@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", "dist"],
+  "extends": "@raypx/typescript/nextjs.json",
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}

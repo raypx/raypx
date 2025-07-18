@@ -1,0 +1,22 @@
+packages:
+  - apps/*
+  - packages/*
+  - docs
+  - tooling/*
+
+catalog:
+  "@types/node": ^24.0.14
+  hono: ^4.8.5
+  typescript: ^5.8.3
+  vite: 6.3.5
+  zod: ^3.25.76
+
+catalogs:
+  react19:
+    react: ^19.1.0
+    react-dom: ^19.1.0
+    "@types/react": ^19.1.8
+    "@types/react-dom": ^19.1.6
+
+onlyBuiltDependencies:
+  - esbuild

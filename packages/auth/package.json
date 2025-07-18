@@ -1,0 +1,39 @@
+{
+  "name": "@raypx/auth",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./envs": "./src/envs.ts",
+    "./types": "./src/types.ts",
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./middleware": "./src/middleware.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
+    "@iconify/react": "^6.0.0",
+    "@raypx/db": "workspace:*",
+    "@raypx/email": "workspace:*",
+    "@raypx/redis": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "bcrypt-ts": "^7.1.0",
+    "better-auth": "^1.2.12",
+    "lodash-es": "^4.17.21",
+    "react-hook-form": "^7.60.0",
+    "react-i18next": "^15.6.0",
+    "server-only": "^0.0.1",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@raypx/typescript": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

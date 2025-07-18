@@ -1,0 +1,13 @@
+{
+  "name": "@raypx/typescript",
+  "private": true,
+  "type": "module",
+  "files": [
+    "nextjs.json",
+    "react-library.json",
+    "base.json"
+  ],
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

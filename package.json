@@ -1,0 +1,59 @@
+{
+  "name": "raypx",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A modern web application built with Next.js and TypeScript",
+  "homepage": "https://raypx.com",
+  "bugs": {
+    "url": "https://github.com/raypx/raypx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raypx/raypx.git"
+  },
+  "license": "MIT",
+  "author": "raypx",
+  "scripts": {
+    "audit": "pnpm audit --audit-level moderate",
+    "build": "turbo build",
+    "clean": "pnpm --recursive --parallel run clean",
+    "coverage": "vitest --coverage",
+    "dedupe": "pnpm dedupe",
+    "dev": "turbo dev",
+    "format": "biome format --write",
+    "generate": "turbo gen",
+    "knip": "knip",
+    "lint": "biome lint --write",
+    "prepare": "husky",
+    "test": "turbo test --cache-dir=.turbo",
+    "typecheck": "biome check --write",
+    "update:deps": "pnpm update --recursive --interactive --latest"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pnpm lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json}": [
+      "pnpm format"
+    ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.2",
+    "@turbo/gen": "^2.5.5",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "^3.2.4",
+    "husky": "^9.1.7",
+    "knip": "^5.61.3",
+    "lint-staged": "^16.1.2",
+    "rimraf": "^6.0.1",
+    "slugify": "^1.6.6",
+    "turbo": "^2.5.5",
+    "typescript": "catalog:",
+    "vitest": "^3.2.4",
+    "zod": "catalog:",
+    "zx": "^8.7.1"
+  },
+  "packageManager": "pnpm@10.13.1"
+}

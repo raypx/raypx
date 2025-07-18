@@ -1,0 +1,26 @@
+{
+  "name": "@raypx/redis",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./envs": "./src/envs.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@raypx/shared": "workspace:*",
+    "lodash-es": "^4.17.21",
+    "redis": "^5.6.0",
+    "superjson": "^2.2.2"
+  },
+  "devDependencies": {
+    "@raypx/typescript": "workspace:*",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}
