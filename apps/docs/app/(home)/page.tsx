@@ -1,5 +1,6 @@
 import { Button } from "@raypx/ui/components/button"
 import Link from "next/link"
+import appConfig from "@/config/app.config"
 
 export default function HomePage() {
   return (
@@ -15,7 +16,7 @@ export default function HomePage() {
         </Link>{" "}
         and see the documentation.
       </p>
-      <Link href="https://raypx.xyz">
+      <Link href={appConfig.url}>
         <Button className="cursor-pointer">Raypx</Button>
       </Link>
     </main>

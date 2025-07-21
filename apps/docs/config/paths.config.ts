@@ -8,7 +8,7 @@ const PathsSchema = z.object({
 
 const pathsConfig = PathsSchema.parse({
   app: {
-    home: "https://raypx.xyz",
+    home: "/",
   },
 } satisfies z.infer<typeof PathsSchema>)
 

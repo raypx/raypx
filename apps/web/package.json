@@ -12,7 +12,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "^15.4.1",
+    "@next/bundle-analyzer": "^15.4.2",
     "@raypx/analytics": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/db": "workspace:*",
@@ -20,7 +20,7 @@
     "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
     "lucide-react": "^0.525.0",
-    "next": "^15.4.1",
+    "next": "^15.4.2",
     "next-sitemap": "^4.2.3",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
