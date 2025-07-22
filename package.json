@@ -16,6 +16,7 @@
   "scripts": {
     "audit": "pnpm audit --audit-level moderate",
     "build": "turbo build",
+    "bump-deps": "pnpm dlx taze -wrI",
     "clean": "pnpm --recursive --parallel run clean",
     "coverage": "vitest --coverage",
     "dedupe": "pnpm dedupe",
@@ -29,11 +30,6 @@
     "typecheck": "biome check --write",
     "update:deps": "pnpm update --recursive --interactive --latest"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pnpm lint-staged"
-    }
-  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json}": [
       "pnpm format"
@@ -41,6 +37,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.1.2",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@turbo/gen": "^2.5.5",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "^3.2.4",
@@ -51,8 +49,7 @@
     "turbo": "^2.5.5",
     "typescript": "catalog:",
     "vitest": "^3.2.4",
-    "zod": "catalog:",
-    "zx": "^8.7.1"
+    "zod": "catalog:"
   },
   "packageManager": "pnpm@10.13.1"
 }

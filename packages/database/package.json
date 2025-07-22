@@ -1,25 +1,24 @@
 {
-  "name": "@raypx/shared",
+  "name": "@raypx/database",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./config": "./src/config/index.ts",
-    "./utils": "./src/utils/index.ts",
-    "./logger": "./src/logger/index.ts"
+    "./envs": "./src/envs.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo",
-    "test": "vitest"
+    "test": "vitest",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@t3-oss/env-nextjs": "^0.13.8",
-    "zod": "catalog:"
+    "@prisma/client": "^6.12.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "^5.8.3"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

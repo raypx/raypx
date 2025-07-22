@@ -6,6 +6,6 @@
     "skipLibCheck": true
   },
   "exclude": ["node_modules", "dist"],
-  "extends": "@raypx/typescript/nextjs.json",
+  "extends": "@raypx/tsconfig/nextjs.json",
   "include": ["./**/*.ts", "./**/*.tsx"]
 }

@@ -1,5 +1,5 @@
 {
-  "extends": "@raypx/typescript/nextjs.json",
+  "extends": "@raypx/tsconfig/nextjs.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

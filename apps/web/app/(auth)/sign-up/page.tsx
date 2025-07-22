@@ -1,7 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@raypx/ui/components/button"
 import {
   Card,
@@ -10,8 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card"
-import { Github, Mail } from "lucide-react"
 import { toast } from "@raypx/ui/components/sonner"
+import { Github, Mail } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function SignUpPage() {
   const router = useRouter()

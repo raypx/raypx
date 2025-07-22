@@ -3,6 +3,6 @@
     "baseUrl": "."
   },
   "exclude": ["node_modules", "dist"],
-  "extends": "@raypx/typescript/base.json",
+  "extends": "@raypx/tsconfig/base.json",
   "include": ["./**/*.ts", "./**/*.tsx"]
 }

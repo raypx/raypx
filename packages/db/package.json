@@ -32,7 +32,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@raypx/typescript": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "catalog:",
     "dotenv-cli": "^8.0.0",

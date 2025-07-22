@@ -12,7 +12,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@raypx/typescript": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

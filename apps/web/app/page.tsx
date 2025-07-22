@@ -1,7 +1,7 @@
 "use client"
 
-import { toast } from "@raypx/ui/components/sonner"
 import { Button } from "@raypx/ui/components/button"
+import { toast } from "@raypx/ui/components/sonner"
 
 export default function Home() {
   const onClick = () => {

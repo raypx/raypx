@@ -10,9 +10,11 @@
     "clean": "rimraf dist .turbo",
     "test": "vitest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "next-seo": "^6.8.0"
+  },
   "devDependencies": {
-    "@raypx/typescript": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

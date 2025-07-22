@@ -1,6 +1,6 @@
+import { envs as db } from "@raypx/db/envs"
 import { envs as email } from "@raypx/email/envs"
 import { envs as redis } from "@raypx/redis/envs"
-import { envs as db } from "@raypx/db/envs"
 import { createEnv, z } from "@raypx/shared"
 
 export const envs = () =>

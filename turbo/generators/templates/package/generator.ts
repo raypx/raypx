@@ -22,26 +22,42 @@ function sanitizePackageName(name: string): string {
 }
 
 /**
- * Fetches the latest version of a package from npm registry
+ * Fetches the latest version of a package from npm registry with timeout
  */
 async function fetchPackageVersion(packageName: string): Promise<string> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 5000) // 5s timeout
+
   try {
     const response = await fetch(
       `${NPM_REGISTRY_URL}/-/package/${encodeURIComponent(packageName)}/dist-tags`,
+      { signal: controller.signal },
     )
 
+    clearTimeout(timeoutId)
+
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch package info for ${packageName}: ${response.status}`,
-      )
+      if (response.status === 404) {
+        console.warn(`Package "${packageName}" not found on npm registry`)
+        return "*"
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
     const data = (await response.json()) as NpmPackageInfo
-    return data.latest
-  } catch (_error) {
-    console.warn(
-      `Warning: Could not fetch version for ${packageName}, using "*" as fallback`,
-    )
+    return data.latest || "*"
+  } catch (error) {
+    clearTimeout(timeoutId)
+
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        console.warn(`Timeout fetching version for "${packageName}", using "*"`)
+      } else {
+        console.warn(
+          `Failed to fetch version for "${packageName}": ${error.message}`,
+        )
+      }
+    }
     return "*"
   }
 }
@@ -84,13 +100,19 @@ async function processDependencies(
  */
 function runCommand(command: string, description: string): void {
   try {
+    console.log(`Running: ${command}`)
     execSync(command, {
       stdio: "inherit",
       cwd: process.cwd(),
+      timeout: 300000, // 5 minute timeout
     })
+    console.log(`✓ Successfully completed: ${description}`)
   } catch (error) {
-    console.error(`Error running ${description}:`, error)
-    throw new Error(`Failed to ${description}`)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error(`✗ Failed to ${description}`)
+    console.error(`Command: ${command}`)
+    console.error(`Error: ${errorMessage}`)
+    throw new Error(`Failed to ${description}: ${errorMessage}`)
   }
 }
 
@@ -103,21 +125,49 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
         name: "name",
         message: `What is the name of the package? (You can skip the \`${PREFIX}\` prefix)`,
         validate: (input: string) => {
-          if (!input.trim()) {
+          const trimmed = input.trim()
+          if (!trimmed) {
             return "Package name is required"
           }
-          if (!/^[a-z0-9-]+$/.test(input.replace(PREFIX, ""))) {
+
+          const sanitized = trimmed.replace(PREFIX, "")
+          if (!/^[a-z0-9-]+$/.test(sanitized)) {
             return "Package name must contain only lowercase letters, numbers, and hyphens"
           }
+
+          if (sanitized.length < 2) {
+            return "Package name must be at least 2 characters long"
+          }
+
+          if (sanitized.startsWith("-") || sanitized.endsWith("-")) {
+            return "Package name cannot start or end with a hyphen"
+          }
+
           return true
         },
       },
       {
         type: "input",
         name: "deps",
-        message:
-          "Enter a space separated list of dependencies you would like to install (optional)",
+        message: "Enter dependencies to install (space-separated, optional):",
         default: "",
+        validate: (input: string) => {
+          if (!input.trim()) return true
+
+          const deps = input
+            .split(" ")
+            .map((d) => d.trim())
+            .filter(Boolean)
+          const invalidDeps = deps.filter(
+            (dep) => !/^[@a-z0-9\-_./]+$/.test(dep),
+          )
+
+          if (invalidDeps.length > 0) {
+            return `Invalid dependency names: ${invalidDeps.join(", ")}`
+          }
+
+          return true
+        },
       },
     ],
     actions: [
@@ -146,6 +196,12 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
         path: "packages/{{ name }}/src/index.ts",
         templateFile: "templates/package/index.ts.hbs",
       },
+      // Create envs.ts
+      {
+        type: "add",
+        path: "packages/{{ name }}/src/envs.ts",
+        templateFile: "templates/package/envs.ts.hbs",
+      },
       // Process dependencies
       {
         type: "modify",
@@ -159,13 +215,24 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
         },
       },
       // Install dependencies and format
-      async () => {
+      async (answers) => {
         try {
+          const packageName =
+            "name" in answers && typeof answers.name === "string"
+              ? answers.name
+              : "unknown"
+          console.log(`\n🚀 Finalizing package setup for "${packageName}"...\n`)
+
           runCommand("pnpm i", "install dependencies")
           runCommand("pnpm run format", "format code")
-          return "Package scaffolded successfully"
+
+          console.log(`\n✨ Package "${packageName}" scaffolded successfully!`)
+          console.log(`📁 Location: packages/${packageName}`)
+          console.log(`🔧 Next steps: cd packages/${packageName} && pnpm dev`)
+
+          return `Package "${packageName}" created successfully`
         } catch (error) {
-          console.error("Failed to complete package setup:", error)
+          console.error("\n❌ Failed to complete package setup:", error)
           throw error
         }
       },

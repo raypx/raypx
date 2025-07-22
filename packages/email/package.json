@@ -20,7 +20,7 @@
     "resend": "^4.7.0"
   },
   "devDependencies": {
-    "@raypx/typescript": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",

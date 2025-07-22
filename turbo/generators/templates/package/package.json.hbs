@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./envs": "./src/envs.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo",
@@ -14,7 +15,7 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@raypx/typescript": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

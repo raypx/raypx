@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { signOut, useSession } from "@raypx/auth/client"
 import { Button } from "@raypx/ui/components/button"
 import {
   Card,
@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card"
-import { signOut, useSession } from "@raypx/auth/client"
 import { toast } from "@raypx/ui/components/sonner"
+import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
   const router = useRouter()

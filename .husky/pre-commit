@@ -1,0 +1,23 @@
+#!/bin/sh
+
+echo "Running pre-commit checks..."
+
+echo "Formatting code..."
+pnpm format || {
+  echo "❌ Code formatting failed. Please fix the issues and try again."
+  exit 1
+}
+
+echo "Running type checks..."
+pnpm typecheck || {
+  echo "❌ Type checking failed. Please fix the issues and try again."
+  exit 1
+}
+
+echo "Running lint checks..."
+pnpm lint || {
+  echo "❌ Linting failed. Please fix the issues and try again."
+  exit 1
+}
+
+echo "✅ All pre-commit checks passed!"

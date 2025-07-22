@@ -26,7 +26,7 @@
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@raypx/typescript": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
