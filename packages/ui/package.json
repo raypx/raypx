@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@types/node": "^24.0.15",
+    "@types/node": "^24.1.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "tailwindcss": "^4.1.11",

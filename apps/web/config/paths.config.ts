@@ -11,10 +11,10 @@ const PathsSchema = z.object({
 
 const pathsConfig = PathsSchema.parse({
   app: {
-    home: "https://raypx.xyz",
+    home: "https://raypx.com",
   },
   docs: {
-    url: "https://docs.raypx.xyz",
+    url: "https://docs.raypx.com",
   },
 } satisfies z.infer<typeof PathsSchema>)
 

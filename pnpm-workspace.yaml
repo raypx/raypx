@@ -5,7 +5,7 @@ packages:
   - tooling/*
 
 catalog:
-  '@types/node': ^24.0.15
+  '@types/node': ^24.1.0
   hono: ^4.8.5
   typescript: ^5.8.3
   vite: ^7.0.5

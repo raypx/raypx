@@ -35,7 +35,7 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "catalog:",
-    "dotenv-cli": "^8.0.0",
+    "dotenv-cli": "^9.0.0",
     "drizzle-kit": "^0.31.4",
     "typescript": "catalog:"
   }

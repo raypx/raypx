@@ -18,8 +18,6 @@ export default async function Page(props: {
 
   const { body: Mdx, toc, lastModified } = page.data
 
-  // const MDXContent = page.data.body
-
   return (
     <DocsPage toc={toc} full={page.data.full} lastUpdate={lastModified}>
       <DocsTitle>{page.data.title}</DocsTitle>
@@ -27,7 +25,6 @@ export default async function Page(props: {
       <DocsBody>
         <Mdx
           components={getMDXComponents({
-            // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
           })}
         />

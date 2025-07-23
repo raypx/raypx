@@ -11,7 +11,7 @@ const app = AppSchema.parse({
   name: "Raypx",
   description: "Raypx is a platform for building AI-powered applications.",
   keywords: ["Raypx", "AI", "Platform", "Framework"],
-  url: "https://raypx.xyz",
+  url: "https://raypx.com",
 } satisfies z.infer<typeof AppSchema>)
 
 export default app
