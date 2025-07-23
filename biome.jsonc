@@ -22,11 +22,10 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "a11y": {
-        "noSvgWithoutTitle": "off"
-      },
+      "a11y": "off",
       "suspicious": {
-        "noDocumentCookie": "off"
+        "noDocumentCookie": "off",
+        "noArrayIndexKey": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "off"

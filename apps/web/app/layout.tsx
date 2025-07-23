@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import type { ReactNode } from "react"
 import "../styles/globals.css"
 import { AnalyticsProvider } from "@raypx/analytics"
+import { Provider } from "@raypx/ui/components/provider"
 import { Toaster } from "@raypx/ui/components/sonner"
 import appConfig from "@/config/app.config"
 
@@ -35,14 +36,16 @@ export default function RootLayout({
   children: ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AnalyticsProvider>
-          {children}
-          <Toaster />
-        </AnalyticsProvider>
+        <Provider>
+          <AnalyticsProvider>
+            {children}
+            <Toaster />
+          </AnalyticsProvider>
+        </Provider>
       </body>
     </html>
   )

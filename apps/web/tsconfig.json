@@ -4,7 +4,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@repo/*": ["../../packages/*"]
+      "@raypx/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": [
