@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import "../styles/globals.css"
 import { AnalyticsProvider } from "@raypx/analytics"
 import { Provider } from "@raypx/ui/components/provider"
-import { Toaster } from "@raypx/ui/components/sonner"
+import { Toaster } from "@raypx/ui/components/toast"
 import appConfig from "@/config/app.config"
 
 const geistSans = Geist({

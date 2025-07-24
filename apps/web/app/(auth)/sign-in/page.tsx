@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card"
-import { toast } from "@raypx/ui/components/sonner"
+import { toast } from "@raypx/ui/components/toast"
 import { Github, Mail } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"

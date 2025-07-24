@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@raypx/ui/components/button"
-import { toast } from "@raypx/ui/components/sonner"
+import { toast } from "@raypx/ui/components/toast"
 import { useTheme } from "next-themes"
 
 export default function Home() {
@@ -14,6 +14,7 @@ export default function Home() {
   return (
     <div>
       <Button onClick={onClick}>Click me</Button>
+      <Button>Get Started</Button>
     </div>
   )
 }

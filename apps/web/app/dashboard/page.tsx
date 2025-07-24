@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card"
-import { toast } from "@raypx/ui/components/sonner"
+import { toast } from "@raypx/ui/components/toast"
 import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {

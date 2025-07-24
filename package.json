@@ -25,6 +25,7 @@
     "generate": "turbo gen",
     "knip": "knip",
     "lint": "biome lint --write",
+    "shadcn": "pnpm --filter @raypx/web run shadcn && pnpm -w format",
     "prepare": "husky",
     "test": "turbo test --cache-dir=.turbo",
     "typecheck": "biome check --write",
