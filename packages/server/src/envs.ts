@@ -1,4 +1,4 @@
-import { createEnv, z } from "@raypx/shared"
+import { createEnv } from "@raypx/shared"
 
 export const envs = () =>
   createEnv({
