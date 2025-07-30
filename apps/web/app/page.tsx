@@ -24,10 +24,10 @@ export default function Home() {
       </Button>
       <Button onClick={onCleanAll}>Clean All</Button>
       <Button variant="outline">Get Started</Button>
-      <Link href="/sign-up">
+      <Link href="/signup">
         <Button>Sign Up</Button>
       </Link>
-      <Link href="/sign-in">
+      <Link href="/signin">
         <Button>Sign In</Button>
       </Link>
     </div>

@@ -44,7 +44,7 @@ export function SignInForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const params = useSearchParams()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,7 +66,8 @@ export function SignInForm({
         window.location.href = res.data.url
       } else {
         toast.success("Sign in successful")
-        window.location.href = params.get("redirect") || window.location.href
+        window.location.href =
+          searchParams.get("redirect") || window.location.href
       }
     } catch (error: any) {
       toast.error(error.message || "Sign in failed")
@@ -86,7 +87,7 @@ export function SignInForm({
         toast.error(res.error.message)
       } else {
         toast.success("Sign in successful")
-        window.location.href = params.get("redirect") || "/"
+        window.location.href = searchParams.get("redirect") || "/"
       }
     } catch (error: any) {
       toast.error(error.message || "Sign in failed")

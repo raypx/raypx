@@ -42,7 +42,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const params = useSearchParams()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,7 +65,7 @@ export function SignUpForm({
         window.location.href = res.data.url
       } else {
         toast.success("Sign up successful")
-        window.location.href = params.get("redirect") || "/"
+        window.location.href = searchParams.get("redirect") || "/"
       }
     } catch (error: any) {
       toast.error(error.message || "Sign up failed")
@@ -87,7 +87,7 @@ export function SignUpForm({
         toast.error(res.error.message)
       } else {
         toast.success("Sign up successful")
-        window.location.href = params.get("redirect") || "/"
+        window.location.href = searchParams.get("redirect") || "/"
       }
     } catch (error: any) {
       toast.error(error.message || "Sign up failed")

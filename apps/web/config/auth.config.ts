@@ -10,8 +10,8 @@ const AuthSchema = z.object({
 })
 
 const authConfig = AuthSchema.parse({
-  signIn: "/sign-in",
-  signUp: "/sign-up",
+  signIn: "/signin",
+  signUp: "/signup",
   verifyMfa: "/verify",
   callback: "/callback",
   passwordReset: "/password-reset",
