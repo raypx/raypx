@@ -4,14 +4,22 @@ import type { NextConfig } from "next"
 
 const withMDX = createMDX()
 
-const INTERNAL_PACKAGES = ["@raypx/ui", "@raypx/auth", "@raypx/shared"]
+const INTERNAL_PACKAGES = [
+  "@raypx/ui",
+  "@raypx/auth",
+  "@raypx/shared",
+  "@raypx/db",
+  "@raypx/redis",
+  "@raypx/email",
+  "@raypx/analytics",
+]
 
 let nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: INTERNAL_PACKAGES,
-  serverExternalPackages: ["prettier"],
 }
 
+// fuma docs
 nextConfig = withMDX(nextConfig)
 
 if (process.env.ANALYZE === "true") {

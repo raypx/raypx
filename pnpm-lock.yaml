@@ -96,6 +96,18 @@ importers:
       '@raypx/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
+      '@raypx/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@raypx/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@raypx/redis':
+        specifier: workspace:*
+        version: link:../../packages/redis
+      '@raypx/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@raypx/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -139,6 +151,12 @@ importers:
       '@types/react-dom':
         specifier: catalog:react19
         version: 19.1.7(@types/react@19.1.9)
+      cross-env:
+        specifier: ^10.0.0
+        version: 10.0.0
+      dotenv-cli:
+        specifier: ^10.0.0
+        version: 10.0.0
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -1073,6 +1091,9 @@ packages:
 
   '@emnapi/wasi-threads@1.0.4':
     resolution: {integrity: sha512-PJR+bOmMOPH8AtcTGAyYNiuJ3/Fcoj2XN/gBEWzDIKh254XO+mM9XoXHk5GNEhodxeMznbg7BlRojVbKN+gC6g==}
+
+  '@epic-web/invariant@1.0.0':
+    resolution: {integrity: sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==}
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
@@ -3369,6 +3390,11 @@ packages:
 
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
+
+  cross-env@10.0.0:
+    resolution: {integrity: sha512-aU8qlEK/nHYtVuN4p7UQgAwVljzMg8hB4YK5ThRqD2l/ziSnryncPNn7bMLt5cFYsKVKBh8HqLqyCoTupEUu7Q==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -6351,6 +6377,8 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
+  '@epic-web/invariant@1.0.0': {}
+
   '@esbuild-kit/core-utils@3.3.2':
     dependencies:
       esbuild: 0.18.20
@@ -8470,6 +8498,11 @@ snapshots:
       typescript: 5.8.3
 
   create-require@1.1.1: {}
+
+  cross-env@10.0.0:
+    dependencies:
+      '@epic-web/invariant': 1.0.0
+      cross-spawn: 7.0.6
 
   cross-spawn@7.0.6:
     dependencies:

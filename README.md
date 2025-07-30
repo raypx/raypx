@@ -8,6 +8,7 @@
 [![pnpm](https://img.shields.io/badge/pnpm-10.13.1-orange?style=flat-square&logo=pnpm)](https://pnpm.io/)
 [![Turborepo](https://img.shields.io/badge/Turborepo-monorepo-red?style=flat-square&logo=turborepo)](https://turbo.build/)
 [![Biome](https://img.shields.io/badge/Biome-linter%20%26%20formatter-yellow?style=flat-square&logo=biome)](https://biomejs.dev/)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/raypx/raypx?utm_source=oss&utm_medium=github&utm_campaign=raypx%2Fraypx&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 > A modern web application platform built with Next.js and TypeScript for building AI-powered applications.
 
