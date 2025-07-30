@@ -519,6 +519,9 @@ importers:
 
   packages/server:
     dependencies:
+      '@raypx/db':
+        specifier: workspace:*
+        version: link:../db
       '@raypx/shared':
         specifier: workspace:*
         version: link:../shared
