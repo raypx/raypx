@@ -1,5 +1,6 @@
 "use client"
 
+import { signIn } from "@raypx/auth/client"
 import { Button } from "@raypx/ui/components/button"
 import {
   Card,
@@ -10,17 +11,34 @@ import {
 } from "@raypx/ui/components/card"
 import { toast } from "@raypx/ui/components/toast"
 import { Github, Mail } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useState } from "react"
 
 export default function SignUpPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const params = useSearchParams()
 
   const handleSocialSignUp = async (provider: "github" | "google") => {
-    setIsLoading(true)
-    toast.info(`Redirecting to ${provider} sign up...`)
-    setIsLoading(false)
+    try {
+      setIsLoading(true)
+      const res = await signIn.social({
+        provider,
+        callbackURL: window.location.href,
+      })
+      if (res.error) {
+        toast.error(res.error.message)
+      } else if (res.data.redirect && res.data.url) {
+        window.location.href = res.data.url
+      } else {
+        toast.success("Sign in successful")
+        window.location.href = params.get("redirect") || window.location.href
+      }
+    } catch (_error) {
+      toast.error("Sign in failed")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
