@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { Suspense } from "react"
 import { GuestGuard } from "../_components/guest-guard"
 import { SignInForm } from "../_components/signin-form"
 import { Splash } from "../_components/splash"
@@ -27,7 +28,9 @@ export default function SignInPage() {
             </div>
             Raypx
           </Link>
-          <SignInForm />
+          <Suspense>
+            <SignInForm />
+          </Suspense>
         </div>
       </div>
       <GuestGuard />

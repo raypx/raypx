@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { Suspense } from "react"
 import { GuestGuard } from "../_components/guest-guard"
 import { SignUpForm } from "../_components/signup-form"
 
@@ -25,7 +26,9 @@ export default function SignUpPage() {
             </div>
             Raypx
           </Link>
-          <SignUpForm />
+          <Suspense>
+            <SignUpForm />
+          </Suspense>
         </div>
       </div>
       <GuestGuard />
