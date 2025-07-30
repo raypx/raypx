@@ -29,7 +29,7 @@
     "dedupe": "pnpm dedupe",
     "dev": "turbo dev",
     "format": "biome check --write",
-    "generate": "turbo gen",
+    "turbo:gen": "turbo gen",
     "knip": "knip",
     "prepare": "husky",
     "shadcn": "pnpm --filter @raypx/web run shadcn && pnpm -w format",

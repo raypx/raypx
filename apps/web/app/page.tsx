@@ -2,14 +2,15 @@
 
 import { Button } from "@raypx/ui/components/button"
 import { closeAllToasts, toast } from "@raypx/ui/components/toast"
+import Link from "next/link"
 import { useTheme } from "next-themes"
 
 export default function Home() {
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
 
   const onClick = () => {
     toast.success("Hello World")
-    setTheme(theme === "dark" ? "light" : "dark")
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }
 
   const onCleanAll = () => {
@@ -23,6 +24,12 @@ export default function Home() {
       </Button>
       <Button onClick={onCleanAll}>Clean All</Button>
       <Button variant="outline">Get Started</Button>
+      <Link href="/signup">
+        <Button>Sign Up</Button>
+      </Link>
+      <Link href="/signin">
+        <Button>Sign In</Button>
+      </Link>
     </div>
   )
 }

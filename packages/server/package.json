@@ -1,21 +1,21 @@
 {
-  "name": "@raypx/scripts",
-  "version": "0.1.0",
+  "name": "@raypx/server",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Build and release scripts for Raypx project",
-  "bin": {
-    "raypx-scripts": "./bin/raypx-scripts.mjs"
+  "exports": {
+    ".": "./src/index.ts",
+    "./envs": "./src/envs.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@changesets/cli": "^2.29.5",
-    "chalk": "^5.4.1",
-    "tsx": "^4.20.3"
+    "@raypx/shared": "workspace:*",
+    "@raypx/db": "workspace:*",
+    "hono": "^4.8.10"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
