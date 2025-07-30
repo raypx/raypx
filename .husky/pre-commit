@@ -1,0 +1,19 @@
+#!/bin/sh
+
+echo "Running pre-commit checks..."
+
+echo "🔧 Auto-fixing code issues..."
+pnpm format
+
+echo "📝 Adding formatted files to git..."
+git add .
+
+echo "🔍 Final code check..."
+pnpm check || {
+  echo "❌ Code issues found that cannot be auto-fixed. Please review and fix manually:"
+  echo "   Run 'pnpm check' to see the issues"
+  echo "   Run 'pnpm format' to auto-fix formatting issues"
+  exit 1
+}
+
+echo "✅ All pre-commit checks passed!"

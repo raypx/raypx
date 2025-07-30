@@ -1,0 +1,36 @@
+{
+  "name": "@raypx/docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "clean": "rm -rf .next .source",
+    "dev": "next dev --turbo --port 3001",
+    "postinstall": "fumadocs-mdx",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@next/bundle-analyzer": "^15.4.5",
+    "@raypx/analytics": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "fumadocs-core": "^15.6.6",
+    "fumadocs-mdx": "^11.7.1",
+    "fumadocs-ui": "^15.6.6",
+    "lucide-react": "catalog:",
+    "next": "^15.4.5",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^24.1.0",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.8.3",
+    "vite": "catalog:"
+  }
+}
