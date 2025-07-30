@@ -19,7 +19,7 @@ export default function SignInPage() {
 
   const handleSocialSignIn = async (provider: "github" | "google") => {
     setIsLoading(true)
-    toast.info(`正在跳转到 ${provider} 登录...`)
+    toast.info(`Redirecting to ${provider} sign in...`)
     setIsLoading(false)
   }
 
@@ -27,9 +27,9 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">登录</CardTitle>
+          <CardTitle className="text-2xl text-center">Sign In</CardTitle>
           <CardDescription className="text-center">
-            选择您的登录方式
+            Choose your sign in method
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -42,7 +42,7 @@ export default function SignInPage() {
               disabled={isLoading}
             >
               <Github className="mr-2 h-4 w-4" />
-              使用 GitHub 登录
+              Sign in with GitHub
             </Button>
             <Button
               variant="outline"
@@ -51,18 +51,18 @@ export default function SignInPage() {
               disabled={isLoading}
             >
               <Mail className="mr-2 h-4 w-4" />
-              使用 Google 登录
+              Sign in with Google
             </Button>
           </div>
 
           <div className="text-center text-sm">
-            还没有账户？{" "}
+            Don't have an account?{" "}
             <Button
               variant="link"
               className="p-0 h-auto"
               onClick={() => router.push("/sign-up")}
             >
-              立即注册
+              Sign up
             </Button>
           </div>
         </CardContent>
