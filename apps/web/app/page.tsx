@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <header className="flex justify-between items-center p-4 border-b">
-        <h1 className="text-2xl font-bold">RayPX</h1>
+        <h1 className="text-2xl font-bold">Raypx</h1>
         <UserAvatar />
       </header>
       <main className="p-4 space-y-4">
