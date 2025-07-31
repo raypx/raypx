@@ -3,8 +3,8 @@
 import { ChevronRight, Home } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { UserAvatar } from "@/app/_components/user-avatar"
 import { ProtectedRoute } from "@/components/auth"
+import { UserAvatar } from "@/components/auth/user-avatar"
 import authConfig from "@/config/auth.config"
 
 interface ConsoleLayoutProps {

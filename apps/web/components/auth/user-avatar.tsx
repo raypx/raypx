@@ -21,6 +21,12 @@ import { LogOut, Moon, Palette, Sun, User } from "lucide-react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 
+const themes = [
+  { name: "Light", value: "light", icon: Sun },
+  { name: "Dark", value: "dark", icon: Moon },
+  { name: "System", value: "system", icon: Palette },
+]
+
 export function UserAvatar() {
   const { data: session } = useSession()
   const { theme, setTheme } = useTheme()
@@ -32,12 +38,6 @@ export function UserAvatar() {
   const handleSignOut = async () => {
     await signOut()
   }
-
-  const themes = [
-    { name: "Light", value: "light", icon: Sun },
-    { name: "Dark", value: "dark", icon: Moon },
-    { name: "System", value: "system", icon: Palette },
-  ]
 
   const userInitials = session.user.name
     ? session.user.name

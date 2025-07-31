@@ -1,4 +1,5 @@
 import Link from "next/link"
+import appConfig from "@/config/app.config"
 
 interface FooterLink {
   href: string
@@ -10,14 +11,7 @@ interface FooterSection {
   links: FooterLink[]
 }
 
-export interface FooterProps {
-  brandName?: string
-  brandDescription?: string
-  sections?: FooterSection[]
-  copyright?: string
-}
-
-const defaultSections: FooterSection[] = [
+const sections: FooterSection[] = [
   {
     title: "Product",
     links: [
@@ -43,12 +37,7 @@ const defaultSections: FooterSection[] = [
   },
 ]
 
-export function Footer({
-  brandName = "RayPx",
-  brandDescription = "Building the future of web applications.",
-  sections = defaultSections,
-  copyright = "2024 RayPx. All rights reserved.",
-}: FooterProps) {
+export function Footer() {
   return (
     <footer className="border-t bg-muted/50">
       <div className="container mx-auto px-4 py-8">
@@ -56,9 +45,11 @@ export function Footer({
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <div className="h-6 w-6 rounded-full bg-primary" />
-              <span className="font-bold">{brandName}</span>
+              <span className="font-bold">{appConfig.name}</span>
             </div>
-            <p className="text-sm text-muted-foreground">{brandDescription}</p>
+            <p className="text-sm text-muted-foreground">
+              {appConfig.description}
+            </p>
           </div>
 
           {sections.map((section) => (
@@ -81,7 +72,9 @@ export function Footer({
         </div>
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>&copy; {copyright}</p>
+          <p>
+            &copy; {appConfig.year} {appConfig.name}. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
