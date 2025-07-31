@@ -87,6 +87,11 @@ const createConfig = (): BetterAuthOptions => {
       },
       cookiePrefix: "auth",
     },
+    user: {
+      deleteUser: {
+        enabled: true,
+      },
+    },
     databaseHooks: {
       user: {
         create: {

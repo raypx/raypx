@@ -3,7 +3,6 @@
 import {
   linkSocial,
   listAccounts,
-  signIn,
   unlinkAccount,
   useSession,
 } from "@raypx/auth/client"

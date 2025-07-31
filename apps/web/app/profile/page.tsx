@@ -18,6 +18,7 @@ import { format } from "date-fns"
 import { Calendar, Mail, Shield, User } from "lucide-react"
 import { ProtectedRoute } from "@/components/auth"
 import { AccountConnections } from "./_components/account-connections"
+import { DeleteAccount } from "./_components/delete-account"
 
 export default function ProfilePage() {
   const { data: session } = useSession()
@@ -130,6 +131,9 @@ export default function ProfilePage() {
 
         {/* Account Connections Card */}
         <AccountConnections />
+
+        {/* Delete Account Card */}
+        <DeleteAccount />
 
         {/* Session Information Card */}
         <Card>
