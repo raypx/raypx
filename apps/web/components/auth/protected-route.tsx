@@ -13,6 +13,22 @@ interface ProtectedRouteProps {
   onRedirect?: () => void
 }
 
+// Define proper user type with roles
+interface UserWithRoles {
+  role?: string | string[]
+  roles?: string | string[]
+}
+
+function hasUserRole(
+  userWithRoles: UserWithRoles,
+  roleToCheck: string,
+): boolean {
+  const userRoles = userWithRoles.role || userWithRoles.roles || []
+  return Array.isArray(userRoles)
+    ? userRoles.includes(roleToCheck)
+    : userRoles === roleToCheck
+}
+
 /**
  * ProtectedRoute component that combines authentication check with automatic redirect.
  * Provides a convenient wrapper for protecting entire routes.
@@ -42,19 +58,12 @@ export function ProtectedRoute({
 
   // Role-based access control
   if (requireRole && session.user) {
-    const userRoles =
-      (session.user as any).role || (session.user as any).roles || []
+    const user = session.user as UserWithRoles
     const roles = Array.isArray(requireRole) ? requireRole : [requireRole]
-    const hasRequiredRole = roles.some((role) =>
-      Array.isArray(userRoles) ? userRoles.includes(role) : userRoles === role,
-    )
+    const hasRequiredRole = roles.some((role) => hasUserRole(user, role))
 
     if (!hasRequiredRole) {
-      return fallback ? (
-        fallback
-      ) : (
-        <div>Access denied: insufficient permissions</div>
-      )
+      return fallback ? fallback : null
     }
   }
 
