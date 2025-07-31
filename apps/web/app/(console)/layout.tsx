@@ -22,16 +22,6 @@ export default function ConsoleLayout({ children }: ConsoleLayoutProps) {
           </div>
         </div>
       }
-      fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <p className="text-lg font-medium mb-2">Access Denied</p>
-            <p className="text-muted-foreground">
-              You need to be signed in to access the console.
-            </p>
-          </div>
-        </div>
-      }
       redirectTo={authConfig.signIn}
     >
       <div className="min-h-screen bg-background">
@@ -53,7 +43,7 @@ export default function ConsoleLayout({ children }: ConsoleLayoutProps) {
                     Dashboard
                   </Link>
                   <Link
-                    href="/console/profile"
+                    href="/profile"
                     className="text-sm hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded px-2 py-1"
                     aria-label="Go to profile page"
                   >
