@@ -31,7 +31,14 @@ export const client = createAuthClient({
 })
 
 // Export the client
-export const { signIn, signUp, useSession, signOut } = client
+export const {
+  signIn,
+  signUp,
+  useSession,
+  signOut,
+  forgetPassword,
+  resetPassword,
+} = client
 
 export * from "./client/socials"
 // Export the types

@@ -15,3 +15,30 @@ export const transporter = nodemailer.createTransport({
     pass: env.MAIL_PASSWORD,
   },
 })
+
+const defaultFrom = "Raypx <hello@raypx.com>"
+
+interface SendEmailOptions {
+  to: string
+  subject: string
+  text: string
+  provider?: "resend" | "nodemailer"
+}
+
+export const sendEmail = async (options: SendEmailOptions) => {
+  if (options.provider === "resend") {
+    await resend.emails.send({
+      from: defaultFrom,
+      to: options.to,
+      subject: options.subject,
+      text: options.text,
+    })
+  } else {
+    await transporter.sendMail({
+      from: defaultFrom,
+      to: options.to,
+      subject: options.subject,
+      text: options.text,
+    })
+  }
+}

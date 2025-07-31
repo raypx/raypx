@@ -1,5 +1,5 @@
 import { db, nanoid, schemas, uuidv7 } from "@raypx/db"
-import { resend } from "@raypx/email"
+import { resend, sendEmail } from "@raypx/email"
 import { type BetterAuthOptions, betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import {
@@ -19,6 +19,13 @@ const createConfig = (): BetterAuthOptions => {
     emailAndPassword: {
       enabled: true,
       autoSignIn: true,
+      sendResetPassword: async ({ user, url, token }) => {
+        await sendEmail({
+          to: user.email,
+          subject: "Reset your password",
+          text: `Click the link to reset your password: ${url} \n\nToken: ${token}`,
+        })
+      },
     },
     secondaryStorage: redisStorage({
       url: env.REDIS_URL,
