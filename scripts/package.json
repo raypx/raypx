@@ -2,8 +2,8 @@
   "name": "@raypx/scripts",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "Build and release scripts for Raypx project",
+  "type": "module",
   "bin": {
     "raypx-scripts": "./bin/raypx-scripts.mjs"
   },

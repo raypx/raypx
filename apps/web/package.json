@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm with-env next build",
-    "clean": "rm -rf .next",
+    "clean": "rimraf .next",
     "dev": "pnpm with-env next dev --turbopack",
     "lint": "next lint",
     "shadcn": "pnpm dlx shadcn@canary add --overwrite",
@@ -18,9 +18,9 @@
     "@raypx/db": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/redis": "workspace:*",
+    "@raypx/server": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "@raypx/server": "workspace:*",
     "lucide-react": "catalog:",
     "next": "^15.4.5",
     "next-sitemap": "^4.2.3",
@@ -31,8 +31,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@raypx/tsconfig": "workspace:*",
     "@next/bundle-analyzer": "^15.4.5",
+    "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
