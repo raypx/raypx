@@ -29,7 +29,7 @@
     "react-hook-form": "^7.61.1",
     "react-i18next": "^15.6.1",
     "server-only": "^0.0.1",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
