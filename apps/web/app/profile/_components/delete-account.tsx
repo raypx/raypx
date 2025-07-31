@@ -1,6 +1,6 @@
 "use client"
 
-import { deleteUser, signOut } from "@raypx/auth/client"
+import { deleteUser } from "@raypx/auth/client"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,12 +24,14 @@ import { Input } from "@raypx/ui/components/input"
 import { Label } from "@raypx/ui/components/label"
 import { toast } from "@raypx/ui/components/toast"
 import { AlertTriangle, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export function DeleteAccount() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [confirmText, setConfirmText] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const router = useRouter()
 
   const handleDeleteAccount = async () => {
     if (confirmText !== "DELETE") {
@@ -39,18 +41,8 @@ export function DeleteAccount() {
 
     try {
       setIsDeleting(true)
-
-      const res = await deleteUser({
-        callbackURL: "/",
-      })
-
-      if (res.error) {
-        toast.error(`Failed to delete account: ${res.error.message}`)
-      } else {
-        toast.success("Account deleted successfully")
-        // 登出并重定向到首页
-        await signOut()
-      }
+      await deleteUser()
+      router.push("/")
     } catch (error: any) {
       toast.error(`Failed to delete account: ${error.message}`)
     } finally {
