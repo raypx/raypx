@@ -52,7 +52,7 @@ export function ForgotPasswordForm({
       setIsLoading(true)
       const res = await forgetPassword({
         email: values.email,
-        redirectTo: `${window.location.origin}${authConfig.passwordReset}`,
+        redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}${authConfig.passwordReset}`,
       })
       if (res.error) {
         toast.error(res.error.message)
@@ -61,7 +61,9 @@ export function ForgotPasswordForm({
         toast.success("Password reset email sent")
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to send reset email")
+      const msg =
+        error instanceof Error ? error.message : "Failed to send reset email"
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }

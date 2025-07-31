@@ -43,10 +43,13 @@ const formSchema = z
     path: ["confirmPassword"],
   })
 
-export function PasswordResetForm({
+interface PasswordResetFormProps
+  extends React.ComponentPropsWithoutRef<"div"> {}
+
+export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}) => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")

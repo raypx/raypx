@@ -20,11 +20,20 @@ const createConfig = (): BetterAuthOptions => {
       enabled: true,
       autoSignIn: true,
       sendResetPassword: async ({ user, url, token }) => {
-        await sendEmail({
-          to: user.email,
-          subject: "Reset your password",
-          text: `Click the link to reset your password: ${url} \n\nToken: ${token}`,
-        })
+        try {
+          const result = await sendEmail({
+            to: user.email,
+            subject: "Reset your password",
+            text: `Click the link to reset your password: ${url} \n\nToken: ${token}`,
+          })
+          if (!result.success) {
+            console.error("Failed to send password reset email:", result.error)
+            throw new Error("Failed to send password reset email")
+          }
+        } catch (error) {
+          console.error("Password reset email error:", error)
+          throw error
+        }
       },
     },
     secondaryStorage: redisStorage({
