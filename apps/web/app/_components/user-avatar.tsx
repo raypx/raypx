@@ -37,7 +37,10 @@ export function UserAvatar() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <button
+          className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          aria-label={`User menu for ${session.user.name || session.user.email}`}
+        >
           <Avatar className="h-8 w-8">
             <AvatarImage
               src={session.user.image || ""}
