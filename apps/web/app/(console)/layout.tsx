@@ -49,6 +49,20 @@ export default function ConsoleLayout({ children }: ConsoleLayoutProps) {
                   >
                     Profile
                   </Link>
+                  <Link
+                    href="/security"
+                    className="text-sm hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded px-2 py-1"
+                    aria-label="Go to security settings"
+                  >
+                    Security
+                  </Link>
+                  <Link
+                    href="/billing"
+                    className="text-sm hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded px-2 py-1"
+                    aria-label="Go to billing page"
+                  >
+                    Billing
+                  </Link>
                 </div>
               </div>
               <UserAvatar />

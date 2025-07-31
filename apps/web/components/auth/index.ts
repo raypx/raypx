@@ -1,5 +1,6 @@
 export { AuthLoaded } from "./auth-loaded"
 export { AuthLoading } from "./auth-loading"
+export { OneTap } from "./one-tap"
 export { ProtectedRoute } from "./protected-route"
 export { RedirectToSignIn } from "./redirect-to-signin"
 export { RedirectToSignUp } from "./redirect-to-signup"

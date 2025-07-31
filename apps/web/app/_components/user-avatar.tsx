@@ -8,16 +8,22 @@ import {
 } from "@raypx/ui/components/avatar"
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu"
-import { LogOut, User } from "lucide-react"
+import { LogOut, Moon, Palette, Sun, User } from "lucide-react"
 import Link from "next/link"
+import { useTheme } from "next-themes"
 
 export function UserAvatar() {
   const { data: session } = useSession()
+  const { theme, setTheme } = useTheme()
 
   if (!session?.user) {
     return null
@@ -26,6 +32,12 @@ export function UserAvatar() {
   const handleSignOut = async () => {
     await signOut()
   }
+
+  const themes = [
+    { name: "Light", value: "light", icon: Sun },
+    { name: "Dark", value: "dark", icon: Moon },
+    { name: "System", value: "system", icon: Palette },
+  ]
 
   const userInitials = session.user.name
     ? session.user.name
@@ -65,6 +77,27 @@ export function UserAvatar() {
             Profile
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Palette className="mr-2 h-4 w-4" />
+            Appearance
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            {themes.map((item) => {
+              const Icon = item.icon
+              return (
+                <DropdownMenuCheckboxItem
+                  key={item.value}
+                  checked={theme === item.value}
+                  onCheckedChange={() => setTheme(item.value)}
+                >
+                  <Icon className="mr-2 h-4 w-4" />
+                  {item.name}
+                </DropdownMenuCheckboxItem>
+              )
+            })}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} variant="destructive">
           <LogOut className="mr-2 h-4 w-4" />

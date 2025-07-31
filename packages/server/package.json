@@ -13,9 +13,9 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
+    "@raypx/auth": "workspace:*",
     "@raypx/db": "workspace:*",
     "@raypx/shared": "workspace:*",
-    "@raypx/auth": "workspace:*",
     "hono": "^4.8.10"
   },
   "devDependencies": {

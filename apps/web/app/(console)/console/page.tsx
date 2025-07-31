@@ -141,21 +141,27 @@ export default function ConsolePage() {
               <Badge variant="outline">Settings</Badge>
             </Link>
 
-            <div className="flex items-center justify-between p-3 rounded-lg border opacity-50">
+            <Link
+              href="/analytics"
+              className="flex items-center justify-between p-3 rounded-lg border opacity-50"
+            >
               <div className="flex items-center gap-3">
                 <BarChart3 className="h-4 w-4" />
                 <span className="font-medium">View Analytics</span>
               </div>
               <Badge variant="secondary">Coming Soon</Badge>
-            </div>
+            </Link>
 
-            <div className="flex items-center justify-between p-3 rounded-lg border opacity-50">
+            <Link
+              href="/security"
+              className="flex items-center justify-between p-3 rounded-lg border opacity-50"
+            >
               <div className="flex items-center gap-3">
                 <Shield className="h-4 w-4" />
-                <span className="font-medium">Security Settings</span>
+                <span className="font-medium">Security</span>
               </div>
               <Badge variant="secondary">Coming Soon</Badge>
-            </div>
+            </Link>
           </CardContent>
         </Card>
 

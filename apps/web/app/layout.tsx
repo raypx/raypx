@@ -5,6 +5,7 @@ import "../styles/globals.css"
 import { AnalyticsProvider } from "@raypx/analytics"
 import { Provider } from "@raypx/ui/components/provider"
 import { Toaster } from "@raypx/ui/components/toast"
+import { OneTap } from "@/components/auth"
 import appConfig from "@/config/app.config"
 
 const geistSans = Geist({
@@ -44,6 +45,7 @@ export default function RootLayout({
           <AnalyticsProvider>
             {children}
             <Toaster />
+            <OneTap />
           </AnalyticsProvider>
         </Provider>
       </body>

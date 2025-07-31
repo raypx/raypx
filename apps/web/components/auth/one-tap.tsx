@@ -6,7 +6,7 @@ import { env } from "@/env"
 
 const isEnabled = env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true"
 
-function OneTap() {
+export function OneTap() {
   const session = useSession()
   const [taped, setTaped] = useState(false)
 
@@ -20,5 +20,3 @@ function OneTap() {
 
   return null
 }
-
-export default OneTap

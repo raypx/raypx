@@ -6,4 +6,10 @@ const closeAllToasts = () => {
   return toast.getToasts().forEach((t) => toast.dismiss(t.id))
 }
 
-export { toast, useSonner, closeAllToasts, type ToasterProps }
+export {
+  toast,
+  useSonner,
+  useSonner as useToast,
+  closeAllToasts,
+  type ToasterProps,
+}
