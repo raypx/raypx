@@ -130,7 +130,7 @@ export function SignInForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between w-full">
                             <Label htmlFor="password">Password</Label>
                             <Link
                               className="ml-auto text-sm underline-offset-4 hover:underline"

@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
@@ -54,7 +55,7 @@ export function UserAvatar() {
           className="flex items-center space-x-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           aria-label={`User menu for ${session.user.name || session.user.email}`}
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="size-8">
             <AvatarImage
               src={session.user.image || ""}
               alt={session.user.name || "User avatar"}
@@ -71,38 +72,40 @@ export function UserAvatar() {
           <p className="text-xs text-muted-foreground">{session.user.email}</p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/profile">
-            <User className="mr-2 h-4 w-4" />
-            Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Palette className="mr-2 h-4 w-4" />
-            Appearance
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            {themes.map((item) => {
-              const Icon = item.icon
-              return (
-                <DropdownMenuCheckboxItem
-                  key={item.value}
-                  checked={theme === item.value}
-                  onCheckedChange={() => setTheme(item.value)}
-                >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.name}
-                </DropdownMenuCheckboxItem>
-              )
-            })}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link href="/profile">
+              <User className="h-4 w-4" />
+              Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Palette className="mr-2 h-4 w-4" />
+              Appearance
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              {themes.map((item) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={item.value}
+                    checked={theme === item.value}
+                    onCheckedChange={() => setTheme(item.value)}
+                  >
+                    {item.name}
+                  </DropdownMenuCheckboxItem>
+                )
+              })}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} variant="destructive">
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign out
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={handleSignOut} variant="destructive">
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

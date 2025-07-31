@@ -84,7 +84,9 @@ export function SignUpForm({
         image: "",
       })
       if (res.error) {
-        toast.error(res.error.message)
+        toast.error("Sign up failed", {
+          description: res.error.message || "Please try again",
+        })
       } else {
         toast.success("Sign up successful")
         window.location.href = searchParams.get("redirect") || "/"

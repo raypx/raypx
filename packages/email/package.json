@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@raypx/shared": "workspace:*",
-    "@react-email/components": "^0.3.3",
+    "@react-email/components": "^0.4.0",
     "@react-email/render": "^1.1.4",
     "nodemailer": "^7.0.5",
     "react": "catalog:react19",
