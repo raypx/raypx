@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu"
 import { LogOut, User } from "lucide-react"
+import Link from "next/link"
 
 export function UserAvatar() {
   const { data: session } = useSession()
@@ -58,9 +59,11 @@ export function UserAvatar() {
           <p className="text-xs text-muted-foreground">{session.user.email}</p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <User className="mr-2 h-4 w-4" />
-          Profile
+        <DropdownMenuItem asChild>
+          <Link href="/profile">
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} variant="destructive">

@@ -21,6 +21,7 @@
     "@raypx/server": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
+    "date-fns": "^4.1.0",
     "lucide-react": "catalog:",
     "next": "^15.4.5",
     "next-sitemap": "^4.2.3",

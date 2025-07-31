@@ -130,7 +130,7 @@ export function SignInForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          <div className="flex items-center">
+                          <div className="flex items-center justify-between">
                             <Label htmlFor="password">Password</Label>
                             <Link
                               className="ml-auto text-sm underline-offset-4 hover:underline"
@@ -161,7 +161,7 @@ export function SignInForm({
               </form>
             </Form>
             <div className="text-center text-sm">
-              Don&apos;t have an account?{" "}
+              {"Don't have an account? "}
               <Link
                 className="underline underline-offset-4"
                 href={authConfig.signUp}
