@@ -5,6 +5,7 @@ import Link from "next/link"
 import type { ReactNode } from "react"
 import { UserAvatar } from "@/app/_components/user-avatar"
 import { ProtectedRoute } from "@/components/auth"
+import authConfig from "@/config/auth.config"
 
 interface ConsoleLayoutProps {
   children: ReactNode
@@ -31,6 +32,7 @@ export default function ConsoleLayout({ children }: ConsoleLayoutProps) {
           </div>
         </div>
       }
+      redirectTo={authConfig.signIn}
     >
       <div className="min-h-screen bg-background">
         <header className="border-b bg-card" role="banner">

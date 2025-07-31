@@ -55,7 +55,6 @@ export function AccountConnections() {
     }
   }
 
-  // 获取关联账户状态
   useEffect(() => {
     fetchConnections()
   }, [session])
@@ -81,7 +80,6 @@ export function AccountConnections() {
     try {
       setIsLoading({ ...isLoading, [provider]: true })
 
-      // 使用linkSocial来关联账户
       const res = await linkSocial({
         provider,
         callbackURL: window.location.href,
@@ -92,11 +90,9 @@ export function AccountConnections() {
           `Failed to connect ${providerConfig[provider].name}: ${res.error.message}`,
         )
       } else if (res.data?.url) {
-        // 重定向到OAuth提供商
         window.location.href = res.data.url
       } else {
         toast.success(`Successfully connected ${providerConfig[provider].name}`)
-        // 刷新连接状态
         await fetchConnections()
       }
     } catch (error: any) {
@@ -112,7 +108,6 @@ export function AccountConnections() {
     try {
       setIsLoading({ ...isLoading, [provider]: true })
 
-      // 首先获取要断开连接的账户
       const accountsResponse = await listAccounts()
       if (accountsResponse.data) {
         const accountToUnlink = accountsResponse.data.find(
@@ -132,7 +127,6 @@ export function AccountConnections() {
             toast.success(
               `Successfully disconnected ${providerConfig[provider].name}`,
             )
-            // 刷新连接状态
             await fetchConnections()
           }
         }

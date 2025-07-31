@@ -519,6 +519,9 @@ importers:
 
   packages/server:
     dependencies:
+      '@raypx/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@raypx/db':
         specifier: workspace:*
         version: link:../db
