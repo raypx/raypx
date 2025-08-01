@@ -5,10 +5,8 @@ export const envs = () =>
     client: {
       NODE_ENV: z.enum(["development", "production"]).default("development"),
     },
-    shared: {
-    },
-    server: {
-    },
+    shared: {},
+    server: {},
     runtimeEnv: {
       NODE_ENV: process.env.NODE_ENV,
     },

@@ -2,12 +2,10 @@
 
 [![Version](https://img.shields.io/github/package-json/v/raypx/raypx?style=flat-square)](https://github.com/raypx/raypx)
 [![License](https://img.shields.io/github/license/raypx/raypx?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Next.js](https://img.shields.io/badge/Next.js-15.4.5-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![pnpm](https://img.shields.io/badge/pnpm-10.13.1-orange?style=flat-square&logo=pnpm)](https://pnpm.io/)
 [![Turborepo](https://img.shields.io/badge/Turborepo-monorepo-red?style=flat-square&logo=turborepo)](https://turbo.build/)
 [![Biome](https://img.shields.io/badge/Biome-linter%20%26%20formatter-yellow?style=flat-square&logo=biome)](https://biomejs.dev/)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/raypx/raypx?utm_source=oss&utm_medium=github&utm_campaign=raypx%2Fraypx&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 > 基于 Next.js 和 TypeScript 构建的现代化 Web 应用平台，专注于构建 AI 驱动的应用程序。
 
@@ -23,7 +21,7 @@
 
 - **框架**: Next.js 15.4.5 with React 19
 - **语言**: TypeScript 5.8.3
-- **包管理器**: pnpm 10.13.1
+- **包管理器**: pnpm 10.14.0
 - **Monorepo**: Turborepo
 - **UI 组件**: Radix UI + Tailwind CSS (shadcn/ui)
 - **数据库**: Drizzle ORM
