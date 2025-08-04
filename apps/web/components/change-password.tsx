@@ -20,12 +20,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@raypx/ui/components/form"
+import { Label } from "@raypx/ui/components/label"
 import { PasswordField } from "@raypx/ui/components/password-field"
 import { toast } from "@raypx/ui/components/toast"
 import { Loader2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
+import z from "zod"
 
 const changePasswordSchema = z
   .object({
@@ -169,7 +170,9 @@ export function ChangePassword() {
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
-                        <p className="text-sm">Sign out from other devices</p>
+                        <Label className="text-sm">
+                          Sign out from other devices
+                        </Label>
                       </div>
                     </FormControl>
                     <FormMessage />

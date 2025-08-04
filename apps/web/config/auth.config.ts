@@ -9,6 +9,7 @@ const authConfigSchema = z.object({
   passwordReset: z.string(),
   passwordUpdate: z.string(),
   googleOneTap: z.boolean().optional(),
+  forgotPassword: z.string(),
 }) satisfies z.ZodType<AuthConfig>
 
 const authConfig = authConfigSchema.parse({
@@ -18,6 +19,7 @@ const authConfig = authConfigSchema.parse({
   callback: "/callback",
   passwordReset: "/password-reset",
   passwordUpdate: "/update-password",
+  forgotPassword: "/forgot-password",
 })
 
 export default authConfig

@@ -8,6 +8,7 @@ export const AuthConfigSchema = z.object({
   callback: z.string(),
   passwordReset: z.string(),
   passwordUpdate: z.string(),
+  forgotPassword: z.string(),
   googleOneTap: z.boolean().optional(),
 })
 

@@ -1,10 +1,9 @@
 "use client"
 
-import { Key, Monitor, Shield, Smartphone } from "lucide-react"
+import { Key, Monitor, Smartphone } from "lucide-react"
 import { ConsolePage, ConsoleSection } from "@/layouts/console"
 import { ActiveSessions } from "./_components/active-sessions"
 import { ChangePassword } from "./_components/change-password"
-import { SecurityLog } from "./_components/security-log"
 import { TwoFactorAuth } from "./_components/two-factor-auth"
 
 export default function SecurityPage() {
@@ -36,14 +35,6 @@ export default function SecurityPage() {
           icon={Monitor}
         >
           <ActiveSessions />
-        </ConsoleSection>
-
-        <ConsoleSection
-          title="Security Log"
-          description="Recent security events and login attempts"
-          icon={Shield}
-        >
-          <SecurityLog />
         </ConsoleSection>
       </div>
     </ConsolePage>
