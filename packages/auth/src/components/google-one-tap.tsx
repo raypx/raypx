@@ -15,7 +15,7 @@ interface GoogleOneTapProps {
 export function GoogleOneTap({ cancelOnTapOutside }: GoogleOneTapProps) {
   const session = useSession()
   const [taped, setTaped] = useState(false)
-  console.log(cancelOnTapOutside)
+  console.log("cancelOnTapOutside", cancelOnTapOutside)
 
   useEffect(() => {
     if (!isEnabled) return

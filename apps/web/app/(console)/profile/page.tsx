@@ -1,12 +1,13 @@
 "use client"
 
-import { useSession } from "@raypx/auth/client"
+import { sendVerificationEmail, useSession } from "@raypx/auth/client"
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@raypx/ui/components/avatar"
 import { Badge } from "@raypx/ui/components/badge"
+import { Button } from "@raypx/ui/components/button"
 import {
   Card,
   CardContent,
@@ -24,6 +25,12 @@ export default function ProfilePage() {
 
   if (!session?.user) {
     return null
+  }
+
+  const handleSendVerificationEmail = async () => {
+    await sendVerificationEmail({
+      email: session.user.email,
+    })
   }
 
   const user = session.user
@@ -95,9 +102,16 @@ export default function ProfilePage() {
 
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Email Verified:</span>
-                <Badge variant={user.emailVerified ? "default" : "secondary"}>
-                  {user.emailVerified ? "Verified" : "Unverified"}
-                </Badge>
+                {user.emailVerified ? (
+                  <Badge variant="default">Verified</Badge>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    onClick={handleSendVerificationEmail}
+                  >
+                    Unverified
+                  </Button>
+                )}
               </div>
 
               <div className="flex justify-between items-center">
@@ -126,37 +140,8 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Account Connections Card */}
       <AccountConnections />
-
-      {/* Delete Account Card */}
       <DeleteAccount />
-
-      {/* Session Information Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Session Information</CardTitle>
-          <CardDescription>Current session details</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Session ID:</span>
-              <code className="text-xs bg-muted px-2 py-1 rounded">
-                {session.user.id}
-              </code>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Expires At:</span>
-              <span className="text-sm text-muted-foreground">
-                {format(session.session.expiresAt, "MM/dd/yyyy")}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

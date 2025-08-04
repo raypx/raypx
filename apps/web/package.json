@@ -21,6 +21,7 @@
     "@raypx/server": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
+    "@tanstack/react-form": "^1.15.3",
     "date-fns": "^4.1.0",
     "lucide-react": "catalog:",
     "next": "^15.4.5",
@@ -29,6 +30,7 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-hook-form": "^7.62.0",
+    "ua-parser-js": "^2.0.4",
     "zod": "catalog:"
   },
   "devDependencies": {

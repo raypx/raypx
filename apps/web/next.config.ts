@@ -15,6 +15,10 @@ let nextConfig: NextConfig = {
     "@raypx/email",
     "@raypx/redis",
   ],
+  serverExternalPackages: ["prettier"],
+  allowedDevOrigins: process.env.NEXT_PUBLIC_AUTH_URL
+    ? [process.env.NEXT_PUBLIC_AUTH_URL]
+    : [],
 }
 
 if (process.env.ANALYZE === "true") {

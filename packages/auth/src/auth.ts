@@ -44,7 +44,6 @@ const createConfig = (): BetterAuthOptions => {
         })
       },
     },
-
     emailVerification: {
       sendVerificationEmail: async ({ url, user }) => {
         await sendEmail({

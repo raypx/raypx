@@ -83,7 +83,6 @@ export function SignUpForm({
         name: values.email,
         callbackURL: window.location.href,
       })
-      console.log(JSON.stringify(res, null, 2))
       if (res.error) {
         toast.error("Sign up failed", {
           description: res.error.message || "Please try again",
@@ -93,7 +92,6 @@ export function SignUpForm({
         window.location.href = searchParams.get("redirect") || "/"
       }
     } catch (error: any) {
-      console.log(error)
       toast.error(error.message || "Sign up failed")
     } finally {
       setIsLoading(false)

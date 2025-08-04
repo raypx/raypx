@@ -52,12 +52,16 @@ export const {
   signOut,
   forgetPassword,
   resetPassword,
+  changePassword,
   listAccounts,
   unlinkAccount,
   linkSocial,
   admin,
   deleteUser,
   accountInfo,
+  sendVerificationEmail,
+  listSessions,
+  revokeSession,
 } = client
 
 export * from "./client/socials"
