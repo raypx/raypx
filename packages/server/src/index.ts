@@ -1,3 +1,4 @@
+import { auth } from "@raypx/auth"
 import { type Database, db } from "@raypx/db"
 import { Hono } from "hono"
 import { compress } from "hono/compress"
@@ -13,6 +14,7 @@ interface ServerOptions {
 
 type Variables = {
   db: Database
+  session?: Awaited<ReturnType<typeof auth.api.getSession>>
 }
 
 export const createApp = (options: ServerOptions) => {
@@ -33,9 +35,53 @@ export const createApp = (options: ServerOptions) => {
     await next()
   })
 
+  app.use("*", async (c, next) => {
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers,
+    })
+    c.set("session", session)
+    return next()
+  })
+
+  app.get("/health", (c) => {
+    return c.json({
+      status: "ok",
+    })
+  })
+
+  app.get("/info", async (c) => {
+    const session = c.get("session")
+
+    return c.json({
+      status: "ok",
+      session: session?.session,
+      user: session?.user,
+    })
+  })
+
   // Routes
   app.get("/", (c) => {
     return c.text("Hello World")
+  })
+
+  app.notFound((c) => {
+    console.log("Not Found", c.req.path)
+    return c.json(
+      {
+        message: "Not Found",
+      },
+      404,
+    )
+  })
+
+  app.onError((err, c) => {
+    console.error(err)
+    return c.json(
+      {
+        message: "Internal Server Error",
+      },
+      500,
+    )
   })
 
   return app

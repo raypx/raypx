@@ -1,21 +1,23 @@
+import type { AuthConfig } from "@raypx/auth/client"
 import { z } from "zod"
 
-const AuthSchema = z.object({
-  signIn: z.string().min(1),
-  signUp: z.string().min(1),
-  verifyMfa: z.string().min(1),
-  callback: z.string().min(1),
-  passwordReset: z.string().min(1),
-  passwordUpdate: z.string().min(1),
-})
+const authConfigSchema = z.object({
+  signIn: z.string(),
+  signUp: z.string(),
+  verifyMfa: z.string(),
+  callback: z.string(),
+  passwordReset: z.string(),
+  passwordUpdate: z.string(),
+  googleOneTap: z.boolean().optional(),
+}) satisfies z.ZodType<AuthConfig>
 
-const authConfig = AuthSchema.parse({
+const authConfig = authConfigSchema.parse({
   signIn: "/signin",
   signUp: "/signup",
   verifyMfa: "/verify",
   callback: "/callback",
   passwordReset: "/password-reset",
   passwordUpdate: "/update-password",
-} satisfies z.infer<typeof AuthSchema>)
+})
 
 export default authConfig

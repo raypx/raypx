@@ -14,11 +14,11 @@ type SocialProps = {
 export function Social({ isLoading, onClick }: SocialProps) {
   const SocialsConfig = {
     github: {
-      label: "Sign up with Github",
+      label: "Continue with Github",
       icon: <Github className="size-4" />,
     },
     google: {
-      label: "Sign up with Google",
+      label: "Continue with Google",
       icon: <Google className="size-4" />,
     },
   }
@@ -50,9 +50,7 @@ export function Social({ isLoading, onClick }: SocialProps) {
         ))}
       </div>
       <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-border after:border-t">
-        <span className="relative z-10 bg-background px-2 text-muted-foreground">
-          Or continue with
-        </span>
+        <span className="relative z-10 px-2 text-muted-foreground">OR</span>
       </div>
     </>
   ) : null

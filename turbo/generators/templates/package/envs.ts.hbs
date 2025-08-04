@@ -3,11 +3,13 @@ import { createEnv, z } from "@raypx/shared"
 export const envs = () =>
   createEnv({
     client: {
+      NODE_ENV: z.enum(["development", "production"]).default("development"),
     },
     shared: {
     },
     server: {
     },
     runtimeEnv: {
+      NODE_ENV: process.env.NODE_ENV,
     },
   })

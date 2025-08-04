@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signIn } from "@raypx/auth/client"
+import { signIn, useAuth } from "@raypx/auth/client"
 import { Button } from "@raypx/ui/components/button"
 import {
   Card,
@@ -28,7 +28,6 @@ import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import authConfig from "@/config/auth.config"
 import { Social } from "./social"
 
 const formSchema = z.object({
@@ -44,6 +43,7 @@ export function SignInForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const { config } = useAuth()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
@@ -130,7 +130,7 @@ export function SignInForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          <div className="flex items-center">
+                          <div className="flex items-center justify-between w-full">
                             <Label htmlFor="password">Password</Label>
                             <Link
                               className="ml-auto text-sm underline-offset-4 hover:underline"
@@ -161,10 +161,10 @@ export function SignInForm({
               </form>
             </Form>
             <div className="text-center text-sm">
-              Don&apos;t have an account?{" "}
+              {"Don't have an account? "}
               <Link
                 className="underline underline-offset-4"
-                href={authConfig.signUp}
+                href={config.signUp}
               >
                 Sign up
               </Link>

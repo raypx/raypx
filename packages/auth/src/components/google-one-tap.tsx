@@ -1,0 +1,29 @@
+"use client"
+
+import { client, useSession } from "@raypx/auth/client"
+import { useEffect, useState } from "react"
+import { envs } from "../envs"
+
+const env = envs()
+
+const isEnabled = env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true"
+
+interface GoogleOneTapProps {
+  cancelOnTapOutside?: boolean
+}
+
+export function GoogleOneTap({ cancelOnTapOutside }: GoogleOneTapProps) {
+  const session = useSession()
+  const [taped, setTaped] = useState(false)
+  console.log(cancelOnTapOutside)
+
+  useEffect(() => {
+    if (!isEnabled) return
+    if (!(session.data?.user || session.isPending || taped)) {
+      client.oneTap()
+      setTaped(true)
+    }
+  }, [session, taped])
+
+  return null
+}

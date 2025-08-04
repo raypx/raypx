@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signIn, signUp } from "@raypx/auth/client"
+import { signIn, signUp, useAuth } from "@raypx/auth/client"
 import { Button } from "@raypx/ui/components/button"
 import {
   Card,
@@ -26,7 +26,6 @@ import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import authConfig from "@/config/auth.config"
 import { Social } from "./social"
 
 const formSchema = z.object({
@@ -42,6 +41,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const { config } = useAuth()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
@@ -84,7 +84,9 @@ export function SignUpForm({
         image: "",
       })
       if (res.error) {
-        toast.error(res.error.message)
+        toast.error("Sign up failed", {
+          description: res.error.message || "Please try again",
+        })
       } else {
         toast.success("Sign up successful")
         window.location.href = searchParams.get("redirect") || "/"
@@ -149,7 +151,7 @@ export function SignUpForm({
                   Already have an account?{" "}
                   <Link
                     className="underline underline-offset-4"
-                    href={authConfig.signIn}
+                    href={config.signIn}
                   >
                     Sign in
                   </Link>

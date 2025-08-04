@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@changesets/cli": "^2.29.5",
-    "chalk": "^5.4.1",
+    "chalk": "^5.5.0",
     "tsx": "^4.20.3"
   },
   "devDependencies": {
