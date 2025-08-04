@@ -3,12 +3,18 @@ import {
   apiKeyClient,
   emailOTPClient,
   magicLinkClient,
+  multiSessionClient,
   oneTapClient,
   organizationClient,
 } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
-
 import { envs } from "./envs"
+import {
+  ac,
+  admin as adminRole,
+  superadmin as superAdminRole,
+  user as userRole,
+} from "./permissions"
 
 // Environment variables
 const env = envs()
@@ -17,8 +23,16 @@ const plugins = [
   organizationClient(),
   magicLinkClient(),
   apiKeyClient(),
-  adminClient(),
+  adminClient({
+    ac,
+    roles: {
+      user: userRole,
+      admin: adminRole,
+      superadmin: superAdminRole,
+    },
+  }),
   emailOTPClient(),
+  multiSessionClient(),
   oneTapClient({
     clientId: env.NEXT_PUBLIC_AUTH_GOOGLE_ID ?? "",
   }),

@@ -1,4 +1,6 @@
+import { render } from "@react-email/render"
 import * as nodemailer from "nodemailer"
+import type { ReactElement } from "react"
 import { Resend } from "resend"
 import { envs } from "./envs"
 
@@ -21,27 +23,29 @@ const defaultFrom = "Raypx <hello@raypx.com>"
 interface SendEmailOptions {
   to: string
   subject: string
-  text: string
+  template: ReactElement
   provider?: "resend" | "nodemailer"
 }
 
 export const sendEmail = async (
   options: SendEmailOptions,
 ): Promise<{ success: boolean; error?: string }> => {
+  const { to, subject, template, provider = "nodemailer" } = options
   try {
-    if (options.provider === "resend") {
+    const html = await render(template)
+    if (provider === "resend") {
       await resend.emails.send({
         from: defaultFrom,
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
+        to,
+        subject,
+        html,
       })
     } else {
       await transporter.sendMail({
         from: defaultFrom,
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
+        to,
+        subject,
+        html,
       })
     }
 

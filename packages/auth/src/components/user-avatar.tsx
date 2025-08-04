@@ -80,7 +80,7 @@ export function UserAvatar() {
             </DropdownMenuItem>
           </Link>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger asChild>
+            <DropdownMenuSubTrigger>
               <Palette className="mr-2 h-4 w-4" />
               Appearance
             </DropdownMenuSubTrigger>

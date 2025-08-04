@@ -19,7 +19,7 @@ export function SignedIn({ children, fallback }: SignedInProps) {
     return fallback ? fallback : null
   }
 
-  if (session.user?.banned) {
+  if (session?.user?.banned) {
     return null
   }
 

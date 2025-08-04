@@ -1,16 +1,30 @@
 import { db, nanoid, schemas, uuidv7 } from "@raypx/db"
 import { resend, sendEmail } from "@raypx/email"
+import ResetPasswordEmail from "@raypx/email/templates/reset-password-email"
+import SendMagicLinkEmail from "@raypx/email/templates/send-magic-link-email"
+import VerifyEmail from "@raypx/email/templates/verify-email"
+import WelcomeEmail from "@raypx/email/templates/welcome-email"
 import { type BetterAuthOptions, betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import {
   admin,
   apiKey,
   emailOTP,
+  magicLink,
+  mcp,
+  multiSession,
   oneTap,
   organization,
 } from "better-auth/plugins"
 import { envs } from "./envs"
-import { redisStorage } from "./storage"
+import {
+  ac,
+  admin as adminRole,
+  superadmin as superAdminRole,
+  user as userRole,
+} from "./permissions"
+
+// import { redisStorage } from "./storage"
 
 const createConfig = (): BetterAuthOptions => {
   const env = envs()
@@ -18,27 +32,34 @@ const createConfig = (): BetterAuthOptions => {
   return {
     emailAndPassword: {
       enabled: true,
-      autoSignIn: true,
-      sendResetPassword: async ({ user, url, token }) => {
-        try {
-          const result = await sendEmail({
-            to: user.email,
-            subject: "Reset your password",
-            text: `Click the link to reset your password: ${url} \n\nToken: ${token}`,
-          })
-          if (!result.success) {
-            console.error("Failed to send password reset email:", result.error)
-            throw new Error("Failed to send password reset email")
-          }
-        } catch (error) {
-          console.error("Password reset email error:", error)
-          throw error
-        }
+      requireEmailVerification: false,
+      sendResetPassword: async ({ user, url }) => {
+        await sendEmail({
+          to: user.email,
+          subject: "Reset your password",
+          template: ResetPasswordEmail({
+            resetLink: url,
+            username: user.name || user.email,
+          }),
+        })
       },
     },
-    secondaryStorage: redisStorage({
-      url: env.REDIS_URL,
-    }),
+
+    emailVerification: {
+      sendVerificationEmail: async ({ url, user }) => {
+        await sendEmail({
+          subject: "Verify your email",
+          template: VerifyEmail({
+            url,
+            username: user.email,
+          }),
+          to: user.email,
+        })
+      },
+    },
+    // secondaryStorage: redisStorage({
+    //   url: env.REDIS_URL,
+    // }),
     baseURL: env.NEXT_PUBLIC_AUTH_URL,
     socialProviders: {
       github: {
@@ -60,6 +81,7 @@ const createConfig = (): BetterAuthOptions => {
         clientSecret: env.AUTH_GOOGLE_SECRET ?? "",
       },
     },
+
     trustedOrigins: (req) =>
       [
         req.headers.get("origin") ?? "",
@@ -108,14 +130,53 @@ const createConfig = (): BetterAuthOptions => {
               },
             }
           },
+          after: async (user) => {
+            await sendEmail({
+              subject: "Welcome to Raypx",
+              template: WelcomeEmail({
+                username: user.name || user.email,
+              }),
+              to: user.email,
+            })
+          },
         },
       },
     },
+    logger: {
+      disabled: false,
+      level: "debug",
+    },
     plugins: [
-      organization(),
       apiKey(),
-      admin(),
+      magicLink({
+        sendMagicLink: async ({ email, token, url }) => {
+          await sendEmail({
+            subject: "Magic Link",
+            template: SendMagicLinkEmail({
+              username: email,
+              url,
+              token,
+            }),
+            to: email,
+          })
+        },
+      }),
       oneTap(),
+      multiSession(),
+      admin({
+        defaultRole: "user",
+        adminRoles: ["admin", "superadmin"],
+        ac,
+        roles: {
+          user: userRole,
+          admin: adminRole,
+          superadmin: superAdminRole,
+        },
+      }),
+      organization(),
+      mcp({
+        loginPage: "/signin",
+      }),
       emailOTP({
         sendVerificationOTP: async (data, _request) => {
           const { email, otp } = data
