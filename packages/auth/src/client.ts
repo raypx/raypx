@@ -6,6 +6,7 @@ import {
   multiSessionClient,
   oneTapClient,
   organizationClient,
+  usernameClient,
 } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 import { envs } from "./envs"
@@ -23,6 +24,7 @@ const plugins = [
   organizationClient(),
   magicLinkClient(),
   apiKeyClient(),
+  usernameClient(),
   adminClient({
     ac,
     roles: {
@@ -62,12 +64,15 @@ export const {
   sendVerificationEmail,
   listSessions,
   revokeSession,
+  updateUser,
 } = client
 
 export * from "./client/socials"
 // Export the types
 export * from "./types"
 
-export type Session = ReturnType<typeof useSession>
+export type UseSession = ReturnType<typeof useSession>
+
+export type { Session, User } from "better-auth"
 
 export * from "./components"

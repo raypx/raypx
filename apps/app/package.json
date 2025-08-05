@@ -1,0 +1,47 @@
+{
+  "name": "@raypx/app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm with-env next build",
+    "clean": "rimraf .next",
+    "dev": "pnpm with-env next dev --turbopack",
+    "lint": "next lint",
+    "shadcn": "pnpm dlx shadcn@canary add --overwrite",
+    "start": "pnpm with-env next start",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.1",
+    "@raypx/analytics": "workspace:*",
+    "@raypx/auth": "workspace:*",
+    "@raypx/db": "workspace:*",
+    "@raypx/email": "workspace:*",
+    "@raypx/redis": "workspace:*",
+    "@raypx/server": "workspace:*",
+    "@raypx/seo": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "@tanstack/react-form": "^1.17.0",
+    "date-fns": "^4.1.0",
+    "lucide-react": "catalog:",
+    "next": "^15.4.5",
+    "next-sitemap": "^4.2.3",
+    "next-themes": "^0.4.6",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-hook-form": "^7.62.0",
+    "ua-parser-js": "^2.0.4",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^15.4.5",
+    "@raypx/tsconfig": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "dotenv-cli": "^10.0.0",
+    "typescript": "catalog:"
+  }
+}

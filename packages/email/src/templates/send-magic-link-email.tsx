@@ -35,10 +35,10 @@ const SendMagicLinkEmail = ({
   )
 }
 
-export default SendMagicLinkEmail
-
 SendMagicLinkEmail.PreviewProps = {
-  username: "John Doe",
+  username: "Raypx",
   url: "https://example.com/magic-link",
   token: "123456",
 }
+
+export { SendMagicLinkEmail }

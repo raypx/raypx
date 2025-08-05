@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@raypx/ui/components/form"
 import { Input } from "@raypx/ui/components/input"
+import { PasswordField } from "@raypx/ui/components/password-field"
 import { toast } from "@raypx/ui/components/toast"
 import { cn } from "@raypx/ui/lib/utils"
 import Link from "next/link"
@@ -133,11 +134,7 @@ export function SignUpForm({
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="********"
-                            type="password"
-                            {...field}
-                          />
+                          <PasswordField placeholder="********" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

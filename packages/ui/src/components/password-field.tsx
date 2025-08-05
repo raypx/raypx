@@ -1,30 +1,26 @@
 "use client"
 
 import { Input } from "@raypx/ui/components/input"
+import { cn } from "@raypx/ui/lib/utils"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
+import type * as React from "react"
 import { useId, useState } from "react"
 
-export interface PasswordFieldProps extends React.ComponentProps<"input"> {
-  label: string
-  placeholder: string
-}
-
-function PasswordField({ label, placeholder, ...props }: PasswordFieldProps) {
+function PasswordField({
+  className,
+  ...props
+}: Omit<React.ComponentProps<"input">, "type">) {
   const id = useId()
-  const [password, setPassword] = useState("")
   const [isVisible, setIsVisible] = useState<boolean>(false)
 
   const toggleVisibility = () => setIsVisible((prevState) => !prevState)
 
   return (
-    <div className="relative">
+    <div className={cn("relative", className)}>
       <Input
         id={id}
         className="pe-9"
-        placeholder="Password"
         type={isVisible ? "text" : "password"}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
         aria-describedby={`${id}-description`}
         {...props}
       />

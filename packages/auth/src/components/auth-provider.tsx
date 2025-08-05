@@ -14,10 +14,12 @@ export type { AuthConfig }
 export { AuthConfigSchema }
 
 export function AuthProvider({ children, config }: AuthProviderProps) {
-  const session = useSession()
+  const { data: session } = useSession()
 
   return (
-    <AuthContext.Provider value={{ session, config }}>
+    <AuthContext.Provider
+      value={{ session: session?.session, user: session?.user, config }}
+    >
       {children}
     </AuthContext.Provider>
   )

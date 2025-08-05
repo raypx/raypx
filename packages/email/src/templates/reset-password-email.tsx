@@ -31,9 +31,9 @@ const ResetPasswordEmail = ({
   )
 }
 
-export default ResetPasswordEmail
-
 ResetPasswordEmail.PreviewProps = {
   resetLink: "https://example.com/reset-password",
-  username: "John Doe",
+  username: "Raypx",
 }
+
+export { ResetPasswordEmail }

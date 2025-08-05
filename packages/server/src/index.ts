@@ -1,5 +1,5 @@
 import { auth } from "@raypx/auth"
-import { type Database, db } from "@raypx/db"
+import { db } from "@raypx/db"
 import { Hono } from "hono"
 import { compress } from "hono/compress"
 import { contextStorage } from "hono/context-storage"
@@ -7,15 +7,8 @@ import { cors } from "hono/cors"
 import { logger } from "hono/logger"
 import { prettyJSON } from "hono/pretty-json"
 import { requestId } from "hono/request-id"
-
-interface ServerOptions {
-  prefix: string
-}
-
-type Variables = {
-  db: Database
-  session?: Awaited<ReturnType<typeof auth.api.getSession>>
-}
+import { authRoutes } from "./routes/auth"
+import type { ServerOptions, Variables } from "./types"
 
 export const createApp = (options: ServerOptions) => {
   const app = new Hono<{ Variables: Variables }>().basePath(options.prefix)
@@ -39,7 +32,10 @@ export const createApp = (options: ServerOptions) => {
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
     })
-    c.set("session", session)
+    if (session) {
+      c.set("session", session.session)
+      c.set("user", session.user)
+    }
     return next()
   })
 
@@ -49,13 +45,17 @@ export const createApp = (options: ServerOptions) => {
     })
   })
 
+  // Auth Routes
+  app.route("/auth", authRoutes)
+
   app.get("/info", async (c) => {
     const session = c.get("session")
+    const user = c.get("user")
 
     return c.json({
       status: "ok",
-      session: session?.session,
-      user: session?.user,
+      session: session,
+      user: user,
     })
   })
 

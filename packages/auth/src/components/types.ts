@@ -1,4 +1,4 @@
-import type { Session } from "@raypx/auth/client"
+import type { Session, User } from "@raypx/auth/client"
 import { z } from "zod"
 
 export const AuthConfigSchema = z.object({
@@ -20,6 +20,7 @@ export interface AuthProviderProps {
 }
 
 export interface AuthContextType {
-  session: Session | null
+  session?: Session
+  user?: User
   config: AuthConfig
 }

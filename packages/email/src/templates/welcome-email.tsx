@@ -19,8 +19,8 @@ const WelcomeEmail = ({ username }: { username: string }) => {
   )
 }
 
-export default WelcomeEmail
-
 WelcomeEmail.PreviewProps = {
-  username: "John Doe",
+  username: "Raypx",
 }
+
+export { WelcomeEmail }

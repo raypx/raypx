@@ -1,9 +1,11 @@
 import { db, nanoid, schemas, uuidv7 } from "@raypx/db"
 import { resend, sendEmail } from "@raypx/email"
-import ResetPasswordEmail from "@raypx/email/templates/reset-password-email"
-import SendMagicLinkEmail from "@raypx/email/templates/send-magic-link-email"
-import VerifyEmail from "@raypx/email/templates/verify-email"
-import WelcomeEmail from "@raypx/email/templates/welcome-email"
+import {
+  ResetPasswordEmail,
+  SendMagicLinkEmail,
+  VerifyEmail,
+  WelcomeEmail,
+} from "@raypx/email/templates"
 import { type BetterAuthOptions, betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import {
@@ -15,6 +17,7 @@ import {
   multiSession,
   oneTap,
   organization,
+  username,
 } from "better-auth/plugins"
 import { envs } from "./envs"
 import {
@@ -23,6 +26,7 @@ import {
   superadmin as superAdminRole,
   user as userRole,
 } from "./permissions"
+import { socialProviders } from "./social-providers"
 
 // import { redisStorage } from "./storage"
 
@@ -60,27 +64,7 @@ const createConfig = (): BetterAuthOptions => {
     //   url: env.REDIS_URL,
     // }),
     baseURL: env.NEXT_PUBLIC_AUTH_URL,
-    socialProviders: {
-      github: {
-        enabled: !!(
-          env.AUTH_GITHUB_ID &&
-          env.AUTH_GITHUB_SECRET &&
-          env.NEXT_PUBLIC_AUTH_GITHUB_ENABLED === "true"
-        ),
-        clientId: env.AUTH_GITHUB_ID ?? "",
-        clientSecret: env.AUTH_GITHUB_SECRET ?? "",
-      },
-      google: {
-        enabled: !!(
-          env.AUTH_GOOGLE_ID &&
-          env.AUTH_GOOGLE_SECRET &&
-          env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true"
-        ),
-        clientId: env.AUTH_GOOGLE_ID ?? "",
-        clientSecret: env.AUTH_GOOGLE_SECRET ?? "",
-      },
-    },
-
+    socialProviders,
     trustedOrigins: (req) =>
       [
         req.headers.get("origin") ?? "",
@@ -146,6 +130,7 @@ const createConfig = (): BetterAuthOptions => {
       level: "debug",
     },
     plugins: [
+      username(),
       apiKey(),
       magicLink({
         sendMagicLink: async ({ email, token, url }) => {

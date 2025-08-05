@@ -6,7 +6,9 @@ import { envs } from "../envs"
 
 const env = envs()
 
-const isEnabled = env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true"
+const isEnabled =
+  env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true" &&
+  process.env.NODE_ENV === "production"
 
 interface GoogleOneTapProps {
   cancelOnTapOutside?: boolean

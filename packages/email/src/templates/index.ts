@@ -1,2 +1,6 @@
-export * from "@react-email/render"
-export * from "./send-magic-link-email"
+export { render } from "@react-email/render"
+export { ResetPasswordEmail } from "./reset-password-email"
+export { SendMagicLinkEmail } from "./send-magic-link-email"
+export { SendVerificationOTP } from "./send-verification-otp"
+export { VerifyEmail } from "./verify-email"
+export { WelcomeEmail } from "./welcome-email"

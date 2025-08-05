@@ -21,6 +21,7 @@ import {
 import { Loader2 } from "@raypx/ui/components/icons"
 import { Input } from "@raypx/ui/components/input"
 import { Label } from "@raypx/ui/components/label"
+import { PasswordField } from "@raypx/ui/components/password-field"
 import { toast } from "@raypx/ui/components/toast"
 import { cn } from "@raypx/ui/lib/utils"
 import Link from "next/link"
@@ -141,11 +142,7 @@ export function SignInForm({
                           </div>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="********"
-                            type="password"
-                            {...field}
-                          />
+                          <PasswordField placeholder="********" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

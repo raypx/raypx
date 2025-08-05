@@ -14,6 +14,8 @@
   "scripts": {
     "clean": "rimraf dist .turbo",
     "test": "vitest",
+    "generate": "pnpm with-env pnpx @better-auth/cli generate --config=src/auth.ts",
+    "with-env": "dotenv -e ../../.env --",
     "test:watch": "vitest --watch"
   },
   "dependencies": {
@@ -33,6 +35,7 @@
     "react-hook-form": "^7.62.0",
     "react-i18next": "^15.6.1",
     "server-only": "^0.0.1",
+    "ua-parser-js": "^2.0.4",
     "zod": "^3.25.76",
     "zustand": "^5.0.7"
   },
@@ -40,8 +43,9 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
+    "dotenv-cli": "^10.0.0",
     "next": "^15.4.5",
-    "type-fest": "^4.26.0",
+    "type-fest": "^4.41.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

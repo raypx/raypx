@@ -27,9 +27,9 @@ const SendVerificationOTP = ({
   )
 }
 
-export default SendVerificationOTP
-
 SendVerificationOTP.PreviewProps = {
-  username: "John Doe",
+  username: "Raypx",
   otp: "596853",
 }
+
+export { SendVerificationOTP }

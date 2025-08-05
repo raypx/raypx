@@ -1,1 +1,1 @@
-export const name = "seo"
+export * from "./metadata"
