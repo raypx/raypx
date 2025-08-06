@@ -14,7 +14,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 export default function LandingPage() {
-  prefetch(trpc.user.all.queryOptions())
+  prefetch(trpc.auth.getSession.queryOptions())
   return (
     <HydrateClient>
       <div className="min-h-screen flex flex-col">
