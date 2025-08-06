@@ -65,6 +65,7 @@ export const {
   listSessions,
   revokeSession,
   updateUser,
+  $store,
 } = client
 
 export * from "./client/socials"
