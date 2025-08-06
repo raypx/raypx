@@ -44,6 +44,7 @@ export function useUserSessions(): UseUserSessionsReturn {
           deviceType: detectDeviceType(item.userAgent || ""),
           browser: ua.getBrowser().name,
           os: ua.getOS().name,
+          token: item.token,
           location: item.location,
           ipAddress: item.ipAddress,
           isCurrent: session?.session?.id === item?.id,
