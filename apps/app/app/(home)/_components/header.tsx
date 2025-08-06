@@ -5,7 +5,7 @@ import { Button } from "@raypx/ui/components/button"
 import Link from "next/link"
 
 export function Header() {
-  const { config: authConfig } = useAuth()
+  const { pages } = useAuth()
   return (
     <header className="w-full border-b border-gray-200 px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -18,10 +18,10 @@ export function Header() {
 
         <SignedOut>
           <div>
-            <Link href={authConfig.signIn}>
+            <Link href={pages.SIGN_IN}>
               <Button>Sign in</Button>
             </Link>
-            <Link href={authConfig.signUp}>
+            <Link href={pages.SIGN_UP}>
               <Button>Sign up</Button>
             </Link>
           </div>

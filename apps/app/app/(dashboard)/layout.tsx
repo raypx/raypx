@@ -10,7 +10,7 @@ interface ConsoleLayoutProps {
 }
 
 export default function ConsoleLayout({ children }: ConsoleLayoutProps) {
-  const { config: authConfig } = useAuth()
+  const { pages } = useAuth()
   return (
     <ProtectedRoute
       loading={
@@ -21,7 +21,7 @@ export default function ConsoleLayout({ children }: ConsoleLayoutProps) {
           </div>
         </div>
       }
-      redirectTo={authConfig.signIn}
+      redirectTo={pages.SIGN_IN}
     >
       <div className="min-h-screen bg-background">
         <header className="border-b bg-card" role="banner">

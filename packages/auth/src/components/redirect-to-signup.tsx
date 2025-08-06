@@ -17,12 +17,12 @@ export function RedirectToSignUp({
   onRedirect,
 }: RedirectToSignUpProps) {
   const { data: session, isPending } = useSession()
-  const { config } = useAuth()
+  const { pages } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!isPending && !session?.user) {
-      const redirectUrl = new URL(config.signUp, window.location.origin)
+      const redirectUrl = new URL(pages.SIGN_UP, window.location.origin)
       if (returnUrl) {
         redirectUrl.searchParams.set("redirect", returnUrl)
       } else if (typeof window !== "undefined") {
@@ -34,7 +34,7 @@ export function RedirectToSignUp({
       onRedirect?.()
       router.push(redirectUrl.toString())
     }
-  }, [session, isPending, router, returnUrl, onRedirect, config.signUp])
+  }, [session, isPending, router, returnUrl, onRedirect, pages.SIGN_UP])
 
   return null
 }

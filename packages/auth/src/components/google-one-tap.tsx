@@ -1,37 +1,37 @@
 "use client"
 
-import { client, useSession } from "@raypx/auth/client"
-import { memo, useEffect, useState } from "react"
-import { envs } from "../envs"
+import { toast } from "@raypx/ui/components/toast"
+import { useContext, useEffect, useRef } from "react"
+import { useOnSuccessTransition } from "../hooks/use-success-transition"
+import { AuthContext } from "./auth-provider"
 
-const env = envs()
-
-const isEnabled =
-  env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true" &&
-  process.env.NODE_ENV === "production"
-
-interface GoogleOneTapProps {
-  cancelOnTapOutside?: boolean
+interface OneTapProps {
+  redirectTo?: string
 }
 
-export const GoogleOneTap = memo(function GoogleOneTap({
-  cancelOnTapOutside,
-}: GoogleOneTapProps) {
-  const session = useSession()
-  const [taped, setTaped] = useState(false)
-  console.log("cancelOnTapOutside", cancelOnTapOutside)
+export function GoogleOneTap({ redirectTo }: OneTapProps) {
+  const { authClient } = useContext(AuthContext)
+  const oneTapFetched = useRef(false)
+
+  const { onSuccess } = useOnSuccessTransition({ redirectTo })
 
   useEffect(() => {
-    if (!isEnabled) return
-    if (!(session.data?.user || session.isPending || taped)) {
-      client.oneTap()
-      setTaped(true)
+    if (oneTapFetched.current) return
+    oneTapFetched.current = true
+
+    try {
+      authClient.oneTap({
+        fetchOptions: {
+          throw: true,
+          onSuccess,
+        },
+      })
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "An unknown error occurred",
+      )
     }
-  }, [session, taped])
+  }, [authClient, onSuccess, toast])
 
   return null
-})
-
-GoogleOneTap.displayName = "GoogleOneTap"
-
-export default GoogleOneTap
+}

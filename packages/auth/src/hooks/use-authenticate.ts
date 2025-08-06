@@ -1,11 +1,11 @@
 import { useContext, useEffect } from "react"
-import { AuthUIContext } from "../lib/auth-ui-provider"
-import type { AuthView } from "../server"
+import { AuthContext } from "../components/auth-provider"
+import type { Page } from "../shared/pages"
 import type { AnyAuthClient } from "../types/any-auth-client"
 
 interface AuthenticateOptions<TAuthClient extends AnyAuthClient> {
   authClient?: TAuthClient
-  authView?: AuthView
+  page?: Page
   enabled?: boolean
 }
 
@@ -15,14 +15,14 @@ export function useAuthenticate<TAuthClient extends AnyAuthClient>(
   type Session = TAuthClient["$Infer"]["Session"]["session"]
   type User = TAuthClient["$Infer"]["Session"]["user"]
 
-  const { authView = "SIGN_IN", enabled = true } = options ?? {}
+  const { page = "SIGN_IN", enabled = true } = options ?? {}
 
   const {
     hooks: { useSession },
     basePath,
-    viewPaths,
+    pages,
     replace,
-  } = useContext(AuthUIContext)
+  } = useContext(AuthContext)
 
   const { data, isPending, error, refetch } = useSession()
   const sessionData = data as
@@ -37,9 +37,9 @@ export function useAuthenticate<TAuthClient extends AnyAuthClient>(
     if (!enabled || isPending || sessionData) return
 
     replace(
-      `${basePath}/${viewPaths[authView]}?redirectTo=${window.location.href.replace(window.location.origin, "")}`,
+      `${basePath}/${pages[page]}?redirectTo=${window.location.href.replace(window.location.origin, "")}`,
     )
-  }, [isPending, sessionData, basePath, viewPaths, replace, authView, enabled])
+  }, [isPending, sessionData, basePath, pages, replace, page, enabled])
 
   return {
     data: sessionData,

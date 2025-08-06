@@ -10,7 +10,7 @@ import {
   useRef,
 } from "react"
 import { useAuthData } from "../hooks/use-auth-data"
-import { type AuthViewPaths, authViewPaths } from "../shared/auth-view-paths"
+import { pages as authPages, type Pages } from "../shared/pages"
 import { getSearchParam } from "../shared/utils"
 import type { AdditionalFields } from "../types/additional-fields"
 import type { AnyAuthClient } from "../types/any-auth-client"
@@ -171,7 +171,12 @@ export interface AuthContextType {
    * @default undefined
    */
   twoFactor?: ("otp" | "totp")[]
-  viewPaths: AuthViewPaths
+  /**
+   * Customize the paths for the auth views
+   * @default authPages
+   * @remarks `Pages`
+   */
+  pages: typeof authPages
   /**
    * Navigate to a new URL
    * @default window.location.href
@@ -220,7 +225,7 @@ export type AuthProviderProps = {
    * @default authViewPaths
    * @remarks `AuthViewPaths`
    */
-  viewPaths?: Partial<AuthViewPaths>
+  pages?: Partial<Pages>
   /**
    * ADVANCED: Custom mutators for updating auth data
    */
@@ -243,7 +248,7 @@ export type AuthProviderProps = {
   Omit<
     AuthContextType,
     | "authClient"
-    | "viewPaths"
+    | "pages"
     | "localization"
     | "mutators"
     | "toast"
@@ -260,6 +265,14 @@ export type AuthProviderProps = {
 export const AuthContext = createContext<AuthContextType>(
   {} as unknown as AuthContextType,
 )
+
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+}
 
 export type { AuthConfig }
 export { AuthConfigSchema }
@@ -284,7 +297,7 @@ export const AuthProvider = ({
   nameRequired = true,
   organization: organizationProp,
   signUp: signUpProp = true,
-  viewPaths: viewPathsProp,
+  pages: pagesProp,
   navigate,
   replace,
   ...props
@@ -501,9 +514,9 @@ export const AuthProvider = ({
     return hooks
   }, [authClient])
 
-  const viewPaths = useMemo(() => {
-    return { ...authViewPaths, ...viewPathsProp } as AuthViewPaths
-  }, [viewPathsProp])
+  const pages = useMemo<AuthContextType["pages"]>(() => {
+    return { ...authPages, ...pagesProp }
+  }, [pagesProp])
 
   const hooks = useMemo(() => {
     return { ...defaultHooks, ...hooksProp } as AuthHooks
@@ -556,7 +569,7 @@ export const AuthProvider = ({
         social,
         navigate: navigate || defaultNavigate,
         replace: replace || navigate || defaultReplace,
-        viewPaths,
+        pages,
         ...props,
       }}
     >

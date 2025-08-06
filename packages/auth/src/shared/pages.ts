@@ -1,4 +1,4 @@
-export const authViewPaths = {
+export const pages = {
   /** @default "accept-invitation" */
   ACCEPT_INVITATION: "accept-invitation",
   /** @default "api-keys" */
@@ -37,5 +37,5 @@ export const authViewPaths = {
   TWO_FACTOR: "two-factor",
 }
 
-export type AuthViewPaths = typeof authViewPaths
-export type AuthView = keyof AuthViewPaths
+export type Pages = Partial<typeof pages>
+export type Page = NonNullable<keyof Pages>

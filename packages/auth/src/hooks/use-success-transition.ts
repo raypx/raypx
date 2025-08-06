@@ -5,15 +5,15 @@ import {
   useState,
   useTransition,
 } from "react"
-import { AuthUIContext } from "../lib/auth-ui-provider"
-import { getSearchParam } from "../lib/utils"
+import { AuthContext } from "../components/auth-provider"
+import { getSearchParam } from "../shared/utils"
 
 export function useOnSuccessTransition({
   redirectTo: redirectToProp,
 }: {
   redirectTo?: string
 }) {
-  const { redirectTo: contextRedirectTo } = useContext(AuthUIContext)
+  const { redirectTo: contextRedirectTo } = useContext(AuthContext)
 
   const getRedirectTo = useCallback(
     () => redirectToProp || getSearchParam("redirectTo") || contextRedirectTo,
@@ -27,7 +27,7 @@ export function useOnSuccessTransition({
     navigate,
     hooks: { useSession },
     onSessionChange,
-  } = useContext(AuthUIContext)
+  } = useContext(AuthContext)
 
   const { refetch: refetchSession } = useSession()
 

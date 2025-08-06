@@ -2,7 +2,7 @@ import { cn } from "@raypx/ui/lib/utils"
 import * as z from "zod"
 import type { AuthLocalization } from "../localization/auth-localization"
 import type { PasswordValidation } from "../types/password-validation"
-import type { AuthView, AuthViewPaths } from "./auth-view-paths"
+import type { AuthView, AuthViewPaths } from "./pages"
 
 export function isValidEmail(email: string) {
   const emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

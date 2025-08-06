@@ -91,3 +91,6 @@ export type Session = Get<AuthClient, "$Infer.Session.session">
 export type User = Get<AuthClient, "$Infer.Session.user">
 
 export * from "../components"
+
+export type { Pages } from "../shared/pages"
+export { authClient as client }

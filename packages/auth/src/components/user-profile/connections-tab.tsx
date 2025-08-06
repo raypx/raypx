@@ -3,7 +3,8 @@
 import { Badge } from "@raypx/ui/components/badge"
 import { Button } from "@raypx/ui/components/button"
 import { Plus, Unlink } from "lucide-react"
-
+import { useAuth } from "../auth-provider"
+import { ProvidersCard } from "../providers-card"
 import type { ConnectedAccount } from "./types"
 
 interface ConnectionsTabProps {
@@ -38,12 +39,13 @@ export default function ConnectionsTab({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h4 className="text-base font-medium">Connected Accounts</h4>
+        <h4 className="text-base font-medium">Connected Accounts333</h4>
         <p className="text-sm text-muted-foreground">
           Connect third-party accounts for quick login and data synchronization
         </p>
 
         {/* Connected Accounts */}
+        <ProvidersCard />
         {accounts.length > 0 && (
           <div className="space-y-3">
             <h5 className="text-sm font-medium text-muted-foreground">

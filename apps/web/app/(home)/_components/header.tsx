@@ -7,7 +7,7 @@ import Link from "next/link"
 import { useAuthSession } from "../../../hooks/use-auth"
 
 export function Header() {
-  const { config: authConfig } = useAuth()
+  const { pages } = useAuth()
   const { session } = useAuthSession()
   return (
     <header className="w-full border-b border-gray-200 px-6 py-4">
@@ -27,10 +27,10 @@ export function Header() {
           <UserAvatar />
         ) : (
           <div className="flex items-center gap-2">
-            <Link href={authConfig.signIn}>
+            <Link href={pages.SIGN_IN}>
               <Button variant="outline">Sign in</Button>
             </Link>
-            <Link href={authConfig.signUp}>
+            <Link href={pages.SIGN_UP}>
               <Button>Get started</Button>
             </Link>
           </div>
