@@ -178,3 +178,5 @@ const createConfig = (): BetterAuthOptions => {
 
 const config: BetterAuthOptions = createConfig()
 export const auth = betterAuth(config)
+
+export type Auth = typeof auth

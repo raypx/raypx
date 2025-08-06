@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 import "../styles/globals.css"
 import { AnalyticsProvider } from "@raypx/analytics"
 import { AuthProvider, GoogleOneTap } from "@raypx/auth/client"
+import { TRPCReactProvider } from "@raypx/trpc/client"
 import { Provider } from "@raypx/ui/components/provider"
 import { Toaster } from "@raypx/ui/components/toast"
 import authConfig from "@/config/auth.config"
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode
@@ -30,7 +31,7 @@ export default function RootLayout({
         <Provider>
           <AuthProvider config={authConfig}>
             <AnalyticsProvider>
-              {children}
+              <TRPCReactProvider>{children}</TRPCReactProvider>
               <Toaster />
               <GoogleOneTap />
             </AnalyticsProvider>

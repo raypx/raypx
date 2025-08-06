@@ -1,5 +1,6 @@
 export * from "better-auth"
 export { toNextJsHandler } from "better-auth/next-js"
+export type { Auth } from "./auth"
 export { auth } from "./auth"
 export { socialProviders, supportedSocials } from "./social-providers"
 export * from "./utils"

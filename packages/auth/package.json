@@ -14,7 +14,7 @@
   "scripts": {
     "clean": "rimraf dist .turbo",
     "test": "vitest",
-    "generate": "pnpm with-env pnpx @better-auth/cli generate --config=src/auth.ts",
+    "generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --output ../db/src/schemas/auth-schema.ts",
     "with-env": "dotenv -e ../../.env --",
     "test:watch": "vitest --watch"
   },
