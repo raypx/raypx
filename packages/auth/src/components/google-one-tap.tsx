@@ -1,7 +1,7 @@
 "use client"
 
 import { client, useSession } from "@raypx/auth/client"
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { envs } from "../envs"
 
 const env = envs()
@@ -14,7 +14,9 @@ interface GoogleOneTapProps {
   cancelOnTapOutside?: boolean
 }
 
-export function GoogleOneTap({ cancelOnTapOutside }: GoogleOneTapProps) {
+export const GoogleOneTap = memo(function GoogleOneTap({
+  cancelOnTapOutside,
+}: GoogleOneTapProps) {
   const session = useSession()
   const [taped, setTaped] = useState(false)
   console.log("cancelOnTapOutside", cancelOnTapOutside)
@@ -28,4 +30,8 @@ export function GoogleOneTap({ cancelOnTapOutside }: GoogleOneTapProps) {
   }, [session, taped])
 
   return null
-}
+})
+
+GoogleOneTap.displayName = "GoogleOneTap"
+
+export default GoogleOneTap
