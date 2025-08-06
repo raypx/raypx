@@ -4,20 +4,7 @@ import { toast } from "@raypx/ui/components/toast"
 import { useCallback, useEffect, useState } from "react"
 import { UAParser } from "ua-parser-js"
 import { listSessions, revokeSession, useSession } from "../client"
-
-interface UserSession {
-  id: string
-  deviceName?: string
-  deviceType: "mobile" | "tablet" | "desktop"
-  browser?: string
-  os?: string
-  location?: string
-  ipAddress?: string
-  token?: string
-  isCurrent: boolean
-  lastActive: Date
-  createdAt: Date
-}
+import type { UserSession } from "../components/user-profile/types"
 
 interface UseUserSessionsReturn {
   sessions: UserSession[]
