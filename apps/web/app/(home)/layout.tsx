@@ -5,8 +5,6 @@ export interface LandingLayoutProps {
   children: ReactNode
 }
 
-export default async function LandingLayoutPage({
-  children,
-}: LandingLayoutProps) {
+export default function LandingLayoutPage({ children }: LandingLayoutProps) {
   return <LandingLayout>{children}</LandingLayout>
 }

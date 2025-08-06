@@ -19,9 +19,8 @@ export function Header() {
         <SignedIn>
           <UserAvatar />
         </SignedIn>
-
+        {JSON.stringify(data)}
         <SignedOut>
-          {JSON.stringify(data)}
           <div>
             <Link href={authConfig.signIn}>
               <Button>Sign in</Button>
