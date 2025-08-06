@@ -1,6 +1,6 @@
 "use client"
 
-import type { Session, User, UseSessionResult } from "../types"
+import type { Session, User, UseSessionResult } from "../types/types"
 
 export interface AuthState {
   isLoaded: boolean

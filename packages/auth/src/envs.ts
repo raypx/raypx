@@ -10,7 +10,7 @@ export const envs = () =>
       NEXT_PUBLIC_AUTH_GOOGLE_ID: z.string().min(1).optional(),
     },
     shared: {
-      NEXT_PUBLIC_AUTH_URL: z.string().min(1).url(),
+      NEXT_PUBLIC_AUTH_URL: z.url().min(1),
       NEXT_PUBLIC_AUTH_GITHUB_ENABLED: z.string().optional(),
       NEXT_PUBLIC_AUTH_GOOGLE_ENABLED: z.string().optional().default("false"),
     },

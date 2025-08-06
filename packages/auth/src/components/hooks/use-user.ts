@@ -1,7 +1,7 @@
 "use client"
 
 import { useSession } from "@raypx/auth/client"
-import type { User } from "@raypx/auth/types"
+import type { User } from "../../types/types"
 import { createAuthState } from "../../utils/auth-state"
 
 export function useUser() {

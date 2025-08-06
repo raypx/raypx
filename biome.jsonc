@@ -38,7 +38,8 @@
         "noExplicitAny": "off"
       },
       "correctness": {
-        "useExhaustiveDependencies": "off"
+        "useExhaustiveDependencies": "off",
+        "useHookAtTopLevel": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "off"

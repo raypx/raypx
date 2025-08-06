@@ -22,6 +22,10 @@ export const baseOptions: BaseLayoutProps = {
       url: "/docs",
       text: "Docs",
     },
+    {
+      url: "https://raypx.featurebase.app/roadmap",
+      text: "Roadmap",
+    },
   ],
   themeSwitch: {
     enabled: true,
