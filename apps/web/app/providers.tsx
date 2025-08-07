@@ -7,7 +7,13 @@ import { authPages } from "@/config/auth.config"
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider>
-      <AuthProvider authClient={client} pages={authPages}>
+      <AuthProvider
+        authClient={client}
+        pages={authPages}
+        social={{
+          providers: ["google", "github"],
+        }}
+      >
         {children}
       </AuthProvider>
     </Provider>

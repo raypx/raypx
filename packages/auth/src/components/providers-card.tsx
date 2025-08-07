@@ -34,6 +34,7 @@ export function ProvidersCard({
     accounts = result.data
     isPending = result.isPending
     refetch = result.refetch
+    console.log(accounts)
   }
 
   return (

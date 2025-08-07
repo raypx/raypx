@@ -3,7 +3,6 @@
 import { Badge } from "@raypx/ui/components/badge"
 import { Button } from "@raypx/ui/components/button"
 import { Plus, Unlink } from "lucide-react"
-import { useAuth } from "../auth-provider"
 import { ProvidersCard } from "../providers-card"
 import type { ConnectedAccount } from "./types"
 
