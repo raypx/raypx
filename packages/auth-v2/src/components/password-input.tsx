@@ -2,9 +2,9 @@
 
 import { Button } from "@raypx/ui/components/button"
 import { Input } from "@raypx/ui/components/input"
+import { cn } from "@raypx/ui/lib/utils"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { type ComponentProps, useState } from "react"
-import { cn } from "../lib/utils"
 
 export function PasswordInput({
   className,

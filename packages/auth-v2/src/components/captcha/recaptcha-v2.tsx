@@ -1,9 +1,9 @@
+import { cn } from "@raypx/ui/lib/utils"
 import { type RefObject, useContext, useEffect } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
 import { useLang } from "../../hooks/use-lang"
 import { useTheme } from "../../hooks/use-theme"
 import { AuthContext } from "../../lib/auth-provider"
-import { cn } from "../../lib/utils"
 
 export function RecaptchaV2({ ref }: { ref: RefObject<ReCAPTCHA | null> }) {
   const { captcha } = useContext(AuthContext)

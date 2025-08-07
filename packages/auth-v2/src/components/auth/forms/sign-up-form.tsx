@@ -19,6 +19,7 @@ import {
 } from "@raypx/ui/components/form"
 import { Loader2, Trash, UploadCloud } from "@raypx/ui/components/icons"
 import { Input } from "@raypx/ui/components/input"
+import { cn } from "@raypx/ui/lib/utils"
 import type { BetterFetchOption } from "better-auth/react"
 import { useCallback, useContext, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -29,7 +30,6 @@ import { useOnSuccessTransition } from "../../../hooks/use-success-transition"
 import { AuthContext } from "../../../lib/auth-provider"
 import { fileToBase64, resizeAndCropImage } from "../../../lib/image-utils"
 import {
-  cn,
   getLocalizedError,
   getPasswordSchema,
   getSearchParam,
@@ -119,13 +119,29 @@ export function SignUpForm({
   // Create the base schema for standard fields
   const schemaFields: Record<string, z.ZodTypeAny> = {
     email: z
-      .string()
-      .min(1, {
-        message: `${localization.EMAIL} ${localization.IS_REQUIRED}`,
-      })
       .email({
         message: `${localization.EMAIL} ${localization.IS_INVALID}`,
-      }),
+        error: (issue) => {
+          if (!issue.input) {
+            return `${localization.EMAIL} ${localization.IS_REQUIRED}`
+          }
+          if (
+            issue.code === "invalid_type" ||
+            issue.code === "invalid_format"
+          ) {
+            return `${localization.EMAIL} ${localization.IS_INVALID}`
+          }
+        },
+      })
+      .min(1, `${localization.EMAIL} ${localization.IS_REQUIRED}`),
+    username: z
+      .string()
+      .min(1, `${localization.USERNAME} ${localization.IS_REQUIRED}`)
+      .optional(),
+    name: z
+      .string()
+      .min(1, `${localization.NAME} ${localization.IS_REQUIRED}`)
+      .optional(),
     password: getPasswordSchema(passwordValidation, localization),
   }
 
@@ -502,6 +518,7 @@ export function SignUpForm({
                     placeholder={localization.NAME_PLACEHOLDER}
                     disabled={isSubmitting}
                     {...field}
+                    value={field.value as string}
                   />
                 </FormControl>
 
@@ -527,6 +544,7 @@ export function SignUpForm({
                     placeholder={localization.USERNAME_PLACEHOLDER}
                     disabled={isSubmitting}
                     {...field}
+                    value={field.value as string}
                   />
                 </FormControl>
 
@@ -552,6 +570,7 @@ export function SignUpForm({
                   placeholder={localization.EMAIL_PLACEHOLDER}
                   disabled={isSubmitting}
                   {...field}
+                  value={field.value as string}
                 />
               </FormControl>
 
@@ -577,6 +596,7 @@ export function SignUpForm({
                   disabled={isSubmitting}
                   enableToggle
                   {...field}
+                  value={field.value as string}
                 />
               </FormControl>
 
@@ -603,6 +623,7 @@ export function SignUpForm({
                     disabled={isSubmitting}
                     enableToggle
                     {...field}
+                    value={field.value as string}
                   />
                 </FormControl>
 
@@ -669,6 +690,7 @@ export function SignUpForm({
                         }
                         disabled={isSubmitting}
                         {...formField}
+                        value={formField.value as string}
                       />
                     </FormControl>
 
