@@ -51,7 +51,7 @@
     "@types/react": "catalog:react19",
     "@types/react-google-recaptcha": "^2.1.9",
     "dotenv-cli": "^10.0.0",
-    "next": "^15.4.5",
+    "next": "^15.4.6",
     "type-fest": "^4.41.0",
     "typescript": "catalog:",
     "vitest": "catalog:"

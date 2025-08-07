@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu"
+import { cn } from "@raypx/ui/lib/utils"
 import {
   ChevronsUpDown,
   LogInIcon,
@@ -28,7 +29,7 @@ import {
 } from "react"
 import { useIsHydrated } from "../hooks/use-hydrated"
 import { AuthContext } from "../lib/auth-provider"
-import { cn, getLocalizedError } from "../lib/utils"
+import { getLocalizedError } from "../lib/utils"
 import type { AuthLocalization } from "../localization/auth-localization"
 import type { AnyAuthClient } from "../types/any-auth-client"
 import type { User } from "../types/auth-client"

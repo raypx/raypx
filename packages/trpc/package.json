@@ -30,7 +30,7 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
-    "next": "^15.4.5",
+    "next": "^15.4.6",
     "react": "catalog:react19",
     "typescript": "catalog:",
     "vitest": "catalog:"

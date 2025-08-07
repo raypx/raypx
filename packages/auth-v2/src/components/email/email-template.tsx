@@ -1,3 +1,4 @@
+import { cn } from "@raypx/ui/lib/utils"
 import {
   Body,
   Button,
@@ -14,8 +15,6 @@ import {
   Text,
 } from "@react-email/components"
 import type { ReactNode } from "react"
-
-import { cn } from "../../lib/utils"
 
 export interface EmailTemplateClassNames {
   body?: string

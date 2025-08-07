@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "@raypx/shared": "workspace:*",
-    "@react-email/components": "^0.4.0",
-    "@react-email/render": "^1.1.4",
+    "@react-email/components": "^0.5.0",
+    "@react-email/render": "^1.2.0",
     "nodemailer": "^7.0.5",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "resend": "^4.8.0"
+    "resend": "^5.0.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

@@ -1,5 +1,6 @@
 "use client"
 
+import { Skeleton } from "@raypx/ui/components/skeleton"
 import { cn } from "@raypx/ui/lib/utils"
 import { useContext, useMemo } from "react"
 import { AuthContext } from "../lib/auth-provider"

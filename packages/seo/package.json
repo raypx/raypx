@@ -18,7 +18,7 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "catalog:",
-    "next": "^15.4.5",
+    "next": "^15.4.6",
     "typescript": "catalog:"
   }
 }
