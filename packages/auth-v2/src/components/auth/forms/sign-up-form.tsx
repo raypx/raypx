@@ -22,7 +22,7 @@ import { Input } from "@raypx/ui/components/input"
 import type { BetterFetchOption } from "better-auth/react"
 import { useCallback, useContext, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
-import { z } from "zod/v4"
+import { z } from "zod"
 import { useCaptcha } from "../../../hooks/use-captcha"
 import { useIsHydrated } from "../../../hooks/use-hydrated"
 import { useOnSuccessTransition } from "../../../hooks/use-success-transition"
@@ -177,28 +177,48 @@ export function SignUpForm({
           ? z.preprocess(
               (val) => (!val ? undefined : Number(val)),
               z.number({
-                required_error: `${additionalField.label} ${localization.IS_REQUIRED}`,
-                invalid_type_error: `${additionalField.label} ${localization.IS_INVALID}`,
+                error: (issue) => {
+                  if (!issue.input) {
+                    return `${additionalField.label} ${localization.IS_REQUIRED}`
+                  }
+                  if (issue.code === "invalid_type") {
+                    return `${additionalField.label} ${localization.IS_INVALID}`
+                  }
+                },
               }),
             )
           : z.coerce
               .number({
-                invalid_type_error: `${additionalField.label} ${localization.IS_INVALID}`,
+                error: (issue) => {
+                  if (issue.code === "invalid_type") {
+                    return `${additionalField.label} ${localization.IS_INVALID}`
+                  }
+                },
               })
               .optional()
       } else if (additionalField.type === "boolean") {
         fieldSchema = additionalField.required
           ? z.coerce
               .boolean({
-                required_error: `${additionalField.label} ${localization.IS_REQUIRED}`,
-                invalid_type_error: `${additionalField.label} ${localization.IS_INVALID}`,
+                error: (issue) => {
+                  if (!issue.input) {
+                    return `${additionalField.label} ${localization.IS_REQUIRED}`
+                  }
+                  if (issue.code === "invalid_type") {
+                    return `${additionalField.label} ${localization.IS_INVALID}`
+                  }
+                },
               })
               .refine((val) => val === true, {
                 message: `${additionalField.label} ${localization.IS_REQUIRED}`,
               })
           : z.coerce
               .boolean({
-                invalid_type_error: `${additionalField.label} ${localization.IS_INVALID}`,
+                error: (issue) => {
+                  if (issue.code === "invalid_type") {
+                    return `${additionalField.label} ${localization.IS_INVALID}`
+                  }
+                },
               })
               .optional()
       } else {

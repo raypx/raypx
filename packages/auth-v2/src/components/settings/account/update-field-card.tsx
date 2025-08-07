@@ -74,27 +74,47 @@ export function UpdateFieldCard({
       ? z.preprocess(
           (val) => (!val ? undefined : Number(val)),
           z.number({
-            required_error: `${label} ${localization.IS_REQUIRED}`,
-            invalid_type_error: `${label} ${localization.IS_INVALID}`,
+            error: (issue) => {
+              if (!issue.input) {
+                return `${label} ${localization.IS_REQUIRED}`
+              }
+              if (issue.code === "invalid_type") {
+                return `${label} ${localization.IS_INVALID}`
+              }
+            },
           }),
         )
       : z.coerce
           .number({
-            invalid_type_error: `${label} ${localization.IS_INVALID}`,
+            error: (issue) => {
+              if (issue.code === "invalid_type") {
+                return `${label} ${localization.IS_INVALID}`
+              }
+            },
           })
           .optional()
   } else if (type === "boolean") {
     fieldSchema = required
       ? z.coerce
           .boolean({
-            required_error: `${label} ${localization.IS_REQUIRED}`,
-            invalid_type_error: `${label} ${localization.IS_INVALID}`,
+            error: (issue) => {
+              if (!issue.input) {
+                return `${label} ${localization.IS_REQUIRED}`
+              }
+              if (issue.code === "invalid_type") {
+                return `${label} ${localization.IS_INVALID}`
+              }
+            },
           })
           .refine((val) => val === true, {
             message: `${label} ${localization.IS_REQUIRED}`,
           })
       : z.coerce.boolean({
-          invalid_type_error: `${label} ${localization.IS_INVALID}`,
+          error: (issue) => {
+            if (issue.code === "invalid_type") {
+              return `${label} ${localization.IS_INVALID}`
+            }
+          },
         })
   } else {
     fieldSchema = required
