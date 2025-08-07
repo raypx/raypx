@@ -10,7 +10,7 @@ catalogs:
       specifier: ^24.2.0
       version: 24.2.0
     lucide-react:
-      specifier: ^0.536.0
+      specifier: 0.536.0
       version: 0.536.0
     typescript:
       specifier: ^5.9.2
@@ -272,6 +272,9 @@ importers:
       '@raypx/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@raypx/auth-v2':
+        specifier: workspace:*
+        version: link:../../packages/auth-v2
       '@raypx/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -491,6 +494,73 @@ importers:
       type-fest:
         specifier: ^4.41.0
         version: 4.41.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.2
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.2.0)(jiti@2.5.1)(lightningcss@1.30.1)(tsx@4.20.3)
+
+  packages/auth-v2:
+    dependencies:
+      '@better-fetch/fetch':
+        specifier: ^1.1.18
+        version: 1.1.18
+      '@hcaptcha/react-hcaptcha':
+        specifier: ^1.12.0
+        version: 1.12.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@hookform/resolvers':
+        specifier: ^5.2.1
+        version: 5.2.1(react-hook-form@7.62.0(react@19.1.1))
+      '@marsidev/react-turnstile':
+        specifier: ^1.3.0
+        version: 1.3.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@raypx/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@raypx/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@wojtekmaj/react-recaptcha-v3':
+        specifier: ^0.1.4
+        version: 0.1.4(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      better-auth:
+        specifier: ^1.3.4
+        version: 1.3.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      js-sha256:
+        specifier: ^0.11.1
+        version: 0.11.1
+      lucide-react:
+        specifier: 'catalog:'
+        version: 0.536.0(react@19.1.1)
+      react:
+        specifier: catalog:react19
+        version: 19.1.1
+      react-google-recaptcha:
+        specifier: ^3.1.0
+        version: 3.1.0(react@19.1.1)
+      react-hook-form:
+        specifier: ^7.62.0
+        version: 7.62.0(react@19.1.1)
+      react-qr-code:
+        specifier: ^2.0.18
+        version: 2.0.18(react@19.1.1)
+      ua-parser-js:
+        specifier: ^2.0.4
+        version: 2.0.4
+      vaul:
+        specifier: ^1.1.2
+        version: 1.1.2(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+    devDependencies:
+      '@raypx/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.2.0
+      '@types/react':
+        specifier: catalog:react19
+        version: 19.1.9
       typescript:
         specifier: 'catalog:'
         version: 5.9.2
@@ -4606,6 +4676,9 @@ packages:
   jose@5.10.0:
     resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
+  js-sha256@0.11.1:
+    resolution: {integrity: sha512-o6WSo/LUvY2uC4j7mO50a2ms7E/EAdbP0swigLV+nzHKTTaYnaLIWJ02VdXrsJX0vGedDESQnLsOekr94ryfjg==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -5405,6 +5478,9 @@ packages:
     resolution: {integrity: sha512-pMpnA0qRdFp32b1sJl1wOJNxZLQ2cbQx+k6tjNtZ8CpvVhNqEPRgivZ2WOUev2YMajecdH7ctUPDvEe87nariQ==}
     engines: {node: '>=6.0.0'}
 
+  qr.js@0.0.0:
+    resolution: {integrity: sha512-c4iYnWb+k2E+vYpRimHqSu575b1/wKl4XFeJGpFmrJQz5I88v9aY2czh7s0w36srfCM1sXgC/xpoJz5dJfq+OQ==}
+
   quansync@0.2.10:
     resolution: {integrity: sha512-t41VRkMYbkHyCYmOvx/6URnN80H7k4X0lLdBMGsz+maAwrJQYB1djpV6vHrQIBE0WBSGqhtEHrK9U3DWWH8v7A==}
 
@@ -5472,6 +5548,11 @@ packages:
 
   react-promise-suspense@0.3.4:
     resolution: {integrity: sha512-I42jl7L3Ze6kZaq+7zXWSunBa3b1on5yfvUW6Eo/3fFOj6dZ5Bqmcd264nJbTK/gn1HjjILAjSwnZbV4RpSaNQ==}
+
+  react-qr-code@2.0.18:
+    resolution: {integrity: sha512-v1Jqz7urLMhkO6jkgJuBYhnqvXagzceg3qJUWayuCK/c6LTIonpWbwxR1f1APGd4xrW/QcQEovNrAojbUz65Tg==}
+    peerDependencies:
+      react: '*'
 
   react-remove-scroll-bar@2.3.8:
     resolution: {integrity: sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q==}
@@ -9928,6 +10009,8 @@ snapshots:
 
   jose@5.10.0: {}
 
+  js-sha256@0.11.1: {}
+
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
@@ -10932,6 +11015,8 @@ snapshots:
 
   pvutils@1.1.3: {}
 
+  qr.js@0.0.0: {}
+
   quansync@0.2.10: {}
 
   queue-microtask@1.2.3: {}
@@ -10993,6 +11078,12 @@ snapshots:
   react-promise-suspense@0.3.4:
     dependencies:
       fast-deep-equal: 2.0.1
+
+  react-qr-code@2.0.18(react@19.1.1):
+    dependencies:
+      prop-types: 15.8.1
+      qr.js: 0.0.0
+      react: 19.1.1
 
   react-remove-scroll-bar@2.3.8(@types/react@19.1.9)(react@19.1.1):
     dependencies:

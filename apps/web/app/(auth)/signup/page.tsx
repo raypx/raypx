@@ -1,9 +1,10 @@
 "use client"
 
+// import { Suspense } from "react"
+// import { SignUpForm } from "../_components/signup-form"
+import { AuthCard } from "@raypx/auth-v2"
 import Image from "next/image"
 import Link from "next/link"
-import { Suspense } from "react"
-import { SignUpForm } from "../_components/signup-form"
 
 export default function SignUpPage() {
   return (
@@ -24,9 +25,10 @@ export default function SignUpPage() {
           </div>
           Raypx
         </Link>
-        <Suspense>
+        {/* <Suspense>
           <SignUpForm />
-        </Suspense>
+        </Suspense> */}
+        <AuthCard view="SIGN_UP" />
       </div>
     </div>
   )

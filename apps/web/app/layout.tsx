@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google"
 import type { ReactNode } from "react"
 import "../styles/globals.css"
 import { AnalyticsProvider } from "@raypx/analytics"
-import { GoogleOneTap } from "@raypx/auth/client"
 import { TRPCReactProvider } from "@raypx/trpc/client"
 import { Toaster } from "@raypx/ui/components/toast"
 import { Providers } from "./providers"
@@ -33,7 +32,6 @@ export default function RootLayout({
           <AnalyticsProvider>
             <TRPCReactProvider>{children}</TRPCReactProvider>
             <Toaster />
-            <GoogleOneTap />
           </AnalyticsProvider>
         </Providers>
       </body>

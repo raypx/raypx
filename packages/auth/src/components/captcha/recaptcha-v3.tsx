@@ -59,7 +59,7 @@ function RecaptchaV3Style() {
       ) as HTMLIFrameElement
       if (iframe) {
         const iframeSrcUrl = new URL(iframe.src)
-        iframeSrcUrl.searchParams.set("theme", theme)
+        iframeSrcUrl.searchParams.set("theme", theme || "light")
         if (lang) iframeSrcUrl.searchParams.set("hl", lang)
         iframe.src = iframeSrcUrl.toString()
       }

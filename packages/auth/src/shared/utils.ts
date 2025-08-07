@@ -2,7 +2,7 @@ import { cn } from "@raypx/ui/lib/utils"
 import * as z from "zod"
 import type { AuthLocalization } from "../localization/auth-localization"
 import type { PasswordValidation } from "../types/password-validation"
-import type { AuthView, AuthViewPaths } from "./pages"
+import type { Page, Pages } from "./pages"
 
 export function isValidEmail(email: string) {
   const emailRegex: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -57,10 +57,10 @@ export function getSearchParam(paramName: string) {
     : null
 }
 
-export function getAuthViewByPath(authViewPaths: AuthViewPaths, path?: string) {
-  for (const authViewPathsKey in authViewPaths) {
-    if (authViewPaths[authViewPathsKey as AuthView] === path) {
-      return authViewPathsKey as AuthView
+export function getPageByPath(pages: Pages, path?: string) {
+  for (const pageKey in pages) {
+    if (pages[pageKey as Page] === path) {
+      return pageKey as Page
     }
   }
 }
