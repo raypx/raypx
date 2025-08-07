@@ -1,21 +1,20 @@
 "use client"
 
-import { useSession } from "@raypx/auth/client"
-import type { ReactNode } from "react"
-
-interface SignedOutProps {
-  children: ReactNode
-}
+import { type ReactNode, useContext } from "react"
+import { AuthContext } from "../lib/auth-provider"
 
 /**
- * SignedOut component renders its children only when the user is not authenticated.
+ * Conditionally renders content for unauthenticated users only
+ *
+ * Renders its children only when no user is authenticated and the authentication
+ * state is not pending. If a session exists or is being loaded, nothing is rendered.
+ * Useful for displaying sign-in prompts or content exclusive to guests.
  */
-export function SignedOut({ children }: SignedOutProps) {
-  const { data: session, isPending } = useSession()
+export function SignedOut({ children }: { children: ReactNode }) {
+  const {
+    hooks: { useSession },
+  } = useContext(AuthContext)
+  const { data, isPending } = useSession()
 
-  if (isPending || session?.user) {
-    return null
-  }
-
-  return <>{children}</>
+  return !data && !isPending ? children : null
 }

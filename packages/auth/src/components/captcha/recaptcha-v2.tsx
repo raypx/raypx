@@ -1,9 +1,9 @@
 import { cn } from "@raypx/ui/lib/utils"
 import { type RefObject, useContext, useEffect } from "react"
 import ReCAPTCHA from "react-google-recaptcha"
-import { AuthContext } from "../../components/auth-provider"
 import { useLang } from "../../hooks/use-lang"
 import { useTheme } from "../../hooks/use-theme"
+import { AuthContext } from "../../lib/auth-provider"
 
 export function RecaptchaV2({ ref }: { ref: RefObject<ReCAPTCHA | null> }) {
   const { captcha } = useContext(AuthContext)
@@ -39,7 +39,7 @@ export function RecaptchaV2({ ref }: { ref: RefObject<ReCAPTCHA | null> }) {
         ref={ref}
         key={`${theme}-${lang}-${captcha.provider}`}
         sitekey={captcha.siteKey}
-        theme={theme as "dark" | "light"}
+        theme={theme}
         hl={lang}
         size={
           captcha.provider === "google-recaptcha-v2-invisible"

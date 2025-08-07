@@ -1,4 +1,4 @@
-import { auth, toNextJsHandler } from "@raypx/auth"
+import { auth, toNextJsHandler } from "@raypx/auth/server"
 
 const handler = toNextJsHandler(auth)
 

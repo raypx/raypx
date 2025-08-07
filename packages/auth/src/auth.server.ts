@@ -26,9 +26,7 @@ import {
   superadmin as superAdminRole,
   user as userRole,
 } from "./permissions"
-import { socialProviders } from "./social-providers"
-
-// import { redisStorage } from "./storage"
+import { socialProviders } from "./shared"
 
 const createConfig = (): BetterAuthOptions => {
   const env = envs()

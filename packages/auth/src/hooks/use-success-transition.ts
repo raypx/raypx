@@ -5,8 +5,8 @@ import {
   useState,
   useTransition,
 } from "react"
-import { AuthContext } from "../components/auth-provider"
-import { getSearchParam } from "../shared/utils"
+import { AuthContext } from "../lib/auth-provider"
+import { getSearchParam } from "../lib/utils"
 
 export function useOnSuccessTransition({
   redirectTo: redirectToProp,

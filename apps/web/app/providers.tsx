@@ -1,18 +1,17 @@
 "use client"
 
-import { AuthProvider, client } from "@raypx/auth/client"
-import { AuthProvider as AuthProviderV2 } from "@raypx/auth-v2"
+import { AuthProvider } from "@raypx/auth"
+import { client } from "@raypx/auth/client"
 import { Provider } from "@raypx/ui/components/provider"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { authPages } from "@/config/auth.config"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   return (
     <Provider>
-      <AuthProviderV2
+      <AuthProvider
         authClient={client}
         social={{
           providers: ["google", "github"],
@@ -25,16 +24,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
         Link={Link}
       >
-        <AuthProvider
-          authClient={client}
-          pages={authPages}
-          social={{
-            providers: ["google", "github"],
-          }}
-        >
-          {children}
-        </AuthProvider>
-      </AuthProviderV2>
+        {children}
+      </AuthProvider>
     </Provider>
   )
 }

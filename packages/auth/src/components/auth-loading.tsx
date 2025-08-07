@@ -1,22 +1,21 @@
 "use client"
 
-import { useSession } from "@raypx/auth/client"
-import type { ReactNode } from "react"
-
-interface AuthLoadingProps {
-  children?: ReactNode
-  fallback?: ReactNode
-}
+import { type ReactNode, useContext } from "react"
+import { AuthContext } from "../lib/auth-provider"
 
 /**
- * AuthLoading component renders its children only when the authentication session is loading.
+ * Conditionally renders content during authentication loading state
+ *
+ * Renders its children only when the authentication state is being determined
+ * (during the loading/pending phase). Once the authentication state is resolved,
+ * nothing is rendered. Useful for displaying loading indicators or temporary
+ * content while waiting for the authentication check to complete.
  */
-export function AuthLoading({ children, fallback }: AuthLoadingProps) {
+export function AuthLoading({ children }: { children: ReactNode }) {
+  const {
+    hooks: { useSession },
+  } = useContext(AuthContext)
   const { isPending } = useSession()
 
-  if (!isPending) {
-    return fallback ? fallback : null
-  }
-
-  return <>{children}</>
+  return isPending ? children : null
 }

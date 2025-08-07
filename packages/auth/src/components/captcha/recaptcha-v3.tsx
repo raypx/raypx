@@ -3,10 +3,11 @@ import {
   useGoogleReCaptcha,
 } from "@wojtekmaj/react-recaptcha-v3"
 import { type ReactNode, useContext, useEffect } from "react"
-import { AuthContext } from "../../components/auth-provider"
+
 import { useIsHydrated } from "../../hooks/use-hydrated"
 import { useLang } from "../../hooks/use-lang"
 import { useTheme } from "../../hooks/use-theme"
+import { AuthContext } from "../../lib/auth-provider"
 
 export function RecaptchaV3({ children }: { children: ReactNode }) {
   const isHydrated = useIsHydrated()
@@ -59,7 +60,7 @@ function RecaptchaV3Style() {
       ) as HTMLIFrameElement
       if (iframe) {
         const iframeSrcUrl = new URL(iframe.src)
-        iframeSrcUrl.searchParams.set("theme", theme || "light")
+        iframeSrcUrl.searchParams.set("theme", theme)
         if (lang) iframeSrcUrl.searchParams.set("hl", lang)
         iframe.src = iframeSrcUrl.toString()
       }

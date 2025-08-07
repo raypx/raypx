@@ -14,13 +14,13 @@ import {
 } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 import type { Get } from "type-fest"
-import { envs } from "../envs"
+import { envs } from "./envs"
 import {
   ac,
   admin as adminRole,
   superadmin as superAdminRole,
   user as userRole,
-} from "../permissions"
+} from "./permissions"
 
 // Environment variables
 const env = envs()
@@ -55,8 +55,6 @@ export const authClient = createAuthClient({
   plugins,
 })
 
-authClient.signIn.social
-
 // Export the client
 export const {
   signIn,
@@ -78,10 +76,7 @@ export const {
   updateUser,
   $store,
 } = authClient
-
 // Export the types
-export * from "../types/types"
-export * from "./socials"
 
 export type AuthClient = typeof authClient
 
@@ -90,7 +85,4 @@ export type UseSession = ReturnType<typeof useSession>
 export type Session = Get<AuthClient, "$Infer.Session.session">
 export type User = Get<AuthClient, "$Infer.Session.user">
 
-export * from "../components"
-
-export type { Pages } from "../shared/pages"
 export { authClient as client }

@@ -1,4 +1,4 @@
-import type Image from "next/image"
+import type { Image } from "./image"
 
 export type AvatarOptions = {
   /**
@@ -20,5 +20,5 @@ export type AvatarOptions = {
    * Custom Image component for rendering avatar images
    * @default AvatarImage from Radix UI
    */
-  Image?: typeof Image
+  Image?: Image
 }

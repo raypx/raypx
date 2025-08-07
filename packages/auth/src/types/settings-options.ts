@@ -11,5 +11,5 @@ export type SettingsOptions = {
    * Array of fields to show in `<SettingsCards />`
    * @default ["image", "name"]
    */
-  fields?: string[]
+  fields: string[]
 }

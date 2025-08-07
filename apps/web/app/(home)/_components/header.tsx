@@ -1,14 +1,18 @@
 "use client"
 
-import { UserAvatar, useAuth } from "@raypx/auth/client"
+import { UserAvatar } from "@raypx/auth"
+import { useAuth } from "@raypx/auth/client"
 import { Button } from "@raypx/ui/components/button"
 import Image from "next/image"
 import Link from "next/link"
-import { useAuthSession } from "../../../hooks/use-auth"
 
 export function Header() {
-  const { pages } = useAuth()
-  const { session } = useAuthSession()
+  const {
+    viewPaths: pages,
+    hooks: { useSession },
+  } = useAuth()
+  const { data: session } = useSession()
+
   return (
     <header className="w-full border-b border-gray-200 px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">

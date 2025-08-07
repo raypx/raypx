@@ -272,9 +272,6 @@ importers:
       '@raypx/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@raypx/auth-v2':
-        specifier: workspace:*
-        version: link:../../packages/auth-v2
       '@raypx/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -406,9 +403,6 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.1.1))
-      '@iconify/react':
-        specifier: ^6.0.0
-        version: 6.0.0(react@19.1.1)
       '@marsidev/react-turnstile':
         specifier: ^1.3.0
         version: 1.3.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -424,103 +418,6 @@ importers:
       '@raypx/redis':
         specifier: workspace:*
         version: link:../redis
-      '@raypx/shared':
-        specifier: workspace:*
-        version: link:../shared
-      '@raypx/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@tabler/icons-react':
-        specifier: ^3.34.1
-        version: 3.34.1(react@19.1.1)
-      '@wojtekmaj/react-recaptcha-v3':
-        specifier: ^0.1.4
-        version: 0.1.4(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      bcrypt-ts:
-        specifier: ^7.1.0
-        version: 7.1.0
-      better-auth:
-        specifier: ^1.3.4
-        version: 1.3.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      lodash-es:
-        specifier: ^4.17.21
-        version: 4.17.21
-      lucide-react:
-        specifier: ^0.536.0
-        version: 0.536.0(react@19.1.1)
-      next-themes:
-        specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      react:
-        specifier: catalog:react19
-        version: 19.1.1
-      react-google-recaptcha:
-        specifier: ^3.1.0
-        version: 3.1.0(react@19.1.1)
-      react-hook-form:
-        specifier: ^7.62.0
-        version: 7.62.0(react@19.1.1)
-      react-i18next:
-        specifier: ^15.6.1
-        version: 15.6.1(i18next@25.3.2(typescript@5.9.2))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2)
-      server-only:
-        specifier: ^0.0.1
-        version: 0.0.1
-      ua-parser-js:
-        specifier: ^2.0.4
-        version: 2.0.4
-      zod:
-        specifier: 'catalog:'
-        version: 4.0.15
-      zustand:
-        specifier: ^5.0.7
-        version: 5.0.7(@types/react@19.1.9)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
-    devDependencies:
-      '@raypx/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.2.0
-      '@types/react':
-        specifier: catalog:react19
-        version: 19.1.9
-      '@types/react-google-recaptcha':
-        specifier: ^2.1.9
-        version: 2.1.9
-      dotenv-cli:
-        specifier: ^10.0.0
-        version: 10.0.0
-      next:
-        specifier: ^15.4.6
-        version: 15.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      type-fest:
-        specifier: ^4.41.0
-        version: 4.41.0
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.2
-      vitest:
-        specifier: 'catalog:'
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.2.0)(jiti@2.5.1)(lightningcss@1.30.1)(tsx@4.20.3)
-
-  packages/auth-v2:
-    dependencies:
-      '@better-fetch/fetch':
-        specifier: ^1.1.18
-        version: 1.1.18
-      '@hcaptcha/react-hcaptcha':
-        specifier: ^1.12.0
-        version: 1.12.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@hookform/resolvers':
-        specifier: ^5.2.1
-        version: 5.2.1(react-hook-form@7.62.0(react@19.1.1))
-      '@marsidev/react-turnstile':
-        specifier: ^1.3.0
-        version: 1.3.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@noble/hashes':
-        specifier: ^1.8.0
-        version: 1.8.0
       '@raypx/shared':
         specifier: workspace:*
         version: link:../shared
@@ -570,6 +467,9 @@ importers:
       '@types/react-google-recaptcha':
         specifier: ^2.1.9
         version: 2.1.9
+      type-fest:
+        specifier: ^4.41.0
+        version: 4.41.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.2
@@ -1695,14 +1595,6 @@ packages:
     resolution: {integrity: sha512-u0+6X58gkjMcxur1wRWokA7XsiiBJ6aK17aPZxhkoYiK5J+HcTx0Vhu9ovXe6H+dVpO6cjrn2FkJTryXEMlryQ==}
     peerDependencies:
       react-hook-form: ^7.55.0
-
-  '@iconify/react@6.0.0':
-    resolution: {integrity: sha512-eqNscABVZS8eCpZLU/L5F5UokMS9mnCf56iS1nM9YYHdH8ZxqZL9zyjSwW60IOQFsXZkilbBiv+1paMXBhSQnw==}
-    peerDependencies:
-      react: '>=16'
-
-  '@iconify/types@2.0.0':
-    resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
   '@img/sharp-darwin-arm64@0.34.3':
     resolution: {integrity: sha512-ryFMfvxxpQRsgZJqBd4wsttYQbCxsJksrv9Lw/v798JcQ8+w84mBWuXwl+TT0WJ/WrYOLaYpwQXi3sA9nTIaIg==}
@@ -3433,10 +3325,6 @@ packages:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
 
-  bcrypt-ts@7.1.0:
-    resolution: {integrity: sha512-t/Dqr9YzYmn/+oPQBgotBPUuezpZD5CPBwapM5Ep1p3zsLmEycMdXOfZpWbztSBWJ41DlB7EluJBUDsAGSiUeQ==}
-    engines: {node: '>=20'}
-
   better-auth@1.3.4:
     resolution: {integrity: sha512-JbZYam6Cs3Eu5CSoMK120zSshfaKvrCftSo/+v7524H1RvhryQ7UtMbzagBcXj0Digjj8hZtVkkR4tTZD/wK2g==}
     peerDependencies:
@@ -4435,9 +4323,6 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
-  html-parse-stringify@3.0.1:
-    resolution: {integrity: sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg==}
-
   html-to-text@9.0.5:
     resolution: {integrity: sha512-qY60FjREgVZL03vJU6IfMV4GDjGBIoOyvuFdpBDIX9yTlDw0TjxVBQp+P8NvpdIXNJvfWBTNul7fsAQJq2FNpg==}
     engines: {node: '>=14'}
@@ -4468,14 +4353,6 @@ packages:
     resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
     engines: {node: '>=18'}
     hasBin: true
-
-  i18next@25.3.2:
-    resolution: {integrity: sha512-JSnbZDxRVbphc5jiptxr3o2zocy5dEqpVm9qCGdJwRNO+9saUJS0/u4LnM/13C23fUEWxAylPqKU/NpMV/IjqA==}
-    peerDependencies:
-      typescript: ^5
-    peerDependenciesMeta:
-      typescript:
-        optional: true
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -5517,22 +5394,6 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
 
-  react-i18next@15.6.1:
-    resolution: {integrity: sha512-uGrzSsOUUe2sDBG/+FJq2J1MM+Y4368/QW8OLEKSFvnDflHBbZhSd1u3UkW0Z06rMhZmnB/AQrhCpYfE5/5XNg==}
-    peerDependencies:
-      i18next: '>= 23.2.3'
-      react: '>= 16.8.0'
-      react-dom: '*'
-      react-native: '*'
-      typescript: ^5
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
-      react-native:
-        optional: true
-      typescript:
-        optional: true
-
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -5782,9 +5643,6 @@ packages:
 
   sentence-case@2.1.1:
     resolution: {integrity: sha512-ENl7cYHaK/Ktwk5OTD+aDbQ3uC8IByu/6Bkg+HDv8Mm+XnBnppVNalcfJTNsp1ibstKh030/JKQQWglDvtKwEQ==}
-
-  server-only@0.0.1:
-    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
   set-cookie-parser@2.7.1:
     resolution: {integrity: sha512-IOc8uWeOZgnb3ptbCURJWNjWUPcO3ZnTTdzsurqERrP6nPyv+paC55vJM0LpOlT2ne+Ix+9+CRG1MNLlyZ4GjQ==}
@@ -6315,10 +6173,6 @@ packages:
       jsdom:
         optional: true
 
-  void-elements@3.1.0:
-    resolution: {integrity: sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==}
-    engines: {node: '>=0.10.0'}
-
   warning@4.0.3:
     resolution: {integrity: sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w==}
 
@@ -6406,24 +6260,6 @@ packages:
 
   zod@4.0.15:
     resolution: {integrity: sha512-2IVHb9h4Mt6+UXkyMs0XbfICUh1eUrlJJAOupBHUhLRnKkruawyDddYRCs0Eizt900ntIMk9/4RksYl+FgSpcQ==}
-
-  zustand@5.0.7:
-    resolution: {integrity: sha512-Ot6uqHDW/O2VdYsKLLU8GQu8sCOM1LcoE8RwvLv9uuRT9s6SOHCKs0ZEOhxg+I1Ld+A1Q5lwx+UlKXXUoCZITg==}
-    engines: {node: '>=12.20.0'}
-    peerDependencies:
-      '@types/react': '>=18.0.0'
-      immer: '>=9.0.6'
-      react: '>=18.0.0'
-      use-sync-external-store: '>=1.2.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      immer:
-        optional: true
-      react:
-        optional: true
-      use-sync-external-store:
-        optional: true
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6993,13 +6829,6 @@ snapshots:
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.62.0(react@19.1.1)
-
-  '@iconify/react@6.0.0(react@19.1.1)':
-    dependencies:
-      '@iconify/types': 2.0.0
-      react: 19.1.1
-
-  '@iconify/types@2.0.0': {}
 
   '@img/sharp-darwin-arm64@0.34.3':
     optionalDependencies:
@@ -8693,8 +8522,6 @@ snapshots:
 
   basic-ftp@5.0.5: {}
 
-  bcrypt-ts@7.1.0: {}
-
   better-auth@1.3.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@better-auth/utils': 0.2.5
@@ -9766,10 +9593,6 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
-  html-parse-stringify@3.0.1:
-    dependencies:
-      void-elements: 3.1.0
-
   html-to-text@9.0.5:
     dependencies:
       '@selderee/plugin-htmlparser2': 0.11.0
@@ -9806,12 +9629,6 @@ snapshots:
   human-signals@2.1.0: {}
 
   husky@9.1.7: {}
-
-  i18next@25.3.2(typescript@5.9.2):
-    dependencies:
-      '@babel/runtime': 7.28.2
-    optionalDependencies:
-      typescript: 5.9.2
 
   iconv-lite@0.4.24:
     dependencies:
@@ -11050,16 +10867,6 @@ snapshots:
     dependencies:
       react: 19.1.1
 
-  react-i18next@15.6.1(i18next@25.3.2(typescript@5.9.2))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2):
-    dependencies:
-      '@babel/runtime': 7.28.2
-      html-parse-stringify: 3.0.1
-      i18next: 25.3.2(typescript@5.9.2)
-      react: 19.1.1
-    optionalDependencies:
-      react-dom: 19.1.1(react@19.1.1)
-      typescript: 5.9.2
-
   react-is@16.13.1: {}
 
   react-is@18.3.1: {}
@@ -11376,8 +11183,6 @@ snapshots:
     dependencies:
       no-case: 2.3.2
       upper-case-first: 1.1.2
-
-  server-only@0.0.1: {}
 
   set-cookie-parser@2.7.1: {}
 
@@ -11931,8 +11736,6 @@ snapshots:
       - tsx
       - yaml
 
-  void-elements@3.1.0: {}
-
   warning@4.0.3:
     dependencies:
       loose-envify: 1.4.0
@@ -12023,11 +11826,5 @@ snapshots:
   yocto-queue@1.2.1: {}
 
   zod@4.0.15: {}
-
-  zustand@5.0.7(@types/react@19.1.9)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1)):
-    optionalDependencies:
-      '@types/react': 19.1.9
-      react: 19.1.1
-      use-sync-external-store: 1.5.0(react@19.1.1)
 
   zwitch@2.0.4: {}

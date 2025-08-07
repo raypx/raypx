@@ -1,8 +1,10 @@
 import HCaptcha from "@hcaptcha/react-hcaptcha"
 import { Turnstile } from "@marsidev/react-turnstile"
 import { type RefObject, useContext } from "react"
-import { AuthContext } from "../../components/auth-provider"
+
 import { useTheme } from "../../hooks/use-theme"
+import { AuthContext } from "../../lib/auth-provider"
+import type { AuthLocalization } from "../../localization/auth-localization"
 import { RecaptchaBadge } from "./recaptcha-badge"
 import { RecaptchaV2 } from "./recaptcha-v2"
 
@@ -15,12 +17,12 @@ const DEFAULT_CAPTCHA_ENDPOINTS = [
 
 interface CaptchaProps {
   ref: RefObject<any>
+  localization: Partial<AuthLocalization>
   action?: string // Optional action to check if it's in the endpoints list
 }
 
-export function Captcha({ ref, action }: CaptchaProps) {
+export function Captcha({ ref, localization, action }: CaptchaProps) {
   const { captcha } = useContext(AuthContext)
-  const { theme, resolvedTheme } = useTheme()
   if (!captcha) return null
 
   // If action is provided, check if it's in the list of captcha-enabled endpoints
@@ -30,6 +32,8 @@ export function Captcha({ ref, action }: CaptchaProps) {
       return null
     }
   }
+
+  const { theme } = useTheme()
 
   const showRecaptchaV2 =
     captcha.provider === "google-recaptcha-v2-checkbox" ||
@@ -46,14 +50,14 @@ export function Captcha({ ref, action }: CaptchaProps) {
   return (
     <>
       {showRecaptchaV2 && <RecaptchaV2 ref={ref} />}
-      {showRecaptchaBadge && <RecaptchaBadge />}
+      {showRecaptchaBadge && <RecaptchaBadge localization={localization} />}
       {showTurnstile && (
         <Turnstile
           className="mx-auto"
           ref={ref}
           siteKey={captcha.siteKey}
           options={{
-            theme: resolvedTheme as "light" | "dark",
+            theme: theme,
             size: "flexible",
           }}
         />

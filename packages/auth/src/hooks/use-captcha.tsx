@@ -3,7 +3,9 @@ import type { TurnstileInstance } from "@marsidev/react-turnstile"
 import { useGoogleReCaptcha } from "@wojtekmaj/react-recaptcha-v3"
 import { type RefObject, useContext, useRef } from "react"
 import type ReCAPTCHA from "react-google-recaptcha"
-import { AuthContext } from "../components/auth-provider"
+
+import { AuthContext } from "../lib/auth-provider"
+import type { AuthLocalization } from "../localization/auth-localization"
 
 // Default captcha endpoints
 const DEFAULT_CAPTCHA_ENDPOINTS = [
@@ -29,14 +31,20 @@ const sanitizeActionName = (action: string): string => {
   return result
 }
 
-export function useCaptcha() {
-  const { captcha } = useContext(AuthContext)
+export function useCaptcha({
+  localization,
+}: {
+  localization: Partial<AuthLocalization>
+}) {
+  const { captcha, localization: contextLocalization } = useContext(AuthContext)
+
+  localization = { ...contextLocalization, ...localization }
 
   const captchaRef = useRef<any>(null)
   const { executeRecaptcha } = useGoogleReCaptcha()
 
   const executeCaptcha = async (action: string) => {
-    if (!captcha) throw new Error("Missing captcha")
+    if (!captcha) throw new Error(localization.MISSING_RESPONSE)
 
     // Sanitize the action name for reCAPTCHA
     let response: string | undefined | null
@@ -70,7 +78,7 @@ export function useCaptcha() {
     }
 
     if (!response) {
-      throw new Error("Missing response")
+      throw new Error(localization.MISSING_RESPONSE)
     }
 
     return response

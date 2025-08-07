@@ -1,15 +1,21 @@
+import { cn } from "@raypx/ui/lib/utils"
 import { useContext } from "react"
-import { AuthContext } from "../../components/auth-provider"
 import { useIsHydrated } from "../../hooks/use-hydrated"
-import { cn } from "../../shared/utils"
+import { AuthContext } from "../../lib/auth-provider"
+import type { AuthLocalization } from "../../localization/auth-localization"
 
 export interface RecaptchaV3BadgeProps {
   className?: string
+  localization?: Partial<AuthLocalization>
 }
 
-export function RecaptchaBadge({ className }: RecaptchaV3BadgeProps) {
+export function RecaptchaBadge({
+  className,
+  localization: propLocalization,
+}: RecaptchaV3BadgeProps) {
   const isHydrated = useIsHydrated()
-  const { captcha } = useContext(AuthContext)
+  const { captcha, localization: contextLocalization } = useContext(AuthContext)
+  const localization = { ...contextLocalization, ...propLocalization }
 
   if (!captcha) return null
 
@@ -28,15 +34,15 @@ export function RecaptchaBadge({ className }: RecaptchaV3BadgeProps) {
             `}</style>
 
       <p className={cn("text-muted-foreground text-xs", className)}>
-        This site is protected by reCAPTCHA. By continuing, you agree to the
-        Google{" "}
+        {localization.PROTECTED_BY_RECAPTCHA}{" "}
+        {localization.BY_CONTINUING_YOU_AGREE} Google{" "}
         <a
           className="text-foreground hover:underline"
           href="https://policies.google.com/privacy"
           target="_blank"
           rel="noreferrer"
         >
-          Privacy Policy
+          {localization.PRIVACY_POLICY}
         </a>{" "}
         &{" "}
         <a
@@ -45,7 +51,7 @@ export function RecaptchaBadge({ className }: RecaptchaV3BadgeProps) {
           target="_blank"
           rel="noreferrer"
         >
-          Terms of Service
+          {localization.TERMS_OF_SERVICE}
         </a>
         .
       </p>

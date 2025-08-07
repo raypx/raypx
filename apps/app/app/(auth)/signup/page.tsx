@@ -2,8 +2,6 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Suspense } from "react"
-import { SignUpForm } from "../_components/signup-form"
 
 export default function SignUpPage() {
   return (
@@ -24,9 +22,6 @@ export default function SignUpPage() {
           </div>
           Raypx
         </Link>
-        <Suspense>
-          <SignUpForm />
-        </Suspense>
       </div>
     </div>
   )

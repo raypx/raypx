@@ -2,7 +2,7 @@
 
 // import { Suspense } from "react"
 // import { SignUpForm } from "../_components/signup-form"
-import { AuthCard } from "@raypx/auth-v2"
+import { AuthCard } from "@raypx/auth"
 import Image from "next/image"
 import Link from "next/link"
 

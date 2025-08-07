@@ -1,4 +1,5 @@
-import { toast } from "@raypx/ui/components/toast"
+"use client"
+
 import {
   useCallback,
   useContext,
@@ -7,8 +8,10 @@ import {
   useState,
   useSyncExternalStore,
 } from "react"
-import { authDataCache } from "../client/auth-data-cache"
-import { AuthContext } from "../components/auth-provider"
+
+import { authDataCache } from "../lib/auth-data-cache"
+import { AuthContext } from "../lib/auth-provider"
+import { getLocalizedError } from "../lib/utils"
 import type { FetchError } from "../types/fetch-error"
 
 export function useAuthData<T>({
@@ -20,7 +23,7 @@ export function useAuthData<T>({
   cacheKey?: string
   staleTime?: number
 }) {
-  const { authClient } = useContext(AuthContext)
+  const { authClient, toast, localization } = useContext(AuthContext)
   const { data: sessionData, isPending: sessionPending } =
     authClient.useSession()
 
@@ -81,7 +84,10 @@ export function useAuthData<T>({
 
       if (error) {
         setError(error)
-        toast.error(error.message)
+        toast({
+          variant: "error",
+          message: getLocalizedError({ error, localization }),
+        })
       } else {
         setError(null)
       }
@@ -91,12 +97,15 @@ export function useAuthData<T>({
     } catch (err) {
       const error = err as FetchError
       setError(error)
-      toast.error(error.message)
+      toast({
+        variant: "error",
+        message: getLocalizedError({ error, localization }),
+      })
     } finally {
       authDataCache.setRefetching(stableCacheKey, false)
       authDataCache.removeInFlightRequest(stableCacheKey)
     }
-  }, [stableCacheKey, cacheEntry])
+  }, [stableCacheKey, toast, localization, cacheEntry])
 
   useEffect(() => {
     const currentUserId = sessionData?.user?.id
