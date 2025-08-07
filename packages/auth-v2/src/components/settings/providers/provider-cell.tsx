@@ -2,12 +2,14 @@
 
 import { Button } from "@raypx/ui/components/button"
 import { Card } from "@raypx/ui/components/card"
+import { Skeleton } from "@raypx/ui/components/skeleton"
+import { cn } from "@raypx/ui/lib/utils"
 import type { SocialProvider } from "better-auth/social-providers"
 import { Loader2 } from "lucide-react"
 import { useContext, useState } from "react"
 import { AuthContext } from "../../../lib/auth-provider"
 import type { Provider } from "../../../lib/social-providers"
-import { cn, getLocalizedError } from "../../../lib/utils"
+import { getLocalizedError } from "../../../lib/utils"
 import type { AuthLocalization } from "../../../localization/auth-localization"
 import type { Refetch } from "../../../types/refetch"
 import type { SettingsCardClassNames } from "../shared/settings-card"
@@ -15,7 +17,10 @@ import type { SettingsCardClassNames } from "../shared/settings-card"
 export interface ProviderCellProps {
   className?: string
   classNames?: SettingsCardClassNames
-  account?: { accountId: string; provider: string } | null
+  account?: {
+    accountId: string
+    provider: string
+  } | null
   isPending?: boolean
   localization?: Partial<AuthLocalization>
   other?: boolean
@@ -106,7 +111,11 @@ export function ProviderCell({
         <provider.icon className={cn("size-4", classNames?.icon)} />
       )}
 
-      <span className="text-sm">{provider.name}</span>
+      <div className="flex-col">
+        <div className="text-sm">{provider.name}</div>
+
+        {account && <AccountInfo account={account} />}
+      </div>
 
       <Button
         className={cn("relative ms-auto", classNames?.button)}
@@ -120,5 +129,27 @@ export function ProviderCell({
         {account ? localization.UNLINK : localization.LINK}
       </Button>
     </Card>
+  )
+}
+
+function AccountInfo({ account }: { account: { accountId: string } }) {
+  const {
+    hooks: { useAccountInfo },
+  } = useContext(AuthContext)
+
+  const { data: accountInfo, isPending } = useAccountInfo({
+    accountId: account.accountId,
+  })
+
+  if (isPending) {
+    return <Skeleton className="my-0.5 h-3 w-28" />
+  }
+
+  if (!accountInfo) return null
+
+  return (
+    <div className="text-muted-foreground text-xs">
+      {accountInfo?.user.email}
+    </div>
   )
 }

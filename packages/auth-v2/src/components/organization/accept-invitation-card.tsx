@@ -8,10 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card"
-import { Check, Loader2, X } from "@raypx/ui/components/icons"
 import { Skeleton } from "@raypx/ui/components/skeleton"
 import { cn } from "@raypx/ui/lib/utils"
-import { useContext, useEffect, useMemo, useState } from "react"
+import { CheckIcon, Loader2, XIcon } from "lucide-react"
+import { useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { useAuthenticate } from "../../hooks/use-authenticate"
 import { AuthContext } from "../../lib/auth-provider"
 import { getLocalizedError, getSearchParam } from "../../lib/utils"
@@ -112,6 +112,11 @@ function AcceptInvitationContent({
     },
   })
 
+  const getRedirectTo = useCallback(
+    () => getSearchParam("redirectTo") || redirectTo,
+    [redirectTo],
+  )
+
   useEffect(() => {
     if (isPending || !invitationId) return
 
@@ -165,7 +170,7 @@ function AcceptInvitationContent({
         message: localization.INVITATION_ACCEPTED || "Invitation accepted",
       })
 
-      replace(redirectTo)
+      replace(getRedirectTo())
     } catch (error) {
       toast({
         variant: "error",
@@ -262,7 +267,7 @@ function AcceptInvitationContent({
             onClick={rejectInvitation}
             disabled={isProcessing}
           >
-            {isRejecting ? <Loader2 className="animate-spin" /> : <X />}
+            {isRejecting ? <Loader2 className="animate-spin" /> : <XIcon />}
 
             {localization.REJECT}
           </Button>
@@ -272,7 +277,7 @@ function AcceptInvitationContent({
             onClick={acceptInvitation}
             disabled={isProcessing}
           >
-            {isAccepting ? <Loader2 className="animate-spin" /> : <Check />}
+            {isAccepting ? <Loader2 className="animate-spin" /> : <CheckIcon />}
 
             {localization.ACCEPT}
           </Button>

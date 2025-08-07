@@ -1,8 +1,8 @@
 "use client"
 
 import { Card } from "@raypx/ui/components/card"
+import { cn } from "@raypx/ui/lib/utils"
 import type { ComponentProps, ReactNode } from "react"
-import { cn } from "../../../lib/utils"
 import type { AuthLocalization } from "../../../localization/auth-localization"
 import type { UserAvatarClassNames } from "../../user-avatar"
 import { SettingsCardFooter } from "./settings-card-footer"

@@ -9,12 +9,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@raypx/ui/components/dialog"
+import { cn } from "@raypx/ui/lib/utils"
 import type { User } from "better-auth"
 import type { Member } from "better-auth/plugins/organization"
 import { Loader2 } from "lucide-react"
 import { type ComponentProps, useContext, useState } from "react"
 import { AuthContext } from "../../lib/auth-provider"
-import { cn, getLocalizedError } from "../../lib/utils"
+import { getLocalizedError } from "../../lib/utils"
 import type { AuthLocalization } from "../../localization/auth-localization"
 import type { SettingsCardClassNames } from "../settings/shared/settings-card"
 import { MemberCell } from "./member-cell"

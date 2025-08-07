@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu"
+import { cn } from "@raypx/ui/lib/utils"
 import {
   ChevronsUpDown,
   LogInIcon,
@@ -24,7 +25,7 @@ import {
   useState,
 } from "react"
 import { AuthContext } from "../../lib/auth-provider"
-import { cn, getLocalizedError } from "../../lib/utils"
+import { getLocalizedError } from "../../lib/utils"
 import type { AuthLocalization } from "../../localization/auth-localization"
 import type { User } from "../../types/auth-client"
 import { UserAvatar, type UserAvatarClassNames } from "../user-avatar"
@@ -240,7 +241,11 @@ export function OrganizationSwitcher({
               </Button>
             ) : (
               <Button
-                className={cn("!p-2", className, classNames?.trigger?.base)}
+                className={cn(
+                  "!p-2 h-fit",
+                  className,
+                  classNames?.trigger?.base,
+                )}
                 size={size}
                 {...props}
               >
@@ -307,11 +312,12 @@ export function OrganizationSwitcher({
 
                 {!isPending && (
                   <Link
-                    href={`${settings?.basePath || basePath}/${
+                    href={
                       activeOrganization
-                        ? viewPaths.ORGANIZATION
-                        : viewPaths.SETTINGS
-                    }`}
+                        ? `${settings?.basePath || basePath}/${viewPaths.ORGANIZATION}`
+                        : settings?.url ||
+                          `${settings?.basePath || basePath}/${viewPaths.SETTINGS}`
+                    }
                   >
                     <Button
                       size="icon"

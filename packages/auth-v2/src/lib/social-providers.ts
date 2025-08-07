@@ -6,12 +6,16 @@ import {
   GitHubIcon,
   GitLabIcon,
   GoogleIcon,
+  HuggingFaceIcon,
   KickIcon,
+  LinearIcon,
   LinkedInIcon,
   MicrosoftIcon,
+  NotionIcon,
   type ProviderIcon,
   RedditIcon,
   RobloxIcon,
+  SlackIcon,
   SpotifyIcon,
   TikTokIcon,
   TwitchIcon,
@@ -57,9 +61,19 @@ export const socialProviders = [
     icon: GoogleIcon,
   },
   {
+    provider: "huggingface",
+    name: "Hugging Face",
+    icon: HuggingFaceIcon,
+  },
+  {
     provider: "kick",
     name: "Kick",
     icon: KickIcon,
+  },
+  {
+    provider: "linear",
+    name: "Linear",
+    icon: LinearIcon,
   },
   {
     provider: "linkedin",
@@ -72,6 +86,11 @@ export const socialProviders = [
     icon: MicrosoftIcon,
   },
   {
+    provider: "notion",
+    name: "Notion",
+    icon: NotionIcon,
+  },
+  {
     provider: "reddit",
     name: "Reddit",
     icon: RedditIcon,
@@ -80,6 +99,11 @@ export const socialProviders = [
     provider: "roblox",
     name: "Roblox",
     icon: RobloxIcon,
+  },
+  {
+    provider: "slack",
+    name: "Slack",
+    icon: SlackIcon,
   },
   {
     provider: "spotify",
