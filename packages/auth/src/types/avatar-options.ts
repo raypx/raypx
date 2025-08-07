@@ -15,7 +15,7 @@ export type AvatarOptions = {
    * File extension for avatar uploads
    * @default "png"
    */
-  extension: string
+  extension?: string
   /**
    * Custom Image component for rendering avatar images
    * @default AvatarImage from Radix UI
