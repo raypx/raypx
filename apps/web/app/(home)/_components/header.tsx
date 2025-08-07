@@ -1,6 +1,6 @@
 "use client"
 
-import { UserAvatar } from "@raypx/auth"
+import { UserButton } from "@raypx/auth"
 import { useAuth } from "@raypx/auth/client"
 import { Button } from "@raypx/ui/components/button"
 import Image from "next/image"
@@ -28,7 +28,7 @@ export function Header() {
           </h1>
         </Link>
         {session?.session ? (
-          <UserAvatar />
+          <UserButton size="icon" />
         ) : (
           <div className="flex items-center gap-2">
             <Link href={pages.SIGN_IN}>

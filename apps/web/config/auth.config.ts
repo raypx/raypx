@@ -1,4 +1,4 @@
-import type { Pages } from "@raypx/auth/client"
+import type { AuthViewPaths } from "@raypx/auth"
 import { z } from "zod"
 
 const authPagesSchema = z.object({
@@ -10,11 +10,11 @@ const authPagesSchema = z.object({
   PASSWORD_UPDATE: z.string(),
   GOOGLE_ONE_TAP: z.boolean().optional(),
   FORGOT_PASSWORD: z.string(),
-}) satisfies z.ZodType<Pages>
+}) satisfies z.ZodType<AuthViewPaths>
 
 export const authPages = authPagesSchema.parse({
-  SIGN_IN: "/signin",
-  SIGN_UP: "/signup",
+  SIGN_IN: "/sign-in",
+  SIGN_UP: "/sign-up",
   VERIFY_MFA: "/verify",
   CALLBACK: "/callback",
   PASSWORD_RESET: "/password-reset",

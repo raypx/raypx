@@ -5,6 +5,7 @@ import { client } from "@raypx/auth/client"
 import { Provider } from "@raypx/ui/components/provider"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { authPages } from "../config/auth.config"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
         navigate={router.push}
         replace={router.replace}
+        viewPaths={authPages}
         onSessionChange={() => {
           // Clear router cache (protected routes)
           router.refresh()
