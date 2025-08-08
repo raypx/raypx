@@ -1,9 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "skipLibCheck": true
+    "baseUrl": "."
   },
   "exclude": ["node_modules", "dist"],
   "extends": "@raypx/tsconfig/nextjs.json",

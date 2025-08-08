@@ -1,25 +1,51 @@
-import type { AuthConfig } from "@raypx/auth/client"
+import type { AuthViewPaths } from "@raypx/auth"
 import { z } from "zod"
 
-const authConfigSchema = z.object({
-  signIn: z.string(),
-  signUp: z.string(),
-  verifyMfa: z.string(),
-  callback: z.string(),
-  passwordReset: z.string(),
-  passwordUpdate: z.string(),
-  googleOneTap: z.boolean().optional(),
-  forgotPassword: z.string(),
-}) satisfies z.ZodType<AuthConfig>
+const authPagesSchema = z.object({
+  SIGN_IN: z.string(),
+  SIGN_UP: z.string(),
+  VERIFY_MFA: z.string(),
+  CALLBACK: z.string(),
+  PASSWORD_RESET: z.string(),
+  PASSWORD_UPDATE: z.string(),
+  GOOGLE_ONE_TAP: z.boolean().optional(),
+  FORGOT_PASSWORD: z.string(),
+  MAGIC_LINK: z.string(),
+  EMAIL_OTP: z.string(),
+  API_KEYS: z.string(),
+  ORGANIZATION: z.string(),
+  ORGANIZATION_API_KEYS: z.string(),
+  MEMBERS: z.string(),
+  ORGANIZATIONS: z.string(),
+  RECOVER_ACCOUNT: z.string(),
+  RESET_PASSWORD: z.string(),
+  TWO_FACTOR: z.string(),
+  ACCEPT_INVITATION: z.string(),
+  SECURITY: z.string(),
+  SETTINGS: z.string(),
+  SIGN_OUT: z.string(),
+}) satisfies z.ZodType<AuthViewPaths>
 
-const authConfig = authConfigSchema.parse({
-  signIn: "/signin",
-  signUp: "/signup",
-  verifyMfa: "/verify",
-  callback: "/callback",
-  passwordReset: "/password-reset",
-  passwordUpdate: "/update-password",
-  forgotPassword: "/forgot-password",
+export const authPages = authPagesSchema.parse({
+  SIGN_IN: "/sign-in",
+  SIGN_UP: "/sign-up",
+  VERIFY_MFA: "/verify",
+  CALLBACK: "/callback",
+  PASSWORD_RESET: "/password-reset",
+  PASSWORD_UPDATE: "/update-password",
+  FORGOT_PASSWORD: "/forgot-password",
+  MAGIC_LINK: "/magic-link",
+  EMAIL_OTP: "/email-otp",
+  API_KEYS: "/api-keys",
+  ORGANIZATION: "/organization",
+  ORGANIZATION_API_KEYS: "/organization-api-keys",
+  MEMBERS: "/members",
+  ORGANIZATIONS: "/organizations",
+  RECOVER_ACCOUNT: "/recover-account",
+  RESET_PASSWORD: "/reset-password",
+  TWO_FACTOR: "/two-factor",
+  ACCEPT_INVITATION: "/accept-invitation",
+  SECURITY: "/security",
+  SETTINGS: "/settings",
+  SIGN_OUT: "/sign-out",
 })
-
-export default authConfig

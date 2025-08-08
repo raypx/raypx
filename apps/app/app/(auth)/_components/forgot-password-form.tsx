@@ -37,7 +37,7 @@ export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const { config } = useAuth()
+  const { pages } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
@@ -52,7 +52,7 @@ export function ForgotPasswordForm({
       setIsLoading(true)
       const res = await forgetPassword({
         email: values.email,
-        redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}${config.passwordReset}`,
+        redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}${pages.RESET_PASSWORD}`,
       })
       if (res.error) {
         toast.error(res.error.message)
@@ -94,7 +94,7 @@ export function ForgotPasswordForm({
                   try again
                 </button>
               </div>
-              <Link href={config.signIn}>
+              <Link href={pages.SIGN_IN}>
                 <Button variant="outline" className="w-full">
                   Back to Sign In
                 </Button>
@@ -145,7 +145,7 @@ export function ForgotPasswordForm({
           <div className="mt-6 text-center">
             <Link
               className="text-sm underline underline-offset-4 hover:text-primary"
-              href={config.signIn}
+              href={pages.SIGN_IN}
             >
               Back to Sign In
             </Link>

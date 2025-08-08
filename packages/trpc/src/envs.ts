@@ -3,7 +3,7 @@ import { createEnv, z } from "@raypx/shared"
 export const envs = () =>
   createEnv({
     client: {
-      NEXT_PUBLIC_WEB_URL: z.string().url(),
+      NEXT_PUBLIC_WEB_URL: z.url().min(1),
     },
     shared: {},
     server: {},

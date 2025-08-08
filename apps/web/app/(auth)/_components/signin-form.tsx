@@ -44,7 +44,7 @@ export function SignInForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const { config } = useAuth()
+  const { pages } = useAuth()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
@@ -135,7 +135,7 @@ export function SignInForm({
                             <Label htmlFor="password">Password</Label>
                             <Link
                               className="ml-auto text-sm underline-offset-4 hover:underline"
-                              href={config.forgotPassword}
+                              href={pages.FORGOT_PASSWORD}
                             >
                               Forgot your password?
                             </Link>
@@ -161,7 +161,7 @@ export function SignInForm({
               {"Don't have an account? "}
               <Link
                 className="underline underline-offset-4"
-                href={config.signUp}
+                href={pages.SIGN_UP}
               >
                 Sign up
               </Link>

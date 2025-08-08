@@ -49,7 +49,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
   className,
   ...props
 }) => {
-  const { config } = useAuth()
+  const { pages } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
@@ -93,7 +93,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
         toast.error(res.error.message)
       } else {
         toast.success("Password reset successful")
-        router.push(config.signIn)
+        router.push(pages.SIGN_IN)
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to reset password")
@@ -159,7 +159,7 @@ export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({
           <div className="mt-6 text-center">
             <Link
               className="text-sm underline underline-offset-4 hover:text-primary"
-              href={config.signIn}
+              href={pages.SIGN_IN}
             >
               Back to Sign In
             </Link>

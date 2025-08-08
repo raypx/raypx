@@ -12,7 +12,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "^15.4.5",
+    "@next/bundle-analyzer": "^15.4.6",
     "@raypx/analytics": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/db": "workspace:*",
@@ -23,7 +23,7 @@
     "fumadocs-mdx": "^11.7.3",
     "fumadocs-ui": "^15.6.9",
     "lucide-react": "catalog:",
-    "next": "^15.4.5",
+    "next": "^15.4.6",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "zod": "catalog:"

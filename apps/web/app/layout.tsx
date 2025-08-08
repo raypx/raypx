@@ -2,11 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google"
 import type { ReactNode } from "react"
 import "../styles/globals.css"
 import { AnalyticsProvider } from "@raypx/analytics"
-import { AuthProvider, GoogleOneTap } from "@raypx/auth/client"
 import { TRPCReactProvider } from "@raypx/trpc/client"
-import { Provider } from "@raypx/ui/components/provider"
 import { Toaster } from "@raypx/ui/components/toast"
-import authConfig from "@/config/auth.config"
+import { Providers } from "./providers"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,15 +28,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Provider>
-          <AuthProvider config={authConfig}>
-            <AnalyticsProvider>
-              <TRPCReactProvider>{children}</TRPCReactProvider>
-              <Toaster />
-              <GoogleOneTap />
-            </AnalyticsProvider>
-          </AuthProvider>
-        </Provider>
+        <Providers>
+          <AnalyticsProvider>
+            <TRPCReactProvider>{children}</TRPCReactProvider>
+            <Toaster />
+          </AnalyticsProvider>
+        </Providers>
       </body>
     </html>
   )

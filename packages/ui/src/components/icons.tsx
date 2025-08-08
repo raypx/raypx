@@ -1,5 +1,18 @@
+export * from "@tabler/icons-react"
 export {
+  IconAlertCircle as AlertCircle,
+  IconArrowLeft as ArrowLeft,
   IconBrandGithub as Github,
   IconBrandGoogle as Google,
+  IconBrandX as X,
+  IconCheck as Check,
+  IconCloudUpload as UploadCloud,
   IconLoader2 as Loader2,
+  IconQrcode as QrCode,
+  IconSend as Send,
+  IconTrash as Trash,
+  IconUpload as Upload,
+  IconUserX as UserX,
 } from "@tabler/icons-react"
+
+export { EllipsisIcon, UserCogIcon, UserRoundIcon } from "lucide-react"
