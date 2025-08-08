@@ -27,7 +27,6 @@ import type { CredentialsOptions } from "../types/credentials-options"
 import type { DeleteUserOptions } from "../types/delete-user-options"
 import type { GenericOAuthOptions } from "../types/generic-oauth-options"
 import type { GravatarOptions } from "../types/gravatar-options"
-import type { Link } from "../types/link"
 import type {
   OrganizationOptions,
   OrganizationOptionsContext,
@@ -38,12 +37,6 @@ import type { SignUpOptions } from "../types/sign-up-options"
 import type { SocialOptions } from "../types/social-options"
 import { type AuthViewPaths, authViewPaths } from "./auth-view-paths"
 import { getLocalizedError, getSearchParam } from "./utils"
-
-const DefaultLink: Link = ({ href, className, children }) => (
-  <a className={className} href={href}>
-    {children}
-  </a>
-)
 
 const defaultNavigate = (href: string) => {
   window.location.href = href
@@ -207,11 +200,6 @@ export type AuthContextType = {
    * @default navigate
    */
   replace: typeof defaultReplace
-  /**
-   * Custom Link component for navigation
-   * @default <a>
-   */
-  Link: Link
 }
 
 export type AuthProviderProps = {
@@ -306,7 +294,7 @@ export const AuthProvider = ({
   deleteUser: deleteUserProp,
   social: socialProp,
   genericOAuth: genericOAuthProp,
-  basePath = "/auth",
+  basePath = "/",
   baseURL = "",
   captcha,
   redirectTo = "/",
@@ -323,7 +311,6 @@ export const AuthProvider = ({
   viewPaths: viewPathsProp,
   navigate,
   replace,
-  Link = DefaultLink,
   ...props
 }: AuthProviderProps) => {
   const authClient = authClientProp as AuthClient
@@ -602,7 +589,6 @@ export const AuthProvider = ({
         navigate: navigate || defaultNavigate,
         replace: replace || navigate || defaultReplace,
         viewPaths,
-        Link,
         ...props,
       }}
     >

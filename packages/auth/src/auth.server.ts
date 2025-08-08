@@ -1,11 +1,11 @@
 import { db, nanoid, schemas, uuidv7 } from "@raypx/db"
-import { resend, sendEmail } from "@raypx/email"
 import {
   ResetPasswordEmail,
   SendMagicLinkEmail,
   VerifyEmail,
   WelcomeEmail,
-} from "@raypx/email/templates"
+} from "@raypx/email"
+import { resend, sendEmail } from "@raypx/email/server"
 import { type BetterAuthOptions, betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import {

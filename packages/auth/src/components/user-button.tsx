@@ -16,6 +16,7 @@ import {
   SettingsIcon,
   UserRoundPlus,
 } from "lucide-react"
+import Link from "next/link"
 import {
   type ComponentProps,
   Fragment,
@@ -106,7 +107,6 @@ export function UserButton({
     toast,
     viewPaths,
     onSessionChange,
-    Link,
   } = useContext(AuthContext)
 
   const localization = useMemo(

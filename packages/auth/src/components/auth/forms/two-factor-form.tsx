@@ -16,6 +16,7 @@ import { Loader2, QrCode, Send } from "@raypx/ui/components/icons"
 import { InputOTP } from "@raypx/ui/components/input-otp"
 import { Label } from "@raypx/ui/components/label"
 import { cn } from "@raypx/ui/lib/utils"
+import Link from "next/link"
 import { useContext, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import QRCode from "react-qr-code"
@@ -60,7 +61,6 @@ export function TwoFactorForm({
     twoFactor,
     viewPaths,
     toast,
-    Link,
   } = useContext(AuthContext)
 
   localization = { ...contextLocalization, ...localization }

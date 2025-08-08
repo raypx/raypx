@@ -1,5 +1,6 @@
 "use client"
 
+import { resolve } from "node:path"
 import type { BetterFetchOption } from "@better-fetch/fetch"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@raypx/ui/components/button"
@@ -15,6 +16,7 @@ import {
 import { Loader2 } from "@raypx/ui/components/icons"
 import { Input } from "@raypx/ui/components/input"
 import { cn } from "@raypx/ui/lib/utils"
+import Link from "next/link"
 import { useContext, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod/v4"
@@ -63,7 +65,6 @@ export function SignInForm({
     viewPaths,
     navigate,
     toast,
-    Link,
   } = useContext(AuthContext)
 
   const rememberMeEnabled = credentials?.rememberMe
@@ -211,7 +212,12 @@ export function SignInForm({
                       "text-sm hover:underline",
                       classNames?.forgotPasswordLink,
                     )}
-                    href={`${basePath}/${viewPaths.FORGOT_PASSWORD}${isHydrated ? window.location.search : ""}`}
+                    href={resolve(
+                      "/",
+                      basePath,
+                      viewPaths.FORGOT_PASSWORD,
+                      isHydrated ? window.location.search : "",
+                    )}
                   >
                     {localization.FORGOT_PASSWORD_LINK}
                   </Link>

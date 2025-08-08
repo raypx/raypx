@@ -41,6 +41,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-google-recaptcha": "^2.1.9",
+    "next": "^15.4.6",
     "type-fest": "^4.41.0",
     "typescript": "catalog:",
     "vitest": "catalog:"

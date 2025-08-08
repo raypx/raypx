@@ -11,6 +11,7 @@ import {
 import { Label } from "@raypx/ui/components/label"
 import type { Organization } from "better-auth/plugins/organization"
 import { MenuIcon } from "lucide-react"
+import Link from "next/link"
 import { useContext, useEffect } from "react"
 import { useAuthenticate } from "../../hooks/use-authenticate"
 import { AuthContext } from "../../lib/auth-provider"
@@ -86,7 +87,6 @@ export function SettingsCards({
     settings,
     viewPaths,
     replace,
-    Link,
   } = useContext(AuthContext)
 
   localization = { ...contextLocalization, ...localization }

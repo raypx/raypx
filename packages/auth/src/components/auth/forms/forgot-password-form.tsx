@@ -1,5 +1,6 @@
 "use client"
 
+import { resolve } from "node:path"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@raypx/ui/components/button"
 import {
@@ -97,7 +98,14 @@ export function ForgotPasswordForm({
         message: localization.FORGOT_PASSWORD_EMAIL,
       })
 
-      navigate(`${basePath}/${viewPaths.SIGN_IN}${window.location.search}`)
+      navigate(
+        resolve(
+          "/",
+          basePath,
+          viewPaths.SIGN_IN,
+          isHydrated ? window.location.search : "",
+        ),
+      )
     } catch (error) {
       toast({
         variant: "error",

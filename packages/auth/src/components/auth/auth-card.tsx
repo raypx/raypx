@@ -1,5 +1,6 @@
 "use client"
 
+import { resolve } from "node:path"
 import { Button } from "@raypx/ui/components/button"
 import {
   Card,
@@ -12,6 +13,7 @@ import {
 import { ArrowLeft, Loader2 } from "@raypx/ui/components/icons"
 import { Separator } from "@raypx/ui/components/separator"
 import { cn } from "@raypx/ui/lib/utils"
+import Link from "next/link"
 import { type ReactNode, useContext, useEffect, useState } from "react"
 import { useIsHydrated } from "../../hooks/use-hydrated"
 import { AuthContext } from "../../lib/auth-provider"
@@ -103,7 +105,6 @@ export function AuthCard({
     genericOAuth,
     viewPaths,
     replace,
-    Link,
   } = useContext(AuthContext)
 
   localization = { ...contextLocalization, ...localization }
@@ -203,7 +204,7 @@ export function AuthCard({
           ["SIGN_IN", "SIGN_UP", "MAGIC_LINK", "EMAIL_OTP"].includes(view) && (
             <OneTap localization={localization} redirectTo={redirectTo} />
           )}
-
+        OR_CONTINUE_WITH
         {(credentials || magicLink || emailOTP) && (
           <div className="grid gap-4">
             <AuthForm
@@ -215,8 +216,8 @@ export function AuthCard({
               pathname={pathname}
               redirectTo={redirectTo}
               setIsSubmitting={setIsSubmitting}
+              view={view}
             />
-
             {magicLink &&
               ((credentials &&
                 [
@@ -234,7 +235,7 @@ export function AuthCard({
                   isSubmitting={isSubmitting}
                 />
               )}
-
+            fff
             {emailOTP &&
               ((credentials &&
                 [
@@ -254,7 +255,6 @@ export function AuthCard({
               )}
           </div>
         )}
-
         {view !== "RESET_PASSWORD" &&
           (social?.providers?.length ||
             genericOAuth?.providers?.length ||
@@ -369,7 +369,6 @@ export function AuthCard({
           ) : (
             <ArrowLeft className="size-3" />
           )}
-
           {view === "SIGN_IN" ||
           view === "MAGIC_LINK" ||
           view === "EMAIL_OTP" ||
@@ -379,7 +378,18 @@ export function AuthCard({
                 "text-foreground underline",
                 classNames?.footerLink,
               )}
-              href={`${basePath}/${viewPaths[view === "SIGN_IN" || view === "MAGIC_LINK" || view === "EMAIL_OTP" ? "SIGN_UP" : "SIGN_IN"]}${isHydrated ? window.location.search : ""}`}
+              href={resolve(
+                "/",
+                basePath,
+                viewPaths[
+                  view === "SIGN_IN" ||
+                  view === "MAGIC_LINK" ||
+                  view === "EMAIL_OTP"
+                    ? "SIGN_UP"
+                    : "SIGN_IN"
+                ],
+                isHydrated ? window.location.search : "",
+              )}
             >
               <Button
                 variant="link"

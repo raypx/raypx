@@ -15,6 +15,7 @@ import {
   PlusCircleIcon,
   SettingsIcon,
 } from "lucide-react"
+import Link from "next/link"
 import {
   type ComponentProps,
   type ReactNode,
@@ -103,7 +104,6 @@ export function OrganizationSwitcher({
     settings,
     toast,
     viewPaths,
-    Link,
   } = useContext(AuthContext)
 
   const localization = useMemo(
