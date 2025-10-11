@@ -1,0 +1,96 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "envMode": "loose",
+  "ui": "tui",
+  "globalDependencies": ["**/.env.*local", ".env.example"],
+  "globalEnv": [
+    "DATABASE_URL",
+    "REDIS_URL",
+    "AUTH_SECRET",
+    "AUTH_GOOGLE_ID",
+    "AUTH_GOOGLE_SECRET",
+    "AUTH_GITHUB_ID",
+    "AUTH_GITHUB_SECRET",
+    "AUTH_RESEND_KEY",
+    "RESEND_FROM",
+    "STRIPE_PUBLIC_KEY",
+    "STRIPE_PRIVATE_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "OPENAI_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "NEXT_PUBLIC_POSTHOG_KEY",
+    "NEXT_PUBLIC_POSTHOG_HOST"
+  ],
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_URL",
+    "npm_lifecycle_event"
+  ],
+  "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*"],
+      "outputs": ["dist/**", ".tanstack/**", ".cache/tsbuildinfo.json"]
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": ["^topo"],
+      "outputs": [".cache/tsbuildinfo.json"]
+    },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["^dev"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "**/*.env.*"],
+      "persistent": true
+    },
+    "format": {
+      "cache": true,
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "check": {
+      "cache": true,
+      "dependsOn": ["^topo"],
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "generate": {
+      "cache": true,
+      "outputLogs": "new-only",
+      "outputs": ["generated/**", "**/*.generated.*"]
+    },
+    "start": {
+      "cache": false,
+      "dependsOn": ["build"]
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.*",
+        "jest.config.*",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "outputs": ["coverage/**", "test-results/**"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "//#clean": {
+      "cache": false
+    },
+    "shadcn": {
+      "cache": false,
+      "interactive": true
+    }
+  }
+}

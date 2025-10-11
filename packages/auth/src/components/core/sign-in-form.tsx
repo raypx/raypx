@@ -1,0 +1,272 @@
+"use client";
+
+import type { BetterFetchOption } from "@better-fetch/fetch";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Badge } from "@raypx/ui/components/badge";
+import { Button } from "@raypx/ui/components/button";
+import { Checkbox } from "@raypx/ui/components/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@raypx/ui/components/form";
+import { Loader2 } from "@raypx/ui/components/icons";
+import { Input } from "@raypx/ui/components/input";
+import { PasswordField } from "@raypx/ui/components/password-field";
+import { type RefObject, useEffect } from "react";
+import type ReCAPTCHA from "react-google-recaptcha";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { z } from "zod/v4";
+import { useAuth } from "../../core/hooks/use-auth";
+import { useCaptcha } from "../../core/hooks/use-captcha";
+import { useIsHydrated } from "../../core/hooks/use-hydrated";
+import { useOnSuccessTransition } from "../../core/hooks/use-success-transition";
+import { cn, getLocalizedError, getPasswordSchema, isValidEmail } from "../../core/lib/utils";
+import type { PasswordValidation } from "../../types";
+import type { AuthFormClassNames } from "./auth-form";
+import { AuthLink } from "./auth-link";
+import { Captcha } from "./captcha";
+
+export type SignInFormProps = {
+  className?: string;
+  classNames?: AuthFormClassNames;
+  isSubmitting?: boolean;
+  redirectTo?: string;
+  setIsSubmitting?: (isSubmitting: boolean) => void;
+  passwordValidation?: PasswordValidation;
+};
+
+export function SignInForm({
+  className,
+  classNames,
+  isSubmitting,
+  redirectTo,
+  setIsSubmitting,
+  passwordValidation,
+}: SignInFormProps) {
+  const isHydrated = useIsHydrated();
+  const { t } = useTranslation("auth");
+  const { captchaRef, getCaptchaHeaders, resetCaptcha } = useCaptcha();
+
+  const {
+    hooks: { useLastUsedLoginMethod },
+    authClient,
+    basePath,
+    credentials,
+    viewPaths,
+    navigate,
+    toast,
+  } = useAuth();
+
+  const { isLastUsedLoginMethod } = useLastUsedLoginMethod();
+
+  const isLastUsed = isLastUsedLoginMethod("email");
+
+  const rememberMeEnabled = credentials?.rememberMe;
+  const usernameEnabled = credentials?.username;
+  const contextPasswordValidation = credentials?.passwordValidation;
+
+  passwordValidation = { ...contextPasswordValidation, ...passwordValidation };
+
+  const { onSuccess, isPending: transitionPending } = useOnSuccessTransition({
+    redirectTo,
+  });
+
+  const formSchema = z.object({
+    email: usernameEnabled
+      ? z.string().min(1, {
+          message: t("FIELD_IS_REQUIRED", { field: t("USERNAME") }),
+        })
+      : z
+          .email({
+            message: `${t("EMAIL")} ${t("IS_INVALID")}`,
+          })
+          .min(1, {
+            message: t("FIELD_IS_REQUIRED", { field: t("EMAIL") }),
+          }),
+    password: getPasswordSchema(passwordValidation, {
+      PASSWORD_REQUIRED: t("PASSWORD_REQUIRED"),
+      PASSWORD_TOO_SHORT: t("PASSWORD_TOO_SHORT"),
+      PASSWORD_TOO_LONG: t("PASSWORD_TOO_LONG"),
+      INVALID_PASSWORD: t("INVALID_PASSWORD"),
+    }),
+    rememberMe: z.boolean().optional(),
+  });
+
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: !rememberMeEnabled,
+    },
+  });
+
+  isSubmitting = isSubmitting || form.formState.isSubmitting || transitionPending;
+
+  useEffect(() => {
+    setIsSubmitting?.(form.formState.isSubmitting || transitionPending);
+  }, [form.formState.isSubmitting, transitionPending, setIsSubmitting]);
+
+  async function signIn({ email, password, rememberMe }: z.infer<typeof formSchema>) {
+    try {
+      let response: Record<string, unknown> = {};
+
+      if (usernameEnabled && !isValidEmail(email)) {
+        const fetchOptions: BetterFetchOption = {
+          throw: true,
+          headers: await getCaptchaHeaders("/sign-in/username"),
+        };
+
+        response = await authClient.signIn.username({
+          username: email,
+          password,
+          rememberMe,
+          fetchOptions,
+        });
+      } else {
+        const fetchOptions: BetterFetchOption = {
+          throw: true,
+          headers: await getCaptchaHeaders("/sign-in/email"),
+        };
+
+        response = await authClient.signIn.email({
+          email,
+          password,
+          rememberMe,
+          fetchOptions,
+        });
+      }
+
+      if (response.twoFactorRedirect) {
+        navigate(`${basePath}/${viewPaths.TWO_FACTOR}${window.location.search}`);
+      } else {
+        await onSuccess();
+      }
+    } catch (error) {
+      form.resetField("password");
+      resetCaptcha();
+
+      toast({
+        variant: "error",
+        message: getLocalizedError({ error, t }),
+      });
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form
+        className={cn("grid w-full gap-6", className, classNames?.base)}
+        noValidate={isHydrated}
+        onSubmit={form.handleSubmit(signIn)}
+      >
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className={classNames?.label}>
+                {usernameEnabled ? t("USERNAME") : t("EMAIL")}
+              </FormLabel>
+
+              <FormControl>
+                <Input
+                  autoComplete={usernameEnabled ? "username" : "email"}
+                  className={classNames?.input}
+                  disabled={isSubmitting}
+                  placeholder={
+                    usernameEnabled ? t("SIGN_IN_USERNAME_PLACEHOLDER") : t("EMAIL_PLACEHOLDER")
+                  }
+                  type={usernameEnabled ? "text" : "email"}
+                  {...field}
+                />
+              </FormControl>
+
+              <FormMessage className={classNames?.error} />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between">
+                <FormLabel className={classNames?.label}>{t("PASSWORD")}</FormLabel>
+
+                {credentials?.forgotPassword && (
+                  <AuthLink
+                    className={cn("text-sm hover:underline", classNames?.forgotPasswordLink)}
+                    pathName="FORGOT_PASSWORD"
+                  >
+                    {t("FORGOT_PASSWORD_LINK")}
+                  </AuthLink>
+                )}
+              </div>
+
+              <FormControl>
+                <PasswordField
+                  autoComplete="current-password"
+                  className={classNames?.input}
+                  disabled={isSubmitting}
+                  placeholder={t("PASSWORD_PLACEHOLDER")}
+                  {...field}
+                />
+              </FormControl>
+
+              <FormMessage className={classNames?.error} />
+            </FormItem>
+          )}
+        />
+
+        {rememberMeEnabled && (
+          <FormField
+            control={form.control}
+            name="rememberMe"
+            render={({ field }) => (
+              <FormItem className="flex">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    disabled={isSubmitting}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel>{t("REMEMBER_ME")}</FormLabel>
+              </FormItem>
+            )}
+          />
+        )}
+
+        <Captcha action="/sign-in/email" ref={captchaRef as RefObject<ReCAPTCHA>} />
+
+        <Button
+          className={cn(
+            "w-full",
+            classNames?.button,
+            classNames?.primaryButton,
+            isLastUsed && "relative",
+          )}
+          disabled={isSubmitting}
+          type="submit"
+        >
+          {isSubmitting ? <Loader2 className="animate-spin" /> : t("SIGN_IN_ACTION")}
+          {isLastUsed && (
+            <Badge
+              className="-top-2 -right-2 absolute border-blue-200 bg-blue-100 text-blue-800 text-xs"
+              variant="secondary"
+            >
+              Last Used
+            </Badge>
+          )}
+        </Button>
+      </form>
+    </Form>
+  );
+}

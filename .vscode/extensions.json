@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    "github.vscode-github-actions",
+    "Lokalise.i18n-ally",
+    "unifiedjs.vscode-mdx",
+    "editorconfig.editorconfig",
+    "drizzle-team.drizzle-vscode",
+    "eamodio.gitlens"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "home": "Home",
+    "title": "Raypx",
+    "docs": "Docs",
+    "application": "Application",
+    "dashboard": "Dashboard",
+    "books": "Books",
+    "configuration": "Configuration",
+    "users": "Users",
+    "account": "Account",
+    "openApp": "Open App",
+    "login": "Login",
+    "signUp": "Sign Up",
+    "apiDocumentation": "API Documentation"
+  }
+}
