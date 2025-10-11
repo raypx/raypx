@@ -1,0 +1,49 @@
+packages:
+  - apps/*
+  - packages/**
+  - tooling/*
+
+catalog:
+  '@hookform/resolvers': ^5.2.2
+  '@tanstack/react-query': ^5.90.2
+  '@types/node': ^24.7.1
+  cross-env: ^10.1.0
+  date-fns: ^4.1.0
+  dotenv-cli: ^10.0.0
+  drizzle-orm: ^0.44.6
+  drizzle-zod: ^0.8.3
+  lucide-react: 0.545.0
+  nitro: "npm:nitro-nightly@latest"
+  react-hook-form: ^7.65.0
+  rimraf: ^6.0.1
+  type-fest: 5.0.1
+  vite: ^7.1.9
+  vitest: ^3.2.4
+  zod: ^4.1.12
+  zustand: ^5.0.8
+
+catalogs:
+  dev:
+    '@biomejs/biome': ^2.2.5
+    lefthook: ^1.13.6
+    typescript: ^5.9.3
+  react19:
+    '@types/react': ^19.2.2
+    '@types/react-dom': ^19.2.1
+    react: ^19.2.0
+    react-dom: ^19.2.0
+  tailwindv4:
+    '@tailwindcss/postcss': ^4.1.14
+    tailwindcss: ^4.1.14
+
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - esbuild
+  - lefthook
+  - sharp
+
+overrides:
+  esbuild: ^0.25.10
+
+publicHoistPattern:
+  - '*prettier*'
