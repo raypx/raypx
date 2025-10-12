@@ -8,8 +8,8 @@ export interface CreateI18nConfigOptions<T extends readonly Language[]> {
   defaultLanguage: string;
   /** Default namespace */
   defaultNamespace?: string;
-  /** i18next resources object */
-  resources: InitOptions["resources"];
+  /** i18next resources object (optional if using lazy loading) */
+  resources?: InitOptions["resources"];
   /** Cookie name for language detection */
   cookieName?: string;
   /** Cookie expiration in minutes */
@@ -34,13 +34,11 @@ export function createI18nConfig<T extends readonly Language[]>({
 }: CreateI18nConfigOptions<T>): InitOptions {
   const languageKeys = languages.map((l) => l.key);
 
-  // Extract namespaces from resources
+  // Extract namespaces from resources if provided
   const namespaces = resources ? Object.keys(resources[defaultLanguage] || {}) : [defaultNamespace];
 
-  return {
+  const config: InitOptions = {
     defaultNS: defaultNamespace,
-    ns: namespaces,
-    resources,
     fallbackLng: defaultLanguage,
     supportedLngs: languageKeys,
     detection: enableDetection
@@ -64,4 +62,12 @@ export function createI18nConfig<T extends readonly Language[]>({
       useSuspense: true,
     },
   };
+
+  // Add resources if provided (eager loading)
+  if (resources) {
+    config.ns = namespaces;
+    config.resources = resources;
+  }
+
+  return config;
 }

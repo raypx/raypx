@@ -1,14 +1,16 @@
-import { Button } from "@raypx/ui/components/button";
-import { toast } from "@raypx/ui/components/toast";
 import { createFileRoute } from "@tanstack/react-router";
+import { CtaSection } from "@/components/home/cta-section";
+import { FeaturesSection } from "@/components/home/features-section";
+import { HeroSection } from "@/components/home/hero-section";
+import { TechStackSection } from "@/components/home/tech-stack-section";
 
 function HomePage() {
-  const onClick = () => {
-    toast.success("Hello");
-  };
   return (
-    <div className="min-h-screen">
-      <Button onClick={onClick}>Click me</Button>
+    <div>
+      <HeroSection />
+      <FeaturesSection />
+      <TechStackSection />
+      <CtaSection />
     </div>
   );
 }

@@ -8,8 +8,16 @@ import {
 import { cn } from "@raypx/ui/lib/utils";
 import { Check, Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import type { AppLanguageKey } from "@/lib/i18n/constants";
 
-const locales = [
+type LocaleConfig = {
+  readonly code: AppLanguageKey;
+  readonly name: string;
+  readonly flag: string;
+  readonly nativeName: string;
+};
+
+const locales: readonly LocaleConfig[] = [
   { code: "en", name: "English", flag: "🇺🇸", nativeName: "English" },
   { code: "zh", name: "Chinese", flag: "🇨🇳", nativeName: "中文" },
 ] as const;
@@ -17,8 +25,8 @@ const locales = [
 export const LangSwitcher = () => {
   const { i18n, t } = useTranslation(["common"]);
 
-  const locale = i18n.language;
-  const setLocale = (nextLocale: string) => {
+  const locale = i18n.language as AppLanguageKey;
+  const setLocale = (nextLocale: AppLanguageKey) => {
     i18n.changeLanguage(nextLocale);
   };
 
