@@ -7,12 +7,13 @@ import { docsI18nConfig } from "@/lib/docs/i18n";
 
 const { provider } = defineI18nUI(docsI18nConfig, {
   translations: {
-    cn: {
-      displayName: "Chinese",
-      search: "Translated Content",
+    zh: {
+      displayName: "简体中文",
+      search: "搜索",
     },
     en: {
       displayName: "English",
+      search: "Search",
     },
   },
 });
