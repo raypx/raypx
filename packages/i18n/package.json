@@ -7,7 +7,10 @@
     ".": "./src/index.ts",
     "./types": "./src/types.ts",
     "./config": "./src/config.ts",
-    "./server": "./src/server.ts"
+    "./client": "./src/client.ts",
+    "./resolver": "./src/resolver.ts",
+    "./server": "./src/server.ts",
+    "./server-runtime": "./src/server-runtime.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo tsconfig.tsbuildinfo",
@@ -22,6 +25,7 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "typescript": "catalog:dev"
   }

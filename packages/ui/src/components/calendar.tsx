@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, buttonVariants } from "@raypx/ui/components/button";
+import { useCalendarLocale } from "@raypx/ui/lib/calendar-locale";
 import { cn } from "@raypx/ui/lib/utils";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import * as React from "react";
@@ -14,11 +15,14 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
-  ...props
+  locale: localeProp,
+  ...rest
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const calendarLocale = useCalendarLocale();
+  const resolvedLocale = localeProp ?? calendarLocale;
 
   return (
     <DayPicker
@@ -127,8 +131,9 @@ function Calendar({
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
         ...formatters,
       }}
+      locale={resolvedLocale}
       showOutsideDays={showOutsideDays}
-      {...props}
+      {...rest}
     />
   );
 }

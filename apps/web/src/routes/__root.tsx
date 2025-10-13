@@ -1,26 +1,50 @@
 import { Analytics } from "@raypx/analytics";
+import type { I18nRequestContext } from "@raypx/i18n/server-runtime";
 import type { TRPCRouter } from "@raypx/trpc";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { createClientOnlyFn, createServerFn, createServerOnlyFn } from "@tanstack/react-start";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import { useTranslation } from "react-i18next";
+import type { i18n as I18nInstance } from "i18next";
+import { useEffect } from "react";
+import { I18nextProvider } from "react-i18next";
 import { Devtools } from "@/components/layout/devtools";
-import i18n, { syncLanguage } from "@/lib/i18n";
+import i18n, { createServerI18n, syncLanguage } from "@/lib/i18n";
 import { AVAILABLE_LANGUAGES } from "@/lib/i18n/constants";
 import { getUserLanguage } from "@/lib/i18n/server";
 import appCss from "@/styles/globals.css?url";
+
+let serverRuntimeModule: I18nRequestContext | null = null;
+
+const ensureServerRuntime = createServerOnlyFn(async () => {
+  if (!serverRuntimeModule) {
+    const { i18nRequestContext } = await import("@raypx/i18n/server-runtime");
+    serverRuntimeModule = i18nRequestContext;
+  }
+  return serverRuntimeModule;
+});
+
+const syncClientLanguage = createClientOnlyFn(async (language: string) => {
+  await i18n.changeLanguage(language);
+});
 
 type RootRouterContext = {
   queryClient: QueryClient;
   trpc: TRPCOptionsProxy<TRPCRouter>;
 };
 
-const initSsrApp = createServerFn({ method: "GET" }).handler(() => {
+const initSsrApp = createServerFn({ method: "GET" }).handler(async () => {
+  const language = getUserLanguage();
+
+  const runtime = await ensureServerRuntime();
+  const instance = await createServerI18n(language);
+  await syncLanguage(language);
+  runtime?.setRequestI18n(instance);
+
   return {
-    language: getUserLanguage(),
+    language,
   };
 });
 
@@ -45,33 +69,38 @@ export const Route = createRootRouteWithContext<RootRouterContext>()({
       },
     ],
   }),
-  loader: async () => {
-    // Setup language and theme in SSR to prevent hydratation errors
-    if (import.meta.env.SSR) {
-      const { language } = await initSsrApp();
-      i18n.changeLanguage(language);
-    }
-  },
+  loader: async () => initSsrApp(),
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { i18n } = useTranslation();
-  syncLanguage(i18n.language);
+  const { language } = Route.useLoaderData();
+  const serverInstance = serverRuntimeModule?.getRequestI18n() ?? null;
+  const activeI18n: I18nInstance = serverInstance ?? i18n;
 
-  const languageConfig = AVAILABLE_LANGUAGES.find(({ key }) => key === i18n.language);
+  if (!serverInstance && activeI18n.language !== language) {
+    void activeI18n.changeLanguage(language);
+  }
+
+  useEffect(() => {
+    void syncClientLanguage(language);
+  }, [language]);
+
+  const languageConfig = AVAILABLE_LANGUAGES.find(({ key }) => key === language);
 
   return (
-    <html dir={languageConfig?.dir ?? "ltr"} lang={i18n.language} suppressHydrationWarning>
+    <html dir={languageConfig?.dir ?? "ltr"} lang={language} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <I18nextProvider i18n={activeI18n}>
+          <ThemeProvider>
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </I18nextProvider>
         <Devtools />
         <Scripts />
         <Analytics />

@@ -4,6 +4,8 @@ export const DEFAULT_NAMESPACE = "common";
 
 export const DEFAULT_LANGUAGE_KEY = "en";
 
+export const COOKIE_NAME = "i18next";
+
 export const AVAILABLE_LANGUAGES = [
   {
     key: "en",

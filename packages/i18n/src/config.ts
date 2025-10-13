@@ -16,6 +16,8 @@ export interface CreateI18nConfigOptions<T extends readonly Language[]> {
   cookieMinutes?: number;
   /** Enable browser language detection */
   enableDetection?: boolean;
+  /** Detection order override */
+  detectionOrder?: string[];
 }
 
 /**
@@ -28,9 +30,10 @@ export function createI18nConfig<T extends readonly Language[]>({
   defaultLanguage,
   defaultNamespace = "common",
   resources,
-  cookieName = "i18next",
+  cookieName,
   cookieMinutes = 43200, // 30 days
   enableDetection = true,
+  detectionOrder,
 }: CreateI18nConfigOptions<T>): InitOptions {
   const languageKeys = languages.map((l) => l.key);
 
@@ -47,6 +50,7 @@ export function createI18nConfig<T extends readonly Language[]>({
           cookieMinutes,
           cookieOptions: { path: "/", sameSite: "lax" },
           lookupCookie: cookieName,
+          order: detectionOrder ?? ["cookie", "navigator", "htmlTag"],
         }
       : undefined,
 
