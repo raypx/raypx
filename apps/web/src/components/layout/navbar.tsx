@@ -10,7 +10,7 @@ import { Skeleton } from "@raypx/ui/components/skeleton";
 import { ThemeSwitcher } from "@raypx/ui/components/theme-switcher";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useScroll } from "@/hooks/use-scroll";
 import Container from "./container";
@@ -36,18 +36,21 @@ export function Navbar({ scroll }: NavBarProps) {
   const location = useLocation();
   const { t, i18n } = useTranslation("layout");
 
-  const menuLinks = [
-    {
-      title: "nav.home",
-      to: "/",
-      external: false,
-    },
-    {
-      title: "nav.docs",
-      to: `/${i18n.language}/docs`,
-      external: false,
-    },
-  ];
+  const menuLinks = useMemo(
+    () => [
+      {
+        title: "nav.home",
+        to: "/",
+        external: false,
+      },
+      {
+        title: "nav.docs",
+        to: `/${i18n.language}/docs`,
+        external: false,
+      },
+    ],
+    [i18n.language],
+  );
 
   useEffect(() => {
     setMounted(true);

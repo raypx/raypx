@@ -7,7 +7,7 @@ export const i18nConfig: InitOptions = createI18nConfig({
   languages: AVAILABLE_LANGUAGES,
   defaultLanguage: DEFAULT_LANGUAGE_KEY as string,
   defaultNamespace: DEFAULT_NAMESPACE,
-  cookieName: "lang",
+  cookieName: "i18next",
   cookieMinutes: 43200, // 30 days
   enableDetection: true,
 });

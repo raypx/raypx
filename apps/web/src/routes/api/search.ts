@@ -6,13 +6,13 @@ import { source } from "@/lib/source";
 const server = createFromSource(source, {
   localeMap: {
     en: "english",
-    cn: {
+    zh: {
       tokenizer: createTokenizer(),
     },
   },
 });
 
-export const ServerRoute = createFileRoute("/api/search")({
+export const Route = createFileRoute("/api/search")({
   server: {
     handlers: {
       GET: async ({ request }) => server.GET(request),
