@@ -1,14 +1,16 @@
 import { ThemeSwitcherHorizontal } from "@raypx/ui/components/theme-switcher";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
+import { docsI18nConfig } from "./docs/i18n";
 
-export function baseOptions(): BaseLayoutProps {
+export function baseOptions(lang: string): BaseLayoutProps {
   return {
     nav: {
-      title: "Raypx",
+      title: `Raypx ${lang}`,
     },
     themeSwitch: {
       component: <ThemeSwitcherHorizontal />,
     },
     githubUrl: "https://github.com/raypx/raypx",
+    i18n: docsI18nConfig,
   } satisfies BaseLayoutProps;
 }

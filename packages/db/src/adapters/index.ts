@@ -1,14 +1,3 @@
-import type { DatabaseConfig } from "../types";
-
-/**
- * Common adapter configuration interface
- */
-export interface AdapterFactory<TClient> {
-  createClient: <TSchema extends Record<string, unknown>>(
-    config: DatabaseConfig<TSchema>,
-  ) => TClient;
-}
-
 /**
  * Shared Drizzle client configuration options
  */

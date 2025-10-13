@@ -16,9 +16,7 @@
   },
   "dependencies": {
     "@raypx/shared": "workspace:*",
-    "@vercel/analytics": "^1.5.0",
-    "posthog-js": "^1.275.1",
-    "posthog-node": "^5.9.5"
+    "@vercel/analytics": "^1.5.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

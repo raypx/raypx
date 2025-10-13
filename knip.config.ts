@@ -1,8 +1,8 @@
 import type { KnipConfig } from "knip";
 
 const config: KnipConfig = {
-  ignoreDependencies: ["tsx", "@turbo/gen", "@commitlint/cli", "consola", "vite"],
-  ignoreBinaries: ["test:e2e", "wait-on", "only-allow"],
+  ignoreDependencies: ["@turbo/gen", "@commitlint/cli"],
+  ignoreBinaries: ["only-allow"],
   ignore: ["turbo/generators/**", "**/*.css", "**/envs.ts"],
   ignoreExportsUsedInFile: true,
   drizzle: true,
@@ -39,13 +39,7 @@ const config: KnipConfig = {
     "packages/ui": {
       entry: [],
       project: ["src/**/*.{ts,tsx}"],
-      ignoreDependencies: [
-        "tailwindcss",
-        "tw-animate-css",
-        "date-fns",
-        "zod",
-        "@hookform/resolvers",
-      ],
+      ignoreDependencies: ["tailwindcss", "tw-animate-css", "date-fns", "@hookform/resolvers"],
     },
     "tooling/tsconfig": {
       entry: [],

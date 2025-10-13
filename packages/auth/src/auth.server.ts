@@ -1,4 +1,4 @@
-import { db, nanoid, schemas, uuidv7 } from "@raypx/db";
+import { getDatabase, nanoid, schemas, uuidv7 } from "@raypx/db";
 import { getMailer } from "@raypx/email";
 import {
   ResetPasswordEmail,
@@ -115,7 +115,7 @@ const buildServerPlugins = () => {
   return plugins;
 };
 
-const createConfig = (): BetterAuthOptions => {
+const createConfig = async (): Promise<BetterAuthOptions> => {
   const env = envs();
 
   return {
@@ -163,7 +163,7 @@ const createConfig = (): BetterAuthOptions => {
       expiresIn: 60 * 60 * 24 * 7, // 7 days
       updateAge: 60 * 60 * 24, // 1 day
     },
-    database: drizzleAdapter(db, {
+    database: drizzleAdapter(await getDatabase(), {
       provider: "pg",
       schema: schemas,
     }),
@@ -218,7 +218,7 @@ const createConfig = (): BetterAuthOptions => {
   };
 };
 
-const config: BetterAuthOptions = createConfig();
+const config = await createConfig();
 
 export const auth = betterAuth(config);
 

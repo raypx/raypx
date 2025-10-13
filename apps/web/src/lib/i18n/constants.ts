@@ -7,9 +7,11 @@ export const DEFAULT_LANGUAGE_KEY = "en";
 export const AVAILABLE_LANGUAGES = [
   {
     key: "en",
+    dir: "ltr",
   } as const,
   {
     key: "zh",
+    dir: "ltr",
   } as const,
 ] satisfies Language[];
 

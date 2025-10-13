@@ -30,24 +30,24 @@ const customNavigationMenuTriggerStyle = cn(
   "data-[state=open]:bg-transparent data-[state=open]:text-foreground",
 );
 
-const menuLinks = [
-  {
-    title: "nav.home",
-    to: "/",
-    external: false,
-  },
-  {
-    title: "nav.docs",
-    to: "/docs",
-    external: false,
-  },
-];
-
 export function Navbar({ scroll }: NavBarProps) {
   const scrolled = useScroll(50);
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
-  const { t } = useTranslation("layout");
+  const { t, i18n } = useTranslation("layout");
+
+  const menuLinks = [
+    {
+      title: "nav.home",
+      to: "/",
+      external: false,
+    },
+    {
+      title: "nav.docs",
+      to: `/${i18n.language}/docs`,
+      external: false,
+    },
+  ];
 
   useEffect(() => {
     setMounted(true);

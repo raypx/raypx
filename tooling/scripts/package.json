@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@raypx/shared": "workspace:*",
-    "consola": "^3.4.2",
     "deepmerge": "^4.3.1",
     "fs-extra": "^11.3.2",
     "listr2": "^9.0.4",

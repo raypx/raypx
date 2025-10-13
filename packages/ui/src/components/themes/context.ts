@@ -17,11 +17,6 @@ export const themes = [...resolvedThemes, "system"] as const;
 export const themeModeSchema = z.enum(themes);
 
 /**
- * Zod schema for validating resolved theme values
- */
-export const resolvedThemeSchema = z.enum(resolvedThemes);
-
-/**
  * LocalStorage key for persisting theme preference
  */
 export const themeKey = "theme" as const;

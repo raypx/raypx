@@ -8,13 +8,17 @@ import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page
 import { useMemo } from "react";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
-import { docs } from "../../../source.generated";
+import { docs } from "../../../../source.generated";
 
-export const Route = createFileRoute("/docs/$")({
+export const Route = createFileRoute("/$lang/docs/$")({
   component: DocPage,
   loader: async ({ params }) => {
-    const slugs = params._splat?.split("/") ?? [];
-    const data = await loader({ data: slugs });
+    const data = await loader({
+      data: {
+        slugs: params._splat?.split("/") ?? [],
+        lang: params.lang,
+      },
+    });
     await clientLoader.preload(data.path);
     return data;
   },
@@ -23,14 +27,14 @@ export const Route = createFileRoute("/docs/$")({
 const loader = createServerFn({
   method: "GET",
 })
-  .inputValidator((slugs: string[]) => slugs)
-  .handler(async ({ data: slugs }) => {
+  .inputValidator((params: { slugs: string[]; lang?: string }) => params)
+  .handler(async ({ data: { slugs, lang } }) => {
     try {
-      const page = source.getPage(slugs);
+      const page = source.getPage(slugs, lang);
       if (!page) throw notFound();
 
       return {
-        tree: source.pageTree as object,
+        tree: source.getPageTree(lang),
         path: page.path,
       };
     } catch (error) {
@@ -66,11 +70,12 @@ const clientLoader = createClientLoader(docs.doc, {
 
 function DocPage() {
   const data = Route.useLoaderData();
+  const { lang } = Route.useParams();
   const Content = clientLoader.getComponent(data.path);
   const tree = useMemo(() => transformPageTree(data.tree as PageTree.Folder), [data.tree]);
 
   return (
-    <DocsLayout {...baseOptions()} tree={tree}>
+    <DocsLayout {...baseOptions(lang)} tree={tree}>
       <Content />
     </DocsLayout>
   );

@@ -47,7 +47,7 @@
     "@tabler/icons-react": "^3.35.0",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "^1.132.47",
-    "@tanstack/react-start": "^1.132.52",
+    "@tanstack/react-start": "^1.132.56",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
