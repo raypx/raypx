@@ -1,8 +1,9 @@
-import type { i18n as I18nInstance, InitOptions } from "i18next";
+import type { i18n as I18nInstance, InitOptions, ResourceKey } from "i18next";
 import i18next, { createInstance } from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { initReactI18next } from "react-i18next";
+import type { JsonValue, Promisable, Simplify } from "type-fest";
 
 /**
  * Translation resolver function type
@@ -11,14 +12,14 @@ import { initReactI18next } from "react-i18next";
  * @param namespace - The namespace (e.g., 'common', 'home')
  * @returns A promise that resolves to the translation data
  */
-export type TranslationResolver = (language: string, namespace: string) => Promise<any>;
+export type TranslationResolver = (language: string, namespace: string) => Promise<JsonValue>;
 
 /**
  * Callback function to sync language changes with external libraries
  * Can be synchronous or asynchronous
  * @param langKey - The language key that was changed to
  */
-export type LanguageSyncCallback = (langKey: string) => void | Promise<void>;
+export type LanguageSyncCallback = (langKey: string) => Promisable<void>;
 
 /**
  * Initialize i18n for client-side usage
@@ -27,7 +28,7 @@ export type LanguageSyncCallback = (langKey: string) => void | Promise<void>;
  * @param syncCallback - Optional callback to sync language changes (e.g., with dayjs)
  * @returns The initialized i18n instance
  */
-type InitializeI18nOptions = {
+type InitializeI18nOptions = Simplify<{
   /**
    * Target i18n instance. Defaults to the shared singleton.
    */
@@ -37,7 +38,7 @@ type InitializeI18nOptions = {
    * Defaults to true in the browser and false on the server.
    */
   enableBrowserLanguageDetection?: boolean;
-};
+}>;
 
 const BACKEND_ATTACHED = Symbol.for("raypx.i18n.backendAttached");
 const DETECTOR_ATTACHED = Symbol.for("raypx.i18n.detectorAttached");
@@ -55,7 +56,7 @@ function attachResolver(instance: I18nInstance, resolver: TranslationResolver | 
     resourcesToBackend(async (language, namespace, callback) => {
       try {
         const data = await resolver(language, namespace);
-        callback(null, data);
+        callback(null, data as ResourceKey);
       } catch (error) {
         console.error(`Error loading translation: ${language}/${namespace}`, error);
         callback(error as Error, null);
@@ -176,14 +177,14 @@ export async function createI18nInstance(
   return instance;
 }
 
-export interface CreateScopedI18nOptions {
+export type CreateScopedI18nOptions = Simplify<{
   config: InitOptions;
   language: string;
   namespaces?: string[];
   resolver?: TranslationResolver;
   syncCallback?: LanguageSyncCallback;
   enableBrowserLanguageDetection?: boolean;
-}
+}>;
 
 export async function createScopedI18n({
   config,

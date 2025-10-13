@@ -1,7 +1,8 @@
 import type { InitOptions } from "i18next";
+import type { Simplify } from "type-fest";
 import type { Language } from "./types";
 
-export interface CreateI18nConfigOptions<T extends readonly Language[]> {
+export type CreateI18nConfigOptions<T extends readonly Language[]> = Simplify<{
   /** Available languages configuration */
   languages: T;
   /** Default language key */
@@ -18,7 +19,7 @@ export interface CreateI18nConfigOptions<T extends readonly Language[]> {
   enableDetection?: boolean;
   /** Detection order override */
   detectionOrder?: string[];
-}
+}>;
 
 /**
  * Creates i18next configuration

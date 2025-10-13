@@ -19,6 +19,7 @@ export const syncLanguage = async (langKey: string) => {
 
 // Initialize i18n with lazy loading resolver and dayjs sync
 export const i18n = initializeI18n(i18nConfig, translationResolver, syncLanguage);
+export const changeLanguage = i18n.changeLanguage;
 
 export default i18n;
 

@@ -2,6 +2,7 @@ import { createTranslationResolver } from "@raypx/i18n";
 import { createI18nConfig } from "@raypx/i18n/config";
 import { logger } from "@raypx/shared/logger";
 import type { InitOptions } from "i18next";
+import type { JsonValue } from "type-fest";
 import {
   AVAILABLE_LANGUAGES,
   COOKIE_NAME,
@@ -9,7 +10,7 @@ import {
   DEFAULT_NAMESPACE,
 } from "./constants";
 
-type TranslationModule = { default: Record<string, unknown> };
+type TranslationModule = { default?: JsonValue };
 
 const translationModules = import.meta.glob<TranslationModule>("../../locales/*/*.json");
 
@@ -24,7 +25,7 @@ export const translationResolver = createTranslationResolver(translationModules,
 
 export const i18nConfig: InitOptions = createI18nConfig({
   languages: AVAILABLE_LANGUAGES,
-  defaultLanguage: DEFAULT_LANGUAGE_KEY as string,
+  defaultLanguage: DEFAULT_LANGUAGE_KEY,
   defaultNamespace: DEFAULT_NAMESPACE,
   cookieName: COOKIE_NAME,
   cookieMinutes: 43200, // 30 days

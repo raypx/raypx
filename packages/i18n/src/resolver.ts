@@ -1,9 +1,10 @@
+import type { JsonValue, Simplify } from "type-fest";
 import type { TranslationResolver } from "./client";
 
-type TranslationModule = { default?: Record<string, unknown> };
+type TranslationModule = { default?: JsonValue } & Record<string, JsonValue>;
 type TranslationLoader = () => Promise<TranslationModule>;
 
-interface CreateTranslationResolverOptions {
+type CreateTranslationResolverOptions = Simplify<{
   /**
    * Custom path matcher to extract language/namespace from module path.
    * Must provide two capture groups for language and namespace respectively.
@@ -17,7 +18,7 @@ interface CreateTranslationResolverOptions {
    * Callback invoked when translation file fails to load.
    */
   onLoadError?(language: string, namespace: string, error: unknown): void;
-}
+}>;
 
 type TranslationManifest = Record<string, Record<string, TranslationLoader>>;
 
@@ -32,8 +33,12 @@ function buildManifest(
     const [, language, namespace] = match;
     if (!language || !namespace) return acc;
 
-    acc[language] ??= {};
-    acc[language][namespace] = loader;
+    const languageAcc = acc[language];
+    if (languageAcc) {
+      languageAcc[namespace] = loader;
+    } else {
+      acc[language] = { [namespace]: loader };
+    }
     return acc;
   }, {});
 }
@@ -55,7 +60,7 @@ export function createTranslationResolver(
 
     try {
       const data = await loader();
-      return data.default ?? data;
+      return data.default ?? (data as JsonValue);
     } catch (error) {
       options.onLoadError?.(language, namespace, error);
       return {};

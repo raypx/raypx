@@ -1,5 +1,5 @@
-import type { Locale } from "date-fns";
-import enUS from "date-fns/locale/en-US";
+import type { Locale } from "date-fns/locale";
+import { enUS } from "date-fns/locale/en-US";
 import { useSyncExternalStore } from "react";
 
 let currentLocale: Locale = enUS;

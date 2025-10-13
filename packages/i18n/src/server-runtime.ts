@@ -1,25 +1,20 @@
-import { AsyncLocalStorage } from "node:async_hooks";
-import type { i18n as I18nInstance } from "i18next";
+import { createServerOnlyFn } from "@tanstack/react-start";
+import type { I18nRequestContext } from "./types";
 
-const storage = new AsyncLocalStorage<I18nInstance>();
+let cachedRequestContext: I18nRequestContext | null = null;
 
-export const setRequestI18n = (instance: I18nInstance) => {
-  storage.enterWith(instance);
+const loadRequestContext = async (): Promise<I18nRequestContext> => {
+  const module = await import("./context");
+  cachedRequestContext = module.i18nRequestContext;
+  return cachedRequestContext;
 };
 
-export const getRequestI18n = () => storage.getStore();
+export const ensureServerRequestContext = createServerOnlyFn(async () => {
+  if (!cachedRequestContext) {
+    cachedRequestContext = await loadRequestContext();
+  }
 
-export const runWithRequestI18n = async <T>(
-  instance: I18nInstance,
-  callback: () => Promise<T> | T,
-) => {
-  return storage.run(instance, callback);
-};
+  return cachedRequestContext;
+});
 
-export const i18nRequestContext = {
-  getRequestI18n,
-  runWithRequestI18n,
-  setRequestI18n,
-};
-
-export type I18nRequestContext = typeof i18nRequestContext;
+export const getServerRequestContext = () => cachedRequestContext ?? null;

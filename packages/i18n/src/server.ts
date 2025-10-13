@@ -1,17 +1,18 @@
-import type { Language } from "./types";
+import type { ReadonlyDeep, Simplify } from "type-fest";
+import type { Language, LanguageKey } from "./types";
 
-export interface DetectLanguageOptions<T extends readonly Language[]> {
+export type DetectLanguageOptions<T extends readonly Language[]> = Simplify<{
   /** Available languages */
-  availableLanguages: T;
+  availableLanguages: ReadonlyDeep<T>;
   /** Default language key */
-  defaultLanguage: string;
+  defaultLanguage: LanguageKey<T>;
   /** Optional input language key (highest priority) */
   input?: string;
   /** Cookie value from i18next cookie */
   cookieValue?: string;
   /** Accept-Language header value */
   acceptLanguageHeader?: string;
-}
+}>;
 
 /**
  * Detects user language from multiple sources with priority:
