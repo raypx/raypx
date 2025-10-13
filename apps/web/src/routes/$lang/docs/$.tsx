@@ -10,6 +10,11 @@ import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 import { docs } from "../../../../source.generated";
 
+type LoaderData = {
+  tree: object;
+  path: string;
+};
+
 export const Route = createFileRoute("/$lang/docs/$")({
   component: DocPage,
   loader: async ({ params }) => {
@@ -27,20 +32,16 @@ export const Route = createFileRoute("/$lang/docs/$")({
 const loader = createServerFn({
   method: "GET",
 })
-  .inputValidator((params: { slugs: string[]; lang?: string }) => params)
+  .inputValidator((params: { slugs: string[]; lang: string }) => params)
   .handler(async ({ data: { slugs, lang } }) => {
-    try {
-      const page = source.getPage(slugs, lang);
-      if (!page) throw notFound();
+    const page = source.getPage(slugs, lang);
+    if (!page) throw notFound();
 
-      return {
-        tree: source.getPageTree(lang),
-        path: page.path,
-      };
-    } catch (error) {
-      console.error("error", error);
-      throw notFound();
-    }
+    const tree = source.getPageTree(lang);
+    return {
+      tree: tree,
+      path: page.path,
+    } as LoaderData;
   });
 
 const clientLoader = createClientLoader(docs.doc, {
@@ -69,7 +70,7 @@ const clientLoader = createClientLoader(docs.doc, {
 });
 
 function DocPage() {
-  const data = Route.useLoaderData();
+  const data = Route.useLoaderData() as { tree: PageTree.Root; path: string };
   const { lang } = Route.useParams();
   const Content = clientLoader.getComponent(data.path);
   const tree = useMemo(() => transformPageTree(data.tree as PageTree.Folder), [data.tree]);

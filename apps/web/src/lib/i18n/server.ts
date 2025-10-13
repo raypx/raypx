@@ -1,4 +1,4 @@
-import { detectLanguage } from "@raypx/i18n";
+import { detectLanguage } from "@raypx/i18n/server";
 import { getCookie, getRequestHeaders, setCookie } from "@tanstack/react-start/server";
 
 import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_KEY } from "@/lib/i18n/constants";

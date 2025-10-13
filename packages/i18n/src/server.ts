@@ -120,3 +120,5 @@ export function getLanguageConfig<T extends readonly Language[]>(
 ): T[number] | undefined {
   return availableLanguages.find((l) => l.key === key);
 }
+
+export * from "./config";

@@ -110,9 +110,11 @@ export function Navbar({ scroll }: NavBarProps) {
               <Skeleton className="size-8 border rounded-full" />
             ) : (
               <div className="flex items-center gap-x-4">
-                <Button className="cursor-pointer" size="sm" variant="outline">
-                  {t("nav.login")}
-                </Button>
+                <Link to="/sign-in">
+                  <Button className="cursor-pointer" size="sm" variant="outline">
+                    {t("nav.login")}
+                  </Button>
+                </Link>
                 <Link
                   className={cn(
                     buttonVariants({
@@ -120,7 +122,7 @@ export function Navbar({ scroll }: NavBarProps) {
                       size: "sm",
                     }),
                   )}
-                  to="/"
+                  to="/sign-up"
                 >
                   {t("nav.signUp")}
                 </Link>

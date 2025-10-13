@@ -1,4 +1,4 @@
-import { initializeI18n } from "@raypx/i18n/client";
+import { initializeI18n } from "@raypx/i18n";
 import { i18nConfig, translationResolver } from "@/lib/i18n/config";
 
 /**
@@ -16,6 +16,6 @@ export const syncLanguage = async (langKey: string) => {
 };
 
 // Initialize i18n with lazy loading resolver and dayjs sync
-const i18n = initializeI18n(i18nConfig, translationResolver, syncLanguage);
+export const i18n = initializeI18n(i18nConfig, translationResolver, syncLanguage);
 
 export default i18n;
