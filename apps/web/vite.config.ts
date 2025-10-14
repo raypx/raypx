@@ -55,6 +55,7 @@ const config = defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
+      external: ["next/server"],
       output: {
         manualChunks: createChunkSplitter(),
       },
