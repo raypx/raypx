@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import Container from "@/components/layout/container";
 
 export function HeroSection() {
-  const { t } = useTranslation("home");
+  const { t, i18n } = useTranslation("home");
 
   return (
     <section className="relative py-20 md:py-32 overflow-hidden">
@@ -42,7 +42,7 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
-            <Link to="/docs">
+            <Link params={{ lang: i18n.language }} to="/$lang/docs">
               <Button className="group" size="lg">
                 {t("hero.getStarted")}
                 <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />

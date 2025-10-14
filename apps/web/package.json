@@ -6,6 +6,7 @@
     "build": "pnpm with-env vite build",
     "dev": "pnpm with-env vite dev",
     "serve": "pnpm with-env vite preview",
+    "clean": "rimraf dist .turbo .tanstack .nitro .output .vercel dist",
     "test": "vitest run",
     "with-env": "dotenv -e ../../.env --"
   },

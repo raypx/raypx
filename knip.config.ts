@@ -23,8 +23,9 @@ const config: KnipConfig = {
       ],
     },
     "apps/web": {
-      entry: ["src/**/*.{ts,tsx}", "src/env.ts"],
+      entry: ["src/**/*.{ts,tsx,js}", "src/env.ts"],
       project: ["src/**/*.{ts,tsx}"],
+      ignoreDependencies: ["tw-animate-css"],
     },
     "apps/docs": {
       entry: ["source.config.ts"],
@@ -39,7 +40,7 @@ const config: KnipConfig = {
     "packages/ui": {
       entry: [],
       project: ["src/**/*.{ts,tsx}"],
-      ignoreDependencies: ["tailwindcss", "tw-animate-css", "date-fns", "@hookform/resolvers"],
+      ignoreDependencies: ["tailwindcss", "tw-animate-css", "@hookform/resolvers"],
     },
     "tooling/tsconfig": {
       entry: [],
@@ -48,9 +49,7 @@ const config: KnipConfig = {
     "packages/db": {
       entry: ["seed.ts"],
     },
-    "packages/email": {
-      ignoreDependencies: ["@react-email/preview-server"],
-    },
+    "packages/email": {},
     "tooling/scripts": {
       entry: [],
     },

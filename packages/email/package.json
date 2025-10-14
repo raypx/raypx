@@ -10,7 +10,6 @@
   },
   "scripts": {
     "clean": "rimraf dist .turbo tsconfig.tsbuildinfo",
-    "preview": "email dev --port 3465 --dir ./src/emails",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
@@ -26,12 +25,10 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@react-email/preview-server": "^4.3.0",
     "@types/node": "catalog:",
     "@types/nodemailer": "^7.0.2",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "react-email": "^4.3.0",
     "typescript": "catalog:dev"
   }
 }
