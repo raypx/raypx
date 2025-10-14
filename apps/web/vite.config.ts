@@ -53,6 +53,7 @@ const config = defineConfig({
   },
   build: {
     sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: createChunkSplitter(),
@@ -72,7 +73,11 @@ const config = defineConfig({
     tsConfigPaths(),
     nitro(),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      router: {
+        routesDirectory: "app",
+      },
+    }),
     viteReact(),
   ],
 });

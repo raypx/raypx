@@ -48,6 +48,7 @@
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "^1.132.47",
     "@tanstack/react-start": "^1.132.56",
+    "@unpic/react": "^1.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
