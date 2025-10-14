@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { I18nextProvider } from "react-i18next";
 import { Devtools } from "@/components/layout/devtools";
 import Loading from "@/components/layout/loading";
+import NotFound from "@/components/layout/not-found";
 import i18n, { changeLanguage, createServerI18n, syncLanguage } from "@/lib/i18n";
 import { AVAILABLE_LANGUAGES } from "@/lib/i18n/constants";
 import { getUserLanguage } from "@/lib/i18n/server";
@@ -59,8 +60,8 @@ export const Route = createRootRouteWithContext<RootRouterContext>()({
   }),
   loader: async () => initSsrApp(),
   component: RootComponent,
-  notFoundComponent: () => <NotFound />,
-  errorComponent: () => <NotFound />,
+  notFoundComponent: () => <NotFoundComponent />,
+  errorComponent: () => <NotFoundComponent />,
   pendingComponent: () => <Loading />,
 });
 
@@ -109,10 +110,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   );
 }
 
-function NotFound() {
+function NotFoundComponent() {
   return (
     <div>
-      <h1>Not Found</h1>
+      <NotFound />
     </div>
   );
 }
