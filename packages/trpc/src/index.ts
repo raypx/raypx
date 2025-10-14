@@ -10,3 +10,4 @@ export { type TRPCRouter, trpcRouter } from "./router";
 
 // Export individual routers for composition
 export { todosRouter } from "./routers/todos";
+export { usersRouter } from "./routers/users";

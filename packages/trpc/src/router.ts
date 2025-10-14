@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "./init";
 import { todosRouter } from "./routers/todos";
+import { usersRouter } from "./routers/users";
 
 /**
  * Root tRPC router
@@ -7,6 +8,7 @@ import { todosRouter } from "./routers/todos";
  */
 export const trpcRouter = createTRPCRouter({
   todos: todosRouter,
+  users: usersRouter,
 });
 
 /**
