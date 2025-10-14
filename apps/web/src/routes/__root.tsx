@@ -4,13 +4,14 @@ import type { TRPCRouter } from "@raypx/trpc";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { createClientOnlyFn, createServerFn } from "@tanstack/react-start";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { i18n as I18nInstance } from "i18next";
 import { useEffect } from "react";
 import { I18nextProvider } from "react-i18next";
 import { Devtools } from "@/components/layout/devtools";
+import Loading from "@/components/layout/loading";
 import i18n, { changeLanguage, createServerI18n, syncLanguage } from "@/lib/i18n";
 import { AVAILABLE_LANGUAGES } from "@/lib/i18n/constants";
 import { getUserLanguage } from "@/lib/i18n/server";
@@ -57,9 +58,19 @@ export const Route = createRootRouteWithContext<RootRouterContext>()({
     ],
   }),
   loader: async () => initSsrApp(),
-  shellComponent: RootDocument,
-  notFoundComponent: NotFound,
+  component: RootComponent,
+  notFoundComponent: () => <NotFound />,
+  errorComponent: () => <NotFound />,
+  pendingComponent: () => <Loading />,
 });
+
+function RootComponent() {
+  return (
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+  );
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { language } = Route.useLoaderData();
