@@ -13,6 +13,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useScroll } from "@/hooks/use-scroll";
+import { useAppLanguage } from "@/state/app-store";
 import Container from "./container";
 import { LangSwitcher } from "./lang-switcher";
 import { Logo } from "./logo";
@@ -34,7 +35,8 @@ export function Navbar({ scroll }: NavBarProps) {
   const scrolled = useScroll(50);
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
-  const { t, i18n } = useTranslation("layout");
+  const { t } = useTranslation("layout");
+  const { language } = useAppLanguage();
 
   const menuLinks = useMemo(
     () => [
@@ -45,11 +47,11 @@ export function Navbar({ scroll }: NavBarProps) {
       },
       {
         title: "nav.docs",
-        to: `/${i18n.language}/docs`,
+        to: `/${language}/docs`,
         external: false,
       },
     ],
-    [i18n.language],
+    [language],
   );
 
   useEffect(() => {

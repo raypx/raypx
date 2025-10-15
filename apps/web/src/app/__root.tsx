@@ -14,8 +14,9 @@ import { Devtools } from "@/components/layout/devtools";
 import Loading from "@/components/layout/loading";
 import NotFound from "@/components/layout/not-found";
 import i18n, { changeLanguage, createServerI18n, syncLanguage } from "@/lib/i18n";
-import { AVAILABLE_LANGUAGES } from "@/lib/i18n/constants";
+import { type AppLanguageKey, AVAILABLE_LANGUAGES } from "@/lib/i18n/constants";
 import { getUserLanguage } from "@/lib/i18n/server";
+import { AppStoreProvider } from "@/state/app-store";
 import appCss from "@/styles/globals.css?url";
 
 const syncClientLanguage = createClientOnlyFn(async (language: string) => {
@@ -97,10 +98,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <I18nextProvider i18n={activeI18n}>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <AppStoreProvider initialLanguage={language as AppLanguageKey}>
+            <ThemeProvider>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </AppStoreProvider>
         </I18nextProvider>
         <Devtools />
         <Scripts />

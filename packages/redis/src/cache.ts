@@ -1,4 +1,5 @@
 import { createClient, type RedisClientType } from "redis";
+import superjson from "superjson";
 import {
   ARRAY_INDEX_NOT_FOUND,
   COMPOUND_KEY_SEPARATOR,
@@ -33,11 +34,13 @@ import {
   type TaggedCacheStore,
 } from "./types";
 
-// TODO: Use superjson for better serialization
-const json = {
+// Prefix signals the payload uses SuperJSON so legacy plain JSON values still deserialize.
+const SUPERJSON_PREFIX = "sj:";
+
+const serializer = {
   serialize: (value: CacheValue): string => {
     try {
-      return JSON.stringify(value);
+      return `${SUPERJSON_PREFIX}${superjson.stringify(value)}`;
     } catch (error) {
       throw new CacheSerializationError(
         `Failed to serialize value: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -49,6 +52,19 @@ const json = {
     if (value === null) {
       return null;
     }
+
+    if (value.startsWith(SUPERJSON_PREFIX)) {
+      const serialized = value.slice(SUPERJSON_PREFIX.length);
+      try {
+        return superjson.parse<T>(serialized);
+      } catch (error) {
+        throw new CacheSerializationError(
+          `Failed to deserialize value: ${error instanceof Error ? error.message : "Unknown error"}`,
+          serialized,
+        );
+      }
+    }
+
     try {
       return JSON.parse(value) as T;
     } catch (error) {
@@ -485,11 +501,11 @@ export class Cache implements RedisCacheStore {
   }
 
   private serialize(value: CacheValue): string {
-    return json.serialize(value);
+    return serializer.serialize(value);
   }
 
-  private deserialize<T>(value: string): T {
-    return json.deserialize<T>(value) as T;
+  private deserialize<T>(value: string): T | null {
+    return serializer.deserialize<T>(value);
   }
 
   private normalizeTtl(ttl?: CacheExpiration): number | undefined {

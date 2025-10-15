@@ -9,6 +9,7 @@ import { cn } from "@raypx/ui/lib/utils";
 import { Check, Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AppLanguageKey } from "@/lib/i18n/constants";
+import { useAppLanguage } from "@/state/app-store";
 
 type LocaleConfig = {
   readonly code: AppLanguageKey;
@@ -23,12 +24,8 @@ const locales: readonly LocaleConfig[] = [
 ] as const;
 
 export const LangSwitcher = () => {
-  const { i18n, t } = useTranslation(["common"]);
-
-  const locale = i18n.language as AppLanguageKey;
-  const setLocale = (nextLocale: AppLanguageKey) => {
-    i18n.changeLanguage(nextLocale);
-  };
+  const { t } = useTranslation(["common"]);
+  const { language: locale, setLanguage } = useAppLanguage();
 
   return (
     <DropdownMenu>
@@ -50,7 +47,7 @@ export const LangSwitcher = () => {
               locale === loc.code && "bg-accent",
             )}
             key={loc.code}
-            onClick={() => setLocale(loc.code)}
+            onClick={() => setLanguage(loc.code)}
           >
             <div className="flex items-center gap-3">
               <span className="text-lg">{loc.flag}</span>
