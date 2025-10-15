@@ -98,12 +98,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <I18nextProvider i18n={activeI18n}>
-          <AppStoreProvider initialLanguage={language as AppLanguageKey}>
-            <ThemeProvider>
+          <ThemeProvider>
+            <AppStoreProvider initialLanguage={language as AppLanguageKey}>
               {children}
               <Toaster />
-            </ThemeProvider>
-          </AppStoreProvider>
+            </AppStoreProvider>
+          </ThemeProvider>
         </I18nextProvider>
         <Devtools />
         <Scripts />
