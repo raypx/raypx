@@ -11,7 +11,10 @@ export type LoaderData = {
 };
 
 export const serverLoader = createServerFn({ method: "GET" })
-  .inputValidator((params: { slugs: string[]; lang?: string }) => params)
+  .inputValidator((params: { slugs: string[]; lang?: string }) => {
+    console.log(params);
+    return params;
+  })
   .handler(async ({ data: { slugs, lang } }) => {
     lang = lang ?? getUserLanguage();
     const page = source.getPage(slugs, lang);
