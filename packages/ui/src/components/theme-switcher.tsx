@@ -9,10 +9,10 @@ import { Skeleton } from "@raypx/ui/components/skeleton";
 import { cn } from "@raypx/ui/lib/utils";
 import { Check, Laptop, Moon, Sun } from "lucide-react";
 import { memo, useEffect, useState } from "react";
-import { type ThemeMode, useTheme } from "../hooks/use-theme";
+import { useTheme } from "../hooks/use-theme";
 
 type ThemeConfig = {
-  key: ThemeMode;
+  key: string;
   icon: React.ReactNode;
   label: string;
 };

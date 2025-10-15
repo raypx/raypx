@@ -1,5 +1,5 @@
 import { defineI18n } from "fumadocs-core/i18n";
-import { AVAILABLE_LANGUAGES } from "../i18n/constants";
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_KEY } from "../i18n/constants";
 
 /**
  * Internationalization configuration for FumaDocs
@@ -7,6 +7,8 @@ import { AVAILABLE_LANGUAGES } from "../i18n/constants";
  * https://fumadocs.dev/docs/ui/internationalization
  */
 export const docsI18nConfig = defineI18n({
-  defaultLanguage: AVAILABLE_LANGUAGES[0].key,
+  defaultLanguage: DEFAULT_LANGUAGE_KEY,
   languages: AVAILABLE_LANGUAGES.map((l) => l.key) as unknown as string[],
+  hideLocale: "default-locale",
+  fallbackLanguage: DEFAULT_LANGUAGE_KEY,
 });

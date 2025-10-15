@@ -98,7 +98,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <I18nextProvider i18n={activeI18n}>
-          <ThemeProvider>
+          <ThemeProvider defaultTheme="system">
             <AppStoreProvider initialLanguage={language as AppLanguageKey}>
               {children}
               <Toaster />

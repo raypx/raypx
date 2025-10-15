@@ -1,5 +1,5 @@
 {
-  "extends": "@raypx/tsconfig/package-library.json",
-  "include": ["src/**/*.ts"],
+  "extends": "@raypx/tsconfig/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", ".turbo"]
 }

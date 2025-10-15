@@ -9,11 +9,11 @@ import {
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { ThemeSwitcher } from "@raypx/ui/components/theme-switcher";
 import { cn } from "@raypx/ui/lib/utils";
-import { Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link as LocaleLink } from "@/components/link";
 import { useScroll } from "@/hooks/use-scroll";
-import { useAppLanguage } from "@/state/app-store";
 import Container from "./container";
 import { LangSwitcher } from "./lang-switcher";
 import { Logo } from "./logo";
@@ -36,23 +36,19 @@ export function Navbar({ scroll }: NavBarProps) {
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
   const { t } = useTranslation("layout");
-  const { language } = useAppLanguage();
 
-  const menuLinks = useMemo(
-    () => [
-      {
-        title: "nav.home",
-        to: "/",
-        external: false,
-      },
-      {
-        title: "nav.docs",
-        to: `/${language}/docs`,
-        external: false,
-      },
-    ],
-    [language],
-  );
+  const menuLinks = [
+    {
+      title: "nav.home",
+      href: "/",
+      external: false,
+    },
+    {
+      title: "nav.docs",
+      href: "/$lang/docs",
+      external: false,
+    },
+  ];
 
   useEffect(() => {
     setMounted(true);
@@ -74,10 +70,10 @@ export function Navbar({ scroll }: NavBarProps) {
         <nav className="hidden lg:flex">
           {/* logo and name */}
           <div className="flex items-center">
-            <Link className="flex items-center space-x-2" to="/">
+            <LocaleLink className="flex items-center space-x-2" href="/">
               <Logo />
               <span className="text-xl font-semibold">{t("nav.title")}</span>
-            </Link>
+            </LocaleLink>
           </div>
 
           {/* menu links */}
@@ -88,20 +84,20 @@ export function Navbar({ scroll }: NavBarProps) {
                   <NavigationMenuItem key={index}>
                     <NavigationMenuLink
                       active={
-                        item.to === "/"
+                        item.href === "/"
                           ? location.pathname === "/"
-                          : location.pathname.startsWith(item.to)
+                          : location.pathname.startsWith(item.href)
                       }
                       asChild
                       className={customNavigationMenuTriggerStyle}
                     >
-                      <Link
+                      <LocaleLink
+                        href={item.href || "#"}
                         rel={item.external ? "noopener noreferrer" : undefined}
                         target={item.external ? "_blank" : undefined}
-                        to={item.to || "#"}
                       >
                         {t(item.title)}
-                      </Link>
+                      </LocaleLink>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
@@ -115,22 +111,22 @@ export function Navbar({ scroll }: NavBarProps) {
               <Skeleton className="size-8 border rounded-full" />
             ) : (
               <div className="flex items-center gap-x-4">
-                <Link to="/sign-in">
+                <LocaleLink href="/sign-in">
                   <Button className="cursor-pointer" size="sm" variant="outline">
                     {t("nav.login")}
                   </Button>
-                </Link>
-                <Link
+                </LocaleLink>
+                <LocaleLink
                   className={cn(
                     buttonVariants({
                       variant: "default",
                       size: "sm",
                     }),
                   )}
-                  to="/sign-up"
+                  href="/sign-up"
                 >
                   {t("nav.signUp")}
-                </Link>
+                </LocaleLink>
               </div>
             )}
             <ThemeSwitcher />

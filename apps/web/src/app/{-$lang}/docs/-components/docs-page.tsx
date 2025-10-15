@@ -1,0 +1,73 @@
+import type { AnyRoute } from "@tanstack/react-router";
+import type * as PageTree from "fumadocs-core/page-tree";
+import { createClientLoader } from "fumadocs-mdx/runtime/vite";
+import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import defaultMdxComponents from "fumadocs-ui/mdx";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
+import { icons } from "lucide-react";
+import { useMemo } from "react";
+import { baseOptions } from "@/lib/layout.shared";
+import { docs } from "../../../../../source.generated";
+import type { LoaderData } from "./loader";
+
+export const clientLoader = createClientLoader(docs.doc, {
+  id: "docs",
+  component({ toc, frontmatter, default: MDX }) {
+    return (
+      <DocsPage
+        footer={{
+          enabled: false,
+        }}
+        tableOfContent={{
+          enabled: true,
+          style: "clerk",
+        }}
+        toc={toc}
+      >
+        <DocsTitle>{frontmatter.title}</DocsTitle>
+        <DocsDescription>{frontmatter.description}</DocsDescription>
+        <DocsBody>
+          <MDX
+            components={{
+              ...defaultMdxComponents,
+            }}
+          />
+        </DocsBody>
+      </DocsPage>
+    );
+  },
+});
+
+export function DocsPageComponent<R extends AnyRoute>({ Route }: { Route: R }) {
+  const data: LoaderData = Route.useLoaderData();
+  const lang = data.lang;
+  const Content = clientLoader.getComponent(data.path);
+  const tree = useMemo(() => transformPageTree(data.tree as PageTree.Folder), [data.tree]);
+
+  return (
+    <DocsLayout {...baseOptions(lang)} tree={tree}>
+      <Content />
+    </DocsLayout>
+  );
+}
+
+function transformPageTree(tree: PageTree.Folder): PageTree.Folder {
+  function transform<T extends PageTree.Item | PageTree.Separator>(item: T) {
+    if (typeof item.icon !== "string") return item;
+    const Icon = icons[item.icon as keyof typeof icons];
+
+    return {
+      ...item,
+      icon: Icon ? <Icon /> : null,
+    };
+  }
+
+  return {
+    ...tree,
+    index: tree.index ? transform(tree.index) : undefined,
+    children: tree.children.map((item) => {
+      if (item.type === "folder") return transformPageTree(item);
+      return transform(item);
+    }),
+  };
+}

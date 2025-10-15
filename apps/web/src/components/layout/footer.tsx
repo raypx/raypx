@@ -1,9 +1,9 @@
 import { Button } from "@raypx/ui/components/button";
 import { Separator } from "@raypx/ui/components/separator";
 import { ThemeSwitcher } from "@raypx/ui/components/theme-switcher";
-import { Link } from "@tanstack/react-router";
 import { Github, Twitter } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "@/components/link";
 import Container from "./container";
 import { LangSwitcher } from "./lang-switcher";
 import { Logo } from "./logo";
@@ -33,7 +33,7 @@ const footerLinks: FooterLink[] = [
   {
     titleKey: "footer.resources.title",
     links: [
-      { labelKey: "footer.resources.docs", href: "/docs" },
+      { labelKey: "footer.resources.docs", href: "/$lang/docs" },
       {
         labelKey: "footer.resources.github",
         href: "https://github.com/raypx/raypx",
@@ -78,7 +78,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand section */}
           <div className="lg:col-span-2 space-y-4">
-            <Link className="flex items-center space-x-2" to="/">
+            <Link className="flex items-center space-x-2" href="/">
               <Logo />
               <span className="text-xl font-semibold">{t("nav.title")}</span>
             </Link>
@@ -114,23 +114,13 @@ export function Footer() {
               <ul className="space-y-2">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
-                    {link.external ? (
-                      <a
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        href={link.href}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        {t(link.labelKey)}
-                      </a>
-                    ) : (
-                      <Link
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        to={link.href}
-                      >
-                        {t(link.labelKey)}
-                      </Link>
-                    )}
+                    <Link
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      external={link.external}
+                      href={link.href}
+                    >
+                      {t(link.labelKey)}
+                    </Link>
                   </li>
                 ))}
               </ul>

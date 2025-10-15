@@ -1,13 +1,4 @@
-import { useContext } from "react";
-import { ThemeContext } from "../components/themes/context";
-
-// Re-export types and constants for convenience
-export {
-  type ResolvedTheme,
-  resolvedThemes,
-  type ThemeMode,
-  themes,
-} from "../components/themes/context";
+import { useTheme as useNextTheme } from "next-themes";
 
 /**
  * Hook to access and control the current theme
@@ -32,9 +23,6 @@ export {
  * ```
  */
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
+  const { theme, setTheme, resolvedTheme } = useNextTheme();
+  return { themeMode: theme, setTheme, resolvedTheme };
 };
