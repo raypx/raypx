@@ -1,10 +1,10 @@
+import { Icon } from "@raypx/ui/components/icon";
 import type { AnyRoute } from "@tanstack/react-router";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { createClientLoader } from "fumadocs-mdx/runtime/vite";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
-import { icons } from "lucide-react";
 import { useMemo } from "react";
 import { baseOptions } from "@/lib/layout.shared";
 import { docs } from "../../../../../source.generated";
@@ -27,11 +27,7 @@ export const clientLoader = createClientLoader(docs.doc, {
         <DocsTitle>{frontmatter.title}</DocsTitle>
         <DocsDescription>{frontmatter.description}</DocsDescription>
         <DocsBody>
-          <MDX
-            components={{
-              ...defaultMdxComponents,
-            }}
-          />
+          <MDX components={defaultMdxComponents} />
         </DocsBody>
       </DocsPage>
     );
@@ -54,11 +50,10 @@ export function DocsPageComponent<R extends AnyRoute>({ Route }: { Route: R }) {
 function transformPageTree(tree: PageTree.Folder): PageTree.Folder {
   function transform<T extends PageTree.Item | PageTree.Separator>(item: T) {
     if (typeof item.icon !== "string") return item;
-    const Icon = icons[item.icon as keyof typeof icons];
 
     return {
       ...item,
-      icon: Icon ? <Icon /> : null,
+      icon: <Icon name={item.icon} />,
     };
   }
 

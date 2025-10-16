@@ -1,7 +1,7 @@
 import "dayjs/locale/zh-cn";
-import dayjs from "dayjs";
-import { zhCN } from "date-fns/locale/zh-CN";
 import { setCalendarLocale } from "@raypx/ui/lib/calendar-locale";
+import { zhCN } from "date-fns/locale/zh-CN";
+import dayjs from "dayjs";
 
 dayjs.locale("zh-cn");
 setCalendarLocale(zhCN);

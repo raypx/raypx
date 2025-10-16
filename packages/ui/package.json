@@ -75,6 +75,7 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "tailwindcss": "catalog:tailwindv4",
+    "type-fest": "catalog:",
     "typescript": "catalog:dev"
   }
 }

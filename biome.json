@@ -9,7 +9,7 @@
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "**/*.{tsx,ts}",
+      "**/*.{tsx,ts,js,jsx,json,jsonc,css,yaml,yml,mdx}",
       "!**/.claude",
       "!**/dist",
       "!**/node_modules",
