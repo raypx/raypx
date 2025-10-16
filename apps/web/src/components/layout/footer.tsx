@@ -1,6 +1,6 @@
+import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button } from "@raypx/ui/components/button";
 import { Separator } from "@raypx/ui/components/separator";
-import { ThemeSwitcher } from "@raypx/ui/components/theme-switcher";
 import { Github, Twitter } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@/components/link";

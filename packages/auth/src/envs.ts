@@ -1,16 +1,14 @@
-import { createEnv, z } from "@raypx/shared"
+import { createEnv, z } from "@raypx/shared";
 
 export const envs = () =>
   createEnv({
     clientPrefix: "VITE_",
-    client: {
-    },
+    client: {},
     shared: {
       NODE_ENV: z.enum(["development", "production"]).default("development"),
     },
-    server: {
-    },
+    server: {},
     runtimeEnv: {
       NODE_ENV: process.env.NODE_ENV,
     },
-  })
+  });

@@ -1,5 +1,6 @@
 import type { LucideProps } from "lucide-react";
-import { type ComponentType, lazy, Suspense, useMemo } from "react";
+import type { ComponentType } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import type { NonEmptyObject, SetOptional, Simplify } from "type-fest";
 
 export type IconProps = Simplify<
@@ -12,7 +13,7 @@ export type IconProps = Simplify<
 type LucideIcon = ComponentType<LucideProps>;
 type IconModule = NonEmptyObject<{ default: LucideIcon }>;
 
-export function Icon({ name, fallback = null, ...props }: IconProps) {
+function Icon({ name, fallback = null, ...props }: IconProps) {
   const LucideIcon = useMemo(
     () =>
       lazy(async (): Promise<IconModule> => {
@@ -20,7 +21,8 @@ export function Icon({ name, fallback = null, ...props }: IconProps) {
           const lucideModule = await import("lucide-react");
           const IconComponent = lucideModule[name as keyof typeof lucideModule];
           return { default: (IconComponent as LucideIcon) || (() => null) };
-        } catch {
+        } catch (error) {
+          console.error("Error importing icon", error);
           return { default: () => null };
         }
       }),
@@ -33,3 +35,7 @@ export function Icon({ name, fallback = null, ...props }: IconProps) {
     </Suspense>
   );
 }
+
+Icon.displayName = "Icon";
+
+export { Icon };

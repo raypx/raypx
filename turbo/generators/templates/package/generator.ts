@@ -1,6 +1,6 @@
+/** biome-ignore-all lint/suspicious/noConsole: Generator scripts need console output */
 import { execSync } from "node:child_process";
 import type { PlopTypes } from "@turbo/gen";
-import consola from "consola";
 
 const PREFIX = "@raypx/";
 const NPM_REGISTRY_URL = "https://registry.npmjs.org";
@@ -29,12 +29,18 @@ function sanitizePackageName(name: string): string {
  */
 async function fetchPackageVersion(packageName: string): Promise<string> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
 
   try {
     const response = await fetch(
       `${NPM_REGISTRY_URL}/-/package/${encodeURIComponent(packageName)}/dist-tags`,
-      { signal: controller.signal },
+      {
+        signal: controller.signal,
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "turbo-gen/1.0.0",
+        },
+      },
     );
 
     clearTimeout(timeoutId);
@@ -79,12 +85,22 @@ async function processDependencies(content: string, deps: string): Promise<strin
     return JSON.stringify(pkg, null, 2);
   }
 
-  const dependencyPromises = dependencies.map(async (dep) => {
-    const version = await fetchPackageVersion(dep);
-    return { name: dep, version };
-  });
+  console.info(`Fetching versions for ${dependencies.length} dependencies...`);
 
-  const resolvedDeps = await Promise.all(dependencyPromises);
+  // Fetch all dependency versions in parallel, but limit concurrency
+  const batchSize = 3;
+  const resolvedDeps: Array<{ name: string; version: string }> = [];
+
+  for (let i = 0; i < dependencies.length; i += batchSize) {
+    const batch = dependencies.slice(i, i + batchSize);
+    const batchPromises = batch.map(async (dep) => {
+      const version = await fetchPackageVersion(dep);
+      return { name: dep, version };
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    resolvedDeps.push(...batchResults);
+  }
 
   for (const { name, version } of resolvedDeps) {
     pkg.dependencies[name] = `^${version}`;
@@ -98,13 +114,14 @@ async function processDependencies(content: string, deps: string): Promise<strin
  */
 function runCommand(command: string, description: string): void {
   try {
-    consola.info(`Running: ${command}`);
+    console.info(`Running: ${command}`);
     execSync(command, {
       stdio: "inherit",
       cwd: process.cwd(),
       timeout: 300_000, // 5 minute timeout
+      env: { ...process.env, NODE_ENV: "development" },
     });
-    consola.success(`✓ Successfully completed: ${description}`);
+    console.log(`✓ Successfully completed: ${description}`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`✗ Failed to ${description}`);
@@ -234,17 +251,30 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
             "location" in answers && typeof answers.location === "string"
               ? answers.location
               : "packages";
-          consola.info(`\n🚀 Finalizing package setup for "${packageName}"...\n`);
 
+          console.info(`\n🚀 Finalizing package setup for "${packageName}"...\n`);
+
+          // Install dependencies only, skip formatting to avoid potential errors
           runCommand("pnpm install", "install dependencies");
-          runCommand("pnpm run format", "format code");
 
-          consola.success(`\n✨ Package "${packageName}" scaffolded successfully!`);
-          consola.info(`📁 Location: ${location}/${packageName}`);
+          // Try to format code, but don't let failure prevent package creation
+          try {
+            runCommand("pnpm run format", "format code");
+          } catch {
+            console.warn("⚠️  Code formatting failed, but package was created successfully");
+            console.warn("You can run 'pnpm run format' manually later");
+          }
+
+          console.log(`\n✨ Package "${packageName}" scaffolded successfully!`);
+          console.info(`📁 Location: ${location}/${packageName}`);
+          console.info(`📦 Package name: @raypx/${packageName}`);
+          console.info(`\nNext steps:`);
+          console.info(`  cd ${location}/${packageName}`);
+          console.info(`  pnpm run test`);
 
           return `Package "${packageName}" created successfully`;
         } catch (error) {
-          console.error("\n❌ Failed to complete package setup:", error);
+          console.error(`\n❌ Failed to complete package setup: ${error}`);
           throw error;
         }
       },

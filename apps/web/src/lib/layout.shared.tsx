@@ -1,4 +1,4 @@
-import { ThemeSwitcherHorizontal } from "@raypx/ui/components/theme-switcher";
+import { ThemeSwitcherHorizontal } from "@raypx/ui/business/theme-switcher";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { docsI18nConfig } from "./docs/i18n";
 

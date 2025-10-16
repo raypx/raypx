@@ -4,16 +4,9 @@ import { camelCase } from "lodash-es";
 import type { Cmd } from "./lib/task";
 import { formatDuration } from "./utils";
 
-// Command cache to avoid repeated dynamic imports
-const cmdCache = new Map<string, Cmd>();
-
 // Lazy load commands with caching
 async function loadCommand(name: string) {
-  if (cmdCache.has(name)) {
-    return cmdCache.get(name);
-  }
-
-  const cmdMap = {
+  const cmdMap: Record<string, () => Promise<Cmd>> = {
     clean: () => import("./cmd/clean").then((m) => m.default),
     format: () => import("./cmd/format").then((m) => m.default),
     setup: () => import("./cmd/setup").then((m) => m.default),
@@ -26,7 +19,6 @@ async function loadCommand(name: string) {
   }
 
   const cmd = await loader();
-  cmdCache.set(name, cmd);
   return cmd;
 }
 

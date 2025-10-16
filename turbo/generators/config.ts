@@ -9,6 +9,9 @@ const generators = [
 ];
 
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
+  // Set default configuration
+  plop.setWelcomeMessage("🚀 Welcome to Raypx Generator!");
+
   for (const gen of generators) {
     gen(plop);
   }

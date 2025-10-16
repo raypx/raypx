@@ -1,3 +1,4 @@
+import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button, buttonVariants } from "@raypx/ui/components/button";
 import {
   NavigationMenu,
@@ -7,7 +8,6 @@ import {
   navigationMenuTriggerStyle,
 } from "@raypx/ui/components/navigation-menu";
 import { Skeleton } from "@raypx/ui/components/skeleton";
-import { ThemeSwitcher } from "@raypx/ui/components/theme-switcher";
 import { cn } from "@raypx/ui/lib/utils";
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";

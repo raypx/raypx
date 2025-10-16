@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /** Project root directory (monorepo root) */
-export const PROJECT_ROOT = resolve(__dirname, "../../../");
+export const PROJECT_ROOT = resolve(__dirname, "../../");
 
 /**
  * Formats duration in milliseconds to human-readable string

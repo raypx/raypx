@@ -59,6 +59,7 @@ function transformPageTree(tree: PageTree.Folder): PageTree.Folder {
 
   return {
     ...tree,
+    icon: typeof tree.icon === "string" ? <Icon name={tree.icon} /> : tree.icon,
     index: tree.index ? transform(tree.index) : undefined,
     children: tree.children.map((item) => {
       if (item.type === "folder") return transformPageTree(item);
