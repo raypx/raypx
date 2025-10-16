@@ -5,7 +5,6 @@ import { serverLoader } from "./-components/loader";
 export const Route = createFileRoute("/{-$lang}/docs/$")({
   component: () => <DocsPageComponent Route={Route} />,
   loader: async ({ params }) => {
-    console.log(params);
     const data = await serverLoader({
       data: {
         slugs: params._splat?.split("/") ?? [],

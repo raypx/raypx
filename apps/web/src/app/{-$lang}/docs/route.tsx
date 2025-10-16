@@ -49,8 +49,7 @@ function resolveRedirect(lang: string | undefined, config: I18nConfig) {
 export const Route = createFileRoute("/{-$lang}/docs")({
   component: DocsLayout,
   beforeLoad(ctx) {
-    const { lang } = ctx.params;
-    const result = resolveRedirect(lang, docsI18nConfig);
+    const result = resolveRedirect(ctx.params.lang, docsI18nConfig);
     if (result) throw redirect(result);
   },
 });
