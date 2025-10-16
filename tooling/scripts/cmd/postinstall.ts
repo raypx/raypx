@@ -1,72 +1,28 @@
 import { join } from "node:path";
-import deepmerge from "deepmerge";
+import fg from "fast-glob";
 import fs from "fs-extra";
-import type { ListrRenderer, ListrTaskWrapper } from "listr2";
 import { createTask, definedCmd } from "../lib/task";
+import { PROJECT_ROOT } from "../utils";
 
-/**
- * Claude Code configuration constants
- */
-const CLAUDE_DIR = ".claude";
-const SETTINGS_FILE = "settings.json";
-const LOCAL_SETTINGS_FILE = "settings.local.json";
+async function generateUiComponentExports() {
+  const COMPONENTS_DIR = join(PROJECT_ROOT, "packages/ui/src/components");
+  const entries = await fg("*.{ts,tsx}", {
+    cwd: COMPONENTS_DIR,
+    onlyFiles: true,
+    ignore: ["index.tsx"],
+  });
 
-/**
- * Merge options for combining settings arrays
- */
-const mergeOptions = {
-  arrayMerge: (target: unknown[], source: unknown[]) => [...new Set([...target, ...source])],
-};
+  const components = entries
+    .map((entry) => entry.replace(/\.(ts|tsx)$/, ""))
+    .sort((a, b) => a.localeCompare(b));
 
-/**
- * Sets up Claude Code configuration
- */
-async function setupClaudeCode(
-  task: ListrTaskWrapper<unknown, typeof ListrRenderer, typeof ListrRenderer>,
-): Promise<void> {
-  const settingsPath = join(CLAUDE_DIR, SETTINGS_FILE);
-  const localSettingsPath = join(CLAUDE_DIR, LOCAL_SETTINGS_FILE);
+  const exportsBlock = components.map((name) => `export * from "./${name}";`).join("\n");
 
-  try {
-    // Check if base settings template exists
-    if (!(await fs.pathExists(settingsPath))) {
-      task.skip("No Claude settings template found");
-      return;
-    }
+  fs.writeFileSync(join(COMPONENTS_DIR, "index.ts"), `${exportsBlock}\n`);
 
-    const baseSettings = await fs.readJson(settingsPath);
-
-    // Validate base settings structure
-    if (!baseSettings || typeof baseSettings !== "object") {
-      task.skip("Invalid base settings format");
-      return;
-    }
-
-    if (await fs.pathExists(localSettingsPath)) {
-      const localSettings = await fs.readJson(localSettingsPath);
-
-      // Validate local settings structure
-      if (!localSettings || typeof localSettings !== "object") {
-        task.skip("Invalid local settings format, recreating...");
-        await fs.writeJson(localSettingsPath, baseSettings, { spaces: 2 });
-        task.title = "Recreated local settings file";
-        return;
-      }
-
-      // Merge base and local settings
-      const merged = deepmerge(baseSettings, localSettings, mergeOptions);
-      await fs.writeJson(localSettingsPath, merged, { spaces: 2 });
-      task.title = "Merged settings with local configuration";
-    } else {
-      // Create local settings from base template
-      await fs.ensureDir(CLAUDE_DIR);
-      await fs.writeJson(localSettingsPath, baseSettings, { spaces: 2 });
-      task.title = "Created local settings file";
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    task.skip(`Failed to setup Claude code: ${errorMessage}`);
-  }
+  return {
+    componentCount: components.length,
+  };
 }
 
 /**
@@ -75,8 +31,9 @@ async function setupClaudeCode(
 const postinstall = definedCmd([
   createTask("biome migrate --write", "Biome migration"),
   createTask("pnpm exec lefthook install", "Lefthook"),
-  createTask("Claude Code setup", async (_, task) => {
-    await setupClaudeCode(task);
+  createTask("Generate UI component exports", async (_, task) => {
+    const result = await generateUiComponentExports();
+    task.title = `Generated UI component exports (${result.componentCount})`;
   }),
 ]);
 

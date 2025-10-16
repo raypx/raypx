@@ -6,13 +6,13 @@
   "exports": {
     "./globals.css": "./src/styles/globals.css",
     "./lib/*": "./src/lib/*.ts",
+    "./components": "./src/components/index.tsx",
     "./components/*": "./src/components/*.tsx",
-    "./components/link": "./src/components/link.tsx",
-    "./components/settings": "./src/components/settings/index.ts",
     "./hooks/*": "./src/hooks/*.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo",
+    "shadcn": "pnpx shadcn@canary add --overwrite",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

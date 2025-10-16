@@ -1,10 +1,10 @@
 "use client";
 
+import { Button } from "@raypx/ui/components/button";
+import { cn } from "@raypx/ui/lib/utils";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import * as React from "react";
-import { cn } from "../lib/utils";
-import { Button } from "./button";
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -59,9 +59,7 @@ function Carousel({
   const [canScrollNext, setCanScrollNext] = React.useState(false);
 
   const onSelect = React.useCallback((api: CarouselApi) => {
-    if (!api) {
-      return;
-    }
+    if (!api) return;
     setCanScrollPrev(api.canScrollPrev());
     setCanScrollNext(api.canScrollNext());
   }, []);
@@ -88,16 +86,12 @@ function Carousel({
   );
 
   React.useEffect(() => {
-    if (!(api && setApi)) {
-      return;
-    }
+    if (!api || !setApi) return;
     setApi(api);
   }, [api, setApi]);
 
   React.useEffect(() => {
-    if (!api) {
-      return;
-    }
+    if (!api) return;
     onSelect(api);
     api.on("reInit", onSelect);
     api.on("select", onSelect);
@@ -111,7 +105,7 @@ function Carousel({
     <CarouselContext.Provider
       value={{
         carouselRef,
-        api,
+        api: api,
         opts,
         orientation: orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
         scrollPrev,
@@ -120,8 +114,7 @@ function Carousel({
         canScrollNext,
       }}
     >
-      {/* biome-ignore lint/a11y/useSemanticElements: Carousel requires specific ARIA pattern */}
-      <section
+      <div
         aria-roledescription="carousel"
         className={cn("relative", className)}
         data-slot="carousel"
@@ -130,7 +123,7 @@ function Carousel({
         {...props}
       >
         {children}
-      </section>
+      </div>
     </CarouselContext.Provider>
   );
 }
@@ -148,18 +141,19 @@ function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function CarouselItem({ className, ...props }: React.ComponentProps<"fieldset">) {
+function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
   const { orientation } = useCarousel();
 
   return (
-    <fieldset
+    <div
       aria-roledescription="slide"
       className={cn(
-        "m-0 min-w-0 shrink-0 grow-0 basis-full border-0 p-0",
+        "min-w-0 shrink-0 grow-0 basis-full",
         orientation === "horizontal" ? "pl-4" : "pt-4",
         className,
       )}
       data-slot="carousel-item"
+      role="group"
       {...props}
     />
   );
@@ -178,8 +172,8 @@ function CarouselPrevious({
       className={cn(
         "absolute size-8 rounded-full",
         orientation === "horizontal"
-          ? "-left-12 -translate-y-1/2 top-1/2"
-          : "-top-12 -translate-x-1/2 left-1/2 rotate-90",
+          ? "top-1/2 -left-12 -translate-y-1/2"
+          : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
         className,
       )}
       data-slot="carousel-previous"
@@ -208,8 +202,8 @@ function CarouselNext({
       className={cn(
         "absolute size-8 rounded-full",
         orientation === "horizontal"
-          ? "-right-12 -translate-y-1/2 top-1/2"
-          : "-bottom-12 -translate-x-1/2 left-1/2 rotate-90",
+          ? "top-1/2 -right-12 -translate-y-1/2"
+          : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
         className,
       )}
       data-slot="carousel-next"

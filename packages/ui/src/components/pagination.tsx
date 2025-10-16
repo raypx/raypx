@@ -46,7 +46,6 @@ function PaginationLink({ className, isActive, size = "icon", ...props }: Pagina
       )}
       data-active={isActive}
       data-slot="pagination-link"
-      href={props.href}
       {...props}
     />
   );

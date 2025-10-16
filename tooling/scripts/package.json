@@ -16,6 +16,7 @@
   "dependencies": {
     "@raypx/shared": "workspace:*",
     "deepmerge": "^4.3.1",
+    "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.2",
     "listr2": "^9.0.4",
     "lodash-es": "^4.17.21",

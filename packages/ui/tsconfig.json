@@ -2,6 +2,7 @@
   "extends": "@raypx/tsconfig/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@raypx/ui/*": ["./src/*"]
     }

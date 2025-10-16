@@ -1,4 +1,4 @@
-import { Button } from "@raypx/ui/components/button";
+import { Button } from "@raypx/ui/components";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Github, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";

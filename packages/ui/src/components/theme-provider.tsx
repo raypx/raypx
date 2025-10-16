@@ -1,12 +1,11 @@
 import { ThemeProvider as NextThemeProvider } from "next-themes";
-import type { ThemeMode } from "./themes/context";
 
 export const ThemeProvider = ({
   children,
   defaultTheme = "system",
 }: {
   children: React.ReactNode;
-  defaultTheme?: ThemeMode;
+  defaultTheme?: string;
 }) => {
   return (
     <NextThemeProvider
