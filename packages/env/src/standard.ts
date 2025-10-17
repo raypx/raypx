@@ -96,15 +96,17 @@ export function parseWithDictionary<TDict extends StandardSchemaDictionary>(
   const result: Record<string, unknown> = {};
   const issues: StandardSchemaV1.Issue[] = [];
   for (const key in dictionary) {
-    // biome-ignore lint/style/noNonNullAssertion: ensure that the key is defined
-    const prop = dictionary[key]!;
-    const propResult = prop["~standard"].validate(value[key]);
+    const schema = (dictionary as any)[key]["~standard"];
+    const propResult = schema.validate(value?.[key]);
 
-    ensureSynchronous(propResult, `Validation must be synchronous, but ${key} returned a Promise.`);
+    ensureSynchronous(
+      propResult,
+      `Validation must be synchronous, but ${String(key)} returned a Promise.`,
+    );
 
-    if (propResult.issues) {
+    if (propResult?.issues) {
       issues.push(
-        ...propResult.issues.map((issue) => ({
+        ...propResult.issues.map((issue: StandardSchemaV1.Issue) => ({
           ...issue,
           message: issue.message, // https://github.com/t3-oss/t3-env/pull/346
           path: [key, ...(issue.path ?? [])],

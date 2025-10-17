@@ -310,37 +310,6 @@ export type CreateEnv<
 > = Readonly<Simplify<Reduce<[StandardSchemaV1.InferOutput<TFinalSchema>, ...TExtends]>>>;
 
 /**
- * Deep merge two objects
- * @internal
- */
-function deepMerge(target: any, source: any): any {
-  for (const key in source) {
-    if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
-      if (!target[key] || typeof target[key] !== "object" || Array.isArray(target[key])) {
-        target[key] = {};
-      }
-      deepMerge(target[key], source[key]);
-    } else {
-      target[key] = source[key];
-    }
-  }
-  return target;
-}
-
-/**
- * Runtime helper to merge objects - matches the type-level merging
- * @internal
- */
-function mergeObjects<T extends readonly Record<string, any>[]>(objects: T): MergeAllOptimized<T> {
-  const merged = {} as any;
-  for (const obj of objects) {
-    // Use deep merge to handle nested objects
-    deepMerge(merged, obj);
-  }
-  return merged as MergeAllOptimized<T>;
-}
-
-/**
  * Create a new environment variable schema.
  */
 export function createEnv<
@@ -422,7 +391,10 @@ export function createEnv<
     return prop === "__esModule" || prop === "$$typeof";
   };
 
-  const extendedObj = mergeObjects(opts.extends ?? ([] as const));
+  const extendedObj = (opts.extends ?? ([] as const)).reduce((acc, curr) => {
+    // biome-ignore lint/performance/noAccumulatingSpread: meh...
+    return Object.assign(acc, curr);
+  }, {}) as MergeAllOptimized<TExtendsFormat>;
   const fullObj = Object.assign(extendedObj, parsed.value);
 
   const env = new Proxy(fullObj, {
@@ -444,5 +416,5 @@ export function createEnv<
     // },
   });
 
-  return env as unknown as CreateEnv<TFinalSchema, TExtends>;
+  return env as any;
 }

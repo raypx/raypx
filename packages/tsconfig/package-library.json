@@ -4,6 +4,8 @@
     "baseUrl": ".",
     "composite": false,
     "declaration": true,
+    "target": "es2022",
+    "module": "preserve",
     "declarationMap": true
   },
   "extends": "./base.json"
