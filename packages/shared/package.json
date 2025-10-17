@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@t3-oss/env-core": "^0.13.8",
+    "@raypx/env": "workspace:*",
     "clsx": "^2.1.1",
     "consola": "^3.4.2",
     "dayjs": "^1.11.18",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
+    "type-fest": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:dev"
   }

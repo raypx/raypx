@@ -104,9 +104,6 @@ importers:
       '@raypx/scripts':
         specifier: workspace:*
         version: link:scripts
-      '@raypx/shared':
-        specifier: workspace:*
-        version: link:packages/shared
       '@turbo/gen':
         specifier: ^2.5.8
         version: 2.5.8(@types/node@24.8.0)(typescript@5.9.3)
@@ -152,96 +149,21 @@ importers:
 
   apps/web:
     dependencies:
-      '@hookform/resolvers':
-        specifier: 'catalog:'
-        version: 5.2.2(react-hook-form@7.65.0(react@19.2.0))
       '@orama/tokenizers':
         specifier: ^3.1.16
         version: 3.1.16
-      '@radix-ui/react-accordion':
-        specifier: ^1.2.12
-        version: 1.2.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-alert-dialog':
-        specifier: ^1.1.15
-        version: 1.1.15(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-aspect-ratio':
-        specifier: ^1.1.7
-        version: 1.1.7(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-avatar':
-        specifier: ^1.1.10
-        version: 1.1.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-checkbox':
-        specifier: ^1.3.3
-        version: 1.3.3(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-collapsible':
-        specifier: ^1.1.12
-        version: 1.1.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-context-menu':
-        specifier: ^2.2.16
-        version: 2.2.16(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-dialog':
-        specifier: ^1.1.15
-        version: 1.1.15(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-dropdown-menu':
-        specifier: ^2.1.16
-        version: 2.1.16(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-hover-card':
-        specifier: ^1.1.15
-        version: 1.1.15(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-label':
-        specifier: ^2.1.7
-        version: 2.1.7(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-menubar':
-        specifier: ^1.1.16
-        version: 1.1.16(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-navigation-menu':
-        specifier: ^1.2.14
-        version: 1.2.14(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-popover':
-        specifier: ^1.1.15
-        version: 1.1.15(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-progress':
-        specifier: ^1.1.7
-        version: 1.1.7(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-radio-group':
-        specifier: ^1.3.8
-        version: 1.3.8(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-scroll-area':
-        specifier: ^1.2.10
-        version: 1.2.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-select':
-        specifier: ^2.2.6
-        version: 2.2.6(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-separator':
-        specifier: ^1.1.7
-        version: 1.1.7(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-slider':
-        specifier: ^1.3.6
-        version: 1.3.6(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-slot':
-        specifier: ^1.2.3
-        version: 1.2.3(@types/react@19.2.2)(react@19.2.0)
-      '@radix-ui/react-switch':
-        specifier: ^1.2.6
-        version: 1.2.6(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-tabs':
-        specifier: ^1.1.13
-        version: 1.1.13(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-toggle':
-        specifier: ^1.1.10
-        version: 1.1.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-toggle-group':
-        specifier: ^1.1.11
-        version: 1.1.11(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@radix-ui/react-tooltip':
-        specifier: ^1.2.8
-        version: 1.2.8(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@raypx/analytics':
         specifier: workspace:*
         version: link:../../packages/analytics
+      '@raypx/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@raypx/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@raypx/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@raypx/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -278,21 +200,12 @@ importers:
       '@trpc/tanstack-react-query':
         specifier: ^11.6.0
         version: 11.6.0(@tanstack/react-query@5.90.5(react@19.2.0))(@trpc/client@11.6.0(@trpc/server@11.6.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      cmdk:
-        specifier: ^1.1.1
-        version: 1.1.1(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       date-fns:
         specifier: 'catalog:'
         version: 4.1.0
       dayjs:
         specifier: ^1.11.18
         version: 1.11.18
-      embla-carousel-react:
-        specifier: ^8.6.0
-        version: 8.6.0(react@19.2.0)
       fumadocs-core:
         specifier: ^15.8.5
         version: 15.8.5(@tanstack/react-router@1.133.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.546.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -305,51 +218,30 @@ importers:
       i18next:
         specifier: ^25.6.0
         version: 25.6.0(typescript@5.9.3)
-      input-otp:
-        specifier: ^1.4.2
-        version: 1.4.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       lucide-react:
         specifier: 'catalog:'
         version: 0.546.0(react@19.2.0)
-      next-themes:
-        specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nitro:
         specifier: 'catalog:'
         version: nitro-nightly@3.0.1-20251015-114932-a0f52cc9(chokidar@4.0.3)(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.2)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6))
       react:
-        specifier: ^19.2.0
+        specifier: catalog:react19
         version: 19.2.0
       react-day-picker:
         specifier: ^9.11.1
         version: 9.11.1(react@19.2.0)
       react-dom:
-        specifier: ^19.2.0
+        specifier: catalog:react19
         version: 19.2.0(react@19.2.0)
-      react-hook-form:
-        specifier: 'catalog:'
-        version: 7.65.0(react@19.2.0)
       react-i18next:
         specifier: ^16.0.1
         version: 16.0.1(i18next@25.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
-      react-resizable-panels:
-        specifier: ^3.0.6
-        version: 3.0.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      recharts:
-        specifier: 3.2.1
-        version: 3.2.1(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react-is@19.2.0)(react@19.2.0)(redux@5.0.1)
-      sonner:
-        specifier: ^2.0.7
-        version: 2.0.7(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       superjson:
         specifier: ^2.2.2
         version: 2.2.2
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
-      vaul:
-        specifier: ^1.1.2
-        version: 1.1.2(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6))
@@ -379,28 +271,28 @@ importers:
         specifier: 'catalog:'
         version: 24.8.0
       '@types/react':
-        specifier: ^19.2.2
+        specifier: catalog:react19
         version: 19.2.2
       '@types/react-dom':
-        specifier: ^19.2.2
+        specifier: catalog:react19
         version: 19.2.2(@types/react@19.2.2)
       '@vitejs/plugin-react':
         specifier: ^5.0.4
         version: 5.0.4(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6))
       tailwindcss:
-        specifier: ^4.1.14
+        specifier: catalog:tailwindv4
         version: 4.1.14
       type-fest:
         specifier: 'catalog:'
         version: 5.1.0
       typescript:
-        specifier: ^5.9.3
+        specifier: catalog:dev
         version: 5.9.3
       vite:
-        specifier: ^7.1.10
+        specifier: 'catalog:'
         version: 7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6)
       vitest:
-        specifier: ^3.2.4
+        specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.8.0)(jiti@2.6.1)(jsdom@27.0.0(postcss@8.5.6))(lightningcss@1.30.1)(tsx@4.20.6)
 
   packages/analytics:
@@ -430,9 +322,18 @@ importers:
 
   packages/auth:
     dependencies:
+      '@raypx/db':
+        specifier: workspace:*
+        version: link:../db
+      '@raypx/email':
+        specifier: workspace:*
+        version: link:../email
       '@raypx/shared':
         specifier: workspace:*
         version: link:../shared
+      '@raypx/ui':
+        specifier: workspace:*
+        version: link:../ui
       better-auth:
         specifier: ^1.3.27
         version: 1.3.27
@@ -555,6 +456,31 @@ importers:
         specifier: catalog:dev
         version: 5.9.3
 
+  packages/env:
+    dependencies:
+      '@typescript/native-preview':
+        specifier: ^7.0.0-dev.20251016.1
+        version: 7.0.0-dev.20251016.1
+      type-fest:
+        specifier: ^5.1.0
+        version: 5.1.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.12
+    devDependencies:
+      '@raypx/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.8.0
+      typescript:
+        specifier: catalog:dev
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.8.0)(jiti@2.6.1)(jsdom@27.0.0(postcss@8.5.6))(lightningcss@1.30.1)(tsx@4.20.6)
+
   packages/i18n:
     dependencies:
       '@tanstack/react-router':
@@ -616,9 +542,9 @@ importers:
 
   packages/shared:
     dependencies:
-      '@t3-oss/env-core':
-        specifier: ^0.13.8
-        version: 0.13.8(typescript@5.9.3)(zod@4.1.12)
+      '@raypx/env':
+        specifier: workspace:*
+        version: link:../env
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -644,6 +570,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.8.0
+      type-fest:
+        specifier: 'catalog:'
+        version: 5.1.0
       typescript:
         specifier: catalog:dev
         version: 5.9.3
@@ -771,18 +700,9 @@ importers:
       '@raypx/i18n':
         specifier: workspace:*
         version: link:../i18n
-      '@tabler/icons-react':
-        specifier: ^3.35.0
-        version: 3.35.0(react@19.2.0)
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.5(react@19.2.0)
-      '@tanstack/react-router':
-        specifier: ^1.133.3
-        version: 1.133.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@tanstack/react-start':
-        specifier: ^1.133.5
-        version: 1.133.5(crossws@0.4.1(srvx@0.8.16))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6))
       '@unpic/react':
         specifier: ^1.0.1
         version: 1.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -840,9 +760,6 @@ importers:
       vaul:
         specifier: ^1.1.2
         version: 1.1.2(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      zod:
-        specifier: 'catalog:'
-        version: 4.1.12
     devDependencies:
       '@raypx/tsconfig':
         specifier: workspace:*
@@ -884,9 +801,6 @@ importers:
       '@raypx/shared':
         specifier: workspace:*
         version: link:../packages/shared
-      deepmerge:
-        specifier: ^4.3.1
-        version: 4.3.1
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
@@ -3041,14 +2955,6 @@ packages:
       zod:
         optional: true
 
-  '@tabler/icons-react@3.35.0':
-    resolution: {integrity: sha512-XG7t2DYf3DyHT5jxFNp5xyLVbL4hMJYJhiSdHADzAjLRYfL7AnjlRfiHDHeXxkb2N103rEIvTsBRazxXtAUz2g==}
-    peerDependencies:
-      react: '>= 16'
-
-  '@tabler/icons@3.35.0':
-    resolution: {integrity: sha512-yYXe+gJ56xlZFiXwV9zVoe3FWCGuZ/D7/G4ZIlDtGxSx5CGQK110wrnT29gUj52kEZoxqF7oURTk97GQxELOFQ==}
-
   '@tailwindcss/node@4.1.14':
     resolution: {integrity: sha512-hpz+8vFk3Ic2xssIA3e01R6jkmsAhvkQdXlEbRTk6S10xDAtiQiM3FyvZVGsucefq764euO/b8WUW9ysLdThHw==}
 
@@ -3514,6 +3420,45 @@ packages:
 
   '@types/use-sync-external-store@0.0.6':
     resolution: {integrity: sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==}
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-TBSMWAhEaHGMwDRYxY5Lpjgr0JMdtdYEr/ha1pdvAP7g+D23EnKNsIpf2bv2FoBkWb5gsh33tT6GcZV0N2bICg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-NRoRafU+2T0PvfpXjxSb99tw1Qu+KrWTiq5i8AdTjGNU2nvD7yB5YeXzEn5L1vylATpxs8oxKbJ5WSHFAZkvXw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-GCwepKA//bh1BX/VDk5Wzo8NQTe4NHcATSQyNqJo+cO1xKEYC4kZFf+0gmjUIo7QnwoHDVlK7tissY3FYIIx2Q==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-4A4q5LUXUluG1vNaU6QqbflPPXxqcMYMMJstgvpz0SJ+pEKzFOeZXYhW254Qdliho6obqB0FHG9IlnQNAvorFw==}
+    cpu: [arm]
+    os: [linux]
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-qmeugyy+02ipEBWevwJrlg6lpIhrziUF5dT0LZp4Qr4moojX/yZIPAelaWzgfe092NOgbTw2bFSzaJk1KK0s6g==}
+    cpu: [x64]
+    os: [linux]
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-7FwP4aMgHx1hcZtFT5WGyyjTliDj2jF2cG1gQcBX+GR2d+DcRUoF41E7WtaPBkBfrfrgjYdxgpliCmDLF4WHMg==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-Q9FeuI8pPmCmpONwc0/mClxHZCzQVvDYbD21lZKoT/yILvtEwRL4HD5VnlTve7fzjhXCkj9R+8I+Nk+Y33n9ug==}
+    cpu: [x64]
+    os: [win32]
+
+  '@typescript/native-preview@7.0.0-dev.20251016.1':
+    resolution: {integrity: sha512-OMnnupqcqdcbf4lryAKyIDWNJHc1dP13OcKmV5aPUY2dJIYBD0ud4xgOkp/zdOoLBCpdRMIMjzziI6PYATMWdw==}
+    hasBin: true
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
@@ -9753,13 +9698,6 @@ snapshots:
       typescript: 5.9.3
       zod: 4.1.12
 
-  '@tabler/icons-react@3.35.0(react@19.2.0)':
-    dependencies:
-      '@tabler/icons': 3.35.0
-      react: 19.2.0
-
-  '@tabler/icons@3.35.0': {}
-
   '@tailwindcss/node@4.1.14':
     dependencies:
       '@jridgewell/remapping': 2.3.5
@@ -10400,6 +10338,37 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@types/use-sync-external-store@0.0.6': {}
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20251016.1':
+    optional: true
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20251016.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20251016.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20251016.1':
+    optional: true
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20251016.1':
+    optional: true
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20251016.1':
+    optional: true
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20251016.1':
+    optional: true
+
+  '@typescript/native-preview@7.0.0-dev.20251016.1':
+    optionalDependencies:
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20251016.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20251016.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20251016.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20251016.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20251016.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20251016.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20251016.1
 
   '@ungap/structured-clone@1.3.0': {}
 

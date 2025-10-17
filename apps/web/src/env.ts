@@ -1,9 +1,16 @@
+import { envs as auth } from "@raypx/auth/envs";
 import { envs as db } from "@raypx/db/envs";
-import { createEnv } from "@t3-oss/env-core";
+import { envs as email } from "@raypx/email/envs";
+import { createEnv } from "@raypx/shared";
+
+const dbEnv = db();
+const authEnv = auth();
+const emailEnv = email();
 
 export const env = createEnv({
-  extends: [db()],
-  clientPrefix: "VITE_",
-  client: {},
-  runtimeEnv: import.meta.env,
+  extends: [dbEnv, authEnv, emailEnv],
+  runtimeEnv: {
+    ...process.env,
+    ...import.meta.env,
+  },
 });

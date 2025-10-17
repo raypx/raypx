@@ -6,6 +6,7 @@
     ".": "./src/index.ts",
     "./emails": "./src/emails/index.ts",
     "./types": "./src/types.ts",
+    "./config": "./src/config.ts",
     "./envs": "./src/envs.ts"
   },
   "scripts": {

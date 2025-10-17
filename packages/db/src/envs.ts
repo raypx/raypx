@@ -2,8 +2,6 @@ import { createEnv, z } from "@raypx/shared";
 
 export const envs = () =>
   createEnv({
-    clientPrefix: "VITE_",
-    client: {},
     server: {
       DATABASE_URL: z.string().min(1),
       DATABASE_PREFIX: z.string().min(1).optional(),
