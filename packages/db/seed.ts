@@ -1,9 +1,8 @@
 import { reset, seed } from "drizzle-seed";
-import { getDatabase } from "./src";
+import { db } from "./src";
 import * as schemas from "./src/schemas";
 
 async function main() {
-  const db = await getDatabase();
   await reset(db, schemas);
   await seed(db, schemas, {
     count: 100,

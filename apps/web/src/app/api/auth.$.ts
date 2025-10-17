@@ -1,14 +1,8 @@
-// import { createAuth } from "@raypx/auth/server";
-
-import fs from "node:fs";
+import { auth } from "@raypx/auth/server";
 import { createFileRoute } from "@tanstack/react-router";
-import { json } from "@tanstack/react-start";
 
 const handler = async ({ request }: { request: Request }) => {
-  // const auth = await createAuth();
-  // return await auth.handler(request);
-  fs.writeFileSync("request.json", JSON.stringify(request, null, 2));
-  return json({ message: "OK" });
+  return await auth.handler(request);
 };
 
 export const Route = createFileRoute("/api/auth/$")({

@@ -1,4 +1,4 @@
-import { getDatabase, schemas } from "@raypx/db";
+import { db, schemas } from "@raypx/db";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure } from "../init";
@@ -10,8 +10,6 @@ const DEFAULT_LIMIT = 100;
  */
 export const usersRouter = {
   list: publicProcedure.query(async () => {
-    const db = await getDatabase();
-
     try {
       const users = await db
         .select({

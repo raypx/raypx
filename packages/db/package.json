@@ -7,7 +7,6 @@
     ".": "./src/index.ts",
     "./envs": "./src/envs.ts",
     "./schemas": "./src/schemas.ts",
-    "./registry": "./src/registry.ts",
     "./types": "./src/types.ts"
   },
   "scripts": {
