@@ -120,6 +120,7 @@ const createAuthOptions = async (): Promise<BetterAuthOptions> => {
   };
 };
 
-const config = await createAuthOptions();
-
-export const auth: AuthType = betterAuth(config);
+export const createAuth = async (): Promise<AuthType> => {
+  const config = await createAuthOptions();
+  return betterAuth(config);
+};
