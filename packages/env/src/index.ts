@@ -1,7 +1,6 @@
 /**
- * This is the nextjs package of t3-env.
- * It contains the `createEnv` function that you can use to create your schema.
- * @module
+ * @fileoverview Environment validation with extends support
+ * Forked from @t3-oss/t3-env
  */
 import type {
   CreateEnv,

@@ -1,5 +1,3 @@
-"use client";
-
 import { envs } from "./envs";
 import type { PostHogInstance } from "./types";
 

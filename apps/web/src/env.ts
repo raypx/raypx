@@ -9,8 +9,5 @@ const emailEnv = email();
 
 export const env = createEnv({
   extends: [dbEnv, authEnv, emailEnv],
-  runtimeEnv: {
-    ...process.env,
-    ...import.meta.env,
-  },
+  runtimeEnv: {},
 });

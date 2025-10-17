@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "description": "Environment validation with extends support (forked from @t3-oss/t3-env)",
   "exports": {
     ".": "./src/index.ts"
   },
@@ -12,7 +13,7 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@typescript/native-preview": "^7.0.0-dev.20251016.1",
+    "@typescript/native-preview": "7.0.0-dev.20251017.1",
     "type-fest": "^5.1.0",
     "zod": "catalog:"
   },
