@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "files": [
-    "nextjs.json",
+    "base.json",
     "react-library.json",
     "package-library.json",
-    "base.json"
+    "vite.json"
   ],
   "devDependencies": {
     "@types/node": "catalog:",

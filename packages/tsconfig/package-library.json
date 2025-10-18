@@ -1,12 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Package Library (Non-React)",
+  "extends": "./base.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "composite": false,
-    "declaration": true,
-    "target": "es2022",
-    "module": "preserve",
-    "declarationMap": true
-  },
-  "extends": "@raypx/tsconfig/base.json"
+    "baseUrl": "."
+  }
 }

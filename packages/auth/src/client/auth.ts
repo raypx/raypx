@@ -1,7 +1,9 @@
 import { createAuthClient } from "better-auth/react";
 
-export type AnyAuthClient = Omit<ReturnType<typeof createAuthClient>, "getSession" | "signUp">;
+export type AuthClientType = ReturnType<typeof createAuthClient>;
 
-export const auth: ReturnType<typeof createAuthClient> = createAuthClient({
+export type AnyAuthClient = Omit<AuthClientType, "getSession" | "signUp">;
+
+export const auth: AuthClientType = createAuthClient({
   // baseURL: "/api/auth",
 });

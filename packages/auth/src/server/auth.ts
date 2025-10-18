@@ -1,4 +1,4 @@
-import { db, schemas } from "@raypx/db";
+import { db, schemas, uuidv7 } from "@raypx/db";
 // import { getMailer } from "@raypx/email";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -107,6 +107,21 @@ const createAuthOptions = (): BetterAuthOptions => {
       provider: "pg",
       schema: schemas,
     }),
+    advanced: {
+      database: {
+        generateId: () => uuidv7(),
+      },
+      crossSubDomainCookies: {
+        enabled: !!env.AUTH_DOMAIN,
+        domain: env.AUTH_DOMAIN,
+      },
+      cookiePrefix: "auth",
+    },
+    user: {
+      deleteUser: {
+        enabled: true,
+      },
+    },
     socialProviders: {
       github: {
         clientId: env.AUTH_GITHUB_ID,
@@ -114,9 +129,9 @@ const createAuthOptions = (): BetterAuthOptions => {
       },
     },
     plugins,
-  };
+  } satisfies BetterAuthOptions;
 };
 
 const config = createAuthOptions();
 
-export const auth = betterAuth(config) as ReturnType<typeof betterAuth>;
+export const auth: AuthType = betterAuth(config);
