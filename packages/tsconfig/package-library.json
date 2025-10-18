@@ -8,5 +8,5 @@
     "module": "preserve",
     "declarationMap": true
   },
-  "extends": "./base.json"
+  "extends": "@raypx/tsconfig/base.json"
 }

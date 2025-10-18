@@ -1,7 +1,5 @@
 import { db, schemas } from "@raypx/db";
 // import { getMailer } from "@raypx/email";
-import { RESEND_FROM } from "@raypx/email/config";
-import { SendMagicLinkEmail, SendVerificationOTPEmail } from "@raypx/email/emails";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
@@ -39,7 +37,7 @@ const getPlugins = () => {
   if (features.magicLink) {
     plugins.push(
       magicLink({
-        sendMagicLink: async ({ email, token, url }) => {
+        sendMagicLink: async ({ email: _email, token: _token, url: _url }) => {
           // const mailer = await getMailer();
           // await mailer.sendEmail({
           //   subject: "Magic Link",
@@ -82,7 +80,7 @@ const getPlugins = () => {
   if (features.emailOTP) {
     plugins.push(
       emailOTP({
-        sendVerificationOTP: async (data, _request) => {
+        sendVerificationOTP: async (_data, _request) => {
           // const { email, otp } = data;
           // const mailer = await getMailer();
           // await mailer.sendEmail({
@@ -121,4 +119,4 @@ const createAuthOptions = (): BetterAuthOptions => {
 
 const config = createAuthOptions();
 
-export const auth = betterAuth(config);
+export const auth = betterAuth(config) as ReturnType<typeof betterAuth>;
