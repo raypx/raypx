@@ -1,0 +1,32 @@
+{
+  "name": "@raypx/trpc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@raypx/auth": "workspace:*",
+    "@raypx/db": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@trpc/client": "^11.6.0",
+    "@trpc/server": "^11.6.0",
+    "@trpc/tanstack-react-query": "^11.6.0",
+    "superjson": "^2.2.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/react": "catalog:react19",
+    "react": "catalog:react19",
+    "typescript": "catalog:dev"
+  }
+}

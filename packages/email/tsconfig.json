@@ -1,0 +1,8 @@
+{
+  "extends": "@raypx/tsconfig/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "compilerOptions": {
+    "types": ["vite/client", "node"]
+  },
+  "exclude": ["node_modules", "dist", ".turbo"]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@raypx/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./envs": "./src/envs.ts",
+    "./schemas": "./src/schemas.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "generate": "pnpm with-env drizzle-kit generate",
+    "migrate": "pnpm with-env drizzle-kit migrate",
+    "push": "pnpm with-env drizzle-kit push",
+    "seed": "pnpm with-env tsx seed.ts",
+    "studio": "pnpm with-env drizzle-kit studio",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@raypx/shared": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "drizzle-seed": "^0.3.1",
+    "drizzle-zod": "catalog:",
+    "nanoid": "^5.1.6",
+    "postgres": "^3.4.7",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "dotenv-cli": "catalog:",
+    "drizzle-kit": "^0.31.5",
+    "typescript": "catalog:dev"
+  }
+}

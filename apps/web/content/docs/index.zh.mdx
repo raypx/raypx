@@ -1,0 +1,63 @@
+---
+title: 快速入门
+description: 了解如何在本地启动 Raypx，并掌握工作区的基础知识。
+---
+
+## Raypx 简介
+
+Raypx 是一个基于 Turborepo 的工作区，核心是 TanStack Start 应用、共享封装包以及围绕 AI 产品构建的工具链。它提供完善的类型安全支持、现代化的 UI 组件以及基础设施能力，帮助团队快速交付功能。
+
+## 环境要求
+
+- **Node.js** ≥ 20（推荐 LTS）
+- **pnpm** ≥ 10.17
+- **Git** 版本控制工具
+
+> 建议运行 `node --version` 和 `pnpm --version`，确保本地版本满足要求。
+
+## 首次启动
+
+```bash title="克隆并安装依赖"
+git clone https://github.com/raypx/raypx.git
+cd raypx
+pnpm install
+```
+
+```bash title="配置环境变量"
+cp .env.example .env.local
+# 根据实际环境更新 .env.local
+```
+
+```bash title="（如需）执行数据库迁移"
+pnpm db:migrate
+```
+
+```bash title="启动开发服务器"
+pnpm web:dev
+# 或者使用 pnpm dev 运行所有受影响的应用
+```
+
+浏览器访问 `http://localhost:3000` 即可预览，TanStack 的文件路由与热更新开箱即用。
+
+## 常用命令
+
+| 任务 | 命令 | 说明 |
+| ---- | ---- | ---- |
+| 格式化与检查 | `pnpm format` / `pnpm check` | 由 Biome 统一负责。 |
+| 类型检查 | `pnpm typecheck` | 在整个工作区运行 TypeScript 检查。 |
+| 单元测试 | `pnpm test` | 基于 Vitest；可使用 `pnpm coverage` 生成报告。 |
+| 构建 | `pnpm build` | 执行 Turborepo 的生产流水线。 |
+| 清理产物 | `pnpm clean` | 删除构建缓存与临时文件。 |
+
+## 推荐流程
+
+1. 使用 `pnpm web:dev` 启动本地服务。
+2. 在对应的 app 或 package 中实现功能。
+3. 提交 PR 前运行 `pnpm check` 与 `pnpm test`。
+4. 按照 Conventional Commits 规范撰写提交信息，例如 `feat(web): add onboarding flow`，保证 CI 钩子顺利通过。
+
+## 延伸阅读
+
+- 访问 [工作区结构](/zh/docs/workspace) 了解代码目录划分。
+- 查看 [开发流程](/zh/docs/development) 获取脚本、测试与提交规范。
+- 阅读 [文档与国际化约定](/zh/docs/docs-and-i18n) 以保持多语言内容同步。

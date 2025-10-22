@@ -1,0 +1,55 @@
+---
+title: 开发流程
+description: 了解 Raypx 的日常开发命令、质量要求与协作规范。
+---
+
+## 环境准备
+
+1. 使用 `pnpm install` 安装依赖。
+2. 将 `.env.example` 拷贝为 `.env.local`，并补全必要的环境变量。
+3. 若需要数据库支持，执行 `pnpm db:migrate`。
+4. 通过 `pnpm web:dev` 启动开发服务器。
+
+> 当需要同时监听多个应用时可使用 `pnpm dev`，由 Turborepo 负责调度。
+
+## 常用脚本
+
+| 命令 | 说明 |
+| ---- | ---- |
+| `pnpm web:dev` | 启动 TanStack Start 前端项目。 |
+| `pnpm build` | 根据 Turborepo 依赖关系构建全部项目。 |
+| `pnpm typecheck` | 运行 TypeScript 全量类型检查。 |
+| `pnpm check` | 执行 Biome 格式化与静态分析。 |
+| `pnpm test` | 运行 Vitest 单元测试。 |
+| `pnpm coverage` | 生成 Vitest 覆盖率报告。 |
+| `pnpm clean` | 清理构建产物与 `.turbo` 缓存。 |
+
+## 代码规范
+
+- **格式化与 lint**：Biome 统一负责，两者在 pre-commit 钩子中都会执行。提交前请确保本地已经通过。
+- **类型安全**：项目启用了严格的 TypeScript 配置，公共包建议显式声明返回值类型。
+- **目录约定**：测试文件推荐与源码同级（`*.test.ts[x]`）或放在 `__tests__/` 中；React Server Components 位于 `apps/web/src/app`，客户端组件放在 `components`。
+
+## Git 协作
+
+- 遵循 Conventional Commits（如 `feat(web): add onboarding flow`），跨范围提交使用逗号分隔：`feat(web,i18n): add zh-cn landing page`。
+- 除非沟通确认，否则避免在共享分支强制推送；如需重写历史，请使用 `git push --force-with-lease`。
+- 推送前请先执行 `pnpm build`、`pnpm test`、`pnpm check`。
+
+## 测试策略
+
+- 为新增逻辑补充 Vitest 覆盖，尽量在边界层（网络、环境）进行 mock。
+- UI 变化尽量附上截图或后续的 Storybook 链接。Playwright 将在后续加入，暂时可以使用 TODO 标注。
+- 在发起 PR 之前执行 `pnpm coverage`，确保覆盖率没有下降。
+
+## 文档维护
+
+- 文档位于 `apps/web/content/docs`，通过创建 `.zh.mdx` 文件提供简体中文版本。
+- 本地使用 `pnpm web:dev` 预览文档，修改会即时热更新。
+- Frontmatter 的 `title` 与 `description` 会被用于导航、搜索与 SEO，请保持精炼。
+
+## 常见问题
+
+- 当构建异常时，可删除 `.turbo` 后重新执行 `pnpm install`。
+- 若 pnpm 出现 peer 依赖警告，请在仓库根目录安装到统一版本。
+- `apps/web/source.generated.ts` 为自动生成文件，仅在 MDX 更新时提交。

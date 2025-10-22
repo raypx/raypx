@@ -1,0 +1,5 @@
+{
+  "extends": "@raypx/tsconfig/package-library.json",
+  "include": ["src/**/*.ts", "seed.ts", "drizzle.config.ts"],
+  "exclude": ["node_modules", "dist", ".turbo", "drizzle"]
+}

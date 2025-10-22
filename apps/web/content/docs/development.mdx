@@ -1,0 +1,55 @@
+---
+title: Development Workflow
+description: Learn the day-to-day commands, QA expectations, and collaboration practices for Raypx.
+---
+
+## Environment Setup
+
+1. Install dependencies with `pnpm install`.
+2. Copy `.env.example` to `.env.local` and fill in required secrets.
+3. Run `pnpm db:migrate` if the change set needs database primitives.
+4. Start the dev server with `pnpm web:dev`.
+
+> Use `pnpm dev` when you want Turborepo to watch all affected apps, not just the web front end.
+
+## Common Scripts
+
+| Command | Description |
+| ------- | ----------- |
+| `pnpm web:dev` | Start the TanStack Start frontend in development mode. |
+| `pnpm build` | Build every package and app according to the Turborepo graph. |
+| `pnpm typecheck` | Validate TypeScript types workspace-wide. |
+| `pnpm check` | Run Biome linting and static analysis. |
+| `pnpm test` | Execute Vitest unit suites. |
+| `pnpm coverage` | Generate coverage reports with Vitest. |
+| `pnpm clean` | Clear build artifacts and `.turbo` caches. |
+
+## Coding Standards
+
+- **Formatting & linting**: Biome enforces formatting and lint rules. The pre-commit hook runs `pnpm -w format`, so make sure your changes pass locally.
+- **Type safety**: Projects compile with strict TypeScript settings. Prefer explicit return types in shared packages.
+- **Directory conventions**: Co-locate tests next to their modules (`*.test.ts[x]`) or inside `__tests__/`. Keep React Server Components in `apps/web/src/app` and Client Components under `components`.
+
+## Git Practices
+
+- Follow Conventional Commits (`feat:`, `fix:`, `chore:`). Use comma-separated scopes for cross-package work: `feat(web,i18n): add zh-cn landing page`.
+- Avoid rewriting history on shared branches unless coordinated (`git push --force-with-lease` only after confirming with the team).
+- Run `pnpm build`, `pnpm test`, and `pnpm check` before pushing.
+
+## Testing Guidance
+
+- Add Vitest coverage for new logic. Prefer mocking only at the boundary (e.g., network, environment).
+- For UI changes, add stories or screenshots wherever possible. Playwright suites will be added later; leave TODO comments rather than empty tests.
+- Use `pnpm coverage` before raising a PR to make sure the change does not regress coverage thresholds.
+
+## Working with Docs
+
+- Documentation lives under `apps/web/content/docs`. Each English MDX file can have a `*.zh.mdx` counterpart for Simplified Chinese.
+- Run `pnpm web:dev` to preview docs locally; updates trigger automatic reloads.
+- Keep frontmatter titles and descriptions concise—they are surfaced in search, navigation, and SEO metadata.
+
+## Troubleshooting
+
+- Delete `.turbo` and rerun `pnpm install` if builds behave unexpectedly.
+- If pnpm warns about missing peer dependencies, install them at the workspace root so all packages resolve the same version.
+- Check `apps/web/source.generated.ts` back into git only when MDX sources change; it is generated deterministically by Fumadocs.

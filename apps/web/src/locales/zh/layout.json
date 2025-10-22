@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "home": "首页",
+    "title": "Raypx",
+    "docs": "文档",
+    "application": "应用",
+    "dashboard": "仪表盘",
+    "books": "书籍",
+    "configuration": "配置",
+    "users": "用户",
+    "account": "账户",
+    "openApp": "打开应用",
+    "login": "登 录",
+    "signUp": "注 册",
+    "apiDocumentation": "API 文档"
+  }
+}
