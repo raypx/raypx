@@ -33,14 +33,17 @@ async function generateComponentExports(pkgName: string) {
 /**
  * Post-install tasks
  */
-const postinstall = definedCmd([
-  createTask("biome migrate --write", "Biome migration"),
-  createTask("pnpm exec lefthook install", "Lefthook"),
-  createTask("Generate UI component exports", async (_, task) => {
-    await generateComponentExports("components");
-    await generateComponentExports("business");
-    task.title = `Generated UI component exports successfully`;
-  }),
-]);
+const postinstall = definedCmd({
+  tasks: [
+    createTask("biome migrate --write", "Biome migration"),
+    createTask("pnpm exec lefthook install", "Lefthook"),
+    createTask("Generate UI component exports", async (_, task) => {
+      await generateComponentExports("components");
+      await generateComponentExports("business");
+      task.title = `Generated UI component exports successfully`;
+    }),
+  ],
+  type: "task",
+});
 
 export default postinstall;

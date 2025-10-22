@@ -21,6 +21,9 @@ function createFormatTask(): ListrTask {
 /**
  * Main format function
  */
-const format = definedCmd([createFormatTask()]);
+const format = definedCmd({
+  tasks: [createFormatTask()],
+  type: "task",
+});
 
 export default format;

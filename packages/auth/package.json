@@ -17,8 +17,8 @@
   "dependencies": {
     "@raypx/db": "workspace:*",
     "@raypx/email": "workspace:*",
-    "@raypx/shared": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-start": "catalog:",
     "better-auth": "^1.3.28",

@@ -3,14 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm with-env vite build",
+    "build": "raypx-scripts run vite build",
     "clean": "rimraf dist .turbo .tanstack .nitro .output .vercel dist",
     "deploy": "pnpm build && wrangler deploy",
-    "dev": "pnpm with-env vite dev",
-    "serve": "pnpm with-env vite preview",
+    "dev": "raypx-scripts run vite dev",
+    "serve": "raypx-scripts run vite preview",
     "shadcn": "pnpx shadcn@canary add --overwrite",
-    "test": "vitest run",
-    "with-env": "dotenv -e ../../.env --"
+    "test": "vitest run"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",

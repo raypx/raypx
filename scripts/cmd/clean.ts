@@ -10,19 +10,19 @@ const CLEAN_PATTERNS = [
   "**/dist", // Build output directories
   "**/.turbo", // Turbo cache directories
   "**/tsconfig.tsbuildinfo", // TypeScript build info files
-  "**/.next", // Next.js build output
   "**/coverage", // Test coverage reports
   "**/.vercel", // Vercel deployment cache
   "**/.output", // Build output directories
+  "**/.tanstack", // TanStack cache directories
+  "**/.nitro", // Nitro cache directories
+  "**/.source", // Fumadocs cache directories
 ];
 
 /**
  * Creates a task that runs the monorepo clean command
  */
 function createWorkspaceCleanTask(): ListrTask {
-  return createTask("pnpm -r --if-present --parallel clean", {
-    title: "Monorepo clean",
-  });
+  return createTask("pnpm -r --if-present --parallel clean", "Monorepo clean");
 }
 
 /**
@@ -48,6 +48,9 @@ function createFileCleanTask(): ListrTask {
 /**
  * Main clean function
  */
-const cleanCmd = definedCmd([createWorkspaceCleanTask(), createFileCleanTask()]);
+const cleanCmd = definedCmd({
+  tasks: [createWorkspaceCleanTask(), createFileCleanTask()],
+  type: "task",
+});
 
 export default cleanCmd;

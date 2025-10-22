@@ -11,19 +11,18 @@
   },
   "scripts": {
     "clean": "rimraf dist .turbo",
-    "generate": "pnpm with-env drizzle-kit generate",
-    "migrate": "pnpm with-env drizzle-kit migrate",
-    "push": "pnpm with-env drizzle-kit push",
-    "seed": "pnpm with-env tsx seed.ts",
-    "studio": "pnpm with-env drizzle-kit studio",
+    "generate": "raypx-scripts run drizzle-kit generate",
+    "migrate": "raypx-scripts run drizzle-kit migrate",
+    "push": "raypx-scripts run drizzle-kit push",
+    "seed": "raypx-scripts run tsx seed.ts",
+    "studio": "raypx-scripts run drizzle-kit studio",
     "test": "vitest",
-    "typecheck": "tsc --noEmit",
-    "with-env": "dotenv -e ../../.env --"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
-    "@raypx/shared": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/shared": "workspace:*",
     "drizzle-orm": "catalog:",
     "drizzle-seed": "^0.3.1",
     "drizzle-zod": "catalog:",

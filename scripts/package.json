@@ -14,11 +14,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.51.0",
     "@raypx/shared": "workspace:*",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.2",
-    "listr2": "^9.0.5",
     "jiti": "^2.6.1",
+    "listr2": "^9.0.5",
     "lodash-es": "^4.17.21",
     "tsx": "^4.20.6"
   },

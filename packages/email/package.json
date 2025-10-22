@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@raypx/shared": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/shared": "workspace:*",
     "@react-email/render": "^1.4.0",
     "nodemailer": "^7.0.9",
     "react": "catalog:react19",

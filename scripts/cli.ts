@@ -1,8 +1,7 @@
 import { logger } from "@raypx/shared/logger";
 import { createJiti } from "jiti";
-import { Listr, PRESET_TIMER } from "listr2";
 import { camelCase } from "lodash-es";
-import type { Cmd } from "./lib/task";
+import type { DefinedCmd } from "./lib/task";
 import { formatDuration } from "./utils";
 
 const jiti = createJiti(import.meta.url);
@@ -11,7 +10,7 @@ const jiti = createJiti(import.meta.url);
  * CLI entry point for raypx-scripts
  */
 async function cli(name: string) {
-  const cmd: Cmd = await jiti.import(`./cmd/${camelCase(name)}.ts`, { default: true });
+  const cmd: DefinedCmd = await jiti.import(`./cmd/${camelCase(name)}.ts`, { default: true });
 
   if (!cmd) {
     logger.error(`Command ${name} not found`);
@@ -20,21 +19,7 @@ async function cli(name: string) {
 
   try {
     const startTime = Date.now();
-    const { tasks, options = {} } = cmd;
-
-    const listr = new Listr(tasks, {
-      concurrent: options.concurrent ?? true,
-      exitOnError: options.exitOnError ?? true,
-      renderer: process.env.CI ? "verbose" : "default",
-      rendererOptions: {
-        timer: PRESET_TIMER,
-        clearOutput: false,
-        removeEmptyLines: true,
-      },
-    });
-
-    await listr.run();
-
+    await cmd.run();
     const totalDuration = Date.now() - startTime;
     logger.success(`Tasks completed in ${formatDuration(totalDuration)}`);
   } catch (error: unknown) {
