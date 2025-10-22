@@ -1,3 +1,9 @@
+/**
+ * Clean build artifacts and cache files
+ *
+ * This command removes build outputs, cache directories, and temporary files
+ * to ensure a clean build environment.
+ */
 import type { ListrTask } from "listr2";
 import { rimraf } from "rimraf";
 import { createTask, definedCmd } from "../lib/task";
@@ -5,18 +11,17 @@ import { PROJECT_ROOT } from "../utils";
 
 /**
  * File patterns to clean during cleanup operations
+ * Organized by category for better maintainability
  */
-const CLEAN_PATTERNS = [
-  "**/dist", // Build output directories
-  "**/.turbo", // Turbo cache directories
-  "**/tsconfig.tsbuildinfo", // TypeScript build info files
-  "**/coverage", // Test coverage reports
-  "**/.vercel", // Vercel deployment cache
-  "**/.output", // Build output directories
-  "**/.tanstack", // TanStack cache directories
-  "**/.nitro", // Nitro cache directories
-  "**/.source", // Fumadocs cache directories
-];
+const CLEAN_PATTERNS = {
+  build: ["**/dist", "**/.output", "**/.nitro"],
+  cache: ["**/.turbo", "**/.tanstack", "**/.source"],
+  typescript: ["**/tsconfig.tsbuildinfo"],
+  testing: ["**/coverage"],
+  deployment: ["**/.vercel"],
+} as const;
+
+const ALL_CLEAN_PATTERNS = Object.values(CLEAN_PATTERNS).flat();
 
 /**
  * Creates a task that runs the monorepo clean command
@@ -31,13 +36,13 @@ function createWorkspaceCleanTask(): ListrTask {
 function createFileCleanTask(): ListrTask {
   return createTask("Cleaning files and directories", async (_, task) => {
     try {
-      await rimraf(CLEAN_PATTERNS, {
+      await rimraf(ALL_CLEAN_PATTERNS, {
         glob: {
           cwd: PROJECT_ROOT,
         },
       });
 
-      task.title = `Cleaned ${CLEAN_PATTERNS.length} patterns successfully`;
+      task.title = `Cleaned ${ALL_CLEAN_PATTERNS.length} patterns successfully`;
     } catch (error) {
       task.title = "File cleaning failed";
       throw new Error(`File cleaning failed: ${error}`);
@@ -50,7 +55,9 @@ function createFileCleanTask(): ListrTask {
  */
 const cleanCmd = definedCmd({
   tasks: [createWorkspaceCleanTask(), createFileCleanTask()],
+  description: "Clean build artifacts and cache files",
   type: "task",
+  cmd: "clean",
 });
 
 export default cleanCmd;

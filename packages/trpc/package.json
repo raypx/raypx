@@ -20,7 +20,7 @@
     "@trpc/client": "^11.6.0",
     "@trpc/server": "^11.6.0",
     "@trpc/tanstack-react-query": "^11.6.0",
-    "superjson": "^2.2.2",
+    "superjson": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

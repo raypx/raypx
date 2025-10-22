@@ -6,6 +6,7 @@
   "type": "module",
   "bin": {
     "raypx-scripts": "./bin/raypx-scripts.mjs",
+    "rs": "./bin/raypx-scripts.mjs",
     "scripts": "./bin/raypx-scripts.mjs"
   },
   "scripts": {
@@ -16,18 +17,20 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
     "@raypx/shared": "workspace:*",
-    "fast-glob": "^3.3.3",
-    "fs-extra": "^11.3.2",
-    "jiti": "^2.6.1",
+    "execa": "^9.6.0",
+    "fast-glob": "catalog:",
+    "fs-extra": "catalog:",
+    "jiti": "catalog:",
     "listr2": "^9.0.5",
-    "lodash-es": "^4.17.21",
-    "tsx": "^4.20.6"
+    "lodash-es": "catalog:",
+    "yargs-parser": "^22.0.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/fs-extra": "^11.0.4",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "catalog:",
+    "@types/yargs-parser": "^21.0.3",
     "type-fest": "catalog:",
     "typescript": "catalog:dev",
     "vitest": "catalog:"

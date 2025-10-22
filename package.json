@@ -24,7 +24,7 @@
     "check": "biome check",
     "clean": "raypx-scripts clean",
     "coverage": "vitest --coverage",
-    "dev": "turbo dev",
+    "dev": "pnpm --filter web dev",
     "format": "raypx-scripts format",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "raypx-scripts postinstall",

@@ -1,7 +1,7 @@
-import { type ExecSyncOptions, execSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { logger } from "@raypx/shared/logger";
+import { execaCommand, type Options } from "execa";
 
 /**
  * Path utilities
@@ -26,12 +26,6 @@ export function formatDuration(ms: number): string {
   const seconds = Math.floor((ms % 60_000) / 1000);
   return `${minutes}m ${seconds}s`;
 }
-
-/** Default execution options for silent command execution */
-export const SILENT_EXEC_OPTIONS: ExecSyncOptions = {
-  stdio: ["ignore", "ignore", "inherit"],
-  cwd: PROJECT_ROOT,
-};
 
 /**
  * Allowed command prefixes for this project
@@ -83,33 +77,54 @@ function validateCommand(command: string): boolean {
 }
 
 /**
- * Safely executes a shell command with security validation and error handling
+ * Safely executes a shell command asynchronously with security validation and better error handling
  */
-export function safeExec(command: string, options?: ExecSyncOptions): boolean {
+export async function safeExecAsync(
+  command: string,
+  options?: Options,
+): Promise<{ success: boolean; error?: Error; output?: string }> {
   // Validate command for security
   if (!validateCommand(command)) {
-    logger.error(`Potentially dangerous command blocked: ${command}`);
-    return false;
+    const error = new Error(`Potentially dangerous command blocked: ${command}`);
+    logger.error(error.message);
+    return { success: false, error };
   }
 
   logger.debug(`Executing: ${command}`);
 
   try {
-    execSync(command, {
-      encoding: "utf8",
-      maxBuffer: 1024 * 1024 * 10,
+    const result = await execaCommand(command, {
+      cwd: PROJECT_ROOT,
       timeout: 180_000, // 3 minutes default
-      ...SILENT_EXEC_OPTIONS,
-      ...options,
+      stdio: "pipe",
+      shell: true,
       env: {
         ...process.env,
         NPM_CONFIG_LOGLEVEL: "error",
         ...options?.env,
       },
+      ...options,
     });
-    return true;
+
+    return {
+      success: true,
+      output: typeof result.stdout === "string" ? result.stdout : undefined,
+    };
   } catch (error) {
+    const execaError = error as any;
     logger.debug(`Command failed: ${command}`, error);
-    return false;
+
+    return {
+      success: false,
+      error: execaError,
+      output:
+        typeof execaError.stdout === "string"
+          ? execaError.stdout
+          : typeof execaError.stderr === "string"
+            ? execaError.stderr
+            : undefined,
+    };
   }
 }
+
+export * from "./component-exports";

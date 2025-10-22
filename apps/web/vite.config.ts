@@ -18,9 +18,10 @@ const config = defineConfig(async ({ mode }) => {
   return {
     server: {
       port: 3000,
+      open: isDev,
     },
     build: {
-      sourcemap: false,
+      sourcemap: true,
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         external: ["next/server"],

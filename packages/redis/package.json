@@ -16,7 +16,7 @@
     "@raypx/env": "workspace:*",
     "@raypx/shared": "workspace:*",
     "redis": "^5.8.3",
-    "superjson": "^2.2.2"
+    "superjson": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

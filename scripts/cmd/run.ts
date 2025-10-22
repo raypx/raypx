@@ -1,6 +1,6 @@
-import { execSync } from "node:child_process";
 import path from "node:path";
 import dotenvx from "@dotenvx/dotenvx";
+import { execaCommand } from "execa";
 import { definedCmd } from "../lib/task";
 import { PROJECT_ROOT } from "../utils";
 
@@ -9,17 +9,30 @@ const runCmd = definedCmd({
     if (!args?.length) {
       throw new Error("No arguments provided");
     }
-    const envs = dotenvx.config({ path: path.join(PROJECT_ROOT, ".env") });
-    execSync(args.join(" "), {
+
+    const envConfig = dotenvx.config({ path: path.join(PROJECT_ROOT, ".env"), quiet: true });
+    await execaCommand(args.join(" "), {
       cwd: process.cwd(),
-      env: {
-        ...process.env,
-        ...envs.parsed,
-      },
+      env: { ...process.env, ...envConfig.parsed },
       stdio: "inherit",
+      shell: true,
     });
   },
+  description: "Execute commands with automatic environment variable loading",
+  help: `This command automatically loads environment variables from PROJECT_ROOT/.env
+before executing the specified command. This eliminates the need for package-specific
+with-env script definitions.
+
+The command uses @dotenvx/dotenvx for secure environment variable injection and
+supports all standard shell commands through execa.`,
+  examples: [
+    "raypx-scripts run vite dev",
+    "raypx-scripts run pnpm build",
+    "raypx-scripts run tsc --noEmit",
+    "rs run node scripts/migrate.js",
+  ],
   type: "run",
+  cmd: "run [args...]",
 });
 
 export default runCmd;

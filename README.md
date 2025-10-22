@@ -1,10 +1,7 @@
 # Raypx
 
-[![Version](https://img.shields.io/github/package-json/v/raypx/raypx?style=flat-square)](https://github.com/raypx/raypx)
 [![License](https://img.shields.io/github/license/raypx/raypx?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
-[![pnpm](https://img.shields.io/badge/pnpm-10.17.1-orange?style=flat-square&logo=pnpm)](https://pnpm.io/)
-[![Turborepo](https://img.shields.io/badge/Turborepo-monorepo-red?style=flat-square&logo=turborepo)](https://turbo.build/)
-[![Biome](https://img.shields.io/badge/Biome-linter%20%26%20formatter-yellow?style=flat-square&logo=biome)](https://biomejs.dev/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/raypx/raypx)
 
 > A modern, high-performance web application platform built with TanStack Start and React 19, designed specifically for building scalable AI-powered applications with enterprise-grade security and uncompromising type safety.
 
@@ -46,7 +43,7 @@ cd raypx
 pnpm install
 
 # Set up environment variables
-cp .env.example .env.local
+cp .env.example .env
 # Edit .env.local with your configuration
 
 # Run database migrations (if applicable)
@@ -165,7 +162,7 @@ These improvements are being tracked through GitHub Issues and project milestone
 ```
 raypx/
 ├── apps/                          # Applications
-│   └── app/                      # Main TanStack Start application
+│   └── web/                      # Main TanStack Start application
 │       ├── src/app/              # File-based routes
 │       ├── src/components/       # React components
 │       ├── src/integrations/     # tRPC and TanStack Query setup

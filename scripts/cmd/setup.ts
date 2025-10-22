@@ -1,20 +1,14 @@
 import { createTask, definedCmd } from "../lib/task";
 
-/**
- * Setup function for initial project configuration
- * Optimized: Use concurrent execution for better performance
- */
-const setup = definedCmd({
-  tasks: [
-    createTask("pnpm --filter @raypx/db run db:migrate", {
-      title: "Database migration",
-    }),
-  ],
+const setupCmd = definedCmd({
+  tasks: [createTask("pnpm --filter @raypx/db run db:migrate", "Database migration")],
   options: {
     concurrent: true, // Enable concurrent execution
     exitOnError: true, // Exit immediately on error
   },
+  description: "Setup project dependencies",
   type: "task",
+  cmd: "setup",
 });
 
-export default setup;
+export default setupCmd;
