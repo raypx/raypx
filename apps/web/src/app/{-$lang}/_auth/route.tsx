@@ -1,7 +1,8 @@
+import { AuthLayout } from "@raypx/auth";
 import { Image } from "@raypx/ui/components/image";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
-function AuthLayout() {
+function AuthLayoutComponent() {
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
       <div className="z-10 flex w-full max-w-sm flex-col gap-6">
@@ -11,12 +12,14 @@ function AuthLayout() {
           </div>
           Raypx
         </Link>
-        <Outlet />
+        <AuthLayout>
+          <Outlet />
+        </AuthLayout>
       </div>
     </div>
   );
 }
 
-export const Route = createFileRoute("/_auth")({
-  component: AuthLayout,
+export const Route = createFileRoute("/{-$lang}/_auth")({
+  component: AuthLayoutComponent,
 });

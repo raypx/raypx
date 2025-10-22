@@ -17,6 +17,6 @@ function HomePage() {
   );
 }
 
-export const Route = createFileRoute("/_home/")({
+export const Route = createFileRoute("/{-$lang}/_home/")({
   component: HomePage,
 });

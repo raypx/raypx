@@ -105,6 +105,9 @@ const createAuthOptions = () => {
       provider: "pg",
       schema: schemas,
     }),
+    emailAndPassword: {
+      enabled: true,
+    },
     advanced: {
       database: {
         generateId: () => uuidv7(),

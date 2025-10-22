@@ -1,9 +1,38 @@
+import {
+  anonymousClient,
+  apiKeyClient,
+  emailOTPClient,
+  genericOAuthClient,
+  magicLinkClient,
+  multiSessionClient,
+  oneTapClient,
+  organizationClient,
+  passkeyClient,
+  twoFactorClient,
+  usernameClient,
+} from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
-export type AuthClientType = ReturnType<typeof createAuthClient>;
-
-export type AnyAuthClient = Omit<AuthClientType, "getSession" | "signUp">;
-
-export const auth: AuthClientType = createAuthClient({
-  // baseURL: "/api/auth",
+export const auth = createAuthClient({
+  plugins: [
+    apiKeyClient(),
+    multiSessionClient(),
+    passkeyClient(),
+    oneTapClient({
+      clientId: "",
+    }),
+    genericOAuthClient(),
+    anonymousClient(),
+    usernameClient(),
+    magicLinkClient(),
+    emailOTPClient(),
+    twoFactorClient(),
+    organizationClient(),
+  ],
 });
+
+export type AuthClientType = typeof auth;
+
+export type AuthClient = typeof auth;
+
+export type AnyAuthClient = Omit<AuthClient, "getSession" | "signUp">;

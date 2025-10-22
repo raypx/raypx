@@ -7,7 +7,7 @@ settings:
 catalogs:
   default:
     '@hookform/resolvers':
-      specifier: ^5.2.2
+      specifier: 5.2.2
       version: 5.2.2
     '@tanstack/react-query':
       specifier: ^5.90.5
@@ -55,7 +55,7 @@ catalogs:
       specifier: npm:nitro-nightly@latest
       version: 3.0.1-20251019-172914-d1eea57b
     react-hook-form:
-      specifier: ^7.65.0
+      specifier: 7.65.0
       version: 7.65.0
     rimraf:
       specifier: ^6.0.1
@@ -176,9 +176,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@better-fetch/fetch':
+        specifier: ^1.1.18
+        version: 1.1.18
       '@dotenvx/dotenvx':
         specifier: ^1.51.0
         version: 1.51.0
+      '@hookform/resolvers':
+        specifier: 'catalog:'
+        version: 5.2.2(react-hook-form@7.65.0(react@19.2.0))
       '@orama/tokenizers':
         specifier: ^3.1.16
         version: 3.1.16
@@ -269,6 +275,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.2.0(react@19.2.0)
+      react-hook-form:
+        specifier: 'catalog:'
+        version: 7.65.0(react@19.2.0)
       react-i18next:
         specifier: ^16.1.4
         version: 16.1.4(i18next@25.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
@@ -400,6 +409,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.2.0(react@19.2.0)
+      react-i18next:
+        specifier: ^16.1.4
+        version: 16.1.4(i18next@25.6.0(typescript@5.9.3))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
     devDependencies:
       '@raypx/tsconfig':
         specifier: workspace:*

@@ -30,26 +30,6 @@ function DocsLayout() {
   );
 }
 
-function resolveRedirect(lang: string | undefined, config: I18nConfig) {
-  const to = "/{-$lang}/docs";
-  const { hideLocale, defaultLanguage, languages } = config;
-
-  if (hideLocale === "always") {
-    return lang ? { to, params: { lang: undefined } } : null;
-  }
-
-  if (hideLocale === "never") {
-    const validLang = lang && languages.includes(lang) ? lang : defaultLanguage;
-    return lang === validLang ? null : { to, params: { lang: validLang } };
-  }
-
-  return lang === defaultLanguage ? { to, params: { lang: undefined } } : null;
-}
-
 export const Route = createFileRoute("/{-$lang}/docs")({
   component: DocsLayout,
-  beforeLoad(ctx) {
-    const result = resolveRedirect(ctx.params.lang, docsI18nConfig);
-    if (result) throw redirect(result);
-  },
 });

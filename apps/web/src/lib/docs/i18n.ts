@@ -9,6 +9,6 @@ import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE_KEY } from "../i18n/constants";
 export const docsI18nConfig = defineI18n({
   defaultLanguage: DEFAULT_LANGUAGE_KEY,
   languages: AVAILABLE_LANGUAGES.map((l) => l.key) as unknown as string[],
-  hideLocale: "default-locale",
+  hideLocale: "never",
   fallbackLanguage: DEFAULT_LANGUAGE_KEY,
 });

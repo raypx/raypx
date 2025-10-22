@@ -30,8 +30,10 @@ type RootRouterContext = {
   trpc: TRPCOptionsProxy<AppRouter>;
 };
 
-const initSsrApp = createServerFn({ method: "GET" }).handler(async () => {
+const initSsrApp = createServerFn({ method: "GET" }).handler(async (ctx) => {
+  console.log('ctx', ctx);
   const language = getUserLanguage();
+  console.log('language', language);
   const runtime = await ensureServerRequestContext();
   const instance = await createServerI18n(language);
   await syncLanguage(language);
@@ -105,7 +107,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <I18nextProvider i18n={activeI18n}>
           <ThemeProvider defaultTheme="system">
-            <AuthProvider>
+            <AuthProvider navigate={() => {}} redirectTo="/" replace={() => {}}>
               <AppStoreProvider initialLanguage={language as AppLanguageKey}>
                 {children}
                 <Toaster />

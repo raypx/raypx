@@ -29,9 +29,9 @@ import { formatDuration } from "./utils";
 const jiti = createJiti(import.meta.url);
 
 const globalOptions = [
-  ['--help, -h', 'Show this help message'],
-  ['--debug, -d', 'Enable debug logging'],
-  ['--verbose, -V', 'Enable verbose output'],
+  ["--help, -h", "Show this help message"],
+  ["--debug, -d", "Enable debug logging"],
+  ["--verbose, -V", "Enable verbose output"],
 ] as const;
 
 /**
@@ -77,9 +77,11 @@ async function discoverCommands(): Promise<
 /**
  * Show help information for a specific command
  */
-async function showCommandHelp(
-  commandInfo: { name: string; desc?: string; file: string },
-): Promise<void> {
+async function showCommandHelp(commandInfo: {
+  name: string;
+  desc?: string;
+  file: string;
+}): Promise<void> {
   // Try to load the command module to get additional help info
   try {
     const cmd: DefinedCmd = await jiti.import(commandInfo.file, { default: true });
@@ -124,7 +126,9 @@ Commands:`);
   Object.entries(commands).forEach(([_, info]) => {
     console.log(`  ${info.name.padEnd(18)} ${info.desc || ""}`);
   });
-  const options = globalOptions.map(([flag, description]) => `  ${flag!.padEnd(18)} ${description}`);
+  const options = globalOptions.map(
+    ([flag, description]) => `  ${flag!.padEnd(18)} ${description}`,
+  );
   console.log(`
 Options:
 ${options.join("\n")}
