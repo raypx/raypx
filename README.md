@@ -77,7 +77,7 @@ Technical documentation is managed within the development workflow and will be i
 
 ### Core Systems Ready
 - **✅ Authentication** - Enterprise-grade auth with Better Auth
-- **✅ Internationalization** - React-i18next integration complete
+- **✅ Internationalization** - Compile-time i18n with inlang/paraglide-js
 - **✅ UI Components** - Modern component library with Radix UI
 - **✅ Database Layer** - Drizzle ORM with PostgreSQL support
 - **✅ API Layer** - Type-safe tRPC implementation
@@ -87,7 +87,7 @@ Technical documentation is managed within the development workflow and will be i
 ### Phase 1: Core Migration ✅ Complete
 - [x] Next.js to TanStack Start migration
 - [x] Authentication system integration
-- [x] Internationalization with react-i18next
+- [x] Internationalization with inlang/paraglide-js (compile-time, zero runtime overhead)
 - [x] UI component library setup
 - [x] Type safety improvements
 
@@ -169,11 +169,9 @@ raypx/
 │       └── public/               # Static assets
 ├── packages/                      # Shared packages
 │   ├── ui/                       # UI component library
-│   │   ├── components/           # Reusable UI components
+│   │   ├── components/           # Reusable UI components (includes i18n abstractions)
+│   │   ├── hooks/                # React hooks (includes useLocale)
 │   │   └── lib/                  # UI utilities and themes
-│   ├── i18n/                     # Internationalization system ✅
-│   │   ├── src/                  # Core i18n functionality
-│   │   └── locales/              # Translation files
 │   ├── auth/                     # Authentication system ✅
 │   ├── db/                       # Database layer and migrations ✅
 │   ├── email/                    # Email templates and service ✅

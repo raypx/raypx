@@ -4,8 +4,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "allowImportingTsExtensions": true,
+    "allowJs": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@output/*": ["./.output/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]
     }
   }

@@ -18,7 +18,7 @@
     "@raypx/env": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@react-email/render": "^1.4.0",
-    "nodemailer": "^7.0.9",
+    "nodemailer": "^7.0.10",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "resend": "^6.2.2",

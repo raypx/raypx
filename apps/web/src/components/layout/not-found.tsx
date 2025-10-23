@@ -1,11 +1,8 @@
 import { Button } from "@raypx/ui/components/button";
 import { Link } from "@tanstack/react-router";
-// import { useTranslation } from "react-i18next";
 import { Logo } from "./logo";
 
 export default function NotFound() {
-  // const { t } = useTranslation("common");
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8">
       <Logo className="size-12" />

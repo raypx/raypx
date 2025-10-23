@@ -1,11 +1,10 @@
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button } from "@raypx/ui/components/button";
 import { Separator } from "@raypx/ui/components/separator";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
+import { Link } from "@tanstack/react-router";
 import { Github, Twitter } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { Link } from "@/components/link";
 import Container from "./container";
-import { LangSwitcher } from "./lang-switcher";
 import { Logo } from "./logo";
 
 type FooterLink = {
@@ -69,16 +68,15 @@ const footerLinks: FooterLink[] = [
 ];
 
 export function Footer() {
-  const { t } = useTranslation("layout");
   const currentYear = new Date().getFullYear();
-
+  const { t } = useLocale("layout");
   return (
     <footer className="border-t bg-background">
       <Container className="py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand section */}
           <div className="lg:col-span-2 space-y-4">
-            <Link className="flex items-center space-x-2" href="/">
+            <Link className="flex items-center space-x-2" to="/">
               <Logo />
               <span className="text-xl font-semibold">{t("nav.title")}</span>
             </Link>
@@ -116,8 +114,7 @@ export function Footer() {
                   <li key={linkIndex}>
                     <Link
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      external={link.external}
-                      href={link.href}
+                      to={link.href}
                     >
                       {t(link.labelKey)}
                     </Link>
@@ -153,7 +150,7 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeSwitcher />
-            <LangSwitcher />
+            {/* <LangSwitcher /> */}
           </div>
         </div>
       </Container>

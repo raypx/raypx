@@ -1,6 +1,6 @@
 import { toast } from "@raypx/ui/components/toast";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useTranslation } from "react-i18next";
 import { authDataCache } from "../context/auth-data";
 // import { getLocalizedError } from "../lib/utils"
 import { useAuth } from "./use-auth";
@@ -21,7 +21,7 @@ export function useAuthData<T>({
   cacheKey?: string;
   staleTime?: number;
 }) {
-  const { t } = useTranslation("auth");
+  const { t } = useLocale("auth");
   const {
     hooks: { useSession },
   } = useAuth();

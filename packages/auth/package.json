@@ -18,11 +18,10 @@
     "@raypx/db": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
-    "react-i18next": "^16.1.4",
     "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-start": "catalog:",
-    "better-auth": "^1.3.28",
+    "better-auth": "^1.3.29",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },

@@ -5,14 +5,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { cn } from "@raypx/ui/lib/utils";
 import { Check, Languages } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import type { AppLanguageKey } from "@/lib/i18n/constants";
-import { useAppLanguage } from "@/state/app-store";
 
 type LocaleConfig = {
-  readonly code: AppLanguageKey;
+  readonly code: string;
   readonly name: string;
   readonly flag: string;
   readonly nativeName: string;
@@ -24,8 +22,7 @@ const locales: readonly LocaleConfig[] = [
 ] as const;
 
 export const LangSwitcher = () => {
-  const { t } = useTranslation(["common"]);
-  const { language: locale, setLanguage } = useAppLanguage();
+  const { t, locale, setLocale } = useLocale("languages");
 
   return (
     <DropdownMenu>
@@ -36,7 +33,7 @@ export const LangSwitcher = () => {
           variant="ghost"
         >
           <Languages className="size-3" />
-          <span className="sr-only">{t("language")}</span>
+          <span className="sr-only">{t("label")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -47,7 +44,7 @@ export const LangSwitcher = () => {
               locale === loc.code && "bg-accent",
             )}
             key={loc.code}
-            onClick={() => setLanguage(loc.code)}
+            onClick={() => setLocale(loc.code)}
           >
             <div className="flex items-center gap-3">
               <span className="text-lg">{loc.flag}</span>

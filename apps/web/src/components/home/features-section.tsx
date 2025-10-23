@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
 import {
   Bot,
   Database,
@@ -16,7 +17,6 @@ import {
   Rocket,
   Zap,
 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import Container from "@/components/layout/container";
 
 type Feature = {
@@ -69,8 +69,7 @@ const features: Feature[] = [
 ];
 
 export function FeaturesSection() {
-  const { t } = useTranslation("home");
-
+  const { t } = useLocale("home");
   return (
     <section className="py-20 md:py-32 bg-muted/30">
       <Container>

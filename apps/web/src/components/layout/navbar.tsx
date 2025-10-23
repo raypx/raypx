@@ -8,11 +8,10 @@ import {
   navigationMenuTriggerStyle,
 } from "@raypx/ui/components/navigation-menu";
 import { Skeleton } from "@raypx/ui/components/skeleton";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { cn } from "@raypx/ui/lib/utils";
-import { useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Link as LocaleLink } from "@/components/link";
 import { useScroll } from "@/hooks/use-scroll";
 import Container from "./container";
 import { LangSwitcher } from "./lang-switcher";
@@ -35,7 +34,7 @@ export function Navbar({ scroll }: NavBarProps) {
   const scrolled = useScroll(50);
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
-  const { t } = useTranslation("layout");
+  const { t } = useLocale("layout");
 
   const menuLinks = [
     {
@@ -45,7 +44,7 @@ export function Navbar({ scroll }: NavBarProps) {
     },
     {
       title: "nav.docs",
-      href: "/$lang/docs",
+      href: "/docs",
       external: false,
     },
   ];
@@ -70,10 +69,10 @@ export function Navbar({ scroll }: NavBarProps) {
         <nav className="hidden lg:flex">
           {/* logo and name */}
           <div className="flex items-center">
-            <LocaleLink className="flex items-center space-x-2" href="/">
+            <Link className="flex items-center space-x-2" to="/">
               <Logo />
               <span className="text-xl font-semibold">{t("nav.title")}</span>
-            </LocaleLink>
+            </Link>
           </div>
 
           {/* menu links */}
@@ -91,13 +90,7 @@ export function Navbar({ scroll }: NavBarProps) {
                       asChild
                       className={customNavigationMenuTriggerStyle}
                     >
-                      <LocaleLink
-                        href={item.href || "#"}
-                        rel={item.external ? "noopener noreferrer" : undefined}
-                        target={item.external ? "_blank" : undefined}
-                      >
-                        {t(item.title)}
-                      </LocaleLink>
+                      <Link to={item.href || "#"}>{t(item.title)}</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
@@ -106,27 +99,27 @@ export function Navbar({ scroll }: NavBarProps) {
           </div>
 
           {/* navbar right show sign in or user */}
-          <div className="flex items-center gap-x-4">
+          <div className="flex items-center gap-x-4 min-w-40">
             {!mounted ? (
               <Skeleton className="size-8 border rounded-full" />
             ) : (
               <div className="flex items-center gap-x-4">
-                <LocaleLink href="/sign-in">
+                <Link to="/sign-in">
                   <Button className="cursor-pointer" size="sm" variant="outline">
                     {t("nav.login")}
                   </Button>
-                </LocaleLink>
-                <LocaleLink
+                </Link>
+                <Link
                   className={cn(
                     buttonVariants({
                       variant: "default",
                       size: "sm",
                     }),
                   )}
-                  href="/sign-up"
+                  to="/sign-up"
                 >
                   {t("nav.signUp")}
-                </LocaleLink>
+                </Link>
               </div>
             )}
             <ThemeSwitcher />

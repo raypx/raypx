@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@raypx/ui/components/tooltip";
-import { useTranslation } from "react-i18next";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
 import Container from "@/components/layout/container";
 
 type TechItem = {
@@ -95,8 +95,7 @@ const categoryColors = {
 } as const;
 
 export function TechStackSection() {
-  const { t } = useTranslation("home");
-
+  const { t } = useLocale("home");
   return (
     <section className="py-20 md:py-32">
       <Container>

@@ -26,12 +26,17 @@ pnpm build
 raypx/
 ├── apps/
 │   └── web/          # Main TanStack Start application
+│       ├── messages/     # i18n message files (en.json, zh.json)
+│       ├── project.inlang/  # Inlang paraglide configuration
+│       └── src/
+│           └── paraglide/   # Auto-generated i18n runtime (DO NOT EDIT)
 ├── packages/          # Shared packages (consumed as TypeScript source)
 │   ├── ui/           # UI components with shadcn/ui
+│   │   ├── components/i18n-provider.tsx  # i18n context abstraction
+│   │   └── hooks/use-locale.ts           # i18n hook abstraction
 │   ├── db/           # Database layer with Drizzle ORM
 │   ├── auth/         # Authentication with Better Auth
 │   ├── trpc/         # Type-safe API layer
-│   ├── i18n/         # Internationalization
 │   ├── env/          # Environment validation
 │   ├── email/        # Email templates and service
 │   ├── redis/        # Cache and session storage
@@ -324,8 +329,204 @@ test: add integration tests for auth flow
 - Radix UI - Accessible primitives
 - shadcn/ui - Component library
 
+**Internationalization:**
+- inlang/paraglide-js - Compile-time i18n with zero runtime overhead
+- Message format - JSON-based translation files
+- Type-safe translations - Auto-generated TypeScript types
+- Vite plugin integration - Seamless build process
+
 **Development:**
 - pnpm + Turborepo - Monorepo management
 - Vitest - Unit testing
 - Biome - Linting and formatting
 - Lefthook - Git hooks
+
+## Internationalization (i18n) Architecture
+
+**This project uses a compile-time i18n approach with inlang/paraglide-js for zero runtime overhead and full type safety.**
+
+### Architecture Overview
+
+The i18n system follows the Dependency Inversion Principle with a clean separation between abstraction and implementation:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ @raypx/ui Package (Abstraction Layer)                       │
+│ ├── components/i18n-provider.tsx  (Context & Provider)      │
+│ └── hooks/use-locale.ts           (Consumer Hook)           │
+└─────────────────────────────────────────────────────────────┘
+                          ▲
+                          │ depends on
+                          │
+┌─────────────────────────────────────────────────────────────┐
+│ apps/web (Implementation Layer)                             │
+│ ├── messages/                     (Source translations)     │
+│ │   ├── en.json                                             │
+│ │   └── zh.json                                             │
+│ ├── project.inlang/               (Configuration)           │
+│ │   └── settings.json                                       │
+│ ├── src/paraglide/                (Auto-generated runtime)  │
+│ │   ├── messages.js               (Type-safe message fns)   │
+│ │   └── runtime.js                (Locale management)       │
+│ └── src/components/layout/                                  │
+│     └── i18n-provider.tsx         (Concrete implementation) │
+└─────────────────────────────────────────────────────────────┘
+                          ▲
+                          │ uses
+                          │
+┌─────────────────────────────────────────────────────────────┐
+│ Vite Build Process                                          │
+│ └── @inlang/paraglide-js/vite     (Compiler plugin)         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Features
+
+1. **Zero Runtime Overhead**
+   - Translations compiled at build time
+   - No runtime i18n library loaded in browser
+   - Smaller bundle size compared to runtime solutions (i18next, react-i18next)
+
+2. **Full Type Safety**
+   - Auto-generated TypeScript types for all messages
+   - Compile-time errors for missing translations
+   - IDE autocomplete for translation keys
+
+3. **Clean Architecture**
+   - UI components depend on abstractions, not implementations
+   - Easy to swap i18n implementation if needed
+   - Follows SOLID principles (Dependency Inversion)
+
+### Directory Structure
+
+```
+apps/web/
+├── messages/                    # Translation source files
+│   ├── en.json                 # English translations
+│   └── zh.json                 # Chinese translations
+├── project.inlang/             # Inlang configuration
+│   └── settings.json           # Locales, plugins, paths
+└── src/
+    ├── paraglide/              # AUTO-GENERATED (DO NOT EDIT)
+    │   ├── messages/           # Individual message functions
+    │   ├── messages.js         # Barrel export of all messages
+    │   └── runtime.js          # Locale management utilities
+    └── components/layout/
+        └── i18n-provider.tsx   # App-specific i18n setup
+```
+
+### Usage Examples
+
+**In Components:**
+```typescript
+import { useLocale } from '@raypx/ui/hooks/use-locale';
+
+function MyComponent() {
+  const { t, locale, setLocale } = useLocale('home');
+
+  return (
+    <div>
+      <h1>{t('hero.title')}</h1>
+      <button onClick={() => setLocale('zh')}>中文</button>
+    </div>
+  );
+}
+```
+
+**Translation Files:**
+```json
+// messages/en.json
+{
+  "home": {
+    "hero": {
+      "title": "Welcome to Raypx"
+    }
+  }
+}
+
+// messages/zh.json
+{
+  "home": {
+    "hero": {
+      "title": "欢迎来到 Raypx"
+    }
+  }
+}
+```
+
+### Adding New Translations
+
+1. **Add messages to JSON files:**
+   ```bash
+   # Edit messages/en.json and messages/zh.json
+   ```
+
+2. **Compile translations:**
+   ```bash
+   pnpx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/paraglide
+
+   # Or let Vite handle it automatically during dev/build
+   pnpm dev
+   ```
+
+3. **Use in components:**
+   ```typescript
+   const { t } = useLocale('namespace');
+   t('key.nested.path')
+   ```
+
+### Machine Translation
+
+For quick translations, use the inlang CLI:
+```bash
+pnpm run machine-translate
+```
+
+This will automatically translate missing keys using AI.
+
+### Adding New Languages
+
+1. **Update inlang config:**
+   ```json
+   // project.inlang/settings.json
+   {
+     "baseLocale": "en",
+     "locales": ["en", "zh", "ja", "ko"]  // Add new locales
+   }
+   ```
+
+2. **Create translation file:**
+   ```bash
+   cp messages/en.json messages/ja.json
+   # Then translate the content
+   ```
+
+3. **Update language switcher:**
+   ```typescript
+   // src/components/layout/lang-switcher.tsx
+   const locales = [
+     { code: "en", name: "English", flag: "🇺🇸" },
+     { code: "zh", name: "Chinese", flag: "🇨🇳" },
+     { code: "ja", name: "Japanese", flag: "🇯🇵" },
+   ];
+   ```
+
+### Migration Notes
+
+**Previous Implementation (Removed):**
+- ❌ i18next + react-i18next (runtime overhead)
+- ❌ @raypx/i18n package (unnecessary abstraction)
+- ❌ Separate locales/ directory structure
+
+**Current Implementation:**
+- ✅ inlang/paraglide-js (compile-time, zero runtime)
+- ✅ Lightweight i18n abstractions in @raypx/ui
+- ✅ Centralized messages/ directory
+- ✅ Auto-generated type-safe runtime
+
+**Benefits of Migration:**
+- ~100KB smaller bundle (removed i18next + react-i18next)
+- Compile-time type safety for translations
+- Better developer experience with autocomplete
+- Faster runtime performance (no i18n library overhead)
+- Simplified architecture with fewer dependencies

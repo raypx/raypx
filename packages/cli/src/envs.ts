@@ -7,7 +7,4 @@ export const envs = () =>
       NODE_ENV: z.enum(["development", "production"]).default("development"),
     },
     server: {},
-    runtimeEnv: {
-      NODE_ENV: process.env.NODE_ENV,
-    },
   });

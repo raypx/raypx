@@ -1,3 +1,4 @@
+import { routeTree } from "@output/route-tree";
 import type { AppRouter } from "@raypx/trpc";
 import { TRPCProvider } from "@raypx/trpc/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -6,9 +7,9 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { createTRPCClient, httpBatchStreamLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
+import { deLocalizeUrl, localizeUrl } from "@/lib/i18n/runtime";
 import { DefaultCatchBoundary } from "./components/default-catch-boundary";
 import { NotFound } from "./components/not-found";
-import { routeTree } from "./routeTree.gen";
 
 function getUrl() {
   const base = (() => {
@@ -48,9 +49,14 @@ export const getRouter = () => {
     context: { queryClient, trpc: serverHelpers },
     routeTree,
     defaultPreload: "intent",
+    defaultPreloadStaleTime: 0,
     defaultErrorComponent: DefaultCatchBoundary,
     defaultNotFoundComponent: () => <NotFound />,
     scrollRestoration: true,
+    rewrite: {
+      input: ({ url }) => deLocalizeUrl(url),
+      output: ({ url }) => localizeUrl(url),
+    },
     Wrap: (props) => {
       return (
         <QueryClientProvider client={queryClient}>

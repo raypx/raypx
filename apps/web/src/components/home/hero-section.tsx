@@ -1,18 +1,15 @@
 import { Button } from "@raypx/ui/components";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Github, Sparkles } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import Container from "@/components/layout/container";
-import { useAppLanguage } from "@/state/app-store";
 
 export function HeroSection() {
-  const { t } = useTranslation("home");
-  const { language } = useAppLanguage();
-
+  const { t } = useLocale("home");
   return (
     <section className="relative py-20 md:py-32 overflow-hidden">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-background pointer-events-none" />
 
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -31,7 +28,7 @@ export function HeroSection() {
           {/* Main headline */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
             {t("hero.title")}
-            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               {" "}
               {t("hero.titleHighlight")}
             </span>
@@ -44,7 +41,7 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
-            <Link params={{ lang: language }} to="/$lang/docs">
+            <Link to="/docs">
               <Button className="group" size="lg">
                 {t("hero.getStarted")}
                 <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />

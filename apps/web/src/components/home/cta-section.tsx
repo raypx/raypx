@@ -1,8 +1,8 @@
 import { Button } from "@raypx/ui/components/button";
 import { Card } from "@raypx/ui/components/card";
+import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Github } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import Container from "@/components/layout/container";
 
 const codeSnippet = `# Clone the repository
@@ -16,8 +16,7 @@ pnpm install
 pnpm dev`;
 
 export function CtaSection() {
-  const { t } = useTranslation("home");
-
+  const { t } = useLocale("home");
   return (
     <section className="py-20 md:py-32 bg-muted/30">
       <Container>
