@@ -1,8 +1,8 @@
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import netlify from "@netlify/vite-plugin-tanstack-start";
-import inlangSettings from "@raypx/i18n/inlang";
+import { i18nConfig } from "@raypx/i18n";
+import { locales } from "@raypx/i18n/inlang";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -14,8 +14,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
-const require = createRequire(import.meta.url);
-
 const jiti = createJiti(import.meta.url);
 
 const urls = ["/", "/:path(.*)?"];
@@ -23,7 +21,7 @@ const outDir = ".output";
 
 const urlPatterns = urls.map((u) => ({
   pattern: u,
-  localized: inlangSettings.locales.map((l) => [l, trimEnd(join("/", l, u), "/")]),
+  localized: locales.map((l) => [l, trimEnd(join("/", l, u), "/")]),
 })) satisfies { pattern: string; localized: [string, string][] }[];
 
 const config = defineConfig(async ({ mode }) => {
@@ -43,8 +41,8 @@ const config = defineConfig(async ({ mode }) => {
     ssr: { noExternal: ["urlpattern-polyfill"] },
     plugins: [
       paraglideVitePlugin({
-        project: join(dirname(require.resolve("@raypx/i18n")), "inlang"),
-        outdir: join(dirname(require.resolve("@raypx/i18n")), "paraglide"),
+        project: i18nConfig.project,
+        outdir: i18nConfig.outdir,
         cookieName: "lang",
         strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
         urlPatterns,

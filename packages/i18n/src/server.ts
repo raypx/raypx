@@ -1,3 +1,3 @@
 import "urlpattern-polyfill";
 
-export * from "./paraglide/server.js";
+export * from "../paraglide/server.js";
