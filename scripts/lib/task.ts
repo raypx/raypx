@@ -82,14 +82,6 @@ type CmdOptions = Simplify<{
   renderer?: string;
 }>;
 
-export type Cmd = Simplify<{
-  tasks: ListrTask[];
-  cmd: string;
-  options?: CmdOptions;
-}>;
-
-type TaskFunction = (args?: string[]) => ListrTask[];
-
 export type TaskCommand = {
   tasks: ListrTask[] | ((args?: string[]) => ListrTask[]);
   options?: CmdOptions;

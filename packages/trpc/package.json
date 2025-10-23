@@ -14,8 +14,6 @@
   "dependencies": {
     "@raypx/auth": "workspace:*",
     "@raypx/db": "workspace:*",
-    "@raypx/env": "workspace:*",
-    "@raypx/shared": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "^11.6.0",
     "@trpc/server": "^11.6.0",

@@ -5,7 +5,6 @@
   "scripts": {
     "build": "raypx-scripts run vite build",
     "clean": "rimraf dist .turbo .tanstack .nitro .output .vercel dist .netlify",
-    "deploy": "pnpm build && wrangler deploy",
     "dev": "raypx-scripts run vite dev",
     "serve": "raypx-scripts run vite preview",
     "shadcn": "pnpx shadcn@canary add --overwrite",
@@ -14,7 +13,6 @@
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.18",
-    "@dotenvx/dotenvx": "^1.51.0",
     "@hookform/resolvers": "catalog:",
     "@orama/tokenizers": "^3.1.16",
     "@raypx/analytics": "workspace:*",
@@ -33,7 +31,6 @@
     "@trpc/client": "^11.6.0",
     "@trpc/server": "^11.6.0",
     "@trpc/tanstack-react-query": "^11.6.0",
-    "date-fns": "catalog:",
     "dayjs": "^1.11.18",
     "fumadocs-core": "^16.0.1",
     "fumadocs-mdx": "^13.0.0",
@@ -42,7 +39,6 @@
     "lucide-react": "catalog:",
     "nitro": "catalog:",
     "react": "catalog:react19",
-    "react-day-picker": "^9.11.1",
     "react-dom": "catalog:react19",
     "react-hook-form": "catalog:",
     "superjson": "catalog:",

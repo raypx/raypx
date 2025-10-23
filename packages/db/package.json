@@ -33,7 +33,6 @@
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "dotenv-cli": "catalog:",
     "drizzle-kit": "^0.31.5",
     "typescript": "catalog:dev"
   }

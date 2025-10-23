@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
-    "@raypx/shared": "workspace:*",
     "@vercel/analytics": "^1.5.0"
   },
   "devDependencies": {
