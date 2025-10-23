@@ -50,11 +50,8 @@ const config: KnipConfig = {
       entry: ["seed.ts"],
     },
     "packages/email": {},
-    "scripts": {
-      entry: [
-        "cmd/*.ts",
-        "cli.ts",
-      ],
+    scripts: {
+      entry: ["cmd/*.ts", "cli.ts"],
     },
   },
 };

@@ -137,6 +137,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.0.1
         version: 4.0.1(vitest@4.0.1(@types/debug@4.1.12)(@types/node@24.9.1)(jiti@2.6.1)(jsdom@27.0.1(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+      bun:
+        specifier: ^1.3.1
+        version: 1.3.1
       jsdom:
         specifier: ^27.0.1
         version: 27.0.1(postcss@8.5.6)
@@ -194,6 +197,9 @@ importers:
       '@raypx/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@raypx/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@raypx/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -247,7 +253,7 @@ importers:
         version: 0.546.0(react@19.2.0)
       nitro:
         specifier: 'catalog:'
-        version: 3.0.1-alpha.0(@netlify/blobs@10.2.1)(chokidar@4.0.3)(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7))(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+        version: 3.0.1-alpha.0(@netlify/blobs@10.2.1)(chokidar@4.0.3)(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
       react:
         specifier: catalog:react19
         version: 19.2.0
@@ -284,7 +290,7 @@ importers:
         version: 2.4.0
       '@netlify/vite-plugin-tanstack-start':
         specifier: ^1.1.6
-        version: 1.1.6(@tanstack/react-start@1.133.22(crossws@0.4.1(srvx@0.8.16))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)))(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+        version: 1.1.6(@tanstack/react-start@1.133.22(crossws@0.4.1(srvx@0.8.16))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)))(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
       '@raypx/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
@@ -519,6 +525,34 @@ importers:
         specifier: 'catalog:'
         version: 4.1.12
     devDependencies:
+      '@raypx/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.9.1
+      typescript:
+        specifier: catalog:dev
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.0.1(@types/debug@4.1.12)(@types/node@24.9.1)(jiti@2.6.1)(jsdom@27.0.1(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
+
+  packages/i18n:
+    dependencies:
+      '@raypx/env':
+        specifier: workspace:*
+        version: link:../env
+      urlpattern-polyfill:
+        specifier: ^10.1.0
+        version: 10.1.0
+    devDependencies:
+      '@inlang/cli':
+        specifier: ^3.0.12
+        version: 3.0.12
+      '@inlang/paraglide-js':
+        specifier: ^2.4.0
+        version: 2.4.0
       '@raypx/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -2124,6 +2158,61 @@ packages:
   '@orama/tokenizers@3.1.16':
     resolution: {integrity: sha512-QLYWlcFNs3G2ikJJewxSsC/JSz3Ltz5uZED1yAubhMg5Vk3jG/3P4UkDYt5SzuimkQYwYnHXVGlw93ZzsP+M0w==}
     engines: {node: '>= 20.0.0'}
+
+  '@oven/bun-darwin-aarch64@1.3.1':
+    resolution: {integrity: sha512-7Rap1BHNWqgnexc4wLjjdZeVRQKtk534iGuJ7qZ42i/q1B+cxJZ6zSnrFsYmo+zreH7dUyUXL3AHuXGrl2772Q==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oven/bun-darwin-x64-baseline@1.3.1':
+    resolution: {integrity: sha512-mJo715WvwEHmJ6khNymWyxi0QrFzU94wolsUmxolViNHrk+2ugzIkVIJhTnxf7pHnarxxHwyJ/kgatuV//QILQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oven/bun-darwin-x64@1.3.1':
+    resolution: {integrity: sha512-wpqmgT/8w+tEr5YMGt1u1sEAMRHhyA2SKZddC6GCPasHxSqkCWOPQvYIHIApnTsoSsxhxP0x6Cpe93+4c7hq/w==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oven/bun-linux-aarch64-musl@1.3.1':
+    resolution: {integrity: sha512-gKU3Wv3BTG5VMjqMMnRwqU6tipCveE9oyYNt62efy6cQK3Vo1DOBwY2SmjbFw+yzj+Um20YoFOLGxghfQET4Ng==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oven/bun-linux-aarch64@1.3.1':
+    resolution: {integrity: sha512-ACn038SZL8del+sFnqCjf+haGB02//j2Ez491IMmPTvbv4a/D0iiNz9xiIB3ICbQd3EwQzi+Ut/om3Ba/KoHbQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-baseline@1.3.1':
+    resolution: {integrity: sha512-7+2aCrL81mtltZQbKdiPB58UL+Gr3DAIuPyUAKm0Ib/KG/Z8t7nD/eSMRY/q6b+NsAjYnVPiPwqSjC3edpMmmQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-musl-baseline@1.3.1':
+    resolution: {integrity: sha512-tP0WWcAqrMayvkggOHBGBoyyoK+QHAqgRUyj1F6x5/udiqc9vCXmIt1tlydxYV/NvyvUAmJ7MWT0af44Xm2kJw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-musl@1.3.1':
+    resolution: {integrity: sha512-8AgEAHyuJ5Jm9MUo1L53K1SRYu0bNGqV0E0L5rB5DjkteO4GXrnWGBT8qsuwuy7WMuCMY3bj64/pFjlRkZuiXw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64@1.3.1':
+    resolution: {integrity: sha512-cAUeM3I5CIYlu5Ur52eCOGg9yfqibQd4lzt9G1/rA0ajqcnCBaTuekhUDZETJJf5H9QV+Gm46CqQg2DpdJzJsw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-windows-x64-baseline@1.3.1':
+    resolution: {integrity: sha512-dcA+Kj7hGFrY3G8NWyYf3Lj3/GMViknpttWUf5pI6p6RphltZaoDu0lY5Lr71PkMdRZTwL2NnZopa/x/NWCdKA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@oven/bun-windows-x64@1.3.1':
+    resolution: {integrity: sha512-xdUjOZRq6PwPbbz4/F2QEMLBZwintGp7AS50cWxgkHnyp7Omz5eJfV6/vWtN4qwZIyR3V3DT/2oXsY1+7p3rtg==}
+    cpu: [x64]
+    os: [win32]
 
   '@oxc-resolver/binding-android-arm-eabi@11.11.1':
     resolution: {integrity: sha512-v5rtczLD5d8lasBdP6GXoM7VQ1Av9pZyWGXF5afQawRZcWTVvncrIzu9nhKpvIhhmC4C6MYdXA3CNZc60LvUig==}
@@ -4458,6 +4547,12 @@ packages:
 
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
+
+  bun@1.3.1:
+    resolution: {integrity: sha512-enqkEb0RhNOgDzHQwv7uvnIhX3uSzmKzz779dL7kdH8SauyTdQvCz4O1UT2rU0UldQp2K9OlrJNdyDHayPEIvw==}
+    cpu: [arm64, x64]
+    os: [darwin, linux, win32]
+    hasBin: true
 
   callsite@1.0.0:
     resolution: {integrity: sha512-0vdNRFXn5q+dtOqjfFtmtlI9N2eVZ7LMyEV2iKC5mEEFvSg/69Ml6b/WU2qF8W1nLRa0wiSrDT3Y5jOHZCwKPQ==}
@@ -10169,7 +10264,7 @@ snapshots:
       uuid: 11.1.0
       write-file-atomic: 5.0.1
 
-  '@netlify/dev@4.6.5(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(rollup@4.52.5)':
+  '@netlify/dev@4.6.5(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(rollup@4.52.5)':
     dependencies:
       '@netlify/blobs': 10.2.1
       '@netlify/config': 23.2.0
@@ -10177,7 +10272,7 @@ snapshots:
       '@netlify/edge-functions-dev': 1.0.1
       '@netlify/functions-dev': 1.0.2(rollup@4.52.5)
       '@netlify/headers': 2.1.0
-      '@netlify/images': 1.3.0(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))
+      '@netlify/images': 1.3.0(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))
       '@netlify/redirects': 3.1.0
       '@netlify/runtime': 4.1.3
       '@netlify/static': 3.1.0
@@ -10284,9 +10379,9 @@ snapshots:
     dependencies:
       '@netlify/headers-parser': 9.0.2
 
-  '@netlify/images@1.3.0(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))':
+  '@netlify/images@1.3.0(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))':
     dependencies:
-      ipx: 3.1.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))
+      ipx: 3.1.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -10355,9 +10450,9 @@ snapshots:
 
   '@netlify/types@2.1.0': {}
 
-  '@netlify/vite-plugin-tanstack-start@1.1.6(@tanstack/react-start@1.133.22(crossws@0.4.1(srvx@0.8.16))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)))(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))':
+  '@netlify/vite-plugin-tanstack-start@1.1.6(@tanstack/react-start@1.133.22(crossws@0.4.1(srvx@0.8.16))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)))(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
-      '@netlify/vite-plugin': 2.7.6(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+      '@netlify/vite-plugin': 2.7.6(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
       vite: 7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
     optionalDependencies:
       '@tanstack/react-start': 1.133.22(crossws@0.4.1(srvx@0.8.16))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
@@ -10387,9 +10482,9 @@ snapshots:
       - supports-color
       - uploadthing
 
-  '@netlify/vite-plugin@2.7.6(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))':
+  '@netlify/vite-plugin@2.7.6(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(rollup@4.52.5)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
-      '@netlify/dev': 4.6.5(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(rollup@4.52.5)
+      '@netlify/dev': 4.6.5(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(rollup@4.52.5)
       '@netlify/dev-utils': 4.3.0
       dedent: 1.7.0
       vite: 7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
@@ -10593,6 +10688,39 @@ snapshots:
   '@orama/tokenizers@3.1.16':
     dependencies:
       '@orama/orama': 3.1.16
+
+  '@oven/bun-darwin-aarch64@1.3.1':
+    optional: true
+
+  '@oven/bun-darwin-x64-baseline@1.3.1':
+    optional: true
+
+  '@oven/bun-darwin-x64@1.3.1':
+    optional: true
+
+  '@oven/bun-linux-aarch64-musl@1.3.1':
+    optional: true
+
+  '@oven/bun-linux-aarch64@1.3.1':
+    optional: true
+
+  '@oven/bun-linux-x64-baseline@1.3.1':
+    optional: true
+
+  '@oven/bun-linux-x64-musl-baseline@1.3.1':
+    optional: true
+
+  '@oven/bun-linux-x64-musl@1.3.1':
+    optional: true
+
+  '@oven/bun-linux-x64@1.3.1':
+    optional: true
+
+  '@oven/bun-windows-x64-baseline@1.3.1':
+    optional: true
+
+  '@oven/bun-windows-x64@1.3.1':
+    optional: true
 
   '@oxc-resolver/binding-android-arm-eabi@11.11.1':
     optional: true
@@ -13231,6 +13359,20 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
+  bun@1.3.1:
+    optionalDependencies:
+      '@oven/bun-darwin-aarch64': 1.3.1
+      '@oven/bun-darwin-x64': 1.3.1
+      '@oven/bun-darwin-x64-baseline': 1.3.1
+      '@oven/bun-linux-aarch64': 1.3.1
+      '@oven/bun-linux-aarch64-musl': 1.3.1
+      '@oven/bun-linux-x64': 1.3.1
+      '@oven/bun-linux-x64-baseline': 1.3.1
+      '@oven/bun-linux-x64-musl': 1.3.1
+      '@oven/bun-linux-x64-musl-baseline': 1.3.1
+      '@oven/bun-windows-x64': 1.3.1
+      '@oven/bun-windows-x64-baseline': 1.3.1
+
   callsite@1.0.0: {}
 
   callsites@3.1.0: {}
@@ -13648,9 +13790,9 @@ snapshots:
 
   dayjs@1.11.18: {}
 
-  db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)):
+  db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)):
     optionalDependencies:
-      drizzle-orm: 0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)
+      drizzle-orm: 0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)
 
   debug@4.4.3:
     dependencies:
@@ -13825,15 +13967,6 @@ snapshots:
       esbuild-register: 3.6.0(esbuild@0.25.11)
     transitivePeerDependencies:
       - supports-color
-
-  drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7):
-    optionalDependencies:
-      '@neondatabase/serverless': 1.0.2
-      '@opentelemetry/api': 1.9.0
-      '@types/pg': 8.15.5
-      kysely: 0.27.6
-      postgres: 3.4.7
-    optional: true
 
   drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7):
     optionalDependencies:
@@ -14731,7 +14864,7 @@ snapshots:
 
   ip-address@10.0.1: {}
 
-  ipx@3.1.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7))):
+  ipx@3.1.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))):
     dependencies:
       '@fastify/accept-negotiator': 2.0.1
       citty: 0.1.6
@@ -14747,7 +14880,7 @@ snapshots:
       sharp: 0.34.4
       svgo: 4.0.0
       ufo: 1.6.1
-      unstorage: 1.17.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))
+      unstorage: 1.17.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))
       xss: 1.0.15
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -15832,12 +15965,12 @@ snapshots:
 
   nf3@0.1.1: {}
 
-  nitro@3.0.1-alpha.0(@netlify/blobs@10.2.1)(chokidar@4.0.3)(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7))(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)):
+  nitro@3.0.1-alpha.0(@netlify/blobs@10.2.1)(chokidar@4.0.3)(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)):
     dependencies:
       consola: 3.4.2
       cookie-es: 2.0.0
       crossws: 0.4.1(srvx@0.8.16)
-      db0: 0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7))
+      db0: 0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))
       esbuild: 0.25.11
       fetchdts: 0.1.7
       h3: 2.0.1-rc.2(crossws@0.4.1(srvx@0.8.16))
@@ -15850,7 +15983,7 @@ snapshots:
       srvx: 0.8.16
       undici: 7.16.0
       unenv: 2.0.0-rc.21
-      unstorage: 2.0.0-alpha.3(@netlify/blobs@10.2.1)(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(lru-cache@11.2.2)(ofetch@1.4.1)
+      unstorage: 2.0.0-alpha.3(@netlify/blobs@10.2.1)(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(lru-cache@11.2.2)(ofetch@1.4.1)
     optionalDependencies:
       vite: 7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
@@ -17376,7 +17509,7 @@ snapshots:
       picomatch: 4.0.3
       webpack-virtual-modules: 0.6.2
 
-  unstorage@1.17.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7))):
+  unstorage@1.17.1(@netlify/blobs@10.2.1)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
@@ -17388,13 +17521,13 @@ snapshots:
       ufo: 1.6.1
     optionalDependencies:
       '@netlify/blobs': 10.2.1
-      db0: 0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7))
+      db0: 0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))
 
-  unstorage@2.0.0-alpha.3(@netlify/blobs@10.2.1)(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7)))(lru-cache@11.2.2)(ofetch@1.4.1):
+  unstorage@2.0.0-alpha.3(@netlify/blobs@10.2.1)(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7)))(lru-cache@11.2.2)(ofetch@1.4.1):
     optionalDependencies:
       '@netlify/blobs': 10.2.1
       chokidar: 4.0.3
-      db0: 0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.27.6)(postgres@3.4.7))
+      db0: 0.3.4(drizzle-orm@0.44.6(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(kysely@0.28.8)(postgres@3.4.7))
       lru-cache: 11.2.2
       ofetch: 1.4.1
 

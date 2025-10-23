@@ -8,6 +8,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@output/*": ["./.output/*"],
+      "@messages/*": ["./messages/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]
     }
   }

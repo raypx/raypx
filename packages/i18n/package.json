@@ -1,0 +1,37 @@
+{
+  "name": "@raypx/i18n",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./messages": "./src/messages.ts",
+    "./runtime": "./src/runtime.ts",
+    "./inlang": {
+      "default": "./src/inlang.cjs",
+      "types": "./src/inlang.d.ts"
+    },
+    "./envs": "./src/envs.ts",
+    "./package.json": "./package.json",
+    "./inlang/*": "./src/inlang/*"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "test": "vitest",
+    "postinstall": "paraglide-js compile --project ./src/inlang --outdir ./src/paraglide",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "urlpattern-polyfill": "^10.1.0",
+    "@raypx/env": "workspace:*"
+  },
+  "devDependencies": {
+    "@inlang/cli": "^3.0.12",
+    "@inlang/paraglide-js": "^2.4.0",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:dev",
+    "vitest": "catalog:"
+  }
+}

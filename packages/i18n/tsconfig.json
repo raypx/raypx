@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "strict": true,
+    "allowJs": true
+  },
+  "exclude": ["node_modules", "dist"],
+  "extends": "@raypx/tsconfig/package-library.json",
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}

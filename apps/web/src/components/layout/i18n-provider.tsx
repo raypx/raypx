@@ -1,8 +1,8 @@
+import { m } from "@raypx/i18n/messages";
+import { type Locale, setLocale as setLocaleRuntime } from "@raypx/i18n/runtime";
 import { I18nProvider as BaseI18nProvider } from "@raypx/ui/components/i18n-provider";
 import { get } from "lodash-es";
 import { useCallback } from "react";
-import { m } from "@/lib/i18n/messages";
-import { type Locale, setLocale as setLocaleRuntime } from "@/lib/i18n/runtime";
 
 const createTranslateFunction = (namespace: string | undefined) => {
   return (localeKey: string, params?: Record<string | number, unknown>) => {

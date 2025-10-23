@@ -1,6 +1,8 @@
-import { join } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import netlify from "@netlify/vite-plugin-tanstack-start";
+import inlangSettings from "@raypx/i18n/inlang";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -11,7 +13,8 @@ import { trimEnd } from "lodash-es";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
-import inlangSettings from "./.inlang/settings.json";
+
+const require = createRequire(import.meta.url);
 
 const jiti = createJiti(import.meta.url);
 
@@ -40,9 +43,8 @@ const config = defineConfig(async ({ mode }) => {
     ssr: { noExternal: ["urlpattern-polyfill"] },
     plugins: [
       paraglideVitePlugin({
-        project: "./.inlang",
-        outdir: `./${outDir}/paraglide`,
-        outputStructure: isDev ? "locale-modules" : "message-modules",
+        project: join(dirname(require.resolve("@raypx/i18n")), "inlang"),
+        outdir: join(dirname(require.resolve("@raypx/i18n")), "paraglide"),
         cookieName: "lang",
         strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
         urlPatterns,

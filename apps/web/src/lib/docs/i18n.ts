@@ -1,5 +1,5 @@
+import { baseLocale, locales } from "@raypx/i18n/runtime";
 import { defineI18n } from "fumadocs-core/i18n";
-import { baseLocale, locales } from "@/lib/i18n/runtime";
 
 /**
  * Internationalization configuration for FumaDocs

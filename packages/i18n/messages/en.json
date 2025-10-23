@@ -146,7 +146,7 @@
     },
     "rememberMeLabel": "Remember me",
     "signIn": {
-      "action": "Sign in"
+      "action": "Login"
     },
     "validation": {
       "required": "Required"
