@@ -8,7 +8,7 @@
     "./client": "./src/client.ts"
   },
   "scripts": {
-    "clean": "rm -rf .turbo node_modules",
+    "clean": "rm -rf .turbo",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
