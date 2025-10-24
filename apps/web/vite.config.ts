@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import netlify from "@netlify/vite-plugin-tanstack-start";
 import { outDir, urlPatterns } from "@raypx/i18n";
@@ -34,10 +35,11 @@ const config = defineConfig(async ({ mode }) => {
       paraglideVitePlugin({
         project: "./.inlang",
         outdir: `./${outDir}/paraglide`,
-        outputStructure: "message-modules",
+        outputStructure: mode === "development" ? "locale-modules" : "message-modules",
         cookieName: "lang",
         strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
         urlPatterns,
+        cleanOutdir: false,
       }),
       mdx(await import("./source.config"), { outDir: `./${outDir}/.source` }),
       devtools({

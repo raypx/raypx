@@ -1,10 +1,10 @@
 {
   "extends": "@raypx/tsconfig/vite.json",
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "src/**/*.js"],
   "compilerOptions": {
     "baseUrl": ".",
     "allowImportingTsExtensions": true,
-    "allowJs": true,
+    "allowJs": false,
     "paths": {
       "@/*": ["./src/*"],
       "@output/*": ["./.output/*"],

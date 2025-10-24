@@ -2,7 +2,7 @@ import { compile } from "@inlang/paraglide-js";
 import { urlPatterns } from ".";
 
 export async function compileParaglide() {
-  console.log('__dirname', __dirname);
+  console.log("__dirname", __dirname);
   const result = await compile({
     project: "./.inlang",
     outdir: "./.output/paraglide",
