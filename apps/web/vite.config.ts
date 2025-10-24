@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import netlify from "@netlify/vite-plugin-tanstack-start";
+import vitePlugin from "@raypx/vite/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -39,6 +40,7 @@ const config = defineConfig(async ({ mode }) => {
     },
     ssr: { noExternal: ["urlpattern-polyfill"] },
     plugins: [
+      vitePlugin(),
       paraglideVitePlugin({
         project: "./.inlang",
         outdir: `./${outDir}/paraglide`,

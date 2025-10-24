@@ -1,25 +1,26 @@
 {
-  "name": "@raypx/env",
+  "name": "@raypx/i18n",
   "version": "0.0.1",
   "private": true,
-  "description": "Environment validation with extends support (forked from @t3-oss/t3-env)",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./envs": "./src/envs.ts"
+  },
   "scripts": {
-    "build": "tsdown",
     "clean": "rimraf dist .turbo",
     "test": "vitest",
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "type-fest": "catalog:",
-    "zod": "catalog:"
+    "@inlang/cli": "^3.0.12",
+    "@inlang/paraglide-js": "^2.4.0",
+    "@raypx/env": "workspace:*"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:"
   }

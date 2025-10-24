@@ -1,11 +1,18 @@
 {
-  "name": "@raypx/env",
+  "name": "@raypx/vite",
   "version": "0.0.1",
   "private": true,
-  "description": "Environment validation with extends support (forked from @t3-oss/t3-env)",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./plugin": {
+      "import": "./dist/plugin.js",
+      "types": "./dist/plugin.d.ts",
+      "require": "./dist/plugin.cjs"
+    },
+    "./envs": "./src/envs.ts"
+  },
   "scripts": {
     "build": "tsdown",
     "clean": "rimraf dist .turbo",
@@ -13,8 +20,8 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "type-fest": "catalog:",
-    "zod": "catalog:"
+    "@raypx/env": "workspace:*",
+    "vite": "^7.1.12"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

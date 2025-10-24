@@ -10,7 +10,6 @@
     "scripts": "./bin/raypx-scripts.mjs"
   },
   "scripts": {
-    "clean": "rimraf dist .turbo",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },

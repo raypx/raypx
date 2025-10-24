@@ -343,8 +343,7 @@ export function createEnv<
   const _client = typeof opts.client === "object" ? opts.client : {};
   const _server = typeof opts.server === "object" ? opts.server : {};
   const _shared = typeof opts.shared === "object" ? opts.shared : {};
-  const isServer =
-    opts.isServer ?? (typeof window === "undefined" || import.meta.env.SSR || "Deno" in window);
+  const isServer = opts.isServer ?? false;
 
   const finalSchemaShape = isServer
     ? {

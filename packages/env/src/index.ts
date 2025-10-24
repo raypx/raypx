@@ -52,10 +52,12 @@ export function createEnv<
   const client = typeof opts.client === "object" ? opts.client : {};
   const server = typeof opts.server === "object" ? opts.server : {};
   const shared = opts.shared;
+  const isServer =
+    opts.isServer ?? (typeof window === "undefined" || import.meta?.env?.SSR || "Deno" in window);
 
   const runtimeEnv = {
-    ...(!import.meta.env.SSR ? {} : process.env),
-    ...import.meta.env,
+    ...(!isServer ? {} : process.env),
+    ...import.meta?.env,
   };
 
   return createEnvCore<ClientPrefix, TServer, TClient, TShared, TExtends, TFinalSchema>({
@@ -64,6 +66,7 @@ export function createEnv<
     client,
     server,
     clientPrefix: CLIENT_PREFIX,
+    isServer,
     runtimeEnv,
   });
 }

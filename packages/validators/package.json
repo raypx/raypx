@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsdown",
     "clean": "rimraf dist .turbo",
     "typecheck": "tsc --noEmit"
   },
@@ -16,6 +16,7 @@
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
+    "tsdown": "catalog:dev",
     "typescript": "catalog:dev"
   }
 }

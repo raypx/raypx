@@ -16,6 +16,7 @@
  * - "raypx-scripts run pnpm --version" → remainingArgs = ["pnpm", "--version"] ✅
  * - NOT: remainingArgs = ["pnpm"] ❌
  */
+/** biome-ignore-all lint/suspicious/noConsole: console is used for logging */
 
 import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -61,7 +62,7 @@ async function discoverCommands(): Promise<
           desc: module?.description,
           file: modulePath,
         };
-      } catch (error) {
+      } catch (_error) {
         // If import fails, use defaults
         commands[commandName] = { name: commandName, file: modulePath };
       }
@@ -98,9 +99,9 @@ ${cmd.examples.map((ex) => `  $ ${ex}`).join("\n")}
 `
     : ""
 }Options:
-${globalOptions.map(([flag, description]) => `  ${flag!.padEnd(18)} ${description}`).join("\n")}
+${globalOptions.map(([flag, description]) => `  ${flag.padEnd(18)} ${description}`).join("\n")}
 `);
-  } catch (error) {
+  } catch (_error) {
     // Fallback to basic help if command module can't be loaded
     console.log(`
 Usage: raypx-scripts ${commandInfo.name}
@@ -170,19 +171,20 @@ async function cli(rawArgs: string[]) {
   // Example: ["run", "pnpm", "--version"] -> commandName="run", remainingArgs=["pnpm", "--version"]
   const [commandName, ...remainingArgs] = rawArgs as string[];
 
+  // Discover available commands
+  const commands = await discoverCommands();
+  const cmdInfo = commands[commandName as keyof typeof commands];
+
   // Handle global help: no command or --help flag with no other args
-  if (!commandName || (parsed.help && remainingArgs.length === 0)) {
+  if (!commandName || !cmdInfo || (parsed.help && remainingArgs.length === 0)) {
     await showHelp();
     return;
   }
 
-  // Discover available commands
-  const commands = await discoverCommands();
-
   // Handle command-level help: "raypx-scripts run --help"
   // Only if single --help flag and command exists
-  if (parsed.help && remainingArgs.length === 1 && commandName in commands) {
-    await showCommandHelp(commands[commandName]!);
+  if (parsed.help && remainingArgs.length === 1) {
+    await showCommandHelp(cmdInfo);
     return;
   }
 
