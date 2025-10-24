@@ -5,7 +5,6 @@
   "scripts": {
     "build": "raypx-scripts run vite build",
     "clean": "rimraf dist .turbo .tanstack .nitro .output .vercel dist .netlify",
-    "predev": "paraglide-js compile --project ./.inlang --outdir ./.output/paraglide",
     "dev": "raypx-scripts run vite dev",
     "machine-translate": "inlang machine translate --project ./.inlang",
     "serve": "raypx-scripts run vite preview",

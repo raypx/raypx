@@ -8,7 +8,6 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsdown",
-    "clean": "rimraf dist .turbo",
     "test": "vitest",
     "test:watch": "vitest --watch"
   },

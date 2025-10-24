@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
+    "@raypx/i18n": "workspace:*",
     "vite": "^7.1.12"
   },
   "devDependencies": {

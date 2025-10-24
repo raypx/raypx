@@ -1,11 +1,13 @@
-/**
- * i18n package
- *
- * @package i18n
- * @version 0.0.1
- */
+import { join } from "node:path";
+import { trimEnd } from "lodash-es";
 
-export const name = "i18n";
+export const urls = ["/", "/:path(.*)?"];
+export const outDir = ".output";
 
-// Add your package exports here
-export * from "./envs";
+export const locales = ["en", "zh"];
+export const baseLocale = "en";
+
+export const urlPatterns = urls.map((u) => ({
+  pattern: u,
+  localized: locales.map((l) => [l, trimEnd(join("/", l, u), "/")]),
+})) satisfies { pattern: string; localized: [string, string][] }[];

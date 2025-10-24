@@ -3,12 +3,21 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/server.ts",
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./server": {
+      "default": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    },
     "./envs": "./src/envs.ts"
   },
   "scripts": {
+    "build": "tsdown",
     "clean": "rimraf dist .turbo",
     "test": "vitest",
     "test:watch": "vitest --watch"
@@ -16,11 +25,14 @@
   "dependencies": {
     "@inlang/cli": "^3.0.12",
     "@inlang/paraglide-js": "^2.4.0",
+    "lodash-es": "^4.17.21",
     "@raypx/env": "workspace:*"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
+    "@types/lodash-es": "catalog:",
+    "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:"
   }

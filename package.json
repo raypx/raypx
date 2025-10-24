@@ -24,7 +24,7 @@
     "check": "biome check",
     "clean": "turbo clean",
     "coverage": "vitest --coverage",
-    "dev": "turbo dev",
+    "dev": "turbo --filter=web dev",
     "format": "raypx-scripts format",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "raypx-scripts postinstall",
