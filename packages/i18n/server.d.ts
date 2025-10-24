@@ -1,0 +1,1 @@
+declare module "@raypx/i18n/server";

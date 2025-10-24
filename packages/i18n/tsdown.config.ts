@@ -1,8 +1,9 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/server.ts"],
+  entry: ["src/index.ts", "src/compile.ts", "src/envs.ts"],
   dts: true,
   shims: true,
-  format: ["esm", "cjs"],
+  format: ["esm"],
+  external: [/^@raypx\/i18n\/paraglide/],
 });

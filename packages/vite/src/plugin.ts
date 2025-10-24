@@ -1,4 +1,4 @@
-import { compileParaglide } from "@raypx/i18n/server";
+import compileParaglide from "@raypx/i18n/compile";
 import type { Plugin } from "vite";
 
 function vitePlugin(): Plugin {

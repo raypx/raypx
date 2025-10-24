@@ -1,11 +1,10 @@
 import { compile } from "@inlang/paraglide-js";
-import { urlPatterns } from ".";
+import { project, outDir, urlPatterns } from "./index.js";
 
-export async function compileParaglide() {
-  console.log('__dirname', __dirname);
+async function compileParaglide() {
   const result = await compile({
-    project: "./.inlang",
-    outdir: "./.output/paraglide",
+    project,
+    outdir: outDir,
     outputStructure: "message-modules",
     cookieName: "lang",
     strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
@@ -13,3 +12,5 @@ export async function compileParaglide() {
   });
   return result;
 }
+
+export default compileParaglide;

@@ -1,6 +1,6 @@
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import netlify from "@netlify/vite-plugin-tanstack-start";
-import { outDir, urlPatterns } from "@raypx/i18n";
+import { getI18nConfig } from "@raypx/i18n";
 import vitePlugin from "@raypx/vite/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
@@ -14,13 +14,17 @@ import tsConfigPaths from "vite-tsconfig-paths";
 
 const jiti = createJiti(import.meta.url);
 
+const i18nConfig = getI18nConfig(import.meta.dirname);
+const outDir = '.output';
+
+console.log(JSON.stringify(i18nConfig, null, 2));
+
 const config = defineConfig(async ({ mode }) => {
   const env: Record<string, string> = await jiti.import("./src/env.ts", { default: true });
 
   const isDev = mode === "development" || env.NODE_ENV === "development";
   return {
     server: {
-      port: 3000,
       open: isDev,
     },
     build: {
@@ -32,12 +36,12 @@ const config = defineConfig(async ({ mode }) => {
     plugins: [
       vitePlugin(),
       paraglideVitePlugin({
-        project: "./.inlang",
-        outdir: `./${outDir}/paraglide`,
+        project: i18nConfig.project,
+        outdir: i18nConfig.outDir,
         outputStructure: "message-modules",
         cookieName: "lang",
         strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
-        urlPatterns,
+        urlPatterns: i18nConfig.urlPatterns,
       }),
       mdx(await import("./source.config"), { outDir: `./${outDir}/.source` }),
       devtools({

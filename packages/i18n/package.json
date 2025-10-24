@@ -3,21 +3,34 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./index.js",
+      "types": "./index.d.ts"
     },
     "./server": {
-      "default": "./dist/server.js",
-      "types": "./dist/server.d.ts"
+      "default": "./server.js",
+      "require": "./server.js",
+      "types": "./server.d.ts"
     },
-    "./envs": "./src/envs.ts"
+    "./messages": {
+      "default": "./messages.js",
+      "require": "./messages.js",
+      "types": "./messages.d.ts"
+    },
+    "./runtime": {
+      "default": "./runtime.js",
+      "require": "./runtime.js",
+      "types": "./runtime.d.ts"
+    },
+    "./compile": {
+      "default": "./compile.js",
+      "require": "./compile.js",
+      "types": "./compile.d.ts"
+    }
   },
   "scripts": {
-    "build": "tsdown",
+    "#build": "tsdown",
     "clean": "rimraf dist .turbo",
     "test": "vitest",
     "test:watch": "vitest --watch"
@@ -25,13 +38,14 @@
   "dependencies": {
     "@inlang/cli": "^3.0.12",
     "@inlang/paraglide-js": "^2.4.0",
+    "@raypx/env": "workspace:*",
     "lodash-es": "^4.17.21",
-    "@raypx/env": "workspace:*"
+    "urlpattern-polyfill": "^10.1.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@types/node": "catalog:",
     "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
     "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:"

@@ -1,0 +1,159 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "languages": {
+    "label": "语言",
+    "values": {
+      "en": "English",
+      "zh": "中文"
+    }
+  },
+  "home": {
+    "hero": {
+      "badge": "核心架构完成 - 已准备投入生产",
+      "title": "构建具有",
+      "titleHighlight": "企业级安全性的 AI 应用",
+      "description": "基于 TanStack Start 和 React 19 构建的现代高性能 Web 应用平台，专为构建可扩展的 AI 应用而设计，提供无妥协的类型安全。",
+      "getStarted": "快速开始",
+      "viewGithub": "在 GitHub 上查看",
+      "status": "已准备投入生产"
+    },
+    "features": {
+      "heading": "构建现代应用所需的一切",
+      "subheading": "采用一流的技术构建，优化开发者体验",
+      "aiFirst": {
+        "title": "AI 优先架构",
+        "description": "内置 AI 集成和优化，为下一代应用而生"
+      },
+      "fast": {
+        "title": "极速性能",
+        "description": "基于 TanStack Start、Vite 和 React 19，提供无与伦比的性能"
+      },
+      "security": {
+        "title": "企业级安全",
+        "description": "使用 Better Auth 提供高级认证和授权"
+      },
+      "ui": {
+        "title": "现代 UI/UX",
+        "description": "使用 Radix UI 和 Tailwind CSS 构建的精美、无障碍组件"
+      },
+      "analytics": {
+        "title": "实时分析",
+        "description": "为您的应用提供全面的监控和洞察"
+      },
+      "database": {
+        "title": "数据库无关",
+        "description": "使用 Drizzle 灵活的 ORM，支持多种数据库"
+      },
+      "i18n": {
+        "title": "国际化",
+        "description": "使用 react-i18next 内置 i18n 支持，覆盖全球"
+      },
+      "deploy": {
+        "title": "随处部署",
+        "description": "针对云平台和边缘部署进行优化"
+      }
+    },
+    "techStack": {
+      "heading": "使用现代技术构建",
+      "subheading": "利用生态系统中的最佳工具，获得最佳开发体验",
+      "tanstackStart": "具有类型安全的全栈 React 框架",
+      "react19": "具有并发特性的最新 React",
+      "typescript": "严格的类型安全开发",
+      "vite": "极速构建工具",
+      "tailwind": "实用优先的 CSS 框架",
+      "radix": "无样式、无障碍的 UI 基元",
+      "shadcn": "精美、可定制的组件库",
+      "drizzle": "类 SQL 语法的 TypeScript ORM",
+      "postgres": "高级开源数据库",
+      "trpc": "端到端类型安全的 API",
+      "pnpm": "快速、节省磁盘空间的包管理器",
+      "turborepo": "高性能构建系统",
+      "biome": "快速的代码检查和格式化工具",
+      "vitest": "快速的单元测试框架",
+      "categories": {
+        "framework": "框架",
+        "styling": "样式",
+        "backend": "后端",
+        "tooling": "工具"
+      }
+    },
+    "cta": {
+      "heading": "准备好开始了吗？",
+      "subheading": "克隆仓库，几分钟内开始构建您的下一个项目",
+      "readDocs": "阅读文档",
+      "starGithub": "在 GitHub 上点赞",
+      "license": "Apache 2.0 许可 • 免费开源"
+    }
+  },
+  "layout": {
+    "nav": {
+      "home": "首页",
+      "title": "Raypx",
+      "docs": "文档",
+      "application": "应用",
+      "dashboard": "仪表盘",
+      "books": "书籍",
+      "configuration": "配置",
+      "users": "用户",
+      "account": "账户",
+      "openApp": "打开应用",
+      "login": "登 录",
+      "signUp": "注 册",
+      "apiDocumentation": "API 文档"
+    },
+    "footer": {
+      "tagline": "构建可扩展 AI 应用的现代高性能 Web 应用平台。",
+      "product": {
+        "title": "产品",
+        "features": "功能特性",
+        "techStack": "技术栈",
+        "roadmap": "路线图"
+      },
+      "resources": {
+        "title": "资源",
+        "docs": "文档",
+        "github": "GitHub",
+        "changelog": "更新日志"
+      },
+      "community": {
+        "title": "社区",
+        "issues": "问题反馈",
+        "discussions": "讨论区",
+        "contributing": "贡献指南"
+      },
+      "copyright": "© {year} Raypx. 保留所有权利。",
+      "license": "Apache 2.0 许可证",
+      "privacy": "隐私政策",
+      "terms": "服务条款"
+    }
+  },
+  "auth": {
+    "username": "用户名",
+    "email": {
+      "label": "邮箱",
+      "placeholder": "请输入邮箱",
+      "required": "邮箱是必填的",
+      "invalid": "邮箱是无效的"
+    },
+    "password": {
+      "label": "密码",
+      "placeholder": "请输入密码",
+      "required": "密码是必填的",
+      "minLength": "密码必须至少 {min} 个字符",
+      "maxLength": "密码必须最多 {max} 个字符",
+      "regex": "密码必须至少包含一个字母和一个数字"
+    },
+    "rememberMeLabel": "记住我",
+    "signIn": {
+      "action": "登录",
+      "usernamePlaceholder": "请输入用户名",
+      "emailPlaceholder": "请输入邮箱"
+    },
+    "validation": {
+      "required": "必填"
+    },
+    "errors": {
+      "EMAIL_AND_PASSWORD_IS_NOT_ENABLED": "邮箱和密码未启用"
+    }
+  }
+}
