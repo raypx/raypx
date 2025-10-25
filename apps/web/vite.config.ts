@@ -1,8 +1,7 @@
-import { createRequire } from "node:module";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import netlify from "@netlify/vite-plugin-tanstack-start";
 import { outDir, urlPatterns } from "@raypx/i18n";
-import vitePlugin from "@raypx/vite/plugin";
+import raypxVitePlugin from "@raypx/vite/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -31,7 +30,7 @@ const config = defineConfig(async ({ mode }) => {
     },
     ssr: { noExternal: ["urlpattern-polyfill"] },
     plugins: [
-      vitePlugin(),
+      raypxVitePlugin(),
       paraglideVitePlugin({
         project: "./.inlang",
         outdir: `./${outDir}/paraglide`,

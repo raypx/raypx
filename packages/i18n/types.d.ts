@@ -1,8 +1,8 @@
-declare module "@/lib/i18n/messages" {
+declare module "@raypx/i18n/messages" {
   export const m: Record<string, (...args: any[]) => string>;
 }
 
-declare module "@/lib/i18n/runtime" {
+declare module "@raypx/i18n/runtime" {
   export const locales: readonly ["en", "zh"];
   export const baseLocale: "en";
   export type SetLocaleFn = (
@@ -22,7 +22,7 @@ declare module "@/lib/i18n/runtime" {
   export function deLocalizeUrl(url: string | URL): URL;
 }
 
-declare module "@/lib/i18n/server" {
+declare module "@raypx/i18n/server" {
   export function paraglideMiddleware<T>(
     request: Request,
     resolve: (args: { request: Request; locale: Locale }) => Promise<T> | T,

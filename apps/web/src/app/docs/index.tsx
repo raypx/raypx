@@ -1,5 +1,5 @@
+import { getLocale } from "@raypx/i18n/runtime";
 import { createFileRoute } from "@tanstack/react-router";
-import { getLocale } from "@/lib/i18n/runtime";
 import { clientLoader, DocsPageComponent } from "./-components/docs-page";
 import { serverLoader } from "./-components/loader";
 

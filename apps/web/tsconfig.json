@@ -5,6 +5,7 @@
     "baseUrl": ".",
     "allowImportingTsExtensions": true,
     "allowJs": false,
+    "types": ["@raypx/i18n/types"],
     "paths": {
       "@/*": ["./src/*"],
       "@output/*": ["./.output/*"],

@@ -1,5 +1,6 @@
 import { Analytics } from "@raypx/analytics";
 import { AuthProvider } from "@raypx/auth";
+import { getLocale } from "@raypx/i18n/runtime";
 import type { AppRouter } from "@raypx/trpc";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
@@ -11,7 +12,6 @@ import { Devtools } from "@/components/layout/devtools";
 import { I18nProvider } from "@/components/layout/i18n-provider";
 import Loading from "@/components/layout/loading";
 import NotFound from "@/components/layout/not-found";
-import { getLocale } from "@/lib/i18n/runtime";
 import appCss from "@/styles/globals.css?url";
 
 type RootRouterContext = {
