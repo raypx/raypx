@@ -1,423 +1,398 @@
 # Claude Code Project Guidelines
 
+> **Project:** Raypx - A modern full-stack web application
+> **Last Updated:** 2025-10-28
+> **Stack:** TanStack Start + React 19 + TypeScript + pnpm monorepo
+
 ## Quick Start
 
-**Start development environment:**
+### Development Commands
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Start development server
+# Start development server (web app only)
 pnpm dev
 
-# Run tests
-pnpm test
-
-# Run E2E tests
-pnpm test:e2e
+# Start specific package
+pnpm --filter web dev
+pnpm --filter @raypx/db run db:studio
 
 # Build for production
 pnpm build
+
+# Type checking
+pnpm typecheck
+
+# Linting and formatting
+pnpm check
+pnpm format
+
+# Run tests
+pnpm test
+pnpm coverage
+
+# Clean build artifacts
+pnpm clean
 ```
 
-**Project Structure:**
+### Database Commands
+
+```bash
+# Open Drizzle Studio
+pnpm --filter @raypx/db run db:studio
+
+# Run migrations
+pnpm --filter @raypx/db run db:migrate
+
+# Generate migrations
+pnpm --filter @raypx/db run db:generate
+
+# Push schema changes
+pnpm --filter @raypx/db run db:push
+
+# Seed database
+pnpm --filter @raypx/db run db:seed
+```
+
+## Project Structure
+
 ```
 raypx/
 ├── apps/
-│   └── web/          # Main TanStack Start application
-│       ├── messages/     # i18n message files (en.json, zh.json)
-│       ├── project.inlang/  # Inlang paraglide configuration
-│       └── src/
-│           └── paraglide/   # Auto-generated i18n runtime (DO NOT EDIT)
-├── packages/          # Shared packages (consumed as TypeScript source)
-│   ├── ui/           # UI components with shadcn/ui
-│   │   ├── components/i18n-provider.tsx  # i18n context abstraction
-│   │   └── hooks/use-locale.ts           # i18n hook abstraction
-│   ├── db/           # Database layer with Drizzle ORM
-│   ├── auth/         # Authentication with Better Auth
-│   ├── trpc/         # Type-safe API layer
-│   ├── env/          # Environment validation
-│   ├── email/        # Email templates and service
-│   ├── redis/        # Cache and session storage
-│   ├── analytics/    # Analytics integration
-│   └── shared/       # Common utilities and types
-├── scripts/          # Development and build scripts
-└── turbo/            # Turborepo configuration
+│   └── web/                    # TanStack Start application
+│       ├── inlang/             # i18n configuration
+│       │   └── settings.json   # Locales: en, zh
+│       ├── messages/           # Translation files
+│       │   ├── en.json
+│       │   └── zh.json
+│       ├── public/             # Static assets
+│       ├── src/
+│       │   ├── app/            # File-based routes
+│       │   ├── components/     # React components
+│       │   ├── hooks/          # Custom React hooks
+│       │   ├── lib/            # Utilities and helpers
+│       │   ├── styles/         # Global styles
+│       │   ├── env.ts          # Environment validation
+│       │   ├── router.tsx      # Router configuration
+│       │   └── server.ts       # Server entry point
+│       └── vite.config.ts
+│
+├── packages/                   # Shared packages
+│   ├── analytics/              # Analytics integration
+│   ├── auth/                   # Better Auth configuration
+│   ├── cli/                    # CLI utilities
+│   ├── db/                     # Drizzle ORM + PostgreSQL
+│   ├── email/                  # Email templates (React Email)
+│   ├── env/                    # Environment validation
+│   ├── i18n/                   # i18n utilities and Vite plugin
+│   ├── redis/                  # Redis client
+│   ├── shared/                 # Shared utilities
+│   ├── trpc/                   # tRPC server setup
+│   ├── tsconfig/               # Shared TypeScript configs
+│   ├── ui/                     # UI components (shadcn/ui)
+│   └── validators/             # Zod schemas
+│
+├── scripts/                    # Build and development scripts
+├── .claude/                    # Claude Code configuration
+├── .github/                    # GitHub Actions workflows
+└── turbo/                      # Turborepo configuration
 ```
 
 ## Package Manager
 
-**This project uses pnpm as the package manager.**
+**This project exclusively uses pnpm 10.19.0+**
 
-- Commands: `pnpm install`, `pnpm add`, `pnpm remove`, `pnpx` (instead of `npx`)
-- Workspace configuration: Defined in `pnpm-workspace.yaml` and root `package.json` `workspaces` field
-- Lock file: `pnpm-lock.yaml` (human-readable format)
+### Why pnpm?
 
-## Build Configuration
+- ⚡ **Fast**: Efficient dependency resolution and installation
+- 💾 **Disk Efficient**: Uses hard links and symlinks
+- 📦 **Monorepo Support**: Native workspace protocol
+- 🔒 **Strict**: Prevents phantom dependencies
+- 🎯 **Catalog**: Centralized dependency management
 
-**Important: Only `apps/` projects should have build scripts.**
-
-- ✅ `apps/*` - Can have `build`, `dev`, `start` scripts (these are deployable applications)
-- ❌ `packages/*` - Should NOT have build scripts (these are internal libraries consumed as TypeScript source)
-
-All packages under `packages/` are consumed directly as TypeScript source files by the applications that import them. They do not need compilation or build steps.
-
-## Testing
-
-### Unit Testing
-- Use `vitest` package for consistent testing setup across the monorepo
-- Test runner: Vitest (pnpm has excellent support for Vitest)
-- Run tests: `pnpm test` or `vitest`
-
-### End-to-End Testing
-- Use `@playwright/test` for E2E testing
-- Test runner: Playwright with multi-browser support
-- Run E2E tests: `pnpm test:e2e`
-- Feature flags for conditional testing (auth, AI, billing)
-- Tests located in `apps/e2e/tests/`
-
-## Dependency Management
-
-- **Catalog dependencies**: Use `catalog:` for shared dependencies managed in root `package.json` `workspaces.catalog`
-- **React dependencies**: Use `catalog:react19` for React 19 related packages
-- **Internal packages**: Use `workspace:*` for internal package dependencies
-- pnpm natively supports workspace dependencies and monorepo structure with excellent performance
-
-## Performance Benefits
-
-- **Installation**: Faster than npm with efficient dependency resolution
-- **Storage efficiency**: Uses symlinks and hard links to save disk space
-- **Workspace support**: Excellent monorepo support with workspace protocols
-- **Lock file**: Fast and reliable dependency resolution
-
-## Code Change Validation
-
-**Important: Always validate changes with build verification.**
-
-After completing any code changes, especially to packages that affect the web application, run the following command to ensure no build errors:
+### Key Commands
 
 ```bash
-cd apps/web && pnpm run build
+# Install dependencies
+pnpm install
+
+# Add dependency to specific package
+pnpm --filter web add <package>
+pnpm --filter @raypx/ui add <package>
+
+# Add dev dependency
+pnpm --filter web add -D <package>
+
+# Remove dependency
+pnpm --filter web remove <package>
+
+# Update dependencies
+pnpm update --recursive --interactive --latest
+
+# Run command in specific package
+pnpm --filter web run <script>
+
+# Run command in all packages
+pnpm -r run <script>
 ```
 
-This validation step should be performed:
-- After modifying package structure or architecture
-- After updating imports/exports in shared packages
-- After refactoring components or services
-- Before committing significant changes
+### Workspace Protocol
 
-The build process verifies TypeScript compilation, dependency resolution, and ensures all routes/pages can be properly generated. This helps catch integration issues early and maintains project stability.
+- **Catalog dependencies**: `"dep": "catalog:"` - Managed in root `package.json`
+- **React 19 deps**: `"react": "catalog:react19"`
+- **Tailwind v4**: `"tailwindcss": "catalog:tailwindv4"`
+- **Internal packages**: `"@raypx/ui": "workspace:*"`
 
-## Code Comments and Documentation
+## Build System
 
-**IMPORTANT: All code comments, documentation, and technical writing in this project MUST be written in English.**
+### Turborepo Configuration
 
-This is a **strict requirement** that applies to:
+The monorepo uses Turborepo for efficient builds and caching:
 
-### Code Comments
-- Inline comments (`//` or `/* */`)
-- JSDoc/TSDoc documentation blocks
-- Function and method descriptions
-- Type annotations and interface documentation
-- TODO, FIXME, NOTE comments
+- **Pipeline**: Defined in `turbo.json`
+- **Cache**: `.turbo/` directory (gitignored)
+- **Parallel execution**: Automatic task parallelization
+- **Remote caching**: Can be configured for team collaboration
 
-### Database and Schema
-- Database schema comments
-- Table and column descriptions
-- Index names and descriptions
-- Migration file comments
-- Seed data comments
+### Build Rules
 
-### Configuration Files
-- Comments in JSON, YAML, TOML files
-- Environment variable descriptions
-- Build configuration comments
-- Docker and deployment comments
+**IMPORTANT: Only `apps/` should have build scripts**
 
-### Documentation Files
-- README files
-- API documentation
-- Architecture decision records (ADRs)
-- Technical specifications
-- Code review comments
+- ✅ `apps/web` - Has `build`, `dev` scripts (deployable app)
+- ❌ `packages/*` - NO build scripts (consumed as TypeScript source)
 
-### Why English Only?
-- Ensures consistency and readability for all developers
-- Facilitates collaboration in international teams
-- Makes the codebase accessible to a wider audience
-- Improves compatibility with AI coding assistants
-- Maintains professional standards
+All packages are consumed directly as TypeScript source files by applications. They do not need compilation or build steps.
 
-**Non-compliance**: Code with non-English comments should be refactored during code review or when encountered during development.
-
-## Development Workflow
-
-### Local Development
-```bash
-# Start development with turbo
-pnpm dev                    # Start all apps in development mode
-pnpm dev --filter web       # Start only web app
-pnpm dev --filter docs      # Start only docs app
-
-# Database operations
-pnpm --filter @raypx/db run db:migrate    # Run database migrations
-pnpm --filter @raypx/db run db:studio     # Open Drizzle Studio
-pnpm --filter @raypx/db run db:seed       # Seed database with test data
-
-# Testing
-pnpm test                   # Run all tests
-pnpm test --filter web      # Test specific package
-pnpm test --watch          # Watch mode
-pnpm test --coverage       # With coverage report
-```
-
-### Code Quality
-```bash
-# Linting and formatting
-pnpm check                  # Run Biome linting
-pnpm format                # Format code with Biome
-
-# Type checking
-pnpm build --dry-run       # Type check without building
-```
-
-## Debugging and Troubleshooting
-
-### Common Issues
-
-**Build Failures:**
-```bash
-# Clear all caches and reinstall
-pnpm clean && rm -rf node_modules && pnpm install
-
-# Clear Vite/TanStack cache
-rm -rf apps/web/.tanstack apps/web/.nitro apps/web/dist
-
-# Clear turbo cache
-pnpm turbo clean
-```
-
-**Database Issues:**
-```bash
-# Reset database (development only)
-pnpm --filter @raypx/db run db:reset
-
-# Check database connection
-pnpm --filter @raypx/db run db:check
-```
-
-**TypeScript Errors:**
-```bash
-# Restart TypeScript server in your editor
-# Check for circular dependencies
-# Verify all packages are properly built
-```
-
-### Performance Optimization
-
-**Development:**
-- Vite provides instant HMR out of the box
-- Use `pnpm dev --filter web` to run only the web app
-- TanStack DevTools available in development mode
-
-**Production:**
-- Vite optimizes bundle automatically
-- Use `pnpm build` with production environment variables
-- Configure CDN and caching strategies for static assets
-
-## Environment Configuration
-
-### Development Environment
-```bash
-# Copy environment template
-cp .env.example .env.local
-
-# Required variables:
-DATABASE_URL=postgresql://...
-BETTER_AUTH_SECRET=your-secret-key
-BETTER_AUTH_URL=http://localhost:3000
-```
-
-### Claude Code Configuration
-
-**Automatic Setup:**
-The project automatically creates and maintains local Claude Code settings during installation with an interactive progress display:
-- `.claude/settings.json` - Shared team configuration (checked into git)
-- `.claude/settings.local.json` - Personal local overrides (gitignored)
-
-**Enhanced Installation Experience:**
-- 🔧 **Interactive Progress Bar**: Visual feedback using listr2 task runner
-- ⚙️ **Step-by-Step Display**: Clear indication of each setup phase
-- 💡 **Contextual Messages**: Helpful tips based on the action performed
-- ⏱️ **Timing Information**: Shows duration for each step
-
-**Intelligent Merging:**
-The setup script uses `deepmerge` to intelligently combine settings:
-- **First time**: Creates local settings from base settings
-- **Updates**: Merges base settings with your local customizations
-- **Arrays**: Concatenates and deduplicates (e.g., permissions.allow)
-- **Objects**: Deep merges with local taking priority
-- **Preserves**: All your custom environment variables and settings
-
-**Manual Setup:**
-```bash
-# If you need to recreate local settings
-cp .claude/settings.json .claude/settings.local.json
-```
-
-**Customization Examples:**
-```json
-{
-  "permissions": {
-    "allow": [
-      // Base permissions are automatically included
-      "Bash(yarn:*)",          // Add your preferred tools
-      "Bash(npm:*)",
-      "WebFetch(domain:my-custom-domain.com)"
-    ]
-  },
-  "env": {
-    "MY_CUSTOM_VAR": "local-value",
-    "DEBUG": "true"
-  }
-}
-```
-
-### Production Checklist
-- [ ] Environment variables configured in deployment platform
-- [ ] Database migrations run successfully
-- [ ] SSL certificates valid
-- [ ] CDN configured for static assets
-- [ ] Monitoring and error tracking enabled
-
-## Git Commit Guidelines
-
-**Git commit messages must not contain Claude or AI assistance references.**
-
-- Keep commit messages professional and focused on the technical changes
-- Do not include phrases like "Generated with Claude Code", "Co-Authored-By: Claude", or similar AI assistance attributions
-- Record Claude assistance details in this CLAUDE.md file instead of commit messages
-- Commit messages should follow conventional commit format and describe the actual changes made
-
-### Commit Format
-```
-feat: add user authentication system
-fix: resolve database connection timeout
-docs: update API documentation
-refactor: optimize database queries
-test: add integration tests for auth flow
-```
+**Exception**: Packages may have build scripts if they export compiled code (e.g., CLI tools), but this should be rare.
 
 ## Tech Stack
 
-**Core Framework:**
-- TanStack Start - Full-stack React framework with SSR/SSG
-- TanStack Router - Type-safe file-based routing
-- React 19 - Latest React with concurrent features
-- Vite - Lightning-fast build tool
-- TypeScript 5.9 - Strict type safety
+### Core Framework
 
-**Backend & Database:**
-- Better Auth - Enterprise authentication
-- PostgreSQL + Drizzle ORM - Type-safe database
-- tRPC - End-to-end type-safe APIs
-- Redis - Caching and sessions
+- **TanStack Start** ^1.133.27 - Full-stack React framework with SSR/SSG
+- **TanStack Router** ^1.133.27 - Type-safe file-based routing
+- **React 19** - Latest React with concurrent features
+- **TypeScript 5.9+** - Strict type safety
+- **Vite 7.1+** - Lightning-fast build tool with HMR
 
-**UI & Styling:**
-- Tailwind CSS v4 - Utility-first styling
-- Radix UI - Accessible primitives
-- shadcn/ui - Component library
+### Backend & Data
 
-**Internationalization:**
-- inlang/paraglide-js - Compile-time i18n with zero runtime overhead
-- Message format - JSON-based translation files
-- Type-safe translations - Auto-generated TypeScript types
-- Vite plugin integration - Seamless build process
+- **Better Auth** - Modern authentication library
+  - Session management
+  - OAuth providers
+  - Email/password auth
+  - 2FA support
+- **PostgreSQL + Drizzle ORM** - Type-safe database
+  - Schema definition in TypeScript
+  - Automatic migrations
+  - Type-safe queries
+- **tRPC 11.7+** - End-to-end type-safe APIs
+  - No code generation
+  - Automatic type inference
+  - React Query integration
+- **Redis** - Caching and session storage
+- **Nitro** - Universal server framework
 
-**Development:**
-- pnpm + Turborepo - Monorepo management
-- Vitest - Unit testing
-- Biome - Linting and formatting
-- Lefthook - Git hooks
+### UI & Styling
 
-## Internationalization (i18n) Architecture
+- **Tailwind CSS v4** - Utility-first CSS framework
+  - Vite plugin for instant compilation
+  - Modern CSS features
+  - JIT compiler
+- **Radix UI** - Accessible component primitives
+- **shadcn/ui** - Component library (via @raypx/ui)
+  - Customizable components
+  - Copy-paste components
+  - Full TypeScript support
+- **Lucide React** - Icon library
+- **React Hook Form** - Form state management
+- **Zod** - Schema validation
 
-**This project uses a compile-time i18n approach with inlang/paraglide-js for zero runtime overhead and full type safety.**
+### Internationalization (i18n)
 
-### Architecture Overview
+- **inlang/paraglide-js** ^2.4.0 - Compile-time i18n
+  - Zero runtime overhead
+  - Type-safe translations
+  - Auto-generated message functions
+  - Vite plugin integration
+- **Supported locales**: English (en), Chinese (zh)
+- **Message format**: JSON-based translation files
+- **URL strategy**: `/en/path` and `/zh/path`
 
-The i18n system follows the Dependency Inversion Principle with a clean separation between abstraction and implementation:
+### Development Tools
+
+- **pnpm** 10.19.0+ - Fast package manager
+- **Turborepo** ^2.5.8 - Monorepo build system
+- **Biome** - Fast linter and formatter (replaces ESLint + Prettier)
+- **Vitest** - Unit testing framework
+- **Lefthook** - Fast git hooks
+- **TypeScript** 5.9+ - Type checking
+- **dotenvx** - Environment variable management
+- **knip** - Find unused files and dependencies
+
+### Documentation
+
+- **Fumadocs** ^16.0.4 - Documentation framework
+  - MDX support
+  - Built-in search
+  - Beautiful UI
+  - API reference generation
+
+## Code Quality
+
+### Linting and Formatting
+
+**This project uses Biome** (NOT ESLint/Prettier)
+
+```bash
+# Check code quality
+pnpm check
+
+# Format code
+pnpm format
+
+# Format specific files
+pnpm format <glob-pattern>
+```
+
+**Biome Configuration**: See `biome.json`
+- Tailwind directive support enabled
+- Strict linting rules
+- Consistent formatting
+- Fast performance
+
+### Type Checking
+
+```bash
+# Type check all packages
+pnpm typecheck
+
+# Type check with Turbo (uses cache)
+pnpm turbo typecheck
+```
+
+### Git Hooks
+
+Configured via `lefthook.yml`:
+
+- **pre-commit**: Runs formatting on staged files
+- Fast execution (faster than husky)
+- No npm dependency
+
+### Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test --watch
+
+# Run tests with coverage
+pnpm coverage
+
+# Run tests for specific package
+pnpm --filter web test
+```
+
+**Test Framework**: Vitest
+- Fast and modern
+- Compatible with Jest API
+- Built-in TypeScript support
+- Coverage with v8
+
+## Internationalization (i18n)
+
+### Architecture
+
+The i18n system uses **compile-time translation** with zero runtime overhead:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ @raypx/ui Package (Abstraction Layer)                       │
-│ ├── components/i18n-provider.tsx  (Context & Provider)      │
-│ └── hooks/use-locale.ts           (Consumer Hook)           │
-└─────────────────────────────────────────────────────────────┘
-                          ▲
-                          │ depends on
-                          │
-┌─────────────────────────────────────────────────────────────┐
-│ apps/web (Implementation Layer)                             │
-│ ├── messages/                     (Source translations)     │
-│ │   ├── en.json                                             │
-│ │   └── zh.json                                             │
-│ ├── project.inlang/               (Configuration)           │
-│ │   └── settings.json                                       │
-│ ├── src/paraglide/                (Auto-generated runtime)  │
-│ │   ├── messages.js               (Type-safe message fns)   │
-│ │   └── runtime.js                (Locale management)       │
-│ └── src/components/layout/                                  │
-│     └── i18n-provider.tsx         (Concrete implementation) │
-└─────────────────────────────────────────────────────────────┘
-                          ▲
-                          │ uses
-                          │
-┌─────────────────────────────────────────────────────────────┐
-│ Vite Build Process                                          │
-│ └── @inlang/paraglide-js/vite     (Compiler plugin)         │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ Build Time (Vite Plugin)                    │
+│ ├── messages/en.json                        │
+│ ├── messages/zh.json                        │
+│ └── inlang/settings.json                    │
+│     ↓ paraglide compiler                    │
+│ └── node_modules/.raypx/paraglide/          │
+│     ├── messages.js (type-safe functions)   │
+│     └── runtime.js (locale management)      │
+└─────────────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────┐
+│ Runtime (@raypx/i18n virtual modules)       │
+│ ├── @raypx/i18n/runtime                     │
+│ ├── @raypx/i18n/server                      │
+│ └── @raypx/i18n/messages                    │
+└─────────────────────────────────────────────┘
+                     ↓
+┌─────────────────────────────────────────────┐
+│ Application (@raypx/ui components)          │
+│ └── useLocale('namespace')                  │
+└─────────────────────────────────────────────┘
 ```
 
-### Key Features
+### Key Benefits
 
 1. **Zero Runtime Overhead**
-   - Translations compiled at build time
-   - No runtime i18n library loaded in browser
-   - Smaller bundle size compared to runtime solutions (i18next, react-i18next)
+   - No i18n library loaded in browser
+   - ~100KB smaller bundle vs i18next
+   - All translations compiled at build time
 
 2. **Full Type Safety**
-   - Auto-generated TypeScript types for all messages
+   - Auto-generated TypeScript types
    - Compile-time errors for missing translations
-   - IDE autocomplete for translation keys
+   - IDE autocomplete for all keys
 
 3. **Clean Architecture**
-   - UI components depend on abstractions, not implementations
-   - Easy to swap i18n implementation if needed
-   - Follows SOLID principles (Dependency Inversion)
+   - Dependency Inversion Principle
+   - @raypx/ui provides abstraction
+   - Easy to swap implementation
 
-### Directory Structure
+### Configuration
 
+**i18n Vite Plugin** (`@raypx/i18n/vite`)
+
+```typescript
+// apps/web/vite.config.ts
+import i18nPlugin from "@raypx/i18n/vite";
+
+export default defineConfig({
+  plugins: [
+    await i18nPlugin({
+      outputStructure: "message-modules", // or "locale-modules"
+      cookieName: "lang",                 // cookie name for locale
+      strategy: [                          // locale detection strategy
+        "url",                             // /en/path, /zh/path
+        "cookie",                          // lang cookie
+        "preferredLanguage",               // Accept-Language header
+        "baseLocale"                       // fallback to en
+      ],
+      inlangDir: "inlang",                // inlang config directory
+      cacheDir: "node_modules/.raypx",    // compiled output cache
+    }),
+  ],
+});
 ```
-apps/web/
-├── messages/                    # Translation source files
-│   ├── en.json                 # English translations
-│   └── zh.json                 # Chinese translations
-├── project.inlang/             # Inlang configuration
-│   └── settings.json           # Locales, plugins, paths
-└── src/
-    ├── paraglide/              # AUTO-GENERATED (DO NOT EDIT)
-    │   ├── messages/           # Individual message functions
-    │   ├── messages.js         # Barrel export of all messages
-    │   └── runtime.js          # Locale management utilities
-    └── components/layout/
-        └── i18n-provider.tsx   # App-specific i18n setup
+
+**Default Configuration** (`I18N_DEFAULTS`)
+
+All options are optional. Defaults from `@raypx/i18n/vite`:
+
+```typescript
+export const I18N_DEFAULTS = {
+  outputStructure: "message-modules",
+  cookieName: "lang",
+  strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
+  inlangDir: "inlang",
+  cacheDir: "node_modules/.raypx",
+};
 ```
 
-### Usage Examples
+### Usage in Components
 
-**In Components:**
 ```typescript
 import { useLocale } from '@raypx/ui/hooks/use-locale';
 
@@ -427,19 +402,24 @@ function MyComponent() {
   return (
     <div>
       <h1>{t('hero.title')}</h1>
-      <button onClick={() => setLocale('zh')}>中文</button>
+      <p>{t('hero.description')}</p>
+      <button onClick={() => setLocale('zh')}>
+        切换到中文
+      </button>
     </div>
   );
 }
 ```
 
-**Translation Files:**
+### Translation Files
+
 ```json
 // messages/en.json
 {
   "home": {
     "hero": {
-      "title": "Welcome to Raypx"
+      "title": "Welcome to Raypx",
+      "description": "Build faster with modern tools"
     }
   }
 }
@@ -448,85 +428,532 @@ function MyComponent() {
 {
   "home": {
     "hero": {
-      "title": "欢迎来到 Raypx"
+      "title": "欢迎来到 Raypx",
+      "description": "使用现代工具快速构建"
     }
   }
 }
 ```
 
-### Adding New Translations
-
-1. **Add messages to JSON files:**
-   ```bash
-   # Edit messages/en.json and messages/zh.json
-   ```
-
-2. **Compile translations:**
-   ```bash
-   pnpx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/paraglide
-
-   # Or let Vite handle it automatically during dev/build
-   pnpm dev
-   ```
-
-3. **Use in components:**
-   ```typescript
-   const { t } = useLocale('namespace');
-   t('key.nested.path')
-   ```
-
-### Machine Translation
-
-For quick translations, use the inlang CLI:
-```bash
-pnpm run machine-translate
-```
-
-This will automatically translate missing keys using AI.
-
 ### Adding New Languages
 
-1. **Update inlang config:**
-   ```json
-   // project.inlang/settings.json
-   {
-     "baseLocale": "en",
-     "locales": ["en", "zh", "ja", "ko"]  // Add new locales
-   }
-   ```
+1. **Update inlang configuration:**
 
-2. **Create translation file:**
+```json
+// apps/web/inlang/settings.json
+{
+  "baseLocale": "en",
+  "locales": ["en", "zh", "ja", "ko"]  // add new locales
+}
+```
+
+2. **Create translation files:**
+
+```bash
+cp messages/en.json messages/ja.json
+# Then translate the content manually or use machine translation
+```
+
+3. **Update locale constants (if needed):**
+
+```typescript
+// packages/i18n/src/index.ts
+export const locales = ["en", "zh", "ja", "ko"];
+```
+
+4. **Machine translate missing keys:**
+
+```bash
+pnpm --filter web run machine-translate
+```
+
+### URL Routing
+
+The i18n middleware automatically handles locale-based URLs:
+
+- `/` → redirects to `/en/` (based on detection strategy)
+- `/en/about` → English about page
+- `/zh/about` → Chinese about page
+- `/api/*` → No locale prefix (API routes skip i18n)
+- `/docs/*` → Documentation routes (configurable)
+
+**Smart Path Filtering**: The server middleware skips i18n processing for:
+- API routes: `/api/*`, `/.well-known/*`, `/_*`
+- Static assets: `.js`, `.css`, images, fonts
+- Non-GET requests
+
+### Server-Side i18n
+
+```typescript
+// apps/web/src/server.ts
+import { paraglideMiddleware } from "@raypx/i18n/server";
+
+export default {
+  fetch(req: Request) {
+    const { pathname } = new URL(req.url);
+
+    // Skip i18n for API and static assets
+    if (req.method !== "GET" || shouldSkipI18n(pathname)) {
+      return handler.fetch(req);
+    }
+
+    // Apply i18n middleware for all GET requests
+    return paraglideMiddleware(req, ({ request }) => handler.fetch(request));
+  },
+};
+```
+
+## Environment Configuration
+
+### Environment Files
+
+```bash
+.env                # Local development (gitignored)
+.env.example        # Template for required variables (committed)
+```
+
+### Environment Validation
+
+Powered by `@raypx/env` package using `@t3-oss/env-core`:
+
+```typescript
+// apps/web/src/env.ts
+import { createEnv } from "@raypx/env";
+import { z } from "zod";
+
+export const env = createEnv({
+  server: {
+    DATABASE_URL: z.string().url(),
+    REDIS_URL: z.string().url().optional(),
+  },
+  client: {
+    // Public env vars (prefixed with VITE_)
+  },
+  shared: {
+    NODE_ENV: z.enum(["development", "production", "test"]),
+  },
+});
+```
+
+**Benefits:**
+- Type-safe environment variables
+- Runtime validation
+- Build-time errors for missing vars
+- Separate server/client vars
+- Great DX with autocomplete
+
+### Required Variables
+
+See `.env.example` for the complete list. Key variables:
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/raypx
+
+# Auth
+BETTER_AUTH_SECRET=your-secret-key-here
+BETTER_AUTH_URL=http://localhost:3000
+
+# Redis (optional)
+REDIS_URL=redis://localhost:6379
+
+# Email (optional)
+RESEND_API_KEY=re_xxx
+```
+
+## Development Workflow
+
+### Starting Development
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Copy environment variables
+cp .env.example .env
+
+# 3. Start database (Docker)
+docker compose up -d
+
+# 4. Run migrations
+pnpm --filter @raypx/db run db:migrate
+
+# 5. Start dev server
+pnpm dev
+```
+
+The dev server will start at `http://localhost:3000`.
+
+### Adding New Features
+
+1. **Create feature branch**
+
+```bash
+git checkout -b feature/my-feature
+```
+
+2. **Implement feature**
+   - Add code to appropriate package
+   - Add tests
+   - Update types
+
+3. **Validate changes**
+
+```bash
+# Type check
+pnpm typecheck
+
+# Lint and format
+pnpm check
+pnpm format
+
+# Run tests
+pnpm test
+
+# Build to verify
+cd apps/web && pnpm run build
+```
+
+4. **Commit changes**
+
+```bash
+git add .
+git commit -m "feat: add my feature"
+```
+
+### Code Change Validation
+
+**IMPORTANT: Always validate changes with a full build**
+
+```bash
+# From project root
+cd apps/web && pnpm run build
+```
+
+This should be done:
+- After modifying package structure
+- After updating imports/exports
+- After refactoring shared code
+- Before committing significant changes
+
+The build process verifies:
+- TypeScript compilation
+- Dependency resolution
+- Route generation
+- Asset bundling
+
+**Build Performance**: Typical build time is 9-13 seconds for full production build.
+
+## Git Workflow
+
+### Commit Convention
+
+This project follows **Conventional Commits**:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only
+- `refactor`: Code refactoring
+- `perf`: Performance improvement
+- `test`: Adding tests
+- `chore`: Maintenance tasks
+- `ci`: CI/CD changes
+
+**Examples:**
+
+```bash
+git commit -m "feat(auth): add OAuth login support"
+git commit -m "fix(ui): resolve button hover state"
+git commit -m "docs: update i18n setup guide"
+git commit -m "refactor(db): optimize user queries"
+```
+
+### Git Hooks
+
+**Lefthook** manages git hooks (see `lefthook.yml`):
+
+- **pre-commit**: Auto-format staged files
+  - Fast execution with native binaries
+  - Only formats changed files
+  - Skips if no matching files
+
+### Commit Message Guidelines
+
+**IMPORTANT: No AI attribution in commit messages**
+
+- ❌ Don't include "Generated with Claude Code"
+- ❌ Don't include "Co-Authored-By: Claude"
+- ✅ Keep messages professional and technical
+- ✅ Describe the actual changes made
+
+Record AI assistance in `CLAUDE.md` instead, not in git history.
+
+## Debugging and Troubleshooting
+
+### Build Failures
+
+```bash
+# Clear all caches and reinstall
+pnpm clean && rm -rf node_modules && pnpm install
+
+# Clear Vite cache
+rm -rf apps/web/.tanstack apps/web/.nitro apps/web/dist
+
+# Clear Turbo cache
+rm -rf .turbo && pnpm turbo clean
+```
+
+### Database Issues
+
+```bash
+# Check database connection
+pnpm --filter @raypx/db run db:check
+
+# Reset database (development only!)
+pnpm --filter @raypx/db run db:reset
+
+# Re-run migrations
+pnpm --filter @raypx/db run db:migrate
+```
+
+### TypeScript Errors
+
+1. **Restart TypeScript server in your editor**
+   - VS Code: `Cmd/Ctrl + Shift + P` → "TypeScript: Restart TS Server"
+
+2. **Check for circular dependencies**
+   - Look for import cycles
+   - Use `knip` to find issues
+
+3. **Verify package dependencies**
    ```bash
-   cp messages/en.json messages/ja.json
-   # Then translate the content
+   pnpm install
+   pnpm typecheck
    ```
 
-3. **Update language switcher:**
-   ```typescript
-   // src/components/layout/lang-switcher.tsx
-   const locales = [
-     { code: "en", name: "English", flag: "🇺🇸" },
-     { code: "zh", name: "Chinese", flag: "🇨🇳" },
-     { code: "ja", name: "Japanese", flag: "🇯🇵" },
-   ];
-   ```
+### Performance Issues
 
-### Migration Notes
+**Development:**
+- Vite provides instant HMR out of the box
+- Use `pnpm dev --filter web` to run only web app
+- TanStack DevTools available in development
 
-**Previous Implementation (Removed):**
-- ❌ i18next + react-i18next (runtime overhead)
-- ❌ @raypx/i18n package (unnecessary abstraction)
-- ❌ Separate locales/ directory structure
+**Production:**
+- Vite auto-optimizes bundles
+- Use lighthouse for performance audits
+- Monitor Web Vitals
 
-**Current Implementation:**
-- ✅ inlang/paraglide-js (compile-time, zero runtime)
-- ✅ Lightweight i18n abstractions in @raypx/ui
-- ✅ Centralized messages/ directory
-- ✅ Auto-generated type-safe runtime
+### Common Errors
 
-**Benefits of Migration:**
-- ~100KB smaller bundle (removed i18next + react-i18next)
-- Compile-time type safety for translations
-- Better developer experience with autocomplete
-- Faster runtime performance (no i18n library overhead)
-- Simplified architecture with fewer dependencies
+**"Cannot find module '@raypx/...'"**
+- Run `pnpm install` to ensure workspace links are created
+- Check `package.json` has correct `workspace:*` reference
+
+**"Type error in node_modules"**
+- This is usually a dependency type issue
+- Try `rm -rf node_modules && pnpm install`
+
+**"Port 3000 already in use"**
+- Kill the process: `kill -9 $(lsof -ti:3000)`
+- Or change port in `vite.config.ts`
+
+## Deployment
+
+### Supported Platforms
+
+- **Netlify** - Configured with `@netlify/vite-plugin-tanstack-start`
+- **Vercel** - Compatible with TanStack Start
+- **Self-hosted** - Via Docker or Node.js
+
+### Build Output
+
+```bash
+# Production build
+pnpm build
+
+# Output locations
+apps/web/dist/client/   # Client-side assets
+apps/web/dist/server/   # Server-side code
+apps/web/.netlify/      # Netlify deployment files
+```
+
+### Environment Variables
+
+Ensure all required environment variables are set in your deployment platform:
+
+```bash
+DATABASE_URL=postgresql://...
+BETTER_AUTH_SECRET=prod-secret-key
+BETTER_AUTH_URL=https://yourdomain.com
+REDIS_URL=redis://...
+```
+
+### Pre-deployment Checklist
+
+- [ ] All tests passing (`pnpm test`)
+- [ ] Type checking passes (`pnpm typecheck`)
+- [ ] Build succeeds (`pnpm build`)
+- [ ] Environment variables configured
+- [ ] Database migrations run
+- [ ] SSL/TLS certificates valid
+
+## Documentation Maintenance
+
+### CLAUDE.md (This File)
+
+Record project guidelines and architecture decisions here.
+
+### TODO.md
+
+Track planned features and improvements. Mark completed items with `[x]`.
+
+### Recent Architecture Improvements
+
+Document significant changes in this section for future reference.
+
+---
+
+## Recent Architecture Improvements
+
+### 2025-10-28 - i18n Infrastructure Optimization
+
+**Commits:**
+- `1db93b6` - refactor(i18n): optimize vite plugin with better defaults and configuration
+- `323dfb6` - refactor: remove redundant @raypx/vite package
+- `a4862fa` - feat(i18n,vite): refactor i18n infrastructure with compile-time approach
+
+**Changes:**
+
+1. **Removed redundant @raypx/vite package**
+   - Eliminated 239 lines of duplicate code
+   - Consolidated i18n Vite plugin into `@raypx/i18n/vite`
+   - Simplified package dependency graph
+   - Clearer single responsibility per package
+
+2. **Optimized @raypx/i18n/vite plugin**
+   - Added `I18N_DEFAULTS` constant for centralized configuration
+   - Made all options optional with sensible defaults
+   - Added support for custom `inlangDir` and `cacheDir` paths
+   - Unified configuration between compile and plugin init
+   - Fixed error handling to properly propagate build failures
+   - Updated documentation to reflect actual file paths
+
+3. **Improved type safety and flexibility**
+   - All config parameters now optional
+   - Better IDE autocomplete and type inference
+   - Easier testing with exported defaults
+   - More flexible for different project structures
+
+**Impact:**
+- ✅ Cleaner architecture following single responsibility principle
+- ✅ Reduced code duplication and maintenance burden
+- ✅ Better developer experience with flexible configuration
+- ✅ Improved error handling and debugging
+- ✅ Build time remains fast (~9-13s for full build)
+- ✅ Zero breaking changes to existing API
+
+**Before:**
+```typescript
+// Had two places defining the same plugin
+packages/vite/src/plugin.ts       // 114 lines - REMOVED
+packages/i18n/src/vite.ts          // 131 lines - KEPT & IMPROVED
+```
+
+**After:**
+```typescript
+// Single source of truth
+packages/i18n/src/vite.ts          // 118 lines, better organized
+
+// Usage (all options optional)
+import i18nPlugin from "@raypx/i18n/vite";
+await i18nPlugin({
+  outputStructure: "message-modules",
+  inlangDir: "inlang",
+  // ... other optional config
+})
+```
+
+---
+
+## Project Standards
+
+### Code Comments
+
+**All code comments, documentation, and technical writing MUST be in English.**
+
+This strict requirement applies to:
+- Code comments (inline, block, JSDoc)
+- Documentation files
+- Commit messages
+- Pull request descriptions
+- Issue descriptions
+- Configuration comments
+
+**Why English?**
+- International collaboration
+- Industry standard
+- AI tooling compatibility
+- Wider audience accessibility
+
+### TypeScript
+
+- Use **strict mode** enabled
+- Prefer `type` over `interface` for object shapes
+- Use `const` assertions for literal types
+- Avoid `any` - use `unknown` if needed
+- Export types with `export type`
+
+### React
+
+- Use **function components** with hooks
+- Prefer named exports over default exports
+- Use TypeScript for prop types
+- Keep components focused and small
+- Extract custom hooks for reusable logic
+
+### Styling
+
+- Use **Tailwind utility classes**
+- Keep custom CSS minimal
+- Use CSS variables for theming
+- Follow mobile-first responsive design
+- Use semantic HTML elements
+
+## Support and Resources
+
+### Documentation
+
+- **Fumadocs**: `/docs` route in web app
+- **API Reference**: Auto-generated from code
+- **Examples**: See `apps/web/src/app/` for patterns
+
+### External Links
+
+- **TanStack Start**: https://tanstack.com/start
+- **TanStack Router**: https://tanstack.com/router
+- **Drizzle ORM**: https://orm.drizzle.team
+- **Better Auth**: https://better-auth.com
+- **inlang/paraglide**: https://inlang.com/m/gerre34r/library-inlang-paraglideJs
+- **Tailwind CSS v4**: https://tailwindcss.com/docs
+
+### Getting Help
+
+1. Check this CLAUDE.md first
+2. Search existing issues
+3. Check package documentation
+4. Create new issue with reproduction
+
+---
+
+**Last Updated**: 2025-10-28
+**Maintained By**: Raypx Team
+**License**: Apache-2.0
