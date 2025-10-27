@@ -54,7 +54,6 @@
     "@inlang/paraglide-js": "2.4.0",
     "@netlify/vite-plugin-tanstack-start": "^1.1.6",
     "@raypx/tsconfig": "workspace:*",
-    "@raypx/vite": "workspace:*",
     "@tailwindcss/vite": "^4.1.16",
     "@tanstack/devtools-vite": "^0.3.10",
     "@tanstack/react-devtools": "^0.7.8",

@@ -99,7 +99,7 @@ async function vitePlugin(opts: RaypxVitePluginOptions): Promise<PluginOption> {
 
   return [
     {
-      name: "@raypx/vite-plugin",
+      name: "@raypx/i18n-plugin",
       enforce: "pre",
       async configResolved() {
         virtualModules["\0@raypx/i18n/messages"] = createVirtualModule(outDir, "messages.js");
