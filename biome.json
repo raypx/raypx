@@ -62,6 +62,9 @@
     "formatter": {
       "enabled": true,
       "quoteStyle": "double"
+    },
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "assist": {

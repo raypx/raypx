@@ -3,19 +3,21 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./server": {
-      "default": "./dist/server.js",
-      "types": "./dist/server.d.ts"
+    "./types": "./types.d.ts",
+    "./vite": {
+      "import": "./dist/vite.js",
+      "types": "./dist/vite.d.ts",
+      "require": "./dist/vite.cjs"
     },
     "./envs": "./src/envs.ts"
   },
+  "main": "./dist/index.js",
+  "types": "./types.d.ts",
   "scripts": {
     "build": "tsdown",
     "clean": "rimraf dist .turbo",
@@ -25,13 +27,16 @@
   "dependencies": {
     "@inlang/cli": "^3.0.12",
     "@inlang/paraglide-js": "^2.4.0",
-    "lodash-es": "^4.17.21",
-    "@raypx/env": "workspace:*"
+    "@raypx/env": "workspace:*",
+    "fs-extra": "catalog:",
+    "jiti": "catalog:",
+    "lodash-es": "^4.17.21"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@types/node": "catalog:",
+    "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
     "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:"

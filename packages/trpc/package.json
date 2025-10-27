@@ -15,9 +15,9 @@
     "@raypx/auth": "workspace:*",
     "@raypx/db": "workspace:*",
     "@tanstack/react-query": "catalog:",
-    "@trpc/client": "^11.6.0",
-    "@trpc/server": "^11.6.0",
-    "@trpc/tanstack-react-query": "^11.6.0",
+    "@trpc/client": "^11.7.0",
+    "@trpc/server": "^11.7.0",
+    "@trpc/tanstack-react-query": "^11.7.0",
     "superjson": "catalog:",
     "zod": "catalog:"
   },

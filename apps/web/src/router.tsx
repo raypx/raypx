@@ -1,4 +1,5 @@
 import { routeTree } from "@output/route-tree";
+import { deLocalizeUrl, localizeUrl } from "@raypx/i18n/runtime";
 import type { AppRouter } from "@raypx/trpc";
 import { TRPCProvider } from "@raypx/trpc/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,7 +8,6 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { createTRPCClient, httpBatchStreamLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
-import { deLocalizeUrl, localizeUrl } from "@/lib/i18n/runtime";
 import { DefaultCatchBoundary } from "./components/default-catch-boundary";
 import { NotFound } from "./components/not-found";
 
@@ -54,8 +54,14 @@ export const getRouter = () => {
     defaultNotFoundComponent: () => <NotFound />,
     scrollRestoration: true,
     rewrite: {
-      input: ({ url }) => deLocalizeUrl(url),
-      output: ({ url }) => localizeUrl(url),
+      input: ({ url }) => {
+        if (url.pathname.startsWith("/api")) return url;
+        return deLocalizeUrl(url);
+      },
+      output: ({ url }) => {
+        if (url.pathname.startsWith("/api")) return url;
+        return localizeUrl(url);
+      },
     },
     Wrap: (props) => {
       return (

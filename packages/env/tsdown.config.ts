@@ -6,5 +6,6 @@ export default defineConfig({
   format: "esm",
   shims: true,
   clean: false,
+  logLevel: "error",
   platform: "neutral",
 });

@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@types/fs-extra": "^11.0.4",
+    "@types/fs-extra": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs-parser": "^21.0.3",
     "type-fest": "catalog:",

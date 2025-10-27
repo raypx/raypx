@@ -21,13 +21,13 @@
     "nodemailer": "^7.0.10",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "resend": "^6.2.2"
+    "resend": "^6.3.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@react-email/components": "^0.5.7",
     "@types/node": "catalog:",
-    "@types/nodemailer": "^7.0.2",
+    "@types/nodemailer": "^7.0.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "typescript": "catalog:dev"
