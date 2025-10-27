@@ -1,15 +1,9 @@
 import { existsSync } from "node:fs";
-import path, { join } from "node:path";
+import path from "node:path";
 import { compile, paraglideVitePlugin } from "@inlang/paraglide-js";
 import fs from "fs-extra";
-import { trimEnd } from "lodash-es";
 import type { Plugin, PluginOption } from "vite";
-
-export const urls = ["/api/:path(.*)?", "/", "/docs", "/:path(.*)", "/:path(.*)?"];
-export const outDir = ".output";
-
-export const locales = ["en", "zh"];
-export const baseLocale = "en";
+import { urlPatterns } from ".";
 
 export type Strategy =
   | "cookie"
@@ -20,18 +14,21 @@ export type Strategy =
   | "localStorage"
   | `custom-${string}`;
 
-export type RaypxVitePluginOptions = {
-  strategy: Strategy[];
-  cookieName?: string;
-  outputStructure?: "locale-modules" | "message-modules";
+export const I18N_DEFAULTS = {
+  outputStructure: "message-modules" as const,
+  cookieName: "lang",
+  strategy: ["url", "cookie", "preferredLanguage", "baseLocale"] as Strategy[],
+  inlangDir: "inlang",
+  cacheDir: "node_modules/.raypx",
 };
 
-export const urlPatterns = [
-  ...(urls.map((u) => ({
-    pattern: u,
-    localized: locales.map((l) => [l, u.startsWith("/api") ? u : trimEnd(join("/", l, u), "/")]),
-  })) satisfies { pattern: string; localized: [string, string][] }[]),
-];
+export type RaypxVitePluginOptions = {
+  strategy?: Strategy[];
+  cookieName?: string;
+  outputStructure?: "locale-modules" | "message-modules";
+  inlangDir?: string;
+  cacheDir?: string;
+};
 
 const virtualIds = new Set<string>([
   "@raypx/i18n/runtime",
@@ -61,17 +58,23 @@ function createVirtualModule(rootDir: string, file: string, exports = "*"): stri
  * in development mode as a fallback.
  *
  * Virtual modules:
- * - @raypx/i18n/runtime  -> .output/paraglide/runtime.js
- * - @raypx/i18n/server   -> .output/paraglide/server.js
- * - @raypx/i18n/messages -> .output/paraglide/messages.js
+ * - @raypx/i18n/runtime  -> node_modules/.raypx/paraglide/runtime.js
+ * - @raypx/i18n/server   -> node_modules/.raypx/paraglide/server.js
+ * - @raypx/i18n/messages -> node_modules/.raypx/paraglide/messages.js
  */
-async function vitePlugin(opts: RaypxVitePluginOptions): Promise<PluginOption> {
+async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOption> {
   const virtualModules: Record<string, string> = {};
-  const cacheDir = path.join(process.cwd(), "node_modules", ".raypx");
-  const outDir = path.join(cacheDir, "paraglide");
-  fs.ensureDirSync(cacheDir);
-  const inlangDirName = "inlang";
-  const projectPath = path.join(process.cwd(), inlangDirName);
+  const {
+    outputStructure = I18N_DEFAULTS.outputStructure,
+    cookieName = I18N_DEFAULTS.cookieName,
+    strategy = I18N_DEFAULTS.strategy,
+    inlangDir = I18N_DEFAULTS.inlangDir,
+    cacheDir = I18N_DEFAULTS.cacheDir,
+  } = opts;
+  const cacheDirPath = path.join(process.cwd(), cacheDir);
+  const outDir = path.join(cacheDirPath, "paraglide");
+  fs.ensureDirSync(cacheDirPath);
+  const projectPath = path.join(process.cwd(), inlangDir);
 
   /**
    * Compile paraglide if output doesn't exist
@@ -80,21 +83,17 @@ async function vitePlugin(opts: RaypxVitePluginOptions): Promise<PluginOption> {
   async function ensureParaglideCompiled(): Promise<void> {
     // Check if paraglide output exists
     if (!existsSync(outDir)) {
-      try {
-        await compile({
-          project: projectPath,
-          outdir: outDir,
-          outputStructure: "message-modules",
-          cookieName: "lang",
-          strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
-          urlPatterns,
-        });
-      } catch (error) {
-        // throw error;
-        console.error(error);
-      }
+      await compile({
+        project: projectPath,
+        outdir: outDir,
+        outputStructure,
+        cookieName,
+        strategy,
+        urlPatterns,
+      });
     }
   }
+
   await ensureParaglideCompiled();
 
   return [
@@ -110,7 +109,6 @@ async function vitePlugin(opts: RaypxVitePluginOptions): Promise<PluginOption> {
         if (virtualIds.has(id)) return `\0${id}`;
         return null;
       },
-
       load(id) {
         return virtualModules[id] ?? null;
       },
@@ -118,9 +116,9 @@ async function vitePlugin(opts: RaypxVitePluginOptions): Promise<PluginOption> {
     paraglideVitePlugin({
       project: projectPath,
       outdir: outDir,
-      outputStructure: opts.outputStructure,
-      cookieName: opts.cookieName,
-      strategy: opts.strategy,
+      outputStructure,
+      cookieName,
+      strategy,
       urlPatterns,
       cleanOutdir: false,
     }),

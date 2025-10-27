@@ -1,5 +1,4 @@
 import netlify from "@netlify/vite-plugin-tanstack-start";
-import { outDir } from "@raypx/i18n";
 import i18nPlugin from "@raypx/i18n/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
@@ -11,6 +10,7 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
+const outDir = ".output";
 const jiti = createJiti(import.meta.url);
 
 const config = defineConfig(async ({ mode }) => {
