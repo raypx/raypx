@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { trimEnd } from "lodash-es";
 
-export const urls = ["/api/:path(.*)?", "/", "/docs", "/:path(.*)", "/:path(.*)?"];
+export const urls = ["/", "/docs", "/:path(.*)", "/:path(.*)?"];
 export const locales = ["en", "zh"];
 export const baseLocale = "en";
 

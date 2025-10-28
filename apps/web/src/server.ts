@@ -15,11 +15,17 @@ const STATIC_ASSET_PATTERN = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|
 
 /**
  * Check if a request should skip i18n processing
+ * Optimized for performance with traditional for loop and null safety
  */
 function shouldSkipI18n(pathname: string): boolean {
-  return (
-    SKIP_I18N_PATHS.some((path) => pathname.startsWith(path)) || STATIC_ASSET_PATTERN.test(pathname)
-  );
+  // Check skip paths using traditional for loop with null safety
+  for (let i = 0; i < SKIP_I18N_PATHS.length; i++) {
+    const i18nPath = SKIP_I18N_PATHS[i];
+    if (i18nPath && pathname.startsWith(i18nPath)) return true;
+  }
+
+  // Check static assets pattern last (least common case)
+  return STATIC_ASSET_PATTERN.test(pathname);
 }
 
 export default {
