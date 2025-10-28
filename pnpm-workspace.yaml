@@ -22,7 +22,7 @@ catalog:
   jiti: ^2.6.1
   lodash-es: ^4.17.21
   lucide-react: ^0.548.0
-  nitro: npm:nitro-nightly@latest
+  nitro: npm:nitro-nightly@3.1.0-20251028-004953-57503e42
   react-hook-form: 7.65.0
   rimraf: ^6.0.1
   superjson: ^2.2.3
@@ -36,7 +36,7 @@ catalogs:
   dev:
     '@biomejs/biome': ^2.3.1
     lefthook: ^2.0.1
-    tsdown: ^0.15.10
+    tsdown: ^0.15.11
     typescript: ~5.9.3
   react19:
     '@types/react': ^19.2.2
