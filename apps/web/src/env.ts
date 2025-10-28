@@ -13,6 +13,7 @@ const env = createEnv({
     NODE_ENV: z.enum(["development", "production"]).default("development"),
     MODE: z.string().optional(),
     VERCEL: z.coerce.boolean().optional().default(false),
+    PORT: z.coerce.number().optional().default(3000),
   },
   server: {
     VERCEL_URL: z.string().optional(),

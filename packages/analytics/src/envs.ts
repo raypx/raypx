@@ -11,4 +11,7 @@ export const envs = createEnv({
     VITE_PUBLIC_ANALYTICS_DISABLED: z.coerce.boolean().optional(),
     VITE_PUBLIC_ANALYTICS_DEBUG: z.coerce.boolean().optional(),
   },
+  shared: {
+    NODE_ENV: z.enum(["development", "production"]).default("development"),
+  },
 });

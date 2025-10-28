@@ -17,12 +17,12 @@ import { ZodError, z } from "zod/v4";
  * Options for creating the tRPC context
  * These are the inputs required to build the request context
  */
-export interface CreateTRPCContextOptions {
+export type CreateTRPCContextOptions = {
   /**
    * Request headers containing authentication and metadata
    */
   readonly headers: Headers;
-}
+};
 
 /**
  * Creates the tRPC context for each request

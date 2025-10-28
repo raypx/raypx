@@ -4,19 +4,21 @@
   "private": true,
   "description": "Environment validation with extends support (forked from @t3-oss/t3-env)",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "build": "tsdown",
     "test": "vitest",
     "test:watch": "vitest --watch"
   },
   "dependencies": {
     "type-fest": "catalog:",
+    "lodash-es": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "tsdown": "catalog:dev",
     "typescript": "catalog:dev",

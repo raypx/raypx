@@ -4,6 +4,7 @@ import { TanstackProvider } from "fumadocs-core/framework/tanstack";
 import { defineI18nUI } from "fumadocs-ui/i18n";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import { docsI18nConfig } from "@/lib/docs/i18n";
+import appCss from "@/styles/mdx.css?url";
 
 const translations = {
   zh: {
@@ -39,4 +40,12 @@ function DocsLayout() {
 
 export const Route = createFileRoute("/docs")({
   component: DocsLayout,
+  head: async () => ({
+    links: [
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+    ],
+  }),
 });

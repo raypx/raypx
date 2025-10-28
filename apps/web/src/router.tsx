@@ -9,24 +9,24 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 import { DefaultCatchBoundary } from "./components/default-catch-boundary";
 import { NotFound } from "./components/not-found";
+import env from "./env";
 import { routeTree } from "./routeTree.gen";
 
 function getUrl() {
   const base = (() => {
     if (typeof window !== "undefined") return "";
-    return `http://localhost:${process.env.PORT ?? 3000}`;
+    return `http://localhost:${env.PORT ?? 3000}`;
   })();
   return `${base}/api/trpc`;
 }
 
-const createQueryClient = () => {
-  return new QueryClient({
+const createQueryClient = () =>
+  new QueryClient({
     defaultOptions: {
       dehydrate: { serializeData: superjson.serialize },
       hydrate: { deserializeData: superjson.deserialize },
     },
   });
-};
 
 export const getRouter = () => {
   const queryClient = createQueryClient();

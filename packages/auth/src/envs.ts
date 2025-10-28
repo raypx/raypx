@@ -1,8 +1,8 @@
 import { envs as email } from "@raypx/email/envs";
 import { createEnv, z } from "@raypx/env";
 
-export const envs = () =>
-  createEnv({
+export function envs() {
+  return createEnv({
     extends: [email()],
     server: {
       AUTH_GITHUB_ID: z.string().min(1),
@@ -11,3 +11,4 @@ export const envs = () =>
       AUTH_DOMAIN: z.string().min(1).optional(),
     },
   });
+}

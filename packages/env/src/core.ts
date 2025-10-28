@@ -233,10 +233,10 @@ export interface ClientOptions<
  * This interface is used to define the schema for your
  * server-side environment variables.
  */
-export interface ServerOptions<
+export type ServerOptions<
   TPrefix extends string | undefined,
   TServer extends StandardSchemaDictionary,
-> {
+> = {
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app isn't
    * built with invalid env vars.
@@ -252,20 +252,20 @@ export interface ServerOptions<
               : never} should not prefixed with ${TPrefix}.`>
           : TServer[TKey];
   }>;
-}
+};
 
-export interface CreateSchemaOptions<
+export type CreateSchemaOptions<
   TServer extends StandardSchemaDictionary,
   TClient extends StandardSchemaDictionary,
   TShared extends StandardSchemaDictionary,
   TFinalSchema extends StandardSchemaV1,
-> {
+> = {
   /**
    * A custom function to combine the schemas.
    * Can be used to add further refinement or transformation.
    */
   createFinalSchema?: (shape: TServer & TClient & TShared, isServer: boolean) => TFinalSchema;
-}
+};
 
 export type ServerClientOptions<
   TPrefix extends string | undefined,

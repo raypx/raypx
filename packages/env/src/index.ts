@@ -2,6 +2,7 @@
  * @fileoverview Environment validation with extends support
  * Forked from @t3-oss/t3-env
  */
+import { pick } from "lodash-es";
 import type {
   CreateEnv,
   CreateSchemaOptions,
@@ -56,7 +57,7 @@ export function createEnv<
     opts.isServer ?? (typeof window === "undefined" || import.meta?.env?.SSR || "Deno" in window);
 
   const runtimeEnv = {
-    ...(!isServer ? {} : process.env),
+    ...(!isServer ? pick(process.env, Object.keys(shared ?? {})) : process.env),
     ...import.meta?.env,
   };
 

@@ -2,6 +2,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Fumadocs UI */
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
 @source "../../../../{packages,apps}/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
 
