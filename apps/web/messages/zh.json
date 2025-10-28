@@ -1,5 +1,9 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+  "meta": {
+    "title": "Raypx",
+    "description": "基于 TanStack Start 和 React 19 构建的现代高性能 Web 应用平台，专为构建可扩展的 AI 应用而设计，提供无妥协的类型安全。"
+  },
   "languages": {
     "label": "语言",
     "values": {
@@ -88,7 +92,6 @@
   "layout": {
     "nav": {
       "home": "首页",
-      "title": "Raypx",
       "docs": "文档",
       "application": "应用",
       "dashboard": "仪表盘",

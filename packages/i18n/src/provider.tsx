@@ -3,7 +3,7 @@ import { getLocale, type Locale, setLocale as setLocaleRuntime } from "@raypx/i1
 import { get } from "lodash-es";
 import { createContext, useCallback, useContext, useMemo } from "react";
 
-type TranslateFunction = (key: string, params?: Record<string | number, unknown>) => string;
+export type TranslateFunction = (key: string, params?: Record<string | number, unknown>) => string;
 
 export type I18nContextType = {
   locale: string;
@@ -18,7 +18,7 @@ export type I18nProviderProps = {
   locale?: string;
 };
 
-const createTranslateFunction = (namespace: string | undefined) => {
+export const createTranslateFunction = (namespace: string | undefined) => {
   return (localeKey: string, params?: Record<string | number, unknown>) => {
     const fn: (...args: any[]) => string = get(
       m,
@@ -31,7 +31,7 @@ const createTranslateFunction = (namespace: string | undefined) => {
 export function I18nProvider({ children, locale }: I18nProviderProps) {
   const setLocale = useCallback((locale: string) => {
     setLocaleRuntime(locale as Locale);
-  }, []);
+  }, [locale]);
 
   return (
     <I18nContext.Provider
@@ -52,6 +52,6 @@ export function useLocale(namespace?: string) {
     throw new Error("useLocale must be used within an I18nProvider");
   }
   const { locale, setLocale, createTranslateFunction } = context;
-  const t = useMemo(() => createTranslateFunction(namespace), [createTranslateFunction, namespace]);
+  const t = useMemo(() => createTranslateFunction(namespace), [createTranslateFunction, namespace, locale]);
   return { locale, setLocale, t };
 }

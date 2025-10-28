@@ -1,6 +1,9 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "example_message": "Hello world {username}",
+  "meta": {
+    "title": "Raypx",
+    "description": "A modern, high-performance web application platform for building scalable AI-powered applications."
+  },
   "languages": {
     "label": "Language",
     "values": {
@@ -89,7 +92,6 @@
   "layout": {
     "nav": {
       "home": "Home",
-      "title": "Raypx",
       "docs": "Docs",
       "application": "Application",
       "dashboard": "Dashboard",

@@ -1,10 +1,13 @@
 import { getLocale } from "@raypx/i18n/runtime";
 import { createFileRoute } from "@tanstack/react-router";
-import { clientLoader, DocsPageComponent } from "./-components/docs-page";
+import { createClientLoader } from "./-components/client.loader";
+import { DocsPageComponent } from "./-components/docs-page";
 import { serverLoader } from "./-components/loader";
 
+const clientLoader = createClientLoader();
+
 export const Route = createFileRoute("/docs/$")({
-  component: () => <DocsPageComponent Route={Route} />,
+  component: () => <DocsPageComponent loader={clientLoader} Route={Route} />,
   loader: async ({ params }) => {
     const lang = getLocale();
     const data = await serverLoader({
