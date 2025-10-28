@@ -155,5 +155,10 @@
     "errors": {
       "EMAIL_AND_PASSWORD_IS_NOT_ENABLED": "邮箱和密码未启用"
     }
+  },
+  "not-found": {
+    "title": "未找到",
+    "description": "您正在寻找的页面不存在。",
+    "backToHome": "返回首页"
   }
 }
