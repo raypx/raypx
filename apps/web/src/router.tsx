@@ -1,4 +1,3 @@
-import { routeTree } from "@output/route-tree";
 import { deLocalizeUrl, localizeUrl } from "@raypx/i18n/runtime";
 import type { AppRouter } from "@raypx/trpc";
 import { TRPCProvider } from "@raypx/trpc/client";
@@ -10,6 +9,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 import { DefaultCatchBoundary } from "./components/default-catch-boundary";
 import { NotFound } from "./components/not-found";
+import { routeTree } from "./routeTree.gen";
 
 function getUrl() {
   const base = (() => {

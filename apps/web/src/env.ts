@@ -12,6 +12,7 @@ const env = createEnv({
   shared: {
     NODE_ENV: z.enum(["development", "production"]).default("development"),
     MODE: z.string().optional(),
+    VERCEL: z.coerce.boolean().optional().default(false),
   },
   server: {
     VERCEL_URL: z.string().optional(),

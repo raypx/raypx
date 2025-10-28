@@ -1,4 +1,3 @@
-import { docs } from "@output/.source";
 import { Icon } from "@raypx/ui/components/icon";
 import type { AnyRoute } from "@tanstack/react-router";
 import type * as PageTree from "fumadocs-core/page-tree";
@@ -8,6 +7,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
 import { useMemo } from "react";
 import { baseOptions } from "@/lib/layout.shared";
+import { docs } from "../../../../.source";
 import type { LoaderData } from "./loader";
 
 export const clientLoader = createClientLoader(docs.doc, {

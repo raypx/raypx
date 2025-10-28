@@ -9,52 +9,46 @@ import { createJiti } from "jiti";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
+import * as sourceConfig from "./source.config";
 
-const outDir = ".output";
 const jiti = createJiti(import.meta.url);
 
-const config = defineConfig(async ({ mode }) => {
-  const env: Record<string, string> = await jiti.import("./src/env.ts", { default: true });
+// Environment variables
+const env = await jiti.import<typeof import("./src/env").default>("./src/env", { default: true });
 
-  const isDev = mode === "development" || env.NODE_ENV === "development";
-  return {
-    server: {
-      port: 3000,
-      open: isDev,
+const isDev = env.NODE_ENV === "development";
+
+export default defineConfig({
+  server: {
+    port: 3000,
+    open: isDev,
+  },
+  build: {
+    sourcemap: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      // Workaround: fumadocs internally imports next/server which causes build errors
+      external: ["next/server"],
     },
-    build: {
-      sourcemap: true,
-      chunkSizeWarningLimit: 1000,
-      rollupOptions: { external: ["next/server"] },
-    },
-    ssr: { noExternal: ["urlpattern-polyfill"] },
-    plugins: [
-      i18nPlugin({
-        outputStructure: isDev ? "locale-modules" : "message-modules",
-        cookieName: "lang",
-        strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],
-      }),
-      mdx(await import("./source.config"), { outDir: `./${outDir}/.source` }),
-      devtools({
-        enhancedLogs: {
-          enabled: false,
-        },
-        injectSource: {
-          enabled: false,
-        },
-      }),
-      tsConfigPaths(),
-      process.env.VERCEL || isDev ? nitro() : netlify(),
-      tailwindcss(),
-      tanstackStart({
-        router: {
-          routesDirectory: "app",
-          generatedRouteTree: `../${outDir}/route-tree.ts`,
-        },
-      }),
-      viteReact(),
-    ],
-  };
+  },
+  plugins: [
+    i18nPlugin({
+      outputStructure: isDev ? "locale-modules" : "message-modules",
+    }),
+    mdx(sourceConfig),
+    // Always include for production tree-shaking
+    devtools({
+      enhancedLogs: { enabled: false },
+      injectSource: { enabled: false },
+    }),
+    tsConfigPaths(),
+    tanstackStart({
+      router: { routesDirectory: "app" },
+    }),
+    // Must come after tanstackStart
+    viteReact(),
+    tailwindcss(),
+    // Use nitro for dev + Vercel, netlify for other platforms
+    isDev || env.VERCEL ? nitro() : netlify(),
+  ],
 });
-
-export default config;

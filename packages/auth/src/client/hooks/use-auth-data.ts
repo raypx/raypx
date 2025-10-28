@@ -1,8 +1,7 @@
 import { useLocale } from "@raypx/i18n/client";
 import { toast } from "@raypx/ui/components/toast";
-import { useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { authDataCache } from "../context/auth-data";
-// import { getLocalizedError } from "../lib/utils"
 import { useAuth } from "./use-auth";
 
 export type FetchError = {

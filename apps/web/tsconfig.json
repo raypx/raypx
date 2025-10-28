@@ -7,7 +7,6 @@
     "allowJs": false,
     "paths": {
       "@/*": ["./src/*"],
-      "@output/*": ["./.output/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]
     }
   }

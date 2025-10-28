@@ -22,7 +22,6 @@ export * from "./empty";
 export * from "./field";
 export * from "./form";
 export * from "./hover-card";
-export * from "./i18n-provider";
 export * from "./icon";
 export * from "./image";
 export * from "./input";
