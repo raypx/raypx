@@ -9,6 +9,7 @@
       "types": "./dist/index.d.ts"
     },
     "./types": "./types.d.ts",
+    "./client": "./src/client.ts",
     "./vite": {
       "import": "./dist/vite.js",
       "types": "./dist/vite.d.ts",
@@ -30,13 +31,15 @@
     "@raypx/env": "workspace:*",
     "fs-extra": "catalog:",
     "jiti": "catalog:",
-    "lodash-es": "^4.17.21"
+    "lodash-es": "^4.17.21",
+    "react": "catalog:react19"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
     "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:"

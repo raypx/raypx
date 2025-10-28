@@ -1,5 +1,5 @@
+import { useLocale } from "@raypx/i18n/client";
 import { toast } from "@raypx/ui/components/toast";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { authDataCache } from "../context/auth-data";
 // import { getLocalizedError } from "../lib/utils"

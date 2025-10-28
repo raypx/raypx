@@ -1,7 +1,7 @@
+import { useLocale } from "@raypx/i18n/client";
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button } from "@raypx/ui/components/button";
 import { Separator } from "@raypx/ui/components/separator";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { Link } from "@tanstack/react-router";
 import { Github, Twitter } from "lucide-react";
 import Container from "./container";

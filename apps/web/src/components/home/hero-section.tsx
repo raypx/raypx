@@ -1,5 +1,5 @@
+import { useLocale } from "@raypx/i18n/client";
 import { Button } from "@raypx/ui/components";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Github, Sparkles } from "lucide-react";
 import Container from "@/components/layout/container";

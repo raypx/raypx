@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/client";
 import {
   Card,
   CardContent,
@@ -5,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import {
   Bot,
   Database,

@@ -1,4 +1,4 @@
-import { useLocale } from "@raypx/ui/hooks/use-locale";
+import { useLocale } from "@raypx/i18n/client";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { TanstackProvider } from "fumadocs-core/framework/tanstack";
 import { defineI18nUI } from "fumadocs-ui/i18n";

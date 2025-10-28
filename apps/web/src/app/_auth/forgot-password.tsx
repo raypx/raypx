@@ -23,7 +23,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { isValidEmail } from "../../utils/email";
 
-function SignUpPage() {
+function ForgotPasswordPage() {
   const { t } = useLocale("auth");
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
@@ -155,7 +155,7 @@ function SignUpPage() {
                 {credentials?.forgotPassword && (
                   <Link
                     className="text-sm hover:underline"
-                    search={isHydrated ? window.location.search : undefined}
+                    search={isHydrated ? window.location.search : ""}
                     to="/forgot-password"
                   >
                     {t("forgotPassword")}
@@ -211,6 +211,6 @@ function SignUpPage() {
   );
 }
 
-export const Route = createFileRoute("/_auth/sign-up")({
-  component: SignUpPage,
+export const Route = createFileRoute("/_auth/forgot-password")({
+  component: ForgotPasswordPage,
 });

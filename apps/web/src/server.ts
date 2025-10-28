@@ -1,5 +1,6 @@
 import { paraglideMiddleware } from "@raypx/i18n/server";
 import handler from "@tanstack/react-start/server-entry";
+import type { Promisable } from "type-fest";
 
 /**
  * Paths that should bypass i18n middleware
@@ -29,7 +30,7 @@ function shouldSkipI18n(pathname: string): boolean {
 }
 
 export default {
-  fetch(req: Request) {
+  fetch(req: Request): Promisable<Response> {
     const { pathname } = new URL(req.url);
 
     // Skip i18n for:

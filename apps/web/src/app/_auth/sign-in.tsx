@@ -1,6 +1,7 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth, useOnSuccessTransition } from "@raypx/auth";
+import { useLocale } from "@raypx/i18n/client";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -15,7 +16,6 @@ import {
   PasswordField,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -25,14 +25,13 @@ import { isValidEmail } from "../../utils/email";
 
 function SignInPage() {
   const { t } = useLocale("auth");
-  const { credentials, auth, navigate, redirectTo } = useAuth();
+  const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting] = useState(false);
   const { onSuccess } = useOnSuccessTransition({ redirectTo: redirectTo });
 
   const rememberMeEnabled = credentials?.rememberMe;
   const usernameEnabled = credentials?.username;
-  const contextPasswordValidation = credentials?.passwordValidation;
 
   const formSchema = z.object({
     email: usernameEnabled
@@ -156,7 +155,8 @@ function SignInPage() {
                 {credentials?.forgotPassword && (
                   <Link
                     className="text-sm hover:underline"
-                    href={`/forgot-password${isHydrated ? window.location.search : ""}`}
+                    search={isHydrated ? window.location.search : ""}
+                    to="/forgot-password"
                   >
                     {t("forgotPassword")}
                   </Link>

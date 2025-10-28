@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/client";
 import { Button } from "@raypx/ui/components/button";
 import {
   DropdownMenu,
@@ -5,7 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { cn } from "@raypx/ui/lib/utils";
 import { Check, Languages } from "lucide-react";
 

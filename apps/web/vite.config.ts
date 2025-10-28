@@ -29,7 +29,7 @@ const config = defineConfig(async ({ mode }) => {
     },
     ssr: { noExternal: ["urlpattern-polyfill"] },
     plugins: [
-      await i18nPlugin({
+      i18nPlugin({
         outputStructure: isDev ? "locale-modules" : "message-modules",
         cookieName: "lang",
         strategy: ["url", "cookie", "preferredLanguage", "baseLocale"],

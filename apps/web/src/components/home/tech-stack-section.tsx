@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/client";
 import { Badge } from "@raypx/ui/components/badge";
 import {
   Tooltip,
@@ -5,7 +6,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@raypx/ui/components/tooltip";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import Container from "@/components/layout/container";
 
 type TechItem = {

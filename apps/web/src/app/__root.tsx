@@ -1,5 +1,6 @@
 import { Analytics } from "@raypx/analytics";
 import { AuthProvider } from "@raypx/auth";
+import { I18nProvider } from "@raypx/i18n/client";
 import { getLocale } from "@raypx/i18n/runtime";
 import type { AppRouter } from "@raypx/trpc";
 import { Toaster } from "@raypx/ui/components/sonner";
@@ -9,7 +10,6 @@ import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanst
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
 import { Devtools } from "@/components/layout/devtools";
-import { I18nProvider } from "@/components/layout/i18n-provider";
 import Loading from "@/components/layout/loading";
 import NotFound from "@/components/layout/not-found";
 import appCss from "@/styles/globals.css?url";

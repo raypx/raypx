@@ -1,3 +1,4 @@
+import { useLocale } from "@raypx/i18n/client";
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button, buttonVariants } from "@raypx/ui/components/button";
 import {
@@ -8,7 +9,6 @@ import {
   navigationMenuTriggerStyle,
 } from "@raypx/ui/components/navigation-menu";
 import { Skeleton } from "@raypx/ui/components/skeleton";
-import { useLocale } from "@raypx/ui/hooks/use-locale";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
