@@ -1,5 +1,4 @@
-import type { ListrTask } from "listr2";
-import { createTask, defineCommand, runTasks } from "../lib/task";
+import { createTask, defineCommand, runTasks, type Task } from "../lib/task";
 import { generateAllComponentExports } from "../utils";
 
 const postinstallCmd = defineCommand({
@@ -9,10 +8,10 @@ const postinstallCmd = defineCommand({
     const tasks = [
       !process.env.VERCEL && createTask("pnpm exec lefthook install", "Install Lefthook"),
       createTask("Generate UI component exports", () => generateAllComponentExports()),
-    ].filter(Boolean) as ListrTask[];
+    ];
 
     // Serial execution to ensure proper setup order
-    await runTasks(tasks, false);
+    await runTasks(tasks);
   },
 });
 

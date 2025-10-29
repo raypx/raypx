@@ -22,7 +22,7 @@
     "build": "turbo build",
     "changeset": "changeset",
     "check": "biome check",
-    "clean": "turbo clean",
+    "clean": "raypx-scripts clean",
     "coverage": "vitest --coverage",
     "dev": "turbo --filter=web dev",
     "format": "raypx-scripts format",
@@ -57,7 +57,7 @@
     "vitest": "catalog:",
     "zod": "catalog:"
   },
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.20.0",
   "engines": {
     "node": ">=20",
     "pnpm": ">=10.0.0"

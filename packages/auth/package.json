@@ -21,7 +21,7 @@
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-start": "catalog:",
-    "better-auth": "^1.3.33",
+    "better-auth": "^1.3.34",
     "react": "catalog:react19"
   },
   "devDependencies": {

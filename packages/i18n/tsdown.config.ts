@@ -6,5 +6,4 @@ export default defineConfig({
   shims: true,
   format: ["esm", "cjs"],
   logLevel: "error",
-  noExternal: [/@raypx/],
 });

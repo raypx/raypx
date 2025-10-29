@@ -30,26 +30,23 @@ const cleanCmd = defineCommand({
   cmd: "clean",
   description: "Clean build artifacts and cache files",
   run: async () => {
-    await runTasks(
-      [
-        createTask("pnpm -r --if-present --parallel clean", "Workspace clean"),
-        createTask("Clean files and directories", async (_, task) => {
-          try {
-            await rimraf(ALL_CLEAN_PATTERNS, {
-              glob: {
-                cwd: PROJECT_ROOT,
-              },
-            });
-
-            task.title = `Cleaned ${ALL_CLEAN_PATTERNS.length} patterns successfully`;
-          } catch (error) {
-            task.title = "File cleaning failed";
-            throw new Error(`File cleaning failed: ${error}`);
-          }
-        }),
-      ],
-      false, // Serial execution - workspace clean must complete first
-    );
+    const tasks = [
+      createTask("pnpm -r --if-present --parallel clean", "Workspace clean"),
+      createTask("Clean files and directories", async (ctx) => {
+        try {
+          await rimraf(ALL_CLEAN_PATTERNS, {
+            glob: {
+              cwd: PROJECT_ROOT,
+            },
+          });
+          ctx.title = "Cleaned files and directories successfully";
+        } catch (error) {
+          ctx.title = "File cleaning failed";
+          throw new Error(`File cleaning failed: ${error}`);
+        }
+      }),
+    ];
+    await runTasks(tasks);
   },
 });
 

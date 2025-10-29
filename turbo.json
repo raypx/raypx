@@ -61,10 +61,6 @@
       ],
       "outputs": ["coverage/**", "test-results/**"]
     },
-    "clean": {
-      "cache": false,
-      "persistent": true
-    },
     "shadcn": {
       "cache": false,
       "interactive": true

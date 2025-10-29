@@ -30,20 +30,14 @@ Common use cases:
       throw new Error("No command provided. Usage: raypx-scripts run <command> [args...]");
     }
 
-    try {
-      // Environment variables are already loaded by cli.ts
-      // Just execute the command with inherited env
-      await execaCommand(args.join(" "), {
-        cwd: process.cwd(),
-        env: process.env,
-        stdio: "inherit",
-        shell: true,
-      });
-    } catch (error) {
-      // execa will handle the error output and exit code
-      // We just need to propagate the failure
-      throw error;
-    }
+    // Environment variables are already loaded by cli.ts
+    // Just execute the command with inherited env
+    await execaCommand(args.join(" "), {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: "inherit",
+      shell: true,
+    });
   },
 });
 

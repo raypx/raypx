@@ -12,8 +12,8 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "type-fest": "catalog:",
     "lodash-es": "catalog:",
+    "type-fest": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

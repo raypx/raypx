@@ -4,22 +4,24 @@
  * This command runs Biome to format code, check for issues, and enforce
  * coding standards across the project.
  */
-import { defineCommand } from "../lib/task";
-import { safeExecAsync } from "../utils";
+import { createTask, defineCommand, runTasks, type Task } from "../lib/task";
 
 /**
- * Main format command - simplified to direct execution
- * Single task doesn't need listr2 overhead
+ * Main format command using task orchestration
+ * Provides consistent logging and error handling across all commands
  */
 const formatCmd = defineCommand({
   cmd: "format",
   description: "Format and check code using Biome",
   run: async () => {
-    const result = await safeExecAsync("pnpm exec biome check --write .");
-
-    if (!result.success) {
-      throw result.error || new Error("Biome formatting and checking failed");
-    }
+    const tasks = [
+      createTask("pnpm exec biome check --write .", {
+        title: "Formatting with Biome",
+        successTitle: "Formatted code successfully",
+        failureMessage: "Biome formatting failed",
+      }),
+    ];
+    await runTasks(tasks);
   },
 });
 

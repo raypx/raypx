@@ -1,31 +1,11 @@
-/**
- * CLI for raypx-scripts
- *
- * ⚠️  IMPORTANT: Parameter Handling Logic
- *
- * This CLI uses a specific parameter handling strategy to avoid common pitfalls:
- *
- * 1. Global flags (--help, --debug, --verbose) are parsed with yargs-parser
- * 2. Command arguments are extracted directly from rawArgs to preserve all flags
- * 3. Global flags are only processed when appropriate (no subcommand arguments)
- *
- * ❌ WRONG: Using parsed._ for command arguments (strips flags from subcommands)
- * ✅ CORRECT: Using rawArgs directly for command arguments (preserves all flags)
- *
- * Example:
- * - "raypx-scripts run pnpm --version" → remainingArgs = ["pnpm", "--version"] ✅
- * - NOT: remainingArgs = ["pnpm"] ❌
- */
-/** biome-ignore-all lint/suspicious/noConsole: console is used for logging */
-
 import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenvx from "@dotenvx/dotenvx";
-import { logger } from "@raypx/shared/logger";
+import { logger, setSilentMode } from "@raypx/shared/logger";
 import { createJiti } from "jiti";
 import yargsParser from "yargs-parser";
-import type { DefinedCmd } from "./lib/task";
+import type { Command } from "./lib/task";
 import { formatDuration, PROJECT_ROOT } from "./utils";
 
 const jiti = createJiti(import.meta.url);
@@ -34,6 +14,8 @@ const globalOptions = [
   ["--help, -h", "Show this help message"],
   ["--debug, -d", "Enable debug logging"],
   ["--verbose, -V", "Enable verbose output"],
+  ["--silent, -s", "Suppress all non-error output"],
+  ["--dry-run", "Preview actions without executing them"],
 ] as const;
 
 /**
@@ -57,7 +39,7 @@ async function discoverCommands(): Promise<
       const modulePath = `./cmd/${commandName}`;
 
       try {
-        const module: DefinedCmd = await jiti.import(modulePath, { default: true });
+        const module: Command = await jiti.import(modulePath, { default: true });
         commands[commandName] = {
           name: module?.cmd || commandName,
           desc: module?.description,
@@ -86,9 +68,9 @@ async function showCommandHelp(commandInfo: {
 }): Promise<void> {
   // Try to load the command module to get additional help info
   try {
-    const cmd: DefinedCmd = await jiti.import(commandInfo.file, { default: true });
+    const cmd: Command = await jiti.import(commandInfo.file, { default: true });
 
-    console.log(`
+    logger.log(`
 Usage: raypx-scripts ${commandInfo.name}
 
 ${commandInfo.desc || "No description available"}
@@ -104,7 +86,7 @@ ${globalOptions.map(([flag, description]) => `  ${flag.padEnd(18)} ${description
 `);
   } catch (_error) {
     // Fallback to basic help if command module can't be loaded
-    console.log(`
+    logger.log(`
 Usage: raypx-scripts ${commandInfo.name}
 
 ${commandInfo.desc || "No description available"}
@@ -121,17 +103,15 @@ Options:
 async function showHelp(): Promise<void> {
   const commands = await discoverCommands();
 
-  console.log(`
+  logger.log(`
 Usage: raypx-scripts <command> [args...]
 
 Commands:`);
   Object.entries(commands).forEach(([_, info]) => {
-    console.log(`  ${info.name.padEnd(18)} ${info.desc || ""}`);
+    logger.log(`  ${info.name.padEnd(18)} ${info.desc || ""}`);
   });
-  const options = globalOptions.map(
-    ([flag, description]) => `  ${flag!.padEnd(18)} ${description}`,
-  );
-  console.log(`
+  const options = globalOptions.map(([flag, description]) => `  ${flag.padEnd(18)} ${description}`);
+  logger.log(`
 Options:
 ${options.join("\n")}
 
@@ -150,11 +130,12 @@ Run 'raypx-scripts <command> --help' for more information on a specific command.
  */
 function parseArgs(args: string[]) {
   return yargsParser(args, {
-    boolean: ["help", "debug", "verbose"],
+    boolean: ["help", "debug", "verbose", "silent", "dry-run"],
     alias: {
       help: ["h"],
       debug: ["d"],
       verbose: ["V"],
+      silent: ["s"],
     },
   });
 }
@@ -198,17 +179,29 @@ async function cli(rawArgs: string[]) {
     process.env.DEBUG = "true";
   }
 
+  // Enable silent mode if requested (global flag)
+  setSilentMode(parsed.silent);
+
+  // Enable dry-run mode if requested (global flag)
+  if (parsed["dry-run"]) {
+    process.env.DRY_RUN = "true";
+    logger.info("🔍 DRY RUN MODE - No changes will be made");
+  }
+
+  // Get command file path
+  const commandFile = cmdInfo?.file;
+
   // Validate command exists
-  if (!(commandName in commands)) {
+  if (!commandFile) {
     logger.error(`Command '${commandName}' not found`);
-    console.log(`\nAvailable commands: ${Object.keys(commands).join(", ")}`);
-    console.log("Use 'raypx-scripts --help' for more information");
+    logger.log(`\nAvailable commands: ${Object.keys(commands).join(", ")}`);
+    logger.log("Use 'raypx-scripts --help' for more information");
     process.exit(1);
   }
 
   try {
     // Load and execute command
-    const cmd: DefinedCmd = await jiti.import(commands[commandName]!.file, { default: true });
+    const cmd: Command = await jiti.import(commandFile, { default: true });
     const startTime = Date.now();
 
     // Execute the command with ALL remaining arguments preserved

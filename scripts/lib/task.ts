@@ -1,16 +1,23 @@
 import { logger } from "@raypx/shared/logger";
 import type { Options } from "execa";
-import { Listr, type ListrTask, PRESET_TIMER } from "listr2";
 import type { Simplify } from "type-fest";
-import { safeExecAsync } from "../utils";
+import { formatDuration, safeExecAsync } from "../utils";
 
 /**
- * Creates a ListrTask - supports both task functions and shell commands
- *
- * @example
- * createTask("Custom Task", async (_, task) => { console.log("done"); })
- * createTask("pnpm build", { title: "Building" })
- * createTask("pnpm test", "Running tests")
+ * Task function type - receives a context object with helper methods
+ */
+type TaskFn = (ctx: TaskContext) => void | Promise<void>;
+
+/**
+ * Context object passed to task functions
+ */
+interface TaskContext {
+  /** Current task title (can be updated during execution) */
+  title: string;
+}
+
+/**
+ * Task configuration for shell commands
  */
 type TaskConfig = Simplify<{
   title: string;
@@ -20,10 +27,26 @@ type TaskConfig = Simplify<{
   retries?: number; // 0-2, simple retry
 }>;
 
+/**
+ * Internal task representation
+ */
+export interface Task {
+  title: string;
+  task: TaskFn;
+}
+
+/**
+ * Creates a Task - supports both task functions and shell commands
+ *
+ * @example
+ * createTask("Custom Task", async () => { console.log("done"); })
+ * createTask("pnpm build", { title: "Building" })
+ * createTask("pnpm test", "Running tests")
+ */
 export function createTask(
   titleOrCommand: string,
-  taskFnOrOpts?: ListrTask["task"] | TaskConfig | string,
-): ListrTask {
+  taskFnOrOpts?: TaskFn | TaskConfig | string,
+): Task {
   if (typeof taskFnOrOpts === "function") {
     return {
       title: titleOrCommand,
@@ -40,7 +63,7 @@ export function createTask(
 
   return {
     title,
-    task: async (_ctx, task) => {
+    task: async (ctx) => {
       let attempts = 0;
       const maxAttempts = retries + 1;
 
@@ -49,7 +72,7 @@ export function createTask(
           const result = await safeExecAsync(command, options);
 
           if (result.success) {
-            task.title = autoSuccessTitle;
+            ctx.title = autoSuccessTitle;
             if (result.output) {
               logger.debug(`Command output: ${result.output}`);
             }
@@ -62,7 +85,7 @@ export function createTask(
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
           if (attempts < maxAttempts) {
-            task.title = `${title} (retry ${attempts}/${retries})`;
+            ctx.title = `${title} (retry ${attempts}/${retries})`;
             // Reduce retry delay for better responsiveness
             await new Promise((resolve) => setTimeout(resolve, Math.min(500 * attempts, 2000)));
             continue;
@@ -76,31 +99,68 @@ export function createTask(
   };
 }
 
+export type RunTasksOptions = {
+  tasks: (Task | undefined | null | false)[];
+  concurrent?: boolean;
+};
+
 /**
- * Run multiple tasks with listr2
- * Commands can choose to use this for complex task orchestration
+ * Run multiple tasks sequentially or concurrently
  *
- * @param tasks - Array of ListrTask objects
+ * @param tasks - Array of Task objects
  * @param concurrent - Run tasks in parallel (default: false for safety)
  */
-export async function runTasks(tasks: ListrTask[], concurrent = false): Promise<void> {
-  const listr = new Listr(tasks, {
-    concurrent,
-    exitOnError: true,
-    renderer: process.env.CI ? "verbose" : "default",
-    rendererOptions: {
-      timer: PRESET_TIMER,
-      clearOutput: false,
-      removeEmptyLines: true,
-    },
-  });
+export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]): Promise<void> {
+  const opts = Array.isArray(_opts) ? { tasks: _opts } : _opts;
+  const { concurrent = false } = opts;
+  const startTime = Date.now();
+  const tasks = opts.tasks.filter(Boolean) as Task[];
 
-  await listr.run();
+  if (concurrent) {
+    // Run all tasks in parallel
+    await Promise.all(
+      tasks.map(async (task) => {
+        const taskStart = Date.now();
+        logger.info(`⏳ ${task.title}...`);
+
+        try {
+          const ctx: TaskContext = { title: task.title };
+          await task.task(ctx);
+          const duration = Date.now() - taskStart;
+          logger.success(`✓ ${ctx.title} (${formatDuration(duration)})`);
+        } catch (error) {
+          const duration = Date.now() - taskStart;
+          logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
+          throw error;
+        }
+      }),
+    );
+  } else {
+    // Run tasks sequentially
+    for (const task of tasks) {
+      const taskStart = Date.now();
+      logger.info(`⏳ ${task.title}...`);
+
+      try {
+        const ctx: TaskContext = { title: task.title };
+        await task.task(ctx);
+        const duration = Date.now() - taskStart;
+        logger.success(`✓ ${ctx.title} (${formatDuration(duration)})`);
+      } catch (error) {
+        const duration = Date.now() - taskStart;
+        logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
+        throw error;
+      }
+    }
+  }
+
+  const totalDuration = Date.now() - startTime;
+  logger.success(`\n🎉 All tasks completed in ${formatDuration(totalDuration)}`);
 }
 
 /**
  * Simplified command definition type
- * Commands decide themselves whether to use listr2 or not
+ * Commands can use runTasks for task orchestration or execute directly
  */
 export type Command = {
   cmd: string;
@@ -117,9 +177,3 @@ export type Command = {
 export function defineCommand(opts: Command): Command {
   return opts;
 }
-
-/**
- * Legacy type alias for backward compatibility
- * @deprecated Use Command instead
- */
-export type DefinedCmd = Command;
