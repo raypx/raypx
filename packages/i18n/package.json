@@ -29,7 +29,6 @@
     "@inlang/cli": "^3.0.12",
     "@inlang/paraglide-js": "^2.4.0",
     "@raypx/env": "workspace:*",
-    "crypto-js": "^4.2.0",
     "fast-glob": "catalog:",
     "fs-extra": "catalog:",
     "jiti": "catalog:",
@@ -38,7 +37,6 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@types/crypto-js": "^4.2.2",
     "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",

@@ -1,11 +1,12 @@
+import crypto from "node:crypto";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { compile, paraglideVitePlugin } from "@inlang/paraglide-js";
-import CryptoJS from "crypto-js";
 import fg from "fast-glob";
 import fs from "fs-extra";
 import { get } from "lodash-es";
 import type { Plugin, PluginOption } from "vite";
+import { Cache, type I18nCacheConfig } from "./cache";
 import { urlPatterns } from ".";
 
 export type Strategy =
@@ -85,25 +86,28 @@ async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOpti
       { onlyFiles: true },
     )
     .sort();
-  const contents = messagesFiles.map((file) => fs.readFileSync(file, "utf-8")).join("\n");
-  const messagesFilesHash = CryptoJS.MD5(contents).toString(); // 输出MD5值
-  console.log("messagesFilesHash", messagesFilesHash);
-
-  const cacheHashFile = path.join(outDir, "cache.hash");
-  const getCacheHash = () => {
-    if (!existsSync(cacheHashFile)) {
-      return null;
-    }
-    return fs.readFileSync(cacheHashFile, "utf-8");
-  };
+  // Calculate hash based on file metadata (mtime + size) for better performance
+  const hash = crypto.createHash("md5");
+  for (const file of messagesFiles) {
+    const stat = fs.statSync(file);
+    hash.update(`${file}:${stat.mtimeMs}:${stat.size}`);
+  }
+  const messagesFilesHash = hash.digest("hex");
 
   /**
-   * Compile paraglide if output doesn't exist
-   * This is a fallback for cases where the output directory was cleaned
+   * Compile paraglide if needed
+   * Uses cache to avoid unnecessary recompilation
    */
   async function ensureParaglideCompiled(): Promise<void> {
-    // Check if paraglide output exists
-    if (!existsSync(outDir) || messagesFilesHash !== getCacheHash()) {
+    const cache = new Cache<I18nCacheConfig>(path.join(cacheDirPath, "i18n.json"));
+    const config: I18nCacheConfig = {
+      outputStructure,
+      cookieName,
+      strategy,
+      inlangDir,
+    };
+
+    if (cache.shouldRecompile(messagesFilesHash, config, outDir)) {
       await compile({
         project: projectPath,
         outdir: outDir,
@@ -112,7 +116,7 @@ async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOpti
         strategy,
         urlPatterns,
       });
-      fs.writeFileSync(cacheHashFile, messagesFilesHash);
+      cache.save(messagesFilesHash, config, messagesFiles);
     }
   }
 

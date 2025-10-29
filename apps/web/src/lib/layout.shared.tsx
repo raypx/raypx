@@ -1,4 +1,4 @@
-import { type TranslateFunction, useLocale } from "@raypx/i18n/client";
+import type { TranslateFunction } from "@raypx/i18n/client";
 import { ThemeSwitcherHorizontal } from "@raypx/ui/business/theme-switcher";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { Logo } from "@/components/layout/logo";

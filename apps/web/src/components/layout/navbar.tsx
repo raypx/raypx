@@ -34,7 +34,7 @@ export function Navbar({ scroll }: NavBarProps) {
   const scrolled = useScroll(50);
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
-  const { t } = useLocale("layout");
+  const { t } = useLocale();
 
   const menuLinks = [
     {
@@ -71,7 +71,7 @@ export function Navbar({ scroll }: NavBarProps) {
           <div className="flex items-center">
             <Link className="flex items-center space-x-2" to="/">
               <Logo />
-              <span className="text-xl font-semibold">{t("nav.title")}</span>
+              <span className="text-xl font-semibold">{t("meta.title")}</span>
             </Link>
           </div>
 
@@ -90,7 +90,7 @@ export function Navbar({ scroll }: NavBarProps) {
                       asChild
                       className={customNavigationMenuTriggerStyle}
                     >
-                      <Link to={item.href || "#"}>{t(item.title)}</Link>
+                      <Link to={item.href || "#"}>{t(`layout.${item.title}`)}</Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
@@ -106,7 +106,7 @@ export function Navbar({ scroll }: NavBarProps) {
               <div className="flex items-center gap-x-4">
                 <Link to="/sign-in">
                   <Button className="cursor-pointer" size="sm" variant="outline">
-                    {t("nav.login")}
+                    {t("layout.nav.login")}
                   </Button>
                 </Link>
                 <Link
@@ -118,7 +118,7 @@ export function Navbar({ scroll }: NavBarProps) {
                   )}
                   to="/sign-up"
                 >
-                  {t("nav.signUp")}
+                  {t("layout.nav.signUp")}
                 </Link>
               </div>
             )}
