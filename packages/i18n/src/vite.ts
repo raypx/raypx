@@ -99,7 +99,7 @@ async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOpti
    * Uses cache to avoid unnecessary recompilation
    */
   async function ensureParaglideCompiled(): Promise<void> {
-    const cache = new Cache<I18nCacheConfig>(path.join(cacheDirPath, "i18n.json"));
+    const cache = new Cache<I18nCacheConfig>("i18n");
     const config: I18nCacheConfig = {
       outputStructure,
       cookieName,

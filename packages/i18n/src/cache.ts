@@ -83,9 +83,11 @@ export type I18nCacheConfig = {
 export class Cache<TConfig extends Record<string, unknown>> {
   private cacheFilePath: string;
   private cache: CacheMetadata<TConfig> | null = null;
+  private basePath: string;
 
-  constructor(cacheFilePath: string) {
-    this.cacheFilePath = cacheFilePath;
+  constructor(name: string, basePath?: string) {
+    this.basePath = basePath ?? path.join(process.cwd(), ".raypx");
+    this.cacheFilePath = path.join(this.basePath, `${name}.json`);
   }
 
   /**
@@ -164,13 +166,13 @@ export class Cache<TConfig extends Record<string, unknown>> {
     const diff = this.diff(messagesFilesHash, config);
 
     if (diff.hasChanges) {
-      console.log(`[@raypx/i18n] ${diff.reasons.join(", ")}, recompiling...`);
+      console.debug(`[@raypx/i18n] ${diff.reasons.join(", ")}, recompiling...`);
       return true;
     }
 
     // Check if output directory is missing (user may have cleaned it)
     if (!existsSync(outDir) || !existsSync(path.join(outDir, "runtime.js"))) {
-      console.log("[@raypx/i18n] Output directory missing, recompiling...");
+      console.debug("[@raypx/i18n] Output directory missing, recompiling...");
       return true;
     }
 
