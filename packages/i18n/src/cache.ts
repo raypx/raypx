@@ -40,8 +40,6 @@ export type ConfigChange<TConfig> = {
 export type CacheDiff<TConfig extends Record<string, unknown>> = {
   /** Whether any changes were detected */
   hasChanges: boolean;
-  /** List of change reasons */
-  reasons: string[];
   /** File change details (null if no change) */
   files: FileChange | null;
   /** Config change details (null if no change) */
@@ -122,7 +120,6 @@ export class Cache<TConfig extends Record<string, unknown>> {
     if (!cache) {
       return {
         hasChanges: true,
-        reasons: ["Cache not found"],
         files: null,
         config: null,
       };
@@ -130,7 +127,6 @@ export class Cache<TConfig extends Record<string, unknown>> {
 
     const diff: CacheDiff<TConfig> = {
       hasChanges: false,
-      reasons: [],
       files: null,
       config: null,
     };
@@ -138,7 +134,6 @@ export class Cache<TConfig extends Record<string, unknown>> {
     // Check file changes
     if (cache.hash !== messagesFilesHash) {
       diff.hasChanges = true;
-      diff.reasons.push("Message files changed");
       diff.files = {
         oldHash: cache.hash,
         newHash: messagesFilesHash,
@@ -148,7 +143,6 @@ export class Cache<TConfig extends Record<string, unknown>> {
     // Check config changes using deep equality
     if (!isEqual(cache.config, config)) {
       diff.hasChanges = true;
-      diff.reasons.push("Configuration changed");
       diff.config = {
         old: cache.config,
         new: config,
@@ -166,7 +160,12 @@ export class Cache<TConfig extends Record<string, unknown>> {
     const diff = this.diff(messagesFilesHash, config);
 
     if (diff.hasChanges) {
-      console.debug(`[@raypx/i18n] ${diff.reasons.join(", ")}, recompiling...`);
+      const reasons: string[] = [];
+      if (diff.files) reasons.push("Message files changed");
+      if (diff.config) reasons.push("Configuration changed");
+      if (reasons.length === 0) reasons.push("Cache not found");
+
+      console.debug(`[@raypx/i18n] ${reasons.join(", ")}, recompiling...`);
       return true;
     }
 
