@@ -1,14 +1,11 @@
-import { createTask, definedCmd } from "../lib/task";
+import { createTask, defineCommand, runTasks } from "../lib/task";
 
-const setupCmd = definedCmd({
-  tasks: [createTask("pnpm --filter @raypx/db run db:migrate", "Database migration")],
-  options: {
-    concurrent: true, // Enable concurrent execution
-    exitOnError: true, // Exit immediately on error
-  },
-  description: "Setup project dependencies",
-  type: "task",
+const setupCmd = defineCommand({
   cmd: "setup",
+  description: "Setup project dependencies",
+  run: async () => {
+    await runTasks([createTask("pnpm --filter @raypx/db run db:migrate", "Database migration")]);
+  },
 });
 
 export default setupCmd;

@@ -76,82 +76,50 @@ export function createTask(
   };
 }
 
-type CmdOptions = Simplify<{
-  concurrent?: boolean | number;
-  exitOnError?: boolean;
-  renderer?: string;
-}>;
+/**
+ * Run multiple tasks with listr2
+ * Commands can choose to use this for complex task orchestration
+ *
+ * @param tasks - Array of ListrTask objects
+ * @param concurrent - Run tasks in parallel (default: false for safety)
+ */
+export async function runTasks(tasks: ListrTask[], concurrent = false): Promise<void> {
+  const listr = new Listr(tasks, {
+    concurrent,
+    exitOnError: true,
+    renderer: process.env.CI ? "verbose" : "default",
+    rendererOptions: {
+      timer: PRESET_TIMER,
+      clearOutput: false,
+      removeEmptyLines: true,
+    },
+  });
 
-export type TaskCommand = {
-  tasks: ListrTask[] | ((args?: string[]) => ListrTask[]);
-  options?: CmdOptions;
-  description?: string;
+  await listr.run();
+}
+
+/**
+ * Simplified command definition type
+ * Commands decide themselves whether to use listr2 or not
+ */
+export type Command = {
   cmd: string;
+  description?: string;
   help?: string;
   examples?: string[];
-  type: "task";
-};
-
-export type RunCommand = {
-  options?: CmdOptions;
   run: (args?: string[]) => Promise<void>;
-  description?: string;
-  cmd: string;
-  help?: string;
-  examples?: string[];
-  type: "run";
-};
-
-export type DefinedCmd = {
-  cmd: string;
-  run: (args?: string[]) => Promise<void>;
-  description?: string;
-  help?: string;
-  examples?: string[];
 };
 
 /**
- * Creates a Cmd object with tasks and options
- * Supports both task arrays and functions that return task arrays
- * Can automatically parse command line arguments and pass them to tasks
+ * Define a command with simplified API
+ * No more type discrimination - just a simple command object
  */
-export function definedCmd(opts: TaskCommand | RunCommand): DefinedCmd {
-  // Handle RunCommand - simple pass-through
-  if (opts.type === "run") {
-    return {
-      cmd: opts.cmd,
-      run: opts.run,
-      description: opts.description,
-      help: opts.help,
-      examples: opts.examples,
-    };
-  }
-
-  // Handle TaskCommand
-  const { tasks, options, description, help, examples } = opts;
-
-  return {
-    cmd: opts.cmd,
-    help,
-    examples,
-    run: async (args?: string[]) => {
-      // Get task list - either static array or from function
-      const taskList = typeof tasks === "function" ? tasks(args) : tasks;
-
-      // Create and run Listr
-      const listr = new Listr(taskList, {
-        concurrent: options?.concurrent ?? true,
-        exitOnError: options?.exitOnError ?? true,
-        renderer: process.env.CI ? "verbose" : "default",
-        rendererOptions: {
-          timer: PRESET_TIMER,
-          clearOutput: false,
-          removeEmptyLines: true,
-        },
-      });
-
-      await listr.run();
-    },
-    description,
-  };
+export function defineCommand(opts: Command): Command {
+  return opts;
 }
+
+/**
+ * Legacy type alias for backward compatibility
+ * @deprecated Use Command instead
+ */
+export type DefinedCmd = Command;

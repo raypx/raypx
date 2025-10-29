@@ -4,34 +4,23 @@
  * This command runs Biome to format code, check for issues, and enforce
  * coding standards across the project.
  */
-import type { ListrTask } from "listr2";
-import { createTask, definedCmd } from "../lib/task";
+import { defineCommand } from "../lib/task";
 import { safeExecAsync } from "../utils";
 
 /**
- * Creates a task that formats and checks code using Biome
+ * Main format command - simplified to direct execution
+ * Single task doesn't need listr2 overhead
  */
-function createFormatTask(): ListrTask {
-  return createTask("Code formatting and checking", async (_, task) => {
+const formatCmd = defineCommand({
+  cmd: "format",
+  description: "Format and check code using Biome",
+  run: async () => {
     const result = await safeExecAsync("pnpm exec biome check --write .");
 
-    if (result.success) {
-      task.title = "Formatted and checked code with Biome";
-    } else {
-      task.title = "Code formatting and checking failed";
+    if (!result.success) {
       throw result.error || new Error("Biome formatting and checking failed");
     }
-  });
-}
-
-/**
- * Main format function
- */
-const formatCmd = definedCmd({
-  tasks: [createFormatTask()],
-  description: "Format and check code using Biome",
-  type: "task",
-  cmd: "format",
+  },
 });
 
 export default formatCmd;

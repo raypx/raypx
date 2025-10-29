@@ -29,9 +29,12 @@ export const createTranslateFunction = (namespace: string | undefined) => {
 };
 
 export function I18nProvider({ children, locale }: I18nProviderProps) {
-  const setLocale = useCallback((locale: string) => {
-    setLocaleRuntime(locale as Locale);
-  }, [locale]);
+  const setLocale = useCallback(
+    (locale: string) => {
+      setLocaleRuntime(locale as Locale);
+    },
+    [locale],
+  );
 
   return (
     <I18nContext.Provider
@@ -52,6 +55,9 @@ export function useLocale(namespace?: string) {
     throw new Error("useLocale must be used within an I18nProvider");
   }
   const { locale, setLocale, createTranslateFunction } = context;
-  const t = useMemo(() => createTranslateFunction(namespace), [createTranslateFunction, namespace, locale]);
+  const t = useMemo(
+    () => createTranslateFunction(namespace),
+    [createTranslateFunction, namespace, locale],
+  );
   return { locale, setLocale, t };
 }

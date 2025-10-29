@@ -1,12 +1,12 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { compile, paraglideVitePlugin } from "@inlang/paraglide-js";
+import CryptoJS from "crypto-js";
+import fg from "fast-glob";
 import fs from "fs-extra";
+import { get } from "lodash-es";
 import type { Plugin, PluginOption } from "vite";
 import { urlPatterns } from ".";
-import { get } from 'lodash-es'
-import fg from "fast-glob";
-import CryptoJS from "crypto-js";
 
 export type Strategy =
   | "cookie"
@@ -79,8 +79,13 @@ async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOpti
   fs.ensureDirSync(cacheDirPath);
   const projectPath = path.join(process.cwd(), inlangDir);
   const projectConfig = fs.readJsonSync(path.join(projectPath, "settings.json"));
-  const messagesFiles = fg.sync(path.join(projectPath, get(get(projectConfig, "plugin.inlang.messageFormat"), "pathPattern")), { onlyFiles: true }).sort();
-  const contents =  messagesFiles.map(file => fs.readFileSync(file, "utf-8")).join("\n");
+  const messagesFiles = fg
+    .sync(
+      path.join(projectPath, get(get(projectConfig, "plugin.inlang.messageFormat"), "pathPattern")),
+      { onlyFiles: true },
+    )
+    .sort();
+  const contents = messagesFiles.map((file) => fs.readFileSync(file, "utf-8")).join("\n");
   const messagesFilesHash = CryptoJS.MD5(contents).toString(); // 输出MD5值
   console.log("messagesFilesHash", messagesFilesHash);
 
@@ -90,7 +95,7 @@ async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOpti
       return null;
     }
     return fs.readFileSync(cacheHashFile, "utf-8");
-  }
+  };
 
   /**
    * Compile paraglide if output doesn't exist

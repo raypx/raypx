@@ -21,11 +21,12 @@
 import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import dotenvx from "@dotenvx/dotenvx";
 import { logger } from "@raypx/shared/logger";
 import { createJiti } from "jiti";
 import yargsParser from "yargs-parser";
 import type { DefinedCmd } from "./lib/task";
-import { formatDuration } from "./utils";
+import { formatDuration, PROJECT_ROOT } from "./utils";
 
 const jiti = createJiti(import.meta.url);
 
@@ -162,6 +163,10 @@ function parseArgs(args: string[]) {
  * CLI entry point for raypx-scripts
  */
 async function cli(rawArgs: string[]) {
+  // Load environment variables from project root .env file
+  // This makes .env available to all commands automatically
+  dotenvx.config({ path: join(PROJECT_ROOT, ".env"), quiet: true });
+
   // Parse arguments to extract global flags (--help, --version, --debug, etc.)
   // Note: We use yargs-parser only for global flags, NOT for command arguments
   const parsed = parseArgs(rawArgs);
