@@ -1,12 +1,11 @@
 import crypto from "node:crypto";
-import { existsSync } from "node:fs";
 import path from "node:path";
 import { compile, paraglideVitePlugin } from "@inlang/paraglide-js";
+import { Cache } from "@raypx/bundler";
 import fg from "fast-glob";
 import fs from "fs-extra";
 import { get } from "lodash-es";
 import type { Plugin, PluginOption } from "vite";
-import { Cache, type I18nCacheConfig } from "./cache";
 import { urlPatterns } from ".";
 
 export type Strategy =
@@ -18,12 +17,22 @@ export type Strategy =
   | "localStorage"
   | `custom-${string}`;
 
+/**
+ * i18n specific cache configuration
+ */
+export type I18nCacheConfig = {
+  outputStructure: "locale-modules" | "message-modules";
+  cookieName: string;
+  strategy: Strategy[];
+  inlangDir: string;
+};
+
 export const I18N_DEFAULTS = {
   outputStructure: "message-modules" as const,
   cookieName: "lang",
   strategy: ["url", "cookie", "preferredLanguage", "baseLocale"] as Strategy[],
   inlangDir: "inlang",
-  cacheDir: "node_modules/.raypx",
+  cacheDir: ".raypx",
 };
 
 export type RaypxVitePluginOptions = {

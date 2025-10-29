@@ -2,7 +2,6 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import fs from "fs-extra";
 import { isEqual } from "lodash-es";
-import type { Strategy } from "./vite";
 
 /**
  * Cache metadata for tracking file changes and configuration
@@ -47,34 +46,20 @@ export type CacheDiff<TConfig extends Record<string, unknown>> = {
 };
 
 /**
- * i18n specific cache configuration
- */
-export type I18nCacheConfig = {
-  outputStructure: "locale-modules" | "message-modules";
-  cookieName: string;
-  strategy: Strategy[];
-  inlangDir: string;
-};
-
-/**
  * Generic cache class for tracking file changes and configuration
  *
  * @template TConfig - Configuration object type for cache validation
  *
  * @example
  * ```typescript
- * const cache = new Cache<I18nCacheConfig>("/path/to/cache.json");
+ * type MyConfig = { outputDir: string; minify: boolean };
+ * const cache = new Cache<MyConfig>("build");
  *
- * const config = {
- *   outputStructure: "message-modules",
- *   cookieName: "lang",
- *   strategy: ["url", "cookie"],
- *   inlangDir: "inlang",
- * };
+ * const config = { outputDir: "dist", minify: true };
  *
  * if (cache.shouldRecompile("abc123", config, "dist")) {
  *   // Perform compilation
- *   cache.save("abc123", config, ["en.json", "zh.json"]);
+ *   cache.save("abc123", config, ["file1.js", "file2.js"]);
  * }
  * ```
  */
@@ -106,7 +91,7 @@ export class Cache<TConfig extends Record<string, unknown>> {
       this.cache = fs.readJSONSync(this.cacheFilePath);
       return this.cache;
     } catch (_error: unknown) {
-      console.warn("[@raypx/i18n] Failed to read cache metadata, will recompile");
+      console.warn("Failed to read cache metadata, will recompile");
       return null;
     }
   }
@@ -165,13 +150,13 @@ export class Cache<TConfig extends Record<string, unknown>> {
       if (diff.config) reasons.push("Configuration changed");
       if (reasons.length === 0) reasons.push("Cache not found");
 
-      console.debug(`[@raypx/i18n] ${reasons.join(", ")}, recompiling...`);
+      console.debug(`[@raypx/bundler] ${reasons.join(", ")}, recompiling...`);
       return true;
     }
 
     // Check if output directory is missing (user may have cleaned it)
     if (!existsSync(outDir) || !existsSync(path.join(outDir, "runtime.js"))) {
-      console.debug("[@raypx/i18n] Output directory missing, recompiling...");
+      console.debug("[@raypx/bundler] Output directory missing, recompiling...");
       return true;
     }
 
@@ -189,8 +174,11 @@ export class Cache<TConfig extends Record<string, unknown>> {
       timestamp: Date.now(),
     };
 
+    fs.ensureFileSync(this.cacheFilePath);
+
     fs.writeJSONSync(this.cacheFilePath, metadata, { spaces: 2 });
-    this.cache = metadata; // Update in-memory cache
+    // Update in-memory cache
+    this.cache = metadata;
   }
 
   /**

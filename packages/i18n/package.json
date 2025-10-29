@@ -28,6 +28,7 @@
   "dependencies": {
     "@inlang/cli": "^3.0.12",
     "@inlang/paraglide-js": "^2.4.0",
+    "@raypx/bundler": "workspace:*",
     "@raypx/env": "workspace:*",
     "fast-glob": "catalog:",
     "fs-extra": "catalog:",
