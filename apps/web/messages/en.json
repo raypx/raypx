@@ -134,21 +134,33 @@
     "username": "Username",
     "email": {
       "label": "Email",
-      "placeholder": "Enter your email",
+      "placeholder": "example@raypx.com",
       "required": "Email is required",
       "invalid": "Email is invalid"
     },
     "password": {
       "label": "Password",
-      "placeholder": "Enter your password",
+      "placeholder": "Password",
       "required": "Password is required",
       "minLength": "Password must be at least {min} characters",
       "maxLength": "Password must be at most {max} characters",
       "regex": "Password must contain at least one letter and one number"
     },
     "rememberMeLabel": "Remember me",
+    "forgotPassword": {
+      "link": "Forgot your password?"
+    },
+    "signUp": {
+      "title": "Sign Up",
+      "description": "Create an account below to get started",
+      "action": "Sign Up"
+    },
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
     "signIn": {
-      "action": "Sign in"
+      "title": "Sign In",
+      "description": "Enter your email below to login to your account",
+      "action": "Login"
     },
     "validation": {
       "required": "Required"

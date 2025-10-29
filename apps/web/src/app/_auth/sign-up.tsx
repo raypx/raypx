@@ -1,6 +1,6 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth, useOnSuccessTransition } from "@raypx/auth";
+import { AuthLayout, useAuth, useOnSuccessTransition } from "@raypx/auth";
 import { useLocale } from "@raypx/i18n/client";
 import { cn } from "@raypx/shared/utils";
 import {
@@ -116,98 +116,102 @@ function SignUpPage() {
   }
 
   return (
-    <Form {...form}>
-      <form
-        className={cn("grid w-full gap-6")}
-        noValidate={isHydrated}
-        onSubmit={form.handleSubmit(signIn)}
-      >
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{usernameEnabled ? t("username.label") : t("email.label")}</FormLabel>
-
-              <FormControl>
-                <Input
-                  autoComplete={usernameEnabled ? "username" : "email"}
-                  disabled={isSubmitting}
-                  placeholder={usernameEnabled ? t("username.placeholder") : t("email.placeholder")}
-                  type={usernameEnabled ? "text" : "email"}
-                  {...field}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-center justify-between">
-                <FormLabel>{t("password.label")}</FormLabel>
-
-                {credentials?.forgotPassword && (
-                  <Link
-                    className="text-sm hover:underline"
-                    search={isHydrated ? window.location.search : undefined}
-                    to="/forgot-password"
-                  >
-                    {t("forgotPassword")}
-                  </Link>
-                )}
-              </div>
-
-              <FormControl>
-                <PasswordField
-                  autoComplete="current-password"
-                  disabled={isSubmitting}
-                  placeholder={t("password.placeholder")}
-                  {...field}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {rememberMeEnabled && (
+    <AuthLayout
+      cardFooter={
+        <>
+          {t("alreadyHaveAccount")}
+          <Link className={cn("text-foreground underline")} to="/sign-in">
+            <Button className={cn("px-0 text-foreground underline")} size="sm" variant="link">
+              {t("signIn.action")}
+            </Button>
+          </Link>
+        </>
+      }
+      description={t("signUp.description")}
+      title={t("signUp.title")}
+    >
+      <Form {...form}>
+        <form
+          className={cn("grid w-full gap-6")}
+          noValidate={isHydrated}
+          onSubmit={form.handleSubmit(signIn)}
+        >
           <FormField
             control={form.control}
-            name="rememberMe"
+            name="email"
             render={({ field }) => (
-              <FormItem className="flex">
+              <FormItem>
+                <FormLabel>{usernameEnabled ? t("username.label") : t("email.label")}</FormLabel>
+
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
+                  <Input
+                    autoComplete={usernameEnabled ? "username" : "email"}
                     disabled={isSubmitting}
-                    onCheckedChange={field.onChange}
+                    placeholder={
+                      usernameEnabled ? t("username.placeholder") : t("email.placeholder")
+                    }
+                    type={usernameEnabled ? "text" : "email"}
+                    {...field}
                   />
                 </FormControl>
 
-                <FormLabel>{t("rememberMeLabel")}</FormLabel>
+                <FormMessage />
               </FormItem>
             )}
           />
-        )}
 
-        {/* <Captcha
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("password.label")}</FormLabel>
+                <FormControl>
+                  <PasswordField
+                    autoComplete="current-password"
+                    disabled={isSubmitting}
+                    placeholder={t("password.placeholder")}
+                    {...field}
+                  />
+                </FormControl>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {rememberMeEnabled && (
+            <FormField
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <FormItem className="flex">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      disabled={isSubmitting}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+
+                  <FormLabel>{t("rememberMeLabel")}</FormLabel>
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* <Captcha
                     action="/sign-in/email"
                     localization={localization}
                     ref={captchaRef}
                 /> */}
 
-        <Button className="w-full" disabled={isSubmitting} type="submit">
-          {isSubmitting ? <Loader2 className="animate-spin" /> : t("signIn.action")}
-        </Button>
-      </form>
-    </Form>
+          <Button className="w-full" disabled={isSubmitting} type="submit">
+            {isSubmitting ? <Loader2 className="animate-spin" /> : t("signIn.action")}
+          </Button>
+        </form>
+      </Form>
+    </AuthLayout>
   );
 }
 

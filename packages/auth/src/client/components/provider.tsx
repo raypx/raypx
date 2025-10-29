@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { auth } from "../auth";
-import { AuthContext } from "../context";
+import { AuthContext, type CredentialsOptions } from "../context";
 import type { AuthHooks } from "../context/hooks";
 import { useAuthData } from "../hooks/use-auth-data";
 
@@ -10,7 +10,7 @@ export type AuthProviderProps = {
   navigate: (href: string) => void;
   onSessionChange?: () => void | Promise<void>;
   replace: (href: string) => void;
-  // credentials?: CredentialsOptions;
+  credentials?: boolean | CredentialsOptions;
 };
 
 const defaultNavigate = (href: string) => {
@@ -27,7 +27,18 @@ export const AuthProvider = ({
   navigate,
   onSessionChange,
   replace,
+  credentials: credentialsProp,
 }: AuthProviderProps) => {
+  const credentials = useMemo<CredentialsOptions | undefined>(() => {
+    if (credentialsProp === false) return;
+    if (credentialsProp === true) return { forgotPassword: true };
+
+    return {
+      ...credentialsProp,
+      forgotPassword: credentialsProp?.forgotPassword ?? true,
+    };
+  }, [credentialsProp]);
+
   const defaultHooks = useMemo(() => {
     return {
       useSession: auth.useSession,
@@ -109,6 +120,7 @@ export const AuthProvider = ({
         navigate: navigate || defaultNavigate,
         onSessionChange,
         replace: defaultReplace,
+        credentials,
       }}
     >
       {children}

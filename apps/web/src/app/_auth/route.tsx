@@ -1,4 +1,3 @@
-import { AuthLayout } from "@raypx/auth";
 import { Image } from "@raypx/ui/components/image";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
@@ -12,9 +11,7 @@ function AuthLayoutComponent() {
           </div>
           Raypx
         </Link>
-        <AuthLayout>
-          <Outlet />
-        </AuthLayout>
+        <Outlet />
       </div>
     </div>
   );

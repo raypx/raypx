@@ -147,10 +147,20 @@
       "regex": "密码必须至少包含一个字母和一个数字"
     },
     "rememberMeLabel": "记住我",
+    "forgotPassword": {
+      "link": "忘记密码？"
+    },
+    "signUp": {
+      "title": "注册",
+      "description": "创建一个账户以开始",
+      "action": "注册"
+    },
+    "alreadyHaveAccount": "已经有一个账户？",
+    "dontHaveAccount": "没有账户？",
     "signIn": {
-      "action": "登录",
-      "usernamePlaceholder": "请输入用户名",
-      "emailPlaceholder": "请输入邮箱"
+      "title": "登录",
+      "description": "输入您的电子邮件以登录您的账户",
+      "action": "登录"
     },
     "validation": {
       "required": "必填"

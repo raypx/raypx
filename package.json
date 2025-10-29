@@ -46,7 +46,7 @@
     "@raypx/scripts": "workspace:*",
     "@turbo/gen": "^2.5.8",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "^4.0.4",
+    "@vitest/coverage-v8": "^4.0.5",
     "jsdom": "^27.0.1",
     "lefthook": "catalog:dev",
     "rimraf": "catalog:",

@@ -16,6 +16,7 @@ type AuthLayoutProps = {
   cardHeader?: ReactNode;
   description?: string;
   title?: string;
+  cardFooter?: ReactNode;
 };
 
 export function AuthLayout({
@@ -25,6 +26,7 @@ export function AuthLayout({
   cardHeader,
   description,
   title,
+  cardFooter,
 }: AuthLayoutProps) {
   return (
     <Card className={cn("w-full max-w-sm", className, classNames?.base)}>
@@ -43,6 +45,11 @@ export function AuthLayout({
         )}
       </CardHeader>
       <CardContent className={cn("grid gap-6", classNames?.content)}>{children}</CardContent>
+      {cardFooter && (
+        <CardFooter className="justify-center gap-1.5 text-muted-foreground text-sm">
+          {cardFooter}
+        </CardFooter>
+      )}
     </Card>
   );
 }
