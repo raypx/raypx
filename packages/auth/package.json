@@ -18,6 +18,7 @@
     "@raypx/db": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@tanstack/react-router": "catalog:",
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-start": "catalog:",

@@ -1,5 +1,5 @@
-import { useCallback, useContext, useEffect, useState, useTransition } from "react";
-// import { AuthUIContext } from "../lib/auth-ui-provider"
+import { useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { getSearchParam } from "../utils/url";
 import { useAuth } from "./use-auth";
 
@@ -13,9 +13,9 @@ export function useOnSuccessTransition({ redirectTo: redirectToProp }: { redirec
 
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const {
-    navigate,
     hooks: { useSession },
     onSessionChange,
   } = useAuth();
@@ -26,7 +26,9 @@ export function useOnSuccessTransition({ redirectTo: redirectToProp }: { redirec
     if (!success || isPending) return;
 
     startTransition(() => {
-      navigate(getRedirectTo());
+      navigate({
+        href: getRedirectTo(),
+      });
     });
   }, [success, isPending, navigate, getRedirectTo]);
 
