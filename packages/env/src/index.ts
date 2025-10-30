@@ -2,7 +2,8 @@
  * @fileoverview Environment validation with extends support
  * Forked from @t3-oss/t3-env
  */
-import { pick } from "lodash-es";
+import { pick, fromPairs, sortBy } from "lodash-es";
+import _ from "lodash-es";
 import type {
   CreateEnv,
   CreateSchemaOptions,
@@ -20,6 +21,12 @@ const CLIENT_PREFIX = "VITE_" as const;
 type ClientPrefix = typeof CLIENT_PREFIX;
 
 export { z } from "zod";
+
+function sortObjectKeys<T extends Record<string, any>>(obj: T): T {
+  return fromPairs(
+    sortBy(Object.entries(obj), ([key]) => key)
+  ) as T;
+}
 
 type Options<
   TServer extends StandardSchemaDictionary,
@@ -60,6 +67,8 @@ export function createEnv<
     ...(!isServer ? pick(process.env, Object.keys(shared ?? {})) : process.env),
     ...import.meta?.env,
   };
+  
+  console.log('runtimeEnv', sortObjectKeys(runtimeEnv))
 
   return createEnvCore<ClientPrefix, TServer, TClient, TShared, TExtends, TFinalSchema>({
     ...opts,

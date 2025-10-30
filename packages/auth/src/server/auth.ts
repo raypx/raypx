@@ -108,6 +108,20 @@ const createAuthOptions = () => {
     emailAndPassword: {
       enabled: true,
     },
+    baseURL: env.VITE_BASE_URL,
+    trustedOrigins: (req) =>
+      [req.headers.get("origin") ?? "", req.headers.get("referer") ?? ""].filter(
+        Boolean,
+      ) as string[],
+    session: {
+      cookieCache: {
+        enabled: true,
+        maxAge: 5 * 60, // 5 minutes
+      },
+      expiresIn: 60 * 60 * 24 * 7, // 7 days
+      updateAge: 60 * 60 * 24, // 1 day
+    },
+    secret: env.AUTH_SECRET,
     advanced: {
       database: {
         generateId: () => uuidv7(),
@@ -128,6 +142,10 @@ const createAuthOptions = () => {
         clientId: env.AUTH_GITHUB_ID,
         clientSecret: env.AUTH_GITHUB_SECRET,
       },
+    },
+    logger: {
+      disabled: true,
+      level: "debug",
     },
     plugins,
   } satisfies BetterAuthOptions;
