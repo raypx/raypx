@@ -38,6 +38,7 @@
   "devDependencies": {
     "@raypx/bundler": "workspace:*",
     "@raypx/tsconfig": "workspace:*",
+    "@inlang/plugin-i18next": "^6.0.11",
     "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",

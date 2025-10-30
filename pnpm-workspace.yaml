@@ -21,7 +21,7 @@ catalog:
   fs-extra: ^11.3.2
   jiti: ^2.6.1
   lodash-es: ^4.17.21
-  lucide-react: ^0.548.0
+  lucide-react: 0.548.0
   nitro: 3.0.1-alpha.0
   react-hook-form: 7.65.0
   rimraf: ^6.0.1

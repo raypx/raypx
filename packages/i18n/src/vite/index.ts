@@ -44,8 +44,14 @@ async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOpti
   const urlPatterns = buildUrlPatterns(urls, config.locales);
 
   // Generate inlang configuration
-  const messagesPathPattern = path.join(process.cwd(), config.pathPattern);
-  const inlangConfig = getInlangConfig(config, messagesPathPattern);
+  const baseMessagesPathPattern = path.join(process.cwd(), config.pathPattern);
+  const inlangConfig = getInlangConfig(config, baseMessagesPathPattern);
+
+  // Calculate message files hash for cache invalidation
+  const { hash: messagesFilesHash, files: messagesFiles } = calculateMessagesHash({
+    cwd: process.cwd(),
+    pattern: config.pathPattern,
+  });
 
   // Setup inlang project directory
   const { inlangDir, projectPath } = setupInlangProject({
@@ -53,10 +59,6 @@ async function vitePlugin(opts: RaypxVitePluginOptions = {}): Promise<PluginOpti
     inlangConfig,
     projectId: config.projectId,
   });
-
-  // Calculate message files hash for cache invalidation
-  const { hash: messagesFilesHash, files: messagesFiles } =
-    calculateMessagesHash(messagesPathPattern);
 
   // Compile paraglide if needed
   const outDir = path.join(process.cwd(), cacheDir, "paraglide");

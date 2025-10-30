@@ -17,7 +17,7 @@
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", ".raypx"],
       "outputs": ["dist/**", ".tanstack/**"]
     },
     "typecheck": {

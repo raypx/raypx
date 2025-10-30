@@ -6,17 +6,14 @@ import type { I18nConfig } from "..";
 /**
  * Generate inlang project configuration
  */
-export function getInlangConfig(config: I18nConfig, messagesPathPattern: string) {
+export function getInlangConfig(config: I18nConfig, pathPatterns: string) {
   return {
     $schema: "https://inlang.com/schema/project-settings",
     baseLocale: config.baseLocale,
     locales: config.locales,
-    modules: [
-      "https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js",
-      "https://cdn.jsdelivr.net/npm/@inlang/plugin-m-function-matcher@2/dist/index.js",
-    ],
-    "plugin.inlang.messageFormat": {
-      pathPattern: messagesPathPattern,
+    modules: ["https://cdn.jsdelivr.net/npm/@inlang/plugin-i18next@latest/dist/index.js"],
+    "plugin.inlang.i18next": {
+      pathPattern: pathPatterns,
     },
   };
 }

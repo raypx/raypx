@@ -173,5 +173,14 @@
     "title": "未找到",
     "description": "您正在寻找的页面不存在。",
     "backToHome": "返回首页"
+  },
+  "userButton": {
+    "myAccount": "我的账户",
+    "settings": "设置",
+    "theme": "主题",
+    "language": "语言",
+    "signOut": "退出登录",
+    "profile": "个人资料",
+    "loading": "加载中..."
   }
 }

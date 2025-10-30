@@ -52,7 +52,7 @@ catalogs:
       specifier: ^4.17.21
       version: 4.17.21
     lucide-react:
-      specifier: ^0.548.0
+      specifier: 0.548.0
       version: 0.548.0
     nitro:
       specifier: 3.0.1-alpha.0
@@ -243,14 +243,14 @@ importers:
         specifier: ^1.11.18
         version: 1.11.18
       fumadocs-core:
-        specifier: ^16.0.5
-        version: 16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        specifier: ^16.0.6
+        version: 16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       fumadocs-mdx:
-        specifier: ^13.0.2
-        version: 13.0.2(fumadocs-core@16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^13.0.3
+        version: 13.0.3(fumadocs-core@16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
       fumadocs-ui:
-        specifier: ^16.0.5
-        version: 16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.16)
+        specifier: ^16.0.6
+        version: 16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.16)
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -304,11 +304,11 @@ importers:
         specifier: ^4.1.16
         version: 4.1.16(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
       '@tanstack/devtools-vite':
-        specifier: ^0.3.10
-        version: 0.3.10(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+        specifier: ^0.3.11
+        version: 0.3.11(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
       '@tanstack/react-devtools':
-        specifier: ^0.7.11
-        version: 0.7.11(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(csstype@3.1.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(solid-js@1.9.10)
+        specifier: ^0.8.0
+        version: 0.8.0(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(csstype@3.1.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(solid-js@1.9.10)
       '@tanstack/react-query-devtools':
         specifier: ^5.90.2
         version: 5.90.2(@tanstack/react-query@5.90.5(react@19.2.0))(react@19.2.0)
@@ -397,6 +397,9 @@ importers:
       better-auth:
         specifier: ^1.3.34
         version: 1.3.34(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 0.548.0(react@19.2.0)
       react:
         specifier: catalog:react19
         version: 19.2.0
@@ -614,6 +617,9 @@ importers:
         specifier: catalog:react19
         version: 19.2.0
     devDependencies:
+      '@inlang/plugin-i18next':
+        specifier: ^6.0.11
+        version: 6.0.11
       '@raypx/bundler':
         specifier: workspace:*
         version: link:../bundler
@@ -1892,6 +1898,9 @@ packages:
   '@inlang/paraglide-js@2.4.0':
     resolution: {integrity: sha512-T/m9uoev574/1JrhCnPcgK1xnAwkVMgaDev4LFthnmID8ubX2xjboSGO3IztwXWwO0aJoT1UJr89JCwjbwgnJQ==}
     hasBin: true
+
+  '@inlang/plugin-i18next@6.0.11':
+    resolution: {integrity: sha512-rsN3JxzrYjhIVCpjpcaCrzBYSj0ISlyuvKZSvenb69Gcgr8LaE/+wCZEEcGPquTDtzcG4RAVGbJHngGzJG7bpA==}
 
   '@inlang/recommend-sherlock@0.2.1':
     resolution: {integrity: sha512-ckv8HvHy/iTqaVAEKrr+gnl+p3XFNwe5D2+6w6wJk2ORV2XkcRkKOJ/XsTUJbPSiyi4PI+p+T3bqbmNx/rDUlg==}
@@ -3742,8 +3751,8 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
 
-  '@tanstack/devtools-client@0.0.3':
-    resolution: {integrity: sha512-kl0r6N5iIL3t9gGDRAv55VRM3UIyMKVH83esRGq7xBjYsRLe/BeCIN2HqrlJkObUXQMKhy7i8ejuGOn+bDqDBw==}
+  '@tanstack/devtools-client@0.0.4':
+    resolution: {integrity: sha512-LefnH9KE9uRDEWifc3QDcooskA8ikfs41bybDTgpYQpyTUspZnaEdUdya9Hry0KYxZ8nos0S3nNbsP79KHqr6Q==}
     engines: {node: '>=18'}
 
   '@tanstack/devtools-event-bus@0.3.3':
@@ -3760,14 +3769,14 @@ packages:
     peerDependencies:
       solid-js: '>=1.9.7'
 
-  '@tanstack/devtools-vite@0.3.10':
-    resolution: {integrity: sha512-vFPYqzFU5FaK0jzMgCA26V5s244P8Ah5cG7eY2oLJrZ6DJ3Wh3UI4W4xqFKzRfQHmgjlndW3/S37eSh5MSFkgQ==}
+  '@tanstack/devtools-vite@0.3.11':
+    resolution: {integrity: sha512-t5jaWJNgkXOQTxuNrwkz71cN86zPZnLJY2Rz0IaMDgjb0ib1EKHeRgdqHMR/2YL96yhCHHDCHroBQXsw5Da4dg==}
     engines: {node: '>=18'}
     peerDependencies:
       vite: ^6.0.0 || ^7.0.0
 
-  '@tanstack/devtools@0.7.0':
-    resolution: {integrity: sha512-AlAoCqJhWLg9GBEaoV1g/j+X/WA1aJSWOsekxeuZpYeS2hdVuKAjj04KQLUMJhtLfNl2s2E+TCj7ZRtWyY3U4w==}
+  '@tanstack/devtools@0.8.0':
+    resolution: {integrity: sha512-j6tBkMpAyTkiGH4ELiHzFSpV0f9fCYtAMEqTEiXEOVVfB57C36KR8LyIHtdeGzK6eQ5sKEdgLbHG9EU31L3Jng==}
     engines: {node: '>=18'}
     peerDependencies:
       solid-js: '>=1.9.7'
@@ -3788,8 +3797,8 @@ packages:
   '@tanstack/query-devtools@5.90.1':
     resolution: {integrity: sha512-GtINOPjPUH0OegJExZ70UahT9ykmAhmtNVcmtdnOZbxLwT7R5OmRztR5Ahe3/Cu7LArEmR6/588tAycuaWb1xQ==}
 
-  '@tanstack/react-devtools@0.7.11':
-    resolution: {integrity: sha512-a2Lmz8x+JoDrsU6f7uKRcyyY+k8mA/n5mb9h7XJ3Fz/y3+sPV9t7vAW1s5lyNkQyyDt6V1Oim99faLthoJSxMw==}
+  '@tanstack/react-devtools@0.8.0':
+    resolution: {integrity: sha512-0TsFICBPr68us3iWHFXCIBSEilTo8j1OdIJLW48LNQNjC/Puno82uqX4qFuaZWfZv6K37QnS6UeRxzWJItMFSA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/react': '>=16.8'
@@ -5632,8 +5641,8 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  fumadocs-core@16.0.5:
-    resolution: {integrity: sha512-xeEDzjagdj1a9ryg5iportmvrJ9yDgQee2KBVjp3rLAUdquN4Z31Gh/pmuByZDVcwu4rl2Ax3qt+kbpY2e6djQ==}
+  fumadocs-core@16.0.6:
+    resolution: {integrity: sha512-RjEz59Jb3w3sHI8XVV3T2FuPzIUQCcPnkyeghYMkOoijdNZHkRfYMB+NpyzIM6OPnksXCMi4+Fq4wNwKLBbLOw==}
     peerDependencies:
       '@mixedbread/sdk': ^0.19.0
       '@orama/core': 1.x.x
@@ -5670,8 +5679,8 @@ packages:
       waku:
         optional: true
 
-  fumadocs-mdx@13.0.2:
-    resolution: {integrity: sha512-PLlpdDJze/Yy7phM6v9vyIcxDSGrfkUTkvhTiGHkLBft5bA171fAs+BzhiqwNCfR+4MfXMppfb7ffZV3sg6frA==}
+  fumadocs-mdx@13.0.3:
+    resolution: {integrity: sha512-Vtt0kwGNTmfTopM+XP/FyU0q83rvFmJV1UKinCHg/3N3plAY0owRQkcyOw5kErSngItkW8eXTgJ3eS8zc0Pu0Q==}
     hasBin: true
     peerDependencies:
       '@fumadocs/mdx-remote': ^1.4.0
@@ -5689,8 +5698,8 @@ packages:
       vite:
         optional: true
 
-  fumadocs-ui@16.0.5:
-    resolution: {integrity: sha512-WSvDnHMslEFrSDH7qQpL4j+vb5dQUjVfUResVSpQS2GbQhpLIiNbUuSaF3iofDNm+/EWKU8iqYVikZfO1i7ybw==}
+  fumadocs-ui@16.0.6:
+    resolution: {integrity: sha512-mi4p6rf9aAhymSoAmqlMTEBpP0WirCna3mEXqnXf2oEeoMAzvKDp8J+yXO3aS9BlxnXUgC8hxmb/RhmxQhWMsA==}
     peerDependencies:
       '@types/react': '*'
       next: 16.x.x
@@ -10045,6 +10054,13 @@ snapshots:
     transitivePeerDependencies:
       - babel-plugin-macros
 
+  '@inlang/plugin-i18next@6.0.11':
+    dependencies:
+      '@inlang/sdk': 2.4.9
+      '@sinclair/typebox': 0.31.28
+    transitivePeerDependencies:
+      - babel-plugin-macros
+
   '@inlang/recommend-sherlock@0.2.1':
     dependencies:
       comment-json: 4.4.1
@@ -12261,7 +12277,7 @@ snapshots:
       tailwindcss: 4.1.16
       vite: 7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
 
-  '@tanstack/devtools-client@0.0.3':
+  '@tanstack/devtools-client@0.0.4':
     dependencies:
       '@tanstack/devtools-event-client': 0.3.4
 
@@ -12282,14 +12298,14 @@ snapshots:
     transitivePeerDependencies:
       - csstype
 
-  '@tanstack/devtools-vite@0.3.10(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))':
+  '@tanstack/devtools-vite@0.3.11(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.28.5
       '@babel/generator': 7.28.5
       '@babel/parser': 7.28.5
       '@babel/traverse': 7.28.5
       '@babel/types': 7.28.5
-      '@tanstack/devtools-client': 0.0.3
+      '@tanstack/devtools-client': 0.0.4
       '@tanstack/devtools-event-bus': 0.3.3
       chalk: 5.6.2
       launch-editor: 2.12.0
@@ -12300,12 +12316,12 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@tanstack/devtools@0.7.0(csstype@3.1.3)(solid-js@1.9.10)':
+  '@tanstack/devtools@0.8.0(csstype@3.1.3)(solid-js@1.9.10)':
     dependencies:
       '@solid-primitives/event-listener': 2.4.3(solid-js@1.9.10)
       '@solid-primitives/keyboard': 1.3.3(solid-js@1.9.10)
       '@solid-primitives/resize-observer': 2.1.3(solid-js@1.9.10)
-      '@tanstack/devtools-client': 0.0.3
+      '@tanstack/devtools-client': 0.0.4
       '@tanstack/devtools-event-bus': 0.3.3
       '@tanstack/devtools-ui': 0.4.4(csstype@3.1.3)(solid-js@1.9.10)
       clsx: 2.1.1
@@ -12336,9 +12352,9 @@ snapshots:
 
   '@tanstack/query-devtools@5.90.1': {}
 
-  '@tanstack/react-devtools@0.7.11(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(csstype@3.1.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(solid-js@1.9.10)':
+  '@tanstack/react-devtools@0.8.0(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(csstype@3.1.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(solid-js@1.9.10)':
     dependencies:
-      '@tanstack/devtools': 0.7.0(csstype@3.1.3)(solid-js@1.9.10)
+      '@tanstack/devtools': 0.8.0(csstype@3.1.3)(solid-js@1.9.10)
       '@types/react': 19.2.2
       '@types/react-dom': 19.2.2(@types/react@19.2.2)
       react: 19.2.0
@@ -14312,7 +14328,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  fumadocs-core@16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       '@formatjs/intl-localematcher': 0.6.2
       '@orama/orama': 3.1.16
@@ -14340,14 +14356,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-mdx@13.0.2(fumadocs-core@16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)):
+  fumadocs-mdx@13.0.3(fumadocs-core@16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@24.9.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)):
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@standard-schema/spec': 1.0.0
       chokidar: 4.0.3
       esbuild: 0.25.11
       estree-util-value-to-estree: 3.5.0
-      fumadocs-core: 16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      fumadocs-core: 16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       js-yaml: 4.1.0
       lru-cache: 11.2.2
       mdast-util-to-markdown: 2.1.2
@@ -14366,7 +14382,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-ui@16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.16):
+  fumadocs-ui@16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(tailwindcss@4.1.16):
     dependencies:
       '@radix-ui/react-accordion': 1.2.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -14379,7 +14395,7 @@ snapshots:
       '@radix-ui/react-slot': 1.2.3(@types/react@19.2.2)(react@19.2.0)
       '@radix-ui/react-tabs': 1.1.13(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       class-variance-authority: 0.7.1
-      fumadocs-core: 16.0.5(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      fumadocs-core: 16.0.6(@tanstack/react-router@1.133.36(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@types/react@19.2.2)(lucide-react@0.548.0(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       lodash.merge: 4.6.2
       next-themes: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       postcss-selector-parser: 7.1.0

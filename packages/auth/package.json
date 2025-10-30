@@ -22,6 +22,7 @@
     "@raypx/ui": "workspace:*",
     "@tanstack/react-start": "catalog:",
     "better-auth": "^1.3.34",
+    "lucide-react": "catalog:",
     "react": "catalog:react19"
   },
   "devDependencies": {

@@ -10,11 +10,12 @@ import type { I18nCacheConfig } from "./types";
 /**
  * Calculate hash for message files to detect changes
  */
-export function calculateMessagesHash(messagesPathPattern: string): {
+export function calculateMessagesHash(params: { cwd: string; pattern: string }): {
   hash: string;
   files: string[];
 } {
-  const messagesFiles = fg.sync(messagesPathPattern, { onlyFiles: true }).sort();
+  const source = params.pattern.replace("{locale}", "*");
+  const messagesFiles = fg.sync(source, { onlyFiles: true, cwd: params.cwd }).sort();
   const hash = crypto.createHash("md5");
 
   for (const file of messagesFiles) {
