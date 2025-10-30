@@ -32,9 +32,9 @@ export default defineConfig({
     },
   },
   plugins: [
-    i18nPlugin({
-      outputStructure: isDev ? "locale-modules" : "message-modules",
-    }),
+    // i18n configuration is centralized in src/lib/i18n.ts
+    // Only override outputStructure for dev mode (better HMR)
+    i18nPlugin({ outputStructure: isDev ? "locale-modules" : undefined }),
     mdx(sourceConfig),
     // Always include for production tree-shaking
     devtools({
