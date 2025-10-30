@@ -1,3 +1,4 @@
+import { SignedIn, SignedOut, UserButton } from "@raypx/auth";
 import { useLocale } from "@raypx/i18n/client";
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button, buttonVariants } from "@raypx/ui/components/button";
@@ -104,22 +105,27 @@ export function Navbar({ scroll }: NavBarProps) {
               <Skeleton className="size-8 border rounded-full" />
             ) : (
               <div className="flex items-center gap-x-4">
-                <Link to="/sign-in">
-                  <Button className="cursor-pointer" size="sm" variant="outline">
-                    {t("layout.nav.login")}
-                  </Button>
-                </Link>
-                <Link
-                  className={cn(
-                    buttonVariants({
-                      variant: "default",
-                      size: "sm",
-                    }),
-                  )}
-                  to="/sign-up"
-                >
-                  {t("layout.nav.signUp")}
-                </Link>
+                <SignedOut>
+                  <Link to="/sign-in">
+                    <Button className="cursor-pointer" size="sm" variant="outline">
+                      {t("layout.nav.login")}
+                    </Button>
+                  </Link>
+                  <Link
+                    className={cn(
+                      buttonVariants({
+                        variant: "default",
+                        size: "sm",
+                      }),
+                    )}
+                    to="/sign-up"
+                  >
+                    {t("layout.nav.signUp")}
+                  </Link>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton />
+                </SignedIn>
               </div>
             )}
             <ThemeSwitcher />
