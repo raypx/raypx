@@ -16,7 +16,7 @@ import {
   PasswordField,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -25,6 +25,7 @@ import { isValidEmail } from "../../utils/email";
 
 function SignInPage() {
   const { t } = useLocale("auth");
+  const navigate = useNavigate();
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
   const [isSubmitting] = useState(false);
@@ -101,10 +102,11 @@ function SignInPage() {
         // navigate(
         //     `${basePath}/${viewPaths.TWO_FACTOR}${window.location.search}`
         // )
+        navigate({ to: "/" });
       } else {
         await onSuccess();
       }
-    } catch (error) {
+    } catch (_error: unknown) {
       form.resetField("password");
       // resetCaptcha()
 

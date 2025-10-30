@@ -11,6 +11,7 @@ import {
   oneTap,
   username,
 } from "better-auth/plugins";
+import { reactStartCookies } from "better-auth/react-start";
 import { envs } from "../envs";
 import { features } from "../features";
 
@@ -21,7 +22,7 @@ const getPlugins = () => {
   plugins.push(
     username(),
     mcp({
-      loginPage: "/signin",
+      loginPage: "/sign-in",
     }),
     lastLoginMethod(),
   );
@@ -94,6 +95,7 @@ const getPlugins = () => {
     );
   }
 
+  plugins.push(reactStartCookies());
   return plugins;
 };
 
@@ -108,29 +110,34 @@ const createAuthOptions = () => {
     emailAndPassword: {
       enabled: true,
     },
-    baseURL: env.VITE_BASE_URL,
-    trustedOrigins: (req) =>
-      [req.headers.get("origin") ?? "", req.headers.get("referer") ?? ""].filter(
-        Boolean,
-      ) as string[],
-    session: {
-      cookieCache: {
-        enabled: true,
-        maxAge: 5 * 60, // 5 minutes
-      },
-      expiresIn: 60 * 60 * 24 * 7, // 7 days
-      updateAge: 60 * 60 * 24, // 1 day
-    },
+    baseURL: env.VITE_AUTH_URL,
+    // trustedOrigins: (req) =>
+    //   [req.headers.get("origin") ?? "", req.headers.get("referer") ?? ""].filter(
+    //     Boolean,
+    //   ) as string[],
+    // session: {
+    //   cookieCache: {
+    //     enabled: true,
+    //     maxAge: 5 * 60, // 5 minutes
+    //   },
+    //   expiresIn: 60 * 60 * 24 * 7, // 7 days
+    //   updateAge: 60 * 60 * 24, // 1 day
+    // },
     secret: env.AUTH_SECRET,
+    // appName: "Raypx",
     advanced: {
       database: {
         generateId: () => uuidv7(),
       },
-      crossSubDomainCookies: {
-        enabled: !!env.AUTH_DOMAIN,
-        domain: env.AUTH_DOMAIN,
-      },
-      cookiePrefix: "auth",
+      // crossSubDomainCookies: {
+      //   enabled: !!env.AUTH_DOMAIN,
+      //   domain: env.AUTH_DOMAIN,
+      // },
+      disableOriginCheck: true,
+      cookiePrefix: "auth2",
+      // defaultCookieAttributes: {
+      //   domain: 'localhost:3000',
+      // },
     },
     user: {
       deleteUser: {
@@ -144,7 +151,7 @@ const createAuthOptions = () => {
       },
     },
     logger: {
-      disabled: true,
+      disabled: false,
       level: "debug",
     },
     plugins,
