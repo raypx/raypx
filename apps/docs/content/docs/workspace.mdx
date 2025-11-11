@@ -1,0 +1,56 @@
+---
+title: Workspace Layout
+description: Understand how the Raypx Turborepo is structured and what each package delivers.
+---
+
+## Monorepo at a Glance
+
+Raypx relies on Turborepo and pnpm workspaces. Applications live in `apps/`, reusable logic in `packages/`, and tooling in `tooling/`.
+
+```text
+raypx/
+├── apps/
+│   └── web/                # TanStack Start frontend
+│       ├── src/app/        # File-based routes (React Server Components)
+│       ├── src/components/ # Colocated UI primitives
+│       ├── src/lib/        # Frontend utilities & adapters
+│       └── public/         # Static assets served by the app
+├── packages/               # Shared, versioned packages
+├── tooling/                # Scripts & shared TypeScript configs
+└── turbo.json              # Turborepo pipeline definition
+```
+
+Each package is published internally and imported via the `@raypx/*` namespace that pnpm configures automatically.
+
+## Applications
+
+- **apps/web** – TanStack Start application that renders the public and authenticated UI. Routes live under `apps/web/src/app` using the `{-$lang}` convention for i18n.
+
+## Core Packages
+
+| Package | Purpose |
+| ------- | ------- |
+| `packages/ui` | Design system built on Radix UI, Tailwind CSS, and shadcn/ui. Provides theme-aware components used across apps. |
+| `packages/i18n` | Centralizes locale data, navigation helpers, and routing utilities. |
+| `packages/db` | Database layer powered by Drizzle ORM, plus migration helpers. |
+| `packages/shared` | Cross-cutting utilities, constants, and TypeScript types. |
+| `packages/trpc` | Type-safe API procedures and server utilities. |
+| `packages/redis` | Redis client configuration and caching helpers. |
+
+Packages can depend on each other, but keep boundaries clear: UI only exposes presentation logic, while `shared` is for pure utilities with zero runtime dependencies.
+
+## Tooling Highlights
+
+- **`tooling/scripts/`** – Reusable scripts invoked by pnpm commands (formatting, linting, migrations).
+- **`tooling/tsconfig/`** – Shared TypeScript configs used by packages and apps.
+- **`biome.json`** – Single source of truth for linting and formatting via Biome.
+
+## Generated Sources
+
+Runtime metadata (such as MDX-driven docs) is generated into `apps/web/source.generated.ts`. Avoid manual edits—run document-related commands or rerun the dev server to refresh the file.
+
+## Navigation Tips
+
+- Use `pnpm --filter <package>` to target builds/tests for a specific package.
+- `pnpm turbo run build --filter=apps/web` builds only the frontend while respecting dependency graphs.
+- `pnpm -w <command>` executes workspace-level scripts, such as `pnpm -w format`.

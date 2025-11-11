@@ -1,0 +1,34 @@
+{
+  "name": "@raypx/env",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Environment validation with extends support (forked from @t3-oss/t3-env)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "rimraf dist .turbo",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "envin": "^1.1.10",
+    "lodash-es": "catalog:",
+    "type-fest": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:dev",
+    "typescript": "catalog:dev",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,43 @@
+---
+title: Docs & i18n Conventions
+description: Maintain Raypx documentation, translations, and search configuration with confidence.
+---
+
+Raypx relies on [Fumadocs](https://fumadocs.vercel.app/) for rendering documentation inside the web app. The content lives in the repository, which means that updating docs follows the same workflow as code changes: create a branch, edit MDX, run checks, and submit a PR.
+
+## Folder Layout
+
+```
+apps/web/content/docs/
+├── index.mdx        # English quick start
+├── index.zh.mdx     # Simplified Chinese quick start
+├── development.mdx  # Development workflow (add .zh.mdx for translations)
+├── workspace.mdx    # Monorepo overview (add .zh.mdx for translations)
+└── meta.json        # Navigation metadata consumed by Fumadocs
+```
+
+Add new documentation by placing `.mdx` files in this folder. Pages are automatically discovered by `apps/web/source.generated.ts`.
+
+## Writing MDX
+
+- Frontmatter requires `title` and `description` to keep navigation consistent.
+- Use standard Markdown + JSX components. Syntax highlighting blocks should provide a `title` or `lang` where possible.
+- Wrap inline component usage in backticks when referencing code (`Button`, `useTheme`).
+
+## Internationalization
+
+- Create a `*.zh.mdx` sibling file to offer Simplified Chinese content.
+- Keep the same frontmatter keys between languages; only the values should differ.
+- If a translation lags behind, add a note at the top of the localized file so contributors know it needs attention.
+
+## Live Preview & Search
+
+- Run `pnpm web:dev` to preview docs locally. Edits trigger instant reloads.
+- The command palette (`⌘ K` / `Ctrl K`) searches through titles, descriptions, and headings. Concise headings improve discoverability.
+- Navigation structure is controlled via `meta.json`. Use folders and icons to group related pages once the catalogue grows.
+
+## Keeping Docs Fresh
+
+- Update docs whenever you introduce new features, scripts, or environment variables.
+- Reference workspace commands (`pnpm ...`) instead of raw `npm` or `yarn` invocations.
+- Include migration notes for breaking changes—especially across shared packages—to reduce onboarding friction.

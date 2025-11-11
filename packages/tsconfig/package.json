@@ -1,0 +1,15 @@
+{
+  "name": "@raypx/tsconfig",
+  "private": true,
+  "type": "module",
+  "files": [
+    "base.json",
+    "react-library.json",
+    "package-library.json",
+    "vite.json"
+  ],
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:dev"
+  }
+}

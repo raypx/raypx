@@ -1,0 +1,13 @@
+.cursor
+.claude
+.conductor
+.kiro
+.github
+.source
+.vscode
+.git
+.dockerignore
+node_modules
+**/node_modules
+Dockerfile
+LICENSE

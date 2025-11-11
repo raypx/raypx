@@ -1,0 +1,38 @@
+{
+  "name": "@raypx/email",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./emails": "./src/emails/index.ts",
+    "./types": "./src/types.ts",
+    "./config": "./src/config.ts",
+    "./envs": "./src/envs.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo tsconfig.tsbuildinfo",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@raypx/env": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "@react-email/render": "^2.0.0",
+    "nodemailer": "^7.0.10",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "resend": "^6.4.2"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@react-email/components": "^1.0.0",
+    "@types/node": "catalog:",
+    "@types/nodemailer": "^7.0.3",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "typescript": "catalog:dev"
+  },
+  "peerDependencies": {
+    "@react-email/components": "^0.5.7"
+  }
+}
