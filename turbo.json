@@ -1,0 +1,69 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "envMode": "loose",
+  "concurrency": "16",
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_URL",
+    "npm_lifecycle_event"
+  ],
+  "tasks": {
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", ".tanstack"],
+      "outputs": ["dist/**", ".tanstack/**"]
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": ["^typecheck"]
+    },
+    "dev": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "persistent": true
+    },
+    "format": {
+      "cache": true,
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "check": {
+      "cache": true,
+      "dependsOn": ["^topo"],
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "generate": {
+      "cache": true,
+      "outputLogs": "new-only",
+      "outputs": ["generated/**", "**/*.generated.*"]
+    },
+    "start": {
+      "cache": false,
+      "dependsOn": ["build"]
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.*",
+        "jest.config.*",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "outputs": ["coverage/**", "test-results/**"]
+    },
+    "shadcn": {
+      "cache": false,
+      "interactive": true
+    }
+  }
+}

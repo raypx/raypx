@@ -1,0 +1,43 @@
+---
+title: 文档与国际化约定
+description: 了解如何维护 Raypx 文档、翻译以及搜索体验。
+---
+
+Raypx 通过 [Fumadocs](https://fumadocs.vercel.app/) 渲染项目文档。文档与代码同库管理，因此更新流程与普通开发一致：创建分支、修改 MDX、运行检查并提交 PR。
+
+## 目录结构
+
+```
+apps/web/content/docs/
+├── index.mdx        # 英文快速入门
+├── index.zh.mdx     # 中文快速入门
+├── development.mdx  # 开发流程（可添加 .zh.mdx）
+├── workspace.mdx    # 工作区结构（可添加 .zh.mdx）
+└── meta.json        # 导航配置
+```
+
+在该目录新增 `.mdx` 文件即可扩展文档。`apps/web/source.generated.ts` 会自动检测并生成导航数据。
+
+## 编写 MDX
+
+- Frontmatter 需要包含 `title` 与 `description`。
+- 支持 Markdown 与 JSX 组合，代码块推荐添加 `title` 或 `lang`。
+- 提及组件或函数时使用反引号包裹，例如 `Button`、`useTheme`。
+
+## 国际化
+
+- 创建同名的 `*.zh.mdx` 文件为页面提供简体中文版本。
+- 保持 frontmatter 键一致，仅修改值。
+- 若翻译暂未完成，可在文件顶部加入提示，帮助后续贡献者补齐内容。
+
+## 本地预览与搜索
+
+- 使用 `pnpm web:dev` 本地预览文档，改动会自动热更新。
+- 命令面板（`⌘ K` / `Ctrl K`）会搜索标题、描述与标题层级，精炼的标题有助于检索。
+- `meta.json` 可用于自定义分组与图标，当文档数量增加时可适当整理。
+
+## 保持文档同步
+
+- 引入新功能、脚本或环境变量时及时更新文档。
+- 命令示例优先使用 `pnpm`，保持与工作区工具链一致。
+- 遇到破坏性变更时补充迁移说明，帮助团队和新成员快速适配。

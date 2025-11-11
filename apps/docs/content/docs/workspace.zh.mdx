@@ -1,0 +1,56 @@
+---
+title: 工作区结构
+description: 了解 Raypx Turborepo 的目录划分以及各个包的职责。
+---
+
+## 总览
+
+Raypx 基于 Turborepo 与 pnpm 工作区。应用位于 `apps/`，可复用逻辑位于 `packages/`，工具链在 `tooling/`。
+
+```text
+raypx/
+├── apps/
+│   └── web/                # TanStack Start 前端
+│       ├── src/app/        # 基于文件的路由（React Server Components）
+│       ├── src/components/ # UI 组件
+│       ├── src/lib/        # 前端工具方法
+│       └── public/         # 静态资源
+├── packages/               # 共享包
+├── tooling/                # 脚本与 TypeScript 配置
+└── turbo.json              # Turborepo 流水线定义
+```
+
+所有包通过 `@raypx/*` 命名空间导出，pnpm 会自动解析依赖。
+
+## 应用
+
+- **apps/web** – 使用 TanStack Start 构建的主站，路由位于 `apps/web/src/app`，结合 `{-$lang}` 语法实现多语言。
+
+## 核心共享包
+
+| 包名 | 功能说明 |
+| ---- | -------- |
+| `packages/ui` | 基于 Radix UI、Tailwind CSS 与 shadcn/ui 构建的设计系统。 |
+| `packages/i18n` | 管理语言包、导航辅助函数与路由工具。 |
+| `packages/db` | Drizzle ORM 数据库层以及迁移脚本。 |
+| `packages/shared` | 无副作用的工具函数与公共类型。 |
+| `packages/trpc` | Type-safe API 定义与服务器端工具。 |
+| `packages/redis` | Redis 客户端配置与缓存封装。 |
+
+请保持边界清晰：`ui` 只关注视图层；`shared` 仅包含零依赖的纯工具。
+
+## 工具链
+
+- **`tooling/scripts/`** – pnpm 命令所依赖的脚本（格式化、迁移等）。
+- **`tooling/tsconfig/`** – 各项目共享的 TS 配置。
+- **`biome.json`** – Biome 的统一配置文件。
+
+## 生成文件
+
+文档相关的元数据会输出到 `apps/web/source.generated.ts`，无需手动修改。更新 MDX 后重新运行开发服务器即可刷新内容。
+
+## 小贴士
+
+- 使用 `pnpm --filter <package>` 在特定包内运行命令。
+- `pnpm turbo run build --filter=apps/web` 可只构建 Web 应用并处理依赖。
+- `pnpm -w <command>` 在工作区根目录执行脚本，例如 `pnpm -w format`。

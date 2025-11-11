@@ -1,0 +1,19 @@
+# Build outputs
+dist
+.tanstack
+.nitro
+.output
+.turbo
+
+# Dependencies
+node_modules
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Generated
+routeTree.gen.ts
