@@ -116,7 +116,6 @@ function logError(entry: ErrorLogEntry): void {
       console.warn(logMessage);
       break;
     case LogLevel.INFO:
-      console.info(logMessage);
       break;
     case LogLevel.DEBUG:
       console.debug(logMessage);
@@ -134,11 +133,6 @@ function logError(entry: ErrorLogEntry): void {
 /**
  * Error logging middleware
  * Catches and logs all errors with contextual information
- *
- * @example
- * ```ts
- * export const publicProcedure = t.procedure.use(errorLoggingMiddleware);
- * ```
  */
 export const errorLoggingMiddleware = async ({ ctx, path, type, next }: any) => {
   try {
@@ -167,12 +161,6 @@ export const errorLoggingMiddleware = async ({ ctx, path, type, next }: any) => 
 /**
  * Performance logging middleware
  * Logs slow requests for performance monitoring
- *
- * @example
- * ```ts
- * export const publicProcedure = t.procedure
- *   .use(performanceLoggingMiddleware(1000)); // Log requests slower than 1000ms
- * ```
  */
 export function performanceLoggingMiddleware(thresholdMs = 3000) {
   return async ({ ctx, path, type, next }: any) => {

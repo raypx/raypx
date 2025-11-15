@@ -26,6 +26,8 @@ Email templates and sending functionality for Raypx, built with React Email.
 
 ### Start Preview Server
 
+The email preview is a separate TanStack Start application located at `apps/email/`.
+
 From the project root:
 
 ```bash
@@ -33,10 +35,12 @@ From the project root:
 pnpm email:dev
 
 # Or directly
-pnpm --filter @raypx/email run dev
+turbo dev --filter=email
 ```
 
-The preview server will start at `http://localhost:3001` and automatically open in your browser.
+The preview server will start at `http://localhost:3002` and automatically open in your browser.
+
+> **Note:** The preview app is a standalone TanStack Start application. See `apps/email/README.md` for more details.
 
 ### Sending Test Emails
 
@@ -85,17 +89,174 @@ With configuration, actual emails will be sent to the specified address.
 
 ## Usage in Application
 
-### Sending an Email
+### Basic Usage
 
 ```typescript
 import { sendEmail } from "@raypx/email";
 import { WelcomeEmail } from "@raypx/email/emails";
 
-await sendEmail({
+const result = await sendEmail({
   to: "user@example.com",
+  from: "noreply@raypx.com",
   subject: "Welcome to Raypx!",
-  react: <WelcomeEmail username="John" />,
+  template: <WelcomeEmail username="John" />,
 });
+
+if (result.success) {
+  console.log("✅ Email sent successfully!");
+  console.log("Email ID:", result.emailId);
+} else {
+  console.error("❌ Failed to send email:", result.error);
+}
+```
+
+### With Error Handling
+
+```typescript
+import { sendEmail } from "@raypx/email";
+import { ResetPasswordEmail } from "@raypx/email/emails";
+
+async function sendPasswordResetEmail(email: string, resetUrl: string) {
+  const result = await sendEmail({
+    to: email,
+    from: "security@raypx.com",
+    subject: "Reset Your Password",
+    template: <ResetPasswordEmail actionUrl={resetUrl} email={email} />,
+  });
+
+  if (!result.success) {
+    console.error("Failed to send password reset:", result.error);
+    throw new Error(`Email delivery failed: ${result.error}`);
+  }
+
+  return result.emailId;
+}
+```
+
+### Specify Provider Explicitly
+
+```typescript
+import { sendEmail } from "@raypx/email";
+import { OrganizationInviteEmail } from "@raypx/email/emails";
+
+const result = await sendEmail({
+  to: "newmember@example.com",
+  from: "invites@raypx.com",
+  subject: "Join Our Organization",
+  template: (
+    <OrganizationInviteEmail
+      organizationName="Acme Corp"
+      inviterName="Jane Smith"
+      actionUrl="https://raypx.com/invite/abc123"
+    />
+  ),
+  provider: "resend", // or "nodemailer"
+});
+```
+
+### Send to Multiple Recipients
+
+```typescript
+import { sendEmail } from "@raypx/email";
+import { WelcomeEmail } from "@raypx/email/emails";
+
+const recipients = ["user1@example.com", "user2@example.com", "user3@example.com"];
+
+const results = await Promise.all(
+  recipients.map((email) =>
+    sendEmail({
+      to: email,
+      from: "noreply@raypx.com",
+      subject: "Welcome!",
+      template: <WelcomeEmail username="User" />,
+    }),
+  ),
+);
+
+const successful = results.filter((r) => r.success).length;
+const failed = results.filter((r) => !r.success).length;
+
+console.log(`✅ Sent: ${successful}, ❌ Failed: ${failed}`);
+```
+
+### Using Plain HTML String
+
+```typescript
+import { sendEmail } from "@raypx/email";
+
+const result = await sendEmail({
+  to: "user@example.com",
+  from: "noreply@raypx.com",
+  subject: "Simple Email",
+  template: "<h1>Hello World!</h1><p>This is a plain HTML email.</p>",
+});
+```
+
+### Response Types
+
+**Success Response:**
+```typescript
+{
+  success: true,
+  emailId?: string,      // Resend email ID (if using Resend)
+  messageId?: string,    // SMTP message ID (if using Nodemailer)
+  provider: "resend" | "nodemailer"
+}
+```
+
+**Error Response:**
+```typescript
+{
+  success: false,
+  error: string,         // Error message
+  provider: "resend" | "nodemailer"
+}
+```
+
+### Provider Selection Priority
+
+1. Explicit `provider` option in `sendEmail()`
+2. `MAILER_PROVIDER` environment variable
+3. Default: `"resend"`
+
+### Best Practices
+
+**1. Always Handle Errors:**
+```typescript
+const result = await sendEmail(options);
+
+if (!result.success) {
+  // Log to error tracking service
+  logger.error("Email failed", { error: result.error, provider: result.provider });
+  // Retry or fallback logic
+}
+```
+
+**2. Use Type-Safe Templates:**
+```typescript
+import { sendEmail } from "@raypx/email";
+import { WelcomeEmail } from "@raypx/email/emails";
+
+// TypeScript will check props
+const result = await sendEmail({
+  to: "user@example.com",
+  from: "noreply@raypx.com",
+  subject: "Welcome!",
+  template: <WelcomeEmail username="John" />, // Type-safe!
+});
+```
+
+**3. Environment-Specific Configuration:**
+```typescript
+// lib/email.ts
+import { sendEmail as baseSendEmail, type SendEmailOptions } from "@raypx/email";
+
+export async function sendEmail(options: Omit<SendEmailOptions, "from">) {
+  return baseSendEmail({
+    ...options,
+    from: process.env.EMAIL_FROM || "noreply@raypx.com",
+  });
+}
 ```
 
 ### Creating New Templates
@@ -145,13 +306,10 @@ packages/email/
 │   ├── config.ts         # Configuration
 │   ├── types.ts          # TypeScript types
 │   └── index.ts          # Main exports
-├── preview/              # Preview app (isolated from main app)
-│   ├── app.tsx          # Preview interface
-│   ├── main.tsx         # Preview entry point
-│   ├── index.html       # Preview HTML
-│   └── styles.css       # Preview styles
-├── vite.config.ts       # Vite configuration for preview
 └── package.json
+
+# Preview app is located at apps/email/
+# See apps/email/README.md for preview application details
 ```
 
 ### Why Not React Email CLI?
@@ -171,69 +329,73 @@ Our custom Vite solution:
 
 The preview system is **completely isolated**:
 
-- ✅ Separate Vite server (port 3001)
-- ✅ Separate build output (`dist-preview`)
+- ✅ Separate TanStack Start application (`apps/email/`)
+- ✅ Separate dev server (port 3002)
 - ✅ Zero impact on main app build time
 - ✅ No code bundled into production
 - ✅ Can be run independently
 
-## Build Static Preview
+## Build Preview App
 
-To export static HTML previews:
-
-```bash
-pnpm email:build
-```
-
-Outputs to `packages/email/dist-preview/`
-
-## Email Providers
-
-### Resend (Recommended)
-
-```typescript
-import { createEmailProvider } from "@raypx/email";
-
-const provider = createEmailProvider({
-  type: "resend",
-  apiKey: process.env.RESEND_API_KEY,
-});
-```
-
-### Nodemailer
-
-```typescript
-const provider = createEmailProvider({
-  type: "nodemailer",
-  config: {
-    host: "smtp.example.com",
-    port: 587,
-    auth: {
-      user: "user",
-      pass: "pass",
-    },
-  },
-});
-```
-
-## Environment Variables
+To build the preview application:
 
 ```bash
-# .env
-RESEND_API_KEY=re_xxx
-# Or for Nodemailer
-SMTP_HOST=smtp.example.com
+turbo build --filter=email
+```
+
+Outputs to `apps/email/.output/` (Nitro build output)
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Choose provider (default: resend)
+MAILER_PROVIDER=resend  # or "nodemailer"
+
+# Resend Configuration
+RESEND_FROM=noreply@yourdomain.com
+AUTH_RESEND_KEY=re_xxxxxxxxxxxxx
+# or
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+
+# Nodemailer (SMTP) Configuration
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+# or
+SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=user
-SMTP_PASS=pass
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_SECURE=false  # true for port 465
+```
+
+### Advanced: Using getMailer() Directly
+
+For advanced use cases, you can use `getMailer()` directly:
+
+```typescript
+import { getMailer } from "@raypx/email";
+import { WelcomeEmail } from "@raypx/email/emails";
+
+const mailer = await getMailer();
+await mailer.sendEmail({
+  to: "user@example.com",
+  from: "noreply@raypx.com",
+  subject: "Welcome!",
+  template: <WelcomeEmail username="John" />,
+});
 ```
 
 ## Performance
 
-- **Cold start**: ~100ms (Vite)
-- **Hot reload**: ~10ms (per template change)
+- **Cold start**: ~200ms (TanStack Start)
+- **Hot reload**: ~50ms (per template change)
 - **Build time**: Not included in main app build
-- **Bundle size**: 0 bytes added to production (dev only)
+- **Bundle size**: 0 bytes added to production (dev-only app)
 
 ## Contributing
 

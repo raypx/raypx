@@ -1,3 +1,4 @@
+import { remarkMdxFiles } from "fumadocs-core/mdx-plugins";
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 
 export const docs = defineDocs({
@@ -6,4 +7,13 @@ export const docs = defineDocs({
 
 export default defineConfig({
   lastModifiedTime: "git",
+  mdxOptions: {
+    remarkPlugins: [remarkMdxFiles],
+    rehypeCodeOptions: {
+      themes: {
+        light: "github-light",
+        dark: "github-dark",
+      },
+    },
+  },
 });

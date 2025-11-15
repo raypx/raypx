@@ -9,6 +9,7 @@
   },
   "scripts": {
     "clean": "rm -rf .turbo",
+    "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -24,7 +25,11 @@
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "react": "catalog:react19",
-    "typescript": "catalog:dev"
+    "typescript": "catalog:dev",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

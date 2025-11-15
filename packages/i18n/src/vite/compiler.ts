@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import path from "node:path";
 import { compile } from "@inlang/paraglide-js";
 import { Cache } from "@raypx/bundler";
 import fg from "fast-glob";

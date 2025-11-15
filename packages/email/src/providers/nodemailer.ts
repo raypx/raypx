@@ -4,12 +4,7 @@ import type { MailerSchema } from "../types";
 import { Mailer } from "./base";
 
 const env = envs();
-
 type Config = z.infer<typeof MailerSchema>;
-
-export function createNodemailerService() {
-  return new Nodemailer();
-}
 
 /**
  * A class representing a mailer using Nodemailer library.
@@ -39,4 +34,8 @@ class Nodemailer extends Mailer {
       messageId: result.messageId,
     };
   }
+}
+
+export function createNodemailerService() {
+  return new Nodemailer();
 }

@@ -33,7 +33,7 @@ import {
 } from "@raypx/ui/components";
 import { toast } from "@raypx/ui/components/toast";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, Eye, EyeOff, Key, Plus, Trash2 } from "lucide-react";
+import { Copy, Key, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_app/api-keys/")({

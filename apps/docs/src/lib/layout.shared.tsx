@@ -7,8 +7,8 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <div className="flex items-center gap-2">
-          <Logo />
-          <span className="text-xl font-semibold">Raypx</span>
+          <Logo className="size-6" />
+          <span className="text-lg font-semibold">Raypx</span>
         </div>
       ),
     },

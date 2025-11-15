@@ -65,15 +65,23 @@ raypx/
 ├── apps/
 │   ├── web/          # Main TanStack Start application
 │   ├── docs/         # Fumadocs documentation site
-│   └── email/        # Email template development
+│   └── server/       # Server utilities
 │
 ├── packages/         # 14 shared packages
+│   ├── analytics/    # Analytics integration
 │   ├── auth/         # Authentication system
+│   ├── bundler/      # Build utilities
+│   ├── cli/          # CLI tools
 │   ├── db/           # Database layer (Drizzle ORM)
-│   ├── email/        # Email templates (React Email)
+│   ├── email/        # Email templates with preview server
+│   ├── env/          # Environment validation
+│   ├── i18n/         # Internationalization (WIP)
+│   ├── redis/        # Redis client
+│   ├── shared/       # Shared utilities
 │   ├── trpc/         # Type-safe API layer
+│   ├── tsconfig/     # TypeScript configurations
 │   ├── ui/           # UI component library (60+ components)
-│   └── ...           # Other utilities
+│   └── validators/   # Zod schemas
 │
 └── tooling/          # Development tools
 ```
@@ -85,6 +93,7 @@ raypx/
 pnpm dev              # Start development server
 pnpm build            # Build for production
 pnpm preview          # Preview production build
+pnpm email-preview    # Email template preview
 
 # Code Quality
 pnpm check            # Lint with Biome

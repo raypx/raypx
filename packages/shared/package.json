@@ -28,6 +28,7 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "type-fest": "catalog:",
-    "typescript": "catalog:dev"
+    "typescript": "catalog:dev",
+    "vitest": "catalog:"
   }
 }

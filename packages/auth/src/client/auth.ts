@@ -39,4 +39,4 @@ export type AuthClientType = typeof auth;
 
 export type AuthClient = typeof auth;
 
-export type AnyAuthClient = Omit<AuthClient, "getSession" | "signUp">;
+export type AnyAuthClient = Omit<AuthClient, "getSession">;

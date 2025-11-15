@@ -1,6 +1,5 @@
 import { Analytics } from "@raypx/analytics";
-import type { Session } from "@raypx/auth";
-import { AuthProvider, useAuth } from "@raypx/auth";
+import { type AnyAuthClient, AuthProvider } from "@raypx/auth";
 import type { AppRouter } from "@raypx/trpc";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
@@ -17,23 +16,19 @@ type RootRouterContext = {
   queryClient: QueryClient;
   trpc: TRPCOptionsProxy<AppRouter>;
   auth?: {
-    session: Session | null;
+    session: AnyAuthClient["$Infer"]["Session"] | null;
   };
 };
 
 export const Route = createRootRouteWithContext<RootRouterContext>()({
   head: async () => ({
     meta: [
-      {
-        charSet: "utf-8",
-      },
+      { charSet: "utf-8" },
       {
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
-      {
-        title: "Raypx",
-      },
+      { title: "Raypx", description: "Raypx" },
     ],
     links: [
       {

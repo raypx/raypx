@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@raypx/ui/components/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/tabs";
 import { createFileRoute } from "@tanstack/react-router";
 import { AccountSettings } from "./-components/account-settings";

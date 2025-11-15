@@ -37,20 +37,6 @@ export interface I18nMiddlewareConfig {
  * - Pre-compiles cookie regex pattern
  * - Caches parsed cookie values per request
  * - Optimized pathname parsing with early returns
- *
- * @example
- * ```typescript
- * import { createMiddleware } from "@raypx/i18n/middleware";
- * import i18nConfig from "./lib/i18n";
- *
- * const i18nMiddleware = createMiddleware(i18nConfig);
- *
- * export default {
- *   async fetch(req: Request) {
- *     return i18nMiddleware(req, ({ request }) => handler.fetch(request));
- *   }
- * };
- * ```
  */
 export function createMiddleware(config: I18nConfig | I18nMiddlewareConfig) {
   const { baseLocale, locales, cookieName = "lang" } = config;
@@ -108,10 +94,6 @@ export function createMiddleware(config: I18nConfig | I18nMiddlewareConfig) {
  * Returns null if no valid locale is found in the path
  *
  * Performance: O(1) Set lookup instead of O(n) Array.includes
- *
- * @example
- * extractLocaleFromUrl("/en/about", localeSet) // "en"
- * extractLocaleFromUrl("/about", localeSet) // null
  */
 function extractLocaleFromUrl(pathname: string, localeSet: Set<string>): string | null {
   // Performance: Early return for root path
@@ -175,11 +157,6 @@ function getLocaleFromCookie(request: Request, cookiePattern: RegExp): string | 
  * - Early return on first high-quality match (q=1)
  * - Avoids full array sort for common cases
  * - Uses Set.has for O(1) locale validation
- *
- * @example
- * Accept-Language: en-US,en;q=0.9,zh;q=0.8
- * Supported: Set(["en", "zh"])
- * Result: "en"
  */
 function getLocaleFromAcceptLanguage(
   request: Request,

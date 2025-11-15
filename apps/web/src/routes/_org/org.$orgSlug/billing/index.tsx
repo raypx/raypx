@@ -105,10 +105,9 @@ const invoices = [
 ];
 
 function BillingPage() {
-  const { orgSlug } = Route.useParams();
-
   // TODO: Add org membership check here
   // For now, auth is handled by parent _org layout
+  // const { orgSlug } = Route.useParams();
 
   const currentPlan = plans.find((p) => p.current);
 

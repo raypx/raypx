@@ -38,7 +38,6 @@ export default defineConfig({
     open: isDev,
   },
   build: {
-    sourcemap: true,
     chunkSizeWarningLimit: 1000,
   },
   ssr: {

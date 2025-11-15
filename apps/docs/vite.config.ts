@@ -43,12 +43,7 @@ export default defineConfig({
     noExternal: ["@raypx/auth"],
   },
   build: {
-    sourcemap: true,
     chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      // Workaround: fumadocs internally imports next/server which causes build errors
-      external: ["next/server"],
-    },
   },
   plugins: [
     // Conditionally load MDX for faster startup (use SKIP_DOCS=true to skip)

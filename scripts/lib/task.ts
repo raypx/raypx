@@ -50,29 +50,6 @@ export interface Task {
 /**
  * Creates a Task - supports task functions, command strings, and command arrays
  *
- * @example
- * // Method 1: Custom task function
- * createTask("Custom Task", async (ctx) => {
- *   console.log("doing work...");
- *   ctx.title = "Work completed";
- * })
- *
- * @example
- * // Method 2: Command string (backward compatible)
- * createTask("pnpm build", { title: "Building project" })
- *
- * @example
- * // Method 3: Command array (recommended - type safe)
- * createTask(["pnpm", "build"], { title: "Building project" })
- *
- * @example
- * // Method 4: Command array with options
- * createTask(["pnpm", "test"], {
- *   title: "Running tests",
- *   retries: 2,
- *   execOptions: { timeout: 60_000 }
- * })
- *
  * @param titleOrCommand - Task title (for functions) or command specification
  * @param taskFnOrOpts - Task function, config object, or simple title string
  */
@@ -177,23 +154,6 @@ export type RunTasksOptions = {
  *
  * @param tasks - Array of Task objects
  * @param concurrent - Run tasks in parallel (default: false for safety)
- *
- * @example
- * // Sequential execution (default)
- * await runTasks([
- *   createTask(["pnpm", "typecheck"]),
- *   createTask(["pnpm", "build"]),
- * ]);
- *
- * @example
- * // Concurrent execution
- * await runTasks({
- *   tasks: [
- *     createTask(["pnpm", "lint"]),
- *     createTask(["pnpm", "test"]),
- *   ],
- *   concurrent: true,
- * });
  */
 export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]): Promise<void> {
   const opts = Array.isArray(_opts) ? { tasks: _opts } : _opts;

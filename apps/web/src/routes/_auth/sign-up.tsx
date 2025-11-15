@@ -1,6 +1,6 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AuthLayout, useAuth, useOnSuccessTransition } from "@raypx/auth";
+import { ProviderButton, socialProviders, useAuth, useOnSuccessTransition } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -13,16 +13,21 @@ import {
   FormMessage,
   Input,
   PasswordField,
+  Separator,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { isValidEmail } from "../../utils/email";
+import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
 
 function SignUpPage() {
+  useAuthPageConfig({
+    footerType: "sign-up",
+  });
+
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
   const [isSubmitting] = useState(false);
@@ -65,74 +70,59 @@ function SignUpPage() {
     },
   });
 
-  async function signIn({ email, password, rememberMe }: z.infer<typeof formSchema>) {
+  async function signUp({ email, password }: z.infer<typeof formSchema>) {
     try {
-      let response: Record<string, unknown> = {};
+      const fetchOptions: BetterFetchOption = {
+        throw: true,
+      };
 
-      if (usernameEnabled && !isValidEmail(email)) {
-        const fetchOptions: BetterFetchOption = {
-          throw: true,
-          // headers: await getCaptchaHeaders("/sign-in/username")
-        };
+      const response = await auth.signUp.email({
+        email,
+        password,
+        name: "",
+        fetchOptions,
+      });
 
-        response = await auth.signIn.username({
-          username: email,
-          password,
-          rememberMe,
-          fetchOptions,
-        });
-      } else {
-        const fetchOptions: BetterFetchOption = {
-          throw: true,
-          // headers: await getCaptchaHeaders("/sign-in/email")
-        };
-
-        response = await auth.signIn.email({
-          email,
-          password,
-          rememberMe,
-          fetchOptions,
-        });
-      }
-
-      if (response.twoFactorRedirect) {
-        // navigate(
-        //     `${basePath}/${viewPaths.TWO_FACTOR}${window.location.search}`
-        // )
-      } else {
+      if ("token" in response && response.token) {
         await onSuccess();
+      } else {
+        // Email verification required - redirect to sign-in
+        // toast: Please check your email to verify your account
       }
-    } catch (error) {
+    } catch (_error) {
       form.resetField("password");
-      // resetCaptcha()
-
-      // toast({
-      //     variant: "error",
-      //     message: getLocalizedError({ error, localization })
-      // })
+      // toast: Sign up failed
     }
   }
 
   return (
-    <AuthLayout
-      cardFooter={
-        <>
-          Already have an account?
-          <Link className={cn("text-foreground underline")} to="/sign-in">
-            <Button className={cn("px-0 text-foreground underline")} size="sm" variant="link">
-              Sign In
-            </Button>
-          </Link>
-        </>
-      }
-      description="Create an account"
-      title="Sign Up"
-    >
+    <>
+      {/* Social Login Buttons */}
+      <div className="grid w-full gap-3">
+        {socialProviders
+          .filter((p) => p.provider === "github" || p.provider === "google")
+          .map((provider) => (
+            <ProviderButton
+              disabled={isSubmitting}
+              key={provider.provider}
+              provider={provider}
+              redirectTo={redirectTo}
+            />
+          ))}
+      </div>
+
+      <div className="relative">
+        <Separator />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs text-muted-foreground">
+          OR
+        </span>
+      </div>
+
       <Form {...form}>
         <form
           className={cn("grid w-full gap-6")}
           noValidate={isHydrated}
-          onSubmit={form.handleSubmit(signIn)}
+          onSubmit={form.handleSubmit(signUp)}
         >
           <FormField
             control={form.control}
@@ -207,10 +197,13 @@ function SignUpPage() {
           </Button>
         </form>
       </Form>
-    </AuthLayout>
+    </>
   );
 }
 
 export const Route = createFileRoute("/_auth/sign-up")({
+  head: () => ({
+    meta: [{ title: "Sign Up - Raypx", description: "Create an account" }],
+  }),
   component: SignUpPage,
 });

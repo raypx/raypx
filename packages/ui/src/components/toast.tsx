@@ -7,7 +7,9 @@ export * from "./sonner";
  */
 const closeAllToasts = (): void => {
   const toasts = toast.getToasts();
-  toasts.map((t) => toast.dismiss(t.id));
+  toasts.forEach((t) => {
+    toast.dismiss(t.id);
+  });
 };
 
 /**
@@ -23,7 +25,9 @@ const closeToast = (id: string | number): void => {
  * @param ids - Array of toast IDs to dismiss
  */
 const closeToasts = (ids: (string | number)[]): void => {
-  ids.map((id) => toast.dismiss(id));
+  ids.forEach((id) => {
+    toast.dismiss(id);
+  });
 };
 
 /**

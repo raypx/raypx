@@ -42,15 +42,6 @@ function isPostgresError(error: unknown): error is PostgresError {
  * Handle database errors with proper error mapping
  *
  * Maps PostgreSQL errors to user-friendly application errors
- *
- * @example
- * ```ts
- * try {
- *   await ctx.db.insert(User).values(data);
- * } catch (error) {
- *   throw handleDatabaseError(error, "create user");
- * }
- * ```
  */
 export function handleDatabaseError(error: unknown, operation: string): TRPCError {
   if (isPostgresError(error)) {
@@ -94,13 +85,6 @@ export function handleDatabaseError(error: unknown, operation: string): TRPCErro
 
 /**
  * Assert that a value exists, throwing a not found error if it doesn't
- *
- * @example
- * ```ts
- * const user = await ctx.db.query.user.findFirst({ where: eq(User.id, id) });
- * assertExists(user, () => Errors.userNotFound(id));
- * // user is now non-nullable
- * ```
  */
 export function assertExists<T>(
   value: T | null | undefined,
@@ -113,14 +97,6 @@ export function assertExists<T>(
 
 /**
  * Assert a condition, throwing an error if it's false
- *
- * @example
- * ```ts
- * assertCondition(
- *   user.role === "admin",
- *   () => Errors.insufficientPermissions("delete users")
- * );
- * ```
  */
 export function assertCondition(
   condition: boolean,
@@ -134,23 +110,13 @@ export function assertCondition(
 /**
  * Wrap an async operation with error handling
  * Automatically catches and transforms errors
- *
- * @example
- * ```ts
- * const user = await withErrorHandling(
- *   async () => {
- *     return await ctx.db.query.user.findFirst({ where: eq(User.id, id) });
- *   },
- *   { operation: "fetch user", notFoundError: () => Errors.userNotFound(id) }
- * );
- * ```
  */
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
   options: {
     operation: string;
     notFoundError?: () => TRPCError;
-    onError?: (error: unknown) => TRPCError | void;
+    onError?: (error: unknown) => TRPCError | undefined;
   },
 ): Promise<T> {
   try {
@@ -183,15 +149,6 @@ export async function withErrorHandling<T>(
 
 /**
  * Check if user has permission to perform an action
- *
- * @example
- * ```ts
- * assertPermission(
- *   ctx.session.user.id === userId,
- *   "update",
- *   "user profile"
- * );
- * ```
  */
 export function assertPermission(
   hasPermission: boolean,
@@ -203,16 +160,6 @@ export function assertPermission(
 
 /**
  * Check if user owns a resource
- *
- * @example
- * ```ts
- * assertOwnership(
- *   ctx.session.user.id,
- *   post.authorId,
- *   "Post",
- *   post.id
- * );
- * ```
  */
 export function assertOwnership(
   userId: string,
@@ -228,14 +175,6 @@ export function assertOwnership(
 /**
  * Retry an operation with exponential backoff
  * Useful for transient errors (network, rate limits, etc.)
- *
- * @example
- * ```ts
- * const result = await retryWithBackoff(
- *   async () => await externalApi.call(),
- *   { maxRetries: 3, baseDelay: 1000 }
- * );
- * ```
  */
 export async function retryWithBackoff<T>(
   operation: () => Promise<T>,
@@ -280,11 +219,6 @@ export async function retryWithBackoff<T>(
 
 /**
  * Validate array has items
- *
- * @example
- * ```ts
- * validateNonEmpty(userIds, "User IDs are required");
- * ```
  */
 export function validateNonEmpty<T>(
   array: T[],
@@ -300,11 +234,6 @@ export function validateNonEmpty<T>(
 
 /**
  * Safe JSON parse with error handling
- *
- * @example
- * ```ts
- * const data = safeJsonParse(input, "Invalid JSON format");
- * ```
  */
 export function safeJsonParse<T = unknown>(jsonString: string, errorMessage = "Invalid JSON"): T {
   try {

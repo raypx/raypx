@@ -7,63 +7,85 @@ description: Get Raypx running locally and learn the fundamentals of the workspa
 
 ### What is Raypx?
 
-Raypx is a Turborepo-powered monorepo that hosts a TanStack Start application, shared packages, and tooling aligned around AI-centric product development.
-It provides a fully type-safe React 19 stack, opinionated UI components, and infrastructure helpers so teams can ship features quickly without rebuilding platform
-primitives.
+Raypx is a Turborepo-powered monorepo that hosts a TanStack Start application, React Email templates, documentation site, and 14 shared packages aligned around modern full-stack development.
+It provides a fully type-safe React 19 stack with Better Auth authentication, Drizzle ORM database layer, tRPC APIs, 60+ shadcn/ui components, and comprehensive infrastructure helpers so teams can ship production-ready features quickly.
+
+### Tech Stack Highlights
+
+- **Framework**: TanStack Start 1.135.2 + React 19 + TypeScript 5.9
+- **Database**: PostgreSQL + Drizzle ORM
+- **Auth**: Better Auth with OAuth, Magic Link, Email OTP
+- **API**: tRPC for type-safe APIs
+- **UI**: Tailwind CSS v4 + 60+ shadcn/ui components
+- **Email**: React Email with 8 pre-built templates
+- **Tooling**: Biome (linter/formatter), Vitest, Turborepo
 
 ### Requirements
 
 Before you start, make sure the following tools are installed:
 
-- **Node.js** 20 or newer (LTS recommended)
-- **pnpm** 10.17 or newer
+- **Node.js** 20+ (LTS recommended)
+- **pnpm** 10.17+ (required - this project uses pnpm workspaces)
+- **PostgreSQL** database (local or cloud like Neon)
 - **Git** for version control
 
-> Tip: run `node --version` and `pnpm --version` to double-check your local versions.
+> Tip: run `node --version` and `pnpm --version` to verify your versions.
 
 ### First-Time Setup
 
-```bash title="Clone and bootstrap the project"
+```bash title="1. Clone and install dependencies"
 git clone https://github.com/raypx/raypx.git
 cd raypx
 pnpm install
 ```
 
-```bash title="Configure environment variables"
-cp .env.example .env.local
-# Update the new file with environment-specific values
+```bash title="2. Configure environment variables"
+cp .env.example .env
+# Edit .env with your configuration:
+# - DATABASE_URL (PostgreSQL connection string)
+# - BETTER_AUTH_SECRET (min 32 characters)
+# - BETTER_AUTH_URL (http://localhost:3000 for dev)
 ```
 
-```bash title="Run database migrations (optional)"
-pnpm db:migrate
+```bash title="3. Run database migrations"
+pnpm --filter @raypx/db run db:migrate
 ```
 
-```bash title="Start the development server"
-pnpm web:dev
-# or pnpm dev to run all affected apps
+```bash title="4. Start the development server"
+pnpm dev
+# Web app: http://localhost:3000
+# Docs: http://localhost:3001
 ```
 
-The web app is available at `http://localhost:3000`. Hot-module reloading and TanStack's file-based routing are enabled out of the box.
+The web app runs at `http://localhost:3000` with hot-module reloading and TanStack's file-based routing enabled.
 
 ## Everyday Commands
 
 | Task | Command | Notes |
 | ---- | ------- | ----- |
-| Format & lint | `pnpm format` / `pnpm check` | Biome handles both formatting and linting. |
-| Type safety | `pnpm typecheck` | Runs TypeScript across the entire workspace. |
-| Tests | `pnpm test` | Uses Vitest; try `pnpm coverage` for HTML coverage reports. |
-| Build | `pnpm build` | Executes the full Turborepo production pipeline. |
-| Clean artifacts | `pnpm clean` | Useful before benchmarking or releasing. |
+| **Development** | `pnpm dev` | Starts all apps (web + docs) with hot reload |
+| **Web app only** | `pnpm --filter web dev` | Just the main TanStack Start app |
+| **Docs only** | `pnpm --filter docs dev` | Just the Fumadocs site |
+| **Email preview** | `pnpm --filter email dev` | Preview email templates |
+| **Format & lint** | `pnpm format` / `pnpm check` | Biome for formatting and linting |
+| **Type check** | `pnpm typecheck` | TypeScript across entire workspace |
+| **Tests** | `pnpm test` | Vitest unit tests |
+| **Coverage** | `pnpm coverage` | HTML coverage reports |
+| **Build** | `pnpm build` | Full Turborepo production build |
+| **Clean** | `pnpm clean` | Remove build artifacts and caches |
+| **Database** | `pnpm --filter @raypx/db run db:studio` | Drizzle Studio (database GUI) |
+| **Add UI component** | `pnpm shadcn` | Add shadcn/ui components |
 
 ## Recommended Workflow
 
-1. Start the local dev server with `pnpm web:dev`.
-2. Implement changes in the relevant app or package.
-3. Run `pnpm check` and `pnpm test` before opening a PR.
-4. Craft conventional commits (e.g., `feat(web): add onboarding flow`) so the CI hooks pass without manual fixes.
+1. Start development with `pnpm dev` (or `pnpm --filter web dev` for web only)
+2. Make changes in the relevant app or package
+3. Run `pnpm typecheck` and `pnpm check` to validate changes
+4. Run `pnpm test` if you've added or modified business logic
+5. Build to verify everything compiles: `pnpm build`
+6. Commit with conventional commits (e.g., `feat(auth): add OAuth providers`)
 
 ## Learn More
 
-- Explore the [Workspace layout](/en/docs/workspace) to understand how apps and packages are organized.
-- Review the [Development workflow](/en/docs/development) for tooling, scripts, and commit guidance.
-- Read about [Docs & i18n conventions](/en/docs/docs-and-i18n) to keep this documentation in sync across languages.
+- Explore the [Workspace layout](/docs/workspace) to understand how apps and packages are organized
+- Review the [Development workflow](/docs/development) for tooling, scripts, and commit guidance

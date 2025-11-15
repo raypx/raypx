@@ -21,8 +21,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { isValidEmail } from "../../utils/email";
+import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
 
 function ForgotPasswordPage() {
+  useAuthPageConfig({
+    footerType: "sign-in",
+  });
+
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
   const [isSubmitting] = useState(false);
@@ -102,7 +107,7 @@ function ForgotPasswordPage() {
       } else {
         await onSuccess();
       }
-    } catch (error) {
+    } catch (_error) {
       form.resetField("password");
       // resetCaptcha()
 
@@ -195,12 +200,6 @@ function ForgotPasswordPage() {
           />
         )}
 
-        {/* <Captcha
-                    action="/sign-in/email"
-                    localization={localization}
-                    ref={captchaRef}
-                /> */}
-
         <Button className="w-full" disabled={isSubmitting} type="submit">
           {isSubmitting ? <Loader2 className="animate-spin" /> : "Forgot Password"}
         </Button>
@@ -210,5 +209,14 @@ function ForgotPasswordPage() {
 }
 
 export const Route = createFileRoute("/_auth/forgot-password")({
+  head: () => ({
+    meta: [
+      {
+        title: "Forgot Password",
+        description:
+          "Forgot your password? No problem. Just enter your email and we'll send you a reset link.",
+      },
+    ],
+  }),
   component: ForgotPasswordPage,
 });

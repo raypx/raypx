@@ -10,7 +10,9 @@ function PasswordField({ className, ...props }: Omit<React.ComponentProps<"input
   const id = useId();
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
-  const toggleVisibility = () => setIsVisible((prevState) => !prevState);
+  const toggleVisibility = () => {
+    setIsVisible((prevState) => !prevState);
+  };
 
   return (
     <div className={cn("relative", className)}>

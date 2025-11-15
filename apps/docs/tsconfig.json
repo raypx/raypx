@@ -6,6 +6,7 @@
     "allowImportingTsExtensions": true,
     "allowJs": false,
     "paths": {
+      "@/.source": [".source"],
       "@/*": ["./src/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]
     }

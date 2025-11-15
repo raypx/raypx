@@ -1,12 +1,10 @@
 import { useAuth } from "@raypx/auth";
-import { auth } from "@raypx/auth/server";
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppHeader } from "./-components/app-header";
 import { AppSidebar } from "./-components/app-sidebar";
 
 export const Route = createFileRoute("/_app")({
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async () => {
     // const session = await auth.api.getSession({
     //   headers: getRequestHeaders(),
     // });

@@ -29,9 +29,9 @@ const SendMagicLinkEmail = ({
 };
 
 SendMagicLinkEmail.PreviewProps = {
-  username: "Raypx",
-  url: "https://example.com/magic-link",
-  token: "123456",
+  username: "John Doe",
+  url: "https://raypx.com/auth/magic-link",
+  token: "abc123def456ghi789",
 };
 
 export default SendMagicLinkEmail;

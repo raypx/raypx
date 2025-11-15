@@ -18,8 +18,8 @@
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "tsdown.config.ts", ".tanstack"],
-      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel"]
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "tsdown.config.ts"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
     },
     "typecheck": {
       "cache": true,
@@ -66,6 +66,11 @@
     "shadcn": {
       "cache": false,
       "interactive": true
+    },
+    "email-preview": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "persistent": true
     }
   }
 }

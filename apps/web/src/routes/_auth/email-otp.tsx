@@ -21,8 +21,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { isValidEmail } from "../../utils/email";
+import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
 
 function EmailOtpPage() {
+  useAuthPageConfig({
+    footerType: "sign-in",
+  });
+
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
   const [isSubmitting] = useState(false);
@@ -102,7 +107,7 @@ function EmailOtpPage() {
       } else {
         await onSuccess();
       }
-    } catch (error) {
+    } catch (_error) {
       form.resetField("password");
       // resetCaptcha()
 
@@ -210,5 +215,8 @@ function EmailOtpPage() {
 }
 
 export const Route = createFileRoute("/_auth/email-otp")({
+  head: () => ({
+    meta: [{ title: "Email OTP", description: "Sign in with an email OTP" }],
+  }),
   component: EmailOtpPage,
 });

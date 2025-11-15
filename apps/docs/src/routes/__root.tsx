@@ -2,6 +2,7 @@ import { Analytics } from "@raypx/analytics";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
 import Loading from "@/components/layout/loading";
 import NotFound from "@/components/layout/not-found";
@@ -54,8 +55,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system">
-          {children}
-          <Toaster />
+          <RootProvider>
+            {children}
+            <Toaster />
+          </RootProvider>
         </ThemeProvider>
         <Scripts />
         {process.env.NODE_ENV === "production" && <Analytics />}

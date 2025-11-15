@@ -9,7 +9,6 @@ import {
 } from "@raypx/ui/components/card";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
-import { Switch } from "@raypx/ui/components/switch";
 import { Clock, Key, Shield, Smartphone } from "lucide-react";
 
 export function SecuritySettings() {

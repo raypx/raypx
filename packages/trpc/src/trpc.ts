@@ -36,15 +36,6 @@ export type CreateTRPCContextOptions = {
  * @param opts - Context creation options containing headers and auth instance
  * @returns Promise resolving to the context object with authApi, session, and db
  *
- * @example
- * ```ts
- * // In API route handler
- * const context = await createTRPCContext({
- *   headers: request.headers,
- *   auth: auth
- * });
- * ```
- *
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (
@@ -68,16 +59,6 @@ export const createTRPCContext = async (
  * - authApi: Better-auth API instance for authentication operations
  * - session: Current user session (may be null if not authenticated)
  * - db: Drizzle ORM database instance
- *
- * @example
- * ```ts
- * import type { TRPCContext } from "@raypx/trpc";
- *
- * function myProcedure(ctx: TRPCContext) {
- *   const user = ctx.session?.user;
- *   const users = await ctx.db.query.user.findMany();
- * }
- * ```
  */
 export type TRPCContext = Awaited<ReturnType<typeof createTRPCContext>>;
 
@@ -100,14 +81,6 @@ export const createTRPCRouter = t.router;
 /**
  * Middleware factory for creating custom middleware
  *
- * @example
- * ```ts
- * const loggerMiddleware = middleware(async ({ next, ctx }) => {
- *   console.log('Request:', ctx);
- *   return next();
- * });
- * ```
- *
  * @see https://trpc.io/docs/server/middlewares
  */
 export const middleware = t.middleware;
@@ -120,14 +93,6 @@ export const middleware = t.middleware;
  * can still access user session data if they are logged in
  *
  * Includes automatic error logging and performance monitoring
- *
- * @example
- * ```ts
- * export const getUsers = publicProcedure
- *   .query(({ ctx }) => {
- *     return ctx.db.query.user.findMany();
- *   });
- * ```
  */
 export const publicProcedure = t.procedure
   .use(errorLoggingMiddleware)
@@ -140,16 +105,6 @@ export const publicProcedure = t.procedure
  * the session is valid and guarantees `ctx.session.user` is not null.
  *
  * Includes automatic error logging and performance monitoring
- *
- * @example
- * ```ts
- * export const deleteUser = protectedProcedure
- *   .input(z.object({ id: z.string() }))
- *   .mutation(({ ctx, input }) => {
- *     // ctx.session.user is guaranteed to be non-null here
- *     return ctx.db.delete(User).where(eq(User.id, input.id));
- *   });
- * ```
  *
  * @see https://trpc.io/docs/procedures
  */

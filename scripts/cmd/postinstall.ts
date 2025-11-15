@@ -1,4 +1,4 @@
-import { createTask, defineCommand, runTasks, type Task } from "../lib/task";
+import { createTask, defineCommand, runTasks } from "../lib/task";
 import { generateAllComponentExports } from "../utils";
 
 const postinstallCmd = defineCommand({

@@ -302,10 +302,67 @@ apps/web/.netlify/      # Netlify files
 - Focused procedures
 - Proper error codes
 
+## Documentation Guidelines
+
+### Location
+**All project documentation MUST be placed in `apps/docs/content/docs/`**
+
+- ✅ `apps/docs/content/docs/oauth-setup.mdx` - OAuth setup guide
+- ✅ `apps/docs/content/docs/development.mdx` - Development workflow
+- ❌ `docs/` - Do NOT use root-level docs directory
+- ❌ `packages/*/docs/` - Do NOT use package-level docs
+
+### Format Requirements
+
+Documentation files must use **MDX format** with proper frontmatter:
+
+```mdx
+---
+title: Your Page Title
+description: Brief description of the content
+---
+
+Your content here...
+```
+
+### Ordering Documentation
+
+Control the order of documentation pages using `meta.json` in the docs directory:
+
+```json
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "workspace",
+    "development",
+    "---Authentication---",
+    "oauth-setup"
+  ]
+}
+```
+
+**Syntax:**
+- `"page-name"` - Include page (without .mdx extension)
+- `"---Section Name---"` - Add separator with label
+- `"..."` - Include remaining pages alphabetically
+- `"!excluded-page"` - Exclude specific page from rest operator
+- `"[External Link](https://example.com)"` - Add external link
+
+### Best Practices
+
+- Use descriptive kebab-case filenames (e.g., `oauth-setup.mdx`, `database-setup.mdx`)
+- Include proper frontmatter with title and description
+- Use code blocks with language tags and titles
+- Link to related documentation using relative paths
+- Keep documentation up-to-date with code changes
+- Update `meta.json` when adding new documentation pages
+
 ## Resources
 
 ### Documentation
 - **Fumadocs**: `/docs` route in web app
+- **Project Docs**: `apps/docs/content/docs/`
 - **Examples**: `apps/web/src/routes/`
 
 ### External Links
@@ -315,10 +372,17 @@ apps/web/.netlify/      # Netlify files
 - [Better Auth](https://better-auth.com)
 - [Tailwind CSS v4](https://tailwindcss.com/docs)
 - [Biome](https://biomejs.dev)
+- [Fumadocs](https://fumadocs.vercel.app)
 
 ---
 
 ## Recent Changes
+
+### 2025-11-13 - Documentation Guidelines
+- Added documentation guidelines section to CLAUDE.md
+- Standardized documentation location: `apps/docs/content/docs/`
+- Added MDX format requirements and best practices
+- Created OAuth setup guide in proper location
 
 ### 2025-11-12 - Documentation Regeneration
 - Complete CLAUDE.md regeneration based on actual project structure

@@ -25,8 +25,8 @@ const SendVerificationOTPEmail = ({ username, otp }: SendVerificationOTPProps) =
 );
 
 SendVerificationOTPEmail.PreviewProps = {
-  username: "Raypx",
-  otp: "596853",
+  username: "John Doe",
+  otp: "123456",
 };
 
 export default SendVerificationOTPEmail;

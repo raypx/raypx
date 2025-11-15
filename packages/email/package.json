@@ -6,11 +6,12 @@
     ".": "./src/index.ts",
     "./emails": "./src/emails/index.ts",
     "./types": "./src/types.ts",
-    "./config": "./src/config.ts",
     "./envs": "./src/envs.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo tsconfig.tsbuildinfo",
+    "dev": "raypx-scripts run vite dev",
+    "email-preview": "raypx-scripts run vite dev",
     "test": "vitest",
     "typecheck": "tsc --noEmit"
   },
@@ -21,18 +22,33 @@
     "nodemailer": "^7.0.10",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "resend": "^6.4.2"
+    "resend": "^6.4.2",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@react-email/components": "^1.0.0",
+    "@raypx/ui": "workspace:*",
+    "@react-email/components": "^1.0.1",
+    "@tailwindcss/vite": "catalog:tailwindv4",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
     "@types/node": "catalog:",
     "@types/nodemailer": "^7.0.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "typescript": "catalog:dev"
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "jiti": "catalog:",
+    "nitro": "catalog:",
+    "tailwindcss": "catalog:tailwindv4",
+    "tw-animate-css": "catalog:",
+    "typescript": "catalog:dev",
+    "vite": "catalog:",
+    "vite-tsconfig-paths": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@react-email/components": "^0.5.7"
+    "@react-email/components": "^1.0.0"
   }
 }

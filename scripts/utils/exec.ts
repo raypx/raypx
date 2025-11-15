@@ -33,18 +33,6 @@ export interface ExecOptions {
  * @param args - Array of arguments (e.g., ["build", "--watch"])
  * @param options - Execution options
  * @returns Promise with execution result
- *
- * @example
- * ```typescript
- * // Simple command
- * const result = await execCommand("pnpm", ["build"]);
- *
- * // With options
- * const result = await execCommand("node", ["script.js"], {
- *   timeout: 30000,
- *   env: { NODE_ENV: "production" }
- * });
- * ```
  */
 export async function execCommand(
   command: string,
@@ -125,15 +113,6 @@ export async function execCommand(
  * @param commandString - Command string (e.g., "pnpm build")
  * @param options - Execution options
  * @returns Promise with execution result
- *
- * @example
- * ```typescript
- * // Legacy usage (backward compatible)
- * const result = await safeExecAsync("pnpm build");
- *
- * // Recommended: Use execCommand instead
- * const result = await execCommand("pnpm", ["build"]);
- * ```
  *
  * @warning This function uses a simple split on whitespace and does NOT handle:
  * - Quoted arguments: "echo 'hello world'" will be split incorrectly

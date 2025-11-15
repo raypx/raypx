@@ -83,7 +83,7 @@ const ApiKeyCreatedEmail = ({
         </Text>
 
         <Button
-          className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+          className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white"
           href={dashboardUrl}
         >
           Manage API Keys
@@ -103,14 +103,17 @@ const ApiKeyCreatedEmail = ({
 );
 
 ApiKeyCreatedEmail.PreviewProps = {
-  username: "Raypx",
-  keyName: "API Key 1",
-  keyPrefix: "1234567890",
+  username: "John Doe",
+  keyName: "Production API Key",
+  keyPrefix: "sk_live_1234567890",
   permissions: ["read", "write"],
   rateLimitInfo: {
     maxRequests: 1000,
     timeWindow: "1 hour",
   },
+  createdAt: "January 15, 2024, 02:30 PM",
+  dashboardUrl: "https://raypx.com/settings/api-keys",
+  securityTips: true,
 };
 
 export default ApiKeyCreatedEmail;

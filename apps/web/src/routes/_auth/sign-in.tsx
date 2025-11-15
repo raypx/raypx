@@ -1,6 +1,12 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AuthLayout, useAuth, useOnSuccessTransition } from "@raypx/auth";
+import {
+  MagicLinkButton,
+  ProviderButton,
+  socialProviders,
+  useAuth,
+  useOnSuccessTransition,
+} from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -13,6 +19,7 @@ import {
   FormMessage,
   Input,
   PasswordField,
+  Separator,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -21,8 +28,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { isValidEmail } from "../../utils/email";
+import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
 
 function SignInPage() {
+  useAuthPageConfig({
+    footerType: "sign-in",
+  });
+
   const navigate = useNavigate();
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
@@ -116,20 +128,28 @@ function SignInPage() {
   }
 
   return (
-    <AuthLayout
-      cardFooter={
-        <>
-          Don't have an account?
-          <Link className={cn("text-foreground underline")} to="/sign-up">
-            <Button className={cn("px-0 text-foreground underline")} size="sm" variant="link">
-              Sign Up
-            </Button>
-          </Link>
-        </>
-      }
-      description="Sign in to your account"
-      title="Sign In"
-    >
+    <>
+      {/* Social Login Buttons */}
+      <div className="grid w-full gap-3">
+        {socialProviders
+          .filter((p) => p.provider === "github" || p.provider === "google")
+          .map((provider) => (
+            <ProviderButton
+              disabled={isSubmitting}
+              key={provider.provider}
+              provider={provider}
+              redirectTo={redirectTo}
+            />
+          ))}
+      </div>
+
+      <div className="relative">
+        <Separator />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs text-muted-foreground">
+          OR
+        </span>
+      </div>
+
       <Form {...form}>
         <form
           className={cn("grid w-full gap-6")}
@@ -220,12 +240,17 @@ function SignInPage() {
           <Button className="w-full" disabled={isSubmitting} type="submit">
             {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}
           </Button>
+
+          <MagicLinkButton currentView="sign-in" disabled={isSubmitting} />
         </form>
       </Form>
-    </AuthLayout>
+    </>
   );
 }
 
 export const Route = createFileRoute("/_auth/sign-in")({
+  head: () => ({
+    meta: [{ title: "Sign In - Raypx", description: "Sign in to your account" }],
+  }),
   component: SignInPage,
 });

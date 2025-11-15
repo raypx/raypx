@@ -130,9 +130,7 @@ const SecurityAlertEmail = ({
 
           <Button
             className={`rounded-lg px-6 py-3 font-medium text-white ${
-              alert.severity === "high"
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-blue-600 hover:bg-blue-700"
+              alert.severity === "high" ? "bg-red-600" : "bg-blue-600"
             }`}
             href={actionUrl}
           >
@@ -150,11 +148,17 @@ const SecurityAlertEmail = ({
 };
 
 SecurityAlertEmail.PreviewProps = {
-  username: "Raypx",
+  username: "John Doe",
   alertType: "suspicious_login",
   details: {
-    timestamp: "2021-01-01 12:00:00",
+    timestamp: "January 15, 2024, 02:30 PM PST",
+    location: "San Francisco, CA, US",
+    ipAddress: "192.168.1.100",
+    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+    deviceInfo: "MacBook Pro (Chrome on macOS)",
   },
+  actionUrl: "https://raypx.com/security",
+  actionText: "Review Security Settings",
 };
 
 export default SecurityAlertEmail;

@@ -1,10 +1,9 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth, useOnSuccessTransition } from "@raypx/auth";
+import { useAuth } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
-  Checkbox,
   Form,
   FormControl,
   FormField,
@@ -12,203 +11,101 @@ import {
   FormLabel,
   FormMessage,
   Input,
-  PasswordField,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { isValidEmail } from "../../utils/email";
+import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
 
 function MagicLinkPage() {
-  const { credentials, auth, redirectTo } = useAuth();
-  const isHydrated = useIsHydrated();
-  const [isSubmitting] = useState(false);
-  const { onSuccess } = useOnSuccessTransition({ redirectTo: redirectTo });
+  useAuthPageConfig({
+    footerType: "sign-in",
+  });
 
-  const rememberMeEnabled = credentials?.rememberMe;
-  const usernameEnabled = credentials?.username;
+  const { auth } = useAuth();
+  const isHydrated = useIsHydrated();
 
   const formSchema = z.object({
-    email: usernameEnabled
-      ? z.string().min(1, {
-          message: "Username is required",
-        })
-      : z.email({
-          message: "Email is invalid",
-        }),
-    password: z
-      .string()
-      .min(1, {
-        message: "Password is required",
-      })
-      .min(8, {
-        message: "Password must be at least 8 characters",
-      })
-      .max(100, {
-        message: "Password must be less than 100 characters",
-      }),
-    // .regex(/^(?=.*[A-Za-z])(?=.*\d)/, {
-    //   message: "Password must contain at least one letter and one number",
-    // })
-    rememberMe: z.boolean().optional(),
+    email: z.email({
+      message: "Email is invalid",
+    }),
   });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
-      rememberMe: !rememberMeEnabled,
     },
   });
 
-  async function signIn({ email, password, rememberMe }: z.infer<typeof formSchema>) {
+  const isSubmitting = form.formState.isSubmitting;
+
+  async function sendMagicLink({ email }: z.infer<typeof formSchema>) {
     try {
-      let response: Record<string, unknown> = {};
+      const fetchOptions: BetterFetchOption = {
+        throw: true,
+      };
 
-      if (usernameEnabled && !isValidEmail(email)) {
-        const fetchOptions: BetterFetchOption = {
-          throw: true,
-          // headers: await getCaptchaHeaders("/sign-in/username")
-        };
+      const searchParam = new URLSearchParams(window.location.search).get("redirectTo");
+      const redirectTo = searchParam || "/";
 
-        response = await auth.signIn.username({
-          username: email,
-          password,
-          rememberMe,
-          fetchOptions,
-        });
-      } else {
-        const fetchOptions: BetterFetchOption = {
-          throw: true,
-          // headers: await getCaptchaHeaders("/sign-in/email")
-        };
+      await auth.signIn.magicLink({
+        email,
+        callbackURL: redirectTo,
+        fetchOptions,
+      });
 
-        response = await auth.signIn.email({
-          email,
-          password,
-          rememberMe,
-          fetchOptions,
-        });
-      }
-
-      if (response.twoFactorRedirect) {
-        // navigate(
-        //     `${basePath}/${viewPaths.TWO_FACTOR}${window.location.search}`
-        // )
-      } else {
-        await onSuccess();
-      }
-    } catch (error) {
-      form.resetField("password");
-      // resetCaptcha()
-
-      // toast({
-      //     variant: "error",
-      //     message: getLocalizedError({ error, localization })
-      // })
+      // toast: Magic link sent! Check your email
+      form.reset();
+    } catch (_error) {
+      // toast: Failed to send magic link
     }
   }
 
   return (
-    <Form {...form}>
-      <form
-        className={cn("grid w-full gap-6")}
-        noValidate={isHydrated}
-        onSubmit={form.handleSubmit(signIn)}
-      >
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
-
-              <FormControl>
-                <Input
-                  autoComplete={usernameEnabled ? "username" : "email"}
-                  disabled={isSubmitting}
-                  placeholder={usernameEnabled ? "Username" : "Email"}
-                  type={usernameEnabled ? "text" : "email"}
-                  {...field}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-center justify-between">
-                <FormLabel>Password</FormLabel>
-
-                {credentials?.forgotPassword && (
-                  <Link
-                    className="text-sm hover:underline"
-                    search={isHydrated ? window.location.search : ""}
-                    to="/forgot-password"
-                  >
-                    Forgot Password
-                  </Link>
-                )}
-              </div>
-
-              <FormControl>
-                <PasswordField
-                  autoComplete="current-password"
-                  disabled={isSubmitting}
-                  placeholder="Password"
-                  {...field}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {rememberMeEnabled && (
+    <>
+      <Form {...form}>
+        <form
+          className={cn("grid w-full gap-6")}
+          noValidate={isHydrated}
+          onSubmit={form.handleSubmit(sendMagicLink)}
+        >
           <FormField
             control={form.control}
-            name="rememberMe"
+            name="email"
             render={({ field }) => (
-              <FormItem className="flex">
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
+                  <Input
+                    autoComplete="email"
                     disabled={isSubmitting}
-                    onCheckedChange={field.onChange}
+                    placeholder="Email"
+                    type="email"
+                    {...field}
                   />
                 </FormControl>
 
-                <FormLabel>Remember Me</FormLabel>
+                <FormMessage />
               </FormItem>
             )}
           />
-        )}
 
-        {/* <Captcha
-                    action="/sign-in/email"
-                    localization={localization}
-                    ref={captchaRef}
-                /> */}
-
-        <Button className="w-full" disabled={isSubmitting} type="submit">
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Magic Link"}
-        </Button>
-      </form>
-    </Form>
+          <Button className="w-full" disabled={isSubmitting} type="submit">
+            {isSubmitting ? <Loader2 className="animate-spin" /> : "Send Magic Link"}
+          </Button>
+        </form>
+      </Form>
+    </>
   );
 }
 
 export const Route = createFileRoute("/_auth/magic-link")({
+  head: () => ({
+    meta: [{ title: "Magic Link", description: "Sign in with a magic link sent to your email" }],
+  }),
   component: MagicLinkPage,
 });

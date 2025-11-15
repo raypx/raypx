@@ -12,7 +12,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,
-  ArrowUpRight,
   Building2,
   Database,
   Server,

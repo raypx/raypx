@@ -5,13 +5,24 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "default": "./dist/index.mjs",
+        "types": "./dist/index.d.mts"
+      },
+      "require": {
+        "default": "./dist/index.cjs",
+        "types": "./dist/index.d.cts"
+      }
     },
     "./vite": {
-      "require": "./dist/vite/index.cjs",
-      "import": "./dist/vite/index.mjs",
-      "types": "./dist/vite/index.d.ts"
+      "import": {
+        "default": "./dist/vite/index.mjs",
+        "types": "./dist/vite/index.d.mts"
+      },
+      "require": {
+        "default": "./dist/vite/index.cjs",
+        "types": "./dist/vite/index.d.cts"
+      }
     },
     "./types": "./types.d.ts",
     "./client": "./src/client.ts",
@@ -37,12 +48,12 @@
   },
   "dependencies": {
     "@inlang/cli": "^3.0.12",
-    "@inlang/paraglide-js": "^2.4.0",
+    "@inlang/paraglide-js": "^2.5.0",
     "@raypx/env": "workspace:*",
-    "fast-glob": "catalog:",
+    "fast-glob": "^3.3.3",
     "fs-extra": "catalog:",
     "jiti": "catalog:",
-    "lodash-es": "^4.17.21",
+    "lodash-es": "catalog:",
     "react": "catalog:react19",
     "urlpattern-polyfill": "^10.1.0"
   },
@@ -54,8 +65,11 @@
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
+    "vite": "catalog:",
     "vitest": "catalog:"
   }
 }

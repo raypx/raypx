@@ -13,7 +13,8 @@ import {
 } from "@raypx/ui/components/dropdown-menu";
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { useTheme } from "@raypx/ui/hooks/use-theme";
-import { Check, Languages, LogOut, Moon, Settings, Sun } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Check, LogOut, Moon, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks";
 
@@ -54,17 +55,13 @@ const themeConfig = [
  * - User info display (name, email)
  * - Settings option
  * - Theme switcher (light/dark)
- * - Language switcher (en/zh)
  * - Sign out button
- *
- * @example
- * ```tsx
- * <UserButton />
- * ```
  */
 export const UserButton = () => {
-  const { auth } = useAuth();
-  const session = auth.useSession();
+  const {
+    hooks: { useSession },
+  } = useAuth();
+  const session = useSession();
   const { themeMode, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -87,10 +84,6 @@ export const UserButton = () => {
   const userEmail = user.email || "";
   const userInitials = getUserInitials(user.name, user.email);
   const userImage = user.image;
-
-  const handleSignOut = async () => {
-    await auth.signOut();
-  };
 
   return (
     <DropdownMenu>
@@ -120,9 +113,11 @@ export const UserButton = () => {
         <DropdownMenuSeparator />
 
         {/* Settings */}
-        <DropdownMenuItem className="cursor-pointer">
-          <Settings className="mr-2 size-4" />
-          <span>Settings</span>
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link className="flex items-center" to="/dashboard">
+            <Settings className="mr-2 size-4" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
 
         {/* Theme Switcher */}
@@ -153,13 +148,13 @@ export const UserButton = () => {
             })}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-
         <DropdownMenuSeparator />
-
         {/* Sign Out */}
-        <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut} variant="destructive">
-          <LogOut className="mr-2 size-4" />
-          <span>Sign Out</span>
+        <DropdownMenuItem asChild className="cursor-pointer" variant="destructive">
+          <Link className="flex items-center" to="/sign-out">
+            <LogOut className="mr-2 size-4" />
+            <span>Sign Out</span>
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

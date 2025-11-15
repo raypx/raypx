@@ -4,7 +4,7 @@
  * This command runs Biome to format code, check for issues, and enforce
  * coding standards across the project.
  */
-import { createTask, defineCommand, runTasks, type Task } from "../lib/task";
+import { createTask, defineCommand, runTasks } from "../lib/task";
 
 /**
  * Main format command using task orchestration

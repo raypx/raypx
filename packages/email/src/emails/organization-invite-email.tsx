@@ -50,11 +50,12 @@ const OrganizationInviteEmail = ({
 );
 
 OrganizationInviteEmail.PreviewProps = {
-  inviterName: "John Doe",
-  inviterEmail: "john.doe@example.com",
-  organizationName: "Acme Inc.",
+  inviterName: "Jane Smith",
+  inviterEmail: "jane.smith@raypx.com",
+  organizationName: "Acme Corporation",
   role: "Admin",
-  inviteUrl: "https://example.com/invite",
+  inviteUrl: "https://raypx.",
+  expiresIn: "7 days",
 };
 
 export default OrganizationInviteEmail;

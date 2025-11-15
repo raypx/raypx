@@ -17,16 +17,14 @@
     "email": "support@raypx.com"
   },
   "scripts": {
-    "audit": "pnpm audit --audit-level moderate",
-    "audit:fix": "pnpm audit --fix",
     "build": "turbo build",
     "changeset": "changeset",
     "check": "biome check",
     "clean": "raypx-scripts clean",
     "coverage": "vitest --coverage",
     "dev": "turbo --filter=web dev",
-    "docs:dev": "pnpm --filter docs run dev",
-    "email:dev": "pnpm --filter email run dev",
+    "docs:dev": "turbo dev --filter docs",
+    "email-preview": "turbo email-preview --filter=@raypx/email",
     "format": "raypx-scripts format",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "raypx-scripts postinstall",
@@ -35,34 +33,26 @@
     "test": "vitest",
     "turbo:gen": "pnpm turbo gen",
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
-    "update:deps": "pnpm update --recursive --interactive --latest",
-    "web:dev": "pnpm --filter web run dev"
-  },
-  "dependencies": {
-    "envin": "^1.1.10"
+    "update:deps": "pnpm update --recursive --interactive --latest"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:dev",
     "@changesets/cli": "^2.29.7",
-    "@commitlint/cli": "^20.1.0",
-    "@commitlint/config-conventional": "^20.0.0",
-    "@commitlint/types": "^20.0.0",
     "@dotenvx/dotenvx": "^1.51.1",
     "@raypx/scripts": "workspace:*",
     "@turbo/gen": "^2.6.1",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "^4.0.8",
-    "jsdom": "^27.1.0",
+    "@vitest/coverage-v8": "^4.0.9",
+    "jsdom": "^27.2.0",
     "lefthook": "catalog:dev",
     "rimraf": "catalog:",
     "tsx": "^4.20.6",
     "turbo": "^2.6.1",
     "typescript": "catalog:dev",
     "vite": "catalog:",
-    "vitest": "catalog:",
-    "zod": "catalog:"
+    "vitest": "catalog:"
   },
-  "packageManager": "pnpm@10.21.0",
+  "packageManager": "pnpm@10.22.0",
   "engines": {
     "node": ">=20",
     "pnpm": ">=10.0.0"

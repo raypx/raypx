@@ -13,7 +13,9 @@ export function NotFound(
       <p className="flex flex-wrap items-center gap-2">
         <button
           className="rounded bg-emerald-500 px-2 py-1 text-sm font-black uppercase text-white"
-          onClick={() => window.history.back()}
+          onClick={() => {
+            window.history.back();
+          }}
           type="button"
         >
           Go back

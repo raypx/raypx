@@ -1,0 +1,13 @@
+/* ============================================
+   Email Preview - Global Styles
+   ============================================ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@raypx/ui/styles/theme.css";
+@import "@raypx/ui/styles/base.css";
+
+@source "../../../../{packages,apps}/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
+
+@custom-variant dark (&:is(.dark *));

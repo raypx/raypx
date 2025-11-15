@@ -27,8 +27,8 @@ const VerifyEmail = ({ url, username }: VerifyEmailProps) => (
 );
 
 VerifyEmail.PreviewProps = {
-  url: "https://example.com/verify-email",
-  username: "Raypx",
+  url: "https://raypx.com/verify-email?token=abc123def456",
+  username: "John Doe",
 };
 
 export default VerifyEmail;

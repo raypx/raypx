@@ -24,7 +24,7 @@ const WelcomeEmail = ({ username }: WelcomeEmailProps) => (
 );
 
 WelcomeEmail.PreviewProps = {
-  username: "Raypx",
+  username: "John Doe",
 };
 
 export default WelcomeEmail;

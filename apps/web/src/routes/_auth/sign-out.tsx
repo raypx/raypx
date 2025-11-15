@@ -102,7 +102,7 @@ function SignOutPage() {
       } else {
         await onSuccess();
       }
-    } catch (error) {
+    } catch (_error) {
       form.resetField("password");
       // resetCaptcha()
 

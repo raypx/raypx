@@ -26,7 +26,7 @@ export const AuthProvider = ({
   redirectTo = "/",
   navigate,
   onSessionChange,
-  replace,
+  replace: _replace,
   credentials: credentialsProp,
 }: AuthProviderProps) => {
   const credentials = useMemo<CredentialsOptions | undefined>(() => {

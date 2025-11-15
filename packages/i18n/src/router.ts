@@ -71,30 +71,6 @@ export interface RouterRewriteConfig {
  * seamless i18n routing:
  * - Server middleware handles initial locale detection and redirection
  * - Router rewrite handles client-side navigation and URL generation
- *
- * @example
- * ```typescript
- * import { createRouterRewrite } from "@raypx/i18n/router";
- * import { createRouter } from "@tanstack/react-router";
- *
- * export const getRouter = () => {
- *   const router = createRouter({
- *     routeTree,
- *     rewrite: createRouterRewrite(),
- *   });
- *   return router;
- * };
- * ```
- *
- * @example With custom cache size
- * ```typescript
- * rewrite: createRouterRewrite({ cacheSize: 200 })
- * ```
- *
- * @example Disable cache for debugging
- * ```typescript
- * rewrite: createRouterRewrite({ enableCache: false })
- * ```
  */
 export function createRouterRewrite(config: RouterRewriteConfig = {}) {
   const { cacheSize = 100, enableCache = true } = config;
@@ -150,17 +126,8 @@ export function createRouterRewrite(config: RouterRewriteConfig = {}) {
 
 /**
  * Get cache statistics (useful for debugging and monitoring)
- *
- * @example
- * ```typescript
- * import { getCacheStats } from "@raypx/i18n/router";
- *
- * const stats = getCacheStats();
- * console.log(`Delocalize cache: ${stats.deLocalizeSize} entries`);
- * console.log(`Localize cache: ${stats.localizeSize} entries`);
- * ```
  */
-export function getCacheStats(rewrite: ReturnType<typeof createRouterRewrite>) {
+export function getCacheStats(_rewrite: ReturnType<typeof createRouterRewrite>) {
   // This is a limitation - we can't access the caches from outside
   // without exposing them. Consider this for future enhancement.
   return {

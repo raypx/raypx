@@ -49,19 +49,6 @@ export type CacheDiff<TConfig extends Record<string, unknown>> = {
  * Generic cache class for tracking file changes and configuration
  *
  * @template TConfig - Configuration object type for cache validation
- *
- * @example
- * ```typescript
- * type MyConfig = { outputDir: string; minify: boolean };
- * const cache = new Cache<MyConfig>("build");
- *
- * const config = { outputDir: "dist", minify: true };
- *
- * if (cache.shouldRecompile("abc123", config, "dist")) {
- *   // Perform compilation
- *   cache.save("abc123", config, ["file1.js", "file2.js"]);
- * }
- * ```
  */
 export class Cache<TConfig extends Record<string, unknown>> {
   private cacheFilePath: string;

@@ -1,6 +1,5 @@
 import type { BetterFetchError } from "@better-fetch/fetch";
 import type { Account, User } from "better-auth";
-import type { Member } from "better-auth/plugins/organization";
 // import type { ApiKey } from "./api-key"
 import type { AnyAuthClient, AuthClient } from "../auth";
 // import type { Invitation } from "./invitation"

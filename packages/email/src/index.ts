@@ -1,6 +1,7 @@
+import { createRegistry } from "@raypx/shared/registry";
 import type { ReactElement } from "react";
 import z from "zod";
-import { mailerRegistry } from "./registry";
+import type { Mailer } from "./providers/base";
 import type { EmailProvider, MailerSchema } from "./types";
 
 const MAILER_PROVIDERS = [
@@ -11,8 +12,21 @@ const MAILER_PROVIDERS = [
 
 const MAILER_PROVIDER = z
   .enum(MAILER_PROVIDERS)
-  .default("resend")
+  .default("nodemailer")
   .parse(process.env.MAILER_PROVIDER);
+
+// Mailer registry for lazy loading providers
+const mailerRegistry = createRegistry<Mailer, EmailProvider>();
+
+mailerRegistry.register("nodemailer", async () => {
+  const { createNodemailerService } = await import("./providers/nodemailer");
+  return createNodemailerService();
+});
+
+mailerRegistry.register("resend", async () => {
+  const { createResendMailer } = await import("./providers/resend");
+  return createResendMailer();
+});
 
 /**
  * @name getMailer
@@ -42,25 +56,6 @@ export type SendEmailResult =
 
 /**
  * Send an email using the configured provider
- *
- * @example
- * ```typescript
- * import { sendEmail } from "@raypx/email";
- * import { WelcomeEmail } from "@raypx/email/emails";
- *
- * const result = await sendEmail({
- *   to: "user@example.com",
- *   from: "noreply@raypx.com",
- *   subject: "Welcome to Raypx!",
- *   template: <WelcomeEmail username="John" />
- * });
- *
- * if (result.success) {
- *   console.log("Email sent!", result.emailId);
- * } else {
- *   console.error("Failed to send email:", result.error);
- * }
- * ```
  */
 export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
   const { to, from, subject, template, provider } = options;
@@ -115,11 +110,11 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
   }
 }
 
-// Export provider constant
+/**
+ * Current mailer provider (from MAILER_PROVIDER env var, defaults to "resend")
+ * @internal - Exported for advanced use cases, most users should use sendEmail()
+ */
 export { MAILER_PROVIDER };
-
-// Export configuration
-export { RESEND_FROM } from "./config";
 // Export all email templates
 export * from "./emails";
 // Export all email types for consumers
@@ -128,7 +123,4 @@ export type {
   EmailProvider,
   EmailStatus,
   EmailTemplateProps,
-  SendEmailFailure,
-  SendEmailResult as LegacySendEmailResult,
-  SendEmailSuccess,
 } from "./types";

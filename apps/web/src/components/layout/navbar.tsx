@@ -63,17 +63,13 @@ export function Navbar({ scroll }: NavBarProps) {
       )}
     >
       <Container className="px-4">
-        {/* desktop navbar */}
         <nav className="hidden lg:flex">
-          {/* logo and name */}
           <div className="flex items-center">
             <Link className="flex items-center space-x-2" to="/">
               <Logo />
               <span className="text-xl font-semibold">Raypx</span>
             </Link>
           </div>
-
-          {/* menu links */}
           <div className="flex-1 flex items-center justify-center space-x-2">
             <NavigationMenu className="relative">
               <NavigationMenuList className="flex items-center">
@@ -88,7 +84,9 @@ export function Navbar({ scroll }: NavBarProps) {
                       asChild
                       className={customNavigationMenuTriggerStyle}
                     >
-                      <Link to={item.href || "#"}>{item.title}</Link>
+                      <Link target={item.external ? "_blank" : undefined} to={item.href || "#"}>
+                        {item.title}
+                      </Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>
                 ))}
@@ -97,27 +95,21 @@ export function Navbar({ scroll }: NavBarProps) {
           </div>
 
           {/* navbar right show sign in or user */}
-          <div className="flex items-center gap-x-4 min-w-40">
+          <div className="flex items-center gap-x-4 min-w-40 justify-end">
             {!mounted ? (
               <Skeleton className="size-8 border rounded-full" />
             ) : (
               <div className="flex items-center gap-x-4">
                 <SignedOut>
                   <Link to="/sign-in">
-                    <Button className="cursor-pointer" size="sm" variant="outline">
+                    <Button size="sm" variant="outline">
                       Login
                     </Button>
                   </Link>
-                  <Link
-                    className={cn(
-                      buttonVariants({
-                        variant: "default",
-                        size: "sm",
-                      }),
-                    )}
-                    to="/sign-up"
-                  >
-                    Sign Up
+                  <Link to="/sign-up">
+                    <Button size="sm" variant="default">
+                      Sign Up
+                    </Button>
                   </Link>
                 </SignedOut>
                 <SignedIn>
@@ -128,9 +120,6 @@ export function Navbar({ scroll }: NavBarProps) {
             <ThemeSwitcher />
           </div>
         </nav>
-
-        {/* mobile navbar */}
-        <div className="lg:hidden" />
       </Container>
     </section>
   );

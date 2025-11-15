@@ -4,11 +4,19 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./server": "./src/server.ts",
-    "./envs": "./src/envs.ts"
+    ".": {
+      "import": {
+        "default": "./dist/index.mjs",
+        "types": "./dist/index.d.mts"
+      },
+      "require": {
+        "default": "./dist/index.cjs",
+        "types": "./dist/index.d.cts"
+      }
+    }
   },
   "scripts": {
+    "build": "tsdown",
     "clean": "rimraf dist .turbo",
     "test": "vitest",
     "test:watch": "vitest --watch"
@@ -16,13 +24,14 @@
   "dependencies": {
     "@raypx/env": "workspace:*",
     "fs-extra": "catalog:",
-    "lodash-es": "^4.17.21"
+    "lodash-es": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
+    "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:"
   }

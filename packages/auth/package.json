@@ -18,19 +18,22 @@
     "@raypx/db": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
-    "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "better-auth": "^1.3.34",
     "lucide-react": "catalog:",
-    "react": "catalog:react19"
+    "react": "catalog:react19",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "typescript": "catalog:dev",
+    "vite": "catalog:",
     "vitest": "catalog:"
   }
 }

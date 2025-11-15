@@ -4,9 +4,6 @@
  * NOTE: Due to Better Auth using cookies that are only accessible client-side,
  * auth checks are performed in the component render cycle, not in beforeLoad.
  * This is a known limitation of the current setup.
- *
- * Auth redirects are handled using window.location.href to ensure proper
- * navigation with i18n URLs.
  */
 
 /**

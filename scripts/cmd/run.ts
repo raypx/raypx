@@ -35,14 +35,22 @@ Common use cases:
     if (!c) return;
     // Environment variables are already loaded by cli.ts
     // Just execute the command with inherited env
-    await x(c, rest, {
+    const result = await x(c, rest, {
       nodeOptions: {
         cwd: process.cwd(),
         env: process.env,
         stdio: "inherit",
         shell: true,
       },
+      throwOnError: true, // Throw error on non-zero exit code to stop execution
     });
+
+    // Check exit code and throw error if command failed
+    if (result.exitCode !== 0) {
+      const errorMessage =
+        result.stderr || result.stdout || `Command exited with code ${result.exitCode}`;
+      throw new Error(`Command failed: ${c} ${rest.join(" ")}\n${errorMessage}`);
+    }
   },
 });
 

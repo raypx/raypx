@@ -23,7 +23,7 @@ const footerLinks: FooterLink[] = [
       { label: "Tech Stack", href: "/#tech-stack" },
       {
         label: "Roadmap",
-        href: "https://github.com/raypx/raypx#-roadmap",
+        href: "https://github.com/raypx/raypx",
         external: true,
       },
     ],

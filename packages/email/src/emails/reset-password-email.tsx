@@ -16,8 +16,8 @@ const ResetPasswordEmail = ({ resetLink, username }: { resetLink: string; userna
 );
 
 ResetPasswordEmail.PreviewProps = {
-  resetLink: "https://example.com/reset-password",
-  username: "Raypx",
+  resetLink: "https://raypx.com/reset-password?token=abc123def456",
+  username: "John Doe",
 };
 
 export default ResetPasswordEmail;

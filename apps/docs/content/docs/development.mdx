@@ -5,51 +5,229 @@ description: Learn the day-to-day commands, QA expectations, and collaboration p
 
 ## Environment Setup
 
-1. Install dependencies with `pnpm install`.
-2. Copy `.env.example` to `.env.local` and fill in required secrets.
-3. Run `pnpm db:migrate` if the change set needs database primitives.
-4. Start the dev server with `pnpm web:dev`.
+### Initial Setup
 
-> Use `pnpm dev` when you want Turborepo to watch all affected apps, not just the web front end.
+1. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+2. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` with required values:
+   - `DATABASE_URL` - PostgreSQL connection string
+   - `BETTER_AUTH_SECRET` - Min 32 characters for auth encryption
+   - `BETTER_AUTH_URL` - Your app URL (http://localhost:3000 for dev)
+   - Optional: Redis, OAuth, Analytics, AI services (137+ env vars available)
+
+3. **Setup database**
+   ```bash
+   pnpm --filter @raypx/db run db:migrate
+   ```
+
+4. **Start development**
+   ```bash
+   pnpm dev  # All apps (web + docs)
+   # or
+   pnpm --filter web dev  # Just web app
+   ```
+
+### Environment Variables
+
+The project uses **type-safe environment variables** via `@raypx/env`:
+
+- **Validation**: All env vars validated with Zod schemas
+- **Organization**: Grouped by category (app, feature flags, database, auth, etc.)
+- **Type safety**: Full TypeScript support in code
+- **Examples**: See `.env.example` for all 137+ available variables
 
 ## Common Scripts
 
 | Command | Description |
 | ------- | ----------- |
-| `pnpm web:dev` | Start the TanStack Start frontend in development mode. |
-| `pnpm build` | Build every package and app according to the Turborepo graph. |
-| `pnpm typecheck` | Validate TypeScript types workspace-wide. |
-| `pnpm check` | Run Biome linting and static analysis. |
-| `pnpm test` | Execute Vitest unit suites. |
-| `pnpm coverage` | Generate coverage reports with Vitest. |
-| `pnpm clean` | Clear build artifacts and `.turbo` caches. |
+| `pnpm dev` | Start all apps (web + docs) with hot reload |
+| `pnpm --filter web dev` | Just the TanStack Start web app |
+| `pnpm --filter docs dev` | Just the Fumadocs documentation site |
+| `pnpm --filter email dev` | Email template preview server |
+| `pnpm build` | Production build of all apps (validates everything) |
+| `pnpm typecheck` | TypeScript validation across workspace |
+| `pnpm check` | Biome linting and formatting check |
+| `pnpm format` | Auto-format all code with Biome |
+| `pnpm test` | Run Vitest unit tests |
+| `pnpm coverage` | Generate HTML coverage reports |
+| `pnpm clean` | Remove build artifacts and caches |
+| `pnpm --filter @raypx/db run db:studio` | Open Drizzle Studio (database GUI) |
+| `pnpm --filter @raypx/db run db:migrate` | Run database migrations |
+| `pnpm --filter @raypx/db run db:generate` | Generate new migration from schema changes |
+| `pnpm shadcn` | Add shadcn/ui components to @raypx/ui |
 
 ## Coding Standards
 
-- **Formatting & linting**: Biome enforces formatting and lint rules. The pre-commit hook runs `pnpm -w format`, so make sure your changes pass locally.
-- **Type safety**: Projects compile with strict TypeScript settings. Prefer explicit return types in shared packages.
-- **Directory conventions**: Co-locate tests next to their modules (`*.test.ts[x]`) or inside `__tests__/`. Keep React Server Components in `apps/web/src/app` and Client Components under `components`.
+### TypeScript
+
+- **Strict mode enabled**: All projects use strict TypeScript settings
+- **Explicit types**: Prefer explicit return types in shared packages
+- **Type over interface**: Use `type` over `interface` for consistency
+- **Avoid `any`**: Use `unknown` instead and narrow with type guards
+
+### Code Style
+
+- **Formatting**: Biome handles all formatting (replaces Prettier)
+- **Linting**: Biome enforces code quality rules (replaces ESLint)
+- **Pre-commit hooks**: Lefthook runs `pnpm format` before commits
+- **Variable names**: Use clear, descriptive names over short abbreviations
+
+### Project Structure
+
+- **Tests**: Co-locate tests next to modules (`*.test.ts[x]`) or in `__tests__/`
+- **Routes**: TanStack Start file-based routing in `apps/web/src/routes/`
+- **Components**: React components in `apps/web/src/components/`
+- **No build for packages**: All packages consumed as TypeScript source
 
 ## Git Practices
 
-- Follow Conventional Commits (`feat:`, `fix:`, `chore:`). Use comma-separated scopes for cross-package work: `feat(web,i18n): add zh-cn landing page`.
-- Avoid rewriting history on shared branches unless coordinated (`git push --force-with-lease` only after confirming with the team).
-- Run `pnpm build`, `pnpm test`, and `pnpm check` before pushing.
+### Commit Convention
 
-## Testing Guidance
+Follow **Conventional Commits** format:
 
-- Add Vitest coverage for new logic. Prefer mocking only at the boundary (e.g., network, environment).
-- For UI changes, add stories or screenshots wherever possible. Playwright suites will be added later; leave TODO comments rather than empty tests.
-- Use `pnpm coverage` before raising a PR to make sure the change does not regress coverage thresholds.
+```
+<type>(<scope>): <description>
 
-## Working with Docs
+[optional body]
+```
 
-- Documentation lives under `apps/web/content/docs`. Each English MDX file can have a `*.zh.mdx` counterpart for Simplified Chinese.
-- Run `pnpm web:dev` to preview docs locally; updates trigger automatic reloads.
-- Keep frontmatter titles and descriptions concise—they are surfaced in search, navigation, and SEO metadata.
+**Types**: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `chore`, `ci`
+
+**Examples**:
+```bash
+git commit -m "feat(auth): add OAuth providers"
+git commit -m "fix(ui): resolve button hover state"
+git commit -m "docs: update environment setup guide"
+git commit -m "feat(web,auth): add login flow"
+```
+
+### Pre-push Checklist
+
+**Always run before pushing**:
+
+```bash
+pnpm typecheck  # TypeScript validation
+pnpm check      # Linting
+pnpm test       # Unit tests
+pnpm build      # Verify production build
+```
+
+Build time is only 10-15 seconds, so always build before commits.
+
+### Branch Strategy
+
+- Work on feature branches (`feature/add-oauth`)
+- Avoid force-pushing shared branches
+- Use `git push --force-with-lease` if necessary (coordinate with team)
+
+## Testing
+
+### Current State
+
+⚠️ **Testing is a critical gap** (15% coverage):
+- ✅ Vitest framework configured
+- ✅ CI runs tests automatically
+- ❌ Minimal test coverage
+- ❌ No E2E tests
+
+### Testing Guidelines
+
+When adding tests:
+
+1. **Unit tests**: Test business logic and utilities
+   ```typescript
+   // packages/shared/__tests__/utils.test.ts
+   import { describe, it, expect } from 'vitest'
+   import { yourFunction } from '../utils'
+
+   describe('yourFunction', () => {
+     it('should handle valid input', () => {
+       expect(yourFunction('test')).toBe('expected')
+     })
+   })
+   ```
+
+2. **Integration tests**: Test API endpoints, database operations
+3. **E2E tests**: Use Playwright (to be implemented)
+
+### Running Tests
+
+```bash
+pnpm test           # All tests
+pnpm test --watch   # Watch mode
+pnpm coverage       # Generate coverage report
+```
+
+Coverage reports are uploaded to Codecov in CI.
+
+## Database Development
+
+### Workflow
+
+1. **Modify schema** in `packages/db/src/schemas/`
+2. **Generate migration**:
+   ```bash
+   pnpm --filter @raypx/db run db:generate
+   ```
+3. **Review migration** in `packages/db/drizzle/`
+4. **Apply migration**:
+   ```bash
+   pnpm --filter @raypx/db run db:migrate
+   ```
+5. **Verify in Drizzle Studio**:
+   ```bash
+   pnpm --filter @raypx/db run db:studio
+   ```
+
+### Database Tips
+
+- Use Drizzle's type-safe query builder
+- Leverage PostgreSQL features (JSONB, arrays, etc.)
+- Add indexes for frequently queried columns
+- Use migrations for all schema changes (never manual ALTER TABLE)
+
+## Working with Documentation
+
+- Documentation lives in `apps/docs/content/docs/`
+- Write documentation in MDX format (Markdown + JSX)
+- Run `pnpm --filter docs dev` to preview docs at http://localhost:3001
+- Fumadocs auto-generates navigation from file structure and frontmatter
 
 ## Troubleshooting
 
-- Delete `.turbo` and rerun `pnpm install` if builds behave unexpectedly.
-- If pnpm warns about missing peer dependencies, install them at the workspace root so all packages resolve the same version.
-- Check `apps/web/source.generated.ts` back into git only when MDX sources change; it is generated deterministically by Fumadocs.
+### Build Issues
+
+```bash
+# Clear all caches and rebuild
+pnpm clean
+rm -rf node_modules .turbo
+pnpm install
+pnpm build
+```
+
+### TypeScript Errors
+
+1. Restart TypeScript server (VS Code: Cmd+Shift+P → "Restart TS Server")
+2. Clear TypeScript cache: `rm -rf tsconfig.tsbuildinfo`
+3. Reinstall dependencies: `pnpm install`
+
+### Common Errors
+
+- **"Cannot find module '@raypx/...'"** → Run `pnpm install`
+- **"Port 3000 in use"** → Kill process: `lsof -ti:3000 | xargs kill -9`
+- **"Type error in node_modules"** → Delete `node_modules` and reinstall
+- **Biome errors** → Run `pnpm format` to auto-fix
+
+### Getting Help
+
+- Check [CLAUDE.md](/CLAUDE.md) for architecture details
+- Review [TODO.md](/TODO.md) for known issues and roadmap
+- See `.env.example` for all environment variables

@@ -16,7 +16,7 @@
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.1",
     "@raypx/shared": "workspace:*",
-    "fast-glob": "catalog:",
+    "fast-glob": "^3.3.3",
     "fs-extra": "catalog:",
     "jiti": "catalog:",
     "tinyexec": "^1.0.2",

@@ -8,16 +8,6 @@ import type { AppRouter } from "./router";
 /**
  * Create tRPC context with React Query hooks
  * This provides TRPCProvider, useTRPC, and useTRPCClient hooks with full type safety
- *
- * @example
- * ```tsx
- * import { TRPCProvider, useTRPC } from "@raypx/trpc/client";
- *
- * function MyComponent() {
- *   const users = useTRPC((trpc) => trpc.users.all.useQuery());
- *   return <div>{users.data?.map(u => u.name)}</div>;
- * }
- * ```
  */
 const trpcContext = createTRPCContext<AppRouter>();
 

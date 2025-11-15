@@ -50,7 +50,7 @@ export type PostHogProviderProps = {
 export type PostHogProvider = (props: PostHogProviderProps) => React.ReactElement | null;
 
 declare global {
-  var gtag: (...args: any[]) => Gtag | Promise<Gtag>;
+  var gtag: (...args: unknown[]) => Gtag | Promise<Gtag>;
   var posthog: PostHogInstance | null;
 }
 

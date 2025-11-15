@@ -23,9 +23,9 @@
     "@neondatabase/serverless": "^1.0.2",
     "@raypx/env": "workspace:*",
     "@raypx/shared": "workspace:*",
-    "drizzle-orm": "catalog:",
+    "drizzle-orm": "^0.44.7",
     "drizzle-seed": "^0.3.1",
-    "drizzle-zod": "catalog:",
+    "drizzle-zod": "^0.8.3",
     "nanoid": "^5.1.6",
     "postgres": "^3.4.7",
     "uuid": "^13.0.0"
@@ -33,7 +33,8 @@
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "drizzle-kit": "^0.31.6",
-    "typescript": "catalog:dev"
+    "drizzle-kit": "^0.31.7",
+    "typescript": "catalog:dev",
+    "vitest": "catalog:"
   }
 }

@@ -114,15 +114,6 @@ export interface ErrorMeta {
  * @param message - Human-readable error message
  * @param meta - Additional error metadata
  * @returns TRPCError with proper typing and metadata
- *
- * @example
- * ```ts
- * throw createAppError(
- *   AppErrorCode.USER_NOT_FOUND,
- *   "User with ID 123 does not exist",
- *   { context: { userId: "123" } }
- * );
- * ```
  */
 export function createAppError(
   appErrorCode: AppErrorCode,

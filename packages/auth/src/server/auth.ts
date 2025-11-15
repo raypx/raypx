@@ -1,16 +1,14 @@
 import { db, schemas, uuidv7 } from "@raypx/db";
-// import { getMailer } from "@raypx/email";
+import {
+  ResetPasswordEmail,
+  SendMagicLinkEmail,
+  SendVerificationOTPEmail,
+  sendEmail,
+  VerifyEmail,
+} from "@raypx/email";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import {
-  apiKey,
-  emailOTP,
-  lastLoginMethod,
-  magicLink,
-  mcp,
-  oneTap,
-  username,
-} from "better-auth/plugins";
+import { apiKey, emailOTP, magicLink, mcp, username } from "better-auth/plugins";
 import { reactStartCookies } from "better-auth/react-start";
 import { envs } from "../envs";
 import { features } from "../features";
@@ -24,7 +22,10 @@ const getPlugins = () => {
     mcp({
       loginPage: "/sign-in",
     }),
-    lastLoginMethod(),
+    // NOTE: lastLoginMethod() conflicts with reactStartCookies() in TanStack Start
+    // This prevents session_token cookie from being set properly
+    // Reference: https://github.com/better-auth/better-auth/issues/5639
+    // lastLoginMethod(),
   );
 
   // Add feature-specific plugins
@@ -36,27 +37,30 @@ const getPlugins = () => {
   if (features.magicLink) {
     plugins.push(
       magicLink({
-        sendMagicLink: async ({ email: _email, token: _token, url: _url }) => {
-          // const mailer = await getMailer();
-          // await mailer.sendEmail({
-          //   subject: "Magic Link",
-          //   from: "noreply@raypx.com",
-          //   template: SendMagicLinkEmail({
-          //     username: email,
-          //     url,
-          //     token,
-          //   }),
-          //   to: email,
-          // });
+        sendMagicLink: async ({ email, token, url }) => {
+          const env = envs();
+          await sendEmail({
+            to: email,
+            from: env.RESEND_FROM,
+            subject: "Your Magic Link - Raypx",
+            template: SendMagicLinkEmail({
+              username: email,
+              url,
+              token,
+            }),
+          });
         },
       }),
     );
   }
 
   // One Tap
-  if (features.oneTap) {
-    plugins.push(oneTap());
-  }
+  // NOTE: oneTap() conflicts with reactStartCookies() in TanStack Start
+  // This prevents session_token cookie from being set properly
+  // Reference: https://github.com/better-auth/better-auth/issues/5639
+  // if (features.oneTap) {
+  //   plugins.push(oneTap());
+  // }
 
   // Organization
   // if (features.organization) {
@@ -79,17 +83,17 @@ const getPlugins = () => {
   if (features.emailOTP) {
     plugins.push(
       emailOTP({
-        sendVerificationOTP: async (_data, _request) => {
-          // const { email, otp } = data;
-          // const mailer = await getMailer();
-          // await mailer.sendEmail({
-          //   to: email,
-          //   from: RESEND_FROM,
-          //   subject: "Verify your email",
-          //   template: SendVerificationOTPEmail({
-          //     otp,
-          //   }),
-          // });
+        sendVerificationOTP: async (data) => {
+          const { email, otp } = data;
+          const env = envs();
+          await sendEmail({
+            to: email,
+            from: env.RESEND_FROM,
+            subject: "Verify your email - Raypx",
+            template: SendVerificationOTPEmail({
+              otp,
+            }),
+          });
         },
       }),
     );
@@ -109,6 +113,34 @@ const createAuthOptions = () => {
     }),
     emailAndPassword: {
       enabled: true,
+      requireEmailVerification: false, // Set to true to require email verification
+      sendResetPassword: async ({ user, url }) => {
+        const env = envs();
+        await sendEmail({
+          to: user.email,
+          from: env.RESEND_FROM,
+          subject: "Reset your password - Raypx",
+          template: ResetPasswordEmail({
+            username: user.name || user.email,
+            resetLink: url,
+          }),
+        });
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: true, // Automatically send verification email on sign up
+      sendVerificationEmail: async ({ user, url }) => {
+        const env = envs();
+        await sendEmail({
+          to: user.email,
+          from: env.RESEND_FROM,
+          subject: "Verify your email - Raypx",
+          template: VerifyEmail({
+            username: user.name || user.email,
+            url,
+          }),
+        });
+      },
     },
     baseURL: env.VITE_AUTH_URL,
     // trustedOrigins: (req) =>
@@ -148,6 +180,10 @@ const createAuthOptions = () => {
       github: {
         clientId: env.AUTH_GITHUB_ID,
         clientSecret: env.AUTH_GITHUB_SECRET,
+      },
+      google: {
+        clientId: env.AUTH_GOOGLE_ID,
+        clientSecret: env.AUTH_GOOGLE_SECRET,
       },
     },
     logger: {
