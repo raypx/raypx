@@ -4,6 +4,7 @@ export * from "./provider-button";
 export * from "./provider-icons";
 export * from "./redirect-to-sign-in";
 export * from "./redirect-to-sign-up";
+export * from "./sign-out-page";
 export * from "./signed-in";
 export * from "./signed-out";
 export * from "./user-button";
