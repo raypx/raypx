@@ -1,4 +1,12 @@
 {
   "title": "Documentation",
-  "pages": ["index", "workspace", "development", "---Authentication---", "oauth-setup"]
+  "pages": [
+    "index",
+    "workspace",
+    "development",
+    "---Authentication---",
+    "oauth-setup",
+    "---CMS (WIP)---",
+    "cms-design"
+  ]
 }

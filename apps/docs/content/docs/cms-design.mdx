@@ -1,0 +1,531 @@
+---
+title: CMS Package Design (WIP)
+description: Comprehensive Content Management System design for the Raypx platform
+---
+
+<Callout type="warn" title="Work In Progress">
+  This document is currently under development. The CMS package has not been implemented yet.
+</Callout>
+
+## Overview
+
+A headless CMS package that integrates seamlessly with the existing Raypx architecture, providing content management capabilities with full type safety, role-based permissions, and a flexible content modeling system.
+
+## Architecture
+
+### Package Structure
+
+```files
+packages/
+├── cms/                    # Main CMS package
+│   ├── src/
+│   │   ├── client/        # Client-side components and hooks
+│   │   │   ├── components/
+│   │   │   │   ├── content-editor/      # Rich text editor
+│   │   │   │   ├── content-list/        # Content listing
+│   │   │   │   ├── content-form/        # Content form builder
+│   │   │   │   ├── media-library/       # Media management
+│   │   │   │   └── field-types/         # Custom field components
+│   │   │   ├── hooks/
+│   │   │   │   ├── use-content.ts
+│   │   │   │   ├── use-content-type.ts
+│   │   │   │   └── use-media.ts
+│   │   │   └── context/
+│   │   │       └── cms-context.tsx
+│   │   ├── server/        # Server-side utilities
+│   │   │   ├── content/
+│   │   │   │   ├── resolver.ts          # Content resolution
+│   │   │   │   ├── validator.ts         # Content validation
+│   │   │   │   └── transformer.ts       # Content transformation
+│   │   │   ├── permissions/
+│   │   │   │   └── check-permissions.ts
+│   │   │   └── media/
+│   │   │       ├── upload.ts
+│   │   │       └── process.ts
+│   │   ├── types/
+│   │   │   ├── content.ts
+│   │   │   ├── field.ts
+│   │   │   └── media.ts
+│   │   └── index.ts
+│   └── package.json
+│
+├── db/                     # Extend existing DB package
+│   └── src/
+│       └── schemas/
+│           └── cms.ts      # CMS database schemas
+│
+└── trpc/                   # Extend existing tRPC package
+    └── src/
+        └── routers/
+            ├── content.ts   # Content CRUD operations
+            ├── content-types.ts
+            └── media.ts
+```
+
+## Database Schema Design
+
+### Content Types (Content Models)
+
+Define the structure of different content models (e.g., "Blog Post", "Product", "Page").
+
+```ts title="packages/db/src/schemas/cms.ts"
+import { pgTable, text, uuid, timestamp, jsonb, boolean, integer, index } from "drizzle-orm/pg-core";
+import { user } from "./auth";
+import { uuidv7 } from "../utils";
+
+/**
+ * Content Types - Define the structure of different content models
+ */
+export const contentType = pgTable(
+  "content_type",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+
+    // Basic info
+    name: text("name").notNull(), // e.g., "Blog Post"
+    slug: text("slug").notNull().unique(), // e.g., "blog-post"
+    description: text("description"),
+    icon: text("icon"), // Lucide icon name
+
+    // Field definitions (JSON schema)
+    fields: jsonb("fields").notNull().$type<FieldDefinition[]>(),
+
+    // Settings
+    isPublished: boolean("is_published").default(true).notNull(),
+    isSingleton: boolean("is_singleton").default(false).notNull(),
+
+    // Display settings
+    displayField: text("display_field").default("title"),
+    previewUrl: text("preview_url"),
+
+    // Timestamps
+    createdAt: timestamp("created_at").$defaultFn(() => new Date()).notNull(),
+    updatedAt: timestamp("updated_at")
+      .$defaultFn(() => new Date())
+      .$onUpdateFn(() => new Date())
+      .notNull(),
+
+    // Creator
+    createdBy: uuid("created_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (table) => [index("idx_content_type_slug").on(table.slug)]
+);
+```
+
+### Content Entries
+
+Store actual content entries with flexible JSON data structure.
+
+```ts title="packages/db/src/schemas/cms.ts"
+/**
+ * Content - The actual content entries
+ */
+export const content = pgTable(
+  "content",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+
+    // Content type reference
+    contentTypeId: uuid("content_type_id")
+      .notNull()
+      .references(() => contentType.id, { onDelete: "cascade" }),
+
+    // Content data (JSON - flexible structure based on content type)
+    data: jsonb("data").notNull().$type<Record<string, unknown>>(),
+
+    // SEO & Meta
+    slug: text("slug"),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
+    metaKeywords: text("meta_keywords"),
+    ogImage: text("og_image"),
+
+    // Status & Publishing
+    status: text("status").notNull().default("draft"), // draft, published, archived
+    publishedAt: timestamp("published_at"),
+    scheduledAt: timestamp("scheduled_at"),
+
+    // Versioning
+    version: integer("version").default(1).notNull(),
+
+    // i18n
+    locale: text("locale").default("en").notNull(),
+
+    // Timestamps
+    createdAt: timestamp("created_at").$defaultFn(() => new Date()).notNull(),
+    updatedAt: timestamp("updated_at")
+      .$defaultFn(() => new Date())
+      .$onUpdateFn(() => new Date())
+      .notNull(),
+
+    // Author
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+
+    // Last modifier
+    updatedBy: uuid("updated_by").references(() => user.id, { onDelete: "set null" }),
+  },
+  (table) => [
+    index("idx_content_type").on(table.contentTypeId),
+    index("idx_content_status").on(table.status),
+    index("idx_content_slug").on(table.slug),
+    index("idx_content_author").on(table.authorId),
+    index("idx_content_locale").on(table.locale),
+    index("idx_content_published").on(table.publishedAt),
+  ]
+);
+```
+
+### Additional Tables
+
+The CMS system also includes:
+
+- **Content Versions** - Track version history for content rollback
+- **Media** - Manage uploaded files with metadata
+- **Content Relations** - Link content entries together
+
+## Type Definitions
+
+### Field Types
+
+The CMS supports 17+ field types for flexible content modeling:
+
+```ts title="packages/cms/src/types/field.ts"
+export type FieldType =
+  | "text"           // Single-line text
+  | "textarea"       // Multi-line text
+  | "richtext"       // Rich text editor (TipTap/Lexical)
+  | "markdown"       // Markdown editor
+  | "number"         // Number input
+  | "boolean"        // Checkbox
+  | "date"           // Date picker
+  | "datetime"       // DateTime picker
+  | "select"         // Dropdown select
+  | "multiselect"    // Multi-select dropdown
+  | "radio"          // Radio buttons
+  | "checkbox-group" // Checkbox group
+  | "media"          // Media picker (single)
+  | "media-gallery"  // Media picker (multiple)
+  | "relation"       // Relation to other content
+  | "json"           // JSON editor
+  | "slug"           // Auto-generated slug
+  | "color"          // Color picker
+  | "url"            // URL input
+  | "email"          // Email input
+  | "component"      // Nested component
+  | "repeater";      // Repeatable fields
+```
+
+### Field Definition
+
+```ts
+export type FieldDefinition = {
+  name: string;
+  label: string;
+  type: FieldType;
+  description?: string;
+  defaultValue?: unknown;
+  placeholder?: string;
+  validation?: FieldValidation;
+  options?: Array<{ label: string; value: string }>;
+  relationTo?: string; // For relation fields
+  accept?: string[]; // For media fields
+  fields?: FieldDefinition[]; // For component/repeater fields
+  admin?: {
+    hidden?: boolean;
+    readOnly?: boolean;
+    width?: string;
+    condition?: string;
+  };
+};
+```
+
+## tRPC API Design
+
+### Content Types Router
+
+```ts title="packages/trpc/src/routers/content-types.ts"
+export const contentTypesRouter = createTRPCRouter({
+  // List all content types
+  list: protectedProcedure.query(async () => {
+    return await db.select().from(contentType).orderBy(contentType.name);
+  }),
+
+  // Get single content type
+  get: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      // Implementation
+    }),
+
+  // Create content type
+  create: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        slug: z.string().min(1),
+        fields: z.array(z.any()),
+        isSingleton: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Implementation
+    }),
+
+  // Update, Delete operations...
+});
+```
+
+### Content Router
+
+```ts title="packages/trpc/src/routers/content.ts"
+export const contentRouter = createTRPCRouter({
+  // List content with filtering and pagination
+  list: protectedProcedure
+    .input(
+      z.object({
+        contentTypeId: z.string().optional(),
+        status: z.enum(["draft", "published", "archived"]).optional(),
+        locale: z.string().optional(),
+        search: z.string().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      // Implementation with filtering, search, and pagination
+    }),
+
+  // CRUD operations
+  create: protectedProcedure.input(/* ... */).mutation(/* ... */),
+  update: protectedProcedure.input(/* ... */).mutation(/* ... */),
+  delete: protectedProcedure.input(/* ... */).mutation(/* ... */),
+
+  // Publishing
+  publish: protectedProcedure.input(/* ... */).mutation(/* ... */),
+  unpublish: protectedProcedure.input(/* ... */).mutation(/* ... */),
+
+  // Versioning
+  versions: protectedProcedure.input(/* ... */).query(/* ... */),
+  restoreVersion: protectedProcedure.input(/* ... */).mutation(/* ... */),
+});
+```
+
+## React Components
+
+### Content Editor
+
+Main component for editing content entries.
+
+```tsx title="packages/cms/src/client/components/content-editor/content-editor.tsx"
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, Button } from "@raypx/ui/components";
+import { FieldRenderer } from "../field-types";
+
+export function ContentEditor({
+  contentType,
+  initialData,
+  onSave,
+}: {
+  contentType: ContentTypeData;
+  initialData?: ContentData;
+  onSave: (data: unknown) => void;
+}) {
+  const form = useForm({
+    resolver: zodResolver(generateSchemaFromFields(contentType.fields)),
+    defaultValues: initialData?.data || {},
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSave)}>
+        {contentType.fields.map((field) => (
+          <FieldRenderer
+            key={field.name}
+            field={field}
+            control={form.control}
+          />
+        ))}
+
+        <div className="flex gap-2">
+          <Button type="submit" variant="default">
+            Save Draft
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onSave({ ...form.getValues(), status: "published" })}
+          >
+            Publish
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+```
+
+### Field Renderer
+
+Dynamic field renderer based on field type.
+
+```tsx title="packages/cms/src/client/components/field-types/field-renderer.tsx"
+export function FieldRenderer({ field, control }: FieldRendererProps) {
+  switch (field.type) {
+    case "text":
+      return <TextFieldRenderer field={field} control={control} />;
+    case "richtext":
+      return <RichTextFieldRenderer field={field} control={control} />;
+    case "media":
+      return <MediaFieldRenderer field={field} control={control} />;
+    case "relation":
+      return <RelationFieldRenderer field={field} control={control} />;
+    // ... other field types
+    default:
+      return <div>Unsupported field type: {field.type}</div>;
+  }
+}
+```
+
+## Usage Example
+
+Example of using the CMS in an admin page:
+
+```tsx title="apps/web/src/routes/admin/cms/content/$contentType/new.tsx"
+import { createFileRoute } from "@tanstack/react-router";
+import { ContentEditor } from "@raypx/cms";
+import { trpc } from "@raypx/trpc/client";
+
+export const Route = createFileRoute("/admin/cms/content/$contentType/new")({
+  component: NewContentPage,
+});
+
+function NewContentPage() {
+  const { contentType } = Route.useParams();
+  const { data: contentTypeData } = trpc.contentTypes.get.useQuery({
+    slug: contentType,
+  });
+
+  const createContent = trpc.content.create.useMutation();
+
+  if (!contentTypeData) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h1>Create New {contentTypeData.name}</h1>
+      <ContentEditor
+        contentType={contentTypeData}
+        onSave={(data) => {
+          createContent.mutate({
+            contentTypeId: contentTypeData.id,
+            data,
+          });
+        }}
+      />
+    </div>
+  );
+}
+```
+
+## Configuration
+
+CMS configuration file example:
+
+```ts title="apps/web/cms.config.ts"
+import { defineCMSConfig } from "@raypx/cms";
+
+export default defineCMSConfig({
+  media: {
+    provider: "s3", // or "local", "cloudinary"
+    config: {
+      bucket: process.env.S3_BUCKET,
+      region: process.env.S3_REGION,
+    },
+    maxFileSize: 10 * 1024 * 1024, // 10MB
+    allowedTypes: ["image/*", "video/*", "application/pdf"],
+  },
+
+  editors: {
+    richText: "tiptap", // or "lexical"
+    markdown: true,
+  },
+
+  versioning: {
+    enabled: true,
+    maxVersions: 10,
+  },
+
+  locales: ["en", "zh", "es", "fr"],
+  defaultLocale: "en",
+
+  permissions: {
+    roles: {
+      admin: ["*"],
+      editor: ["content:read", "content:write", "media:read", "media:write"],
+      viewer: ["content:read", "media:read"],
+    },
+  },
+});
+```
+
+## Implementation Phases
+
+### Phase 1: Foundation (Week 1-2)
+
+1. Create database schemas
+2. Set up migrations
+3. Create base types and interfaces
+4. Implement tRPC routers (content types, content, media)
+
+### Phase 2: Core Features (Week 3-4)
+
+5. Implement content type builder
+6. Build content editor
+7. Create field renderers for basic types
+8. Implement media upload and management
+
+### Phase 3: Advanced Features (Week 5-6)
+
+9. Add versioning system
+10. Implement content relations
+11. Add rich text editor integration
+12. Build media library UI
+
+### Phase 4: Polish (Week 7-8)
+
+13. Add permissions and role-based access
+14. Implement search and filtering
+15. Add i18n support
+16. Create admin UI pages
+17. Write documentation
+
+## Key Benefits
+
+| Feature | Benefit |
+|---------|---------|
+| **Type Safety** | Full TypeScript support from database to UI |
+| **Flexible** | JSON-based content modeling allows for any structure |
+| **Scalable** | Designed to handle thousands of content entries |
+| **Developer Friendly** | tRPC provides auto-completion and type checking |
+| **Versioning** | Track all changes with version history |
+| **i18n Ready** | Built-in multi-language support |
+| **Media Management** | Integrated media library with S3/Cloudinary support |
+| **Role-Based Access** | Fine-grained permissions system |
+
+## Related Documentation
+
+- [Database Schema](/workspace#database)
+- [tRPC Router Setup](/development#trpc-api)
+- [Authentication](/oauth-setup)
+
+---
+
+<Callout type="info">
+  For questions or suggestions about the CMS design, please open an issue on GitHub.
+</Callout>
