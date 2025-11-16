@@ -1,4 +1,3 @@
-import { UserButton } from "@raypx/auth";
 import { useTRPC } from "@raypx/trpc/client";
 import { Badge } from "@raypx/ui/components/badge";
 import { Button } from "@raypx/ui/components/button";
@@ -23,7 +22,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import Container from "@/components/layout/container";
 
 type UserListItem = {
   id: string;
@@ -47,18 +45,19 @@ const formatDateTime = (value: Date | string | null | undefined) => {
   return dateTimeFormatter.format(date);
 };
 
-function ConsolePage() {
+function AdminUsersPage() {
   return (
-    <Container className="space-y-8 py-10">
-      <UserButton />
-      <section className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Console</h1>
-        <p className="text-muted-foreground text-sm">
-          Review user accounts with live data retrieved through tRPC.
-        </p>
-      </section>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+          <p className="text-muted-foreground">
+            Review and manage all user accounts with live data retrieved through tRPC.
+          </p>
+        </div>
+      </div>
       <UsersSection />
-    </Container>
+    </div>
   );
 }
 
@@ -96,7 +95,7 @@ function UsersSection() {
   return (
     <Card>
       <CardHeader className="border-b">
-        <CardTitle>Users</CardTitle>
+        <CardTitle>All Users</CardTitle>
         <CardDescription>Latest user accounts and their current status.</CardDescription>
         <CardAction>
           <Button
@@ -218,6 +217,6 @@ function ErrorState({
   );
 }
 
-export const Route = createFileRoute("/console/")({
-  component: ConsolePage,
+export const Route = createFileRoute("/_admin/admin/users/")({
+  component: AdminUsersPage,
 });

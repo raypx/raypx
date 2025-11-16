@@ -27,7 +27,8 @@ export const Route = createFileRoute("/_app/dashboard/")({
 });
 
 function DashboardPage() {
-  const { user } = useAuth();
+  const { hooks: {useSession} } = useAuth();
+  const { data: session } = useSession();
 
   const stats = [
     {
@@ -121,7 +122,7 @@ function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {user?.name?.split(" ")[0] || "User"}!
+            Welcome back, {session?.user?.name?.split(" ")[0] || "User"}!
           </h1>
           <p className="text-muted-foreground">Here's what's happening with your account today</p>
         </div>

@@ -2,16 +2,8 @@ import { Button } from "@raypx/ui/components/button";
 import { ScrollArea } from "@raypx/ui/components/scroll-area";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  BarChart3,
-  Building2,
-  Database,
-  LayoutDashboard,
-  Settings,
-  Shield,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Shield, Users } from "lucide-react";
+import { Logo } from "@/components/layout/logo";
 
 const adminMenuItems = [
   {
@@ -24,26 +16,6 @@ const adminMenuItems = [
     href: "/admin/users",
     icon: Users,
   },
-  {
-    title: "Organizations",
-    href: "/admin/organizations",
-    icon: Building2,
-  },
-  {
-    title: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Database",
-    href: "/admin/database",
-    icon: Database,
-  },
-  {
-    title: "System",
-    href: "/admin/system",
-    icon: Settings,
-  },
 ];
 
 export function AdminSidebar() {
@@ -51,7 +23,7 @@ export function AdminSidebar() {
     <aside className="w-64 border-r bg-card">
       <div className="flex h-16 items-center justify-between px-4 border-b">
         <Link className="flex items-center gap-2 font-semibold" to="/admin">
-          <Shield className="h-6 w-6 text-primary" />
+          <Logo />
           <span>Admin Panel</span>
         </Link>
       </div>

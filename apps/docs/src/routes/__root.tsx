@@ -7,6 +7,7 @@ import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
 import Loading from "@/components/layout/loading";
 import NotFound from "@/components/layout/not-found";
 import appCss from "@/styles/globals.css?url";
+import { brand } from "@/config/site";
 
 export const Route = createRootRoute({
   head: async () => ({
@@ -19,7 +20,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "Raypx",
+        title: `${brand.name} Docs`,
       },
     ],
     links: [

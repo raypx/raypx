@@ -68,7 +68,7 @@ export function useAuthPageConfig(config: AuthPageConfig) {
     return () => {
       context.setConfig({});
     };
-  }, [config.footerType, context]);
+  }, [config.footerType]);
 }
 
 /**

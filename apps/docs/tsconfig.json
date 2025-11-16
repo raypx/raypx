@@ -1,6 +1,6 @@
 {
   "extends": "@raypx/tsconfig/vite.json",
-  "include": ["**/*.ts", "**/*.tsx", "**/*.mts", "src/routes/sitemap/.xml.ts"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "compilerOptions": {
     "baseUrl": ".",
     "allowImportingTsExtensions": true,

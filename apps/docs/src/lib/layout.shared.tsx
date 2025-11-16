@@ -1,6 +1,7 @@
 import { ThemeSwitcherHorizontal } from "@raypx/ui/business/theme-switcher";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { Logo } from "@/components/layout/logo";
+import { brand, links } from "@/config/site";
 
 export function baseOptions(): BaseLayoutProps {
   return {
@@ -8,13 +9,13 @@ export function baseOptions(): BaseLayoutProps {
       title: (
         <div className="flex items-center gap-2">
           <Logo className="size-6" />
-          <span className="text-lg font-semibold">Raypx</span>
+          <span className="text-lg font-semibold">{brand.name}</span>
         </div>
       ),
     },
     themeSwitch: {
       component: <ThemeSwitcherHorizontal />,
     },
-    githubUrl: "https://github.com/raypx/raypx",
+    githubUrl: links.github,
   } satisfies BaseLayoutProps;
 }

@@ -1,10 +1,11 @@
-import { useAuth } from "@raypx/auth";
+import { RedirectToSignIn, useAuth } from "@raypx/auth";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppHeader } from "./-components/app-header";
 import { AppSidebar } from "./-components/app-sidebar";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
+    console.log('beforeLoad');
     // const session = await auth.api.getSession({
     //   headers: getRequestHeaders(),
     // });
@@ -24,18 +25,18 @@ function AppLayout() {
     hooks: { useSession },
   } = useAuth();
 
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
 
   // Client-side redirect if not authenticated
-  if (typeof window !== "undefined" && !session?.user) {
-    // Redirect to sign-in with current path as redirect param
-    const currentPath = window.location.pathname;
-    window.location.href = `/sign-in?redirect=${encodeURIComponent(currentPath)}`;
-    return null;
-  }
+  // if (typeof window !== "undefined" && !session?.user) {
+  //   // Redirect to sign-in with current path as redirect param
+  //   const currentPath = window.location.pathname;
+  //   window.location.href = `/sign-in?redirect=${encodeURIComponent(currentPath)}`;
+  //   return null;
+  // }
 
   // Show loading state while checking auth
-  if (!session?.user) {
+  if (isPending) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -44,6 +45,11 @@ function AppLayout() {
         </div>
       </div>
     );
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!session?.user) {
+    return <RedirectToSignIn />;
   }
 
   return (

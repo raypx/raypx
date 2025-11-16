@@ -3,7 +3,7 @@ import { ScrollArea } from "@raypx/ui/components/scroll-area";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import type { User as AuthUser } from "better-auth";
-import { Building2, Home, Key, LogOut, Menu, Settings, User } from "lucide-react";
+import { Home, Key, LogOut, Menu, Settings } from "lucide-react";
 
 interface AppSidebarProps {
   user: AuthUser;
@@ -16,19 +16,9 @@ const menuItems = [
     icon: Home,
   },
   {
-    title: "Profile",
-    href: "/profile",
-    icon: User,
-  },
-  {
     title: "API Keys",
     href: "/api-keys",
     icon: Key,
-  },
-  {
-    title: "Organizations",
-    href: "/organizations",
-    icon: Building2,
   },
   {
     title: "Settings",

@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { baseOptions } from "../lib/layout.shared";
+import { links } from "@/config/site";
 
 export const Route = createFileRoute("/")({
   component: () => <RouteComponent />,
@@ -98,12 +99,7 @@ function RouteComponent() {
   return (
     <HomeLayout
       {...options}
-      links={[
-        {
-          url: "/docs",
-          text: "Docs",
-        },
-      ]}
+      links={[{ url: links.docs, text: "Docs" }, { url: links.github, text: "GitHub" }]}
       nav={{ ...options.nav }}
     >
       <main className="container mx-auto px-4 py-12">

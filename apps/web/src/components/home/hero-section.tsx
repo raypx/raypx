@@ -11,8 +11,8 @@ export function HeroSection() {
 
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 size-80 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 size-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute -top-40 -right-40 size-80 bg-primary/10 rounded-full blur-3xl animate-pulse motion-reduce:animate-none" />
+        <div className="absolute -bottom-40 -left-40 size-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000 motion-reduce:animate-none" />
       </div>
 
       <Container className="relative">

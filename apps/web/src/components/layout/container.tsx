@@ -10,5 +10,9 @@ export default function Container({
   children?: ReactNode;
 }) {
   // add mx-auto to make it center
-  return <div className={cn("container", "mx-auto max-w-7xl", className)}>{children}</div>;
+  return (
+    <div className={cn("container", "mx-auto max-w-7xl px-4 md:px-6 lg:px-8", className)}>
+      {children}
+    </div>
+  );
 }

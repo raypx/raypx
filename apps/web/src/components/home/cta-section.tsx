@@ -29,7 +29,9 @@ export function CtaSection() {
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
                   Get Started
                 </h2>
-                <p className="text-lg text-muted-foreground">Get Started</p>
+                <p className="text-lg text-muted-foreground">
+                  Clone, install dependencies, and start developing in minutes.
+                </p>
               </div>
 
               {/* Code snippet */}

@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { Github, Twitter } from "lucide-react";
 import Container from "./container";
 import { Logo } from "./logo";
+import { brand as siteBrand, links as siteLinks, footer as siteFooter } from "@/config/site";
 
 type FooterLink = {
   title: string;
@@ -15,56 +16,7 @@ type FooterLink = {
   }[];
 };
 
-const footerLinks: FooterLink[] = [
-  {
-    title: "Product",
-    links: [
-      { label: "Features", href: "/#features" },
-      { label: "Tech Stack", href: "/#tech-stack" },
-      {
-        label: "Roadmap",
-        href: "https://github.com/raypx/raypx",
-        external: true,
-      },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
-      { label: "Docs", href: "/docs" },
-      {
-        label: "GitHub",
-        href: "https://github.com/raypx/raypx",
-        external: true,
-      },
-      {
-        label: "Changelog",
-        href: "https://github.com/raypx/raypx/releases",
-        external: true,
-      },
-    ],
-  },
-  {
-    title: "Community",
-    links: [
-      {
-        label: "Issues",
-        href: "https://github.com/raypx/raypx/issues",
-        external: true,
-      },
-      {
-        label: "Discussions",
-        href: "https://github.com/raypx/raypx/discussions",
-        external: true,
-      },
-      {
-        label: "Contributing",
-        href: "https://github.com/raypx/raypx#-contributing",
-        external: true,
-      },
-    ],
-  },
-];
+const footerLinks: FooterLink[] = siteFooter.sections;
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -76,14 +28,14 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <Link className="flex items-center space-x-2" to="/">
               <Logo />
-              <span className="text-xl font-semibold">Raypx</span>
+              <span className="text-xl font-semibold">{siteBrand.name}</span>
             </Link>
-            <p className="text-sm text-muted-foreground max-w-xs">Modern full-stack framework</p>
+            <p className="text-sm text-muted-foreground max-w-xs">{siteBrand.tagline}</p>
             <div className="flex items-center gap-2">
               <Button asChild size="icon" variant="ghost">
                 <a
                   aria-label="GitHub"
-                  href="https://github.com/raypx/raypx"
+                  href={siteLinks.github}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
@@ -93,7 +45,7 @@ export function Footer() {
               <Button asChild size="icon" variant="ghost">
                 <a
                   aria-label="Twitter"
-                  href="https://twitter.com/raypx"
+                  href={siteLinks.twitter}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

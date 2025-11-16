@@ -10,10 +10,34 @@ import {
 } from "@raypx/ui/components/card";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
-import { Upload } from "lucide-react";
+import { useToast } from "@raypx/ui/hooks/use-toast";
+import { Upload, User } from "lucide-react";
+import { useState } from "react";
 
 export function AccountSettings() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleProfileSave = async () => {
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast({
+      title: "Profile updated",
+      description: "Your profile has been updated successfully.",
+    });
+    setIsSaving(false);
+  };
+
+  const handleAvatarClick = async () => {
+    // Simulate file upload
+    toast({
+      title: "Upload started",
+      description: "Avatar upload initiated.",
+    });
+  };
 
   const userInitials = user?.name
     ?.split(" ")
@@ -35,10 +59,16 @@ export function AccountSettings() {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarImage alt={user?.name ?? ""} src={user?.image ?? undefined} />
-              <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
+              <AvatarFallback className="text-lg">{userInitials ? userInitials : <User className="h-8 w-8" />}</AvatarFallback>
             </Avatar>
             <div>
-              <Button className="gap-2" size="sm" variant="outline">
+              <Button
+                className="gap-2"
+                size="sm"
+                variant="outline"
+                onClick={handleAvatarClick}
+                disabled={isLoading}
+              >
                 <Upload className="h-4 w-4" />
                 Upload new photo
               </Button>
@@ -79,9 +109,13 @@ export function AccountSettings() {
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button>Save Changes</Button>
-            <Button variant="outline">Cancel</Button>
+          <div className="flex gap-2 pt-2">
+            <Button onClick={handleProfileSave} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Cancel
+            </Button>
           </div>
         </CardContent>
       </Card>
