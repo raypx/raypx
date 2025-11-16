@@ -44,7 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@raypx/ui/components/table";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -110,7 +110,7 @@ function UsersSection({ query }: { query: string }) {
       },
       { staleTime: 30_000 },
     ),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
   const { data, isPending, isError, error, refetch, isFetching } = usersQuery;
 
@@ -521,6 +521,10 @@ function ErrorState({
   );
 }
 
-export const Route = createFileRoute("/_admin/admin/users/")({
+export const Route = createFileRoute("/_app/admin/users/")({
   component: AdminUsersPage,
+  beforeLoad: ({ context }) => {
+    // Admin-only route
+    // Access control is handled by the _app layout and tRPC procedures
+  },
 });
