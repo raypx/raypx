@@ -16,6 +16,7 @@ import { useTheme } from "@raypx/ui/hooks/use-theme";
 import { Link } from "@tanstack/react-router";
 import { Check, LogOut, Moon, Settings, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { defaultAuthRoutes } from "../../config/routes";
 import { useAuth } from "../hooks";
 
 /**
@@ -151,7 +152,7 @@ export const UserButton = () => {
         <DropdownMenuSeparator />
         {/* Sign Out */}
         <DropdownMenuItem asChild className="cursor-pointer" variant="destructive">
-          <Link className="flex items-center" to="/sign-out">
+          <Link className="flex items-center" to={defaultAuthRoutes.signOut}>
             <LogOut className="mr-2 size-4" />
             <span>Sign Out</span>
           </Link>

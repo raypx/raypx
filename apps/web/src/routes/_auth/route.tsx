@@ -1,6 +1,7 @@
 import { AuthLayout } from "@raypx/auth";
 import { Image } from "@raypx/ui/components/image";
-import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation, useMatches } from "@tanstack/react-router";
+import { authRoutes } from "@/config/auth";
 import { getAuthPageFooter } from "./-components/auth-page-footer";
 import { AuthPageConfigProvider, useAuthPageConfigValue } from "./-hooks/use-auth-page-config";
 
@@ -10,11 +11,15 @@ function AuthLayoutWrapper() {
 
   // Get meta from the current (last) route match
   const currentMatch = matches[matches.length - 1];
-  const meta = currentMatch?.meta?.find((m) => m.title || m.description);
+  const location = useLocation();
+  const meta: { title?: string; description?: string } | undefined = currentMatch?.meta?.find(
+    (m: { title?: string; description?: string } | undefined) => m?.title || m?.description,
+  );
 
   const title = meta?.title;
   const description = meta?.description;
   const cardFooter = getAuthPageFooter(config.footerType);
+  const isSignOut = location.pathname === authRoutes.signOut;
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
@@ -34,9 +39,13 @@ function AuthLayoutWrapper() {
           </div>
           Raypx
         </Link>
-        <AuthLayout cardFooter={cardFooter} description={description} title={title}>
+        {!isSignOut ? (
+          <AuthLayout cardFooter={cardFooter} description={description} title={title}>
+            <Outlet />
+          </AuthLayout>
+        ) : (
           <Outlet />
-        </AuthLayout>
+        )}
       </div>
     </div>
   );

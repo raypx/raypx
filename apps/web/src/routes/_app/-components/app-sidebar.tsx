@@ -7,6 +7,7 @@ import { cn } from "@raypx/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { Home, Key, LogOut, Settings, Shield, Users } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
+import { authRoutes } from "@/config/auth";
 
 interface AppSidebarProps {
   user: AuthUser;
@@ -120,7 +121,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </div>
 
           <Button asChild className="w-full justify-start gap-3" variant="ghost">
-            <Link to="/sign-out">
+            <Link to={authRoutes.signOut}>
               <LogOut className="h-4 w-4" />
               Sign Out
             </Link>

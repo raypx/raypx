@@ -12,6 +12,7 @@ import { Input } from "@raypx/ui/components/input";
 import { Link } from "@tanstack/react-router";
 import type { User as AuthUser } from "better-auth";
 import { Bell, Search } from "lucide-react";
+import { authRoutes } from "@/config/auth";
 
 interface AppHeaderProps {
   user: AuthUser;
@@ -65,7 +66,7 @@ export function AppHeader({ user }: AppHeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/sign-out">Sign out</Link>
+              <Link to={authRoutes.signOut}>Sign out</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
