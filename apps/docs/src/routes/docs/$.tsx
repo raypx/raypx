@@ -1,11 +1,10 @@
+import browserCollections from "fumadocs-mdx:collections/browser";
 import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import type * as PageTree from "fumadocs-core/page-tree";
-import { createClientLoader as createFumadocsClientLoader } from "fumadocs-mdx/runtime/vite";
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
 import { useMemo } from "react";
-import { docs } from "@/.source";
 import { getMdxComponents } from "@/components/layout/mdx-components";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
@@ -76,8 +75,7 @@ export function DocsPageComponent() {
   );
 }
 
-const clientLoader = createFumadocsClientLoader(docs.doc, {
-  id: "docs",
+const clientLoader = browserCollections.docs.createClientLoader({
   component({ toc, frontmatter, lastModified, default: MDX }, { path }: { path: string }) {
     return (
       <DocsPage

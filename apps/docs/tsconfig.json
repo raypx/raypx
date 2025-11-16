@@ -1,12 +1,12 @@
 {
   "extends": "@raypx/tsconfig/vite.json",
-  "include": ["**/*.ts", "**/*.tsx", "**/*.mts"],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.mts", "src/routes/sitemap/.xml.ts"],
   "compilerOptions": {
     "baseUrl": ".",
     "allowImportingTsExtensions": true,
     "allowJs": false,
     "paths": {
-      "@/.source": [".source"],
+      "fumadocs-mdx:collections/*": [".source/*"],
       "@/*": ["./src/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]
     }

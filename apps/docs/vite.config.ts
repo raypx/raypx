@@ -8,7 +8,7 @@ import { createJiti } from "jiti";
 import { nitro } from "nitro/vite";
 import { defineConfig, type PluginOption } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
-import * as sourceConfig from "./source.config";
+import * as MdxConfig from "./source.config";
 
 const jiti = createJiti(import.meta.url);
 
@@ -47,7 +47,7 @@ export default defineConfig({
   },
   plugins: [
     // Conditionally load MDX for faster startup (use SKIP_DOCS=true to skip)
-    mdx(sourceConfig),
+    mdx(MdxConfig),
     // Always include for production tree-shaking
     devtools({
       enhancedLogs: { enabled: false },
