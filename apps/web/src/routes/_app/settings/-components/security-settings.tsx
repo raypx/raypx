@@ -22,7 +22,7 @@ export function SecuritySettings() {
 
   const handlePasswordUpdate = async () => {
     setIsUpdatingPassword(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     toast({
       title: "Password updated",
       description: "Your password has been updated successfully.",
@@ -33,7 +33,7 @@ export function SecuritySettings() {
 
   const handleEnable2FA = async () => {
     setEnabling2FA(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     toast({
       title: "2FA Setup Initiated",
       description: "Please scan the QR code with your authenticator app.",
@@ -43,7 +43,7 @@ export function SecuritySettings() {
 
   const handleGenerateBackup = async () => {
     setGeneratingBackup(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     toast({
       title: "Backup Codes Generated",
       description: "Save these codes in a secure location.",
@@ -53,7 +53,7 @@ export function SecuritySettings() {
 
   const handleRevokeSession = async (sessionId: string) => {
     setRevokingSession(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     toast({
       title: "Session Revoked",
       description: "The session has been terminated.",
@@ -88,7 +88,7 @@ export function SecuritySettings() {
             <Input id="confirm-password" placeholder="Confirm your new password" type="password" />
           </div>
 
-          <Button onClick={handlePasswordUpdate} disabled={isUpdatingPassword}>
+          <Button disabled={isUpdatingPassword} onClick={handlePasswordUpdate}>
             {isUpdatingPassword ? "Updating..." : "Update Password"}
           </Button>
         </CardContent>
@@ -111,7 +111,7 @@ export function SecuritySettings() {
                 Use an authenticator app to generate one-time codes
               </p>
             </div>
-            <Button variant="outline" onClick={handleEnable2FA} disabled={enabling2FA}>
+            <Button disabled={enabling2FA} onClick={handleEnable2FA} variant="outline">
               {enabling2FA ? "Setting up..." : "Enable"}
             </Button>
           </div>
@@ -126,7 +126,7 @@ export function SecuritySettings() {
                 Generate backup codes for account recovery
               </p>
             </div>
-            <Button variant="outline" onClick={handleGenerateBackup} disabled={generatingBackup}>
+            <Button disabled={generatingBackup} onClick={handleGenerateBackup} variant="outline">
               {generatingBackup ? "Generating..." : "Generate"}
             </Button>
           </div>

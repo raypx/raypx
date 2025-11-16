@@ -20,4 +20,3 @@ export const siteConfig = {
   brand,
   links,
 };
-

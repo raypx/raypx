@@ -8,24 +8,24 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@raypx/ui/components/navigation-menu";
-import { Skeleton } from "@raypx/ui/components/skeleton";
 import { Separator } from "@raypx/ui/components/separator";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetClose,
 } from "@raypx/ui/components/sheet";
+import { Skeleton } from "@raypx/ui/components/skeleton";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { MenuIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { navigation } from "@/config/site";
 import { useScroll } from "@/hooks/use-scroll";
 import Container from "./container";
 import { Logo } from "./logo";
-import { navigation } from "@/config/site";
 
 type NavBarProps = {
   scroll?: boolean;
@@ -85,12 +85,7 @@ export function Navbar({ scroll }: NavBarProps) {
                         className={customNavigationMenuTriggerStyle}
                       >
                         {item.external ? (
-                          <a
-                            href={item.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-current={undefined}
-                          >
+                          <a href={item.href} rel="noopener noreferrer" target="_blank">
                             {item.title}
                           </a>
                         ) : (
@@ -144,11 +139,11 @@ export function Navbar({ scroll }: NavBarProps) {
             <ThemeSwitcher />
             <Sheet>
               <SheetTrigger asChild>
-                <Button size="icon" variant="ghost" aria-label="Open menu">
+                <Button aria-label="Open menu" size="icon" variant="ghost">
                   <MenuIcon className="size-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0">
+              <SheetContent className="p-0" side="left">
                 <SheetHeader className="px-4 py-3">
                   <SheetTitle>
                     <Link className="flex items-center space-x-2" to="/">
@@ -174,19 +169,18 @@ export function Navbar({ scroll }: NavBarProps) {
                         href={item.href}
                         rel="noopener noreferrer"
                         target="_blank"
-                        aria-current={undefined}
                       >
                         {item.title}
                       </a>
                     ) : (
                       <Link
+                        aria-current={isActive ? "page" : undefined}
                         className={cn(
                           buttonVariants({ variant: "ghost", size: "lg" }),
                           "justify-start",
                           isActive && "text-foreground font-medium",
                         )}
                         to={item.href || "#"}
-                        aria-current={isActive ? "page" : undefined}
                       >
                         {item.title}
                       </Link>

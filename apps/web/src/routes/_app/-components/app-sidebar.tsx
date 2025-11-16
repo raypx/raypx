@@ -1,9 +1,10 @@
+import type { AuthUser } from "@raypx/auth";
 import { Button } from "@raypx/ui/components/button";
 import { ScrollArea } from "@raypx/ui/components/scroll-area";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
-import type { User as AuthUser } from "better-auth";
-import { Home, Key, LogOut, Menu, Settings } from "lucide-react";
+import { Home, Key, LogOut, Settings } from "lucide-react";
+import { Logo } from "@/components/layout/logo";
 
 interface AppSidebarProps {
   user: AuthUser;
@@ -32,7 +33,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
     <aside className="w-64 border-r bg-card">
       <div className="flex h-16 items-center justify-between px-4 border-b">
         <Link className="flex items-center gap-2 font-semibold" to="/">
-          <Menu className="h-6 w-6" />
+          <Logo className="size-6" />
           <span>Raypx</span>
         </Link>
       </div>

@@ -23,7 +23,7 @@ export function AccountSettings() {
   const handleProfileSave = async () => {
     setIsSaving(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     toast({
       title: "Profile updated",
       description: "Your profile has been updated successfully.",
@@ -59,15 +59,17 @@ export function AccountSettings() {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarImage alt={user?.name ?? ""} src={user?.image ?? undefined} />
-              <AvatarFallback className="text-lg">{userInitials ? userInitials : <User className="h-8 w-8" />}</AvatarFallback>
+              <AvatarFallback className="text-lg">
+                {userInitials ? userInitials : <User className="h-8 w-8" />}
+              </AvatarFallback>
             </Avatar>
             <div>
               <Button
                 className="gap-2"
+                disabled={isLoading}
+                onClick={handleAvatarClick}
                 size="sm"
                 variant="outline"
-                onClick={handleAvatarClick}
-                disabled={isLoading}
               >
                 <Upload className="h-4 w-4" />
                 Upload new photo
@@ -110,10 +112,10 @@ export function AccountSettings() {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button onClick={handleProfileSave} disabled={isSaving}>
+            <Button disabled={isSaving} onClick={handleProfileSave}>
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
-            <Button variant="outline" onClick={() => window.location.reload()}>
+            <Button onClick={() => window.location.reload()} variant="outline">
               Cancel
             </Button>
           </div>

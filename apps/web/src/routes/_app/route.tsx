@@ -5,7 +5,7 @@ import { AppSidebar } from "./-components/app-sidebar";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
-    console.log('beforeLoad');
+    console.log("beforeLoad");
     // const session = await auth.api.getSession({
     //   headers: getRequestHeaders(),
     // });

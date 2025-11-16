@@ -1,4 +1,4 @@
-import { useAuth } from "@raypx/auth";
+import { SecurityPanel, useAuth } from "@raypx/auth";
 import { Badge } from "@raypx/ui/components/badge";
 import { Button } from "@raypx/ui/components/button";
 import {
@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
+  KeyRound,
   Shield,
   TrendingUp,
   Users,
@@ -27,7 +28,9 @@ export const Route = createFileRoute("/_app/dashboard/")({
 });
 
 function DashboardPage() {
-  const { hooks: {useSession} } = useAuth();
+  const {
+    hooks: { useSession },
+  } = useAuth();
   const { data: session } = useSession();
 
   const stats = [
@@ -131,6 +134,14 @@ function DashboardPage() {
           Last login: 2 hours ago
         </Badge>
       </div>
+
+      {/* Security shortcuts (from @raypx/auth) */}
+      <SecurityPanel
+        changePasswordSearch={{ tab: "security" }}
+        changePasswordTo="/_app/settings/"
+        forgotPasswordTo="/_auth/forgot-password"
+        providers={["github", "google"]}
+      />
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

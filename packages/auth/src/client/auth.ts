@@ -40,3 +40,5 @@ export type AuthClientType = typeof auth;
 export type AuthClient = typeof auth;
 
 export type AnyAuthClient = Omit<AuthClient, "getSession">;
+
+export type AuthUser = Awaited<ReturnType<typeof auth.getSession>>["session"]["user"];

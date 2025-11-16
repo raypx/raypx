@@ -3,9 +3,9 @@ import { Button } from "@raypx/ui/components/button";
 import { Separator } from "@raypx/ui/components/separator";
 import { Link } from "@tanstack/react-router";
 import { Github, Twitter } from "lucide-react";
+import { brand as siteBrand, footer as siteFooter, links as siteLinks } from "@/config/site";
 import Container from "./container";
 import { Logo } from "./logo";
-import { brand as siteBrand, links as siteLinks, footer as siteFooter } from "@/config/site";
 
 type FooterLink = {
   title: string;

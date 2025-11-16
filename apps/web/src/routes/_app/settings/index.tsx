@@ -1,17 +1,38 @@
-import { Card, CardContent } from "@raypx/ui/components/card";
-import { CardDescription, CardHeader, CardTitle } from "@raypx/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@raypx/ui/components/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/tabs";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
+import { Settings, Shield, UserCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { AccountSettings } from "./-components/account-settings";
 import { PreferencesSettings } from "./-components/preferences-settings";
 import { SecuritySettings } from "./-components/security-settings";
-import { UserCheck, Shield, Settings } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings/")({
   component: SettingsPage,
 });
 
 function SettingsPage() {
+  const location = useLocation();
+  const getTabFromSearch = (): "account" | "security" | "preferences" => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab === "security" || tab === "preferences" || tab === "account") return tab;
+    return "account";
+  };
+  const [activeTab, setActiveTab] = useState<"account" | "security" | "preferences">(
+    getTabFromSearch(),
+  );
+
+  useEffect(() => {
+    setActiveTab(getTabFromSearch());
+  }, [location.search]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -19,30 +40,44 @@ function SettingsPage() {
         <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
-      <Tabs className="space-y-6" defaultValue="account">
+      <Tabs className="space-y-6" onValueChange={(v) => setActiveTab(v as any)} value={activeTab}>
         <TabsList className="w-full grid grid-cols-3 lg:w-auto lg:grid-cols-3 lg:inline-flex">
-          <TabsTrigger value="account" className="flex items-center gap-2">
+          <TabsTrigger
+            aria-selected={activeTab === "account"}
+            className="flex items-center gap-2"
+            value="account"
+          >
             <UserCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Account</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
+          <TabsTrigger
+            aria-selected={activeTab === "security"}
+            className="flex items-center gap-2"
+            value="security"
+          >
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="flex items-center gap-2">
+          <TabsTrigger
+            aria-selected={activeTab === "preferences"}
+            className="flex items-center gap-2"
+            value="preferences"
+          >
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline">Preferences</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="account" className="space-y-4">
+        <TabsContent className="space-y-4" value="account">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-muted-foreground" />
                 Account Information
               </CardTitle>
-              <CardDescription>Manage your account profile and personal information</CardDescription>
+              <CardDescription>
+                Manage your account profile and personal information
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <AccountSettings />
@@ -50,7 +85,7 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="security" className="space-y-4">
+        <TabsContent className="space-y-4" value="security">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -65,7 +100,7 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="preferences" className="space-y-4">
+        <TabsContent className="space-y-4" value="preferences">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

@@ -100,8 +100,16 @@ export const footer: Footer = {
       title: "Community",
       links: [
         { label: "Issues", href: "https://github.com/raypx/raypx/issues", external: true },
-        { label: "Discussions", href: "https://github.com/raypx/raypx/discussions", external: true },
-        { label: "Contributing", href: "https://github.com/raypx/raypx#-contributing", external: true },
+        {
+          label: "Discussions",
+          href: "https://github.com/raypx/raypx/discussions",
+          external: true,
+        },
+        {
+          label: "Contributing",
+          href: "https://github.com/raypx/raypx#-contributing",
+          external: true,
+        },
       ],
     },
   ],
