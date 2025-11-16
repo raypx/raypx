@@ -1,9 +1,9 @@
-import { desc, eq } from "@raypx/db";
+import { and, desc, eq, ilike, isNull, or, sql } from "@raypx/db";
 import { CreateUserSchema, user as User } from "@raypx/db/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";
-import { protectedProcedure, publicProcedure } from "../trpc";
+import { adminProcedure, protectedProcedure, publicProcedure } from "../trpc";
 import { assertExists, assertOwnership, handleDatabaseError } from "../utils/error-handler";
 
 /**
@@ -12,15 +12,71 @@ import { assertExists, assertOwnership, handleDatabaseError } from "../utils/err
  */
 export const usersRouter = {
   /**
-   * Get all users (limited to 10)
-   * Public endpoint - no authentication required
+   * List users with search, pagination, and status filters
+   * Admin-only endpoint
    */
-  all: publicProcedure.query(({ ctx }) => {
-    return ctx.db.query.user.findMany({
-      orderBy: desc(User.id),
-      limit: 10,
-    });
-  }),
+  list: adminProcedure
+    .input(
+      z
+        .object({
+          q: z.string().trim().min(1).max(200).optional(),
+          page: z.number().int().min(1).default(1),
+          pageSize: z.number().int().min(1).max(100).default(10),
+          status: z.enum(["all", "active", "banned"]).default("all"),
+          sortBy: z.enum(["createdAt", "email", "name"]).default("createdAt"),
+          sortOrder: z.enum(["asc", "desc"]).default("desc"),
+        })
+        .partial()
+        .default({}),
+    )
+    .query(async ({ ctx, input }) => {
+      const page = input.page ?? 1;
+      const pageSize = input.pageSize ?? 10;
+      const offset = (page - 1) * pageSize;
+      const conditions = [];
+
+      if (input.q) {
+        const like = `%${input.q}%`;
+        conditions.push(or(ilike(User.name, like), ilike(User.email, like)));
+      }
+      if (input.status === "banned") {
+        conditions.push(eq(User.banned, true));
+      } else if (input.status === "active") {
+        conditions.push(or(eq(User.banned, false), isNull(User.banned)));
+      }
+
+      const where = conditions.length ? and(...conditions) : undefined;
+
+      const sortByCol =
+        input.sortBy === "email"
+          ? User.email
+          : input.sortBy === "name"
+            ? User.name
+            : User.createdAt;
+      const orderBy = input.sortOrder === "desc" ? desc(sortByCol) : sortByCol;
+
+      const [items, totalRow] = await Promise.all([
+        ctx.db.query.user.findMany({
+          where,
+          orderBy,
+          limit: pageSize,
+          offset,
+        }),
+        ctx.db
+          .select({ value: sql<number>`count(*)::int` })
+          .from(User)
+          .where(where as any)
+          .then((r) => r[0]),
+      ]);
+
+      const total = totalRow?.value ?? 0;
+      return {
+        items,
+        total,
+        page,
+        pageSize,
+      };
+    }),
 
   /**
    * Get a single user by ID
@@ -37,6 +93,71 @@ export const usersRouter = {
 
     return user;
   }),
+
+  /**
+   * Update a user's role
+   * Admin-only endpoint
+   */
+  updateRole: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        role: z.union([z.enum(["user", "admin", "superadmin"]), z.null()]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.query.user.findFirst({
+        where: eq(User.id, input.id),
+      });
+      assertExists(existing, () => Errors.userNotFound(input.id));
+
+      const [updated] = await ctx.db
+        .update(User)
+        .set({ role: input.role })
+        .where(eq(User.id, input.id))
+        .returning();
+      return updated;
+    }),
+
+  /**
+   * Ban or unban a user (with optional reason/expiry)
+   * Admin-only endpoint
+   */
+  setBanned: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        banned: z.boolean(),
+        banReason: z.string().max(500).optional(),
+        banExpires: z
+          .union([
+            z.date(),
+            z
+              .string()
+              .transform((v) => new Date(v))
+              .pipe(z.date()),
+            z.null(),
+          ])
+          .optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.query.user.findFirst({
+        where: eq(User.id, input.id),
+      });
+      assertExists(existing, () => Errors.userNotFound(input.id));
+
+      const [updated] = await ctx.db
+        .update(User)
+        .set({
+          banned: input.banned,
+          banReason: input.banReason,
+          banExpires: input.banExpires ?? null,
+        })
+        .where(eq(User.id, input.id))
+        .returning();
+      return updated;
+    }),
 
   /**
    * Create a new user

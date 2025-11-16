@@ -8,10 +8,16 @@ import {
 } from "@raypx/email";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { apiKey, emailOTP, magicLink, mcp, username } from "better-auth/plugins";
+import { admin, apiKey, emailOTP, magicLink, mcp, username } from "better-auth/plugins";
 import { reactStartCookies } from "better-auth/react-start";
 import { envs } from "../envs";
 import { features } from "../features";
+import {
+  ac,
+  admin as adminRole,
+  superadmin as superAdminRole,
+  user as userRole,
+} from "../permissions";
 
 const getPlugins = () => {
   const plugins: BetterAuthPlugin[] = [];
@@ -64,19 +70,19 @@ const getPlugins = () => {
 
   // Organization
   // if (features.organization) {
-  //   plugins.push(
-  //     admin({
-  //       defaultRole: "user",
-  //       adminRoles: ["admin", "superadmin"],
-  //       ac,
-  //       roles: {
-  //         user: userRole,
-  //         admin: adminRole,
-  //         superadmin: superAdminRole,
-  //       },
-  //     }),
-  //     organization(),
-  //   );
+  plugins.push(
+    admin({
+      defaultRole: "user",
+      adminRoles: ["admin", "superadmin"],
+      ac,
+      roles: {
+        user: userRole,
+        admin: adminRole,
+        superadmin: superAdminRole,
+      },
+    }),
+    // organization(),
+  );
   // }
 
   // Email OTP

@@ -1,4 +1,5 @@
 import {
+  adminClient,
   anonymousClient,
   apiKeyClient,
   emailOTPClient,
@@ -19,6 +20,7 @@ const env = envs();
 export const auth = createAuthClient({
   baseURL: env.VITE_AUTH_URL,
   plugins: [
+    adminClient(),
     apiKeyClient(),
     multiSessionClient(),
     passkeyClient(),

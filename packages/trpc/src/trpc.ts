@@ -8,7 +8,7 @@
  */
 
 import { auth, type Session } from "@raypx/auth/server";
-import { db } from "@raypx/db";
+import { db, eq, schemas } from "@raypx/db";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError, z } from "zod/v4";
@@ -122,3 +122,19 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Admin-only procedure builder
+ *
+ * Requires authentication and admin role (admin or superadmin).
+ */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const current = await db.query.user.findFirst({
+    where: eq(schemas.user.id, ctx.session.user.id),
+    columns: { role: true },
+  });
+  const role = current?.role;
+  const isAdmin = role === "admin" || role === "superadmin";
+  if (!isAdmin) throw new TRPCError({ code: "FORBIDDEN" });
+  return next();
+});
