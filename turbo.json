@@ -12,9 +12,6 @@
     "npm_lifecycle_event"
   ],
   "tasks": {
-    "topo": {
-      "dependsOn": ["^topo"]
-    },
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
@@ -38,7 +35,6 @@
     },
     "check": {
       "cache": true,
-      "dependsOn": ["^topo"],
       "outputs": [".cache/.biomecache"],
       "outputLogs": "new-only"
     },
@@ -46,10 +42,6 @@
       "cache": true,
       "outputLogs": "new-only",
       "outputs": ["generated/**", "**/*.generated.*"]
-    },
-    "start": {
-      "cache": false,
-      "dependsOn": ["build"]
     },
     "test": {
       "cache": true,
@@ -70,7 +62,8 @@
     "email-preview": {
       "cache": false,
       "dependsOn": ["^build"],
-      "persistent": true
+      "persistent": true,
+      "outputs": []
     }
   }
 }

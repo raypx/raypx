@@ -1,12 +1,14 @@
 import { toast } from "@raypx/ui/components/toast";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PreviewArea } from "../../components/preview-area";
 import { SendDialog } from "../../components/send-dialog";
 import { Toolbar } from "../../components/toolbar";
 import { useLastEmail } from "../../components/use-last-email";
 import { useRender } from "../../components/use-render";
 import { useSend } from "../../components/use-send";
+import { useSendDialog } from "../../components/use-send-dialog";
+import { useSource } from "../../components/use-source";
 import { getTemplateNames } from "../../lib/emails";
 
 export const Route = createFileRoute("/email/$templateName")({
@@ -32,27 +34,35 @@ export const Route = createFileRoute("/email/$templateName")({
 function RouteComponent() {
   const { templateName } = Route.useParams();
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
-  const [showSendDialog, setShowSendDialog] = useState(false);
-  const [testEmail, setTestEmail] = useState("");
+  const [width, setWidth] = useState(375);
+  const [height, setHeight] = useState(667);
+  const [displayMode, setDisplayMode] = useState<"preview" | "tsx">("preview");
+
+  // Update default dimensions based on view mode
+  useEffect(() => {
+    if (viewMode === "mobile") {
+      setWidth(375);
+      setHeight(667);
+    } else {
+      setWidth(1400);
+      setHeight(800);
+    }
+  }, [viewMode]);
 
   const { html, loading } = useRender(templateName);
+  const { source, loading: sourceLoading } = useSource(templateName);
   const { send, sending } = useSend();
   const { lastEmail, saveLastEmail } = useLastEmail();
-
-  const handleViewModeChange = (mode: "desktop" | "mobile") => {
-    setViewMode(mode);
-  };
+  const sendDialog = useSendDialog(templateName);
 
   const handleSend = async () => {
-    if (!testEmail || !templateName) return;
+    if (!sendDialog.testEmail || !templateName) return;
 
     try {
-      await send(templateName, testEmail);
-      saveLastEmail(testEmail);
-      // Save email to memory after successful send
-      setShowSendDialog(false);
-      setTestEmail("");
-      toast.success(`Email sent to ${testEmail}`);
+      await send(templateName, sendDialog.testEmail, sendDialog.subject || undefined);
+      saveLastEmail(sendDialog.testEmail);
+      sendDialog.closeDialog();
+      toast.success(`Email sent to ${sendDialog.testEmail}`);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Failed to send email");
     }
@@ -61,23 +71,40 @@ function RouteComponent() {
   return (
     <>
       <Toolbar
-        onSendTestClick={() => setShowSendDialog(true)}
-        onViewModeChange={handleViewModeChange}
+        displayMode={displayMode}
+        height={height}
+        onDisplayModeChange={setDisplayMode}
+        onHeightChange={setHeight}
+        onSendTestClick={sendDialog.openDialog}
+        onViewModeChange={setViewMode}
+        onWidthChange={setWidth}
         templateName={templateName}
         viewMode={viewMode}
+        width={width}
       />
 
-      <PreviewArea html={html} loading={loading} viewMode={viewMode} />
+      <PreviewArea
+        displayMode={displayMode}
+        height={height}
+        html={html}
+        loading={loading}
+        source={source}
+        sourceLoading={sourceLoading}
+        viewMode={viewMode}
+        width={width}
+      />
 
       <SendDialog
         lastEmail={lastEmail}
-        onEmailChange={setTestEmail}
-        onOpenChange={setShowSendDialog}
+        onEmailChange={sendDialog.setTestEmail}
+        onOpenChange={sendDialog.handleOpenChange}
         onSend={handleSend}
-        open={showSendDialog}
+        onSubjectChange={sendDialog.setSubject}
+        open={sendDialog.open}
         sending={sending}
+        subject={sendDialog.subject}
         templateName={templateName}
-        testEmail={testEmail}
+        testEmail={sendDialog.testEmail}
       />
     </>
   );

@@ -3,7 +3,7 @@ import { useState } from "react";
 export function useSend() {
   const [sending, setSending] = useState(false);
 
-  const send = async (templateName: string, to: string) => {
+  const send = async (templateName: string, to: string, subject?: string) => {
     setSending(true);
 
     try {
@@ -15,6 +15,7 @@ export function useSend() {
         body: JSON.stringify({
           templateName,
           to,
+          subject,
         }),
       });
 

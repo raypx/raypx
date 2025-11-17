@@ -44,11 +44,12 @@ The preview server will start at `http://localhost:3002` and automatically open 
 
 ### Sending Test Emails
 
-Click the "📧 Send Test" button in the preview interface to send a test email:
+Click the "📧 Send" button in the preview interface to send a test email:
 
 1. Enter the recipient email address
-2. Click "Send Email"
-3. Check the send history to see the status
+2. Optionally customize the email subject (defaults to `[Test] ${templateName}`)
+3. Click "Send"
+4. Check the send history to see the status
 
 **Email Provider Configuration:**
 
@@ -82,8 +83,10 @@ With configuration, actual emails will be sent to the specified address.
 - **Template Selector** - Browse all available email templates in the sidebar
 - **Live Rendering** - See real-time updates as you edit templates
 - **Device Preview** - Toggle between desktop and mobile views
+- **Code View** - View TSX source code of email templates
+- **Theme Switcher** - Switch between light, dark, and system themes
 - **Preview Props** - Each template uses its `.PreviewProps` for realistic rendering
-- **Send Test Emails** - Send test emails directly from the preview interface
+- **Send Test Emails** - Send test emails directly from the preview interface with custom subject
 - **Send History** - Track all test emails with status and timestamp
 - **Mock Mode** - Works without email provider configuration (logs to console)
 

@@ -6,9 +6,11 @@ A standalone TanStack Start application for previewing and testing email templat
 
 - 📧 **Visual Preview** - See all email templates in real-time
 - 📱 **Responsive Testing** - Toggle between desktop and mobile views
-- 🚀 **Send Test Emails** - Send test emails to any address
+- 💻 **Code View** - View TSX source code of email templates
+- 🎨 **Theme Switcher** - Switch between light, dark, and system themes
+- 🚀 **Send Test Emails** - Send test emails to any address with custom subject
 - 📝 **Send History** - Track all test emails with status
-- 🎨 **Hot Reload** - Instant updates when templates change
+- 🔥 **Hot Reload** - Instant updates when templates change
 - 🔧 **Mock Mode** - Works without email provider configuration
 
 ## Quick Start
@@ -106,15 +108,18 @@ SMTP_SECURE=false  # true for port 465
 
 1. Start the dev server: `pnpm email:dev`
 2. Browse templates in the sidebar
-3. Switch between desktop/mobile views
-4. See real-time updates when editing templates
+3. Switch between preview and TSX code view
+4. Switch between desktop/mobile views (in preview mode)
+5. Toggle theme (light/dark/system) using the theme switcher
+6. See real-time updates when editing templates
 
 ### Send Test Emails
 
-1. Click "📧 Send Test" button
+1. Click "📧 Send" button
 2. Enter recipient email address
-3. Click "Send Email"
-4. Check send history for status
+3. Optionally customize the email subject (defaults to `[Test] ${templateName}`)
+4. Click "Send"
+5. Check send history for status
 
 ### Development Workflow
 

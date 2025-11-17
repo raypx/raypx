@@ -8,6 +8,7 @@ import { getEmailTemplate } from "../../lib/emails";
 type SendRequest = {
   templateName: string;
   to: string;
+  subject?: string;
 };
 
 /**
@@ -61,10 +62,11 @@ export const Route = createFileRoute("/api/send")({
           }
 
           // Send email using new unified API
+          const emailSubject = data.subject || `[Test] ${data.templateName}`;
           const result = await sendEmail({
             to: data.to,
             from: env.RESEND_FROM,
-            subject: `[Test] ${data.templateName}`,
+            subject: emailSubject,
             template: templateElement,
           });
 

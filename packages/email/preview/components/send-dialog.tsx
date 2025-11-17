@@ -5,19 +5,21 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
 } from "@raypx/ui/components/dialog";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
+import { useTemplatePreview } from "./use-template-preview";
 
 type SendDialogProps = {
   open: boolean;
   templateName: string;
   testEmail: string;
+  subject: string;
   lastEmail: string | null;
   sending: boolean;
   onOpenChange: (open: boolean) => void;
   onEmailChange: (email: string) => void;
+  onSubjectChange: (subject: string) => void;
   onSend: () => void;
 };
 
@@ -25,28 +27,26 @@ export function SendDialog({
   open,
   templateName,
   testEmail,
+  subject,
   lastEmail,
   sending,
   onOpenChange,
   onEmailChange,
+  onSubjectChange,
   onSend,
 }: SendDialogProps) {
+  const { defaultSubject } = useTemplatePreview(templateName);
+
   const handleApplyLastEmail = () => {
     if (lastEmail) {
       onEmailChange(lastEmail);
     }
   };
+
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) onEmailChange("");
-      }}
-      open={open}
-    >
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Send Test Email</DialogTitle>
           <DialogDescription>
             Send <span className="font-medium text-foreground">{templateName}</span> to a test email
             address.
@@ -71,6 +71,24 @@ export function SendDialog({
               placeholder="test@example.com"
               type="email"
               value={testEmail}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="email-subject">Subject</Label>
+            <Input
+              disabled={sending}
+              id="email-subject"
+              onChange={(e) => {
+                onSubjectChange(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !sending && testEmail) {
+                  onSend();
+                }
+              }}
+              placeholder={defaultSubject}
+              value={subject}
             />
           </div>
 
@@ -102,18 +120,11 @@ export function SendDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            disabled={sending}
-            onClick={() => {
-              onOpenChange(false);
-              onEmailChange("");
-            }}
-            variant="outline"
-          >
+          <Button disabled={sending} onClick={() => onOpenChange(false)} variant="outline">
             Cancel
           </Button>
           <Button disabled={sending || !testEmail} onClick={onSend}>
-            {sending ? "Sending..." : "Send Email"}
+            {sending ? "Sending..." : "Send"}
           </Button>
         </DialogFooter>
       </DialogContent>

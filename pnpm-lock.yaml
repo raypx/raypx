@@ -676,6 +676,9 @@ importers:
       '@react-email/render':
         specifier: ^2.0.0
         version: 2.0.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 0.553.0(react@19.2.0)
       nodemailer:
         specifier: ^7.0.10
         version: 7.0.10
@@ -737,6 +740,9 @@ importers:
       nitro:
         specifier: 'catalog:'
         version: 3.0.1-alpha.1(@netlify/blobs@10.3.3)(chokidar@4.0.3)(drizzle-orm@0.44.7(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.2)(rollup@4.53.2)(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1))
+      shiki:
+        specifier: ^3.15.0
+        version: 3.15.0
       tailwindcss:
         specifier: catalog:tailwindv4
         version: 4.1.17
