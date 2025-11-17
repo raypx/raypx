@@ -6,6 +6,7 @@ import viteReact from "@vitejs/plugin-react";
 import { createJiti } from "jiti";
 import { nitro } from "nitro/vite";
 import { defineConfig, type PluginOption } from "vite";
+import Inspect from "vite-plugin-inspect";
 import tsConfigPaths from "vite-tsconfig-paths";
 
 const tsImport = createJiti(import.meta.url).import;
@@ -49,6 +50,8 @@ export default defineConfig({
       enhancedLogs: { enabled: false },
       injectSource: { enabled: false },
     }),
+    // Vite plugin inspector (dev only)
+    ...(isDev ? [Inspect()] : []),
     tsConfigPaths(),
     tanstackStart(),
     // Must come after tanstackStart

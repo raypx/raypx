@@ -43,7 +43,7 @@
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.3.11",
     "@tanstack/react-devtools": "^0.8.1",
-    "@tanstack/react-router-devtools": "^1.136.6",
+    "@tanstack/react-router-devtools": "^1.136.8",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
@@ -55,6 +55,7 @@
     "type-fest": "catalog:",
     "typescript": "catalog:dev",
     "vite": "catalog:",
+    "vite-plugin-inspect": "^11.3.3",
     "vitest": "catalog:"
   }
 }
