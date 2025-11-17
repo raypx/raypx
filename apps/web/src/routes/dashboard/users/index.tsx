@@ -34,7 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@raypx/ui/components/select";
-import { Skeleton } from "@raypx/ui/components/skeleton";
 import {
   Table,
   TableBody,
@@ -47,8 +46,12 @@ import {
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Users } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
+import { DataTable } from "../-components/data-table";
+import { EmptyState } from "../-components/empty-state";
+import { ErrorState } from "../-components/error-state";
+import { TableSkeleton } from "../-components/table-skeleton";
 
 type UserListItem = {
   id: string;
@@ -123,7 +126,7 @@ function UsersSection({ query }: { query: string }) {
   let content: ReactNode;
 
   if (isPending) {
-    content = <UsersTableSkeleton />;
+    content = <TableSkeleton columns={["Name", "Email", "Role", "Status", "Created", "Actions"]} />;
   } else if (isError) {
     content = (
       <ErrorState
@@ -135,7 +138,7 @@ function UsersSection({ query }: { query: string }) {
       />
     );
   } else if (users.length === 0) {
-    content = <EmptyState />;
+    content = <EmptyState description="No users found." icon={Users} title="No Users" />;
   } else {
     content = (
       <UsersTable
@@ -529,70 +532,6 @@ function UsersTable({
           </div>
         </TableCaption>
       </Table>
-    </div>
-  );
-}
-
-function UsersTableSkeleton() {
-  return (
-    <div className="px-6 pb-2">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-40">Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 5 }).map((_, index) => (
-            <TableRow key={index}>
-              <TableCell>
-                <Skeleton className="h-5 w-32" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-40" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-20" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-16" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-28" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="px-6 py-12 text-center text-muted-foreground text-sm">No users found.</div>
-  );
-}
-
-function ErrorState({
-  message,
-  onRetry,
-  retrying,
-}: {
-  message: string;
-  onRetry: () => void;
-  retrying: boolean;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-4 px-6 py-12 text-sm">
-      <p className="text-destructive">{message}</p>
-      <Button disabled={retrying} onClick={onRetry} size="sm" variant="outline">
-        {retrying ? "Retrying…" : "Try again"}
-      </Button>
     </div>
   );
 }

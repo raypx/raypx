@@ -1,6 +1,7 @@
 export type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 export {
   and,
+  asc,
   desc,
   eq,
   gt,

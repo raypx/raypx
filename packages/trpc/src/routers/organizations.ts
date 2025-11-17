@@ -121,7 +121,13 @@ export const organizationsRouter = {
     .input(
       z.object({
         name: z.string().trim().min(1).max(255),
-        slug: z.string().trim().min(1).max(100).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens").optional(),
+        slug: z
+          .string()
+          .trim()
+          .min(1)
+          .max(100)
+          .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
+          .optional(),
         logo: z.string().url().optional().nullable(),
         metadata: z.string().optional().nullable(),
       }),
@@ -180,7 +186,13 @@ export const organizationsRouter = {
       z.object({
         id: z.string(),
         name: z.string().trim().min(1).max(255).optional(),
-        slug: z.string().trim().min(1).max(100).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens").optional(),
+        slug: z
+          .string()
+          .trim()
+          .min(1)
+          .max(100)
+          .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
+          .optional(),
         logo: z.string().url().optional().nullable(),
         metadata: z.string().optional().nullable(),
       }),
@@ -397,7 +409,10 @@ export const organizationsRouter = {
 
       // Prevent removing yourself
       if (member.userId === userId) {
-        throw Errors.operationNotAllowed("remove yourself", "You cannot remove yourself from the organization");
+        throw Errors.operationNotAllowed(
+          "remove yourself",
+          "You cannot remove yourself from the organization",
+        );
       }
 
       try {
@@ -447,4 +462,3 @@ export const organizationsRouter = {
       return invitations;
     }),
 };
-

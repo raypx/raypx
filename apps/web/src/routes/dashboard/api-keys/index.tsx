@@ -1,16 +1,9 @@
+import { useTRPC } from "@raypx/trpc/client";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
   Badge,
   Button,
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -22,106 +15,58 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Input,
   Label,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from "@raypx/ui/components";
 import { toast } from "@raypx/ui/components/toast";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, Key, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { Copy, Key, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { type ReactNode, useMemo, useState } from "react";
+import { DataTable } from "../-components/data-table";
+import { EmptyState } from "../-components/empty-state";
+import { ErrorState } from "../-components/error-state";
+import { SortControls } from "../-components/sort-controls";
+import { TableSkeleton } from "../-components/table-skeleton";
+import { formatDate } from "../-components/utils";
+
+dayjs.extend(relativeTime);
+
+type ApiKeyListItem = {
+  id: string;
+  name: string | null;
+  prefix: string;
+  key: string;
+  enabled: boolean;
+  createdAt: Date;
+  lastRequest: Date | null;
+  requestCount: number;
+  remaining: number | null;
+  expiresAt: Date | null;
+  rateLimitEnabled: boolean;
+  rateLimitMax: number;
+  rateLimitTimeWindow: number;
+};
+
+const formatLastUsed = (date: Date | string | null | undefined) => {
+  if (!date) return "Never";
+  return dayjs(date).fromNow();
+};
 
 export const Route = createFileRoute("/dashboard/api-keys/")({
   component: ApiKeysPage,
 });
 
-type ApiKey = {
-  id: string;
-  name: string;
-  key: string;
-  prefix: string;
-  created: string;
-  lastUsed: string;
-  requests: number;
-  enabled: boolean;
-};
-
-// Mock data - replace with real API call
-const mockApiKeys: ApiKey[] = [
-  {
-    id: "1",
-    name: "Production API",
-    key: "sk_live_••••••••••••4d2f",
-    prefix: "sk_live_",
-    created: "2025-01-15",
-    lastUsed: "2 hours ago",
-    requests: 12453,
-    enabled: true,
-  },
-  {
-    id: "2",
-    name: "Development API",
-    key: "sk_test_••••••••••••8a9b",
-    prefix: "sk_test_",
-    created: "2025-01-10",
-    lastUsed: "5 minutes ago",
-    requests: 3421,
-    enabled: true,
-  },
-  {
-    id: "3",
-    name: "Staging API",
-    key: "sk_test_••••••••••••1c3e",
-    prefix: "sk_test_",
-    created: "2025-01-05",
-    lastUsed: "Never",
-    requests: 0,
-    enabled: false,
-  },
-];
-
 function ApiKeysPage() {
-  const [apiKeys, setApiKeys] = useState(mockApiKeys);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newKeyName, setNewKeyName] = useState("");
-  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
-
-  const handleCreateKey = () => {
-    // In real app, call API to create key
-    const newKey = `sk_live_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-
-    const newApiKey: ApiKey = {
-      id: String(apiKeys.length + 1),
-      name: newKeyName || "Untitled Key",
-      key: `${newKey.substring(0, 15)}••••••••••••${newKey.slice(-4)}`,
-      prefix: "sk_live_",
-      created: new Date().toISOString().split("T")[0] || "",
-      lastUsed: "Never",
-      requests: 0,
-      enabled: true,
-    };
-
-    setApiKeys([...apiKeys, newApiKey]);
-    setNewlyCreatedKey(newKey);
-    setNewKeyName("");
-    toast.success("API key created successfully!");
-  };
-
-  const handleDeleteKey = (id: string) => {
-    setApiKeys(apiKeys.filter((key) => key.id !== id));
-    toast.success("API key deleted successfully!");
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -129,82 +74,117 @@ function ApiKeysPage() {
           <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
           <p className="text-muted-foreground">Manage your API keys for programmatic access</p>
         </div>
-
-        <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create New Key
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New API Key</DialogTitle>
-              <DialogDescription>Generate a new API key for your application</DialogDescription>
-            </DialogHeader>
-
-            {newlyCreatedKey ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg border border-green-500/50">
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
-                    ✓ API Key Created Successfully
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Make sure to copy your API key now. You won't be able to see it again!
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 p-2 bg-background rounded text-xs border font-mono">
-                      {newlyCreatedKey}
-                    </code>
-                    <Button
-                      onClick={() => copyToClipboard(newlyCreatedKey)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setNewlyCreatedKey(null);
-                    setIsCreateDialogOpen(false);
-                  }}
-                >
-                  Done
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="key-name">Key Name</Label>
-                    <Input
-                      id="key-name"
-                      onChange={(e) => setNewKeyName(e.target.value)}
-                      placeholder="e.g., Production API"
-                      value={newKeyName}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      A descriptive name to identify this key
-                    </p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={() => setIsCreateDialogOpen(false)} variant="outline">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateKey}>Create Key</Button>
-                </DialogFooter>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
+      <ApiKeysSection />
+      <ApiUsageCard />
+    </div>
+  );
+}
 
+function ApiKeysSection() {
+  const trpc = useTRPC();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"createdAt" | "name" | "lastRequest" | "requestCount">(
+    "createdAt",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const apiKeysQuery = useQuery({
+    ...trpc.apiKeys.list.queryOptions(
+      {
+        sortBy,
+        sortOrder,
+      },
+      { staleTime: 30_000 },
+    ),
+    placeholderData: keepPreviousData,
+  });
+
+  const { data, isPending, isError, error, refetch, isFetching } = apiKeysQuery;
+
+  const apiKeys: ApiKeyListItem[] = useMemo(() => (data ?? []) as ApiKeyListItem[], [data]);
+
+  // Create API key mutation
+  const createKeyMutation = useMutation({
+    ...trpc.apiKeys.create.mutationOptions(),
+    onSuccess: (data) => {
+      setNewlyCreatedKey(data.key);
+      setNewKeyName("");
+      void refetch();
+      toast.success("API key created successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create API key");
+    },
+  });
+
+  const handleCreateKey = () => {
+    if (!newKeyName.trim()) {
+      toast.error("Please enter a key name");
+      return;
+    }
+    createKeyMutation.mutate({ name: newKeyName.trim() });
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard!");
+    } catch (error) {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
+  let content: ReactNode;
+
+  if (isPending) {
+    content = (
+      <TableSkeleton
+        columns={["Name", "Key", "Created", "Last Used", "Requests", "Status", "Actions"]}
+      />
+    );
+  } else if (isError) {
+    content = (
+      <ErrorState
+        message={error?.message ?? "Something went wrong while loading API keys."}
+        onRetry={() => {
+          void refetch();
+        }}
+        retrying={isFetching}
+      />
+    );
+  } else if (apiKeys.length === 0) {
+    content = (
+      <EmptyState
+        actionLabel={
+          <>
+            <Plus className="h-4 w-4 mr-2" />
+            Create API Key
+          </>
+        }
+        description="Create your first API key to get started"
+        icon={Key}
+        onAction={() => setIsCreateDialogOpen(true)}
+        title="No API Keys"
+      />
+    );
+  } else {
+    content = (
+      <ApiKeysTable
+        apiKeys={apiKeys}
+        onChanged={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
+
+  return (
+    <>
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b">
           <CardTitle className="flex items-center gap-2">
             <Key className="h-5 w-5" />
             Active API Keys
@@ -212,122 +192,314 @@ function ApiKeysPage() {
           <CardDescription>
             {apiKeys.length} active key{apiKeys.length !== 1 ? "s" : ""}
           </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {apiKeys.length === 0 ? (
-            <div className="text-center py-12">
-              <Key className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No API Keys</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Create your first API key to get started
-              </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create API Key
-              </Button>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Key</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Last Used</TableHead>
-                    <TableHead>Requests</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {apiKeys.map((apiKey) => (
-                    <TableRow key={apiKey.id}>
-                      <TableCell className="font-medium">{apiKey.name}</TableCell>
-                      <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded">{apiKey.key}</code>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {apiKey.created}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {apiKey.lastUsed}
-                      </TableCell>
-                      <TableCell className="text-sm">{apiKey.requests.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge variant={apiKey.enabled ? "default" : "secondary"}>
-                          {apiKey.enabled ? "Active" : "Disabled"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            onClick={() => copyToClipboard(apiKey.key)}
-                            size="sm"
-                            variant="ghost"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="ghost">
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete API Key?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This action cannot be undone. Applications using this key will no
-                                  longer be able to access the API.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  onClick={() => handleDeleteKey(apiKey.id)}
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          <CardAction>
+            <SortControls
+              onSortByChange={(value) => setSortBy(value as typeof sortBy)}
+              onSortOrderChange={(value) => setSortOrder(value as typeof sortOrder)}
+              sortBy={sortBy}
+              sortOptions={[
+                { value: "createdAt", label: "Created Date" },
+                { value: "name", label: "Name" },
+                { value: "lastRequest", label: "Last Used" },
+                { value: "requestCount", label: "Request Count" },
+              ]}
+              sortOrder={sortOrder}
+            />
+            <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create New Key
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New API Key</DialogTitle>
+                  <DialogDescription>Generate a new API key for your application</DialogDescription>
+                </DialogHeader>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>API Usage</CardTitle>
-          <CardDescription>Monitor your API usage and rate limits</CardDescription>
+                {newlyCreatedKey ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted rounded-lg border border-green-500/50">
+                      <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
+                        ✓ API Key Created Successfully
+                      </p>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Make sure to copy your API key now. You won't be able to see it again!
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 p-2 bg-background rounded text-xs border font-mono">
+                          {newlyCreatedKey}
+                        </code>
+                        <Button
+                          onClick={() => copyToClipboard(newlyCreatedKey)}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      className="w-full"
+                      onClick={() => {
+                        setNewlyCreatedKey(null);
+                        setIsCreateDialogOpen(false);
+                      }}
+                    >
+                      Done
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="key-name">Key Name</Label>
+                        <Input
+                          id="key-name"
+                          onChange={(e) => setNewKeyName(e.target.value)}
+                          placeholder="e.g., Production API"
+                          value={newKeyName}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A descriptive name to identify this key
+                        </p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        onClick={() => {
+                          setIsCreateDialogOpen(false);
+                          setNewKeyName("");
+                          setNewlyCreatedKey(null);
+                        }}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                      <Button disabled={createKeyMutation.isPending} onClick={handleCreateKey}>
+                        {createKeyMutation.isPending ? "Creating..." : "Create Key"}
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
+            <Button
+              disabled={isFetching}
+              onClick={() => {
+                void refetch();
+              }}
+              size="sm"
+              variant="outline"
+            >
+              {isFetching ? "Refreshing…" : "Refresh"}
+            </Button>
+          </CardAction>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Total Requests</p>
-              <p className="text-2xl font-bold">
-                {apiKeys.reduce((sum, key) => sum + key.requests, 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Rate Limit</p>
-              <p className="text-2xl font-bold">1,000/min</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Monthly Quota</p>
-              <p className="text-2xl font-bold">Unlimited</p>
-            </div>
-          </div>
-        </CardContent>
+        <CardContent className="px-0">{content}</CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+function ApiKeysTable({
+  apiKeys,
+  onChanged,
+}: {
+  apiKeys: ApiKeyListItem[];
+  onChanged: () => void;
+}) {
+  const trpc = useTRPC();
+  const deleteKeyMutation = useMutation({
+    ...trpc.apiKeys.delete.mutationOptions(),
+    onSuccess: () => {
+      onChanged();
+      toast.success("API key deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete API key");
+    },
+  });
+
+  const handleDeleteKey = (id: string) => {
+    deleteKeyMutation.mutate(id);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard!");
+    } catch (error) {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
+  // Define columns
+  const columns = useMemo<ColumnDef<ApiKeyListItem>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => <div className="font-medium">{row.original.name || "Untitled Key"}</div>,
+      },
+      {
+        accessorKey: "key",
+        header: "Key",
+        cell: ({ row }) => (
+          <code className="text-xs bg-muted px-2 py-1 rounded font-mono">{row.original.key}</code>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Created",
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">{formatDate(row.original.createdAt)}</div>
+        ),
+      },
+      {
+        accessorKey: "lastRequest",
+        header: "Last Used",
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">
+            {formatLastUsed(row.original.lastRequest)}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "requestCount",
+        header: "Requests",
+        cell: ({ row }) => (
+          <div className="text-sm">{row.original.requestCount.toLocaleString()}</div>
+        ),
+      },
+      {
+        accessorKey: "enabled",
+        header: "Status",
+        cell: ({ row }) => (
+          <Badge variant={row.original.enabled ? "default" : "secondary"}>
+            {row.original.enabled ? "Active" : "Disabled"}
+          </Badge>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const apiKey = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => {
+                    void copyToClipboard(apiKey.key);
+                  }}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy Key
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive"
+                  disabled={deleteKeyMutation.isPending}
+                  onClick={() => {
+                    handleDeleteKey(apiKey.id);
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Key
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ],
+    [deleteKeyMutation.isPending, handleDeleteKey],
+  );
+
+  const [selectedRows, setSelectedRows] = useState<ApiKeyListItem[]>([]);
+
+  return (
+    <>
+      {selectedRows.length > 0 && (
+        <div className="px-6 py-2 bg-muted border-b">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {selectedRows.length} item{selectedRows.length !== 1 ? "s" : ""} selected
+            </span>
+            <Button
+              disabled={deleteKeyMutation.isPending}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Are you sure you want to delete ${selectedRows.length} API key${selectedRows.length !== 1 ? "s" : ""}?`,
+                  )
+                ) {
+                  selectedRows.forEach((key) => {
+                    deleteKeyMutation.mutate(key.id);
+                  });
+                  setSelectedRows([]);
+                }
+              }}
+              size="sm"
+              variant="destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected
+            </Button>
+          </div>
+        </div>
+      )}
+      <DataTable
+        columns={columns}
+        data={apiKeys}
+        enableSelection
+        onSelectionChange={setSelectedRows}
+      />
+    </>
+  );
+}
+
+function ApiUsageCard() {
+  const trpc = useTRPC();
+  const { data: apiKeys } = useQuery(
+    trpc.apiKeys.list.queryOptions(undefined, { staleTime: 30_000 }),
+  );
+
+  const apiKeysList = apiKeys ?? [];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>API Usage</CardTitle>
+        <CardDescription>Monitor your API usage and rate limits</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Total Requests</p>
+            <p className="text-2xl font-bold">
+              {apiKeysList.reduce((sum, key) => sum + (key.requestCount || 0), 0).toLocaleString()}
+            </p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Active Keys</p>
+            <p className="text-2xl font-bold">{apiKeysList.filter((key) => key.enabled).length}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Total Keys</p>
+            <p className="text-2xl font-bold">{apiKeysList.length}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

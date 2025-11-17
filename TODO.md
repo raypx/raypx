@@ -97,7 +97,7 @@
   - [x] Theme switching (`theme-provider.tsx`)
   - [x] Persist user preference
 
-## 🚀 API Development (75% Complete)
+## 🚀 API Development (80% Complete)
 
 ### tRPC Endpoints
 - [x] User management API (`/packages/trpc/src/routers/users.ts`)
@@ -273,11 +273,15 @@ All 8 templates built with React Email in `/packages/email/src/emails/`:
 - [x] Member management API
 - [ ] Invitation flow implementation (create/accept invitations)
 
-### API Key Management (70% Complete)
+### API Key Management (100% Complete) ✅
 - [x] Database schema with rate limiting support
 - [x] Frontend UI (`/apps/web/src/routes/_app/api-keys/`)
 - [x] Email notifications (api-key-created-email)
-- [ ] Backend API implementation
+- [x] Backend API implementation (`/packages/trpc/src/routers/api-keys.ts`)
+  - [x] List API keys
+  - [x] Create API key
+  - [x] Update API key (name, enabled, rate limits)
+  - [x] Delete API key
 
 ### Billing & Payments (30% Complete)
 - [x] Billing page framework (`/apps/web/src/routes/_org/org.$orgSlug/billing/`)
@@ -403,7 +407,7 @@ These must be completed before production launch:
 
 ## Notes
 
-- **Overall Project Completion: 70%**
+- **Overall Project Completion: 72%**
 - Review and update this TODO list regularly
 - Completed foundational work: Auth, DB, UI, CI/CD
 - Main gaps: File upload, email activation, testing, deployment

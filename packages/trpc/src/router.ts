@@ -1,3 +1,6 @@
+import { apiKeysRouter } from "./routers/api-keys";
+import { documentsRouter } from "./routers/documents";
+import { knowledgesRouter } from "./routers/knowledges";
 import { organizationsRouter } from "./routers/organizations";
 import { usersRouter } from "./routers/users";
 import { createTRPCRouter } from "./trpc";
@@ -9,6 +12,9 @@ import { createTRPCRouter } from "./trpc";
 export const trpcRouter = createTRPCRouter({
   users: usersRouter,
   organizations: organizationsRouter,
+  apiKeys: apiKeysRouter,
+  knowledges: knowledgesRouter,
+  documents: documentsRouter,
 });
 
 /**
