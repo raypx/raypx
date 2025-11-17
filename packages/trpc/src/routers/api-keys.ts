@@ -85,6 +85,34 @@ export const apiKeysRouter = {
     }),
 
   /**
+   * Get API usage statistics for the current user
+   * Returns aggregated stats without fetching all keys
+   */
+  stats: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const where = eq(ApiKey.userId, userId);
+
+    const [stats] = await Promise.all([
+      ctx.db
+        .select({
+          totalKeys: sql<number>`count(*)::int`,
+          activeKeys: sql<number>`count(*) filter (where ${ApiKey.enabled} = true)::int`,
+          totalRequests: sql<number>`coalesce(sum(${ApiKey.requestCount}), 0)::int`,
+        })
+        .from(ApiKey)
+        .where(where as any)
+        .then((r) => r[0]),
+    ]);
+
+    return {
+      totalKeys: stats?.totalKeys ?? 0,
+      activeKeys: stats?.activeKeys ?? 0,
+      totalRequests: stats?.totalRequests ?? 0,
+    };
+  }),
+
+  /**
    * Get a single API key by ID
    * Only returns the full key if it was just created (within last 5 minutes)
    */
