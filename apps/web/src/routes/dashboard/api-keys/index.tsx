@@ -85,14 +85,18 @@ function ApiKeysSection() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<"createdAt" | "name" | "lastRequest" | "requestCount">(
     "createdAt",
   );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const pageSize = 10;
 
   const apiKeysQuery = useQuery({
     ...trpc.apiKeys.list.queryOptions(
       {
+        page,
+        pageSize,
         sortBy,
         sortOrder,
       },
@@ -103,7 +107,9 @@ function ApiKeysSection() {
 
   const { data, isPending, isError, error, refetch, isFetching } = apiKeysQuery;
 
-  const apiKeys: ApiKeyListItem[] = useMemo(() => (data ?? []) as ApiKeyListItem[], [data]);
+  const apiKeys: ApiKeyListItem[] = useMemo(() => (data?.items ?? []) as ApiKeyListItem[], [data?.items]);
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   // Create API key mutation
   const createKeyMutation = useMutation({
@@ -176,12 +182,17 @@ function ApiKeysSection() {
         onChanged={() => {
           void refetch();
         }}
+        onPageChange={(p) => {
+          setPage(p);
+        }}
         onSortingChange={(sorting) => {
           if (sorting) {
             setSortBy(sorting.id as typeof sortBy);
             setSortOrder(sorting.desc ? "desc" : "asc");
           }
         }}
+        page={page}
+        pageCount={totalPages}
       />
     );
   }
@@ -198,7 +209,17 @@ function ApiKeysSection() {
             {apiKeys.length} active key{apiKeys.length !== 1 ? "s" : ""}
           </CardDescription>
           <CardAction>
-            <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
+            <Dialog
+              onOpenChange={(open) => {
+                setIsCreateDialogOpen(open);
+                if (!open) {
+                  // Reset form state when dialog closes
+                  setNewlyCreatedKey(null);
+                  setNewKeyName("");
+                }
+              }}
+              open={isCreateDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
@@ -299,11 +320,17 @@ function ApiKeysSection() {
 function ApiKeysTable({
   apiKeys,
   onChanged,
+  onPageChange,
   onSortingChange,
+  page,
+  pageCount,
 }: {
   apiKeys: ApiKeyListItem[];
   onChanged: () => void;
+  onPageChange: (p: number) => void;
   onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
+  page: number;
+  pageCount: number;
 }) {
   const trpc = useTRPC();
   const deleteKeyMutation = useMutation({
@@ -459,27 +486,60 @@ function ApiKeysTable({
           </div>
         </div>
       )}
-      <DataTable
-        columns={columns}
-        data={apiKeys}
-        enableSelection
-        enableSorting
-        initialSorting={{ id: "createdAt", desc: true }}
-        manualSorting
-        onSelectionChange={setSelectedRows}
-        onSortingChange={onSortingChange}
-      />
+      <div className="px-6 pb-2 space-y-3">
+        <DataTable
+          columns={columns}
+          data={apiKeys}
+          enableSelection
+          enableSorting
+          initialSorting={{ id: "createdAt", desc: true }}
+          manualSorting
+          onSelectionChange={setSelectedRows}
+          onSortingChange={onSortingChange}
+        />
+        <div className="flex items-center justify-between px-6 py-2 border-t">
+          <div>
+            Page {page} of {pageCount}
+          </div>
+          <div className="space-x-2">
+            <Button
+              disabled={page <= 1}
+              onClick={() => onPageChange(Math.max(1, page - 1))}
+              size="sm"
+              variant="outline"
+            >
+              Previous
+            </Button>
+            <Button
+              disabled={page >= pageCount}
+              onClick={() => onPageChange(Math.min(pageCount, page + 1))}
+              size="sm"
+              variant="outline"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
 
 function ApiUsageCard() {
   const trpc = useTRPC();
-  const { data: apiKeys } = useQuery(
-    trpc.apiKeys.list.queryOptions(undefined, { staleTime: 30_000 }),
+  const { data: apiKeysData } = useQuery(
+    trpc.apiKeys.list.queryOptions(
+      {
+        page: 1,
+        pageSize: 1000, // Get all keys for stats
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      },
+      { staleTime: 30_000 },
+    ),
   );
 
-  const apiKeysList = apiKeys ?? [];
+  const apiKeysList = apiKeysData?.items ?? [];
 
   return (
     <Card>
@@ -492,7 +552,7 @@ function ApiUsageCard() {
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Total Requests</p>
             <p className="text-2xl font-bold">
-              {apiKeysList.reduce((sum, key) => sum + (key.requestCount || 0), 0).toLocaleString()}
+              {apiKeysList.reduce((sum: number, key) => sum + (key.requestCount || 0), 0).toLocaleString()}
             </p>
           </div>
           <div className="space-y-2">

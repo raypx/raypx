@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "@raypx/db";
+import { and, asc, desc, eq, sql } from "@raypx/db";
 import { apikey as ApiKey } from "@raypx/db/schemas";
 import { z } from "zod/v4";
 
@@ -11,12 +11,14 @@ import { assertExists, handleDatabaseError } from "../utils/error-handler";
  */
 export const apiKeysRouter = {
   /**
-   * List all API keys for the current user
+   * List all API keys for the current user with pagination
    */
   list: protectedProcedure
     .input(
       z
         .object({
+          page: z.number().int().min(1).default(1),
+          pageSize: z.number().int().min(1).max(100).default(10),
           sortBy: z.enum(["createdAt", "name", "lastRequest", "requestCount"]).default("createdAt"),
           sortOrder: z.enum(["asc", "desc"]).default("desc"),
         })
@@ -25,6 +27,9 @@ export const apiKeysRouter = {
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const page = input.page ?? 1;
+      const pageSize = input.pageSize ?? 10;
+      const offset = (page - 1) * pageSize;
 
       const sortByCol =
         input.sortBy === "name"
@@ -36,29 +41,47 @@ export const apiKeysRouter = {
               : ApiKey.createdAt;
       const orderBy = input.sortOrder === "desc" ? desc(sortByCol) : asc(sortByCol);
 
-      const keys = await ctx.db.query.apikey.findMany({
-        where: eq(ApiKey.userId, userId),
-        orderBy,
-      });
+      const where = eq(ApiKey.userId, userId);
+
+      const [keys, totalRow] = await Promise.all([
+        ctx.db.query.apikey.findMany({
+          where,
+          orderBy,
+          limit: pageSize,
+          offset,
+        }),
+        ctx.db
+          .select({ value: sql<number>`count(*)::int` })
+          .from(ApiKey)
+          .where(where as any)
+          .then((r) => r[0]),
+      ]);
+
+      const total = totalRow?.value ?? 0;
 
       // Mask the keys for security (only show prefix and last 4 characters)
-      return keys.map((key) => ({
-        id: key.id,
-        name: key.name,
-        prefix: key.prefix || "",
-        key: key.prefix
-          ? `${key.prefix}${"•".repeat(Math.max(0, (key.key?.length || 0) - (key.prefix?.length || 0) - 4))}${key.key?.slice(-4) || ""}`
-          : `••••••••${key.key?.slice(-4) || ""}`,
-        enabled: key.enabled ?? true,
-        createdAt: key.createdAt,
-        lastRequest: key.lastRequest,
-        requestCount: key.requestCount ?? 0,
-        remaining: key.remaining,
-        expiresAt: key.expiresAt,
-        rateLimitEnabled: key.rateLimitEnabled ?? true,
-        rateLimitMax: key.rateLimitMax ?? 10,
-        rateLimitTimeWindow: key.rateLimitTimeWindow ?? 86_400_000,
-      }));
+      return {
+        items: keys.map((key) => ({
+          id: key.id,
+          name: key.name,
+          prefix: key.prefix || "",
+          key: key.prefix
+            ? `${key.prefix}${"•".repeat(Math.max(0, (key.key?.length || 0) - (key.prefix?.length || 0) - 4))}${key.key?.slice(-4) || ""}`
+            : `••••••••${key.key?.slice(-4) || ""}`,
+          enabled: key.enabled ?? true,
+          createdAt: key.createdAt,
+          lastRequest: key.lastRequest,
+          requestCount: key.requestCount ?? 0,
+          remaining: key.remaining,
+          expiresAt: key.expiresAt,
+          rateLimitEnabled: key.rateLimitEnabled ?? true,
+          rateLimitMax: key.rateLimitMax ?? 10,
+          rateLimitTimeWindow: key.rateLimitTimeWindow ?? 86_400_000,
+        })),
+        total,
+        page,
+        pageSize,
+      };
     }),
 
   /**
