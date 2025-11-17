@@ -25,7 +25,7 @@ export const user = pgTable(
     username: text("username").unique(),
     displayUsername: text("display_username"),
     role: text("role"),
-    banned: boolean("banned"),
+    banned: boolean("banned").default(false),
     banReason: text("ban_reason"),
     banExpires: timestamp("ban_expires"),
   },
@@ -69,8 +69,9 @@ export const session = pgTable(
       .$defaultFn(() => uuidv7()),
     expiresAt: timestamp("expires_at").notNull(),
     token: text("token").notNull().unique(),
-    createdAt: timestamp("created_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
+      .defaultNow()
       .notNull()
       .$onUpdateFn(() => /* @__PURE__ */ new Date()),
     lastActive: timestamp("last_active")
@@ -150,7 +151,7 @@ export const apikey = pgTable(
     rateLimitEnabled: boolean("rate_limit_enabled").default(true),
     rateLimitTimeWindow: integer("rate_limit_time_window").default(86_400_000),
     rateLimitMax: integer("rate_limit_max").default(10),
-    requestCount: integer("request_count"),
+    requestCount: integer("request_count").default(0),
     remaining: integer("remaining"),
     lastRequest: timestamp("last_request"),
     expiresAt: timestamp("expires_at"),
@@ -228,10 +229,8 @@ export const oauthApplication = pgTable("oauth_application", {
   clientSecret: text("client_secret"),
   redirectURLs: text("redirect_u_r_ls"),
   type: text("type"),
-  disabled: boolean("disabled"),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  disabled: boolean("disabled").default(false),
+  userId: uuid("user_id").references(() => user.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at")
     .notNull()
     .$defaultFn(() => /* @__PURE__ */ new Date()),
@@ -248,10 +247,10 @@ export const oauthAccessToken = pgTable("oauth_access_token", {
   refreshToken: text("refresh_token").unique(),
   accessTokenExpiresAt: timestamp("access_token_expires_at"),
   refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-  clientId: text("client_id"),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  clientId: text("client_id").references(() => oauthApplication.clientId, {
+    onDelete: "cascade",
+  }),
+  userId: uuid("user_id").references(() => user.id, { onDelete: "cascade" }),
   scopes: text("scopes"),
   createdAt: timestamp("created_at")
     .notNull()
@@ -265,10 +264,10 @@ export const oauthConsent = pgTable("oauth_consent", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => uuidv7()),
-  clientId: text("client_id"),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  clientId: text("client_id").references(() => oauthApplication.clientId, {
+    onDelete: "cascade",
+  }),
+  userId: uuid("user_id").references(() => user.id, { onDelete: "cascade" }),
   scopes: text("scopes"),
   createdAt: timestamp("created_at")
     .notNull()

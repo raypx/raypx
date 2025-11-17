@@ -1,11 +1,5 @@
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "declaration": false,
-    "declarationMap": false,
-    "composite": false,
-    "types": ["../i18n/types.d.ts"]
-  },
+  "compilerOptions": { "strict": true },
   "exclude": ["node_modules", "dist"],
   "extends": "@raypx/tsconfig/react-library.json",
   "include": ["./**/*.ts", "./**/*.tsx", "../i18n/types.d.ts"]

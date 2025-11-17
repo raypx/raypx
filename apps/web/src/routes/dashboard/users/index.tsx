@@ -44,14 +44,9 @@ import {
   TableHeader,
   TableRow,
 } from "@raypx/ui/components/table";
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -251,11 +246,7 @@ function UsersTable({
             return <div className="text-muted-foreground">--</div>;
           }
           const roleVariant =
-            role === "superadmin"
-              ? "destructive"
-              : role === "admin"
-                ? "default"
-                : "secondary";
+            role === "superadmin" ? "destructive" : role === "admin" ? "default" : "secondary";
           const roleLabel =
             role === "superadmin" ? "Super Admin" : role === "admin" ? "Admin" : "User";
           return (
@@ -484,19 +475,19 @@ function UsersTable({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className={header.id === "actions" ? "w-20" : ""}>
+                <TableHead className={header.id === "actions" ? "w-20" : ""} key={header.id}>
                   {header.isPlaceholder
                     ? null
                     : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               ))}
-          </TableRow>
+            </TableRow>
           ))}
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+              <TableRow data-state={row.getIsSelected() && "selected"} key={row.id}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -506,7 +497,7 @@ function UsersTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell className="h-24 text-center" colSpan={columns.length}>
                 No results.
               </TableCell>
             </TableRow>

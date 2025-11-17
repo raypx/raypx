@@ -8,6 +8,20 @@
       "when": 1757476378831,
       "tag": "0000_optimal_patch",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763397188319,
+      "tag": "0001_lush_mongoose",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1763398442652,
+      "tag": "0002_neat_magneto",
+      "breakpoints": true
     }
   ]
 }
