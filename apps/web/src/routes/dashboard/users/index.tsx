@@ -44,8 +44,15 @@ import {
   TableHeader,
   TableRow,
 } from "@raypx/ui/components/table";
+import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { MoreHorizontal } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
 type UserListItem = {
@@ -222,6 +229,117 @@ function UsersTable({
     onChanged();
   };
 
+  // Define columns
+  const columns = useMemo<ColumnDef<UserListItem>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => <div className="font-medium">{row.original.name ?? "--"}</div>,
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+        cell: ({ row }) => <div className="text-muted-foreground">{row.original.email}</div>,
+      },
+      {
+        accessorKey: "role",
+        header: "Role",
+        cell: ({ row }) => {
+          const role = row.original.role;
+          if (!role) {
+            return <div className="text-muted-foreground">--</div>;
+          }
+          const roleVariant =
+            role === "superadmin"
+              ? "destructive"
+              : role === "admin"
+                ? "default"
+                : "secondary";
+          const roleLabel =
+            role === "superadmin" ? "Super Admin" : role === "admin" ? "Admin" : "User";
+          return (
+            <Badge variant={roleVariant as "default" | "secondary" | "destructive"}>
+              {roleLabel}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "banned",
+        header: "Status",
+        cell: ({ row }) => {
+          const user = row.original;
+          return user.banned ? (
+            <Badge title={user.banReason ?? undefined} variant="destructive">
+              Banned
+            </Badge>
+          ) : (
+            <Badge variant="secondary">Active</Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Created",
+        cell: ({ row }) => <div>{formatDateTime(row.original.createdAt)}</div>,
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const user = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Role</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedUser(user);
+                    setRoleValue((user.role as any) || "");
+                    setRoleDialogOpen(true);
+                  }}
+                >
+                  Update Role
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={setBanned.isPending}
+                  onClick={() => void doToggleBan(user)}
+                >
+                  {user.banned ? "Unban User" : "Ban User"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive"
+                  disabled={deleteUser.isPending}
+                  onClick={() => void doDelete(user)}
+                >
+                  Delete User
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ],
+    [setBanned.isPending, deleteUser.isPending, doToggleBan, doDelete],
+  );
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    pageCount,
+  });
+
   return (
     <div className="px-6 pb-2 space-y-3">
       {/* Update Role Dialog */}
@@ -363,69 +481,36 @@ function UsersTable({
 
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-40">Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="w-20">Actions</TableHead>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id} className={header.id === "actions" ? "w-20" : ""}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              ))}
           </TableRow>
+          ))}
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name ?? "--"}</TableCell>
-              <TableCell className="text-muted-foreground">{user.email}</TableCell>
-              <TableCell>{user.role ?? "--"}</TableCell>
-              <TableCell>
-                {user.banned ? (
-                  <Badge title={user.banReason ?? undefined} variant="destructive">
-                    Banned
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">Active</Badge>
-                )}
-              </TableCell>
-              <TableCell>{formatDateTime(user.createdAt)}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button size="sm" variant="outline">
-                      Manage
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Role</DropdownMenuLabel>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setRoleValue((user.role as any) || "");
-                        setRoleDialogOpen(true);
-                      }}
-                    >
-                      Update Role…
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      disabled={setBanned.isPending}
-                      onClick={() => void doToggleBan(user)}
-                    >
-                      {user.banned ? "Unban User" : "Ban User"}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      disabled={deleteUser.isPending}
-                      onClick={() => void doDelete(user)}
-                    >
-                      Delete User
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
         <TableCaption>
           <div className="flex items-center justify-between">

@@ -28,6 +28,7 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-ssr-query": "^1.136.8",
     "@tanstack/react-start": "catalog:",
+    "@tanstack/react-table": "^8.21.3",
     "@trpc/client": "^11.7.1",
     "@trpc/server": "^11.7.1",
     "@trpc/tanstack-react-query": "^11.7.1",
@@ -44,7 +45,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@netlify/vite-plugin-tanstack-start": "^1.1.12",
+    "@netlify/vite-plugin-tanstack-start": "^1.2.0",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.3.11",

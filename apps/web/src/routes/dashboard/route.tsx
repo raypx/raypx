@@ -3,8 +3,8 @@ import { Button } from "@raypx/ui/components/button";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { HelpCircle } from "lucide-react";
 import { links } from "@/config/site";
-import { AppHeader } from "./-components/app-header";
-import { AppSidebar } from "./-components/app-sidebar";
+import { AppHeader } from "./-components/header";
+import { AppSidebar } from "./-components/sidebar";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {

@@ -1,3 +1,4 @@
+import { cn } from "@raypx/ui/lib/utils";
 import { Link, useParams } from "@tanstack/react-router";
 import { getTemplateNames } from "../lib/emails";
 
@@ -20,15 +21,11 @@ export function Sidebar() {
           const isActive = templateName === name;
           return (
             <Link
-              className={`
-                block w-full px-3 py-2.5 mb-1.5 rounded-lg text-left text-sm font-medium
-                transition-all duration-200
-                ${
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90 hover:text-primary-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                }
-              `}
+              className={cn(
+                "block w-full px-3 py-2 rounded-md text-sm transition-colors mb-1.5",
+                "hover:bg-accent hover:text-accent-foreground",
+                isActive && "bg-accent text-accent-foreground",
+              )}
               key={name}
               params={{ templateName: name }}
               to="/email/$templateName"
