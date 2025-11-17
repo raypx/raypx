@@ -36,7 +36,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Copy, Key, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-export const Route = createFileRoute("/_app/api-keys/")({
+export const Route = createFileRoute("/dashboard/api-keys/")({
   component: ApiKeysPage,
 });
 

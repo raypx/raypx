@@ -150,7 +150,7 @@ export function SecuritySettings() {
               </p>
             </div>
             <Button asChild variant="outline">
-              <a href="/api-keys">View API Keys</a>
+              <a href="/dashboard/api-keys">View API Keys</a>
             </Button>
           </div>
         </CardContent>

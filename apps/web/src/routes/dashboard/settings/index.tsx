@@ -13,7 +13,7 @@ import { AccountSettings } from "./-components/account-settings";
 import { PreferencesSettings } from "./-components/preferences-settings";
 import { SecuritySettings } from "./-components/security-settings";
 
-export const Route = createFileRoute("/_app/settings/")({
+export const Route = createFileRoute("/dashboard/settings/")({
   component: SettingsPage,
 });
 

@@ -1,11 +1,11 @@
 import type { AuthUser } from "@raypx/auth";
+import { UserButton } from "@raypx/auth";
 import { Badge } from "@raypx/ui/components/badge";
-import { Button } from "@raypx/ui/components/button";
 import { ScrollArea } from "@raypx/ui/components/scroll-area";
 import { Separator } from "@raypx/ui/components/separator";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { Home, Key, LogOut, Settings, Shield, Users } from "lucide-react";
+import { Home, Key, Settings, Shield, User, Users } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import { authRoutes } from "@/config/auth";
 
@@ -20,13 +20,18 @@ const userMenuItems = [
     icon: Home,
   },
   {
+    title: "Profile",
+    href: "/dashboard/profile",
+    icon: User,
+  },
+  {
     title: "API Keys",
-    href: "/api-keys",
+    href: "/dashboard/api-keys",
     icon: Key,
   },
   {
     title: "Settings",
-    href: "/settings",
+    href: "/dashboard/settings",
     icon: Settings,
   },
 ];
@@ -34,7 +39,7 @@ const userMenuItems = [
 const adminMenuItems = [
   {
     title: "Users",
-    href: "/admin/users",
+    href: "/dashboard/users",
     icon: Users,
   },
 ];
@@ -47,12 +52,33 @@ export function AppSidebar({ user }: AppSidebarProps) {
   const showAdminMenu = isAdmin(user?.role);
 
   return (
-    <aside className="w-64 border-r bg-card">
+    <aside className="w-64 border-r bg-card flex flex-col">
+      {/* Header */}
       <div className="flex h-16 items-center justify-between px-4 border-b">
         <Link className="flex items-center gap-2 font-semibold" to="/">
           <Logo className="size-6" />
           <span>Raypx</span>
         </Link>
+      </div>
+
+      {/* User/Organization Switcher */}
+      <div className="px-4 py-3 border-b">
+        <div className="flex items-center gap-3">
+          <UserButton
+            avatar={{ size: "size-8" }}
+            showThemeSwitcher={false}
+            signOutPath={authRoutes.signOut}
+            user={user}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user?.name || user?.email}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.email && user?.name ? user.email : "Personal"}
+            </p>
+          </div>
+        </div>
+        {/* TODO: Add organization switcher here */}
+        {/* <OrganizationSwitcher /> */}
       </div>
 
       <ScrollArea className="flex-1 p-4">
@@ -107,26 +133,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
             </nav>
           </>
         )}
-
-        {/* User Info & Sign Out */}
-        <div className="mt-6 pt-4 border-t">
-          <div className="px-3 py-2 text-sm">
-            <p className="font-medium">{user?.name}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
-            {user?.role && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Role: <span className="font-medium">{user.role}</span>
-              </p>
-            )}
-          </div>
-
-          <Button asChild className="w-full justify-start gap-3" variant="ghost">
-            <Link to={authRoutes.signOut}>
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Link>
-          </Button>
-        </div>
       </ScrollArea>
     </aside>
   );

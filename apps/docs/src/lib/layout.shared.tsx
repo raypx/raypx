@@ -1,4 +1,4 @@
-import { ThemeSwitcherHorizontal } from "@raypx/ui/business/theme-switcher";
+import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { Logo } from "@/components/layout/logo";
 import { brand, links } from "@/config/site";
@@ -14,7 +14,7 @@ export function baseOptions(): BaseLayoutProps {
       ),
     },
     themeSwitch: {
-      component: <ThemeSwitcherHorizontal />,
+      component: <ThemeSwitcher variant="horizontal" />,
     },
     githubUrl: links.github,
   } satisfies BaseLayoutProps;

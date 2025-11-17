@@ -92,7 +92,10 @@ export function Toolbar({
         </div>
 
         {/* Send Email Button - Fixed width to prevent layout shift */}
-        <Button className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium min-w-[80px]" onClick={onSendTestClick}>
+        <Button
+          className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium min-w-[80px]"
+          onClick={onSendTestClick}
+        >
           Send
         </Button>
       </div>

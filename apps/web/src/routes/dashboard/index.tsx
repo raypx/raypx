@@ -16,14 +16,13 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
-  KeyRound,
   Shield,
   TrendingUp,
   Users,
   Zap,
 } from "lucide-react";
 
-export const Route = createFileRoute("/_app/dashboard/")({
+export const Route = createFileRoute("/dashboard/")({
   component: DashboardPage,
 });
 
@@ -76,14 +75,14 @@ function DashboardPage() {
     {
       title: "Create API Key",
       description: "Generate a new API key",
-      href: "/api-keys",
+      href: "/dashboard/api-keys",
       icon: Shield,
       color: "text-blue-500",
     },
     {
       title: "View Settings",
       description: "Manage your preferences",
-      href: "/settings",
+      href: "/dashboard/settings",
       icon: Zap,
       color: "text-purple-500",
     },
@@ -138,7 +137,7 @@ function DashboardPage() {
       {/* Security shortcuts (from @raypx/auth) */}
       <SecurityPanel
         changePasswordSearch={{ tab: "security" }}
-        changePasswordTo="/_app/settings/"
+        changePasswordTo="/_app/dashboard/settings/"
         forgotPasswordTo="/_auth/forgot-password"
         providers={["github", "google"]}
       />
@@ -243,7 +242,7 @@ function DashboardPage() {
 
           <div className="pt-2">
             <Button asChild size="sm" variant="outline">
-              <Link to="/settings">Complete Your Profile</Link>
+              <Link to="/dashboard/settings">Complete Your Profile</Link>
             </Button>
           </div>
         </CardContent>

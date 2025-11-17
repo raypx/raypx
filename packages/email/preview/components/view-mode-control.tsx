@@ -86,12 +86,7 @@ export function SizeControl({
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger asChild>
-        <Button
-          className="px-3 py-1.5"
-          disabled={disabled}
-          size="sm"
-          variant="secondary"
-        >
+        <Button className="px-3 py-1.5" disabled={disabled} size="sm" variant="secondary">
           <ChevronDown className="size-3" />
         </Button>
       </DropdownMenuTrigger>

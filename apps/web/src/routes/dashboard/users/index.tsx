@@ -521,10 +521,6 @@ function ErrorState({
   );
 }
 
-export const Route = createFileRoute("/_app/admin/users/")({
+export const Route = createFileRoute("/dashboard/users/")({
   component: AdminUsersPage,
-  beforeLoad: ({ context }) => {
-    // Admin-only route
-    // Access control is handled by the _app layout and tRPC procedures
-  },
 });
