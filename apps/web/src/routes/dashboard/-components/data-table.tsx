@@ -1,4 +1,5 @@
 import {
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -28,6 +29,8 @@ interface DataTableProps<TData> {
   manualSorting?: boolean;
   onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
   initialSorting?: { id: string; desc: boolean };
+  isLoading?: boolean;
+  skeletonRows?: number;
 }
 
 export function DataTable<TData>({
@@ -40,6 +43,8 @@ export function DataTable<TData>({
   manualSorting = false,
   onSortingChange,
   initialSorting,
+  isLoading = false,
+  skeletonRows = 5,
 }: DataTableProps<TData>) {
   const getRowId = customGetRowId || ((row: TData) => (row as { id: string }).id);
   const [sorting, setSorting] = useState<SortingState>(
@@ -158,7 +163,55 @@ export function DataTable<TData>({
     }
   }, [table.getState().rowSelection, enableSelection, onSelectionChange, table]);
 
+  // Extract header text from column definitions for skeleton
+  const getHeaderText = (column: ColumnDef<TData>): string => {
+    if (typeof column.header === "string") {
+      return column.header;
+    }
+    if (typeof column.header === "function") {
+      // For function headers, try to get a fallback from id or accessorKey
+      return column.id || ("accessorKey" in column ? String(column.accessorKey) : "") || "";
+    }
+    // Fallback to id or accessorKey
+    return column.id || ("accessorKey" in column ? String(column.accessorKey) : "") || "";
+  };
+
   const colSpan = enableSelection ? columnsWithSelection.length : columns.length;
+
+  // Show skeleton when loading
+  if (isLoading) {
+    return (
+      <div className="px-6 pb-2">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columnsWithSelection.map((column, index) => (
+                <TableHead
+                  className={
+                    column.id === "actions" ? "w-20" : column.id === "select" ? "w-12" : ""
+                  }
+                  key={index}
+                >
+                  {getHeaderText(column)}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: skeletonRows }).map((_, index) => (
+              <TableRow key={index}>
+                {columnsWithSelection.map((_, colIndex) => (
+                  <TableCell key={colIndex}>
+                    <Skeleton className="h-5 w-32" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 pb-2 space-y-3">

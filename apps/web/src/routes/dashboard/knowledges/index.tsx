@@ -39,7 +39,6 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "../-components/data-table";
 import { EmptyState } from "../-components/empty-state";
 import { ErrorState } from "../-components/error-state";
-import { TableSkeleton } from "../-components/table-skeleton";
 import { formatDate } from "../-components/utils";
 
 type KnowledgeListItem = {
@@ -128,9 +127,7 @@ function KnowledgesSection() {
 
   let content: ReactNode;
 
-  if (isPending) {
-    content = <TableSkeleton columns={["Name", "Description", "Status", "Created", "Actions"]} />;
-  } else if (isError) {
+  if (isError) {
     content = (
       <ErrorState
         message={error?.message ?? "Something went wrong while loading knowledge bases."}
@@ -158,6 +155,7 @@ function KnowledgesSection() {
   } else {
     content = (
       <KnowledgesTable
+        isLoading={isPending}
         knowledges={knowledges}
         onChanged={() => {
           void refetch();
@@ -268,10 +266,12 @@ function KnowledgesSection() {
 
 function KnowledgesTable({
   knowledges,
+  isLoading = false,
   onChanged,
   onSortingChange,
 }: {
   knowledges: KnowledgeListItem[];
+  isLoading?: boolean;
   onChanged: () => void;
   onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
 }) {
@@ -403,6 +403,7 @@ function KnowledgesTable({
         enableSelection
         enableSorting
         initialSorting={{ id: "createdAt", desc: true }}
+        isLoading={isLoading}
         manualSorting
         onSelectionChange={setSelectedRows}
         onSortingChange={onSortingChange}

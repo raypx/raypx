@@ -5,7 +5,7 @@ import { ScrollArea } from "@raypx/ui/components/scroll-area";
 import { Separator } from "@raypx/ui/components/separator";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Key, Settings, Shield, User, Users } from "lucide-react";
+import { BookOpen, FileText, Home, Key, Settings, Shield, User, Users } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 
 /**
@@ -43,6 +43,16 @@ const userMenuItems = [
     title: "Profile",
     href: "/dashboard/profile",
     icon: User,
+  },
+  {
+    title: "Knowledge Bases",
+    href: "/dashboard/knowledges",
+    icon: BookOpen,
+  },
+  {
+    title: "Documents",
+    href: "/dashboard/documents",
+    icon: FileText,
   },
   {
     title: "API Keys",

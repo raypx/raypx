@@ -29,7 +29,6 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "../-components/data-table";
 import { EmptyState } from "../-components/empty-state";
 import { ErrorState } from "../-components/error-state";
-import { TableSkeleton } from "../-components/table-skeleton";
 import { formatDate, formatFileSize } from "../-components/utils";
 
 type DocumentListItem = {
@@ -97,21 +96,7 @@ function DocumentsSection() {
 
   let content: ReactNode;
 
-  if (isPending) {
-    content = (
-      <TableSkeleton
-        columns={[
-          "Name",
-          "Original Name",
-          "Knowledge Base",
-          "Size",
-          "Status",
-          "Created",
-          "Actions",
-        ]}
-      />
-    );
-  } else if (isError) {
+  if (isError) {
     content = (
       <ErrorState
         message={error?.message ?? "Something went wrong while loading documents."}
@@ -127,6 +112,7 @@ function DocumentsSection() {
     content = (
       <DocumentsTable
         documents={documents}
+        isLoading={isPending}
         knowledges={knowledges ?? []}
         onChanged={() => {
           void refetch();
@@ -203,11 +189,13 @@ function DocumentsSection() {
 
 function DocumentsTable({
   documents,
+  isLoading = false,
   knowledges,
   onChanged,
   onSortingChange,
 }: {
   documents: DocumentListItem[];
+  isLoading?: boolean;
   knowledges: Array<{ id: string; name: string }>;
   onChanged: () => void;
   onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
@@ -371,6 +359,7 @@ function DocumentsTable({
         enableSelection
         enableSorting
         initialSorting={{ id: "createdAt", desc: true }}
+        isLoading={isLoading}
         manualSorting
         onSelectionChange={setSelectedRows}
         onSortingChange={onSortingChange}

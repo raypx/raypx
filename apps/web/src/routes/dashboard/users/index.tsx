@@ -51,7 +51,6 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "../-components/data-table";
 import { EmptyState } from "../-components/empty-state";
 import { ErrorState } from "../-components/error-state";
-import { TableSkeleton } from "../-components/table-skeleton";
 
 type UserListItem = {
   id: string;
@@ -127,9 +126,7 @@ function UsersSection({ query }: { query: string }) {
 
   let content: ReactNode;
 
-  if (isPending) {
-    content = <TableSkeleton columns={["Name", "Email", "Role", "Status", "Created", "Actions"]} />;
-  } else if (isError) {
+  if (isError) {
     content = (
       <ErrorState
         message={error?.message ?? "Something went wrong while loading users."}
@@ -144,6 +141,7 @@ function UsersSection({ query }: { query: string }) {
   } else {
     content = (
       <UsersTable
+        isLoading={isPending}
         onChanged={() => {
           void refetch();
         }}
@@ -188,6 +186,7 @@ function UsersSection({ query }: { query: string }) {
 
 function UsersTable({
   users,
+  isLoading = false,
   page,
   pageCount,
   onPageChange,
@@ -195,6 +194,7 @@ function UsersTable({
   onSortingChange,
 }: {
   users: UserListItem[];
+  isLoading?: boolean;
   page: number;
   pageCount: number;
   onPageChange: (p: number) => void;
@@ -486,6 +486,7 @@ function UsersTable({
           data={users}
           enableSorting
           initialSorting={{ id: "createdAt", desc: true }}
+          isLoading={isLoading}
           manualSorting
           onSortingChange={onSortingChange}
         />
