@@ -39,7 +39,6 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "../-components/data-table";
 import { EmptyState } from "../-components/empty-state";
 import { ErrorState } from "../-components/error-state";
-import { SortControls } from "../-components/sort-controls";
 import { TableSkeleton } from "../-components/table-skeleton";
 import { formatDate } from "../-components/utils";
 
@@ -163,6 +162,12 @@ function KnowledgesSection() {
         onChanged={() => {
           void refetch();
         }}
+        onSortingChange={(sorting) => {
+          if (sorting) {
+            setSortBy(sorting.id as typeof sortBy);
+            setSortOrder(sorting.desc ? "desc" : "asc");
+          }
+        }}
       />
     );
   }
@@ -179,32 +184,19 @@ function KnowledgesSection() {
             {knowledges.length} knowledge base{knowledges.length !== 1 ? "s" : ""}
           </CardDescription>
           <CardAction>
-            <div className="flex items-center gap-2">
-              <Select
-                onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
-                value={statusFilter}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <SortControls
-                onSortByChange={(value) => setSortBy(value as typeof sortBy)}
-                onSortOrderChange={(value) => setSortOrder(value as typeof sortOrder)}
-                sortBy={sortBy}
-                sortOptions={[
-                  { value: "createdAt", label: "Created Date" },
-                  { value: "name", label: "Name" },
-                  { value: "status", label: "Status" },
-                ]}
-                sortOrder={sortOrder}
-              />
-            </div>
+            <Select
+              onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
+              value={statusFilter}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
             <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
@@ -277,9 +269,11 @@ function KnowledgesSection() {
 function KnowledgesTable({
   knowledges,
   onChanged,
+  onSortingChange,
 }: {
   knowledges: KnowledgeListItem[];
   onChanged: () => void;
+  onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
 }) {
   const trpc = useTRPC();
   const deleteMutation = useMutation({
@@ -304,11 +298,13 @@ function KnowledgesTable({
       {
         accessorKey: "name",
         header: "Name",
+        enableSorting: true,
         cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
       },
       {
         accessorKey: "description",
         header: "Description",
+        enableSorting: false,
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground max-w-md truncate">
             {row.original.description || "--"}
@@ -318,6 +314,7 @@ function KnowledgesTable({
       {
         accessorKey: "status",
         header: "Status",
+        enableSorting: true,
         cell: ({ row }) => (
           <Badge variant={row.original.status === "active" ? "default" : "secondary"}>
             {row.original.status}
@@ -327,6 +324,7 @@ function KnowledgesTable({
       {
         accessorKey: "createdAt",
         header: "Created",
+        enableSorting: true,
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">{formatDate(row.original.createdAt)}</div>
         ),
@@ -403,7 +401,11 @@ function KnowledgesTable({
         columns={columns}
         data={knowledges}
         enableSelection
+        enableSorting
+        initialSorting={{ id: "createdAt", desc: true }}
+        manualSorting
         onSelectionChange={setSelectedRows}
+        onSortingChange={onSortingChange}
       />
     </>
   );

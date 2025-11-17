@@ -45,7 +45,7 @@ import {
 } from "@raypx/ui/components/table";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Users } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "../-components/data-table";
@@ -102,6 +102,8 @@ function AdminUsersPage() {
 function UsersSection({ query }: { query: string }) {
   const trpc = useTRPC();
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<"createdAt" | "email" | "name">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const pageSize = 10;
   const usersQuery = useQuery({
     ...trpc.users.list.queryOptions(
@@ -109,8 +111,8 @@ function UsersSection({ query }: { query: string }) {
         q: query || undefined,
         page,
         pageSize,
-        sortBy: "createdAt",
-        sortOrder: "desc",
+        sortBy,
+        sortOrder,
         status: "all",
       },
       { staleTime: 30_000 },
@@ -148,6 +150,12 @@ function UsersSection({ query }: { query: string }) {
         onPageChange={(p) => {
           setPage(p);
         }}
+        onSortingChange={(sorting) => {
+          if (sorting) {
+            setSortBy(sorting.id as typeof sortBy);
+            setSortOrder(sorting.desc ? "desc" : "asc");
+          }
+        }}
         page={page}
         pageCount={totalPages}
         users={users}
@@ -184,12 +192,14 @@ function UsersTable({
   pageCount,
   onPageChange,
   onChanged,
+  onSortingChange,
 }: {
   users: UserListItem[];
   page: number;
   pageCount: number;
   onPageChange: (p: number) => void;
   onChanged: () => void;
+  onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
 }) {
   const trpc = useTRPC();
   const updateRole = useMutation(trpc.users.updateRole.mutationOptions());
@@ -233,16 +243,19 @@ function UsersTable({
       {
         accessorKey: "name",
         header: "Name",
+        enableSorting: true,
         cell: ({ row }) => <div className="font-medium">{row.original.name ?? "--"}</div>,
       },
       {
         accessorKey: "email",
         header: "Email",
+        enableSorting: true,
         cell: ({ row }) => <div className="text-muted-foreground">{row.original.email}</div>,
       },
       {
         accessorKey: "role",
         header: "Role",
+        enableSorting: false,
         cell: ({ row }) => {
           const role = row.original.role;
           if (!role) {
@@ -262,6 +275,7 @@ function UsersTable({
       {
         accessorKey: "banned",
         header: "Status",
+        enableSorting: false,
         cell: ({ row }) => {
           const user = row.original;
           return user.banned ? (
@@ -276,6 +290,7 @@ function UsersTable({
       {
         accessorKey: "createdAt",
         header: "Created",
+        enableSorting: true,
         cell: ({ row }) => <div>{formatDateTime(row.original.createdAt)}</div>,
       },
       {
@@ -326,16 +341,8 @@ function UsersTable({
     [setBanned.isPending, deleteUser.isPending, doToggleBan, doDelete],
   );
 
-  const table = useReactTable({
-    data: users,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-    pageCount,
-  });
-
   return (
-    <div className="px-6 pb-2 space-y-3">
+    <>
       {/* Update Role Dialog */}
       <Dialog
         onOpenChange={(open) => {
@@ -473,66 +480,40 @@ function UsersTable({
         </DialogContent>
       </Dialog>
 
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead className={header.id === "actions" ? "w-20" : ""} key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow data-state={row.getIsSelected() && "selected"} key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell className="h-24 text-center" colSpan={columns.length}>
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-        <TableCaption>
-          <div className="flex items-center justify-between">
-            <div>
-              Page {page} of {pageCount}
-            </div>
-            <div className="space-x-2">
-              <Button
-                disabled={page <= 1}
-                onClick={() => onPageChange(Math.max(1, page - 1))}
-                size="sm"
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <Button
-                disabled={page >= pageCount}
-                onClick={() => onPageChange(Math.min(pageCount, page + 1))}
-                size="sm"
-                variant="outline"
-              >
-                Next
-              </Button>
-            </div>
+      <div className="px-6 pb-2 space-y-3">
+        <DataTable
+          columns={columns}
+          data={users}
+          enableSorting
+          initialSorting={{ id: "createdAt", desc: true }}
+          manualSorting
+          onSortingChange={onSortingChange}
+        />
+        <div className="flex items-center justify-between px-6 py-2 border-t">
+          <div>
+            Page {page} of {pageCount}
           </div>
-        </TableCaption>
-      </Table>
-    </div>
+          <div className="space-x-2">
+            <Button
+              disabled={page <= 1}
+              onClick={() => onPageChange(Math.max(1, page - 1))}
+              size="sm"
+              variant="outline"
+            >
+              Previous
+            </Button>
+            <Button
+              disabled={page >= pageCount}
+              onClick={() => onPageChange(Math.min(pageCount, page + 1))}
+              size="sm"
+              variant="outline"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

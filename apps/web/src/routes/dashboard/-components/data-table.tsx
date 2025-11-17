@@ -7,8 +7,16 @@ import {
   TableRow,
 } from "@raypx/ui/components";
 import { Checkbox } from "@raypx/ui/components/checkbox";
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { useEffect, useMemo } from "react";
+import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  type SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 interface DataTableProps<TData> {
   data: TData[];
@@ -16,6 +24,10 @@ interface DataTableProps<TData> {
   enableSelection?: boolean;
   onSelectionChange?: (selectedRows: TData[]) => void;
   getRowId?: (row: TData) => string;
+  enableSorting?: boolean;
+  manualSorting?: boolean;
+  onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
+  initialSorting?: { id: string; desc: boolean };
 }
 
 export function DataTable<TData>({
@@ -24,8 +36,15 @@ export function DataTable<TData>({
   enableSelection = false,
   onSelectionChange,
   getRowId: customGetRowId,
+  enableSorting = false,
+  manualSorting = false,
+  onSortingChange,
+  initialSorting,
 }: DataTableProps<TData>) {
   const getRowId = customGetRowId || ((row: TData) => (row as { id: string }).id);
+  const [sorting, setSorting] = useState<SortingState>(
+    initialSorting ? [{ id: initialSorting.id, desc: initialSorting.desc }] : [],
+  );
 
   // Add selection column if enabled
   const columnsWithSelection = useMemo(() => {
@@ -57,11 +76,77 @@ export function DataTable<TData>({
     return [selectionColumn, ...columns];
   }, [columns, enableSelection]);
 
+  // Add sortable header renderer if sorting is enabled
+  const columnsWithSorting = useMemo(() => {
+    if (!enableSorting) return columnsWithSelection;
+
+    return columnsWithSelection.map((column) => {
+      if (column.enableSorting === false || column.id === "select" || column.id === "actions") {
+        return column;
+      }
+
+      const originalHeader = column.header;
+      const columnId = column.id || ("accessorKey" in column ? column.accessorKey : undefined);
+      return {
+        ...column,
+        header: ({ column: col }: { column: any }) => {
+          const canSort = col.getCanSort();
+          const sortDirection = col.getIsSorted();
+
+          return (
+            <button
+              className="flex items-center gap-2 hover:text-foreground transition-colors disabled:cursor-default disabled:opacity-50"
+              disabled={!canSort}
+              onClick={col.getToggleSortingHandler()}
+              type="button"
+            >
+              {typeof originalHeader === "function"
+                ? originalHeader({ column: col } as any)
+                : originalHeader || columnId || ""}
+              {canSort && (
+                <span className="ml-1">
+                  {sortDirection === "asc" ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : sortDirection === "desc" ? (
+                    <ArrowDown className="h-4 w-4" />
+                  ) : (
+                    <ArrowUpDown className="h-4 w-4 opacity-50" />
+                  )}
+                </span>
+              )}
+            </button>
+          );
+        },
+      } as ColumnDef<TData>;
+    });
+  }, [columnsWithSelection, enableSorting]);
+
   const table = useReactTable({
     data,
-    columns: columnsWithSelection,
+    columns: columnsWithSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: enableSorting && !manualSorting ? getSortedRowModel() : undefined,
     enableRowSelection: enableSelection,
+    enableSorting,
+    manualSorting,
+    onSortingChange: (updater) => {
+      const newSorting = typeof updater === "function" ? updater(sorting) : updater;
+      setSorting(newSorting);
+
+      if (onSortingChange) {
+        if (newSorting.length > 0) {
+          const sort = newSorting[0];
+          if (sort) {
+            onSortingChange({ id: sort.id, desc: sort.desc });
+          }
+        } else {
+          onSortingChange(null);
+        }
+      }
+    },
+    state: {
+      sorting,
+    },
     getRowId: enableSelection ? getRowId : undefined,
   });
 

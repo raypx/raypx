@@ -29,7 +29,6 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "../-components/data-table";
 import { EmptyState } from "../-components/empty-state";
 import { ErrorState } from "../-components/error-state";
-import { SortControls } from "../-components/sort-controls";
 import { TableSkeleton } from "../-components/table-skeleton";
 import { formatDate, formatFileSize } from "../-components/utils";
 
@@ -132,6 +131,12 @@ function DocumentsSection() {
         onChanged={() => {
           void refetch();
         }}
+        onSortingChange={(sorting) => {
+          if (sorting) {
+            setSortBy(sorting.id as typeof sortBy);
+            setSortOrder(sorting.desc ? "desc" : "asc");
+          }
+        }}
       />
     );
   }
@@ -178,18 +183,6 @@ function DocumentsSection() {
                 <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
-            <SortControls
-              onSortByChange={(value) => setSortBy(value as typeof sortBy)}
-              onSortOrderChange={(value) => setSortOrder(value as typeof sortOrder)}
-              sortBy={sortBy}
-              sortOptions={[
-                { value: "createdAt", label: "Created Date" },
-                { value: "name", label: "Name" },
-                { value: "status", label: "Status" },
-                { value: "size", label: "Size" },
-              ]}
-              sortOrder={sortOrder}
-            />
           </div>
           <Button
             disabled={isFetching}
@@ -212,10 +205,12 @@ function DocumentsTable({
   documents,
   knowledges,
   onChanged,
+  onSortingChange,
 }: {
   documents: DocumentListItem[];
   knowledges: Array<{ id: string; name: string }>;
   onChanged: () => void;
+  onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
 }) {
   const trpc = useTRPC();
   const deleteMutation = useMutation({
@@ -257,11 +252,13 @@ function DocumentsTable({
       {
         accessorKey: "name",
         header: "Name",
+        enableSorting: true,
         cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
       },
       {
         accessorKey: "originalName",
         header: "Original Name",
+        enableSorting: false,
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">{row.original.originalName}</div>
         ),
@@ -269,6 +266,7 @@ function DocumentsTable({
       {
         accessorKey: "knowledgeBaseId",
         header: "Knowledge Base",
+        enableSorting: false,
         cell: ({ row }) => (
           <div className="text-sm">{getKnowledgeBaseName(row.original.knowledgeBaseId)}</div>
         ),
@@ -276,6 +274,7 @@ function DocumentsTable({
       {
         accessorKey: "size",
         header: "Size",
+        enableSorting: true,
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">{formatFileSize(row.original.size)}</div>
         ),
@@ -283,6 +282,7 @@ function DocumentsTable({
       {
         accessorKey: "status",
         header: "Status",
+        enableSorting: true,
         cell: ({ row }) => (
           <Badge variant={getStatusVariant(row.original.status) as any}>
             {row.original.status}
@@ -292,6 +292,7 @@ function DocumentsTable({
       {
         accessorKey: "createdAt",
         header: "Created",
+        enableSorting: true,
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">{formatDate(row.original.createdAt)}</div>
         ),
@@ -368,7 +369,11 @@ function DocumentsTable({
         columns={columns}
         data={documents}
         enableSelection
+        enableSorting
+        initialSorting={{ id: "createdAt", desc: true }}
+        manualSorting
         onSelectionChange={setSelectedRows}
+        onSortingChange={onSortingChange}
       />
     </>
   );

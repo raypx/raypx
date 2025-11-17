@@ -35,7 +35,6 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "../-components/data-table";
 import { EmptyState } from "../-components/empty-state";
 import { ErrorState } from "../-components/error-state";
-import { SortControls } from "../-components/sort-controls";
 import { TableSkeleton } from "../-components/table-skeleton";
 import { formatDate } from "../-components/utils";
 
@@ -177,6 +176,12 @@ function ApiKeysSection() {
         onChanged={() => {
           void refetch();
         }}
+        onSortingChange={(sorting) => {
+          if (sorting) {
+            setSortBy(sorting.id as typeof sortBy);
+            setSortOrder(sorting.desc ? "desc" : "asc");
+          }
+        }}
       />
     );
   }
@@ -193,18 +198,6 @@ function ApiKeysSection() {
             {apiKeys.length} active key{apiKeys.length !== 1 ? "s" : ""}
           </CardDescription>
           <CardAction>
-            <SortControls
-              onSortByChange={(value) => setSortBy(value as typeof sortBy)}
-              onSortOrderChange={(value) => setSortOrder(value as typeof sortOrder)}
-              sortBy={sortBy}
-              sortOptions={[
-                { value: "createdAt", label: "Created Date" },
-                { value: "name", label: "Name" },
-                { value: "lastRequest", label: "Last Used" },
-                { value: "requestCount", label: "Request Count" },
-              ]}
-              sortOrder={sortOrder}
-            />
             <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
@@ -306,9 +299,11 @@ function ApiKeysSection() {
 function ApiKeysTable({
   apiKeys,
   onChanged,
+  onSortingChange,
 }: {
   apiKeys: ApiKeyListItem[];
   onChanged: () => void;
+  onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
 }) {
   const trpc = useTRPC();
   const deleteKeyMutation = useMutation({
@@ -341,11 +336,13 @@ function ApiKeysTable({
       {
         accessorKey: "name",
         header: "Name",
+        enableSorting: true,
         cell: ({ row }) => <div className="font-medium">{row.original.name || "Untitled Key"}</div>,
       },
       {
         accessorKey: "key",
         header: "Key",
+        enableSorting: false,
         cell: ({ row }) => (
           <code className="text-xs bg-muted px-2 py-1 rounded font-mono">{row.original.key}</code>
         ),
@@ -353,6 +350,7 @@ function ApiKeysTable({
       {
         accessorKey: "createdAt",
         header: "Created",
+        enableSorting: true,
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">{formatDate(row.original.createdAt)}</div>
         ),
@@ -360,6 +358,7 @@ function ApiKeysTable({
       {
         accessorKey: "lastRequest",
         header: "Last Used",
+        enableSorting: true,
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">
             {formatLastUsed(row.original.lastRequest)}
@@ -369,6 +368,7 @@ function ApiKeysTable({
       {
         accessorKey: "requestCount",
         header: "Requests",
+        enableSorting: true,
         cell: ({ row }) => (
           <div className="text-sm">{row.original.requestCount.toLocaleString()}</div>
         ),
@@ -376,6 +376,7 @@ function ApiKeysTable({
       {
         accessorKey: "enabled",
         header: "Status",
+        enableSorting: false,
         cell: ({ row }) => (
           <Badge variant={row.original.enabled ? "default" : "secondary"}>
             {row.original.enabled ? "Active" : "Disabled"}
@@ -462,7 +463,11 @@ function ApiKeysTable({
         columns={columns}
         data={apiKeys}
         enableSelection
+        enableSorting
+        initialSorting={{ id: "createdAt", desc: true }}
+        manualSorting
         onSelectionChange={setSelectedRows}
+        onSortingChange={onSortingChange}
       />
     </>
   );
