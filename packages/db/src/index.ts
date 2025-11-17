@@ -11,6 +11,7 @@ export {
   like,
   lt,
   lte,
+  ne,
   not,
   or,
   sql,

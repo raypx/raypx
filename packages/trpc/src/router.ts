@@ -1,3 +1,4 @@
+import { organizationsRouter } from "./routers/organizations";
 import { usersRouter } from "./routers/users";
 import { createTRPCRouter } from "./trpc";
 
@@ -7,6 +8,7 @@ import { createTRPCRouter } from "./trpc";
  */
 export const trpcRouter = createTRPCRouter({
   users: usersRouter,
+  organizations: organizationsRouter,
 });
 
 /**

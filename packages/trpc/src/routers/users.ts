@@ -1,3 +1,4 @@
+import { auth } from "@raypx/auth/server";
 import { and, desc, eq, ilike, isNull, or, sql } from "@raypx/db";
 import { CreateUserSchema, user as User } from "@raypx/db/schemas";
 import { z } from "zod/v4";
@@ -201,4 +202,113 @@ export const usersRouter = {
       throw handleDatabaseError(error, "delete user");
     }
   }),
+
+  /**
+   * Update user profile
+   * Protected endpoint - users can only update their own profile
+   * @throws {NOT_FOUND} If user does not exist
+   * @throws {FORBIDDEN} If user tries to update another user's profile
+   */
+  updateProfile: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().trim().min(1).max(255).optional(),
+        username: z.string().trim().min(1).max(50).optional().nullable(),
+        displayUsername: z.string().trim().max(50).optional().nullable(),
+        image: z.string().url().optional().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Check if user exists
+      const existing = await ctx.db.query.user.findFirst({
+        where: eq(User.id, userId),
+      });
+      assertExists(existing, () => Errors.userNotFound(userId));
+
+      // Build update object with only provided fields
+      const updateData: {
+        name?: string;
+        username?: string | null;
+        displayUsername?: string | null;
+        image?: string | null;
+      } = {};
+
+      if (input.name !== undefined) {
+        updateData.name = input.name;
+      }
+      if (input.username !== undefined) {
+        updateData.username = input.username;
+      }
+      if (input.displayUsername !== undefined) {
+        updateData.displayUsername = input.displayUsername;
+      }
+      if (input.image !== undefined) {
+        updateData.image = input.image;
+      }
+
+      try {
+        const [updated] = await ctx.db
+          .update(User)
+          .set(updateData)
+          .where(eq(User.id, userId))
+          .returning();
+        return updated;
+      } catch (error) {
+        throw handleDatabaseError(error, "update profile");
+      }
+    }),
+
+  /**
+   * Change user password
+   * Protected endpoint - users can only change their own password
+   * @throws {BAD_REQUEST} If current password is incorrect
+   * @throws {BAD_REQUEST} If new password doesn't meet requirements
+   */
+  changePassword: protectedProcedure
+    .input(
+      z.object({
+        currentPassword: z.string().min(1, "Current password is required"),
+        newPassword: z
+          .string()
+          .min(8, "Password must be at least 8 characters")
+          .max(128, "Password must be less than 128 characters"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      try {
+        // Use Better Auth API to change password
+        // This will validate the current password and update it
+        const result = await auth.api.changePassword({
+          body: {
+            currentPassword: input.currentPassword,
+            newPassword: input.newPassword,
+          },
+          headers: ctx.headers,
+        });
+
+        if (!result || "error" in result) {
+          throw Errors.businessRuleViolation(
+            "Password change failed",
+            result?.error?.message || "Invalid current password or password requirements not met",
+          );
+        }
+
+        return { success: true };
+      } catch (error) {
+        // If it's already a TRPCError, re-throw it
+        if (error instanceof Error && "code" in error) {
+          throw error;
+        }
+
+        // Handle Better Auth errors
+        throw Errors.businessRuleViolation(
+          "Password change failed",
+          error instanceof Error ? error.message : "Unknown error occurred",
+        );
+      }
+    }),
 };

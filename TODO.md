@@ -1,6 +1,6 @@
 # Raypx Project TODO
 
-> **Last Updated:** 2025-11-13
+> **Last Updated:** 2025-11-18
 >
 > This document tracks planned features and improvements for the Raypx project.
 > Mark items as complete by changing `[ ]` to `[x]`.
@@ -97,21 +97,21 @@
   - [x] Theme switching (`theme-provider.tsx`)
   - [x] Persist user preference
 
-## 🚀 API Development (60% Complete)
+## 🚀 API Development (75% Complete)
 
 ### tRPC Endpoints
 - [x] User management API (`/packages/trpc/src/routers/users.ts`)
   - [x] CRUD operations (all, byId, create, delete)
   - [x] Protected procedure with auth checks
-  - [ ] Profile update API
-  - [ ] Password change API
+  - [x] Profile update API
+  - [x] Password change API
 - [x] Error handling framework
   - [x] Custom error types (`/packages/trpc/src/errors.ts`)
   - [x] Error logging middleware
-- [ ] Organization API
-  - [ ] Organization CRUD
-  - [ ] Member management
-  - [ ] Invitation handling
+- [x] Organization API (`/packages/trpc/src/routers/organizations.ts`)
+  - [x] Organization CRUD
+  - [x] Member management
+  - [x] Invitation listing
 - [ ] File upload API (0% - **Critical gap**)
   - [ ] Image upload endpoint
   - [ ] File type validation
@@ -265,13 +265,13 @@ All 8 templates built with React Email in `/packages/email/src/emails/`:
 
 ## 💼 Business Features (30% Complete)
 
-### Organization Management (50% Complete)
+### Organization Management (80% Complete)
 - [x] Database schema (organization, member, invitation tables)
 - [x] Frontend pages (`/apps/web/src/routes/_org/`)
 - [x] Email templates (organization-invite-email)
-- [ ] Organization CRUD API
-- [ ] Member management API
-- [ ] Invitation flow implementation
+- [x] Organization CRUD API
+- [x] Member management API
+- [ ] Invitation flow implementation (create/accept invitations)
 
 ### API Key Management (70% Complete)
 - [x] Database schema with rate limiting support
@@ -403,7 +403,7 @@ These must be completed before production launch:
 
 ## Notes
 
-- **Overall Project Completion: 66%**
+- **Overall Project Completion: 70%**
 - Review and update this TODO list regularly
 - Completed foundational work: Auth, DB, UI, CI/CD
 - Main gaps: File upload, email activation, testing, deployment
