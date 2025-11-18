@@ -2,10 +2,11 @@ import { envs } from "./envs";
 import type { PostHogInstance } from "./types";
 
 export function useAnalytics() {
+  const env = envs();
   let posthog: PostHogInstance | null = null;
 
   // Try to get PostHog instance if available
-  if (typeof window !== "undefined" && envs.VITE_PUBLIC_POSTHOG_KEY) {
+  if (typeof window !== "undefined" && env.VITE_PUBLIC_POSTHOG_KEY) {
     try {
       // If PostHog is loaded globally, use it
       if (window.posthog) {
@@ -18,13 +19,13 @@ export function useAnalytics() {
 
   const track = (event: string, properties?: Record<string, unknown>) => {
     if (
-      envs.VITE_PUBLIC_ANALYTICS_DISABLED ||
-      (import.meta.env.NODE_ENV !== "production" && !envs.VITE_PUBLIC_ANALYTICS_DEBUG)
+      env.VITE_PUBLIC_ANALYTICS_DISABLED ||
+      (import.meta.env.NODE_ENV !== "production" && !env.VITE_PUBLIC_ANALYTICS_DEBUG)
     ) {
       return;
     }
 
-    if (envs.VITE_PUBLIC_ANALYTICS_DEBUG) {
+    if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
       console.debug("[Analytics] Track:", event, properties);
     }
 
@@ -37,11 +38,11 @@ export function useAnalytics() {
     if (
       typeof window !== "undefined" &&
       typeof window.gtag === "function" &&
-      envs.VITE_PUBLIC_GA_MEASUREMENT_ID
+      env.VITE_PUBLIC_GA_MEASUREMENT_ID
     ) {
       window.gtag("event", event, {
         ...properties,
-        send_to: envs.VITE_PUBLIC_GA_MEASUREMENT_ID,
+        send_to: env.VITE_PUBLIC_GA_MEASUREMENT_ID,
       });
     }
   };
@@ -58,7 +59,7 @@ export function useAnalytics() {
 
     // Google Analytics
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("config", envs.VITE_PUBLIC_GA_MEASUREMENT_ID, {
+      window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
         user_id: userId,
         ...properties,
       });
@@ -88,7 +89,7 @@ export function useAnalytics() {
 
     // Google Analytics - set custom parameters
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("config", envs.VITE_PUBLIC_GA_MEASUREMENT_ID, {
+      window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
         custom_map: properties,
       });
     }
@@ -120,7 +121,7 @@ export function useAnalytics() {
 
     // Google Analytics
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("config", envs.VITE_PUBLIC_GA_MEASUREMENT_ID, {
+      window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
         page_path: url || window.location.pathname,
         page_title: title,
       });
@@ -179,19 +180,17 @@ export function useAnalytics() {
 
     // Raw instances for advanced usage
     posthog:
-      import.meta.env.NODE_ENV === "production" || envs.VITE_PUBLIC_ANALYTICS_DEBUG
-        ? posthog
-        : null,
+      import.meta.env.NODE_ENV === "production" || env.VITE_PUBLIC_ANALYTICS_DEBUG ? posthog : null,
     gtag:
-      (import.meta.env.NODE_ENV === "production" || envs.VITE_PUBLIC_ANALYTICS_DEBUG) &&
+      (import.meta.env.NODE_ENV === "production" || env.VITE_PUBLIC_ANALYTICS_DEBUG) &&
       typeof window !== "undefined"
         ? window.gtag
         : null,
 
     // Utility functions
     isEnabled:
-      !envs.VITE_PUBLIC_ANALYTICS_DISABLED &&
-      (import.meta.env.NODE_ENV === "production" || envs.VITE_PUBLIC_ANALYTICS_DEBUG),
-    isDebug: envs.VITE_PUBLIC_ANALYTICS_DEBUG,
+      !env.VITE_PUBLIC_ANALYTICS_DISABLED &&
+      (import.meta.env.NODE_ENV === "production" || env.VITE_PUBLIC_ANALYTICS_DEBUG),
+    isDebug: env.VITE_PUBLIC_ANALYTICS_DEBUG,
   };
 }

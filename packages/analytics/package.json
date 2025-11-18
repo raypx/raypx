@@ -6,6 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./envs": "./src/envs.ts",
+    "./sentry": "./src/sentry.ts",
+    "./sentry/client": "./src/sentry/client.ts",
+    "./sentry/server": "./src/sentry/server.ts",
     "./server": "./src/server/index.ts"
   },
   "scripts": {
@@ -16,12 +19,16 @@
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
+    "@sentry/react": "^10.25.0",
+    "@sentry/node": "^10.25.0",
+    "@sentry/tanstackstart-react": "^10.25.0",
     "@vercel/analytics": "^1.5.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
+    "type-fest": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "typescript": "catalog:dev",

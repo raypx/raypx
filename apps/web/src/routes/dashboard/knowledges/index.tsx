@@ -36,10 +36,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { BookOpen, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { DataTable } from "../-components/data-table";
-import { EmptyState } from "../-components/empty-state";
-import { ErrorState } from "../-components/error-state";
-import { formatDate } from "../-components/utils";
+import { DataTable } from "@/components/data-table";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { formatDate } from "@/lib/dashboard-utils";
 
 type KnowledgeListItem = {
   id: string;
@@ -61,7 +61,7 @@ function KnowledgesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Knowledge Bases</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Knowledge</h1>
           <p className="text-muted-foreground">Manage your knowledge bases and documents</p>
         </div>
       </div>
@@ -149,7 +149,7 @@ function KnowledgesSection() {
         description="Create your first knowledge base to get started"
         icon={BookOpen}
         onAction={() => setIsCreateDialogOpen(true)}
-        title="No Knowledge Bases"
+        title="No Knowledge"
       />
     );
   } else {
@@ -171,96 +171,94 @@ function KnowledgesSection() {
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Knowledge Bases
-          </CardTitle>
-          <CardDescription>
-            {knowledges.length} knowledge base{knowledges.length !== 1 ? "s" : ""}
-          </CardDescription>
-          <CardAction>
-            <Select
-              onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
-              value={statusFilter}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-            <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create Knowledge Base
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Knowledge Base</DialogTitle>
-                  <DialogDescription>
-                    Create a new knowledge base to organize your documents
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      onChange={(e) => setNewName(e.target.value)}
-                      placeholder="e.g., Product Documentation"
-                      value={newName}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      onChange={(e) => setNewDescription(e.target.value)}
-                      placeholder="Optional description"
-                      value={newDescription}
-                    />
-                  </div>
+    <Card>
+      <CardHeader className="border-b">
+        <CardTitle className="flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
+          Knowledge
+        </CardTitle>
+        <CardDescription>
+          {`${knowledges.length} knowledge${knowledges.length !== 1 ? "s" : ""}`}
+        </CardDescription>
+        <CardAction>
+          <Select
+            onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
+            value={statusFilter}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Knowledge Base
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Knowledge Base</DialogTitle>
+                <DialogDescription>
+                  Create a new knowledge base to organize your documents
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="e.g., Product Documentation"
+                    value={newName}
+                  />
                 </div>
-                <DialogFooter>
-                  <Button
-                    onClick={() => {
-                      setIsCreateDialogOpen(false);
-                      setNewName("");
-                      setNewDescription("");
-                    }}
-                    variant="outline"
-                  >
-                    Cancel
-                  </Button>
-                  <Button disabled={createMutation.isPending} onClick={handleCreate}>
-                    {createMutation.isPending ? "Creating..." : "Create"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Button
-              disabled={isFetching}
-              onClick={() => {
-                void refetch();
-              }}
-              size="sm"
-              variant="outline"
-            >
-              {isFetching ? "Refreshing…" : "Refresh"}
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="px-0">{content}</CardContent>
-      </Card>
-    </>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    placeholder="Optional description"
+                    value={newDescription}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={() => {
+                    setIsCreateDialogOpen(false);
+                    setNewName("");
+                    setNewDescription("");
+                  }}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button disabled={createMutation.isPending} onClick={handleCreate}>
+                  {createMutation.isPending ? "Creating..." : "Create"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button
+            disabled={isFetching}
+            onClick={() => {
+              void refetch();
+            }}
+            size="sm"
+            variant="outline"
+          >
+            {isFetching ? "Refreshing…" : "Refresh"}
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-0">{content}</CardContent>
+    </Card>
   );
 }
 

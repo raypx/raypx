@@ -215,7 +215,26 @@ export const usersRouter = {
         name: z.string().trim().min(1).max(255).optional(),
         username: z.string().trim().min(1).max(50).optional().nullable(),
         displayUsername: z.string().trim().max(50).optional().nullable(),
-        image: z.string().url().optional().nullable(),
+        image: z
+          .string()
+          .refine(
+            (val) => {
+              if (!val) return true; // Allow null/empty
+              // Allow URLs
+              try {
+                new URL(val);
+                return true;
+              } catch {
+                // Allow base64 data URIs (data:image/...;base64,...)
+                return val.startsWith("data:image/") && val.includes("base64,");
+              }
+            },
+            {
+              message: "Image must be a valid URL or base64 data URI",
+            },
+          )
+          .optional()
+          .nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

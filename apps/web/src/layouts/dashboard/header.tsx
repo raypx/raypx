@@ -7,11 +7,11 @@ import { Link } from "@tanstack/react-router";
 import { Bell, Search, User } from "lucide-react";
 import { authRoutes } from "@/config/auth";
 
-interface AppHeaderProps {
+interface HeaderProps {
   user: AuthUser;
 }
 
-export function AppHeader({ user }: AppHeaderProps) {
+export function Header({ user }: HeaderProps) {
   return (
     <header className="h-16 border-b bg-card flex items-center justify-between px-6">
       <div className="flex-1 max-w-md">

@@ -26,10 +26,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FileText, MoreHorizontal, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { DataTable } from "../-components/data-table";
-import { EmptyState } from "../-components/empty-state";
-import { ErrorState } from "../-components/error-state";
-import { formatDate, formatFileSize } from "../-components/utils";
+import { DataTable } from "@/components/data-table";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { formatDate, formatFileSize } from "@/lib/dashboard-utils";
 
 type DocumentListItem = {
   id: string;
@@ -147,7 +147,7 @@ function DocumentsSection() {
                 <SelectValue placeholder="Knowledge Base" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Knowledge Bases</SelectItem>
+                <SelectItem value="all">All Knowledge</SelectItem>
                 {(knowledges ?? []).map((kb) => (
                   <SelectItem key={kb.id} value={kb.id}>
                     {kb.name}

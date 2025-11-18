@@ -29,7 +29,7 @@ function getUserInitials(name?: string | null, email?: string | null): string {
   return "U";
 }
 
-interface AppSidebarProps {
+interface SidebarProps {
   user: AuthUser;
 }
 
@@ -45,7 +45,7 @@ const userMenuItems = [
     icon: User,
   },
   {
-    title: "Knowledge Bases",
+    title: "Knowledge",
     href: "/dashboard/knowledges",
     icon: BookOpen,
   },
@@ -87,7 +87,7 @@ function isActivePath(currentPath: string, href: string): boolean {
   return currentPath.startsWith(href);
 }
 
-export function AppSidebar({ user }: AppSidebarProps) {
+export function Sidebar({ user }: SidebarProps) {
   const showAdminMenu = isAdmin(user?.role);
   const location = useLocation();
   const currentPath = location.pathname;

@@ -1,45 +1,46 @@
-import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+
+async function renderEmail(templateName: string): Promise<string> {
+  const response = await fetch("/api/render", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      templateName,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || "Failed to render email");
+  }
+
+  return result.html;
+}
 
 export function useRender(selectedTemplate: string) {
-  const [html, setHtml] = useState("");
-  const [loading, setLoading] = useState(false);
+  const {
+    data: html = "",
+    isLoading,
+    isFetching,
+    error,
+  } = useQuery({
+    queryKey: ["render", selectedTemplate],
+    queryFn: () => renderEmail(selectedTemplate),
+    enabled: !!selectedTemplate,
+    placeholderData: keepPreviousData, // Keep previous data while fetching new data
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    if (!selectedTemplate) {
-      setHtml("");
-      return;
-    }
+  // Return error HTML if there's an error
+  const errorHtml = error
+    ? `<div style="padding: 20px; color: red;">Error rendering email: ${error instanceof Error ? error.message : String(error)}</div>`
+    : "";
 
-    const renderEmail = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/render", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            templateName: selectedTemplate,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || "Failed to render email");
-        }
-
-        setHtml(result.html);
-      } catch (error) {
-        console.error("Failed to render email:", error);
-        setHtml(`<div style="padding: 20px; color: red;">Error rendering email: ${error}</div>`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    renderEmail();
-  }, [selectedTemplate]);
-
-  return { html, loading };
+  return {
+    html: errorHtml || html,
+    loading: isLoading || isFetching,
+  };
 }

@@ -9,7 +9,7 @@ import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
 import { Devtools } from "@/components/layout/devtools";
 import Loading from "@/components/layout/loading";
-import NotFound from "@/components/layout/not-found";
+import { NotFound } from "@/components/not-found";
 import appCss from "@/styles/globals.css?url";
 
 type RootRouterContext = {
@@ -38,7 +38,7 @@ export const Route = createRootRouteWithContext<RootRouterContext>()({
     ],
   }),
   component: RootComponent,
-  notFoundComponent: () => <NotFoundComponent />,
+  notFoundComponent: NotFoundComponent,
   errorComponent: (props) => (
     <RootDocument>
       <DefaultCatchBoundary {...props} />
@@ -78,8 +78,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function NotFoundComponent() {
   return (
-    <div>
+    <RootDocument>
       <NotFound />
-    </div>
+    </RootDocument>
   );
 }

@@ -1,0 +1,27 @@
+{
+  "name": "@raypx/billing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./constants": "./src/constants.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf .turbo",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@raypx/db": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "stripe": "^19.3.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "typescript": "catalog:dev",
+    "vitest": "catalog:"
+  }
+}

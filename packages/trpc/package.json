@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@raypx/auth": "workspace:*",
+    "@raypx/billing": "workspace:*",
     "@raypx/db": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "^11.7.1",
@@ -21,6 +22,9 @@
     "@trpc/tanstack-react-query": "^11.7.1",
     "superjson": "catalog:",
     "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "@raypx/analytics": "workspace:*"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

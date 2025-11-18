@@ -48,9 +48,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Users } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { DataTable } from "../-components/data-table";
-import { EmptyState } from "../-components/empty-state";
-import { ErrorState } from "../-components/error-state";
+import { DataTable } from "@/components/data-table";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 
 type UserListItem = {
   id: string;

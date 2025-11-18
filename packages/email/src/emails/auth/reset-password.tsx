@@ -1,5 +1,5 @@
 import { Button, Text } from "@react-email/components";
-import { EmailLayout } from "../components/layout";
+import { EmailLayout } from "../../components/layout";
 
 const ResetPasswordEmail = ({ resetLink, username }: { resetLink: string; username: string }) => (
   <EmailLayout preview="Reset your password">

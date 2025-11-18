@@ -30,9 +30,9 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
-    "tsdown": "catalog:dev",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
+    "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:",
     "vitest": "catalog:"

@@ -1,32 +1,36 @@
-import { Link } from "@tanstack/react-router";
+import { Button } from "@raypx/ui/components/button";
+import { Link, useRouter } from "@tanstack/react-router";
+import { ArrowLeft, Home } from "lucide-react";
+import { Logo } from "./layout/logo";
 
-export function NotFound(
-  props: Readonly<{
-    children?: React.ReactNode;
-  }>,
-) {
+export function NotFound() {
+  const router = useRouter();
+
+  const handleGoBack = () => {
+    if (router.history.length > 1) {
+      router.history.back();
+    } else {
+      router.navigate({ to: "/" });
+    }
+  };
+
   return (
-    <div className="space-y-2 p-2">
-      <div className="text-gray-600 dark:text-gray-400">
-        {props.children || <p>The page you are looking for does not exist.</p>}
+    <div className="flex min-h-full w-full flex-col items-center justify-center gap-6 p-6">
+      <Logo className="size-12" />
+      <h1 className="text-6xl font-bold">404</h1>
+      <p className="text-xl text-muted-foreground">Page not found</p>
+      <div className="flex gap-3">
+        <Button asChild size="lg">
+          <Link to="/">
+            <Home className="mr-2 h-4 w-4" />
+            Go Home
+          </Link>
+        </Button>
+        <Button onClick={handleGoBack} size="lg" variant="outline">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Go Back
+        </Button>
       </div>
-      <p className="flex flex-wrap items-center gap-2">
-        <button
-          className="rounded bg-emerald-500 px-2 py-1 text-sm font-black uppercase text-white"
-          onClick={() => {
-            window.history.back();
-          }}
-          type="button"
-        >
-          Go back
-        </button>
-        <Link
-          className="rounded bg-cyan-600 px-2 py-1 text-sm font-black uppercase text-white"
-          to="/"
-        >
-          Start Over
-        </Link>
-      </p>
     </div>
   );
 }

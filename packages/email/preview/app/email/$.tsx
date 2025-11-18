@@ -11,20 +11,21 @@ import { useSendDialog } from "../../components/use-send-dialog";
 import { useSource } from "../../components/use-source";
 import { getTemplateNames } from "../../lib/emails";
 
-export const Route = createFileRoute("/email/$templateName")({
+export const Route = createFileRoute("/email/$")({
   component: RouteComponent,
   beforeLoad: ({ params }) => {
+    const slug = params._splat || "";
     // Validate template name at route level
     const validTemplates = getTemplateNames();
-    const isValidTemplate = validTemplates.includes(params.templateName);
+    const isValidTemplate = validTemplates.includes(slug);
 
     if (!isValidTemplate) {
       // Redirect to first valid template
       const firstTemplate = validTemplates[0];
       if (firstTemplate) {
         throw redirect({
-          to: "/email/$templateName",
-          params: { templateName: firstTemplate },
+          to: "/email/$",
+          params: { _splat: firstTemplate },
         });
       }
     }
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/email/$templateName")({
 });
 
 function RouteComponent() {
-  const { templateName } = Route.useParams();
+  const { _splat: slug = "" } = Route.useParams();
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
   const [width, setWidth] = useState(375);
   const [height, setHeight] = useState(667);
@@ -49,17 +50,17 @@ function RouteComponent() {
     }
   }, [viewMode]);
 
-  const { html, loading } = useRender(templateName);
-  const { source, loading: sourceLoading } = useSource(templateName);
+  const { html, loading } = useRender(slug);
+  const { source, loading: sourceLoading } = useSource(slug);
   const { send, sending } = useSend();
   const { lastEmail, saveLastEmail } = useLastEmail();
-  const sendDialog = useSendDialog(templateName);
+  const sendDialog = useSendDialog(slug);
 
   const handleSend = async () => {
-    if (!sendDialog.testEmail || !templateName) return;
+    if (!sendDialog.testEmail || !slug) return;
 
     try {
-      await send(templateName, sendDialog.testEmail, sendDialog.subject || undefined);
+      await send(slug, sendDialog.testEmail, sendDialog.subject || undefined);
       saveLastEmail(sendDialog.testEmail);
       sendDialog.closeDialog();
       toast.success(`Email sent to ${sendDialog.testEmail}`);
@@ -78,7 +79,7 @@ function RouteComponent() {
         onSendTestClick={sendDialog.openDialog}
         onViewModeChange={setViewMode}
         onWidthChange={setWidth}
-        templateName={templateName}
+        templateName={slug}
         viewMode={viewMode}
         width={width}
       />
@@ -103,7 +104,7 @@ function RouteComponent() {
         open={sendDialog.open}
         sending={sending}
         subject={sendDialog.subject}
-        templateName={templateName}
+        templateName={slug}
         testEmail={sendDialog.testEmail}
       />
     </>

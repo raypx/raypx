@@ -2,6 +2,7 @@ import { boolean, index, integer, text, timestamp, uuid } from "drizzle-orm/pg-c
 import { createInsertSchema } from "drizzle-zod";
 import { uuidv7 } from "../utils";
 import { pgTable } from "./_table";
+import { organization } from "./organizations";
 
 export const user = pgTable(
   "user",
@@ -166,22 +167,6 @@ export const apikey = pgTable(
   },
   (table) => [index("idx_apikey_user_id").on(table.userId), index("idx_apikey_key").on(table.key)],
 );
-
-export const organization = pgTable("organization", {
-  id: uuid("id")
-    .primaryKey()
-    .$defaultFn(() => uuidv7()),
-  name: text("name").notNull(),
-  slug: text("slug").unique(),
-  logo: text("logo"),
-  createdAt: timestamp("created_at")
-    .notNull()
-    .$defaultFn(() => /* @__PURE__ */ new Date()),
-  updatedAt: timestamp("updated_at")
-    .notNull()
-    .$onUpdateFn(() => /* @__PURE__ */ new Date()),
-  metadata: text("metadata"),
-});
 
 export const member = pgTable("member", {
   id: uuid("id")

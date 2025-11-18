@@ -39,9 +39,6 @@
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
     "update:deps": "pnpm update --recursive --interactive --latest"
   },
-  "dependencies": {
-    "@tanstack/react-table": "^8.21.3"
-  },
   "devDependencies": {
     "@biomejs/biome": "catalog:dev",
     "@changesets/cli": "^2.29.7",
@@ -49,7 +46,7 @@
     "@raypx/scripts": "workspace:*",
     "@turbo/gen": "^2.6.1",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "^4.0.9",
+    "@vitest/coverage-v8": "^4.0.10",
     "jsdom": "^27.2.0",
     "lefthook": "catalog:dev",
     "rimraf": "catalog:",

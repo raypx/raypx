@@ -1,3 +1,4 @@
+import { initSentryClient } from "@raypx/analytics/sentry/client";
 import type { AppRouter } from "@raypx/trpc";
 import { TRPCProvider } from "@raypx/trpc/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -6,8 +7,8 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { createTRPCClient, httpBatchStreamLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
+import { NotFound } from "@/components/not-found";
 import { DefaultCatchBoundary } from "./components/default-catch-boundary";
-import { NotFound } from "./components/not-found";
 import env from "./env";
 import { routeTree } from "./routeTree.gen";
 
@@ -62,6 +63,13 @@ export const getRouter = () => {
       );
     },
   });
+
+  // Initialize Sentry (client-side only)
+  if (!router.isServer) {
+    initSentryClient({
+      router,
+    });
+  }
 
   setupRouterSsrQueryIntegration({
     router,

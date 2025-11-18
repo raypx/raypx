@@ -1,45 +1,46 @@
-import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+
+async function fetchSource(templateName: string): Promise<string> {
+  const response = await fetch("/api/source", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      templateName,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || "Failed to fetch source");
+  }
+
+  return result.source || "";
+}
 
 export function useSource(selectedTemplate: string) {
-  const [source, setSource] = useState("");
-  const [loading, setLoading] = useState(false);
+  const {
+    data: source = "",
+    isLoading,
+    isFetching,
+    error,
+  } = useQuery({
+    queryKey: ["source", selectedTemplate],
+    queryFn: () => fetchSource(selectedTemplate),
+    enabled: !!selectedTemplate,
+    placeholderData: keepPreviousData, // Keep previous data while fetching new data
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    if (!selectedTemplate) {
-      setSource("");
-      return;
-    }
+  // Return error message if there's an error
+  const errorSource = error
+    ? `// Error loading source: ${error instanceof Error ? error.message : String(error)}`
+    : "";
 
-    const fetchSource = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/source", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            templateName: selectedTemplate,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || "Failed to fetch source");
-        }
-
-        setSource(result.source || "");
-      } catch (error) {
-        console.error("Failed to fetch source:", error);
-        setSource(`// Error loading source: ${error}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSource();
-  }, [selectedTemplate]);
-
-  return { source, loading };
+  return {
+    source: errorSource || source,
+    loading: isLoading || isFetching,
+  };
 }
