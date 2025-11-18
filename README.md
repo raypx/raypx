@@ -67,7 +67,7 @@ raypx/
 │   ├── docs/         # Fumadocs documentation site
 │   └── server/       # Server utilities
 │
-├── packages/         # 14 shared packages
+├── packages/         # 13 shared packages
 │   ├── analytics/    # Analytics integration
 │   ├── auth/         # Authentication system
 │   ├── bundler/      # Build utilities
@@ -80,8 +80,7 @@ raypx/
 │   ├── shared/       # Shared utilities
 │   ├── trpc/         # Type-safe API layer
 │   ├── tsconfig/     # TypeScript configurations
-│   ├── ui/           # UI component library (60+ components)
-│   └── validators/   # Zod schemas
+│   └── ui/           # UI component library (60+ components)
 │
 └── tooling/          # Development tools
 ```

@@ -22,6 +22,10 @@
     "check": "biome check",
     "clean": "raypx-scripts clean",
     "coverage": "vitest --coverage",
+    "db:generate": "pnpm --filter @raypx/db generate",
+    "db:migrate": "pnpm --filter @raypx/db migrate",
+    "db:push": "pnpm --filter @raypx/db push",
+    "db:studio": "pnpm --filter @raypx/db studio",
     "dev": "turbo --filter=web dev",
     "docs:dev": "turbo dev --filter docs",
     "email-preview": "turbo email-preview --filter=@raypx/email",
@@ -29,15 +33,14 @@
     "preinstall": "npx only-allow pnpm",
     "postinstall": "raypx-scripts postinstall",
     "setup": "raypx-scripts setup",
-    "db:generate": "pnpm --filter @raypx/db generate",
-    "db:migrate": "pnpm --filter @raypx/db migrate",
-    "db:push": "pnpm --filter @raypx/db push",
-    "db:studio": "pnpm --filter @raypx/db studio",
     "shadcn": "pnpm --filter web run shadcn && pnpm -w format",
     "test": "vitest",
     "turbo:gen": "pnpm turbo gen",
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
     "update:deps": "pnpm update --recursive --interactive --latest"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "^8.21.3"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:dev",
@@ -60,8 +63,5 @@
   "engines": {
     "node": ">=20",
     "pnpm": ">=10.0.0"
-  },
-  "dependencies": {
-    "@tanstack/react-table": "^8.21.3"
   }
 }

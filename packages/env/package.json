@@ -6,14 +6,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "default": "./dist/index.mjs",
-        "types": "./dist/index.d.mts"
-      },
-      "require": {
-        "default": "./dist/index.cjs",
-        "types": "./dist/index.d.cts"
-      }
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
     }
   },
   "scripts": {

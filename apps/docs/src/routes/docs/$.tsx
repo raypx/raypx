@@ -85,7 +85,7 @@ const clientLoader = browserCollections.docs.createClientLoader({
           sha: "main",
           path: `apps/docs/content/docs/${path}`,
         }}
-        lastUpdate={lastModified}
+        lastUpdate={lastModified as Date}
         tableOfContent={{ enabled: true, style: "clerk" }}
         toc={toc}
       >

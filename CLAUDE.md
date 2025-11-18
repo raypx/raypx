@@ -55,7 +55,7 @@ raypx/
 │   ├── email/        # Email templates
 │   └── server/       # Server utilities
 │
-├── packages/         # 14 shared packages
+├── packages/         # 13 shared packages
 │   ├── auth/         # Better Auth
 │   ├── db/           # Drizzle ORM + PostgreSQL
 │   ├── email/        # React Email
@@ -63,7 +63,6 @@ raypx/
 │   ├── redis/        # Redis client
 │   ├── trpc/         # tRPC API
 │   ├── ui/           # shadcn/ui (60+ components)
-│   ├── validators/   # Zod schemas
 │   ├── analytics/    # Vercel Analytics
 │   ├── i18n/         # Internationalization
 │   └── ...           # Other utilities
