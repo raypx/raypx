@@ -34,7 +34,7 @@
     "postinstall": "raypx-scripts postinstall",
     "setup": "raypx-scripts setup",
     "shadcn": "pnpm --filter web run shadcn && pnpm -w format",
-    "test": "vitest",
+    "test": "turbo test",
     "turbo:gen": "pnpm turbo gen",
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
     "update:deps": "pnpm update --recursive --interactive --latest"

@@ -5,37 +5,27 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "default": "./dist/index.mjs",
-        "types": "./dist/index.d.mts"
-      },
-      "require": {
-        "default": "./dist/index.cjs",
-        "types": "./dist/index.d.cts"
-      }
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
     },
     "./vite": {
-      "import": {
-        "default": "./dist/vite/index.mjs",
-        "types": "./dist/vite/index.d.mts"
-      },
-      "require": {
-        "default": "./dist/vite/index.cjs",
-        "types": "./dist/vite/index.d.cts"
-      }
+      "types": "./dist/vite/index.d.mts",
+      "import": "./dist/vite/index.mjs",
+      "require": "./dist/vite/index.cjs"
     },
     "./types": "./types.d.ts",
     "./client": "./src/client.ts",
     "./envs": "./src/envs.ts",
     "./middleware": {
+      "types": "./dist/middleware.d.ts",
       "require": "./dist/middleware.cjs",
-      "import": "./dist/middleware.mjs",
-      "types": "./dist/middleware.d.ts"
+      "import": "./dist/middleware.mjs"
     },
     "./router": {
+      "types": "./dist/router.d.ts",
       "require": "./dist/router.cjs",
-      "import": "./dist/router.mjs",
-      "types": "./dist/router.d.ts"
+      "import": "./dist/router.mjs"
     }
   },
   "main": "./dist/index.js",
@@ -43,7 +33,7 @@
   "scripts": {
     "build": "tsdown",
     "clean": "rimraf dist .turbo",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch"
   },
   "dependencies": {

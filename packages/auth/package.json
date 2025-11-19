@@ -11,7 +11,7 @@
   },
   "scripts": {
     "clean": "rimraf .turbo",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch"
   },
   "dependencies": {

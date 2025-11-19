@@ -10,7 +10,7 @@
   },
   "scripts": {
     "clean": "rm -rf .turbo",
-    "test": "vitest",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
