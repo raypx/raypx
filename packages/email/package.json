@@ -2,6 +2,7 @@
   "name": "@raypx/email",
   "version": "0.0.1",
   "type": "module",
+  "private": true,
   "exports": {
     ".": "./src/index.ts",
     "./emails": "./src/emails/index.ts",
