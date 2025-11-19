@@ -1,11 +1,11 @@
 # Raypx Project TODO
 
-> **Last Updated:** 2025-01-27
+> **Last Updated:** 2025-11-19
 >
 > This document tracks planned features and improvements for the Raypx project.
 > Mark items as complete by changing `[ ]` to `[x]`.
 >
-> **Overall Completion: 75%** | See [CLAUDE.md](/CLAUDE.md) for architecture details
+> **Overall Completion: 78%** | See [CLAUDE.md](/CLAUDE.md) for architecture details
 
 ## 🔐 Authentication & Authorization (70% Complete)
 
@@ -32,7 +32,7 @@
   - [ ] Device management UI
 
 ### Security
-- [ ] Rate limiting implementation
+- [ ] Rate limiting implementation **Deferred** (will use Cloudflare Turnstile when needed)
   - [ ] Login attempts
   - [ ] API endpoints
   - [x] API key rate limiting (database schema ready)
@@ -275,7 +275,7 @@ All 8 templates built with React Email in `/packages/email/src/emails/`:
 - [ ] API documentation (tRPC auto-generated types)
 - [ ] Component documentation (Storybook or similar)
 - [ ] Database schema documentation
-- [ ] Deployment guide
+- [x] Deployment guide (`/apps/docs/content/docs/vercel-deployment.mdx`) ✅
 
 ### User Documentation
 - [ ] User guide
@@ -299,13 +299,13 @@ All 8 templates built with React Email in `/packages/email/src/emails/`:
 
 ## 💼 Business Features (30% Complete)
 
-### Organization Management (80% Complete)
+### Organization Management (80% Complete - **Deferred**)
 - [x] Database schema (organization, member, invitation tables)
 - [x] Frontend pages (`/apps/web/src/routes/_org/`)
 - [x] Email templates (organization-invite-email)
 - [x] Organization CRUD API
 - [x] Member management API
-- [ ] Invitation flow implementation (create/accept invitations)
+- [ ] Invitation flow implementation (create/accept invitations) **Deferred** (focusing on individual users first)
 
 ### API Key Management (100% Complete) ✅
 - [x] Database schema with rate limiting support
@@ -317,14 +317,14 @@ All 8 templates built with React Email in `/packages/email/src/emails/`:
   - [x] Update API key (name, enabled, rate limits)
   - [x] Delete API key
 
-### Billing & Payments (70% Complete)
+### Billing & Payments (85% Complete)
 - [x] Billing page framework (`/apps/web/src/routes/_org/org.$orgSlug/billing/`)
 - [x] Billing package (`@raypx/billing`)
   - [x] Database schema (subscription, invoice, payment_method)
   - [x] Type definitions and constants
   - [x] Stripe integration
   - [x] Stripe utilities (customer, subscription, checkout, portal)
-  - [x] Webhook handling
+  - [x] Webhook handling (complete implementation with 8 events) ✅
   - [x] tRPC router implementation
 - [x] Stripe integration ✅
   - [x] Stripe client setup
@@ -332,8 +332,12 @@ All 8 templates built with React Email in `/packages/email/src/emails/`:
   - [x] Billing portal integration
   - [x] Subscription management
   - [x] Webhook endpoint (`/api/billing/webhook`)
+  - [x] Stripe API version compatibility (v17 and v18+)
+  - [x] Subscription synchronization
+  - [x] Invoice synchronization
+  - [x] Payment method tracking
 - [ ] Stripe products/prices setup (manual configuration in Stripe Dashboard)
-- [ ] Invoice generation (automatic via Stripe webhooks)
+- [x] Invoice generation (automatic via Stripe webhooks) ✅
 - [ ] Usage tracking
 - [ ] Customer portal UI integration
 

@@ -9,15 +9,40 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@raypx/ui/components/form";
 import { Input } from "@raypx/ui/components/input";
-import { Label } from "@raypx/ui/components/label";
 import { useToast } from "@raypx/ui/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Upload, User } from "lucide-react";
 import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_BASE64_SIZE = 500 * 1024; // 500KB after base64 encoding (roughly 375KB original)
+
+/**
+ * Profile update form schema
+ */
+const profileFormSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(255, "Name is too long"),
+  username: z
+    .string()
+    .trim()
+    .min(1, "Username is required")
+    .max(50, "Username is too long")
+    .nullable()
+    .optional(),
+});
 
 /**
  * Convert image file to base64 data URI with compression
@@ -95,9 +120,17 @@ export function AccountSettings() {
   const user = session?.user;
   const { toast } = useToast();
   const trpc = useTRPC();
-  const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize form with user data
+  const form = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: user?.name ?? "",
+      username: (user as any)?.username ?? "",
+    },
+  });
 
   const updateProfileMutation = useMutation({
     ...trpc.users.updateProfile.mutationOptions(),
@@ -117,11 +150,33 @@ export function AccountSettings() {
     },
   });
 
-  const handleProfileSave = async () => {
-    setIsSaving(true);
-    // TODO: Implement actual profile update
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
+  const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
+    try {
+      // Build update data with only changed fields
+      const updateData: {
+        name?: string;
+        username?: string | null;
+      } = {};
+
+      if (values.name !== user?.name) {
+        updateData.name = values.name;
+      }
+      if (values.username !== (user as any)?.username) {
+        updateData.username = values.username || null;
+      }
+
+      // Only update if there are changes
+      if (Object.keys(updateData).length > 0) {
+        await updateProfileMutation.mutateAsync(updateData);
+      } else {
+        toast({
+          title: "No changes",
+          description: "No changes were made to your profile.",
+        });
+      }
+    } catch (error) {
+      // Error handling is done in updateProfileMutation.onError
+    }
   };
 
   const handleAvatarClick = () => {
@@ -203,45 +258,60 @@ export function AccountSettings() {
             </div>
           </div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input defaultValue={user?.name ?? ""} id="name" placeholder="Enter your full name" />
-          </div>
+          <Form {...form}>
+            <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+              {/* Name */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Username */}
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              defaultValue={(user as any)?.username ?? ""}
-              id="username"
-              placeholder="Enter your username"
-            />
-            <p className="text-xs text-muted-foreground">This is your public display name.</p>
-          </div>
+              {/* Username */}
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your username" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormDescription>This is your public display name.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              defaultValue={user?.email ?? ""}
-              id="email"
-              placeholder="Enter your email"
-              type="email"
-            />
-            <p className="text-xs text-muted-foreground">
-              We'll send a verification email to confirm changes.
-            </p>
-          </div>
+              {/* Email (read-only) */}
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl>
+                  <Input disabled placeholder="Enter your email" type="email" value={user?.email ?? ""} />
+                </FormControl>
+                <FormDescription>
+                  Email changes require verification. Contact support to update your email.
+                </FormDescription>
+              </FormItem>
 
-          <div className="flex gap-2 pt-2">
-            <Button disabled={isSaving} onClick={handleProfileSave}>
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Cancel
-            </Button>
-          </div>
+              <div className="flex gap-2 pt-2">
+                <Button disabled={form.formState.isSubmitting} type="submit">
+                  {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button onClick={() => form.reset()} type="button" variant="outline">
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
 

@@ -5,6 +5,7 @@
     "workspace",
     "development",
     "---Deployment---",
+    "vercel-deployment",
     "hosting/database",
     "hosting/redis",
     "---Authentication---",

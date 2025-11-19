@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@raypx/db": "workspace:*",
-    "@raypx/shared": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/shared": "workspace:*",
     "stripe": "^20.0.0",
     "zod": "catalog:"
   },
