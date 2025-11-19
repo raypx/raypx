@@ -12,13 +12,4 @@ export {
   useAnalyticsConfig,
 } from "./providers";
 export type * from "./types";
-export {
-  isClient,
-  isDev,
-  isProd,
-  isServer,
-  isSSR,
-  logger,
-  runOnClient,
-  runOnServer,
-} from "./utils";
+export { logger } from "./utils";

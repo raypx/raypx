@@ -1,6 +1,7 @@
 import { usePostHog } from "@posthog/react";
+import { isClient } from "@raypx/shared";
 import { useAnalyticsConfig } from "./context";
-import { isClient, logger } from "./utils";
+import { logger } from "./utils";
 
 export function useAnalytics() {
   const config = useAnalyticsConfig();

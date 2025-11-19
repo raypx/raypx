@@ -1,8 +1,9 @@
 import { PostHogProvider as PostHogReactProvider } from "@posthog/react";
 import type { FC, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { isServer } from "@raypx/shared";
 import { useAnalyticsConfig } from "../context";
-import { isServer, logger } from "../utils";
+import { logger } from "../utils";
 import { initPostHog } from "./init";
 
 export const PostHogProvider: FC<{ children: ReactNode }> = ({ children }) => {

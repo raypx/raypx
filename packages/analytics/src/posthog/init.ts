@@ -1,6 +1,7 @@
 import posthog from "posthog-js";
+import { isServer } from "@raypx/shared";
 import { envs } from "../envs";
-import { isServer, logger } from "../utils";
+import { logger } from "../utils";
 
 /**
  * Initialize PostHog client
