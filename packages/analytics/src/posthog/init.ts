@@ -31,14 +31,15 @@ export function initPostHog() {
 
       // Enable in production or debug mode
       loaded: (posthog) => {
+        console.log("posthog loaded", posthog);
         if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
           console.log("[PostHog] Initialized successfully");
         }
       },
 
       // Privacy settings
-      autocapture: false, // Disable automatic event capture for better control
-      capture_pageview: false, // We'll handle pageviews manually
+      autocapture: true, // Disable automatic event capture for better control
+      capture_pageview: true, // We'll handle pageviews manually
       capture_pageleave: true,
 
       // Session recording (optional)
@@ -49,7 +50,7 @@ export function initPostHog() {
       },
 
       // Performance
-      disable_compression: false,
+      disable_compression: true,
 
       // Custom ingestion URL if provided
       ...(env.VITE_PUBLIC_POSTHOG_INGESTION_URL && {

@@ -10,21 +10,16 @@ export const PostHogProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     // Only initialize on client side
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    // Skip if analytics disabled
-    if (env.VITE_PUBLIC_ANALYTICS_DISABLED) {
-      return;
-    }
-
-    // Skip in development unless debug mode is enabled
-    if (env.NODE_ENV !== "production" && !env.VITE_PUBLIC_ANALYTICS_DEBUG) {
+    if (
+      typeof window === "undefined" ||
+      (!import.meta.env.PROD && !env.VITE_PUBLIC_ANALYTICS_DEBUG) ||
+      env.VITE_PUBLIC_ANALYTICS_DISABLED
+    ) {
       return;
     }
 
     const posthogInstance = initPostHog();
+    console.log("posthogInstance", posthogInstance);
     setClient(posthogInstance);
 
     // Cleanup on unmount
