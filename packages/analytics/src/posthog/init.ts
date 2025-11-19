@@ -1,5 +1,5 @@
-import posthog from "posthog-js";
 import { isServer } from "@raypx/shared";
+import posthog from "posthog-js";
 import { envs } from "../envs";
 import { logger } from "../utils";
 

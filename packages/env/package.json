@@ -4,6 +4,8 @@
   "private": true,
   "description": "Environment validation with extends support (forked from @t3-oss/t3-env)",
   "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",

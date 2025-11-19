@@ -12,8 +12,8 @@ import {
   FormMessage,
   PasswordField,
 } from "@raypx/ui/components";
-import { useToast } from "@raypx/ui/hooks/use-toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { useToast } from "@raypx/ui/hooks/use-toast";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -220,9 +220,7 @@ function ResetPasswordPage() {
     <div className="grid w-full gap-6">
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight">Set new password</h1>
-        <p className="text-sm text-muted-foreground">
-          Choose a strong password for your account
-        </p>
+        <p className="text-sm text-muted-foreground">Choose a strong password for your account</p>
       </div>
 
       <Form {...form}>
@@ -281,10 +279,7 @@ function ResetPasswordPage() {
 
       <div className="text-center text-sm">
         Remember your password?{" "}
-        <Link
-          className="font-medium underline underline-offset-4 hover:text-primary"
-          to="/sign-in"
-        >
+        <Link className="font-medium underline underline-offset-4 hover:text-primary" to="/sign-in">
           Sign in
         </Link>
       </div>
@@ -304,4 +299,3 @@ export const Route = createFileRoute("/_auth/reset-password")({
   validateSearch: resetPasswordSearch,
   component: ResetPasswordPage,
 });
-

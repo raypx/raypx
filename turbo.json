@@ -45,7 +45,7 @@
     },
     "test": {
       "cache": true,
-      "dependsOn": [],
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "vitest.config.*",

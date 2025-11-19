@@ -1,7 +1,7 @@
 import { PostHogProvider as PostHogReactProvider } from "@posthog/react";
+import { isServer } from "@raypx/shared";
 import type { FC, ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { isServer } from "@raypx/shared";
 import { useAnalyticsConfig } from "../context";
 import { logger } from "../utils";
 import { initPostHog } from "./init";

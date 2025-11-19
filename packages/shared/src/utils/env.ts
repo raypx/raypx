@@ -71,7 +71,4 @@ export const isBrowser = isClient;
  * Check if running in Node.js environment
  */
 export const isNode =
-  typeof process !== "undefined" &&
-  process.versions != null &&
-  process.versions.node != null;
-
+  typeof process !== "undefined" && process.versions != null && process.versions.node != null;

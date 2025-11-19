@@ -11,8 +11,8 @@ import {
   FormMessage,
   Input,
 } from "@raypx/ui/components";
-import { useToast } from "@raypx/ui/hooks/use-toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { useToast } from "@raypx/ui/hooks/use-toast";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
@@ -61,8 +61,7 @@ function ForgotPasswordPage() {
         toast({
           variant: "destructive",
           title: "Error",
-          description:
-            response.error.message || "Failed to send reset email. Please try again.",
+          description: response.error.message || "Failed to send reset email. Please try again.",
         });
       } else {
         setEmailSent(true);
@@ -91,9 +90,7 @@ function ForgotPasswordPage() {
 
           <div className="space-y-2">
             <h2 className="text-2xl font-bold">Check your email</h2>
-            <p className="text-sm text-muted-foreground">
-              We've sent a password reset link to:
-            </p>
+            <p className="text-sm text-muted-foreground">We've sent a password reset link to:</p>
             <p className="text-sm font-medium">{submittedEmail}</p>
           </div>
         </div>
@@ -115,11 +112,11 @@ function ForgotPasswordPage() {
         <div className="flex flex-col gap-3">
           <Button
             className="w-full"
-            variant="outline"
             onClick={() => {
               setEmailSent(false);
               form.setValue("email", submittedEmail);
             }}
+            variant="outline"
           >
             Send another email
           </Button>
@@ -188,10 +185,7 @@ function ForgotPasswordPage() {
 
       <div className="text-center text-sm">
         Remember your password?{" "}
-        <Link
-          className="font-medium underline underline-offset-4 hover:text-primary"
-          to="/sign-in"
-        >
+        <Link className="font-medium underline underline-offset-4 hover:text-primary" to="/sign-in">
           Sign in
         </Link>
       </div>
