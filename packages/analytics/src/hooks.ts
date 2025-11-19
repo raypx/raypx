@@ -1,21 +1,9 @@
+import { usePostHog } from "@posthog/react";
 import { envs } from "./envs";
-import type { PostHogInstance } from "./types";
 
 export function useAnalytics() {
   const env = envs();
-  let posthog: PostHogInstance | null = null;
-
-  // Try to get PostHog instance if available
-  if (typeof window !== "undefined" && env.VITE_PUBLIC_POSTHOG_KEY) {
-    try {
-      // If PostHog is loaded globally, use it
-      if (window.posthog) {
-        posthog = window.posthog;
-      }
-    } catch (_error) {
-      // Silent fail
-    }
-  }
+  const posthog = usePostHog();
 
   const track = (event: string, properties?: Record<string, unknown>) => {
     if (
@@ -34,8 +22,9 @@ export function useAnalytics() {
       posthog.capture(event, properties);
     }
 
-    // Google Analytics
+    // Google Analytics (仅在启用时发送)
     if (
+      env.VITE_PUBLIC_ENABLE_GA &&
       typeof window !== "undefined" &&
       typeof window.gtag === "function" &&
       env.VITE_PUBLIC_GA_MEASUREMENT_ID
@@ -57,8 +46,12 @@ export function useAnalytics() {
       posthog.identify(userId, properties);
     }
 
-    // Google Analytics
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    // Google Analytics (仅在启用时发送)
+    if (
+      env.VITE_PUBLIC_ENABLE_GA &&
+      typeof window !== "undefined" &&
+      typeof window.gtag === "function"
+    ) {
       window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
         user_id: userId,
         ...properties,
@@ -87,8 +80,12 @@ export function useAnalytics() {
       posthog.setPersonProperties(properties);
     }
 
-    // Google Analytics - set custom parameters
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    // Google Analytics (仅在启用时发送)
+    if (
+      env.VITE_PUBLIC_ENABLE_GA &&
+      typeof window !== "undefined" &&
+      typeof window.gtag === "function"
+    ) {
       window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
         custom_map: properties,
       });
@@ -119,8 +116,12 @@ export function useAnalytics() {
       });
     }
 
-    // Google Analytics
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    // Google Analytics (仅在启用时发送)
+    if (
+      env.VITE_PUBLIC_ENABLE_GA &&
+      typeof window !== "undefined" &&
+      typeof window.gtag === "function"
+    ) {
       window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
         page_path: url || window.location.pathname,
         page_title: title,
@@ -182,6 +183,7 @@ export function useAnalytics() {
     posthog:
       import.meta.env.NODE_ENV === "production" || env.VITE_PUBLIC_ANALYTICS_DEBUG ? posthog : null,
     gtag:
+      env.VITE_PUBLIC_ENABLE_GA &&
       (import.meta.env.NODE_ENV === "production" || env.VITE_PUBLIC_ANALYTICS_DEBUG) &&
       typeof window !== "undefined"
         ? window.gtag

@@ -23,7 +23,7 @@
     "nodemailer": "^7.0.10",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "resend": "^6.4.2",
+    "resend": "^6.5.0",
     "zod": "catalog:"
   },
   "devDependencies": {

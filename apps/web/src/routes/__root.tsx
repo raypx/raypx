@@ -1,4 +1,4 @@
-import { Analytics } from "@raypx/analytics";
+import { AnalyticsProvider } from "@raypx/analytics";
 import { type AnyAuthClient, AuthProvider } from "@raypx/auth";
 import type { AppRouter } from "@raypx/trpc";
 import { Toaster } from "@raypx/ui/components/sonner";
@@ -62,15 +62,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider defaultTheme="system">
-          <AuthProvider navigate={() => {}} redirectTo="/" replace={() => {}}>
-            {children}
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
+        <AnalyticsProvider>
+          <ThemeProvider defaultTheme="system">
+            <AuthProvider navigate={() => {}} redirectTo="/" replace={() => {}}>
+              {children}
+              <Toaster />
+            </AuthProvider>
+          </ThemeProvider>
+        </AnalyticsProvider>
         <Devtools />
         <Scripts />
-        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   );
