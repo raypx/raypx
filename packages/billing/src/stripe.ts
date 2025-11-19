@@ -60,8 +60,9 @@ export const stripeUtils = {
         })
       : { data: [] };
 
-    if (existingCustomers.data.length > 0) {
-      return existingCustomers.data[0]!;
+    const existingCustomer = existingCustomers.data[0];
+    if (existingCustomer) {
+      return existingCustomer;
     }
 
     // Create new customer

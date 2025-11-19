@@ -9,24 +9,20 @@ import {
 } from "@raypx/ui/components/card";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
-import { useToast } from "@raypx/ui/hooks/use-toast";
+import { toast } from "@raypx/ui/components/toast";
 import { Clock, Key, Shield, Smartphone } from "lucide-react";
 import { useState } from "react";
 
 export function SecuritySettings() {
-  const { toast } = useToast();
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [enabling2FA, setEnabling2FA] = useState(false);
   const [generatingBackup, setGeneratingBackup] = useState(false);
-  const [revokingSession, setRevokingSession] = useState(false);
 
   const handlePasswordUpdate = async () => {
     setIsUpdatingPassword(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast({
-      title: "Password updated",
+    toast.success("Password updated", {
       description: "Your password has been updated successfully.",
-      duration: 5000,
     });
     setIsUpdatingPassword(false);
   };
@@ -34,8 +30,7 @@ export function SecuritySettings() {
   const handleEnable2FA = async () => {
     setEnabling2FA(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast({
-      title: "2FA Setup Initiated",
+    toast.info("2FA Setup Initiated", {
       description: "Please scan the QR code with your authenticator app.",
     });
     setEnabling2FA(false);
@@ -44,21 +39,8 @@ export function SecuritySettings() {
   const handleGenerateBackup = async () => {
     setGeneratingBackup(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast({
-      title: "Backup Codes Generated",
-      description: "Save these codes in a secure location.",
-    });
+    toast.info("Backup Codes Generated", { description: "Save these codes in a secure location." });
     setGeneratingBackup(false);
-  };
-
-  const handleRevokeSession = async (sessionId: string) => {
-    setRevokingSession(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast({
-      title: "Session Revoked",
-      description: "The session has been terminated.",
-    });
-    setRevokingSession(false);
   };
 
   return (

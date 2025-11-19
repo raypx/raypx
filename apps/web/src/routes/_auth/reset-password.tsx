@@ -12,8 +12,8 @@ import {
   FormMessage,
   PasswordField,
 } from "@raypx/ui/components";
+import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
-import { useToast } from "@raypx/ui/hooks/use-toast";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,8 +26,7 @@ const resetPasswordSearch = z.object({
   token: z.string().optional(),
   error: z.string().optional(),
 });
-
-type ResetPasswordSearch = z.infer<typeof resetPasswordSearch>;
+type ResetPasswordParams = z.infer<typeof resetPasswordSearch>;
 
 const passwordSchema = z
   .string()
@@ -59,9 +58,8 @@ function ResetPasswordPage() {
   });
 
   const navigate = useNavigate();
-  const { token, error: tokenError } = Route.useSearch();
+  const { token, error: tokenError } = Route.useSearch() as ResetPasswordParams;
   const { auth, redirectTo } = useAuth();
-  const { toast } = useToast();
   const isHydrated = useIsHydrated();
   const { onSuccess } = useOnSuccessTransition({ redirectTo });
 
@@ -79,28 +77,22 @@ function ResetPasswordPage() {
   // Check if token exists
   useEffect(() => {
     if (!token && !tokenError) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Link",
+      toast.error("Invalid Link", {
         description: "No reset token found. Please request a new password reset link.",
       });
     }
 
     if (tokenError) {
-      toast({
-        variant: "destructive",
-        title: "Invalid or Expired Link",
+      toast.error("Invalid or Expired Link", {
         description:
           "This password reset link is invalid or has expired. Please request a new one.",
       });
     }
-  }, [token, tokenError, toast]);
+  }, [token, tokenError]);
 
   async function onSubmit({ password }: FormValues) {
     if (!token) {
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: "Invalid reset token. Please request a new password reset link.",
       });
       return;
@@ -115,30 +107,26 @@ function ResetPasswordPage() {
       });
 
       if (response.error) {
-        toast({
-          variant: "destructive",
-          title: "Reset Failed",
+        toast.error("Reset Failed", {
           description:
             response.error.message ||
             "Failed to reset password. The link may have expired. Please try again.",
         });
       } else {
         setIsSuccess(true);
-        toast({
-          title: "Success!",
+        toast.success("Success!", {
           description: "Your password has been reset successfully.",
         });
 
         // Redirect to sign-in after 3 seconds
         setTimeout(async () => {
+          onSuccess();
           await navigate({ to: "/sign-in" });
         }, 3000);
       }
     } catch (error) {
       console.error("Reset password error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: "An unexpected error occurred. Please try again.",
       });
     } finally {

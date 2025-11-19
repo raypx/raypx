@@ -604,6 +604,9 @@ importers:
       '@raypx/env':
         specifier: workspace:*
         version: link:../env
+      '@raypx/shared':
+        specifier: workspace:*
+        version: link:../shared
       stripe:
         specifier: ^20.0.0
         version: 20.0.0(@types/node@24.10.1)

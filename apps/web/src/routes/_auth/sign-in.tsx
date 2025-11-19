@@ -1,6 +1,5 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAnalytics } from "@raypx/analytics";
 import {
   MagicLinkButton,
   ProviderButton,
@@ -41,7 +40,6 @@ function SignInPage() {
   const isHydrated = useIsHydrated();
   const [isSubmitting] = useState(false);
   const { onSuccess } = useOnSuccessTransition({ redirectTo: redirectTo });
-  const analytics = useAnalytics();
 
   const rememberMeEnabled = credentials?.rememberMe;
   const usernameEnabled = credentials?.username;

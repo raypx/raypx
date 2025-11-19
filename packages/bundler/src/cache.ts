@@ -53,11 +53,12 @@ export type CacheDiff<TConfig extends Record<string, unknown>> = {
 export class Cache<TConfig extends Record<string, unknown>> {
   private cacheFilePath: string;
   private cache: CacheMetadata<TConfig> | null = null;
-  private basePath: string;
 
   constructor(name: string, basePath?: string) {
-    this.basePath = basePath ?? path.join(process.cwd(), ".tanstack");
-    this.cacheFilePath = path.join(this.basePath, `${name}.json`);
+    this.cacheFilePath = path.join(
+      basePath ?? path.join(process.cwd(), ".tanstack"),
+      `${name}.json`,
+    );
   }
 
   /**

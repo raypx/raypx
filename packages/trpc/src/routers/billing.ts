@@ -216,7 +216,7 @@ export const billingRouter = {
         cancelUrl: z.string().url(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       // Ensure exactly one of organizationId or userId is provided
       if (!input.organizationId && !input.userId) {
         throw new Error("Either organizationId or userId must be provided");

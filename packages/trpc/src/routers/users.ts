@@ -296,7 +296,7 @@ export const usersRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
+      const _userId = ctx.session.user.id;
 
       try {
         // Use Better Auth API to change password

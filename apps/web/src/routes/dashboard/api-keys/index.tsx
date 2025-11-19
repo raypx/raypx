@@ -139,7 +139,7 @@ function ApiKeysSection() {
     try {
       await navigator.clipboard.writeText(text);
       toast.success("Copied to clipboard!");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to copy to clipboard");
     }
   };
@@ -195,122 +195,120 @@ function ApiKeysSection() {
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            Active API Keys
-          </CardTitle>
-          <CardDescription>
-            {apiKeys.length} active key{apiKeys.length !== 1 ? "s" : ""}
-          </CardDescription>
-          <CardAction>
-            <Dialog
-              onOpenChange={(open) => {
-                setIsCreateDialogOpen(open);
-                if (!open) {
-                  // Reset form state when dialog closes
-                  setNewlyCreatedKey(null);
-                  setNewKeyName("");
-                }
-              }}
-              open={isCreateDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button className="gap-2" size="sm">
-                  <Plus className="h-4 w-4" />
-                  Create New Key
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New API Key</DialogTitle>
-                  <DialogDescription>Generate a new API key for your application</DialogDescription>
-                </DialogHeader>
+    <Card>
+      <CardHeader className="border-b">
+        <CardTitle className="flex items-center gap-2">
+          <Key className="h-5 w-5" />
+          Active API Keys
+        </CardTitle>
+        <CardDescription>
+          {apiKeys.length} active key{apiKeys.length !== 1 ? "s" : ""}
+        </CardDescription>
+        <CardAction>
+          <Dialog
+            onOpenChange={(open) => {
+              setIsCreateDialogOpen(open);
+              if (!open) {
+                // Reset form state when dialog closes
+                setNewlyCreatedKey(null);
+                setNewKeyName("");
+              }
+            }}
+            open={isCreateDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button className="gap-2" size="sm">
+                <Plus className="h-4 w-4" />
+                Create New Key
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New API Key</DialogTitle>
+                <DialogDescription>Generate a new API key for your application</DialogDescription>
+              </DialogHeader>
 
-                {newlyCreatedKey ? (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-muted rounded-lg border border-green-500/50">
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
-                        ✓ API Key Created Successfully
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Make sure to copy your API key now. You won't be able to see it again!
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 p-2 bg-background rounded text-xs border font-mono">
-                          {newlyCreatedKey}
-                        </code>
-                        <Button
-                          onClick={() => copyToClipboard(newlyCreatedKey)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <Button
-                      className="w-full"
-                      onClick={() => {
-                        setNewlyCreatedKey(null);
-                        setIsCreateDialogOpen(false);
-                      }}
-                    >
-                      Done
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="key-name">Key Name</Label>
-                        <Input
-                          id="key-name"
-                          onChange={(e) => setNewKeyName(e.target.value)}
-                          placeholder="e.g., Production API"
-                          value={newKeyName}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          A descriptive name to identify this key
-                        </p>
-                      </div>
-                    </div>
-                    <DialogFooter>
+              {newlyCreatedKey ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted rounded-lg border border-green-500/50">
+                    <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
+                      ✓ API Key Created Successfully
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Make sure to copy your API key now. You won't be able to see it again!
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 p-2 bg-background rounded text-xs border font-mono">
+                        {newlyCreatedKey}
+                      </code>
                       <Button
-                        onClick={() => {
-                          setIsCreateDialogOpen(false);
-                          setNewKeyName("");
-                          setNewlyCreatedKey(null);
-                        }}
+                        onClick={() => copyToClipboard(newlyCreatedKey)}
+                        size="sm"
                         variant="outline"
                       >
-                        Cancel
+                        <Copy className="h-4 w-4" />
                       </Button>
-                      <Button disabled={createKeyMutation.isPending} onClick={handleCreateKey}>
-                        {createKeyMutation.isPending ? "Creating..." : "Create Key"}
-                      </Button>
-                    </DialogFooter>
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
-            <Button
-              disabled={isFetching}
-              onClick={() => {
-                void refetch();
-              }}
-              size="sm"
-              variant="outline"
-            >
-              {isFetching ? "Refreshing…" : "Refresh"}
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="px-0">{content}</CardContent>
-      </Card>
-    </>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setNewlyCreatedKey(null);
+                      setIsCreateDialogOpen(false);
+                    }}
+                  >
+                    Done
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="key-name">Key Name</Label>
+                      <Input
+                        id="key-name"
+                        onChange={(e) => setNewKeyName(e.target.value)}
+                        placeholder="e.g., Production API"
+                        value={newKeyName}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        A descriptive name to identify this key
+                      </p>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      onClick={() => {
+                        setIsCreateDialogOpen(false);
+                        setNewKeyName("");
+                        setNewlyCreatedKey(null);
+                      }}
+                      variant="outline"
+                    >
+                      Cancel
+                    </Button>
+                    <Button disabled={createKeyMutation.isPending} onClick={handleCreateKey}>
+                      {createKeyMutation.isPending ? "Creating..." : "Create Key"}
+                    </Button>
+                  </DialogFooter>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
+          <Button
+            disabled={isFetching}
+            onClick={() => {
+              void refetch();
+            }}
+            size="sm"
+            variant="outline"
+          >
+            {isFetching ? "Refreshing…" : "Refresh"}
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-0">{content}</CardContent>
+    </Card>
   );
 }
 
@@ -351,7 +349,7 @@ function ApiKeysTable({
     try {
       await navigator.clipboard.writeText(text);
       toast.success("Copied to clipboard!");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to copy to clipboard");
     }
   };

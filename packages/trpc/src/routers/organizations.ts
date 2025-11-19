@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, ne, or, sql } from "@raypx/db";
+import { and, desc, eq, ilike, ne, sql } from "@raypx/db";
 import {
   invitation as Invitation,
   member as Member,
@@ -8,8 +8,8 @@ import {
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";
-import { adminProcedure, protectedProcedure } from "../trpc";
-import { assertExists, assertOwnership, handleDatabaseError } from "../utils/error-handler";
+import { protectedProcedure } from "../trpc";
+import { assertExists, handleDatabaseError } from "../utils/error-handler";
 
 /**
  * Organizations router - handles all organization-related operations
@@ -163,6 +163,10 @@ export const organizationsRouter = {
             metadata: input.metadata,
           })
           .returning();
+
+        if (!org) {
+          throw Errors.databaseError("create organization");
+        }
 
         // Add creator as admin member
         await ctx.db.insert(Member).values({

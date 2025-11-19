@@ -3,7 +3,6 @@
 import { cn } from "@raypx/ui/lib/utils";
 import { Image as UnpicImage, type ImageProps as UnpicImageProps } from "@unpic/react";
 import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
 
 const imageVariants = cva("", {
   variants: {

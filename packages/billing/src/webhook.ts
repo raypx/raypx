@@ -1,3 +1,4 @@
+import { logger } from "@raypx/shared/logger";
 import type { Stripe } from "stripe";
 import { envs } from "./envs";
 import { stripe } from "./stripe";
@@ -20,7 +21,7 @@ export function verifyWebhookSignature(
     }
     return stripe.webhooks.constructEvent(payload, signature, env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error("Webhook signature verification failed:", err);
+    logger.error("Webhook signature verification failed:", err);
     return null;
   }
 }
@@ -79,7 +80,7 @@ export async function handleStripeWebhook(event: Stripe.Event): Promise<void> {
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
       // TODO: Sync subscription to database
-      console.log("Subscription event:", event.type, subscription.id);
+      logger.info("Subscription event:", event.type, subscription.id);
       break;
     }
 
@@ -88,18 +89,18 @@ export async function handleStripeWebhook(event: Stripe.Event): Promise<void> {
     case "invoice.payment_action_required": {
       const invoice = event.data.object as Stripe.Invoice;
       // TODO: Sync invoice to database
-      console.log("Invoice event:", event.type, invoice.id);
+      logger.info("Invoice event:", event.type, invoice.id);
       break;
     }
 
     case "payment_method.attached": {
       const paymentMethod = event.data.object as Stripe.PaymentMethod;
       // TODO: Sync payment method to database
-      console.log("Payment method attached:", paymentMethod.id);
+      logger.info("Payment method attached:", paymentMethod.id);
       break;
     }
 
     default:
-      console.log("Unhandled webhook event type:", event.type);
+      logger.info("Unhandled webhook event type:", event.type);
   }
 }
