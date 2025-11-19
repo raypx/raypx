@@ -23,9 +23,6 @@
     "superjson": "catalog:",
     "zod": "catalog:"
   },
-  "peerDependencies": {
-    "@raypx/analytics": "workspace:*"
-  },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
@@ -35,5 +32,8 @@
     "typescript": "catalog:dev",
     "vite": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@raypx/analytics": "workspace:*"
   }
 }

@@ -289,15 +289,42 @@ VITE_PUBLIC_ENABLE_GA=true
 
 ## 🐛 Debugging
 
-Development environment debugging:
+### Development Mode
+
+Enable debugging in development to see all analytics events in console:
 
 ```bash
-# Enable debug mode (output logs in development)
+# Enable debug mode (logs all events in development)
 VITE_PUBLIC_ANALYTICS_DEBUG=true
 
 # Enable Sentry in development
 VITE_SENTRY_ENABLE_DEV=true
 ```
+
+### Working Without PostHog Key
+
+The analytics package is designed to work gracefully without PostHog configured:
+
+**✅ What happens:**
+- PostHog initialization is skipped with a warning
+- All `analytics.track()` calls work without errors
+- Events are logged in debug mode but not sent
+- Google Analytics and Vercel Analytics still work if configured
+
+**🔧 Debug mode without keys:**
+```bash
+# See what events would be tracked
+VITE_PUBLIC_ANALYTICS_DEBUG=true
+```
+
+This will log:
+```
+[PostHog] API key not configured, skipping initialization
+[Analytics] Track: button_clicked { location: 'navbar' }
+[Analytics] PostHog not initialized, event not sent: button_clicked
+```
+
+**No configuration required** - you can start using analytics hooks immediately and add keys later when ready for production.
 
 ## 📚 API Reference
 

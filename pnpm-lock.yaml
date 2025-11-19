@@ -485,6 +485,9 @@ importers:
       '@raypx/env':
         specifier: workspace:*
         version: link:../env
+      '@raypx/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@sentry/node':
         specifier: ^10.25.0
         version: 10.25.0

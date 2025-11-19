@@ -1,3 +1,4 @@
+import { useAnalytics } from "@raypx/analytics";
 import { SignedIn, SignedOut, UserButton } from "@raypx/auth";
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button, buttonVariants } from "@raypx/ui/components/button";
@@ -44,6 +45,7 @@ export function Navbar({ scroll }: NavBarProps) {
   const scrolled = useScroll(50);
   const [mounted, setMounted] = useState(false);
   const location = useLocation();
+  const analytics = useAnalytics();
 
   useEffect(() => {
     setMounted(true);
@@ -109,12 +111,30 @@ export function Navbar({ scroll }: NavBarProps) {
               <div className="flex items-center gap-x-4">
                 <SignedOut>
                   <Link to="/sign-in">
-                    <Button size="sm" variant="outline">
+                    <Button
+                      onClick={() => {
+                        analytics.track("navbar_login_clicked", {
+                          location: "navbar",
+                          page: location.pathname,
+                        });
+                      }}
+                      size="sm"
+                      variant="outline"
+                    >
                       Login
                     </Button>
                   </Link>
                   <Link to="/sign-up">
-                    <Button size="sm" variant="default">
+                    <Button
+                      onClick={() => {
+                        analytics.track("navbar_signup_clicked", {
+                          location: "navbar",
+                          page: location.pathname,
+                        });
+                      }}
+                      size="sm"
+                      variant="default"
+                    >
                       Sign Up
                     </Button>
                   </Link>
