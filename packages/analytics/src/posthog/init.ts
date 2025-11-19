@@ -1,5 +1,6 @@
 import posthog from "posthog-js";
 import { envs } from "../envs";
+import { isServer, logger } from "../utils";
 
 /**
  * Initialize PostHog client
@@ -7,7 +8,7 @@ import { envs } from "../envs";
  */
 export function initPostHog() {
   // Skip if running on server
-  if (typeof window === "undefined") {
+  if (isServer) {
     return null;
   }
 
@@ -15,7 +16,7 @@ export function initPostHog() {
 
   // Skip if no API key configured
   if (!env.VITE_PUBLIC_POSTHOG_KEY) {
-    console.warn("[PostHog] API key not configured, skipping initialization");
+    logger.warn("PostHog API key not configured, skipping initialization");
     return null;
   }
 
@@ -30,10 +31,9 @@ export function initPostHog() {
       ui_host: env.VITE_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
 
       // Enable in production or debug mode
-      loaded: (posthog) => {
-        console.log("posthog loaded", posthog);
+      loaded: () => {
         if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-          console.log("[PostHog] Initialized successfully");
+          logger.info("PostHog initialized successfully");
         }
       },
 
@@ -60,7 +60,7 @@ export function initPostHog() {
 
     return posthog;
   } catch (error) {
-    console.error("[PostHog] Failed to initialize:", error);
+    logger.error("PostHog failed to initialize:", error);
     return null;
   }
 }
@@ -69,7 +69,7 @@ export function initPostHog() {
  * Get PostHog instance
  */
 export function getPostHog() {
-  if (typeof window === "undefined") {
+  if (isServer) {
     return null;
   }
   return posthog.__loaded ? posthog : null;

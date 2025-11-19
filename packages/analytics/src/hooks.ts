@@ -1,188 +1,198 @@
 import { usePostHog } from "@posthog/react";
-import { logger } from "@raypx/shared/logger";
-import { envs } from "./envs";
+import { useAnalyticsConfig } from "./context";
+import { isClient, logger } from "./utils";
 
 export function useAnalytics() {
-  const env = envs();
+  const config = useAnalyticsConfig();
   const posthog = usePostHog();
-  const isProd = import.meta.env.PROD;
-  console.log("isProd", isProd);
-  const isDisabled =
-    env.VITE_PUBLIC_ANALYTICS_DISABLED || (!isProd && !env.VITE_PUBLIC_ANALYTICS_DEBUG);
-  console.log("isDisabled", isDisabled);
 
   const track = (event: string, properties?: Record<string, unknown>) => {
-    logger.info("track1", event, properties);
-    logger.info(`VITE_PUBLIC_ANALYTICS_DISABLED: ${env.VITE_PUBLIC_ANALYTICS_DISABLED}`);
-    logger.info(`NODE_ENV: ${import.meta.env.PROD}`);
-    logger.info(`VITE_PUBLIC_ANALYTICS_DEBUG: ${env.VITE_PUBLIC_ANALYTICS_DEBUG}`);
-    if (isDisabled) {
+    // Check if analytics is globally disabled
+    if (!config.enabled) {
+      if (config.debug) {
+        logger.debug("[Analytics] Tracking disabled globally");
+      }
       return;
     }
-    logger.info("track2", event, properties);
 
-    if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-      console.debug("[Analytics] Track:", event, properties);
+    if (config.debug) {
+      logger.debug("[Analytics] Track:", event, properties);
     }
-    logger.info("track3", event, properties);
 
-    // PostHog (safe call - won't error if not initialized)
-    try {
-      logger.info("track4", event, properties);
-      console.log("posthog capture", posthog?.capture);
-      if (posthog?.capture) {
-        posthog.capture(event, properties);
-      } else if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-        console.debug("[Analytics] PostHog not initialized, event not sent:", event);
+    // PostHog tracking
+    if (config.posthog.enabled) {
+      try {
+        if (posthog?.capture) {
+          posthog.capture(event, properties);
+        } else if (config.debug) {
+          logger.debug("[Analytics] PostHog not initialized, event not sent:", event);
+        }
+      } catch (error) {
+        logger.warn("[Analytics] PostHog track error:", error);
       }
-    } catch (error) {
-      console.warn("[Analytics] PostHog track error:", error);
     }
 
-    // Google Analytics (仅在启用时发送)
-    if (
-      env.VITE_PUBLIC_ENABLE_GA &&
-      typeof window !== "undefined" &&
-      typeof window.gtag === "function" &&
-      env.VITE_PUBLIC_GA_MEASUREMENT_ID
-    ) {
-      window.gtag("event", event, {
-        ...properties,
-        send_to: env.VITE_PUBLIC_GA_MEASUREMENT_ID,
-      });
+    // Google Analytics tracking
+    if (config.ga.enabled) {
+      try {
+        if (isClient && typeof window.gtag === "function") {
+          window.gtag("event", event, {
+            ...properties,
+            send_to: config.ga.measurementId,
+          });
+        }
+      } catch (error) {
+        logger.warn("[Analytics] GA track error:", error);
+      }
     }
   };
 
   const identify = (userId: string, properties?: Record<string, unknown>) => {
-    if (isDisabled) {
+    if (!config.enabled) {
       return;
     }
 
-    if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-      console.debug("[Analytics] Identify:", userId, properties);
+    if (config.debug) {
+      logger.debug("[Analytics] Identify:", userId, properties);
     }
 
-    // PostHog (safe call)
-    try {
-      if (posthog?.identify) {
-        posthog.identify(userId, properties);
+    // PostHog identify
+    if (config.posthog.enabled) {
+      try {
+        if (posthog?.identify) {
+          posthog.identify(userId, properties);
+        }
+      } catch (error) {
+        logger.warn("[Analytics] PostHog identify error:", error);
       }
-    } catch (error) {
-      console.warn("[Analytics] PostHog identify error:", error);
     }
 
-    // Google Analytics (仅在启用时发送)
-    if (
-      env.VITE_PUBLIC_ENABLE_GA &&
-      typeof window !== "undefined" &&
-      typeof window.gtag === "function"
-    ) {
-      window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
-        user_id: userId,
-        ...properties,
-      });
+    // Google Analytics identify
+    if (config.ga.enabled) {
+      try {
+        if (isClient && typeof window.gtag === "function") {
+          window.gtag("config", config.ga.measurementId, {
+            user_id: userId,
+            ...properties,
+          });
+        }
+      } catch (error) {
+        logger.warn("[Analytics] GA identify error:", error);
+      }
     }
   };
 
   const reset = () => {
-    if (isDisabled) {
+    if (!config.enabled) {
       return;
     }
 
-    if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-      console.debug("[Analytics] Reset");
+    if (config.debug) {
+      logger.debug("[Analytics] Reset");
     }
 
-    // PostHog (safe call)
-    try {
-      if (posthog?.reset) {
-        posthog.reset();
+    // PostHog reset
+    if (config.posthog.enabled) {
+      try {
+        if (posthog?.reset) {
+          posthog.reset();
+        }
+      } catch (error) {
+        logger.warn("[Analytics] PostHog reset error:", error);
       }
-    } catch (error) {
-      console.warn("[Analytics] PostHog reset error:", error);
     }
   };
 
   const setPersonProperties = (properties: Record<string, unknown>) => {
-    if (isDisabled) {
+    if (!config.enabled) {
       return;
     }
 
-    if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-      console.debug("[Analytics] Set person properties:", properties);
+    if (config.debug) {
+      logger.debug("[Analytics] Set person properties:", properties);
     }
 
-    // PostHog (safe call)
-    try {
-      if (posthog?.setPersonProperties) {
-        posthog.setPersonProperties(properties);
+    // PostHog set properties
+    if (config.posthog.enabled) {
+      try {
+        if (posthog?.setPersonProperties) {
+          posthog.setPersonProperties(properties);
+        }
+      } catch (error) {
+        logger.warn("[Analytics] PostHog setPersonProperties error:", error);
       }
-    } catch (error) {
-      console.warn("[Analytics] PostHog setPersonProperties error:", error);
     }
 
-    // Google Analytics (仅在启用时发送)
-    if (
-      env.VITE_PUBLIC_ENABLE_GA &&
-      typeof window !== "undefined" &&
-      typeof window.gtag === "function"
-    ) {
-      window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
-        custom_map: properties,
-      });
+    // Google Analytics set properties
+    if (config.ga.enabled) {
+      try {
+        if (isClient && typeof window.gtag === "function") {
+          window.gtag("config", config.ga.measurementId, {
+            custom_map: properties,
+          });
+        }
+      } catch (error) {
+        logger.warn("[Analytics] GA setPersonProperties error:", error);
+      }
     }
   };
 
   const group = (groupType: string, groupKey: string, properties?: Record<string, unknown>) => {
-    if (isDisabled) {
+    if (!config.enabled) {
       return;
     }
 
-    if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-      console.debug("[Analytics] Group:", groupType, groupKey, properties);
+    if (config.debug) {
+      logger.debug("[Analytics] Group:", groupType, groupKey, properties);
     }
 
-    // PostHog (safe call)
-    try {
-      if (posthog?.group) {
-        posthog.group(groupType, groupKey, properties);
+    // PostHog group (only PostHog supports this)
+    if (config.posthog.enabled) {
+      try {
+        if (posthog?.group) {
+          posthog.group(groupType, groupKey, properties);
+        }
+      } catch (error) {
+        logger.warn("[Analytics] PostHog group error:", error);
       }
-    } catch (error) {
-      console.warn("[Analytics] PostHog group error:", error);
     }
   };
 
   const pageView = (url?: string, title?: string) => {
-    if (isDisabled) {
+    if (!config.enabled) {
       return;
     }
 
-    if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
-      console.debug("[Analytics] Page view:", url, title);
+    if (config.debug) {
+      logger.debug("[Analytics] Page view:", url, title);
     }
 
-    // PostHog (safe call)
-    try {
-      if (posthog?.capture) {
-        posthog.capture("$pageview", {
-          $current_url: url || window.location.href,
-          title,
-        });
+    // PostHog page view
+    if (config.posthog.enabled) {
+      try {
+        if (posthog?.capture) {
+          posthog.capture("$pageview", {
+            $current_url: url || window.location.href,
+            title,
+          });
+        }
+      } catch (error) {
+        logger.warn("[Analytics] PostHog pageView error:", error);
       }
-    } catch (error) {
-      console.warn("[Analytics] PostHog pageView error:", error);
     }
 
-    // Google Analytics (仅在启用时发送)
-    if (
-      env.VITE_PUBLIC_ENABLE_GA &&
-      typeof window !== "undefined" &&
-      typeof window.gtag === "function"
-    ) {
-      window.gtag("config", env.VITE_PUBLIC_GA_MEASUREMENT_ID, {
-        page_path: url || window.location.pathname,
-        page_title: title,
-      });
+    // Google Analytics page view
+    if (config.ga.enabled) {
+      try {
+        if (isClient && typeof window.gtag === "function") {
+          window.gtag("config", config.ga.measurementId, {
+            page_path: url || window.location.pathname,
+            page_title: title,
+          });
+        }
+      } catch (error) {
+        logger.warn("[Analytics] GA pageView error:", error);
+      }
     }
   };
 
@@ -237,14 +247,12 @@ export function useAnalytics() {
     trackUserAction,
 
     // Raw instances for advanced usage
-    posthog: isProd || env.VITE_PUBLIC_ANALYTICS_DEBUG ? posthog : null,
-    gtag:
-      env.VITE_PUBLIC_ENABLE_GA && !isDisabled && typeof window !== "undefined"
-        ? window.gtag
-        : null,
+    posthog: config.posthog.enabled ? posthog : null,
+    gtag: config.ga.enabled && isClient ? window.gtag : null,
 
     // Utility functions
-    isEnabled: !env.VITE_PUBLIC_ANALYTICS_DISABLED && (isProd || env.VITE_PUBLIC_ANALYTICS_DEBUG),
-    isDebug: env.VITE_PUBLIC_ANALYTICS_DEBUG,
+    isEnabled: config.enabled,
+    isDebug: config.debug,
+    config,
   };
 }

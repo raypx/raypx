@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/react";
 import type { Integration } from "../sentry";
+import { logger } from "../utils";
 import { getSentryConfig } from "./shared";
 
 /**
@@ -16,7 +17,7 @@ export function initSentryClient({
   const config = getSentryConfig();
 
   if (!config.dsn) {
-    console.warn("[Sentry] DSN not configured, skipping client initialization");
+    logger.warn("Sentry DSN not configured, skipping client initialization");
     return Sentry;
   }
 
@@ -45,7 +46,7 @@ export function initSentryClient({
   try {
     Sentry.init(sentryConfig);
   } catch (error) {
-    console.warn("[Sentry] Failed to initialize client:", error);
+    logger.warn("Sentry failed to initialize client:", error);
   }
 
   return Sentry;

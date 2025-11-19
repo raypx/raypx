@@ -1,25 +1,33 @@
 import { PostHogProvider as PostHogReactProvider } from "@posthog/react";
 import type { FC, ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { envs } from "../envs";
+import { useAnalyticsConfig } from "../context";
+import { isServer, logger } from "../utils";
 import { initPostHog } from "./init";
 
 export const PostHogProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [client, setClient] = useState<ReturnType<typeof initPostHog>>(null);
-  const env = envs();
+  const config = useAnalyticsConfig();
 
   useEffect(() => {
     // Only initialize on client side
-    if (
-      typeof window === "undefined" ||
-      (!import.meta.env.PROD && !env.VITE_PUBLIC_ANALYTICS_DEBUG) ||
-      env.VITE_PUBLIC_ANALYTICS_DISABLED
-    ) {
+    if (isServer) {
       return;
     }
 
+    // Check if PostHog is enabled
+    if (!config.posthog.enabled) {
+      if (config.debug) {
+        logger.info("PostHog disabled by configuration");
+      }
+      return;
+    }
+
+    // Initialize PostHog
     const posthogInstance = initPostHog();
-    console.log("posthogInstance", posthogInstance);
+    if (config.debug && posthogInstance) {
+      logger.info("PostHog instance initialized");
+    }
     setClient(posthogInstance);
 
     // Cleanup on unmount
@@ -29,7 +37,7 @@ export const PostHogProvider: FC<{ children: ReactNode }> = ({ children }) => {
         posthogInstance.reset();
       }
     };
-  }, [env]);
+  }, [config]);
 
   // If no client, just render children without provider
   if (!client) {

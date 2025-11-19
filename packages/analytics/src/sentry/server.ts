@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/tanstackstart-react";
 import type { Integration } from "../sentry";
+import { logger } from "../utils";
 import { getSentryConfig } from "./shared";
 
 /**
@@ -14,13 +15,13 @@ export function initSentryServer({
   const config = getSentryConfig();
 
   if (!config.dsn) {
-    console.warn("[Sentry] DSN not configured, skipping server initialization");
+    logger.warn("Sentry DSN not configured, skipping server initialization");
     return Sentry;
   }
 
   // Check Node.js environment
   if (typeof process === "undefined" || !process.versions?.node) {
-    console.warn("[Sentry] Server-side initialization skipped: Not in Node.js environment");
+    logger.warn("Sentry server-side initialization skipped: Not in Node.js environment");
     return Sentry;
   }
 
@@ -41,7 +42,7 @@ export function initSentryServer({
   try {
     Sentry.init(sentryConfig);
   } catch (error) {
-    console.warn("[Sentry] Failed to initialize server:", error);
+    logger.warn("Sentry failed to initialize server:", error);
   }
 
   return Sentry;
