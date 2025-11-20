@@ -5,7 +5,7 @@ import { ScrollArea } from "@raypx/ui/components/scroll-area";
 import { Separator } from "@raypx/ui/components/separator";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BookOpen, FileText, Home, Key, Settings, Shield, User, Users } from "lucide-react";
+import { BookOpen, CreditCard, FileText, Home, Key, Settings, Shield, User, Users } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 
 /**
@@ -58,6 +58,11 @@ const userMenuItems = [
     title: "API Keys",
     href: "/dashboard/api-keys",
     icon: Key,
+  },
+  {
+    title: "Billing",
+    href: "/dashboard/billing",
+    icon: CreditCard,
   },
   {
     title: "Settings",
