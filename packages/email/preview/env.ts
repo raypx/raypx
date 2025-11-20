@@ -12,7 +12,7 @@ const env = createEnv({
     PORT: z.coerce.number().optional().default(3000),
     VERCEL_URL: z.string().optional(),
   },
-  skip: process.env.NODE_ENV !== "production",
+  skip: process.env.NODE_ENV !== "production" || !!process.env.CI,
 });
 
 export default env;
