@@ -13,9 +13,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@raypx/env": "workspace:*",
+    "@raypx/env": "catalog:",
     "@raypx/shared": "workspace:*",
-    "redis": "^5.9.0",
+    "redis": "^5.10.0",
     "superjson": "catalog:"
   },
   "devDependencies": {

@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@raypx/env": "workspace:*",
+    "@raypx/env": "catalog:",
     "clsx": "^2.1.1",
     "consola": "^3.4.2",
     "dayjs": "^1.11.19",

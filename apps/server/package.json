@@ -14,7 +14,7 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@raypx/env": "workspace:*"
+    "@raypx/env": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

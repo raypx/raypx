@@ -17,14 +17,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@raypx/env": "workspace:*",
+    "@raypx/env": "catalog:",
     "@raypx/shared": "workspace:*",
     "@react-email/render": "^2.0.0",
     "lucide-react": "catalog:",
     "nodemailer": "^7.0.10",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "resend": "^6.5.0",
+    "resend": "^6.5.2",
     "zod": "catalog:"
   },
   "devDependencies": {
