@@ -5,7 +5,7 @@ description: Understand how the Raypx Turborepo is structured and what each pack
 
 ## Monorepo at a Glance
 
-Raypx is a pnpm monorepo orchestrated by Turborepo. It contains **3 applications** and **13 shared packages** that work together to provide a complete full-stack development platform.
+Raypx is a pnpm monorepo orchestrated by Turborepo. It contains **2 applications** and **13 shared packages** that work together to provide a complete full-stack development platform.
 
 ```files
 raypx/
@@ -14,9 +14,8 @@ raypx/
 │   │   ├── src/routes/     # File-based routing
 │   │   ├── src/components/ # React components
 │   │   └── public/         # Static assets
-│   ├── docs/               # Fumadocs documentation site
-│   └── server/             # Server utilities and workers
-├── packages/               # 14 shared packages (see below)
+│   └── docs/               # Fumadocs documentation site
+├── packages/               # 13 shared packages (see below)
 ├── tooling/                # Biome config, TypeScript configs
 └── turbo.json              # Turborepo build pipeline
 ```
@@ -29,7 +28,6 @@ All packages use the `@raypx/*` namespace and are consumed as TypeScript source 
 |-----|-------------|------|------|
 | **web** | Main TanStack Start app with auth, UI, and API | 3000 | TanStack Start, React 19 |
 | **docs** | Documentation site powered by Fumadocs | 3001 | Fumadocs, Next.js |
-| **server** | Background workers and server utilities | - | Node.js |
 
 ## Packages (13 Total)
 

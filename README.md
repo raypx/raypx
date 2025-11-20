@@ -64,8 +64,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 raypx/
 ├── apps/
 │   ├── web/          # Main TanStack Start application
-│   ├── docs/         # Fumadocs documentation site
-│   └── server/       # Server utilities
+│   └── docs/         # Fumadocs documentation site
 │
 ├── packages/         # 13 shared packages
 │   ├── analytics/    # Analytics integration
