@@ -2,7 +2,7 @@
 
 > **Project:** Raypx - Modern full-stack AI-powered web application platform
 > **Stack:** TanStack Start + React 19 + TypeScript + pnpm monorepo
-> **Last Updated:** 2025-11-12
+> **Last Updated:** 2025-11-20
 
 ## Quick Start
 
@@ -26,7 +26,7 @@ pnpm dev  # http://localhost:3000
 # Development
 pnpm dev              # Start web app
 pnpm docs:dev         # Start docs
-pnpm email:dev        # Email templates
+pnpm email-preview    # Email template preview
 
 # Build & Quality
 pnpm build            # Production build
@@ -51,21 +51,21 @@ pnpm shadcn           # Add UI component
 raypx/
 ├── apps/
 │   ├── web/          # Main TanStack Start app
-│   ├── docs/         # Fumadocs site
-│   ├── email/        # Email templates
-│   └── server/       # Server utilities
+│   └── docs/         # Fumadocs site
 │
-├── packages/         # 13 shared packages
+├── packages/         # 12 shared packages
 │   ├── auth/         # Better Auth
 │   ├── db/           # Drizzle ORM + PostgreSQL
 │   ├── email/        # React Email
-│   ├── env/          # Environment validation
 │   ├── redis/        # Redis client
 │   ├── trpc/         # tRPC API
 │   ├── ui/           # shadcn/ui (60+ components)
-│   ├── analytics/    # Vercel Analytics
-│   ├── i18n/         # Internationalization
-│   └── ...           # Other utilities
+│   ├── analytics/    # Analytics (PostHog, Sentry, Vercel)
+│   ├── billing/      # Stripe integration
+│   ├── bundler/      # Build utilities
+│   ├── cli/          # CLI tools
+│   ├── shared/       # Shared utilities
+│   └── tsconfig/     # TypeScript configs
 └── tooling/          # Dev tools (Biome, etc.)
 ```
 
@@ -376,6 +376,11 @@ Control the order of documentation pages using `meta.json` in the docs directory
 ---
 
 ## Recent Changes
+
+### 2025-11-20 - Project Structure Updates
+- Removed `apps/server` package (no longer needed)
+- Updated project structure documentation
+- Optimized changeset configuration with custom commit message
 
 ### 2025-11-13 - Documentation Guidelines
 - Added documentation guidelines section to CLAUDE.md

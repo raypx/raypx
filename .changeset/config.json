@@ -1,7 +1,8 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
   "changelog": "@changesets/cli/changelog",
-  "commit": false,
+  "commit": true,
+  "commitMessage": "chore: release version {version}",
   "fixed": [],
   "linked": [],
   "access": "restricted",
