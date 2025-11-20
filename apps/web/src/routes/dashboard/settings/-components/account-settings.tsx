@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@raypx/auth";
 import { useTRPC } from "@raypx/trpc/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
@@ -20,7 +21,6 @@ import {
 } from "@raypx/ui/components/form";
 import { Input } from "@raypx/ui/components/input";
 import { useToast } from "@raypx/ui/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Upload, User } from "lucide-react";
 import { useRef, useState } from "react";
@@ -283,7 +283,11 @@ export function AccountSettings() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your username" {...field} value={field.value ?? ""} />
+                      <Input
+                        placeholder="Enter your username"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
                     </FormControl>
                     <FormDescription>This is your public display name.</FormDescription>
                     <FormMessage />
@@ -295,7 +299,12 @@ export function AccountSettings() {
               <FormItem>
                 <FormLabel>Email Address</FormLabel>
                 <FormControl>
-                  <Input disabled placeholder="Enter your email" type="email" value={user?.email ?? ""} />
+                  <Input
+                    disabled
+                    placeholder="Enter your email"
+                    type="email"
+                    value={user?.email ?? ""}
+                  />
                 </FormControl>
                 <FormDescription>
                   Email changes require verification. Contact support to update your email.

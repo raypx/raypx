@@ -402,10 +402,7 @@ async function handlePaymentMethodAttached(
     let pmType: "card" | "bank_account" | "paypal";
     if (paymentMethod.type === "card") {
       pmType = "card";
-    } else if (
-      paymentMethod.type === "us_bank_account" ||
-      paymentMethod.type === "sepa_debit"
-    ) {
+    } else if (paymentMethod.type === "us_bank_account" || paymentMethod.type === "sepa_debit") {
       pmType = "bank_account";
     } else {
       pmType = "paypal";
