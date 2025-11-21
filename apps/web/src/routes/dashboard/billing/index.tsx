@@ -1,5 +1,5 @@
-import { useTRPC } from "@raypx/trpc/client";
 import { useAuth } from "@raypx/auth/client";
+import { useTRPC } from "@raypx/trpc/client";
 import {
   Badge,
   Button,
@@ -22,22 +22,13 @@ import { toast } from "@raypx/ui/components/toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  Check,
-  Clock,
-  CreditCard,
-  Crown,
-  Database,
-  Download,
-  Rocket,
-  Zap,
-} from "lucide-react";
+import dayjs from "dayjs";
+import { Check, Clock, CreditCard, Crown, Database, Download, Rocket, Zap } from "lucide-react";
 import { useMemo } from "react";
 import { DataTable } from "@/components/data-table";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { formatDate } from "@/lib/dashboard-utils";
-import dayjs from "dayjs";
 
 const plans = [
   {
@@ -227,9 +218,7 @@ function BillingPage() {
       {
         accessorKey: "invoiceNumber",
         header: "Invoice",
-        cell: ({ row }) => (
-          <div className="font-medium">{row.original.invoiceNumber}</div>
-        ),
+        cell: ({ row }) => <div className="font-medium">{row.original.invoiceNumber}</div>,
       },
       {
         accessorKey: "invoiceDate",
@@ -275,14 +264,14 @@ function BillingPage() {
           const invoice = row.original;
           return (
             <Button
-              size="sm"
-              variant="ghost"
               disabled={!invoice.pdfUrl}
               onClick={() => {
                 if (invoice.pdfUrl) {
                   window.open(invoice.pdfUrl, "_blank");
                 }
               }}
+              size="sm"
+              variant="ghost"
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -336,17 +325,18 @@ function BillingPage() {
                         </>
                       )}
                       {subscription.status === "trialing" && subscription.trialEnd && (
-                        <>
-                          Trial ends: {dayjs(subscription.trialEnd).format("MMMM D, YYYY")}
-                        </>
+                        <>Trial ends: {dayjs(subscription.trialEnd).format("MMMM D, YYYY")}</>
                       )}
                       {subscription.cancelAtPeriodEnd && (
-                        <> • Cancels on {dayjs(subscription.currentPeriodEnd).format("MMMM D, YYYY")}</>
+                        <>
+                          {" "}
+                          • Cancels on {dayjs(subscription.currentPeriodEnd).format("MMMM D, YYYY")}
+                        </>
                       )}
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" onClick={handleManageBilling}>
+                <Button onClick={handleManageBilling} variant="outline">
                   Manage Subscription
                 </Button>
               </div>
@@ -382,9 +372,7 @@ function BillingPage() {
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">No active subscription</p>
-              <p className="text-sm text-muted-foreground">
-                Choose a plan below to get started
-              </p>
+              <p className="text-sm text-muted-foreground">Choose a plan below to get started</p>
             </div>
           )}
         </CardContent>
@@ -426,8 +414,8 @@ function BillingPage() {
                   <Button
                     className="w-full"
                     disabled={isCurrent || createCheckoutMutation.isPending}
-                    variant={isCurrent ? "outline" : "default"}
                     onClick={() => handleUpgrade(plan.id, plan.priceId)}
+                    variant={isCurrent ? "outline" : "default"}
                   >
                     {isCurrent
                       ? "Current Plan"
@@ -478,22 +466,22 @@ function BillingPage() {
                 </div>
                 {paymentMethod.isDefault && <Badge variant="default">Default</Badge>}
               </div>
-              <Button variant="outline" onClick={handleManageBilling}>
+              <Button onClick={handleManageBilling} variant="outline">
                 Manage
               </Button>
             </div>
           ) : (
             <EmptyState
-              description="No payment method on file"
-              icon={CreditCard}
-              title="No Payment Method"
               actionLabel={
                 <>
                   <CreditCard className="h-4 w-4 mr-2" />
                   Add Payment Method
                 </>
               }
+              description="No payment method on file"
+              icon={CreditCard}
               onAction={handleManageBilling}
+              title="No Payment Method"
             />
           )}
         </CardContent>
@@ -507,11 +495,7 @@ function BillingPage() {
         </CardHeader>
         <CardContent>
           {invoicesQuery.isPending ? (
-            <DataTable
-              columns={invoiceColumns}
-              data={[]}
-              isLoading={true}
-            />
+            <DataTable columns={invoiceColumns} data={[]} isLoading={true} />
           ) : invoicesQuery.isError ? (
             <ErrorState
               message={invoicesQuery.error?.message || "Failed to load invoices"}
@@ -519,11 +503,7 @@ function BillingPage() {
               retrying={invoicesQuery.isFetching}
             />
           ) : invoices.length === 0 ? (
-            <EmptyState
-              description="No invoices found"
-              icon={Download}
-              title="No Invoices"
-            />
+            <EmptyState description="No invoices found" icon={Download} title="No Invoices" />
           ) : (
             <DataTable columns={invoiceColumns} data={invoices} />
           )}
@@ -532,4 +512,3 @@ function BillingPage() {
     </div>
   );
 }
-
