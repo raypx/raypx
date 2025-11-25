@@ -1,15 +1,6 @@
-import { toast } from "@raypx/ui/components/toast";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { PreviewArea } from "../../components/preview-area";
-import { SendDialog } from "../../components/send-dialog";
-import { Toolbar } from "../../components/toolbar";
-import { useLastEmail } from "../../hooks/use-last";
-import { useRender } from "../../hooks/use-render";
-import { useSend } from "../../hooks/use-send";
-import { useSendDialog } from "../../hooks/use-send-dialog";
-import { useSource } from "../../hooks/use-source";
-import { getTemplateNames } from "../../lib/emails";
+import { Workspace } from "../../components/workspace";
+import { getEmailMenuTree, getTemplateNames } from "../../lib/emails";
 
 export const Route = createFileRoute("/email/$")({
   component: RouteComponent,
@@ -34,79 +25,8 @@ export const Route = createFileRoute("/email/$")({
 
 function RouteComponent() {
   const { _splat: slug = "" } = Route.useParams();
-  const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
-  const [width, setWidth] = useState(375);
-  const [height, setHeight] = useState(667);
-  const [displayMode, setDisplayMode] = useState<"preview" | "tsx">("preview");
+  // Get menuTree directly since parent route loader provides it
+  const menuTree = getEmailMenuTree();
 
-  // Update default dimensions based on view mode
-  useEffect(() => {
-    if (viewMode === "mobile") {
-      setWidth(375);
-      setHeight(667);
-    } else {
-      setWidth(1400);
-      setHeight(800);
-    }
-  }, [viewMode]);
-
-  const { html, loading } = useRender(slug);
-  const { source, loading: sourceLoading } = useSource(slug);
-  const { send, sending } = useSend();
-  const { lastEmail, saveLastEmail } = useLastEmail();
-  const sendDialog = useSendDialog(slug);
-
-  const handleSend = async () => {
-    if (!sendDialog.testEmail || !slug) return;
-
-    try {
-      await send(slug, sendDialog.testEmail, sendDialog.subject || undefined);
-      saveLastEmail(sendDialog.testEmail);
-      sendDialog.closeDialog();
-      toast.success(`Email sent to ${sendDialog.testEmail}`);
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to send email");
-    }
-  };
-
-  return (
-    <>
-      <Toolbar
-        displayMode={displayMode}
-        height={height}
-        onDisplayModeChange={setDisplayMode}
-        onHeightChange={setHeight}
-        onSendTestClick={sendDialog.openDialog}
-        onViewModeChange={setViewMode}
-        onWidthChange={setWidth}
-        templateName={slug}
-        viewMode={viewMode}
-        width={width}
-      />
-
-      <PreviewArea
-        displayMode={displayMode}
-        height={height}
-        html={html}
-        loading={loading}
-        source={source}
-        sourceLoading={sourceLoading}
-        viewMode={viewMode}
-        width={width}
-      />
-
-      <SendDialog
-        lastEmail={lastEmail}
-        onEmailChange={sendDialog.setTestEmail}
-        onOpenChange={sendDialog.handleOpenChange}
-        onSend={handleSend}
-        onSubjectChange={sendDialog.setSubject}
-        open={sendDialog.open}
-        sending={sending}
-        subject={sendDialog.subject}
-        templateName={slug}
-        testEmail={sendDialog.testEmail}
-      />
-    </>
-  );
+  return <Workspace menuTree={menuTree} templateName={slug} />;
 }

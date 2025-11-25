@@ -3,130 +3,162 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogTitle,
 } from "@raypx/ui/components/dialog";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
-import { useTemplatePreview } from "../hooks/use-preview";
+import { toast } from "@raypx/ui/components/toast";
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLastEmail } from "../hooks/use-last";
+import { useSend } from "../hooks/use-send";
 
-type SendDialogProps = {
+interface SendDialogProps {
   open: boolean;
-  templateName: string;
-  testEmail: string;
-  subject: string;
-  lastEmail: string | null;
-  sending: boolean;
   onOpenChange: (open: boolean) => void;
-  onEmailChange: (email: string) => void;
-  onSubjectChange: (subject: string) => void;
-  onSend: () => void;
-};
+  html: string;
+  templateName: string;
+}
 
-export function SendDialog({
-  open,
-  templateName,
-  testEmail,
-  subject,
-  lastEmail,
-  sending,
-  onOpenChange,
-  onEmailChange,
-  onSubjectChange,
-  onSend,
-}: SendDialogProps) {
-  const { defaultSubject } = useTemplatePreview(templateName);
+export function SendDialog({ open, onOpenChange, html: _html, templateName }: SendDialogProps) {
+  const { lastEmail, saveLastEmail } = useLastEmail();
+  const [to, setTo] = useState("");
+  const [from, setFrom] = useState("hello@raypx.com");
+  const [subject, setSubject] = useState("");
+  const { send, sending } = useSend();
+  const [sendStatus, setSendStatus] = useState<"idle" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleApplyLastEmail = () => {
-    if (lastEmail) {
-      onEmailChange(lastEmail);
+  // Pre-fill recipient email when dialog opens
+  useEffect(() => {
+    if (open && lastEmail && !to) {
+      setTo(lastEmail);
+    }
+  }, [open, lastEmail, to]);
+
+  const handleSend = async () => {
+    if (!to) {
+      setErrorMessage("Please enter a recipient email");
+      setSendStatus("error");
+      return;
+    }
+
+    if (!subject) {
+      setErrorMessage("Please enter a subject");
+      setSendStatus("error");
+      return;
+    }
+
+    setSendStatus("idle");
+
+    try {
+      await send(templateName, to, subject);
+      saveLastEmail(to);
+      setSendStatus("success");
+      toast.success(`Email sent to ${to}`);
+      setTimeout(() => {
+        onOpenChange(false);
+        setSendStatus("idle");
+        setTo("");
+        setSubject("");
+      }, 2000);
+    } catch (error) {
+      setSendStatus("error");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to send email");
     }
   };
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogDescription>
-            Send <span className="font-medium text-foreground">{templateName}</span> to a test email
-            address.
-          </DialogDescription>
+          <DialogTitle>Send Test Email</DialogTitle>
+          <DialogDescription>Send "{templateName}" template via Resend</DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="test-email">Recipient Email</Label>
+        {sendStatus !== "idle" && (
+          <div
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+              sendStatus === "success"
+                ? "bg-green-500/10 text-green-400"
+                : "bg-red-500/10 text-red-400"
+            }`}
+          >
+            {sendStatus === "success" ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                <span>Email sent successfully!</span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-4 w-4" />
+                <span>{errorMessage}</span>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {/* From */}
+          <div className="space-y-2">
+            <Label className="text-sm" htmlFor="from">
+              From
+            </Label>
             <Input
-              autoFocus
-              disabled={sending}
-              id="test-email"
-              onChange={(e) => {
-                onEmailChange(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !sending && testEmail) {
-                  onSend();
-                }
-              }}
-              placeholder="test@example.com"
+              id="from"
+              onChange={(e) => setFrom(e.target.value)}
+              placeholder="sender@example.com"
               type="email"
-              value={testEmail}
+              value={from}
+            />
+            <p className="text-xs text-muted-foreground">Use a verified domain email in Resend</p>
+          </div>
+
+          {/* To */}
+          <div className="space-y-2">
+            <Label className="text-sm" htmlFor="to">
+              To
+            </Label>
+            <Input
+              id="to"
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="recipient@example.com"
+              type="email"
+              value={to}
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="email-subject">Subject</Label>
+          {/* Subject */}
+          <div className="space-y-2">
+            <Label className="text-sm" htmlFor="subject">
+              Subject
+            </Label>
             <Input
-              disabled={sending}
-              id="email-subject"
-              onChange={(e) => {
-                onSubjectChange(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !sending && testEmail) {
-                  onSend();
-                }
-              }}
-              placeholder={defaultSubject}
+              id="subject"
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Email subject"
               value={subject}
             />
           </div>
 
-          {/* Last email button */}
-          {lastEmail && lastEmail !== testEmail && (
-            <div className="flex items-center gap-2">
-              <Button
-                className="h-8 text-xs"
-                disabled={sending}
-                onClick={handleApplyLastEmail}
-                type="button"
-                variant="outline"
-              >
-                Use last email: {lastEmail}
-              </Button>
-            </div>
-          )}
-
-          {/* Info message */}
-          <div className="rounded-lg border border-border bg-accent/50 p-3">
-            <p className="text-xs text-accent-foreground">
-              💡 Configure{" "}
-              <code className="rounded-md bg-background px-1.5 py-0.5 text-foreground font-mono">
-                RESEND_API_KEY
-              </code>{" "}
-              or SMTP credentials to send real emails. Otherwise, emails will be logged to console.
-            </p>
+          {/* Actions */}
+          <div className="flex justify-end gap-2 pt-2">
+            <Button onClick={() => onOpenChange(false)} variant="outline">
+              Cancel
+            </Button>
+            <Button disabled={sending || !to || !subject} onClick={handleSend}>
+              {sending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Email"
+              )}
+            </Button>
           </div>
         </div>
-
-        <DialogFooter>
-          <Button disabled={sending} onClick={() => onOpenChange(false)} variant="outline">
-            Cancel
-          </Button>
-          <Button disabled={sending || !testEmail} onClick={onSend}>
-            {sending ? "Sending..." : "Send"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
