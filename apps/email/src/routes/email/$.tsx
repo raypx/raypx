@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { PreviewArea } from "../../components/preview-area";
 import { SendDialog } from "../../components/send-dialog";
 import { Toolbar } from "../../components/toolbar";
-import { useLastEmail } from "../../components/use-last-email";
-import { useRender } from "../../components/use-render";
-import { useSend } from "../../components/use-send";
-import { useSendDialog } from "../../components/use-send-dialog";
-import { useSource } from "../../components/use-source";
+import { useLastEmail } from "../../hooks/use-last";
+import { useRender } from "../../hooks/use-render";
+import { useSend } from "../../hooks/use-send";
+import { useSendDialog } from "../../hooks/use-send-dialog";
+import { useSource } from "../../hooks/use-source";
 import { getTemplateNames } from "../../lib/emails";
 
 export const Route = createFileRoute("/email/$")({

@@ -8,7 +8,7 @@ import {
 } from "@raypx/ui/components/dialog";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
-import { useTemplatePreview } from "./use-template-preview";
+import { useTemplatePreview } from "../hooks/use-preview";
 
 type SendDialogProps = {
   open: boolean;

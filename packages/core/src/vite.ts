@@ -2,32 +2,23 @@ import type { PluginOption } from "vite";
 import type { Config } from "./config";
 import VirtualModule from "./vite/virtual-module";
 
-const VIRTUAL_MODULE_ID = "virtual:@raypx/core/env";
-const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
-
 const virtual = {
-  serverBuild: VirtualModule.create("server-build"),
-  serverManifest: VirtualModule.create("server-manifest"),
-  browserManifest: VirtualModule.create("browser-manifest"),
+  runtimeEnv: VirtualModule.create("runtime-env"),
 };
 
-export function raypxVitePlugin<Env>(config: Config<Env>): PluginOption {
+export function raypxVitePlugin<Env>(_config: Config<Env>): PluginOption {
   return {
     name: "@raypx/vite-plugin",
     enforce: "pre",
-    async configResolved(viteConfig) {
-      //
-      // console.log(config);
-      // console.log(viteConfig);
-    },
     resolveId(id) {
-      if (id === VIRTUAL_MODULE_ID || id === "@raypx/core/env") {
-        return RESOLVED_VIRTUAL_MODULE_ID;
+      if (id === virtual.runtimeEnv.id) {
+        return virtual.runtimeEnv.resolvedId;
       }
       return null;
     },
     async load(id) {
-      if (id === RESOLVED_VIRTUAL_MODULE_ID) {
+      if (id === virtual.runtimeEnv.resolvedId) {
+        return `export const runtimeEnv = ${JSON.stringify({})}`;
         // try {
         //   const content = await readFile(envJsPath, "utf-8");
         //   return content;
@@ -38,10 +29,6 @@ export function raypxVitePlugin<Env>(config: Config<Env>): PluginOption {
         // }
       }
       return null;
-    },
-    configureServer(server) {
-      //
-      // console.log(server);
     },
   };
 }

@@ -2,7 +2,7 @@ import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button } from "@raypx/ui/components/button";
 import { ButtonGroup } from "@raypx/ui/components/button-group";
 import { Code, Computer, Laptop, Smartphone } from "lucide-react";
-import { SizeControl } from "./view-mode-control";
+import { SizeControl } from "./view-mode";
 
 type ToolbarProps = {
   templateName: string;

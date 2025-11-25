@@ -26,21 +26,21 @@ Email templates and sending functionality for Raypx, built with React Email.
 
 ### Start Preview Server
 
-The email preview is a separate TanStack Start application located at `apps/email/`.
+The email preview is a separate TanStack Start application located at `apps/email-preview/`.
 
 From the project root:
 
 ```bash
 # Using the root shortcut
-pnpm email:dev
+pnpm email-preview
 
 # Or directly
-turbo dev --filter=email
+turbo dev --filter=email-preview
 ```
 
 The preview server will start at `http://localhost:3002` and automatically open in your browser.
 
-> **Note:** The preview app is a standalone TanStack Start application. See `apps/email/README.md` for more details.
+> **Note:** The preview app is a standalone TanStack Start application. See `apps/email-preview/README.md` for more details.
 
 ### Sending Test Emails
 

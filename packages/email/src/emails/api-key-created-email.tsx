@@ -26,7 +26,7 @@ const ApiKeyCreatedEmail = ({
   securityTips = true,
 }: ApiKeyCreatedEmailProps) => (
   <EmailLayout preview={`New API Key Created: ${keyName}`}>
-    <Text className="font-bold text-2xl text-gray-800">🔑 New API Key Created</Text>
+    <Text className="font-bold text-2xl text-gray-800">New API Key Created</Text>
 
     <Text className="text-gray-600">Hi {username},</Text>
 

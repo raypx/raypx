@@ -8,8 +8,8 @@ export const Route = createFileRoute("/")({
     const firstTemplate = templates[0];
     if (firstTemplate) {
       throw redirect({
-        to: "/email/$templateName",
-        params: { templateName: firstTemplate },
+        to: "/email/$",
+        params: { _splat: firstTemplate },
         search: { viewMode: "desktop" },
       });
     }

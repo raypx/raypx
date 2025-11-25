@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useTemplatePreview } from "./use-template-preview";
+import { useTemplatePreview } from "./use-preview";
 
 type SendDialogState = {
   open: boolean;

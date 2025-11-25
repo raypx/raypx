@@ -1,7 +1,7 @@
 import { Button } from "@raypx/ui/components/button";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
-import { CodeHighlighter } from "./code-highlighter";
+import { CodeHighlighter } from "./highlighter";
 
 type CodeViewProps = {
   source: string;

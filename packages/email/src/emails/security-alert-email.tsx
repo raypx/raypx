@@ -82,9 +82,7 @@ const SecurityAlertEmail = ({
 
   return (
     <EmailLayout preview={`Security Alert: ${alert.title}`}>
-      <Text className={`font-bold text-2xl ${severityColors[alert.severity]}`}>
-        🔒 Security Alert
-      </Text>
+      <Text className={`font-bold text-2xl ${severityColors[alert.severity]}`}>Security Alert</Text>
 
       <Text className="mt-4 font-semibold text-gray-800 text-xl">{alert.title}</Text>
 

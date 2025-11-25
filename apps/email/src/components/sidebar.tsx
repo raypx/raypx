@@ -18,12 +18,9 @@ import {
   SidebarMenuSubItem,
   Sidebar as UISidebar,
 } from "@raypx/ui/components/sidebar";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { type EmailMenuItem, getEmailMenuTree } from "../lib/emails";
-
-// Get hierarchical menu structure
-const menuTree = getEmailMenuTree();
+import type { EmailMenuItem } from "../lib/emails";
 
 function MenuItem({ item, currentPath }: { item: EmailMenuItem; currentPath: string }) {
   const hasChildren = item.children && item.children.length > 0;
@@ -68,10 +65,12 @@ function MenuItem({ item, currentPath }: { item: EmailMenuItem; currentPath: str
   );
 }
 
-export function Sidebar() {
-  const params = useParams({ strict: false });
-  const currentTemplateName = params._splat || "";
+type SidebarProps = {
+  menuTree: EmailMenuItem[];
+  currentTemplateName: string;
+};
 
+export function Sidebar({ menuTree, currentTemplateName }: SidebarProps) {
   // Find current path from template name
   const findPathByTemplateName = (items: EmailMenuItem[], templateName: string): string => {
     for (const item of items) {

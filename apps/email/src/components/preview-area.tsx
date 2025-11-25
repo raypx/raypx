@@ -1,5 +1,5 @@
-import { CodeView } from "./code-view";
-import { EmailPreview } from "./email-preview";
+import { CodeView } from "./code";
+import { EmailPreview } from "./preview";
 
 type PreviewAreaProps = {
   html: string;

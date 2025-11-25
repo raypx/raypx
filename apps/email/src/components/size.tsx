@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@raypx/ui/components/button";
 import {
   DropdownMenu,

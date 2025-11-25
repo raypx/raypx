@@ -1,7 +1,7 @@
+import { sendEmail } from "@raypx/email";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
 import { createElement } from "react";
-import { sendEmail } from "../../../src/index";
 import env from "../../env";
 import { getEmailTemplate } from "../../lib/emails";
 

@@ -8,7 +8,7 @@ const env = createEnv({
     VERCEL: z.coerce.boolean().optional().default(false),
   },
   server: {
-    PORT: z.coerce.number().optional().default(3000),
+    PORT: z.coerce.number().optional().default(3002),
     VERCEL_URL: z.string().optional(),
   },
   skip: process.env.NODE_ENV !== "production" || !!process.env.CI,

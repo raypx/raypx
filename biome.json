@@ -20,7 +20,8 @@
       "!**/.nitro",
       "!**/.output",
       "!**/coverage",
-      "!**/*.tsbuildinfo"
+      "!**/*.tsbuildinfo",
+      "!**/routeTree.gen.ts"
     ]
   },
   "formatter": {

@@ -1,0 +1,47 @@
+{
+  "name": "email",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "raypx-scripts run vite build",
+    "clean": "rimraf dist .turbo .tanstack .nitro .output",
+    "dev": "raypx-scripts run vite dev",
+    "serve": "raypx-scripts run vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@raypx/config": "workspace:*",
+    "@raypx/email": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "@react-email/render": "^2.0.0",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "lucide-react": "catalog:",
+    "pathe": "^2.0.3",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "catalog:tailwindv4",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "nitro": "catalog:",
+    "shiki": "^3.15.0",
+    "tailwindcss": "catalog:tailwindv4",
+    "tw-animate-css": "catalog:",
+    "typescript": "catalog:dev",
+    "vite": "catalog:",
+    "vite-tsconfig-paths": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@react-email/components": "^1.0.0"
+  }
+}
