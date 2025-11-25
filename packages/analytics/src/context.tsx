@@ -43,10 +43,6 @@ export const AnalyticsConfigProvider: FC<{
           ...baseConfig.vercel,
           ...customConfig.vercel,
         },
-        sentry: {
-          ...baseConfig.sentry,
-          ...customConfig.sentry,
-        },
       };
     }
 

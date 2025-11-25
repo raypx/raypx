@@ -16,7 +16,7 @@ import {
   Rocket,
   Zap,
 } from "lucide-react";
-import Container from "@/components/layout/container";
+import Container from "~/components/layout/container";
 
 type Feature = {
   icon: LucideIcon;

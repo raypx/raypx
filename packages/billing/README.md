@@ -113,7 +113,7 @@ await trpc.billing.cancelSubscription.mutate({
 
 ## Database Schema
 
-The package uses the following database tables (defined in `@raypx/db`):
+The package uses the following database tables (defined in `@raypx/database`):
 
 - `subscription` - Organization subscriptions
 - `invoice` - Billing invoices

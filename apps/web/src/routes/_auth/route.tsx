@@ -1,7 +1,7 @@
 import { AuthLayout } from "@raypx/auth";
 import { Image } from "@raypx/ui/components/image";
 import { createFileRoute, Link, Outlet, useLocation, useMatches } from "@tanstack/react-router";
-import { authRoutes } from "@/config/auth";
+import { authRoutes } from "~/config/auth";
 import { getAuthPageFooter } from "./-components/auth-page-footer";
 import { AuthPageConfigProvider, useAuthPageConfigValue } from "./-hooks/use-auth-page-config";
 

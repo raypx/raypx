@@ -1,0 +1,39 @@
+{
+  "name": "@raypx/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./config": {
+      "types": "./dist/config.d.mts",
+      "import": "./dist/config.mjs"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.mts",
+      "import": "./dist/vite.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "rimraf dist .turbo",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@raypx/env": "catalog:",
+    "esbuild": "^0.27.0",
+    "jiti": "catalog:",
+    "vite": "^7.2.4"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:dev",
+    "vitest": "catalog:"
+  }
+}

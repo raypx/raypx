@@ -23,8 +23,8 @@ import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
 import { MenuIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { navigation } from "@/config/site";
-import { useScroll } from "@/hooks/use-scroll";
+import { navigation } from "~/config/site";
+import { useScroll } from "~/hooks/use-scroll";
 import Container from "./container";
 import { Logo } from "./logo";
 

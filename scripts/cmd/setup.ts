@@ -4,7 +4,9 @@ const setupCmd = defineCommand({
   cmd: "setup",
   description: "Setup project dependencies",
   run: async () => {
-    const tasks = [createTask("pnpm --filter @raypx/db run db:migrate", "Database migration")];
+    const tasks = [
+      createTask("pnpm --filter @raypx/database run db:migrate", "Database migration"),
+    ];
     await runTasks(tasks);
   },
 });

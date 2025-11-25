@@ -1,6 +1,6 @@
 import { auth } from "@raypx/auth/server";
-import { and, desc, eq, ilike, isNull, or, sql } from "@raypx/db";
-import { CreateUserSchema, user as User } from "@raypx/db/schemas";
+import { and, desc, eq, ilike, isNull, or, sql } from "@raypx/database";
+import { CreateUserSchema, user as User } from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";

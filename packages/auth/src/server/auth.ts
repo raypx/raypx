@@ -1,4 +1,4 @@
-import { db, schemas, uuidv7 } from "@raypx/db";
+import { db, schemas, uuidv7 } from "@raypx/database";
 import {
   ResetPasswordEmail,
   SendMagicLinkEmail,
@@ -8,8 +8,16 @@ import {
 } from "@raypx/email";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { admin, apiKey, emailOTP, magicLink, mcp, username } from "better-auth/plugins";
-import { reactStartCookies } from "better-auth/react-start";
+import {
+  admin,
+  apiKey,
+  emailOTP,
+  lastLoginMethod,
+  magicLink,
+  mcp,
+  username,
+} from "better-auth/plugins";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { envs } from "../envs";
 import { features } from "../features";
 import {
@@ -105,7 +113,9 @@ const getPlugins = () => {
     );
   }
 
-  plugins.push(reactStartCookies());
+  plugins.push(lastLoginMethod());
+
+  plugins.push(tanstackStartCookies());
   return plugins;
 };
 
@@ -117,6 +127,9 @@ const createAuthOptions = () => {
       provider: "pg",
       schema: schemas,
     }),
+    experimental: {
+      joins: true,
+    },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false, // Set to true to require email verification
@@ -165,17 +178,13 @@ const createAuthOptions = () => {
     // appName: "Raypx",
     advanced: {
       database: {
-        generateId: () => uuidv7(),
+        generateId: "uuid",
       },
-      // crossSubDomainCookies: {
-      //   enabled: !!env.AUTH_DOMAIN,
-      //   domain: env.AUTH_DOMAIN,
-      // },
       disableOriginCheck: true,
-      cookiePrefix: "auth2",
-      // defaultCookieAttributes: {
-      //   domain: 'localhost:3000',
-      // },
+      defaultCookieAttributes: {
+        domain: process.env.NODE_ENV === "production" ? `.raypx.com` : undefined,
+      },
+      cookiePrefix: "auth",
     },
     user: {
       deleteUser: {

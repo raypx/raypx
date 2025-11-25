@@ -2,7 +2,7 @@ import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenvx from "@dotenvx/dotenvx";
-import { logger, setSilentMode } from "@raypx/shared/logger";
+import { logger, setSilentMode } from "@raypx/logger";
 import { createJiti } from "jiti";
 import yargsParser from "yargs-parser";
 import type { Command } from "./lib/task";

@@ -32,10 +32,10 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Copy, Key, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { DataTable } from "@/components/data-table";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
-import { formatDate } from "@/lib/dashboard-utils";
+import { DataTable } from "~/components/data-table";
+import { EmptyState } from "~/components/empty-state";
+import { ErrorState } from "~/components/error-state";
+import { formatDate } from "~/lib/dashboard-utils";
 
 dayjs.extend(relativeTime);
 

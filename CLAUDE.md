@@ -14,7 +14,7 @@ pnpm install
 cp .env.example .env  # Edit with your config
 
 # Run migrations
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 
 # Start development
 pnpm dev  # http://localhost:3000
@@ -36,9 +36,9 @@ pnpm format           # Format code
 pnpm test             # Run tests
 
 # Database
-pnpm --filter @raypx/db run db:studio    # Database GUI
-pnpm --filter @raypx/db run db:migrate   # Run migrations
-pnpm --filter @raypx/db run db:generate  # Generate migrations
+pnpm --filter @raypx/database run db:studio    # Database GUI
+pnpm --filter @raypx/database run db:migrate   # Run migrations
+pnpm --filter @raypx/database run db:generate  # Generate migrations
 
 # Utilities
 pnpm clean            # Clean artifacts
@@ -238,8 +238,8 @@ pnpm build
 
 ### Database Issues
 ```bash
-pnpm --filter @raypx/db run db:studio   # Inspect DB
-pnpm --filter @raypx/db run db:migrate  # Run migrations
+pnpm --filter @raypx/database run db:studio   # Inspect DB
+pnpm --filter @raypx/database run db:migrate  # Run migrations
 ```
 
 ### TypeScript Errors

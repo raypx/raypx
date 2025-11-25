@@ -50,7 +50,7 @@ cp .env.example .env
 # Edit .env with your configuration
 
 # Run database migrations
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 
 # Start development server
 pnpm dev
@@ -62,13 +62,13 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
 ```bash
 # Open database GUI
-pnpm --filter @raypx/db run db:studio
+pnpm --filter @raypx/database run db:studio
 
 # Generate new migration
-pnpm --filter @raypx/db run db:generate
+pnpm --filter @raypx/database run db:generate
 
 # Run migrations
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 ```
 
 ## Development Workflow
@@ -303,7 +303,7 @@ raypx/
 ### Key Packages
 
 - **@raypx/auth** - Authentication system
-- **@raypx/db** - Database schema and migrations
+- **@raypx/database** - Database schema and migrations
 - **@raypx/trpc** - Type-safe API layer
 - **@raypx/ui** - UI component library
 - **@raypx/billing** - Payment and subscription management

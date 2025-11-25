@@ -5,7 +5,7 @@ import { DropdownMenuItem } from "@raypx/ui/components/dropdown-menu";
 import { Input } from "@raypx/ui/components/input";
 import { Link } from "@tanstack/react-router";
 import { Bell, Search, User } from "lucide-react";
-import { authRoutes } from "@/config/auth";
+import { authRoutes } from "~/config/auth";
 
 interface HeaderProps {
   user: AuthUser;

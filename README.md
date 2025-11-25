@@ -15,7 +15,7 @@ pnpm install
 cp .env.example .env
 
 # Run database migrations
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 
 # Start development server
 pnpm dev
@@ -103,8 +103,8 @@ pnpm test             # Run tests
 pnpm coverage         # Test coverage
 
 # Database
-pnpm --filter @raypx/db run db:studio    # Database GUI
-pnpm --filter @raypx/db run db:migrate   # Run migrations
+pnpm --filter @raypx/database run db:studio    # Database GUI
+pnpm --filter @raypx/database run db:migrate   # Run migrations
 
 # Utilities
 pnpm clean            # Clean build artifacts
@@ -216,7 +216,7 @@ pnpm typecheck
 pnpm build
 
 # Database GUI
-pnpm --filter @raypx/db run db:studio
+pnpm --filter @raypx/database run db:studio
 
 # Add UI component
 pnpm shadcn add button

@@ -4,11 +4,11 @@ import {
   apiKeyClient,
   emailOTPClient,
   genericOAuthClient,
+  lastLoginMethodClient,
   magicLinkClient,
   multiSessionClient,
   oneTapClient,
   organizationClient,
-  passkeyClient,
   twoFactorClient,
   usernameClient,
 } from "better-auth/client/plugins";
@@ -23,7 +23,6 @@ export const auth = createAuthClient({
     adminClient(),
     apiKeyClient(),
     multiSessionClient(),
-    passkeyClient(),
     oneTapClient({
       clientId: "",
     }),
@@ -34,6 +33,7 @@ export const auth = createAuthClient({
     emailOTPClient(),
     twoFactorClient(),
     organizationClient(),
+    lastLoginMethodClient(),
   ],
 });
 

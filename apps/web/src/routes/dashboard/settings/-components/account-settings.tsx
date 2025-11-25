@@ -174,7 +174,7 @@ export function AccountSettings() {
           description: "No changes were made to your profile.",
         });
       }
-    } catch (error) {
+    } catch (_error) {
       // Error handling is done in updateProfileMutation.onError
     }
   };

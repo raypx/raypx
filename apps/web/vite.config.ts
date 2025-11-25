@@ -1,13 +1,16 @@
 import netlify from "@netlify/vite-plugin-tanstack-start";
+import raypx from "@raypx/core/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { createJiti } from "jiti";
 import { nitro } from "nitro/vite";
-import { defineConfig, type PluginOption } from "vite";
+import { fileURLToPath } from "url";
+import { defineConfig, loadEnv, type PluginOption } from "vite";
 import Inspect from "vite-plugin-inspect";
 import tsConfigPaths from "vite-tsconfig-paths";
+import raypxConfig from "./raypx.config";
 
 const tsImport = createJiti(import.meta.url).import;
 
@@ -16,6 +19,11 @@ const env = await tsImport<typeof import("./src/env").default>("./src/env", {
   default: true,
   try: false,
 });
+
+const envDir = fileURLToPath(new URL("../..", import.meta.url));
+const env2 = loadEnv("development", envDir, "");
+
+console.log(env2);
 
 const isDev = env.NODE_ENV === "development";
 
@@ -36,7 +44,6 @@ const deployPlugin = () => {
 export default defineConfig({
   server: {
     port: env.PORT,
-    open: isDev,
   },
   build: {
     chunkSizeWarningLimit: 1000,
@@ -45,6 +52,7 @@ export default defineConfig({
     noExternal: ["urlpattern-polyfill"],
   },
   plugins: [
+    raypx(raypxConfig),
     // Always include for production tree-shaking
     devtools({
       enhancedLogs: { enabled: false },

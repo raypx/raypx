@@ -16,7 +16,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { Logo } from "@/components/layout/logo";
+import { Logo } from "~/components/layout/logo";
 
 /**
  * Get user initials from name or email

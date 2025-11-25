@@ -8,7 +8,7 @@
  */
 
 import { auth, type Session } from "@raypx/auth/server";
-import { db, eq, schemas } from "@raypx/db";
+import { db, eq, schemas } from "@raypx/database";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError, z } from "zod/v4";

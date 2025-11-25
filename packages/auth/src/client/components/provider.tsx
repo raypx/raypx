@@ -62,7 +62,7 @@ export const AuthProvider = ({
           queryFn: auth.listSessions,
           cacheKey: "listSessions",
         }),
-      useListPasskeys: auth.useListPasskeys,
+      // useListPasskeys: auth.useListPasskeys, // Not available in better-auth 1.4.1
       useListApiKeys: () =>
         useAuthData({
           queryFn: auth.apiKey.list,

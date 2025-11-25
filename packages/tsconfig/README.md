@@ -23,7 +23,7 @@ Base TypeScript configuration with strict type checking and modern ES features.
 ### `package-library.json`
 For non-React internal packages (utilities, tools, etc.).
 
-**Best for:** `@raypx/db`, `@raypx/env`, `@raypx/shared`, etc.
+**Best for:** `@raypx/database`, `@raypx/env`, `@raypx/shared`, etc.
 
 **Usage:**
 ```json

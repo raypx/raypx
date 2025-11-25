@@ -25,7 +25,7 @@ description: Learn the day-to-day commands, QA expectations, and collaboration p
 
 3. **Setup database**
    ```bash
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 
 4. **Start development**
@@ -59,9 +59,9 @@ The project uses **type-safe environment variables** via `@raypx/env`:
 | `pnpm test` | Run Vitest unit tests |
 | `pnpm coverage` | Generate HTML coverage reports |
 | `pnpm clean` | Remove build artifacts and caches |
-| `pnpm --filter @raypx/db run db:studio` | Open Drizzle Studio (database GUI) |
-| `pnpm --filter @raypx/db run db:migrate` | Run database migrations |
-| `pnpm --filter @raypx/db run db:generate` | Generate new migration from schema changes |
+| `pnpm --filter @raypx/database run db:studio` | Open Drizzle Studio (database GUI) |
+| `pnpm --filter @raypx/database run db:migrate` | Run database migrations |
+| `pnpm --filter @raypx/database run db:generate` | Generate new migration from schema changes |
 | `pnpm shadcn` | Add shadcn/ui components to @raypx/ui |
 
 ## Coding Standards
@@ -175,16 +175,16 @@ Coverage reports are uploaded to Codecov in CI.
 1. **Modify schema** in `packages/db/src/schemas/`
 2. **Generate migration**:
    ```bash
-   pnpm --filter @raypx/db run db:generate
+   pnpm --filter @raypx/database run db:generate
    ```
 3. **Review migration** in `packages/db/drizzle/`
 4. **Apply migration**:
    ```bash
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 5. **Verify in Drizzle Studio**:
    ```bash
-   pnpm --filter @raypx/db run db:studio
+   pnpm --filter @raypx/database run db:studio
    ```
 
 ### Database Tips

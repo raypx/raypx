@@ -1,7 +1,7 @@
 import { RedirectToSignIn, useAuth } from "@raypx/auth";
 import { createFileRoute } from "@tanstack/react-router";
-import { NotFound } from "@/components/not-found";
-import { Layout } from "@/layouts/dashboard";
+import { NotFound } from "~/components/not-found";
+import { Layout } from "~/layouts/dashboard";
 
 export const Route = createFileRoute("/dashboard")({
   component: AppLayout,

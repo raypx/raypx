@@ -36,7 +36,7 @@ All packages use the `@raypx/*` namespace and are consumed as TypeScript source 
 | Package | Description | Key Features |
 | ------- | ----------- | ------------ |
 | **@raypx/auth** | Authentication system powered by Better Auth | OAuth, Magic Link, Email OTP, 2FA ready |
-| **@raypx/db** | Database layer with Drizzle ORM | PostgreSQL, migrations, Neon adapter |
+| **@raypx/database** | Database layer with Drizzle ORM | PostgreSQL, migrations, Neon adapter |
 | **@raypx/trpc** | Type-safe API layer | tRPC v11, procedures, middleware |
 | **@raypx/redis** | Caching and session storage | Upstash Redis, 18k line cache system |
 | **@raypx/env** | Environment variable validation | Zod schemas, type-safe env vars (137+) |
@@ -117,8 +117,8 @@ turbo dev --filter=docs     # Just docs
 pnpm email-preview          # Email template preview (packages/email)
 
 # Package-specific commands (still use pnpm for non-turbo tasks)
-pnpm --filter @raypx/db run db:studio    # Drizzle Studio
-pnpm --filter @raypx/db run db:migrate   # Run migrations
+pnpm --filter @raypx/database run db:studio    # Drizzle Studio
+pnpm --filter @raypx/database run db:migrate   # Run migrations
 pnpm --filter @raypx/ui run shadcn add button  # Add UI component
 
 # Turborepo filters (for cached tasks)

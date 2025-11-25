@@ -48,7 +48,7 @@ cp .env.example .env
 ```
 
 ```bash title="3. Run database migrations"
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 ```
 
 ```bash title="4. Start the development server"
@@ -73,7 +73,7 @@ The web app runs at `http://localhost:3000` with hot-module reloading and TanSta
 | **Coverage** | `pnpm coverage` | HTML coverage reports |
 | **Build** | `pnpm build` | Full Turborepo production build |
 | **Clean** | `pnpm clean` | Remove build artifacts and caches |
-| **Database** | `pnpm --filter @raypx/db run db:studio` | Drizzle Studio (database GUI) |
+| **Database** | `pnpm --filter @raypx/database run db:studio` | Drizzle Studio (database GUI) |
 | **Add UI component** | `pnpm shadcn` | Add shadcn/ui components |
 
 ## Recommended Workflow

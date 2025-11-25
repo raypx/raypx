@@ -67,11 +67,11 @@ cp .env.example .env.production
    ```
 4. Run database migrations:
    ```bash
-   DATABASE_URL="postgresql://..." pnpm --filter @raypx/db run db:migrate
+   DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:migrate
    ```
 5. Verify database:
    ```bash
-   DATABASE_URL="postgresql://..." pnpm --filter @raypx/db run db:studio
+   DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
    ```
 
 ### Option 2: Vercel Postgres (Easiest)
@@ -89,7 +89,7 @@ cp .env.example .env.production
 5. Run migrations locally (connecting to Vercel Postgres):
    ```bash
    vercel env pull .env.local
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 
 ### Option 3: Any Standard PostgreSQL
@@ -110,7 +110,7 @@ cp .env.example .env.production
 DATABASE_URL="postgresql://..." psql -c "SELECT version();"
 
 # View tables
-DATABASE_URL="postgresql://..." pnpm --filter @raypx/db run db:studio
+DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
 ```
 
 ---
@@ -583,7 +583,7 @@ VITE_SENTRY_DSN=https://xxx@sentry.io/xxx
 
 **Drizzle Studio (Local):**
 ```bash
-DATABASE_URL="postgresql://..." pnpm --filter @raypx/db run db:studio
+DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
 ```
 
 ---

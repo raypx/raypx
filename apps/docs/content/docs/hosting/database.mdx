@@ -39,7 +39,7 @@ Raypx uses **PostgreSQL** as the primary database with **Drizzle ORM** for type-
 
 5. **Run migrations**
    ```bash
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 
 #### Neon Features
@@ -81,7 +81,7 @@ postgresql://user:password@host.neon.tech/dbname?sslmode=require&pgbouncer=true
 
 4. **Run migrations**
    ```bash
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 
 #### Supabase Features
@@ -119,7 +119,7 @@ postgresql://user:password@host.neon.tech/dbname?sslmode=require&pgbouncer=true
 
 5. **Run migrations**
    ```bash
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 
 ### 4. Vercel Postgres
@@ -144,7 +144,7 @@ postgresql://user:password@host.neon.tech/dbname?sslmode=require&pgbouncer=true
 
 4. **Run migrations**
    ```bash
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 
 ### 5. Self-Hosted PostgreSQL
@@ -170,7 +170,7 @@ For self-hosted PostgreSQL (Docker, VPS, etc.):
 
 3. **Run migrations**
    ```bash
-   pnpm --filter @raypx/db run db:migrate
+   pnpm --filter @raypx/database run db:migrate
    ```
 
 ## Environment Configuration
@@ -221,7 +221,7 @@ DATABASE_URL=postgresql://user:password@pooler-host:6543/dbname?sslmode=require
 
 ### Development
 ```bash
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 ```
 
 ### Production
@@ -232,7 +232,7 @@ pnpm --filter @raypx/db run db:migrate
 export DATABASE_URL=your_production_connection_string
 
 # Run migrations
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 ```
 
 #### Option 2: CI/CD Migration
@@ -243,7 +243,7 @@ Add migration step to your deployment pipeline:
 - name: Run migrations
   env:
     DATABASE_URL: ${{ secrets.DATABASE_URL }}
-  run: pnpm --filter @raypx/db run db:migrate
+  run: pnpm --filter @raypx/database run db:migrate
 ```
 
 #### Option 3: Migration Script
@@ -253,7 +253,7 @@ Create a migration script for your hosting platform:
 #!/bin/bash
 # migrate.sh
 export DATABASE_URL=$1
-pnpm --filter @raypx/db run db:migrate
+pnpm --filter @raypx/database run db:migrate
 ```
 
 ## Backup Strategy
@@ -329,7 +329,7 @@ Monitor these key metrics:
 
 ### Tools
 
-- **Drizzle Studio**: `pnpm --filter @raypx/db run db:studio`
+- **Drizzle Studio**: `pnpm --filter @raypx/database run db:studio`
 - **Provider dashboards**: Use hosting provider's monitoring tools
 - **pgAdmin**: PostgreSQL administration tool
 - **PostgreSQL logs**: Check application logs for database errors
@@ -355,7 +355,7 @@ Monitor these key metrics:
 ### Migration Issues
 
 **Error: Migration already applied**
-- Check migration status: `pnpm --filter @raypx/db run db:migrate`
+- Check migration status: `pnpm --filter @raypx/database run db:migrate`
 - Manually verify migration table
 
 **Error: Schema conflicts**

@@ -1,6 +1,8 @@
 # @raypx/analytics
 
-Unified analytics and monitoring toolkit with multiple analytics platforms and error tracking tools.
+Business analytics toolkit with multiple analytics platforms for product insights and user behavior tracking.
+
+> **Note:** For error monitoring and system observability, use [`@raypx/observability`](../observability/README.md) instead.
 
 ## 🚀 Integrated Tools
 
@@ -8,7 +10,6 @@ Unified analytics and monitoring toolkit with multiple analytics platforms and e
 
 | Tool | Purpose | Status |
 |------|---------|--------|
-| **Sentry** | Error monitoring, performance tracking, session replay | ✅ Enabled |
 | **PostHog** | Product analytics, user behavior tracking, A/B testing | ✅ Enabled |
 | **Vercel Analytics** | Basic traffic, performance monitoring (privacy-friendly) | ✅ Enabled |
 
@@ -31,10 +32,6 @@ pnpm add @raypx/analytics
 Configure in your `.env` file:
 
 ```bash
-# ===== Sentry Error Monitoring =====
-VITE_SENTRY_DSN=https://your-sentry-dsn.ingest.sentry.io/xxxxx
-VITE_SENTRY_ENABLE_DEV=false  # Enable Sentry in development
-
 # ===== PostHog Product Analytics =====
 VITE_PUBLIC_POSTHOG_KEY=phc_xxxxxxxxxxxxxxxx
 VITE_PUBLIC_POSTHOG_HOST=https://app.posthog.com
@@ -51,40 +48,7 @@ VITE_PUBLIC_ANALYTICS_DEBUG=false     # Debug mode in development
 
 ## 📖 Usage
 
-### 1. Sentry Error Monitoring
-
-**Client-side initialization:**
-
-```typescript
-import { initSentryClient } from "@raypx/analytics/sentry/client";
-
-// Initialize at app entry point
-const router = createRouter();
-initSentryClient({ router });
-```
-
-**Server-side initialization:**
-
-```typescript
-import { initSentryServer } from "@raypx/analytics/sentry/server";
-
-// Initialize when server starts
-initSentryServer();
-```
-
-**Manual error capture:**
-
-```typescript
-import * as Sentry from "@sentry/react";
-
-try {
-  // Your code
-} catch (error) {
-  Sentry.captureException(error);
-}
-```
-
-### 2. PostHog Product Analytics
+### PostHog Product Analytics
 
 **Setup in your app:**
 
@@ -245,21 +209,23 @@ function MyComponent() {
 
 ## 🔐 Privacy and Compliance
 
-- **Sentry**: Only collects error and performance data, configurable PII filtering
 - **PostHog**: Self-hosting supported, full data control
 - **Vercel Analytics**: No cookies, fully anonymous
 - **Google Analytics**: Disabled by default, enable when needed (consider GDPR compliance)
+
+> **Note:** For error monitoring and privacy controls, see [`@raypx/observability`](../observability/README.md)
 
 ## 🎚️ Tool Selection Guide
 
 ### Current Recommended Configuration (Default)
 
 ```
-✅ Sentry - Error monitoring and performance tracking
 ✅ PostHog - Product analytics and user behavior
 ✅ Vercel Analytics - Lightweight performance monitoring
 ❌ Google Analytics - Disabled by default
 ```
+
+> **Note:** For error monitoring, use [`@raypx/observability`](../observability/README.md) with Sentry
 
 ### When to Enable Google Analytics
 
@@ -296,9 +262,6 @@ Enable debugging in development to see all analytics events in console:
 ```bash
 # Enable debug mode (logs all events in development)
 VITE_PUBLIC_ANALYTICS_DEBUG=true
-
-# Enable Sentry in development
-VITE_SENTRY_ENABLE_DEV=true
 ```
 
 ### Working Without PostHog Key
@@ -346,10 +309,10 @@ Returns an object with the following methods:
 
 ## 🔗 Related Links
 
-- [Sentry Documentation](https://docs.sentry.io/)
 - [PostHog Documentation](https://posthog.com/docs)
 - [Google Analytics Documentation](https://developers.google.com/analytics)
 - [Vercel Analytics Documentation](https://vercel.com/docs/analytics)
+- [`@raypx/observability`](../observability/README.md) - Error monitoring with Sentry
 
 ## 📝 License
 

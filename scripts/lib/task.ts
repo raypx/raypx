@@ -1,4 +1,4 @@
-import { logger } from "@raypx/shared/logger";
+import { logger } from "@raypx/logger";
 import type { Simplify } from "type-fest";
 import { execCommand, formatDuration } from "../utils";
 import type { ExecOptions } from "../utils/exec";

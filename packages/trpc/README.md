@@ -58,7 +58,7 @@ export const myRouter = {
 
 ```typescript
 import { Errors, assertExists } from "@raypx/trpc";
-import { eq } from "@raypx/db";
+import { eq } from "@raypx/database";
 
 export const getUser = publicProcedure
   .input(z.object({ id: z.string() }))

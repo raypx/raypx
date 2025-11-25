@@ -1,10 +1,10 @@
-import { and, desc, eq, ilike, ne, sql } from "@raypx/db";
+import { and, desc, eq, ilike, ne, sql } from "@raypx/database";
 import {
   invitation as Invitation,
   member as Member,
   organization as Organization,
   user as User,
-} from "@raypx/db/schemas";
+} from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";

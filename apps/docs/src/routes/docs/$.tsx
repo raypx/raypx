@@ -5,9 +5,9 @@ import type * as PageTree from "fumadocs-core/page-tree";
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
 import { useMemo } from "react";
-import { getMdxComponents } from "@/components/layout/mdx-components";
-import { baseOptions } from "@/lib/layout.shared";
-import { source } from "@/lib/source";
+import { getMdxComponents } from "~/components/layout/mdx-components";
+import { baseOptions } from "~/lib/layout.shared";
+import { source } from "~/lib/source";
 
 const loader = createServerFn({ method: "GET" })
   .inputValidator((slugs: string[]) => slugs)

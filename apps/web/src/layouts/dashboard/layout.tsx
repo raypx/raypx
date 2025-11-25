@@ -2,7 +2,7 @@ import type { AuthUser } from "@raypx/auth";
 import { Button } from "@raypx/ui/components/button";
 import { Outlet } from "@tanstack/react-router";
 import { HelpCircle } from "lucide-react";
-import { links } from "@/config/site";
+import { links } from "~/config/site";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 

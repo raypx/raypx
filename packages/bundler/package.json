@@ -26,7 +26,6 @@
     "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
-    "tsdown": "catalog:dev",
     "typescript": "catalog:dev",
     "vitest": "catalog:"
   }

@@ -1,7 +1,7 @@
 import { envs } from "./envs";
 
 /**
- * Analytics configuration interface
+ * Analytics configuration interface (business analytics only)
  */
 export interface AnalyticsConfig {
   // Global settings
@@ -34,13 +34,6 @@ export interface AnalyticsConfig {
   // Vercel Analytics settings
   vercel: {
     enabled: boolean;
-  };
-
-  // Sentry settings
-  sentry: {
-    enabled: boolean;
-    dsn?: string;
-    enableInDev: boolean;
   };
 }
 
@@ -90,13 +83,6 @@ export function createAnalyticsConfig(): AnalyticsConfig {
     vercel: {
       enabled: globalEnabled && isProduction,
     },
-
-    // Sentry configuration
-    sentry: {
-      enabled: !!env.VITE_SENTRY_DSN && (isProduction || env.VITE_SENTRY_ENABLE_DEV),
-      dsn: env.VITE_SENTRY_DSN,
-      enableInDev: env.VITE_SENTRY_ENABLE_DEV,
-    },
   };
 }
 
@@ -122,9 +108,5 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
   },
   vercel: {
     enabled: false,
-  },
-  sentry: {
-    enabled: false,
-    enableInDev: false,
   },
 };

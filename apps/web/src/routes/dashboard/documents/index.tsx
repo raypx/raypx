@@ -26,10 +26,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FileText, MoreHorizontal, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { DataTable } from "@/components/data-table";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
-import { formatDate, formatFileSize } from "@/lib/dashboard-utils";
+import { DataTable } from "~/components/data-table";
+import { EmptyState } from "~/components/empty-state";
+import { ErrorState } from "~/components/error-state";
+import { formatDate, formatFileSize } from "~/lib/dashboard-utils";
 
 type DocumentListItem = {
   id: string;

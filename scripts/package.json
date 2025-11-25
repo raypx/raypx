@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.51.1",
-    "@raypx/shared": "workspace:*",
+    "@raypx/logger": "^0.1.0",
     "fast-glob": "^3.3.3",
     "fs-extra": "catalog:",
     "jiti": "catalog:",

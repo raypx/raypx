@@ -7,7 +7,7 @@
 
 import { usePostHog } from "@raypx/analytics";
 import { Button } from "@raypx/ui/components/button";
-import { usePageTracking, useTrackAction } from "@/hooks/useTracking";
+import { usePageTracking, useTrackAction } from "~/hooks/useTracking";
 
 export function AnalyticsExample() {
   // Method 1: Use custom tracking hooks

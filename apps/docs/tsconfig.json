@@ -7,7 +7,7 @@
     "allowJs": false,
     "paths": {
       "fumadocs-mdx:collections/*": [".source/*"],
-      "@/*": ["./src/*"],
+      "~/*": ["./src/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]
     }
   }

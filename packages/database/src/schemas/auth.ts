@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { boolean, index, integer, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { uuidv7 } from "../utils";
@@ -262,3 +263,80 @@ export const oauthConsent = pgTable("oauth_consent", {
     .$onUpdateFn(() => /* @__PURE__ */ new Date()),
   consentGiven: boolean("consent_given"),
 });
+
+export const jwks = pgTable("jwks", {
+  id: text("id").primaryKey(),
+  publicKey: text("public_key").notNull(),
+  privateKey: text("private_key").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+  oauthApplications: many(oauthApplication),
+  oauthAccessTokens: many(oauthAccessToken),
+  oauthConsents: many(oauthConsent),
+  apikeys: many(apikey),
+  passkeys: many(passkey),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+
+export const passkeyRelations = relations(passkey, ({ one }) => ({
+  user: one(user, {
+    fields: [passkey.userId],
+    references: [user.id],
+  }),
+}));
+
+export const oauthApplicationRelations = relations(oauthApplication, ({ one, many }) => ({
+  user: one(user, {
+    fields: [oauthApplication.userId],
+    references: [user.id],
+  }),
+  oauthAccessTokens: many(oauthAccessToken),
+  oauthConsents: many(oauthConsent),
+}));
+
+export const oauthAccessTokenRelations = relations(oauthAccessToken, ({ one }) => ({
+  oauthApplication: one(oauthApplication, {
+    fields: [oauthAccessToken.clientId],
+    references: [oauthApplication.clientId],
+  }),
+  user: one(user, {
+    fields: [oauthAccessToken.userId],
+    references: [user.id],
+  }),
+}));
+
+export const oauthConsentRelations = relations(oauthConsent, ({ one }) => ({
+  oauthApplication: one(oauthApplication, {
+    fields: [oauthConsent.clientId],
+    references: [oauthApplication.clientId],
+  }),
+  user: one(user, {
+    fields: [oauthConsent.userId],
+    references: [user.id],
+  }),
+}));
+
+export const apikeyRelations = relations(apikey, ({ one }) => ({
+  user: one(user, {
+    fields: [apikey.userId],
+    references: [user.id],
+  }),
+}));

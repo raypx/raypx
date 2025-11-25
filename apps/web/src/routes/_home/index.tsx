@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CtaSection } from "@/components/home/cta-section";
-import { HeroSection } from "@/components/home/hero-section";
-import { TechStackSection } from "@/components/home/tech-stack-section";
+import { CtaSection } from "~/components/home/cta-section";
+import { HeroSection } from "~/components/home/hero-section";
+import { TechStackSection } from "~/components/home/tech-stack-section";
 
 function HomePage() {
   return (

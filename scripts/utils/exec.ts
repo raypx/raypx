@@ -1,4 +1,4 @@
-import { logger } from "@raypx/shared/logger";
+import { logger } from "@raypx/logger";
 import { x } from "tinyexec";
 import { PROJECT_ROOT } from "./paths";
 

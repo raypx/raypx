@@ -1,4 +1,4 @@
-import { db, eq, schemas } from "@raypx/db";
+import { db, eq, schemas } from "@raypx/database";
 import { logger } from "@raypx/shared/logger";
 import type { Stripe } from "stripe";
 import { envs } from "./envs";
@@ -87,7 +87,11 @@ function getPeriodStartsAt(subscription: Stripe.Subscription): number {
   }
 
   // Stripe 18+
-  return subscription.items.data[0]!.current_period_start;
+  const periodStart = subscription.items.data[0]?.current_period_start;
+  if (periodStart === undefined) {
+    throw new Error("Subscription missing current_period_start");
+  }
+  return periodStart;
 }
 
 /**
@@ -102,7 +106,11 @@ function getPeriodEndsAt(subscription: Stripe.Subscription): number {
   }
 
   // Stripe 18+
-  return subscription.items.data[0]!.current_period_end;
+  const periodEnd = subscription.items.data[0]?.current_period_end;
+  if (periodEnd === undefined) {
+    throw new Error("Subscription missing current_period_end");
+  }
+  return periodEnd;
 }
 
 /**

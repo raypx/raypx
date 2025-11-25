@@ -10,14 +10,6 @@ import {
   CardTitle,
 } from "@raypx/ui/components";
 import { Progress } from "@raypx/ui/components/progress";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@raypx/ui/components/table";
 import { toast } from "@raypx/ui/components/toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -25,10 +17,10 @@ import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Check, Clock, CreditCard, Crown, Database, Download, Rocket, Zap } from "lucide-react";
 import { useMemo } from "react";
-import { DataTable } from "@/components/data-table";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
-import { formatDate } from "@/lib/dashboard-utils";
+import { DataTable } from "~/components/data-table";
+import { EmptyState } from "~/components/empty-state";
+import { ErrorState } from "~/components/error-state";
+import { formatDate } from "~/lib/dashboard-utils";
 
 const plans = [
   {
@@ -104,7 +96,6 @@ export const Route = createFileRoute("/dashboard/billing/")({
 
 function BillingPage() {
   const trpc = useTRPC();
-  const navigate = useNavigate();
   const {
     hooks: { useSession },
   } = useAuth();

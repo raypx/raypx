@@ -1,5 +1,5 @@
-import { and, asc, desc, eq, sql } from "@raypx/db";
-import { apikey as ApiKey } from "@raypx/db/schemas";
+import { and, asc, desc, eq, sql } from "@raypx/database";
+import { apikey as ApiKey } from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";

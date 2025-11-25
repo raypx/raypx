@@ -15,7 +15,7 @@ import {
   TestTube,
   Zap,
 } from "lucide-react";
-import { links } from "@/config/site";
+import { links } from "~/config/site";
 import { baseOptions } from "../lib/layout.shared";
 
 export const Route = createFileRoute("/")({

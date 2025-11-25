@@ -6,11 +6,11 @@ import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
-import { Devtools } from "@/components/layout/devtools";
-import Loading from "@/components/layout/loading";
-import { NotFound } from "@/components/not-found";
-import appCss from "@/styles/globals.css?url";
+import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
+import { Devtools } from "~/components/layout/devtools";
+import Loading from "~/components/layout/loading";
+import { NotFound } from "~/components/not-found";
+import appCss from "~/styles/globals.css?url";
 
 type RootRouterContext = {
   queryClient: QueryClient;

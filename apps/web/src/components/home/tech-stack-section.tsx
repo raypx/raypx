@@ -5,8 +5,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@raypx/ui/components/tooltip";
-import Container from "@/components/layout/container";
-import { useIsMobile } from "@/hooks/use-mobile";
+import Container from "~/components/layout/container";
+import { useIsMobile } from "~/hooks/use-mobile";
 
 type TechItem = {
   name: string;

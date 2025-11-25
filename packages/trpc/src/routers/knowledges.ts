@@ -1,5 +1,5 @@
-import { and, asc, desc, eq } from "@raypx/db";
-import { knowledges as Knowledges } from "@raypx/db/schemas";
+import { and, asc, desc, eq } from "@raypx/database";
+import { knowledges as Knowledges } from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";

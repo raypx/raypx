@@ -1,7 +1,7 @@
 import { Button } from "@raypx/ui/components";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Github, Sparkles } from "lucide-react";
-import Container from "@/components/layout/container";
+import Container from "~/components/layout/container";
 
 export function HeroSection() {
   return (

@@ -2,7 +2,7 @@ import { Button } from "@raypx/ui/components/button";
 import { Card } from "@raypx/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Github } from "lucide-react";
-import Container from "@/components/layout/container";
+import Container from "~/components/layout/container";
 
 const codeSnippet = `# Clone the repository
 git clone https://github.com/raypx/raypx.git

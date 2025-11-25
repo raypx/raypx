@@ -1,10 +1,10 @@
 import { isStripeConfigured, stripeUtils } from "@raypx/billing";
-import { and, desc, eq, isNull, sql } from "@raypx/db";
+import { and, desc, eq, isNull, sql } from "@raypx/database";
 import {
   invoice as Invoice,
   paymentMethod as PaymentMethod,
   subscription as Subscription,
-} from "@raypx/db/schemas";
+} from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";

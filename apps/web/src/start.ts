@@ -1,4 +1,4 @@
-import { createSentry } from "@raypx/analytics/sentry/server";
+import { createSentry } from "@raypx/observability/sentry/server";
 import { createMiddleware, createStart } from "@tanstack/react-start";
 
 const sentry = createSentry();

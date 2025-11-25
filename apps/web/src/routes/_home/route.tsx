@@ -1,19 +1,6 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { Footer } from "@/components/layout/footer";
-import { Navbar } from "@/components/layout/navbar";
-
-function HomeLayout() {
-  return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar scroll />
-      <main className="flex-1">
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
-  );
-}
+import { createFileRoute } from "@tanstack/react-router";
+import { Layout } from "~/layouts/home";
 
 export const Route = createFileRoute("/_home")({
-  component: HomeLayout,
+  component: Layout,
 });

@@ -1,7 +1,7 @@
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { Logo } from "@/components/layout/logo";
-import { brand, links } from "@/config/site";
+import { Logo } from "~/components/layout/logo";
+import { brand, links } from "~/config/site";
 
 export function baseOptions(): BaseLayoutProps {
   return {
