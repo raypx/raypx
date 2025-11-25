@@ -16,6 +16,7 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
+    "@raypx/config": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "catalog:",

@@ -1,4 +1,4 @@
-import { envs } from "./envs";
+import { env } from "./envs";
 
 /**
  * Analytics configuration interface (business analytics only)
@@ -41,7 +41,6 @@ export interface AnalyticsConfig {
  * Create analytics configuration from environment variables
  */
 export function createAnalyticsConfig(): AnalyticsConfig {
-  const env = envs();
   const isProduction = env.NODE_ENV === "production";
   const debugMode = env.VITE_PUBLIC_ANALYTICS_DEBUG ?? false;
 

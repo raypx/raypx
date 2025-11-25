@@ -1,15 +1,6 @@
-import {
-  analyticsEnv,
-  authEnv,
-  createEnv,
-  databaseEnv,
-  emailEnv,
-  observabilityEnv,
-  z,
-} from "@raypx/config";
+import { createEnv, z } from "@raypx/env";
 
 const env = createEnv({
-  extends: [databaseEnv, authEnv, emailEnv, analyticsEnv, observabilityEnv],
   shared: {
     NODE_ENV: z.enum(["development", "production"]).default("development"),
     MODE: z.string().optional(),

@@ -4,11 +4,9 @@ import type { PlopTypes } from "@turbo/gen";
 
 const PREFIX = "@raypx/";
 const NPM_REGISTRY_URL = "https://registry.npmjs.org";
-const LOCATIONS = ["packages", "packages/auth", "packages/features"] as const;
 
 type PackageAnswers = {
   name: string;
-  location: (typeof LOCATIONS)[number];
   deps: string;
 };
 
@@ -136,16 +134,6 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
     description: "Generate a new package for the Monorepo",
     prompts: [
       {
-        type: "list",
-        name: "location",
-        message: "Where would you like to create the package?",
-        choices: LOCATIONS.map((location) => ({
-          name: location,
-          value: location,
-        })),
-        default: LOCATIONS[0],
-      },
-      {
         type: "input",
         name: "name",
         message: `What is the name of the package? (You can skip the \`${PREFIX}\` prefix)`,
@@ -206,37 +194,43 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
       // Create package.json
       {
         type: "add",
-        path: "{{ location }}/{{ name }}/package.json",
+        path: "packages/{{ name }}/package.json",
         templateFile: "templates/package/package.json.hbs",
       },
       // Create tsconfig.json
       {
         type: "add",
-        path: "{{ location }}/{{ name }}/tsconfig.json",
+        path: "packages/{{ name }}/tsconfig.json",
         templateFile: "templates/package/tsconfig.json.hbs",
       },
       // Create src/index.ts
       {
         type: "add",
-        path: "{{ location }}/{{ name }}/src/index.ts",
+        path: "packages/{{ name }}/src/index.ts",
         templateFile: "templates/package/index.ts.hbs",
       },
       // Create envs.ts
       {
         type: "add",
-        path: "{{ location }}/{{ name }}/src/envs.ts",
+        path: "packages/{{ name }}/src/envs.ts",
         templateFile: "templates/package/envs.ts.hbs",
       },
       // Create server.ts
       {
         type: "add",
-        path: "{{ location }}/{{ name }}/src/server.ts",
+        path: "packages/{{ name }}/src/server.ts",
         templateFile: "templates/package/server.ts.hbs",
+      },
+      // Create tsdown.config.ts
+      {
+        type: "add",
+        path: "packages/{{ name }}/tsdown.config.ts",
+        templateFile: "templates/package/tsdown.config.ts.hbs",
       },
       // Process dependencies
       {
         type: "modify",
-        path: "{{ location }}/{{ name }}/package.json",
+        path: "packages/{{ name }}/package.json",
         async transform(content: string, answers: PackageAnswers) {
           const deps = "deps" in answers && typeof answers.deps === "string" ? answers.deps : "";
           return await processDependencies(content, deps);
@@ -247,10 +241,6 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
         try {
           const packageName =
             "name" in answers && typeof answers.name === "string" ? answers.name : "unknown";
-          const location =
-            "location" in answers && typeof answers.location === "string"
-              ? answers.location
-              : "packages";
 
           console.info(`\n🚀 Finalizing package setup for "${packageName}"...\n`);
 
@@ -266,10 +256,10 @@ export function createPackageGenerator(plop: PlopTypes.NodePlopAPI) {
           }
 
           console.log(`\n✨ Package "${packageName}" scaffolded successfully!`);
-          console.info(`📁 Location: ${location}/${packageName}`);
+          console.info(`📁 Location: packages/${packageName}`);
           console.info(`📦 Package name: @raypx/${packageName}`);
           console.info(`\nNext steps:`);
-          console.info(`  cd ${location}/${packageName}`);
+          console.info(`  cd packages/${packageName}`);
           console.info(`  pnpm run test`);
 
           return `Package "${packageName}" created successfully`;

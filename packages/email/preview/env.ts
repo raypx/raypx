@@ -1,5 +1,4 @@
-import { createEnv, z } from "@raypx/env";
-import { emailEnv } from "../src/envs";
+import { createEnv, emailEnv, z } from "@raypx/config";
 
 const env = createEnv({
   extends: [emailEnv],

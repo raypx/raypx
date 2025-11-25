@@ -9,7 +9,7 @@ export type { AnalyticsConfig } from "./config";
 export { createAnalyticsConfig, defaultAnalyticsConfig } from "./config";
 
 // Environment variables
-export { analyticsEnv, envs } from "./envs";
+export { envs } from "./envs";
 
 // Hooks
 export * from "./hooks";

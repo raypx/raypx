@@ -16,7 +16,7 @@
     "@hookform/resolvers": "catalog:",
     "@orama/tokenizers": "^3.1.16",
     "@raypx/analytics": "workspace:*",
-    "@raypx/env": "catalog:",
+    "@raypx/config": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",

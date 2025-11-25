@@ -1,4 +1,4 @@
-import { db, schemas, uuidv7 } from "@raypx/database";
+import { db, schemas } from "@raypx/database";
 import {
   ResetPasswordEmail,
   SendMagicLinkEmail,
@@ -15,6 +15,7 @@ import {
   lastLoginMethod,
   magicLink,
   mcp,
+  oAuthProxy,
   username,
 } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
@@ -114,7 +115,12 @@ const getPlugins = () => {
   }
 
   plugins.push(lastLoginMethod());
-
+  const env = envs();
+  plugins.push(
+    oAuthProxy({
+      productionURL: env.VITE_AUTH_URL,
+    }),
+  );
   plugins.push(tanstackStartCookies());
   return plugins;
 };

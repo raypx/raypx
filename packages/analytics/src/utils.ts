@@ -1,5 +1,5 @@
+import { createConsola } from "@raypx/logger";
 import { isProd } from "@raypx/shared";
-import { createConsola } from "@raypx/shared/logger";
 
 /**
  * Analytics-specific logger with [Analytics] tag

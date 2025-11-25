@@ -1,5 +1,5 @@
 {
-  "name": "@raypx/{{name}}",
+  "name": "@raypx/config",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -13,10 +13,13 @@
       "import": "./dist/server.mjs"
     },
     "./envs": {
-      "types": "./dist/envs.d.mts",
-      "import": "./dist/envs.mjs"
+      "types": "./dist/envs/index.d.mts",
+      "import": "./dist/envs/index.mjs"
     }
   },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "scripts": {
     "build": "tsdown",
     "clean": "rimraf dist .turbo",
@@ -25,7 +28,7 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@raypx/config": "workspace:*"
+    "@raypx/env": "^0.0.3"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

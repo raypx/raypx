@@ -1,5 +1,5 @@
+import { createConsola } from "@raypx/logger";
 import { isProd } from "@raypx/shared";
-import { createConsola } from "@raypx/shared/logger";
 
 /**
  * Observability-specific logger with [Observability] tag

@@ -1,12 +1,5 @@
-import {
-  analyticsEnv,
-  authEnv,
-  createEnv,
-  databaseEnv,
-  emailEnv,
-  observabilityEnv,
-  z,
-} from "@raypx/config";
+import { createEnv, z } from "@raypx/env";
+import { analyticsEnv, authEnv, databaseEnv, emailEnv, observabilityEnv } from "./envs";
 
 const env = createEnv({
   extends: [databaseEnv, authEnv, emailEnv, analyticsEnv, observabilityEnv],

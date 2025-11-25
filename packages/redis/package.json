@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@raypx/config": "workspace:*",
     "@raypx/env": "catalog:",
     "@raypx/shared": "workspace:*",
     "redis": "^5.10.0",

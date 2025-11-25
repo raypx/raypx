@@ -4,20 +4,12 @@ import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import mdx from "fumadocs-mdx/vite";
-import { createJiti } from "jiti";
 import { nitro } from "nitro/vite";
 import { defineConfig, type PluginOption } from "vite";
 import Inspect from "vite-plugin-inspect";
 import tsConfigPaths from "vite-tsconfig-paths";
 import * as MdxConfig from "./source.config";
-
-const jiti = createJiti(import.meta.url);
-
-// Environment variables
-const env = await jiti.import<typeof import("./src/env").default>("./src/env", {
-  default: true,
-  try: false,
-});
+import env from "./src/env";
 
 const isDev = env.NODE_ENV === "development";
 

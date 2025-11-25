@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@raypx/config": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/env": "catalog:",
     "@raypx/shared": "workspace:*",

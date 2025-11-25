@@ -1,6 +1,6 @@
 import { isServer } from "@raypx/shared";
 import posthog from "posthog-js";
-import { envs } from "../envs";
+import { env } from "../envs";
 import { logger } from "../utils";
 
 /**
@@ -12,8 +12,6 @@ export function initPostHog() {
   if (isServer) {
     return null;
   }
-
-  const env = envs();
 
   // Skip if no API key configured
   if (!env.VITE_PUBLIC_POSTHOG_KEY) {

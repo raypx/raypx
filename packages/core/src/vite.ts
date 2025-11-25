@@ -1,8 +1,15 @@
 import type { PluginOption } from "vite";
 import type { Config } from "./config";
+import VirtualModule from "./vite/virtual-module";
 
 const VIRTUAL_MODULE_ID = "virtual:@raypx/core/env";
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
+
+const virtual = {
+  serverBuild: VirtualModule.create("server-build"),
+  serverManifest: VirtualModule.create("server-manifest"),
+  browserManifest: VirtualModule.create("browser-manifest"),
+};
 
 export function raypxVitePlugin<Env>(config: Config<Env>): PluginOption {
   return {

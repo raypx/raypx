@@ -1,5 +1,5 @@
 {
   "search.exclude": {
-    "**/{.output,.nitro}": true
+    "**/{.output,.nitro,.next}": true
   }
 }
