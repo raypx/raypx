@@ -163,8 +163,9 @@ We welcome contributions! Here's how you can help:
 
 1. **Check the [Roadmap](#-roadmap)** for upcoming features
 2. **Review [GitHub Issues](https://github.com/raypx/raypx/issues)** for tasks
-3. **Read [CLAUDE.md](CLAUDE.md)** for development guidelines
-4. **Submit Pull Requests** with clear descriptions
+3. **Read [Contributing Guide](.github/CONTRIBUTING.md)** for detailed guidelines
+4. **Read [CLAUDE.md](CLAUDE.md)** for development guidelines
+5. **Submit Pull Requests** with clear descriptions
 
 ### Development Guidelines
 
