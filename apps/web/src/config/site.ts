@@ -59,7 +59,7 @@ export const brand: Brand = {
 
 // Links
 export const links: Links = {
-  docs: "/docs",
+  docs: "https://docs.raypx.com",
   github: "https://github.com/raypx/raypx",
   twitter: "https://twitter.com/raypx",
   changelog: "https://github.com/raypx/raypx/releases",
@@ -73,7 +73,7 @@ export const links: Links = {
 export const navigation: Navigation = {
   main: [
     { title: "Home", href: "/" },
-    { title: "Docs", href: "https://docs.raypx.com", external: true },
+    { title: "Docs", href: links.docs, external: true },
   ],
 };
 

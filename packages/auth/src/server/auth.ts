@@ -18,7 +18,7 @@ import {
   oAuthProxy,
   username,
 } from "better-auth/plugins";
-import { tanstackStartCookies } from "better-auth/tanstack-start";
+// import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { envs } from "../envs";
 import { features } from "../features";
 import {
@@ -37,10 +37,6 @@ const getPlugins = () => {
     mcp({
       loginPage: "/sign-in",
     }),
-    // NOTE: lastLoginMethod() conflicts with reactStartCookies() in TanStack Start
-    // This prevents session_token cookie from being set properly
-    // Reference: https://github.com/better-auth/better-auth/issues/5639
-    // lastLoginMethod(),
   );
 
   // Add feature-specific plugins
@@ -68,14 +64,6 @@ const getPlugins = () => {
       }),
     );
   }
-
-  // One Tap
-  // NOTE: oneTap() conflicts with reactStartCookies() in TanStack Start
-  // This prevents session_token cookie from being set properly
-  // Reference: https://github.com/better-auth/better-auth/issues/5639
-  // if (features.oneTap) {
-  //   plugins.push(oneTap());
-  // }
 
   // Organization
   // if (features.organization) {
@@ -121,7 +109,7 @@ const getPlugins = () => {
       productionURL: env.VITE_AUTH_URL,
     }),
   );
-  plugins.push(tanstackStartCookies());
+  // plugins.push(tanstackStartCookies());
   return plugins;
 };
 

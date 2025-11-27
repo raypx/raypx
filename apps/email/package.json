@@ -33,7 +33,7 @@
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "nitro": "catalog:",
-    "shiki": "^3.15.0",
+    "shiki": "^3.17.0",
     "tailwindcss": "catalog:tailwindv4",
     "tw-animate-css": "catalog:",
     "typescript": "catalog:dev",

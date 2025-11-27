@@ -2,6 +2,9 @@ import { Button } from "@raypx/ui/components";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Github, Sparkles } from "lucide-react";
 import Container from "~/components/layout/container";
+// import { FallingStarsBg } from "./falling-stars-bg";
+import { links } from "~/config/site";
+import { TextHoverEffect } from "@raypx/ui/components";
 
 export function HeroSection() {
   return (
@@ -10,20 +13,20 @@ export function HeroSection() {
       <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-background pointer-events-none" />
 
       {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden">
+        <TextHoverEffect text="RAYPX" />
+        {/* <FallingStarsBg className="opacity-30" color="#FFF" count={100} /> */}
         <div className="absolute -top-40 -right-40 size-80 bg-primary/10 rounded-full blur-3xl animate-pulse motion-reduce:animate-none" />
         <div className="absolute -bottom-40 -left-40 size-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000 motion-reduce:animate-none" />
       </div>
 
-      <Container className="relative">
+      <Container className="relative pointer-events-none">
         <div className="flex flex-col items-center text-center space-y-8 max-w-4xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-card/50 backdrop-blur-sm text-sm font-medium">
+          {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-card/50 backdrop-blur-sm text-sm font-medium">
             <Sparkles className="size-4 text-primary" />
             <span>Core Architecture Complete - Ready for Production</span>
-          </div>
+          </div> */}
 
-          {/* Main headline */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
             Build AI-Powered Applications with
             <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
@@ -40,8 +43,8 @@ export function HeroSection() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
-            <Link to="/docs">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4 pointer-events-auto">
+            <Link to={links.docs}>
               <Button className="group" size="lg">
                 Get Started
                 <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
