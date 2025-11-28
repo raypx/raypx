@@ -1,7 +1,7 @@
 import { createServerOnlyFn } from "@tanstack/react-start";
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthMiddleware } from "better-auth/plugins";
-import { parseSetCookieHeader } from "../shared/utils/cookies";
+import { parseSetCookieHeader } from "../../shared/utils/cookies";
 
 export const tanstackStartCookies = () =>
   createServerOnlyFn(() => ({

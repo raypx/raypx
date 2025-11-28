@@ -28,10 +28,10 @@ export function parseSetCookieHeader(setCookie: string): Map<string, CookieAttri
     const attrObj: CookieAttributes = { value };
 
     attributes.forEach((attribute) => {
-      const [attrName, ...attrValueParts] = attribute!.split("=");
+      const [attrName, ...attrValueParts] = attribute?.split("=") ?? [];
       const attrValue = attrValueParts.join("=");
 
-      const normalizedAttrName = attrName!.trim().toLowerCase();
+      const normalizedAttrName = attrName?.trim().toLowerCase() ?? "";
 
       switch (normalizedAttrName) {
         case "max-age":
