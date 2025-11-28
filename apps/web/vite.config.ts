@@ -34,9 +34,6 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1000,
   },
-  ssr: {
-    noExternal: ["urlpattern-polyfill"],
-  },
   plugins: [
     raypx(raypxConfig),
     // Always include for production tree-shaking
