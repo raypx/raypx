@@ -23,7 +23,7 @@
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "better-auth": "1.4.2",
+    "better-auth": "^1.4.3",
     "lucide-react": "catalog:",
     "react": "catalog:react19",
     "zod": "catalog:"

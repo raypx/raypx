@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:dev",
-    "@changesets/cli": "^2.29.7",
+    "@changesets/cli": "^2.29.8",
     "@dotenvx/dotenvx": "^1.51.1",
     "@raypx/scripts": "workspace:*",
     "@turbo/gen": "^2.6.1",
@@ -58,7 +58,7 @@
     "vite": "catalog:",
     "vitest": "catalog:"
   },
-  "packageManager": "pnpm@10.23.0",
+  "packageManager": "pnpm@10.24.0",
   "engines": {
     "node": ">=20",
     "pnpm": ">=10.0.0"

@@ -18,7 +18,6 @@ import {
   oAuthProxy,
   username,
 } from "better-auth/plugins";
-// import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { envs } from "../envs";
 import { features } from "../features";
 import {
@@ -27,6 +26,7 @@ import {
   superadmin as superAdminRole,
   user as userRole,
 } from "../permissions";
+import { tanstackStartCookies } from "./integrations/cookies";
 
 const getPlugins = () => {
   const plugins: BetterAuthPlugin[] = [];
@@ -109,7 +109,7 @@ const getPlugins = () => {
       productionURL: env.VITE_AUTH_URL,
     }),
   );
-  // plugins.push(tanstackStartCookies());
+  plugins.push(tanstackStartCookies());
   return plugins;
 };
 

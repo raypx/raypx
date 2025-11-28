@@ -1,10 +1,9 @@
-import { Button } from "@raypx/ui/components";
+import { Button, TextHoverEffect } from "@raypx/ui/components";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Github, Sparkles } from "lucide-react";
 import Container from "~/components/layout/container";
 // import { FallingStarsBg } from "./falling-stars-bg";
 import { links } from "~/config/site";
-import { TextHoverEffect } from "@raypx/ui/components";
 
 export function HeroSection() {
   return (
