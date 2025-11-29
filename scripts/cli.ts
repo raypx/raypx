@@ -15,7 +15,6 @@ const globalOptions = [
   ["--debug, -d", "Enable debug logging"],
   ["--verbose, -V", "Enable verbose output"],
   ["--silent, -s", "Suppress all non-error output"],
-  ["--dry-run", "Preview actions without executing them"],
 ] as const;
 
 /**
@@ -130,7 +129,7 @@ Run 'raypx-scripts <command> --help' for more information on a specific command.
  */
 function parseArgs(args: string[]) {
   return yargsParser(args, {
-    boolean: ["help", "debug", "verbose", "silent", "dry-run"],
+    boolean: ["help", "debug", "verbose", "silent"],
     alias: {
       help: ["h"],
       debug: ["d"],
@@ -181,12 +180,6 @@ async function cli(rawArgs: string[]) {
 
   // Enable silent mode if requested (global flag)
   setSilentMode(parsed.silent);
-
-  // Enable dry-run mode if requested (global flag)
-  if (parsed["dry-run"]) {
-    process.env.DRY_RUN = "true";
-    logger.info("🔍 DRY RUN MODE - No changes will be made");
-  }
 
   // Get command file path
   const commandFile = cmdInfo?.file;

@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "exclude": ["node_modules", "dist"],
+  "extends": "@raypx/tsconfig/react-library.json",
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}
+

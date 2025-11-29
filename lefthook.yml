@@ -5,7 +5,7 @@
 #
 pre-commit:
   jobs:
-    - run: pnpm -w format
+    - run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       glob:
         - "*.js"
         - "*.jsx"
@@ -18,3 +18,4 @@ pre-commit:
         - "*.yml"
         - "*.mdx"
       root: "."
+      stage_fixed: true

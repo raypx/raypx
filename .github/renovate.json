@@ -3,10 +3,22 @@
   "extends": ["config:base"],
   "packageRules": [
     {
-      "matchPackagePatterns": ["^@raypx/", "web", "docs"],
+      "matchPackagePatterns": ["^@raypx/", "web", "docs", "email"],
       "enabled": false
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "automergeType": "pr",
+      "labels": ["dependencies", "dev"]
+    },
+    {
+      "matchDepTypes": ["dependencies"],
+      "labels": ["dependencies", "production"]
     }
   ],
   "updateInternalDeps": true,
-  "rangeStrategy": "bump"
+  "rangeStrategy": "bump",
+  "separateMinorPatch": true,
+  "schedule": ["before 10am on monday"]
 }
