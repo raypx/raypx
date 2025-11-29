@@ -64,6 +64,10 @@
       "dependsOn": ["^build"],
       "persistent": true,
       "outputs": []
+    },
+    "clean": {
+      "cache": false,
+      "outputLogs": "errors-only"
     }
   }
 }

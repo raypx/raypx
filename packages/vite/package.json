@@ -1,0 +1,45 @@
+{
+  "name": "@raypx/vite",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./plugins": {
+      "types": "./dist/plugins.d.mts",
+      "import": "./dist/plugins.mjs"
+    },
+    "./presets": {
+      "types": "./dist/presets.d.mts",
+      "import": "./dist/presets.mjs"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.mts",
+      "import": "./dist/utils.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "rimraf dist .turbo",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "vite": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:dev",
+    "tsdown": "catalog:dev",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "vite": "^7.0.0"
+  }
+}
+
