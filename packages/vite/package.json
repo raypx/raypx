@@ -34,12 +34,11 @@
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:dev",
     "tsdown": "catalog:dev",
+    "typescript": "catalog:dev",
     "vitest": "catalog:"
   },
   "peerDependencies": {
     "vite": "^7.0.0"
   }
 }
-

@@ -1,5 +1,5 @@
 import browserCollections from "fumadocs-mdx:collections/browser";
-import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect, useLoaderData } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { DocsLayout } from "fumadocs-ui/layouts/notebook";
@@ -102,6 +102,12 @@ const clientLoader = browserCollections.docs.createClientLoader({
 export const Route = createFileRoute("/docs/$")({
   component: DocsPageComponent,
   loader: async ({ params }) => {
+    if (!params._splat) {
+      throw redirect({
+        to: "/docs/$",
+        params: { _splat: "start" },
+      });
+    }
     const data = await loader({ data: params._splat?.split("/").filter(Boolean) ?? [] });
     await clientLoader.preload(data.path);
     return data;

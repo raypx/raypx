@@ -45,9 +45,7 @@ export function getPort(defaultPort = 3000): number {
 export function mergePlugins(
   ...pluginArrays: (PluginOption | null | undefined)[][]
 ): PluginOption[] {
-  return pluginArrays.flat().filter(
-    (plugin): plugin is PluginOption => plugin != null,
-  );
+  return pluginArrays.flat().filter((plugin): plugin is PluginOption => plugin != null);
 }
 
 /**
@@ -77,4 +75,3 @@ export function oncePlugin(plugin: PluginOption): PluginOption {
     },
   };
 }
-

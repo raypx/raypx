@@ -6,6 +6,5 @@
 
 export * from "./plugins";
 export * from "./presets";
+export type { PluginWithMetadata, VirtualModuleConfig, VitePluginOptions } from "./types";
 export * from "./utils";
-export type { VitePluginOptions, VirtualModuleConfig, PluginWithMetadata } from "./types";
-
