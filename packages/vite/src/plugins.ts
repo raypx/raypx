@@ -25,9 +25,7 @@ import type { VirtualModuleConfig } from "./types";
  * });
  * ```
  */
-export function createVirtualModulePlugin(
-  config: VirtualModuleConfig,
-): PluginOption {
+export function createVirtualModulePlugin(config: VirtualModuleConfig): PluginOption {
   const virtualId = `virtual:${config.id}`;
   const resolvedId = `\0${virtualId}`;
 
@@ -121,9 +119,7 @@ export const plugins = {
    * Filter out null/undefined plugins
    */
   filter: (plugins: (PluginOption | null | undefined)[]): PluginOption[] => {
-    return plugins.filter(
-      (plugin): plugin is PluginOption => plugin != null,
-    );
+    return plugins.filter((plugin): plugin is PluginOption => plugin != null);
   },
 
   /**
@@ -133,4 +129,3 @@ export const plugins = {
     return plugins.flat();
   },
 };
-

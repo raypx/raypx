@@ -46,4 +46,3 @@ export interface PluginWithMetadata extends PluginOption {
    */
   description?: string;
 }
-

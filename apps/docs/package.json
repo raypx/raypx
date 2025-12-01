@@ -22,9 +22,9 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "dayjs": "^1.11.19",
-    "fumadocs-core": "^16.2.0",
+    "fumadocs-core": "^16.2.1",
     "fumadocs-mdx": "^14.0.4",
-    "fumadocs-ui": "^16.2.0",
+    "fumadocs-ui": "^16.2.1",
     "lodash-es": "catalog:",
     "lucide-react": "catalog:",
     "nitro": "catalog:",
@@ -34,7 +34,7 @@
     "superjson": "catalog:",
     "vite-tsconfig-paths": "catalog:",
     "zod": "catalog:",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@netlify/vite-plugin-tanstack-start": "^1.2.1",
@@ -42,7 +42,7 @@
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.3.11",
     "@tanstack/react-devtools": "^0.8.2",
-    "@tanstack/react-router-devtools": "^1.139.11",
+    "@tanstack/react-router-devtools": "^1.139.12",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
