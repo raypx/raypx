@@ -136,8 +136,6 @@ export function Sidebar({ user }: SidebarProps) {
             </p>
           </div>
         </Link>
-        {/* TODO: Add organization switcher here */}
-        {/* <OrganizationSwitcher /> */}
       </div>
 
       <ScrollArea className="flex-1 p-4">
