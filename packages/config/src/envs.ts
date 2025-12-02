@@ -6,3 +6,4 @@ export * from "./envs/database";
 export * from "./envs/email";
 export * from "./envs/observability";
 export * from "./envs/redis";
+export * from "./envs/storage";

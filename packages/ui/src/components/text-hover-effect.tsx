@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 export const TextHoverEffect = ({
   text,
   duration,
+  strokeDuration = 4,
 }: {
   text: string;
   duration?: number;
+  strokeDuration?: number;
   automatic?: boolean;
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -58,14 +60,6 @@ export const TextHoverEffect = ({
           initial={{ cx: "50%", cy: "50%" }}
           r="20%"
           transition={{ duration: duration ?? 0, ease: "easeOut" }}
-
-          // example for a smoother animation below
-
-          //   transition={{
-          //     type: "spring",
-          //     stiffness: 300,
-          //     damping: 50,
-          //   }}
         >
           <stop offset="0%" stopColor="white" />
           <stop offset="100%" stopColor="black" />
@@ -96,7 +90,7 @@ export const TextHoverEffect = ({
         strokeWidth="0.3"
         textAnchor="middle"
         transition={{
-          duration: 4,
+          duration: strokeDuration,
           ease: "easeInOut",
         }}
         x="50%"

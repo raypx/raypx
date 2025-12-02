@@ -22,30 +22,55 @@ function AuthLayoutWrapper() {
   const isSignOut = location.pathname === authRoutes.signOut;
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-      <div className="z-10 flex w-full max-w-sm flex-col gap-6">
-        <Link className="flex items-center gap-2 self-center font-medium" to="/">
-          <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full text-primary-foreground">
-            <Image
-              alt="Raypx"
-              className="object-cover"
-              height={24}
-              layout="fixed"
-              priority
-              shape="circle"
-              src="/logo.png"
-              width={24}
-            />
-          </div>
-          Raypx
-        </Link>
+    <div className="flex min-h-svh flex-col items-center justify-center bg-muted/40 p-4 md:p-10">
+      <div className="w-full max-w-[400px] space-y-6">
+        {/* Logo - Centered */}
+        <div className="flex flex-col items-center text-center space-y-2">
+          <Link className="mb-4 transition-transform hover:scale-105 active:scale-95" to="/">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <Image
+                alt="Raypx"
+                className="object-cover"
+                height={32}
+                layout="fixed"
+                priority
+                shape="circle"
+                src="/logo.png"
+                width={32}
+              />
+            </div>
+          </Link>
+        </div>
+
+        {/* Content */}
         {!isSignOut ? (
-          <AuthLayout cardFooter={cardFooter} description={description} title={title}>
+          <AuthLayout
+            cardFooter={cardFooter}
+            className="sm:border sm:shadow-sm sm:bg-card sm:rounded-xl sm:p-8"
+            classNames={{
+              header: "px-0 pt-0 text-center space-y-2",
+              content: "px-0 py-4",
+              title: "text-2xl font-bold tracking-tight text-foreground",
+              description: "text-muted-foreground",
+            }}
+            description={description}
+            title={title}
+          >
             <Outlet />
           </AuthLayout>
         ) : (
           <Outlet />
         )}
+
+        {/* Simple Footer Links */}
+        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <a className="hover:text-foreground transition-colors" href="/terms">
+            Terms
+          </a>
+          <a className="hover:text-foreground transition-colors" href="/privacy">
+            Privacy
+          </a>
+        </div>
       </div>
     </div>
   );

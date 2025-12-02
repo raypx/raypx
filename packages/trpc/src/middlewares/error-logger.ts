@@ -31,6 +31,7 @@ export interface ErrorLogEntry {
   context?: Record<string, unknown>;
   stack?: string;
   userId?: string;
+  error?: TRPCError;
 }
 
 /**
@@ -85,12 +86,12 @@ function formatErrorLog(
     context: meta?.context,
     stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     userId,
+    error,
   };
 }
 
 /**
  * Log error to console with proper formatting
- * In production, this should be replaced with a proper logging service
  */
 function logError(entry: ErrorLogEntry): void {
   const { level, message, errorCode, trpcCode, path, method, context, userId, stack } = entry;
@@ -122,12 +123,11 @@ function logError(entry: ErrorLogEntry): void {
       break;
   }
 
-  // In production, send to logging service
-  if (process.env.NODE_ENV === "production") {
-    // TODO: Send to external logging service (e.g., Sentry, LogRocket, etc.)
-    // Example:
-    // await logger.error(entry);
-  }
+  // TODO: Send to external logging service (e.g., Sentry, LogRocket, etc.)
+  // Example:
+  // if (process.env.NODE_ENV === "production" && (level === LogLevel.ERROR || level === LogLevel.WARN)) {
+  //   await logger.error(entry);
+  // }
 }
 
 /**
@@ -160,28 +160,29 @@ export const errorLoggingMiddleware = async ({ ctx, path, type, next }: any) => 
 
 /**
  * Performance logging middleware
- * Logs slow requests for performance monitoring
+ * Logs slow requests
  */
 export function performanceLoggingMiddleware(thresholdMs = 3000) {
   return async ({ ctx, path, type, next }: any) => {
     const start = Date.now();
 
-    const result = await next();
+    try {
+      const result = await next();
+      const duration = Date.now() - start;
 
-    const duration = Date.now() - start;
+      // Log slow requests
+      if (duration > thresholdMs) {
+        console.warn(`[tRPC Slow Request] ${type.toUpperCase()} ${path} took ${duration}ms`, {
+          userId: ctx.session?.user?.id,
+          threshold: thresholdMs,
+        });
 
-    if (duration > thresholdMs) {
-      console.warn(`[tRPC Slow Request] ${type.toUpperCase()} ${path} took ${duration}ms`, {
-        userId: ctx.session?.user?.id,
-        threshold: thresholdMs,
-      });
-
-      // In production, send to monitoring service
-      if (process.env.NODE_ENV === "production") {
         // TODO: Send to monitoring service (e.g., DataDog, New Relic)
       }
-    }
 
-    return result;
+      return result;
+    } catch (error) {
+      throw error;
+    }
   };
 }

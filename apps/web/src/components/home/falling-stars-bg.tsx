@@ -1,5 +1,6 @@
+import { useTheme } from "@raypx/ui/hooks/use-theme";
 import { cn } from "@raypx/ui/lib/utils";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface Star {
   x: number;
@@ -14,7 +15,7 @@ interface FallingStarsBgProps {
   className?: string;
 }
 
-export function FallingStarsBg({ color = "#FFF", count = 200, className }: FallingStarsBgProps) {
+export function FallingStarsBg({ color, count = 200, className }: FallingStarsBgProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const perspectiveRef = useRef<number>(0);
   const starsRef = useRef<Star[]>([]);
@@ -22,9 +23,24 @@ export function FallingStarsBg({ color = "#FFF", count = 200, className }: Falli
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const isPausedRef = useRef(false);
 
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Handle hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determine effective color based on theme if not provided
+  const effectiveColor = useMemo(() => {
+    if (color) return color;
+    if (!mounted) return "#FFF"; // Default fallback
+    return resolvedTheme === "dark" ? "#FFF" : "#64748b"; // Slate-500 for light mode
+  }, [color, resolvedTheme, mounted]);
+
   // Pre-calculate RGB values once
   const rgb = useMemo(() => {
-    let hex = color.replace(/^#/, "");
+    let hex = effectiveColor.replace(/^#/, "");
 
     // If the hex code is 3 characters, expand it to 6 characters
     if (hex.length === 3) {
@@ -41,7 +57,7 @@ export function FallingStarsBg({ color = "#FFF", count = 200, className }: Falli
     const b = bigint & 255; // Extract the blue component
 
     return { r, g, b };
-  }, [color]);
+  }, [effectiveColor]);
 
   // Pre-calculate color strings
   const colorStrings = useMemo(
@@ -194,6 +210,9 @@ export function FallingStarsBg({ color = "#FFF", count = 200, className }: Falli
       }
     };
   }, [count, colorStrings]);
+
+  // Don't render until mounted to avoid hydration mismatch with theme
+  if (!mounted) return null;
 
   return (
     <canvas

@@ -1,5 +1,4 @@
 import { useAuth } from "@raypx/auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Button } from "@raypx/ui/components/button";
 import {
   Card,
@@ -13,8 +12,9 @@ import { Label } from "@raypx/ui/components/label";
 import { Textarea } from "@raypx/ui/components/textarea";
 import { toast } from "@raypx/ui/components/toast";
 import { createFileRoute } from "@tanstack/react-router";
-import { Camera, Mail, User } from "lucide-react";
+import { Mail, User } from "lucide-react";
 import { useState } from "react";
+import { AvatarUpload } from "~/components/avatar-upload";
 
 export const Route = createFileRoute("/dashboard/profile/")({
   component: ProfilePage,
@@ -40,21 +40,6 @@ function ProfilePage() {
     toast.success("Profile updated successfully!");
   };
 
-  const handleAvatarUpload = () => {
-    // TODO: Implement avatar upload
-    toast.info("Avatar upload coming soon!");
-  };
-
-  const getInitials = (name?: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -72,21 +57,7 @@ function ProfilePage() {
           <CardDescription>Update your profile picture and avatar</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage alt={user?.name || "User"} src={user?.image || undefined} />
-              <AvatarFallback className="text-2xl">{getInitials(user?.name)}</AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
-              <Button className="gap-2" onClick={handleAvatarUpload} variant="outline">
-                <Camera className="h-4 w-4" />
-                Upload New Picture
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                JPG, PNG or GIF. Max size 2MB. Recommended: 400x400px
-              </p>
-            </div>
-          </div>
+          <AvatarUpload currentAvatar={user?.image} userId={user?.id || ""} userName={user?.name} />
         </CardContent>
       </Card>
 

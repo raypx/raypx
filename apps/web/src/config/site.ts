@@ -20,6 +20,7 @@ export type Brand = {
 
 export type Links = {
   docs: string;
+  contact: string;
   github: string;
   twitter: string;
   changelog: string;
@@ -62,6 +63,7 @@ export const links: Links = {
   docs: "https://docs.raypx.com",
   github: "https://github.com/raypx/raypx",
   twitter: "https://twitter.com/raypx",
+  contact: "https://github.com/raypx/raypx/issues",
   changelog: "https://github.com/raypx/raypx/releases",
   issues: "https://github.com/raypx/raypx/issues",
   discussions: "https://github.com/raypx/raypx/discussions",

@@ -1,73 +1,58 @@
 import { Button } from "@raypx/ui/components/button";
-import { Card } from "@raypx/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Github } from "lucide-react";
+import { Rocket, Sparkles } from "lucide-react";
 import Container from "~/components/layout/container";
-
-const codeSnippet = `# Clone the repository
-git clone https://github.com/raypx/raypx.git
-cd raypx
-
-# Install dependencies
-pnpm install
-
-# Start development
-pnpm dev`;
+import { links } from "~/config/site";
 
 export function CtaSection() {
   return (
-    <section className="py-20 md:py-32 bg-muted/30">
+    <section className="py-24 md:py-32">
       <Container>
-        <Card className="relative overflow-hidden border-2">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-purple-500/10 to-background" />
-
-          <div className="relative p-8 md:p-12 lg:p-16">
-            <div className="max-w-3xl mx-auto text-center space-y-8">
-              {/* Heading */}
-              <div className="space-y-4">
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
-                  Get Started
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Clone, install dependencies, and start developing in minutes.
-                </p>
-              </div>
-
-              {/* Code snippet */}
-              <div className="bg-card/80 backdrop-blur-sm border rounded-lg p-6 font-mono text-sm text-left">
-                <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                  <div className="size-3 rounded-full bg-red-500" />
-                  <div className="size-3 rounded-full bg-yellow-500" />
-                  <div className="size-3 rounded-full bg-green-500" />
-                </div>
-                <pre className="overflow-x-auto">
-                  <code className="text-foreground">{codeSnippet}</code>
-                </pre>
-              </div>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
-                <Link to="/docs">
-                  <Button className="group" size="lg">
-                    <BookOpen className="mr-2 size-4" />
-                    Read Docs
-                    <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </Link>
-                <a href="https://github.com/raypx/raypx" rel="noopener noreferrer" target="_blank">
-                  <Button size="lg" variant="outline">
-                    <Github className="mr-2 size-4" />
-                    Star on GitHub
-                  </Button>
-                </a>
-              </div>
-
-              {/* Additional info */}
-              <p className="text-sm text-muted-foreground">License</p>
-            </div>
+        <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-16 text-center shadow-2xl md:px-16 md:py-24">
+          {/* Background Pattern - CSS Grid */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
           </div>
-        </Card>
+
+          {/* Glowing Orbs */}
+          <div className="absolute -top-24 -right-24 size-96 rounded-full bg-white/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 size-96 rounded-full bg-white/20 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl mx-auto space-y-8 text-primary-foreground">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+              Ready to build your next big idea?
+            </h2>
+            <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto leading-relaxed">
+              Stop wasting time on configuration. Start building with a production-ready foundation
+              that scales with you.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 w-full sm:w-auto">
+              <Link to={links.docs}>
+                <Button
+                  className="w-full sm:w-auto h-14 px-8 text-base font-semibold group"
+                  size="lg"
+                  variant="secondary"
+                >
+                  <Rocket className="mr-2 size-4 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
+                  Get Started Now
+                </Button>
+              </Link>
+              <a href="https://github.com/raypx/raypx" rel="noopener noreferrer" target="_blank">
+                <Button
+                  className="w-full sm:w-auto h-14 px-8 text-base border-primary-foreground/20 hover:bg-primary-foreground/10 hover:text-primary-foreground text-primary-foreground bg-transparent"
+                  size="lg"
+                  variant="outline"
+                >
+                  <Sparkles className="mr-2 size-4" />
+                  Star on GitHub
+                </Button>
+              </a>
+            </div>
+
+            <p className="text-sm opacity-70 pt-4">Free and open source under the MIT License.</p>
+          </div>
+        </div>
       </Container>
     </section>
   );

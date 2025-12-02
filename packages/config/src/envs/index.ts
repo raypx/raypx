@@ -11,3 +11,4 @@ export * from "./database";
 export * from "./email";
 export * from "./observability";
 export * from "./redis";
+export * from "./storage";

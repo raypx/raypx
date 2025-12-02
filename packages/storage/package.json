@@ -1,0 +1,26 @@
+{
+  "name": "@raypx/storage",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.943.0",
+    "@raypx/config": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:dev",
+    "vitest": "catalog:"
+  }
+}
