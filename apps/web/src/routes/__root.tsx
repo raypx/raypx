@@ -4,7 +4,13 @@ import type { AppRouter } from "@raypx/trpc";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import type { QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  Scripts,
+  useRouter,
+} from "@tanstack/react-router";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
 import { Devtools } from "~/components/layout/devtools";
@@ -56,6 +62,8 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
   return (
     <html dir="ltr" lang="en" suppressHydrationWarning>
       <head>
@@ -64,7 +72,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <AnalyticsProvider>
           <ThemeProvider defaultTheme="system">
-            <AuthProvider navigate={() => {}} redirectTo="/" replace={() => {}}>
+            <AuthProvider
+              navigate={(to) => router.navigate({ to })}
+              redirectTo="/"
+              replace={(to) => router.navigate({ to, replace: true })}
+            >
               {children}
               <Toaster />
             </AuthProvider>

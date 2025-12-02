@@ -45,7 +45,8 @@ export function createAnalyticsConfig(): AnalyticsConfig {
   const debugMode = env.VITE_PUBLIC_ANALYTICS_DEBUG ?? false;
 
   // Global analytics enabled check
-  const globalEnabled = !env.VITE_PUBLIC_ANALYTICS_DISABLED;
+  // Only enable in production by default, or if debug mode is on
+  const globalEnabled = !env.VITE_PUBLIC_ANALYTICS_DISABLED && (isProduction || debugMode === true);
 
   return {
     // Global settings

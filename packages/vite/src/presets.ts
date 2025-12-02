@@ -3,7 +3,7 @@
  */
 
 import type { PluginOption } from "vite";
-import { conditionalPlugin, envPlugin } from "./plugins";
+import { conditionalPlugin } from "./plugins";
 import { isDev } from "./utils";
 
 /**

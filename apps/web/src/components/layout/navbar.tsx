@@ -140,7 +140,7 @@ export function Navbar({ scroll }: NavBarProps) {
                   </Link>
                 </SignedOut>
                 <SignedIn>
-                  <UserButton />
+                  <UserButton showThemeSwitcher={false} />
                 </SignedIn>
               </div>
             )}
@@ -239,7 +239,7 @@ export function Navbar({ scroll }: NavBarProps) {
                       <SignedIn>
                         <div className="flex items-center justify-between">
                           <div className="text-sm text-muted-foreground">Account</div>
-                          <UserButton />
+                          <UserButton showThemeSwitcher={false} />
                         </div>
                       </SignedIn>
                     </>

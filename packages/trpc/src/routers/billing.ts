@@ -1,15 +1,36 @@
-import { isStripeConfigured, stripeUtils } from "@raypx/billing";
+import { isStripeConfigured, mapStripeSubscriptionStatus, stripeUtils } from "@raypx/billing";
 import { and, desc, eq, isNull, sql } from "@raypx/database";
 import {
   invoice as Invoice,
   paymentMethod as PaymentMethod,
   subscription as Subscription,
 } from "@raypx/database/schemas";
+import type Stripe from "stripe";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";
 import { protectedProcedure } from "../trpc";
 import { assertExists } from "../utils/error-handler";
+
+/**
+ * Extract subscription sync data from Stripe subscription
+ * Syncs status, dates, and cancellation info from Stripe to database
+ */
+function extractSubscriptionSyncData(stripeSubscription: Stripe.Subscription) {
+  return {
+    status: mapStripeSubscriptionStatus(stripeSubscription.status),
+    currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+    currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+    cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end ?? false,
+    canceledAt: stripeSubscription.canceled_at
+      ? new Date(stripeSubscription.canceled_at * 1000)
+      : null,
+    trialStart: stripeSubscription.trial_start
+      ? new Date(stripeSubscription.trial_start * 1000)
+      : null,
+    trialEnd: stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000) : null,
+  };
+}
 
 /**
  * Billing router - handles subscription, invoice, and payment method operations
@@ -348,12 +369,15 @@ export const billingRouter = {
         },
       );
 
-      // Update subscription in database
-      // TODO: Sync subscription status and dates from Stripe response
+      // Extract sync data from Stripe response
+      const syncData = extractSubscriptionSyncData(updatedStripeSubscription);
+
+      // Update subscription in database with synced data from Stripe
       const updatedSubscription = await ctx.db
         .update(Subscription)
         .set({
-          cancelAtPeriodEnd: updatedStripeSubscription.cancel_at_period_end ?? false,
+          ...syncData,
+          ...(input.planId && { planId: input.planId }),
           updatedAt: new Date(),
         })
         .where(eq(Subscription.id, subscription.id))
@@ -405,16 +429,14 @@ export const billingRouter = {
         input.cancelAtPeriodEnd,
       );
 
-      // Update subscription in database
+      // Extract sync data from Stripe response
+      const syncData = extractSubscriptionSyncData(canceledStripeSubscription);
+
+      // Update subscription in database with synced data from Stripe
       const updatedSubscription = await ctx.db
         .update(Subscription)
         .set({
-          status:
-            canceledStripeSubscription.status === "canceled" ? "canceled" : subscription.status,
-          cancelAtPeriodEnd: canceledStripeSubscription.cancel_at_period_end ?? false,
-          canceledAt: canceledStripeSubscription.canceled_at
-            ? new Date(canceledStripeSubscription.canceled_at * 1000)
-            : subscription.canceledAt,
+          ...syncData,
           updatedAt: new Date(),
         })
         .where(eq(Subscription.id, subscription.id))

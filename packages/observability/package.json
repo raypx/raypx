@@ -20,9 +20,9 @@
     "@raypx/config": "workspace:*",
     "@raypx/logger": "^0.1.0",
     "@raypx/shared": "workspace:*",
-    "@sentry/node": "^10.27.0",
-    "@sentry/react": "^10.27.0",
-    "@sentry/tanstackstart-react": "^10.27.0"
+    "@sentry/node": "^10.28.0",
+    "@sentry/react": "^10.28.0",
+    "@sentry/tanstackstart-react": "^10.28.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

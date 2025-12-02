@@ -4,7 +4,10 @@ import { Button } from "@raypx/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -14,7 +17,7 @@ import {
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { useTheme } from "@raypx/ui/hooks/use-theme";
 import { Link } from "@tanstack/react-router";
-import { Check, HelpCircle, LogOut, Moon, Settings, Sun, User } from "lucide-react";
+import { HelpCircle, Laptop, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { defaultAuthRoutes } from "../../config/routes";
@@ -47,6 +50,7 @@ function getUserInitials(name?: string | null, email?: string | null): string {
 const themeConfig = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Laptop },
 ] as const;
 
 export interface UserButtonProps {
@@ -71,13 +75,6 @@ export interface UserButtonProps {
 
 /**
  * UserButton component with dropdown menu
- *
- * Features:
- * - User avatar with fallback initials
- * - User info display (name, email)
- * - Customizable menu items
- * - Optional theme switcher (light/dark)
- * - Sign out button
  */
 export const UserButton = ({
   user: userProp,
@@ -88,7 +85,6 @@ export const UserButton = ({
   helpPath,
   showKeyboardShortcuts = false,
 }: UserButtonProps = {}) => {
-  // Paths are hardcoded. Can be configured via auth config in the future if needed.
   const profilePath = "/dashboard/profile";
   const settingsPath = "/dashboard/settings";
   const avatarSize = avatar?.size ?? "size-8";
@@ -96,7 +92,7 @@ export const UserButton = ({
     hooks: { useSession },
   } = useAuth();
   const session = useSession();
-  const { themeMode, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -121,78 +117,88 @@ export const UserButton = ({
   const userInitials = getUserInitials(user.name, user.email);
   const userImage = user.image;
 
+  const hasMiddleSection = showThemeSwitcher || !!helpPath || showKeyboardShortcuts;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           aria-label="My Account"
-          className={`${avatarSize} rounded-full p-0 cursor-pointer`}
+          className={`${avatarSize} rounded-full p-0 cursor-pointer ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
           size="icon"
           variant="ghost"
         >
           <Avatar className={avatarSize}>
             {userImage && <AvatarImage alt={userName} src={userImage} />}
-            <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
+              {userInitials}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56">
-        {/* User Info Section - Clickable to profile */}
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link className="flex flex-col space-y-1 p-2" to={profilePath}>
-            <p className="text-sm font-medium leading-none">{userName}</p>
-            {userEmail && (
-              <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-xs leading-none">{userEmail}</p>
-                <User className="size-3 text-muted-foreground" />
-              </div>
-            )}
+      <DropdownMenuContent align="end" className="w-60 p-1" forceMount>
+        {/* User Info Header */}
+        <DropdownMenuItem asChild className="p-0 font-normal focus:bg-accent cursor-pointer">
+          <Link className="flex items-center gap-3 px-3 py-2.5" to={profilePath}>
+            <div className="flex flex-col space-y-0.5 overflow-hidden">
+              <p className="text-sm font-medium leading-none truncate">{userName}</p>
+              {userEmail && (
+                <p className="text-xs text-muted-foreground truncate max-w-[180px]">{userEmail}</p>
+              )}
+            </div>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
-        {/* Custom menu items */}
-        {menuItems?.map((item, index) => (
-          <div key={index}>{item}</div>
-        ))}
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link className="flex items-center" to={profilePath}>
+              <User className="mr-2 size-4 text-muted-foreground" />
+              <span>Profile</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link className="flex items-center" to={settingsPath}>
+              <Settings className="mr-2 size-4 text-muted-foreground" />
+              <span>Settings</span>
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
 
-        {/* Settings */}
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <Link className="flex items-center" to={settingsPath}>
-            <Settings className="mr-2 size-4" />
-            <span>Settings</span>
-          </Link>
-        </DropdownMenuItem>
+        {/* Custom menu items */}
+        {menuItems && (
+          <>
+            <DropdownMenuSeparator />
+            {menuItems.map((item, index) => (
+              <div key={index}>{item}</div>
+            ))}
+          </>
+        )}
+
+        {hasMiddleSection && <DropdownMenuSeparator />}
 
         {/* Theme Switcher */}
         {showThemeSwitcher && (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="cursor-pointer">
-              {themeMode === "dark" ? (
-                <Moon className="mr-2 size-4" />
-              ) : (
-                <Sun className="mr-2 size-4" />
-              )}
+              <Sun className="mr-2 size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-muted-foreground" />
+              <Moon className="absolute mr-2 size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-muted-foreground" />
               <span>Theme</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              {themeConfig.map((theme) => {
-                const Icon = theme.icon;
-                const isActive = themeMode === theme.value;
-                return (
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    key={theme.value}
-                    onClick={() => setTheme(theme.value)}
-                  >
-                    <Icon className="mr-2 size-4" />
-                    <span>{theme.label}</span>
-                    {isActive && <Check className="ml-auto size-4" />}
-                  </DropdownMenuItem>
-                );
-              })}
+              <DropdownMenuRadioGroup onValueChange={setTheme} value={theme}>
+                {themeConfig.map((t) => {
+                  const Icon = t.icon;
+                  return (
+                    <DropdownMenuRadioItem className="cursor-pointer" key={t.value} value={t.value}>
+                      <Icon className="mr-2 size-4 text-muted-foreground" />
+                      {t.label}
+                    </DropdownMenuRadioItem>
+                  );
+                })}
+              </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         )}
@@ -201,7 +207,7 @@ export const UserButton = ({
         {helpPath && (
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link className="flex items-center" to={helpPath}>
-              <HelpCircle className="mr-2 size-4" />
+              <HelpCircle className="mr-2 size-4 text-muted-foreground" />
               <span>Help & Support</span>
             </Link>
           </DropdownMenuItem>
@@ -210,9 +216,29 @@ export const UserButton = ({
         {/* Keyboard Shortcuts Hint */}
         {showKeyboardShortcuts && (
           <>
-            <DropdownMenuSeparator />
-            <div className="px-2 py-1.5 text-xs text-muted-foreground">
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">?</kbd> for shortcuts
+            {/* Separator only if other items above it in middle section didn't trigger one? 
+                No, we used one separator for the whole block. 
+                But if showThemeSwitcher is false AND helpPath is false, but shortcuts is true,
+                we need a separator before shortcuts. hasMiddleSection handles this.
+                
+                However, if we have Theme AND Shortcuts, do we want a separator between them?
+                Usually no, they are grouped. But shortcuts hint often has a separator before it if it's distinct.
+                Let's keep it simple: grouped together.
+            */}
+            {!showThemeSwitcher &&
+            !helpPath &&
+            hasMiddleSection ? null : /* If theme/help exist, shortcuts is just at bottom of that group. */
+            /* If ONLY shortcuts exist, hasMiddleSection adds the top separator. */
+            /* Wait, originally shortcuts had its own separator. */
+            /* Let's assume shortcuts is footer-like for the middle section. */
+            showThemeSwitcher || helpPath ? (
+              <DropdownMenuSeparator />
+            ) : null}
+            <div className="flex items-center justify-between px-2 py-1.5 text-xs text-muted-foreground">
+              <span>Shortcuts</span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
             </div>
           </>
         )}
@@ -220,7 +246,10 @@ export const UserButton = ({
         <DropdownMenuSeparator />
 
         {/* Sign Out */}
-        <DropdownMenuItem asChild className="cursor-pointer" variant="destructive">
+        <DropdownMenuItem
+          asChild
+          className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+        >
           <Link className="flex items-center" to={signOutPath ?? defaultAuthRoutes.signOut}>
             <LogOut className="mr-2 size-4" />
             <span>Sign Out</span>

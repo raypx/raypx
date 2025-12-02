@@ -50,7 +50,7 @@ export function initSentryServer({
 
 /**
  * Create Sentry instance for server-side middleware
- * @deprecated Use initSentryServer() instead
+ * Returns an object with middleware handler for TanStack Start
  */
 export function createSentry() {
   return initSentryServer();
