@@ -93,15 +93,15 @@ export const TextHoverEffect = ({
           const svgRect = svgRef.current.getBoundingClientRect();
           const cxPercentage = ((e.clientX - svgRect.left) / svgRect.width) * 100;
           const cyPercentage = ((e.clientY - svgRect.top) / svgRect.height) * 100;
-          
+
           // Set both current and target to mouse position to avoid animation from center
           currentPositionRef.current = { cx: cxPercentage, cy: cyPercentage };
           targetPositionRef.current = { cx: cxPercentage, cy: cyPercentage };
-          
+
           // Set radius to normal size
           currentRadiusRef.current = NORMAL_RADIUS;
           targetRadiusRef.current = NORMAL_RADIUS;
-          
+
           // Immediately update gradient position and radius
           if (gradientRef.current) {
             gradientRef.current.setAttribute("cx", `${cxPercentage}%`);
@@ -145,6 +145,31 @@ export const TextHoverEffect = ({
             </>
           )}
         </linearGradient>
+
+        <motion.linearGradient
+          animate={{
+            x1: ["-100%", "100%"],
+            x2: ["0%", "200%"],
+          }}
+          gradientUnits="userSpaceOnUse"
+          id="rainbowGradient"
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            repeatType: "loop",
+            ease: "linear",
+          }}
+          x1="0%"
+          x2="100%"
+          y1="0%"
+          y2="0%"
+        >
+          <stop offset="0%" stopColor="#eab308" stopOpacity="0" />
+          <stop offset="20%" stopColor="#ef4444" stopOpacity="0.5" />
+          <stop offset="50%" stopColor="#3b82f6" stopOpacity="1" />
+          <stop offset="80%" stopColor="#06b6d4" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+        </motion.linearGradient>
 
         <radialGradient
           cx="50%"
@@ -193,6 +218,22 @@ export const TextHoverEffect = ({
       >
         {text}
       </motion.text>
+
+      {/* Rainbow flow effect when not hovered */}
+      {!hovered && (
+        <text
+          className="fill-transparent font-[helvetica] text-7xl font-bold"
+          dominantBaseline="middle"
+          stroke="url(#rainbowGradient)"
+          strokeWidth="0.3"
+          textAnchor="middle"
+          x="50%"
+          y="50%"
+        >
+          {text}
+        </text>
+      )}
+
       {/* Colored fill and stroke layer - follows mouse */}
       {hovered && (
         <text

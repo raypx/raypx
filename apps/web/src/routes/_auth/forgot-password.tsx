@@ -85,7 +85,7 @@ function ForgotPasswordPage() {
           }
           title="Check your email"
         >
-          <Alert>
+          <Alert className="text-left">
             <Mail className="h-4 w-4" />
             <AlertTitle>Didn't receive the email?</AlertTitle>
             <AlertDescription>
