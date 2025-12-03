@@ -20,6 +20,8 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { AuthCard } from "~/layouts/auth/auth-card";
+import { SignInFooter } from "~/layouts/auth/auth-footers";
 import { isValidEmail } from "../../utils/email";
 
 function RecoverAccountPage() {
@@ -114,98 +116,100 @@ function RecoverAccountPage() {
   }
 
   return (
-    <Form {...form}>
-      <form
-        className={cn("grid w-full gap-6")}
-        noValidate={isHydrated}
-        onSubmit={form.handleSubmit(signIn)}
-      >
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
-
-              <FormControl>
-                <Input
-                  autoComplete={usernameEnabled ? "username" : "email"}
-                  disabled={isSubmitting}
-                  placeholder={usernameEnabled ? "Username" : "Email"}
-                  type={usernameEnabled ? "text" : "email"}
-                  {...field}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-center justify-between">
-                <FormLabel>Password</FormLabel>
-
-                {credentials?.forgotPassword && (
-                  <Link
-                    className="text-sm hover:underline"
-                    search={isHydrated ? window.location.search : ""}
-                    to="/forgot-password"
-                  >
-                    Forgot Password
-                  </Link>
-                )}
-              </div>
-
-              <FormControl>
-                <PasswordField
-                  autoComplete="current-password"
-                  disabled={isSubmitting}
-                  placeholder="Password"
-                  {...field}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {rememberMeEnabled && (
+    <AuthCard description="Recover your account" footer={<SignInFooter />} title="Recover Account">
+      <Form {...form}>
+        <form
+          className={cn("grid w-full gap-6")}
+          noValidate={isHydrated}
+          onSubmit={form.handleSubmit(signIn)}
+        >
           <FormField
             control={form.control}
-            name="rememberMe"
+            name="email"
             render={({ field }) => (
-              <FormItem className="flex">
+              <FormItem>
+                <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
+
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
+                  <Input
+                    autoComplete={usernameEnabled ? "username" : "email"}
                     disabled={isSubmitting}
-                    onCheckedChange={field.onChange}
+                    placeholder={usernameEnabled ? "Username" : "Email"}
+                    type={usernameEnabled ? "text" : "email"}
+                    {...field}
                   />
                 </FormControl>
 
-                <FormLabel>Remember Me</FormLabel>
+                <FormMessage />
               </FormItem>
             )}
           />
-        )}
 
-        {/* <Captcha
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Password</FormLabel>
+
+                  {credentials?.forgotPassword && (
+                    <Link
+                      className="text-sm hover:underline"
+                      search={isHydrated ? window.location.search : ""}
+                      to="/forgot-password"
+                    >
+                      Forgot Password
+                    </Link>
+                  )}
+                </div>
+
+                <FormControl>
+                  <PasswordField
+                    autoComplete="current-password"
+                    disabled={isSubmitting}
+                    placeholder="Password"
+                    {...field}
+                  />
+                </FormControl>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {rememberMeEnabled && (
+            <FormField
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <FormItem className="flex">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      disabled={isSubmitting}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+
+                  <FormLabel>Remember Me</FormLabel>
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* <Captcha
                     action="/sign-in/email"
                     localization={localization}
                     ref={captchaRef}
                 /> */}
 
-        <Button className="w-full" disabled={isSubmitting} type="submit">
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Recover Account"}
-        </Button>
-      </form>
-    </Form>
+          <Button className="w-full" disabled={isSubmitting} type="submit">
+            {isSubmitting ? <Loader2 className="animate-spin" /> : "Recover Account"}
+          </Button>
+        </form>
+      </Form>
+    </AuthCard>
   );
 }
 

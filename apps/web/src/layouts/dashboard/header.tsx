@@ -9,15 +9,14 @@ import {
   BreadcrumbSeparator,
 } from "@raypx/ui/components/breadcrumb";
 import { Button } from "@raypx/ui/components/button";
-import { DropdownMenuItem } from "@raypx/ui/components/dropdown-menu";
-import { Input } from "@raypx/ui/components/input";
 import { Separator } from "@raypx/ui/components/separator";
 import { SidebarTrigger } from "@raypx/ui/components/sidebar";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useMemo } from "react";
 import { authRoutes } from "~/config/auth";
 import { sidebarGroups } from "~/config/sidebar";
+import { CommandMenu } from "./command-menu";
 
 interface HeaderProps {
   user: AuthUser;
@@ -84,14 +83,7 @@ export function Header({ user }: HeaderProps) {
         )}
 
         <Separator className="h-4 hidden md:block" orientation="vertical" />
-        <div className="relative group max-w-md w-full hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          <Input
-            className="pl-9 bg-muted/50 border-transparent focus:bg-background focus:border-primary/20 transition-all"
-            placeholder="Search anything..."
-            type="search"
-          />
-        </div>
+        <CommandMenu />
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
@@ -100,11 +92,11 @@ export function Header({ user }: HeaderProps) {
 
         {/* Notifications */}
         <Button className="relative" size="icon" variant="ghost">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background animate-pulse" />
+          <Bell className="h-5 w-5 text-muted-foreground" />
+          <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-600 ring-2 ring-background" />
         </Button>
 
-        <div className="h-6 w-px bg-border/50 mx-1 hidden md:block" />
+        <div className="h-4 w-px bg-border/50 mx-1 hidden md:block" />
 
         {/* User menu */}
         <UserButton

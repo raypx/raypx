@@ -26,8 +26,8 @@ export function CtaSection() {
           <div className="relative z-10 max-w-3xl mx-auto space-y-8">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white">
               Ready to build your{" "}
-              <span className="bg-linear-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                next big idea?
+              <span className="bg-linear-to-r from-primary to-purple-400 bg-clip-text text-transparent py-1">
+                Next big idea?
               </span>
             </h2>
             <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
@@ -59,7 +59,7 @@ export function CtaSection() {
             </div>
 
             <p className="text-sm text-zinc-500 pt-8">
-              Free and open source under the MIT License.
+              Free and open source under the Apache 2.0 License.
             </p>
           </div>
         </div>
