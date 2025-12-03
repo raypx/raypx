@@ -1,10 +1,8 @@
-import { useTRPC } from "@raypx/trpc/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Button } from "@raypx/ui/components/button";
-import { toast } from "@raypx/ui/components/toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Camera, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
+import { useAvatarUpload } from "../hooks/use-avatar-upload";
 
 interface AvatarUploadProps {
   userId: string;
@@ -12,36 +10,12 @@ interface AvatarUploadProps {
   userName?: string | null;
 }
 
-export function AvatarUpload({ userId, currentAvatar, userName }: AvatarUploadProps) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Upload mutation
-  const uploadMutation = useMutation({
-    ...trpc.storage.uploadAvatar.mutationOptions(),
-    onSuccess: (data) => {
-      toast.success("Avatar uploaded successfully!");
-      setPreview(null);
-      // Invalidate session to refresh avatar
-      queryClient.invalidateQueries();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to upload avatar");
-    },
-  });
-
-  // Delete mutation
-  const deleteMutation = useMutation({
-    ...trpc.storage.deleteAvatar.mutationOptions(),
+  const { upload, deleteAvatar, isLoading } = useAvatarUpload({
     onSuccess: () => {
-      toast.success("Avatar removed successfully!");
-      queryClient.invalidateQueries();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to remove avatar");
+      setPreview(null);
     },
   });
 
@@ -49,49 +23,23 @@ export function AvatarUpload({ userId, currentAvatar, userName }: AvatarUploadPr
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
-    }
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setPreview(dataUrl);
+    };
+    reader.readAsDataURL(file);
 
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        setPreview(dataUrl);
-      };
-      reader.readAsDataURL(file);
-
-      // Convert to base64 for upload
-      const base64 = await fileToBase64(file);
-
-      // Upload
-      await uploadMutation.mutateAsync({
-        image: base64,
-        format: "webp", // Always convert to WebP for optimization
-      });
-    } catch (error) {
-      console.error("Upload error:", error);
-    } finally {
-      setIsProcessing(false);
-    }
+    // Upload file
+    await upload(file);
   };
 
   const handleDelete = () => {
     if (!window.confirm("Are you sure you want to remove your avatar?")) {
       return;
     }
-    deleteMutation.mutate();
+    deleteAvatar();
   };
 
   const getInitials = (name?: string | null) => {
@@ -104,7 +52,6 @@ export function AvatarUpload({ userId, currentAvatar, userName }: AvatarUploadPr
       .slice(0, 2);
   };
 
-  const isLoading = uploadMutation.isPending || deleteMutation.isPending || isProcessing;
   const displayAvatar = preview || currentAvatar;
 
   return (
@@ -173,16 +120,4 @@ export function AvatarUpload({ userId, currentAvatar, userName }: AvatarUploadPr
       </div>
     </div>
   );
-}
-
-/**
- * Convert File to base64 string
- */
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
