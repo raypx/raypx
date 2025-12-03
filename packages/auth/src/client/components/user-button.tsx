@@ -71,7 +71,6 @@ export const UserButton = ({
   helpPath,
   showKeyboardShortcuts = false,
 }: UserButtonProps = {}) => {
-  const profilePath = "/dashboard/profile";
   const settingsPath = "/dashboard/settings";
   const avatarSize = avatar?.size ?? "size-8";
   const {
@@ -122,7 +121,7 @@ export const UserButton = ({
 
       <DropdownMenuContent align="end" className="w-60 p-1" forceMount>
         <DropdownMenuItem asChild className="p-0 font-normal focus:bg-accent cursor-pointer">
-          <Link className="flex items-center gap-3 px-3 py-2.5" to={profilePath}>
+          <Link className="flex items-center gap-3 px-3 py-2.5" to={settingsPath}>
             <div className="flex flex-col space-y-0.5 overflow-hidden">
               <p className="text-sm font-medium leading-none truncate">{userName}</p>
               {userEmail && (
@@ -135,12 +134,6 @@ export const UserButton = ({
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild className="cursor-pointer">
-            <Link className="flex items-center" to={profilePath}>
-              <User className="mr-2 size-4 text-muted-foreground" />
-              <span>Profile</span>
-            </Link>
-          </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link className="flex items-center" to={settingsPath}>
               <Settings className="mr-2 size-4 text-muted-foreground" />

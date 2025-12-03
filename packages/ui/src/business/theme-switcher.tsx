@@ -182,7 +182,7 @@ export const ThemeSwitcher = memo(({ mode = "light-dark-system", variant }: Them
       <DropdownMenuTrigger asChild>
         <Button
           aria-label="Toggle theme"
-          className={`size-8 ${BUTTON_CLASSES}`}
+          className={cn('size-8', BUTTON_CLASSES, 'focus-visible:!none')}
           size="sm"
           variant="ghost"
         >
