@@ -127,7 +127,7 @@ export function Sidebar({ user }: SidebarProps) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12"
               size="lg"
             >
-              <Link to="/dashboard/profile">
+              <Link to="/dashboard/settings">
                 <Avatar className="h-8 w-8 rounded-lg">
                   {user?.image && (
                     <AvatarImage alt={user?.name || user?.email || ""} src={user.image} />
