@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { logger } from "@raypx/shared/logger";
 import { env } from "./envs";
@@ -127,7 +128,7 @@ export async function uploadToR2(options: UploadOptions): Promise<{
 
 /**
  * Upload an avatar image to R2
- * Automatically generates key and sets proper content type
+ * Automatically generates key with content hash and sets proper content type
  */
 export async function uploadAvatar(
   userId: string,
@@ -144,7 +145,15 @@ export async function uploadAvatar(
     png: "image/png",
   };
 
-  const key = `avatars/${userId}.${format}`;
+  // Generate content hash (first 16 chars of SHA-256) for unique URL
+  // This ensures each upload gets a new URL, breaking browser cache
+  const contentHash = createHash("sha256").update(buffer).digest("hex");
+  const timestamp = Date.now();
+
+  // Build initial key and hash it again for shorter, cleaner filename
+  const initialKey = `${userId}-${timestamp}-${contentHash}.${format}`;
+  const keyHash = createHash("sha256").update(initialKey).digest("hex");
+  const key = `avatars/${keyHash}.${format}`;
   const contentType = contentTypeMap[format];
 
   return uploadToR2({
@@ -154,6 +163,8 @@ export async function uploadAvatar(
     metadata: {
       userId,
       uploadedAt: new Date().toISOString(),
+      contentHash,
+      keyHash,
     },
   });
 }

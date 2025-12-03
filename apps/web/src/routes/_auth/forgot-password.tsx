@@ -12,7 +12,7 @@ import {
   Input,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
-import { useToast } from "@raypx/ui/hooks/use-toast";
+import { toast } from "@raypx/ui/hooks/use-toast";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
@@ -35,7 +35,6 @@ function ForgotPasswordPage() {
   });
 
   const { auth } = useAuth();
-  const { toast } = useToast();
   const isHydrated = useIsHydrated();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);

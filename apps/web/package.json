@@ -23,6 +23,7 @@
     "@raypx/email": "workspace:*",
     "@raypx/observability": "workspace:*",
     "@raypx/shared": "workspace:*",
+    "@raypx/storage": "workspace:*",
     "@raypx/trpc": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@react-email/components": "^1.0.1",

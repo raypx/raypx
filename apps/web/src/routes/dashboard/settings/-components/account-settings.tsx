@@ -20,15 +20,13 @@ import {
   FormMessage,
 } from "@raypx/ui/components/form";
 import { Input } from "@raypx/ui/components/input";
-import { useToast } from "@raypx/ui/hooks/use-toast";
+import { toast } from "@raypx/ui/components/toast";
 import { useMutation } from "@tanstack/react-query";
 import { Upload, User } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
-const MAX_BASE64_SIZE = 500 * 1024; // 500KB after base64 encoding (roughly 375KB original)
+import { useAvatarUpload } from "~/hooks/use-avatar-upload";
 
 /**
  * Profile update form schema
@@ -44,84 +42,15 @@ const profileFormSchema = z.object({
     .optional(),
 });
 
-/**
- * Convert image file to base64 data URI with compression
- */
-function imageToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      reject(new Error("File must be an image"));
-      return;
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      reject(new Error(`File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`));
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      // Check base64 size (base64 is ~33% larger than original)
-      const base64Size = result.length;
-      if (base64Size > MAX_BASE64_SIZE * 1.33) {
-        // Try to compress
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-
-          // Calculate new dimensions (max 400x400)
-          const maxDimension = 400;
-          if (width > height) {
-            if (width > maxDimension) {
-              height = (height * maxDimension) / width;
-              width = maxDimension;
-            }
-          } else {
-            if (height > maxDimension) {
-              width = (width * maxDimension) / height;
-              height = maxDimension;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            reject(new Error("Failed to create canvas context"));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          // Convert to JPEG with 0.85 quality for smaller size
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.85);
-          resolve(compressedBase64);
-        };
-        img.onerror = () => reject(new Error("Failed to load image"));
-        img.src = result;
-      } else {
-        resolve(result);
-      }
-    };
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  });
-}
-
 export function AccountSettings() {
   const {
     hooks: { useSession },
   } = useAuth();
   const { data: session, refetch: refetchSession } = useSession();
   const user = session?.user;
-  const { toast } = useToast();
   const trpc = useTRPC();
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { upload, isLoading: isUploading } = useAvatarUpload();
 
   // Initialize form with user data
   const form = useForm<z.infer<typeof profileFormSchema>>({
@@ -132,23 +61,7 @@ export function AccountSettings() {
     },
   });
 
-  const updateProfileMutation = useMutation({
-    ...trpc.users.updateProfile.mutationOptions(),
-    onSuccess: () => {
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      });
-      void refetchSession();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update profile",
-        variant: "destructive",
-      });
-    },
-  });
+  const updateProfileMutation = useMutation(trpc.users.updateProfile.mutationOptions());
 
   const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
     try {
@@ -167,15 +80,18 @@ export function AccountSettings() {
 
       // Only update if there are changes
       if (Object.keys(updateData).length > 0) {
-        await updateProfileMutation.mutateAsync(updateData);
+        try {
+          await updateProfileMutation.mutateAsync(updateData);
+          toast.success("Profile updated successfully!");
+          void refetchSession();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Failed to update profile");
+        }
       } else {
-        toast({
-          title: "No changes",
-          description: "No changes were made to your profile.",
-        });
+        toast.info("No changes were made to your profile.");
       }
-    } catch (_error) {
-      // Error handling is done in updateProfileMutation.onError
+    } catch {
+      // Error handling is done above
     }
   };
 
@@ -187,27 +103,13 @@ export function AccountSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
-    try {
-      const base64 = await imageToBase64(file);
-      await updateProfileMutation.mutateAsync({ image: base64 });
-      toast({
-        title: "Avatar updated",
-        description: "Your avatar has been updated successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload avatar",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
+
+    // Upload file (validation is handled in the hook)
+    await upload(file);
   };
 
   const userInitials = user?.name

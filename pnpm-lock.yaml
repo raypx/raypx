@@ -421,6 +421,9 @@ importers:
       '@raypx/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@raypx/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@raypx/trpc':
         specifier: workspace:*
         version: link:../../packages/trpc
