@@ -27,24 +27,32 @@ const techStackRow2: TechItem[] = [
 ];
 
 const TechCard = ({ name, description }: TechItem) => (
-  <div className="relative flex h-16 w-48 items-center space-x-4 rounded-xl border bg-background p-4 hover:bg-accent/50 transition-colors">
+  <div className="relative flex h-16 w-52 items-center space-x-4 rounded-xl border bg-background/50 backdrop-blur-sm p-4 hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 group">
     {/* Placeholder icon */}
-    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary group-hover:scale-110 transition-transform">
       {name[0]}
     </div>
-    <div className="flex flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden text-left">
       <span className="text-sm font-medium leading-none">{name}</span>
-      <span className="text-xs text-muted-foreground truncate">{description}</span>
+      <span className="text-xs text-muted-foreground truncate group-hover:text-primary/80 transition-colors">
+        {description}
+      </span>
     </div>
   </div>
 );
 
 export function TechStackSection() {
   return (
-    <section className="py-20 md:py-32 overflow-hidden bg-background">
-      <div className="container mx-auto px-4 md:px-6 mb-10 text-center">
+    <section className="py-20 md:py-32 overflow-hidden bg-background relative">
+      {/* Spotlight Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05)_0,transparent_100%)] pointer-events-none" />
+
+      <div className="container mx-auto px-4 md:px-6 mb-10 text-center relative z-10">
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-          Powered by Modern Tech
+          Powered by{" "}
+          <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Modern Tech
+          </span>
         </h2>
         <p className="text-lg text-muted-foreground">
           Built with the best tools in the React ecosystem.

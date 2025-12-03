@@ -121,17 +121,29 @@ function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {session?.user?.name?.split(" ")[0] || "User"}!
+            Welcome back,{" "}
+            <span className="bg-linear-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              {session?.user?.name?.split(" ")[0] || "User"}
+            </span>
+            !
           </h1>
-          <p className="text-muted-foreground">Here's what's happening with your account today</p>
+          <p className="text-muted-foreground mt-1">
+            Here's what's happening with your account today
+          </p>
         </div>
-        <Badge className="gap-2" variant="outline">
-          <Clock className="h-3 w-3" />
-          Last login: 2 hours ago
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge className="gap-1.5 py-1.5 px-3" variant="secondary">
+            <Clock className="h-3.5 w-3.5" />
+            Last login: 2 hours ago
+          </Badge>
+          <Button size="sm">
+            <Zap className="mr-2 h-4 w-4" />
+            Upgrade Plan
+          </Button>
+        </div>
       </div>
 
       {/* Security shortcuts (from @raypx/auth) */}
@@ -146,68 +158,69 @@ function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card
-            className="relative overflow-hidden transition-all hover:shadow-md hover:border-primary/50"
+            className="relative overflow-hidden transition-all hover:shadow-lg hover:border-primary/20 group bg-card/50 backdrop-blur-sm"
             key={stat.title}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+            <div className="absolute inset-0 bg-linear-to-br from-transparent via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.title}
+              </CardTitle>
+              <div
+                className={`p-2 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}
+              >
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                <ArrowUpRight className="h-3 w-3" />
-                <span>{stat.change} from last month</span>
+              <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge
+                  className="gap-1 font-normal"
+                  variant={stat.changeType === "increase" ? "default" : "destructive"}
+                >
+                  {stat.changeType === "increase" ? (
+                    <ArrowUpRight className="h-3 w-3" />
+                  ) : (
+                    <ArrowUpRight className="h-3 w-3 rotate-90" />
+                  )}
+                  {stat.change}
+                </Badge>
+                <span className="text-xs text-muted-foreground">vs last month</span>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Quick Actions */}
-        <Card>
+      <div className="grid gap-6 md:grid-cols-7">
+        {/* Recent Activity - Takes up more space */}
+        <Card className="md:col-span-4 lg:col-span-5 flex flex-col bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks you might want to do</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Your recent actions and updates</CardDescription>
+              </div>
+              <Button size="sm" variant="outline">
+                View All
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {quickActions.map((action) => (
-              <Link key={action.href} to={action.href}>
-                <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer group">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <action.icon className={`h-4 w-4 ${action.color}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{action.title}</p>
-                      <p className="text-xs text-muted-foreground">{action.description}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                </div>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
+          <CardContent className="flex-1">
+            <div className="relative space-y-6 pl-2">
+              {/* Timeline Line */}
+              <div className="absolute left-2 top-2 bottom-2 w-px bg-border" />
 
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your recent actions and updates</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
               {recentActivity.map((activity, index) => (
-                <div className="flex items-center gap-4" key={index}>
+                <div className="relative flex items-start gap-4 group" key={index}>
                   <div
-                    className={`h-2 w-2 rounded-full ${statusColors[activity.status]} animate-pulse`}
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
+                    className={`relative z-10 mt-1 flex h-4 w-4 items-center justify-center rounded-full border bg-background shadow-xs transition-colors group-hover:border-primary group-hover:scale-110`}
+                  >
+                    <div className={`h-2 w-2 rounded-full ${statusColors[activity.status]}`} />
+                  </div>
+                  <div className="flex-1 space-y-1 bg-muted/30 p-3 rounded-lg group-hover:bg-muted/50 transition-colors">
+                    <p className="text-sm font-medium leading-none">{activity.action}</p>
                     <p className="text-xs text-muted-foreground">{activity.time}</p>
                   </div>
                 </div>
@@ -215,38 +228,65 @@ function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Quick Actions & Account Health - Side Column */}
+        <div className="space-y-6 md:col-span-3 lg:col-span-2">
+          <Card className="bg-card/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Common tasks</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-2">
+              {quickActions.map((action) => (
+                <Link key={action.href} to={action.href}>
+                  <Button className="w-full justify-start h-auto py-3 px-4 group" variant="outline">
+                    <div
+                      className={`mr-3 p-1.5 rounded-md bg-primary/5 group-hover:bg-primary/10 transition-colors`}
+                    >
+                      <action.icon className={`h-4 w-4 ${action.color}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-sm font-medium">{action.title}</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              ))}
+              <Button className="w-full justify-start gap-3" variant="ghost">
+                <div className="p-1.5">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </div>
+                Invite Team Member
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Account Health</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Profile Completion</span>
+                  <span className="font-medium">85%</span>
+                </div>
+                <Progress className="h-1.5" value={85} />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Security Score</span>
+                  <span className="font-medium text-green-600">Good</span>
+                </div>
+                <Progress className="h-1.5" value={70} />
+              </div>
+              <Button asChild className="w-full text-xs" size="sm" variant="secondary">
+                <Link to="/dashboard/settings">Complete Profile</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* Account Health */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Health</CardTitle>
-          <CardDescription>Keep your account secure and up to date</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>Profile Completion</span>
-              <span className="text-muted-foreground">85%</span>
-            </div>
-            <Progress className="h-2" value={85} />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>Security Score</span>
-              <span className="text-muted-foreground">Good</span>
-            </div>
-            <Progress className="h-2" value={70} />
-          </div>
-
-          <div className="pt-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/dashboard/settings">Complete Your Profile</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { cn } from "@raypx/ui/lib/utils";
 import {
   Bot,
   Database,
@@ -78,9 +79,11 @@ const features: Feature[] = [
 export function FeaturesSection() {
   return (
     <section className="py-20 md:py-32 bg-muted/30 relative overflow-hidden">
-      <div className="absolute inset-0 bg-linear-to-b from-background via-transparent to-background pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-b from-background via-transparent to-background pointer-events-none z-10" />
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
 
-      <Container>
+      <Container className="relative z-20">
         <div className="space-y-12 relative">
           {/* Section header */}
           <div className="text-center space-y-4 max-w-3xl mx-auto">
@@ -97,12 +100,22 @@ export function FeaturesSection() {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <SpotlightCard className={feature.className} key={index}>
-                  <div className="p-8 h-full flex flex-col">
-                    <div className="mb-4 size-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <SpotlightCard
+                  className={cn("group overflow-hidden bg-card/50", feature.className)}
+                  key={index}
+                >
+                  {/* Dot Pattern inside card */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                    <div className="absolute inset-0 bg-[radial-gradient(var(--primary)_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black,transparent)] opacity-20" />
+                  </div>
+
+                  <div className="p-8 h-full flex flex-col relative z-10">
+                    <div className="mb-6 size-12 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300 shadow-sm group-hover:shadow-primary/20 ring-1 ring-primary/10 group-hover:ring-primary/30">
                       <Icon className="size-6 text-primary" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                    <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
+                      {feature.title}
+                    </h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">
                       {feature.description}
                     </p>

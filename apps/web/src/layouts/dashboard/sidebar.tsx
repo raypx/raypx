@@ -1,21 +1,21 @@
 import type { AuthUser } from "@raypx/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
-import { Badge } from "@raypx/ui/components/badge";
-import { ScrollArea } from "@raypx/ui/components/scroll-area";
-import { Separator } from "@raypx/ui/components/separator";
+import {
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  Sidebar as UiSidebar,
+} from "@raypx/ui/components/sidebar";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import {
-  BookOpen,
-  CreditCard,
-  FileText,
-  Home,
-  Key,
-  Settings,
-  Shield,
-  User,
-  Users,
-} from "lucide-react";
+import { BookOpen, CreditCard, FileText, Home, Key, Settings, User, Users } from "lucide-react";
 import { Logo } from "~/components/layout/logo";
 
 /**
@@ -108,95 +108,101 @@ export function Sidebar({ user }: SidebarProps) {
   const currentPath = location.pathname;
 
   return (
-    <aside className="w-64 border-r bg-card flex flex-col">
-      {/* Header */}
-      <div className="flex h-16 items-center justify-between px-4 border-b">
-        <Link className="flex items-center gap-2 font-semibold" to="/">
-          <Logo className="size-6" />
-          <span>Raypx</span>
-        </Link>
-      </div>
-
-      {/* User Info */}
-      <div className="px-4 py-3 border-b">
-        <Link
-          className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent"
-          to="/dashboard/profile"
-        >
-          <Avatar className="size-8">
-            {user?.image && <AvatarImage alt={user?.name || user?.email || ""} src={user.image} />}
-            <AvatarFallback className="text-xs">
-              {getUserInitials(user?.name, user?.email)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.name || user?.email}</p>
-            <p className="text-xs text-muted-foreground truncate">
-              {user?.email && user?.name ? user.email : "Personal"}
-            </p>
-          </div>
-        </Link>
-      </div>
-
-      <ScrollArea className="flex-1 p-4">
-        {/* User Menu */}
-        <nav className="space-y-1">
-          {userMenuItems.map((item) => {
-            const isActive = isActivePath(currentPath, item.href);
-            return (
-              <Link
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
-                  isActive && "bg-accent text-accent-foreground",
-                )}
-                key={item.href}
-                to={item.href}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
+    <UiSidebar className="border-r-0 bg-card/50 backdrop-blur-xl" collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg">
+              <Link to="/">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Logo className="size-5" />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-semibold">Raypx</span>
+                  <span className="text-xs text-muted-foreground">v1.0.0</span>
+                </div>
               </Link>
-            );
-          })}
-        </nav>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
 
-        {/* Admin Menu */}
-        {showAdminMenu && (
-          <>
-            <Separator className="my-4" />
-            <div className="mb-2 px-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Admin
-                </h3>
-                <Badge className="h-5 text-[10px]" variant="destructive">
-                  <Shield className="h-3 w-3 mr-1" />
-                  Admin
-                </Badge>
-              </div>
-            </div>
-            <nav className="space-y-1">
-              {adminMenuItems.map((item) => {
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {userMenuItems.map((item) => {
                 const isActive = isActivePath(currentPath, item.href);
                 return (
-                  <Link
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      isActive && "bg-accent text-accent-foreground",
-                    )}
-                    key={item.href}
-                    to={item.href}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                      <Link to={item.href}>
+                        <item.icon className={cn(isActive && "text-primary")} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 );
               })}
-            </nav>
-          </>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {showAdminMenu && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminMenuItems.map((item) => {
+                  const isActive = isActivePath(currentPath, item.href);
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                        <Link to={item.href}>
+                          <item.icon className={cn(isActive && "text-primary")} />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         )}
-      </ScrollArea>
-    </aside>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground h-12"
+              size="lg"
+            >
+              <Link to="/dashboard/profile">
+                <Avatar className="h-8 w-8 rounded-lg">
+                  {user?.image && (
+                    <AvatarImage alt={user?.name || user?.email || ""} src={user.image} />
+                  )}
+                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-medium">
+                    {getUserInitials(user?.name, user?.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">{user?.name || user?.email}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {user?.email && user?.name ? user.email : "Personal Plan"}
+                  </span>
+                </div>
+                <Settings className="ml-auto size-4" />
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </UiSidebar>
   );
 }

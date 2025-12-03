@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -34,7 +33,7 @@ import { toast } from "@raypx/ui/components/toast";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BookOpen, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { BookOpen, FileText, FolderOpen, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
@@ -58,14 +57,63 @@ export const Route = createFileRoute("/dashboard/knowledges/")({
 
 function KnowledgesPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Knowledge</h1>
-          <p className="text-muted-foreground">Manage your knowledge bases and documents</p>
+          <p className="text-muted-foreground mt-1">
+            Organize and manage your knowledge bases and documentation
+          </p>
         </div>
       </div>
-      <KnowledgesSection />
+
+      <KnowledgeUsageStats />
+
+      <div className="space-y-4">
+        <KnowledgesSection />
+      </div>
+    </div>
+  );
+}
+
+function KnowledgeUsageStats() {
+  const usageStats = [
+    {
+      title: "Total Bases",
+      value: "0",
+      icon: FolderOpen,
+      description: "Knowledge bases",
+    },
+    {
+      title: "Total Documents",
+      value: "0",
+      icon: FileText,
+      description: "Indexed documents",
+    },
+    {
+      title: "Storage Used",
+      value: "0 MB",
+      icon: BookOpen,
+      description: "Vector storage",
+    },
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {usageStats.map((stat) => (
+        <Card className="bg-card/50 backdrop-blur-sm" key={stat.title}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {stat.title}
+            </CardTitle>
+            <stat.icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
@@ -171,47 +219,50 @@ function KnowledgesSection() {
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b">
-        <CardTitle className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5" />
-          Knowledge
-        </CardTitle>
-        <CardDescription>
-          {`${knowledges.length} knowledge${knowledges.length !== 1 ? "s" : ""}`}
-        </CardDescription>
-        <CardAction>
+    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <BookOpen className="h-5 w-5 text-primary" />
+            Knowledge Bases
+          </CardTitle>
+          <CardDescription className="mt-1.5">
+            {`${knowledges.length} knowledge base${knowledges.length !== 1 ? "s" : ""}`} available
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-3">
           <Select
             onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}
             value={statusFilter}
           >
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-32 h-9 bg-background/50 border-border/50">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
           <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
                 <Plus className="h-4 w-4" />
                 Create Knowledge Base
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Create New Knowledge Base</DialogTitle>
                 <DialogDescription>
-                  Create a new knowledge base to organize your documents
+                  Create a new knowledge base to organize and search your documents effectively.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-6 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
                   <Input
+                    className="bg-muted/50"
                     id="name"
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="e.g., Product Documentation"
@@ -221,9 +272,10 @@ function KnowledgesSection() {
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
+                    className="bg-muted/50 min-h-[100px]"
                     id="description"
                     onChange={(e) => setNewDescription(e.target.value)}
-                    placeholder="Optional description"
+                    placeholder="Describe what kind of documents this knowledge base will contain..."
                     value={newDescription}
                   />
                 </div>
@@ -240,7 +292,7 @@ function KnowledgesSection() {
                   Cancel
                 </Button>
                 <Button disabled={createMutation.isPending} onClick={handleCreate}>
-                  {createMutation.isPending ? "Creating..." : "Create"}
+                  {createMutation.isPending ? "Creating..." : "Create Knowledge Base"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -255,9 +307,9 @@ function KnowledgesSection() {
           >
             {isFetching ? "Refreshing…" : "Refresh"}
           </Button>
-        </CardAction>
+        </div>
       </CardHeader>
-      <CardContent className="px-0">{content}</CardContent>
+      <CardContent className="p-0">{content}</CardContent>
     </Card>
   );
 }
