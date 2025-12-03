@@ -1,6 +1,6 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ProviderButton, socialProviders, useAuth, useOnSuccessTransition } from "@raypx/auth";
+import { useAuth, useOnSuccessTransition } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -13,7 +13,6 @@ import {
   FormMessage,
   Input,
   PasswordField,
-  Separator,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
 import { createFileRoute } from "@tanstack/react-router";
@@ -21,13 +20,12 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
+import { AuthCard } from "~/layouts/auth/auth-card";
+import { SignUpFooter } from "~/layouts/auth/auth-footers";
+import { OrDivider } from "~/layouts/auth/or-divider";
+import { SocialProviders } from "~/layouts/auth/social-providers";
 
 function SignUpPage() {
-  useAuthPageConfig({
-    footerType: "sign-up",
-  });
-
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
   const [isSubmitting] = useState(false);
@@ -96,27 +94,10 @@ function SignUpPage() {
   }
 
   return (
-    <>
-      {/* Social Login Buttons */}
-      <div className="grid w-full gap-3">
-        {socialProviders
-          .filter((p) => p.provider === "github" || p.provider === "google")
-          .map((provider) => (
-            <ProviderButton
-              disabled={isSubmitting}
-              key={provider.provider}
-              provider={provider}
-              redirectTo={redirectTo}
-            />
-          ))}
-      </div>
+    <AuthCard description="Create an account" footer={<SignUpFooter />} title="Sign Up">
+      <SocialProviders disabled={isSubmitting} redirectTo={redirectTo} />
 
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs text-muted-foreground">
-          OR
-        </span>
-      </div>
+      <OrDivider />
 
       <Form {...form}>
         <form
@@ -197,7 +178,7 @@ function SignUpPage() {
           </Button>
         </form>
       </Form>
-    </>
+    </AuthCard>
   );
 }
 

@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu";
 import { Input } from "@raypx/ui/components/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/input-group";
 import { Label } from "@raypx/ui/components/label";
 import {
   Select,
@@ -38,7 +39,7 @@ import { toast } from "@raypx/ui/components/toast";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreHorizontal, RefreshCw, Search, Users } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
@@ -160,35 +161,42 @@ function UsersSection({
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1">
-            <CardTitle>All Users</CardTitle>
-            <CardDescription>Latest user accounts and their current status.</CardDescription>
+    <Card className="shadow-sm">
+      <CardHeader className="border-b bg-muted/40 px-6 py-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex-1 space-y-1">
+            <CardTitle className="text-xl">All Users</CardTitle>
+            <CardDescription>Manage user accounts and permissions.</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-64">
-              <Input
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Search name or email..."
-                value={searchValue}
-              />
+            <div className="w-full md:w-64">
+              <InputGroup className="bg-background">
+                <InputGroupAddon>
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder="Search users..."
+                  value={searchValue}
+                />
+              </InputGroup>
             </div>
             <Button
               disabled={isFetching}
               onClick={() => {
                 void refetch();
               }}
-              size="sm"
+              size="icon"
+              title="Refresh"
               variant="outline"
             >
-              {isFetching ? "Refreshing…" : "Refresh"}
+              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+              <span className="sr-only">Refresh</span>
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-0">{content}</CardContent>
+      <CardContent className="p-0">{content}</CardContent>
     </Card>
   );
 }
@@ -540,26 +548,31 @@ function UsersTable({
           manualSorting
           onSortingChange={onSortingChange}
         />
-        <div className="flex items-center justify-between px-6 py-2 border-t">
-          <div>
-            Page {page} of {pageCount}
+        <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/40">
+          <div className="text-sm text-muted-foreground">
+            Page <span className="font-medium text-foreground">{page}</span> of{" "}
+            <span className="font-medium text-foreground">{pageCount}</span>
           </div>
-          <div className="space-x-2">
+          <div className="flex items-center gap-2">
             <Button
+              className="h-8 w-8 p-0"
               disabled={page <= 1}
               onClick={() => onPageChange(Math.max(1, page - 1))}
               size="sm"
               variant="outline"
             >
-              Previous
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous</span>
             </Button>
             <Button
+              className="h-8 w-8 p-0"
               disabled={page >= pageCount}
               onClick={() => onPageChange(Math.min(pageCount, page + 1))}
               size="sm"
               variant="outline"
             >
-              Next
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next</span>
             </Button>
           </div>
         </div>

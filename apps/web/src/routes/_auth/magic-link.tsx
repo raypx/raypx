@@ -17,13 +17,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
+import { AuthCard } from "~/layouts/auth/auth-card";
+import { SignInFooter } from "~/layouts/auth/auth-footers";
 
 function MagicLinkPage() {
-  useAuthPageConfig({
-    footerType: "sign-in",
-  });
-
   const { auth } = useAuth();
   const isHydrated = useIsHydrated();
 
@@ -65,39 +62,45 @@ function MagicLinkPage() {
   }
 
   return (
-    <Form {...form}>
-      <form
-        className={cn("grid w-full gap-6")}
-        noValidate={isHydrated}
-        onSubmit={form.handleSubmit(sendMagicLink)}
-      >
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
+    <AuthCard
+      description="Sign in with a magic link sent to your email"
+      footer={<SignInFooter />}
+      title="Magic Link"
+    >
+      <Form {...form}>
+        <form
+          className={cn("grid w-full gap-6")}
+          noValidate={isHydrated}
+          onSubmit={form.handleSubmit(sendMagicLink)}
+        >
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
 
-              <FormControl>
-                <Input
-                  autoComplete="email"
-                  disabled={isSubmitting}
-                  placeholder="Email"
-                  type="email"
-                  {...field}
-                />
-              </FormControl>
+                <FormControl>
+                  <Input
+                    autoComplete="email"
+                    disabled={isSubmitting}
+                    placeholder="Email"
+                    type="email"
+                    {...field}
+                  />
+                </FormControl>
 
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button className="w-full" disabled={isSubmitting} type="submit">
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Send Magic Link"}
-        </Button>
-      </form>
-    </Form>
+          <Button className="w-full" disabled={isSubmitting} type="submit">
+            {isSubmitting ? <Loader2 className="animate-spin" /> : "Send Magic Link"}
+          </Button>
+        </form>
+      </Form>
+    </AuthCard>
   );
 }
 

@@ -15,11 +15,13 @@ import {
 import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
+import { AuthCard } from "~/layouts/auth/auth-card";
+import { SignInFooter } from "~/layouts/auth/auth-footers";
+import { AuthSuccessState } from "~/layouts/auth/auth-success-state";
 
 // Search params validation
 const resetPasswordSearch = z.object({
@@ -53,10 +55,6 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 function ResetPasswordPage() {
-  useAuthPageConfig({
-    footerType: "sign-in",
-  });
-
   const navigate = useNavigate();
   const { token, error: tokenError } = Route.useSearch() as ResetPasswordParams;
   const { auth, redirectTo } = useAuth();
@@ -180,37 +178,30 @@ function ResetPasswordPage() {
   // Success state
   if (isSuccess) {
     return (
-      <div className="grid w-full gap-6 text-center">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
-            <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Password Reset Successful!</h2>
-            <p className="text-sm text-muted-foreground">
-              Your password has been changed successfully.
-              <br />
-              Redirecting you to sign in...
-            </p>
-          </div>
-        </div>
-
+      <AuthSuccessState
+        description={
+          <>
+            Your password has been changed successfully.
+            <br />
+            Redirecting you to sign in...
+          </>
+        }
+        title="Password Reset Successful!"
+      >
         <Link className="w-full" to="/sign-in">
           <Button className="w-full">Continue to sign in</Button>
         </Link>
-      </div>
+      </AuthSuccessState>
     );
   }
 
   // Reset form
   return (
-    <div className="grid w-full gap-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Set new password</h1>
-        <p className="text-sm text-muted-foreground">Choose a strong password for your account</p>
-      </div>
-
+    <AuthCard
+      description="Choose a strong password for your account"
+      footer={<SignInFooter />}
+      title="Set new password"
+    >
       <Form {...form}>
         <form
           className={cn("grid w-full gap-4")}
@@ -264,14 +255,7 @@ function ResetPasswordPage() {
           </Button>
         </form>
       </Form>
-
-      <div className="text-center text-sm">
-        Remember your password?{" "}
-        <Link className="font-medium underline underline-offset-4 hover:text-primary" to="/sign-in">
-          Sign in
-        </Link>
-      </div>
-    </div>
+    </AuthCard>
   );
 }
 

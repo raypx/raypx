@@ -6,6 +6,7 @@ import { Textarea } from "@raypx/ui/components/textarea";
 import { cn } from "@raypx/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
+import { forwardRef } from "react";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -121,18 +122,23 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   );
 }
 
-function InputGroupInput({ className, ...props }: React.ComponentProps<"input">) {
-  return (
-    <Input
-      className={cn(
-        "flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent",
-        className,
-      )}
-      data-slot="input-group-control"
-      {...props}
-    />
-  );
-}
+const InputGroupInput = forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, ...props }, ref) => {
+    return (
+      <Input
+        className={cn(
+          "flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent",
+          className,
+        )}
+        data-slot="input-group-control"
+        ref={ref}
+        {...props}
+      />
+    );
+  },
+);
+
+InputGroupInput.displayName = "InputGroupInput";
 
 function InputGroupTextarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (

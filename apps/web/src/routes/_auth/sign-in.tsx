@@ -1,12 +1,6 @@
 import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  MagicLinkButton,
-  ProviderButton,
-  socialProviders,
-  useAuth,
-  useOnSuccessTransition,
-} from "@raypx/auth";
+import { MagicLinkButton, useAuth, useOnSuccessTransition } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -27,14 +21,13 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { AuthCard } from "~/layouts/auth/auth-card";
+import { SignInFooter } from "~/layouts/auth/auth-footers";
+import { OrDivider } from "~/layouts/auth/or-divider";
+import { SocialProviders } from "~/layouts/auth/social-providers";
 import { isValidEmail } from "../../utils/email";
-import { useAuthPageConfig } from "./-hooks/use-auth-page-config";
 
 function SignInPage() {
-  useAuthPageConfig({
-    footerType: "sign-in",
-  });
-
   const navigate = useNavigate();
   const { credentials, auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
@@ -128,27 +121,10 @@ function SignInPage() {
   }
 
   return (
-    <>
-      {/* Social Login Buttons */}
-      <div className="grid w-full gap-3">
-        {socialProviders
-          .filter((p) => p.provider === "github" || p.provider === "google")
-          .map((provider) => (
-            <ProviderButton
-              disabled={isSubmitting}
-              key={provider.provider}
-              provider={provider}
-              redirectTo={redirectTo}
-            />
-          ))}
-      </div>
+    <AuthCard description="Sign in to your account" footer={<SignInFooter />} title="Sign In">
+      <SocialProviders disabled={isSubmitting} redirectTo={redirectTo} />
 
-      <div className="relative">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs text-muted-foreground">
-          OR
-        </span>
-      </div>
+      <OrDivider />
 
       <Form {...form}>
         <form
@@ -244,7 +220,7 @@ function SignInPage() {
           <MagicLinkButton currentView="sign-in" disabled={isSubmitting} />
         </form>
       </Form>
-    </>
+    </AuthCard>
   );
 }
 

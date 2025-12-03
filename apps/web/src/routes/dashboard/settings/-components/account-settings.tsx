@@ -172,7 +172,8 @@ export function AccountSettings() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remove profile picture?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This will remove your current profile picture. This action cannot be undone.
+                          This will remove your current profile picture. This action cannot be
+                          undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
