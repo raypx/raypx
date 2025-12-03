@@ -29,7 +29,7 @@ export function HeroSection() {
 
       <Container className="relative pointer-events-none">
         <div className="flex flex-col items-center text-center space-y-8 max-w-4xl mx-auto z-10 relative">
-          <TextHoverEffect strokeDuration={2} text="RAYPX" className="w-full" />
+          <TextHoverEffect className="w-full" strokeDuration={2} text="RAYPX" />
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
             The Modern Foundation for
             <span className="bg-linear-to-r from-blue-600 via-primary to-purple-600 bg-clip-text text-transparent animate-gradient bg-300%">
