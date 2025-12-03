@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@raypx/ui/components/card";
 import { Label } from "@raypx/ui/components/label";
-import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/radio-group";
 import {
   Select,
   SelectContent,
@@ -16,49 +15,11 @@ import {
   SelectValue,
 } from "@raypx/ui/components/select";
 import { Switch } from "@raypx/ui/components/switch";
-import { useTheme } from "@raypx/ui/hooks/use-theme";
-import { Bell, Globe, Mail, Moon, Sun } from "lucide-react";
+import { Bell, Globe, Mail } from "lucide-react";
 
 export function PreferencesSettings() {
-  const { theme, setTheme } = useTheme();
-
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>Customize how the application looks and feels</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Theme</Label>
-            <RadioGroup onValueChange={setTheme} value={theme}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem id="light" value="light" />
-                <Label className="flex items-center gap-2 font-normal" htmlFor="light">
-                  <Sun className="h-4 w-4" />
-                  Light
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem id="dark" value="dark" />
-                <Label className="flex items-center gap-2 font-normal" htmlFor="dark">
-                  <Moon className="h-4 w-4" />
-                  Dark
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem id="system" value="system" />
-                <Label className="flex items-center gap-2 font-normal" htmlFor="system">
-                  <Sun className="h-4 w-4" />
-                  System
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>Language & Region</CardTitle>

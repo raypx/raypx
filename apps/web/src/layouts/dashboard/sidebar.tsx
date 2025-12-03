@@ -15,8 +15,9 @@ import {
 } from "@raypx/ui/components/sidebar";
 import { cn } from "@raypx/ui/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BookOpen, CreditCard, FileText, Home, Key, Settings, User, Users } from "lucide-react";
+import { Settings } from "lucide-react";
 import { Logo } from "~/components/layout/logo";
+import { sidebarGroups } from "~/config/sidebar";
 
 /**
  * Get user initials from name or email
@@ -43,54 +44,14 @@ interface SidebarProps {
   user: AuthUser;
 }
 
-const userMenuItems = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: Home,
-  },
-  {
-    title: "Profile",
-    href: "/dashboard/profile",
-    icon: User,
-  },
-  {
-    title: "Knowledge",
-    href: "/dashboard/knowledges",
-    icon: BookOpen,
-  },
-  {
-    title: "Documents",
-    href: "/dashboard/documents",
-    icon: FileText,
-  },
-  {
-    title: "API Keys",
-    href: "/dashboard/api-keys",
-    icon: Key,
-  },
-  {
-    title: "Billing",
-    href: "/dashboard/billing",
-    icon: CreditCard,
-  },
-  {
-    title: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
-];
-
-const adminMenuItems = [
-  {
-    title: "Users",
-    href: "/dashboard/users",
-    icon: Users,
-  },
-];
-
-function isAdmin(role: string | null | undefined): boolean {
-  return role === "admin" || role === "superadmin";
+function hasRoleAccess(userRole: string | null | undefined, requiredRoles?: string[]): boolean {
+  if (!requiredRoles || requiredRoles.length === 0) {
+    return true; // No role restriction, all users can access
+  }
+  if (!userRole) {
+    return false; // User has no role, but roles are required
+  }
+  return requiredRoles.includes(userRole);
 }
 
 function isActivePath(currentPath: string, href: string): boolean {
@@ -103,7 +64,6 @@ function isActivePath(currentPath: string, href: string): boolean {
 }
 
 export function Sidebar({ user }: SidebarProps) {
-  const showAdminMenu = isAdmin(user?.role);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -128,49 +88,35 @@ export function Sidebar({ user }: SidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {userMenuItems.map((item) => {
-                const isActive = isActivePath(currentPath, item.href);
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <Link to={item.href}>
-                        <item.icon className={cn(isActive && "text-primary")} />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {Object.entries(sidebarGroups).map(([key, group]) => {
+          // Check if user has required role to see this group
+          if (!hasRoleAccess(user?.role, group.role)) {
+            return null;
+          }
 
-        {showAdminMenu && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminMenuItems.map((item) => {
-                  const isActive = isActivePath(currentPath, item.href);
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                        <Link to={item.href}>
-                          <item.icon className={cn(isActive && "text-primary")} />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+          return (
+            <SidebarGroup key={key}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const isActive = isActivePath(currentPath, item.href);
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                          <Link to={item.href}>
+                            <item.icon className={cn(isActive && "text-primary")} />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       <SidebarFooter>

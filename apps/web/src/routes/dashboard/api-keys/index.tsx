@@ -34,6 +34,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
+import { PageWrapper } from "~/components/page-wrapper";
 import { formatDate } from "~/lib/dashboard-utils";
 
 dayjs.extend(relativeTime);
@@ -65,69 +66,11 @@ export const Route = createFileRoute("/dashboard/api-keys/")({
 
 function ApiKeysPage() {
   return (
-    <div className="space-y-8">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage and monitor your programmatic access keys
-          </p>
-        </div>
-      </div>
-
-      <ApiUsageStats />
-
+    <PageWrapper spacing="lg">
       <div className="space-y-4">
         <ApiKeysSection />
       </div>
-    </div>
-  );
-}
-
-function ApiUsageStats() {
-  const trpc = useTRPC();
-  const { data: stats } = useQuery(
-    trpc.apiKeys.stats.queryOptions(undefined, { staleTime: 30_000 }),
-  );
-
-  const usageStats = [
-    {
-      title: "Total Requests",
-      value: (stats?.totalRequests ?? 0).toLocaleString(),
-      icon: Activity,
-      description: "All time usage",
-    },
-    {
-      title: "Active Keys",
-      value: stats?.activeKeys ?? 0,
-      icon: CheckCircle2,
-      description: "Currently enabled",
-    },
-    {
-      title: "Total Keys",
-      value: stats?.totalKeys ?? 0,
-      icon: Key,
-      description: "Created keys",
-    },
-  ];
-
-  return (
-    <div className="grid gap-4 md:grid-cols-3">
-      {usageStats.map((stat) => (
-        <Card className="bg-card/50 backdrop-blur-sm" key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    </PageWrapper>
   );
 }
 

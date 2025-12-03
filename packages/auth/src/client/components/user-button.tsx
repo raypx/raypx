@@ -16,16 +16,14 @@ import {
 } from "@raypx/ui/components/dropdown-menu";
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { useTheme } from "@raypx/ui/hooks/use-theme";
+import { themeConfig, themeIcons } from "@raypx/ui/lib/theme-config";
 import { Link } from "@tanstack/react-router";
-import { HelpCircle, Laptop, LogOut, Moon, Settings, Sun, User } from "lucide-react";
+import { HelpCircle, LogOut, Settings, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { defaultAuthRoutes } from "../../config/routes";
 import { useAuth } from "../hooks";
 
-/**
- * Get user initials from name or email
- */
 function getUserInitials(name?: string | null, email?: string | null): string {
   if (name) {
     const names = name.trim().split(" ");
@@ -43,15 +41,6 @@ function getUserInitials(name?: string | null, email?: string | null): string {
   }
   return "U";
 }
-
-/**
- * Theme configuration
- */
-const themeConfig = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Laptop },
-] as const;
 
 export interface UserButtonProps {
   /** User object (uses useAuth if not provided) */
@@ -73,9 +62,6 @@ export interface UserButtonProps {
   showKeyboardShortcuts?: boolean;
 }
 
-/**
- * UserButton component with dropdown menu
- */
 export const UserButton = ({
   user: userProp,
   showThemeSwitcher = true,
@@ -99,15 +85,12 @@ export const UserButton = ({
     setMounted(true);
   }, []);
 
-  // Use provided user or get from session
   const user = userProp ?? session.data?.user;
 
-  // Show skeleton during loading (only if using session)
   if (!userProp && (!mounted || session.isPending)) {
     return <Skeleton className="size-8 rounded-full" />;
   }
 
-  // Don't render if no user
   if (!user) {
     return null;
   }
@@ -138,7 +121,6 @@ export const UserButton = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-60 p-1" forceMount>
-        {/* User Info Header */}
         <DropdownMenuItem asChild className="p-0 font-normal focus:bg-accent cursor-pointer">
           <Link className="flex items-center gap-3 px-3 py-2.5" to={profilePath}>
             <div className="flex flex-col space-y-0.5 overflow-hidden">
@@ -167,7 +149,6 @@ export const UserButton = ({
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
-        {/* Custom menu items */}
         {menuItems && (
           <>
             <DropdownMenuSeparator />
@@ -179,22 +160,33 @@ export const UserButton = ({
 
         {hasMiddleSection && <DropdownMenuSeparator />}
 
-        {/* Theme Switcher */}
         {showThemeSwitcher && (
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="cursor-pointer">
-              <Sun className="mr-2 size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-muted-foreground" />
-              <Moon className="absolute mr-2 size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-muted-foreground" />
+              {(() => {
+                const Sun = themeIcons.light;
+                const Moon = themeIcons.dark;
+                return (
+                  <>
+                    <Sun className="mr-2 size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-muted-foreground" />
+                    <Moon className="absolute mr-2 size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-muted-foreground" />
+                  </>
+                );
+              })()}
               <span>Theme</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup onValueChange={setTheme} value={theme}>
-                {themeConfig.map((t) => {
-                  const Icon = t.icon;
+                {themeConfig.map((config) => {
+                  const Icon = config.icon;
                   return (
-                    <DropdownMenuRadioItem className="cursor-pointer" key={t.value} value={t.value}>
+                    <DropdownMenuRadioItem
+                      className="cursor-pointer"
+                      key={config.value}
+                      value={config.value}
+                    >
                       <Icon className="mr-2 size-4 text-muted-foreground" />
-                      {t.label}
+                      {config.label}
                     </DropdownMenuRadioItem>
                   );
                 })}
@@ -203,7 +195,6 @@ export const UserButton = ({
           </DropdownMenuSub>
         )}
 
-        {/* Help/Documentation */}
         {helpPath && (
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link className="flex items-center" to={helpPath}>
@@ -213,27 +204,9 @@ export const UserButton = ({
           </DropdownMenuItem>
         )}
 
-        {/* Keyboard Shortcuts Hint */}
         {showKeyboardShortcuts && (
           <>
-            {/* Separator only if other items above it in middle section didn't trigger one? 
-                No, we used one separator for the whole block. 
-                But if showThemeSwitcher is false AND helpPath is false, but shortcuts is true,
-                we need a separator before shortcuts. hasMiddleSection handles this.
-                
-                However, if we have Theme AND Shortcuts, do we want a separator between them?
-                Usually no, they are grouped. But shortcuts hint often has a separator before it if it's distinct.
-                Let's keep it simple: grouped together.
-            */}
-            {!showThemeSwitcher &&
-            !helpPath &&
-            hasMiddleSection ? null : /* If theme/help exist, shortcuts is just at bottom of that group. */
-            /* If ONLY shortcuts exist, hasMiddleSection adds the top separator. */
-            /* Wait, originally shortcuts had its own separator. */
-            /* Let's assume shortcuts is footer-like for the middle section. */
-            showThemeSwitcher || helpPath ? (
-              <DropdownMenuSeparator />
-            ) : null}
+            {showThemeSwitcher || helpPath ? <DropdownMenuSeparator /> : null}
             <div className="flex items-center justify-between px-2 py-1.5 text-xs text-muted-foreground">
               <span>Shortcuts</span>
               <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
@@ -245,7 +218,6 @@ export const UserButton = ({
 
         <DropdownMenuSeparator />
 
-        {/* Sign Out */}
         <DropdownMenuItem
           asChild
           className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"

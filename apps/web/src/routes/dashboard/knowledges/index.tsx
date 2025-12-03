@@ -38,6 +38,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
+import { PageWrapper } from "~/components/page-wrapper";
 import { formatDate } from "~/lib/dashboard-utils";
 
 type KnowledgeListItem = {
@@ -57,64 +58,11 @@ export const Route = createFileRoute("/dashboard/knowledges/")({
 
 function KnowledgesPage() {
   return (
-    <div className="space-y-8">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Knowledge</h1>
-          <p className="text-muted-foreground mt-1">
-            Organize and manage your knowledge bases and documentation
-          </p>
-        </div>
-      </div>
-
-      <KnowledgeUsageStats />
-
+    <PageWrapper spacing="lg">
       <div className="space-y-4">
         <KnowledgesSection />
       </div>
-    </div>
-  );
-}
-
-function KnowledgeUsageStats() {
-  const usageStats = [
-    {
-      title: "Total Bases",
-      value: "0",
-      icon: FolderOpen,
-      description: "Knowledge bases",
-    },
-    {
-      title: "Total Documents",
-      value: "0",
-      icon: FileText,
-      description: "Indexed documents",
-    },
-    {
-      title: "Storage Used",
-      value: "0 MB",
-      icon: BookOpen,
-      description: "Vector storage",
-    },
-  ];
-
-  return (
-    <div className="grid gap-4 md:grid-cols-3">
-      {usageStats.map((stat) => (
-        <Card className="bg-card/50 backdrop-blur-sm" key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    </PageWrapper>
   );
 }
 

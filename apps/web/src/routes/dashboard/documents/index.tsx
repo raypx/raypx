@@ -23,19 +23,12 @@ import { toast } from "@raypx/ui/components/toast";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  AlertCircle,
-  CheckCircle2,
-  FileText,
-  HardDrive,
-  Loader2,
-  MoreHorizontal,
-  Trash2,
-} from "lucide-react";
+import { CheckCircle2, FileText, HardDrive, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
+import { PageWrapper } from "~/components/page-wrapper";
 import { formatDate, formatFileSize } from "~/lib/dashboard-utils";
 
 type DocumentListItem = {
@@ -58,62 +51,11 @@ export const Route = createFileRoute("/dashboard/documents/")({
 
 function DocumentsPage() {
   return (
-    <div className="space-y-8">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
-          <p className="text-muted-foreground mt-1">Upload, process, and manage your documents</p>
-        </div>
-      </div>
-
-      <DocumentUsageStats />
-
+    <PageWrapper spacing="lg">
       <div className="space-y-4">
         <DocumentsSection />
       </div>
-    </div>
-  );
-}
-
-function DocumentUsageStats() {
-  const usageStats = [
-    {
-      title: "Processed",
-      value: "0",
-      icon: CheckCircle2,
-      description: "Successfully indexed",
-    },
-    {
-      title: "Processing",
-      value: "0",
-      icon: Loader2,
-      description: "Currently indexing",
-    },
-    {
-      title: "Total Size",
-      value: "0 B",
-      icon: HardDrive,
-      description: "Storage used",
-    },
-  ];
-
-  return (
-    <div className="grid gap-4 md:grid-cols-3">
-      {usageStats.map((stat) => (
-        <Card className="bg-card/50 backdrop-blur-sm" key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    </PageWrapper>
   );
 }
 

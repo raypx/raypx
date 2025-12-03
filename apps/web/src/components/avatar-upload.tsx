@@ -23,7 +23,6 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
@@ -31,7 +30,6 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
     };
     reader.readAsDataURL(file);
 
-    // Upload file
     await upload(file);
   };
 

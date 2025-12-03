@@ -11,8 +11,8 @@ import {
   FormMessage,
   Input,
 } from "@raypx/ui/components";
+import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
-import { toast } from "@raypx/ui/hooks/use-toast";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
@@ -51,15 +51,12 @@ function ForgotPasswordPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await auth.forgetPassword({
+      const response = await auth.forgetPassword.emailOtp({
         email,
-        redirectTo: "/reset-password",
       });
 
       if (response.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
+        toast.error("Error", {
           description: response.error.message || "Failed to send reset email. Please try again.",
         });
       } else {
@@ -69,9 +66,7 @@ function ForgotPasswordPage() {
       }
     } catch (error) {
       console.error("Forgot password error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
+      toast.error("Error", {
         description: "An unexpected error occurred. Please try again later.",
       });
     } finally {
@@ -96,7 +91,7 @@ function ForgotPasswordPage() {
 
         <div className="rounded-lg border bg-muted/50 p-4">
           <div className="flex gap-3">
-            <Mail className="mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+            <Mail className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
             <div className="space-y-1 text-left text-sm">
               <p className="font-medium">Didn't receive the email?</p>
               <ul className="list-inside list-disc space-y-1 text-muted-foreground">
@@ -175,7 +170,7 @@ function ForgotPasswordPage() {
 
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/20">
         <div className="flex gap-2 text-sm">
-          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <p className="text-amber-800 dark:text-amber-200">
             The reset link will expire in <strong>15 minutes</strong>
           </p>
