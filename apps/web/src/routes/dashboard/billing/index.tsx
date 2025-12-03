@@ -20,6 +20,7 @@ import { useMemo } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
+import { PageWrapper } from "~/components/page-wrapper";
 import { formatDate } from "~/lib/dashboard-utils";
 
 const plans = [
@@ -274,12 +275,7 @@ function BillingPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Billing & Subscription</h1>
-        <p className="text-muted-foreground">Manage your subscription and billing</p>
-      </div>
-
+    <PageWrapper spacing="md">
       {/* Current Plan */}
       <Card>
         <CardHeader>
@@ -500,6 +496,6 @@ function BillingPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageWrapper>
   );
 }

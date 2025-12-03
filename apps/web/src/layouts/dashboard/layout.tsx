@@ -29,14 +29,14 @@ export function Layout({ user }: LayoutProps) {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,#00000005_0%,transparent_100%)] pointer-events-none" />
 
-            <div className="relative z-10 p-6 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="relative z-10 p-6 md:p-8 max-w-8xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Outlet />
             </div>
           </main>
 
           {/* Footer */}
           <footer className="border-t bg-background/50 backdrop-blur-sm px-6 py-4 relative z-20">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="max-w-8xl mx-auto flex items-center justify-between">
               <Button asChild className="gap-2" size="sm" variant="ghost">
                 <a href={links.docs} rel="noopener noreferrer" target="_blank">
                   <HelpCircle className="h-4 w-4" />

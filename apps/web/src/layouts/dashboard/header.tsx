@@ -1,23 +1,88 @@
 import { type AuthUser, UserButton } from "@raypx/auth";
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@raypx/ui/components/breadcrumb";
 import { Button } from "@raypx/ui/components/button";
 import { DropdownMenuItem } from "@raypx/ui/components/dropdown-menu";
 import { Input } from "@raypx/ui/components/input";
 import { Separator } from "@raypx/ui/components/separator";
 import { SidebarTrigger } from "@raypx/ui/components/sidebar";
-import { Link } from "@tanstack/react-router";
-import { Bell, Search, User } from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { Bell, Search } from "lucide-react";
+import { useMemo } from "react";
 import { authRoutes } from "~/config/auth";
+import { sidebarGroups } from "~/config/sidebar";
 
 interface HeaderProps {
   user: AuthUser;
 }
 
+function generateBreadcrumbs(pathname: string) {
+  const breadcrumbs: Array<{ label: string; href: string }> = [];
+
+  // Always start with Dashboard
+  if (pathname !== "/dashboard") {
+    breadcrumbs.push({ label: "Dashboard", href: "/dashboard" });
+  }
+
+  // Find matching menu item from sidebar config
+  const allMenuItems = Object.values(sidebarGroups).flatMap((group) => group.items);
+
+  const pathSegments = pathname.split("/").filter(Boolean);
+  let currentPath = "";
+
+  for (const segment of pathSegments) {
+    currentPath += `/${segment}`;
+    const menuItem = allMenuItems.find((item) => item.href === currentPath);
+    if (menuItem && currentPath !== "/dashboard") {
+      breadcrumbs.push({ label: menuItem.title, href: currentPath });
+    }
+  }
+
+  return breadcrumbs;
+}
+
 export function Header({ user }: HeaderProps) {
+  const location = useLocation();
+  const breadcrumbs = useMemo(() => generateBreadcrumbs(location.pathname), [location.pathname]);
+
   return (
     <header className="sticky top-0 z-30 h-16 border-b bg-background/80 backdrop-blur-md flex items-center justify-between px-4 gap-4 transition-all">
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <SidebarTrigger className="-ml-1" />
+        <Separator className="h-4 hidden md:block" orientation="vertical" />
+
+        {/* Breadcrumb */}
+        {breadcrumbs.length > 0 && (
+          <Breadcrumb className="hidden md:flex">
+            <BreadcrumbList>
+              {breadcrumbs.map((crumb, index) => {
+                const isLast = index === breadcrumbs.length - 1;
+                return (
+                  <div className="flex items-center" key={crumb.href}>
+                    {index > 0 && <BreadcrumbSeparator />}
+                    <BreadcrumbItem>
+                      {isLast ? (
+                        <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink asChild>
+                          <Link to={crumb.href}>{crumb.label}</Link>
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                  </div>
+                );
+              })}
+            </BreadcrumbList>
+          </Breadcrumb>
+        )}
+
         <Separator className="h-4 hidden md:block" orientation="vertical" />
         <div className="relative group max-w-md w-full hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -44,14 +109,6 @@ export function Header({ user }: HeaderProps) {
         {/* User menu */}
         <UserButton
           avatar={{ size: "h-9 w-9" }}
-          menuItems={[
-            <DropdownMenuItem asChild key="profile">
-              <Link className="flex items-center cursor-pointer" to="/dashboard/profile">
-                <User className="mr-2 size-4" />
-                <span>Profile</span>
-              </Link>
-            </DropdownMenuItem>,
-          ]}
           showThemeSwitcher={false}
           signOutPath={authRoutes.signOut}
           user={user}

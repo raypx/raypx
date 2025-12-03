@@ -1,9 +1,9 @@
 import { useTRPC } from "@raypx/trpc/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Badge } from "@raypx/ui/components/badge";
 import { Button } from "@raypx/ui/components/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -34,19 +34,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@raypx/ui/components/select";
+import { toast } from "@raypx/ui/components/toast";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Users } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
+import { PageWrapper } from "~/components/page-wrapper";
+
+type UserRole = "user" | "admin" | "superadmin";
 
 type UserListItem = {
   id: string;
   name: string | null;
   email: string;
+  image: string | null;
   role: string | null;
   createdAt: Date;
   banned: boolean | null;
@@ -67,29 +72,31 @@ const formatDateTime = (value: Date | string | null | undefined) => {
 
 function AdminUsersPage() {
   const [q, setQ] = useState("");
+  const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQ(inputValue);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">
-            Review and manage all user accounts with live data retrieved through tRPC.
-          </p>
-        </div>
-        <div className="w-72">
-          <Input
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name or email..."
-            value={q}
-          />
-        </div>
-      </div>
-      <UsersSection query={q} />
-    </div>
+    <PageWrapper>
+      <UsersSection onSearchChange={setInputValue} query={q} searchValue={inputValue} />
+    </PageWrapper>
   );
 }
 
-function UsersSection({ query }: { query: string }) {
+function UsersSection({
+  query,
+  searchValue,
+  onSearchChange,
+}: {
+  query: string;
+  searchValue: string;
+  onSearchChange: (value: string) => void;
+}) {
   const trpc = useTRPC();
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<"createdAt" | "email" | "name">("createdAt");
@@ -155,20 +162,31 @@ function UsersSection({ query }: { query: string }) {
   return (
     <Card>
       <CardHeader className="border-b">
-        <CardTitle>All Users</CardTitle>
-        <CardDescription>Latest user accounts and their current status.</CardDescription>
-        <CardAction>
-          <Button
-            disabled={isFetching}
-            onClick={() => {
-              void refetch();
-            }}
-            size="sm"
-            variant="outline"
-          >
-            {isFetching ? "Refreshing…" : "Refresh"}
-          </Button>
-        </CardAction>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <CardTitle>All Users</CardTitle>
+            <CardDescription>Latest user accounts and their current status.</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-64">
+              <Input
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="Search name or email..."
+                value={searchValue}
+              />
+            </div>
+            <Button
+              disabled={isFetching}
+              onClick={() => {
+                void refetch();
+              }}
+              size="sm"
+              variant="outline"
+            >
+              {isFetching ? "Refreshing…" : "Refresh"}
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="px-0">{content}</CardContent>
     </Card>
@@ -193,6 +211,7 @@ function UsersTable({
   onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
 }) {
   const trpc = useTRPC();
+
   const updateRole = useMutation(trpc.users.updateRole.mutationOptions());
   const setBanned = useMutation(trpc.users.setBanned.mutationOptions());
   const deleteUser = useMutation(trpc.users.delete.mutationOptions());
@@ -202,31 +221,103 @@ function UsersTable({
   const [selectedUser, setSelectedUser] = useState<UserListItem | null>(null);
 
   // Role state
-  const [roleValue, setRoleValue] = useState<"user" | "admin" | "superadmin" | "">("");
+  const [roleValue, setRoleValue] = useState<UserRole | "">("");
   // Ban state
   const [banReason, setBanReason] = useState("");
   const [banExpires, setBanExpires] = useState<string>("");
 
-  const doSetRole = async (id: string, role: "user" | "admin" | "superadmin" | null) => {
-    await updateRole.mutateAsync({ id, role });
-    onChanged();
-  };
-  const doToggleBan = async (u: UserListItem) => {
-    if (u.banned) {
-      await setBanned.mutateAsync({ id: u.id, banned: false });
-      onChanged();
-      return;
-    }
-    setSelectedUser(u);
+  const openRoleDialog = useCallback((user: UserListItem) => {
+    setSelectedUser(user);
+    setRoleValue((user.role as UserRole) || "");
+    setRoleDialogOpen(true);
+  }, []);
+
+  const closeRoleDialog = useCallback(() => {
+    setRoleDialogOpen(false);
+    setSelectedUser(null);
+    setRoleValue("");
+  }, []);
+
+  const openBanDialog = useCallback((user: UserListItem) => {
+    setSelectedUser(user);
     setBanReason("");
     setBanExpires("");
     setBanDialogOpen(true);
-  };
-  const doDelete = async (u: UserListItem) => {
-    if (!window.confirm(`Delete user ${u.email}? This cannot be undone.`)) return;
-    await deleteUser.mutateAsync(u.id);
-    onChanged();
-  };
+  }, []);
+
+  const closeBanDialog = useCallback(() => {
+    setBanDialogOpen(false);
+    setSelectedUser(null);
+    setBanReason("");
+    setBanExpires("");
+  }, []);
+
+  const doSetRole = useCallback(
+    async (id: string, role: UserRole | null) => {
+      try {
+        await updateRole.mutateAsync({ id, role });
+        toast.success("User role updated successfully");
+        onChanged();
+      } catch (err) {
+        toast.error(
+          `Failed to update role: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
+      }
+    },
+    [updateRole, onChanged],
+  );
+
+  const doToggleBan = useCallback(
+    async (u: UserListItem) => {
+      if (u.banned) {
+        try {
+          await setBanned.mutateAsync({ id: u.id, banned: false });
+          toast.success("User unbanned successfully");
+          onChanged();
+        } catch (err) {
+          toast.error(
+            `Failed to unban user: ${err instanceof Error ? err.message : "Unknown error"}`,
+          );
+        }
+        return;
+      }
+      openBanDialog(u);
+    },
+    [setBanned, onChanged, openBanDialog],
+  );
+
+  const doBanUser = useCallback(async () => {
+    if (!selectedUser) return;
+    try {
+      await setBanned.mutateAsync({
+        id: selectedUser.id,
+        banned: true,
+        banReason: banReason || undefined,
+        banExpires: banExpires ? new Date(banExpires) : undefined,
+      });
+      toast.success("User banned successfully");
+      onChanged();
+      closeBanDialog();
+    } catch (err) {
+      toast.error(`Failed to ban user: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  }, [selectedUser, banReason, banExpires, setBanned, onChanged, closeBanDialog]);
+
+  const doDelete = useCallback(
+    async (u: UserListItem) => {
+      if (!window.confirm(`Delete user ${u.email}? This cannot be undone.`)) return;
+      try {
+        await deleteUser.mutateAsync(u.id);
+        toast.success("User deleted successfully");
+        onChanged();
+      } catch (err) {
+        toast.error(
+          `Failed to delete user: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
+      }
+    },
+    [deleteUser, onChanged],
+  );
 
   // Define columns
   const columns = useMemo<ColumnDef<UserListItem>[]>(
@@ -235,7 +326,25 @@ function UsersTable({
         accessorKey: "name",
         header: "Name",
         enableSorting: true,
-        cell: ({ row }) => <div className="font-medium">{row.original.name ?? "--"}</div>,
+        cell: ({ row }) => {
+          const user = row.original;
+          const initials = (user.name || user.email || "U")
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+
+          return (
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8">
+                <AvatarImage alt={user.name || ""} src={user.image || undefined} />
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="font-medium">{user.name ?? "--"}</div>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "email",
@@ -299,13 +408,7 @@ function UsersTable({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Role</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setSelectedUser(user);
-                    setRoleValue((user.role as any) || "");
-                    setRoleDialogOpen(true);
-                  }}
-                >
+                <DropdownMenuItem onClick={() => openRoleDialog(user)}>
                   Update Role
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -335,16 +438,7 @@ function UsersTable({
   return (
     <>
       {/* Update Role Dialog */}
-      <Dialog
-        onOpenChange={(open) => {
-          setRoleDialogOpen(open);
-          if (!open) {
-            setSelectedUser(null);
-            setRoleValue("");
-          }
-        }}
-        open={roleDialogOpen}
-      >
+      <Dialog onOpenChange={(open) => (open ? undefined : closeRoleDialog())} open={roleDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Update Role</DialogTitle>
@@ -371,14 +465,7 @@ function UsersTable({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              onClick={() => {
-                setRoleDialogOpen(false);
-                setSelectedUser(null);
-                setRoleValue("");
-              }}
-              variant="outline"
-            >
+            <Button onClick={closeRoleDialog} variant="outline">
               Cancel
             </Button>
             <Button
@@ -387,9 +474,9 @@ function UsersTable({
                 if (!selectedUser) return;
                 await doSetRole(
                   selectedUser.id,
-                  (roleValue || selectedUser.role || "user") as "user" | "admin" | "superadmin",
+                  (roleValue || selectedUser.role || "user") as UserRole,
                 );
-                setRoleDialogOpen(false);
+                closeRoleDialog();
               }}
             >
               {updateRole.isPending ? "Saving..." : "Save"}
@@ -399,17 +486,7 @@ function UsersTable({
       </Dialog>
 
       {/* Ban User Dialog */}
-      <Dialog
-        onOpenChange={(open) => {
-          setBanDialogOpen(open);
-          if (!open) {
-            setSelectedUser(null);
-            setBanReason("");
-            setBanExpires("");
-          }
-        }}
-        open={banDialogOpen}
-      >
+      <Dialog onOpenChange={(open) => (open ? undefined : closeBanDialog())} open={banDialogOpen}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Ban User</DialogTitle>
@@ -439,30 +516,12 @@ function UsersTable({
             </div>
           </div>
           <DialogFooter>
-            <Button
-              onClick={() => {
-                setBanDialogOpen(false);
-                setSelectedUser(null);
-                setBanReason("");
-                setBanExpires("");
-              }}
-              variant="outline"
-            >
+            <Button onClick={closeBanDialog} variant="outline">
               Cancel
             </Button>
             <Button
               disabled={!selectedUser || setBanned.isPending}
-              onClick={async () => {
-                if (!selectedUser) return;
-                await setBanned.mutateAsync({
-                  id: selectedUser.id,
-                  banned: true,
-                  banReason: banReason || undefined,
-                  banExpires: banExpires ? new Date(banExpires) : undefined,
-                });
-                onChanged();
-                setBanDialogOpen(false);
-              }}
+              onClick={doBanUser}
               variant="destructive"
             >
               {setBanned.isPending ? "Banning..." : "Ban User"}

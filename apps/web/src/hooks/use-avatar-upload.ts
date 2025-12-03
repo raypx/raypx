@@ -51,12 +51,7 @@ interface UseAvatarUploadReturn {
  * Provides unified error handling, session refresh, and loading states
  */
 export function useAvatarUpload(options: UseAvatarUploadOptions = {}): UseAvatarUploadReturn {
-  const {
-    onSuccess,
-    onError,
-    format = "jpeg",
-    maxSize = 5 * 1024 * 1024, // 5MB default
-  } = options;
+  const { onSuccess, onError, format = "jpeg", maxSize = 5 * 1024 * 1024 } = options;
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -66,15 +61,12 @@ export function useAvatarUpload(options: UseAvatarUploadOptions = {}): UseAvatar
   const { refetch: refetchSession } = useSession();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Upload mutation using FormData
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         throw new Error("Please select an image file");
       }
 
-      // Validate file size
       if (file.size > maxSize) {
         throw new Error(`Image must be less than ${Math.round(maxSize / 1024 / 1024)}MB`);
       }
@@ -98,7 +90,6 @@ export function useAvatarUpload(options: UseAvatarUploadOptions = {}): UseAvatar
     },
     onSuccess: () => {
       toast.success("Avatar uploaded successfully!");
-      // Invalidate queries and refresh session to update avatar
       queryClient.invalidateQueries();
       void refetchSession();
       onSuccess?.();
@@ -109,7 +100,6 @@ export function useAvatarUpload(options: UseAvatarUploadOptions = {}): UseAvatar
     },
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     ...trpc.storage.deleteAvatar.mutationOptions(),
     onSuccess: () => {
@@ -127,7 +117,7 @@ export function useAvatarUpload(options: UseAvatarUploadOptions = {}): UseAvatar
     try {
       await uploadMutation.mutateAsync(file);
     } catch {
-      // Error handling is done in uploadMutation.onError
+      // Error already handled in mutation
     } finally {
       setIsProcessing(false);
     }

@@ -6,55 +6,53 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu";
 import { Skeleton } from "@raypx/ui/components/skeleton";
+import { type ThemeKey, themeConfig, themeIcons } from "@raypx/ui/lib/theme-config";
 import { cn } from "@raypx/ui/lib/utils";
-import { Check, Laptop, Moon, Sun } from "lucide-react";
+import { Check } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { useTheme } from "../hooks/use-theme";
 
-type ThemeKey = "light" | "dark" | "system";
-
 type ThemeConfig = {
   key: ThemeKey;
-  icon: typeof Sun | typeof Moon | typeof Laptop;
+  icon: (typeof themeConfig)[number]["icon"];
   label: string;
 };
 
-// Constants
 const ICON_SIZE = "size-4";
 const BUTTON_CLASSES = "cursor-pointer rounded-full border border-border p-0.5";
 
-// Theme configuration map for O(1) lookup
+const getThemeLabel = (key: ThemeKey): string => {
+  return themeConfig.find((t) => t.value === key)?.label ?? key;
+};
+
 const THEME_MAP = {
   light: {
-    key: "light",
-    icon: Sun,
-    label: "Light",
+    key: "light" as const,
+    icon: themeIcons.light,
+    label: getThemeLabel("light"),
   },
   dark: {
-    key: "dark",
-    icon: Moon,
-    label: "Dark",
+    key: "dark" as const,
+    icon: themeIcons.dark,
+    label: getThemeLabel("dark"),
   },
   system: {
-    key: "system",
-    icon: Laptop,
-    label: "System",
+    key: "system" as const,
+    icon: themeIcons.system,
+    label: getThemeLabel("system"),
   },
 } satisfies Record<ThemeKey, ThemeConfig>;
 
-// Icon component map for O(1) lookup
 const THEME_ICON_MAP: Record<ThemeKey, ThemeConfig["icon"]> = {
-  light: Sun,
-  dark: Moon,
-  system: Laptop,
+  light: THEME_MAP.light.icon,
+  dark: THEME_MAP.dark.icon,
+  system: THEME_MAP.system.icon,
 };
 
-// Helper function to get icon component for a theme
 const getThemeIconComponent = (themeKey: ThemeKey): ThemeConfig["icon"] => {
-  return THEME_ICON_MAP[themeKey] ?? Sun;
+  return THEME_ICON_MAP[themeKey] ?? THEME_MAP.light.icon;
 };
 
-// Pre-computed theme lists for each mode (O(1) lookup)
 const THEMES_BY_MODE = {
   "light-dark": [THEME_MAP.light, THEME_MAP.dark],
   "light-dark-system": [THEME_MAP.light, THEME_MAP.dark, THEME_MAP.system],

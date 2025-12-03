@@ -5,6 +5,8 @@
 @import "@raypx/ui/styles/globals.css";
 
 @theme {
+  --max-width-8xl: 100rem;
+
   --animate-marquee: marquee var(--duration) linear infinite;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
 

@@ -1,6 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@raypx/auth";
 import { useTRPC } from "@raypx/trpc/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@raypx/ui/components/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Button } from "@raypx/ui/components/button";
 import {
@@ -28,9 +39,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAvatarUpload } from "~/hooks/use-avatar-upload";
 
-/**
- * Profile update form schema
- */
 const profileFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(255, "Name is too long"),
   username: z
@@ -50,9 +58,8 @@ export function AccountSettings() {
   const user = session?.user;
   const trpc = useTRPC();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { upload, isLoading: isUploading } = useAvatarUpload();
+  const { upload, isLoading: isUploading, remove } = useAvatarUpload();
 
-  // Initialize form with user data
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -65,7 +72,6 @@ export function AccountSettings() {
 
   const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
     try {
-      // Build update data with only changed fields
       const updateData: {
         name?: string;
         username?: string | null;
@@ -78,7 +84,6 @@ export function AccountSettings() {
         updateData.username = values.username || null;
       }
 
-      // Only update if there are changes
       if (Object.keys(updateData).length > 0) {
         try {
           await updateProfileMutation.mutateAsync(updateData);
@@ -91,7 +96,7 @@ export function AccountSettings() {
         toast.info("No changes were made to your profile.");
       }
     } catch {
-      // Error handling is done above
+      // Error already handled above
     }
   };
 
@@ -103,13 +108,15 @@ export function AccountSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
 
-    // Upload file (validation is handled in the hook)
     await upload(file);
+  };
+
+  const handleRemoveAvatar = async () => {
+    await remove();
   };
 
   const userInitials = user?.name
@@ -128,7 +135,6 @@ export function AccountSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Avatar Upload */}
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarImage alt={user?.name ?? ""} src={user?.image ?? undefined} />
@@ -144,16 +150,39 @@ export function AccountSettings() {
                 ref={fileInputRef}
                 type="file"
               />
-              <Button
-                className="gap-2"
-                disabled={isUploading}
-                onClick={handleAvatarClick}
-                size="sm"
-                variant="outline"
-              >
-                <Upload className="h-4 w-4" />
-                {isUploading ? "Uploading..." : "Upload new photo"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  className="gap-2"
+                  disabled={isUploading}
+                  onClick={handleAvatarClick}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Upload className="h-4 w-4" />
+                  {isUploading ? "Uploading..." : "Upload new photo"}
+                </Button>
+                {user?.image && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="ghost">
+                        Remove
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remove profile picture?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove your current profile picture. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleRemoveAvatar}>Continue</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground mt-2">
                 JPG, PNG or GIF. Max size of 2MB. Will be compressed to ~400x400px.
               </p>
@@ -162,7 +191,6 @@ export function AccountSettings() {
 
           <Form {...form}>
             <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-              {/* Name */}
               <FormField
                 control={form.control}
                 name="name"
@@ -177,7 +205,6 @@ export function AccountSettings() {
                 )}
               />
 
-              {/* Username */}
               <FormField
                 control={form.control}
                 name="username"
@@ -197,7 +224,6 @@ export function AccountSettings() {
                 )}
               />
 
-              {/* Email (read-only) */}
               <FormItem>
                 <FormLabel>Email Address</FormLabel>
                 <FormControl>
