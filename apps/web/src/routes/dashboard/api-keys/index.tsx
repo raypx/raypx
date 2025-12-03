@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -30,7 +29,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Copy, Key, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Activity, CheckCircle2, Copy, Key, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
@@ -66,15 +65,68 @@ export const Route = createFileRoute("/dashboard/api-keys/")({
 
 function ApiKeysPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">API Keys</h1>
-          <p className="text-muted-foreground">Manage your API keys for programmatic access</p>
+          <p className="text-muted-foreground mt-1">
+            Manage and monitor your programmatic access keys
+          </p>
         </div>
       </div>
-      <ApiKeysSection />
-      <ApiUsageCard />
+
+      <ApiUsageStats />
+
+      <div className="space-y-4">
+        <ApiKeysSection />
+      </div>
+    </div>
+  );
+}
+
+function ApiUsageStats() {
+  const trpc = useTRPC();
+  const { data: stats } = useQuery(
+    trpc.apiKeys.stats.queryOptions(undefined, { staleTime: 30_000 }),
+  );
+
+  const usageStats = [
+    {
+      title: "Total Requests",
+      value: (stats?.totalRequests ?? 0).toLocaleString(),
+      icon: Activity,
+      description: "All time usage",
+    },
+    {
+      title: "Active Keys",
+      value: stats?.activeKeys ?? 0,
+      icon: CheckCircle2,
+      description: "Currently enabled",
+    },
+    {
+      title: "Total Keys",
+      value: stats?.totalKeys ?? 0,
+      icon: Key,
+      description: "Created keys",
+    },
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {usageStats.map((stat) => (
+        <Card className="bg-card/50 backdrop-blur-sm" key={stat.title}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {stat.title}
+            </CardTitle>
+            <stat.icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
@@ -195,119 +247,114 @@ function ApiKeysSection() {
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b">
-        <CardTitle className="flex items-center gap-2">
-          <Key className="h-5 w-5" />
-          Active API Keys
-        </CardTitle>
-        <CardDescription>
-          {apiKeys.length} active key{apiKeys.length !== 1 ? "s" : ""}
-        </CardDescription>
-        <CardAction>
-          <Dialog
-            onOpenChange={(open) => {
-              setIsCreateDialogOpen(open);
-              if (!open) {
-                // Reset form state when dialog closes
-                setNewlyCreatedKey(null);
-                setNewKeyName("");
-              }
-            }}
-            open={isCreateDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button className="gap-2" size="sm">
-                <Plus className="h-4 w-4" />
-                Create New Key
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New API Key</DialogTitle>
-                <DialogDescription>Generate a new API key for your application</DialogDescription>
-              </DialogHeader>
+    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Key className="h-5 w-5 text-primary" />
+            Active Keys
+          </CardTitle>
+          <CardDescription className="mt-1.5">
+            View and manage your API keys. Treat these keys like passwords.
+          </CardDescription>
+        </div>
+        <Dialog
+          onOpenChange={(open) => {
+            setIsCreateDialogOpen(open);
+            if (!open) {
+              // Reset form state when dialog closes
+              setNewlyCreatedKey(null);
+              setNewKeyName("");
+            }
+          }}
+          open={isCreateDialogOpen}
+        >
+          <DialogTrigger asChild>
+            <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
+              <Plus className="h-4 w-4" />
+              Create New Key
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New API Key</DialogTitle>
+              <DialogDescription>
+                Generate a new API key for your application. Keys are used to authenticate requests.
+              </DialogDescription>
+            </DialogHeader>
 
-              {newlyCreatedKey ? (
-                <div className="space-y-4">
-                  <div className="p-4 bg-muted rounded-lg border border-green-500/50">
-                    <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
-                      ✓ API Key Created Successfully
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Make sure to copy your API key now. You won't be able to see it again!
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 p-2 bg-background rounded text-xs border font-mono">
-                        {newlyCreatedKey}
-                      </code>
-                      <Button
-                        onClick={() => copyToClipboard(newlyCreatedKey)}
-                        size="sm"
-                        variant="outline"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
+            {newlyCreatedKey ? (
+              <div className="space-y-6 py-2">
+                <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+                  <div className="flex items-center gap-2 mb-2 text-green-600 dark:text-green-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <p className="text-sm font-medium">API Key Created Successfully</p>
                   </div>
-                  <Button
-                    className="w-full"
-                    onClick={() => {
-                      setNewlyCreatedKey(null);
-                      setIsCreateDialogOpen(false);
-                    }}
-                  >
-                    Done
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="key-name">Key Name</Label>
-                      <Input
-                        id="key-name"
-                        onChange={(e) => setNewKeyName(e.target.value)}
-                        placeholder="e.g., Production API"
-                        value={newKeyName}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        A descriptive name to identify this key
-                      </p>
-                    </div>
-                  </div>
-                  <DialogFooter>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Make sure to copy your API key now. You won't be able to see it again!
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 p-2.5 bg-background rounded-lg text-xs border font-mono shadow-sm">
+                      {newlyCreatedKey}
+                    </code>
                     <Button
-                      onClick={() => {
-                        setIsCreateDialogOpen(false);
-                        setNewKeyName("");
-                        setNewlyCreatedKey(null);
-                      }}
+                      className="shrink-0"
+                      onClick={() => copyToClipboard(newlyCreatedKey)}
+                      size="icon"
                       variant="outline"
                     >
-                      Cancel
+                      <Copy className="h-4 w-4" />
                     </Button>
-                    <Button disabled={createKeyMutation.isPending} onClick={handleCreateKey}>
-                      {createKeyMutation.isPending ? "Creating..." : "Create Key"}
-                    </Button>
-                  </DialogFooter>
-                </>
-              )}
-            </DialogContent>
-          </Dialog>
-          <Button
-            disabled={isFetching}
-            onClick={() => {
-              void refetch();
-            }}
-            size="sm"
-            variant="outline"
-          >
-            {isFetching ? "Refreshing…" : "Refresh"}
-          </Button>
-        </CardAction>
+                  </div>
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setNewlyCreatedKey(null);
+                    setIsCreateDialogOpen(false);
+                  }}
+                >
+                  Done
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="key-name">Key Name</Label>
+                    <Input
+                      className="bg-muted/50"
+                      id="key-name"
+                      onChange={(e) => setNewKeyName(e.target.value)}
+                      placeholder="e.g., Production Server"
+                      value={newKeyName}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Give your key a descriptive name to identify its usage
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={() => {
+                      setIsCreateDialogOpen(false);
+                      setNewKeyName("");
+                      setNewlyCreatedKey(null);
+                    }}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                  <Button disabled={createKeyMutation.isPending} onClick={handleCreateKey}>
+                    {createKeyMutation.isPending ? "Creating..." : "Create Key"}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </CardHeader>
-      <CardContent className="px-0">{content}</CardContent>
+      <CardContent className="p-0">{content}</CardContent>
     </Card>
   );
 }
@@ -520,37 +567,5 @@ function ApiKeysTable({
         </div>
       </div>
     </>
-  );
-}
-
-function ApiUsageCard() {
-  const trpc = useTRPC();
-  const { data: stats } = useQuery(
-    trpc.apiKeys.stats.queryOptions(undefined, { staleTime: 30_000 }),
-  );
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>API Usage</CardTitle>
-        <CardDescription>Monitor your API usage and rate limits</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Total Requests</p>
-            <p className="text-2xl font-bold">{(stats?.totalRequests ?? 0).toLocaleString()}</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Active Keys</p>
-            <p className="text-2xl font-bold">{stats?.activeKeys ?? 0}</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Total Keys</p>
-            <p className="text-2xl font-bold">{stats?.totalKeys ?? 0}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
