@@ -93,12 +93,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -282,12 +278,8 @@
           "name": "apikey_user_id_user_id_fk",
           "tableFrom": "apikey",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -352,12 +344,8 @@
           "name": "invitation_organization_id_organization_id_fk",
           "tableFrom": "invitation",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -365,12 +353,8 @@
           "name": "invitation_inviter_id_user_id_fk",
           "tableFrom": "invitation",
           "tableTo": "user",
-          "columnsFrom": [
-            "inviter_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["inviter_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -472,12 +456,8 @@
           "name": "member_organization_id_organization_id_fk",
           "tableFrom": "member",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -485,12 +465,8 @@
           "name": "member_user_id_user_id_fk",
           "tableFrom": "member",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -572,12 +548,8 @@
           "name": "oauth_access_token_client_id_oauth_application_client_id_fk",
           "tableFrom": "oauth_access_token",
           "tableTo": "oauth_application",
-          "columnsFrom": [
-            "client_id"
-          ],
-          "columnsTo": [
-            "client_id"
-          ],
+          "columnsFrom": ["client_id"],
+          "columnsTo": ["client_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -585,12 +557,8 @@
           "name": "oauth_access_token_user_id_user_id_fk",
           "tableFrom": "oauth_access_token",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -600,16 +568,12 @@
         "oauth_access_token_access_token_unique": {
           "name": "oauth_access_token_access_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "access_token"
-          ]
+          "columns": ["access_token"]
         },
         "oauth_access_token_refresh_token_unique": {
           "name": "oauth_access_token_refresh_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "refresh_token"
-          ]
+          "columns": ["refresh_token"]
         }
       },
       "policies": {},
@@ -700,12 +664,8 @@
           "name": "oauth_application_user_id_user_id_fk",
           "tableFrom": "oauth_application",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -715,9 +675,7 @@
         "oauth_application_client_id_unique": {
           "name": "oauth_application_client_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "client_id"
-          ]
+          "columns": ["client_id"]
         }
       },
       "policies": {},
@@ -777,12 +735,8 @@
           "name": "oauth_consent_client_id_oauth_application_client_id_fk",
           "tableFrom": "oauth_consent",
           "tableTo": "oauth_application",
-          "columnsFrom": [
-            "client_id"
-          ],
-          "columnsTo": [
-            "client_id"
-          ],
+          "columnsFrom": ["client_id"],
+          "columnsTo": ["client_id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -790,12 +744,8 @@
           "name": "oauth_consent_user_id_user_id_fk",
           "tableFrom": "oauth_consent",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -889,12 +839,8 @@
           "name": "passkey_user_id_user_id_fk",
           "tableFrom": "passkey",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1030,12 +976,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1045,9 +987,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -1176,16 +1116,12 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "user_username_unique": {
           "name": "user_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -1421,12 +1357,8 @@
           "name": "invoice_organization_id_organization_id_fk",
           "tableFrom": "invoice",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1434,12 +1366,8 @@
           "name": "invoice_user_id_user_id_fk",
           "tableFrom": "invoice",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1447,12 +1375,8 @@
           "name": "invoice_subscription_id_subscription_id_fk",
           "tableFrom": "invoice",
           "tableTo": "subscription",
-          "columnsFrom": [
-            "subscription_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["subscription_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1462,9 +1386,7 @@
         "invoice_invoice_number_unique": {
           "name": "invoice_invoice_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "invoice_number"
-          ]
+          "columns": ["invoice_number"]
         }
       },
       "policies": {},
@@ -1602,12 +1524,8 @@
           "name": "payment_method_organization_id_organization_id_fk",
           "tableFrom": "payment_method",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1615,12 +1533,8 @@
           "name": "payment_method_user_id_user_id_fk",
           "tableFrom": "payment_method",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1796,12 +1710,8 @@
           "name": "subscription_organization_id_organization_id_fk",
           "tableFrom": "subscription",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1809,12 +1719,8 @@
           "name": "subscription_user_id_user_id_fk",
           "tableFrom": "subscription",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1911,12 +1817,8 @@
           "name": "config_history_config_id_configs_id_fk",
           "tableFrom": "config_history",
           "tableTo": "configs",
-          "columnsFrom": [
-            "config_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["config_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1924,12 +1826,8 @@
           "name": "config_history_changed_by_user_id_fk",
           "tableFrom": "config_history",
           "tableTo": "user",
-          "columnsFrom": [
-            "changed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["changed_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2034,12 +1932,8 @@
           "name": "config_namespaces_user_id_user_id_fk",
           "tableFrom": "config_namespaces",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2199,12 +2093,8 @@
           "name": "configs_namespace_id_config_namespaces_id_fk",
           "tableFrom": "configs",
           "tableTo": "config_namespaces",
-          "columnsFrom": [
-            "namespace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["namespace_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2212,12 +2102,8 @@
           "name": "configs_user_id_user_id_fk",
           "tableFrom": "configs",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2298,9 +2184,7 @@
         "organization_slug_unique": {
           "name": "organization_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -2467,12 +2351,8 @@
           "name": "chunks_document_id_documents_id_fk",
           "tableFrom": "chunks",
           "tableTo": "documents",
-          "columnsFrom": [
-            "document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["document_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2480,12 +2360,8 @@
           "name": "chunks_knowledge_base_id_knowledges_id_fk",
           "tableFrom": "chunks",
           "tableTo": "knowledges",
-          "columnsFrom": [
-            "knowledge_base_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["knowledge_base_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2493,12 +2369,8 @@
           "name": "chunks_user_id_user_id_fk",
           "tableFrom": "chunks",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2508,10 +2380,7 @@
         "chunks_client_id_user_id_unique": {
           "name": "chunks_client_id_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "client_id",
-            "user_id"
-          ]
+          "columns": ["client_id", "user_id"]
         }
       },
       "policies": {},
@@ -2645,12 +2514,8 @@
           "name": "documents_knowledge_base_id_knowledges_id_fk",
           "tableFrom": "documents",
           "tableTo": "knowledges",
-          "columnsFrom": [
-            "knowledge_base_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["knowledge_base_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2658,12 +2523,8 @@
           "name": "documents_user_id_user_id_fk",
           "tableFrom": "documents",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2753,12 +2614,8 @@
           "name": "embeddings_chunk_id_chunks_id_fk",
           "tableFrom": "embeddings",
           "tableTo": "chunks",
-          "columnsFrom": [
-            "chunk_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chunk_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2766,12 +2623,8 @@
           "name": "embeddings_user_id_user_id_fk",
           "tableFrom": "embeddings",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2781,17 +2634,12 @@
         "embeddings_chunk_id_unique": {
           "name": "embeddings_chunk_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "chunk_id"
-          ]
+          "columns": ["chunk_id"]
         },
         "embeddings_client_id_user_id_unique": {
           "name": "embeddings_client_id_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "client_id",
-            "user_id"
-          ]
+          "columns": ["client_id", "user_id"]
         }
       },
       "policies": {},
@@ -2892,12 +2740,8 @@
           "name": "knowledges_user_id_user_id_fk",
           "tableFrom": "knowledges",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2993,10 +2837,7 @@
         "resources_schema_name_table_name_unique": {
           "name": "resources_schema_name_table_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "schema_name",
-            "table_name"
-          ]
+          "columns": ["schema_name", "table_name"]
         }
       },
       "policies": {},
@@ -3008,32 +2849,17 @@
     "public.invoice_status": {
       "name": "invoice_status",
       "schema": "public",
-      "values": [
-        "paid",
-        "pending",
-        "failed",
-        "void"
-      ]
+      "values": ["paid", "pending", "failed", "void"]
     },
     "public.payment_method_type": {
       "name": "payment_method_type",
       "schema": "public",
-      "values": [
-        "card",
-        "bank_account",
-        "paypal"
-      ]
+      "values": ["card", "bank_account", "paypal"]
     },
     "public.subscription_status": {
       "name": "subscription_status",
       "schema": "public",
-      "values": [
-        "active",
-        "canceled",
-        "past_due",
-        "trialing",
-        "incomplete"
-      ]
+      "values": ["active", "canceled", "past_due", "trialing", "incomplete"]
     }
   },
   "schemas": {},

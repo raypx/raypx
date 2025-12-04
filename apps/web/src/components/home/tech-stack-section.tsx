@@ -1,4 +1,4 @@
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, CSSProperties, SVGProps } from "react";
 import { Marquee } from "./marquee";
 import { Icons } from "./tech-icons";
 
@@ -71,11 +71,12 @@ const techStackRow2: TechItem[] = [
 
 const TechCard = ({ name, description, color, icon: Icon }: TechItem) => (
   <div
-    className="relative flex h-16 w-52 items-center space-x-4 rounded-xl border bg-background/50 backdrop-blur-sm p-4 hover:bg-accent/50 transition-all duration-300 hover:shadow-lg group"
-    style={{
-      // @ts-expect-error
-      "--tech-color": color,
-    }}
+    className="relative flex h-14 md:h-16 w-40 md:w-52 items-center space-x-3 md:space-x-4 rounded-xl border bg-background/50 backdrop-blur-sm p-3 md:p-4 hover:bg-accent/50 transition-all duration-300 hover:shadow-lg group"
+    style={
+      {
+        "--tech-color": color,
+      } as CSSProperties
+    }
   >
     {/* Placeholder icon */}
     <div
@@ -88,7 +89,7 @@ const TechCard = ({ name, description, color, icon: Icon }: TechItem) => (
       {Icon ? <Icon className="size-5" /> : name[0]}
     </div>
     <div className="flex flex-col overflow-hidden text-left">
-      <span className="text-sm font-medium leading-none">{name}</span>
+      <span className="text-sm font-medium leading-none truncate w-full">{name}</span>
       <span className="text-xs text-muted-foreground truncate group-hover:text-(--tech-color) transition-colors">
         {description}
       </span>
@@ -98,7 +99,7 @@ const TechCard = ({ name, description, color, icon: Icon }: TechItem) => (
 
 export function TechStackSection() {
   return (
-    <section className="py-20 md:py-32 overflow-hidden bg-background relative">
+    <section className="py-12 md:py-32 overflow-hidden bg-background relative">
       {/* Spotlight Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05)_0,transparent_100%)] pointer-events-none" />
 
@@ -115,12 +116,12 @@ export function TechStackSection() {
       </div>
 
       <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
-        <Marquee className="[--duration:40s]" pauseOnHover>
+        <Marquee className="[--duration:30s] md:[--duration:40s]" pauseOnHover={false}>
           {techStackRow1.map((item, i) => (
             <TechCard key={i} {...item} />
           ))}
         </Marquee>
-        <Marquee className="[--duration:40s] mt-4" pauseOnHover reverse>
+        <Marquee className="[--duration:30s] md:[--duration:40s] mt-4" pauseOnHover={false} reverse>
           {techStackRow2.map((item, i) => (
             <TechCard key={i} {...item} />
           ))}

@@ -27,14 +27,14 @@ const features: Feature[] = [
     title: "AI-First Design",
     description:
       "Built from the ground up for AI applications, with native integration for LLMs and vector databases.",
-    className: "md:col-span-2 md:row-span-2",
+    className: "col-span-2 md:col-span-2 md:row-span-2",
     accent: "#8b5cf6",
   },
   {
     icon: Zap,
     title: "Lightning Fast",
     description: "Powered by Vite and React 19 for instant HMR and optimal production performance.",
-    className: "md:col-span-1",
+    className: "col-span-1 md:col-span-1",
     accent: "#eab308",
   },
   {
@@ -42,7 +42,7 @@ const features: Feature[] = [
     title: "Enterprise Security",
     description:
       "Bank-grade security with secure authentication, role-based access control, and data encryption.",
-    className: "md:col-span-1",
+    className: "col-span-1 md:col-span-1",
     accent: "#22c55e",
   },
   {
@@ -50,14 +50,14 @@ const features: Feature[] = [
     title: "Modern UI/UX",
     description:
       "Beautiful, accessible components built with Tailwind CSS and Radix UI for a premium feel.",
-    className: "md:col-span-1",
+    className: "col-span-1 md:col-span-1",
     accent: "#ec4899",
   },
   {
     icon: LineChart,
     title: "Deep Observability",
     description: "Integrated analytics, error tracking, and performance monitoring out of the box.",
-    className: "md:col-span-1",
+    className: "col-span-1 md:col-span-1",
     accent: "#06b6d4",
   },
   {
@@ -65,14 +65,14 @@ const features: Feature[] = [
     title: "Type-Safe Database",
     description:
       "End-to-end type safety with Drizzle ORM and tRPC for confident database operations.",
-    className: "md:col-span-2",
+    className: "col-span-2 md:col-span-2",
     accent: "#3b82f6",
   },
   {
     icon: Globe,
     title: "Global Ready",
     description: "Built-in internationalization support to help you reach users worldwide.",
-    className: "md:col-span-1",
+    className: "col-span-1 md:col-span-1",
     accent: "#14b8a6",
   },
   {
@@ -80,7 +80,7 @@ const features: Feature[] = [
     title: "Easy Deployment",
     description:
       "Deploy anywhere with Docker support, or one-click deploy to Vercel, Cloudflare, or Railway.",
-    className: "md:col-span-1",
+    className: "col-span-1 md:col-span-1",
     accent: "#f97316",
   },
 ];
@@ -123,7 +123,7 @@ export function FeaturesSection() {
           </div>
 
           {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[minmax(180px,auto)]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[minmax(180px,auto)]">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               const isLarge = feature.className?.includes("row-span-2");
@@ -182,7 +182,10 @@ export function FeaturesSection() {
                   )}
 
                   <div
-                    className={cn("p-8 h-full flex flex-col relative z-10", isLarge && "p-10")}
+                    className={cn(
+                      "p-6 md:p-8 h-full flex flex-col relative z-10",
+                      isLarge && "p-8 md:p-10",
+                    )}
                   >
                     {/* Icon with glow effect */}
                     <div className="relative mb-6">

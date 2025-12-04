@@ -7,7 +7,7 @@ import { FallingStarsBg } from "./falling-stars-bg";
 
 export function HeroSection() {
   return (
-    <section className="relative py-20 md:py-32 overflow-hidden">
+    <section className="relative py-16 md:py-32 overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-background pointer-events-none" />
 
