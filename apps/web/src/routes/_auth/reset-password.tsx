@@ -12,23 +12,26 @@ import {
   FormMessage,
   PasswordField,
 } from "@raypx/ui/components";
+import { Alert, AlertDescription, AlertTitle } from "@raypx/ui/components/alert";
 import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AuthCard } from "~/layouts/auth/auth-card";
-import { SignInFooter } from "~/layouts/auth/auth-footers";
-import { AuthSuccessState } from "~/layouts/auth/auth-success-state";
+import { AuthCard } from "~/layouts/auth/card";
+import { SuccessState } from "~/layouts/auth/success-state";
+
+// Constants
+const REDIRECT_DELAY = 3000; // 3 seconds
+const LINK_EXPIRY_MINUTES = 15;
 
 // Search params validation
 const resetPasswordSearch = z.object({
   token: z.string().optional(),
   error: z.string().optional(),
 });
-type ResetPasswordParams = z.infer<typeof resetPasswordSearch>;
 
 const passwordSchema = z
   .string()
@@ -56,13 +59,13 @@ type FormValues = z.infer<typeof formSchema>;
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
-  const { token, error: tokenError } = Route.useSearch() as ResetPasswordParams;
+  const { token, error: tokenError } = Route.useSearch();
   const { auth, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
   const { onSuccess } = useOnSuccessTransition({ redirectTo });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,7 +75,9 @@ function ResetPasswordPage() {
     },
   });
 
-  // Check if token exists
+  const isSubmitting = form.formState.isSubmitting;
+
+  // Check if token exists and show error if needed
   useEffect(() => {
     if (!token && !tokenError) {
       toast.error("Invalid Link", {
@@ -86,6 +91,13 @@ function ResetPasswordPage() {
           "This password reset link is invalid or has expired. Please request a new one.",
       });
     }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
   }, [token, tokenError]);
 
   async function onSubmit({ password }: FormValues) {
@@ -95,8 +107,6 @@ function ResetPasswordPage() {
       });
       return;
     }
-
-    setIsSubmitting(true);
 
     try {
       const response = await auth.resetPassword({
@@ -110,88 +120,94 @@ function ResetPasswordPage() {
             response.error.message ||
             "Failed to reset password. The link may have expired. Please try again.",
         });
+        form.resetField("password");
+        form.resetField("confirmPassword");
       } else {
         setIsSuccess(true);
         toast.success("Success!", {
           description: "Your password has been reset successfully.",
         });
 
-        // Redirect to sign-in after 3 seconds
-        setTimeout(async () => {
+        // Redirect to sign-in after delay
+        redirectTimeoutRef.current = setTimeout(async () => {
           onSuccess();
           await navigate({ to: "/sign-in" });
-        }, 3000);
+        }, REDIRECT_DELAY);
       }
     } catch (error) {
-      console.error("Reset password error:", error);
       toast.error("Error", {
         description: "An unexpected error occurred. Please try again.",
       });
-    } finally {
-      setIsSubmitting(false);
+      form.resetField("password");
+      form.resetField("confirmPassword");
     }
   }
 
   // Invalid token state
   if (!token || tokenError) {
     return (
-      <div className="grid w-full gap-6 text-center">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-            <AlertCircle className="h-8 w-8 text-destructive" />
+      <AuthCard>
+        <div className="grid w-full gap-6 text-center">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Invalid Reset Link</h2>
+              <p className="text-sm text-muted-foreground">
+                This password reset link is invalid or has expired.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Invalid Reset Link</h2>
-            <p className="text-sm text-muted-foreground">
-              This password reset link is invalid or has expired.
-            </p>
+          <Alert className="text-left">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Possible reasons:</AlertTitle>
+            <AlertDescription>
+              <ul className="list-inside list-disc space-y-1 mt-2">
+                <li>The link has expired (links expire after {LINK_EXPIRY_MINUTES} minutes)</li>
+                <li>The link has already been used</li>
+                <li>The link was copied incorrectly</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+
+          <div className="flex flex-col gap-3">
+            <Link className="w-full" to="/forgot-password">
+              <Button className="w-full">Request new reset link</Button>
+            </Link>
+
+            <Link className="w-full" to="/sign-in">
+              <Button className="w-full" variant="outline">
+                Back to sign in
+              </Button>
+            </Link>
           </div>
         </div>
-
-        <div className="rounded-lg border bg-muted/50 p-4">
-          <div className="space-y-2 text-left text-sm">
-            <p className="font-medium">Possible reasons:</p>
-            <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-              <li>The link has expired (links expire after 15 minutes)</li>
-              <li>The link has already been used</li>
-              <li>The link was copied incorrectly</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <Link className="w-full" to="/forgot-password">
-            <Button className="w-full">Request new reset link</Button>
-          </Link>
-
-          <Link className="w-full" to="/sign-in">
-            <Button className="w-full" variant="outline">
-              Back to sign in
-            </Button>
-          </Link>
-        </div>
-      </div>
+      </AuthCard>
     );
   }
 
   // Success state
   if (isSuccess) {
     return (
-      <AuthSuccessState
-        description={
-          <>
-            Your password has been changed successfully.
-            <br />
-            Redirecting you to sign in...
-          </>
-        }
-        title="Password Reset Successful!"
-      >
-        <Link className="w-full" to="/sign-in">
-          <Button className="w-full">Continue to sign in</Button>
-        </Link>
-      </AuthSuccessState>
+      <AuthCard>
+        <SuccessState
+          description={
+            <>
+              Your password has been changed successfully.
+              <br />
+              Redirecting you to sign in...
+            </>
+          }
+          title="Password Reset Successful!"
+        >
+          <Link className="w-full" to="/sign-in">
+            <Button className="w-full">Continue to sign in</Button>
+          </Link>
+        </SuccessState>
+      </AuthCard>
     );
   }
 
@@ -199,7 +215,17 @@ function ResetPasswordPage() {
   return (
     <AuthCard
       description="Choose a strong password for your account"
-      footer={<SignInFooter />}
+      footer={
+        <>
+          Don't have an account?{" "}
+          <Link
+            className="font-medium underline underline-offset-4 hover:text-primary"
+            to="/sign-up"
+          >
+            Sign Up
+          </Link>
+        </>
+      }
       title="Set new password"
     >
       <Form {...form}>

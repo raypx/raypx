@@ -1,6 +1,10 @@
-import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth, useOnSuccessTransition } from "@raypx/auth";
+import {
+  createSignUpFormSchema,
+  getSignInFormDefaults,
+  useAuth,
+  useOnSuccessTransition,
+} from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -15,13 +19,13 @@ import {
   PasswordField,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { AuthCard } from "~/layouts/auth/auth-card";
-import { SignUpFooter } from "~/layouts/auth/auth-footers";
+import type { z } from "zod";
+import { AuthGuard } from "~/layouts/auth/auth-guard";
+import { AuthCard } from "~/layouts/auth/card";
 import { OrDivider } from "~/layouts/auth/or-divider";
 import { SocialProviders } from "~/layouts/auth/social-providers";
 
@@ -34,51 +38,24 @@ function SignUpPage() {
   const rememberMeEnabled = credentials?.rememberMe;
   const usernameEnabled = credentials?.username;
 
-  const formSchema = z.object({
-    email: usernameEnabled
-      ? z.string().min(1, {
-          message: "Username is required",
-        })
-      : z.email({
-          message: "Email is invalid",
-        }),
-    password: z
-      .string()
-      .min(1, {
-        message: "Password is required",
-      })
-      .min(8, {
-        message: "Password must be at least 8 characters",
-      })
-      .max(100, {
-        message: "Password must be less than 100 characters",
-      }),
-    // .regex(/^(?=.*[A-Za-z])(?=.*\d)/, {
-    //   message: "Password must contain at least one letter and one number",
-    // })
-    rememberMe: z.boolean().optional(),
+  const formSchema = createSignUpFormSchema({
+    usernameEnabled,
+    passwordValidation: { minLength: 8, maxLength: 100 },
+    rememberMeEnabled,
   });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: !rememberMeEnabled,
-    },
+    defaultValues: getSignInFormDefaults(rememberMeEnabled),
   });
 
   async function signUp({ email, password }: z.infer<typeof formSchema>) {
     try {
-      const fetchOptions: BetterFetchOption = {
-        throw: true,
-      };
-
       const response = await auth.signUp.email({
         email,
         password,
         name: "",
-        fetchOptions,
+        fetchOptions: { throw: true },
       });
 
       if ("token" in response && response.token) {
@@ -94,91 +71,107 @@ function SignUpPage() {
   }
 
   return (
-    <AuthCard description="Create an account" footer={<SignUpFooter />} title="Sign Up">
-      <SocialProviders disabled={isSubmitting} redirectTo={redirectTo} />
+    <AuthGuard redirectTo={redirectTo || "/dashboard"}>
+      <AuthCard
+        description="Create an account"
+        footer={
+          <>
+            Already have an account?{" "}
+            <Link
+              className="font-medium underline underline-offset-4 hover:text-primary"
+              to="/sign-in"
+            >
+              Sign In
+            </Link>
+          </>
+        }
+        title="Sign Up"
+      >
+        <SocialProviders disabled={isSubmitting} redirectTo={redirectTo} />
 
-      <OrDivider />
+        <OrDivider />
 
-      <Form {...form}>
-        <form
-          className={cn("grid w-full gap-6")}
-          noValidate={isHydrated}
-          onSubmit={form.handleSubmit(signUp)}
-        >
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
-
-                <FormControl>
-                  <Input
-                    autoComplete={usernameEnabled ? "username" : "email"}
-                    disabled={isSubmitting}
-                    placeholder={usernameEnabled ? "Username" : "Email"}
-                    type={usernameEnabled ? "text" : "email"}
-                    {...field}
-                  />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <PasswordField
-                    autoComplete="current-password"
-                    disabled={isSubmitting}
-                    placeholder="Password"
-                    {...field}
-                  />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {rememberMeEnabled && (
+        <Form {...form}>
+          <form
+            className={cn("grid w-full gap-6")}
+            noValidate={isHydrated}
+            onSubmit={form.handleSubmit(signUp)}
+          >
             <FormField
               control={form.control}
-              name="rememberMe"
+              name="email"
               render={({ field }) => (
-                <FormItem className="flex">
+                <FormItem>
+                  <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
+
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
+                    <Input
+                      autoComplete={usernameEnabled ? "username" : "email"}
                       disabled={isSubmitting}
-                      onCheckedChange={field.onChange}
+                      placeholder={usernameEnabled ? "Username" : "Email"}
+                      type={usernameEnabled ? "text" : "email"}
+                      {...field}
                     />
                   </FormControl>
 
-                  <FormLabel>Remember Me</FormLabel>
+                  <FormMessage />
                 </FormItem>
               )}
             />
-          )}
 
-          {/* <Captcha
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <PasswordField
+                      autoComplete="current-password"
+                      disabled={isSubmitting}
+                      placeholder="Password"
+                      {...field}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {rememberMeEnabled && (
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        disabled={isSubmitting}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+
+                    <FormLabel>Remember Me</FormLabel>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* <Captcha
                     action="/sign-in/email"
                     localization={localization}
                     ref={captchaRef}
                 /> */}
 
-          <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign Up"}
-          </Button>
-        </form>
-      </Form>
-    </AuthCard>
+            <Button className="w-full" disabled={isSubmitting} type="submit">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign Up"}
+            </Button>
+          </form>
+        </Form>
+      </AuthCard>
+    </AuthGuard>
   );
 }
 

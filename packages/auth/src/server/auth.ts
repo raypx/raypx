@@ -141,6 +141,7 @@ const createAuthOptions = () => {
       },
     },
     emailVerification: {
+      autoSignInAfterVerification: true,
       sendOnSignUp: true, // Automatically send verification email on sign up
       sendVerificationEmail: async ({ user, url }) => {
         const env = envs();

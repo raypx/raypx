@@ -1,10 +1,10 @@
 import {
-  Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  Card as UICard,
 } from "@raypx/ui/components/card";
 import type { ReactNode } from "react";
 
@@ -17,7 +17,7 @@ interface AuthCardProps {
 
 export function AuthCard({ title, description, children, footer }: AuthCardProps) {
   return (
-    <Card className="sm:border sm:shadow-sm sm:bg-card sm:rounded-xl sm:p-8">
+    <UICard className="sm:border sm:shadow-sm sm:bg-card sm:rounded-xl sm:p-8">
       {(title || description) && (
         <CardHeader className="flex flex-col space-y-1.5 text-center px-0 pt-0">
           {title && (
@@ -38,6 +38,6 @@ export function AuthCard({ title, description, children, footer }: AuthCardProps
           {footer}
         </CardFooter>
       )}
-    </Card>
+    </UICard>
   );
 }
