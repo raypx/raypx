@@ -1,40 +1,95 @@
+import type { ComponentType, SVGProps } from "react";
 import { Marquee } from "./marquee";
+import { Icons } from "./tech-icons";
 
 type TechItem = {
   name: string;
   description: string;
-  icon?: string; // Optional icon path or component
+  color: string;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
 const techStackRow1: TechItem[] = [
-  { name: "TanStack Start", description: "React Framework" },
-  { name: "React 19", description: "UI Library" },
-  { name: "TypeScript", description: "Type Safety" },
-  { name: "Vite", description: "Build Tool" },
-  { name: "Tailwind CSS", description: "Styling" },
-  { name: "Radix UI", description: "Primitives" },
-  { name: "shadcn/ui", description: "Components" },
+  {
+    name: "TanStack Start",
+    description: "React Framework",
+    color: "#71717a",
+    icon: Icons.TanStackStart,
+  },
+  { name: "React 19", description: "UI Library", color: "#61DAFB", icon: Icons.React },
+  {
+    name: "TypeScript",
+    description: "Type Safety",
+    color: "#3178C6",
+    icon: Icons.TypeScript,
+  },
+  { name: "Vite", description: "Build Tool", color: "#646CFF", icon: Icons.Vite },
+  {
+    name: "Tailwind CSS",
+    description: "Styling",
+    color: "#06B6D4",
+    icon: Icons.TailwindCSS,
+  },
+  { name: "Radix UI", description: "Primitives", color: "#0091FF", icon: Icons.RadixUI },
+  {
+    name: "shadcn/ui",
+    description: "Components",
+    color: "#000000",
+    icon: Icons.ShadcnUI,
+  },
 ];
 
 const techStackRow2: TechItem[] = [
-  { name: "Drizzle ORM", description: "Database ORM" },
-  { name: "PostgreSQL", description: "Database" },
-  { name: "tRPC", description: "API Layer" },
-  { name: "pnpm", description: "Package Manager" },
-  { name: "Turborepo", description: "Monorepo Tool" },
-  { name: "Biome", description: "Linter/Formatter" },
-  { name: "Vitest", description: "Testing" },
+  {
+    name: "Drizzle ORM",
+    description: "Database ORM",
+    color: "#C5F74F",
+    icon: Icons.DrizzleORM,
+  },
+  {
+    name: "PostgreSQL",
+    description: "Database",
+    color: "#336791",
+    icon: Icons.PostgreSQL,
+  },
+  { name: "tRPC", description: "API Layer", color: "#2596BE", icon: Icons.tRPC },
+  { name: "pnpm", description: "Package Manager", color: "#F69220", icon: Icons.pnpm },
+  {
+    name: "Turborepo",
+    description: "Monorepo Tool",
+    color: "#EF4444",
+    icon: Icons.Turborepo,
+  },
+  {
+    name: "Biome",
+    description: "Linter/Formatter",
+    color: "#FBBC04",
+    icon: Icons.Biome,
+  },
+  { name: "Vitest", description: "Testing", color: "#FCC72B", icon: Icons.Vitest },
 ];
 
-const TechCard = ({ name, description }: TechItem) => (
-  <div className="relative flex h-16 w-52 items-center space-x-4 rounded-xl border bg-background/50 backdrop-blur-sm p-4 hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 group">
+const TechCard = ({ name, description, color, icon: Icon }: TechItem) => (
+  <div
+    className="relative flex h-16 w-52 items-center space-x-4 rounded-xl border bg-background/50 backdrop-blur-sm p-4 hover:bg-accent/50 transition-all duration-300 hover:shadow-lg group"
+    style={{
+      // @ts-expect-error
+      "--tech-color": color,
+    }}
+  >
     {/* Placeholder icon */}
-    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary group-hover:scale-110 transition-transform">
-      {name[0]}
+    <div
+      className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold group-hover:scale-110 transition-transform"
+      style={{
+        backgroundColor: `${color}20`,
+        color: color,
+      }}
+    >
+      {Icon ? <Icon className="size-5" /> : name[0]}
     </div>
     <div className="flex flex-col overflow-hidden text-left">
       <span className="text-sm font-medium leading-none">{name}</span>
-      <span className="text-xs text-muted-foreground truncate group-hover:text-primary/80 transition-colors">
+      <span className="text-xs text-muted-foreground truncate group-hover:text-(--tech-color) transition-colors">
         {description}
       </span>
     </div>
@@ -71,8 +126,8 @@ export function TechStackSection() {
           ))}
         </Marquee>
 
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-background"></div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-background"></div>
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-linear-to-r from-background"></div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-linear-to-l from-background"></div>
       </div>
     </section>
   );
