@@ -5,12 +5,14 @@ interface SpotlightCardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   className?: string;
   spotlightColor?: string;
+  borderGlow?: boolean;
 }
 
 export function SpotlightCard({
   children,
   className = "",
-  spotlightColor = "rgba(255, 255, 255, 0.1)",
+  spotlightColor = "rgba(120, 119, 198, 0.3)",
+  borderGlow = true,
   ...props
 }: SpotlightCardProps) {
   const divRef = useRef<HTMLDivElement>(null);
@@ -60,20 +62,46 @@ export function SpotlightCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm",
+        "group/card relative rounded-xl text-card-foreground transition-all duration-500",
         className,
       )}
       ref={divRef}
       {...props}
     >
+      {/* Animated border gradient */}
+      {borderGlow && (
+        <div
+          className="absolute -inset-[1px] rounded-xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 blur-[1px]"
+          style={{
+            background: `radial-gradient(400px circle at ${position.x}px ${position.y}px, rgba(120, 119, 198, 0.4), rgba(59, 130, 246, 0.2), transparent 60%)`,
+            opacity: opacity * 0.8,
+          }}
+        />
+      )}
+
+      {/* Card background with subtle gradient */}
+      <div className="absolute inset-[1px] rounded-xl bg-card/90 backdrop-blur-xl" />
+
+      {/* Inner border */}
+      <div className="absolute inset-0 rounded-xl border border-white/[0.08] group-hover/card:border-white/[0.15] transition-colors duration-500" />
+
+      {/* Spotlight effect */}
       <div
-        className="pointer-events-none absolute -inset-px transition duration-300"
+        className="pointer-events-none absolute -inset-px rounded-xl transition duration-500"
         style={{
           opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
+          background: `radial-gradient(800px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
         }}
       />
-      <div className="relative h-full">{children}</div>
+
+      {/* Corner accents */}
+      <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-primary/20 rounded-tl-xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+      <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-primary/20 rounded-tr-xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+      <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-primary/20 rounded-bl-xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+      <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-primary/20 rounded-br-xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+
+      {/* Content */}
+      <div className="relative h-full z-10">{children}</div>
     </div>
   );
 }
