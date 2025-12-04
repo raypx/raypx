@@ -98,10 +98,7 @@ function ConfigsPage() {
     <PageWrapper spacing="lg">
       <div className="space-y-4">
         {selectedNamespace ? (
-          <ConfigsSection
-            namespace={selectedNamespace}
-            onBack={() => setSelectedNamespace(null)}
-          />
+          <ConfigsSection namespace={selectedNamespace} onBack={() => setSelectedNamespace(null)} />
         ) : (
           <NamespacesSection onSelectNamespace={setSelectedNamespace} />
         )}
@@ -112,11 +109,7 @@ function ConfigsPage() {
 
 // ==================== Namespaces Section ====================
 
-function NamespacesSection({
-  onSelectNamespace,
-}: {
-  onSelectNamespace: (ns: Namespace) => void;
-}) {
+function NamespacesSection({ onSelectNamespace }: { onSelectNamespace: (ns: Namespace) => void }) {
   const trpc = useTRPC();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -168,7 +161,12 @@ function NamespacesSection({
   };
 
   const handleDelete = (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this namespace? All configs in it will be deleted.")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this namespace? All configs in it will be deleted.",
+      )
+    )
+      return;
     deleteMutation.mutate(id);
   };
 
@@ -223,7 +221,11 @@ function NamespacesSection({
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                    <Button size="icon" variant="ghost" className="size-8 opacity-0 group-hover:opacity-100">
+                    <Button
+                      className="size-8 opacity-0 group-hover:opacity-100"
+                      size="icon"
+                      variant="ghost"
+                    >
                       <MoreHorizontal className="size-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -245,9 +247,7 @@ function NamespacesSection({
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <p className="text-xs text-muted-foreground">
-                Created {formatDate(ns.createdAt)}
-              </p>
+              <p className="text-xs text-muted-foreground">Created {formatDate(ns.createdAt)}</p>
             </CardContent>
           </Card>
         ))}
@@ -321,12 +321,7 @@ function NamespacesSection({
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button
-            disabled={isFetching}
-            onClick={() => void refetch()}
-            size="sm"
-            variant="outline"
-          >
+          <Button disabled={isFetching} onClick={() => void refetch()} size="sm" variant="outline">
             {isFetching ? "Refreshing…" : "Refresh"}
           </Button>
         </div>
@@ -338,13 +333,7 @@ function NamespacesSection({
 
 // ==================== Configs Section ====================
 
-function ConfigsSection({
-  namespace,
-  onBack,
-}: {
-  namespace: Namespace;
-  onBack: () => void;
-}) {
+function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: () => void }) {
   const trpc = useTRPC();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -355,7 +344,9 @@ function ConfigsSection({
   // Form state
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
-  const [newValueType, setNewValueType] = useState<"string" | "number" | "boolean" | "json">("string");
+  const [newValueType, setNewValueType] = useState<"string" | "number" | "boolean" | "json">(
+    "string",
+  );
   const [newDescription, setNewDescription] = useState("");
   const [newIsSecret, setNewIsSecret] = useState(false);
 
@@ -593,9 +584,7 @@ function ConfigsSection({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Config</DialogTitle>
-            <DialogDescription>
-              Update the configuration value.
-            </DialogDescription>
+            <DialogDescription>Update the configuration value.</DialogDescription>
           </DialogHeader>
           <ConfigForm
             description={newDescription}
@@ -787,9 +776,7 @@ function ConfigsTable({
         accessorKey: "key",
         header: "Key",
         cell: ({ row }) => (
-          <code className="font-mono text-sm bg-muted px-2 py-1 rounded">
-            {row.original.key}
-          </code>
+          <code className="font-mono text-sm bg-muted px-2 py-1 rounded">{row.original.key}</code>
         ),
       },
       {
@@ -802,19 +789,21 @@ function ConfigsTable({
 
           return (
             <div className="flex items-center gap-2 max-w-xs">
-              <code className={cn(
-                "font-mono text-sm truncate",
-                config.valueType === "boolean" && "text-blue-500",
-                config.valueType === "number" && "text-green-500",
-              )}>
+              <code
+                className={cn(
+                  "font-mono text-sm truncate",
+                  config.valueType === "boolean" && "text-blue-500",
+                  config.valueType === "number" && "text-green-500",
+                )}
+              >
                 {displayValue || <span className="text-muted-foreground italic">empty</span>}
               </code>
               {config.isSecret && (
                 <Button
+                  className="size-6"
                   onClick={() => toggleSecretVisibility(config.id)}
                   size="icon"
                   variant="ghost"
-                  className="size-6"
                 >
                   {isVisible ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
                 </Button>
@@ -827,7 +816,7 @@ function ConfigsTable({
         accessorKey: "valueType",
         header: "Type",
         cell: ({ row }) => (
-          <Badge variant="outline" className="font-mono text-xs">
+          <Badge className="font-mono text-xs" variant="outline">
             {row.original.valueType}
           </Badge>
         ),
@@ -845,9 +834,7 @@ function ConfigsTable({
         accessorKey: "updatedAt",
         header: "Updated",
         cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">
-            {formatDate(row.original.updatedAt)}
-          </div>
+          <div className="text-sm text-muted-foreground">{formatDate(row.original.updatedAt)}</div>
         ),
       },
       {
@@ -880,10 +867,7 @@ function ConfigsTable({
                   View History
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => onDelete(config.id)}
-                >
+                <DropdownMenuItem className="text-destructive" onClick={() => onDelete(config.id)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
@@ -896,13 +880,7 @@ function ConfigsTable({
     [visibleSecrets, onEdit, onDelete, onCopy, onViewHistory],
   );
 
-  return (
-    <DataTable
-      columns={columns}
-      data={configs}
-      isLoading={isLoading}
-    />
-  );
+  return <DataTable columns={columns} data={configs} isLoading={isLoading} />;
 }
 
 // ==================== Config History List ====================
@@ -925,30 +903,21 @@ function ConfigHistoryList({ configId }: { configId: string }) {
   }
 
   if (isError) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Failed to load history
-      </div>
-    );
+    return <div className="text-center py-8 text-muted-foreground">Failed to load history</div>;
   }
 
   const history = (data ?? []) as HistoryItem[];
 
   if (history.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        No change history available
-      </div>
+      <div className="text-center py-8 text-muted-foreground">No change history available</div>
     );
   }
 
   return (
     <div className="space-y-3 max-h-80 overflow-y-auto">
       {history.map((item) => (
-        <div
-          className="rounded-lg border p-3 space-y-2"
-          key={item.id}
-        >
+        <div className="rounded-lg border p-3 space-y-2" key={item.id}>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="size-3" />
             {formatDate(item.createdAt)}
@@ -968,13 +937,10 @@ function ConfigHistoryList({ configId }: { configId: string }) {
             </div>
           </div>
           {item.changeReason && (
-            <p className="text-xs text-muted-foreground italic">
-              Reason: {item.changeReason}
-            </p>
+            <p className="text-xs text-muted-foreground italic">Reason: {item.changeReason}</p>
           )}
         </div>
       ))}
     </div>
   );
 }
-

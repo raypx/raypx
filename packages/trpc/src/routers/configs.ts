@@ -463,4 +463,3 @@ export const configsRouter = {
       }));
     }),
 };
-

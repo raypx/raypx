@@ -7,8 +7,8 @@
 @theme {
   --max-width-8xl: 100rem;
 
-  --animate-marquee: marquee var(--duration) linear infinite;
-  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --animate-marquee: marquee var(--duration, 40s) linear infinite;
+  --animate-marquee-vertical: marquee-vertical var(--duration, 40s) linear infinite;
 
   @keyframes marquee {
     from {
@@ -89,7 +89,8 @@
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
 
   @keyframes glow-pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 0.5;
       transform: scale(1);
     }

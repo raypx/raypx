@@ -1,4 +1,4 @@
-import { index, jsonb, text, timestamp, uuid, varchar, boolean } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { pgTable } from "./_table";
 import { user } from "./auth";
 
@@ -80,10 +80,9 @@ export const configHistory = pgTable(
       .notNull(),
     previousValue: text("previous_value"),
     newValue: text("new_value"),
-    changedBy: uuid("changed_by")
-      .references(() => user.id, {
-        onDelete: "set null",
-      }),
+    changedBy: uuid("changed_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
     changeReason: text("change_reason"),
     createdAt: timestamptz("created_at").notNull().defaultNow(),
   },
@@ -92,4 +91,3 @@ export const configHistory = pgTable(
     index("idx_config_history_changed_by").on(table.changedBy),
   ],
 );
-

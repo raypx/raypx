@@ -23,9 +23,9 @@ export function Footer() {
   return (
     <footer className="border-t bg-background">
       <Container className="py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand section */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="col-span-2 lg:col-span-2 space-y-4">
             <Link className="flex items-center space-x-2" to="/">
               <Logo />
               <span className="text-xl font-semibold">{siteBrand.name}</span>
@@ -89,8 +89,8 @@ export function Footer() {
         <Separator className="my-8" />
 
         {/* Bottom section */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-          <div className="flex flex-col sm:flex-row items-center gap-4 text-muted-foreground">
+        <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-4 text-sm">
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-muted-foreground text-center sm:text-left">
             <p>© {currentYear} Raypx. All rights reserved.</p>
             <div className="flex items-center gap-4">
               <a
