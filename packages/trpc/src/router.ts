@@ -1,5 +1,6 @@
 import { apiKeysRouter } from "./routers/api-keys";
 import { billingRouter } from "./routers/billing";
+import { configsRouter } from "./routers/configs";
 import { documentsRouter } from "./routers/documents";
 import { knowledgesRouter } from "./routers/knowledges";
 import { storageRouter } from "./routers/storage";
@@ -13,6 +14,7 @@ import { createTRPCRouter } from "./trpc";
 export const trpcRouter = createTRPCRouter({
   users: usersRouter,
   apiKeys: apiKeysRouter,
+  configs: configsRouter,
   knowledges: knowledgesRouter,
   documents: documentsRouter,
   billing: billingRouter,
