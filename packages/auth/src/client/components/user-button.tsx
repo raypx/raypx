@@ -18,7 +18,7 @@ import { Skeleton } from "@raypx/ui/components/skeleton";
 import { useTheme } from "@raypx/ui/hooks/use-theme";
 import { themeConfig, themeIcons } from "@raypx/ui/lib/theme-config";
 import { Link } from "@tanstack/react-router";
-import { HelpCircle, LogOut, Settings, User } from "lucide-react";
+import { HelpCircle, Home, LogOut, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { defaultAuthRoutes } from "../../config/routes";
@@ -71,12 +71,30 @@ export const UserButton = ({
   helpPath,
   showKeyboardShortcuts = false,
 }: UserButtonProps = {}) => {
+  const dashboardPath = "/dashboard";
   const settingsPath = "/dashboard/settings";
   const avatarSize = avatar?.size ?? "size-8";
-  const {
-    hooks: { useSession },
-  } = useAuth();
-  const session = useSession();
+
+  // Only use useAuth if userProp is not provided
+  let session: ReturnType<ReturnType<typeof useAuth>["hooks"]["useSession"]> | null = null;
+  let user: AuthUser | null | undefined = userProp;
+
+  if (!userProp) {
+    try {
+      const auth = useAuth();
+      const sessionHook = auth.hooks.useSession();
+      session = sessionHook;
+      user = session.data?.user;
+    } catch (error) {
+      // If useAuth fails (e.g., AuthProvider not available), return null
+      // This can happen during SSR or before AuthProvider is initialized
+      if (error instanceof Error && error.message.includes("AuthProvider")) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -84,9 +102,7 @@ export const UserButton = ({
     setMounted(true);
   }, []);
 
-  const user = userProp ?? session.data?.user;
-
-  if (!userProp && (!mounted || session.isPending)) {
+  if (!userProp && (!mounted || (session?.isPending ?? false))) {
     return <Skeleton className="size-8 rounded-full" />;
   }
 
@@ -134,6 +150,12 @@ export const UserButton = ({
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link className="flex items-center" to={dashboardPath}>
+              <Home className="mr-2 size-4 text-muted-foreground" />
+              <span>Dashboard</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link className="flex items-center" to={settingsPath}>
               <Settings className="mr-2 size-4 text-muted-foreground" />

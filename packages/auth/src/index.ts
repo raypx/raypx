@@ -6,3 +6,5 @@ export * from "./client/utils/error";
 export * from "./client/utils/password";
 export * from "./client/utils/social-providers";
 export { type AuthRoutes, defaultAuthRoutes } from "./config/routes";
+export * from "./permissions";
+export * from "./utils/rbac-helpers";

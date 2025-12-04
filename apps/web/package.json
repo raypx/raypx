@@ -38,6 +38,7 @@
     "dayjs": "^1.11.19",
     "lodash-es": "catalog:",
     "lucide-react": "catalog:",
+    "nanoid": "^5.1.6",
     "nitro": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

@@ -6,6 +6,7 @@ export const statement = {
   ...defaultStatements,
   project: ["create", "read", "update", "delete", "share"],
   billing: ["read", "update", "manage"],
+  config: ["create", "read", "update", "delete", "manage"],
 } as const;
 
 // Create access control instance
@@ -15,17 +16,20 @@ const ac = createAccessControl(statement);
 export const user = ac.newRole({
   project: ["create", "read"],
   billing: ["read"],
+  config: ["create", "read", "update", "delete"], // Users can manage their own configs
 });
 
 export const admin = ac.newRole({
   project: ["create", "read", "update", "delete", "share"],
   billing: ["read", "update"],
+  config: ["create", "read", "update", "delete", "manage"], // Admins can manage all configs
   ...adminAc.statements, // Include all admin statements
 });
 
 export const superadmin = ac.newRole({
   project: ["create", "read", "update", "delete", "share"],
   billing: ["read", "update", "manage"],
+  config: ["create", "read", "update", "delete", "manage"], // Superadmins can manage all configs
   ...adminAc.statements, // Include all admin statements
 });
 
@@ -86,6 +90,23 @@ export function canManageOrganizations(role: UserRole): boolean {
 
 export function canManageBilling(role: UserRole): boolean {
   return role === "superadmin";
+}
+
+export function canManageConfigs(role: UserRole): boolean {
+  return role === "admin" || role === "superadmin";
+}
+
+export function canAccessConfig(
+  userRole: UserRole,
+  configUserId: string,
+  currentUserId: string,
+): boolean {
+  // Users can always access their own configs
+  if (configUserId === currentUserId) {
+    return true;
+  }
+  // Admins and superadmins can access all configs
+  return canManageConfigs(userRole);
 }
 
 // Get user permissions based on role

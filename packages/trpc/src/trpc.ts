@@ -140,3 +140,18 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   if (!isAdmin) throw new TRPCError({ code: "FORBIDDEN" });
   return next();
 });
+
+/**
+ * Create a procedure builder with RBAC permission check
+ *
+ * @example
+ * ```ts
+ * export const deleteProject = protectedProcedure
+ *   .use(requirePermission("project", "delete"))
+ *   .input(z.string())
+ *   .mutation(async ({ ctx, input }) => {
+ *     // User has permission to delete projects
+ *   });
+ * ```
+ */
+export { requireOwnershipOrPermission, requirePermission, requireRole } from "./middlewares/rbac";

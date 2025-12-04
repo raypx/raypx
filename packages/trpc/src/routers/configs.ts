@@ -1,8 +1,9 @@
-import { and, asc, desc, eq } from "@raypx/database";
+import { and, asc, desc, eq, ilike, or, sql } from "@raypx/database";
 import {
   configHistory as ConfigHistory,
   configNamespaces as ConfigNamespaces,
   configs as Configs,
+  user as User,
 } from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
@@ -16,32 +17,96 @@ import { assertExists, handleDatabaseError } from "../utils/error-handler";
 const valueTypeEnum = z.enum(["string", "number", "boolean", "json"]);
 
 /**
+ * Helper function to check if user can access a config
+ * Users can access their own configs, admins can access all configs
+ */
+async function canAccessConfig(
+  db: typeof import("@raypx/database").db,
+  userId: string,
+  configUserId: string,
+): Promise<boolean> {
+  // Users can always access their own configs
+  if (userId === configUserId) {
+    return true;
+  }
+
+  // Check if current user is admin
+  const currentUser = await db.query.user.findFirst({
+    where: eq(User.id, userId),
+    columns: { role: true },
+  });
+  const role = currentUser?.role;
+  return role === "admin" || role === "superadmin";
+}
+
+/**
  * Configs router - handles all configuration-related operations
  */
 export const configsRouter = {
   // ==================== Namespaces ====================
 
   /**
-   * List all config namespaces for the current user
+   * List all config namespaces for the current user with pagination and search
    */
-  listNamespaces: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
+  listNamespaces: protectedProcedure
+    .input(
+      z
+        .object({
+          q: z.string().trim().min(1).max(200).optional(),
+          page: z.number().int().min(1).default(1),
+          pageSize: z.number().int().min(1).max(100).default(12),
+        })
+        .partial()
+        .default({}),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const page = input.page ?? 1;
+      const pageSize = input.pageSize ?? 12;
+      const offset = (page - 1) * pageSize;
 
-    const namespaces = await ctx.db.query.configNamespaces.findMany({
-      where: eq(ConfigNamespaces.userId, userId),
-      orderBy: [asc(ConfigNamespaces.sortOrder), asc(ConfigNamespaces.name)],
-    });
+      const whereConditions = [eq(ConfigNamespaces.userId, userId)];
 
-    return namespaces.map((ns) => ({
-      id: ns.id,
-      name: ns.name,
-      description: ns.description,
-      icon: ns.icon,
-      sortOrder: ns.sortOrder,
-      createdAt: ns.createdAt,
-      updatedAt: ns.updatedAt,
-    }));
-  }),
+      if (input.q) {
+        const like = `%${input.q}%`;
+        const searchCondition = or(
+          ilike(ConfigNamespaces.name, like),
+          ilike(ConfigNamespaces.description, like),
+        );
+        if (searchCondition) {
+          whereConditions.push(searchCondition);
+        }
+      }
+
+      const where = whereConditions.length > 1 ? and(...whereConditions) : whereConditions[0]!;
+
+      const [namespaces, totalResult] = await Promise.all([
+        ctx.db.query.configNamespaces.findMany({
+          where,
+          orderBy: [asc(ConfigNamespaces.sortOrder), asc(ConfigNamespaces.name)],
+          limit: pageSize,
+          offset,
+        }),
+        ctx.db.select({ count: sql<number>`count(*)` }).from(ConfigNamespaces).where(where),
+      ]);
+
+      const total = Number(totalResult[0]?.count ?? 0);
+
+      return {
+        items: namespaces.map((ns) => ({
+          id: ns.id,
+          name: ns.name,
+          description: ns.description,
+          icon: ns.icon,
+          sortOrder: ns.sortOrder,
+          createdAt: ns.createdAt,
+          updatedAt: ns.updatedAt,
+        })),
+        total,
+        page,
+        pageSize,
+      };
+    }),
 
   /**
    * Create a new config namespace
@@ -82,6 +147,31 @@ export const configsRouter = {
       } catch (error) {
         throw handleDatabaseError(error, "create namespace");
       }
+    }),
+
+  /**
+   * Get a single namespace by ID
+   */
+  getNamespaceById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const namespace = await ctx.db.query.configNamespaces.findFirst({
+        where: and(eq(ConfigNamespaces.id, input.id), eq(ConfigNamespaces.userId, userId)),
+      });
+
+      assertExists(namespace, () => Errors.resourceNotFound("Namespace", input.id));
+
+      return {
+        id: namespace.id,
+        name: namespace.name,
+        description: namespace.description,
+        icon: namespace.icon,
+        sortOrder: namespace.sortOrder,
+        createdAt: namespace.createdAt,
+        updatedAt: namespace.updatedAt,
+      };
     }),
 
   /**
@@ -152,18 +242,31 @@ export const configsRouter = {
   // ==================== Configs ====================
 
   /**
-   * List all configs for a namespace
+   * List all configs for a namespace with pagination, search, and filtering
    */
   list: protectedProcedure
     .input(
       z.object({
         namespaceId: z.string(),
+        q: z.string().trim().min(1).max(200).optional(),
         sortBy: z.enum(["createdAt", "key", "updatedAt"]).default("key"),
         sortOrder: z.enum(["asc", "desc"]).default("asc"),
+        valueType: z
+          .union([
+            z.enum(["string", "number", "boolean", "json"]),
+            z.array(z.enum(["string", "number", "boolean", "json"])),
+          ])
+          .optional(),
+        isSecret: z.boolean().optional(),
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(10),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const page = input.page ?? 1;
+      const pageSize = input.pageSize ?? 10;
+      const offset = (page - 1) * pageSize;
 
       // Verify namespace belongs to user
       const namespace = await ctx.db.query.configNamespaces.findFirst({
@@ -180,36 +283,86 @@ export const configsRouter = {
             : Configs.createdAt;
       const orderBy = input.sortOrder === "desc" ? desc(sortByCol) : asc(sortByCol);
 
-      const configs = await ctx.db.query.configs.findMany({
-        where: eq(Configs.namespaceId, input.namespaceId),
-        orderBy,
-      });
+      const whereConditions = [eq(Configs.namespaceId, input.namespaceId)];
 
-      return configs.map((config) => ({
-        id: config.id,
-        key: config.key,
-        value: config.isSecret ? "••••••••" : config.value,
-        valueType: config.valueType,
-        description: config.description,
-        isSecret: config.isSecret,
-        metadata: config.metadata,
-        namespaceId: config.namespaceId,
-        createdAt: config.createdAt,
-        updatedAt: config.updatedAt,
-      }));
+      if (input.q) {
+        const like = `%${input.q}%`;
+        const searchCondition = or(
+          ilike(Configs.key, like),
+          ilike(Configs.description, like),
+          ilike(Configs.value, like),
+        );
+        if (searchCondition) {
+          whereConditions.push(searchCondition);
+        }
+      }
+
+      if (input.valueType) {
+        if (Array.isArray(input.valueType)) {
+          const typeCondition = or(...input.valueType.map((type) => eq(Configs.valueType, type)));
+          if (typeCondition) {
+            whereConditions.push(typeCondition);
+          }
+        } else {
+          whereConditions.push(eq(Configs.valueType, input.valueType));
+        }
+      }
+
+      if (input.isSecret !== undefined) {
+        whereConditions.push(eq(Configs.isSecret, input.isSecret));
+      }
+
+      const where = whereConditions.length > 1 ? and(...whereConditions) : whereConditions[0];
+
+      const [configs, totalResult] = await Promise.all([
+        ctx.db.query.configs.findMany({
+          where,
+          orderBy,
+          limit: pageSize,
+          offset,
+        }),
+        ctx.db.select({ count: sql<number>`count(*)` }).from(Configs).where(where),
+      ]);
+
+      const total = Number(totalResult[0]?.count ?? 0);
+
+      return {
+        items: configs.map((config) => ({
+          id: config.id,
+          key: config.key,
+          value: config.isSecret ? "••••••••" : config.value,
+          valueType: config.valueType,
+          description: config.description,
+          isSecret: config.isSecret,
+          metadata: config.metadata,
+          namespaceId: config.namespaceId,
+          createdAt: config.createdAt,
+          updatedAt: config.updatedAt,
+        })),
+        total,
+        page,
+        pageSize,
+      };
     }),
 
   /**
    * Get a single config by ID
+   * Users can access their own configs, admins can access all configs
    */
   byId: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
 
     const config = await ctx.db.query.configs.findFirst({
-      where: and(eq(Configs.id, input.id), eq(Configs.userId, userId)),
+      where: eq(Configs.id, input.id),
     });
 
     assertExists(config, () => Errors.resourceNotFound("Config", input.id));
+
+    // Check access permission
+    const hasAccess = await canAccessConfig(ctx.db, userId, config.userId);
+    if (!hasAccess) {
+      throw Errors.accessDenied("Config", input.id);
+    }
 
     return {
       id: config.id,
@@ -227,6 +380,7 @@ export const configsRouter = {
 
   /**
    * Get config value by namespace and key (for runtime use)
+   * Users can access their own configs, admins can access all configs
    */
   getValue: protectedProcedure
     .input(
@@ -239,15 +393,17 @@ export const configsRouter = {
       const userId = ctx.session.user.id;
 
       const config = await ctx.db.query.configs.findFirst({
-        where: and(
-          eq(Configs.namespaceId, input.namespaceId),
-          eq(Configs.key, input.key),
-          eq(Configs.userId, userId),
-        ),
+        where: and(eq(Configs.namespaceId, input.namespaceId), eq(Configs.key, input.key)),
       });
 
       if (!config) {
         return null;
+      }
+
+      // Check access permission
+      const hasAccess = await canAccessConfig(ctx.db, userId, config.userId);
+      if (!hasAccess) {
+        return null; // Return null instead of throwing error for runtime use
       }
 
       // Parse value based on type
@@ -366,10 +522,16 @@ export const configsRouter = {
       const { id, changeReason, ...updateData } = input;
 
       const existing = await ctx.db.query.configs.findFirst({
-        where: and(eq(Configs.id, id), eq(Configs.userId, userId)),
+        where: eq(Configs.id, id),
       });
 
       assertExists(existing, () => Errors.resourceNotFound("Config", id));
+
+      // Check access permission
+      const hasAccess = await canAccessConfig(ctx.db, userId, existing.userId);
+      if (!hasAccess) {
+        throw Errors.accessDenied("Config", id);
+      }
 
       try {
         // Record history if value changed
@@ -415,10 +577,16 @@ export const configsRouter = {
     const userId = ctx.session.user.id;
 
     const existing = await ctx.db.query.configs.findFirst({
-      where: and(eq(Configs.id, input), eq(Configs.userId, userId)),
+      where: eq(Configs.id, input),
     });
 
     assertExists(existing, () => Errors.resourceNotFound("Config", input));
+
+    // Check access permission
+    const hasAccess = await canAccessConfig(ctx.db, userId, existing.userId);
+    if (!hasAccess) {
+      throw Errors.accessDenied("Config", input);
+    }
 
     try {
       await ctx.db.delete(Configs).where(eq(Configs.id, input));
@@ -441,12 +609,18 @@ export const configsRouter = {
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Verify config belongs to user
+      // Get config
       const config = await ctx.db.query.configs.findFirst({
-        where: and(eq(Configs.id, input.configId), eq(Configs.userId, userId)),
+        where: eq(Configs.id, input.configId),
       });
 
       assertExists(config, () => Errors.resourceNotFound("Config", input.configId));
+
+      // Check access permission
+      const hasAccess = await canAccessConfig(ctx.db, userId, config.userId);
+      if (!hasAccess) {
+        throw Errors.accessDenied("Config", input.configId);
+      }
 
       const history = await ctx.db.query.configHistory.findMany({
         where: eq(ConfigHistory.configId, input.configId),

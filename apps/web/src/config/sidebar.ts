@@ -1,4 +1,13 @@
-import { BookOpen, CreditCard, FileText, Home, Key, Settings, Users } from "lucide-react";
+import {
+  BookOpen,
+  CreditCard,
+  FileText,
+  FolderCog,
+  Home,
+  Key,
+  Settings,
+  Users,
+} from "lucide-react";
 
 export type SidebarItem = {
   title: string;
@@ -23,14 +32,9 @@ export const sidebarGroups: Record<string, SidebarGroup> = {
         icon: Home,
       },
       {
-        title: "Knowledge",
-        href: "/dashboard/knowledges",
+        title: "Datasets",
+        href: "/dashboard/datasets",
         icon: BookOpen,
-      },
-      {
-        title: "Documents",
-        href: "/dashboard/documents",
-        icon: FileText,
       },
     ],
   },
@@ -46,6 +50,11 @@ export const sidebarGroups: Record<string, SidebarGroup> = {
         title: "API Keys",
         href: "/dashboard/api-keys",
         icon: Key,
+      },
+      {
+        title: "Configs",
+        href: "/dashboard/configs",
+        icon: FolderCog,
       },
       {
         title: "Billing",

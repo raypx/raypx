@@ -17,8 +17,8 @@ export const timestamptz = (name: string) =>
     withTimezone: true,
   });
 
-export const knowledges = pgTable(
-  "knowledges",
+export const datasets = pgTable(
+  "datasets",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
@@ -34,8 +34,8 @@ export const knowledges = pgTable(
     updatedAt: timestamptz("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    index("idx_knowledges_user_id").on(table.userId),
-    index("idx_knowledges_status").on(table.status),
+    index("idx_datasets_user_id").on(table.userId),
+    index("idx_datasets_status").on(table.status),
   ],
 );
 
@@ -49,8 +49,8 @@ export const documents = pgTable(
     size: integer("size").notNull(),
     status: varchar("status", { length: 50 }).notNull().default("processing"),
     metadata: jsonb("metadata"),
-    knowledgeBaseId: uuid("knowledge_base_id")
-      .references(() => knowledges.id, {
+    datasetId: uuid("dataset_id")
+      .references(() => datasets.id, {
         onDelete: "cascade",
       })
       .notNull(),
@@ -63,7 +63,7 @@ export const documents = pgTable(
     updatedAt: timestamptz("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    index("idx_documents_knowledge_base_id").on(table.knowledgeBaseId),
+    index("idx_documents_dataset_id").on(table.datasetId),
     index("idx_documents_user_id").on(table.userId),
     index("idx_documents_status").on(table.status),
   ],
@@ -82,7 +82,7 @@ export const chunks = pgTable(
     documentId: uuid("document_id").references(() => documents.id, {
       onDelete: "cascade",
     }),
-    knowledgeBaseId: uuid("knowledge_base_id").references(() => knowledges.id, {
+    datasetId: uuid("dataset_id").references(() => datasets.id, {
       onDelete: "cascade",
     }),
     userId: uuid("user_id").references(() => user.id, {
@@ -95,9 +95,9 @@ export const chunks = pgTable(
   (t) => [
     unique("chunks_client_id_user_id_unique").on(t.clientId, t.userId),
     index("idx_chunks_document_id").on(t.documentId),
-    index("idx_chunks_knowledge_base_id").on(t.knowledgeBaseId),
+    index("idx_chunks_dataset_id").on(t.datasetId),
     index("idx_chunks_user_id").on(t.userId),
-    index("idx_chunks_knowledge_base_id_user_id").on(t.knowledgeBaseId, t.userId),
+    index("idx_chunks_dataset_id_user_id").on(t.datasetId, t.userId),
   ],
 );
 

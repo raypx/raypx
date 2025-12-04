@@ -1,5 +1,5 @@
-import { and, asc, desc, eq } from "@raypx/database";
-import { documents as Documents, knowledges as Knowledges } from "@raypx/database/schemas";
+import { and, asc, desc, eq, ilike, or, sql } from "@raypx/database";
+import { datasets as Datasets, documents as Documents } from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";
@@ -11,22 +11,33 @@ import { assertExists, handleDatabaseError } from "../utils/error-handler";
  */
 export const documentsRouter = {
   /**
-   * List all documents for the current user
+   * List all documents for the current user with pagination
    */
   list: protectedProcedure
     .input(
       z
         .object({
-          knowledgeBaseId: z.string().optional(),
+          datasetId: z.string().optional(),
+          q: z.string().trim().min(1).max(200).optional(),
           sortBy: z.enum(["createdAt", "name", "status", "size"]).default("createdAt"),
           sortOrder: z.enum(["asc", "desc"]).default("desc"),
-          status: z.enum(["processing", "completed", "failed", "all"]).default("all"),
+          status: z
+            .union([
+              z.enum(["processing", "uploaded", "completed", "failed", "all"]),
+              z.array(z.enum(["processing", "uploaded", "completed", "failed"])),
+            ])
+            .optional(),
+          page: z.number().int().min(1).default(1),
+          pageSize: z.number().int().min(1).max(100).default(10),
         })
         .partial()
         .default({}),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const page = input.page ?? 1;
+      const pageSize = input.pageSize ?? 10;
+      const offset = (page - 1) * pageSize;
 
       const sortByCol =
         input.sortBy === "name"
@@ -40,34 +51,63 @@ export const documentsRouter = {
 
       const conditions = [eq(Documents.userId, userId)];
 
-      if (input.knowledgeBaseId) {
-        conditions.push(eq(Documents.knowledgeBaseId, input.knowledgeBaseId));
+      if (input.datasetId) {
+        conditions.push(eq(Documents.datasetId, input.datasetId));
       }
 
-      if (input.status !== "all") {
-        conditions.push(eq(Documents.status, input.status));
+      if (input.q) {
+        const like = `%${input.q}%`;
+        conditions.push(
+          or(ilike(Documents.name, like), ilike(Documents.originalName, like)) as any,
+        );
+      }
+
+      if (input.status) {
+        if (Array.isArray(input.status) && input.status.length > 0) {
+          // Multiple statuses: use OR conditions
+          conditions.push(or(...input.status.map((s) => eq(Documents.status, s))) as any);
+        } else if (typeof input.status === "string" && input.status !== "all") {
+          // Single status
+          conditions.push(eq(Documents.status, input.status));
+        }
       }
 
       const where = conditions.length > 1 ? and(...conditions) : conditions[0];
 
-      const docs = await ctx.db.query.documents.findMany({
-        where,
-        orderBy,
-      });
+      const [items, totalRow] = await Promise.all([
+        ctx.db.query.documents.findMany({
+          where,
+          orderBy,
+          limit: pageSize,
+          offset,
+        }),
+        ctx.db
+          .select({ value: sql<number>`count(*)::int` })
+          .from(Documents)
+          .where(where as any)
+          .then((r) => r[0]),
+      ]);
 
-      return docs.map((doc) => ({
-        id: doc.id,
-        name: doc.name,
-        originalName: doc.originalName,
-        mimeType: doc.mimeType,
-        size: doc.size,
-        status: doc.status,
-        metadata: doc.metadata,
-        knowledgeBaseId: doc.knowledgeBaseId,
-        userId: doc.userId,
-        createdAt: doc.createdAt,
-        updatedAt: doc.updatedAt,
-      }));
+      const total = totalRow?.value ?? 0;
+
+      return {
+        items: items.map((doc) => ({
+          id: doc.id,
+          name: doc.name,
+          originalName: doc.originalName,
+          mimeType: doc.mimeType,
+          size: doc.size,
+          status: doc.status,
+          metadata: doc.metadata,
+          datasetId: doc.datasetId,
+          userId: doc.userId,
+          createdAt: doc.createdAt,
+          updatedAt: doc.updatedAt,
+        })),
+        total,
+        page,
+        pageSize,
+      };
     }),
 
   /**
@@ -90,7 +130,7 @@ export const documentsRouter = {
       size: document.size,
       status: document.status,
       metadata: document.metadata,
-      knowledgeBaseId: document.knowledgeBaseId,
+      datasetId: document.datasetId,
       userId: document.userId,
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
@@ -107,21 +147,21 @@ export const documentsRouter = {
         originalName: z.string().trim().min(1).max(255),
         mimeType: z.string().trim().min(1).max(100),
         size: z.number().int().min(0),
-        knowledgeBaseId: z.string(),
-        status: z.enum(["processing", "completed", "failed"]).default("processing"),
-        metadata: z.record(z.any()).optional(),
+        datasetId: z.string(),
+        status: z.enum(["processing", "uploaded", "completed", "failed"]).default("processing"),
+        metadata: z.record(z.string(), z.any()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Verify knowledge base exists and belongs to user
-      const knowledgeBase = await ctx.db.query.knowledges.findFirst({
-        where: and(eq(Knowledges.id, input.knowledgeBaseId), eq(Knowledges.userId, userId)),
+      // Verify dataset exists and belongs to user
+      const dataset = await ctx.db.query.datasets.findFirst({
+        where: and(eq(Datasets.id, input.datasetId), eq(Datasets.userId, userId)),
       });
 
-      if (!knowledgeBase) {
-        throw Errors.resourceNotFound("Knowledge Base", input.knowledgeBaseId);
+      if (!dataset) {
+        throw Errors.resourceNotFound("Dataset", input.datasetId);
       }
 
       try {
@@ -132,7 +172,7 @@ export const documentsRouter = {
             originalName: input.originalName,
             mimeType: input.mimeType,
             size: input.size,
-            knowledgeBaseId: input.knowledgeBaseId,
+            datasetId: input.datasetId,
             status: input.status,
             metadata: input.metadata ?? null,
             userId,
@@ -149,7 +189,7 @@ export const documentsRouter = {
           size: created.size,
           status: created.status,
           metadata: created.metadata,
-          knowledgeBaseId: created.knowledgeBaseId,
+          datasetId: created.datasetId,
           userId: created.userId,
           createdAt: created.createdAt,
           updatedAt: created.updatedAt,
@@ -167,8 +207,8 @@ export const documentsRouter = {
       z.object({
         id: z.string(),
         name: z.string().trim().min(1).max(255).optional(),
-        status: z.enum(["processing", "completed", "failed"]).optional(),
-        metadata: z.record(z.any()).optional(),
+        status: z.enum(["processing", "uploaded", "completed", "failed"]).optional(),
+        metadata: z.record(z.string(), z.any()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -199,7 +239,7 @@ export const documentsRouter = {
           size: updated.size,
           status: updated.status,
           metadata: updated.metadata,
-          knowledgeBaseId: updated.knowledgeBaseId,
+          datasetId: updated.datasetId,
           userId: updated.userId,
           createdAt: updated.createdAt,
           updatedAt: updated.updatedAt,

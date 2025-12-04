@@ -72,11 +72,7 @@ const techStackRow2: TechItem[] = [
 const TechCard = ({ name, description, color, icon: Icon }: TechItem) => (
   <div
     className="relative flex h-14 md:h-16 w-40 md:w-52 items-center space-x-3 md:space-x-4 rounded-xl border bg-background/50 backdrop-blur-sm p-3 md:p-4 hover:bg-accent/50 transition-all duration-300 hover:shadow-lg group"
-    style={
-      {
-        "--tech-color": color,
-      } as CSSProperties
-    }
+    style={{ "--tech-color": color } as CSSProperties}
   >
     {/* Placeholder icon */}
     <div

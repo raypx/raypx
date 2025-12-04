@@ -1,4 +1,14 @@
 import { useTRPC } from "@raypx/trpc/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@raypx/ui/components/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Badge } from "@raypx/ui/components/badge";
 import { Button } from "@raypx/ui/components/button";
@@ -26,7 +36,6 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components/dropdown-menu";
 import { Input } from "@raypx/ui/components/input";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/input-group";
 import { Label } from "@raypx/ui/components/label";
 import {
   Select,
@@ -38,10 +47,21 @@ import {
 import { toast } from "@raypx/ui/components/toast";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import type { ColumnDef } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight, MoreHorizontal, RefreshCw, Search, Users } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { DataTable } from "~/components/data-table";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import {
+  MoreHorizontal,
+  RefreshCw,
+  Shield,
+  ShieldAlert,
+  Trash2,
+  User,
+  UserCheck,
+  Users,
+  UserX,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { DataTableColumnHeader } from "~/components/data-table/column-header";
+import { ServerDataTable } from "~/components/data-table/server-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -100,9 +120,12 @@ function UsersSection({
 }) {
   const trpc = useTRPC();
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState<"createdAt" | "email" | "name">("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const pageSize = 10;
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<UserListItem[]>([]);
+
   const usersQuery = useQuery({
     ...trpc.users.list.queryOptions(
       {
@@ -111,7 +134,12 @@ function UsersSection({
         pageSize,
         sortBy,
         sortOrder,
-        status: "all",
+        status:
+          statusFilter.length === 1
+            ? (statusFilter[0] as "active" | "banned")
+            : statusFilter.length > 1
+              ? undefined
+              : "all",
       },
       { staleTime: 30_000 },
     ),
@@ -121,118 +149,59 @@ function UsersSection({
 
   const users: UserListItem[] = useMemo(() => (data?.items ?? []) as UserListItem[], [data?.items]);
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  let content: ReactNode;
-
-  if (isError) {
-    content = (
-      <ErrorState
-        message={error?.message ?? "Something went wrong while loading users."}
-        onRetry={() => {
-          void refetch();
-        }}
-        retrying={isFetching}
-      />
-    );
-  } else if (users.length === 0) {
-    content = <EmptyState description="No users found." icon={Users} title="No Users" />;
-  } else {
-    content = (
-      <UsersTable
-        isLoading={isPending}
-        onChanged={() => {
-          void refetch();
-        }}
-        onPageChange={(p) => {
-          setPage(p);
-        }}
-        onSortingChange={(sorting) => {
-          if (sorting) {
-            setSortBy(sorting.id as typeof sortBy);
-            setSortOrder(sorting.desc ? "desc" : "asc");
-          }
-        }}
-        page={page}
-        pageCount={totalPages}
-        users={users}
-      />
-    );
-  }
-
-  return (
-    <Card className="shadow-sm">
-      <CardHeader className="border-b bg-muted/40 px-6 py-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1 space-y-1">
-            <CardTitle className="text-xl">All Users</CardTitle>
-            <CardDescription>Manage user accounts and permissions.</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-full md:w-64">
-              <InputGroup className="bg-background">
-                <InputGroupAddon>
-                  <Search className="h-4 w-4 text-muted-foreground" />
-                </InputGroupAddon>
-                <InputGroupInput
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="Search users..."
-                  value={searchValue}
-                />
-              </InputGroup>
-            </div>
-            <Button
-              disabled={isFetching}
-              onClick={() => {
-                void refetch();
-              }}
-              size="icon"
-              title="Refresh"
-              variant="outline"
-            >
-              <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-              <span className="sr-only">Refresh</span>
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">{content}</CardContent>
-    </Card>
+  const sorting: SortingState = useMemo(
+    () => [{ id: sortBy, desc: sortOrder === "desc" }],
+    [sortBy, sortOrder],
   );
-}
 
-function UsersTable({
-  users,
-  isLoading = false,
-  page,
-  pageCount,
-  onPageChange,
-  onChanged,
-  onSortingChange,
-}: {
-  users: UserListItem[];
-  isLoading?: boolean;
-  page: number;
-  pageCount: number;
-  onPageChange: (p: number) => void;
-  onChanged: () => void;
-  onSortingChange?: (sorting: { id: string; desc: boolean } | null) => void;
-}) {
-  const trpc = useTRPC();
+  const handleSortingChange = (newSorting: SortingState) => {
+    if (newSorting.length > 0) {
+      const sort = newSorting[0];
+      if (sort) {
+        setSortBy(sort.id as typeof sortBy);
+        setSortOrder(sort.desc ? "desc" : "asc");
+        setPage(1);
+      }
+    }
+  };
 
+  const handleResetFilters = () => {
+    onSearchChange("");
+    setStatusFilter([]);
+    setPage(1);
+  };
+
+  // Status filter options
+  const statusOptions = [
+    {
+      label: "Active",
+      value: "active",
+      icon: User,
+    },
+    {
+      label: "Banned",
+      value: "banned",
+      icon: ShieldAlert,
+    },
+  ];
+
+  // Mutations
   const updateRole = useMutation(trpc.users.updateRole.mutationOptions());
   const setBanned = useMutation(trpc.users.setBanned.mutationOptions());
   const deleteUser = useMutation(trpc.users.delete.mutationOptions());
 
+  // Dialog state
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [banDialogOpen, setBanDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserListItem | null>(null);
-
-  // Role state
   const [roleValue, setRoleValue] = useState<UserRole | "">("");
-  // Ban state
   const [banReason, setBanReason] = useState("");
   const [banExpires, setBanExpires] = useState<string>("");
+  // Delete confirm dialog state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserListItem | null>(null);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
   const openRoleDialog = useCallback((user: UserListItem) => {
     setSelectedUser(user);
@@ -265,14 +234,14 @@ function UsersTable({
       try {
         await updateRole.mutateAsync({ id, role });
         toast.success("User role updated successfully");
-        onChanged();
+        void refetch();
       } catch (err) {
         toast.error(
           `Failed to update role: ${err instanceof Error ? err.message : "Unknown error"}`,
         );
       }
     },
-    [updateRole, onChanged],
+    [updateRole, refetch],
   );
 
   const doToggleBan = useCallback(
@@ -281,7 +250,7 @@ function UsersTable({
         try {
           await setBanned.mutateAsync({ id: u.id, banned: false });
           toast.success("User unbanned successfully");
-          onChanged();
+          void refetch();
         } catch (err) {
           toast.error(
             `Failed to unban user: ${err instanceof Error ? err.message : "Unknown error"}`,
@@ -291,7 +260,7 @@ function UsersTable({
       }
       openBanDialog(u);
     },
-    [setBanned, onChanged, openBanDialog],
+    [setBanned, refetch, openBanDialog],
   );
 
   const doBanUser = useCallback(async () => {
@@ -304,35 +273,101 @@ function UsersTable({
         banExpires: banExpires ? new Date(banExpires) : undefined,
       });
       toast.success("User banned successfully");
-      onChanged();
+      void refetch();
       closeBanDialog();
     } catch (err) {
       toast.error(`Failed to ban user: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
-  }, [selectedUser, banReason, banExpires, setBanned, onChanged, closeBanDialog]);
+  }, [selectedUser, banReason, banExpires, setBanned, refetch, closeBanDialog]);
 
-  const doDelete = useCallback(
-    async (u: UserListItem) => {
-      if (!window.confirm(`Delete user ${u.email}? This cannot be undone.`)) return;
+  const openDeleteConfirm = useCallback((u: UserListItem) => {
+    setUserToDelete(u);
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  const doDelete = useCallback(async () => {
+    if (!userToDelete) return;
+    try {
+      await deleteUser.mutateAsync(userToDelete.id);
+      toast.success("User deleted successfully");
+      void refetch();
+      setSelectedRows([]);
+      setDeleteConfirmOpen(false);
+      setUserToDelete(null);
+    } catch (err) {
+      toast.error(`Failed to delete user: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  }, [userToDelete, deleteUser, refetch]);
+
+  // Bulk operations
+  const doBulkDelete = useCallback(async () => {
+    if (selectedRows.length === 0) return;
+    try {
+      await Promise.all(selectedRows.map((user) => deleteUser.mutateAsync(user.id)));
+      toast.success(`${selectedRows.length} user(s) deleted successfully`);
+      void refetch();
+      setSelectedRows([]);
+      setBulkDeleteConfirmOpen(false);
+    } catch (err) {
+      toast.error(
+        `Failed to delete users: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
+    }
+  }, [selectedRows, deleteUser, refetch]);
+
+  const doBulkUpdateRole = useCallback(
+    async (role: UserRole | null) => {
+      if (selectedRows.length === 0) return;
       try {
-        await deleteUser.mutateAsync(u.id);
-        toast.success("User deleted successfully");
-        onChanged();
+        await Promise.all(
+          selectedRows.map((user) => updateRole.mutateAsync({ id: user.id, role })),
+        );
+        toast.success(`Role updated for ${selectedRows.length} user(s)`);
+        void refetch();
+        setSelectedRows([]);
       } catch (err) {
         toast.error(
-          `Failed to delete user: ${err instanceof Error ? err.message : "Unknown error"}`,
+          `Failed to update roles: ${err instanceof Error ? err.message : "Unknown error"}`,
         );
       }
     },
-    [deleteUser, onChanged],
+    [selectedRows, updateRole, refetch],
   );
+
+  const doBulkBan = useCallback(async () => {
+    if (selectedRows.length === 0) return;
+    try {
+      await Promise.all(
+        selectedRows.map((user) => setBanned.mutateAsync({ id: user.id, banned: true })),
+      );
+      toast.success(`${selectedRows.length} user(s) banned successfully`);
+      void refetch();
+      setSelectedRows([]);
+    } catch (err) {
+      toast.error(`Failed to ban users: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  }, [selectedRows, setBanned, refetch]);
+
+  const doBulkUnban = useCallback(async () => {
+    if (selectedRows.length === 0) return;
+    try {
+      await Promise.all(
+        selectedRows.map((user) => setBanned.mutateAsync({ id: user.id, banned: false })),
+      );
+      toast.success(`${selectedRows.length} user(s) unbanned successfully`);
+      void refetch();
+      setSelectedRows([]);
+    } catch (err) {
+      toast.error(`Failed to unban users: ${err instanceof Error ? err.message : "Unknown error"}`);
+    }
+  }, [selectedRows, setBanned, refetch]);
 
   // Define columns
   const columns = useMemo<ColumnDef<UserListItem>[]>(
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
         enableSorting: true,
         cell: ({ row }) => {
           const user = row.original;
@@ -356,7 +391,7 @@ function UsersTable({
       },
       {
         accessorKey: "email",
-        header: "Email",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
         enableSorting: true,
         cell: ({ row }) => <div className="text-muted-foreground">{row.original.email}</div>,
       },
@@ -397,7 +432,7 @@ function UsersTable({
       },
       {
         accessorKey: "createdAt",
-        header: "Created",
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
         enableSorting: true,
         cell: ({ row }) => <div>{formatDateTime(row.original.createdAt)}</div>,
       },
@@ -430,7 +465,7 @@ function UsersTable({
                 <DropdownMenuItem
                   className="text-destructive"
                   disabled={deleteUser.isPending}
-                  onClick={() => void doDelete(user)}
+                  onClick={() => openDeleteConfirm(user)}
                 >
                   Delete User
                 </DropdownMenuItem>
@@ -440,8 +475,24 @@ function UsersTable({
         },
       },
     ],
-    [setBanned.isPending, deleteUser.isPending, doToggleBan, doDelete],
+    [setBanned.isPending, deleteUser.isPending, doToggleBan, doDelete, openRoleDialog],
   );
+
+  if (isError) {
+    return (
+      <Card className="shadow-sm">
+        <CardContent className="p-6">
+          <ErrorState
+            message={error?.message ?? "Something went wrong while loading users."}
+            onRetry={() => {
+              void refetch();
+            }}
+            retrying={isFetching}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -538,45 +589,170 @@ function UsersTable({
         </DialogContent>
       </Dialog>
 
-      <div className="px-6 pb-2 space-y-3">
-        <DataTable
-          columns={columns}
-          data={users}
-          enableSorting
-          initialSorting={{ id: "createdAt", desc: true }}
-          isLoading={isLoading}
-          manualSorting
-          onSortingChange={onSortingChange}
-        />
-        <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/40">
-          <div className="text-sm text-muted-foreground">
-            Page <span className="font-medium text-foreground">{page}</span> of{" "}
-            <span className="font-medium text-foreground">{pageCount}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              className="h-8 w-8 p-0"
-              disabled={page <= 1}
-              onClick={() => onPageChange(Math.max(1, page - 1))}
-              size="sm"
-              variant="outline"
+      {/* Delete User Confirm Dialog */}
+      <AlertDialog onOpenChange={setDeleteConfirmOpen} open={deleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete user <strong>{userToDelete?.email}</strong>? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => void doDelete()}
             >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Previous</span>
-            </Button>
-            <Button
-              className="h-8 w-8 p-0"
-              disabled={page >= pageCount}
-              onClick={() => onPageChange(Math.min(pageCount, page + 1))}
-              size="sm"
-              variant="outline"
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirm Dialog */}
+      <AlertDialog onOpenChange={setBulkDeleteConfirmOpen} open={bulkDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Users</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{selectedRows.length}</strong> user(s)? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => void doBulkDelete()}
             >
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">Next</span>
-            </Button>
+              Delete {selectedRows.length} User(s)
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Card className="shadow-sm">
+        <CardHeader className="border-b bg-muted/40 px-6 py-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex-1 space-y-1">
+              <CardTitle className="text-xl">All Users</CardTitle>
+              <CardDescription>Manage user accounts and permissions.</CardDescription>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <ServerDataTable
+            columns={columns}
+            data={users}
+            // Pagination
+            emptyComponent={
+              <EmptyState description="No users found." icon={Users} title="No Users" />
+            }
+            enableSelection
+            enableSorting
+            filters={[
+              {
+                title: "Status",
+                options: statusOptions,
+                selectedValues: statusFilter,
+                onSelectedValuesChange: (values) => {
+                  setStatusFilter(values);
+                  setPage(1);
+                },
+              },
+            ]}
+            getRowId={(row) => row.id}
+            // Sorting
+            isLoading={isPending}
+            manualSorting
+            onPageChange={setPage}
+            onPageSizeChange={(newPageSize) => {
+              setPageSize(newPageSize);
+              setPage(1);
+            }}
+            // Toolbar
+            onResetFilters={handleResetFilters}
+            onSearchChange={(value) => {
+              onSearchChange(value);
+              setPage(1);
+            }}
+            onSelectionChange={setSelectedRows}
+            onSortingChange={handleSortingChange}
+            page={page}
+            pageSize={pageSize}
+            // Selection
+            searchPlaceholder="Search users..."
+            searchValue={searchValue}
+            selectedRows={selectedRows}
+            skeletonRows={5}
+            // Loading
+            sorting={sorting}
+            toolbarActions={
+              <div className="flex items-center gap-2">
+                {selectedRows.length > 0 && (
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <Shield className="h-4 w-4 mr-2" />
+                          Update Role ({selectedRows.length})
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => void doBulkUpdateRole("user")}>
+                          Set as User
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void doBulkUpdateRole("admin")}>
+                          Set as Admin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void doBulkUpdateRole("superadmin")}>
+                          Set as Super Admin
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    {selectedRows.some((u) => !u.banned) && (
+                      <Button onClick={() => void doBulkBan()} size="sm" variant="outline">
+                        <UserX className="h-4 w-4 mr-2" />
+                        Ban ({selectedRows.filter((u) => !u.banned).length})
+                      </Button>
+                    )}
+                    {selectedRows.some((u) => u.banned) && (
+                      <Button onClick={() => void doBulkUnban()} size="sm" variant="outline">
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Unban ({selectedRows.filter((u) => u.banned).length})
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => setBulkDeleteConfirmOpen(true)}
+                      size="sm"
+                      variant="destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete ({selectedRows.length})
+                    </Button>
+                  </>
+                )}
+                <Button
+                  disabled={isFetching}
+                  onClick={() => {
+                    void refetch();
+                  }}
+                  size="sm"
+                  title="Refresh"
+                  variant="outline"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+                  Refresh
+                </Button>
+              </div>
+            }
+            // Empty state
+            total={total}
+          />
+        </CardContent>
+      </Card>
     </>
   );
 }
