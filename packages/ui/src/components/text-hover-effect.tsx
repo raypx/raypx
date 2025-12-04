@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../lib/utils";
 
 export const TextHoverEffect = ({
@@ -29,6 +29,31 @@ export const TextHoverEffect = ({
   const lerp = (start: number, end: number, factor: number) => {
     return start + (end - start) * factor;
   };
+
+  // Helper to update position based on mouse/touch coordinates
+  const updatePosition = useCallback((clientX: number, clientY: number, immediate = false) => {
+    if (svgRef.current) {
+      const svgRect = svgRef.current.getBoundingClientRect();
+      const cxPercentage = ((clientX - svgRect.left) / svgRect.width) * 100;
+      const cyPercentage = ((clientY - svgRect.top) / svgRect.height) * 100;
+
+      const newPos = { cx: cxPercentage, cy: cyPercentage };
+      targetPositionRef.current = newPos;
+
+      if (immediate) {
+        currentPositionRef.current = newPos;
+        currentRadiusRef.current = NORMAL_RADIUS;
+        targetRadiusRef.current = NORMAL_RADIUS;
+
+        if (gradientRef.current) {
+          gradientRef.current.setAttribute("cx", `${cxPercentage}%`);
+          gradientRef.current.setAttribute("cy", `${cyPercentage}%`);
+          gradientRef.current.setAttribute("r", `${NORMAL_RADIUS}%`);
+        }
+      }
+    }
+    setCursor({ x: clientX, y: clientY });
+  }, []);
 
   // Continuous animation loop
   useEffect(() => {
@@ -71,55 +96,51 @@ export const TextHoverEffect = ({
     };
   }, [duration]);
 
-  // Update target position when cursor moves
-  useEffect(() => {
-    if (svgRef.current && hovered && cursor.x !== null && cursor.y !== null) {
-      const svgRect = svgRef.current.getBoundingClientRect();
-      const cxPercentage = ((cursor.x - svgRect.left) / svgRect.width) * 100;
-      const cyPercentage = ((cursor.y - svgRect.top) / svgRect.height) * 100;
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    setHovered(true);
+    updatePosition(e.clientX, e.clientY, true);
+  };
 
-      targetPositionRef.current = { cx: cxPercentage, cy: cyPercentage };
+  const handleMouseLeave = () => {
+    setHovered(false);
+    targetRadiusRef.current = 0;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    updatePosition(e.clientX, e.clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (touch) {
+      updatePosition(touch.clientX, touch.clientY);
     }
-  }, [cursor, hovered]);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      setHovered(true);
+      updatePosition(touch.clientX, touch.clientY, true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setHovered(false);
+    targetRadiusRef.current = 0;
+  };
 
   return (
     <svg
       className={cn("select-none pointer-events-auto", className)}
       height="100%"
-      onMouseEnter={(e) => {
-        setHovered(true);
-        // Immediately set position to mouse location when entering
-        if (svgRef.current) {
-          const svgRect = svgRef.current.getBoundingClientRect();
-          const cxPercentage = ((e.clientX - svgRect.left) / svgRect.width) * 100;
-          const cyPercentage = ((e.clientY - svgRect.top) / svgRect.height) * 100;
-
-          // Set both current and target to mouse position to avoid animation from center
-          currentPositionRef.current = { cx: cxPercentage, cy: cyPercentage };
-          targetPositionRef.current = { cx: cxPercentage, cy: cyPercentage };
-
-          // Set radius to normal size
-          currentRadiusRef.current = NORMAL_RADIUS;
-          targetRadiusRef.current = NORMAL_RADIUS;
-
-          // Immediately update gradient position and radius
-          if (gradientRef.current) {
-            gradientRef.current.setAttribute("cx", `${cxPercentage}%`);
-            gradientRef.current.setAttribute("cy", `${cyPercentage}%`);
-            gradientRef.current.setAttribute("r", `${NORMAL_RADIUS}%`);
-          }
-        }
-        setCursor({ x: e.clientX, y: e.clientY });
-      }}
-      onMouseLeave={() => {
-        setHovered(false);
-        // Shrink radius to 0 instead of moving to center - avoids bounce effect
-        // Keep position at current location, just shrink the radius
-        targetRadiusRef.current = 0;
-      }}
-      onMouseMove={(e) => {
-        setCursor({ x: e.clientX, y: e.clientY });
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      onTouchStart={handleTouchStart}
       ref={svgRef}
       style={{ display: "block" }}
       viewBox="0 0 300 100"
@@ -135,15 +156,11 @@ export const TextHoverEffect = ({
           y1="0%"
           y2="0%"
         >
-          {hovered && (
-            <>
-              <stop offset="0%" stopColor="#eab308" />
-              <stop offset="25%" stopColor="#ef4444" />
-              <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="75%" stopColor="#06b6d4" />
-              <stop offset="100%" stopColor="#8b5cf6" />
-            </>
-          )}
+          <stop offset="0%" stopColor="#eab308" />
+          <stop offset="25%" stopColor="#ef4444" />
+          <stop offset="50%" stopColor="#3b82f6" />
+          <stop offset="75%" stopColor="#06b6d4" />
+          <stop offset="100%" stopColor="#8b5cf6" />
         </linearGradient>
 
         <motion.linearGradient
@@ -189,7 +206,7 @@ export const TextHoverEffect = ({
         </mask>
       </defs>
       <text
-        className="fill-transparent stroke-neutral-200 font-[helvetica] text-7xl font-bold dark:stroke-neutral-800"
+        className="fill-transparent stroke-neutral-200 font-[helvetica] text-7xl font-bold dark:stroke-neutral-800 transition-opacity duration-300"
         dominantBaseline="middle"
         strokeWidth="0.3"
         style={{ opacity: hovered ? 0.7 : 0 }}
@@ -235,21 +252,19 @@ export const TextHoverEffect = ({
       )}
 
       {/* Colored fill and stroke layer - follows mouse */}
-      {hovered && (
-        <text
-          className="font-[helvetica] text-7xl font-bold"
-          dominantBaseline="middle"
-          fill="url(#textGradient)"
-          mask="url(#textMask)"
-          stroke="url(#textGradient)"
-          strokeWidth="0.5"
-          textAnchor="middle"
-          x="50%"
-          y="50%"
-        >
-          {text}
-        </text>
-      )}
+      <text
+        className="font-[helvetica] text-7xl font-bold"
+        dominantBaseline="middle"
+        fill="url(#textGradient)"
+        mask="url(#textMask)"
+        stroke="url(#textGradient)"
+        strokeWidth="0.5"
+        textAnchor="middle"
+        x="50%"
+        y="50%"
+      >
+        {text}
+      </text>
     </svg>
   );
 };
