@@ -6,6 +6,7 @@ export * from "./client/utils/email";
 export * from "./client/utils/error";
 export * from "./client/utils/forms";
 export * from "./client/utils/password";
+export * from "./client/utils/router";
 export * from "./client/utils/social-providers";
 export { type AuthRoutes, defaultAuthRoutes } from "./config/routes";
 export * from "./permissions";

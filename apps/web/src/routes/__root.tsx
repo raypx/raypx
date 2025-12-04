@@ -24,6 +24,8 @@ type RootRouterContext = {
   auth?: {
     session: AnyAuthClient["$Infer"]["Session"] | null;
   };
+  request?: Request;
+  headers?: Headers;
 };
 
 export const Route = createRootRouteWithContext<RootRouterContext>()({

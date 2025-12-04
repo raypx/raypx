@@ -1,5 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createSignInFormSchema, getSignInFormDefaults, useAuth, useSignIn } from "@raypx/auth";
+import {
+  createAuthRouteBeforeLoad,
+  createSignInFormSchema,
+  getSignInFormDefaults,
+  useAuth,
+  useSignIn,
+} from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -165,4 +171,5 @@ function RecoverAccountPage() {
 
 export const Route = createFileRoute("/_auth/recover-account")({
   component: RecoverAccountPage,
+  beforeLoad: createAuthRouteBeforeLoad("/dashboard"),
 });

@@ -1,36 +1,26 @@
-import { RedirectToSignIn, useAuth } from "@raypx/auth";
+import { createProtectedRouteBeforeLoad, useAuth } from "@raypx/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { NotFound } from "~/components/not-found";
 import { Layout } from "~/layouts/dashboard";
-
-export const Route = createFileRoute("/dashboard")({
-  component: AppLayout,
-  notFoundComponent: NotFound,
-});
 
 function AppLayout() {
   const {
     hooks: { useSession },
   } = useAuth();
 
-  const { data: session, isPending } = useSession();
+  const { data: session } = useSession();
 
-  // Show loading state while checking auth
-  if (isPending) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect to sign-in if not authenticated
+  // Session is guaranteed to exist due to beforeLoad check
+  // But we still need it for the user data
   if (!session?.user) {
-    return <RedirectToSignIn />;
+    return null; // This shouldn't happen due to beforeLoad, but handle gracefully
   }
 
   return <Layout user={session.user} />;
 }
+
+export const Route = createFileRoute("/dashboard")({
+  beforeLoad: createProtectedRouteBeforeLoad("/sign-in"),
+  component: AppLayout,
+  notFoundComponent: NotFound,
+});

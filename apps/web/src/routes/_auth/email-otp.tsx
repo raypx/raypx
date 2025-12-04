@@ -1,5 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createSignInFormSchema, getSignInFormDefaults, useAuth, useSignIn } from "@raypx/auth";
+import {
+  createAuthRouteBeforeLoad,
+  createSignInFormSchema,
+  getSignInFormDefaults,
+  useAuth,
+  useSignIn,
+} from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -167,5 +173,6 @@ export const Route = createFileRoute("/_auth/email-otp")({
   head: () => ({
     meta: [{ title: "Email OTP", description: "Sign in with an email OTP" }],
   }),
+  beforeLoad: createAuthRouteBeforeLoad("/dashboard"),
   component: EmailOtpPage,
 });
