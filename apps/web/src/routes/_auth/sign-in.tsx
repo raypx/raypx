@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  createAuthRouteBeforeLoad,
   createSignInFormSchema,
   getSignInFormDefaults,
   MagicLinkButton,
@@ -24,7 +25,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { AuthGuard } from "~/layouts/auth/auth-guard";
 import { AuthCard } from "~/layouts/auth/card";
 import { OrDivider } from "~/layouts/auth/or-divider";
 import { SocialProviders } from "~/layouts/auth/social-providers";
@@ -58,122 +58,120 @@ function SignInPage() {
   });
 
   return (
-    <AuthGuard redirectTo={redirectTo || "/dashboard"}>
-      <AuthCard
-        description="Sign in to your account"
-        footer={
-          <>
-            Don't have an account?{" "}
-            <Link
-              className="font-medium underline underline-offset-4 hover:text-primary"
-              to="/sign-up"
-            >
-              Sign Up
-            </Link>
-          </>
-        }
-        title="Sign In"
-      >
-        <SocialProviders disabled={isSubmitting} redirectTo={redirectTo} />
-
-        <OrDivider />
-
-        <Form {...form}>
-          <form
-            className={cn("grid w-full gap-6")}
-            noValidate={isHydrated}
-            onSubmit={form.handleSubmit(signIn)}
+    <AuthCard
+      description="Sign in to your account"
+      footer={
+        <>
+          Don't have an account?{" "}
+          <Link
+            className="font-medium underline underline-offset-4 hover:text-primary"
+            to="/sign-up"
           >
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
+            Sign Up
+          </Link>
+        </>
+      }
+      title="Sign In"
+    >
+      <SocialProviders disabled={isSubmitting} redirectTo={redirectTo} />
 
-                  <FormControl>
-                    <Input
-                      autoComplete={usernameEnabled ? "username" : "email"}
-                      disabled={isSubmitting}
-                      placeholder={usernameEnabled ? "Username" : "Email"}
-                      type={usernameEnabled ? "text" : "email"}
-                      {...field}
-                    />
-                  </FormControl>
+      <OrDivider />
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <Form {...form}>
+        <form
+          className={cn("grid w-full gap-6")}
+          noValidate={isHydrated}
+          onSubmit={form.handleSubmit(signIn)}
+        >
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    autoComplete={usernameEnabled ? "username" : "email"}
+                    disabled={isSubmitting}
+                    placeholder={usernameEnabled ? "Username" : "Email"}
+                    type={usernameEnabled ? "text" : "email"}
+                    {...field}
+                  />
+                </FormControl>
 
-                    {credentials?.forgotPassword && (
-                      <Link
-                        className="text-sm hover:underline"
-                        search={isHydrated ? window.location.search : ""}
-                        to="/forgot-password"
-                      >
-                        Forgot Password
-                      </Link>
-                    )}
-                  </div>
-
-                  <FormControl>
-                    <PasswordField
-                      autoComplete="current-password"
-                      disabled={isSubmitting}
-                      placeholder="Password"
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {rememberMeEnabled && (
-              <FormField
-                control={form.control}
-                name="rememberMe"
-                render={({ field }) => (
-                  <FormItem className="flex">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        disabled={isSubmitting}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-
-                    <FormLabel>Remember Me</FormLabel>
-                  </FormItem>
-                )}
-              />
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
-            {/* <Captcha
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Password</FormLabel>
+
+                  {credentials?.forgotPassword && (
+                    <Link
+                      className="text-sm hover:underline"
+                      search={isHydrated ? window.location.search : ""}
+                      to="/forgot-password"
+                    >
+                      Forgot Password
+                    </Link>
+                  )}
+                </div>
+
+                <FormControl>
+                  <PasswordField
+                    autoComplete="current-password"
+                    disabled={isSubmitting}
+                    placeholder="Password"
+                    {...field}
+                  />
+                </FormControl>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {rememberMeEnabled && (
+            <FormField
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <FormItem className="flex">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      disabled={isSubmitting}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+
+                  <FormLabel>Remember Me</FormLabel>
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* <Captcha
                     action="/sign-in/email"
                     localization={localization}
                     ref={captchaRef}
                 /> */}
 
-            <Button className="w-full" disabled={isSubmitting} type="submit">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}
-            </Button>
+          <Button className="w-full" disabled={isSubmitting} type="submit">
+            {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}
+          </Button>
 
-            <MagicLinkButton currentView="sign-in" disabled={isSubmitting} />
-          </form>
-        </Form>
-      </AuthCard>
-    </AuthGuard>
+          <MagicLinkButton currentView="sign-in" disabled={isSubmitting} />
+        </form>
+      </Form>
+    </AuthCard>
   );
 }
 
@@ -181,5 +179,6 @@ export const Route = createFileRoute("/_auth/sign-in")({
   head: () => ({
     meta: [{ title: "Sign In - Raypx", description: "Sign in to your account" }],
   }),
+  beforeLoad: createAuthRouteBeforeLoad("/dashboard"),
   component: SignInPage,
 });

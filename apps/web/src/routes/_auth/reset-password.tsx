@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth, useOnSuccessTransition } from "@raypx/auth";
+import { createAuthRouteBeforeLoad, useAuth, useOnSuccessTransition } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -295,5 +295,6 @@ export const Route = createFileRoute("/_auth/reset-password")({
     ],
   }),
   validateSearch: resetPasswordSearch,
+  beforeLoad: createAuthRouteBeforeLoad("/dashboard"),
   component: ResetPasswordPage,
 });

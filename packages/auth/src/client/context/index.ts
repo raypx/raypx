@@ -1,23 +1,7 @@
 import { createContext } from "react";
 import type { AnyAuthClient } from "../auth";
+import type { PasswordValidation } from "../utils/password";
 import type { AuthHooks } from "./hooks";
-
-export type PasswordValidation = {
-  /**
-   * Maximum password length
-   */
-  maxLength?: number;
-
-  /**
-   * Minimum password length
-   */
-  minLength?: number;
-
-  /**
-   * Password validation regex
-   */
-  regex?: RegExp;
-};
 
 export type CredentialsOptions = {
   /**

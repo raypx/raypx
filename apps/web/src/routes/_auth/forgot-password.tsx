@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@raypx/auth";
+import { createAuthRouteBeforeLoad, useAuth } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -19,7 +19,6 @@ import { AlertCircle, ArrowLeft, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AuthGuard } from "~/layouts/auth/auth-guard";
 import { AuthCard } from "~/layouts/auth/card";
 import { SuccessState } from "~/layouts/auth/success-state";
 
@@ -80,119 +79,115 @@ function ForgotPasswordPage() {
   // Success state - email sent
   if (emailSent) {
     return (
-      <AuthGuard redirectTo={redirectTo || "/dashboard"}>
-        <AuthCard>
-          <SuccessState
-            description={
-              <>
-                We've sent a password reset link to{" "}
-                <span className="font-medium text-foreground">{submittedEmail}</span>
-              </>
-            }
-            title="Check your email"
-          >
-            <Alert className="text-left">
-              <Mail className="h-4 w-4" />
-              <AlertTitle>Didn't receive the email?</AlertTitle>
-              <AlertDescription>
-                <ul className="list-inside list-disc space-y-1 mt-2">
-                  <li>Check your spam or junk folder</li>
-                  <li>Make sure the email address is correct</li>
-                  <li>Wait a few minutes for the email to arrive</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
+      <AuthCard>
+        <SuccessState
+          description={
+            <>
+              We've sent a password reset link to{" "}
+              <span className="font-medium text-foreground">{submittedEmail}</span>
+            </>
+          }
+          title="Check your email"
+        >
+          <Alert className="text-left">
+            <Mail className="h-4 w-4" />
+            <AlertTitle>Didn't receive the email?</AlertTitle>
+            <AlertDescription>
+              <ul className="list-inside list-disc space-y-1 mt-2">
+                <li>Check your spam or junk folder</li>
+                <li>Make sure the email address is correct</li>
+                <li>Wait a few minutes for the email to arrive</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
 
-            <div className="flex flex-col gap-3">
-              <Button
-                className="w-full"
-                onClick={() => {
-                  setEmailSent(false);
-                  emailForm.setValue("email", submittedEmail);
-                }}
-                variant="outline"
-              >
-                Send another email
+          <div className="flex flex-col gap-3">
+            <Button
+              className="w-full"
+              onClick={() => {
+                setEmailSent(false);
+                emailForm.setValue("email", submittedEmail);
+              }}
+              variant="outline"
+            >
+              Send another email
+            </Button>
+
+            <Link className="w-full" to="/sign-in">
+              <Button className="w-full" variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to sign in
               </Button>
-
-              <Link className="w-full" to="/sign-in">
-                <Button className="w-full" variant="ghost">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to sign in
-                </Button>
-              </Link>
-            </div>
-          </SuccessState>
-        </AuthCard>
-      </AuthGuard>
+            </Link>
+          </div>
+        </SuccessState>
+      </AuthCard>
     );
   }
 
   // Email input step
   return (
-    <AuthGuard redirectTo={redirectTo || "/dashboard"}>
-      <AuthCard
-        description="No worries! Enter your email and we'll send you a reset link."
-        footer={
-          <>
-            Remember your password?{" "}
-            <Link
-              className="font-medium underline underline-offset-4 hover:text-primary"
-              to="/sign-in"
-            >
-              Sign in
-            </Link>
-          </>
-        }
-        title="Forgot your password?"
-      >
-        <Form {...emailForm}>
-          <form
-            className={cn("grid w-full gap-4")}
-            noValidate={isHydrated}
-            onSubmit={emailForm.handleSubmit(onSubmit)}
+    <AuthCard
+      description="No worries! Enter your email and we'll send you a reset link."
+      footer={
+        <>
+          Remember your password?{" "}
+          <Link
+            className="font-medium underline underline-offset-4 hover:text-primary"
+            to="/sign-in"
           >
-            <FormField
-              control={emailForm.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <InputGroup>
-                      <InputGroupAddon>
-                        <Mail className="h-4 w-4" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        autoComplete="email"
-                        disabled={isSubmitting}
-                        placeholder="name@example.com"
-                        type="email"
-                        {...field}
-                      />
-                    </InputGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            Sign in
+          </Link>
+        </>
+      }
+      title="Forgot your password?"
+    >
+      <Form {...emailForm}>
+        <form
+          className={cn("grid w-full gap-4")}
+          noValidate={isHydrated}
+          onSubmit={emailForm.handleSubmit(onSubmit)}
+        >
+          <FormField
+            control={emailForm.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <Mail className="h-4 w-4" />
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      autoComplete="email"
+                      disabled={isSubmitting}
+                      placeholder="name@example.com"
+                      type="email"
+                      {...field}
+                    />
+                  </InputGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <Button className="w-full" disabled={isSubmitting} type="submit">
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send reset link
-            </Button>
-          </form>
-        </Form>
+          <Button className="w-full" disabled={isSubmitting} type="submit">
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Send reset link
+          </Button>
+        </form>
+      </Form>
 
-        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle className="text-amber-800 dark:text-amber-200">Important</AlertTitle>
-          <AlertDescription className="block text-amber-800 dark:text-amber-200">
-            The reset link will expire in <strong>15 minutes</strong>
-          </AlertDescription>
-        </Alert>
-      </AuthCard>
-    </AuthGuard>
+      <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle className="text-amber-800 dark:text-amber-200">Important</AlertTitle>
+        <AlertDescription className="block text-amber-800 dark:text-amber-200">
+          The reset link will expire in <strong>15 minutes</strong>
+        </AlertDescription>
+      </Alert>
+    </AuthCard>
   );
 }
 
@@ -206,5 +201,6 @@ export const Route = createFileRoute("/_auth/forgot-password")({
       },
     ],
   }),
+  beforeLoad: createAuthRouteBeforeLoad("/dashboard"),
   component: ForgotPasswordPage,
 });
