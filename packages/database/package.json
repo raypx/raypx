@@ -24,7 +24,7 @@
     "@raypx/config": "workspace:*",
     "@raypx/env": "catalog:",
     "@raypx/shared": "workspace:*",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.0",
     "drizzle-seed": "^0.3.1",
     "drizzle-zod": "^0.8.3",
     "nanoid": "^5.1.6",
@@ -34,7 +34,7 @@
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "drizzle-kit": "^0.31.7",
+    "drizzle-kit": "^0.31.8",
     "typescript": "catalog:dev",
     "vitest": "catalog:"
   }

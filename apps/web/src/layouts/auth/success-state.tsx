@@ -2,7 +2,7 @@ import { cn } from "@raypx/ui/lib/utils";
 import { CheckCircle2, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-interface AuthSuccessStateProps {
+interface SuccessStateProps {
   icon?: LucideIcon;
   title: string;
   description?: string | ReactNode;
@@ -10,13 +10,13 @@ interface AuthSuccessStateProps {
   className?: string;
 }
 
-export function AuthSuccessState({
+export function SuccessState({
   icon: Icon = CheckCircle2,
   title,
   description,
   children,
   className,
-}: AuthSuccessStateProps) {
+}: SuccessStateProps) {
   return (
     <div className={cn("grid w-full gap-6 text-center", className)}>
       <div className="flex flex-col items-center justify-center gap-4">

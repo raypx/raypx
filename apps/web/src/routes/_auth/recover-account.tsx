@@ -1,6 +1,5 @@
-import type { BetterFetchOption } from "@better-fetch/fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth, useOnSuccessTransition } from "@raypx/auth";
+import { createSignInFormSchema, getSignInFormDefaults, useAuth, useSignIn } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
 import {
   Button,
@@ -19,197 +18,148 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { AuthCard } from "~/layouts/auth/auth-card";
-import { SignInFooter } from "~/layouts/auth/auth-footers";
-import { isValidEmail } from "../../utils/email";
+import { AuthGuard } from "~/layouts/auth/auth-guard";
+import { AuthCard } from "~/layouts/auth/card";
 
 function RecoverAccountPage() {
-  const { credentials, auth, redirectTo } = useAuth();
+  const { credentials, redirectTo } = useAuth();
   const isHydrated = useIsHydrated();
   const [isSubmitting] = useState(false);
-  const { onSuccess } = useOnSuccessTransition({ redirectTo: redirectTo });
 
   const rememberMeEnabled = credentials?.rememberMe;
   const usernameEnabled = credentials?.username;
 
-  const formSchema = z.object({
-    email: usernameEnabled
-      ? z.string().min(1, {
-          message: "Username is required",
-        })
-      : z.email({
-          message: "Email is invalid",
-        }),
-    password: z
-      .string()
-      .min(1, {
-        message: "Password is required",
-      })
-      .min(8, {
-        message: "Password must be at least 8 characters",
-      })
-      .max(100, {
-        message: "Password must be less than 100 characters",
-      }),
-    // .regex(/^(?=.*[A-Za-z])(?=.*\d)/, {
-    //   message: "Password must contain at least one letter and one number",
-    // })
-    rememberMe: z.boolean().optional(),
+  const formSchema = createSignInFormSchema({
+    usernameEnabled,
+    passwordValidation: { minLength: 8, maxLength: 100 },
+    rememberMeEnabled,
   });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: !rememberMeEnabled,
+    defaultValues: getSignInFormDefaults(rememberMeEnabled),
+  });
+
+  const { signIn } = useSignIn({
+    redirectTo,
+    onError: () => {
+      form.resetField("password");
+      // resetCaptcha()
+      // toast error handling
     },
   });
 
-  async function signIn({ email, password, rememberMe }: z.infer<typeof formSchema>) {
-    try {
-      let response: Record<string, unknown> = {};
-
-      if (usernameEnabled && !isValidEmail(email)) {
-        const fetchOptions: BetterFetchOption = {
-          throw: true,
-          // headers: await getCaptchaHeaders("/sign-in/username")
-        };
-
-        response = await auth.signIn.username({
-          username: email,
-          password,
-          rememberMe,
-          fetchOptions,
-        });
-      } else {
-        const fetchOptions: BetterFetchOption = {
-          throw: true,
-          // headers: await getCaptchaHeaders("/sign-in/email")
-        };
-
-        response = await auth.signIn.email({
-          email,
-          password,
-          rememberMe,
-          fetchOptions,
-        });
-      }
-
-      if (response.twoFactorRedirect) {
-        // navigate(
-        //     `${basePath}/${viewPaths.TWO_FACTOR}${window.location.search}`
-        // )
-      } else {
-        await onSuccess();
-      }
-    } catch (_error) {
-      form.resetField("password");
-      // resetCaptcha()
-
-      // toast({
-      //     variant: "error",
-      //     message: getLocalizedError({ error, localization })
-      // })
-    }
-  }
-
   return (
-    <AuthCard description="Recover your account" footer={<SignInFooter />} title="Recover Account">
-      <Form {...form}>
-        <form
-          className={cn("grid w-full gap-6")}
-          noValidate={isHydrated}
-          onSubmit={form.handleSubmit(signIn)}
-        >
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
-
-                <FormControl>
-                  <Input
-                    autoComplete={usernameEnabled ? "username" : "email"}
-                    disabled={isSubmitting}
-                    placeholder={usernameEnabled ? "Username" : "Email"}
-                    type={usernameEnabled ? "text" : "email"}
-                    {...field}
-                  />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>Password</FormLabel>
-
-                  {credentials?.forgotPassword && (
-                    <Link
-                      className="text-sm hover:underline"
-                      search={isHydrated ? window.location.search : ""}
-                      to="/forgot-password"
-                    >
-                      Forgot Password
-                    </Link>
-                  )}
-                </div>
-
-                <FormControl>
-                  <PasswordField
-                    autoComplete="current-password"
-                    disabled={isSubmitting}
-                    placeholder="Password"
-                    {...field}
-                  />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {rememberMeEnabled && (
+    <AuthGuard redirectTo={redirectTo || "/dashboard"}>
+      <AuthCard
+        description="Recover your account"
+        footer={
+          <>
+            Don't have an account?{" "}
+            <Link
+              className="font-medium underline underline-offset-4 hover:text-primary"
+              to="/sign-up"
+            >
+              Sign Up
+            </Link>
+          </>
+        }
+        title="Recover Account"
+      >
+        <Form {...form}>
+          <form
+            className={cn("grid w-full gap-6")}
+            noValidate={isHydrated}
+            onSubmit={form.handleSubmit(signIn)}
+          >
             <FormField
               control={form.control}
-              name="rememberMe"
+              name="email"
               render={({ field }) => (
-                <FormItem className="flex">
+                <FormItem>
+                  <FormLabel>{usernameEnabled ? "Username" : "Email"}</FormLabel>
+
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
+                    <Input
+                      autoComplete={usernameEnabled ? "username" : "email"}
                       disabled={isSubmitting}
-                      onCheckedChange={field.onChange}
+                      placeholder={usernameEnabled ? "Username" : "Email"}
+                      type={usernameEnabled ? "text" : "email"}
+                      {...field}
                     />
                   </FormControl>
 
-                  <FormLabel>Remember Me</FormLabel>
+                  <FormMessage />
                 </FormItem>
               )}
             />
-          )}
 
-          {/* <Captcha
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Password</FormLabel>
+
+                    {credentials?.forgotPassword && (
+                      <Link
+                        className="text-sm hover:underline"
+                        search={isHydrated ? window.location.search : ""}
+                        to="/forgot-password"
+                      >
+                        Forgot Password
+                      </Link>
+                    )}
+                  </div>
+
+                  <FormControl>
+                    <PasswordField
+                      autoComplete="current-password"
+                      disabled={isSubmitting}
+                      placeholder="Password"
+                      {...field}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {rememberMeEnabled && (
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        disabled={isSubmitting}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+
+                    <FormLabel>Remember Me</FormLabel>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* <Captcha
                     action="/sign-in/email"
                     localization={localization}
                     ref={captchaRef}
                 /> */}
 
-          <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting ? <Loader2 className="animate-spin" /> : "Recover Account"}
-          </Button>
-        </form>
-      </Form>
-    </AuthCard>
+            <Button className="w-full" disabled={isSubmitting} type="submit">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "Recover Account"}
+            </Button>
+          </form>
+        </Form>
+      </AuthCard>
+    </AuthGuard>
   );
 }
 
