@@ -1,3 +1,4 @@
+import type { InferSelectModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import { boolean, index, integer, pgEnum, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { uuidv7 } from "../utils";
@@ -210,3 +211,7 @@ export const paymentMethodRelations = relations(paymentMethod, ({ one }) => ({
     relationName: "user_payment_methods",
   }),
 }));
+
+export type Subscription = InferSelectModel<typeof subscription>;
+export type Invoice = InferSelectModel<typeof invoice>;
+export type PaymentMethod = InferSelectModel<typeof paymentMethod>;

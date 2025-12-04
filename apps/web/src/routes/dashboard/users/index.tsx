@@ -1,4 +1,5 @@
 import { useTRPC } from "@raypx/trpc/client";
+import { DataTableColumnHeader, ServerDataTable } from "@raypx/ui/business";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,43 +9,38 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@raypx/ui/components/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
-import { Badge } from "@raypx/ui/components/badge";
-import { Button } from "@raypx/ui/components/button";
-import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@raypx/ui/components/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@raypx/ui/components/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@raypx/ui/components/dropdown-menu";
-import { Input } from "@raypx/ui/components/input";
-import { Label } from "@raypx/ui/components/label";
-import {
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@raypx/ui/components/select";
-import { toast } from "@raypx/ui/components/toast";
+  toast,
+} from "@raypx/ui/components";
+import { cn } from "@raypx/ui/lib/utils";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
@@ -56,13 +52,9 @@ import {
   Trash2,
   User,
   UserCheck,
-  Users,
   UserX,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DataTableColumnHeader } from "~/components/data-table/column-header";
-import { ServerDataTable } from "~/components/data-table/server-table";
-import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
 
@@ -633,23 +625,19 @@ function UsersSection({
         </AlertDialogContent>
       </AlertDialog>
 
-      <Card className="shadow-sm">
-        <CardHeader className="border-b bg-muted/40 px-6 py-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex-1 space-y-1">
-              <CardTitle className="text-xl">All Users</CardTitle>
-              <CardDescription>Manage user accounts and permissions.</CardDescription>
-            </div>
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">All Users</CardTitle>
+            <CardDescription className="mt-1.5">
+              Manage user accounts and permissions.
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="p-4">
           <ServerDataTable
             columns={columns}
             data={users}
-            // Pagination
-            emptyComponent={
-              <EmptyState description="No users found." icon={Users} title="No Users" />
-            }
             enableSelection
             enableSorting
             filters={[
@@ -664,30 +652,31 @@ function UsersSection({
               },
             ]}
             getRowId={(row) => row.id}
-            // Sorting
             isLoading={isPending}
             manualSorting
-            onPageChange={setPage}
-            onPageSizeChange={(newPageSize) => {
-              setPageSize(newPageSize);
-              setPage(1);
-            }}
-            // Toolbar
             onResetFilters={handleResetFilters}
-            onSearchChange={(value) => {
-              onSearchChange(value);
-              setPage(1);
-            }}
             onSelectionChange={setSelectedRows}
             onSortingChange={handleSortingChange}
-            page={page}
-            pageSize={pageSize}
-            // Selection
-            searchPlaceholder="Search users..."
-            searchValue={searchValue}
+            pagination={{
+              page,
+              pageSize,
+              total,
+              onPageChange: setPage,
+              onPageSizeChange: (newPageSize) => {
+                setPageSize(newPageSize);
+                setPage(1);
+              },
+            }}
+            search={{
+              value: searchValue,
+              onChange: (value) => {
+                onSearchChange(value);
+                setPage(1);
+              },
+              placeholder: "Search users...",
+            }}
             selectedRows={selectedRows}
             skeletonRows={5}
-            // Loading
             sorting={sorting}
             toolbarActions={
               <div className="flex items-center gap-2">
@@ -740,16 +729,12 @@ function UsersSection({
                     void refetch();
                   }}
                   size="sm"
-                  title="Refresh"
                   variant="outline"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
-                  Refresh
+                  <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
                 </Button>
               </div>
             }
-            // Empty state
-            total={total}
           />
         </CardContent>
       </Card>

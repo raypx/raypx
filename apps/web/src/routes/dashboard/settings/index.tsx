@@ -4,8 +4,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@raypx/ui/components/card";
-import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -14,7 +12,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-} from "@raypx/ui/components/sidebar";
+} from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { Settings, Shield, UserCheck } from "lucide-react";

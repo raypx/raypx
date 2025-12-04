@@ -1,6 +1,7 @@
 import { Button, Input } from "@raypx/ui/components";
 import { Search, X } from "lucide-react";
-import { DataTableFacetedFilter } from "./faceted-filter";
+import { FacetedFilter } from "./faceted-filter";
+import type { SearchProps } from "./types";
 
 interface FilterOption {
   label: string;
@@ -9,9 +10,7 @@ interface FilterOption {
 }
 
 interface DataTableToolbarProps {
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
+  search?: SearchProps;
   filters?: Array<{
     title: string;
     options: FilterOption[];
@@ -24,13 +23,17 @@ interface DataTableToolbarProps {
 }
 
 export function DataTableToolbar({
-  searchValue = "",
-  onSearchChange,
-  searchPlaceholder = "Filter...",
+  search,
   filters = [],
   onReset,
   actions,
 }: DataTableToolbarProps) {
+  const {
+    value: searchValue = "",
+    onChange: onSearchChange,
+    placeholder: searchPlaceholder = "Filter...",
+  } = search || {};
+
   const hasActiveFilters =
     searchValue ||
     filters.some((filter) => filter.selectedValues && filter.selectedValues.length > 0);
@@ -50,7 +53,7 @@ export function DataTableToolbar({
           </div>
         )}
         {filters.map((filter, index) => (
-          <DataTableFacetedFilter
+          <FacetedFilter
             counts={filter.counts}
             key={index}
             onSelectedValuesChange={filter.onSelectedValuesChange}

@@ -14,10 +14,10 @@ import {
   Separator,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
-import { Check, PlusCircle, X } from "lucide-react";
+import { Check, PlusCircle } from "lucide-react";
 import type * as React from "react";
 
-interface DataTableFacetedFilterProps {
+interface FacetedFilterProps {
   title?: string;
   options: {
     label: string;
@@ -29,13 +29,13 @@ interface DataTableFacetedFilterProps {
   counts?: Map<string, number>;
 }
 
-export function DataTableFacetedFilter({
+export function FacetedFilter({
   title,
   options,
   selectedValues = [],
   onSelectedValuesChange,
   counts,
-}: DataTableFacetedFilterProps) {
+}: FacetedFilterProps) {
   const selectedSet = new Set(selectedValues);
 
   const handleSelect = (value: string) => {
@@ -71,8 +71,10 @@ export function DataTableFacetedFilter({
                   </Badge>
                 ) : (
                   options
-                    .filter((option) => selectedSet.has(option.value))
-                    .map((option) => (
+                    .filter((option: { label: string; value: string }) =>
+                      selectedSet.has(option.value),
+                    )
+                    .map((option: { label: string; value: string }) => (
                       <Badge
                         className="rounded-sm px-1 font-normal"
                         key={option.value}
@@ -93,30 +95,36 @@ export function DataTableFacetedFilter({
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => {
-                const isSelected = selectedSet.has(option.value);
-                return (
-                  <CommandItem key={option.value} onSelect={() => handleSelect(option.value)}>
-                    <div
-                      className={cn(
-                        "flex size-4 items-center justify-center rounded-[4px] border",
-                        isSelected
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : "border-input [&_svg]:invisible",
+              {options.map(
+                (option: {
+                  label: string;
+                  value: string;
+                  icon?: React.ComponentType<{ className?: string }>;
+                }) => {
+                  const isSelected = selectedSet.has(option.value);
+                  return (
+                    <CommandItem key={option.value} onSelect={() => handleSelect(option.value)}>
+                      <div
+                        className={cn(
+                          "flex size-4 items-center justify-center rounded-[4px] border",
+                          isSelected
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "border-input [&_svg]:invisible",
+                        )}
+                      >
+                        <Check className="text-primary-foreground size-3.5" />
+                      </div>
+                      {option.icon && <option.icon className="text-muted-foreground size-4" />}
+                      <span>{option.label}</span>
+                      {counts?.get(option.value) !== undefined && (
+                        <span className="text-muted-foreground ml-auto flex size-4 items-center justify-center font-mono text-xs">
+                          {counts.get(option.value)}
+                        </span>
                       )}
-                    >
-                      <Check className="text-primary-foreground size-3.5" />
-                    </div>
-                    {option.icon && <option.icon className="text-muted-foreground size-4" />}
-                    <span>{option.label}</span>
-                    {counts?.get(option.value) !== undefined && (
-                      <span className="text-muted-foreground ml-auto flex size-4 items-center justify-center font-mono text-xs">
-                        {counts.get(option.value)}
-                      </span>
-                    )}
-                  </CommandItem>
-                );
-              })}
+                    </CommandItem>
+                  );
+                },
+              )}
             </CommandGroup>
             {selectedSet.size > 0 && (
               <>

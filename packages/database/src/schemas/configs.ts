@@ -1,3 +1,4 @@
+import type { InferSelectModel } from "drizzle-orm";
 import { boolean, index, jsonb, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { pgTable } from "./_table";
 import { user } from "./auth";
@@ -31,6 +32,8 @@ export const configNamespaces = pgTable(
     index("idx_config_namespaces_name").on(table.name),
   ],
 );
+
+export type ConfigNamespace = InferSelectModel<typeof configNamespaces>;
 
 /**
  * Configuration items
@@ -66,6 +69,8 @@ export const configs = pgTable(
   ],
 );
 
+export type Config = InferSelectModel<typeof configs>;
+
 /**
  * Configuration history for audit trail
  */
@@ -91,3 +96,5 @@ export const configHistory = pgTable(
     index("idx_config_history_changed_by").on(table.changedBy),
   ],
 );
+
+export type ConfigHistory = InferSelectModel<typeof configHistory>;

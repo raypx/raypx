@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Checkbox,
   Skeleton,
@@ -19,22 +17,19 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import * as React from "react";
-
+import { useEffect, useMemo, useState } from "react";
+import { EmptyComponent } from "./empty";
+import { ErrorWithRetry } from "./error";
 import { DataTablePagination } from "./pagination";
 import { DataTableToolbar } from "./toolbar";
+import type { EmptyProps, ErrorProps, PaginationProps, SearchProps } from "./types";
 import { DataTableViewOptions } from "./view-options";
 
 interface ServerDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   // Pagination
-  page: number;
-  pageSize: number;
-  total: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
-  pageSizeOptions?: number[];
+  pagination: PaginationProps;
   // Sorting
   sorting?: SortingState;
   onSortingChange?: (sorting: SortingState) => void;
@@ -46,9 +41,7 @@ interface ServerDataTableProps<TData, TValue> {
   onSelectionChange?: (rows: TData[]) => void;
   getRowId?: (row: TData) => string;
   // Toolbar
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
+  search?: SearchProps;
   filters?: Array<{
     title: string;
     options: Array<{
@@ -68,20 +61,17 @@ interface ServerDataTableProps<TData, TValue> {
   isLoading?: boolean;
   skeletonRows?: number;
   // Empty state
-  emptyMessage?: string;
-  emptyComponent?: React.ReactNode;
+  empty?: EmptyProps;
+  // Error state
+  isError?: boolean;
+  error?: ErrorProps;
 }
 
 export function ServerDataTable<TData, TValue>({
   columns,
   data,
   // Pagination
-  page,
-  pageSize,
-  total,
-  onPageChange,
-  onPageSizeChange,
-  pageSizeOptions,
+  pagination: paginationProps,
   // Sorting
   sorting: controlledSorting,
   onSortingChange,
@@ -93,9 +83,7 @@ export function ServerDataTable<TData, TValue>({
   onSelectionChange,
   getRowId,
   // Toolbar
-  searchValue,
-  onSearchChange,
-  searchPlaceholder,
+  search,
   filters,
   onResetFilters,
   toolbarActions,
@@ -105,17 +93,40 @@ export function ServerDataTable<TData, TValue>({
   isLoading = false,
   skeletonRows = 5,
   // Empty state
-  emptyMessage = "No results.",
-  emptyComponent,
+  empty,
+  // Error state
+  isError = false,
+  error,
 }: ServerDataTableProps<TData, TValue>) {
-  const [internalSorting, setInternalSorting] = React.useState<SortingState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const { message: emptyMessage = "No results.", component: emptyComponent = <EmptyComponent /> } =
+    empty || {};
+  const {
+    message: errorMessage,
+    component: errorComponent,
+    onRetry,
+    retrying = false,
+  } = error || {};
+  const {
+    value: searchValue,
+    onChange: onSearchChange,
+    placeholder: searchPlaceholder = "Search...",
+  } = search || {};
+  const [internalSorting, setInternalSorting] = useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
+  const pagination = useMemo(
+    () => ({
+      ...paginationProps,
+      pageSizeOptions: paginationProps.pageSizeOptions ?? [10, 20, 50, 100],
+    }),
+    [paginationProps],
+  );
 
   const sorting = controlledSorting ?? internalSorting;
   const setSorting = onSortingChange ?? setInternalSorting;
 
   // Add selection column if enabled
-  const columnsWithSelection = React.useMemo(() => {
+  const columnsWithSelection = useMemo(() => {
     if (!enableSelection) return columns;
 
     const selectionColumn: ColumnDef<TData, TValue> = {
@@ -166,7 +177,7 @@ export function ServerDataTable<TData, TValue>({
   });
 
   // Handle selection changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (enableSelection && onSelectionChange) {
       const selected = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
       onSelectionChange(selected);
@@ -174,6 +185,45 @@ export function ServerDataTable<TData, TValue>({
   }, [table.getState().rowSelection, enableSelection, onSelectionChange, table]);
 
   const colSpan = columnsWithSelection.length;
+
+  // Show error state
+  if (isError) {
+    const errorDisplay = errorComponent || (
+      <ErrorWithRetry message={errorMessage} onRetry={onRetry} retrying={retrying} />
+    );
+    return (
+      <div className="flex flex-col gap-4">
+        {(searchValue !== undefined || filters || toolbarActions) && (
+          <DataTableToolbar
+            actions={
+              <>
+                {enableColumnVisibility && <DataTableViewOptions table={table} />}
+                {toolbarActions}
+              </>
+            }
+            filters={filters}
+            onReset={onResetFilters}
+            search={{
+              value: searchValue,
+              onChange: onSearchChange,
+              placeholder: searchPlaceholder,
+            }}
+          />
+        )}
+        <div className="overflow-hidden rounded-md border">
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell className="h-24 text-center" colSpan={colSpan}>
+                  {errorDisplay}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
+  }
 
   // Show skeleton when loading
   if (isLoading) {
@@ -189,9 +239,11 @@ export function ServerDataTable<TData, TValue>({
             }
             filters={filters}
             onReset={onResetFilters}
-            onSearchChange={onSearchChange}
-            searchPlaceholder={searchPlaceholder}
-            searchValue={searchValue}
+            search={{
+              value: searchValue,
+              onChange: onSearchChange,
+              placeholder: searchPlaceholder,
+            }}
           />
         )}
         <div className="overflow-hidden rounded-md border">
@@ -234,9 +286,11 @@ export function ServerDataTable<TData, TValue>({
           }
           filters={filters}
           onReset={onResetFilters}
-          onSearchChange={onSearchChange}
-          searchPlaceholder={searchPlaceholder}
-          searchValue={searchValue}
+          search={{
+            value: searchValue,
+            onChange: onSearchChange,
+            placeholder: searchPlaceholder,
+          }}
         />
       )}
       <div className="overflow-hidden rounded-md border">
@@ -278,15 +332,7 @@ export function ServerDataTable<TData, TValue>({
         </Table>
       </div>
       {data.length > 0 && (
-        <DataTablePagination
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
-          page={page}
-          pageSize={pageSize}
-          pageSizeOptions={pageSizeOptions}
-          selectedCount={selectedRows.length}
-          total={total}
-        />
+        <DataTablePagination {...pagination} selectedCount={selectedRows.length} />
       )}
     </div>
   );
