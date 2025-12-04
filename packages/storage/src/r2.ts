@@ -77,6 +77,39 @@ export interface UploadOptions {
 }
 
 /**
+ * Sanitize metadata value for S3/R2 headers
+ * Removes invalid characters that are not allowed in HTTP headers
+ */
+function sanitizeMetadataValue(value: string): string {
+  // Remove or replace invalid characters for HTTP headers
+  // Invalid characters include: \r, \n, and other control characters
+  return value
+    .replace(/[\r\n\t]/g, " ") // Replace newlines, carriage returns, tabs with spaces
+    .replace(/[^\x20-\x7E]/g, "") // Remove non-printable ASCII characters
+    .trim()
+    .slice(0, 2000); // Limit length (S3 metadata values have a practical limit)
+}
+
+/**
+ * Sanitize metadata object for S3/R2 upload
+ * Ensures all values are valid HTTP header values
+ */
+function sanitizeMetadata(metadata: Record<string, string>): Record<string, string> {
+  const sanitized: Record<string, string> = {};
+  for (const [key, value] of Object.entries(metadata)) {
+    // Sanitize key (remove invalid characters, ensure lowercase)
+    const sanitizedKey = key
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "_")
+      .slice(0, 64); // S3 metadata keys are limited
+
+    // Sanitize value
+    sanitized[sanitizedKey] = sanitizeMetadataValue(String(value));
+  }
+  return sanitized;
+}
+
+/**
  * Upload a file to R2
  */
 export async function uploadToR2(options: UploadOptions): Promise<{
@@ -98,6 +131,9 @@ export async function uploadToR2(options: UploadOptions): Promise<{
     metadata = {},
   } = options;
 
+  // Sanitize metadata to ensure valid HTTP header values
+  const sanitizedMetadata = sanitizeMetadata(metadata);
+
   try {
     const command = new PutObjectCommand({
       Bucket: env.R2_BUCKET_NAME,
@@ -105,7 +141,7 @@ export async function uploadToR2(options: UploadOptions): Promise<{
       Body: buffer,
       ContentType: contentType,
       CacheControl: cacheControl,
-      Metadata: metadata,
+      Metadata: sanitizedMetadata,
     });
 
     await client.send(command);

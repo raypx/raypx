@@ -1,5 +1,5 @@
-import { and, asc, desc, eq } from "@raypx/database";
-import { knowledges as Knowledges } from "@raypx/database/schemas";
+import { and, asc, desc, eq, sql } from "@raypx/database";
+import { datasets as Datasets } from "@raypx/database/schemas";
 import { z } from "zod/v4";
 
 import { Errors } from "../errors";
@@ -7,11 +7,11 @@ import { protectedProcedure } from "../trpc";
 import { assertExists, handleDatabaseError } from "../utils/error-handler";
 
 /**
- * Knowledges router - handles all knowledge base-related operations
+ * Datasets router - handles all dataset-related operations
  */
-export const knowledgesRouter = {
+export const datasetsRouter = {
   /**
-   * List all knowledge bases for the current user
+   * List all datasets for the current user with pagination
    */
   list: protectedProcedure
     .input(
@@ -20,73 +20,94 @@ export const knowledgesRouter = {
           sortBy: z.enum(["createdAt", "name", "status"]).default("createdAt"),
           sortOrder: z.enum(["asc", "desc"]).default("desc"),
           status: z.enum(["active", "inactive", "all"]).default("all"),
+          page: z.number().int().min(1).default(1),
+          pageSize: z.number().int().min(1).max(100).default(12),
         })
         .partial()
         .default({}),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
+      const page = input.page ?? 1;
+      const pageSize = input.pageSize ?? 12;
+      const offset = (page - 1) * pageSize;
 
       const sortByCol =
         input.sortBy === "name"
-          ? Knowledges.name
+          ? Datasets.name
           : input.sortBy === "status"
-            ? Knowledges.status
-            : Knowledges.createdAt;
+            ? Datasets.status
+            : Datasets.createdAt;
       const orderBy = input.sortOrder === "desc" ? desc(sortByCol) : asc(sortByCol);
 
-      const conditions = [eq(Knowledges.userId, userId)];
+      const conditions = [eq(Datasets.userId, userId)];
       if (input.status === "active") {
-        conditions.push(eq(Knowledges.status, "active"));
+        conditions.push(eq(Datasets.status, "active"));
       } else if (input.status === "inactive") {
-        conditions.push(eq(Knowledges.status, "inactive"));
+        conditions.push(eq(Datasets.status, "inactive"));
       }
 
       const where = conditions.length > 1 ? and(...conditions) : conditions[0];
 
-      const knowledgeBases = await ctx.db.query.knowledges.findMany({
-        where,
-        orderBy,
-      });
+      const [items, totalRow] = await Promise.all([
+        ctx.db.query.datasets.findMany({
+          where,
+          orderBy,
+          limit: pageSize,
+          offset,
+        }),
+        ctx.db
+          .select({ value: sql<number>`count(*)::int` })
+          .from(Datasets)
+          .where(where as any)
+          .then((r) => r[0]),
+      ]);
 
-      return knowledgeBases.map((kb) => ({
-        id: kb.id,
-        name: kb.name,
-        description: kb.description,
-        status: kb.status,
-        settings: kb.settings,
-        userId: kb.userId,
-        createdAt: kb.createdAt,
-        updatedAt: kb.updatedAt,
-      }));
+      const total = totalRow?.value ?? 0;
+
+      return {
+        items: items.map((ds) => ({
+          id: ds.id,
+          name: ds.name,
+          description: ds.description,
+          status: ds.status,
+          settings: ds.settings,
+          userId: ds.userId,
+          createdAt: ds.createdAt,
+          updatedAt: ds.updatedAt,
+        })),
+        total,
+        page,
+        pageSize,
+      };
     }),
 
   /**
-   * Get a single knowledge base by ID
+   * Get a single dataset by ID
    */
   byId: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
 
-    const knowledgeBase = await ctx.db.query.knowledges.findFirst({
-      where: and(eq(Knowledges.id, input.id), eq(Knowledges.userId, userId)),
+    const dataset = await ctx.db.query.datasets.findFirst({
+      where: and(eq(Datasets.id, input.id), eq(Datasets.userId, userId)),
     });
 
-    assertExists(knowledgeBase, () => Errors.resourceNotFound("Knowledge Base", input.id));
+    assertExists(dataset, () => Errors.resourceNotFound("Dataset", input.id));
 
     return {
-      id: knowledgeBase.id,
-      name: knowledgeBase.name,
-      description: knowledgeBase.description,
-      status: knowledgeBase.status,
-      settings: knowledgeBase.settings,
-      userId: knowledgeBase.userId,
-      createdAt: knowledgeBase.createdAt,
-      updatedAt: knowledgeBase.updatedAt,
+      id: dataset.id,
+      name: dataset.name,
+      description: dataset.description,
+      status: dataset.status,
+      settings: dataset.settings,
+      userId: dataset.userId,
+      createdAt: dataset.createdAt,
+      updatedAt: dataset.updatedAt,
     };
   }),
 
   /**
-   * Create a new knowledge base
+   * Create a new dataset
    */
   create: protectedProcedure
     .input(
@@ -102,7 +123,7 @@ export const knowledgesRouter = {
 
       try {
         const [created] = await ctx.db
-          .insert(Knowledges)
+          .insert(Datasets)
           .values({
             name: input.name,
             description: input.description ?? null,
@@ -112,7 +133,7 @@ export const knowledgesRouter = {
           })
           .returning();
 
-        assertExists(created, () => Errors.internalError("Failed to create knowledge base"));
+        assertExists(created, () => Errors.internalError("Failed to create dataset"));
 
         return {
           id: created.id,
@@ -125,12 +146,12 @@ export const knowledgesRouter = {
           updatedAt: created.updatedAt,
         };
       } catch (error) {
-        throw handleDatabaseError(error, "create knowledge base");
+        throw handleDatabaseError(error, "create dataset");
       }
     }),
 
   /**
-   * Update a knowledge base
+   * Update a dataset
    */
   update: protectedProcedure
     .input(
@@ -146,21 +167,21 @@ export const knowledgesRouter = {
       const userId = ctx.session.user.id;
       const { id, ...updateData } = input;
 
-      // Verify knowledge base exists and belongs to user
-      const existing = await ctx.db.query.knowledges.findFirst({
-        where: and(eq(Knowledges.id, id), eq(Knowledges.userId, userId)),
+      // Verify dataset exists and belongs to user
+      const existing = await ctx.db.query.datasets.findFirst({
+        where: and(eq(Datasets.id, id), eq(Datasets.userId, userId)),
       });
 
-      assertExists(existing, () => Errors.resourceNotFound("Knowledge Base", id));
+      assertExists(existing, () => Errors.resourceNotFound("Dataset", id));
 
       try {
         const [updated] = await ctx.db
-          .update(Knowledges)
+          .update(Datasets)
           .set(updateData)
-          .where(eq(Knowledges.id, id))
+          .where(eq(Datasets.id, id))
           .returning();
 
-        assertExists(updated, () => Errors.resourceNotFound("Knowledge Base", id));
+        assertExists(updated, () => Errors.resourceNotFound("Dataset", id));
 
         return {
           id: updated.id,
@@ -173,28 +194,28 @@ export const knowledgesRouter = {
           updatedAt: updated.updatedAt,
         };
       } catch (error) {
-        throw handleDatabaseError(error, "update knowledge base");
+        throw handleDatabaseError(error, "update dataset");
       }
     }),
 
   /**
-   * Delete a knowledge base
+   * Delete a dataset
    */
   delete: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
 
-    // Verify knowledge base exists and belongs to user
-    const existing = await ctx.db.query.knowledges.findFirst({
-      where: and(eq(Knowledges.id, input), eq(Knowledges.userId, userId)),
+    // Verify dataset exists and belongs to user
+    const existing = await ctx.db.query.datasets.findFirst({
+      where: and(eq(Datasets.id, input), eq(Datasets.userId, userId)),
     });
 
-    assertExists(existing, () => Errors.resourceNotFound("Knowledge Base", input));
+    assertExists(existing, () => Errors.resourceNotFound("Dataset", input));
 
     try {
-      await ctx.db.delete(Knowledges).where(eq(Knowledges.id, input));
+      await ctx.db.delete(Datasets).where(eq(Datasets.id, input));
       return { success: true, deletedId: input };
     } catch (error) {
-      throw handleDatabaseError(error, "delete knowledge base");
+      throw handleDatabaseError(error, "delete dataset");
     }
   }),
 };

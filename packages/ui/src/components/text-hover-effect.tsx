@@ -170,14 +170,16 @@ export const TextHoverEffect = ({
           }}
           gradientUnits="userSpaceOnUse"
           id="rainbowGradient"
+          initial={{
+            x1: "-100%",
+            x2: "0%",
+          }}
           transition={{
             duration: 4,
             repeat: Infinity,
             repeatType: "loop",
             ease: "linear",
           }}
-          x1="0%"
-          x2="100%"
           y1="0%"
           y2="0%"
         >
