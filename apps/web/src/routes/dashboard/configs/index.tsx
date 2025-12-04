@@ -1,6 +1,6 @@
 import { useTRPC } from "@raypx/trpc/client";
+import { ServerCardGrid } from "@raypx/ui/business";
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -22,12 +22,6 @@ import {
   DropdownMenuTrigger,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Switch,
   Textarea,
 } from "@raypx/ui/components";
 import {
@@ -44,11 +38,9 @@ import { toast } from "@raypx/ui/components/toast";
 import { cn } from "@raypx/ui/lib/utils";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Edit, FolderCog, MoreHorizontal, Plus, Settings, Trash2 } from "lucide-react";
+import { Edit, FolderCog, MoreHorizontal, Plus, RefreshCw, Settings, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ServerCardGrid } from "~/components/data-table/card-grid";
 import { EmptyState } from "~/components/empty-state";
-import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
 import { formatDate } from "~/lib/dashboard-utils";
 
@@ -112,7 +104,7 @@ function NamespacesSection() {
     placeholderData: keepPreviousData,
   });
 
-  const { data, isPending, isError, error, refetch, isFetching } = namespacesQuery;
+  const { data, isPending, refetch, isFetching } = namespacesQuery;
 
   const namespaces: Namespace[] = useMemo(() => (data?.items ?? []) as Namespace[], [data?.items]);
   const total = data?.total ?? 0;
@@ -371,43 +363,45 @@ function NamespacesSection() {
               size="sm"
               variant="outline"
             >
-              {isFetching ? "Refreshing…" : "Refresh"}
+              <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
             </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <ServerCardGrid
             data={namespaces}
-            emptyComponent={
-              <EmptyState
-                actionLabel={
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Namespace
-                  </>
-                }
-                description="Create your first namespace to organize your configurations"
-                icon={FolderCog}
-                onAction={() => setIsCreateDialogOpen(true)}
-                title="No Namespaces"
-              />
-            }
-            emptyMessage="No namespaces found"
+            empty={{
+              component: (
+                <EmptyState
+                  actionLabel={
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Namespace
+                    </>
+                  }
+                  description="Create your first namespace to organize your configurations"
+                  icon={FolderCog}
+                  onAction={() => setIsCreateDialogOpen(true)}
+                  title="No Namespaces"
+                />
+              ),
+            }}
             filters={[]}
-            getCardKey={(ns) => ns.id}
-            gridCols={{ default: 1, md: 2, lg: 3 }}
             isLoading={isPending}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
             onResetFilters={handleResetFilters}
-            onSearchChange={setSearchValue}
-            page={page}
-            pageSize={pageSize}
-            pageSizeOptions={[12, 24, 48, 96]}
+            pagination={{
+              page,
+              pageSize,
+              total,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+            }}
             renderCard={renderNamespaceCard}
-            searchPlaceholder="Search namespaces..."
-            searchValue={searchValue}
-            total={total}
+            search={{
+              value: searchValue,
+              onChange: setSearchValue,
+              placeholder: "Search namespaces...",
+            }}
           />
         </CardContent>
       </Card>

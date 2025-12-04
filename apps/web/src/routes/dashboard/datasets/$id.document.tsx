@@ -1,4 +1,5 @@
 import { useTRPC } from "@raypx/trpc/client";
+import { DataTableColumnHeader, ServerDataTable } from "@raypx/ui/business";
 import {
   Badge,
   Button,
@@ -21,8 +22,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Label,
+  toast,
 } from "@raypx/ui/components";
-import { toast } from "@raypx/ui/components/toast";
+import { cn } from "@raypx/ui/lib/utils";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
@@ -36,6 +38,7 @@ import {
   FileText,
   MoreHorizontal,
   Plus,
+  RefreshCw,
   Trash2,
   Upload,
   Upload as UploadIcon,
@@ -43,8 +46,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
-import { DataTableColumnHeader } from "~/components/data-table/column-header";
-import { ServerDataTable } from "~/components/data-table/server-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -547,20 +548,22 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
           columns={columns}
           data={documents}
           // Pagination
-          emptyComponent={
-            <EmptyState
-              actionLabel={
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Upload Documents
-                </>
-              }
-              description="Upload documents to this dataset"
-              icon={FileText}
-              onAction={() => setIsUploadDialogOpen(true)}
-              title="No Documents"
-            />
-          }
+          empty={{
+            component: (
+              <EmptyState
+                actionLabel={
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Upload Documents
+                  </>
+                }
+                description="Upload documents to this dataset"
+                icon={FileText}
+                onAction={() => setIsUploadDialogOpen(true)}
+                title="No Documents"
+              />
+            ),
+          }}
           enableSelection
           enableSorting
           filters={[
@@ -575,30 +578,31 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
             },
           ]}
           getRowId={(row) => row.id}
-          // Sorting
           isLoading={isPending}
           manualSorting
-          onPageChange={setPage}
-          onPageSizeChange={(newPageSize) => {
-            setPageSize(newPageSize);
-            setPage(1);
-          }}
-          // Selection
           onResetFilters={handleResetFilters}
-          onSearchChange={(value) => {
-            setSearchValue(value);
-            setPage(1);
-          }}
           onSelectionChange={setSelectedRows}
           onSortingChange={handleSortingChange}
-          // Toolbar
-          page={page}
-          pageSize={pageSize}
-          searchPlaceholder="Filter documents..."
-          searchValue={searchValue}
+          pagination={{
+            page,
+            pageSize,
+            total,
+            onPageChange: setPage,
+            onPageSizeChange: (newPageSize) => {
+              setPageSize(newPageSize);
+              setPage(1);
+            },
+          }}
+          search={{
+            value: searchValue,
+            onChange: (value) => {
+              setSearchValue(value);
+              setPage(1);
+            },
+            placeholder: "Filter documents...",
+          }}
           selectedRows={selectedRows}
           skeletonRows={5}
-          // Loading
           sorting={sorting}
           toolbarActions={
             <>
@@ -732,12 +736,10 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                 size="sm"
                 variant="outline"
               >
-                {isFetching ? "Refreshing…" : "Refresh"}
+                <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
               </Button>
             </>
           }
-          // Empty state
-          total={total}
         />
       </CardContent>
     </Card>

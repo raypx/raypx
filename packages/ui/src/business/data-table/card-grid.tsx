@@ -2,40 +2,31 @@
 
 import { Card, CardContent, CardHeader, Skeleton } from "@raypx/ui/components";
 import * as React from "react";
-
+import { useMemo } from "react";
+import { EmptyComponent } from "./empty";
+import { ErrorWithRetry } from "./error";
+import { type GridCols, useGridColsClass } from "./grid-cols";
 import { DataTablePagination } from "./pagination";
 import { DataTableToolbar } from "./toolbar";
+import type { EmptyProps, ErrorProps, PaginationProps, SearchProps } from "./types";
 
 interface ServerCardGridProps<TData> {
   data: TData[];
   // Card rendering
   renderCard: (item: TData, index: number) => React.ReactNode;
-  getCardKey?: (item: TData) => string;
+  getRowId?: (item: TData) => string;
   // Grid layout
-  gridCols?: {
-    default?: number;
-    md?: number;
-    lg?: number;
-    xl?: number;
-  };
+  gridCols?: GridCols;
   cardGap?: string;
   cardPadding?: string;
   // Pagination
-  page: number;
-  pageSize: number;
-  total: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
-  pageSizeOptions?: number[];
+  pagination: PaginationProps;
   // Selection
   enableSelection?: boolean;
   selectedRows?: TData[];
   onSelectionChange?: (rows: TData[]) => void;
-  getRowId?: (row: TData) => string;
   // Toolbar
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
+  search?: SearchProps;
   filters?: Array<{
     title: string;
     options: Array<{
@@ -54,33 +45,27 @@ interface ServerCardGridProps<TData> {
   skeletonRows?: number;
   renderSkeleton?: () => React.ReactNode;
   // Empty state
-  emptyMessage?: string;
-  emptyComponent?: React.ReactNode;
+  empty?: EmptyProps;
+  // Error state
+  isError?: boolean;
+  error?: ErrorProps;
 }
 
 export function ServerCardGrid<TData>({
   data,
   renderCard,
-  getCardKey,
+  getRowId = (item: TData) => (item as any).id || "",
   gridCols = { default: 1, md: 2, lg: 3 },
   cardGap = "gap-4",
   cardPadding = "p-6",
   // Pagination
-  page,
-  pageSize,
-  total,
-  onPageChange,
-  onPageSizeChange,
-  pageSizeOptions,
+  pagination: paginationProps,
   // Selection
-  enableSelection = false,
+  enableSelection: _enableSelection = false,
   selectedRows = [],
-  onSelectionChange,
-  getRowId,
+  onSelectionChange: _onSelectionChange,
   // Toolbar
-  searchValue,
-  onSearchChange,
-  searchPlaceholder,
+  search,
   filters,
   onResetFilters,
   toolbarActions,
@@ -89,50 +74,58 @@ export function ServerCardGrid<TData>({
   skeletonRows = 6,
   renderSkeleton,
   // Empty state
-  emptyMessage = "No results.",
-  emptyComponent,
+  empty,
+  // Error state
+  isError = false,
+  error,
 }: ServerCardGridProps<TData>) {
-  const gridColsClass = React.useMemo(() => {
-    const cols: string[] = [];
-    // Use explicit class names for Tailwind CSS to work properly
-    const colMap: Record<number, string> = {
-      1: "grid-cols-1",
-      2: "grid-cols-2",
-      3: "grid-cols-3",
-      4: "grid-cols-4",
-      5: "grid-cols-5",
-      6: "grid-cols-6",
-    };
-    const mdColMap: Record<number, string> = {
-      1: "md:grid-cols-1",
-      2: "md:grid-cols-2",
-      3: "md:grid-cols-3",
-      4: "md:grid-cols-4",
-      5: "md:grid-cols-5",
-      6: "md:grid-cols-6",
-    };
-    const lgColMap: Record<number, string> = {
-      1: "lg:grid-cols-1",
-      2: "lg:grid-cols-2",
-      3: "lg:grid-cols-3",
-      4: "lg:grid-cols-4",
-      5: "lg:grid-cols-5",
-      6: "lg:grid-cols-6",
-    };
-    const xlColMap: Record<number, string> = {
-      1: "xl:grid-cols-1",
-      2: "xl:grid-cols-2",
-      3: "xl:grid-cols-3",
-      4: "xl:grid-cols-4",
-      5: "xl:grid-cols-5",
-      6: "xl:grid-cols-6",
-    };
-    if (gridCols.default) cols.push(colMap[gridCols.default] || "grid-cols-1");
-    if (gridCols.md) cols.push(mdColMap[gridCols.md] || "md:grid-cols-2");
-    if (gridCols.lg) cols.push(lgColMap[gridCols.lg] || "lg:grid-cols-3");
-    if (gridCols.xl) cols.push(xlColMap[gridCols.xl] || "xl:grid-cols-4");
-    return cols.join(" ");
-  }, [gridCols]);
+  const { message: emptyMessage = "No results.", component: emptyComponent = <EmptyComponent /> } =
+    empty || {};
+  const {
+    message: errorMessage,
+    component: errorComponent,
+    onRetry,
+    retrying = false,
+  } = error || {};
+  const {
+    value: searchValue,
+    onChange: onSearchChange,
+    placeholder: searchPlaceholder = "Search...",
+  } = search || {};
+
+  const pagination = useMemo(
+    () => ({
+      ...paginationProps,
+      pageSizeOptions: paginationProps.pageSizeOptions ?? [12, 24, 48, 96],
+    }),
+    [paginationProps],
+  );
+
+  const gridColsClass = useGridColsClass(gridCols);
+
+  // Show error state
+  if (isError) {
+    const errorDisplay = errorComponent || (
+      <ErrorWithRetry message={errorMessage} onRetry={onRetry} retrying={retrying} />
+    );
+    return (
+      <div className="flex flex-col gap-4">
+        {(searchValue !== undefined || filters || toolbarActions) && (
+          <DataTableToolbar
+            actions={toolbarActions}
+            filters={filters}
+            onReset={onResetFilters}
+            search={{
+              value: searchValue,
+              onChange: onSearchChange,
+              placeholder: searchPlaceholder,
+            }}
+          />
+        )}
+        <div className="flex items-center justify-center min-h-[200px]">{errorDisplay}</div>
+      </div>
+    );
+  }
 
   // Show skeleton when loading
   if (isLoading) {
@@ -143,9 +136,11 @@ export function ServerCardGrid<TData>({
             actions={toolbarActions}
             filters={filters}
             onReset={onResetFilters}
-            onSearchChange={onSearchChange}
-            searchPlaceholder={searchPlaceholder}
-            searchValue={searchValue}
+            search={{
+              value: searchValue,
+              onChange: onSearchChange,
+              placeholder: searchPlaceholder,
+            }}
           />
         )}
         <div className={`grid ${gridColsClass} ${cardGap} ${cardPadding}`}>
@@ -177,28 +172,22 @@ export function ServerCardGrid<TData>({
           actions={toolbarActions}
           filters={filters}
           onReset={onResetFilters}
-          onSearchChange={onSearchChange}
-          searchPlaceholder={searchPlaceholder}
-          searchValue={searchValue}
+          search={{
+            value: searchValue,
+            onChange: onSearchChange,
+            placeholder: searchPlaceholder,
+          }}
         />
       )}
       {data.length > 0 ? (
         <>
           <div className={`grid ${gridColsClass} ${cardGap} ${cardPadding}`}>
             {data.map((item, index) => {
-              const key = getCardKey ? getCardKey(item) : (item as any).id || index;
+              const key = getRowId(item) || String(index);
               return <React.Fragment key={key}>{renderCard(item, index)}</React.Fragment>;
             })}
           </div>
-          <DataTablePagination
-            onPageChange={onPageChange}
-            onPageSizeChange={onPageSizeChange}
-            page={page}
-            pageSize={pageSize}
-            pageSizeOptions={pageSizeOptions}
-            selectedCount={selectedRows.length}
-            total={total}
-          />
+          <DataTablePagination {...pagination} selectedCount={selectedRows.length} />
         </>
       ) : (
         <div className="flex items-center justify-center min-h-[200px]">

@@ -1,5 +1,14 @@
 import { useTRPC } from "@raypx/trpc/client";
+import { DataTableColumnHeader, ServerDataTable } from "@raypx/ui/business";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Badge,
   Button,
   Card,
@@ -30,21 +39,11 @@ import {
   Switch,
   Textarea,
 } from "@raypx/ui/components";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@raypx/ui/components/alert-dialog";
 import { toast } from "@raypx/ui/components/toast";
 import { cn } from "@raypx/ui/lib/utils";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   ChevronLeft,
   Clock,
@@ -56,16 +55,16 @@ import {
   History,
   MoreHorizontal,
   Plus,
+  RefreshCw,
   Settings,
   Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { DataTableColumnHeader } from "~/components/data-table/column-header";
-import { ServerDataTable } from "~/components/data-table/server-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
 import { formatDate } from "~/lib/dashboard-utils";
+import { type ConfigItem, useConfigsStore } from "~/store/configs";
 
 export const Route = createFileRoute("/dashboard/configs/$id")({
   component: ConfigsPage,
@@ -77,19 +76,6 @@ type Namespace = {
   description: string | null;
   icon: string | null;
   sortOrder: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type ConfigItem = {
-  id: string;
-  key: string;
-  value: string | null;
-  valueType: string;
-  description: string | null;
-  isSecret: boolean | null;
-  metadata: Record<string, unknown> | null;
-  namespaceId: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -161,36 +147,45 @@ function ConfigsPage() {
   );
 }
 
-// ==================== Configs Section ====================
-
 function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: () => void }) {
   const trpc = useTRPC();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [configToDelete, setConfigToDelete] = useState<ConfigItem | null>(null);
-  const [editingConfig, setEditingConfig] = useState<ConfigItem | null>(null);
-  const [historyConfigId, setHistoryConfigId] = useState<string | null>(null);
-
-  // Form state
-  const [newKey, setNewKey] = useState("");
-  const [newValue, setNewValue] = useState("");
-  const [newValueType, setNewValueType] = useState<"string" | "number" | "boolean" | "json">(
-    "string",
-  );
-  const [newDescription, setNewDescription] = useState("");
-  const [newIsSecret, setNewIsSecret] = useState(false);
-  const [changeReason, setChangeReason] = useState("");
-
-  // Search, filter, pagination, and sorting state
-  const [searchValue, setSearchValue] = useState("");
-  const [q, setQ] = useState("");
-  const [valueTypeFilters, setValueTypeFilters] = useState<string[]>([]);
-  const [isSecretFilter, setIsSecretFilter] = useState<boolean | undefined>(undefined);
-  const [sorting, setSorting] = useState<SortingState>([{ id: "key", desc: false }]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const {
+    // Dialog states
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isHistoryDialogOpen,
+    deleteConfirmOpen,
+    configToDelete,
+    editingConfig,
+    historyConfigId,
+    // Form state
+    formData,
+    // Search, filter, pagination, and sorting state
+    searchValue,
+    q,
+    valueTypeFilters,
+    isSecretFilter,
+    sorting,
+    page,
+    pageSize,
+    // Actions
+    setCreateDialogOpen,
+    setEditDialogOpen,
+    setHistoryDialogOpen,
+    setDeleteConfirmOpen,
+    setConfigToDelete,
+    setEditingConfig,
+    setHistoryConfigId,
+    updateFormData,
+    resetForm,
+    setSearchValue,
+    setQ,
+    setValueTypeFilters,
+    setIsSecretFilter,
+    setSorting,
+    setPage,
+    setPageSize,
+  } = useConfigsStore();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -198,7 +193,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
       setPage(1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchValue]);
+  }, [searchValue, setQ, setPage]);
 
   const sortBy =
     sorting[0]?.id === "key" || sorting[0]?.id === "createdAt" || sorting[0]?.id === "updatedAt"
@@ -234,7 +229,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
       resetForm();
       void refetch();
       toast.success("Config created successfully!");
-      setIsCreateDialogOpen(false);
+      setCreateDialogOpen(false);
       setPage(1);
     },
     onError: (error) => {
@@ -248,7 +243,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
       resetForm();
       void refetch();
       toast.success("Config updated successfully!");
-      setIsEditDialogOpen(false);
+      setEditDialogOpen(false);
       setEditingConfig(null);
     },
     onError: (error) => {
@@ -272,27 +267,18 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
     },
   });
 
-  const resetForm = () => {
-    setNewKey("");
-    setNewValue("");
-    setNewValueType("string");
-    setNewDescription("");
-    setNewIsSecret(false);
-    setChangeReason("");
-  };
-
   const handleCreate = () => {
-    if (!newKey.trim()) {
+    if (!formData.key.trim()) {
       toast.error("Please enter a key");
       return;
     }
     createMutation.mutate({
       namespaceId: namespace.id,
-      key: newKey.trim(),
-      value: newValue,
-      valueType: newValueType,
-      description: newDescription.trim() || undefined,
-      isSecret: newIsSecret,
+      key: formData.key.trim(),
+      value: formData.value,
+      valueType: formData.valueType,
+      description: formData.description.trim() || undefined,
+      isSecret: formData.isSecret,
     });
   };
 
@@ -300,12 +286,12 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
     if (!editingConfig) return;
     updateMutation.mutate({
       id: editingConfig.id,
-      key: newKey.trim(),
-      value: newValue,
-      valueType: newValueType,
-      description: newDescription.trim() || undefined,
-      isSecret: newIsSecret,
-      changeReason: changeReason.trim() || undefined,
+      key: formData.key.trim(),
+      value: formData.value,
+      valueType: formData.valueType,
+      description: formData.description.trim() || undefined,
+      isSecret: formData.isSecret,
+      changeReason: formData.changeReason.trim() || undefined,
     });
   };
 
@@ -321,13 +307,15 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
 
   const openEditDialog = (config: ConfigItem) => {
     setEditingConfig(config);
-    setNewKey(config.key);
-    setNewValue(config.value ?? "");
-    setNewValueType(config.valueType as typeof newValueType);
-    setNewDescription(config.description ?? "");
-    setNewIsSecret(config.isSecret ?? false);
-    setChangeReason("");
-    setIsEditDialogOpen(true);
+    updateFormData({
+      key: config.key,
+      value: config.value ?? "",
+      valueType: config.valueType as "string" | "number" | "boolean" | "json",
+      description: config.description ?? "",
+      isSecret: config.isSecret ?? false,
+      changeReason: "",
+    });
+    setEditDialogOpen(true);
   };
 
   const copyToClipboard = (value: string) => {
@@ -489,7 +477,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                 <DropdownMenuItem
                   onClick={() => {
                     setHistoryConfigId(config.id);
-                    setIsHistoryDialogOpen(true);
+                    setHistoryDialogOpen(true);
                   }}
                 >
                   <History className="mr-2 h-4 w-4" />
@@ -535,46 +523,51 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
           <ServerDataTable
             columns={columns}
             data={configs}
-            emptyComponent={
-              <EmptyState
-                actionLabel={
-                  q ? undefined : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Config
-                    </>
-                  )
-                }
-                description={
-                  q
-                    ? `No configs found matching "${q}"`
-                    : "Add your first configuration item to this namespace"
-                }
-                icon={Settings}
-                onAction={q ? undefined : () => setIsCreateDialogOpen(true)}
-                title={q ? "No Results" : "No Configs"}
-              />
-            }
-            emptyMessage="No configs found"
+            empty={{
+              component: (
+                <EmptyState
+                  actionLabel={
+                    q ? undefined : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Config
+                      </>
+                    )
+                  }
+                  description={
+                    q
+                      ? `No configs found matching "${q}"`
+                      : "Add your first configuration item to this namespace"
+                  }
+                  icon={Settings}
+                  onAction={q ? undefined : () => setCreateDialogOpen(true)}
+                  title={q ? "No Results" : "No Configs"}
+                />
+              ),
+            }}
             filters={filters}
             isLoading={isPending}
             manualSorting
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
             onResetFilters={handleResetFilters}
-            onSearchChange={setSearchValue}
             onSortingChange={setSorting}
-            page={page}
-            pageSize={pageSize}
-            pageSizeOptions={[10, 20, 50, 100]}
-            searchPlaceholder="Search configs..."
-            searchValue={searchValue}
+            pagination={{
+              page,
+              pageSize,
+              total,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+            }}
+            search={{
+              value: searchValue,
+              onChange: setSearchValue,
+              placeholder: "Search configs...",
+            }}
             sorting={sorting}
             toolbarActions={
               <>
                 <Dialog
                   onOpenChange={(open) => {
-                    setIsCreateDialogOpen(open);
+                    setCreateDialogOpen(open);
                     if (!open) resetForm();
                   }}
                   open={isCreateDialogOpen}
@@ -593,19 +586,19 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                       </DialogDescription>
                     </DialogHeader>
                     <ConfigForm
-                      description={newDescription}
-                      isSecret={newIsSecret}
-                      keyValue={newKey}
-                      onDescriptionChange={setNewDescription}
-                      onIsSecretChange={setNewIsSecret}
-                      onKeyChange={setNewKey}
-                      onValueChange={setNewValue}
-                      onValueTypeChange={setNewValueType}
-                      value={newValue}
-                      valueType={newValueType}
+                      description={formData.description}
+                      isSecret={formData.isSecret}
+                      keyValue={formData.key}
+                      onDescriptionChange={(value) => updateFormData({ description: value })}
+                      onIsSecretChange={(value) => updateFormData({ isSecret: value })}
+                      onKeyChange={(value) => updateFormData({ key: value })}
+                      onValueChange={(value) => updateFormData({ value })}
+                      onValueTypeChange={(value) => updateFormData({ valueType: value })}
+                      value={formData.value}
+                      valueType={formData.valueType}
                     />
                     <DialogFooter>
-                      <Button onClick={() => setIsCreateDialogOpen(false)} variant="outline">
+                      <Button onClick={() => setCreateDialogOpen(false)} variant="outline">
                         Cancel
                       </Button>
                       <Button disabled={createMutation.isPending} onClick={handleCreate}>
@@ -620,11 +613,10 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                   size="sm"
                   variant="outline"
                 >
-                  {isFetching ? "Refreshing…" : "Refresh"}
+                  <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
                 </Button>
               </>
             }
-            total={total}
           />
         </CardContent>
       </Card>
@@ -632,7 +624,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
       {/* Edit Dialog */}
       <Dialog
         onOpenChange={(open) => {
-          setIsEditDialogOpen(open);
+          setEditDialogOpen(open);
           if (!open) {
             setEditingConfig(null);
             resetForm();
@@ -647,25 +639,25 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
           </DialogHeader>
           <div className="space-y-4 py-4">
             <ConfigForm
-              description={newDescription}
-              isSecret={newIsSecret}
-              keyValue={newKey}
-              onDescriptionChange={setNewDescription}
-              onIsSecretChange={setNewIsSecret}
-              onKeyChange={setNewKey}
-              onValueChange={setNewValue}
-              onValueTypeChange={setNewValueType}
-              value={newValue}
-              valueType={newValueType}
+              description={formData.description}
+              isSecret={formData.isSecret}
+              keyValue={formData.key}
+              onDescriptionChange={(value) => updateFormData({ description: value })}
+              onIsSecretChange={(value) => updateFormData({ isSecret: value })}
+              onKeyChange={(value) => updateFormData({ key: value })}
+              onValueChange={(value) => updateFormData({ value })}
+              onValueTypeChange={(value) => updateFormData({ valueType: value })}
+              value={formData.value}
+              valueType={formData.valueType}
             />
             <div className="space-y-2">
               <Label htmlFor="change-reason">Change Reason (Optional)</Label>
               <Textarea
                 className="bg-muted/50 min-h-[60px]"
                 id="change-reason"
-                onChange={(e) => setChangeReason(e.target.value)}
+                onChange={(e) => updateFormData({ changeReason: e.target.value })}
                 placeholder="Describe why you're making this change..."
-                value={changeReason}
+                value={formData.changeReason}
               />
               <p className="text-xs text-muted-foreground">
                 This reason will be recorded in the change history.
@@ -675,7 +667,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
           <DialogFooter>
             <Button
               onClick={() => {
-                setIsEditDialogOpen(false);
+                setEditDialogOpen(false);
                 setEditingConfig(null);
                 resetForm();
               }}
@@ -693,7 +685,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
       {/* History Dialog */}
       <Dialog
         onOpenChange={(open) => {
-          setIsHistoryDialogOpen(open);
+          setHistoryDialogOpen(open);
           if (!open) setHistoryConfigId(null);
         }}
         open={isHistoryDialogOpen}
@@ -736,8 +728,6 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
     </>
   );
 }
-
-// ==================== Config Form ====================
 
 function ConfigForm({
   keyValue,
@@ -843,8 +833,6 @@ function ConfigForm({
     </div>
   );
 }
-
-// ==================== Config History List ====================
 
 function ConfigHistoryList({ configId }: { configId: string }) {
   const trpc = useTRPC();

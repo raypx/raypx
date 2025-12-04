@@ -1191,6 +1191,9 @@ importers:
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.11(react@19.2.1)
+      '@tanstack/react-table':
+        specifier: ^8.21.3
+        version: 8.21.3(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@unpic/placeholder':
         specifier: ^0.1.2
         version: 0.1.2

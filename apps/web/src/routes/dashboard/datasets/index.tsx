@@ -1,4 +1,5 @@
 import { useTRPC } from "@raypx/trpc/client";
+import { ServerCardGrid } from "@raypx/ui/business";
 import {
   Badge,
   Button,
@@ -28,13 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
+  toast,
 } from "@raypx/ui/components";
-import { toast } from "@raypx/ui/components/toast";
+import { cn } from "@raypx/ui/lib/utils";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { BookOpen, Edit, Eye, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { BookOpen, Edit, Eye, MoreHorizontal, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { ServerCardGrid } from "~/components/data-table/card-grid";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -362,7 +363,7 @@ function DatasetsSection() {
             size="sm"
             variant="outline"
           >
-            {isFetching ? "Refreshing…" : "Refresh"}
+            <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
           </Button>
         </div>
       </CardHeader>
@@ -378,34 +379,35 @@ function DatasetsSection() {
         ) : (
           <ServerCardGrid
             data={datasets}
-            emptyComponent={
-              <EmptyState
-                actionLabel={
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Dataset
-                  </>
-                }
-                description="Create your first dataset to get started"
-                icon={BookOpen}
-                onAction={() => setIsCreateDialogOpen(true)}
-                title="No Datasets"
-              />
-            }
-            getCardKey={(ds) => ds.id}
-            gridCols={{ default: 1, md: 2, lg: 3 }}
-            isLoading={datasetsQuery.isPending}
-            onPageChange={(newPage) => setPage(newPage)}
-            onPageSizeChange={(newPageSize) => {
-              setPageSize(newPageSize);
-              setPage(1);
+            empty={{
+              component: (
+                <EmptyState
+                  actionLabel={
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Dataset
+                    </>
+                  }
+                  description="Create your first dataset to get started"
+                  icon={BookOpen}
+                  onAction={() => setIsCreateDialogOpen(true)}
+                  title="No Datasets"
+                />
+              ),
             }}
-            page={page}
-            pageSize={pageSize}
-            pageSizeOptions={[12, 24, 48, 96]}
+            isLoading={datasetsQuery.isPending}
+            pagination={{
+              page,
+              pageSize,
+              total,
+              onPageChange: (newPage) => setPage(newPage),
+              onPageSizeChange: (newPageSize) => {
+                setPageSize(newPageSize);
+                setPage(1);
+              },
+            }}
             renderCard={renderDatasetCard}
             skeletonRows={6}
-            total={total}
           />
         )}
       </CardContent>

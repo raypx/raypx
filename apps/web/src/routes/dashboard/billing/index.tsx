@@ -1,5 +1,6 @@
 import { useAuth } from "@raypx/auth/client";
 import { useTRPC } from "@raypx/trpc/client";
+import { DataTable } from "@raypx/ui/business";
 import {
   Badge,
   Button,
@@ -8,16 +9,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Progress,
+  toast,
 } from "@raypx/ui/components";
-import { Progress } from "@raypx/ui/components/progress";
-import { toast } from "@raypx/ui/components/toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { Check, Clock, CreditCard, Crown, Database, Download, Rocket, Zap } from "lucide-react";
 import { useMemo } from "react";
-import { DataTable } from "~/components/data-table";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -115,7 +115,7 @@ function BillingPage() {
 
   // Get payment method
   const paymentMethodQuery = useQuery({
-    ...trpc.billing.getPaymentMethod.queryOptions(
+    ...trpc.billing.getDefaultPaymentMethod.queryOptions(
       { userId },
       { enabled: !!userId, staleTime: 30_000 },
     ),
@@ -148,8 +148,8 @@ function BillingPage() {
   });
 
   const subscription = subscriptionQuery.data;
-  const invoices = invoicesQuery.data?.items ?? [];
-  const paymentMethod = paymentMethodQuery.data;
+  const invoices = invoicesQuery.data?.invoices ?? [];
+  const paymentMethod = paymentMethodQuery.data ?? null;
 
   const currentPlan = useMemo(() => {
     if (!subscription) return null;
