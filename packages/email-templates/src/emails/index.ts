@@ -1,4 +1,3 @@
-export type { EmailTemplateProps } from "../types";
 export { default as ApiKeyCreatedEmail } from "./api-key-created-email";
 export { default as ResetPasswordEmail } from "./auth/reset-password";
 export { default as SecurityAlertEmail } from "./security-alert-email";

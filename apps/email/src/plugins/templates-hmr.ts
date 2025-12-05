@@ -1,6 +1,6 @@
 /**
  * Vite plugin for email templates HMR support
- * Watches email template files in @raypx/email package and triggers HMR updates
+ * Watches email template files in @raypx/email-templates package and triggers HMR updates
  */
 
 import { resolve } from "node:path";
@@ -16,7 +16,7 @@ const virtual = {
  * Check if file is an email template
  */
 const isEmailTemplate = (file: string): boolean =>
-  file.includes("/packages/email/src/emails/") && file.endsWith(".tsx");
+  file.includes("/packages/email-templates/src/emails/") && file.endsWith(".tsx");
 
 /**
  * Recursively collect all modules that import from a given module
@@ -41,7 +41,7 @@ export function emailPlugin(): Plugin {
     name: "@raypx/email/plugin",
 
     async configResolved(config) {
-      emailTemplatesPath = resolve(config.root, "../../packages/email/src/emails");
+      emailTemplatesPath = resolve(config.root, "../../packages/email-templates/src/emails");
       try {
         await cache.scan(emailTemplatesPath);
       } catch (error) {

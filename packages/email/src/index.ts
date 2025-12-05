@@ -115,12 +115,9 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
  * @internal - Exported for advanced use cases, most users should use sendEmail()
  */
 export { MAILER_PROVIDER };
-// Export all email templates
-export * from "./emails";
 // Export all email types for consumers
 export type {
   EmailEventType,
   EmailProvider,
   EmailStatus,
-  EmailTemplateProps,
 } from "./types";

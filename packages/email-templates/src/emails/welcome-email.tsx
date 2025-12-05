@@ -1,11 +1,12 @@
 import { Text } from "@react-email/components";
 import { EmailLayout } from "../components/layout";
-import type { EmailTemplateProps } from "../types";
 
 /**
  * Props for the welcome email component
  */
-type WelcomeEmailProps = Pick<EmailTemplateProps, "username">;
+type WelcomeEmailProps = {
+  username: string;
+};
 
 /**
  * Welcome email template for new users

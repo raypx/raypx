@@ -96,7 +96,7 @@ With configuration, actual emails will be sent to the specified address.
 
 ```typescript
 import { sendEmail } from "@raypx/email";
-import { WelcomeEmail } from "@raypx/email/emails";
+import { WelcomeEmail } from "@raypx/email-templates";
 
 const result = await sendEmail({
   to: "user@example.com",
@@ -117,7 +117,7 @@ if (result.success) {
 
 ```typescript
 import { sendEmail } from "@raypx/email";
-import { ResetPasswordEmail } from "@raypx/email/emails";
+import { ResetPasswordEmail } from "@raypx/email-templates";
 
 async function sendPasswordResetEmail(email: string, resetUrl: string) {
   const result = await sendEmail({
@@ -140,7 +140,7 @@ async function sendPasswordResetEmail(email: string, resetUrl: string) {
 
 ```typescript
 import { sendEmail } from "@raypx/email";
-import { OrganizationInviteEmail } from "@raypx/email/emails";
+import { OrganizationInviteEmail } from "@raypx/email-templates";
 
 const result = await sendEmail({
   to: "newmember@example.com",
@@ -161,7 +161,7 @@ const result = await sendEmail({
 
 ```typescript
 import { sendEmail } from "@raypx/email";
-import { WelcomeEmail } from "@raypx/email/emails";
+import { WelcomeEmail } from "@raypx/email-templates";
 
 const recipients = ["user1@example.com", "user2@example.com", "user3@example.com"];
 
@@ -238,7 +238,7 @@ if (!result.success) {
 **2. Use Type-Safe Templates:**
 ```typescript
 import { sendEmail } from "@raypx/email";
-import { WelcomeEmail } from "@raypx/email/emails";
+import { WelcomeEmail } from "@raypx/email-templates";
 
 // TypeScript will check props
 const result = await sendEmail({
@@ -270,9 +270,9 @@ export async function sendEmail(options: Omit<SendEmailOptions, "from">) {
 // src/emails/custom-email.tsx
 import { Text } from "@react-email/components";
 import { EmailLayout } from "../components/layout";
-import type { EmailTemplateProps } from "../types";
-
-type CustomEmailProps = Pick<EmailTemplateProps, "username">;
+type CustomEmailProps = {
+  username: string;
+};
 
 const CustomEmail = ({ username }: CustomEmailProps) => (
   <EmailLayout preview="Your custom preview text">

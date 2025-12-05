@@ -52,7 +52,6 @@
     "lefthook": "catalog:dev",
     "rimraf": "catalog:",
     "tsdown": "catalog:dev",
-    "tsx": "^4.21.0",
     "turbo": "^2.6.3",
     "typescript": "catalog:dev",
     "vite": "catalog:",

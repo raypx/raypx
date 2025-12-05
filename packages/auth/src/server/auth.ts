@@ -1,11 +1,11 @@
 import { db, schemas } from "@raypx/database";
+import { sendEmail } from "@raypx/email";
 import {
   ResetPasswordEmail,
   SendMagicLinkEmail,
   SendVerificationOTPEmail,
-  sendEmail,
   VerifyEmail,
-} from "@raypx/email";
+} from "@raypx/email-templates";
 import { type BetterAuthOptions, type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
