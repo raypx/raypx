@@ -219,8 +219,9 @@ export function getEmailTemplatePath(templateName: string): string {
   if (!emailTemplates[templateName]) return "";
 
   // Construct path from template name
-  // e.g., "welcome-email" -> "/path/to/packages/email/src/emails/welcome-email.tsx"
-  // e.g., "auth/reset-password" -> "/path/to/packages/email/src/emails/auth/reset-password.tsx"
-  const baseDir = new URL("../../../../packages/email/src/emails", import.meta.url).pathname;
+  // e.g., "welcome-email" -> "/path/to/packages/email-templates/src/emails/welcome-email.tsx"
+  // e.g., "auth/reset-password" -> "/path/to/packages/email-templates/src/emails/auth/reset-password.tsx"
+  const baseDir = new URL("../../../../packages/email-templates/src/emails", import.meta.url)
+    .pathname;
   return `${baseDir}/${templateName}.tsx`;
 }

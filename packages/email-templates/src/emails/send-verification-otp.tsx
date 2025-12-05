@@ -1,11 +1,15 @@
 import { Text } from "@react-email/components";
 import { EmailLayout } from "../components/layout";
-import type { EmailTemplateProps } from "../types";
 
 /**
  * Props for the send verification OTP component
  */
-type SendVerificationOTPProps = Pick<EmailTemplateProps, "username" | "otp">;
+type SendVerificationOTPProps = {
+  /** Username or display name */
+  username: string;
+  /** One-time password code */
+  otp: string;
+};
 
 /**
  * OTP verification email template

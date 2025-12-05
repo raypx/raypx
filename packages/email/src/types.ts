@@ -99,29 +99,3 @@ export const EMAIL_STATUSES = Object.values(EmailStatus);
 export const EMAIL_PROVIDERS = Object.values(EmailProvider);
 export const EMAIL_EVENT_TYPES = Object.values(EmailEventType);
 export const RESEND_WEBHOOK_EVENT_TYPES = Object.values(ResendWebhookEventType);
-
-/**
- * Email template props - used by all email templates
- */
-export type EmailTemplateProps = {
-  username?: string;
-  email?: string;
-  actionUrl?: string;
-  otp?: string;
-  organizationName?: string;
-  inviterName?: string;
-  apiKeyName?: string;
-  securityDetails?: {
-    type: string;
-    description: string;
-    timestamp: Date;
-    ipAddress?: string;
-    userAgent?: string;
-    location?: string;
-    severity?: "low" | "medium" | "high" | "critical";
-  };
-  unsubscribeUrl?: string;
-  supportEmail?: string;
-  companyName?: string;
-  logoUrl?: string;
-};

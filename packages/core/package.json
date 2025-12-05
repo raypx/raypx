@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "@raypx/env": "catalog:",
-    "esbuild": "^0.27.1",
     "vite": "catalog:"
   },
   "devDependencies": {

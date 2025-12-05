@@ -20,7 +20,7 @@ export default defineConfig({
     alias: {
       // Alias for email templates directory to use in import.meta.glob
       // This allows us to use a cleaner path instead of relative paths
-      "@raypx/email/emails": resolve(__dirname, "../../packages/email/src/emails"),
+      "@raypx/email-templates": resolve(__dirname, "../../packages/email-templates/src"),
     },
   },
   plugins: [
