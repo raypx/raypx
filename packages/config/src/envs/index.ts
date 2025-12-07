@@ -10,5 +10,6 @@ export * from "./billing";
 export * from "./database";
 export * from "./email";
 export * from "./observability";
+export * from "./rag";
 export * from "./redis";
 export * from "./storage";

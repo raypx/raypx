@@ -16,6 +16,7 @@
     "@raypx/auth": "workspace:*",
     "@raypx/billing": "workspace:*",
     "@raypx/database": "workspace:*",
+    "@raypx/rag": "workspace:*",
     "@raypx/storage": "workspace:*",
     "@sentry/node": "^10.29.0",
     "@tanstack/react-query": "catalog:",

@@ -18,8 +18,8 @@
   "dependencies": {
     "@raypx/config": "workspace:*",
     "@raypx/database": "workspace:*",
-    "@raypx/email-templates": "workspace:*",
     "@raypx/email": "workspace:*",
+    "@raypx/email-templates": "workspace:*",
     "@raypx/env": "catalog:",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",

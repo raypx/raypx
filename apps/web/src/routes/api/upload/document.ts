@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { auth } from "@raypx/auth/server";
 import { and, db, eq } from "@raypx/database";
-import { datasets as Datasets, documents as Documents } from "@raypx/database/schemas";
+import { datasets as Datasets } from "@raypx/database/schemas";
 import { isR2Configured, uploadToR2 } from "@raypx/storage";
+import { createTRPCContext, trpcRouter } from "@raypx/trpc";
 import { createFileRoute } from "@tanstack/react-router";
 import { nanoid } from "nanoid";
 
@@ -96,27 +97,24 @@ async function handler({ request }: { request: Request }) {
       },
     });
 
-    // Create document record with uploaded status since upload succeeded
-    // Status flow: processing -> uploaded -> completed (if processing needed)
-    // If there's additional processing needed (e.g., text extraction, vectorization),
-    // it can be done asynchronously and status can be updated to "completed" later
-    const [document] = await db
-      .insert(Documents)
-      .values({
-        name: file.name,
-        originalName: file.name,
-        mimeType: file.type || "application/octet-stream",
-        size: file.size,
-        datasetId,
-        status: "uploaded", // Set to uploaded since file upload succeeded
-        metadata: {
-          storageKey: key,
-          storageUrl: uploadResult.url,
-          contentHash,
-        },
-        userId,
-      })
-      .returning();
+    // Create document record via tRPC mutation (which handles auto-vectorization)
+    const ctx = await createTRPCContext({ headers: request.headers });
+    const caller = trpcRouter.createCaller(ctx);
+
+    const document = await caller.documents.create({
+      name: file.name,
+      originalName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      size: file.size,
+      datasetId,
+      status: "uploaded", // Set to uploaded so user can manually trigger vectorization
+      metadata: {
+        storageKey: key,
+        storageUrl: uploadResult.url,
+        contentHash,
+      },
+      autoVectorize: false, // Disable auto-vectorization, user will trigger manually
+    });
 
     return new Response(
       JSON.stringify({

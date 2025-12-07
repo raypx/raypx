@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { logger } from "@raypx/shared/logger";
 import { env } from "./envs";
 
@@ -210,4 +210,39 @@ export async function uploadAvatar(
  */
 export function getAvatarUrl(userId: string, format: "webp" | "jpeg" | "png" = "webp"): string {
   return `${env.VITE_R2_PUBLIC_URL}/avatars/${userId}.${format}`;
+}
+
+/**
+ * Get a file from R2 storage
+ */
+export async function getFromR2(key: string): Promise<Buffer | null> {
+  if (!isR2Configured()) {
+    throw new Error("R2 is not configured");
+  }
+
+  const client = getR2Client();
+
+  try {
+    const command = new GetObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      Key: key,
+    });
+
+    const response = await client.send(command);
+
+    if (!response.Body) {
+      return null;
+    }
+
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of response.Body as any) {
+      chunks.push(chunk);
+    }
+
+    return Buffer.concat(chunks);
+  } catch (error) {
+    logger.error(`Failed to get file from R2: ${key}`, error);
+    return null;
+  }
 }

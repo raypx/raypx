@@ -30,6 +30,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import {
   BookOpen,
+  Brain,
   CheckCircle,
   ChevronLeft,
   Clock,
@@ -329,9 +330,29 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
     },
   });
 
+  const vectorizeMutation = useMutation({
+    ...trpc.documents.vectorize.mutationOptions(),
+    onSuccess: () => {
+      void refetch();
+      toast.success("Document vectorization started! This may take a few moments.");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to vectorize document");
+    },
+  });
+
   const handleDelete = (id: string) => {
     if (!window.confirm("Are you sure you want to delete this document?")) return;
     deleteMutation.mutate(id);
+  };
+
+  const handleVectorize = (id: string) => {
+    vectorizeMutation.mutate({ documentId: id });
+  };
+
+  const canVectorize = (status: string) => {
+    // Only allow vectorization for uploaded or failed documents
+    return status === "uploaded" || status === "failed";
   };
 
   const getStatusVariant = (status: string) => {
@@ -484,6 +505,18 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {canVectorize(document.status) && (
+                  <DropdownMenuItem
+                    disabled={vectorizeMutation.isPending || document.status === "processing"}
+                    onClick={() => {
+                      handleVectorize(document.id);
+                    }}
+                  >
+                    <Brain className="mr-2 h-4 w-4" />
+                    Vectorize
+                  </DropdownMenuItem>
+                )}
+                {canVectorize(document.status) && <DropdownMenuSeparator />}
                 <DropdownMenuItem
                   className="text-destructive"
                   disabled={deleteMutation.isPending}

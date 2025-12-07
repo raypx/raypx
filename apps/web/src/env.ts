@@ -19,6 +19,7 @@ const env = createEnv({
   server: {
     PORT: z.coerce.number().optional().default(3000),
     VERCEL_URL: z.string().optional(),
+    CRON_SECRET: z.string().optional(), // Secret for authenticating cron job requests
   },
   skip: process.env.NODE_ENV !== "production" || !!process.env.CI,
 });
