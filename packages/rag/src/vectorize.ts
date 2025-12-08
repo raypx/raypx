@@ -180,70 +180,82 @@ export async function vectorizeDocument(
       }
     }
     logger.debug("Model name", { modelName });
-    // Store chunks and embeddings in database
-    let chunksCreated = 0;
-    let embeddingsCreated = 0;
-    logger.debug("Chunks created", { chunksCreated });
-    logger.debug("Embeddings created", { embeddingsCreated });
-    for (let i = 0; i < langchainDocs.length; i++) {
-      const doc = langchainDocs[i];
+    // Store chunks and embeddings in database using batch inserts for better performance
+    // Prepare all chunk data first
+    const chunksToInsert = langchainDocs.map((doc, i) => {
       const embedding = embeddings[i];
-
       if (!doc || !embedding) {
-        continue; // Skip if document or embedding is missing
+        return null;
       }
 
-      // Extract metadata from LangChain document
       const docMetadata = (doc.metadata || {}) as Record<string, unknown>;
       const startIndex = (docMetadata.startIndex as number) ?? 0;
       const endIndex = (docMetadata.endIndex as number) ?? doc.pageContent.length;
 
-      // Create chunk
-      const [createdChunk] = await db
-        .insert(Chunks)
-        .values({
-          text: doc.pageContent,
-          index: i,
+      return {
+        text: doc.pageContent,
+        index: i,
+        documentId: document.id,
+        datasetId: document.datasetId,
+        userId,
+        metadata: {
+          ...parseMetadata,
+          ...docMetadata,
+          startIndex,
+          endIndex,
+        },
+        embedding,
+        embeddingMetadata: {
+          userId,
           documentId: document.id,
           datasetId: document.datasetId,
-          userId,
-          metadata: {
-            ...parseMetadata,
-            ...docMetadata,
-            startIndex,
-            endIndex,
-          },
-        })
-        .returning();
+          chunkIndex: i,
+          startIndex,
+          endIndex,
+          ...parseMetadata,
+          ...docMetadata,
+        },
+      };
+    }).filter((item): item is NonNullable<typeof item> => item !== null);
 
-      if (createdChunk) {
-        chunksCreated += 1;
+    logger.debug("Prepared chunks for batch insert", { count: chunksToInsert.length });
 
-        // Always store embedding in vector database (vector_embeddings table)
-        // This works whether using separate vector database or same database
-        // Note: Store userId and chunkId in metadata for PGVectorStore filtering
-        await vectorDb.insert(VectorEmbeddings).values({
-          chunkId: createdChunk.id,
-          embedding: embedding as any, // Pass array directly, Drizzle vector type handles conversion
-          content: doc.pageContent, // Cache content for faster retrieval
-          model: modelName,
-          userId,
-          metadata: {
-            userId, // Store in metadata for PGVectorStore access control
-            chunkId: createdChunk.id, // Store in metadata for PGVectorStore retrieval
-            documentId: document.id,
-            datasetId: document.datasetId,
-            chunkIndex: i,
-            startIndex,
-            endIndex,
-            ...parseMetadata,
-            ...docMetadata,
-          },
-        });
+    // Batch insert all chunks at once
+    const createdChunks = await db
+      .insert(Chunks)
+      .values(
+        chunksToInsert.map(({ embedding: _, embeddingMetadata: __, ...chunkData }) => chunkData),
+      )
+      .returning();
 
-        embeddingsCreated += 1;
-      }
+    logger.debug("Chunks inserted", { count: createdChunks.length });
+
+    // Batch insert all embeddings at once
+    if (createdChunks.length > 0) {
+      await vectorDb.insert(VectorEmbeddings).values(
+        createdChunks.map((chunk, i) => {
+          const chunkData = chunksToInsert[i];
+          if (!chunkData) {
+            throw new Error(`Missing chunk data at index ${i}`);
+          }
+          return {
+            chunkId: chunk.id,
+            embedding: chunkData.embedding as any,
+            content: chunkData.text,
+            model: modelName,
+            userId,
+            metadata: {
+              ...chunkData.embeddingMetadata,
+              chunkId: chunk.id,
+            },
+          };
+        }),
+      );
+      logger.debug("Embeddings inserted", { count: createdChunks.length });
     }
+
+    const chunksCreated = createdChunks.length;
+    const embeddingsCreated = createdChunks.length;
 
     // Update document status to completed
     await db.update(Documents).set({ status: "completed" }).where(eq(Documents.id, documentId));

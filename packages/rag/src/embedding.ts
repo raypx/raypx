@@ -117,31 +117,52 @@ export async function generateEmbeddings(
       return results;
     }
 
-    // Process in batches
+    // Process in batches with concurrency for better performance
+    // For providers with small batch sizes (like aliyun), process multiple batches concurrently
+    const concurrency = provider === "aliyun" ? 5 : 1; // Process 5 batches concurrently for aliyun
     const results: number[][] = [];
+    const batches: Array<{ index: number; texts: string[] }> = [];
+
+    // Prepare all batches
     for (let i = 0; i < texts.length; i += batchSize) {
-      logger.debug("Processing batch", {
-        batchIndex: i,
-        batchSize,
-        batchTextsCount: Math.min(batchSize, texts.length - i),
+      batches.push({
+        index: i,
+        texts: texts.slice(i, i + batchSize),
       });
-      const batch = texts.slice(i, i + batchSize);
-      const batchResults = await embeddings.embedDocuments(batch).catch((error: unknown) => {
-        logger.error("Failed to embed batch", {
-          error: error instanceof Error ? error.message : String(error),
-          errorType: error instanceof Error ? error.constructor.name : typeof error,
-          batchIndex: i,
-          batchSize: batch.length,
-          totalTexts: texts.length,
-        });
-        throw error;
+    }
+
+    // Process batches with concurrency limit
+    for (let i = 0; i < batches.length; i += concurrency) {
+      const concurrentBatches = batches.slice(i, i + concurrency);
+      logger.debug("Processing concurrent batches", {
+        batchStart: i,
+        batchCount: concurrentBatches.length,
+        totalBatches: batches.length,
       });
-      logger.debug("Batch embedding results", {
-        batchIndex: i,
-        count: batchResults.length,
-        dimensions: batchResults[0]?.length || 0,
+
+      const batchResults = await Promise.all(
+        concurrentBatches.map(async ({ index, texts: batchTexts }) => {
+          return embeddings.embedDocuments(batchTexts).catch((error: unknown) => {
+            logger.error("Failed to embed batch", {
+              error: error instanceof Error ? error.message : String(error),
+              errorType: error instanceof Error ? error.constructor.name : typeof error,
+              batchIndex: index,
+              batchSize: batchTexts.length,
+              totalTexts: texts.length,
+            });
+            throw error;
+          });
+        }),
+      );
+
+      for (const batchResult of batchResults) {
+        results.push(...batchResult);
+      }
+
+      logger.debug("Processed batches", {
+        totalProcessed: results.length,
+        totalTexts: texts.length,
       });
-      results.push(...batchResults);
     }
 
     return results;

@@ -28,6 +28,7 @@
     "@neondatabase/serverless": "^1.0.2",
     "@raypx/config": "workspace:*",
     "@raypx/env": "catalog:",
+    "@raypx/logger": "^0.1.0",
     "@raypx/shared": "workspace:*",
     "drizzle-orm": "^0.45.0",
     "drizzle-seed": "^0.3.1",
