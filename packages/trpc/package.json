@@ -16,6 +16,7 @@
     "@raypx/auth": "workspace:*",
     "@raypx/billing": "workspace:*",
     "@raypx/database": "workspace:*",
+    "@raypx/logger": "^0.1.0",
     "@raypx/rag": "workspace:*",
     "@raypx/storage": "workspace:*",
     "@sentry/node": "^10.29.0",

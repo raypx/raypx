@@ -4,7 +4,6 @@
  * Supports both separate vector database and co-located database scenarios
  */
 
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { and, db, eq, vectorDb } from "@raypx/database";
 import { chunks as Chunks, documents as Documents } from "@raypx/database/schemas";
@@ -12,6 +11,7 @@ import { vectorEmbeddings as VectorEmbeddings } from "@raypx/database/vectorSche
 import { getFromR2 } from "@raypx/storage";
 import { getRAGConfig } from "./config";
 import { generateEmbeddings, getEmbeddingsInstance } from "./embedding";
+import { loadDocuments } from "./loaders";
 import { logger } from "./utils";
 
 /**
@@ -87,18 +87,42 @@ export async function vectorizeDocument(
     logger.debug("Chunk size", { chunkSize });
     logger.debug("Chunk overlap", { chunkOverlap });
 
-    // Use LangChain PDFLoader + RecursiveCharacterTextSplitter for all PDF files
+    // Use LangChain loaders + RecursiveCharacterTextSplitter for all file types
     // This follows LangChain.js standard workflow: Load → Split → Embed → Store
+    logger.debug("Loading documents", {
+      mimeType: document.mimeType,
+      filename: document.originalName || document.name,
+    });
+
     let langchainDocs: Array<{ pageContent: string; metadata: Record<string, unknown> }>;
     let parseMetadata: Record<string, unknown> | undefined;
 
-    if (document.mimeType === "application/pdf") {
-      logger.debug("Using LangChain PDFLoader for PDF parsing");
-      // Convert Buffer to Blob for PDFLoader
-      const pdfBlob = new Blob([fileBuffer], { type: "application/pdf" });
-      const loader = new PDFLoader(pdfBlob);
-      const docs = await loader.load();
-      logger.debug("PDFLoader loaded documents", { count: docs.length });
+    try {
+      // Load documents using appropriate loader based on MIME type
+      const loadedDocs = await loadDocuments(
+        fileBuffer,
+        document.mimeType,
+        document.originalName || document.name,
+      );
+
+      if (loadedDocs.length === 0) {
+        logger.warn("No documents loaded", {
+          mimeType: document.mimeType,
+          filename: document.originalName || document.name,
+        });
+        return {
+          documentId,
+          chunksCreated: 0,
+          embeddingsCreated: 0,
+        };
+      }
+
+      logger.debug("Documents loaded", { count: loadedDocs.length });
+
+      // Extract metadata from first document if available
+      if (loadedDocs.length > 0 && loadedDocs[0]?.metadata) {
+        parseMetadata = loadedDocs[0].metadata as Record<string, unknown>;
+      }
 
       // Use RecursiveCharacterTextSplitter to chunk the documents
       const splitter = new RecursiveCharacterTextSplitter({
@@ -107,20 +131,28 @@ export async function vectorizeDocument(
         separators: ["\n\n", "\n", " ", ""], // Priority: paragraph > line > word > character
       });
 
-      // Split documents into chunks
-      langchainDocs = await splitter.splitDocuments(docs);
-      logger.debug("Documents split into chunks", { chunksCount: langchainDocs.length });
+      // Convert to LangChain Document format for splitting
+      const { Document } = await import("@langchain/core/documents");
+      const langchainDocuments = loadedDocs.map(
+        (doc) =>
+          new Document({
+            pageContent: doc.pageContent,
+            metadata: doc.metadata,
+          }),
+      );
 
-      // Extract metadata from first document if available
-      if (docs.length > 0 && docs[0]?.metadata) {
-        parseMetadata = docs[0].metadata as Record<string, unknown>;
-      }
-    } else {
-      return {
-        documentId,
-        chunksCreated: 0,
-        embeddingsCreated: 0,
-      };
+      // Split documents into chunks
+      langchainDocs = await splitter.splitDocuments(langchainDocuments);
+      logger.debug("Documents split into chunks", { chunksCount: langchainDocs.length });
+    } catch (error) {
+      logger.error("Failed to load or process documents", {
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        errorStack: error instanceof Error ? error.stack : undefined,
+        mimeType: document.mimeType,
+        filename: document.originalName || document.name,
+      });
+      throw error;
     }
 
     logger.debug("LangChain documents prepared", {
@@ -182,41 +214,43 @@ export async function vectorizeDocument(
     logger.debug("Model name", { modelName });
     // Store chunks and embeddings in database using batch inserts for better performance
     // Prepare all chunk data first
-    const chunksToInsert = langchainDocs.map((doc, i) => {
-      const embedding = embeddings[i];
-      if (!doc || !embedding) {
-        return null;
-      }
+    const chunksToInsert = langchainDocs
+      .map((doc, i) => {
+        const embedding = embeddings[i];
+        if (!doc || !embedding) {
+          return null;
+        }
 
-      const docMetadata = (doc.metadata || {}) as Record<string, unknown>;
-      const startIndex = (docMetadata.startIndex as number) ?? 0;
-      const endIndex = (docMetadata.endIndex as number) ?? doc.pageContent.length;
+        const docMetadata = (doc.metadata || {}) as Record<string, unknown>;
+        const startIndex = (docMetadata.startIndex as number) ?? 0;
+        const endIndex = (docMetadata.endIndex as number) ?? doc.pageContent.length;
 
-      return {
-        text: doc.pageContent,
-        index: i,
-        documentId: document.id,
-        datasetId: document.datasetId,
-        userId,
-        metadata: {
-          ...parseMetadata,
-          ...docMetadata,
-          startIndex,
-          endIndex,
-        },
-        embedding,
-        embeddingMetadata: {
-          userId,
+        return {
+          text: doc.pageContent,
+          index: i,
           documentId: document.id,
           datasetId: document.datasetId,
-          chunkIndex: i,
-          startIndex,
-          endIndex,
-          ...parseMetadata,
-          ...docMetadata,
-        },
-      };
-    }).filter((item): item is NonNullable<typeof item> => item !== null);
+          userId,
+          metadata: {
+            ...parseMetadata,
+            ...docMetadata,
+            startIndex,
+            endIndex,
+          },
+          embedding,
+          embeddingMetadata: {
+            userId,
+            documentId: document.id,
+            datasetId: document.datasetId,
+            chunkIndex: i,
+            startIndex,
+            endIndex,
+            ...parseMetadata,
+            ...docMetadata,
+          },
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
 
     logger.debug("Prepared chunks for batch insert", { count: chunksToInsert.length });
 
@@ -272,7 +306,7 @@ export async function vectorizeDocument(
       await db.update(Documents).set({ status: "failed" }).where(eq(Documents.id, documentId));
     } catch (updateError) {
       // Log but don't throw - we want to preserve the original error
-      console.error("[Vectorize] Failed to update document status:", updateError);
+      logger.error("Failed to update document status", { updateError });
     }
 
     // Re-throw the original error

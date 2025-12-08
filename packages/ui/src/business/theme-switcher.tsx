@@ -10,6 +10,7 @@ import { type ThemeKey, themeConfig, themeIcons } from "@raypx/ui/lib/theme-conf
 import { cn } from "@raypx/ui/lib/utils";
 import { Check } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
+import { logger } from "../../logger";
 import { useTheme } from "../hooks/use-theme";
 
 type ThemeConfig = {
@@ -100,13 +101,13 @@ export const ThemeSwitcher = memo(({ mode = "light-dark-system", variant }: Them
     if (variant) {
       // TypeScript should catch incompatible combinations, but add runtime check as safety
       if (variant === "toggle" && mode !== "light-dark") {
-        console.warn(
+        logger.warn(
           `ThemeSwitcher: variant="toggle" is only available for mode="light-dark". Falling back to "dropdown".`,
         );
         return "dropdown";
       }
       if (variant === "dropdown" && mode !== "light-dark-system") {
-        console.warn(
+        logger.warn(
           `ThemeSwitcher: variant="dropdown" is only available for mode="light-dark-system". Falling back to "toggle".`,
         );
         return "toggle";

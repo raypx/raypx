@@ -21,6 +21,7 @@
     "@raypx/email": "workspace:*",
     "@raypx/email-templates": "workspace:*",
     "@raypx/env": "catalog:",
+    "@raypx/logger": "^0.1.0",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",

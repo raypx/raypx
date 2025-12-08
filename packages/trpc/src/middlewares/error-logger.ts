@@ -4,6 +4,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
+import { logger } from "../../logger";
 import type { AppErrorCode, ErrorMeta } from "../errors";
 import { isAppError } from "../errors";
 
@@ -110,16 +111,16 @@ function logError(entry: ErrorLogEntry): void {
   // Log based on level
   switch (level) {
     case LogLevel.ERROR:
-      console.error(logMessage);
-      if (stack) console.error("Stack:", stack);
+      logger.error(logMessage);
+      if (stack) logger.error("Stack:", stack);
       break;
     case LogLevel.WARN:
-      console.warn(logMessage);
+      logger.warn(logMessage);
       break;
     case LogLevel.INFO:
       break;
     case LogLevel.DEBUG:
-      console.debug(logMessage);
+      logger.debug(logMessage);
       break;
   }
 
@@ -145,7 +146,7 @@ export const errorLoggingMiddleware = async ({ ctx, path, type, next }: any) => 
       logError(logEntry);
     } else {
       // Log unexpected errors
-      console.error("[tRPC Unexpected Error]", {
+      logger.error("Unexpected error", {
         path,
         type,
         error,
@@ -172,7 +173,7 @@ export function performanceLoggingMiddleware(thresholdMs = 3000) {
 
       // Log slow requests
       if (duration > thresholdMs) {
-        console.warn(`[tRPC Slow Request] ${type.toUpperCase()} ${path} took ${duration}ms`, {
+        logger.warn(`Slow request: ${type.toUpperCase()} ${path} took ${duration}ms`, {
           userId: ctx.session?.user?.id,
           threshold: thresholdMs,
         });

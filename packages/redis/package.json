@@ -15,6 +15,7 @@
   "dependencies": {
     "@raypx/config": "workspace:*",
     "@raypx/env": "catalog:",
+    "@raypx/logger": "^0.1.0",
     "@raypx/shared": "workspace:*",
     "redis": "^5.10.0",
     "superjson": "catalog:"

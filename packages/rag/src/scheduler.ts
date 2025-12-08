@@ -128,7 +128,10 @@ export async function retryFailedVectorizations(options: RetryVectorizationOptio
         })
         .where(eq(Documents.id, document.id));
 
-      console.error(`[Retry Vectorization Failed] Document ${document.id}:`, errorMessage);
+      logger.error("Retry vectorization failed", {
+        documentId: document.id,
+        errorMessage,
+      });
     }
   }
 

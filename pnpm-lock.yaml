@@ -211,7 +211,7 @@ importers:
         version: 0.556.0(react@19.2.1)
       nitro:
         specifier: 'catalog:'
-        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
       react:
         specifier: catalog:react19
         version: 19.2.1
@@ -357,7 +357,7 @@ importers:
         version: 1.0.0
       nitro:
         specifier: 'catalog:'
-        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
       shiki:
         specifier: ^3.19.0
         version: 3.19.0
@@ -471,7 +471,7 @@ importers:
         version: 5.1.6
       nitro:
         specifier: 'catalog:'
-        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
       react:
         specifier: catalog:react19
         version: 19.2.1
@@ -624,6 +624,9 @@ importers:
       '@raypx/env':
         specifier: 'catalog:'
         version: 0.0.3
+      '@raypx/logger':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@raypx/ui':
         specifier: workspace:*
         version: link:../ui
@@ -707,6 +710,9 @@ importers:
       '@raypx/env':
         specifier: 'catalog:'
         version: 0.0.3
+      '@raypx/logger':
+        specifier: ^0.1.0
+        version: 0.1.0
       fs-extra:
         specifier: 'catalog:'
         version: 11.3.2
@@ -1039,6 +1045,9 @@ importers:
       '@raypx/env':
         specifier: 'catalog:'
         version: 0.0.3
+      '@raypx/logger':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@raypx/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1144,6 +1153,9 @@ importers:
       '@raypx/database':
         specifier: workspace:*
         version: link:../database
+      '@raypx/logger':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@raypx/rag':
         specifier: workspace:*
         version: link:../rag
@@ -1292,6 +1304,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@raypx/logger':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.12(react@19.2.1)
@@ -17820,7 +17835,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.3
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.13.2(debug@4.4.3))
+      retry-axios: 2.6.0(axios@1.13.2)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -19076,7 +19091,7 @@ snapshots:
 
   nf3@0.1.12: {}
 
-  nitro@3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)):
+  nitro@3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       consola: 3.4.2
       crossws: 0.4.1(srvx@0.9.7)
@@ -19093,7 +19108,6 @@ snapshots:
       unenv: 2.0.0-rc.24
       unstorage: 2.0.0-alpha.4(@netlify/blobs@10.4.3)(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7)))(lru-cache@11.2.4)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
-      rolldown: 1.0.0-beta.53
       vite: 8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -20040,7 +20054,7 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.13.2(debug@4.4.3)):
+  retry-axios@2.6.0(axios@1.13.2):
     dependencies:
       axios: 1.13.2(debug@4.4.3)
 

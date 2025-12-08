@@ -116,7 +116,14 @@ const embeddings = await generateEmbeddings(texts, {
 
 ## Supported File Types
 
-- PDF (`.pdf`) - Using LangChain PDFLoader
+- **PDF** (`.pdf`) - Using LangChain PDFLoader
+- **DOCX/DOC** (`.docx`, `.doc`) - Using LangChain DocxLoader
+- **PPTX/PPT** (`.pptx`, `.ppt`) - Using LangChain PPTXLoader
+- **Text** (`.txt`, `.md`, `.markdown`, `.log`) - Using custom TextLoader
+- **CSV** (`.csv`) - Text extraction (CSV parsing can be added)
+- **JSON** (`.json`) - Text extraction (JSON parsing can be added)
+- **HTML** (`.html`) - Text extraction
+- **Other text-based formats** - Fallback to text extraction
 
 ## Architecture
 

@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@raypx/env": "catalog:",
+    "@raypx/logger": "^0.1.0",
     "fs-extra": "catalog:",
     "lodash-es": "catalog:"
   },

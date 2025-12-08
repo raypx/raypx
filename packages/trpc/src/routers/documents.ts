@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike, or, sql } from "@raypx/database";
 import { datasets as Datasets, documents as Documents } from "@raypx/database/schemas";
 import { z } from "zod/v4";
-
+import { logger } from "../../logger";
 import { Errors } from "../errors";
 import { protectedProcedure } from "../trpc";
 import { assertExists, handleDatabaseError } from "../utils/error-handler";
@@ -195,7 +195,10 @@ export const documentsRouter = {
                 await vectorizeDocument(created.id, userId);
                 // Status will be updated to "completed" by vectorizeDocument
               } catch (error) {
-                console.error(`Failed to vectorize document ${created.id}:`, error);
+                logger.error("Failed to vectorize document", {
+                  documentId: created.id,
+                  error,
+                });
                 // Update document status to failed
                 await ctx.db
                   .update(Documents)
@@ -257,7 +260,7 @@ export const documentsRouter = {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const errorStack = error instanceof Error ? error.stack : undefined;
 
-        console.error("[Vectorization Failed]", {
+        logger.error("Vectorization failed", {
           documentId: input.documentId,
           userId,
           error: errorMessage,
