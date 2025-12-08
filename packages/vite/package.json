@@ -29,11 +29,11 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "vite": "catalog:"
+    "vite": "8.0.0-beta.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@tanstack/devtools-vite": "^0.3.11",
+    "@tanstack/devtools-vite": "^0.3.12",
     "@types/node": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
@@ -44,6 +44,6 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "vite": "^7.0.0"
+    "vite": "8.0.0-beta.0"
   }
 }

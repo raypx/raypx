@@ -1,6 +1,6 @@
+import { retryFailedVectorizations } from "@raypx/rag";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
-import { retryFailedVectorizations } from "@raypx/rag";
 
 /**
  * API endpoint for retrying failed document vectorizations
@@ -54,4 +54,3 @@ export const Route = createFileRoute("/api/cron/retry-vectorization")({
     },
   },
 });
-

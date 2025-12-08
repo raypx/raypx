@@ -33,7 +33,7 @@
     "babel-plugin-react-compiler": "catalog:",
     "react": "catalog:react19",
     "typescript": "catalog:dev",
-    "vite": "catalog:",
+    "vite": "8.0.0-beta.0",
     "vitest": "catalog:"
   },
   "peerDependencies": {

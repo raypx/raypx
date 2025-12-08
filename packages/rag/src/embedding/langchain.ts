@@ -62,7 +62,7 @@ export function createLangChainEmbeddings(config: LangChainEmbeddingConfig): Emb
       // ⚠️ WARNING: DeepSeek may not support embeddings API
       // DeepSeek primarily provides chat models (deepseek-chat), not embedding models
       // If you encounter MODEL_NOT_FOUND (404) errors, DeepSeek likely doesn't support embeddings
-      // 
+      //
       // Recommended alternatives:
       // - Use OpenAI for embeddings (EMBEDDING_PROVIDER=openai)
       // - Use Hugging Face for embeddings (EMBEDDING_PROVIDER=huggingface)
@@ -74,7 +74,7 @@ export function createLangChainEmbeddings(config: LangChainEmbeddingConfig): Emb
       // 3. Verify the API endpoint is correct
       const baseURL = config.apiUrl || "https://api.deepseek.com/v1";
       const modelName = config.model || "text-embedding-3-small";
-      
+
       const embeddings = new OpenAIEmbeddings({
         openAIApiKey: config.apiKey,
         modelName,
@@ -83,7 +83,7 @@ export function createLangChainEmbeddings(config: LangChainEmbeddingConfig): Emb
         },
         dimensions: config.dimensions,
       });
-      
+
       // Wrap to provide better error messages
       return new Proxy(embeddings, {
         get(target, prop) {
@@ -91,7 +91,10 @@ export function createLangChainEmbeddings(config: LangChainEmbeddingConfig): Emb
           if (typeof value === "function") {
             return async (...args: unknown[]) => {
               try {
-                return await (value as (...args: unknown[]) => Promise<unknown>).apply(target, args);
+                return await (value as (...args: unknown[]) => Promise<unknown>).apply(
+                  target,
+                  args,
+                );
               } catch (error: unknown) {
                 if (
                   error &&
@@ -101,10 +104,10 @@ export function createLangChainEmbeddings(config: LangChainEmbeddingConfig): Emb
                 ) {
                   throw new Error(
                     `DeepSeek embedding model not found (404). ` +
-                    `DeepSeek may not support embeddings API. ` +
-                    `Please use a different provider (OpenAI, Hugging Face, or Cohere) ` +
-                    `or check DeepSeek documentation for embedding support. ` +
-                    `Original error: ${error instanceof Error ? error.message : String(error)}`
+                      `DeepSeek may not support embeddings API. ` +
+                      `Please use a different provider (OpenAI, Hugging Face, or Cohere) ` +
+                      `or check DeepSeek documentation for embedding support. ` +
+                      `Original error: ${error instanceof Error ? error.message : String(error)}`,
                   );
                 }
                 throw error;
@@ -126,7 +129,7 @@ export function createLangChainEmbeddings(config: LangChainEmbeddingConfig): Emb
       const baseURL = config.apiUrl || "https://dashscope.aliyuncs.com/compatible-mode/v1";
       // Alibaba Cloud embedding models: text-embedding-v1, text-embedding-v2, etc.
       const modelName = config.model || "text-embedding-v3";
-      
+
       return new OpenAIEmbeddings({
         openAIApiKey: config.apiKey,
         modelName,

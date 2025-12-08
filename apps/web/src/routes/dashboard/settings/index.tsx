@@ -15,10 +15,11 @@ import {
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
-import { Settings, Shield, UserCheck } from "lucide-react";
+import { Brain, Settings, Shield, UserCheck } from "lucide-react";
 import { PageWrapper } from "~/components/page-wrapper";
 import { AccountSettings } from "./-components/account-settings";
 import { PreferencesSettings } from "./-components/preferences-settings";
+import { RAGSettings } from "./-components/rag-settings";
 import { SecuritySettings } from "./-components/security-settings";
 
 export const Route = createFileRoute("/dashboard/settings/")({
@@ -29,10 +30,11 @@ function SettingsPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const getTabFromSearch = (): "account" | "security" | "preferences" => {
+  const getTabFromSearch = (): "account" | "security" | "preferences" | "rag" => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
-    if (tab === "security" || tab === "preferences" || tab === "account") return tab;
+    if (tab === "security" || tab === "preferences" || tab === "account" || tab === "rag")
+      return tab;
     return "account";
   };
 
@@ -56,6 +58,12 @@ function SettingsPage() {
       icon: Settings,
       value: "preferences",
       description: "App settings and customization",
+    },
+    {
+      title: "RAG",
+      icon: Brain,
+      value: "rag",
+      description: "Document vectorization configuration",
     },
   ];
 
@@ -161,6 +169,19 @@ function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <PreferencesSettings />
+              </CardContent>
+            </Card>
+          )}
+          {activeTab === "rag" && (
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+              <CardHeader>
+                <CardTitle>RAG Configuration</CardTitle>
+                <CardDescription>
+                  Configure embedding provider and text chunking settings for document vectorization
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RAGSettings />
               </CardContent>
             </Card>
           )}

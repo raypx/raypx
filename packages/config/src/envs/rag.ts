@@ -4,7 +4,9 @@ export const ragEnv = {
   id: "rag",
   server: {
     // Provider selection
-    EMBEDDING_PROVIDER: z.enum(["openai", "huggingface", "cohere", "deepseek", "aliyun"]).default("openai"),
+    EMBEDDING_PROVIDER: z
+      .enum(["openai", "huggingface", "cohere", "deepseek", "aliyun"])
+      .default("openai"),
     EMBEDDING_API_KEY: z.string().min(1).optional(), // Unified API key for all providers
     EMBEDDING_API_URL: z.string().url().optional(), // For self-hosted models (DeepSeek endpoint is hardcoded, but can be overridden here)
 

@@ -256,7 +256,7 @@ export const documentsRouter = {
         // Log detailed error information for debugging
         const errorMessage = error instanceof Error ? error.message : String(error);
         const errorStack = error instanceof Error ? error.stack : undefined;
-        
+
         console.error("[Vectorization Failed]", {
           documentId: input.documentId,
           userId,
@@ -272,9 +272,7 @@ export const documentsRouter = {
           .set({ status: "failed" })
           .where(eq(Documents.id, input.documentId));
 
-        throw Errors.internalError(
-          errorMessage || "Failed to vectorize document",
-        );
+        throw Errors.internalError(errorMessage || "Failed to vectorize document");
       }
     }),
 

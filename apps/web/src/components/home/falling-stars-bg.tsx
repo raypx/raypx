@@ -1,3 +1,5 @@
+"use client";
+
 import { useTheme } from "@raypx/ui/hooks/use-theme";
 import { cn } from "@raypx/ui/lib/utils";
 import { useEffect, useMemo, useRef, useState } from "react";

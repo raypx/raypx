@@ -1,8 +1,10 @@
 import { apiKeysRouter } from "./routers/api-keys";
 import { billingRouter } from "./routers/billing";
 import { configsRouter } from "./routers/configs";
+import { conversationsRouter } from "./routers/conversations";
 import { datasetsRouter } from "./routers/datasets";
 import { documentsRouter } from "./routers/documents";
+import { ragRouter } from "./routers/rag";
 import { storageRouter } from "./routers/storage";
 import { usersRouter } from "./routers/users";
 import { createTRPCRouter } from "./trpc";
@@ -15,10 +17,12 @@ export const trpcRouter = createTRPCRouter({
   users: usersRouter,
   apiKeys: apiKeysRouter,
   configs: configsRouter,
+  conversations: conversationsRouter,
   datasets: datasetsRouter,
   documents: documentsRouter,
   billing: billingRouter,
   storage: storageRouter,
+  rag: ragRouter,
 });
 
 /**

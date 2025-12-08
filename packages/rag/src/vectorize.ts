@@ -1,17 +1,24 @@
 /**
  * Main vectorization service that orchestrates parsing, chunking, and embedding
+ *
+ * Supports both separate vector database and co-located database scenarios
  */
 
-import { and, db, eq } from "@raypx/database";
-import {
-  chunks as Chunks,
-  documents as Documents,
-  embeddings as Embeddings,
-} from "@raypx/database/schemas";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { and, db, eq, vectorDb } from "@raypx/database";
+import { chunks as Chunks, documents as Documents } from "@raypx/database/schemas";
+import { vectorEmbeddings as VectorEmbeddings } from "@raypx/database/vectorSchemas";
 import { getFromR2 } from "@raypx/storage";
-import { chunkText } from "./chunking";
+import { getRAGConfig } from "./config";
 import { generateEmbeddings, getEmbeddingsInstance } from "./embedding";
-import { parseDocument } from "./parsers/registry";
+import { logger } from "./utils";
+
+/**
+ * Default chunking configuration
+ */
+const DEFAULT_CHUNK_SIZE = 1000;
+const DEFAULT_CHUNK_OVERLAP = 200;
 
 export interface VectorizeOptions {
   chunkSize?: number;
@@ -46,109 +53,217 @@ export async function vectorizeDocument(
     throw new Error(`Document ${documentId} not found`);
   }
 
+  // Get RAG configuration from database (with fallback to environment variables)
+  const ragConfig = await getRAGConfig(userId);
+  logger.debug("RAG configuration", { ragConfig });
+
   // Update status to processing
-  await db
-    .update(Documents)
-    .set({ status: "processing" })
-    .where(eq(Documents.id, documentId));
+  // await db.update(Documents).set({ status: "processing" }).where(eq(Documents.id, documentId));
 
-  // Get file from storage
-  const storageKey = (document.metadata as { storageKey?: string })?.storageKey;
-  if (!storageKey) {
-    throw new Error(`Document ${documentId} has no storage key`);
-  }
-
-  const fileBuffer = await getFromR2(storageKey);
-  if (!fileBuffer) {
-    throw new Error(`Failed to retrieve file from storage: ${storageKey}`);
-  }
-
-  // Parse document
-  // Use originalName or name as filename for MIME type inference
-  const filename = document.originalName || document.name;
-  const { text, metadata: parseMetadata } = await parseDocument(
-    fileBuffer,
-    document.mimeType,
-    filename,
-  );
-
-  // Chunk text
-  const chunkSize = options.chunkSize || Number(process.env.CHUNK_SIZE) || 1000;
-  const chunkOverlap = options.chunkOverlap || Number(process.env.CHUNK_OVERLAP) || 200;
-
-  const textChunks = chunkText(text, { chunkSize, chunkOverlap });
-
-  // Generate embeddings in batch
-  const chunkTexts = textChunks.map((chunk) => chunk.text);
-  const embeddings = await generateEmbeddings(chunkTexts, {
-    provider: options.embeddingProvider as any,
-    model: options.embeddingModel,
-    dimensions: options.embeddingDimensions,
-    apiKey: options.embeddingApiKey,
-    apiUrl: options.embeddingApiUrl,
-  });
-
-  // Get the actual model name from embeddings instance
-  const embeddingsInstance = getEmbeddingsInstance();
-  const modelName =
-    options.embeddingModel ||
-    process.env.EMBEDDING_MODEL ||
-    (embeddingsInstance as any).modelName ||
-    (embeddingsInstance as any).model ||
-    "unknown";
-
-  // Store chunks and embeddings in database
-  let chunksCreated = 0;
-  let embeddingsCreated = 0;
-
-  for (let i = 0; i < textChunks.length; i++) {
-    const chunk = textChunks[i];
-    const embedding = embeddings[i];
-
-    if (!chunk || !embedding) {
-      continue; // Skip if chunk or embedding is missing
+  try {
+    // Get file from storage
+    const storageKey = (document.metadata as { storageKey?: string })?.storageKey;
+    logger.debug("Storage key", { storageKey });
+    if (!storageKey) {
+      logger.error(`Document ${documentId} has no storage key`);
+      throw new Error(`Document ${documentId} has no storage key`);
     }
 
-    // Create chunk
-    const [createdChunk] = await db
-      .insert(Chunks)
-      .values({
-        text: chunk.text,
-        index: chunk.index,
-        documentId: document.id,
-        datasetId: document.datasetId,
-        userId,
-        metadata: {
-          ...parseMetadata,
-          startIndex: chunk.startIndex,
-          endIndex: chunk.endIndex,
-        },
-      })
-      .returning();
+    const fileBuffer = await getFromR2(storageKey);
+    if (!fileBuffer) {
+      logger.error(`Failed to retrieve file from storage: ${storageKey}`);
+      throw new Error(`Failed to retrieve file from storage: ${storageKey}`);
+    }
 
-    if (createdChunk) {
-      chunksCreated += 1;
+    // Chunk size and overlap configuration
+    const chunkSize =
+      options.chunkSize ||
+      ragConfig.chunkSize ||
+      (process.env.CHUNK_SIZE ? Number(process.env.CHUNK_SIZE) : DEFAULT_CHUNK_SIZE);
+    const chunkOverlap =
+      options.chunkOverlap ||
+      ragConfig.chunkOverlap ||
+      (process.env.CHUNK_OVERLAP ? Number(process.env.CHUNK_OVERLAP) : DEFAULT_CHUNK_OVERLAP);
+    logger.debug("Chunk size", { chunkSize });
+    logger.debug("Chunk overlap", { chunkOverlap });
 
-      // Create embedding
-      // PostgreSQL pgvector format: Drizzle's vector type expects the array directly
-      // The vector column type will handle the conversion to pgvector format
-      await db.insert(Embeddings).values({
-        chunkId: createdChunk.id,
-        embeddings: embedding as any, // Pass array directly, Drizzle vector type handles conversion
-        model: modelName,
-        userId,
+    // Use LangChain PDFLoader + RecursiveCharacterTextSplitter for all PDF files
+    // This follows LangChain.js standard workflow: Load → Split → Embed → Store
+    let langchainDocs: Array<{ pageContent: string; metadata: Record<string, unknown> }>;
+    let parseMetadata: Record<string, unknown> | undefined;
+
+    if (document.mimeType === "application/pdf") {
+      logger.debug("Using LangChain PDFLoader for PDF parsing");
+      // Convert Buffer to Blob for PDFLoader
+      const pdfBlob = new Blob([fileBuffer], { type: "application/pdf" });
+      const loader = new PDFLoader(pdfBlob);
+      const docs = await loader.load();
+      logger.debug("PDFLoader loaded documents", { count: docs.length });
+
+      // Use RecursiveCharacterTextSplitter to chunk the documents
+      const splitter = new RecursiveCharacterTextSplitter({
+        chunkSize,
+        chunkOverlap,
+        separators: ["\n\n", "\n", " ", ""], // Priority: paragraph > line > word > character
       });
 
-      embeddingsCreated += 1;
+      // Split documents into chunks
+      langchainDocs = await splitter.splitDocuments(docs);
+      logger.debug("Documents split into chunks", { chunksCount: langchainDocs.length });
+
+      // Extract metadata from first document if available
+      if (docs.length > 0 && docs[0]?.metadata) {
+        parseMetadata = docs[0].metadata as Record<string, unknown>;
+      }
+    } else {
+      return {
+        documentId,
+        chunksCreated: 0,
+        embeddingsCreated: 0,
+      };
     }
+
+    logger.debug("LangChain documents prepared", {
+      count: langchainDocs.length,
+      hasMetadata: !!parseMetadata,
+    });
+
+    // Generate embeddings in batch - use options first, then database config
+    const chunkTexts = langchainDocs.map((doc) => doc.pageContent);
+    logger.debug("Chunk texts", { chunkTextsCount: chunkTexts.length });
+    const embeddingModel = options.embeddingModel || ragConfig.model;
+    logger.debug("Embedding model", { embeddingModel });
+    const embeddingProvider = options.embeddingProvider || ragConfig.provider;
+    logger.debug("Embedding provider", { embeddingProvider });
+    const embeddings = await generateEmbeddings(chunkTexts, {
+      provider: embeddingProvider as
+        | "openai"
+        | "huggingface"
+        | "cohere"
+        | "deepseek"
+        | "aliyun"
+        | undefined,
+      model: embeddingModel,
+      dimensions: options.embeddingDimensions || ragConfig.dimensions,
+      apiKey: options.embeddingApiKey || ragConfig.apiKey,
+      apiUrl: options.embeddingApiUrl || ragConfig.apiUrl,
+    }).catch((embeddingError: unknown) => {
+      logger.error("Failed to generate embeddings", {
+        error: embeddingError instanceof Error ? embeddingError.message : String(embeddingError),
+        errorType:
+          embeddingError instanceof Error ? embeddingError.constructor.name : typeof embeddingError,
+        errorStack: embeddingError instanceof Error ? embeddingError.stack : undefined,
+        chunksCount: chunkTexts.length,
+        provider: embeddingProvider,
+        model: embeddingModel,
+      });
+      throw embeddingError;
+    });
+    logger.debug("Embeddings generated", {
+      count: embeddings.length,
+      dimensions: embeddings[0]?.length || 0,
+    });
+
+    // Get the actual model name for storage
+    // Priority: explicit config > environment variable > instance property > default
+    let modelName = embeddingModel || process.env.EMBEDDING_MODEL;
+    logger.debug("Model name", { modelName });
+    if (!modelName) {
+      try {
+        const instance = getEmbeddingsInstance();
+        modelName =
+          (instance as { modelName?: string }).modelName ||
+          (instance as { model?: string }).model ||
+          "unknown";
+      } catch {
+        modelName = "unknown";
+      }
+    }
+    logger.debug("Model name", { modelName });
+    // Store chunks and embeddings in database
+    let chunksCreated = 0;
+    let embeddingsCreated = 0;
+    logger.debug("Chunks created", { chunksCreated });
+    logger.debug("Embeddings created", { embeddingsCreated });
+    for (let i = 0; i < langchainDocs.length; i++) {
+      const doc = langchainDocs[i];
+      const embedding = embeddings[i];
+
+      if (!doc || !embedding) {
+        continue; // Skip if document or embedding is missing
+      }
+
+      // Extract metadata from LangChain document
+      const docMetadata = (doc.metadata || {}) as Record<string, unknown>;
+      const startIndex = (docMetadata.startIndex as number) ?? 0;
+      const endIndex = (docMetadata.endIndex as number) ?? doc.pageContent.length;
+
+      // Create chunk
+      const [createdChunk] = await db
+        .insert(Chunks)
+        .values({
+          text: doc.pageContent,
+          index: i,
+          documentId: document.id,
+          datasetId: document.datasetId,
+          userId,
+          metadata: {
+            ...parseMetadata,
+            ...docMetadata,
+            startIndex,
+            endIndex,
+          },
+        })
+        .returning();
+
+      if (createdChunk) {
+        chunksCreated += 1;
+
+        // Always store embedding in vector database (vector_embeddings table)
+        // This works whether using separate vector database or same database
+        // Note: Store userId and chunkId in metadata for PGVectorStore filtering
+        await vectorDb.insert(VectorEmbeddings).values({
+          chunkId: createdChunk.id,
+          embedding: embedding as any, // Pass array directly, Drizzle vector type handles conversion
+          content: doc.pageContent, // Cache content for faster retrieval
+          model: modelName,
+          userId,
+          metadata: {
+            userId, // Store in metadata for PGVectorStore access control
+            chunkId: createdChunk.id, // Store in metadata for PGVectorStore retrieval
+            documentId: document.id,
+            datasetId: document.datasetId,
+            chunkIndex: i,
+            startIndex,
+            endIndex,
+            ...parseMetadata,
+            ...docMetadata,
+          },
+        });
+
+        embeddingsCreated += 1;
+      }
+    }
+
+    // Update document status to completed
+    await db.update(Documents).set({ status: "completed" }).where(eq(Documents.id, documentId));
+
+    return {
+      documentId,
+      chunksCreated,
+      embeddingsCreated,
+    };
+  } catch (error) {
+    // Ensure document status is updated to failed on any error
+    // This handles cases where errors occur after status is set to processing
+    try {
+      await db.update(Documents).set({ status: "failed" }).where(eq(Documents.id, documentId));
+    } catch (updateError) {
+      // Log but don't throw - we want to preserve the original error
+      console.error("[Vectorize] Failed to update document status:", updateError);
+    }
+
+    // Re-throw the original error
+    throw error;
   }
-
-  // Update document status to completed
-  await db.update(Documents).set({ status: "completed" }).where(eq(Documents.id, documentId));
-
-  return {
-    documentId,
-    chunksCreated,
-    embeddingsCreated,
-  };
 }

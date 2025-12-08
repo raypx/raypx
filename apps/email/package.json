@@ -37,7 +37,7 @@
     "tailwindcss": "catalog:tailwindv4",
     "tw-animate-css": "catalog:",
     "typescript": "catalog:dev",
-    "vite": "catalog:",
+    "vite": "8.0.0-beta.0",
     "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"
   },

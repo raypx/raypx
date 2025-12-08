@@ -6,6 +6,16 @@ import { and, db, eq, inArray } from "@raypx/database";
 import { documents as Documents } from "@raypx/database/schemas";
 import { vectorizeDocument } from "./vectorize";
 
+/**
+ * Document metadata type for retry logic
+ */
+interface DocumentRetryMetadata {
+  storageKey?: string;
+  retryCount?: number;
+  lastRetryAt?: string;
+  lastRetryError?: string;
+}
+
 export interface RetryVectorizationOptions {
   /**
    * Maximum number of documents to retry per run
@@ -29,9 +39,7 @@ export interface RetryVectorizationOptions {
 /**
  * Retry vectorization for failed or uploaded documents
  */
-export async function retryFailedVectorizations(
-  options: RetryVectorizationOptions = {},
-): Promise<{
+export async function retryFailedVectorizations(options: RetryVectorizationOptions = {}): Promise<{
   processed: number;
   succeeded: number;
   failed: number;
@@ -58,12 +66,12 @@ export async function retryFailedVectorizations(
 
   // Filter documents that have storageKey and haven't exceeded retry limit
   const documentsToRetry = documents.filter((doc) => {
-    const metadata = doc.metadata as { storageKey?: string; retryCount?: number } | null;
+    const metadata = doc.metadata as DocumentRetryMetadata | null;
     if (!metadata?.storageKey) {
       return false; // Skip documents without storageKey
     }
 
-    const retryCount = metadata.retryCount || 0;
+    const retryCount = metadata.retryCount ?? 0;
     if (retryCount >= maxRetries) {
       return false; // Skip documents that exceeded retry limit
     }
@@ -83,8 +91,8 @@ export async function retryFailedVectorizations(
 
   // Process documents sequentially to avoid overwhelming the system
   for (const document of documentsToRetry) {
-    const metadata = document.metadata as { storageKey?: string; retryCount?: number } | null;
-    const retryCount = (metadata?.retryCount || 0) + 1;
+    const metadata = document.metadata as DocumentRetryMetadata | null;
+    const retryCount = (metadata?.retryCount ?? 0) + 1;
 
     try {
       // Update retry count before attempting
@@ -130,4 +138,3 @@ export async function retryFailedVectorizations(
     failed,
   };
 }
-

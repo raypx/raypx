@@ -36,7 +36,7 @@
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "typescript": "catalog:dev",
-    "vite": "catalog:",
+    "vite": "8.0.0-beta.0",
     "vitest": "catalog:"
   }
 }

@@ -37,6 +37,7 @@ import {
   Copy,
   ExternalLink,
   FileText,
+  MessageSquare,
   MoreHorizontal,
   Plus,
   RefreshCw,
@@ -50,7 +51,7 @@ import { useMemo, useRef, useState } from "react";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
-import { formatDate, formatFileSize } from "~/lib/dashboard-utils";
+import { formatDate, formatFileSize, truncateTextMiddle } from "~/lib/dashboard-utils";
 
 export const Route = createFileRoute("/dashboard/datasets/$id/document")({
   component: DatasetDocumentsPage,
@@ -145,6 +146,7 @@ type DatasetListItem = {
 
 function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBack: () => void }) {
   const trpc = useTRPC();
+  const navigate = useNavigate();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
@@ -436,13 +438,16 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                     e.stopPropagation();
                     handleOpenUrl(document);
                   }}
+                  title={document.name}
                   type="button"
                 >
-                  <span>{document.name}</span>
-                  <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="truncate">{truncateTextMiddle(document.name, 50, 20, 20)}</span>
+                  <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </button>
               ) : (
-                <div className="font-medium flex-1">{document.name}</div>
+                <div className="font-medium flex-1 truncate" title={document.name}>
+                  {truncateTextMiddle(document.name, 50, 20, 20)}
+                </div>
               )}
               {hasUrl && (
                 <Button
@@ -505,6 +510,17 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {document.status === "completed" && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      navigate({ to: `/dashboard/documents/${document.id}/chat` });
+                    }}
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Chat with Document
+                  </DropdownMenuItem>
+                )}
+                {document.status === "completed" && <DropdownMenuSeparator />}
                 {canVectorize(document.status) && (
                   <DropdownMenuItem
                     disabled={vectorizeMutation.isPending || document.status === "processing"}
@@ -575,6 +591,16 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
             </CardDescription>
           </div>
         </div>
+        <Button
+          className="gap-2"
+          onClick={() => {
+            navigate({ to: `/dashboard/datasets/${dataset.id}/chat` });
+          }}
+          size="sm"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Chat with Dataset
+        </Button>
       </CardHeader>
       <CardContent className="p-4">
         <ServerDataTable
@@ -692,7 +718,9 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm truncate">{file.name}</p>
+                                    <p className="text-sm truncate" title={file.name}>
+                                      {truncateTextMiddle(file.name, 45, 18, 18)}
+                                    </p>
                                     <p className="text-xs text-muted-foreground">
                                       {formatFileSize(file.size)}
                                     </p>

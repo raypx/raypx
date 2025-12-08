@@ -37,11 +37,11 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@netlify/vite-plugin-tanstack-start": "^1.2.2",
+    "@netlify/vite-plugin-tanstack-start": "^1.2.3",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:tailwindv4",
-    "@tanstack/devtools-vite": "^0.3.11",
-    "@tanstack/react-devtools": "^0.8.2",
+    "@tanstack/devtools-vite": "^0.3.12",
+    "@tanstack/react-devtools": "^0.8.4",
     "@tanstack/react-router-devtools": "^1.140.0",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
@@ -52,7 +52,7 @@
     "tailwindcss": "catalog:tailwindv4",
     "type-fest": "catalog:",
     "typescript": "catalog:dev",
-    "vite": "catalog:",
+    "vite": "8.0.0-beta.0",
     "vite-plugin-inspect": "^11.3.3",
     "vitest": "catalog:"
   }

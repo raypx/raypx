@@ -131,25 +131,6 @@ const result = await vectorizeDocument(documentId, userId, {
 console.log(`Created ${result.chunksCreated} chunks and ${result.embeddingsCreated} embeddings`);
 ```
 
-### Parse a Document
-
-```typescript
-import { parseDocument } from "@raypx/rag";
-
-const { text, metadata } = await parseDocument(buffer, mimeType, filename);
-```
-
-### Chunk Text
-
-```typescript
-import { chunkText } from "@raypx/rag";
-
-const chunks = chunkText(text, {
-  chunkSize: 1000,
-  chunkOverlap: 200,
-});
-```
-
 ### Generate Embeddings
 
 ```typescript

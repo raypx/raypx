@@ -6,16 +6,21 @@
   "exports": {
     ".": "./src/index.ts",
     "./envs": "./src/envs.ts",
-    "./schemas": "./src/schemas.ts",
+    "./schemas": "./src/schemas/pg/index.ts",
+    "./vectorSchemas": "./src/schemas/vector/index.ts",
     "./types": "./src/types.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo",
-    "generate": "raypx-scripts run drizzle-kit generate",
-    "migrate": "raypx-scripts run drizzle-kit migrate",
-    "push": "raypx-scripts run drizzle-kit push",
+    "generate": "raypx-scripts run drizzle-kit generate --config=config/drizzle.config.ts",
+    "generate:vector": "raypx-scripts run drizzle-kit generate --config=config/drizzle-vector.config.ts",
+    "migrate": "raypx-scripts run drizzle-kit migrate --config=config/drizzle.config.ts",
+    "migrate:vector": "raypx-scripts run drizzle-kit migrate --config=config/drizzle-vector.config.ts",
+    "push": "raypx-scripts run drizzle-kit push --config=config/drizzle.config.ts",
+    "push:vector": "raypx-scripts run drizzle-kit push --config=config/drizzle-vector.config.ts",
     "seed": "raypx-scripts run tsx seed.ts",
-    "studio": "raypx-scripts run drizzle-kit studio",
+    "studio": "raypx-scripts run drizzle-kit studio --config=config/drizzle.config.ts",
+    "studio:vector": "raypx-scripts run drizzle-kit studio --config=config/drizzle-vector.config.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -35,6 +40,7 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "drizzle-kit": "^0.31.8",
+    "jiti": "catalog:",
     "typescript": "catalog:dev",
     "vitest": "catalog:"
   }

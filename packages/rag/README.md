@@ -1,13 +1,15 @@
 # @raypx/rag
 
-RAG (Retrieval-Augmented Generation) package for document parsing, chunking, and vectorization.
+RAG (Retrieval-Augmented Generation) package for document vectorization, search, and chat.
 
 ## Features
 
-- **Document Parsing**: Extract text from PDF, DOCX, and text files
-- **Text Chunking**: Split documents into smaller chunks with overlap
-- **Embedding Generation**: Generate embeddings using LangChain (supports OpenAI, Hugging Face, Cohere, and more)
+- **Document Vectorization**: Extract text from PDF files using LangChain PDFLoader
+- **Intelligent Chunking**: Split documents using LangChain RecursiveCharacterTextSplitter
+- **Embedding Generation**: Generate embeddings using LangChain (supports OpenAI, Hugging Face, Cohere, DeepSeek, Alibaba Cloud, and more)
 - **Vector Storage**: Store embeddings in PostgreSQL with pgvector
+- **Advanced Retrieval**: Multi-query and contextual compression retrieval
+- **Chat Interface**: Streaming chat with document context
 
 ## Usage
 
@@ -24,25 +26,6 @@ const result = await vectorizeDocument(documentId, userId, {
 });
 
 console.log(`Created ${result.chunksCreated} chunks and ${result.embeddingsCreated} embeddings`);
-```
-
-### Parse a Document
-
-```typescript
-import { parseDocument } from "@raypx/rag";
-
-const { text, metadata } = await parseDocument(buffer, mimeType);
-```
-
-### Chunk Text
-
-```typescript
-import { chunkText } from "@raypx/rag";
-
-const chunks = chunkText(text, {
-  chunkSize: 1000,
-  chunkOverlap: 200,
-});
 ```
 
 ### Generate Embeddings
@@ -133,16 +116,16 @@ const embeddings = await generateEmbeddings(texts, {
 
 ## Supported File Types
 
-- PDF (`.pdf`)
-- Word Documents (`.docx`, `.doc`)
-- Text files (`.txt`, `.md`, `.json`, `.xml`)
+- PDF (`.pdf`) - Using LangChain PDFLoader
 
 ## Architecture
 
-1. **Parsers**: Extract text from various file formats
-2. **Chunking**: Split text into manageable chunks
+1. **Document Loading**: Load PDF files using LangChain PDFLoader
+2. **Chunking**: Split documents using LangChain RecursiveCharacterTextSplitter
 3. **Embedding**: Generate vector embeddings using LangChain (supports multiple providers)
-4. **Storage**: Store chunks and embeddings in PostgreSQL
+4. **Storage**: Store chunks and embeddings in PostgreSQL with pgvector
+5. **Retrieval**: Advanced retrieval with multi-query and contextual compression
+6. **Chat**: Streaming chat interface with document context
 
 ## Why LangChain?
 

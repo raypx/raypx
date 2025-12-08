@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@raypx/env": "catalog:",
-    "vite": "catalog:"
+    "vite": "8.0.0-beta.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
