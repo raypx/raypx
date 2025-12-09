@@ -33,6 +33,17 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1000,
+    commonjsOptions: {
+      include: [/officeparser/, /node_modules/],
+    },
+  },
+  optimizeDeps: {
+    exclude: ["officeparser"], // Exclude from client-side optimization
+  },
+  ssr: {
+    // officeparser is a CommonJS module used server-side only
+    // Mark as external so it's not bundled, loaded at runtime instead
+    external: ["officeparser"],
   },
   plugins: [
     raypx(raypxConfig),
