@@ -41,6 +41,7 @@
     "lucide-react": "catalog:",
     "nanoid": "^5.1.6",
     "nitro": "catalog:",
+    "officeparser": "^5.2.2",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-hook-form": "catalog:",

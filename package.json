@@ -54,12 +54,19 @@
     "vite": "8.0.0-beta.0",
     "vitest": "catalog:"
   },
-  "packageManager": "pnpm@10.24.0",
+  "packageManager": "pnpm@10.25.0",
   "engines": {
     "node": ">=20",
     "pnpm": ">=10.0.0"
   },
-  "optionalDependencies": {
-    "officeparser": "^4.2.0"
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "dotenv": "*",
+        "openai": "*",
+        "pdf-parse": "*",
+        "zod": "*"
+      }
+    }
   }
 }

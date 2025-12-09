@@ -25,16 +25,18 @@
     "cohere-ai": "^7.20.0",
     "langchain": "^1.1.5",
     "mammoth": "^1.11.0",
+    "officeparser": "^5.2.2",
     "openai": "^6.10.0",
-    "pdfjs-dist": "^5",
-    "pdf-parse": "^1",
-    "pg": "^8.13.1"
+    "pdf-parse": "1.1.4",
+    "pdfjs-dist": "^5.4.449"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "@types/pg": "^8.11.10",
     "typescript": "catalog:dev",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "officeparser": "^4|5"
   }
 }
