@@ -5,7 +5,7 @@
 
 import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
+import { AIClient, type LLMProvider } from "@raypx/ai";
 import { getRAGConfig } from "./config";
 import { saveMessage } from "./conversation";
 import { type SearchResult, searchSimilarChunks } from "./search";
@@ -422,7 +422,7 @@ Be concise and accurate in your responses.${languageInstruction}`;
 }
 
 /**
- * Generate LLM response using LangChain ChatOpenAI
+ * Generate LLM response using @raypx/ai framework
  * Supports Alibaba Cloud DashScope (通义千问), OpenAI, DeepSeek and other OpenAI-compatible APIs
  */
 async function generateLLMResponse(
@@ -453,22 +453,22 @@ async function generateLLMResponse(
   }
 
   // Determine API URL and model based on provider
-  let baseURL: string | undefined;
+  let apiUrl: string | undefined;
   let defaultModel: string;
 
   switch (llmProvider) {
     case "aliyun":
       // Alibaba Cloud DashScope (通义千问)
-      baseURL =
+      apiUrl =
         llmApiUrl || ragConfig?.apiUrl || "https://dashscope.aliyuncs.com/compatible-mode/v1";
       defaultModel = llmModel || "qwen3-max"; // Default to qwen3-max for chat
       break;
     case "openai":
-      baseURL = llmApiUrl; // OpenAI default if not provided
+      apiUrl = llmApiUrl; // OpenAI default if not provided
       defaultModel = llmModel || "gpt-4";
       break;
     case "deepseek":
-      baseURL = llmApiUrl || "https://api.deepseek.com/v1";
+      apiUrl = llmApiUrl || "https://api.deepseek.com/v1";
       defaultModel = llmModel || "deepseek-chat";
       break;
     default:
@@ -476,83 +476,59 @@ async function generateLLMResponse(
   }
 
   try {
-    // Create LangChain ChatOpenAI instance
-    // ChatOpenAI supports OpenAI-compatible APIs via configuration.baseURL
-    const chatModel = new ChatOpenAI({
+    // Create AI client using @raypx/ai framework
+    const aiClient = new AIClient({
+      provider: llmProvider as LLMProvider,
       apiKey,
-      modelName: defaultModel,
-      temperature,
-      maxTokens,
-      ...(baseURL && {
-        configuration: {
-          baseURL,
-        },
-      }),
-    });
-
-    logger.debug("Calling LLM API via LangChain", {
-      baseURL,
+      apiUrl,
       model: defaultModel,
       temperature,
       maxTokens,
     });
 
-    // Invoke the chat model with messages
-    const response = await chatModel.invoke(messages);
-
-    const answer = response.content;
-    if (!answer || typeof answer !== "string") {
-      throw new Error("No response from LLM or invalid response format");
-    }
-
-    // Extract thinking/reasoning content if available
-    // For OpenAI o1/o3 models, thinking content is in response.additional_kwargs
-    let thinking: string | undefined;
-    if (response.additional_kwargs) {
-      // Check for thinking in various possible locations
-      const rawResponse = response.additional_kwargs.raw_response as
-        | {
-            choices?: Array<{
-              message?: {
-                reasoning?: string;
-                thinking?: string;
-                content?: Array<{ type: string; text?: string; thinking?: string }>;
-              };
-            }>;
-          }
-        | undefined;
-
-      if (rawResponse?.choices?.[0]?.message) {
-        const message = rawResponse.choices[0].message;
-        // Check for thinking in different formats
-        if (message.reasoning) {
-          thinking = message.reasoning;
-        } else if (message.thinking) {
-          thinking = message.thinking;
-        } else if (message.content) {
-          // Some models return content as an array with thinking
-          const thinkingContent = message.content.find((c) => c.thinking);
-          if (thinkingContent?.thinking) {
-            thinking = thinkingContent.thinking;
-          }
-        }
-      }
-    }
-
-    logger.debug("LLM response generated", {
-      answerLength: answer.length,
-      hasThinking: !!thinking,
-      thinkingLength: thinking?.length,
+    logger.debug("Calling LLM API via @raypx/ai", {
+      provider: llmProvider,
+      apiUrl,
+      model: defaultModel,
+      temperature,
+      maxTokens,
     });
 
-    return { answer, thinking };
+    // Convert BaseMessage[] to ChatMessage[]
+    const chatMessages = messages.map((msg) => {
+      if (msg instanceof HumanMessage) {
+        return { role: "user" as const, content: msg.content as string };
+      }
+      if (msg instanceof AIMessage) {
+        return { role: "assistant" as const, content: msg.content as string };
+      }
+      if (msg instanceof SystemMessage) {
+        return { role: "system" as const, content: msg.content as string };
+      }
+      return { role: "user" as const, content: String(msg.content) };
+    });
+
+    // Invoke the chat model
+    const response = await aiClient.chat({
+      messages: chatMessages,
+      temperature,
+      maxTokens,
+    });
+
+    logger.debug("LLM response generated", {
+      answerLength: response.content.length,
+      hasThinking: !!response.thinking,
+      thinkingLength: response.thinking?.length,
+    });
+
+    return { answer: response.content, thinking: response.thinking };
   } catch (error) {
     logger.error("Failed to generate LLM response", {
       error: error instanceof Error ? error.message : String(error),
       errorType: error instanceof Error ? error.constructor.name : typeof error,
       errorStack: error instanceof Error ? error.stack : undefined,
       provider: llmProvider,
-      baseURL,
+      apiUrl,
       model: defaultModel,
     });
     throw error;
@@ -820,7 +796,7 @@ export async function chatWithDocumentStream(
 }
 
 /**
- * Generate streaming LLM response using LangChain's stream() method
+ * Generate streaming LLM response using @raypx/ai framework
  */
 async function generateLLMResponseStream(
   messages: BaseMessage[],
@@ -851,21 +827,21 @@ async function generateLLMResponseStream(
   }
 
   // Determine API URL and model based on provider
-  let baseURL: string | undefined;
+  let apiUrl: string | undefined;
   let defaultModel: string;
 
   switch (llmProvider) {
     case "aliyun":
-      baseURL =
+      apiUrl =
         llmApiUrl || ragConfig?.apiUrl || "https://dashscope.aliyuncs.com/compatible-mode/v1";
       defaultModel = llmModel || "qwen3-max";
       break;
     case "openai":
-      baseURL = llmApiUrl;
+      apiUrl = llmApiUrl;
       defaultModel = llmModel || "gpt-4";
       break;
     case "deepseek":
-      baseURL = llmApiUrl || "https://api.deepseek.com/v1";
+      apiUrl = llmApiUrl || "https://api.deepseek.com/v1";
       defaultModel = llmModel || "deepseek-chat";
       break;
     default:
@@ -873,77 +849,58 @@ async function generateLLMResponseStream(
   }
 
   try {
-    // Create LangChain ChatOpenAI instance with streaming enabled
-    const chatModel = new ChatOpenAI({
+    // Create AI client using @raypx/ai framework
+    const aiClient = new AIClient({
+      provider: llmProvider as LLMProvider,
       apiKey,
-      modelName: defaultModel,
-      temperature,
-      maxTokens,
-      streaming: true, // Enable streaming
-      ...(baseURL && {
-        configuration: {
-          baseURL,
-        },
-      }),
-    });
-
-    logger.debug("Calling streaming LLM API via LangChain", {
-      baseURL,
+      apiUrl,
       model: defaultModel,
       temperature,
       maxTokens,
     });
 
-    // Stream the response
-    const stream = await chatModel.stream(messages);
+    logger.debug("Calling streaming LLM API via @raypx/ai", {
+      provider: llmProvider,
+      apiUrl,
+      model: defaultModel,
+      temperature,
+      maxTokens,
+    });
 
+    // Convert BaseMessage[] to ChatMessage[]
+    const chatMessages = messages.map((msg) => {
+      if (msg instanceof HumanMessage) {
+        return { role: "user" as const, content: msg.content as string };
+      }
+      if (msg instanceof AIMessage) {
+        return { role: "assistant" as const, content: msg.content as string };
+      }
+      if (msg instanceof SystemMessage) {
+        return { role: "system" as const, content: msg.content as string };
+      }
+      return { role: "user" as const, content: String(msg.content) };
+    });
+
+    // Stream the response
     let fullAnswer = "";
     let thinking: string | undefined;
 
-    for await (const chunk of stream) {
-      // Handle content chunks
-      // LangChain stream() returns chunks with content property
-      const chunkContent = chunk.content;
-      if (chunkContent !== undefined && chunkContent !== null) {
-        const content = typeof chunkContent === "string" ? chunkContent : String(chunkContent);
-        if (content.length > 0) {
-          fullAnswer += content;
-          callbacks.onChunk(content);
-        }
-      }
-
-      // Handle thinking/reasoning chunks if available
-      if (chunk.additional_kwargs) {
-        const rawResponse = chunk.additional_kwargs.raw_response as
-          | {
-              choices?: Array<{
-                delta?: {
-                  reasoning?: string;
-                  thinking?: string;
-                };
-                message?: {
-                  reasoning?: string;
-                  thinking?: string;
-                };
-              }>;
-            }
-          | undefined;
-
-        if (rawResponse?.choices?.[0]) {
-          const choice = rawResponse.choices[0];
-          const thinkingContent =
-            choice.delta?.thinking ||
-            choice.delta?.reasoning ||
-            choice.message?.thinking ||
-            choice.message?.reasoning;
-
-          if (thinkingContent && callbacks.onThinking) {
-            thinking = (thinking || "") + thinkingContent;
-            callbacks.onThinking(thinkingContent);
+    await aiClient.chatStream(
+      {
+        messages: chatMessages,
+        temperature,
+        maxTokens,
+      },
+      (chunk) => {
+        if (chunk.type === "chunk" && chunk.content) {
+          fullAnswer += chunk.content;
+          callbacks.onChunk(chunk.content);
+        } else if (chunk.type === "thinking" && chunk.content && callbacks.onThinking) {
+          thinking = (thinking || "") + chunk.content;
+          callbacks.onThinking(chunk.content);
           }
-        }
-      }
-    }
+      },
+    );
 
     logger.debug("Streaming LLM response completed", {
       answerLength: fullAnswer.length,
@@ -956,7 +913,7 @@ async function generateLLMResponseStream(
       errorType: error instanceof Error ? error.constructor.name : typeof error,
       errorStack: error instanceof Error ? error.stack : undefined,
       provider: llmProvider,
-      baseURL,
+      apiUrl,
       model: defaultModel,
     });
     throw error;

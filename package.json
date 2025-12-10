@@ -23,6 +23,8 @@
     "check": "biome check",
     "clean": "raypx-scripts clean",
     "coverage": "vitest --coverage",
+    "web:build": "turbo build --filter=web",
+    "web:start": "turbo --filter=web start",
     "db": "raypx-scripts db",
     "dev": "turbo --filter=web dev",
     "docs:dev": "turbo dev --filter docs",

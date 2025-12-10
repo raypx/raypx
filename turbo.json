@@ -18,6 +18,12 @@
       "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "tsdown.config.ts"],
       "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
     },
+    "start": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "tsdown.config.ts"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
+    },
     "typecheck": {
       "cache": true,
       "dependsOn": ["^typecheck"],

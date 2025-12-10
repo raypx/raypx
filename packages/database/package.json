@@ -30,7 +30,7 @@
     "@raypx/env": "catalog:",
     "@raypx/logger": "^0.1.0",
     "@raypx/shared": "workspace:*",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "drizzle-seed": "^0.3.1",
     "drizzle-zod": "^0.8.3",
     "nanoid": "^5.1.6",

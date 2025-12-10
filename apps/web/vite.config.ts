@@ -24,7 +24,7 @@ const deployPlugin = () => {
     return [nitro()];
   }
 
-  return plugins;
+  return plugins?.length ? plugins : [nitro()];
 };
 
 export default defineConfig({
