@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { auth } from "@raypx/auth/server";
 import { and, db, eq } from "@raypx/database";
 import { datasets as Datasets } from "@raypx/database/schemas";
@@ -75,15 +74,14 @@ async function handler({ request }: { request: Request }) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Generate file key with nanoid (shorter and URL-safe)
-    const contentHash = createHash("sha256").update(buffer).digest("hex");
     const fileExtension = file.name.split(".").pop() || "bin";
-    // Generate a short unique ID (12 characters) using nanoid
-    const fileId = nanoid(12);
+    // Generate a unique ID using nanoid (21 characters by default, URL-safe)
+    // Used for file naming, no deduplication needed
+    const fileId = nanoid();
     // Include userId in the path: documents/{userId}/{fileId}.{extension}
     const key = `documents/${userId}/${fileId}.${fileExtension}`;
 
-    // Upload to R2
+    // Upload to R2 directly
     const uploadResult = await uploadToR2({
       key,
       buffer,
@@ -93,7 +91,6 @@ async function handler({ request }: { request: Request }) {
         datasetId,
         originalName: file.name,
         uploadedAt: new Date().toISOString(),
-        contentHash,
       },
     });
 
@@ -111,7 +108,6 @@ async function handler({ request }: { request: Request }) {
       metadata: {
         storageKey: key,
         storageUrl: uploadResult.url,
-        contentHash,
       },
       autoVectorize: false, // Disable auto-vectorization, user will trigger manually
     });

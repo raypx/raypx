@@ -17,6 +17,8 @@ import { formatFileSize, truncateTextMiddle } from "~/lib/dashboard-utils";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_FILE_TYPES = ".pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls";
+// const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks for large files (for future chunked upload implementation)
+const MAX_CONCURRENT_UPLOADS = 3; // Limit concurrent uploads
 
 interface DocumentUploadDialogProps {
   datasetId: string;
@@ -128,6 +130,103 @@ export function DocumentUploadDialog({
     dispatch({ type: "REMOVE_FILE", index });
   }, []);
 
+  // Upload a single file with progress tracking using XMLHttpRequest for better progress support
+  const uploadFile = async (file: File, index: number): Promise<unknown> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("datasetId", datasetId);
+
+    return new Promise<unknown>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      // Throttle progress updates to avoid excessive re-renders
+      let lastUpdateTime = 0;
+      const PROGRESS_UPDATE_INTERVAL = 100; // Update every 100ms
+
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const now = Date.now();
+          if (now - lastUpdateTime >= PROGRESS_UPDATE_INTERVAL) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            dispatch({ type: "UPDATE_PROGRESS", index, progress: percentComplete });
+            lastUpdateTime = now;
+          }
+        }
+      });
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const result = JSON.parse(xhr.responseText);
+            dispatch({ type: "UPDATE_PROGRESS", index, progress: 100 });
+            resolve(result);
+          } catch (error) {
+            reject(new Error("Invalid response format"));
+          }
+        } else {
+          try {
+            const result = JSON.parse(xhr.responseText);
+            reject(new Error(result.error || `Upload failed: ${xhr.statusText}`));
+          } catch {
+            reject(new Error(`Upload failed: ${xhr.statusText}`));
+          }
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Upload failed"));
+      xhr.onabort = () => reject(new Error("Upload cancelled"));
+
+      xhr.open("POST", "/api/upload/document");
+      xhr.send(formData);
+    }).catch((error) => {
+      toast.error(
+        `Failed to upload "${file.name}": ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      throw error;
+    });
+  };
+
+  // Concurrency control: upload files with limited concurrency
+  const uploadWithConcurrency = async (files: File[]): Promise<void> => {
+    const activeUploads = new Set<Promise<unknown>>();
+    let currentIndex = 0;
+
+    const uploadNext = async (): Promise<void> => {
+      while (currentIndex < files.length) {
+        const index = currentIndex++;
+        const file = files[index];
+
+        if (!file) {
+          continue;
+        }
+
+        // Initialize progress
+        dispatch({ type: "UPDATE_PROGRESS", index, progress: 0 });
+
+        const uploadPromise = uploadFile(file, index).finally(() => {
+          activeUploads.delete(uploadPromise);
+        });
+
+        activeUploads.add(uploadPromise);
+
+        // If we've reached max concurrency, wait for one to complete
+        if (activeUploads.size >= MAX_CONCURRENT_UPLOADS) {
+          await Promise.race(activeUploads);
+        }
+      }
+
+      // Wait for all remaining uploads to complete
+      await Promise.all(activeUploads);
+    };
+
+    // Start concurrent uploads
+    const uploadPromises = Array.from(
+      { length: Math.min(MAX_CONCURRENT_UPLOADS, files.length) },
+      () => uploadNext(),
+    );
+    await Promise.all(uploadPromises);
+  };
+
   const handleUpload = async () => {
     if (uploadState.files.length === 0) {
       toast.error("Please select at least one file");
@@ -136,60 +235,14 @@ export function DocumentUploadDialog({
 
     dispatch({ type: "SET_UPLOADING", isUploading: true });
 
-    const uploadPromises = uploadState.files.map(async (file, index) => {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("datasetId", datasetId);
-
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const percentComplete = (e.loaded / e.total) * 100;
-            dispatch({ type: "UPDATE_PROGRESS", index, progress: percentComplete });
-          }
-        });
-
-        const uploadPromise = new Promise<Response>((resolve, reject) => {
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve(new Response(xhr.responseText, { status: xhr.status }));
-            } else {
-              reject(new Error(`Upload failed: ${xhr.statusText}`));
-            }
-          };
-          xhr.onerror = () => reject(new Error("Upload failed"));
-          xhr.open("POST", "/api/upload/document");
-          xhr.send(formData);
-        });
-
-        const response = await uploadPromise;
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || "Upload failed");
-        }
-
-        dispatch({ type: "UPDATE_PROGRESS", index, progress: 100 });
-
-        return result;
-      } catch (error) {
-        toast.error(
-          `Failed to upload "${file.name}": ${error instanceof Error ? error.message : "Unknown error"}`,
-        );
-        throw error;
-      }
-    });
-
     try {
-      await Promise.all(uploadPromises);
+      await uploadWithConcurrency(uploadState.files);
       toast.success(`Successfully uploaded ${uploadState.files.length} file(s)`);
       dispatch({ type: "RESET" });
       onOpenChange(false);
       onSuccess?.();
     } catch {
-      // Errors already handled above
+      // Errors already handled in uploadFile
     } finally {
       dispatch({ type: "SET_UPLOADING", isUploading: false });
     }
