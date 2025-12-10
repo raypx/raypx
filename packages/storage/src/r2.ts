@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { logger } from "@raypx/shared/logger";
 import { env } from "./envs";
 
@@ -17,6 +19,13 @@ export function getR2Client(): S3Client {
   }
 
   try {
+    // Configure HTTP handler with proper timeouts and connection settings
+    const requestHandler = new NodeHttpHandler({
+      requestTimeout: 300000, // 5 minutes for large file uploads
+      connectionTimeout: 10000, // 10 seconds to establish connection
+      socketTimeout: 300000, // 5 minutes socket timeout
+    });
+
     r2Client = new S3Client({
       region: "auto",
       endpoint: env.R2_ENDPOINT,
@@ -24,6 +33,11 @@ export function getR2Client(): S3Client {
         accessKeyId: env.R2_ACCESS_KEY_ID,
         secretAccessKey: env.R2_SECRET_ACCESS_KEY,
       },
+      requestHandler,
+      // Increase maxAttempts for better reliability
+      maxAttempts: 3,
+      // Use forcePathStyle if needed for R2 compatibility
+      forcePathStyle: false,
     });
 
     return r2Client;
@@ -244,5 +258,88 @@ export async function getFromR2(key: string): Promise<Buffer | null> {
   } catch (error) {
     logger.error(`Failed to get file from R2: ${key}`, error);
     return null;
+  }
+}
+
+/**
+ * Options for generating presigned URL
+ */
+export interface PresignedUrlOptions {
+  /**
+   * File key (path) in the bucket
+   */
+  key: string;
+  /**
+   * Content type (MIME type)
+   * @default 'application/octet-stream'
+   */
+  contentType?: string;
+  /**
+   * URL expiration time in seconds
+   * @default 3600 (1 hour)
+   */
+  expiresIn?: number;
+  /**
+   * Cache control header
+   * @default 'public, max-age=31536000, immutable'
+   */
+  cacheControl?: string;
+  /**
+   * Custom metadata (will be sanitized)
+   */
+  metadata?: Record<string, string>;
+}
+
+/**
+ * Generate a presigned URL for direct upload to R2
+ * This allows clients to upload files directly to R2 without going through the server
+ */
+export async function generatePresignedUploadUrl(
+  options: PresignedUrlOptions,
+): Promise<{
+  url: string;
+  key: string;
+  expiresAt: Date;
+}> {
+  if (!isR2Configured()) {
+    throw new Error("R2 is not configured");
+  }
+
+  const client = getR2Client();
+
+  const {
+    key,
+    contentType = "application/octet-stream",
+    expiresIn = 3600, // 1 hour default
+    cacheControl = "public, max-age=31536000, immutable",
+    metadata = {},
+  } = options;
+
+  // Sanitize metadata to ensure valid HTTP header values
+  const sanitizedMetadata = sanitizeMetadata(metadata);
+
+  try {
+    const command = new PutObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      Key: key,
+      ContentType: contentType,
+      CacheControl: cacheControl,
+      Metadata: sanitizedMetadata,
+    });
+
+    const presignedUrl = await getSignedUrl(client, command, { expiresIn });
+
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
+
+    logger.info(`Generated presigned URL for R2 upload: ${key} (expires in ${expiresIn}s)`);
+
+    return {
+      url: presignedUrl,
+      key,
+      expiresAt,
+    };
+  } catch (error) {
+    logger.error("Failed to generate presigned URL:", error);
+    throw new Error(`Failed to generate presigned URL: ${error}`);
   }
 }

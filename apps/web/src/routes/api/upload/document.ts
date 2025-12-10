@@ -70,7 +70,8 @@ async function handler({ request }: { request: Request }) {
       );
     }
 
-    // Read file buffer
+    // Use stream for better performance with large files
+    // Convert File to Buffer (for now, could be optimized to use streams)
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

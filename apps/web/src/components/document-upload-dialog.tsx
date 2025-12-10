@@ -130,60 +130,109 @@ export function DocumentUploadDialog({
     dispatch({ type: "REMOVE_FILE", index });
   }, []);
 
-  // Upload a single file with progress tracking using XMLHttpRequest for better progress support
+  // Upload a single file using presigned URL (direct upload to R2)
   const uploadFile = async (file: File, index: number): Promise<unknown> => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("datasetId", datasetId);
-
-    return new Promise<unknown>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-
-      // Throttle progress updates to avoid excessive re-renders
-      let lastUpdateTime = 0;
-      const PROGRESS_UPDATE_INTERVAL = 100; // Update every 100ms
-
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          const now = Date.now();
-          if (now - lastUpdateTime >= PROGRESS_UPDATE_INTERVAL) {
-            const percentComplete = (e.loaded / e.total) * 100;
-            dispatch({ type: "UPDATE_PROGRESS", index, progress: percentComplete });
-            lastUpdateTime = now;
-          }
-        }
+    try {
+      // Step 1: Get presigned URL from server
+      const presignedResponse = await fetch("/api/upload/presigned-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          contentType: file.type || "application/octet-stream",
+          datasetId,
+        }),
       });
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const result = JSON.parse(xhr.responseText);
-            dispatch({ type: "UPDATE_PROGRESS", index, progress: 100 });
-            resolve(result);
-          } catch (error) {
-            reject(new Error("Invalid response format"));
-          }
-        } else {
-          try {
-            const result = JSON.parse(xhr.responseText);
-            reject(new Error(result.error || `Upload failed: ${xhr.statusText}`));
-          } catch {
-            reject(new Error(`Upload failed: ${xhr.statusText}`));
-          }
-        }
+      if (!presignedResponse.ok) {
+        const error = await presignedResponse.json();
+        throw new Error(error.error || "Failed to get presigned URL");
+      }
+
+      const { uploadUrl, key, publicUrl } = (await presignedResponse.json()) as {
+        uploadUrl: string;
+        key: string;
+        publicUrl: string;
+        expiresAt: string;
       };
 
-      xhr.onerror = () => reject(new Error("Upload failed"));
-      xhr.onabort = () => reject(new Error("Upload cancelled"));
+      // Step 2: Upload directly to R2 using presigned URL
+      return new Promise<unknown>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
 
-      xhr.open("POST", "/api/upload/document");
-      xhr.send(formData);
-    }).catch((error) => {
+        // Throttle progress updates to avoid excessive re-renders
+        let lastUpdateTime = 0;
+        const PROGRESS_UPDATE_INTERVAL = 100; // Update every 100ms
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const now = Date.now();
+            if (now - lastUpdateTime >= PROGRESS_UPDATE_INTERVAL) {
+              const percentComplete = (e.loaded / e.total) * 100;
+              dispatch({ type: "UPDATE_PROGRESS", index, progress: percentComplete });
+              lastUpdateTime = now;
+            }
+          }
+        });
+
+        xhr.onload = async () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              // Step 3: Notify server that upload is complete
+              const completeResponse = await fetch("/api/upload/complete", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  key,
+                  fileName: file.name,
+                  fileSize: file.size,
+                  contentType: file.type || "application/octet-stream",
+                  datasetId,
+                  publicUrl,
+                }),
+              });
+
+              if (!completeResponse.ok) {
+                const error = await completeResponse.json();
+                throw new Error(error.error || "Failed to complete upload");
+              }
+
+              const result = await completeResponse.json();
+              dispatch({ type: "UPDATE_PROGRESS", index, progress: 100 });
+              resolve(result);
+            } catch (error) {
+              reject(error);
+            }
+          } else {
+            reject(new Error(`Upload failed: ${xhr.statusText}`));
+          }
+        };
+
+        xhr.onerror = () => {
+          // Log CORS errors for debugging
+          console.error("Upload error:", xhr.status, xhr.statusText);
+          reject(new Error(`Upload failed: ${xhr.statusText || "Network error"}`));
+        };
+        xhr.onabort = () => reject(new Error("Upload cancelled"));
+
+        // Upload directly to R2
+        xhr.open("PUT", uploadUrl);
+        // Set Content-Type header (must match what was used in presigned URL generation)
+        xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+        // Don't set other headers as they might not be allowed by CORS
+        xhr.send(file);
+      });
+    } catch (error) {
       toast.error(
         `Failed to upload "${file.name}": ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       throw error;
-    });
+    }
   };
 
   // Concurrency control: upload files with limited concurrency
