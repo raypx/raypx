@@ -41,10 +41,7 @@ export abstract class AIProvider {
    * @param callbacks - Callback functions for stream events
    * @returns Promise that resolves when streaming is complete
    */
-  abstract chatStream(
-    options: ChatCompletionOptions,
-    callbacks: StreamCallback,
-  ): Promise<void>;
+  abstract chatStream(options: ChatCompletionOptions, callbacks: StreamCallback): Promise<void>;
 
   /**
    * Validate provider configuration

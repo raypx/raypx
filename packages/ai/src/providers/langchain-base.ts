@@ -58,9 +58,7 @@ export abstract class LangChainAIProvider extends AIProvider {
   /**
    * Convert ChatMessage[] to BaseMessage[]
    */
-  protected convertMessages(
-    messages: ChatCompletionOptions["messages"],
-  ): BaseMessage[] {
+  protected convertMessages(messages: ChatCompletionOptions["messages"]): BaseMessage[] {
     // If already BaseMessage[], return as is
     if (messages.length > 0 && messages[0] && "getType" in messages[0]) {
       return messages as BaseMessage[];
@@ -85,7 +83,9 @@ export abstract class LangChainAIProvider extends AIProvider {
   /**
    * Extract thinking content from LangChain response
    */
-  protected extractThinking(response: Awaited<ReturnType<ChatOpenAI["invoke"]>>): string | undefined {
+  protected extractThinking(
+    response: Awaited<ReturnType<ChatOpenAI["invoke"]>>,
+  ): string | undefined {
     if (!response.additional_kwargs) {
       return undefined;
     }
@@ -150,10 +150,7 @@ export abstract class LangChainAIProvider extends AIProvider {
   /**
    * Generate a streaming chat completion
    */
-  async chatStream(
-    options: ChatCompletionOptions,
-    callback: StreamCallback,
-  ): Promise<void> {
+  async chatStream(options: ChatCompletionOptions, callback: StreamCallback): Promise<void> {
     const chatModel = this.createChatModel(options);
     const messages = this.convertMessages(options.messages);
 

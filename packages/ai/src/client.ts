@@ -3,6 +3,10 @@
  * Unified interface for interacting with different AI providers
  */
 
+import { AliyunProvider } from "./providers/aliyun";
+import type { AIProvider } from "./providers/base";
+import { DeepSeekProvider } from "./providers/deepseek";
+import { OpenAIProvider } from "./providers/openai";
 import type {
   ChatCompletionOptions,
   ChatCompletionResponse,
@@ -10,10 +14,6 @@ import type {
   LLMProviderConfig,
   StreamCallback,
 } from "./types";
-import { AliyunProvider } from "./providers/aliyun";
-import { DeepSeekProvider } from "./providers/deepseek";
-import { OpenAIProvider } from "./providers/openai";
-import { AIProvider } from "./providers/base";
 
 /**
  * AI Client class

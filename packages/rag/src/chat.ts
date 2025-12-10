@@ -898,7 +898,7 @@ async function generateLLMResponseStream(
         } else if (chunk.type === "thinking" && chunk.content && callbacks.onThinking) {
           thinking = (thinking || "") + chunk.content;
           callbacks.onThinking(chunk.content);
-          }
+        }
       },
     );
 

@@ -216,9 +216,12 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
 
   const vectorizeMutation = useMutation({
     ...trpc.documents.vectorize.mutationOptions(),
+    onMutate: () => {
+      // Show toast immediately when vectorization starts
+      toast.success("Document vectorization started! This may take a few moments.");
+    },
     onSuccess: () => {
       void refetch();
-      toast.success("Document vectorization started! This may take a few moments.");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to vectorize document");

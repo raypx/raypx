@@ -1,8 +1,15 @@
 import { createHash } from "node:crypto";
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { logger } from "@raypx/shared/logger";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { env } from "./envs";
 
 /**
@@ -262,6 +269,201 @@ export async function getFromR2(key: string): Promise<Buffer | null> {
 }
 
 /**
+ * Delete a file from R2 storage
+ */
+export async function deleteFromR2(key: string): Promise<boolean> {
+  if (!isR2Configured()) {
+    throw new Error("R2 is not configured");
+  }
+
+  const client = getR2Client();
+
+  try {
+    const command = new DeleteObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      Key: key,
+    });
+
+    await client.send(command);
+    logger.info(`Deleted file from R2: ${key}`);
+    return true;
+  } catch (error) {
+    logger.error(`Failed to delete file from R2: ${key}`, error);
+    return false;
+  }
+}
+
+/**
+ * Delete multiple files from R2 storage
+ */
+export async function deleteMultipleFromR2(keys: string[]): Promise<{
+  deleted: number;
+  failed: number;
+}> {
+  if (!isR2Configured()) {
+    throw new Error("R2 is not configured");
+  }
+
+  if (keys.length === 0) {
+    return { deleted: 0, failed: 0 };
+  }
+
+  const client = getR2Client();
+  let deleted = 0;
+  let failed = 0;
+
+  // R2/S3 DeleteObjectsCommand supports up to 1000 objects per request
+  const batchSize = 1000;
+  const batches: string[][] = [];
+
+  for (let i = 0; i < keys.length; i += batchSize) {
+    batches.push(keys.slice(i, i + batchSize));
+  }
+
+  for (const batch of batches) {
+    try {
+      const command = new DeleteObjectsCommand({
+        Bucket: env.R2_BUCKET_NAME,
+        Delete: {
+          Objects: batch.map((key) => ({ Key: key })),
+          Quiet: false,
+        },
+      });
+
+      const response = await client.send(command);
+
+      if (response.Deleted) {
+        deleted += response.Deleted.length;
+      }
+      if (response.Errors) {
+        failed += response.Errors.length;
+        logger.error("Failed to delete some files from R2:", response.Errors);
+      }
+    } catch (error) {
+      logger.error("Failed to delete batch from R2:", error);
+      failed += batch.length;
+    }
+  }
+
+  logger.info(`Deleted ${deleted} files from R2, ${failed} failed`);
+  return { deleted, failed };
+}
+
+/**
+ * List all files in R2 with a given prefix
+ */
+export async function listR2Files(prefix: string): Promise<string[]> {
+  if (!isR2Configured()) {
+    throw new Error("R2 is not configured");
+  }
+
+  const client = getR2Client();
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+
+  try {
+    do {
+      const command = new ListObjectsV2Command({
+        Bucket: env.R2_BUCKET_NAME,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      });
+
+      const response = await client.send(command);
+
+      if (response.Contents) {
+        for (const object of response.Contents) {
+          if (object.Key) {
+            keys.push(object.Key);
+          }
+        }
+      }
+
+      continuationToken = response.NextContinuationToken;
+    } while (continuationToken);
+
+    logger.info(`Listed ${keys.length} files from R2 with prefix: ${prefix}`);
+    return keys;
+  } catch (error) {
+    logger.error(`Failed to list files from R2 with prefix: ${prefix}`, error);
+    throw error;
+  }
+}
+
+/**
+ * Extract R2 key from a public URL
+ * Example: https://pub-xxx.r2.dev/avatars/abc123.webp -> avatars/abc123.webp
+ */
+function extractKeyFromUrl(url: string): string | null {
+  try {
+    // Remove the public URL prefix to get the key
+    const publicUrl = env.VITE_R2_PUBLIC_URL;
+    if (url.startsWith(publicUrl)) {
+      return url.slice(publicUrl.length + 1); // +1 for the trailing slash
+    }
+    // If URL doesn't match public URL, try to extract key from path
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split("/").filter(Boolean);
+    if (pathParts.length >= 2) {
+      // Assume format: /avatars/keyhash.format or /documents/userId/key.format
+      return pathParts.slice(0).join("/");
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete all files belonging to a user from R2
+ * This includes:
+ * - Documents: documents/{userId}/*
+ * - Avatar: extracted from user.image URL if it's an R2 URL
+ */
+export async function deleteUserFiles(
+  userId: string,
+  avatarUrl?: string | null,
+): Promise<{
+  deleted: number;
+  failed: number;
+}> {
+  if (!isR2Configured()) {
+    throw new Error("R2 is not configured");
+  }
+
+  try {
+    const allKeys: string[] = [];
+
+    // List all documents for this user
+    const documentsPrefix = `documents/${userId}/`;
+    const documentKeys = await listR2Files(documentsPrefix);
+    allKeys.push(...documentKeys);
+
+    // Extract avatar key from user's image URL if provided
+    if (avatarUrl) {
+      const avatarKey = extractKeyFromUrl(avatarUrl);
+      if (avatarKey && avatarKey.startsWith("avatars/")) {
+        allKeys.push(avatarKey);
+        logger.info(`Found avatar key for user ${userId}: ${avatarKey}`);
+      }
+    }
+
+    if (allKeys.length === 0) {
+      logger.info(`No files found for user ${userId}`);
+      return { deleted: 0, failed: 0 };
+    }
+
+    // Delete all files
+    const result = await deleteMultipleFromR2(allKeys);
+    logger.info(`Deleted ${result.deleted} files for user ${userId}, ${result.failed} failed`);
+    return result;
+  } catch (error) {
+    logger.error(`Failed to delete user files for user ${userId}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Options for generating presigned URL
  */
 export interface PresignedUrlOptions {
@@ -294,9 +496,7 @@ export interface PresignedUrlOptions {
  * Generate a presigned URL for direct upload to R2
  * This allows clients to upload files directly to R2 without going through the server
  */
-export async function generatePresignedUploadUrl(
-  options: PresignedUrlOptions,
-): Promise<{
+export async function generatePresignedUploadUrl(options: PresignedUrlOptions): Promise<{
   url: string;
   key: string;
   expiresAt: Date;

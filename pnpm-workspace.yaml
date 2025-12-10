@@ -56,3 +56,14 @@ overrides:
 
 publicHoistPattern:
   - '*prettier*'
+
+peerDependencyRules:
+  allowedVersions:
+    dotenv: "*"
+    openai: "*"
+    pdf-parse: "*"
+    zod: "*"
+
+updateConfig:
+  ignoreDependencies:
+    - pdf-parse

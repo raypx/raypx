@@ -1,10 +1,10 @@
 import { auth } from "@raypx/auth/server";
 import { and, db, eq } from "@raypx/database";
 import { datasets as Datasets } from "@raypx/database/schemas";
+import { nanoid } from "@raypx/shared/utils";
 import { isR2Configured, uploadToR2 } from "@raypx/storage";
 import { createTRPCContext, trpcRouter } from "@raypx/trpc";
 import { createFileRoute } from "@tanstack/react-router";
-import { nanoid } from "nanoid";
 
 async function handler({ request }: { request: Request }) {
   const session = await auth.api.getSession({

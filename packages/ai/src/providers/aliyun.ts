@@ -22,10 +22,7 @@ export class AliyunProvider extends LangChainAIProvider {
   }
 
   protected getBaseURL(): string | undefined {
-    return (
-      this.config.apiUrl ||
-      "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    );
+    return this.config.apiUrl || "https://dashscope.aliyuncs.com/compatible-mode/v1";
   }
 
   protected getDefaultModel(): string {

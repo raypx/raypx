@@ -64,8 +64,7 @@ export async function getAIConfig(userId: string): Promise<AIConfig> {
 
   // Map database keys to config object properties
   const mappedConfig: AIConfig = {
-    provider: (config[CONFIG_KEYS.PROVIDER] ||
-      fallbackConfig[CONFIG_KEYS.PROVIDER]) as LLMProvider,
+    provider: (config[CONFIG_KEYS.PROVIDER] || fallbackConfig[CONFIG_KEYS.PROVIDER]) as LLMProvider,
     apiKey: (config[CONFIG_KEYS.API_KEY] || fallbackConfig[CONFIG_KEYS.API_KEY]) as
       | string
       | undefined,
@@ -73,10 +72,12 @@ export async function getAIConfig(userId: string): Promise<AIConfig> {
       | string
       | undefined,
     model: (config[CONFIG_KEYS.MODEL] || fallbackConfig[CONFIG_KEYS.MODEL]) as string | undefined,
-    temperature: (config[CONFIG_KEYS.TEMPERATURE] ??
-      fallbackConfig[CONFIG_KEYS.TEMPERATURE]) as number | undefined,
-    maxTokens: (config[CONFIG_KEYS.MAX_TOKENS] ??
-      fallbackConfig[CONFIG_KEYS.MAX_TOKENS]) as number | undefined,
+    temperature: (config[CONFIG_KEYS.TEMPERATURE] ?? fallbackConfig[CONFIG_KEYS.TEMPERATURE]) as
+      | number
+      | undefined,
+    maxTokens: (config[CONFIG_KEYS.MAX_TOKENS] ?? fallbackConfig[CONFIG_KEYS.MAX_TOKENS]) as
+      | number
+      | undefined,
   };
 
   // Set default API URLs for specific providers
