@@ -37,6 +37,6 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "officeparser": "^4|5"
+    "officeparser": "^4"
   }
 }

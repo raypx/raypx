@@ -42,7 +42,7 @@
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.3.12",
     "@tanstack/react-devtools": "^0.8.4",
-    "@tanstack/react-router-devtools": "^1.140.0",
+    "@tanstack/react-router-devtools": "^1.140.1",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",

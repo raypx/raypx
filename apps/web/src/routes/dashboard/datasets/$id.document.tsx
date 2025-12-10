@@ -8,12 +8,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +15,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Label,
   toast,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
@@ -44,10 +37,10 @@ import {
   Trash2,
   Upload,
   Upload as UploadIcon,
-  X,
   XCircle,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { DocumentUploadDialog } from "~/components/document-upload-dialog";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -148,10 +141,6 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
   const trpc = useTRPC();
   const navigate = useNavigate();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [sortBy, setSortBy] = useState<"createdAt" | "name" | "status" | "size">("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [searchValue, setSearchValue] = useState("");
@@ -211,111 +200,6 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
   );
   const total = data?.total ?? 0;
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    const validFiles = files.filter((file) => {
-      if (file.size > maxSize) {
-        toast.error(`File "${file.name}" exceeds 50MB limit`);
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length > 0) {
-      setUploadingFiles((prev) => [...prev, ...validFiles]);
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setUploadingFiles((prev) => prev.filter((_, i) => i !== index));
-    setUploadProgress((prev) => {
-      const newProgress = { ...prev };
-      delete newProgress[index.toString()];
-      return newProgress;
-    });
-  };
-
-  const handleUpload = async () => {
-    if (uploadingFiles.length === 0) {
-      toast.error("Please select at least one file");
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress({});
-
-    const uploadPromises = uploadingFiles.map(async (file, index) => {
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("datasetId", dataset.id);
-
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const percentComplete = (e.loaded / e.total) * 100;
-            setUploadProgress((prev) => ({
-              ...prev,
-              [index.toString()]: percentComplete,
-            }));
-          }
-        });
-
-        const uploadPromise = new Promise<Response>((resolve, reject) => {
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve(new Response(xhr.responseText, { status: xhr.status }));
-            } else {
-              reject(new Error(`Upload failed: ${xhr.statusText}`));
-            }
-          };
-          xhr.onerror = () => reject(new Error("Upload failed"));
-          xhr.open("POST", "/api/upload/document");
-          xhr.send(formData);
-        });
-
-        const response = await uploadPromise;
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || "Upload failed");
-        }
-
-        setUploadProgress((prev) => ({
-          ...prev,
-          [index.toString()]: 100,
-        }));
-
-        return result;
-      } catch (error) {
-        toast.error(
-          `Failed to upload "${file.name}": ${error instanceof Error ? error.message : "Unknown error"}`,
-        );
-        throw error;
-      }
-    });
-
-    try {
-      await Promise.all(uploadPromises);
-      toast.success(`Successfully uploaded ${uploadingFiles.length} file(s)`);
-      setUploadingFiles([]);
-      setUploadProgress({});
-      setIsUploadDialogOpen(false);
-      void refetch();
-    } catch {
-      // Errors already handled above
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const deleteMutation = useMutation({
     ...trpc.documents.delete.mutationOptions(),
@@ -665,130 +549,21 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
           sorting={sorting}
           toolbarActions={
             <>
-              <Dialog onOpenChange={setIsUploadDialogOpen} open={isUploadDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
-                    <Upload className="h-4 w-4" />
-                    Upload Documents
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>Upload Documents</DialogTitle>
-                    <DialogDescription>
-                      Upload documents to {dataset.name}. Supported formats: PDF, DOCX, TXT, MD,
-                      etc.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="files">Files</Label>
-                      <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                        <input
-                          accept=".pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls"
-                          className="hidden"
-                          id="files"
-                          multiple
-                          onChange={handleFileSelect}
-                          ref={fileInputRef}
-                          type="file"
-                        />
-                        <Button
-                          onClick={() => fileInputRef.current?.click()}
-                          size="sm"
-                          type="button"
-                          variant="outline"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Select Files
-                        </Button>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Max 50MB per file. Multiple files supported.
-                        </p>
-                      </div>
-                      {uploadingFiles.length > 0 && (
-                        <div className="space-y-2 mt-4">
-                          <p className="text-sm font-medium">Selected Files:</p>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {uploadingFiles.map((file, index) => (
-                              <div
-                                className="flex items-center justify-between p-2 bg-muted/50 rounded border"
-                                key={index}
-                              >
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm truncate" title={file.name}>
-                                      {truncateTextMiddle(file.name, 45, 18, 18)}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatFileSize(file.size)}
-                                    </p>
-                                  </div>
-                                </div>
-                                {isUploading && uploadProgress[index.toString()] !== undefined ? (
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full bg-primary transition-all"
-                                        style={{
-                                          width: `${uploadProgress[index.toString()]}%`,
-                                        }}
-                                      />
-                                    </div>
-                                    <span className="text-xs text-muted-foreground w-10 text-right">
-                                      {Math.round(uploadProgress[index.toString()] ?? 0)}%
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    disabled={isUploading}
-                                    onClick={() => removeFile(index)}
-                                    size="icon"
-                                    variant="ghost"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      onClick={() => {
-                        setIsUploadDialogOpen(false);
-                        setUploadingFiles([]);
-                        setUploadProgress({});
-                      }}
-                      variant="outline"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      disabled={uploadingFiles.length === 0 || isUploading}
-                      onClick={handleUpload}
-                    >
-                      {isUploading ? (
-                        <>
-                          <Upload className="h-4 w-4 mr-2 animate-pulse" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload {uploadingFiles.length > 0 ? `${uploadingFiles.length} ` : ""}
-                          File
-                          {uploadingFiles.length !== 1 ? "s" : ""}
-                        </>
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <DialogTrigger asChild>
+                <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
+                  <Upload className="h-4 w-4" />
+                  Upload Documents
+                </Button>
+              </DialogTrigger>
+              <DocumentUploadDialog
+                datasetId={dataset.id}
+                datasetName={dataset.name}
+                onOpenChange={setIsUploadDialogOpen}
+                onSuccess={() => {
+                  void refetch();
+                }}
+                open={isUploadDialogOpen}
+              />
               <Button
                 disabled={isFetching}
                 onClick={() => {
