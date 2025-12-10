@@ -1,4 +1,6 @@
+import { useAuth } from "@raypx/auth";
 import { useTRPC } from "@raypx/trpc/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Button } from "@raypx/ui/components/button";
 import {
   Card,
@@ -13,12 +15,31 @@ import { toast } from "@raypx/ui/components/toast";
 import { cn } from "@raypx/ui/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Bot, Loader2, MessageSquare, Send, Trash2, User } from "lucide-react";
+import { ArrowLeft, Bot, Loader2, MessageSquare, Send, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
+import { MarkdownContent } from "~/components/markdown-content";
 import { PageWrapper } from "~/components/page-wrapper";
 import { truncateTextMiddle } from "~/lib/dashboard-utils";
+
+function getUserInitials(name?: string | null, email?: string | null): string {
+  if (name) {
+    const names = name.trim().split(" ");
+    if (names.length >= 2) {
+      const firstInitial = names[0]?.[0];
+      const lastInitial = names[names.length - 1]?.[0];
+      if (firstInitial && lastInitial) {
+        return `${firstInitial}${lastInitial}`.toUpperCase();
+      }
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  if (email) {
+    return email.slice(0, 2).toUpperCase();
+  }
+  return "U";
+}
 
 export const Route = createFileRoute("/dashboard/datasets/$id/chat")({
   component: DatasetChatPage,
@@ -43,6 +64,11 @@ function DatasetChatPage() {
   const { id: datasetId } = Route.useParams();
   const trpc = useTRPC();
   const navigate = useNavigate();
+  const {
+    hooks: { useSession },
+  } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -464,7 +490,7 @@ function DatasetChatPage() {
                     messages.map((message, index) => (
                       <div
                         className={cn(
-                          "flex gap-4",
+                          "flex gap-4 min-w-0",
                           message.role === "user" ? "justify-end" : "justify-start",
                         )}
                         key={index}
@@ -476,26 +502,36 @@ function DatasetChatPage() {
                         )}
                         <div
                           className={cn(
-                            "rounded-lg px-4 py-3 max-w-[80%]",
+                            "rounded-lg px-4 py-3 max-w-[80%] min-w-0",
                             message.role === "user"
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted",
                           )}
                         >
                           {message.role === "assistant" && message.thinking && (
-                            <div className="mb-2 p-2 bg-muted-foreground/10 rounded text-sm text-muted-foreground italic">
+                            <div className="mb-2 p-2 bg-muted-foreground/10 rounded text-sm text-muted-foreground italic break-words">
                               <div className="font-semibold mb-1">Thinking:</div>
-                              <div className="whitespace-pre-wrap wrap-break-word">
+                              <div className="whitespace-pre-wrap break-words">
                                 {message.thinking}
                               </div>
                             </div>
                           )}
-                          <div className="whitespace-pre-wrap wrap-break-word">
-                            {message.content ||
-                              (isStreaming && index === messages.length - 1 ? (
-                                <span className="text-muted-foreground italic">Thinking...</span>
-                              ) : null)}
-                          </div>
+                          {message.role === "assistant" ? (
+                            <MarkdownContent
+                              className="text-foreground"
+                              content={
+                                message.content ||
+                                (isStreaming && index === messages.length - 1 ? "Thinking..." : "")
+                              }
+                            />
+                          ) : (
+                            <div className="whitespace-pre-wrap wrap-break-word">
+                              {message.content ||
+                                (isStreaming && index === messages.length - 1 ? (
+                                  <span className="text-muted-foreground italic">Thinking...</span>
+                                ) : null)}
+                            </div>
+                          )}
                           {message.sources && message.sources.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-border/50">
                               <div className="text-xs font-semibold mb-2 text-muted-foreground">
@@ -508,7 +544,7 @@ function DatasetChatPage() {
                                     key={sourceIndex}
                                   >
                                     <span className="shrink-0">•</span>
-                                    <span className="flex-1">
+                                    <span className="flex-1 min-w-0 break-words">
                                       <span className="font-medium">
                                         {truncateTextMiddle(source.documentName, 40)}
                                       </span>
@@ -525,8 +561,18 @@ function DatasetChatPage() {
                           )}
                         </div>
                         {message.role === "user" && (
-                          <div className="shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                            <User className="h-4 w-4 text-primary-foreground" />
+                          <div className="shrink-0">
+                            <Avatar className="h-8 w-8">
+                              {user?.image && (
+                                <AvatarImage
+                                  alt={user?.name || user?.email || ""}
+                                  src={user.image}
+                                />
+                              )}
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {getUserInitials(user?.name, user?.email)}
+                              </AvatarFallback>
+                            </Avatar>
                           </div>
                         )}
                       </div>
