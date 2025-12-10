@@ -8,7 +8,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  DialogTrigger,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -199,7 +198,6 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
     [data?.items],
   );
   const total = data?.total ?? 0;
-
 
   const deleteMutation = useMutation({
     ...trpc.documents.delete.mutationOptions(),
@@ -549,12 +547,14 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
           sorting={sorting}
           toolbarActions={
             <>
-              <DialogTrigger asChild>
-                <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
-                  <Upload className="h-4 w-4" />
-                  Upload Documents
-                </Button>
-              </DialogTrigger>
+              <Button
+                className="gap-2 shadow-lg shadow-primary/20"
+                onClick={() => setIsUploadDialogOpen(true)}
+                size="sm"
+              >
+                <Upload className="h-4 w-4" />
+                Upload Documents
+              </Button>
               <DocumentUploadDialog
                 datasetId={dataset.id}
                 datasetName={dataset.name}

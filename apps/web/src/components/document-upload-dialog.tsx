@@ -308,7 +308,9 @@ export function DocumentUploadDialog({
                           <p className="text-sm truncate" title={file.name}>
                             {truncateTextMiddle(file.name, 45, 18, 18)}
                           </p>
-                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(file.size)}
+                          </p>
                         </div>
                         {showProgress ? (
                           <div className="flex items-center gap-2 shrink-0">
@@ -324,11 +326,11 @@ export function DocumentUploadDialog({
                           </div>
                         ) : (
                           <Button
+                            className="shrink-0"
                             disabled={uploadState.isUploading}
                             onClick={() => removeFile(index)}
                             size="icon"
                             variant="ghost"
-                            className="shrink-0"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -342,11 +344,7 @@ export function DocumentUploadDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button
-            onClick={handleClose}
-            variant="outline"
-            disabled={uploadState.isUploading}
-          >
+          <Button disabled={uploadState.isUploading} onClick={handleClose} variant="outline">
             Cancel
           </Button>
           <Button
@@ -370,4 +368,3 @@ export function DocumentUploadDialog({
     </Dialog>
   );
 }
-

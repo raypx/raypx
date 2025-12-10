@@ -211,7 +211,7 @@ importers:
         version: 0.556.0(react@19.2.1)
       nitro:
         specifier: 'catalog:'
-        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
       react:
         specifier: catalog:react19
         version: 19.2.1
@@ -357,7 +357,7 @@ importers:
         version: 1.0.0
       nitro:
         specifier: 'catalog:'
-        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
       shiki:
         specifier: ^3.19.0
         version: 3.19.0
@@ -471,7 +471,7 @@ importers:
         version: 5.1.6
       nitro:
         specifier: 'catalog:'
-        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+        version: 3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
       officeparser:
         specifier: ^5.2.2
         version: 5.2.2
@@ -562,7 +562,7 @@ importers:
     dependencies:
       '@posthog/react':
         specifier: ^1.5.2
-        version: 1.5.2(@types/react@19.2.7)(posthog-js@1.302.2)(react@19.2.1)
+        version: 1.5.2(@types/react@19.2.7)(posthog-js@1.303.1)(react@19.2.1)
       '@raypx/config':
         specifier: workspace:*
         version: link:../config
@@ -576,8 +576,8 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(react@19.2.1)
       posthog-js:
-        specifier: ^1.302.2
-        version: 1.302.2
+        specifier: ^1.303.1
+        version: 1.303.1
       react:
         specifier: catalog:react19
         version: 19.2.1
@@ -1341,8 +1341,8 @@ importers:
         specifier: 'catalog:'
         version: 0.556.0(react@19.2.1)
       motion:
-        specifier: ^12.23.25
-        version: 12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: ^12.23.26
+        version: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -7479,8 +7479,8 @@ packages:
   forwarded-parse@2.1.2:
     resolution: {integrity: sha512-alTFZZQDKMporBH77856pXgzhEzaUVmLCDk+egLgIgHst3Tpndzz8MnKe+GzRJRfvVdn69HhpW7cmXzvtLvJAw==}
 
-  framer-motion@12.23.25:
-    resolution: {integrity: sha512-gUHGl2e4VG66jOcH0JHhuJQr6ZNwrET9g31ZG0xdXzT0CznP7fHX4P8Bcvuc4MiUB90ysNnWX2ukHRIggkl6hQ==}
+  framer-motion@12.23.26:
+    resolution: {integrity: sha512-cPcIhgR42xBn1Uj+PzOyheMtZ73H927+uWPDVhUMqxy8UHt6Okavb6xIz9J/phFUHUj0OncR6UvMfJTXoc/LKA==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -8762,8 +8762,8 @@ packages:
   motion-utils@12.23.6:
     resolution: {integrity: sha512-eAWoPgr4eFEOFfg2WjIsMoqJTW6Z8MTUCgn/GZ3VRpClWBdnbjryiA3ZSNLyxCTmCQx4RmYX6jX1iWHbenUPNQ==}
 
-  motion@12.23.25:
-    resolution: {integrity: sha512-Fk5Y1kcgxYiTYOUjmwfXQAP7tP+iGqw/on1UID9WEL/6KpzxPr9jY2169OsjgZvXJdpraKXy0orkjaCVIl5fgQ==}
+  motion@12.23.26:
+    resolution: {integrity: sha512-Ll8XhVxY8LXMVYTCfme27WH2GjBrCIzY4+ndr5QKxsK+YwCtOi2B/oBi5jcIbik5doXuWT/4KKDOVAZJkeY5VQ==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ^18.0.0 || ^19.0.0
@@ -9314,8 +9314,8 @@ packages:
     resolution: {integrity: sha512-Jtc2612XINuBjIl/QTWsV5UvE8UHuNblcO3vVADSrKsrc6RqGX6lOW1cEo3CM2v0XG4Nat8nI+YM7/f26VxXLw==}
     engines: {node: '>=12'}
 
-  posthog-js@1.302.2:
-    resolution: {integrity: sha512-4voih22zQe7yHA7DynlQ3B7kgzJOaKIjzV7K3jJ2Qf+UDXd1ZgO7xYmLWYVtuKEvD1OXHbKk/fPhUTZeHEWpBw==}
+  posthog-js@1.303.1:
+    resolution: {integrity: sha512-qSQ5T/eBwtJx/FzokB6dTCpICdz1Vi5nNfeRTlhbz7NTrb6VAc14g2XQtgYb6fr4AhRoFs61aPHZRcQJJlDjfA==}
 
   preact@10.28.0:
     resolution: {integrity: sha512-rytDAoiXr3+t6OIP3WGlDd0ouCUG1iCWzkcY3++Nreuoi17y6T5i/zRhe6uYfoVcxq6YU+sBtJouuRDsq8vvqA==}
@@ -9701,6 +9701,9 @@ packages:
 
   rou3@0.7.10:
     resolution: {integrity: sha512-aoFj6f7MJZ5muJ+Of79nrhs9N3oLGqi2VEMe94Zbkjb6Wupha46EuoYgpWSOZlXww3bbd8ojgXTAA2mzimX5Ww==}
+
+  rou3@0.7.11:
+    resolution: {integrity: sha512-ELguG3ENDw5NKNmWHO3OGEjcgdxkCNvnMR22gKHEgRXuwiriap5RIYdummOaOiqUNcC5yU5txGCHWNm7KlHuAA==}
 
   run-applescript@7.1.0:
     resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
@@ -13900,9 +13903,9 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
-  '@posthog/react@1.5.2(@types/react@19.2.7)(posthog-js@1.302.2)(react@19.2.1)':
+  '@posthog/react@1.5.2(@types/react@19.2.7)(posthog-js@1.303.1)(react@19.2.1)':
     dependencies:
-      posthog-js: 1.302.2
+      posthog-js: 1.303.1
       react: 19.2.1
     optionalDependencies:
       '@types/react': 19.2.7
@@ -15956,7 +15959,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 24.10.2
+      '@types/node': 18.19.130
       form-data: 4.0.5
 
   '@types/node@12.20.55': {}
@@ -17587,7 +17590,7 @@ snapshots:
 
   forwarded-parse@2.1.2: {}
 
-  framer-motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  framer-motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       motion-dom: 12.23.23
       motion-utils: 12.23.6
@@ -17861,7 +17864,7 @@ snapshots:
     dependencies:
       cookie-es: 2.0.0
       fetchdts: 0.1.7
-      rou3: 0.7.10
+      rou3: 0.7.11
       srvx: 0.8.16
     optionalDependencies:
       crossws: 0.4.1(srvx@0.9.7)
@@ -18045,7 +18048,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.3
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.13.2)
+      retry-axios: 2.6.0(axios@1.13.2(debug@4.4.3))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -19260,9 +19263,9 @@ snapshots:
 
   motion-utils@12.23.6: {}
 
-  motion@12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  motion@12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
-      framer-motion: 12.23.25(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      framer-motion: 12.23.26(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       tslib: 2.8.1
     optionalDependencies:
       react: 19.2.1
@@ -19301,7 +19304,7 @@ snapshots:
 
   nf3@0.1.12: {}
 
-  nitro@3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(rolldown@1.0.0-beta.53)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)):
+  nitro@3.0.1-alpha.1(@netlify/blobs@10.4.3)(chokidar@4.0.3)(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7))(lru-cache@11.2.4)(vite@8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       consola: 3.4.2
       crossws: 0.4.1(srvx@0.9.7)
@@ -19318,7 +19321,6 @@ snapshots:
       unenv: 2.0.0-rc.24
       unstorage: 2.0.0-alpha.4(@netlify/blobs@10.4.3)(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.45.0(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(kysely@0.28.8)(postgres@3.4.7)))(lru-cache@11.2.4)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
-      rolldown: 1.0.0-beta.53
       vite: 8.0.0-beta.0(@types/node@24.10.2)(esbuild@0.25.12)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -19827,7 +19829,7 @@ snapshots:
 
   postgres@3.4.7: {}
 
-  posthog-js@1.302.2:
+  posthog-js@1.303.1:
     dependencies:
       '@posthog/core': 1.7.1
       core-js: 3.47.0
@@ -20251,7 +20253,7 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.13.2):
+  retry-axios@2.6.0(axios@1.13.2(debug@4.4.3)):
     dependencies:
       axios: 1.13.2(debug@4.4.3)
 
@@ -20305,6 +20307,8 @@ snapshots:
       '@rolldown/binding-win32-x64-msvc': 1.0.0-beta.53
 
   rou3@0.7.10: {}
+
+  rou3@0.7.11: {}
 
   run-applescript@7.1.0: {}
 
