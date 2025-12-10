@@ -445,8 +445,8 @@ function DatasetChatPage() {
         </div>
 
         {/* Chat Interface */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader>
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 flex flex-col h-[calc(100vh-16.5rem)]">
+          <CardHeader className="shrink-0 border-b border-border/50">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -476,135 +476,175 @@ function DatasetChatPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="flex flex-col h-[600px]">
-              <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-                <div className="space-y-4">
-                  {messages.length === 0 ? (
-                    <EmptyState
-                      description="Ask questions about the documents in this dataset"
-                      icon={MessageSquare}
-                      title="Start a conversation"
-                    />
-                  ) : (
-                    messages.map((message, index) => (
+          <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">
+            <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollAreaRef}>
+              <div className="space-y-4">
+                {messages.length === 0 ? (
+                  <EmptyState
+                    description="Ask questions about the documents in this dataset"
+                    icon={MessageSquare}
+                    title="Start a conversation"
+                  />
+                ) : (
+                  messages.map((message, index) => (
+                    <div
+                      className={cn(
+                        "flex gap-4 min-w-0",
+                        message.role === "user" ? "justify-end" : "justify-start",
+                      )}
+                      key={index}
+                    >
+                      {message.role === "assistant" && (
+                        <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
                       <div
                         className={cn(
-                          "flex gap-4 min-w-0",
-                          message.role === "user" ? "justify-end" : "justify-start",
+                          "rounded-lg px-4 py-3 max-w-[80%] min-w-0",
+                          message.role === "user"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted",
                         )}
-                        key={index}
                       >
-                        {message.role === "assistant" && (
-                          <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Bot className="h-4 w-4 text-primary" />
+                        {message.role === "assistant" && message.thinking && (
+                          <div className="mb-2 p-2 bg-muted-foreground/10 rounded text-sm text-muted-foreground italic break-words">
+                            <div className="font-semibold mb-1">Thinking:</div>
+                            <div className="whitespace-pre-wrap break-words">
+                              {message.thinking}
+                            </div>
                           </div>
                         )}
-                        <div
-                          className={cn(
-                            "rounded-lg px-4 py-3 max-w-[80%] min-w-0",
-                            message.role === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted",
-                          )}
-                        >
-                          {message.role === "assistant" && message.thinking && (
-                            <div className="mb-2 p-2 bg-muted-foreground/10 rounded text-sm text-muted-foreground italic break-words">
-                              <div className="font-semibold mb-1">Thinking:</div>
-                              <div className="whitespace-pre-wrap break-words">
-                                {message.thinking}
-                              </div>
+                        {message.role === "assistant" ? (
+                          <MarkdownContent
+                            className="text-foreground"
+                            content={
+                              message.content ||
+                              (isStreaming && index === messages.length - 1 ? "Thinking..." : "")
+                            }
+                          />
+                        ) : (
+                          <div className="whitespace-pre-wrap wrap-break-word">
+                            {message.content ||
+                              (isStreaming && index === messages.length - 1 ? (
+                                <span className="text-muted-foreground italic">Thinking...</span>
+                              ) : null)}
+                          </div>
+                        )}
+                        {message.sources && message.sources.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-border/50">
+                            <div className="text-xs font-semibold mb-2 text-muted-foreground">
+                              Sources ({message.sources.length}):
                             </div>
-                          )}
-                          {message.role === "assistant" ? (
-                            <MarkdownContent
-                              className="text-foreground"
-                              content={
-                                message.content ||
-                                (isStreaming && index === messages.length - 1 ? "Thinking..." : "")
-                              }
-                            />
-                          ) : (
-                            <div className="whitespace-pre-wrap wrap-break-word">
-                              {message.content ||
-                                (isStreaming && index === messages.length - 1 ? (
-                                  <span className="text-muted-foreground italic">Thinking...</span>
-                                ) : null)}
-                            </div>
-                          )}
-                          {message.sources && message.sources.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-border/50">
-                              <div className="text-xs font-semibold mb-2 text-muted-foreground">
-                                Sources:
-                              </div>
-                              <div className="space-y-1">
-                                {message.sources.map((source, sourceIndex) => (
-                                  <div
-                                    className="text-xs text-muted-foreground flex items-start gap-2"
-                                    key={sourceIndex}
-                                  >
-                                    <span className="shrink-0">•</span>
-                                    <span className="flex-1 min-w-0 break-words">
-                                      <span className="font-medium">
-                                        {truncateTextMiddle(source.documentName, 40)}
-                                      </span>
-                                      {source.chunkIndex !== undefined && (
-                                        <span className="ml-1 opacity-70">
-                                          (chunk {source.chunkIndex + 1})
+                            <div className="space-y-1">
+                              {(() => {
+                                // Group sources by documentId or documentName
+                                const groupedSources = message.sources.reduce(
+                                  (acc, source) => {
+                                    const key = source.documentId || source.documentName;
+                                    if (!acc[key]) {
+                                      acc[key] = [];
+                                    }
+                                    acc[key].push(source);
+                                    return acc;
+                                  },
+                                  {} as Record<string, typeof message.sources>,
+                                );
+
+                                // Convert to array and sort by highest similarity
+                                const groupedArray = Object.values(groupedSources)
+                                  .map((sources) => {
+                                    const firstSource = sources[0];
+                                    if (!firstSource) return null;
+                                    return {
+                                      documentName: firstSource.documentName || "Unknown",
+                                      documentId: firstSource.documentId || "",
+                                      chunks: sources
+                                        .map((s) => ({
+                                          chunkIndex: s.chunkIndex ?? 0,
+                                          similarity: s.similarity,
+                                        }))
+                                        .sort((a, b) => b.similarity - a.similarity),
+                                      maxSimilarity: Math.max(...sources.map((s) => s.similarity)),
+                                    };
+                                  })
+                                  .filter((g): g is NonNullable<typeof g> => g !== null)
+                                  .sort((a, b) => b.maxSimilarity - a.maxSimilarity)
+                                  .slice(0, 5);
+
+                                return groupedArray.map((group, idx) => {
+                                  const firstChunk = group.chunks[0];
+                                  return (
+                                    <div
+                                      className="text-xs text-muted-foreground flex items-start gap-2"
+                                      key={idx}
+                                      title={`${group.documentName} - chunks: ${group.chunks.map((c) => c.chunkIndex + 1).join(", ")}`}
+                                    >
+                                      <span className="shrink-0">•</span>
+                                      <span className="flex-1 min-w-0 break-words">
+                                        <span className="font-medium">
+                                          {truncateTextMiddle(group.documentName, 40)}
                                         </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
+                                        {group.chunks.length > 1 ? (
+                                          <span className="ml-1 opacity-70">
+                                            (chunks{" "}
+                                            {group.chunks.map((c) => c.chunkIndex + 1).join(", ")})
+                                          </span>
+                                        ) : firstChunk ? (
+                                          <span className="ml-1 opacity-70">
+                                            (chunk {firstChunk.chunkIndex + 1})
+                                          </span>
+                                        ) : null}
+                                      </span>
+                                    </div>
+                                  );
+                                });
+                              })()}
                             </div>
-                          )}
-                        </div>
-                        {message.role === "user" && (
-                          <div className="shrink-0">
-                            <Avatar className="h-8 w-8">
-                              {user?.image && (
-                                <AvatarImage
-                                  alt={user?.name || user?.email || ""}
-                                  src={user.image}
-                                />
-                              )}
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                {getUserInitials(user?.name, user?.email)}
-                              </AvatarFallback>
-                            </Avatar>
                           </div>
                         )}
                       </div>
-                    ))
+                      {message.role === "user" && (
+                        <div className="shrink-0">
+                          <Avatar className="h-8 w-8">
+                            {user?.image && (
+                              <AvatarImage alt={user?.name || user?.email || ""} src={user.image} />
+                            )}
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {getUserInitials(user?.name, user?.email)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+
+            {/* Input Area */}
+            <div className="border-t border-border/50 p-4 shrink-0">
+              <div className="flex gap-2">
+                <Input
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Ask a question about this dataset..."
+                  value={input}
+                />
+                <Button disabled={!input.trim() || isStreaming} onClick={handleSend} size="icon">
+                  {isStreaming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
                   )}
-
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-
-              {/* Input Area */}
-              <div className="border-t border-border/50 p-4">
-                <div className="flex gap-2">
-                  <Input
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
-                      }
-                    }}
-                    placeholder="Ask a question about this dataset..."
-                    value={input}
-                  />
-                  <Button disabled={!input.trim() || isStreaming} onClick={handleSend} size="icon">
-                    {isStreaming ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+                </Button>
               </div>
             </div>
           </CardContent>

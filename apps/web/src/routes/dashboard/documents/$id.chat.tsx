@@ -53,7 +53,10 @@ interface ChatMessage {
     chunkId: string;
     text: string;
     similarity: number;
+    documentId?: string;
     documentName: string;
+    chunkIndex?: number;
+    metadata?: Record<string, unknown>;
   }>;
 }
 
@@ -288,7 +291,7 @@ function DocumentChatPage() {
             if (currentData === null) {
               currentData = data;
             } else {
-              currentData += "\n" + data;
+              currentData += `\n${data}`;
             }
             continue;
           }
@@ -448,8 +451,8 @@ function DocumentChatPage() {
         </div>
 
         {/* Chat Card */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader>
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 flex flex-col h-[calc(100vh-16.5rem)]">
+          <CardHeader className="shrink-0">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -482,7 +485,7 @@ function DocumentChatPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">
             {!isVectorized ? (
               <EmptyState
                 actionLabel="Go to Documents"
@@ -494,9 +497,9 @@ function DocumentChatPage() {
                 title="Document not vectorized"
               />
             ) : (
-              <div className="flex flex-col h-[600px]">
+              <>
                 {/* Messages Area */}
-                <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+                <ScrollArea className="flex-1 min-h-0 pr-4" ref={scrollAreaRef}>
                   <div className="space-y-4">
                     {messages.length === 0 && (
                       <div className="text-center text-muted-foreground py-8">
@@ -561,16 +564,73 @@ function DocumentChatPage() {
                                 Sources ({message.sources.length}):
                               </p>
                               <div className="space-y-1">
-                                {message.sources.slice(0, 3).map((source, idx) => (
-                                  <div
-                                    className="text-xs text-muted-foreground truncate"
-                                    key={idx}
-                                    title={source.text}
-                                  >
-                                    • {truncateTextMiddle(source.documentName, 40, 15, 15)}{" "}
-                                    (similarity: {(source.similarity * 100).toFixed(1)}%)
-                                  </div>
-                                ))}
+                                {(() => {
+                                  // Group sources by documentId or documentName
+                                  const groupedSources = message.sources.reduce(
+                                    (acc, source) => {
+                                      const key = source.documentId || source.documentName;
+                                      if (!acc[key]) {
+                                        acc[key] = [];
+                                      }
+                                      const group = acc[key];
+                                      if (group) {
+                                        group.push(source);
+                                      }
+                                      return acc;
+                                    },
+                                    {} as Record<string, typeof message.sources>,
+                                  );
+
+                                  // Convert to array and sort by highest similarity
+                                  const groupedArray = Object.values(groupedSources)
+                                    .map((sources) => {
+                                      const firstSource = sources[0];
+                                      if (!firstSource) return null;
+                                      return {
+                                        documentName: firstSource.documentName || "Unknown",
+                                        documentId: firstSource.documentId || "",
+                                        chunks: sources
+                                          .map((s) => ({
+                                            chunkIndex: s.chunkIndex ?? 0,
+                                            similarity: s.similarity,
+                                          }))
+                                          .sort((a, b) => b.similarity - a.similarity),
+                                        maxSimilarity: Math.max(
+                                          ...sources.map((s) => s.similarity),
+                                        ),
+                                      };
+                                    })
+                                    .filter((g): g is NonNullable<typeof g> => g !== null)
+                                    .sort((a, b) => b.maxSimilarity - a.maxSimilarity)
+                                    .slice(0, 5);
+
+                                  return groupedArray
+                                    .map((group, idx) => {
+                                      const firstChunk = group.chunks[0];
+                                      if (!firstChunk) return null;
+                                      return (
+                                        <div
+                                          className="text-xs text-muted-foreground"
+                                          key={idx}
+                                          title={`${group.documentName} - chunks: ${group.chunks.map((c) => c.chunkIndex + 1).join(", ")}`}
+                                        >
+                                          • {truncateTextMiddle(group.documentName, 40, 15, 15)}
+                                          {group.chunks.length > 1 ? (
+                                            <span className="ml-1">
+                                              (chunks{" "}
+                                              {group.chunks.map((c) => c.chunkIndex + 1).join(", ")}
+                                              )
+                                            </span>
+                                          ) : (
+                                            <span className="ml-1">
+                                              (chunk {firstChunk.chunkIndex + 1})
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    })
+                                    .filter(Boolean);
+                                })()}
                               </div>
                             </div>
                           )}
@@ -599,24 +659,30 @@ function DocumentChatPage() {
                 </ScrollArea>
 
                 {/* Input Area */}
-                <div className="mt-4 flex gap-2">
-                  <Input
-                    className="flex-1"
-                    disabled={isStreaming}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask a question about this document..."
-                    value={input}
-                  />
-                  <Button disabled={!input.trim() || isStreaming} onClick={handleSend} size="icon">
-                    {isStreaming ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
+                <div className="border-t border-border/50 p-4 shrink-0">
+                  <div className="flex gap-2">
+                    <Input
+                      className="flex-1"
+                      disabled={isStreaming}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Ask a question about this document..."
+                      value={input}
+                    />
+                    <Button
+                      disabled={!input.trim() || isStreaming}
+                      onClick={handleSend}
+                      size="icon"
+                    >
+                      {isStreaming ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
