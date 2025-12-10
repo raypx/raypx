@@ -20,7 +20,7 @@
     },
     "start": {
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": ["build", "^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "tsdown.config.ts"],
       "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
     },
