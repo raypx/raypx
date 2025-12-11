@@ -12,7 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@better-fetch/fetch": "^1.1.19",
+    "@better-fetch/fetch": "^1.1.21",
     "@hookform/resolvers": "catalog:",
     "@orama/tokenizers": "^3.1.16",
     "@raypx/analytics": "workspace:*",
@@ -42,7 +42,7 @@
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.3.12",
     "@tanstack/react-devtools": "^0.8.4",
-    "@tanstack/react-router-devtools": "^1.140.1",
+    "@tanstack/react-router-devtools": "^1.140.5",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",

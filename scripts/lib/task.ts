@@ -30,6 +30,8 @@ type TaskConfig = Simplify<{
   retries?: number;
   /** Execution options (timeout, env, etc.) */
   execOptions?: ExecOptions;
+  /** Allow task to fail without stopping the entire process (defaults to false) */
+  allowFailure?: boolean;
 }>;
 
 /**
@@ -45,6 +47,8 @@ type CommandSpec =
 export interface Task {
   title: string;
   task: TaskFn;
+  /** Allow task to fail without stopping the entire process */
+  allowFailure?: boolean;
 }
 
 /**
@@ -62,6 +66,7 @@ export function createTask(
     return {
       title: titleOrCommand as string,
       task: taskFnOrOpts,
+      allowFailure: false,
     };
   }
 
@@ -101,6 +106,7 @@ export function createTask(
     failureMessage,
     retries = 0,
     execOptions,
+    allowFailure = false,
   } = config ?? {};
 
   const autoSuccessTitle = successTitle || `${title} completed`;
@@ -108,6 +114,7 @@ export function createTask(
 
   return {
     title,
+    allowFailure,
     task: async (ctx) => {
       let attempts = 0;
       const maxAttempts = retries + 1;
@@ -176,28 +183,42 @@ export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]
         } catch (error) {
           const duration = Date.now() - taskStart;
           logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
+          
+          // If task allows failure, log warning and continue (don't throw)
+          if (task.allowFailure) {
+            logger.warn(`⚠ ${task.title} failed but continuing (allowFailure=true)`);
+            return; // Continue without throwing
+          }
+          
           throw error;
         }
       }),
     );
-  } else {
-    // Run tasks sequentially
-    for (const task of tasks) {
-      const taskStart = Date.now();
-      logger.info(`⏳ ${task.title}...`);
+      } else {
+        // Run tasks sequentially
+        for (const task of tasks) {
+          const taskStart = Date.now();
+          logger.info(`⏳ ${task.title}...`);
 
-      try {
-        const ctx: TaskContext = { title: task.title };
-        await task.task(ctx);
-        const duration = Date.now() - taskStart;
-        logger.success(`✓ ${ctx.title} (${formatDuration(duration)})`);
-      } catch (error) {
-        const duration = Date.now() - taskStart;
-        logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
-        throw error;
+          try {
+            const ctx: TaskContext = { title: task.title };
+            await task.task(ctx);
+            const duration = Date.now() - taskStart;
+            logger.success(`✓ ${ctx.title} (${formatDuration(duration)})`);
+          } catch (error) {
+            const duration = Date.now() - taskStart;
+            logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
+            
+            // If task allows failure, log warning and continue
+            if (task.allowFailure) {
+              logger.warn(`⚠ ${task.title} failed but continuing (allowFailure=true)`);
+              continue;
+            }
+            
+            throw error;
+          }
+        }
       }
-    }
-  }
 
   const totalDuration = Date.now() - startTime;
   logger.success(`🎉 All tasks completed in ${formatDuration(totalDuration)}`);

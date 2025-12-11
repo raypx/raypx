@@ -23,21 +23,21 @@
     "check": "biome check",
     "clean": "raypx-scripts clean",
     "coverage": "vitest --coverage",
-    "start": "turbo start",
     "db": "raypx-scripts db",
     "dev": "turbo --filter=web dev",
     "docs:dev": "turbo dev --filter docs",
-    "web:start": "turbo start --filter=web",
     "email:dev": "turbo dev --filter=email",
     "format": "raypx-scripts format",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "raypx-scripts postinstall",
     "setup": "raypx-scripts setup",
     "shadcn": "pnpm --filter web run shadcn && pnpm -w format",
+    "start": "turbo start",
     "test": "turbo test",
     "turbo:gen": "pnpm turbo gen",
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
-    "update:deps": "pnpm update --recursive --interactive --latest"
+    "update:deps": "pnpm update --recursive --interactive --latest",
+    "web:start": "turbo start --filter=web"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:dev",
@@ -58,7 +58,7 @@
   },
   "packageManager": "pnpm@10.25.0",
   "engines": {
-    "node": ">=20",
+    "node": ">=22",
     "pnpm": ">=10.0.0"
   }
 }

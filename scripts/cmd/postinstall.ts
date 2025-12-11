@@ -6,7 +6,10 @@ const postinstallCmd = defineCommand({
   description: "Run post-install tasks",
   run: async () => {
     const tasks = [
-      !process.env.VERCEL && createTask("pnpm exec lefthook install", "Install Lefthook"),
+      createTask("pnpm exec lefthook install", {
+        title: "Install Lefthook",
+        allowFailure: true, // Allow failure without stopping the process
+      }),
       createTask("Generate UI component exports", () => generateAllComponentExports()),
     ];
 
