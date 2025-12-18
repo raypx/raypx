@@ -14,7 +14,7 @@ import {
   Sidebar as UiSidebar,
 } from "@raypx/ui/components/sidebar";
 import { cn } from "@raypx/ui/lib/utils";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
 import { Logo } from "~/components/layout/logo";
 import { sidebarGroups } from "~/config/sidebar";
@@ -65,6 +65,7 @@ function isActivePath(currentPath: string, href: string): boolean {
 
 export function Sidebar({ user }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
 
   return (
@@ -103,11 +104,14 @@ export function Sidebar({ user }: SidebarProps) {
                     const isActive = isActivePath(currentPath, item.href);
                     return (
                       <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                          <Link to={item.href}>
-                            <item.icon className={cn(isActive && "text-primary")} />
-                            <span>{item.title}</span>
-                          </Link>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          onClick={() => {
+                            navigate({ to: item.href });
+                          }}
+                        >
+                          <item.icon className={cn(isActive && "text-primary")} />
+                          <span>{item.title}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     );

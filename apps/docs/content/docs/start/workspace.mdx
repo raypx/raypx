@@ -5,7 +5,7 @@ description: Understand how the Raypx Turborepo is structured and what each pack
 
 ## Monorepo at a Glance
 
-Raypx is a pnpm monorepo orchestrated by Turborepo. It contains **2 applications** and **13 shared packages** that work together to provide a complete full-stack development platform.
+Raypx is a bun monorepo orchestrated by Turborepo. It contains **2 applications** and **13 shared packages** that work together to provide a complete full-stack development platform.
 
 ```files
 raypx/
@@ -105,7 +105,7 @@ This approach:
 
 ```bash
 # Workspace-level commands (all packages)
-turbo dev                   # Start all apps (or pnpm dev for web only)
+turbo dev                   # Start all apps (or bun dev for web only)
 turbo build                 # Build all apps
 turbo typecheck             # Check all TypeScript
 turbo format                # Format all code
@@ -114,12 +114,12 @@ turbo test                  # Run all tests
 # App-specific commands
 turbo dev --filter=web      # Just web app
 turbo dev --filter=docs     # Just docs
-pnpm email-preview          # Email template preview (packages/email)
+bun email-preview          # Email template preview (packages/email)
 
-# Package-specific commands (still use pnpm for non-turbo tasks)
-pnpm --filter @raypx/database run db:studio    # Drizzle Studio
-pnpm --filter @raypx/database run db:migrate   # Run migrations
-pnpm --filter @raypx/ui run shadcn add button  # Add UI component
+# Package-specific commands (still use bun for non-turbo tasks)
+bun run --filter @raypx/database studio       # Drizzle Studio
+bun run --filter @raypx/database migrate       # Run migrations
+bun run --filter @raypx/ui shadcn add button  # Add UI component
 
 # Turborepo filters (for cached tasks)
 turbo build --filter=web              # Build web app only
@@ -131,20 +131,20 @@ turbo build --filter=...^web          # Build web and its dependencies
 
 ```bash
 # Add to specific package
-pnpm --filter web add react-query
-pnpm --filter @raypx/ui add -D @types/node
+bun --filter web add react-query
+bun --filter @raypx/ui add -D @types/node
 
 # Add to workspace root (dev tools)
-pnpm add -D -w typescript
+bun add -D -w typescript
 
 # Use catalog dependencies (preferred)
-# Edit pnpm-workspace.yaml catalog, then:
+# Edit package.json catalog, then:
 pnpm install
 ```
 
 ### Catalog Dependencies
 
-This project uses **pnpm catalogs** for centralized version management:
+This project uses **pnpm catalogs** (via package.json workspaces.catalog) for centralized version management:
 
 ```yaml
 catalog:

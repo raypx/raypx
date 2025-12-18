@@ -1,4 +1,4 @@
-import { db, schemas } from "@raypx/database";
+import { db, eq, schemas } from "@raypx/database";
 import { sendEmail } from "@raypx/email";
 import {
   ResetPasswordEmail,
@@ -89,11 +89,17 @@ const getPlugins = () => {
         sendVerificationOTP: async (data) => {
           const { email, otp } = data;
           const env = envs();
+          // Try to get user name from database, fallback to email
+          const user = await db.query.user.findFirst({
+            where: eq(schemas.user.email, email),
+            columns: { name: true },
+          });
           await sendEmail({
             to: email,
             from: env.RESEND_FROM,
             subject: "Verify your email - Raypx",
             template: SendVerificationOTPEmail({
+              username: user?.name || email,
               otp,
             }),
           });

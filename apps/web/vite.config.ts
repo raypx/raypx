@@ -1,5 +1,3 @@
-import netlify from "@netlify/vite-plugin-tanstack-start";
-import raypx from "@raypx/core/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -8,7 +6,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig, type PluginOption } from "vite";
 import Inspect from "vite-plugin-inspect";
 import tsConfigPaths from "vite-tsconfig-paths";
-import raypxConfig from "./raypx.config";
 import env from "./src/env";
 
 const isDev = env.NODE_ENV === "development";
@@ -16,15 +13,11 @@ const isDev = env.NODE_ENV === "development";
 const deployPlugin = () => {
   const plugins: PluginOption[] = [];
 
-  if (process.env.NETLIFY) {
-    return [netlify()];
-  }
-
   if (process.env.VERCEL || env.VERCEL) {
     return [nitro()];
   }
 
-  return plugins;
+  return plugins?.length ? plugins : [nitro()];
 };
 
 export default defineConfig({
@@ -33,9 +26,21 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1000,
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Suppress eval warnings from dependencies (e.g., eval("require")("stream"))
+        if (warning.code === "EVAL" && warning.message?.includes("eval")) {
+          return;
+        }
+        // Use default warning handler for other warnings
+        warn(warning);
+      },
+    },
   },
   plugins: [
-    raypx(raypxConfig),
     // Always include for production tree-shaking
     devtools({
       enhancedLogs: { enabled: false },

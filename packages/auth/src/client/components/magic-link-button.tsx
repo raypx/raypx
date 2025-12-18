@@ -1,7 +1,7 @@
 import { Button } from "@raypx/ui/components/button";
 import { cn } from "@raypx/ui/lib/utils";
+import { IconLock, IconMail } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { LockIcon, MailIcon } from "lucide-react";
 
 type MagicLinkButtonProps = {
   className?: string;
@@ -35,9 +35,9 @@ export function MagicLinkButton({
       variant="secondary"
     >
       {isMagicLinkView ? (
-        <LockIcon className="mr-2 size-4" />
+        <IconLock className="mr-2 size-4" />
       ) : (
-        <MailIcon className="mr-2 size-4" />
+        <IconMail className="mr-2 size-4" />
       )}
       Sign in with {isMagicLinkView ? "Password" : "Magic Link"}
     </Button>

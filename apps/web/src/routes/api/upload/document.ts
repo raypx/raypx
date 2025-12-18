@@ -1,10 +1,10 @@
-import { createHash } from "node:crypto";
 import { auth } from "@raypx/auth/server";
 import { and, db, eq } from "@raypx/database";
-import { datasets as Datasets, documents as Documents } from "@raypx/database/schemas";
+import { datasets as Datasets } from "@raypx/database/schemas";
+import { nanoid } from "@raypx/shared/utils";
 import { isR2Configured, uploadToR2 } from "@raypx/storage";
+import { createTRPCContext, trpcRouter } from "@raypx/trpc";
 import { createFileRoute } from "@tanstack/react-router";
-import { nanoid } from "nanoid";
 
 async function handler({ request }: { request: Request }) {
   const session = await auth.api.getSession({
@@ -70,19 +70,19 @@ async function handler({ request }: { request: Request }) {
       );
     }
 
-    // Read file buffer
+    // Use stream for better performance with large files
+    // Convert File to Buffer (for now, could be optimized to use streams)
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Generate file key with nanoid (shorter and URL-safe)
-    const contentHash = createHash("sha256").update(buffer).digest("hex");
     const fileExtension = file.name.split(".").pop() || "bin";
-    // Generate a short unique ID (12 characters) using nanoid
-    const fileId = nanoid(12);
+    // Generate a unique ID using nanoid (21 characters by default, URL-safe)
+    // Used for file naming, no deduplication needed
+    const fileId = nanoid();
     // Include userId in the path: documents/{userId}/{fileId}.{extension}
     const key = `documents/${userId}/${fileId}.${fileExtension}`;
 
-    // Upload to R2
+    // Upload to R2 directly
     const uploadResult = await uploadToR2({
       key,
       buffer,
@@ -92,31 +92,26 @@ async function handler({ request }: { request: Request }) {
         datasetId,
         originalName: file.name,
         uploadedAt: new Date().toISOString(),
-        contentHash,
       },
     });
 
-    // Create document record with uploaded status since upload succeeded
-    // Status flow: processing -> uploaded -> completed (if processing needed)
-    // If there's additional processing needed (e.g., text extraction, vectorization),
-    // it can be done asynchronously and status can be updated to "completed" later
-    const [document] = await db
-      .insert(Documents)
-      .values({
-        name: file.name,
-        originalName: file.name,
-        mimeType: file.type || "application/octet-stream",
-        size: file.size,
-        datasetId,
-        status: "uploaded", // Set to uploaded since file upload succeeded
-        metadata: {
-          storageKey: key,
-          storageUrl: uploadResult.url,
-          contentHash,
-        },
-        userId,
-      })
-      .returning();
+    // Create document record via tRPC mutation (which handles auto-vectorization)
+    const ctx = await createTRPCContext({ headers: request.headers });
+    const caller = trpcRouter.createCaller(ctx);
+
+    const document = await caller.documents.create({
+      name: file.name,
+      originalName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      size: file.size,
+      datasetId,
+      status: "uploaded", // Set to uploaded so user can manually trigger vectorization
+      metadata: {
+        storageKey: key,
+        storageUrl: uploadResult.url,
+      },
+      autoVectorize: false, // Disable auto-vectorization, user will trigger manually
+    });
 
     return new Response(
       JSON.stringify({

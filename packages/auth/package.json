@@ -18,24 +18,27 @@
   "dependencies": {
     "@raypx/config": "workspace:*",
     "@raypx/database": "workspace:*",
-    "@raypx/email-templates": "workspace:*",
     "@raypx/email": "workspace:*",
-    "@raypx/env": "catalog:",
+    "@raypx/email-templates": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
     "@raypx/ui": "workspace:*",
+    "@tabler/icons-react": "^3.36.0",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "better-auth": "^1.4.5",
+    "better-auth": "^1.4.7",
     "lucide-react": "catalog:",
     "react": "catalog:react19",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@better-fetch/fetch": "^1.1.21",
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   }

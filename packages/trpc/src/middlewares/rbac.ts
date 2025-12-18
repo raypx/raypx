@@ -6,22 +6,17 @@
 
 import type { statement, UserRole } from "@raypx/auth";
 import { TRPCError } from "@trpc/server";
-import type { MiddlewareFunction } from "@trpc/server/unstable-core-do-not-import";
-import type { TRPCContext } from "../trpc";
-import { checkPermission, getUserRole, hasAnyRole } from "../utils/rbac";
+import { middleware } from "../trpc";
+import { checkPermission, hasAnyRole } from "../utils/rbac";
 
 /**
  * Create middleware that checks if user has permission for a resource and action
  */
-export function requirePermission<
-  TContext extends TRPCContext,
-  TInput = unknown,
-  TOutput = unknown,
->(
+export function requirePermission(
   resource: keyof typeof statement,
   action: (typeof statement)[keyof typeof statement][number],
-): MiddlewareFunction<TContext, TInput, TOutput> {
-  return async ({ ctx, next }) => {
+) {
+  return middleware(async ({ ctx, next }) => {
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
@@ -42,16 +37,14 @@ export function requirePermission<
         session: ctx.session,
       },
     });
-  };
+  });
 }
 
 /**
  * Create middleware that checks if user has one of the specified roles
  */
-export function requireRole<TContext extends TRPCContext, TInput = unknown, TOutput = unknown>(
-  ...roles: UserRole[]
-): MiddlewareFunction<TContext, TInput, TOutput> {
-  return async ({ ctx, next }) => {
+export function requireRole(...roles: UserRole[]) {
+  return middleware(async ({ ctx, next }) => {
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
@@ -72,7 +65,7 @@ export function requireRole<TContext extends TRPCContext, TInput = unknown, TOut
         session: ctx.session,
       },
     });
-  };
+  });
 }
 
 /**
@@ -82,16 +75,12 @@ export function requireRole<TContext extends TRPCContext, TInput = unknown, TOut
  * @param action - Action for permission check
  * @param getResourceUserId - Function to get the resource owner's userId from input
  */
-export function requireOwnershipOrPermission<
-  TContext extends TRPCContext,
-  TInput = unknown,
-  TOutput = unknown,
->(
+export function requireOwnershipOrPermission<TInput = unknown>(
   resource: keyof typeof statement,
   action: (typeof statement)[keyof typeof statement][number],
   getResourceUserId: (input: TInput) => string | null | Promise<string | null>,
-): MiddlewareFunction<TContext, TInput, TOutput> {
-  return async ({ ctx, input, next }) => {
+) {
+  return middleware(async ({ ctx, input, next }) => {
     if (!ctx.session?.user) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
@@ -124,5 +113,5 @@ export function requireOwnershipOrPermission<
         session: ctx.session,
       },
     });
-  };
+  });
 }

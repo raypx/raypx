@@ -13,19 +13,19 @@ description: Complete checklist for deploying Raypx to Vercel with database, Red
 
 ```bash
 # Clean cache
-pnpm clean
+bun clean
 
 # Install dependencies
 pnpm install
 
 # Type check
-pnpm typecheck
+bun typecheck
 
 # Code check
-pnpm check
+bun check
 
 # Full build
-pnpm build
+bun run build
 
 # Verify build output
 ls -la apps/web/dist/client
@@ -67,11 +67,11 @@ cp .env.example .env.production
    ```
 4. Run database migrations:
    ```bash
-   DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:migrate
+   DATABASE_URL="postgresql://..." bun run --filter @raypx/database migrate
    ```
 5. Verify database:
    ```bash
-   DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
+   DATABASE_URL="postgresql://..." bun run --filter @raypx/database studio
    ```
 
 ### Option 2: Vercel Postgres (Easiest)
@@ -89,7 +89,7 @@ cp .env.example .env.production
 5. Run migrations locally (connecting to Vercel Postgres):
    ```bash
    vercel env pull .env.local
-   pnpm --filter @raypx/database run db:migrate
+   bun run --filter @raypx/database migrate
    ```
 
 ### Option 3: Any Standard PostgreSQL
@@ -110,7 +110,7 @@ cp .env.example .env.production
 DATABASE_URL="postgresql://..." psql -c "SELECT version();"
 
 # View tables
-DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
+DATABASE_URL="postgresql://..." bun run --filter @raypx/database studio
 ```
 
 ---
@@ -234,7 +234,7 @@ stripe trigger checkout.session.completed
 **✅ Test Email Sending:**
 ```bash
 # Start email preview service
-pnpm email:dev
+bun email:dev
 
 # Visit http://localhost:3003
 # Test sending emails
@@ -297,7 +297,7 @@ AUTH_GOOGLE_SECRET=your_google_client_secret
    ```
    Framework Preset: Other
    Root Directory: ./
-   Build Command: pnpm build
+   Build Command: bun run build
    Output Directory: apps/web/dist
    Install Command: pnpm install
    ```
@@ -355,7 +355,7 @@ git commit -m "chore: prepare for deployment"
 git push origin main
 
 # Method 2: Use Vercel CLI
-pnpm add -g vercel
+bun add -g vercel
 vercel --prod
 
 # Method 3: Vercel Dashboard manual trigger
@@ -435,9 +435,9 @@ curl -I https://yourdomain.com
 
 ```json
 {
-  "buildCommand": "pnpm build",
+  "buildCommand": "bun run build",
   "outputDirectory": "apps/web/dist",
-  "devCommand": "pnpm dev",
+  "devCommand": "bun dev",
   "installCommand": "pnpm install",
   "framework": null,
   "regions": ["iad1"],
@@ -474,14 +474,14 @@ curl -I https://yourdomain.com
 ```json
 {
   "scripts": {
-    "vercel-build": "pnpm build"
+    "vercel-build": "bun run build"
   }
 }
 ```
 
 **Cache Optimization:**
 - Vercel automatically caches `node_modules`
-- Use `pnpm` for faster dependency installation
+- Use `bun` for faster dependency installation
 - Turborepo caches build artifacts
 
 ---
@@ -490,7 +490,7 @@ curl -I https://yourdomain.com
 
 ### Issue 1: Build Failure - "Cannot find module"
 
-**Cause:** pnpm workspace dependencies not resolved correctly
+**Cause:** bun workspace dependencies not resolved correctly
 
 **Solution:**
 ```bash
@@ -583,7 +583,7 @@ VITE_SENTRY_DSN=https://xxx@sentry.io/xxx
 
 **Drizzle Studio (Local):**
 ```bash
-DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
+DATABASE_URL="postgresql://..." bun run --filter @raypx/database studio
 ```
 
 ---
@@ -591,9 +591,9 @@ DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
 ## ✅ Final Checklist
 
 ### Pre-Deployment (Local)
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm check` passes
-- [ ] `pnpm build` succeeds
+- [ ] `bun typecheck` passes
+- [ ] `bun check` passes
+- [ ] `bun run build` succeeds
 - [ ] All TODO code completed or commented
 - [ ] .env.example updated
 
@@ -631,7 +631,7 @@ DATABASE_URL="postgresql://..." pnpm --filter @raypx/database run db:studio
 
 ```bash
 # 1. Local verification
-pnpm clean && pnpm install && pnpm build
+pnpm clean && pnpm install && pnpm run build
 
 # 2. Commit code
 git add .

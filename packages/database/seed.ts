@@ -1,6 +1,16 @@
+import { createConsola } from "@raypx/logger";
 import { reset, seed } from "drizzle-seed";
 import { db } from "./src";
-import * as schemas from "./src/schemas";
+import * as schemas from "./src/schemas/pg";
+
+const logger = createConsola({
+  level: process.env.NODE_ENV === "production" ? 3 : 4,
+  formatOptions: {
+    colors: true,
+    date: false,
+    compact: true,
+  },
+}).withTag("Database");
 
 async function main() {
   await reset(db, schemas);
@@ -10,6 +20,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(e);
+  logger.error("Seed failed", { error: e });
   process.exit(1);
 });

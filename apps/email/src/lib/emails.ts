@@ -153,25 +153,21 @@ function clearCaches(): void {
 if (import.meta.hot) {
   // Accept HMR updates for this module
   import.meta.hot.accept(() => {
-    console.log("[emails.ts] HMR: Accepting module update");
     clearCaches();
   });
 
   // Listen for custom email templates update event from our Vite plugin
-  import.meta.hot.on("email-templates-update", (data: { file: string }) => {
-    console.log("[emails.ts] HMR: Email template updated:", data.file);
+  import.meta.hot.on("email-templates-update", (_data: { file: string }) => {
     clearCaches();
   });
 
   // Clear caches before any update
   import.meta.hot.on("vite:beforeUpdate", () => {
-    console.log("[emails.ts] HMR: Clearing caches before update");
     clearCaches();
   });
 
   // Dispose handler to clean up when module is replaced
   import.meta.hot.dispose(() => {
-    console.log("[emails.ts] HMR: Disposing old module");
     clearCaches();
   });
 }

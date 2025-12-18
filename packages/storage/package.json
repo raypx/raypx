@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./envs": "./src/envs.ts"
   },
   "scripts": {
     "clean": "rimraf dist .turbo",
@@ -12,15 +13,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.943.0",
+    "@aws-sdk/client-s3": "^3.954.0",
+    "@aws-sdk/s3-request-presigner": "^3.954.0",
     "@raypx/config": "workspace:*",
     "@raypx/shared": "workspace:*",
+    "@smithy/node-http-handler": "^4.4.6",
     "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

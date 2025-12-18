@@ -14,8 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@dotenvx/dotenvx": "^1.51.1",
-    "@raypx/logger": "^0.1.0",
+    "@dotenvx/dotenvx": "^1.51.2",
+    "@raypx/logger": "workspace:*",
     "fast-glob": "^3.3.3",
     "fs-extra": "catalog:",
     "jiti": "catalog:",
@@ -28,7 +28,7 @@
     "@types/node": "catalog:",
     "@types/yargs-parser": "^21.0.3",
     "type-fest": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

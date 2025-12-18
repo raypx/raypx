@@ -2,7 +2,7 @@
 
 > **Project:** Raypx - Modern full-stack AI-powered web application platform
 > **Stack:** TanStack Start + React 19 + TypeScript + pnpm monorepo
-> **Last Updated:** 2025-11-20
+> **Last Updated:** 2025-12-16
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ pnpm install
 cp .env.example .env  # Edit with your config
 
 # Run migrations
-pnpm --filter @raypx/database run db:migrate
+pnpm --filter @raypx/database run migrate
 
 # Start development
 pnpm dev  # http://localhost:3000
@@ -26,19 +26,19 @@ pnpm dev  # http://localhost:3000
 # Development
 pnpm dev              # Start web app
 pnpm docs:dev         # Start docs
-pnpm email-preview    # Email template preview
+pnpm email:dev        # Email template preview
 
 # Build & Quality
-pnpm build            # Production build
+pnpm run build            # Production build
 pnpm typecheck        # Type check
 pnpm check            # Lint (Biome)
 pnpm format           # Format code
 pnpm test             # Run tests
 
 # Database
-pnpm --filter @raypx/database run db:studio    # Database GUI
-pnpm --filter @raypx/database run db:migrate   # Run migrations
-pnpm --filter @raypx/database run db:generate  # Generate migrations
+pnpm --filter @raypx/database run studio       # Database GUI
+pnpm --filter @raypx/database run migrate      # Run migrations
+pnpm --filter @raypx/database run generate     # Generate migrations
 
 # Utilities
 pnpm clean            # Clean artifacts
@@ -76,7 +76,7 @@ raypx/
 - **React** 19.2.0 - UI library
 - **TypeScript** 5.9.3 - Type safety
 - **Vite** 7.2.2 - Build tool
-- **pnpm** 10.17.0+ - Package manager
+- **pnpm** 10.26.0+ - Package manager
 - **Turborepo** 2.6.1 - Monorepo orchestration
 
 ### Backend
@@ -101,7 +101,7 @@ raypx/
 
 ## Package Manager (pnpm)
 
-**This project exclusively uses pnpm 10.17.0+**
+**This project exclusively uses pnpm 10.26.0+**
 
 ```bash
 # Add dependency to package
@@ -115,7 +115,7 @@ pnpm --filter web add -D <package>
 pnpm --filter web remove <package>
 
 # Update dependencies
-pnpm update --recursive --interactive --latest
+pnpm update --latest --interactive --recursive
 
 # Run in all packages
 pnpm -r run <script>
@@ -172,7 +172,7 @@ pnpm format
 pnpm test
 
 # 3. Build to verify
-pnpm build
+pnpm run build
 
 # 4. Commit
 git commit -m "feat: add my feature"
@@ -182,7 +182,7 @@ git commit -m "feat: add my feature"
 
 **Always run full build before committing:**
 ```bash
-pnpm build  # Verifies TypeScript, dependencies, routes, assets
+pnpm run build  # Verifies TypeScript, dependencies, routes, assets
 ```
 
 Build time: 10-15 seconds for full production build.
@@ -233,13 +233,13 @@ pnpm coverage          # Coverage report
 ```bash
 pnpm clean && rm -rf node_modules && pnpm install
 rm -rf apps/web/.tanstack apps/web/.nitro apps/web/dist
-pnpm build
+pnpm run build
 ```
 
 ### Database Issues
 ```bash
-pnpm --filter @raypx/database run db:studio   # Inspect DB
-pnpm --filter @raypx/database run db:migrate  # Run migrations
+pnpm --filter @raypx/database run studio      # Inspect DB
+pnpm --filter @raypx/database run migrate     # Run migrations
 ```
 
 ### TypeScript Errors
@@ -258,7 +258,7 @@ pnpm --filter @raypx/database run db:migrate  # Run migrations
 
 ### Build Output
 ```bash
-pnpm build
+pnpm run build
 
 apps/web/dist/client/   # Client assets
 apps/web/dist/server/   # Server code
@@ -268,7 +268,7 @@ apps/web/.netlify/      # Netlify files
 ### Pre-deployment Checklist
 - [ ] Tests pass (`pnpm test`)
 - [ ] Type check passes (`pnpm typecheck`)
-- [ ] Build succeeds (`pnpm build`)
+- [ ] Build succeeds (`pnpm run build`)
 - [ ] Environment variables configured
 - [ ] Database migrations run
 

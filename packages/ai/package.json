@@ -1,0 +1,28 @@
+{
+  "name": "@raypx/ai",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.6",
+    "@langchain/openai": "^1.2.0",
+    "@raypx/config": "workspace:*",
+    "@raypx/database": "workspace:*",
+    "@raypx/logger": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "rimraf": "^6.1.2",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

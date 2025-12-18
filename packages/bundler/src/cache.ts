@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import fs from "fs-extra";
 import { isEqual } from "lodash-es";
+import { logger } from "../logger";
 
 /**
  * Cache metadata for tracking file changes and configuration
@@ -79,7 +80,7 @@ export class Cache<TConfig extends Record<string, unknown>> {
       this.cache = fs.readJSONSync(this.cacheFilePath);
       return this.cache;
     } catch (_error: unknown) {
-      console.warn("Failed to read cache metadata, will recompile");
+      logger.warn("Failed to read cache metadata, will recompile");
       return null;
     }
   }
@@ -138,13 +139,13 @@ export class Cache<TConfig extends Record<string, unknown>> {
       if (diff.config) reasons.push("Configuration changed");
       if (reasons.length === 0) reasons.push("Cache not found");
 
-      console.debug(`[@raypx/bundler] ${reasons.join(", ")}, recompiling...`);
+      logger.debug(`${reasons.join(", ")}, recompiling...`);
       return true;
     }
 
     // Check if output directory is missing (user may have cleaned it)
     if (!existsSync(outDir) || !existsSync(path.join(outDir, "runtime.js"))) {
-      console.debug("[@raypx/bundler] Output directory missing, recompiling...");
+      logger.debug("Output directory missing, recompiling...");
       return true;
     }
 

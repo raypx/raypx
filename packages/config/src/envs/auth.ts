@@ -1,5 +1,5 @@
 import { z } from "@raypx/env";
-import { emailEnv } from "./email";
+import { emailEnv } from "./email.ts";
 
 export const authEnv = {
   id: "auth",

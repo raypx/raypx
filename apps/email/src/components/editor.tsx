@@ -89,11 +89,11 @@ export function Editor({ templateName, menuTree, from, to, subject }: EditorProp
         {/* Center: View mode toggle */}
         <ToggleGroup
           className="border border-border rounded-lg bg-muted/50"
-          onValueChange={(value) => {
-            if (value) setViewMode(value as ViewMode);
+          onValueChange={([value]) => {
+            const viewMode = value as ViewMode;
+            setViewMode(viewMode);
           }}
-          type="single"
-          value={viewMode}
+          value={[viewMode]}
           variant="default"
         >
           <ToggleGroupItem
@@ -116,11 +116,10 @@ export function Editor({ templateName, menuTree, from, to, subject }: EditorProp
         <div className="flex items-center gap-2">
           <ToggleGroup
             className="border border-border rounded-lg"
-            onValueChange={(value) => {
-              if (value) setDeviceMode(value as DeviceMode);
+            onValueChange={([value]) => {
+              setDeviceMode(value as DeviceMode);
             }}
-            type="single"
-            value={deviceMode}
+            value={[deviceMode]}
             variant="default"
           >
             <ToggleGroupItem aria-label="Desktop view" value="desktop">

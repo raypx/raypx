@@ -17,7 +17,8 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@raypx/env": "catalog:",
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
     "fs-extra": "catalog:",
     "lodash-es": "catalog:"
   },
@@ -26,7 +27,7 @@
     "@types/fs-extra": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

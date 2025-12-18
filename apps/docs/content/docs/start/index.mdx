@@ -25,11 +25,11 @@ It provides a fully type-safe React 19 stack with Better Auth authentication, Dr
 Before you start, make sure the following tools are installed:
 
 - **Node.js** 20+ (LTS recommended)
-- **pnpm** 10.17+ (required - this project uses pnpm workspaces)
+- **bun** 10.17+ (required - this project uses bun workspaces)
 - **PostgreSQL** database (local or cloud like Neon)
 - **Git** for version control
 
-> Tip: run `node --version` and `pnpm --version` to verify your versions.
+> Tip: run `node --version` and `bun --version` to verify your versions.
 
 ### First-Time Setup
 
@@ -48,11 +48,11 @@ cp .env.example .env
 ```
 
 ```bash title="3. Run database migrations"
-pnpm --filter @raypx/database run db:migrate
+bun run --filter @raypx/database migrate
 ```
 
 ```bash title="4. Start the development server"
-pnpm dev
+bun dev
 # Web app: http://localhost:3000
 # Docs: http://localhost:3001
 ```
@@ -63,26 +63,26 @@ The web app runs at `http://localhost:3000` with hot-module reloading and TanSta
 
 | Task | Command | Notes |
 | ---- | ------- | ----- |
-| **Development** | `pnpm dev` | Starts all apps (web + docs) with hot reload |
-| **Web app only** | `pnpm --filter web dev` | Just the main TanStack Start app |
-| **Docs only** | `pnpm --filter docs dev` | Just the Fumadocs site |
-| **Email preview** | `pnpm --filter email dev` | Preview email templates |
-| **Format & lint** | `pnpm format` / `pnpm check` | Biome for formatting and linting |
-| **Type check** | `pnpm typecheck` | TypeScript across entire workspace |
-| **Tests** | `pnpm test` | Vitest unit tests |
-| **Coverage** | `pnpm coverage` | HTML coverage reports |
-| **Build** | `pnpm build` | Full Turborepo production build |
-| **Clean** | `pnpm clean` | Remove build artifacts and caches |
-| **Database** | `pnpm --filter @raypx/database run db:studio` | Drizzle Studio (database GUI) |
-| **Add UI component** | `pnpm shadcn` | Add shadcn/ui components |
+| **Development** | `bun dev` | Starts all apps (web + docs) with hot reload |
+| **Web app only** | `bun --filter web dev` | Just the main TanStack Start app |
+| **Docs only** | `bun --filter docs dev` | Just the Fumadocs site |
+| **Email preview** | `bun --filter email dev` | Preview email templates |
+| **Format & lint** | `bun format` / `bun check` | Biome for formatting and linting |
+| **Type check** | `bun typecheck` | TypeScript across entire workspace |
+| **Tests** | `bun test` | Vitest unit tests |
+| **Coverage** | `bun coverage` | HTML coverage reports |
+| **Build** | `bun run build` | Full Turborepo production build |
+| **Clean** | `bun clean` | Remove build artifacts and caches |
+| **Database** | `bun run --filter @raypx/database studio` | Drizzle Studio (database GUI) |
+| **Add UI component** | `bun shadcn` | Add shadcn/ui components |
 
 ## Recommended Workflow
 
-1. Start development with `pnpm dev` (or `pnpm --filter web dev` for web only)
+1. Start development with `bun dev` (or `bun --filter web dev` for web only)
 2. Make changes in the relevant app or package
-3. Run `pnpm typecheck` and `pnpm check` to validate changes
-4. Run `pnpm test` if you've added or modified business logic
-5. Build to verify everything compiles: `pnpm build`
+3. Run `bun typecheck` and `bun check` to validate changes
+4. Run `bun test` if you've added or modified business logic
+5. Build to verify everything compiles: `bun run build`
 6. Commit with conventional commits (e.g., `feat(auth): add OAuth providers`)
 
 ## Learn More

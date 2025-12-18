@@ -1,18 +1,18 @@
-#!/usr/bin/env -S node --no-warnings=ExperimentalWarning
+#!/usr/bin/env node
 
 import { createJiti } from "jiti";
 
 const jiti = createJiti(import.meta.url);
-
-// Import the main CLI handler
-const cli = await jiti.import("../cli.ts", { default: true });
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 
 // Execute the CLI with error handling
 try {
-  cli(args);
+  const cli = await jiti.import("../cli", { default: true });
+  await cli(args);
 } catch (error) {
-  process.exit(error.status || 1);
+  // Handle errors with proper exit codes
+  const exitCode = error?.status || error?.code || 1;
+  process.exit(exitCode);
 }

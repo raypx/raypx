@@ -1,0 +1,11 @@
+import { defineConfig } from "tsdown";
+
+export default defineConfig({
+  entry: ["src/index.ts", "src/server.ts", "src/envs.ts"],
+  dts: true,
+  format: "esm",
+  shims: true,
+  sourcemap: true,
+  clean: false,
+  logLevel: "error",
+});

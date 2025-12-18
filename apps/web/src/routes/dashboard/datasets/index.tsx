@@ -294,7 +294,7 @@ function DatasetsSection() {
             value={statusFilter}
           >
             <SelectTrigger className="w-32 h-9 bg-background/50 border-border/50">
-              <SelectValue placeholder="Status" />
+              <SelectValue render={<span>Status</span>} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>

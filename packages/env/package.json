@@ -1,0 +1,28 @@
+{
+  "name": "@raypx/env",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "#build": "tsdown",
+    "clean": "rimraf dist .turbo",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "envin": "^1.1.12",
+    "lodash-es": "catalog:",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "raypx-scripts run vite build",
+    "#build": "raypx-scripts run vite build",
     "clean": "rimraf dist .turbo .tanstack .nitro .output",
     "dev": "raypx-scripts run vite dev",
     "serve": "raypx-scripts run vite preview",
@@ -22,6 +22,7 @@
     "pathe": "^2.0.3",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "shadcn": "^3.6.2",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -33,12 +34,12 @@
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "nitro": "catalog:",
-    "shiki": "^3.19.0",
+    "shiki": "^3.20.0",
     "tailwindcss": "catalog:tailwindv4",
     "tw-animate-css": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vite": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
+    "vite-tsconfig-paths": "^6.0.3",
     "vitest": "catalog:"
   },
   "peerDependencies": {

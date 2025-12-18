@@ -1,7 +1,6 @@
 export * from "./magic-link-button";
 export * from "./provider";
 export * from "./provider-button";
-export * from "./provider-icons";
 export * from "./redirect-to-sign-in";
 export * from "./redirect-to-sign-up";
 export * from "./security-panel";

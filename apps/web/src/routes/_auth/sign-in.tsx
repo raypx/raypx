@@ -123,7 +123,6 @@ function SignInPage() {
                     </Link>
                   )}
                 </div>
-
                 <FormControl>
                   <PasswordField
                     autoComplete="current-password"
@@ -132,7 +131,6 @@ function SignInPage() {
                     {...field}
                   />
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}
@@ -157,12 +155,6 @@ function SignInPage() {
               )}
             />
           )}
-
-          {/* <Captcha
-                    action="/sign-in/email"
-                    localization={localization}
-                    ref={captchaRef}
-                /> */}
 
           <Button className="w-full" disabled={isSubmitting} type="submit">
             {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}

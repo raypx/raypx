@@ -123,7 +123,7 @@ export async function validateImage(buffer: Buffer): Promise<{
     }
 
     return { valid: true };
-  } catch (error) {
+  } catch (_error) {
     return { valid: false, error: "Invalid image file" };
   }
 }

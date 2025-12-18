@@ -1,5 +1,6 @@
 import { createClient, type RedisClientType } from "redis";
 import superjson from "superjson";
+import { logger } from "../logger";
 import {
   ARRAY_INDEX_NOT_FOUND,
   COMPOUND_KEY_SEPARATOR,
@@ -468,7 +469,7 @@ export class Cache implements RedisCacheStore {
       try {
         listener(event);
       } catch (error) {
-        console.error("Error in cache event listener:", error);
+        logger.error("Error in cache event listener", { error });
       }
     }
   }

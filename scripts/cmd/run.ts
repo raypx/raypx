@@ -23,8 +23,8 @@ Common use cases:
   examples: [
     "raypx-scripts run drizzle-kit studio",
     "raypx-scripts run drizzle-kit generate",
-    "raypx-scripts run pnpm build",
-    "rs run node scripts/seed.js",
+    "raypx-scripts run pnpm run build",
+    "rs run pnpm run scripts/seed.js",
   ],
   run: async (args?: string[]) => {
     if (!args?.length) {

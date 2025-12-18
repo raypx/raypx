@@ -2,6 +2,7 @@ import type { LucideProps } from "lucide-react";
 import type { ComponentType } from "react";
 import { lazy, Suspense, useMemo } from "react";
 import type { NonEmptyObject, SetOptional, Simplify } from "type-fest";
+import { logger } from "../../logger";
 
 export type IconProps = Simplify<
   SetOptional<LucideProps, "ref"> & {
@@ -22,7 +23,7 @@ function Icon({ name, fallback = null, ...props }: IconProps) {
           const IconComponent = lucideModule[name as keyof typeof lucideModule];
           return { default: (IconComponent as LucideIcon) || (() => null) };
         } catch (error) {
-          console.error("Error importing icon", error);
+          logger.error("Error importing icon", { error });
           return { default: () => null };
         }
       }),

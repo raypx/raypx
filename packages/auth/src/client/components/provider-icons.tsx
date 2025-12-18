@@ -1,4 +1,6 @@
 /** biome-ignore-all lint/a11y/noSvgWithoutTitle: svg icons */
+
+import { IconBrandGoogle } from "@tabler/icons-react";
 import type { ComponentType } from "react";
 
 export type ProviderIconProps = {
@@ -21,7 +23,7 @@ export const GitHubIcon: ProviderIcon = ({ className }) => (
   </svg>
 );
 
-export const GoogleIcon: ProviderIcon = ({ className }) => (
+export const GoogleIcon2: ProviderIcon = ({ className }) => (
   <svg
     aria-label="Google"
     className={className}
@@ -46,6 +48,8 @@ export const GoogleIcon: ProviderIcon = ({ className }) => (
     />
   </svg>
 );
+
+export const GoogleIcon = IconBrandGoogle;
 
 export const AppleIcon: ProviderIcon = ({ className }) => (
   <svg

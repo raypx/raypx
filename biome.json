@@ -10,7 +10,7 @@
     "ignoreUnknown": true,
     "maxSize": 1048576,
     "includes": [
-      "**/*.{tsx,ts,js,jsx,json,jsonc,css,yaml,yml,mdx}",
+      "**/*.{tsx,ts,js,jsx,json,jsonc,css,mdx}",
       "!**/dist",
       "!**/node_modules",
       "!**/.git",

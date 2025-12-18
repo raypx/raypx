@@ -23,43 +23,50 @@
     "check": "biome check",
     "clean": "raypx-scripts clean",
     "coverage": "vitest --coverage",
-    "db:generate": "pnpm --filter @raypx/database generate",
-    "db:migrate": "pnpm --filter @raypx/database migrate",
-    "db:push": "pnpm --filter @raypx/database push",
-    "db:studio": "pnpm --filter @raypx/database studio",
+    "db": "raypx-scripts db",
     "dev": "turbo --filter=web dev",
     "docs:dev": "turbo dev --filter docs",
+    "turbo": "turbo",
     "email:dev": "turbo dev --filter=email",
     "format": "raypx-scripts format",
     "preinstall": "npx only-allow pnpm",
     "postinstall": "raypx-scripts postinstall",
     "setup": "raypx-scripts setup",
     "shadcn": "pnpm --filter web run shadcn && pnpm -w format",
+    "start": "turbo start",
     "test": "turbo test",
-    "turbo:gen": "pnpm turbo gen",
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
-    "update:deps": "pnpm update --recursive --interactive --latest"
+    "update:deps": "pnpm update --latest --interactive --recursive",
+    "web:start": "turbo start --filter=web"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:dev",
+    "@biomejs/biome": "^2.3.10",
     "@changesets/cli": "^2.29.8",
-    "@dotenvx/dotenvx": "^1.51.1",
+    "@dotenvx/dotenvx": "^1.51.2",
     "@raypx/scripts": "workspace:*",
-    "@turbo/gen": "^2.6.3",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "^4.0.15",
-    "jsdom": "^27.2.0",
-    "lefthook": "catalog:dev",
-    "rimraf": "catalog:",
-    "tsdown": "catalog:dev",
+    "@vitest/coverage-v8": "^4.0.16",
+    "jsdom": "^27.3.0",
+    "lefthook": "^2.0.12",
+    "rimraf": "^6.1.2",
+    "tsdown": "^0.18.1",
     "turbo": "^2.6.3",
-    "typescript": "catalog:dev",
+    "typescript": "^5.9.3",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "^4.0.16"
   },
-  "packageManager": "pnpm@10.24.0",
+  "packageManager": "pnpm@10.26.0",
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=10.0.0"
+    "node": ">=22",
+    "pnpm": ">=10.26.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/**",
+    "tooling/*",
+    "scripts"
+  ],
+  "overrides": {
+    "vite": "catalog:"
   }
 }

@@ -60,3 +60,6 @@ logs
 **/.output
 
 **/.raypx
+
+# pnpm
+.pnpm-store/

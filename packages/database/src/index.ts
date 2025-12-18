@@ -20,15 +20,30 @@ export {
 } from "drizzle-orm";
 
 import { createClient } from "./adapters/neon";
-import * as schemas from "./schemas";
+import * as schemas from "./schemas/pg";
+import * as vectorSchemas from "./schemas/vector";
 
-export * as schemas from "./schemas";
+export * as schemas from "./schemas/pg";
+export * as vectorSchemas from "./schemas/vector";
+export * from "./services/config";
 export * from "./types";
 export * from "./utils";
 
 import { envs } from "./envs";
 
+// Main database connection (for documents, datasets, conversations, etc.)
 export const db = createClient<typeof schemas>({
   databaseUrl: envs().DATABASE_URL,
   schema: schemas,
+});
+
+// Vector database connection (for embeddings and optionally chunks)
+// Uses VECTOR_URL if set, otherwise falls back to DATABASE_URL (same database)
+const env = envs();
+
+const vectorUrl = env.VECTOR_URL || env.DATABASE_URL;
+
+export const vectorDb = createClient<typeof vectorSchemas>({
+  databaseUrl: vectorUrl,
+  schema: vectorSchemas,
 });

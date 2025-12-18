@@ -35,7 +35,7 @@ export function Layout({ user }: LayoutProps) {
           </main>
 
           {/* Footer */}
-          <footer className="border-t bg-background/50 backdrop-blur-sm px-6 py-4 relative z-20">
+          <footer className="border-t bg-background/50 backdrop-blur-sm px-6 py-4 mt-auto">
             <div className="max-w-8xl mx-auto flex items-center justify-between">
               <Button asChild className="gap-2" size="sm" variant="ghost">
                 <a href={links.docs} rel="noopener noreferrer" target="_blank">

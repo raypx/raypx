@@ -24,23 +24,24 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build Package Dependencies
+        run: pnpm run build:pkg
+
       - name: Lint
-        run: pnpm check
+        run: pnpm run check
 
       - name: Type Check
-        run: pnpm check
+        run: pnpm run typecheck
 
   test:
     name: Test
@@ -54,26 +55,24 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          run_install: false
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build Dependencies
-        run: pnpm build
+        run: pnpm run build
 
       - name: Run Tests
-        run: pnpm test
+        run: pnpm run test
 
       - name: Run unit tests with coverage
-        run: pnpm coverage
+        run: pnpm run coverage
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -88,20 +87,18 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build All Packages
-        run: pnpm build
+        run: pnpm run build
 
       - name: Check Build Artifacts
         run: |
@@ -118,14 +115,12 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile

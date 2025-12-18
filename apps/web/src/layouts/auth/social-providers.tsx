@@ -3,7 +3,7 @@ import { ProviderButton, socialProviders } from "@raypx/auth";
 interface SocialProvidersProps {
   redirectTo?: string;
   disabled?: boolean;
-  providers?: ("github" | "google" | "discord" | "microsoft" | "apple")[];
+  providers?: ("github" | "google" | "discord")[];
 }
 
 export function SocialProviders({

@@ -25,14 +25,14 @@ description: Learn the day-to-day commands, QA expectations, and collaboration p
 
 3. **Setup database**
    ```bash
-   pnpm --filter @raypx/database run db:migrate
+   bun run --filter @raypx/database migrate
    ```
 
 4. **Start development**
    ```bash
-   pnpm dev  # All apps (web + docs)
+   bun dev  # All apps (web + docs)
    # or
-   pnpm --filter web dev  # Just web app
+   bun --filter web dev  # Just web app
    ```
 
 ### Environment Variables
@@ -48,21 +48,21 @@ The project uses **type-safe environment variables** via `@raypx/env`:
 
 | Command | Description |
 | ------- | ----------- |
-| `pnpm dev` | Start all apps (web + docs) with hot reload |
-| `pnpm --filter web dev` | Just the TanStack Start web app |
-| `pnpm --filter docs dev` | Just the Fumadocs documentation site |
-| `pnpm --filter email dev` | Email template preview server |
-| `pnpm build` | Production build of all apps (validates everything) |
-| `pnpm typecheck` | TypeScript validation across workspace |
-| `pnpm check` | Biome linting and formatting check |
-| `pnpm format` | Auto-format all code with Biome |
-| `pnpm test` | Run Vitest unit tests |
-| `pnpm coverage` | Generate HTML coverage reports |
-| `pnpm clean` | Remove build artifacts and caches |
-| `pnpm --filter @raypx/database run db:studio` | Open Drizzle Studio (database GUI) |
-| `pnpm --filter @raypx/database run db:migrate` | Run database migrations |
-| `pnpm --filter @raypx/database run db:generate` | Generate new migration from schema changes |
-| `pnpm shadcn` | Add shadcn/ui components to @raypx/ui |
+| `bun dev` | Start all apps (web + docs) with hot reload |
+| `bun --filter web dev` | Just the TanStack Start web app |
+| `bun --filter docs dev` | Just the Fumadocs documentation site |
+| `bun --filter email dev` | Email template preview server |
+| `bun run build` | Production build of all apps (validates everything) |
+| `bun typecheck` | TypeScript validation across workspace |
+| `bun check` | Biome linting and formatting check |
+| `bun format` | Auto-format all code with Biome |
+| `bun test` | Run Vitest unit tests |
+| `bun coverage` | Generate HTML coverage reports |
+| `bun clean` | Remove build artifacts and caches |
+| `bun run --filter @raypx/database studio` | Open Drizzle Studio (database GUI) |
+| `bun run --filter @raypx/database migrate` | Run database migrations |
+| `bun run --filter @raypx/database generate` | Generate new migration from schema changes |
+| `bun shadcn` | Add shadcn/ui components to @raypx/ui |
 
 ## Coding Standards
 
@@ -77,7 +77,7 @@ The project uses **type-safe environment variables** via `@raypx/env`:
 
 - **Formatting**: Biome handles all formatting (replaces Prettier)
 - **Linting**: Biome enforces code quality rules (replaces ESLint)
-- **Pre-commit hooks**: Lefthook runs `pnpm format` before commits
+- **Pre-commit hooks**: Lefthook runs `bun format` before commits
 - **Variable names**: Use clear, descriptive names over short abbreviations
 
 ### Project Structure
@@ -114,10 +114,10 @@ git commit -m "feat(web,auth): add login flow"
 **Always run before pushing**:
 
 ```bash
-pnpm typecheck  # TypeScript validation
-pnpm check      # Linting
-pnpm test       # Unit tests
-pnpm build      # Verify production build
+bun typecheck  # TypeScript validation
+bun check      # Linting
+bun test       # Unit tests
+bun run build      # Verify production build
 ```
 
 Build time is only 10-15 seconds, so always build before commits.
@@ -161,9 +161,9 @@ When adding tests:
 ### Running Tests
 
 ```bash
-pnpm test           # All tests
-pnpm test --watch   # Watch mode
-pnpm coverage       # Generate coverage report
+bun test           # All tests
+bun test --watch   # Watch mode
+bun coverage       # Generate coverage report
 ```
 
 Coverage reports are uploaded to Codecov in CI.
@@ -175,16 +175,16 @@ Coverage reports are uploaded to Codecov in CI.
 1. **Modify schema** in `packages/db/src/schemas/`
 2. **Generate migration**:
    ```bash
-   pnpm --filter @raypx/database run db:generate
+   bun run --filter @raypx/database generate
    ```
 3. **Review migration** in `packages/db/drizzle/`
 4. **Apply migration**:
    ```bash
-   pnpm --filter @raypx/database run db:migrate
+   bun run --filter @raypx/database migrate
    ```
 5. **Verify in Drizzle Studio**:
    ```bash
-   pnpm --filter @raypx/database run db:studio
+   bun run --filter @raypx/database studio
    ```
 
 ### Database Tips
@@ -200,7 +200,7 @@ Coverage reports are uploaded to Codecov in CI.
 
 - Documentation lives in `apps/docs/content/docs/`
 - Write documentation in MDX format (Markdown + JSX)
-- Run `pnpm --filter docs dev` to preview docs at http://localhost:3001
+- Run `bun --filter docs dev` to preview docs at http://localhost:3001
 - Fumadocs auto-generates navigation from file structure and frontmatter
 
 ## Troubleshooting
@@ -212,7 +212,7 @@ Coverage reports are uploaded to Codecov in CI.
 pnpm clean
 rm -rf node_modules .turbo
 pnpm install
-pnpm build
+pnpm run build
 ```
 
 ### TypeScript Errors
@@ -226,7 +226,7 @@ pnpm build
 - **"Cannot find module '@raypx/...'"** → Run `pnpm install`
 - **"Port 3000 in use"** → Kill process: `lsof -ti:3000 | xargs kill -9`
 - **"Type error in node_modules"** → Delete `node_modules` and reinstall
-- **Biome errors** → Run `pnpm format` to auto-fix
+- **Biome errors** → Run `bun format` to auto-fix
 
 ### Getting Help
 

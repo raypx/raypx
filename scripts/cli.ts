@@ -123,7 +123,7 @@ Run 'raypx-scripts <command> --help' for more information on a specific command.
  *
  * IMPORTANT: This function is ONLY used to extract global flags (--help, --debug, --verbose)
  * It should NOT be used to parse command arguments, as it would strip flags
- * from subcommands (e.g., "pnpm --version" would become just "pnpm")
+ * from subcommands (e.g., "bun --version" would become just "bun")
  *
  * For command arguments, we use rawArgs directly to preserve all flags and options.
  */
@@ -153,7 +153,7 @@ async function cli(rawArgs: string[]) {
 
   // Extract command name and arguments directly from rawArgs
   // This preserves all arguments including flags like --version for subcommands
-  // Example: ["run", "pnpm", "--version"] -> commandName="run", remainingArgs=["pnpm", "--version"]
+  // Example: ["run", "bun", "--version"] -> commandName="run", remainingArgs=["bun", "--version"]
   const [commandName, ...remainingArgs] = rawArgs as string[];
 
   // Discover available commands

@@ -1,6 +1,6 @@
 import type { PluginOption } from "vite";
-import type { Config } from "./config";
-import VirtualModule from "./vite/virtual-module";
+import type { Config } from "./config.ts";
+import VirtualModule from "./vite/virtual-module.ts";
 
 const virtual = {
   runtimeEnv: VirtualModule.create("runtime-env"),

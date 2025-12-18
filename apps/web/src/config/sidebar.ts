@@ -1,13 +1,4 @@
-import {
-  BookOpen,
-  CreditCard,
-  FileText,
-  FolderCog,
-  Home,
-  Key,
-  Settings,
-  Users,
-} from "lucide-react";
+import { BookOpen, CreditCard, FolderCog, Home, Key, Settings, Users } from "lucide-react";
 
 export type SidebarItem = {
   title: string;

@@ -1,8 +1,9 @@
 import { auth } from "@raypx/auth/server";
 import { and, desc, eq, ilike, isNull, or, sql } from "@raypx/database";
 import { CreateUserSchema, user as User } from "@raypx/database/schemas";
+import { deleteUserFiles, isR2Configured } from "@raypx/storage";
 import { z } from "zod/v4";
-
+import { logger } from "../../logger";
 import { Errors } from "../errors";
 import { adminProcedure, protectedProcedure, publicProcedure } from "../trpc";
 import { assertExists, assertOwnership, handleDatabaseError } from "../utils/error-handler";
@@ -180,6 +181,7 @@ export const usersRouter = {
    * Delete a user by ID
    * Protected endpoint - requires authentication
    * Users can only delete their own account unless they are an admin
+   * Also deletes all R2 files belonging to the user
    * @throws {NOT_FOUND} If user with given ID does not exist
    * @throws {FORBIDDEN} If user tries to delete another user's account
    */
@@ -196,7 +198,26 @@ export const usersRouter = {
     assertOwnership(ctx.session.user.id, userToDelete.id, "User", input);
 
     try {
+      // Delete all R2 files belonging to this user before deleting the user
+      // This ensures we can still access user data if needed for cleanup
+      if (isR2Configured()) {
+        try {
+          // Pass user's avatar URL if available to delete avatar file
+          const avatarUrl = userToDelete.image;
+          const result = await deleteUserFiles(input, avatarUrl);
+          logger.info(
+            `Deleted ${result.deleted} R2 files for user ${input}, ${result.failed} failed`,
+          );
+        } catch (r2Error) {
+          // Log error but don't fail user deletion if R2 deletion fails
+          // R2 files can be cleaned up later if needed
+          logger.error(`Failed to delete R2 files for user ${input}:`, r2Error);
+        }
+      }
+
+      // Delete user from database (cascade will handle related records like documents, datasets, etc.)
       await ctx.db.delete(User).where(eq(User.id, input));
+
       return { success: true, deletedId: input };
     } catch (error) {
       throw handleDatabaseError(error, "delete user");
@@ -310,10 +331,13 @@ export const usersRouter = {
         });
 
         if (!result || "error" in result) {
-          throw Errors.businessRuleViolation(
-            "Password change failed",
-            result?.error?.message || "Invalid current password or password requirements not met",
-          );
+          const errorMessage =
+            result && typeof result === "object" && "error" in result && result.error
+              ? typeof result.error === "object" && "message" in result.error
+                ? String(result.error.message)
+                : "Invalid current password or password requirements not met"
+              : "Invalid current password or password requirements not met";
+          throw Errors.businessRuleViolation("Password change failed", errorMessage);
         }
 
         return { success: true };

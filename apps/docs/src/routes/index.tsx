@@ -80,7 +80,7 @@ const techStack = [
   {
     icon: Package,
     category: "Monorepo",
-    items: ["pnpm 10+", "Turborepo", "14 Packages", "Workspace Protocol"],
+    items: ["bun 10+", "Turborepo", "14 Packages", "Workspace Protocol"],
   },
   {
     icon: TestTube,

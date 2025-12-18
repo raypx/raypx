@@ -1,43 +1,22 @@
-import {
-  AppleIcon,
-  DiscordIcon,
-  GitHubIcon,
-  GoogleIcon,
-  MicrosoftIcon,
-  type ProviderIcon,
-  XIcon,
-} from "../components/provider-icons";
+import { IconBrandDiscord, IconBrandGithub, IconBrandGoogle } from "@tabler/icons-react";
+
+type ProviderIcon = typeof IconBrandGoogle;
 
 export const socialProviders = [
   {
-    provider: "apple",
-    name: "Apple",
-    icon: AppleIcon,
-  },
-  {
     provider: "discord",
     name: "Discord",
-    icon: DiscordIcon,
+    icon: IconBrandDiscord,
   },
   {
     provider: "github",
     name: "GitHub",
-    icon: GitHubIcon,
+    icon: IconBrandGithub,
   },
   {
     provider: "google",
     name: "Google",
-    icon: GoogleIcon,
-  },
-  {
-    provider: "microsoft",
-    name: "Microsoft",
-    icon: MicrosoftIcon,
-  },
-  {
-    provider: "twitter",
-    name: "X",
-    icon: XIcon,
+    icon: IconBrandGoogle,
   },
 ] as const;
 

@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true
   },
-  "exclude": ["node_modules", "dist"],
+  "exclude": ["node_modules"],
   "extends": "@raypx/tsconfig/react-library.json",
-  "include": ["./**/*.ts", "./**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

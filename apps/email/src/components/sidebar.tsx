@@ -69,7 +69,7 @@ export function Sidebar({ menuTree, selectedTemplateName }: SidebarProps) {
         {Object.entries(groups).map(([category, templates]) => (
           <SidebarGroup key={category}>
             <Collapsible defaultOpen>
-              <CollapsibleTrigger asChild>
+              <CollapsibleTrigger asChild nativeButton={false}>
                 <SidebarGroupLabel className="cursor-pointer hover:text-sidebar-foreground">
                   <Folder className="h-4 w-4" />
                   <span className="ml-2">{category}</span>

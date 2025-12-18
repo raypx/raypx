@@ -2,10 +2,13 @@
   "extends": "@raypx/tsconfig/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "paths": {
       "@raypx/ui/*": ["./src/*"]
-    }
+    },
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true
   },
   "include": ["."],
   "exclude": ["node_modules", "dist"]

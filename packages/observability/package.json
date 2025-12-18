@@ -18,11 +18,11 @@
   },
   "dependencies": {
     "@raypx/config": "workspace:*",
-    "@raypx/logger": "^0.1.0",
+    "@raypx/logger": "workspace:*",
     "@raypx/shared": "workspace:*",
-    "@sentry/node": "^10.29.0",
-    "@sentry/react": "^10.29.0",
-    "@sentry/tanstackstart-react": "^10.29.0"
+    "@sentry/node": "^10.32.0",
+    "@sentry/react": "^10.32.0",
+    "@sentry/tanstackstart-react": "^10.32.0"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
@@ -31,7 +31,7 @@
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "type-fest": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   },

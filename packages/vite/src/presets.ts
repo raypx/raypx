@@ -18,13 +18,11 @@ import { isDev } from "./utils";
  * ```ts
  * import { createDeployPlugin } from "@raypx/vite/presets";
  * import { nitro } from "nitro/vite";
- * import netlify from "@netlify/vite-plugin-tanstack-start";
  *
  * export default defineConfig({
  *   plugins: [
  *     createDeployPlugin({
  *       vercel: () => nitro(),
- *       netlify: () => netlify(),
  *     }),
  *   ],
  * });

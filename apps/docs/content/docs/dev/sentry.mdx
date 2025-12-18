@@ -293,7 +293,7 @@ Ensure source maps are uploaded:
 
 ```bash
 # Build with source maps
-pnpm build
+bun run build
 
 # Upload to Sentry
 npx @sentry/cli releases files $VERSION upload-sourcemaps ./dist

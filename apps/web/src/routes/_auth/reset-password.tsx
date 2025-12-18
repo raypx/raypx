@@ -134,7 +134,7 @@ function ResetPasswordPage() {
           await navigate({ to: "/sign-in" });
         }, REDIRECT_DELAY);
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error", {
         description: "An unexpected error occurred. Please try again.",
       });

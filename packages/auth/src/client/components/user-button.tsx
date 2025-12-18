@@ -119,49 +119,62 @@ export const UserButton = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          aria-label="My Account"
-          className={`${avatarSize} rounded-full p-0 cursor-pointer ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
-          size="icon"
-          variant="ghost"
-        >
-          <Avatar className={avatarSize}>
-            {userImage && <AvatarImage alt={userName} src={userImage} />}
-            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
-              {userInitials}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label="My Account"
+            className={`${avatarSize} rounded-full p-0 cursor-pointer ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+            size="icon"
+            variant="ghost"
+          >
+            <Avatar className={avatarSize}>
+              {userImage && <AvatarImage alt={userName} src={userImage} />}
+              <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        }
+      />
 
-      <DropdownMenuContent align="end" className="w-60 p-1" forceMount>
-        <DropdownMenuItem asChild className="p-0 font-normal focus:bg-accent cursor-pointer">
-          <Link className="flex items-center gap-3 px-3 py-2.5" to={settingsPath}>
-            <div className="flex flex-col space-y-0.5 overflow-hidden">
-              <p className="text-sm font-medium leading-none truncate">{userName}</p>
-              {userEmail && (
-                <p className="text-xs text-muted-foreground truncate max-w-[180px]">{userEmail}</p>
-              )}
-            </div>
-          </Link>
-        </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="w-60 p-1">
+        <DropdownMenuItem
+          className="p-0 font-normal focus:bg-accent cursor-pointer"
+          render={
+            <Link className="flex items-center gap-3 px-3 py-2.5" to={settingsPath}>
+              <div className="flex flex-col space-y-0.5 overflow-hidden">
+                <p className="text-sm font-medium leading-none truncate">{userName}</p>
+                {userEmail && (
+                  <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                    {userEmail}
+                  </p>
+                )}
+              </div>
+            </Link>
+          }
+        ></DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild className="cursor-pointer">
-            <Link className="flex items-center" to={dashboardPath}>
-              <Home className="mr-2 size-4 text-muted-foreground" />
-              <span>Dashboard</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer">
-            <Link className="flex items-center" to={settingsPath}>
-              <Settings className="mr-2 size-4 text-muted-foreground" />
-              <span>Settings</span>
-            </Link>
-          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            render={
+              <Link className="flex items-center" to={dashboardPath}>
+                <Home className="mr-2 size-4 text-muted-foreground" />
+                <span>Dashboard</span>
+              </Link>
+            }
+          />
+          <DropdownMenuItem
+            className="cursor-pointer"
+            render={
+              <Link className="flex items-center" to={settingsPath}>
+                <Settings className="mr-2 size-4 text-muted-foreground" />
+                <span>Settings</span>
+              </Link>
+            }
+          />
         </DropdownMenuGroup>
 
         {menuItems && (
@@ -211,14 +224,16 @@ export const UserButton = ({
         )}
 
         {helpPath && (
-          <DropdownMenuItem asChild className="cursor-pointer">
-            <Link className="flex items-center" to={helpPath}>
-              <HelpCircle className="mr-2 size-4 text-muted-foreground" />
-              <span>Help & Support</span>
-            </Link>
-          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            render={
+              <Link className="flex items-center" to={helpPath}>
+                <HelpCircle className="mr-2 size-4 text-muted-foreground" />
+                <span>Help & Support</span>
+              </Link>
+            }
+          />
         )}
-
         {showKeyboardShortcuts && (
           <>
             {showThemeSwitcher || helpPath ? <DropdownMenuSeparator /> : null}
@@ -230,18 +245,16 @@ export const UserButton = ({
             </div>
           </>
         )}
-
         <DropdownMenuSeparator />
-
         <DropdownMenuItem
-          asChild
           className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-        >
-          <Link className="flex items-center" to={signOutPath ?? defaultAuthRoutes.signOut}>
-            <LogOut className="mr-2 size-4" />
-            <span>Sign Out</span>
-          </Link>
-        </DropdownMenuItem>
+          render={
+            <Link className="flex items-center" to={signOutPath ?? defaultAuthRoutes.signOut}>
+              <LogOut className="mr-2 size-4" />
+              <span>Sign Out</span>
+            </Link>
+          }
+        ></DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

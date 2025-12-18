@@ -1,3 +1,4 @@
+# IDE and editor files
 .cursor
 .claude
 .conductor
@@ -5,9 +6,85 @@
 .github
 .source
 .vscode
+.idea
+
+# Git
 .git
+.gitignore
+.gitattributes
+
+# Docker
 .dockerignore
+Dockerfile
+docker-compose.yml
+
+# Dependencies (will be installed in container)
 node_modules
 **/node_modules
-Dockerfile
-LICENSE
+.pnpm-store
+.bun
+bun.lock
+bun.lockb
+
+# Build outputs (will be built in container)
+dist
+**/dist
+.tanstack
+.turbo
+.output
+.nitro
+.netlify
+.vercel
+out
+*.tgz
+
+# Exclude docs app from production builds
+apps/docs
+apps/email
+
+# Test and coverage
+coverage
+*.lcov
+test-results
+**/__tests__
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
+
+# Cache directories
+.cache
+.eslintcache
+*.tsbuildinfo
+.raypx
+
+# Documentation
+README.md
+*.md
+!packages/*/README.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+
+# Misc
+.DS_Store
+*.swp
+*.swo
+*~
+.nyc_output
+
+# Temporary files
+temp
+tmp
+*.tmp
+
+# License (optional, uncomment if you don't want to include it)
+# LICENSE

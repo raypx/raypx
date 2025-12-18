@@ -3,10 +3,14 @@ import { and, desc, eq, isNull, sql } from "@raypx/database";
 import {
   invoice as Invoice,
   paymentMethod as PaymentMethod,
-  subscription as Subscription,
+  subscription as SubscriptionSchema,
 } from "@raypx/database/schemas";
 import type Stripe from "stripe";
 import { z } from "zod/v4";
+
+// Avoid type conflict: DatabaseSubscription vs Stripe.Subscription
+// The database schemas export a Subscription type, so we alias Stripe's Subscription
+type StripeSubscription = Stripe.Subscription;
 
 import { Errors } from "../errors";
 import { protectedProcedure } from "../trpc";
@@ -16,19 +20,27 @@ import { assertExists } from "../utils/error-handler";
  * Extract subscription sync data from Stripe subscription
  * Syncs status, dates, and cancellation info from Stripe to database
  */
-function extractSubscriptionSyncData(stripeSubscription: Stripe.Subscription) {
+function extractSubscriptionSyncData(stripeSub: StripeSubscription): {
+  status: ReturnType<typeof mapStripeSubscriptionStatus>;
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  canceledAt: Date | null;
+  trialStart: Date | null;
+  trialEnd: Date | null;
+} {
+  // Explicitly cast to avoid type conflict with database Subscription type
+  // DatabaseSubscription is exported from @raypx/database/schemas, causing conflict
+  // Use bracket notation to access properties to avoid type inference issues
+  const sub: Stripe.Subscription = stripeSub as unknown as Stripe.Subscription;
   return {
-    status: mapStripeSubscriptionStatus(stripeSubscription.status),
-    currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-    cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end ?? false,
-    canceledAt: stripeSubscription.canceled_at
-      ? new Date(stripeSubscription.canceled_at * 1000)
-      : null,
-    trialStart: stripeSubscription.trial_start
-      ? new Date(stripeSubscription.trial_start * 1000)
-      : null,
-    trialEnd: stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000) : null,
+    status: mapStripeSubscriptionStatus(sub.status),
+    currentPeriodStart: new Date((sub as any).current_period_start * 1000),
+    currentPeriodEnd: new Date((sub as any).current_period_end * 1000),
+    cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+    canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
+    trialStart: sub.trial_start ? new Date(sub.trial_start * 1000) : null,
+    trialEnd: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
   };
 }
 
@@ -57,18 +69,21 @@ export const billingRouter = {
       }
 
       const whereConditions = [
-        eq(Subscription.status, "active"),
+        eq(SubscriptionSchema.status, "active"),
         input.organizationId
-          ? and(eq(Subscription.organizationId, input.organizationId), isNull(Subscription.userId))
+          ? and(
+              eq(SubscriptionSchema.organizationId, input.organizationId),
+              isNull(SubscriptionSchema.userId),
+            )
           : and(
-              eq(Subscription.userId, input.userId as string),
-              isNull(Subscription.organizationId),
+              eq(SubscriptionSchema.userId, input.userId as string),
+              isNull(SubscriptionSchema.organizationId),
             ),
       ];
 
       const subscription = await ctx.db.query.subscription.findFirst({
         where: and(...whereConditions),
-        orderBy: desc(Subscription.createdAt),
+        orderBy: desc(SubscriptionSchema.createdAt),
       });
 
       return subscription;
@@ -297,12 +312,18 @@ export const billingRouter = {
 
       // Get subscription to find customer
       const where = input.organizationId
-        ? and(eq(Subscription.organizationId, input.organizationId), isNull(Subscription.userId))
-        : and(eq(Subscription.userId, input.userId as string), isNull(Subscription.organizationId));
+        ? and(
+            eq(SubscriptionSchema.organizationId, input.organizationId),
+            isNull(SubscriptionSchema.userId),
+          )
+        : and(
+            eq(SubscriptionSchema.userId, input.userId as string),
+            isNull(SubscriptionSchema.organizationId),
+          );
 
       const subscription = await ctx.db.query.subscription.findFirst({
         where,
-        orderBy: desc(Subscription.createdAt),
+        orderBy: desc(SubscriptionSchema.createdAt),
       });
 
       if (!subscription?.stripeCustomerId) {
@@ -348,12 +369,18 @@ export const billingRouter = {
       }
 
       const where = input.organizationId
-        ? and(eq(Subscription.organizationId, input.organizationId), isNull(Subscription.userId))
-        : and(eq(Subscription.userId, input.userId as string), isNull(Subscription.organizationId));
+        ? and(
+            eq(SubscriptionSchema.organizationId, input.organizationId),
+            isNull(SubscriptionSchema.userId),
+          )
+        : and(
+            eq(SubscriptionSchema.userId, input.userId as string),
+            isNull(SubscriptionSchema.organizationId),
+          );
 
       const subscription = await ctx.db.query.subscription.findFirst({
         where,
-        orderBy: desc(Subscription.createdAt),
+        orderBy: desc(SubscriptionSchema.createdAt),
       });
 
       if (!subscription?.stripeSubscriptionId) {
@@ -374,13 +401,13 @@ export const billingRouter = {
 
       // Update subscription in database with synced data from Stripe
       const updatedSubscription = await ctx.db
-        .update(Subscription)
+        .update(SubscriptionSchema)
         .set({
           ...syncData,
           ...(input.planId && { planId: input.planId }),
           updatedAt: new Date(),
         })
-        .where(eq(Subscription.id, subscription.id))
+        .where(eq(SubscriptionSchema.id, subscription.id))
         .returning();
 
       return updatedSubscription[0];
@@ -411,12 +438,18 @@ export const billingRouter = {
       }
 
       const where = input.organizationId
-        ? and(eq(Subscription.organizationId, input.organizationId), isNull(Subscription.userId))
-        : and(eq(Subscription.userId, input.userId as string), isNull(Subscription.organizationId));
+        ? and(
+            eq(SubscriptionSchema.organizationId, input.organizationId),
+            isNull(SubscriptionSchema.userId),
+          )
+        : and(
+            eq(SubscriptionSchema.userId, input.userId as string),
+            isNull(SubscriptionSchema.organizationId),
+          );
 
       const subscription = await ctx.db.query.subscription.findFirst({
         where,
-        orderBy: desc(Subscription.createdAt),
+        orderBy: desc(SubscriptionSchema.createdAt),
       });
 
       if (!subscription?.stripeSubscriptionId) {
@@ -434,12 +467,12 @@ export const billingRouter = {
 
       // Update subscription in database with synced data from Stripe
       const updatedSubscription = await ctx.db
-        .update(Subscription)
+        .update(SubscriptionSchema)
         .set({
           ...syncData,
           updatedAt: new Date(),
         })
-        .where(eq(Subscription.id, subscription.id))
+        .where(eq(SubscriptionSchema.id, subscription.id))
         .returning();
 
       return updatedSubscription[0];

@@ -1,4 +1,3 @@
-import netlify from "@netlify/vite-plugin-tanstack-start";
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -24,7 +23,7 @@ const deployPlugin = () => {
     return [nitro()];
   }
 
-  return plugins;
+  return plugins?.length ? plugins : [nitro()];
 };
 
 export default defineConfig({

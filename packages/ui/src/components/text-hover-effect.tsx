@@ -1,6 +1,6 @@
+import { cn } from "@raypx/ui/lib/utils";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "../lib/utils";
 
 export const TextHoverEffect = ({
   text,
@@ -17,7 +17,7 @@ export const TextHoverEffect = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const gradientRef = useRef<SVGRadialGradientElement>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const [cursor, setCursor] = useState({ x: 0, y: 0 });
+  const [_cursor, setCursor] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState(false);
   const currentPositionRef = useRef({ cx: 50, cy: 50 });
   const targetPositionRef = useRef({ cx: 50, cy: 50 });

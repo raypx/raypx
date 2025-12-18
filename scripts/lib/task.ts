@@ -30,14 +30,16 @@ type TaskConfig = Simplify<{
   retries?: number;
   /** Execution options (timeout, env, etc.) */
   execOptions?: ExecOptions;
+  /** Allow task to fail without stopping the entire process (defaults to false) */
+  allowFailure?: boolean;
 }>;
 
 /**
  * Command specification types
  */
 type CommandSpec =
-  | string // Legacy: "pnpm build"
-  | [command: string, ...args: string[]]; // Recommended: ["pnpm", "build"]
+  | string // Legacy: "bun run build"
+  | [command: string, ...args: string[]]; // Recommended: ["bun", "run", "build"]
 
 /**
  * Internal task representation
@@ -45,6 +47,8 @@ type CommandSpec =
 export interface Task {
   title: string;
   task: TaskFn;
+  /** Allow task to fail without stopping the entire process */
+  allowFailure?: boolean;
 }
 
 /**
@@ -62,6 +66,7 @@ export function createTask(
     return {
       title: titleOrCommand as string,
       task: taskFnOrOpts,
+      allowFailure: false,
     };
   }
 
@@ -74,7 +79,7 @@ export function createTask(
   let args: string[];
 
   if (Array.isArray(commandSpec)) {
-    // Command array: ["pnpm", "build", "--watch"]
+    // Command array: ["bun", "run", "build", "--watch"]
     const [cmd, ...rest] = commandSpec;
     if (!cmd) {
       throw new Error("Command array cannot be empty");
@@ -82,7 +87,7 @@ export function createTask(
     command = cmd;
     args = rest;
   } else {
-    // Command string: "pnpm build --watch" (backward compatible)
+    // Command string: "bun run build --watch" (backward compatible)
     const parts = commandSpec.trim().split(/\s+/);
     const [cmd, ...rest] = parts;
     if (!cmd) {
@@ -101,6 +106,7 @@ export function createTask(
     failureMessage,
     retries = 0,
     execOptions,
+    allowFailure = false,
   } = config ?? {};
 
   const autoSuccessTitle = successTitle || `${title} completed`;
@@ -108,6 +114,7 @@ export function createTask(
 
   return {
     title,
+    allowFailure,
     task: async (ctx) => {
       let attempts = 0;
       const maxAttempts = retries + 1;
@@ -176,6 +183,13 @@ export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]
         } catch (error) {
           const duration = Date.now() - taskStart;
           logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
+
+          // If task allows failure, log warning and continue (don't throw)
+          if (task.allowFailure) {
+            logger.warn(`⚠ ${task.title} failed but continuing (allowFailure=true)`);
+            return; // Continue without throwing
+          }
+
           throw error;
         }
       }),
@@ -194,6 +208,13 @@ export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]
       } catch (error) {
         const duration = Date.now() - taskStart;
         logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
+
+        // If task allows failure, log warning and continue
+        if (task.allowFailure) {
+          logger.warn(`⚠ ${task.title} failed but continuing (allowFailure=true)`);
+          continue;
+        }
+
         throw error;
       }
     }

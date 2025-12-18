@@ -96,8 +96,6 @@ export function Header({ user }: HeaderProps) {
           <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-600 ring-2 ring-background" />
         </Button>
 
-        <div className="h-4 w-px bg-border/50 mx-1 hidden md:block" />
-
         {/* User menu */}
         <UserButton
           avatar={{ size: "h-9 w-9" }}

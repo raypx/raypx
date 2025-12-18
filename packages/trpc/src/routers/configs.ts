@@ -78,7 +78,7 @@ export const configsRouter = {
         }
       }
 
-      const where = whereConditions.length > 1 ? and(...whereConditions) : whereConditions[0]!;
+      const where = whereConditions.length > 1 ? and(...whereConditions) : whereConditions[0];
 
       const [namespaces, totalResult] = await Promise.all([
         ctx.db.query.configNamespaces.findMany({

@@ -16,14 +16,14 @@
   "dependencies": {
     "@raypx/config": "workspace:*",
     "@raypx/database": "workspace:*",
-    "@raypx/env": "catalog:",
+    "@raypx/env": "workspace:*",
     "@raypx/shared": "workspace:*",
-    "stripe": "^20.0.0",
+    "stripe": "^20.1.0",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

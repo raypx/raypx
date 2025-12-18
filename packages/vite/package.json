@@ -33,17 +33,17 @@
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
-    "@tanstack/devtools-vite": "^0.3.11",
+    "@tanstack/devtools-vite": "^0.3.12",
     "@types/node": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "tsdown": "catalog:dev",
-    "typescript": "catalog:dev",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
     "vite-plugin-inspect": "^11.3.3",
-    "vite-tsconfig-paths": "catalog:",
+    "vite-tsconfig-paths": "^6.0.3",
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "vite": "^7.0.0"
+    "vite": "catalog:"
   }
 }

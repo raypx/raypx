@@ -32,7 +32,7 @@ const emailFormSchema = z.object({
 type EmailFormValues = z.infer<typeof emailFormSchema>;
 
 function ForgotPasswordPage() {
-  const { auth, redirectTo } = useAuth();
+  const { auth } = useAuth();
   const [emailSent, setEmailSent] = useState(false);
   const isHydrated = useIsHydrated();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,7 +67,7 @@ function ForgotPasswordPage() {
           description: "Please check your email for the password reset link.",
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error", {
         description: "An unexpected error occurred. Please try again later.",
       });

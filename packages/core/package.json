@@ -4,34 +4,25 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./config": {
-      "types": "./dist/config.d.mts",
-      "import": "./dist/config.mjs"
-    },
-    "./vite": {
-      "types": "./dist/vite.d.mts",
-      "import": "./dist/vite.mjs"
-    }
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts",
+    "./vite": "./src/vite.ts"
   },
   "scripts": {
-    "build": "tsdown",
+    "#build": "tsdown",
     "clean": "rimraf dist .turbo",
     "dev": "tsdown --watch",
     "test": "vitest run",
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@raypx/env": "catalog:",
+    "@raypx/env": "workspace:*",
     "vite": "catalog:"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

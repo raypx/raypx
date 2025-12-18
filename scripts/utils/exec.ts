@@ -29,7 +29,7 @@ export interface ExecOptions {
 /**
  * Execute command with type-safe arguments
  *
- * @param command - Command to execute (e.g., "pnpm", "npm", "node")
+ * @param command - Command to execute (e.g., "bun", "npm", "node")
  * @param args - Array of arguments (e.g., ["build", "--watch"])
  * @param options - Execution options
  * @returns Promise with execution result
@@ -110,7 +110,7 @@ export async function execCommand(
  *
  * @deprecated Use execCommand(cmd, args[]) instead for better type safety and proper argument handling
  *
- * @param commandString - Command string (e.g., "pnpm build")
+ * @param commandString - Command string (e.g., "bun run build")
  * @param options - Execution options
  * @returns Promise with execution result
  *

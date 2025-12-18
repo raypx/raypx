@@ -118,7 +118,6 @@ export function Navbar({ scroll }: NavBarProps) {
                           page: location.pathname,
                         });
                       }}
-                      size="sm"
                       variant="outline"
                     >
                       Login
@@ -132,7 +131,6 @@ export function Navbar({ scroll }: NavBarProps) {
                           page: location.pathname,
                         });
                       }}
-                      size="sm"
                       variant="default"
                     >
                       Sign Up
@@ -158,8 +156,8 @@ export function Navbar({ scroll }: NavBarProps) {
           <div className="flex items-center gap-2">
             <ThemeSwitcher />
             <Sheet>
-              <SheetTrigger asChild>
-                <Button aria-label="Open menu" size="icon" variant="ghost">
+              <SheetTrigger>
+                <Button aria-label="Open menu" asChild size="icon" variant="ghost">
                   <MenuIcon className="size-5" />
                 </Button>
               </SheetTrigger>
@@ -205,11 +203,7 @@ export function Navbar({ scroll }: NavBarProps) {
                         {item.title}
                       </Link>
                     );
-                    return (
-                      <SheetClose asChild key={index}>
-                        {content}
-                      </SheetClose>
-                    );
+                    return <SheetClose key={index}>{content}</SheetClose>;
                   })}
                 </div>
                 <Separator />
@@ -220,14 +214,14 @@ export function Navbar({ scroll }: NavBarProps) {
                     <>
                       <SignedOut>
                         <div className="flex gap-2">
-                          <SheetClose asChild>
+                          <SheetClose>
                             <Link className="flex-1" to="/sign-in">
                               <Button className="w-full" variant="outline">
                                 Login
                               </Button>
                             </Link>
                           </SheetClose>
-                          <SheetClose asChild>
+                          <SheetClose>
                             <Link className="flex-1" to="/sign-up">
                               <Button className="w-full" variant="default">
                                 Sign Up

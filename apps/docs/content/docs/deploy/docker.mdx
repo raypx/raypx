@@ -1,0 +1,564 @@
+---
+title: Docker Deployment Guide
+description: Complete guide for deploying Raypx using Docker and Docker Compose
+---
+
+> **Project:** Raypx - TanStack Start + React 19 + PostgreSQL + Redis + Stripe
+> **Platform:** Docker / Docker Compose
+> **Created:** 2025-12-05
+
+## Prerequisites
+
+- Docker Engine 20.10+ or Docker Desktop
+- Docker Compose 2.0+ (optional, for docker-compose.yml)
+- Basic knowledge of Docker commands
+
+## Quick Start
+
+### 1. Build Docker Image
+
+```bash
+# Build the image
+docker build -t raypx:latest .
+
+# Or build with a specific tag
+docker build -t raypx:v1.0.0 .
+```
+
+### 2. Run Container
+
+```bash
+# Run with environment variables
+docker run -d \
+  --name raypx \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e DATABASE_URL=postgresql://user:pass@host:5432/raypx \
+  -e AUTH_SECRET=your-secret-key \
+  -e BETTER_AUTH_URL=http://localhost:3000 \
+  raypx:latest
+
+# Or use docker-compose (recommended)
+docker-compose up -d
+```
+
+### 3. View Logs
+
+```bash
+# View container logs
+docker logs -f raypx
+
+# Or with docker-compose
+docker-compose logs -f web
+```
+
+## Docker Compose Setup
+
+### Basic Configuration
+
+The project includes a `docker-compose.yml` file for easy deployment. Edit the environment variables section:
+
+```yaml
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:pass@host:5432/raypx
+      # Add other required environment variables
+```
+
+### Full Stack with PostgreSQL and Redis
+
+For a complete setup including PostgreSQL and Redis:
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: raypx
+      POSTGRES_PASSWORD: your-password
+      POSTGRES_DB: raypx
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raypx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://raypx:your-password@postgres:5432/raypx
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SECRET=your-super-secret-key-min-32-characters
+      - BETTER_AUTH_URL=http://localhost:3000
+      # Add other environment variables
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+## Environment Variables
+
+### Required Variables
+
+```bash
+# Application
+NODE_ENV=production
+PORT=3000
+
+# Database
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# Authentication
+AUTH_SECRET=your-super-secret-key-min-32-characters
+BETTER_AUTH_URL=https://yourdomain.com
+
+# Email (Resend)
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+RESEND_FROM=noreply@yourdomain.com
+```
+
+### Optional Variables
+
+```bash
+# Redis (optional, falls back to in-memory cache)
+REDIS_URL=redis://default:password@host:6379
+
+# Stripe
+STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
+
+# OAuth Providers
+AUTH_GITHUB_ID=your_github_client_id
+AUTH_GITHUB_SECRET=your_github_client_secret
+AUTH_GOOGLE_ID=your_google_client_id
+AUTH_GOOGLE_SECRET=your_google_client_secret
+
+# Analytics
+POSTHOG_KEY=phc_xxxxxxxxxxxxx
+POSTHOG_HOST=https://app.posthog.com
+
+# Observability
+SENTRY_DSN=https://xxx@sentry.io/xxx
+
+# Storage
+STORAGE_PROVIDER=local
+STORAGE_LOCAL_PATH=/app/storage
+```
+
+## Using Environment Files
+
+### Option 1: Docker Compose env_file
+
+Create a `.env` file (do NOT commit to git):
+
+```bash
+NODE_ENV=production
+DATABASE_URL=postgresql://...
+AUTH_SECRET=...
+# ... other variables
+```
+
+Update `docker-compose.yml`:
+
+```yaml
+services:
+  web:
+    env_file:
+      - .env
+```
+
+### Option 2: Docker run with --env-file
+
+```bash
+docker run -d \
+  --name raypx \
+  --env-file .env \
+  -p 3000:3000 \
+  raypx:latest
+```
+
+## Database Migrations
+
+Run migrations before starting the application:
+
+```bash
+# Option 1: Run migrations from host
+DATABASE_URL="postgresql://..." bun run --filter @raypx/database migrate
+
+# Option 2: Run migrations inside container
+docker exec -it raypx sh -c "cd /app && bun run --filter @raypx/database migrate"
+
+# Option 3: Use a migration container (recommended for production)
+docker run --rm \
+  --network raypx_default \
+  -e DATABASE_URL=postgresql://raypx:password@postgres:5432/raypx \
+  raypx:latest \
+  bun run --filter @raypx/database migrate
+```
+
+## Production Deployment
+
+### 1. Build for Production
+
+```bash
+# Build with production optimizations
+docker build \
+  --target runner \
+  -t raypx:latest \
+  -t raypx:v$(date +%Y%m%d) \
+  .
+```
+
+### 2. Tag and Push to Registry
+
+```bash
+# Tag for registry
+docker tag raypx:latest registry.example.com/raypx:latest
+
+# Push to registry
+docker push registry.example.com/raypx:latest
+```
+
+### 3. Deploy to Server
+
+```bash
+# Pull latest image
+docker pull registry.example.com/raypx:latest
+
+# Stop and remove old container
+docker stop raypx && docker rm raypx
+
+# Run new container
+docker run -d \
+  --name raypx \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  --env-file .env \
+  registry.example.com/raypx:latest
+```
+
+## Dockerfile Details
+
+The Dockerfile uses a multi-stage build:
+
+1. **Builder stage**: Installs all dependencies and builds the application
+2. **Runner stage**: Only includes production dependencies and built artifacts
+
+### Build Arguments
+
+You can customize the build with arguments:
+
+```dockerfile
+ARG NODE_VERSION=20
+ARG PNPM_VERSION=10.26.0
+```
+
+Build with custom arguments:
+
+```bash
+docker build \
+  --build-arg NODE_VERSION=20 \
+  --build-arg PNPM_VERSION=10.26.0 \
+  -t raypx:latest .
+```
+
+## Volume Mounts
+
+### Local Storage
+
+If using local storage provider:
+
+```yaml
+services:
+  web:
+    volumes:
+      - ./storage:/app/storage
+```
+
+### Persistent Data
+
+For persistent data directories:
+
+```yaml
+services:
+  web:
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  app_data:
+```
+
+## Health Checks
+
+The Dockerfile includes a health check. You can also configure it in docker-compose:
+
+```yaml
+services:
+  web:
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+```
+
+## Networking
+
+### Custom Network
+
+Create a custom network for better isolation:
+
+```bash
+docker network create raypx-network
+```
+
+Use in docker-compose:
+
+```yaml
+services:
+  web:
+    networks:
+      - raypx-network
+
+networks:
+  raypx-network:
+    driver: bridge
+```
+
+### Reverse Proxy (Nginx)
+
+Example Nginx configuration:
+
+```nginx
+upstream raypx {
+    server web:3000;
+}
+
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location / {
+        proxy_pass http://raypx;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+## Troubleshooting
+
+### Issue 1: Build Fails - "Cannot find module"
+
+**Solution:**
+```bash
+# Clean build cache
+docker builder prune
+
+# Rebuild without cache
+docker build --no-cache -t raypx:latest .
+```
+
+### Issue 2: Container Exits Immediately
+
+**Check logs:**
+```bash
+docker logs raypx
+```
+
+**Common causes:**
+- Missing required environment variables
+- Database connection failed
+- Port already in use
+
+### Issue 3: Permission Denied Errors
+
+**Solution:**
+The Dockerfile uses a non-root user (`raypx`). Ensure volumes have correct permissions:
+
+```bash
+# Fix permissions
+sudo chown -R 1001:1001 ./storage
+```
+
+### Issue 4: Out of Memory
+
+**Solution:**
+Increase Docker memory limit or optimize build:
+
+```bash
+# Build with memory limit
+docker build --memory=4g -t raypx:latest .
+```
+
+### Issue 5: Slow Builds
+
+**Solution:**
+Use BuildKit for faster builds:
+
+```bash
+# Enable BuildKit
+export DOCKER_BUILDKIT=1
+
+# Build with BuildKit
+docker build -t raypx:latest .
+```
+
+## Security Best Practices
+
+1. **Use non-root user**: The Dockerfile already uses `raypx` user
+2. **Scan images**: Use Docker Scout or Trivy to scan for vulnerabilities
+3. **Keep base images updated**: Regularly update `node:20-alpine`
+4. **Use secrets**: Don't hardcode secrets in Dockerfile
+5. **Limit resources**: Set memory and CPU limits
+
+```yaml
+services:
+  web:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+```
+
+## Monitoring
+
+### View Container Stats
+
+```bash
+docker stats raypx
+```
+
+### Log Aggregation
+
+Use Docker logging drivers:
+
+```yaml
+services:
+  web:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to Registry
+        uses: docker/login-action@v2
+        with:
+          registry: registry.example.com
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      - name: Build and Push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: registry.example.com/raypx:latest
+```
+
+## Quick Reference
+
+```bash
+# Build image
+docker build -t raypx:latest .
+
+# Run container
+docker run -d --name raypx -p 3000:3000 --env-file .env raypx:latest
+
+# View logs
+docker logs -f raypx
+
+# Execute command in container
+docker exec -it raypx sh
+
+# Stop container
+docker stop raypx
+
+# Remove container
+docker rm raypx
+
+# Remove image
+docker rmi raypx:latest
+
+# Clean up
+docker system prune -a
+```
+
+---
+
+**Created:** 2025-12-05
+**Last Updated:** 2025-12-05
+**Maintained By:** Raypx Team
+

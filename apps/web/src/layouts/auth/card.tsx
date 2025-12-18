@@ -34,7 +34,7 @@ export function AuthCard({ title, description, children, footer }: AuthCardProps
       )}
       <CardContent className="px-0 py-4 grid gap-6">{children}</CardContent>
       {footer && (
-        <CardFooter className="justify-center gap-1.5 text-muted-foreground text-sm px-0 pb-0">
+        <CardFooter className="justify-center gap-1.5 text-muted-foreground text-sm px-0 pb-0 mb-4 bg-transparent">
           {footer}
         </CardFooter>
       )}

@@ -1,5 +1,3 @@
-// declare function defineConfig(config?: GlobalConfig): GlobalConfig;
-
 export type PluginContext = {
   env: Record<string, string>;
 };

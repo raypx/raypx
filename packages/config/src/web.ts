@@ -1,5 +1,5 @@
 import { createEnv, z } from "@raypx/env";
-import { analyticsEnv, authEnv, databaseEnv, emailEnv, observabilityEnv } from "./envs";
+import { analyticsEnv, authEnv, databaseEnv, emailEnv, observabilityEnv } from "./envs/index.ts";
 
 const env = createEnv({
   extends: [databaseEnv, authEnv, emailEnv, analyticsEnv, observabilityEnv],

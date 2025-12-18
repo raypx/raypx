@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-email/components": "^1.0.1",
+    "@react-email/components": "^1.0.2",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },
@@ -21,7 +21,9 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "typescript": "catalog:dev",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

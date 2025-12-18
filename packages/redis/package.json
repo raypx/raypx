@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@raypx/config": "workspace:*",
-    "@raypx/env": "catalog:",
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
     "@raypx/shared": "workspace:*",
     "redis": "^5.10.0",
     "superjson": "catalog:"
@@ -22,7 +23,7 @@
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:dev",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

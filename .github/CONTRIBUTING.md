@@ -34,7 +34,7 @@ This project adheres to a code of conduct that all contributors are expected to 
 
 ### Prerequisites
 
-- **Node.js** >= 20.0.0
+- **Node.js** >= 22.0.0
 - **pnpm** >= 10.17.0
 - **PostgreSQL** database
 - **Redis** (optional, for caching)
@@ -114,7 +114,7 @@ pnpm format
 pnpm test
 
 # Build to verify
-pnpm build
+pnpm run build
 ```
 
 ### 4. Commit Your Changes
@@ -260,7 +260,7 @@ Before submitting a PR, ensure:
 - [ ] All tests pass (`pnpm test`)
 - [ ] Type checking passes (`pnpm typecheck`)
 - [ ] Linting passes (`pnpm check`)
-- [ ] Build succeeds (`pnpm build`)
+- [ ] Build succeeds (`pnpm run build`)
 - [ ] Documentation is updated (if needed)
 - [ ] Commit messages follow Conventional Commits
 - [ ] PR description is clear and detailed

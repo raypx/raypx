@@ -64,7 +64,7 @@ We follow a **coordinated disclosure** process:
 - Never commit secrets or API keys to the repository
 - Use environment variables for sensitive configuration
 - Follow the principle of least privilege
-- Keep dependencies updated (`pnpm update`)
+- Keep dependencies updated (`pnpm update --latest`)
 - Review security advisories for dependencies
 
 ## Security Features
