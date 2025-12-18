@@ -59,14 +59,5 @@
   "engines": {
     "node": ">=22",
     "pnpm": ">=10.26.0"
-  },
-  "workspaces": [
-    "apps/*",
-    "packages/**",
-    "tooling/*",
-    "scripts"
-  ],
-  "overrides": {
-    "vite": "catalog:"
   }
 }
