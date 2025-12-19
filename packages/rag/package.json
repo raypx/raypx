@@ -4,8 +4,8 @@
   "dependencies": {
     "@huggingface/inference": "^4.13.5",
     "@langchain/cohere": "^1.0.1",
-    "@langchain/community": "^1.1.0",
-    "@langchain/core": "^1.1.6",
+    "@langchain/community": "^1.1.1",
+    "@langchain/core": "^1.1.7",
     "@langchain/openai": "^1.2.0",
     "@langchain/textsplitters": "^1.0.1",
     "@raypx/ai": "workspace:*",

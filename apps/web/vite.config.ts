@@ -24,6 +24,9 @@ export default defineConfig({
   server: {
     port: env.PORT,
   },
+  ssr: {
+    noExternal: ["@tabler/icons-react"],
+  },
   build: {
     chunkSizeWarningLimit: 1000,
     commonjsOptions: {

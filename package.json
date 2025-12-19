@@ -55,9 +55,16 @@
     "vite": "catalog:",
     "vitest": "^4.0.16"
   },
-  "packageManager": "pnpm@10.26.0",
+  "packageManager": "pnpm@10.26.1",
   "engines": {
     "node": ">=22",
     "pnpm": ">=10.26.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "vite": "8.0.0-beta.1"
+      }
+    }
   }
 }
