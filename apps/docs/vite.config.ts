@@ -15,10 +15,6 @@ const isDev = env.NODE_ENV === "development";
 const deployPlugin = () => {
   const plugins: PluginOption[] = [];
 
-  if (process.env.NETLIFY) {
-    return [netlify()];
-  }
-
   if (process.env.VERCEL || env.VERCEL) {
     return [nitro()];
   }
@@ -30,6 +26,9 @@ export default defineConfig({
   server: {
     port: 3004,
     open: isDev,
+  },
+  resolve: {
+    external: ["fumadocs-core", "fumadocs-ui"],
   },
   ssr: {
     noExternal: ["@raypx/auth"],

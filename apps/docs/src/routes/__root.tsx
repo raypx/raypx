@@ -1,6 +1,7 @@
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { TanstackProvider } from "fumadocs-core/framework/tanstack";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
 import Loading from "~/components/layout/loading";
@@ -55,10 +56,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system">
-          <RootProvider>
-            {children}
-            <Toaster />
-          </RootProvider>
+          <TanstackProvider>
+            <RootProvider>
+              {children}
+              <Toaster />
+            </RootProvider>
+          </TanstackProvider>
         </ThemeProvider>
         <Scripts />
       </body>

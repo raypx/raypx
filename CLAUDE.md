@@ -2,7 +2,7 @@
 
 > **Project:** Raypx - Modern full-stack AI-powered web application platform
 > **Stack:** TanStack Start + React 19 + TypeScript + pnpm monorepo
-> **Last Updated:** 2025-12-16
+> **Last Updated:** 2025-12-19
 
 ## Quick Start
 
@@ -51,33 +51,42 @@ pnpm shadcn           # Add UI component
 raypx/
 ├── apps/
 │   ├── web/          # Main TanStack Start app
-│   └── docs/         # Fumadocs site
+│   ├── docs/         # Fumadocs site
+│   └── email/        # Email template preview server
 │
-├── packages/         # 12 shared packages
+├── packages/         # Shared packages
+│   ├── ai/           # AI/LLM providers (OpenAI, DeepSeek)
+│   ├── analytics/    # Analytics (PostHog, GA)
 │   ├── auth/         # Better Auth
-│   ├── db/           # Drizzle ORM + PostgreSQL
-│   ├── email/        # React Email
-│   ├── redis/        # Redis client
-│   ├── trpc/         # tRPC API
-│   ├── ui/           # shadcn/ui (60+ components)
-│   ├── analytics/    # Analytics (PostHog, Sentry, Vercel)
 │   ├── billing/      # Stripe integration
 │   ├── bundler/      # Build utilities
-│   ├── cli/          # CLI tools
+│   ├── config/       # Configuration management
+│   ├── core/         # Core utilities
+│   ├── database/     # Drizzle ORM + PostgreSQL
+│   ├── email/        # Email providers
+│   ├── email-templates/ # React Email templates
+│   ├── env/          # Environment validation
+│   ├── logger/       # Logging utilities
+│   ├── observability/ # Sentry error tracking
+│   ├── rag/          # RAG (Retrieval Augmented Generation)
+│   ├── redis/        # Redis client
 │   ├── shared/       # Shared utilities
-│   └── tsconfig/     # TypeScript configs
+│   ├── storage/      # Storage providers (R2, etc.)
+│   ├── trpc/         # tRPC API
+│   ├── tsconfig/     # TypeScript configs
+│   └── ui/           # shadcn/ui (60+ components)
 └── tooling/          # Dev tools (Biome, etc.)
 ```
 
 ## Tech Stack
 
 ### Core
-- **TanStack Start** 1.135.2 - Full-stack React framework
-- **React** 19.2.0 - UI library
+- **TanStack Start** 1.141.7 - Full-stack React framework
+- **React** 19.2.3 - UI library
 - **TypeScript** 5.9.3 - Type safety
-- **Vite** 7.2.2 - Build tool
-- **pnpm** 10.26.0+ - Package manager
-- **Turborepo** 2.6.1 - Monorepo orchestration
+- **Vite** 8.0.0-beta.1 - Build tool
+- **pnpm** 10.26.1+ - Package manager
+- **Turborepo** 2.6.3 - Monorepo orchestration
 
 ### Backend
 - **Better Auth** 1.3.34 - Authentication
@@ -87,21 +96,22 @@ raypx/
 - **Redis** 5.9.0 - Caching (optional)
 
 ### UI
-- **Tailwind CSS** v4.1.17 - Styling
+- **Tailwind CSS** v4.1.18 - Styling
 - **Radix UI** - Component primitives
 - **shadcn/ui** - Component library
-- **React Hook Form** 7.66.0 - Forms
-- **Zod** 4.1.12 - Validation
+- **React Hook Form** 7.68.0 - Forms
+- **Zod** 4.2.1 - Validation
+- **Recharts** 3.6.0 - Charts
 
 ### Dev Tools
-- **Biome** 2.3.5 - Linter/formatter (replaces ESLint + Prettier)
-- **Vitest** 4.0.8 - Testing
-- **Lefthook** 2.0.3 - Git hooks
-- **Drizzle Kit** 0.31.6 - Migrations
+- **Biome** 2.3.10 - Linter/formatter (replaces ESLint + Prettier)
+- **Vitest** 4.0.16 - Testing
+- **Lefthook** 2.0.12 - Git hooks
+- **Drizzle Kit** - Migrations
 
 ## Package Manager (pnpm)
 
-**This project exclusively uses pnpm 10.26.0+**
+**This project exclusively uses pnpm 10.26.1+**
 
 ```bash
 # Add dependency to package
@@ -134,7 +144,7 @@ pnpm -r run <script>
 - ✅ `apps/web`, `apps/docs` - Have build scripts (deployable)
 - ❌ `packages/*` - NO build scripts (consumed as TypeScript source)
 
-All packages are consumed directly as TypeScript source files by applications.
+All packages are consumed directly as TypeScript source files by applications. No build step required for packages.
 
 ## Environment Variables
 
@@ -144,7 +154,7 @@ All packages are consumed directly as TypeScript source files by applications.
 - Database (DATABASE_URL)
 - Redis (REDIS_URL)
 - Authentication (Better Auth + OAuth)
-- Analytics (PostHog, GA, Umami)
+- Analytics (PostHog, Google Analytics)
 - Payment (Stripe)
 - AI Services (OpenAI, DeepSeek)
 
@@ -376,6 +386,16 @@ Control the order of documentation pages using `meta.json` in the docs directory
 ---
 
 ## Recent Changes
+
+### 2025-12-19 - Project Cleanup and Updates
+- Removed tsdown build tool (all packages now use TypeScript source directly)
+- Removed @vercel/analytics integration
+- Updated Vite to 8.0.0-beta.1
+- Updated pnpm to 10.26.1
+- Updated Recharts to 3.6.0 with API compatibility fixes
+- Removed @raypx/vite package (no longer needed)
+- Added Docker VS Code extension recommendation
+- Cleaned up documentation and configuration files
 
 ### 2025-11-20 - Project Structure Updates
 - Removed `apps/server` package (no longer needed)

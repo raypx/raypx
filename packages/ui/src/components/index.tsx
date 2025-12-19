@@ -12,6 +12,7 @@ export * from "./card";
 export * from "./carousel";
 export * from "./chart";
 export * from "./checkbox";
+export * from "./cmdk";
 export * from "./collapsible";
 export * from "./combobox";
 export * from "./command";

@@ -21,7 +21,7 @@
     "dayjs": "^1.11.19",
     "fumadocs-core": "^16.3.0",
     "fumadocs-mdx": "^14.1.1",
-    "fumadocs-ui": "^16.3.0",
+    "fumadocs-ui": "npm:@fumadocs/base-ui@latest",
     "lodash-es": "catalog:",
     "lucide-react": "catalog:",
     "nitro": "catalog:",

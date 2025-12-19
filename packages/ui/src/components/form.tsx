@@ -1,7 +1,7 @@
 "use client";
 
-import type * as LabelPrimitive from "@radix-ui/react-label";
-import { Slot } from "@radix-ui/react-slot";
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import { Label } from "@raypx/ui/components/label";
 import { cn } from "@raypx/ui/lib/utils";
 import * as React from "react";
@@ -78,7 +78,7 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function FormLabel({ className, ...props }: React.ComponentProps<typeof LabelPrimitive.Root>) {
+function FormLabel({ className, ...props }: React.ComponentProps<"label">) {
   const { error, formItemId } = useFormField();
 
   return (
@@ -92,18 +92,33 @@ function FormLabel({ className, ...props }: React.ComponentProps<typeof LabelPri
   );
 }
 
-function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
+function FormControl({
+  children,
+  ...props
+}: React.PropsWithChildren<React.HTMLAttributes<HTMLElement>>) {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
-  return (
-    <Slot
-      aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-      aria-invalid={!!error}
-      data-slot="form-control"
-      id={formItemId}
-      {...props}
-    />
-  );
+  const controlProps = {
+    "aria-describedby": !error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`,
+    "aria-invalid": !!error,
+    "data-slot": "form-control",
+    id: formItemId,
+    ...props,
+  };
+
+  // If children is a single React element, use it as render prop
+  // This follows Base UI's pattern for Slot-like behavior
+  if (React.isValidElement(children)) {
+    const childProps = children.props as Record<string, unknown>;
+    return useRender({
+      defaultTagName: "div",
+      render: children,
+      props: mergeProps(childProps, controlProps),
+    });
+  }
+
+  // Fallback for non-element children (shouldn't happen in normal usage)
+  return <div {...controlProps}>{children}</div>;
 }
 
 function FormDescription({ className, ...props }: React.ComponentProps<"p">) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { Command as CommandPrimitive } from "@raypx/ui/components/cmdk";
 import {
   Dialog,
   DialogContent,
@@ -8,10 +9,8 @@ import {
   DialogTitle,
 } from "@raypx/ui/components/dialog";
 import { InputGroup, InputGroupAddon } from "@raypx/ui/components/input-group";
-
 import { cn } from "@raypx/ui/lib/utils";
 import { IconCheck, IconSearch } from "@tabler/icons-react";
-import { Command as CommandPrimitive } from "cmdk";
 import type * as React from "react";
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
