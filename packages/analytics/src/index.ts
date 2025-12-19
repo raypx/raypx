@@ -1,9 +1,6 @@
 // Re-export PostHog hooks
 export { usePostHog } from "@posthog/react";
 
-// Re-export Vercel Analytics component
-export { Analytics } from "@vercel/analytics/react";
-
 // Configuration
 export type { AnalyticsConfig } from "./config";
 export { createAnalyticsConfig, defaultAnalyticsConfig } from "./config";

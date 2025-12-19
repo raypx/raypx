@@ -4,14 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
-    }
+    ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsdown",
     "clean": "rimraf dist .turbo",
     "test": "vitest run",
     "test:watch": "vitest --watch"

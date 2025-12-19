@@ -1,4 +1,3 @@
-import { Analytics } from "@raypx/analytics";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
@@ -62,7 +61,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           </RootProvider>
         </ThemeProvider>
         <Scripts />
-        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   );

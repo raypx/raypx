@@ -20,7 +20,6 @@
     "@raypx/config": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/shared": "workspace:*",
-    "@vercel/analytics": "^1.6.1",
     "posthog-js": "^1.309.1"
   },
   "devDependencies": {

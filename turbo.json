@@ -15,13 +15,13 @@
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "tsdown.config.ts"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
       "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
     },
     "start": {
       "cache": true,
       "dependsOn": ["build", "^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "tsdown.config.ts"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
       "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
     },
     "typecheck": {

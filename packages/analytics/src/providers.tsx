@@ -1,6 +1,4 @@
-import { Analytics } from "@vercel/analytics/react";
 import type { FC, ReactNode } from "react";
-import type { AnalyticsConfig } from "./config";
 import { AnalyticsConfigProvider, useAnalyticsConfig } from "./context";
 import { PostHogProvider } from "./posthog/provider";
 
@@ -8,14 +6,7 @@ import { PostHogProvider } from "./posthog/provider";
  * Internal provider that uses the config
  */
 const AnalyticsProviderInner: FC<{ children: ReactNode }> = ({ children }) => {
-  const config = useAnalyticsConfig();
-
-  return (
-    <PostHogProvider>
-      {children}
-      {config.vercel.enabled && <Analytics />}
-    </PostHogProvider>
-  );
+  return <PostHogProvider>{children}</PostHogProvider>;
 };
 
 /**

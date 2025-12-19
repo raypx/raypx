@@ -30,11 +30,6 @@ export interface AnalyticsConfig {
     enabled: boolean;
     measurementId?: string;
   };
-
-  // Vercel Analytics settings
-  vercel: {
-    enabled: boolean;
-  };
 }
 
 /**
@@ -78,11 +73,6 @@ export function createAnalyticsConfig(): AnalyticsConfig {
         !!env.VITE_PUBLIC_GA_MEASUREMENT_ID,
       measurementId: env.VITE_PUBLIC_GA_MEASUREMENT_ID,
     },
-
-    // Vercel Analytics configuration
-    vercel: {
-      enabled: globalEnabled && isProduction,
-    },
   };
 }
 
@@ -104,9 +94,6 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
     },
   },
   ga: {
-    enabled: false,
-  },
-  vercel: {
     enabled: false,
   },
 };
