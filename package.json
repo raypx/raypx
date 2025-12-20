@@ -27,6 +27,7 @@
     "dev": "turbo --filter=web dev",
     "docs:dev": "turbo dev --filter docs",
     "turbo": "turbo",
+    "docs:build": "turbo build --filter=docs",
     "email:dev": "turbo dev --filter=email",
     "format": "raypx-scripts format",
     "preinstall": "npx only-allow pnpm",
@@ -49,7 +50,7 @@
     "jsdom": "^27.3.0",
     "lefthook": "^2.0.12",
     "rimraf": "^6.1.2",
-    "turbo": "^2.6.3",
+    "turbo": "^2.7.0",
     "typescript": "^5.9.3",
     "vite": "catalog:",
     "vitest": "^4.0.16"
@@ -64,6 +65,9 @@
       "allowedVersions": {
         "vite": "8.0.0-beta.1"
       }
+    },
+    "overrides": {
+      "esbuild": "^0.27.2"
     }
   }
 }

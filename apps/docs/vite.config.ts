@@ -1,3 +1,4 @@
+import netlify from "@netlify/vite-plugin-tanstack-start"; // ← add this
 import tailwindcss from "@tailwindcss/vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -16,10 +17,24 @@ const deployPlugin = () => {
   const plugins: PluginOption[] = [];
 
   if (process.env.VERCEL || env.VERCEL) {
-    return [nitro()];
+    return [
+      nitro({
+        preset: "vercel",
+      }),
+    ];
   }
 
-  return plugins?.length ? plugins : [nitro()];
+  if (env.NETLIFY) {
+    return [netlify()];
+  }
+
+  return plugins?.length
+    ? plugins
+    : [
+        nitro({
+          preset: "node-server",
+        }),
+      ];
 };
 
 export default defineConfig({
@@ -29,9 +44,6 @@ export default defineConfig({
   },
   resolve: {
     external: ["fumadocs-core", "fumadocs-ui"],
-  },
-  ssr: {
-    noExternal: ["@raypx/auth"],
   },
   build: {
     chunkSizeWarningLimit: 1000,

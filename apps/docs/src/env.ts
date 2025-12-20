@@ -5,6 +5,7 @@ const env = createEnv({
     NODE_ENV: z.enum(["development", "production"]).default("development"),
     MODE: z.string().optional(),
     VERCEL: z.coerce.boolean().optional().default(false),
+    NETLIFY: z.coerce.boolean().optional().default(false),
   },
   server: {
     PORT: z.coerce.number().optional().default(3000),
