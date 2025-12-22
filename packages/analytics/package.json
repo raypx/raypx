@@ -20,7 +20,7 @@
     "@raypx/config": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/shared": "workspace:*",
-    "posthog-js": "^1.309.1"
+    "posthog-js": "^1.310.1"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",

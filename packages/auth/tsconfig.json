@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "strict": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true

@@ -37,6 +37,9 @@
     "start": "turbo start",
     "test": "turbo test",
     "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
+    "knip": "knip",
+    "knip:production": "knip --production",
+    "knip:files": "knip --files",
     "update:deps": "pnpm update --latest --interactive --recursive",
     "web:start": "turbo start --filter=web"
   },
@@ -48,9 +51,10 @@
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "^4.0.16",
     "jsdom": "^27.3.0",
+    "knip": "^5.76.3",
     "lefthook": "^2.0.12",
     "rimraf": "^6.1.2",
-    "turbo": "^2.7.0",
+    "turbo": "^2.7.1",
     "typescript": "^5.9.3",
     "vite": "catalog:",
     "vitest": "^4.0.16"

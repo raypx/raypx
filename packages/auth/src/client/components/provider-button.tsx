@@ -2,7 +2,7 @@ import { Button } from "@raypx/ui/components/button";
 import { cn } from "@raypx/ui/lib/utils";
 import type { SocialProvider } from "better-auth/social-providers";
 import { useCallback } from "react";
-import { logger } from "../../../logger";
+import { logger } from "../../logger";
 import { useAuth } from "../hooks/use-auth";
 import type { Provider } from "../utils/social-providers";
 
