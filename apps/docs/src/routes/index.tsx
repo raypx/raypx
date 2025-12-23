@@ -1,20 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { HomeLayout } from "fumadocs-ui/layouts/home";
+import { HomeLayout } from "@fumadocs/base-ui/layouts/home";
 import {
-  Code2,
-  Database,
-  FileCode,
-  GitBranch,
-  Github,
-  LayoutTemplate,
-  Package,
-  Palette,
-  Rocket,
-  Shield,
-  Sparkles,
-  TestTube,
-  Zap,
-} from "lucide-react";
+  IconBrandGithub,
+  IconCode,
+  IconDatabase,
+  IconFileCode,
+  IconGitBranch,
+  IconMapPin,
+  IconPackage,
+  IconPalette,
+  IconRocket,
+  IconShield,
+  IconSparkles,
+  IconTemplate,
+  IconTestPipe,
+} from "@tabler/icons-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { links } from "~/config/site";
 import { baseOptions } from "../lib/layout.shared";
 
@@ -24,37 +24,37 @@ export const Route = createFileRoute("/")({
 
 const features = [
   {
-    icon: Zap,
+    icon: IconMapPin,
     title: "Lightning Fast",
     description:
       "Built with TanStack Start, Vite 7, and React 19 for unparalleled performance and developer experience.",
   },
   {
-    icon: Shield,
+    icon: IconShield,
     title: "Enterprise Security",
     description:
       "Better Auth with OAuth, 2FA, session management, and enterprise-grade security features out of the box.",
   },
   {
-    icon: Palette,
+    icon: IconPalette,
     title: "Modern UI/UX",
     description:
       "60+ shadcn/ui components with Radix UI primitives and Tailwind CSS v4 for beautiful, accessible interfaces.",
   },
   {
-    icon: Code2,
+    icon: IconCode,
     title: "Type-Safe APIs",
     description:
       "End-to-end type safety with tRPC, ensuring your frontend and backend always stay in sync.",
   },
   {
-    icon: Database,
+    icon: IconDatabase,
     title: "Powerful ORM",
     description:
       "Drizzle ORM with PostgreSQL for a type-safe, performant, and developer-friendly database layer.",
   },
   {
-    icon: Sparkles,
+    icon: IconSparkles,
     title: "AI-Ready",
     description:
       "Built-in support for OpenAI and DeepSeek integration for building intelligent applications.",
@@ -63,34 +63,34 @@ const features = [
 
 const techStack = [
   {
-    icon: LayoutTemplate,
+    icon: IconTemplate,
     category: "Framework",
     items: ["TanStack Start 1.135", "React 19", "TypeScript 5.9", "Vite 7"],
   },
   {
-    icon: FileCode,
+    icon: IconFileCode,
     category: "Backend",
     items: ["Better Auth", "Drizzle ORM", "tRPC", "PostgreSQL"],
   },
   {
-    icon: Palette,
+    icon: IconPalette,
     category: "UI & Styling",
     items: ["Tailwind CSS v4", "Radix UI", "shadcn/ui", "60+ Components"],
   },
   {
-    icon: Package,
+    icon: IconPackage,
     category: "Monorepo",
     items: ["bun 10+", "Turborepo", "14 Packages", "Workspace Protocol"],
   },
   {
-    icon: TestTube,
+    icon: IconTestPipe,
     category: "Dev Tools",
     items: ["Biome", "Vitest", "Drizzle Kit", "Lefthook"],
   },
   {
-    icon: GitBranch,
+    icon: IconGitBranch,
     category: "Deploy",
-    items: ["Netlify", "Vercel", "Cloudflare", "Self-hosted"],
+    items: ["Netlify", "Cloudflare", "Self-hosted"],
   },
 ];
 
@@ -109,7 +109,7 @@ function RouteComponent() {
         {/* Hero Section */}
         <div className="mx-auto max-w-4xl text-center animate-in fade-in slide-in-from-top-4 duration-1000">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary animate-in fade-in zoom-in-95 duration-700 delay-150">
-            <Rocket className="size-4" />
+            <IconRocket className="size-4" />
             Production-Ready Full-Stack Platform
           </div>
 
@@ -143,7 +143,7 @@ function RouteComponent() {
               rel="noopener noreferrer"
               target="_blank"
             >
-              <Github className="size-5 transition-transform group-hover:rotate-12" />
+              <IconBrandGithub className="size-5 transition-transform group-hover:rotate-12" />
               <span>View on GitHub</span>
             </a>
           </div>

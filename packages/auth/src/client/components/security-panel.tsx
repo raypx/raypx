@@ -9,8 +9,8 @@ import {
 import { Link } from "@tanstack/react-router";
 import { KeyRound, Shield } from "lucide-react";
 import type React from "react";
-import { ProviderButton } from "../components";
 import { socialProviders } from "../utils/social-providers";
+import { ProviderButton } from "./provider-button";
 
 export type SecurityPanelProps = {
   // Route to the in-app security settings page (e.g. "/_app/settings/")

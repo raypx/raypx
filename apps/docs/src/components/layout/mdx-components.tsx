@@ -1,7 +1,7 @@
-import { Banner } from "fumadocs-ui/components/banner";
-import * as Files from "fumadocs-ui/components/files";
-import * as TabsComponents from "fumadocs-ui/components/tabs";
-import defaultMdxComponents from "fumadocs-ui/mdx";
+import { Banner } from "@fumadocs/base-ui/components/banner";
+import * as Files from "@fumadocs/base-ui/components/files";
+import * as TabsComponents from "@fumadocs/base-ui/components/tabs";
+import defaultMdxComponents from "@fumadocs/base-ui/mdx";
 
 export const getMdxComponents = () => {
   return {

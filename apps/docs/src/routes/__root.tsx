@@ -1,8 +1,8 @@
+import { RootProvider } from "@fumadocs/base-ui/provider/tanstack";
 import { Toaster } from "@raypx/ui/components/sonner";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanstackProvider } from "fumadocs-core/framework/tanstack";
-import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
 import Loading from "~/components/layout/loading";
 import NotFound from "~/components/layout/not-found";

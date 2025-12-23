@@ -4,35 +4,26 @@
   "type": "module",
   "scripts": {
     "build": "raypx-scripts run vite build",
-    "clean": "rimraf dist .turbo .tanstack .nitro .output .vercel dist .netlify",
+    "clean": "rimraf dist .turbo .tanstack .nitro .output dist .netlify",
     "dev": "raypx-scripts run vite dev",
     "serve": "raypx-scripts run vite preview",
     "shadcn": "shadcn add --overwrite",
     "test": "vitest run"
   },
   "dependencies": {
-    "@hookform/resolvers": "catalog:",
-    "@raypx/analytics": "workspace:*",
+    "@fumadocs/base-ui": "^16.3.2",
     "@raypx/config": "workspace:*",
-    "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
+    "@tabler/icons-react": "^3.36.0",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "dayjs": "^1.11.19",
     "fumadocs-core": "^16.3.2",
     "fumadocs-mdx": "^14.2.2",
-    "fumadocs-ui": "npm:@fumadocs/base-ui@^16.3.2",
-    "lodash-es": "catalog:",
-    "lucide-react": "catalog:",
     "nitro": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-hook-form": "catalog:",
     "shadcn": "^3.6.2",
-    "superjson": "catalog:",
-    "vite-tsconfig-paths": "^6.0.3",
-    "zod": "catalog:",
-    "zustand": "^5.0.9"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@netlify/vite-plugin-tanstack-start": "^1.2.6",
@@ -40,8 +31,7 @@
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.3.12",
     "@tanstack/react-devtools": "^0.8.4",
-    "@tanstack/react-router-devtools": "^1.142.13",
-    "@types/lodash-es": "catalog:",
+    "@tanstack/react-router-devtools": "^1.143.3",
     "@types/node": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
@@ -52,6 +42,7 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-inspect": "^11.3.3",
+    "vite-tsconfig-paths": "^6.0.3",
     "vitest": "catalog:"
   }
 }

@@ -1,6 +1,5 @@
 import { createClient, type RedisClientType } from "redis";
 import superjson from "superjson";
-import { logger } from "../logger";
 import {
   ARRAY_INDEX_NOT_FOUND,
   COMPOUND_KEY_SEPARATOR,
@@ -18,6 +17,7 @@ import {
   REDIS_EXISTS,
   REDIS_SUCCESS,
 } from "./consts";
+import { logger } from "./logger";
 import {
   type CacheClosure,
   CacheConnectionError,

@@ -1,9 +1,9 @@
 import browserCollections from "fumadocs-mdx:collections/browser";
+import { DocsLayout } from "@fumadocs/base-ui/layouts/notebook";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "@fumadocs/base-ui/page";
 import { createFileRoute, notFound, redirect, useLoaderData } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import type * as PageTree from "fumadocs-core/page-tree";
-import { DocsLayout } from "fumadocs-ui/layouts/notebook";
-import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
 import { useMemo } from "react";
 import { getMdxComponents } from "~/components/layout/mdx-components";
 import { baseOptions } from "~/lib/layout.shared";

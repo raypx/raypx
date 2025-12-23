@@ -10,8 +10,8 @@ import { type ThemeKey, themeConfig, themeIcons } from "@raypx/ui/lib/theme-conf
 import { cn } from "@raypx/ui/lib/utils";
 import { Check } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
-import { logger } from "../../logger";
 import { useTheme } from "../hooks/use-theme";
+import { logger } from "../lib/logger";
 
 type ThemeConfig = {
   key: ThemeKey;

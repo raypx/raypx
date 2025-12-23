@@ -1,8 +1,8 @@
 import { and, asc, desc, eq, ilike, or, sql } from "@raypx/database";
 import { datasets as Datasets, documents as Documents } from "@raypx/database/schemas";
 import { z } from "zod/v4";
-import { logger } from "../../logger";
 import { Errors } from "../errors";
+import { logger } from "../logger";
 import { protectedProcedure } from "../trpc";
 import { assertExists, handleDatabaseError } from "../utils/error-handler";
 

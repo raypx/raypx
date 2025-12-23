@@ -13,10 +13,6 @@ const isDev = env.NODE_ENV === "development";
 const deployPlugin = () => {
   const plugins: PluginOption[] = [];
 
-  if (process.env.VERCEL || env.VERCEL) {
-    return [nitro()];
-  }
-
   return plugins?.length ? plugins : [nitro()];
 };
 
@@ -28,19 +24,12 @@ export default defineConfig({
     noExternal: ["@tabler/icons-react"],
   },
   build: {
+    // Use 'hidden' sourcemap: generates .map files but doesn't expose them to browsers
+    // Access to .map files can be restricted via server config (nginx/reverse proxy)
+    sourcemap: 'hidden',
     chunkSizeWarningLimit: 1000,
     commonjsOptions: {
       include: [/node_modules/],
-    },
-    rollupOptions: {
-      onwarn(warning, warn) {
-        // Suppress eval warnings from dependencies (e.g., eval("require")("stream"))
-        if (warning.code === "EVAL" && warning.message?.includes("eval")) {
-          return;
-        }
-        // Use default warning handler for other warnings
-        warn(warning);
-      },
     },
   },
   plugins: [
@@ -68,7 +57,6 @@ export default defineConfig({
       },
     }),
     tailwindcss(),
-    // Use nitro for dev + Vercel, netlify for other platforms
     deployPlugin(),
   ],
 });

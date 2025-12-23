@@ -20,7 +20,7 @@ The project includes a Redis client package (`@raypx/redis`) that works with any
 
 ### 1. Upstash (Recommended for Serverless)
 
-**Upstash** is a serverless Redis platform perfect for serverless applications like Vercel deployments.
+**Upstash** is a serverless Redis platform perfect for serverless applications.
 
 #### Setup Steps
 
@@ -132,32 +132,7 @@ The project includes a Redis client package (`@raypx/redis`) that works with any
    REDIS_URL=redis://default:password@host:port
    ```
 
-### 4. Vercel KV (Redis)
-
-**Vercel KV** integrates seamlessly with Vercel deployments using Upstash.
-
-#### Setup Steps
-
-1. **Add KV to Vercel project**
-   - In Vercel dashboard, go to your project
-   - Navigate to "Storage" tab
-   - Click "Create Database" → "KV"
-
-2. **Get connection details**
-   - Vercel automatically provides environment variables:
-     - `KV_REST_API_URL`
-     - `KV_REST_API_TOKEN`
-     - `KV_URL` (for Redis client)
-
-3. **Configure environment variables**
-   ```bash
-   REDIS_URL=$KV_URL
-   # or
-   UPSTASH_REDIS_REST_URL=$KV_REST_API_URL
-   UPSTASH_REDIS_REST_TOKEN=$KV_REST_API_TOKEN
-   ```
-
-### 5. Self-Hosted Redis
+### 4. Self-Hosted Redis
 
 For self-hosted Redis (Docker, VPS, etc.):
 
@@ -205,10 +180,6 @@ UPSTASH_REDIS_REST_TOKEN=your-token
 ### Production
 
 For production deployments:
-
-#### Vercel
-- Add `REDIS_URL` or Upstash variables in Project Settings → Environment Variables
-- Use production Redis connection details
 
 #### Netlify
 - Add `REDIS_URL` in Site Settings → Environment Variables

@@ -36,9 +36,6 @@ logs
 # Finder (MacOS) folder config
 .DS_Store
 
-# Vercel
-.vercel
-
 # Fumadocs
 .source
 

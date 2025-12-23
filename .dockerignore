@@ -24,11 +24,6 @@ coverage
 *.swo
 *~
 
-# Environment
-.env
-.env.local
-.env.*.local
-
 # Logs
 *.log
 npm-debug.log*

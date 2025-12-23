@@ -3,8 +3,8 @@ import { and, desc, eq, ilike, isNull, or, sql } from "@raypx/database";
 import { CreateUserSchema, user as User } from "@raypx/database/schemas";
 import { deleteUserFiles, isR2Configured } from "@raypx/storage";
 import { z } from "zod/v4";
-import { logger } from "../../logger";
 import { Errors } from "../errors";
+import { logger } from "../logger";
 import { adminProcedure, protectedProcedure, publicProcedure } from "../trpc";
 import { assertExists, assertOwnership, handleDatabaseError } from "../utils/error-handler";
 

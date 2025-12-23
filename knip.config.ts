@@ -2,22 +2,6 @@ import type { KnipConfig } from "knip";
 
 const config: KnipConfig = {
   workspaces: {
-    ".": {
-      entry: ["scripts/cli.ts", "scripts/bin/*.{mjs,js}"],
-      project: ["scripts/**/*.{ts,tsx}"],
-    },
-    "apps/web": {
-      entry: ["src/router.tsx", "src/routes/**/*.{ts,tsx}"],
-      project: ["src/**/*.{ts,tsx}"],
-    },
-    "apps/docs": {
-      entry: ["src/router.tsx", "src/routes/**/*.{ts,tsx}"],
-      project: ["src/**/*.{ts,tsx}"],
-    },
-    "apps/email": {
-      entry: ["src/router.tsx", "src/routes/**/*.{ts,tsx}"],
-      project: ["src/**/*.{ts,tsx}"],
-    },
     "packages/auth": {
       entry: [
         "src/index.ts",
@@ -25,9 +9,8 @@ const config: KnipConfig = {
         "src/middleware.ts",
         "src/envs.ts",
         "src/client/index.ts",
-        "logger.ts",
       ],
-      project: ["src/**/*.{ts,tsx}", "logger.ts"],
+      project: ["src/**/*.{ts,tsx}"],
     },
     "packages/config": {
       entry: ["src/index.ts", "src/server.ts", "src/envs.ts"],
@@ -50,8 +33,8 @@ const config: KnipConfig = {
       project: ["src/**/*.{ts}"],
     },
     "packages/bundler": {
-      entry: ["src/index.ts", "logger.ts"],
-      project: ["src/**/*.{ts}", "logger.ts"],
+      entry: ["src/index.ts"],
+      project: ["src/**/*.{ts}"],
     },
     "packages/core": {
       entry: ["src/index.ts", "src/config.ts", "src/vite.ts"],
@@ -82,8 +65,8 @@ const config: KnipConfig = {
       project: ["src/**/*.{ts}"],
     },
     "packages/redis": {
-      entry: ["src/index.ts", "logger.ts"],
-      project: ["src/**/*.{ts}", "logger.ts"],
+      entry: ["src/index.ts"],
+      project: ["src/**/*.{ts}"],
     },
     "packages/shared": {
       entry: ["src/index.ts"],
@@ -94,8 +77,8 @@ const config: KnipConfig = {
       project: ["src/**/*.{ts}"],
     },
     "packages/trpc": {
-      entry: ["src/index.ts", "src/client.ts", "logger.ts"],
-      project: ["src/**/*.{ts}", "logger.ts"],
+      entry: ["src/index.ts", "src/client.ts"],
+      project: ["src/**/*.{ts}"],
     },
     "packages/ui": {
       entry: ["src/**/*.{ts,tsx}"],
@@ -119,22 +102,7 @@ const config: KnipConfig = {
     "**/vitest.config.{ts,js}",
     "**/migrations/**",
   ],
-  ignoreDependencies: [
-    "@types/*",
-    "typescript",
-    "vite",
-    "vitest",
-    "@vitest/*",
-    "@vitejs/*",
-    "turbo",
-    "rimraf",
-    "lefthook",
-    "@biomejs/biome",
-    "@changesets/cli",
-    "@dotenvx/dotenvx",
-    "knip",
-  ],
-  ignoreBinaries: ["raypx-scripts", "turbo", "vitest", "vite", "knip"],
+  ignoreDependencies: ["@types/*", "@vitejs/*", "@dotenvx/dotenvx"],
 };
 
 export default config;

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import fs from "fs-extra";
 import { isEqual } from "lodash-es";
-import { logger } from "../logger";
+import { logger } from "./logger";
 
 /**
  * Cache metadata for tracking file changes and configuration

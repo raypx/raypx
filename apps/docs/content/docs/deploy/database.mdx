@@ -15,7 +15,7 @@ Raypx uses **PostgreSQL** as the primary database with **Drizzle ORM** for type-
 
 ### 1. Neon (Recommended for Serverless)
 
-**Neon** is a serverless PostgreSQL platform optimized for modern applications, perfect for Vercel deployments.
+**Neon** is a serverless PostgreSQL platform optimized for modern applications.
 
 #### Setup Steps
 
@@ -122,32 +122,7 @@ postgresql://user:password@host.neon.tech/dbname?sslmode=require&pgbouncer=true
    bun run --filter @raypx/database migrate
    ```
 
-### 4. Vercel Postgres
-
-**Vercel Postgres** integrates seamlessly with Vercel deployments.
-
-#### Setup Steps
-
-1. **Add Postgres to Vercel project**
-   - In Vercel dashboard, go to your project
-   - Navigate to "Storage" tab
-   - Click "Create Database" → "Postgres"
-
-2. **Get connection string**
-   - Vercel automatically provides `POSTGRES_URL` environment variable
-   - Use this in your `.env` file
-
-3. **Configure environment variable**
-   ```bash
-   DATABASE_URL=$POSTGRES_URL
-   ```
-
-4. **Run migrations**
-   ```bash
-   bun run --filter @raypx/database migrate
-   ```
-
-### 5. Self-Hosted PostgreSQL
+### 4. Self-Hosted PostgreSQL
 
 For self-hosted PostgreSQL (Docker, VPS, etc.):
 
@@ -186,10 +161,6 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/raypx_dev
 ### Production
 
 For production deployments:
-
-#### Vercel
-- Add `DATABASE_URL` in Project Settings → Environment Variables
-- Use production database connection string
 
 #### Netlify
 - Add `DATABASE_URL` in Site Settings → Environment Variables
@@ -265,7 +236,6 @@ Most providers offer automated backups:
 - **Neon**: Automatic daily backups with point-in-time recovery
 - **Supabase**: Daily backups (upgrade for more frequent)
 - **Railway**: Automatic backups (check plan details)
-- **Vercel Postgres**: Automatic backups
 
 ### Manual Backups
 

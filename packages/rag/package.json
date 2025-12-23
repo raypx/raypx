@@ -1,6 +1,16 @@
 {
   "name": "@raypx/rag",
   "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@huggingface/inference": "^4.13.5",
     "@langchain/cohere": "^1.0.1",
@@ -20,15 +30,5 @@
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "private": true,
-  "scripts": {
-    "clean": "rimraf dist .turbo",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
-  },
-  "type": "module"
+  }
 }

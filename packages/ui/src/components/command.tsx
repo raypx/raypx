@@ -1,6 +1,6 @@
 "use client";
 
-import { Command as CommandPrimitive } from "@raypx/ui/components/cmdk";
+import { CMDK as CommandPrimitive } from "@raypx/ui/components/cmdk";
 import {
   Dialog,
   DialogContent,

@@ -16,14 +16,6 @@ const isDev = env.NODE_ENV === "development";
 const deployPlugin = () => {
   const plugins: PluginOption[] = [];
 
-  if (process.env.VERCEL || env.VERCEL) {
-    return [
-      nitro({
-        preset: "vercel",
-      }),
-    ];
-  }
-
   if (env.NETLIFY) {
     return [netlify()];
   }
@@ -42,8 +34,11 @@ export default defineConfig({
     port: 3004,
     open: isDev,
   },
+  ssr: {
+    noExternal: ["@tabler/icons-react"],
+  },
   resolve: {
-    external: ["fumadocs-core", "fumadocs-ui"],
+    external: ["fumadocs-core", "fumadocs-ui", "@fumadocs/base-ui"],
   },
   build: {
     chunkSizeWarningLimit: 1000,
@@ -75,7 +70,6 @@ export default defineConfig({
       },
     }),
     tailwindcss(),
-    // Use nitro for dev + Vercel, netlify for other platforms
     deployPlugin(),
   ],
 });

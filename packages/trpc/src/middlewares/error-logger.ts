@@ -4,9 +4,9 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { logger } from "../../logger";
 import type { AppErrorCode, ErrorMeta } from "../errors";
 import { isAppError } from "../errors";
+import { logger } from "../logger";
 
 /**
  * Log levels for different error severities

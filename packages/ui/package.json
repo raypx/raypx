@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     "./styles/*.css": "./src/styles/*.css",
-    "./lib/*": "./src/lib/*.{ts,tsx}",
-    "./lib/utils": "./src/lib/utils.ts",
+    "./lib/*": "./src/lib/*.ts",
     "./components": "./src/components/index.ts",
     "./components/*": "./src/components/*.tsx",
     "./business": "./src/business/index.tsx",

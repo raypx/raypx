@@ -5,13 +5,11 @@ import { json } from "@tanstack/react-start";
 /**
  * API endpoint for retrying failed document vectorizations
  * This endpoint can be called by:
- * - Vercel Cron Jobs (configured in vercel.json)
  * - External cron services (e.g., cron-job.org)
  * - Manual triggers
  */
 async function handler({ request }: { request: Request }) {
   // Optional: Add authentication/authorization check
-  // For Vercel Cron, you can use a secret header
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 

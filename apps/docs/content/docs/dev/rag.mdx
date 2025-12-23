@@ -161,8 +161,7 @@ const embeddings = await generateEmbeddings(texts, {
 Failed vectorizations are automatically retried via a cron job endpoint:
 
 - **Endpoint**: `/api/cron/retry-vectorization`
-- **Schedule**: Configure via Vercel Cron Jobs or external cron service
-- **Configuration**: See `vercel.json.example` for Vercel Cron setup
+- **Schedule**: Configure via external cron service
 
 The retry system:
 - Processes documents with `failed` or `uploaded` status

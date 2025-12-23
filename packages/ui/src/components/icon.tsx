@@ -2,7 +2,7 @@ import type { LucideProps } from "lucide-react";
 import type { ComponentType } from "react";
 import { lazy, Suspense, useMemo } from "react";
 import type { NonEmptyObject, SetOptional, Simplify } from "type-fest";
-import { logger } from "../../logger";
+import { logger } from "../lib/logger";
 
 export type IconProps = Simplify<
   SetOptional<LucideProps, "ref"> & {

@@ -6,7 +6,6 @@ export default {
     "dev/index",
     "dev/sentry",
     "dev/rag",
-    "deploy/vercel",
     "deploy/database",
     "deploy/redis",
     "auth/oauth",

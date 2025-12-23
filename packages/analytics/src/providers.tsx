@@ -13,6 +13,8 @@ const AnalyticsProviderInner: FC<{ children: ReactNode }> = ({ children }) => {
  * Main analytics provider
  * Wraps children with analytics configuration and providers
  */
+import type { AnalyticsConfig } from "./config";
+
 export const AnalyticsProvider: FC<{
   children: ReactNode;
   config?: Partial<AnalyticsConfig>;

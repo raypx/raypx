@@ -79,7 +79,7 @@ const features: Feature[] = [
     icon: Rocket,
     title: "Easy Deployment",
     description:
-      "Deploy anywhere with Docker support, or one-click deploy to Vercel, Cloudflare, or Railway.",
+      "Deploy anywhere with Docker support, or one-click deploy to Cloudflare or Railway.",
     className: "col-span-1 md:col-span-1",
     accent: "#f97316",
   },

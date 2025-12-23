@@ -2,27 +2,19 @@
   "$schema": "https://turbo.build/schema.json",
   "envMode": "loose",
   "concurrency": "16",
-  "globalPassThroughEnv": [
-    "NODE_ENV",
-    "CI",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_URL",
-    "NETLIFY",
-    "npm_lifecycle_event"
-  ],
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event"],
   "tasks": {
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
-      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**"]
     },
     "start": {
       "cache": true,
       "dependsOn": ["build", "^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
-      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".vercel/**"]
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**"]
     },
     "typecheck": {
       "cache": true,

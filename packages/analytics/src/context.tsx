@@ -39,10 +39,6 @@ export const AnalyticsConfigProvider: FC<{
           ...baseConfig.ga,
           ...customConfig.ga,
         },
-        vercel: {
-          ...baseConfig.vercel,
-          ...customConfig.vercel,
-        },
       };
     }
 

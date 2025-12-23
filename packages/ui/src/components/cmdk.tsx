@@ -164,7 +164,7 @@ const StoreContext = React.createContext<Store>(undefined as any);
 const useStore = () => React.useContext(StoreContext);
 const GroupContext = React.createContext<Group | undefined>(undefined);
 
-const Command = React.forwardRef<HTMLDivElement, CommandProps>((props, forwardedRef) => {
+const CMDK = React.forwardRef<HTMLDivElement, CommandProps>((props, forwardedRef) => {
   const state = useLazyRef<State>(() => ({
     /** Value of the search query. */
     search: "",
@@ -929,7 +929,7 @@ const Dialog = React.forwardRef<HTMLDivElement, DialogProps>((props, forwardedRe
       <BaseDialog.Portal container={container}>
         <BaseDialog.Backdrop className={overlayClassName} cmdk-overlay="" />
         <BaseDialog.Popup aria-label={props.label} className={contentClassName} cmdk-dialog="">
-          <Command ref={forwardedRef} {...etc} />
+          <CMDK ref={forwardedRef} {...etc} />
         </BaseDialog.Popup>
       </BaseDialog.Portal>
     </BaseDialog.Root>
@@ -970,7 +970,7 @@ const Loading = React.forwardRef<HTMLDivElement, LoadingProps>((props, forwarded
   );
 });
 
-const pkg = Object.assign(Command, {
+const pkg = Object.assign(CMDK, {
   List,
   Item,
   Input,
@@ -981,19 +981,19 @@ const pkg = Object.assign(Command, {
   Loading,
 });
 
-export { useCmdk as useCommandState };
-export { pkg as Command };
-export { defaultFilter };
+export { useCmdk as useCMDKState };
+export { pkg as CMDK };
+export { defaultFilter as CMDKDefaultFilter };
 
-export { Command as CommandRoot };
-export { List as CommandList };
-export { Item as CommandItem };
-export { Input as CommandInput };
-export { Group as CommandGroup };
-export { Separator as CommandSeparator };
-export { Dialog as CommandDialog };
-export { Empty as CommandEmpty };
-export { Loading as CommandLoading };
+export { CMDK as CMDKRoot };
+export { List as CMDKList };
+export { Item as CMDKItem };
+export { Input as CMDKInput };
+export { Group as CMDKGroup };
+export { Separator as CMDKSeparator };
+export { Dialog as CMDKDialog };
+export { Empty as CMDKEmpty };
+export { Loading as CMDKLoading };
 
 /**
  *
