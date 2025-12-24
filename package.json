@@ -51,10 +51,10 @@
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "^4.0.16",
     "jsdom": "^27.3.0",
-    "knip": "^5.76.3",
+    "knip": "^5.77.0",
     "lefthook": "^2.0.12",
     "rimraf": "^6.1.2",
-    "turbo": "^2.7.1",
+    "turbo": "^2.7.2",
     "typescript": "^5.9.3",
     "vite": "catalog:",
     "vitest": "^4.0.16"
@@ -73,5 +73,10 @@
     "overrides": {
       "esbuild": "^0.27.2"
     }
+  },
+  "dependencies": {
+    "@tanstack/react-form": "^1.27.6",
+    "@tanstack/zod-form-adapter": "^0.42.1",
+    "zod-validator": "^1.0.1"
   }
 }

@@ -15,10 +15,9 @@
 
 import assert from "node:assert/strict";
 import type { Config } from "drizzle-kit";
-import { loadDatabaseUrl } from "./utils";
 
 // VECTOR_URL already falls back to DATABASE_URL in the schema
-const vectorUrl = loadDatabaseUrl("VECTOR_URL");
+const vectorUrl = process.env.VECTOR_URL || process.env.DATABASE_URL;
 assert(vectorUrl, "Missing DATABASE_URL environment variable");
 
 const config: Config = {

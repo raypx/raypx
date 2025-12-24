@@ -19,7 +19,7 @@ export {
   sql,
 } from "drizzle-orm";
 
-import { createClient } from "./adapters/neon";
+import { createClient } from "./adapters/postgres";
 import * as schemas from "./schemas/pg";
 import * as vectorSchemas from "./schemas/vector";
 

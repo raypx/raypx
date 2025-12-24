@@ -11,9 +11,9 @@
 
 import assert from "node:assert/strict";
 import type { Config } from "drizzle-kit";
-import { loadDatabaseUrl } from "./utils";
 
-const databaseUrl = loadDatabaseUrl("DATABASE_URL");
+console.log("DATABASE_URL", process.env.DATABASE_URL);
+const databaseUrl = process.env.DATABASE_URL;
 assert(databaseUrl, "Missing DATABASE_URL environment variable");
 
 const config: Config = {

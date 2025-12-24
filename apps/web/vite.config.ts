@@ -26,7 +26,7 @@ export default defineConfig({
   build: {
     // Use 'hidden' sourcemap: generates .map files but doesn't expose them to browsers
     // Access to .map files can be restricted via server config (nginx/reverse proxy)
-    sourcemap: 'hidden',
+    sourcemap: "hidden",
     chunkSizeWarningLimit: 1000,
     commonjsOptions: {
       include: [/node_modules/],

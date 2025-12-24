@@ -58,11 +58,21 @@ export function createSignUpFormSchema(options: SignUpFormSchemaOptions = {}) {
   const { usernameEnabled = false, passwordValidation, rememberMeEnabled = false } = options;
 
   return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, {
+        message: "Name is required",
+      })
+      .max(255, {
+        message: "Name is too long",
+      })
+      .optional(),
     email: usernameEnabled
       ? z.string().min(1, {
           message: "Username is required",
         })
-      : z.email({
+      : z.string().email({
           message: "Email is invalid",
         }),
     password: getPasswordSchema(
@@ -86,6 +96,18 @@ export function createSignUpFormSchema(options: SignUpFormSchemaOptions = {}) {
  */
 export function getSignInFormDefaults(rememberMeEnabled = false) {
   return {
+    email: "",
+    password: "",
+    rememberMe: !rememberMeEnabled,
+  };
+}
+
+/**
+ * Get default form values for sign-up forms
+ */
+export function getSignUpFormDefaults(rememberMeEnabled = false) {
+  return {
+    name: "",
     email: "",
     password: "",
     rememberMe: !rememberMeEnabled,
