@@ -6,12 +6,7 @@ import {
   useOnSuccessTransition,
 } from "@raypx/auth";
 import { cn } from "@raypx/shared/utils";
-import {
-  Button,
-  Checkbox,
-  Input,
-  PasswordField,
-} from "@raypx/ui/components";
+import { Button, Checkbox, Input, PasswordField } from "@raypx/ui/components";
 import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
 import { useForm } from "@tanstack/react-form";
@@ -80,9 +75,7 @@ function SignUpPage() {
         }
       } catch (error) {
         const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to create account. Please try again.";
+          error instanceof Error ? error.message : "Failed to create account. Please try again.";
         toast.error(errorMessage);
         form.setFieldMeta("password", (prev) => ({
           ...prev,
@@ -185,9 +178,7 @@ function SignUpPage() {
                 value={field.state.value}
               />
               {field.state.meta.errors && (
-                <p className="text-sm font-medium text-destructive">
-                  {field.state.meta.errors[0]}
-                </p>
+                <p className="text-sm font-medium text-destructive">{field.state.meta.errors[0]}</p>
               )}
             </div>
           )}
@@ -218,9 +209,7 @@ function SignUpPage() {
                 value={field.state.value}
               />
               {field.state.meta.errors && (
-                <p className="text-sm font-medium text-destructive">
-                  {field.state.meta.errors[0]}
-                </p>
+                <p className="text-sm font-medium text-destructive">{field.state.meta.errors[0]}</p>
               )}
             </div>
           )}
