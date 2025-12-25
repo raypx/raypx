@@ -13,12 +13,14 @@ import type { Table } from "@tanstack/react-table";
 export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button className="ml-auto hidden h-8 lg:flex" size="sm" variant="outline">
-          <IconSettings className="h-4 w-4" />
-          View
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button className="ml-auto hidden h-8 lg:flex" size="sm" variant="outline">
+            <IconSettings className="h-4 w-4" />
+            View
+          </Button>
+        }
+      />
       <DropdownMenuContent align="end" className="w-[150px]">
         <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
         <DropdownMenuSeparator />

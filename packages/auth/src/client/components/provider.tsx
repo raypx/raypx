@@ -52,22 +52,22 @@ export const AuthProvider = ({
           queryFn: () => auth.accountInfo(params),
           cacheKey: `accountInfo:${JSON.stringify(params)}`,
         }),
-      useListDeviceSessions: () =>
-        useAuthData({
-          queryFn: auth.multiSession.listDeviceSessions,
-          cacheKey: "listDeviceSessions",
-        }),
+      // useListDeviceSessions: () =>
+      //   useAuthData({
+      //     queryFn: auth.multiSession.listDeviceSessions,
+      //     cacheKey: "listDeviceSessions",
+      //   }),
       useListSessions: () =>
         useAuthData({
           queryFn: auth.listSessions,
           cacheKey: "listSessions",
         }),
       // useListPasskeys: auth.useListPasskeys, // Not available in better-auth 1.4.1
-      useListApiKeys: () =>
-        useAuthData({
-          queryFn: auth.apiKey.list,
-          cacheKey: "listApiKeys",
-        }),
+      // useListApiKeys: () =>
+      //   useAuthData({
+      //     queryFn: auth.apiKey.list,
+      //     cacheKey: "listApiKeys",
+      //   }),
       useActiveOrganization: auth.useActiveOrganization,
       useListOrganizations: auth.useListOrganizations,
       // useHasPermission: (params) =>

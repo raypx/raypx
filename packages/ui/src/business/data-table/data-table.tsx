@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@raypx/ui/components";
 import { Checkbox } from "@raypx/ui/components/checkbox";
-import { IconArrowDown, IconArrowUp, IconArrowUpDown } from "@tabler/icons-react";
+import { IconArrowDown, IconArrowsUpDown, IconArrowUp } from "@tabler/icons-react";
 import {
   type ColumnDef,
   flexRender,
@@ -60,13 +60,8 @@ export function DataTable<TData>({
       header: ({ table }) => (
         <Checkbox
           aria-label="Select all"
-          checked={
-            table.getIsAllPageRowsSelected()
-              ? true
-              : table.getIsSomePageRowsSelected()
-                ? ("indeterminate" as const)
-                : false
-          }
+          checked={table.getIsAllPageRowsSelected()}
+          indeterminate={!table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         />
       ),
@@ -118,7 +113,7 @@ export function DataTable<TData>({
                   ) : sortDirection === "desc" ? (
                     <IconArrowDown className="h-4 w-4" />
                   ) : (
-                    <IconArrowUpDown className="h-4 w-4 opacity-50" />
+                    <IconArrowsUpDown className="h-4 w-4 opacity-50" />
                   )}
                 </span>
               )}

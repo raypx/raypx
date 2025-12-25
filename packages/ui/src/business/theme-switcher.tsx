@@ -180,17 +180,19 @@ export const ThemeSwitcher = memo(({ mode = "light-dark-system", variant }: Them
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          aria-label="Toggle theme"
-          className={cn("size-8", BUTTON_CLASSES, "focus-visible:!none")}
-          size="sm"
-          variant="ghost"
-        >
-          <TriggerIcon className={ICON_SIZE} />
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label="Toggle theme"
+            className={cn("size-8", BUTTON_CLASSES, "focus-visible:!none")}
+            size="sm"
+            variant="ghost"
+          >
+            <TriggerIcon className={ICON_SIZE} />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+        }
+      ></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {availableThemes.map((theme) => {
           const IconComponent = theme.icon;

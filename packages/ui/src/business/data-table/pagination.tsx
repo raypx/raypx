@@ -83,7 +83,6 @@ export function DataTablePagination({
               <PaginationLink
                 aria-label="Go to first page"
                 className="hidden size-8 lg:flex border"
-                disabled={!canPreviousPage}
                 onClick={(e) => {
                   e.preventDefault();
                   if (canPreviousPage) onPageChange(1);
@@ -98,7 +97,6 @@ export function DataTablePagination({
               <PaginationLink
                 aria-label="Go to previous page"
                 className="size-8 border"
-                disabled={!canPreviousPage}
                 onClick={(e) => {
                   e.preventDefault();
                   if (canPreviousPage) onPageChange(page - 1);
@@ -113,7 +111,6 @@ export function DataTablePagination({
               <PaginationLink
                 aria-label="Go to next page"
                 className="size-8 border"
-                disabled={!canNextPage}
                 onClick={(e) => {
                   e.preventDefault();
                   if (canNextPage) onPageChange(page + 1);
@@ -128,7 +125,6 @@ export function DataTablePagination({
               <PaginationLink
                 aria-label="Go to last page"
                 className="hidden size-8 lg:flex border"
-                disabled={!canNextPage}
                 onClick={(e) => {
                   e.preventDefault();
                   if (canNextPage) onPageChange(totalPages);

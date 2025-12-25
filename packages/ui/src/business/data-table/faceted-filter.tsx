@@ -54,41 +54,43 @@ export function FacetedFilter({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button className="h-8 border-dashed" size="sm" variant="outline">
-          <IconCirclePlus className="h-4 w-4" />
-          {title}
-          {selectedSet.size > 0 && (
-            <>
-              <Separator className="mx-2 h-4" orientation="vertical" />
-              <Badge className="rounded-sm px-1 font-normal lg:hidden" variant="secondary">
-                {selectedSet.size}
-              </Badge>
-              <div className="hidden gap-1 lg:flex">
-                {selectedSet.size > 2 ? (
-                  <Badge className="rounded-sm px-1 font-normal" variant="secondary">
-                    {selectedSet.size} selected
-                  </Badge>
-                ) : (
-                  options
-                    .filter((option: { label: string; value: string }) =>
-                      selectedSet.has(option.value),
-                    )
-                    .map((option: { label: string; value: string }) => (
-                      <Badge
-                        className="rounded-sm px-1 font-normal"
-                        key={option.value}
-                        variant="secondary"
-                      >
-                        {option.label}
-                      </Badge>
-                    ))
-                )}
-              </div>
-            </>
-          )}
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button className="h-8 border-dashed" size="sm" variant="outline">
+            <IconCirclePlus className="h-4 w-4" />
+            {title}
+            {selectedSet.size > 0 && (
+              <>
+                <Separator className="mx-2 h-4" orientation="vertical" />
+                <Badge className="rounded-sm px-1 font-normal lg:hidden" variant="secondary">
+                  {selectedSet.size}
+                </Badge>
+                <div className="hidden gap-1 lg:flex">
+                  {selectedSet.size > 2 ? (
+                    <Badge className="rounded-sm px-1 font-normal" variant="secondary">
+                      {selectedSet.size} selected
+                    </Badge>
+                  ) : (
+                    options
+                      .filter((option: { label: string; value: string }) =>
+                        selectedSet.has(option.value),
+                      )
+                      .map((option: { label: string; value: string }) => (
+                        <Badge
+                          className="rounded-sm px-1 font-normal"
+                          key={option.value}
+                          variant="secondary"
+                        >
+                          {option.label}
+                        </Badge>
+                      ))
+                  )}
+                </div>
+              </>
+            )}
+          </Button>
+        }
+      ></PopoverTrigger>
       <PopoverContent align="start" className="w-[200px] p-0">
         <Command>
           <CommandInput placeholder={title} />

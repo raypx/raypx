@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
-import { IconArrowDown, IconArrowUp, IconChevronsUpDown, IconEyeOff } from "@tabler/icons-react";
+import { IconArrowDown, IconArrowsUpDown, IconArrowUp, IconEyeOff } from "@tabler/icons-react";
 import type { Column } from "@tanstack/react-table";
 
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
@@ -27,18 +27,20 @@ export function DataTableColumnHeader<TData, TValue>({
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button className="data-[state=open]:bg-accent -ml-3 h-8" size="sm" variant="ghost">
-            <span>{title}</span>
-            {column.getIsSorted() === "desc" ? (
-              <IconArrowDown className="h-4 w-4" />
-            ) : column.getIsSorted() === "asc" ? (
-              <IconArrowUp className="h-4 w-4" />
-            ) : (
-              <IconChevronsUpDown className="h-4 w-4" />
-            )}
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button className="data-[state=open]:bg-accent -ml-3 h-8" size="sm" variant="ghost">
+              <span>{title}</span>
+              {column.getIsSorted() === "desc" ? (
+                <IconArrowDown className="h-4 w-4" />
+              ) : column.getIsSorted() === "asc" ? (
+                <IconArrowUp className="h-4 w-4" />
+              ) : (
+                <IconArrowsUpDown className="h-4 w-4" />
+              )}
+            </Button>
+          }
+        />
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
             <IconArrowUp className="mr-2 h-4 w-4" />

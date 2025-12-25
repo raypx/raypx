@@ -131,7 +131,7 @@ jobs:
 
       - name: Check for vulnerable packages
         run: |
-          if pnpm audit --audit-level=high --json > audit.json 2>/dev/null; then
+          if ! pnpm audit --audit-level=high --json > audit.json 2>/dev/null; then
             echo "High severity vulnerabilities found!"
             cat audit.json
             exit 1

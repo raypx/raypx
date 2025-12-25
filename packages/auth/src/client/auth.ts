@@ -1,7 +1,7 @@
 import {
   adminClient,
-  anonymousClient,
-  apiKeyClient,
+  // anonymousClient,
+  // apiKeyClient,
   emailOTPClient,
   genericOAuthClient,
   lastLoginMethodClient,
@@ -21,13 +21,13 @@ export const auth = createAuthClient({
   baseURL: env.VITE_AUTH_URL,
   plugins: [
     adminClient(),
-    apiKeyClient(),
+    // apiKeyClient(),
     multiSessionClient(),
     oneTapClient({
       clientId: "",
     }),
     genericOAuthClient(),
-    anonymousClient(),
+    // anonymousClient(),
     usernameClient(),
     magicLinkClient(),
     emailOTPClient(),

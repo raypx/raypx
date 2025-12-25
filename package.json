@@ -39,7 +39,7 @@
     "start": "turbo start",
     "test": "turbo test",
     "turbo": "turbo",
-    "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
+    "typecheck": "turbo typecheck",
     "update:deps": "pnpm update --latest --interactive --recursive",
     "web:start": "turbo start --filter=web"
   },

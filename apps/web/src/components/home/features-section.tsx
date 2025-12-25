@@ -1,11 +1,11 @@
 import { cn } from "@raypx/ui/lib/utils";
 import {
   IconBolt,
-  IconBot,
   IconChartLine,
   IconDatabase,
   IconLock,
   IconPalette,
+  IconRobot,
   IconRocket,
   IconWorld,
 } from "@tabler/icons-react";
@@ -25,7 +25,7 @@ type Feature = {
 
 const features: Feature[] = [
   {
-    icon: IconBot,
+    icon: IconRobot,
     title: "AI-First Design",
     description:
       "Built from the ground up for AI applications, with native integration for LLMs and vector databases.",
@@ -146,7 +146,7 @@ export function FeaturesSection() {
                   {/* Tech grid pattern */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                     <div
-                      className="absolute inset-0 [background-size:20px_20px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)] opacity-30"
+                      className="absolute inset-0 bg-size-[20px_20px] mask-[radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)] opacity-30"
                       style={{
                         backgroundImage: `radial-gradient(${feature.accent}40 1px, transparent 1px)`,
                       }}
@@ -199,7 +199,7 @@ export function FeaturesSection() {
                       <div
                         className={cn(
                           "relative size-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                          "bg-gradient-to-br from-white/10 to-white/5 dark:from-white/10 dark:to-white/5",
+                          "bg-linear-to-br from-white/10 to-white/5 dark:from-white/10 dark:to-white/5",
                           "ring-1 ring-white/10 group-hover:ring-white/20",
                           "group-hover:scale-110 group-hover:rotate-3",
                           isLarge && "size-14",
@@ -242,7 +242,7 @@ export function FeaturesSection() {
 
                     {/* Decorative line */}
                     <div className="mt-auto pt-6">
-                      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="h-px w-full bg-linear-to-r from-transparent via-border to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
                   </div>
                 </SpotlightCard>
