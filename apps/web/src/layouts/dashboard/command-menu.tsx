@@ -11,8 +11,15 @@ import {
 import { Kbd } from "@raypx/ui/components/kbd";
 import { useCmdK } from "@raypx/ui/hooks/use-cmd-k";
 import { useTheme } from "@raypx/ui/hooks/use-theme";
+import {
+  IconDeviceLaptop,
+  IconLogout,
+  IconMoon,
+  IconSearch,
+  IconSettings,
+  IconSun,
+} from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Laptop, LogOut, Moon, Search, Settings, Sun } from "lucide-react";
 import { useState } from "react";
 import { authRoutes } from "~/config/auth";
 import { sidebarGroups } from "~/config/sidebar";
@@ -31,7 +38,7 @@ export function CommandMenu() {
         onClick={() => setOpen(true)}
         variant="ghost"
       >
-        <Search className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+        <IconSearch className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
         <span className="flex-1 text-muted-foreground group-hover:text-foreground transition-colors">
           Search anything...
         </span>
@@ -46,7 +53,7 @@ export function CommandMenu() {
         size="icon"
         variant="ghost"
       >
-        <Search className="h-4 w-4" />
+        <IconSearch className="h-4 w-4" />
         <span className="sr-only">Search</span>
       </Button>
 
@@ -78,15 +85,15 @@ export function CommandMenu() {
 
           <CommandGroup heading="Theme">
             <CommandItem onSelect={() => setTheme("light")}>
-              <Sun className="mr-2 h-4 w-4" />
+              <IconSun className="mr-2 h-4 w-4" />
               <span>Light</span>
             </CommandItem>
             <CommandItem onSelect={() => setTheme("dark")}>
-              <Moon className="mr-2 h-4 w-4" />
+              <IconMoon className="mr-2 h-4 w-4" />
               <span>Dark</span>
             </CommandItem>
             <CommandItem onSelect={() => setTheme("system")}>
-              <Laptop className="mr-2 h-4 w-4" />
+              <IconDeviceLaptop className="mr-2 h-4 w-4" />
               <span>System</span>
             </CommandItem>
           </CommandGroup>
@@ -100,7 +107,7 @@ export function CommandMenu() {
                 setOpen(false);
               }}
             >
-              <Settings className="mr-2 h-4 w-4" />
+              <IconSettings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </CommandItem>
             <CommandItem
@@ -108,7 +115,7 @@ export function CommandMenu() {
                 window.location.href = authRoutes.signOut;
               }}
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <IconLogout className="mr-2 h-4 w-4" />
               <span>Sign out</span>
             </CommandItem>
           </CommandGroup>

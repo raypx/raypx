@@ -9,9 +9,9 @@ import { cn } from "@raypx/shared/utils";
 import { Button, Checkbox, Input, PasswordField } from "@raypx/ui/components";
 import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { AuthCard } from "~/layouts/auth/card";
 import { OrDivider } from "~/layouts/auth/or-divider";
@@ -239,7 +239,7 @@ function SignUpPage() {
         <Button className="w-full" disabled={form.state.isSubmitting} type="submit">
           {form.state.isSubmitting ? (
             <>
-              <Loader2 className="mr-2 size-4 animate-spin" />
+              <IconLoader2 className="mr-2 size-4 animate-spin" />
               Creating account...
             </>
           ) : (

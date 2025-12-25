@@ -1,24 +1,15 @@
 "use client";
 
-import { mergeProps } from "@base-ui/react/merge-props";
 import { PreviewCard as PreviewCardPrimitive } from "@base-ui/react/preview-card";
 
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 
 function HoverCard({ ...props }: PreviewCardPrimitive.Root.Props) {
   return <PreviewCardPrimitive.Root data-slot="hover-card" {...props} />;
 }
 
-function HoverCardTrigger({
-  ...props
-}: PreviewCardPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <PreviewCardPrimitive.Trigger
-      render={renderProp}
-      {...mergeProps({ "data-slot": "hover-card-trigger" }, rest)}
-    />
-  );
+function HoverCardTrigger({ ...props }: PreviewCardPrimitive.Trigger.Props) {
+  return <PreviewCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />;
 }
 
 function HoverCardContent({

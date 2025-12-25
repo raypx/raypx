@@ -14,7 +14,7 @@ import {
   Separator,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
-import { Check, PlusCircle } from "lucide-react";
+import { IconCheck, IconCirclePlus } from "@tabler/icons-react";
 import type * as React from "react";
 
 interface FacetedFilterProps {
@@ -56,7 +56,7 @@ export function FacetedFilter({
     <Popover>
       <PopoverTrigger asChild>
         <Button className="h-8 border-dashed" size="sm" variant="outline">
-          <PlusCircle className="h-4 w-4" />
+          <IconCirclePlus className="h-4 w-4" />
           {title}
           {selectedSet.size > 0 && (
             <>
@@ -112,7 +112,7 @@ export function FacetedFilter({
                             : "border-input [&_svg]:invisible",
                         )}
                       >
-                        <Check className="text-primary-foreground size-3.5" />
+                        <IconCheck className="text-primary-foreground size-3.5" />
                       </div>
                       {option.icon && <option.icon className="text-muted-foreground size-4" />}
                       <span>{option.label}</span>

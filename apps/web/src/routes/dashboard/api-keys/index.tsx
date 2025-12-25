@@ -25,12 +25,19 @@ import {
   Label,
   toast,
 } from "@raypx/ui/components";
+import {
+  IconCircleCheck,
+  IconCopy,
+  IconDots,
+  IconKey,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { CheckCircle2, Copy, Key, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
@@ -156,12 +163,12 @@ function ApiKeysSection() {
       <EmptyState
         actionLabel={
           <>
-            <Plus className="h-4 w-4 mr-2" />
+            <IconPlus className="h-4 w-4 mr-2" />
             Create API Key
           </>
         }
         description="Create your first API key to get started"
-        icon={Key}
+        icon={IconKey}
         onAction={() => setIsCreateDialogOpen(true)}
         title="No API Keys"
       />
@@ -194,7 +201,7 @@ function ApiKeysSection() {
       <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Key className="h-5 w-5 text-primary" />
+            <IconKey className="h-5 w-5 text-primary" />
             Active Keys
           </CardTitle>
           <CardDescription className="mt-1.5">
@@ -214,7 +221,7 @@ function ApiKeysSection() {
         >
           <DialogTrigger asChild>
             <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
-              <Plus className="h-4 w-4" />
+              <IconPlus className="h-4 w-4" />
               Create New Key
             </Button>
           </DialogTrigger>
@@ -230,7 +237,7 @@ function ApiKeysSection() {
               <div className="space-y-6 py-2">
                 <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
                   <div className="flex items-center gap-2 mb-2 text-green-600 dark:text-green-400">
-                    <CheckCircle2 className="h-4 w-4" />
+                    <IconCircleCheck className="h-4 w-4" />
                     <p className="text-sm font-medium">API Key Created Successfully</p>
                   </div>
                   <p className="text-xs text-muted-foreground mb-4">
@@ -246,7 +253,7 @@ function ApiKeysSection() {
                       size="icon"
                       variant="outline"
                     >
-                      <Copy className="h-4 w-4" />
+                      <IconCopy className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -406,7 +413,7 @@ function ApiKeysTable({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline">
-                  <MoreHorizontal className="h-4 w-4" />
+                  <IconDots className="h-4 w-4" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -417,7 +424,7 @@ function ApiKeysTable({
                     void copyToClipboard(apiKey.key);
                   }}
                 >
-                  <Copy className="mr-2 h-4 w-4" />
+                  <IconCopy className="mr-2 h-4 w-4" />
                   Copy Key
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -428,7 +435,7 @@ function ApiKeysTable({
                     handleDeleteKey(apiKey.id);
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <IconTrash className="mr-2 h-4 w-4" />
                   Delete Key
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -467,7 +474,7 @@ function ApiKeysTable({
               size="sm"
               variant="destructive"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <IconTrash className="h-4 w-4 mr-2" />
               Delete Selected
             </Button>
           </div>

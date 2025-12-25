@@ -41,19 +41,18 @@ import {
   toast,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
+import {
+  IconDots,
+  IconRefresh,
+  IconShieldHeart,
+  IconTrash,
+  IconUser,
+  IconUserCheck,
+  IconUserX,
+} from "@tabler/icons-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import {
-  MoreHorizontal,
-  RefreshCw,
-  Shield,
-  ShieldAlert,
-  Trash2,
-  User,
-  UserCheck,
-  UserX,
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -169,12 +168,12 @@ function UsersSection({
     {
       label: "Active",
       value: "active",
-      icon: User,
+      icon: IconUser,
     },
     {
       label: "Banned",
       value: "banned",
-      icon: ShieldAlert,
+      icon: IconShieldHeart,
     },
   ];
 
@@ -437,7 +436,7 @@ function UsersSection({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline">
-                  <MoreHorizontal className="h-4 w-4" />
+                  <IconDots className="h-4 w-4" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -505,7 +504,7 @@ function UsersSection({
                 value={roleValue || (selectedUser?.role as any) || ""}
               >
                 <SelectTrigger id="role">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
@@ -685,7 +684,7 @@ function UsersSection({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="sm" variant="outline">
-                          <Shield className="h-4 w-4 mr-2" />
+                          <IconShieldHeart className="h-4 w-4 mr-2" />
                           Update Role ({selectedRows.length})
                         </Button>
                       </DropdownMenuTrigger>
@@ -703,13 +702,13 @@ function UsersSection({
                     </DropdownMenu>
                     {selectedRows.some((u) => !u.banned) && (
                       <Button onClick={() => void doBulkBan()} size="sm" variant="outline">
-                        <UserX className="h-4 w-4 mr-2" />
+                        <IconUserX className="h-4 w-4 mr-2" />
                         Ban ({selectedRows.filter((u) => !u.banned).length})
                       </Button>
                     )}
                     {selectedRows.some((u) => u.banned) && (
                       <Button onClick={() => void doBulkUnban()} size="sm" variant="outline">
-                        <UserCheck className="h-4 w-4 mr-2" />
+                        <IconUserCheck className="h-4 w-4 mr-2" />
                         Unban ({selectedRows.filter((u) => u.banned).length})
                       </Button>
                     )}
@@ -718,7 +717,7 @@ function UsersSection({
                       size="sm"
                       variant="destructive"
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <IconTrash className="h-4 w-4 mr-2" />
                       Delete ({selectedRows.length})
                     </Button>
                   </>
@@ -731,7 +730,7 @@ function UsersSection({
                   size="sm"
                   variant="outline"
                 >
-                  <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
+                  <IconRefresh className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
                 </Button>
               </div>
             }

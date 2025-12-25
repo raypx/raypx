@@ -15,8 +15,8 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@raypx/ui/components/alert";
 import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { IconAlertCircle, IconLoader2 } from "@tabler/icons-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -150,7 +150,7 @@ function ResetPasswordPage() {
         <div className="grid w-full gap-6 text-center">
           <div className="flex flex-col items-center justify-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-              <AlertCircle className="h-8 w-8 text-destructive" />
+              <IconAlertCircle className="h-8 w-8 text-destructive" />
             </div>
 
             <div className="space-y-2">
@@ -162,7 +162,7 @@ function ResetPasswordPage() {
           </div>
 
           <Alert className="text-left">
-            <AlertCircle className="h-4 w-4" />
+            <IconAlertCircle className="h-4 w-4" />
             <AlertTitle>Possible reasons:</AlertTitle>
             <AlertDescription>
               <ul className="list-inside list-disc space-y-1 mt-2">
@@ -276,7 +276,7 @@ function ResetPasswordPage() {
           />
 
           <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
             Reset password
           </Button>
         </form>

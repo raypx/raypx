@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@raypx/ui/components/select";
 import { Switch } from "@raypx/ui/components/switch";
-import { Bell, Globe, Mail } from "lucide-react";
+import { IconBell, IconMail, IconWorld } from "@tabler/icons-react";
 
 export function PreferencesSettings() {
   return (
@@ -35,7 +35,7 @@ export function PreferencesSettings() {
               <SelectContent>
                 <SelectItem value="en">
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
+                    <IconWorld className="h-4 w-4" />
                     English
                   </div>
                 </SelectItem>
@@ -70,7 +70,7 @@ export function PreferencesSettings() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
+                <IconBell className="h-4 w-4" />
                 <Label className="font-medium" htmlFor="push-notifications">
                   Push Notifications
                 </Label>
@@ -85,7 +85,7 @@ export function PreferencesSettings() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
+                <IconMail className="h-4 w-4" />
                 <Label className="font-medium" htmlFor="email-notifications">
                   Email Notifications
                 </Label>

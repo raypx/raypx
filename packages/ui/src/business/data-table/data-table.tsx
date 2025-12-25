@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@raypx/ui/components";
 import { Checkbox } from "@raypx/ui/components/checkbox";
+import { IconArrowDown, IconArrowUp, IconArrowUpDown } from "@tabler/icons-react";
 import {
   type ColumnDef,
   flexRender,
@@ -16,7 +17,6 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 interface DataTableProps<TData> {
@@ -114,11 +114,11 @@ export function DataTable<TData>({
               {canSort && (
                 <span className="ml-1">
                   {sortDirection === "asc" ? (
-                    <ArrowUp className="h-4 w-4" />
+                    <IconArrowUp className="h-4 w-4" />
                   ) : sortDirection === "desc" ? (
-                    <ArrowDown className="h-4 w-4" />
+                    <IconArrowDown className="h-4 w-4" />
                   ) : (
-                    <ArrowUpDown className="h-4 w-4 opacity-50" />
+                    <IconArrowUpDown className="h-4 w-4 opacity-50" />
                   )}
                 </span>
               )}

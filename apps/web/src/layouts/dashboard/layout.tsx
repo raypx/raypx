@@ -1,8 +1,8 @@
 import type { AuthUser } from "@raypx/auth";
 import { Button } from "@raypx/ui/components/button";
 import { SidebarInset, SidebarProvider } from "@raypx/ui/components/sidebar";
+import { IconHelpCircle } from "@tabler/icons-react";
 import { Outlet } from "@tanstack/react-router";
-import { HelpCircle } from "lucide-react";
 import { links } from "~/config/site";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
@@ -39,7 +39,7 @@ export function Layout({ user }: LayoutProps) {
             <div className="max-w-8xl mx-auto flex items-center justify-between">
               <Button asChild className="gap-2" size="sm" variant="ghost">
                 <a href={links.docs} rel="noopener noreferrer" target="_blank">
-                  <HelpCircle className="h-4 w-4" />
+                  <IconHelpCircle className="h-4 w-4" />
                   <span>Help & Support</span>
                 </a>
               </Button>

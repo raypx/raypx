@@ -12,11 +12,20 @@ import {
   Progress,
   toast,
 } from "@raypx/ui/components";
+import {
+  IconBolt,
+  IconCheck,
+  IconClock,
+  IconCreditCard,
+  IconCrown,
+  IconDatabase,
+  IconDownload,
+  IconRocket,
+} from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
-import { Check, Clock, CreditCard, Crown, Database, Download, Rocket, Zap } from "lucide-react";
 import { useMemo } from "react";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
@@ -31,7 +40,7 @@ const plans = [
     period: "forever",
     description: "Perfect for trying out",
     features: ["Up to 5 API keys", "10 GB storage", "Basic support", "API access", "1 dataset"],
-    icon: Zap,
+    icon: IconBolt,
     color: "text-blue-500",
     priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || "",
   },
@@ -49,7 +58,7 @@ const plans = [
       "10 datasets",
       "Custom integrations",
     ],
-    icon: Rocket,
+    icon: IconRocket,
     color: "text-purple-500",
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "",
   },
@@ -69,7 +78,7 @@ const plans = [
       "SLA guarantee",
       "On-premise deployment",
     ],
-    icon: Crown,
+    icon: IconCrown,
     color: "text-yellow-500",
     priceId: "",
   },
@@ -259,7 +268,7 @@ function BillingPage() {
               size="sm"
               variant="ghost"
             >
-              <Download className="h-4 w-4" />
+              <IconDownload className="h-4 w-4" />
             </Button>
           );
         },
@@ -329,7 +338,7 @@ function BillingPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <Database className="h-4 w-4" />
+                        <IconDatabase className="h-4 w-4" />
                         <span>Storage</span>
                       </div>
                       <span className="text-muted-foreground">45 GB of 100 GB</span>
@@ -340,7 +349,7 @@ function BillingPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
+                        <IconClock className="h-4 w-4" />
                         <span>API Calls</span>
                       </div>
                       <span className="text-muted-foreground">125k of 1M</span>
@@ -386,7 +395,7 @@ function BillingPage() {
                   <ul className="space-y-2">
                     {plan.features.map((feature) => (
                       <li className="flex items-center gap-2 text-sm" key={feature}>
-                        <Check className="h-4 w-4 text-green-500" />
+                        <IconCheck className="h-4 w-4 text-green-500" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -432,7 +441,7 @@ function BillingPage() {
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-lg bg-muted">
-                  <CreditCard className="h-5 w-5" />
+                  <IconCreditCard className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="font-medium">
@@ -455,12 +464,12 @@ function BillingPage() {
             <EmptyState
               actionLabel={
                 <>
-                  <CreditCard className="h-4 w-4 mr-2" />
+                  <IconCreditCard className="h-4 w-4 mr-2" />
                   Add Payment Method
                 </>
               }
               description="No payment method on file"
-              icon={CreditCard}
+              icon={IconCreditCard}
               onAction={handleManageBilling}
               title="No Payment Method"
             />
@@ -484,7 +493,11 @@ function BillingPage() {
               retrying={invoicesQuery.isFetching}
             />
           ) : invoices.length === 0 ? (
-            <EmptyState description="No invoices found" icon={Download} title="No Invoices" />
+            <EmptyState
+              description="No invoices found"
+              icon={IconFileInvoice}
+              title="No Invoices"
+            />
           ) : (
             <DataTable columns={invoiceColumns} data={invoices} />
           )}

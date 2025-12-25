@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { cn } from "@raypx/ui/lib/utils";
-import { Bot } from "lucide-react";
+import { IconRobot } from "@tabler/icons-react";
 import { MarkdownContent } from "~/components/markdown-content";
 import type { ChatMessage } from "../types";
 import { getUserInitials } from "../utils/user-utils";
@@ -33,7 +33,7 @@ export function ChatMessageComponent({
       {message.role === "assistant" && (
         <div className="shrink-0">
           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <Bot className="h-4 w-4 text-primary" />
+            <IconRobot className="h-4 w-4 text-primary" />
           </div>
         </div>
       )}

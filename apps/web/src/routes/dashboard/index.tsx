@@ -9,18 +9,18 @@ import {
   CardTitle,
 } from "@raypx/ui/components/card";
 import { Progress } from "@raypx/ui/components/progress";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Activity,
-  ArrowUpRight,
-  ChevronRight,
-  Clock,
-  CreditCard,
-  Shield,
-  TrendingUp,
-  Users,
-  Zap,
-} from "lucide-react";
+  IconActivity,
+  IconArrowUpRight,
+  IconBolt,
+  IconChevronRight,
+  IconClock,
+  IconCreditCard,
+  IconShield,
+  IconTrendingUp,
+  IconUsers,
+} from "@tabler/icons-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardPage,
@@ -38,7 +38,7 @@ function DashboardPage() {
       value: "2,845",
       change: "+12.5%",
       changeType: "increase" as const,
-      icon: Users,
+      icon: IconUsers,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
     },
@@ -47,7 +47,7 @@ function DashboardPage() {
       value: "573",
       change: "+4.3%",
       changeType: "increase" as const,
-      icon: Activity,
+      icon: IconActivity,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
@@ -56,7 +56,7 @@ function DashboardPage() {
       value: "$12,456",
       change: "+8.2%",
       changeType: "increase" as const,
-      icon: CreditCard,
+      icon: IconCreditCard,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
     },
@@ -65,7 +65,7 @@ function DashboardPage() {
       value: "+23%",
       change: "+2.1%",
       changeType: "increase" as const,
-      icon: TrendingUp,
+      icon: IconTrendingUp,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",
     },
@@ -76,14 +76,14 @@ function DashboardPage() {
       title: "Create API Key",
       description: "Generate a new API key",
       href: "/dashboard/api-keys",
-      icon: Shield,
+      icon: IconShield,
       color: "text-blue-500",
     },
     {
       title: "View Settings",
       description: "Manage your preferences",
       href: "/dashboard/settings",
-      icon: Zap,
+      icon: IconBolt,
       color: "text-purple-500",
     },
   ];
@@ -136,11 +136,11 @@ function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge className="gap-1.5 py-1.5 px-3" variant="secondary">
-            <Clock className="h-3.5 w-3.5" />
+            <IconClock className="h-3.5 w-3.5" />
             Last login: 2 hours ago
           </Badge>
           <Button size="sm">
-            <Zap className="mr-2 h-4 w-4" />
+            <IconBolt className="mr-2 h-4 w-4" />
             Upgrade Plan
           </Button>
         </div>
@@ -180,9 +180,9 @@ function DashboardPage() {
                   variant={stat.changeType === "increase" ? "default" : "destructive"}
                 >
                   {stat.changeType === "increase" ? (
-                    <ArrowUpRight className="h-3 w-3" />
+                    <IconArrowUpRight className="h-3 w-3" />
                   ) : (
-                    <ArrowUpRight className="h-3 w-3 rotate-90" />
+                    <IconArrowUpRight className="h-3 w-3 rotate-90" />
                   )}
                   {stat.change}
                 </Badge>
@@ -248,13 +248,13 @@ function DashboardPage() {
                     <div className="flex-1 text-left">
                       <div className="text-sm font-medium">{action.title}</div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                    <IconChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
               ))}
               <Button className="w-full justify-start gap-3" variant="ghost">
                 <div className="p-1.5">
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <IconUsers className="h-4 w-4 text-muted-foreground" />
                 </div>
                 Invite Team Member
               </Button>

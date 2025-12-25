@@ -1,6 +1,6 @@
 import { Button } from "@raypx/ui/components/button";
+import { IconRocket, IconSparkles } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { Rocket, Sparkles } from "lucide-react";
 import Container from "~/components/layout/container";
 import { links } from "~/config/site";
 
@@ -42,7 +42,7 @@ export function CtaSection() {
                   size="lg"
                 >
                   <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] animate-shimmer" />
-                  <Rocket className="mr-2 size-4 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
+                  <IconRocket className="mr-2 size-4 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
                   Get Started Now
                 </Button>
               </Link>
@@ -52,7 +52,7 @@ export function CtaSection() {
                   size="lg"
                   variant="outline"
                 >
-                  <Sparkles className="mr-2 size-4 text-yellow-400" />
+                  <IconSparkles className="mr-2 size-4 text-yellow-400" />
                   Star on GitHub
                 </Button>
               </a>

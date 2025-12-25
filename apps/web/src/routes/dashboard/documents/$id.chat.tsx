@@ -2,9 +2,9 @@ import { useAuth } from "@raypx/auth";
 import { useTRPC } from "@raypx/trpc/client";
 import { Button } from "@raypx/ui/components/button";
 import { Card, CardContent } from "@raypx/ui/components/card";
+import { IconArrowLeft, IconRobot } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Bot } from "lucide-react";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -90,7 +90,7 @@ function DocumentChatPage() {
               size="icon"
               variant="ghost"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <IconArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold truncate" title={document.name}>
@@ -107,7 +107,7 @@ function DocumentChatPage() {
               <EmptyState
                 actionLabel="Go to Documents"
                 description="Please vectorize this document first before you can chat with it."
-                icon={Bot}
+                icon={IconRobot}
                 onAction={() =>
                   navigate({ to: `/dashboard/datasets/${document.datasetId}/document` })
                 }

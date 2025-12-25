@@ -7,8 +7,8 @@ import {
   DropdownMenuTrigger,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
+import { IconArrowDown, IconArrowUp, IconChevronsUpDown, IconEyeOff } from "@tabler/icons-react";
 import type { Column } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from "lucide-react";
 
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
   column: Column<TData, TValue>;
@@ -31,26 +31,26 @@ export function DataTableColumnHeader<TData, TValue>({
           <Button className="data-[state=open]:bg-accent -ml-3 h-8" size="sm" variant="ghost">
             <span>{title}</span>
             {column.getIsSorted() === "desc" ? (
-              <ArrowDown className="h-4 w-4" />
+              <IconArrowDown className="h-4 w-4" />
             ) : column.getIsSorted() === "asc" ? (
-              <ArrowUp className="h-4 w-4" />
+              <IconArrowUp className="h-4 w-4" />
             ) : (
-              <ChevronsUpDown className="h-4 w-4" />
+              <IconChevronsUpDown className="h-4 w-4" />
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-            <ArrowUp className="mr-2 h-4 w-4" />
+            <IconArrowUp className="mr-2 h-4 w-4" />
             Asc
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-            <ArrowDown className="mr-2 h-4 w-4" />
+            <IconArrowDown className="mr-2 h-4 w-4" />
             Desc
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-            <EyeOff className="mr-2 h-4 w-4" />
+            <IconEyeOff className="mr-2 h-4 w-4" />
             Hide
           </DropdownMenuItem>
         </DropdownMenuContent>

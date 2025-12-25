@@ -14,8 +14,8 @@ import {
   SidebarProvider,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
+import { IconBrain, IconSettings, IconShield, IconUserCheck } from "@tabler/icons-react";
 import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
-import { Brain, Settings, Shield, UserCheck } from "lucide-react";
 import { PageWrapper } from "~/components/page-wrapper";
 import { AccountSettings } from "./-components/account-settings";
 import { PreferencesSettings } from "./-components/preferences-settings";
@@ -43,25 +43,25 @@ function SettingsPage() {
   const sidebarNavItems = [
     {
       title: "Account",
-      icon: UserCheck,
+      icon: IconUserCheck,
       value: "account",
       description: "Profile and personal information",
     },
     {
       title: "Security",
-      icon: Shield,
+      icon: IconShield,
       value: "security",
       description: "Password and authentication",
     },
     {
       title: "Preferences",
-      icon: Settings,
+      icon: IconSettings,
       value: "preferences",
       description: "App settings and customization",
     },
     {
       title: "RAG",
-      icon: Brain,
+      icon: IconBrain,
       value: "rag",
       description: "Document vectorization configuration",
     },

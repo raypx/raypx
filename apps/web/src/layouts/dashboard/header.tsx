@@ -11,8 +11,8 @@ import {
 import { Button } from "@raypx/ui/components/button";
 import { Separator } from "@raypx/ui/components/separator";
 import { SidebarTrigger } from "@raypx/ui/components/sidebar";
+import { IconBell } from "@tabler/icons-react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Bell } from "lucide-react";
 import { useMemo } from "react";
 import { authRoutes } from "~/config/auth";
 import { sidebarGroups } from "~/config/sidebar";
@@ -92,7 +92,7 @@ export function Header({ user }: HeaderProps) {
 
         {/* Notifications */}
         <Button className="relative" size="icon" variant="ghost">
-          <Bell className="h-5 w-5 text-muted-foreground" />
+          <IconBell className="h-5 w-5 text-muted-foreground" />
           <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-600 ring-2 ring-background" />
         </Button>
 

@@ -1,5 +1,5 @@
 import { ScrollArea } from "@raypx/ui/components/scroll-area";
-import { Bot } from "lucide-react";
+import { IconRobot } from "@tabler/icons-react";
 import type { ChatMessage } from "../types";
 import { ChatMessageComponent } from "./chat-message";
 
@@ -27,7 +27,7 @@ export function ChatMessageList({
       <div className="space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground py-8">
-            <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <IconRobot className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>{emptyStateMessage}</p>
           </div>
         )}

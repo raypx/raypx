@@ -1,7 +1,7 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Separator } from "@raypx/ui/components/separator";
-import { cn, useRenderParam } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
@@ -57,22 +57,17 @@ function Item({
   variant = "default",
   size = "default",
   render,
-  children,
-  asChild = false,
   ...props
-}: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants> & { asChild?: boolean }) {
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
+}: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants>) {
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
       {
         className: cn(itemVariants({ variant, size, className })),
-        ...(renderChildren !== undefined && { children: renderChildren }),
       },
       props,
     ),
-    render: renderProp,
+    render,
     state: {
       slot: "item",
       variant,

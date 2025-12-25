@@ -1,6 +1,5 @@
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
-import { mergeProps } from "@base-ui/react/merge-props";
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { IconCheck, IconChevronRight } from "@tabler/icons-react";
 import type * as React from "react";
 
@@ -12,21 +11,12 @@ function ContextMenuPortal({ ...props }: ContextMenuPrimitive.Portal.Props) {
   return <ContextMenuPrimitive.Portal data-slot="context-menu-portal" {...props} />;
 }
 
-function ContextMenuTrigger({
-  className,
-  ...props
-}: ContextMenuPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
+function ContextMenuTrigger({ className, ...props }: ContextMenuPrimitive.Trigger.Props) {
   return (
     <ContextMenuPrimitive.Trigger
-      render={renderProp}
-      {...mergeProps(
-        {
-          className: cn("select-none", className),
-          "data-slot": "context-menu-trigger",
-        },
-        rest,
-      )}
+      className={cn("select-none", className)}
+      data-slot="context-menu-trigger"
+      {...props}
     />
   );
 }

@@ -1,6 +1,5 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
-import { mergeProps } from "@base-ui/react/merge-props";
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { IconCheck, IconChevronRight } from "@tabler/icons-react";
 import type * as React from "react";
 
@@ -12,14 +11,8 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />;
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <MenuPrimitive.Trigger
-      render={renderProp}
-      {...mergeProps({ "data-slot": "dropdown-menu-trigger" }, rest)}
-    />
-  );
+function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
+  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
 }
 
 function DropdownMenuContent({

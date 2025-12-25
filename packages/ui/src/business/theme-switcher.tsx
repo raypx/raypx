@@ -8,7 +8,7 @@ import {
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { type ThemeKey, themeConfig, themeIcons } from "@raypx/ui/lib/theme-config";
 import { cn } from "@raypx/ui/lib/utils";
-import { Check } from "lucide-react";
+import { IconCheck } from "@tabler/icons-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { useTheme } from "../hooks/use-theme";
 import { logger } from "../lib/logger";
@@ -207,7 +207,7 @@ export const ThemeSwitcher = memo(({ mode = "light-dark-system", variant }: Them
                 <IconComponent className={ICON_SIZE} />
                 <span className="text-sm">{theme.label}</span>
               </div>
-              {themeMode === theme.key && <Check className="size-4 text-primary" />}
+              {themeMode === theme.key && <IconCheck className="size-4 text-primary" />}
             </DropdownMenuItem>
           );
         })}

@@ -1,6 +1,6 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
-import { cn, useRenderParam } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { IconChevronRight, IconDots } from "@tabler/icons-react";
 import type * as React from "react";
 
@@ -33,25 +33,16 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   );
 }
 
-function BreadcrumbLink({
-  className,
-  render,
-  asChild = false,
-  children,
-  ...props
-}: useRender.ComponentProps<"a"> & { asChild?: boolean }) {
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
+function BreadcrumbLink({ className, render, ...props }: useRender.ComponentProps<"a">) {
   return useRender({
     defaultTagName: "a",
     props: mergeProps<"a">(
       {
         className: cn("hover:text-foreground transition-colors", className),
-        ...(renderChildren !== undefined && { children: renderChildren }),
       },
       props,
     ),
-    render: renderProp,
+    render,
     state: {
       slot: "breadcrumb-link",
     },

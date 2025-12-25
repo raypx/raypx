@@ -1,6 +1,6 @@
 import { Button, TextHoverEffect } from "@raypx/ui/components";
+import { IconArrowRight, IconBrandGithub } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Github } from "lucide-react";
 import Container from "~/components/layout/container";
 import { links } from "~/config/site";
 import { FallingStarsBg } from "./falling-stars-bg";
@@ -54,13 +54,13 @@ export function HeroSection() {
                 <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] animate-shimmer" />
                 <span className="relative z-10 flex items-center">
                   Get Started
-                  <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
+                  <IconArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
                 </span>
               </Button>
             </Link>
             <a href="https://github.com/raypx/raypx" rel="noopener noreferrer" target="_blank">
               <Button className="group" size="lg" variant="outline">
-                <Github className="mr-2 size-4" />
+                <IconBrandGithub className="mr-2 size-4" />
                 View on GitHub
               </Button>
             </a>

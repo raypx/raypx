@@ -11,7 +11,12 @@ import {
   PaginationItem,
   PaginationLink,
 } from "@raypx/ui/components/pagination";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
+} from "@tabler/icons-react";
 import { useMemo } from "react";
 
 interface DataTablePaginationProps {
@@ -86,7 +91,7 @@ export function DataTablePagination({
                 size="icon"
               >
                 <span className="sr-only">Go to first page</span>
-                <ChevronsLeft className="h-4 w-4" />
+                <IconChevronsLeft className="h-4 w-4" />
               </PaginationLink>
             </PaginationItem>
             <PaginationItem>
@@ -101,7 +106,7 @@ export function DataTablePagination({
                 size="icon"
               >
                 <span className="sr-only">Go to previous page</span>
-                <ChevronLeft className="h-4 w-4" />
+                <IconChevronLeft className="h-4 w-4" />
               </PaginationLink>
             </PaginationItem>
             <PaginationItem>
@@ -116,7 +121,7 @@ export function DataTablePagination({
                 size="icon"
               >
                 <span className="sr-only">Go to next page</span>
-                <ChevronRight className="h-4 w-4" />
+                <IconChevronRight className="h-4 w-4" />
               </PaginationLink>
             </PaginationItem>
             <PaginationItem>
@@ -131,7 +136,7 @@ export function DataTablePagination({
                 size="icon"
               >
                 <span className="sr-only">Go to last page</span>
-                <ChevronsRight className="h-4 w-4" />
+                <IconChevronsRight className="h-4 w-4" />
               </PaginationLink>
             </PaginationItem>
           </PaginationContent>

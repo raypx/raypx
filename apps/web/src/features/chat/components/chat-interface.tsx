@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card";
-import { MessageSquare, Trash2 } from "lucide-react";
+import { IconMessage, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { useChatConversation } from "../hooks/use-chat-conversation";
 import { useChatMessages } from "../hooks/use-chat-messages";
@@ -98,7 +98,7 @@ export function ChatInterface({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
+              <IconMessage className="h-5 w-5" />
               {title}
             </CardTitle>
             <CardDescription>{description}</CardDescription>
@@ -110,7 +110,7 @@ export function ChatInterface({
               size="sm"
               variant="outline"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <IconTrash className="h-4 w-4 mr-2" />
               {clearMessagesMutation.isPending ? "Clearing..." : "Clear History"}
             </Button>
           )}

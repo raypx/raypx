@@ -1,5 +1,5 @@
 import { Button, Input } from "@raypx/ui/components";
-import { Search, X } from "lucide-react";
+import { IconSearch, IconX } from "@tabler/icons-react";
 import { FacetedFilter } from "./faceted-filter";
 import type { SearchProps } from "./types";
 
@@ -43,7 +43,7 @@ export function DataTableToolbar({
       <div className="flex flex-1 items-center gap-2">
         {onSearchChange && (
           <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <IconSearch className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               className="h-8 w-[150px] pl-8 lg:w-[250px]"
               onChange={(e) => onSearchChange(e.target.value)}
@@ -65,7 +65,7 @@ export function DataTableToolbar({
         {hasActiveFilters && onReset && (
           <Button className="h-8" onClick={onReset} size="sm" variant="ghost">
             Reset
-            <X className="ml-2 h-4 w-4" />
+            <IconX className="ml-2 h-4 w-4" />
           </Button>
         )}
       </div>

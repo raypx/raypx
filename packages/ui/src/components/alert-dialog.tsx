@@ -1,24 +1,15 @@
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
-import { mergeProps } from "@base-ui/react/merge-props";
 import { Button } from "@raypx/ui/components/button";
 
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import type * as React from "react";
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
-function AlertDialogTrigger({
-  ...props
-}: AlertDialogPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <AlertDialogPrimitive.Trigger
-      render={renderProp}
-      {...mergeProps({ "data-slot": "alert-dialog-trigger" }, rest)}
-    />
-  );
+function AlertDialogTrigger({ ...props }: AlertDialogPrimitive.Trigger.Props) {
+  return <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />;
 }
 
 function AlertDialogPortal({ ...props }: AlertDialogPrimitive.Portal.Props) {

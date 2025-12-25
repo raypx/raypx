@@ -1,6 +1,5 @@
-import { mergeProps } from "@base-ui/react/merge-props";
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { IconChevronDown } from "@tabler/icons-react";
 import { cva } from "class-variance-authority";
 
@@ -48,18 +47,12 @@ function NavigationMenuTrigger({
   className,
   children,
   ...props
-}: NavigationMenuPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
+}: NavigationMenuPrimitive.Trigger.Props) {
   return (
     <NavigationMenuPrimitive.Trigger
-      render={renderProp}
-      {...mergeProps(
-        {
-          className: cn(navigationMenuTriggerStyle(), "group", className),
-          "data-slot": "navigation-menu-trigger",
-        },
-        rest,
-      )}
+      className={cn(navigationMenuTriggerStyle(), "group", className)}
+      data-slot="navigation-menu-trigger"
+      {...props}
     >
       {children}{" "}
       <IconChevronDown
@@ -112,24 +105,15 @@ function NavigationMenuPositioner({
   );
 }
 
-function NavigationMenuLink({
-  className,
-  ...props
-}: NavigationMenuPrimitive.Link.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
+function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Link.Props) {
   return (
     <NavigationMenuPrimitive.Link
-      render={renderProp}
-      {...mergeProps(
-        {
-          className: cn(
-            "data-active:focus:bg-muted data-active:hover:bg-muted data-active:bg-muted/50 focus-visible:ring-ring/50 hover:bg-muted focus:bg-muted flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none focus-visible:ring-[3px] focus-visible:outline-1 [&_svg:not([class*='size-'])]:size-4 [[data-slot=navigation-menu-content]_&]:rounded-md",
-            className,
-          ),
-          "data-slot": "navigation-menu-link",
-        },
-        rest,
+      className={cn(
+        "data-active:focus:bg-muted data-active:hover:bg-muted data-active:bg-muted/50 focus-visible:ring-ring/50 hover:bg-muted focus:bg-muted flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none focus-visible:ring-[3px] focus-visible:outline-1 [&_svg:not([class*='size-'])]:size-4 [[data-slot=navigation-menu-content]_&]:rounded-md",
+        className,
       )}
+      data-slot="navigation-menu-link"
+      {...props}
     />
   );
 }

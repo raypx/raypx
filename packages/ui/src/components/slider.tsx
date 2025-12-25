@@ -1,7 +1,7 @@
 "use client";
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import * as React from "react";
 
 function Slider({
@@ -44,23 +44,15 @@ function Slider({
           />
         </SliderPrimitive.Track>
         {Array.from({ length: _values.length }, (_, index) => (
-          <SliderThumb key={index} />
+          <SliderPrimitive.Thumb
+            className="border-ring ring-ring/50 relative size-3 rounded-full border bg-white transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-[3px] focus-visible:ring-[3px] focus-visible:outline-hidden active:ring-[3px] block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
+            data-slot="slider-thumb"
+            key={index}
+          />
         ))}
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>
   );
 }
 
-function SliderThumb({ ...props }: SliderPrimitive.Thumb.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <SliderPrimitive.Thumb
-      className="border-ring ring-ring/50 relative size-3 rounded-full border bg-white transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-[3px] focus-visible:ring-[3px] focus-visible:outline-hidden active:ring-[3px] block shrink-0 select-none disabled:pointer-events-none disabled:opacity-50"
-      data-slot="slider-thumb"
-      render={renderProp}
-      {...rest}
-    />
-  );
-}
-
-export { Slider, SliderThumb };
+export { Slider };

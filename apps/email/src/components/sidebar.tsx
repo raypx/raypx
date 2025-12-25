@@ -14,8 +14,8 @@ import {
   SidebarMenuItem,
   Sidebar as UISidebar,
 } from "@raypx/ui/components/sidebar";
+import { IconChevronDown, IconFileText, IconFolder, IconMail } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, FileText, Folder, MailIcon } from "lucide-react";
 import type { EmailMenuItem } from "../lib/emails";
 
 interface SidebarProps {
@@ -59,7 +59,7 @@ export function Sidebar({ menuTree, selectedTemplateName }: SidebarProps) {
       <SidebarHeader className="flex h-14 flex-row items-center justify-start border-b border-sidebar-border px-0 py-0">
         <div className="flex w-full items-center gap-2 px-4">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-foreground">
-            <MailIcon className="h-4 w-4 text-background" />
+            <IconMail className="h-4 w-4 text-background" />
           </div>
           <span className="font-semibold text-foreground">Email Preview</span>
         </div>
@@ -71,9 +71,9 @@ export function Sidebar({ menuTree, selectedTemplateName }: SidebarProps) {
             <Collapsible defaultOpen>
               <CollapsibleTrigger asChild nativeButton={false}>
                 <SidebarGroupLabel className="cursor-pointer hover:text-sidebar-foreground">
-                  <Folder className="h-4 w-4" />
+                  <IconFolder className="h-4 w-4" />
                   <span className="ml-2">{category}</span>
-                  <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=closed]/collapsible:-rotate-90" />
+                  <IconChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=closed]/collapsible:-rotate-90" />
                 </SidebarGroupLabel>
               </CollapsibleTrigger>
               <CollapsibleContent>
@@ -85,7 +85,7 @@ export function Sidebar({ menuTree, selectedTemplateName }: SidebarProps) {
                         <SidebarMenuItem key={template.path}>
                           <SidebarMenuButton asChild isActive={isSelected}>
                             <Link params={{ _splat: template.templateName }} to="/email/$">
-                              <FileText className="h-4 w-4" />
+                              <IconFileText className="h-4 w-4" />
                               <span
                                 className={
                                   isSelected

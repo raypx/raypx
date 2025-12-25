@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Button } from "@raypx/ui/components/button";
-import { Camera, Loader2, Trash2, Upload } from "lucide-react";
+import { IconCamera, IconLoader2, IconTrash, IconUpload } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import { useAvatarUpload } from "../hooks/use-avatar-upload";
 
@@ -61,7 +61,7 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
         </Avatar>
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
-            <Loader2 className="h-6 w-6 animate-spin" />
+            <IconLoader2 className="h-6 w-6 animate-spin" />
           </div>
         )}
       </div>
@@ -77,12 +77,12 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
           >
             {currentAvatar ? (
               <>
-                <Camera className="h-4 w-4" />
+                <IconCamera className="h-4 w-4" />
                 Change Picture
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4" />
+                <IconUpload className="h-4 w-4" />
                 Upload Picture
               </>
             )}
@@ -96,7 +96,7 @@ export function AvatarUpload({ currentAvatar, userName }: AvatarUploadProps) {
               size="sm"
               variant="ghost"
             >
-              <Trash2 className="h-4 w-4" />
+              <IconTrash className="h-4 w-4" />
               Remove
             </Button>
           )}

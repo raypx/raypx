@@ -9,7 +9,7 @@ import {
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
 import { toast } from "@raypx/ui/components/toast";
-import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { IconAlertCircle, IconCircleCheck, IconLoader2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useLastEmail } from "../hooks/use-last";
 import { useSend } from "../hooks/use-send";
@@ -87,12 +87,12 @@ export function SendDialog({ open, onOpenChange, html: _html, templateName }: Se
           >
             {sendStatus === "success" ? (
               <>
-                <CheckCircle className="h-4 w-4" />
+                <IconCircleCheck className="h-4 w-4" />
                 <span>Email sent successfully!</span>
               </>
             ) : (
               <>
-                <AlertCircle className="h-4 w-4" />
+                <IconAlertCircle className="h-4 w-4" />
                 <span>{errorMessage}</span>
               </>
             )}
@@ -150,7 +150,7 @@ export function SendDialog({ open, onOpenChange, html: _html, templateName }: Se
             <Button disabled={sending || !to || !subject} onClick={handleSend}>
               {sending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
                   Sending...
                 </>
               ) : (

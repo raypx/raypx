@@ -1,8 +1,7 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
-import { mergeProps } from "@base-ui/react/merge-props";
 import { Button } from "@raypx/ui/components/button";
 
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { IconX } from "@tabler/icons-react";
 import type * as React from "react";
 
@@ -10,28 +9,16 @@ function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
 
-function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <SheetPrimitive.Trigger
-      render={renderProp}
-      {...mergeProps({ "data-slot": "sheet-trigger" }, rest)}
-    />
-  );
+function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
 }
 
-function SheetClose({ ...props }: SheetPrimitive.Close.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <SheetPrimitive.Close
-      render={renderProp}
-      {...mergeProps({ "data-slot": "sheet-close" }, rest)}
-    />
-  );
+function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
 }
 
 function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
-  return <SheetPrimitive.Portal {...mergeProps({ "data-slot": "sheet-portal" }, props)} />;
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
 }
 
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {

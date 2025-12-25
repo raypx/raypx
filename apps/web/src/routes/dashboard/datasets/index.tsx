@@ -32,9 +32,17 @@ import {
   toast,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
+import {
+  IconBook,
+  IconDots,
+  IconEdit,
+  IconEye,
+  IconPlus,
+  IconRefresh,
+  IconTrash,
+} from "@tabler/icons-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { BookOpen, Edit, Eye, MoreHorizontal, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
@@ -203,7 +211,7 @@ function DatasetsSection() {
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <BookOpen className="size-5" />
+              <IconBook className="size-5" />
             </div>
             <div>
               <CardTitle className="text-base group-hover:text-primary transition-colors">
@@ -221,7 +229,7 @@ function DatasetsSection() {
                 size="icon"
                 variant="ghost"
               >
-                <MoreHorizontal className="size-4" />
+                <IconDots className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -233,7 +241,7 @@ function DatasetsSection() {
                   handleViewDocuments(ds.id);
                 }}
               >
-                <Eye className="mr-2 h-4 w-4" />
+                <IconEye className="mr-2 h-4 w-4" />
                 View Documents
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -242,7 +250,7 @@ function DatasetsSection() {
                   openEditDialog(ds);
                 }}
               >
-                <Edit className="mr-2 h-4 w-4" />
+                <IconEdit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -253,7 +261,7 @@ function DatasetsSection() {
                   handleDelete(ds.id);
                 }}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <IconTrash className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -276,7 +284,7 @@ function DatasetsSection() {
       <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <BookOpen className="h-5 w-5 text-primary" />
+            <IconBook className="h-5 w-5 text-primary" />
             Datasets
           </CardTitle>
           <CardDescription className="mt-1.5">
@@ -305,7 +313,7 @@ function DatasetsSection() {
           <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
-                <Plus className="h-4 w-4" />
+                <IconPlus className="h-4 w-4" />
                 Create Dataset
               </Button>
             </DialogTrigger>
@@ -363,7 +371,7 @@ function DatasetsSection() {
             size="sm"
             variant="outline"
           >
-            <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
+            <IconRefresh className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
           </Button>
         </div>
       </CardHeader>
@@ -384,12 +392,12 @@ function DatasetsSection() {
                 <EmptyState
                   actionLabel={
                     <>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <IconPlus className="h-4 w-4 mr-2" />
                       Create Dataset
                     </>
                   }
                   description="Create your first dataset to get started"
-                  icon={BookOpen}
+                  icon={IconBook}
                   onAction={() => setIsCreateDialogOpen(true)}
                   title="No Datasets"
                 />

@@ -13,8 +13,8 @@ import {
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@raypx/ui/components/input-otp";
 import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { IconLoader2 } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -146,7 +146,6 @@ export function TwoFactorVerify({
                 <FormControl>
                   <InputOTP
                     disabled={isSubmitting}
-                    length={6}
                     maxLength={6}
                     name={field.name}
                     onBlur={field.onBlur}
@@ -174,7 +173,7 @@ export function TwoFactorVerify({
           />
 
           <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
             Verify Code
           </Button>
         </form>

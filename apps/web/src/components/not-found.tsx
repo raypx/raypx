@@ -1,6 +1,6 @@
 import { Button } from "@raypx/ui/components/button";
+import { IconArrowLeft, IconHome, IconSearch } from "@tabler/icons-react";
 import { Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Home, SearchX } from "lucide-react";
 import { links } from "~/config/site";
 
 export function NotFound() {
@@ -26,7 +26,7 @@ export function NotFound() {
       <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
         {/* Animated Icon */}
         <div className="mb-8 flex size-24 items-center justify-center rounded-3xl bg-muted/50 shadow-inner ring-1 ring-border/50">
-          <SearchX className="size-10 text-muted-foreground animate-pulse" />
+          <IconSearch className="size-10 text-muted-foreground animate-pulse" />
         </div>
 
         <div className="mb-8 space-y-4">
@@ -48,19 +48,23 @@ export function NotFound() {
         </div>
 
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button asChild className="w-full sm:w-auto group" size="lg">
-            <Link to="/">
-              <Home className="mr-2 size-4 group-hover:-translate-y-0.5 transition-transform" />
-              Back to Home
-            </Link>
-          </Button>
+          <Button
+            className="w-full sm:w-auto group"
+            render={
+              <Link to="/">
+                <IconHome className="mr-2 size-4 group-hover:-translate-y-0.5 transition-transform" />
+                Back to Home
+              </Link>
+            }
+            size="lg"
+          />
           <Button
             className="w-full sm:w-auto group"
             onClick={handleGoBack}
             size="lg"
             variant="outline"
           >
-            <ArrowLeft className="mr-2 size-4 group-hover:-translate-x-0.5 transition-transform" />
+            <IconArrowLeft className="mr-2 size-4 group-hover:-translate-x-0.5 transition-transform" />
             Go Back
           </Button>
         </div>

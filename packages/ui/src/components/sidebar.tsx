@@ -13,7 +13,7 @@ import {
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/tooltip";
 import { useIsMobile } from "@raypx/ui/hooks/use-mobile";
-import { cn, useRenderParam } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { IconLayoutSidebar } from "@tabler/icons-react";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
@@ -76,7 +76,6 @@ function SidebarProvider({
       }
 
       // This sets the cookie to keep the sidebar state.
-      // biome-ignore lint/suspicious/noDocumentCookie: we need to set the cookie for the sidebar state
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
     [setOpenProp, open],
@@ -476,8 +475,6 @@ const sidebarMenuButtonVariants = cva(
 
 function SidebarMenuButton({
   render,
-  children,
-  asChild = false,
   isActive = false,
   variant = "default",
   size = "default",
@@ -486,23 +483,19 @@ function SidebarMenuButton({
   ...props
 }: useRender.ComponentProps<"button"> &
   React.ComponentProps<"button"> & {
-    asChild?: boolean;
     isActive?: boolean;
     tooltip?: string | React.ComponentProps<typeof TooltipContent>;
   } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const { isMobile, state } = useSidebar();
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
   const comp = useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
       {
         className: cn(sidebarMenuButtonVariants({ variant, size }), className),
-        ...(renderChildren !== undefined && { children: renderChildren }),
       },
       props,
     ),
-    render: !tooltip ? renderProp : TooltipTrigger,
+    render: !tooltip ? render : TooltipTrigger,
     state: {
       slot: "sidebar-menu-button",
       sidebar: "menu-button",
@@ -537,17 +530,12 @@ function SidebarMenuButton({
 function SidebarMenuAction({
   className,
   render,
-  children,
-  asChild = false,
   showOnHover = false,
   ...props
 }: useRender.ComponentProps<"button"> &
   React.ComponentProps<"button"> & {
-    asChild?: boolean;
     showOnHover?: boolean;
   }) {
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
   return useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
@@ -558,11 +546,10 @@ function SidebarMenuAction({
             "peer-data-active/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-open:opacity-100 md:opacity-0",
           className,
         ),
-        ...(renderChildren !== undefined && { children: renderChildren }),
       },
       props,
     ),
-    render: renderProp,
+    render,
     state: {
       slot: "sidebar-menu-action",
       sidebar: "menu-action",
@@ -644,20 +631,15 @@ function SidebarMenuSubItem({ className, ...props }: React.ComponentProps<"li">)
 
 function SidebarMenuSubButton({
   render,
-  children,
-  asChild = false,
   size = "md",
   isActive = false,
   className,
   ...props
 }: useRender.ComponentProps<"a"> &
   React.ComponentProps<"a"> & {
-    asChild?: boolean;
     size?: "sm" | "md";
     isActive?: boolean;
   }) {
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
   return useRender({
     defaultTagName: "a",
     props: mergeProps<"a">(
@@ -666,11 +648,10 @@ function SidebarMenuSubButton({
           "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground h-7 gap-2 rounded-md px-2 focus-visible:ring-2 data-[size=md]:text-sm data-[size=sm]:text-xs [&>svg]:size-4 flex min-w-0 -translate-x-px items-center overflow-hidden outline-hidden group-data-[collapsible=icon]:hidden disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:shrink-0",
           className,
         ),
-        ...(renderChildren !== undefined && { children: renderChildren }),
       },
       props,
     ),
-    render: renderProp,
+    render,
     state: {
       slot: "sidebar-menu-sub-button",
       sidebar: "menu-sub-button",

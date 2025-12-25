@@ -20,8 +20,8 @@ import {
 } from "@raypx/ui/components/sheet";
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { cn } from "@raypx/ui/lib/utils";
+import { IconMenu } from "@tabler/icons-react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { MenuIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { navigation } from "~/config/site";
 import { useScroll } from "~/hooks/use-scroll";
@@ -158,7 +158,7 @@ export function Navbar({ scroll }: NavBarProps) {
             <Sheet>
               <SheetTrigger>
                 <Button aria-label="Open menu" asChild size="icon" variant="ghost">
-                  <MenuIcon className="size-5" />
+                  <IconMenu className="size-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent className="p-0" side="left">

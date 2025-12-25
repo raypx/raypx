@@ -1,9 +1,9 @@
 "use client";
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { mergeProps } from "@base-ui/react/merge-props";
 import { Button } from "@raypx/ui/components/button";
-import { cn, extractRenderProp } from "@raypx/ui/lib/utils";
+
+import { cn } from "@raypx/ui/lib/utils";
 import { IconX } from "@tabler/icons-react";
 import type * as React from "react";
 
@@ -11,34 +11,16 @@ function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <DialogPrimitive.Trigger
-      render={renderProp}
-      {...mergeProps({ "data-slot": "dialog-trigger" }, rest)}
-    />
-  );
+function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
-function DialogPortal({ ...props }: DialogPrimitive.Portal.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <DialogPrimitive.Portal
-      render={renderProp}
-      {...mergeProps({ "data-slot": "dialog-portal" }, rest)}
-    />
-  );
+function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose({ ...props }: DialogPrimitive.Close.Props & { asChild?: boolean }) {
-  const [renderProp, rest] = extractRenderProp(props);
-  return (
-    <DialogPrimitive.Close
-      render={renderProp}
-      {...mergeProps({ "data-slot": "dialog-close" }, rest)}
-    />
-  );
+function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
 function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) {

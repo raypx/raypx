@@ -1,7 +1,7 @@
 import { Button } from "@raypx/ui/components/button";
 import { Image } from "@raypx/ui/components/image";
+import { IconChevronLeft } from "@tabler/icons-react";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { ChevronLeft } from "lucide-react";
 import { brand } from "~/config/site";
 
 function AuthLayoutComponent() {
@@ -15,7 +15,7 @@ function AuthLayoutComponent() {
         variant="ghost"
       >
         <Link to="/">
-          <ChevronLeft className="mr-2 h-4 w-4" />
+          <IconChevronLeft className="mr-2 h-4 w-4" />
           Back
         </Link>
       </Button>

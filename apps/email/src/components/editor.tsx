@@ -1,7 +1,15 @@
 import { Button } from "@raypx/ui/components/button";
 import { ToggleGroup, ToggleGroupItem } from "@raypx/ui/components/toggle-group";
 import { cn } from "@raypx/ui/lib/utils";
-import { Check, Code, Copy, Download, Eye, Monitor, Smartphone } from "lucide-react";
+import {
+  IconCheck,
+  IconCode,
+  IconCopy,
+  IconDeviceDesktop,
+  IconDeviceMobile,
+  IconDownload,
+  IconEye,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { useRender } from "../hooks/use-render";
 import { useSource } from "../hooks/use-source";
@@ -82,7 +90,7 @@ export function Editor({ templateName, menuTree, from, to, subject }: EditorProp
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4">
         {/* Left: File info */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Code className="h-4 w-4" />
+          <IconCode className="h-4 w-4" />
           <span>{templateLabel}</span>
         </div>
 
@@ -101,14 +109,14 @@ export function Editor({ templateName, menuTree, from, to, subject }: EditorProp
             className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
             value="preview"
           >
-            <Eye className="h-4 w-4" />
+            <IconEye className="h-4 w-4" />
           </ToggleGroupItem>
           <ToggleGroupItem
             aria-label="Code view"
             className="data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
             value="code"
           >
-            <Code className="h-4 w-4" />
+            <IconCode className="h-4 w-4" />
           </ToggleGroupItem>
         </ToggleGroup>
 
@@ -123,10 +131,10 @@ export function Editor({ templateName, menuTree, from, to, subject }: EditorProp
             variant="default"
           >
             <ToggleGroupItem aria-label="Desktop view" value="desktop">
-              <Monitor className="h-4 w-4" />
+              <IconDeviceDesktop className="h-4 w-4" />
             </ToggleGroupItem>
             <ToggleGroupItem aria-label="Mobile view" value="mobile">
-              <Smartphone className="h-4 w-4" />
+              <IconDeviceMobile className="h-4 w-4" />
             </ToggleGroupItem>
           </ToggleGroup>
           <Button
@@ -314,7 +322,7 @@ function CodePane({
               title="Download"
               type="button"
             >
-              <Download className="h-4 w-4" />
+              <IconDownload className="h-4 w-4" />
             </button>
             <button
               className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -322,7 +330,11 @@ function CodePane({
               title="Copy"
               type="button"
             >
-              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              {copied ? (
+                <IconCheck className="h-4 w-4 text-green-500" />
+              ) : (
+                <IconCopy className="h-4 w-4" />
+              )}
             </button>
           </div>
         </div>

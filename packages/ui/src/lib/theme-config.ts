@@ -1,11 +1,14 @@
-import { Laptop, type LucideIcon, Moon, Sun } from "lucide-react";
+import { IconDeviceLaptop, IconMoon, IconSun } from "@tabler/icons-react";
+import type { ComponentType, SVGProps } from "react";
 
 export type ThemeKey = "light" | "dark" | "system";
 
-export const themeIcons: Record<ThemeKey, LucideIcon> = {
-  light: Sun,
-  dark: Moon,
-  system: Laptop,
+type TablerIcon = ComponentType<SVGProps<SVGSVGElement>>;
+
+export const themeIcons: Record<ThemeKey, TablerIcon> = {
+  light: IconSun,
+  dark: IconMoon,
+  system: IconDeviceLaptop,
 } as const;
 
 export type ThemeConfig = {

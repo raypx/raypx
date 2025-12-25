@@ -2,9 +2,9 @@ import { useAuth } from "@raypx/auth";
 import { useTRPC } from "@raypx/trpc/client";
 import { Button } from "@raypx/ui/components/button";
 import { Card, CardContent } from "@raypx/ui/components/card";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
 import { ErrorState } from "~/components/error-state";
 import { PageWrapper } from "~/components/page-wrapper";
 import type { ChatStreamParams } from "~/features/chat";
@@ -87,7 +87,7 @@ function DatasetChatPage() {
               size="icon"
               variant="ghost"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <IconArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold truncate">

@@ -11,7 +11,7 @@ import {
   Label,
   toast,
 } from "@raypx/ui/components";
-import { FileText, Upload, X } from "lucide-react";
+import { IconFileText, IconUpload, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { formatFileSize, truncateTextMiddle } from "~/lib/dashboard-utils";
 
@@ -332,7 +332,7 @@ export function DocumentUploadDialog({
                 type="button"
                 variant="outline"
               >
-                <Upload className="h-4 w-4 mr-2" />
+                <IconUpload className="h-4 w-4 mr-2" />
                 Select Files
               </Button>
               <p className="text-xs text-muted-foreground mt-2">
@@ -352,7 +352,7 @@ export function DocumentUploadDialog({
                         className="flex items-center gap-3 p-2 bg-muted/50 rounded border"
                         key={`${file.name}-${file.size}-${index}`}
                       >
-                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <IconFileText className="h-4 w-4 text-muted-foreground shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm truncate" title={file.name}>
                             {truncateTextMiddle(file.name, 45, 18, 18)}
@@ -381,7 +381,7 @@ export function DocumentUploadDialog({
                             size="icon"
                             variant="ghost"
                           >
-                            <X className="h-4 w-4" />
+                            <IconX className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -402,12 +402,12 @@ export function DocumentUploadDialog({
           >
             {uploadState.isUploading ? (
               <>
-                <Upload className="h-4 w-4 mr-2 animate-pulse" />
+                <IconUpload className="h-4 w-4 mr-2 animate-pulse" />
                 Uploading...
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4 mr-2" />
+                <IconUpload className="h-4 w-4 mr-2" />
                 Upload {uploadState.files.length} File{uploadState.files.length !== 1 ? "s" : ""}
               </>
             )}

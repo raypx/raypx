@@ -1,6 +1,6 @@
 import { Button } from "@raypx/ui/components/button";
 import { Input } from "@raypx/ui/components/input";
-import { Loader2, Send } from "lucide-react";
+import { IconLoader2, IconSend } from "@tabler/icons-react";
 
 interface ChatInputProps {
   input: string;
@@ -37,9 +37,9 @@ export function ChatInput({
         />
         <Button disabled={!input.trim() || isStreaming} onClick={onSend} size="icon">
           {isStreaming ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <IconLoader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Send className="h-4 w-4" />
+            <IconSend className="h-4 w-4" />
           )}
         </Button>
       </div>

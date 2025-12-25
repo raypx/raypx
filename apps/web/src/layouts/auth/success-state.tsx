@@ -1,9 +1,11 @@
 import { cn } from "@raypx/ui/lib/utils";
-import { CheckCircle2, type LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { IconCircleCheck } from "@tabler/icons-react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
+
+type TablerIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 interface SuccessStateProps {
-  icon?: LucideIcon;
+  icon?: TablerIcon;
   title: string;
   description?: string | ReactNode;
   children?: ReactNode;
@@ -11,7 +13,7 @@ interface SuccessStateProps {
 }
 
 export function SuccessState({
-  icon: Icon = CheckCircle2,
+  icon: Icon = IconCircleCheck,
   title,
   description,
   children,

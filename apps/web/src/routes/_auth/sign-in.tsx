@@ -21,8 +21,8 @@ import {
   PasswordField,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { IconLoader2 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthCard } from "~/layouts/auth/card";
@@ -157,7 +157,7 @@ function SignInPage() {
           )}
 
           <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}
+            {isSubmitting ? <IconLoader2 className="animate-spin" /> : "Sign In"}
           </Button>
 
           <MagicLinkButton currentView="sign-in" disabled={isSubmitting} />

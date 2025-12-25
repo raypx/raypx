@@ -32,8 +32,8 @@ import {
 } from "@raypx/ui/components/form";
 import { Input } from "@raypx/ui/components/input";
 import { toast } from "@raypx/ui/components/toast";
+import { IconUpload, IconUser } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
-import { Upload, User } from "lucide-react";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -139,7 +139,7 @@ export function AccountSettings() {
             <Avatar className="h-20 w-20">
               <AvatarImage alt={user?.name ?? ""} src={user?.image ?? undefined} />
               <AvatarFallback className="text-lg">
-                {userInitials ? userInitials : <User className="h-8 w-8" />}
+                {userInitials ? userInitials : <IconUser className="h-8 w-8" />}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -158,7 +158,7 @@ export function AccountSettings() {
                   size="sm"
                   variant="outline"
                 >
-                  <Upload className="h-4 w-4" />
+                  <IconUpload className="h-4 w-4" />
                   {isUploading ? "Uploading..." : "Upload new photo"}
                 </Button>
                 {user?.image && (

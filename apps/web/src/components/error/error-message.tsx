@@ -1,6 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@raypx/ui/components/alert";
 import { Button } from "@raypx/ui/components/button";
-import { AlertCircle, AlertTriangle, Info, XCircle } from "lucide-react";
+import { IconAlertCircle, IconAlertTriangle, IconInfoCircle, IconX } from "@tabler/icons-react";
 
 interface ErrorMessageProps {
   title?: string;
@@ -18,9 +18,9 @@ export function ErrorMessage({
   retryText = "Try Again",
 }: ErrorMessageProps) {
   const icons = {
-    error: XCircle,
-    warning: AlertTriangle,
-    info: Info,
+    error: IconX,
+    warning: IconAlertTriangle,
+    info: IconInfoCircle,
   };
 
   const variants = {
@@ -57,7 +57,7 @@ export function PageError({
       <div className="text-center space-y-4 max-w-md">
         <div className="flex justify-center">
           <div className="rounded-full bg-destructive/10 p-3">
-            <XCircle className="h-8 w-8 text-destructive" />
+            <IconX className="h-8 w-8 text-destructive" />
           </div>
         </div>
         <div className="space-y-2">
@@ -75,7 +75,7 @@ export function PageError({
 }
 
 export function EmptyState({
-  icon: Icon = AlertCircle,
+  icon: Icon = IconAlertCircle,
   title,
   message,
   action,

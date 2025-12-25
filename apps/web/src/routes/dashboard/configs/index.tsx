@@ -36,9 +36,17 @@ import {
 } from "@raypx/ui/components/alert-dialog";
 import { toast } from "@raypx/ui/components/toast";
 import { cn } from "@raypx/ui/lib/utils";
+import {
+  IconDots,
+  IconEdit,
+  IconFolderCog,
+  IconPlus,
+  IconRefresh,
+  IconSettings,
+  IconTrash,
+} from "@tabler/icons-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Edit, FolderCog, MoreHorizontal, Plus, RefreshCw, Settings, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "~/components/empty-state";
 import { PageWrapper } from "~/components/page-wrapper";
@@ -218,7 +226,7 @@ function NamespacesSection() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <FolderCog className="size-5" />
+                <IconFolderCog className="size-5" />
               </div>
               <div>
                 <CardTitle className="text-base group-hover:text-primary transition-colors">
@@ -230,15 +238,17 @@ function NamespacesSection() {
               </div>
             </div>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button
-                  className="size-8 opacity-0 group-hover:opacity-100"
-                  size="icon"
-                  variant="ghost"
-                >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    className="size-8 opacity-0 group-hover:opacity-100"
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <IconDots className="size-4" />
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -248,7 +258,7 @@ function NamespacesSection() {
                     openEditDialog(ns);
                   }}
                 >
-                  <Edit className="mr-2 h-4 w-4" />
+                  <IconEdit className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -259,7 +269,7 @@ function NamespacesSection() {
                     openDeleteConfirm(ns);
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <IconTrash className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -285,7 +295,7 @@ function NamespacesSection() {
         <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Settings className="h-5 w-5 text-primary" />
+              <IconSettings className="h-5 w-5 text-primary" />
               Configuration Center
             </CardTitle>
             <CardDescription className="mt-1.5">
@@ -294,12 +304,14 @@ function NamespacesSection() {
           </div>
           <div className="flex items-center gap-3">
             <Dialog onOpenChange={setIsCreateDialogOpen} open={isCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
-                  <Plus className="h-4 w-4" />
-                  Create Namespace
-                </Button>
-              </DialogTrigger>
+              <DialogTrigger
+                render={
+                  <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
+                    <IconPlus className="h-4 w-4" />
+                    Create Namespace
+                  </Button>
+                }
+              />
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Create New Namespace</DialogTitle>
@@ -363,7 +375,7 @@ function NamespacesSection() {
               size="sm"
               variant="outline"
             >
-              <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
+              <IconRefresh className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
             </Button>
           </div>
         </CardHeader>
@@ -375,12 +387,12 @@ function NamespacesSection() {
                 <EmptyState
                   actionLabel={
                     <>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <IconPlus className="h-4 w-4 mr-2" />
                       Create Namespace
                     </>
                   }
                   description="Create your first namespace to organize your configurations"
-                  icon={FolderCog}
+                  icon={IconFolderCog}
                   onAction={() => setIsCreateDialogOpen(true)}
                   title="No Namespaces"
                 />

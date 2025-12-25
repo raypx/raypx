@@ -20,8 +20,8 @@ import {
   PasswordField,
 } from "@raypx/ui/components";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { IconLoader2 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthGuard } from "~/layouts/auth/auth-guard";
@@ -160,7 +160,7 @@ function RecoverAccountPage() {
                 /> */}
 
             <Button className="w-full" disabled={isSubmitting} type="submit">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Recover Account"}
+              {isSubmitting ? <IconLoader2 className="animate-spin" /> : "Recover Account"}
             </Button>
           </form>
         </Form>

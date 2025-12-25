@@ -1,6 +1,6 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
-import { cn, useRenderParam } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const badgeVariants = cva(
@@ -27,22 +27,17 @@ function Badge({
   className,
   variant = "default",
   render,
-  children,
-  asChild = false,
   ...props
-}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
+}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
   return useRender({
     defaultTagName: "span",
     props: mergeProps<"span">(
       {
         className: cn(badgeVariants({ className, variant })),
-        ...(renderChildren !== undefined && { children: renderChildren }),
       },
       props,
     ),
-    render: renderProp,
+    render,
     state: {
       slot: "badge",
       variant,

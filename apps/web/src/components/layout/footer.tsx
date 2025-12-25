@@ -1,8 +1,8 @@
 import { ThemeSwitcher } from "@raypx/ui/business/theme-switcher";
 import { Button } from "@raypx/ui/components/button";
 import { Separator } from "@raypx/ui/components/separator";
+import { IconBrandGithub, IconBrandTwitter } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { Github, Twitter } from "lucide-react";
 import { brand as siteBrand, footer as siteFooter, links as siteLinks } from "~/config/site";
 import Container from "./container";
 import { Logo } from "./logo";
@@ -32,26 +32,34 @@ export function Footer() {
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">{siteBrand.tagline}</p>
             <div className="flex items-center gap-2">
-              <Button asChild size="icon" variant="ghost">
-                <a
-                  aria-label="GitHub"
-                  href={siteLinks.github}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <Github className="size-5" />
-                </a>
-              </Button>
-              <Button asChild size="icon" variant="ghost">
-                <a
-                  aria-label="Twitter"
-                  href={siteLinks.twitter}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <Twitter className="size-5" />
-                </a>
-              </Button>
+              <Button
+                render={
+                  <a
+                    aria-label="GitHub"
+                    href={siteLinks.github}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <IconBrandGithub className="size-5" />
+                  </a>
+                }
+                size="icon"
+                variant="ghost"
+              ></Button>
+              <Button
+                render={
+                  <a
+                    aria-label="Twitter"
+                    href={siteLinks.twitter}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <IconBrandTwitter className="size-5" />
+                  </a>
+                }
+                size="icon"
+                variant="ghost"
+              ></Button>
             </div>
           </div>
 

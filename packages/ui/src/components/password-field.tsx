@@ -2,7 +2,7 @@
 
 import { Input } from "@raypx/ui/components/input";
 import { cn } from "@raypx/ui/lib/utils";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import type * as React from "react";
 import { useId, useState } from "react";
 
@@ -32,9 +32,9 @@ function PasswordField({ className, ...props }: Omit<React.ComponentProps<"input
         type="button"
       >
         {isVisible ? (
-          <EyeOffIcon aria-hidden="true" size={16} />
+          <IconEyeOff aria-hidden="true" size={16} />
         ) : (
-          <EyeIcon aria-hidden="true" size={16} />
+          <IconEye aria-hidden="true" size={16} />
         )}
       </button>
     </div>

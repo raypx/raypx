@@ -1,20 +1,22 @@
 import { cn } from "@raypx/ui/lib/utils";
 import {
-  Bot,
-  Database,
-  Globe,
-  LineChart,
-  Lock,
-  type LucideIcon,
-  Palette,
-  Rocket,
-  Zap,
-} from "lucide-react";
+  IconBolt,
+  IconBot,
+  IconChartLine,
+  IconDatabase,
+  IconLock,
+  IconPalette,
+  IconRocket,
+  IconWorld,
+} from "@tabler/icons-react";
+import type { ComponentType, SVGProps } from "react";
 import Container from "~/components/layout/container";
 import { SpotlightCard } from "./spotlight-card";
 
+type TablerIcon = ComponentType<SVGProps<SVGSVGElement>>;
+
 type Feature = {
-  icon: LucideIcon;
+  icon: TablerIcon;
   title: string;
   description: string;
   className?: string;
@@ -23,7 +25,7 @@ type Feature = {
 
 const features: Feature[] = [
   {
-    icon: Bot,
+    icon: IconBot,
     title: "AI-First Design",
     description:
       "Built from the ground up for AI applications, with native integration for LLMs and vector databases.",
@@ -31,14 +33,14 @@ const features: Feature[] = [
     accent: "#8b5cf6",
   },
   {
-    icon: Zap,
+    icon: IconBolt,
     title: "Lightning Fast",
     description: "Powered by Vite and React 19 for instant HMR and optimal production performance.",
     className: "col-span-1 md:col-span-1",
     accent: "#eab308",
   },
   {
-    icon: Lock,
+    icon: IconLock,
     title: "Enterprise Security",
     description:
       "Bank-grade security with secure authentication, role-based access control, and data encryption.",
@@ -46,7 +48,7 @@ const features: Feature[] = [
     accent: "#22c55e",
   },
   {
-    icon: Palette,
+    icon: IconPalette,
     title: "Modern UI/UX",
     description:
       "Beautiful, accessible components built with Tailwind CSS and Radix UI for a premium feel.",
@@ -54,14 +56,14 @@ const features: Feature[] = [
     accent: "#ec4899",
   },
   {
-    icon: LineChart,
+    icon: IconChartLine,
     title: "Deep Observability",
     description: "Integrated analytics, error tracking, and performance monitoring out of the box.",
     className: "col-span-1 md:col-span-1",
     accent: "#06b6d4",
   },
   {
-    icon: Database,
+    icon: IconDatabase,
     title: "Type-Safe Database",
     description:
       "End-to-end type safety with Drizzle ORM and tRPC for confident database operations.",
@@ -69,14 +71,14 @@ const features: Feature[] = [
     accent: "#3b82f6",
   },
   {
-    icon: Globe,
+    icon: IconWorld,
     title: "Global Ready",
     description: "Built-in internationalization support to help you reach users worldwide.",
     className: "col-span-1 md:col-span-1",
     accent: "#14b8a6",
   },
   {
-    icon: Rocket,
+    icon: IconRocket,
     title: "Easy Deployment",
     description:
       "Deploy anywhere with Docker support, or one-click deploy to Cloudflare or Railway.",

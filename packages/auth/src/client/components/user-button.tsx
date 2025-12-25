@@ -17,8 +17,8 @@ import {
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { useTheme } from "@raypx/ui/hooks/use-theme";
 import { themeConfig, themeIcons } from "@raypx/ui/lib/theme-config";
+import { IconHelpCircle, IconHome, IconLogout, IconSettings } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { HelpCircle, Home, LogOut, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { defaultAuthRoutes } from "../../config/routes";
@@ -161,7 +161,7 @@ export const UserButton = ({
             className="cursor-pointer"
             render={
               <Link className="flex items-center" to={dashboardPath}>
-                <Home className="mr-2 size-4 text-muted-foreground" />
+                <IconHome className="mr-2 size-4 text-muted-foreground" />
                 <span>Dashboard</span>
               </Link>
             }
@@ -170,7 +170,7 @@ export const UserButton = ({
             className="cursor-pointer"
             render={
               <Link className="flex items-center" to={settingsPath}>
-                <Settings className="mr-2 size-4 text-muted-foreground" />
+                <IconSettings className="mr-2 size-4 text-muted-foreground" />
                 <span>Settings</span>
               </Link>
             }
@@ -228,7 +228,7 @@ export const UserButton = ({
             className="cursor-pointer"
             render={
               <Link className="flex items-center" to={helpPath}>
-                <HelpCircle className="mr-2 size-4 text-muted-foreground" />
+                <IconHelpCircle className="mr-2 size-4 text-muted-foreground" />
                 <span>Help & Support</span>
               </Link>
             }
@@ -250,7 +250,7 @@ export const UserButton = ({
           className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
           render={
             <Link className="flex items-center" to={signOutPath ?? defaultAuthRoutes.signOut}>
-              <LogOut className="mr-2 size-4" />
+              <IconLogout className="mr-2 size-4" />
               <span>Sign Out</span>
             </Link>
           }

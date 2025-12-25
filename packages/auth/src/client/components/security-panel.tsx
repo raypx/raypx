@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card";
+import { IconKey, IconShield } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { KeyRound, Shield } from "lucide-react";
 import type React from "react";
 import { socialProviders } from "../utils/social-providers";
 import { ProviderButton } from "./provider-button";
@@ -36,7 +36,7 @@ export function SecurityPanel({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <KeyRound className="h-5 w-5 text-muted-foreground" />
+            <IconKey className="h-5 w-5 text-muted-foreground" />
             Password & Security
           </CardTitle>
           <CardDescription>Quick actions for account security</CardDescription>
@@ -54,7 +54,7 @@ export function SecurityPanel({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-muted-foreground" />
+            <IconShield className="h-5 w-5 text-muted-foreground" />
             Social Accounts
           </CardTitle>
           <CardDescription>Connect providers to enable social sign-in</CardDescription>

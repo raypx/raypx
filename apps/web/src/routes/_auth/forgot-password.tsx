@@ -14,8 +14,8 @@ import { Alert, AlertDescription, AlertTitle } from "@raypx/ui/components/alert"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/input-group";
 import { toast } from "@raypx/ui/components/toast";
 import { useIsHydrated } from "@raypx/ui/hooks/use-hydrated";
+import { IconAlertCircle, IconArrowLeft, IconLoader2, IconMail } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertCircle, ArrowLeft, Loader2, Mail } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -90,7 +90,7 @@ function ForgotPasswordPage() {
           title="Check your email"
         >
           <Alert className="text-left">
-            <Mail className="h-4 w-4" />
+            <IconMail className="h-4 w-4" />
             <AlertTitle>Didn't receive the email?</AlertTitle>
             <AlertDescription>
               <ul className="list-inside list-disc space-y-1 mt-2">
@@ -115,7 +115,7 @@ function ForgotPasswordPage() {
 
             <Link className="w-full" to="/sign-in">
               <Button className="w-full" variant="ghost">
-                <ArrowLeft className="mr-2 h-4 w-4" />
+                <IconArrowLeft className="mr-2 h-4 w-4" />
                 Back to sign in
               </Button>
             </Link>
@@ -157,7 +157,7 @@ function ForgotPasswordPage() {
                 <FormControl>
                   <InputGroup>
                     <InputGroupAddon>
-                      <Mail className="h-4 w-4" />
+                      <IconMail className="h-4 w-4" />
                     </InputGroupAddon>
                     <InputGroupInput
                       autoComplete="email"
@@ -174,14 +174,14 @@ function ForgotPasswordPage() {
           />
 
           <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
             Send reset link
           </Button>
         </form>
       </Form>
 
       <Alert className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20 [&>svg]:text-amber-600 dark:[&>svg]:text-amber-400">
-        <AlertCircle className="h-4 w-4" />
+        <IconAlertCircle className="h-4 w-4" />
         <AlertTitle className="text-amber-800 dark:text-amber-200">Important</AlertTitle>
         <AlertDescription className="block text-amber-800 dark:text-amber-200">
           The reset link will expire in <strong>15 minutes</strong>

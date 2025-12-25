@@ -10,7 +10,7 @@ import {
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
 import { toast } from "@raypx/ui/components/toast";
-import { Clock, Key, Shield, Smartphone } from "lucide-react";
+import { IconClock, IconDeviceMobile, IconKey, IconShield } from "@tabler/icons-react";
 import { useState } from "react";
 
 export function SecuritySettings() {
@@ -85,7 +85,7 @@ export function SecuritySettings() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4" />
+                <IconDeviceMobile className="h-4 w-4" />
                 <span className="font-medium">Authenticator App</span>
                 <Badge variant="secondary">Not Enabled</Badge>
               </div>
@@ -101,7 +101,7 @@ export function SecuritySettings() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
+                <IconShield className="h-4 w-4" />
                 <span className="font-medium">Backup Codes</span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -124,7 +124,7 @@ export function SecuritySettings() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Key className="h-4 w-4" />
+                <IconKey className="h-4 w-4" />
                 <span className="font-medium">Manage API Keys</span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -148,7 +148,7 @@ export function SecuritySettings() {
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                  <IconClock className="h-4 w-4" />
                   <span className="font-medium">Current Session</span>
                   <Badge variant="default">Active</Badge>
                 </div>
@@ -162,7 +162,7 @@ export function SecuritySettings() {
             <div className="flex items-center justify-between p-3 border rounded-lg">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                  <IconClock className="h-4 w-4" />
                   <span className="font-medium">Mobile Session</span>
                 </div>
                 <p className="text-sm text-muted-foreground">

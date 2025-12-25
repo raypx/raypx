@@ -7,15 +7,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@raypx/ui/components";
+import { IconSettings } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { Settings2 } from "lucide-react";
 
 export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button className="ml-auto hidden h-8 lg:flex" size="sm" variant="outline">
-          <Settings2 className="h-4 w-4" />
+          <IconSettings className="h-4 w-4" />
           View
         </Button>
       </DropdownMenuTrigger>

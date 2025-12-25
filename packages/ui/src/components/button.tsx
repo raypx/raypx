@@ -1,6 +1,5 @@
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
-import { cn, useRenderParam } from "@raypx/ui/lib/utils";
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
+import { cn } from "@raypx/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonVariants = cva(
@@ -40,39 +39,19 @@ const buttonVariants = cva(
   },
 );
 
-export interface ButtonProps
-  extends useRender.ComponentProps<"button">,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-}
-
 function Button({
   className,
   variant = "default",
   size = "default",
-  render,
-  children,
-  asChild = false,
   ...props
-}: ButtonProps) {
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
-  const typeValue: React.ButtonHTMLAttributes<HTMLButtonElement>["type"] = renderProp
-    ? undefined
-    : "button";
-
-  const defaultProps = {
-    className: cn(buttonVariants({ className, size, variant })),
-    "data-slot": "button",
-    type: typeValue,
-    ...(renderChildren !== undefined && { children: renderChildren }),
-  };
-
-  return useRender({
-    defaultTagName: "button",
-    props: mergeProps<"button">(defaultProps, props),
-    render: renderProp,
-  });
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  return (
+    <ButtonPrimitive
+      className={cn(buttonVariants({ variant, size, className }))}
+      data-slot="button"
+      {...props}
+    />
+  );
 }
 
 export { Button, buttonVariants };

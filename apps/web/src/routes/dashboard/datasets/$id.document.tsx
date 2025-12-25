@@ -17,27 +17,26 @@ import {
   toast,
 } from "@raypx/ui/components";
 import { cn } from "@raypx/ui/lib/utils";
+import {
+  IconBook,
+  IconBrain,
+  IconChevronLeft,
+  IconCircleCheck,
+  IconClock,
+  IconCopy,
+  IconDots,
+  IconExternalLink,
+  IconFileText,
+  IconMessage,
+  IconPlus,
+  IconTrash,
+  IconUpload,
+  IconX,
+  IconUpload as UploadIcon,
+} from "@tabler/icons-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import {
-  BookOpen,
-  Brain,
-  CheckCircle,
-  ChevronLeft,
-  Clock,
-  Copy,
-  ExternalLink,
-  FileText,
-  MessageSquare,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Trash2,
-  Upload,
-  Upload as UploadIcon,
-  XCircle,
-} from "lucide-react";
 import { useMemo, useState } from "react";
 import { DocumentUploadDialog } from "~/components/document-upload-dialog";
 import { EmptyState } from "~/components/empty-state";
@@ -150,7 +149,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
     {
       label: "Processing",
       value: "processing",
-      icon: Clock,
+      icon: IconClock,
     },
     {
       label: "Uploaded",
@@ -160,12 +159,12 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
     {
       label: "Completed",
       value: "completed",
-      icon: CheckCircle,
+      icon: IconCircleCheck,
     },
     {
       label: "Failed",
       value: "failed",
-      icon: XCircle,
+      icon: IconX,
     },
   ];
   const [page, setPage] = useState(1);
@@ -225,6 +224,9 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
     },
     onError: (error) => {
       toast.error(error.message || "Failed to vectorize document");
+    },
+    onSettled: () => {
+      void refetch();
     },
   });
 
@@ -327,7 +329,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                   type="button"
                 >
                   <span className="truncate">{truncateTextMiddle(document.name, 50, 20, 20)}</span>
-                  <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <IconExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </button>
               ) : (
                 <div className="font-medium flex-1 truncate" title={document.name}>
@@ -345,7 +347,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                   title="Copy URL"
                   variant="ghost"
                 >
-                  <Copy className="h-3.5 w-3.5" />
+                  <IconCopy className="h-3.5 w-3.5" />
                   <span className="sr-only">Copy URL</span>
                 </Button>
               )}
@@ -386,12 +388,15 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
           const document = row.original;
           return (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button size="sm" variant="outline">
+                    <IconDots className="h-4 w-4" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                }
+              />
+
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -401,7 +406,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                       navigate({ to: `/dashboard/documents/${document.id}/chat` });
                     }}
                   >
-                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <IconMessage className="mr-2 h-4 w-4" />
                     Chat with Document
                   </DropdownMenuItem>
                 )}
@@ -413,7 +418,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                       handleVectorize(document.id);
                     }}
                   >
-                    <Brain className="mr-2 h-4 w-4" />
+                    <IconBrain className="mr-2 h-4 w-4" />
                     Vectorize
                   </DropdownMenuItem>
                 )}
@@ -425,7 +430,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                     handleDelete(document.id);
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <IconTrash className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -464,11 +469,11 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
       <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
         <div className="flex items-center gap-4">
           <Button onClick={onBack} size="icon" variant="ghost">
-            <ChevronLeft className="size-5" />
+            <IconChevronLeft className="size-5" />
           </Button>
           <div>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <BookOpen className="h-5 w-5 text-primary" />
+              <IconBook className="h-5 w-5 text-primary" />
               {dataset.name}
             </CardTitle>
             <CardDescription className="mt-1.5">
@@ -483,7 +488,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
           }}
           size="sm"
         >
-          <MessageSquare className="h-4 w-4" />
+          <IconMessage className="h-4 w-4" />
           Chat with Dataset
         </Button>
       </CardHeader>
@@ -497,12 +502,12 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
               <EmptyState
                 actionLabel={
                   <>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <IconPlus className="h-4 w-4 mr-2" />
                     Upload Documents
                   </>
                 }
                 description="Upload documents to this dataset"
-                icon={FileText}
+                icon={IconFileText}
                 onAction={() => setIsUploadDialogOpen(true)}
                 title="No Documents"
               />
@@ -555,7 +560,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                 onClick={() => setIsUploadDialogOpen(true)}
                 size="sm"
               >
-                <Upload className="h-4 w-4" />
+                <IconUpload className="h-4 w-4" />
                 Upload Documents
               </Button>
               <DocumentUploadDialog
@@ -575,7 +580,7 @@ function DocumentsSection({ dataset, onBack }: { dataset: DatasetListItem; onBac
                 size="sm"
                 variant="outline"
               >
-                <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
+                <IconRefresh className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
               </Button>
             </>
           }

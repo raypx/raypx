@@ -1,9 +1,17 @@
-import { BookOpen, CreditCard, FolderCog, Home, Key, Settings, Users } from "lucide-react";
+import {
+  IconBook,
+  IconCreditCard,
+  IconFolderCog,
+  IconHome,
+  IconKey,
+  IconSettings,
+  IconUsers,
+} from "@tabler/icons-react";
 
 export type SidebarItem = {
   title: string;
   href: string;
-  icon: typeof Home;
+  icon: typeof IconHome;
 };
 
 export type SidebarGroup = {
@@ -20,12 +28,12 @@ export const sidebarGroups: Record<string, SidebarGroup> = {
       {
         title: "Dashboard",
         href: "/dashboard",
-        icon: Home,
+        icon: IconHome,
       },
       {
         title: "Datasets",
         href: "/dashboard/datasets",
-        icon: BookOpen,
+        icon: IconBook,
       },
     ],
   },
@@ -35,22 +43,22 @@ export const sidebarGroups: Record<string, SidebarGroup> = {
       {
         title: "Settings",
         href: "/dashboard/settings",
-        icon: Settings,
+        icon: IconSettings,
       },
       {
         title: "API Keys",
         href: "/dashboard/api-keys",
-        icon: Key,
+        icon: IconKey,
       },
       {
         title: "Configs",
         href: "/dashboard/configs",
-        icon: FolderCog,
+        icon: IconFolderCog,
       },
       {
         title: "Billing",
         href: "/dashboard/billing",
-        icon: CreditCard,
+        icon: IconCreditCard,
       },
     ],
   },
@@ -61,7 +69,7 @@ export const sidebarGroups: Record<string, SidebarGroup> = {
       {
         title: "Users",
         href: "/dashboard/users",
-        icon: Users,
+        icon: IconUsers,
       },
     ],
   },

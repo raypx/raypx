@@ -17,8 +17,8 @@ import {
   SelectValue,
 } from "@raypx/ui/components/select";
 import { toast } from "@raypx/ui/components/toast";
+import { IconBrain, IconDeviceFloppy, IconEye, IconEyeOff, IconLoader2 } from "@tabler/icons-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Brain, Eye, EyeOff, Loader2, Save } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const RAG_NAMESPACE_NAME = "rag";
@@ -301,7 +301,7 @@ export function RAGSettings() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
+            <IconBrain className="h-5 w-5" />
             <CardTitle>Embedding Provider</CardTitle>
           </div>
           <CardDescription>
@@ -361,7 +361,7 @@ export function RAGSettings() {
                 type="button"
                 variant="ghost"
               >
-                {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showApiKey ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
               </Button>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -462,12 +462,12 @@ export function RAGSettings() {
         <Button disabled={isLoading} onClick={handleSave}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <IconDeviceFloppy className="mr-2 h-4 w-4" />
               Save Configuration
             </>
           )}

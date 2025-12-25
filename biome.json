@@ -40,6 +40,7 @@
       },
       "suspicious": {
         "noExplicitAny": "off",
+        "noDocumentCookie": "off",
         "noConsole": {
           "level": "warn",
           "options": {

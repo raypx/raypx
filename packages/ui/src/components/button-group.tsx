@@ -2,7 +2,7 @@ import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Separator } from "@raypx/ui/components/separator";
 
-import { cn, useRenderParam } from "@raypx/ui/lib/utils";
+import { cn } from "@raypx/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonGroupVariants = cva(
@@ -38,15 +38,7 @@ function ButtonGroup({
   );
 }
 
-function ButtonGroupText({
-  className,
-  render,
-  children,
-  asChild = false,
-  ...props
-}: useRender.ComponentProps<"div"> & { asChild?: boolean }) {
-  const [renderProp, renderChildren] = useRenderParam(render, asChild, children);
-
+function ButtonGroupText({ className, render, ...props }: useRender.ComponentProps<"div">) {
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
@@ -55,11 +47,10 @@ function ButtonGroupText({
           "bg-muted gap-2 rounded-lg border px-2.5 text-sm font-medium [&_svg:not([class*='size-'])]:size-4 flex items-center [&_svg]:pointer-events-none",
           className,
         ),
-        ...(renderChildren !== undefined && { children: renderChildren }),
       },
       props,
     ),
-    render: renderProp,
+    render,
     state: {
       slot: "button-group-text",
     },

@@ -1,27 +1,30 @@
-import type { LucideProps } from "lucide-react";
-import type { ComponentType } from "react";
+import type { ComponentType, SVGProps } from "react";
 import { lazy, Suspense, useMemo } from "react";
 import type { NonEmptyObject, SetOptional, Simplify } from "type-fest";
 import { logger } from "../lib/logger";
 
+export type TablerIconProps = SVGProps<SVGSVGElement>;
+
 export type IconProps = Simplify<
-  SetOptional<LucideProps, "ref"> & {
+  SetOptional<TablerIconProps, "ref"> & {
     name: string;
     fallback?: React.ReactNode;
   }
 >;
 
-type LucideIcon = ComponentType<LucideProps>;
-type IconModule = NonEmptyObject<{ default: LucideIcon }>;
+type TablerIcon = ComponentType<TablerIconProps>;
+type IconModule = NonEmptyObject<{ default: TablerIcon }>;
 
 function Icon({ name, fallback = null, ...props }: IconProps) {
-  const LucideIcon = useMemo(
+  const TablerIcon = useMemo(
     () =>
       lazy(async (): Promise<IconModule> => {
         try {
-          const lucideModule = await import("lucide-react");
-          const IconComponent = lucideModule[name as keyof typeof lucideModule];
-          return { default: (IconComponent as LucideIcon) || (() => null) };
+          // Ensure name has Icon prefix
+          const iconName = name.startsWith("Icon") ? name : `Icon${name}`;
+          const tablerModule = await import("@tabler/icons-react");
+          const IconComponent = tablerModule[iconName as keyof typeof tablerModule];
+          return { default: (IconComponent as TablerIcon) || (() => null) };
         } catch (error) {
           logger.error("Error importing icon", { error });
           return { default: () => null };
@@ -32,7 +35,7 @@ function Icon({ name, fallback = null, ...props }: IconProps) {
 
   return (
     <Suspense fallback={fallback}>
-      <LucideIcon {...props} />
+      <TablerIcon {...props} />
     </Suspense>
   );
 }

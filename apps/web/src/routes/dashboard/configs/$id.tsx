@@ -41,24 +41,24 @@ import {
 } from "@raypx/ui/components";
 import { toast } from "@raypx/ui/components/toast";
 import { cn } from "@raypx/ui/lib/utils";
+import {
+  IconChevronLeft,
+  IconClock,
+  IconCopy,
+  IconDots,
+  IconEdit,
+  IconEye,
+  IconEyeOff,
+  IconFolderCog,
+  IconHistory,
+  IconPlus,
+  IconRefresh,
+  IconSettings,
+  IconTrash,
+} from "@tabler/icons-react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  ChevronLeft,
-  Clock,
-  Copy,
-  Edit,
-  Eye,
-  EyeOff,
-  FolderCog,
-  History,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Settings,
-  Trash2,
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "~/components/empty-state";
 import { ErrorState } from "~/components/error-state";
@@ -413,7 +413,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                   size="icon"
                   variant="ghost"
                 >
-                  {isVisible ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                  {isVisible ? <IconEyeOff className="size-3" /> : <IconEye className="size-3" />}
                 </Button>
               )}
             </div>
@@ -458,19 +458,19 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline">
-                  <MoreHorizontal className="h-4 w-4" />
+                  <IconDots className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => openEditDialog(config)}>
-                  <Edit className="mr-2 h-4 w-4" />
+                  <IconEdit className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
                 {!config.isSecret && config.value && (
                   <DropdownMenuItem onClick={() => copyToClipboard(config.value ?? "")}>
-                    <Copy className="mr-2 h-4 w-4" />
+                    <IconCopy className="mr-2 h-4 w-4" />
                     Copy Value
                   </DropdownMenuItem>
                 )}
@@ -480,7 +480,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                     setHistoryDialogOpen(true);
                   }}
                 >
-                  <History className="mr-2 h-4 w-4" />
+                  <IconHistory className="mr-2 h-4 w-4" />
                   View History
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -488,7 +488,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                   className="text-destructive"
                   onClick={() => openDeleteConfirm(config)}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <IconTrash className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -506,11 +506,11 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
         <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
           <div className="flex items-center gap-4">
             <Button onClick={onBack} size="icon" variant="ghost">
-              <ChevronLeft className="size-5" />
+              <IconChevronLeft className="size-5" />
             </Button>
             <div>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <FolderCog className="h-5 w-5 text-primary" />
+                <IconFolderCog className="h-5 w-5 text-primary" />
                 {namespace.name}
               </CardTitle>
               <CardDescription className="mt-1.5">
@@ -529,7 +529,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                   actionLabel={
                     q ? undefined : (
                       <>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <IconPlus className="h-4 w-4 mr-2" />
                         Add Config
                       </>
                     )
@@ -539,7 +539,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                       ? `No configs found matching "${q}"`
                       : "Add your first configuration item to this namespace"
                   }
-                  icon={Settings}
+                  icon={IconSettings}
                   onAction={q ? undefined : () => setCreateDialogOpen(true)}
                   title={q ? "No Results" : "No Configs"}
                 />
@@ -574,7 +574,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                 >
                   <DialogTrigger asChild>
                     <Button className="gap-2 shadow-lg shadow-primary/20" size="sm">
-                      <Plus className="h-4 w-4" />
+                      <IconPlus className="h-4 w-4" />
                       Add Config
                     </Button>
                   </DialogTrigger>
@@ -613,7 +613,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
                   size="sm"
                   variant="outline"
                 >
-                  <RefreshCw className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
+                  <IconRefresh className={cn("h-4 w-4", isFetching ? "animate-spin" : "")} />
                 </Button>
               </>
             }
@@ -693,7 +693,7 @@ function ConfigsSection({ namespace, onBack }: { namespace: Namespace; onBack: (
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <History className="size-5" />
+              <IconHistory className="size-5" />
               Change History
             </DialogTitle>
             <DialogDescription>
@@ -767,7 +767,10 @@ function ConfigForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="valueType">Type</Label>
-          <Select onValueChange={onValueTypeChange} value={valueType}>
+          <Select
+            onValueChange={(v) => onValueTypeChange(v as "string" | "number" | "boolean" | "json")}
+            value={valueType}
+          >
             <SelectTrigger className="bg-muted/50">
               <SelectValue />
             </SelectTrigger>
@@ -792,9 +795,9 @@ function ConfigForm({
       <div className="space-y-2">
         <Label htmlFor="value">Value</Label>
         {valueType === "boolean" ? (
-          <Select onValueChange={onValueChange} value={value}>
+          <Select onValueChange={(v) => onValueChange(v ?? "")} value={value}>
             <SelectTrigger className="bg-muted/50">
-              <SelectValue placeholder="Select value" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="true">true</SelectItem>
@@ -868,7 +871,7 @@ function ConfigHistoryList({ configId }: { configId: string }) {
       {history.map((item) => (
         <div className="rounded-lg border p-3 space-y-2" key={item.id}>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock className="size-3" />
+            <IconClock className="size-3" />
             {formatDate(item.createdAt)}
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">

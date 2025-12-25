@@ -18,7 +18,6 @@
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "lucide-react": "catalog:",
     "pathe": "^2.0.3",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

@@ -14,8 +14,8 @@ import {
   Sidebar as UiSidebar,
 } from "@raypx/ui/components/sidebar";
 import { cn } from "@raypx/ui/lib/utils";
+import { IconSettings } from "@tabler/icons-react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Settings } from "lucide-react";
 import { Logo } from "~/components/layout/logo";
 import { sidebarGroups } from "~/config/sidebar";
 
@@ -146,7 +146,7 @@ export function Sidebar({ user }: SidebarProps) {
                     {user?.email && user?.name ? user.email : "Personal Plan"}
                   </span>
                 </div>
-                <Settings className="ml-auto size-4" />
+                <IconSettings className="ml-auto size-4" />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

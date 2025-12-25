@@ -1,9 +1,10 @@
 import { Button } from "@raypx/ui/components/button";
-import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
+
+type TablerIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  icon: TablerIcon;
   title: string;
   description: string;
   actionLabel?: ReactNode;
