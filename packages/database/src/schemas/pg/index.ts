@@ -8,5 +8,4 @@ export * from "./auth";
 export * from "./billing";
 export * from "./configs";
 export * from "./organizations";
-export * from "./rag";
 export * from "./resources";

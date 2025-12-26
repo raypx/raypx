@@ -22,7 +22,6 @@
     "@raypx/email": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/observability": "workspace:*",
-    "@raypx/rag": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@raypx/storage": "workspace:*",
     "@raypx/trpc": "workspace:*",

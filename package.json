@@ -52,7 +52,7 @@
     "@vitest/coverage-v8": "^4.0.16",
     "jsdom": "^27.3.0",
     "knip": "^5.77.1",
-    "lefthook": "^2.0.12",
+    "lefthook": "^2.0.13",
     "rimraf": "^6.1.2",
     "turbo": "^2.7.2",
     "typescript": "^5.9.3",

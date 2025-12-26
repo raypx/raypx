@@ -1,12 +1,4 @@
-import {
-  IconBook,
-  IconCreditCard,
-  IconFolderCog,
-  IconHome,
-  IconKey,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconHome } from "@tabler/icons-react";
 
 export type SidebarItem = {
   title: string;
@@ -29,47 +21,6 @@ export const sidebarGroups: Record<string, SidebarGroup> = {
         title: "Dashboard",
         href: "/dashboard",
         icon: IconHome,
-      },
-      {
-        title: "Datasets",
-        href: "/dashboard/datasets",
-        icon: IconBook,
-      },
-    ],
-  },
-  account: {
-    label: "Account",
-    items: [
-      {
-        title: "Settings",
-        href: "/dashboard/settings",
-        icon: IconSettings,
-      },
-      {
-        title: "API Keys",
-        href: "/dashboard/api-keys",
-        icon: IconKey,
-      },
-      {
-        title: "Configs",
-        href: "/dashboard/configs",
-        icon: IconFolderCog,
-      },
-      {
-        title: "Billing",
-        href: "/dashboard/billing",
-        icon: IconCreditCard,
-      },
-    ],
-  },
-  admin: {
-    label: "Administration",
-    role: ["admin", "superadmin"],
-    items: [
-      {
-        title: "Users",
-        href: "/dashboard/users",
-        icon: IconUsers,
       },
     ],
   },

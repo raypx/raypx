@@ -139,7 +139,6 @@ export const documentsRouter = {
 
   /**
    * Create a new document
-   * If storageKey exists in metadata, automatically triggers vectorization
    */
   create: protectedProcedure
     .input(
@@ -151,63 +150,36 @@ export const documentsRouter = {
         datasetId: z.string(),
         status: z.enum(["processing", "uploaded", "completed", "failed"]).default("processing"),
         metadata: z.record(z.string(), z.any()).optional(),
-        autoVectorize: z.boolean().default(false), // Auto-vectorize if storageKey exists (disabled by default, use manual trigger)
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { autoVectorize, ...documentData } = input;
 
       // Verify dataset exists and belongs to user
       const dataset = await ctx.db.query.datasets.findFirst({
-        where: and(eq(Datasets.id, documentData.datasetId), eq(Datasets.userId, userId)),
+        where: and(eq(Datasets.id, input.datasetId), eq(Datasets.userId, userId)),
       });
 
       if (!dataset) {
-        throw Errors.resourceNotFound("Dataset", documentData.datasetId);
+        throw Errors.resourceNotFound("Dataset", input.datasetId);
       }
 
       try {
         const [created] = await ctx.db
           .insert(Documents)
           .values({
-            name: documentData.name,
-            originalName: documentData.originalName,
-            mimeType: documentData.mimeType,
-            size: documentData.size,
-            datasetId: documentData.datasetId,
-            status: documentData.status,
-            metadata: documentData.metadata ?? null,
+            name: input.name,
+            originalName: input.originalName,
+            mimeType: input.mimeType,
+            size: input.size,
+            datasetId: input.datasetId,
+            status: input.status,
+            metadata: input.metadata ?? null,
             userId,
           })
           .returning();
 
         assertExists(created, () => Errors.internalError("Failed to create document"));
-
-        // Auto-vectorize if storageKey exists and autoVectorize is true
-        if (autoVectorize && created.metadata && typeof created.metadata === "object") {
-          const metadata = created.metadata as Record<string, unknown>;
-          if (metadata.storageKey && typeof metadata.storageKey === "string") {
-            // Trigger vectorization asynchronously (don't block the response)
-            setImmediate(async () => {
-              try {
-                const { vectorizeDocument } = await import("@raypx/rag");
-                await vectorizeDocument(created.id, userId);
-                // Status will be updated to "completed" by vectorizeDocument
-              } catch (error) {
-                logger.error("Failed to vectorize document", {
-                  documentId: created.id,
-                  error,
-                });
-                // Update document status to failed
-                await ctx.db
-                  .update(Documents)
-                  .set({ status: "failed" })
-                  .where(eq(Documents.id, created.id));
-              }
-            });
-          }
-        }
 
         return {
           id: created.id,
@@ -224,58 +196,6 @@ export const documentsRouter = {
         };
       } catch (error) {
         throw handleDatabaseError(error, "create document");
-      }
-    }),
-
-  /**
-   * Vectorize a document (parse, chunk, and generate embeddings)
-   */
-  vectorize: protectedProcedure
-    .input(
-      z.object({
-        documentId: z.string().uuid(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-
-      // Verify document exists and belongs to user
-      const document = await ctx.db.query.documents.findFirst({
-        where: and(eq(Documents.id, input.documentId), eq(Documents.userId, userId)),
-      });
-
-      if (!document) {
-        throw Errors.resourceNotFound("Document", input.documentId);
-      }
-
-      // Import vectorize function dynamically to avoid circular dependencies
-      const { vectorizeDocument } = await import("@raypx/rag");
-
-      try {
-        const result = await vectorizeDocument(input.documentId, userId);
-
-        return result;
-      } catch (error) {
-        // Log detailed error information for debugging
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorStack = error instanceof Error ? error.stack : undefined;
-
-        logger.error("Vectorization failed", {
-          documentId: input.documentId,
-          userId,
-          error: errorMessage,
-          stack: errorStack,
-          provider: process.env.EMBEDDING_PROVIDER,
-          model: process.env.EMBEDDING_MODEL,
-        });
-
-        // Update document status to failed if vectorization fails
-        await ctx.db
-          .update(Documents)
-          .set({ status: "failed" })
-          .where(eq(Documents.id, input.documentId));
-
-        throw Errors.internalError(errorMessage || "Failed to vectorize document");
       }
     }),
 

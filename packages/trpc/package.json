@@ -17,7 +17,6 @@
     "@raypx/billing": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/logger": "workspace:*",
-    "@raypx/rag": "workspace:*",
     "@raypx/storage": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "^11.8.1",
