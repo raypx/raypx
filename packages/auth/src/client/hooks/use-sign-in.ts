@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import type { BetterFetchOption } from "better-auth/client";
 import { useCallback } from "react";
-import { isValidEmail } from "../utils/email";
 import { useAuth } from "./use-auth";
 import { useOnSuccessTransition } from "./use-success-transition";
 
@@ -35,45 +34,18 @@ export function useSignIn(options: UseSignInOptions = {}) {
       rememberMe?: boolean;
     }) => {
       try {
-        let response: Record<string, unknown> = {};
+        const fetchOptions: BetterFetchOption = {
+          throw: true,
+        };
 
-        if (usernameEnabled && !isValidEmail(email)) {
-          const fetchOptions: BetterFetchOption = {
-            throw: true,
-          };
+        await auth.signIn.email({
+          email,
+          password,
+          rememberMe,
+          fetchOptions,
+        });
 
-          response = await auth.signIn.username({
-            username: email,
-            password,
-            rememberMe,
-            fetchOptions,
-          });
-        } else {
-          const fetchOptions: BetterFetchOption = {
-            throw: true,
-          };
-
-          response = await auth.signIn.email({
-            email,
-            password,
-            rememberMe,
-            fetchOptions,
-          });
-        }
-
-        if (response.twoFactorRedirect) {
-          if (options.onTwoFactorRedirect) {
-            await options.onTwoFactorRedirect(redirectTo);
-          } else {
-            await navigate({
-              to: "/two-factor",
-              search: { redirectTo },
-              replace: true,
-            });
-          }
-        } else {
-          await onSuccess();
-        }
+        await onSuccess();
       } catch (error) {
         options.onError?.(error);
         throw error;
