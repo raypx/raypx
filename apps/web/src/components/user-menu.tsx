@@ -1,5 +1,3 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-
 import {
   Button,
   DropdownMenu,
@@ -11,6 +9,7 @@ import {
   DropdownMenuTrigger,
   Skeleton,
 } from "@raypx/ui";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 
 export default function UserMenu() {

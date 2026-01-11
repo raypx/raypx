@@ -1,9 +1,8 @@
+import { Button, Input, Label } from "@raypx/ui";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
-
-import { Button, Input, Label } from "@raypx/ui";
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
