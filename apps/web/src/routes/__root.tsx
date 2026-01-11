@@ -3,7 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@raypx/ui/sonner";
 import type { orpc } from "@/utils/orpc";
 
 import Header from "../components/header";

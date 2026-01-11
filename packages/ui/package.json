@@ -1,0 +1,43 @@
+{
+	"name": "@raypx/ui",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./utils": "./src/utils.ts",
+		"./button": "./src/components/button.tsx",
+		"./card": "./src/components/card.tsx",
+		"./checkbox": "./src/components/checkbox.tsx",
+		"./dropdown-menu": "./src/components/dropdown-menu.tsx",
+		"./input": "./src/components/input.tsx",
+		"./label": "./src/components/label.tsx",
+		"./skeleton": "./src/components/skeleton.tsx",
+		"./sonner": "./src/components/sonner.tsx"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit",
+		"shadcn": "shadcn"
+	},
+	"dependencies": {
+		"@base-ui/react": "^1.0.0",
+		"@tabler/icons-react": "^3.36.1",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"next-themes": "^0.4.6",
+		"sonner": "^2.0.7",
+		"tailwind-merge": "^3.4.0"
+	},
+	"peerDependencies": {
+		"react": ">=18",
+		"react-dom": ">=18"
+	},
+	"devDependencies": {
+		"@raypx/config": "workspace:*",
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"shadcn": "^3.6.3",
+		"typescript": "catalog:"
+	}
+}
