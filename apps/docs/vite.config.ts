@@ -1,0 +1,32 @@
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import react from "@vitejs/plugin-react";
+import mdx from "fumadocs-mdx/vite";
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import tsConfigPaths from "vite-tsconfig-paths";
+import * as docsConfig from "./source.config";
+import { baseURL } from "./src/config/base";
+
+export default defineConfig({
+  server: {
+    port: 3000,
+  },
+  base: baseURL,
+  plugins: [
+    mdx(docsConfig),
+    tailwindcss(),
+    tsConfigPaths({
+      projects: ["./tsconfig.json"],
+    }),
+    tanstackStart({
+      prerender: {
+        enabled: true,
+      },
+    }),
+    react(),
+    nitro({
+      // baseURL,
+    }),
+  ],
+});

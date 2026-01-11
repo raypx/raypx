@@ -1,0 +1,77 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "envMode": "loose",
+  "remoteCache": { "signature": true },
+  "concurrency": "16",
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event"],
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**"],
+      "outputLogs": "new-only"
+    },
+    "start": {
+      "cache": true,
+      "dependsOn": ["build", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**"]
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": ["^typecheck"],
+      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"]
+    },
+    "check-types": {
+      "cache": true,
+      "dependsOn": ["^check-types"],
+      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"]
+    },
+    "format": {
+      "cache": true,
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "check": {
+      "cache": true,
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.*",
+        "jest.config.*",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "outputs": [],
+      "outputLogs": "new-only"
+    },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "persistent": true
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    }
+  }
+}
