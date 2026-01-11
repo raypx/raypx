@@ -1,0 +1,31 @@
+{
+  "name": "@raypx/database",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./schema/auth": "./src/schema/auth.ts",
+    "./sql": "./src/sql.ts"
+  },
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "db": "dotenvx run -f ../../.env -- drizzle-kit",
+    "with-env": "dotenvx run -f ../../.env --",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@raypx/env": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "postgres": "^3.4.8"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@vitest/ui": "catalog:",
+    "drizzle-kit": "^0.31.8",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

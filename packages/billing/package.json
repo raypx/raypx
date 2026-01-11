@@ -1,0 +1,27 @@
+{
+  "name": "@raypx/billing",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "with-env": "dotenvx run -f ../../.env --"
+  },
+  "dependencies": {
+    "@raypx/database": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
+    "stripe": "^20.3.0"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@vitest/ui": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

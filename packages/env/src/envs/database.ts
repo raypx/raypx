@@ -1,0 +1,25 @@
+import { z } from "zod";
+
+export const databaseEnv = {
+  id: "database",
+  server: {
+    DATABASE_URL: z.string().min(1),
+    DATABASE_MAX_CONNECTIONS: z
+      .string()
+      .optional()
+      .transform((val) => (val ? Number.parseInt(val, 10) : undefined)),
+    DATABASE_PREPARE: z
+      .string()
+      .optional()
+      .transform((val) => val === "true" || val === "1"),
+    VECTOR_URL: z
+      .string()
+      .optional()
+      .transform((val) => {
+        // If VECTOR_URL is not set or empty, fallback to DATABASE_URL
+        // val can be string | undefined, so we need to handle both cases
+        return val?.trim() || process.env.DATABASE_URL || "";
+      }),
+    DATABASE_PREFIX: z.string().min(1).optional(),
+  },
+} as const;

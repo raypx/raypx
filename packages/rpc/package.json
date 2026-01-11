@@ -1,0 +1,31 @@
+{
+  "name": "@raypx/rpc",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts"
+  },
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@orpc/client": "^1.13.4",
+    "@orpc/server": "^1.13.4",
+    "@orpc/tanstack-query": "^1.13.4",
+    "@raypx/auth": "workspace:*",
+    "@raypx/database": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@vitest/ui": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@raypx/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./vitest": "./vitest.config.ts",
+    "./base.json": "./base.json",
+    "./vite.json": "./vite.json",
+    "./react.json": "./react.json"
+  },
+  "main": "./index.ts",
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo"
+  },
+  "devDependencies": {
+    "@vitest/ui": "catalog:",
+    "jsdom": "catalog:",
+    "vitest": "catalog:"
+  }
+}

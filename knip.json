@@ -1,0 +1,65 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "apps/web": {
+      "entry": ["src/router.tsx", "src/routeTree.gen.ts", "src/routes/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/docs": {
+      "entry": ["src/router.tsx", "src/routeTree.gen.ts", "src/routes/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/desktop": {
+      "entry": ["src/router.tsx", "src/routeTree.gen.ts", "src/routes/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/ui": {
+      "entry": ["src/index.ts", "src/lib/utils.ts", "src/components/*.tsx", "src/hooks/*.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/database": {
+      "entry": ["src/index.ts", "src/schema/index.ts", "src/schema/auth.ts", "src/sql.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/logger": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/config": {
+      "entry": ["vitest.config.ts", "base.json", "vite.json", "react.json"],
+      "project": ["*.ts", "*.json"]
+    },
+    "packages/auth": {
+      "entry": ["src/index.ts", "src/client.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/observability": {
+      "entry": ["src/index.ts", "src/sentry.ts", "src/analytics.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/env": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/rpc": {
+      "entry": ["src/client.ts", "src/server.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/billing": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    }
+  },
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/*.config.{js,ts,mjs,cjs}",
+    "**/vitest.setup.{js,ts}",
+    "**/migrations/**",
+    "**/*.css"
+  ],
+  "ignoreDependencies": ["tailwindcss", "tw-animate-css"]
+}

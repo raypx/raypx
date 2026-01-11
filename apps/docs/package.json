@@ -1,0 +1,29 @@
+{
+  "name": "docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "shadcn": "shadcn add",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@raypx/ui": "workspace:*",
+    "next": "^16.1.6",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "shadcn": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^25.1.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "babel-plugin-react-compiler": "1.0.0",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}
