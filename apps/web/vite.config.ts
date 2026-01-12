@@ -6,5 +6,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { nitro } from "nitro/vite";
 
 export default defineConfig({
+  ssr: {
+    noExternal: ["@tabler/icons-react"],
+  },
   plugins: [tsconfigPaths(), tailwindcss(), tanstackStart(), viteReact(), nitro()],
 });

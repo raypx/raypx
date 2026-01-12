@@ -1,8 +1,0 @@
-node_modules
-.output
-.git
-.gitignore
-.env.local
-.env.*.local
-*.log
-turbo
