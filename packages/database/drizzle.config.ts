@@ -1,9 +1,4 @@
-import dotenv from "@dotenvx/dotenvx";
 import { defineConfig } from "drizzle-kit";
-
-dotenv.config({
-  path: "../../apps/server/.env",
-});
 
 export default defineConfig({
   schema: "./src/schema",

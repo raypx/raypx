@@ -1,7 +1,7 @@
+// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import { Toaster } from "@raypx/ui/components/toast";
 import type { QueryClient } from "@tanstack/react-query";
-// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { ThemeProvider } from '@raypx/ui/components/theme-provider'
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import NotFound from "@/components/not-found";
 import appCss from "@/styles/globals.css?url";

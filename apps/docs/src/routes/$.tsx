@@ -1,10 +1,15 @@
 import browserCollections from "fumadocs-mdx:collections/browser";
+import { DocsLayout } from "@fumadocs/base-ui/layouts/docs";
+import {
+  DocsBody,
+  DocsDescription,
+  DocsPage,
+  DocsTitle,
+} from "@fumadocs/base-ui/layouts/docs/page";
+import defaultMdxComponents from "@fumadocs/base-ui/mdx";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
-import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/docs/page";
-import defaultMdxComponents from "fumadocs-ui/mdx";
 
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";

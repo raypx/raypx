@@ -1,5 +1,5 @@
 {
-  "name": "@raypx/db",
+  "name": "@raypx/database",
   "type": "module",
   "exports": {
     ".": {
@@ -10,10 +10,11 @@
     }
   },
   "scripts": {
-    "db:push": "drizzle-kit push",
+    "db": "drizzle-kit",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit -- --push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
@@ -23,7 +24,6 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@dotenvx/dotenvx": "^1.51.4",
     "drizzle-kit": "^0.31.8",
     "typescript": "catalog:"
   }

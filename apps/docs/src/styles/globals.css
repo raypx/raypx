@@ -1,6 +1,6 @@
 @import "@raypx/ui/styles/index.css";
-@import "fumadocs-ui/css/neutral.css";
-@import "fumadocs-ui/css/preset.css";
+@import "@fumadocs/base-ui/css/neutral.css";
+@import "@fumadocs/base-ui/css/preset.css";
 
 :root {
   --background: oklch(1 0 0);

@@ -60,6 +60,9 @@
       "dependsOn": ["^build"],
       "persistent": true
     },
+    "db": {
+      "cache": false
+    },
     "db:push": {
       "cache": false
     },

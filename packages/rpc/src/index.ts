@@ -2,6 +2,14 @@ import { ORPCError, os } from "@orpc/server";
 
 import type { Context } from "./context";
 
+export {
+  getUserPermissions,
+  getUserRole,
+  hasPermission,
+  isOrganizationOwner,
+  requirePermission,
+} from "./rbac";
+
 export const o = os.$context<Context>();
 
 export const publicProcedure = o;

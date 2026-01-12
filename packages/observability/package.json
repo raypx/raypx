@@ -1,0 +1,28 @@
+{
+  "name": "@raypx/observability",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./sentry": {
+      "default": "./src/sentry.ts"
+    },
+    "./analytics": {
+      "default": "./src/analytics.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@raypx/env": "workspace:*",
+    "@sentry/react": "^10.33.0",
+    "posthog-js": "^1.243.0"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

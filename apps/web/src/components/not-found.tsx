@@ -47,11 +47,7 @@ export default function NotFound() {
             }
             size="lg"
           />
-          <Button
-            className="group w-full sm:w-auto"
-            size="lg"
-            variant="outline"
-          >
+          <Button className="group w-full sm:w-auto" size="lg" variant="outline">
             <IconArrowLeft className="mr-2 size-4 transition-transform group-hover:-translate-x-0.5" />
             Go Back
           </Button>

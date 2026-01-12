@@ -9,38 +9,133 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
+import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardSettingsProfileRouteImport } from './routes/dashboard/settings/profile'
+import { Route as DashboardSettingsOrganizationRouteImport } from './routes/dashboard/settings/organization'
+import { Route as DashboardSettingsBillingRouteImport } from './routes/dashboard/settings/billing'
 
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardSettingsRoute,
+} as any)
+const DashboardSettingsProfileRoute =
+  DashboardSettingsProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsOrganizationRoute =
+  DashboardSettingsOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
+const DashboardSettingsBillingRoute =
+  DashboardSettingsBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRouteWithChildren
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
+  '/dashboard/settings/organization': typeof DashboardSettingsOrganizationRoute
+  '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
+  '/dashboard/settings/': typeof DashboardSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
+  '/dashboard/settings/organization': typeof DashboardSettingsOrganizationRoute
+  '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
+  '/dashboard/settings': typeof DashboardSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRouteWithChildren
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/settings/billing': typeof DashboardSettingsBillingRoute
+  '/dashboard/settings/organization': typeof DashboardSettingsOrganizationRoute
+  '/dashboard/settings/profile': typeof DashboardSettingsProfileRoute
+  '/dashboard/settings/': typeof DashboardSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/dashboard/settings'
+    | '/dashboard/'
+    | '/dashboard/settings/billing'
+    | '/dashboard/settings/organization'
+    | '/dashboard/settings/profile'
+    | '/dashboard/settings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/dashboard/settings/billing'
+    | '/dashboard/settings/organization'
+    | '/dashboard/settings/profile'
+    | '/dashboard/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/dashboard/settings'
+    | '/dashboard/'
+    | '/dashboard/settings/billing'
+    | '/dashboard/settings/organization'
+    | '/dashboard/settings/profile'
+    | '/dashboard/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +143,85 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/settings/': {
+      id: '/dashboard/settings/'
+      path: '/'
+      fullPath: '/dashboard/settings/'
+      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/profile': {
+      id: '/dashboard/settings/profile'
+      path: '/profile'
+      fullPath: '/dashboard/settings/profile'
+      preLoaderRoute: typeof DashboardSettingsProfileRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/organization': {
+      id: '/dashboard/settings/organization'
+      path: '/organization'
+      fullPath: '/dashboard/settings/organization'
+      preLoaderRoute: typeof DashboardSettingsOrganizationRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
+    '/dashboard/settings/billing': {
+      id: '/dashboard/settings/billing'
+      path: '/billing'
+      fullPath: '/dashboard/settings/billing'
+      preLoaderRoute: typeof DashboardSettingsBillingRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
   }
 }
 
+interface DashboardSettingsRouteChildren {
+  DashboardSettingsBillingRoute: typeof DashboardSettingsBillingRoute
+  DashboardSettingsOrganizationRoute: typeof DashboardSettingsOrganizationRoute
+  DashboardSettingsProfileRoute: typeof DashboardSettingsProfileRoute
+  DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+}
+
+const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
+  DashboardSettingsBillingRoute: DashboardSettingsBillingRoute,
+  DashboardSettingsOrganizationRoute: DashboardSettingsOrganizationRoute,
+  DashboardSettingsProfileRoute: DashboardSettingsProfileRoute,
+  DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+}
+
+const DashboardSettingsRouteWithChildren =
+  DashboardSettingsRoute._addFileChildren(DashboardSettingsRouteChildren)
+
+interface DashboardRouteChildren {
+  DashboardSettingsRoute: typeof DashboardSettingsRouteWithChildren
+  DashboardIndexRoute: typeof DashboardIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardSettingsRoute: DashboardSettingsRouteWithChildren,
+  DashboardIndexRoute: DashboardIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
