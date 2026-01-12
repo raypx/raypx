@@ -1,12 +1,13 @@
 import { Toaster } from "@raypx/ui/components/toast";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ThemeProvider } from '@raypx/ui/components/theme-provider'
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import NotFound from "@/components/not-found";
+import appCss from "@/styles/globals.css?url";
+// import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type { orpc } from "@/utils/orpc";
 
-import Header from "../components/header";
-import appCss from "../index.css?url";
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
@@ -15,16 +16,12 @@ export interface RouterAppContext {
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
-      {
-        charSet: "utf-8",
-      },
+      { charSet: "utf-8" },
       {
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
-      {
-        title: "My App",
-      },
+      { title: "Raypx", description: "Raypx" },
     ],
     links: [
       {
@@ -33,26 +30,39 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
     ],
   }),
-
-  component: RootDocument,
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
 });
 
-function RootDocument() {
+function RootComponent() {
+  return (
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+  );
+}
+
+function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html className="dark" lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
-        <div className="grid h-svh grid-rows-[auto_1fr]">
-          <Header />
-          <Outlet />
-        </div>
-        <Toaster richColors />
-        <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
+        <ThemeProvider defaultTheme="system">
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function NotFoundComponent() {
+  return (
+    <RootDocument>
+      <NotFound />
+    </RootDocument>
   );
 }

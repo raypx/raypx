@@ -17,14 +17,13 @@
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
-    "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
-    "pg": "^8.16.3",
+    "postgres": "^3.4.5",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@types/pg": "^8.16.0",
+    "@dotenvx/dotenvx": "^1.51.4",
     "drizzle-kit": "^0.31.8",
     "typescript": "catalog:"
   }

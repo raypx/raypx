@@ -4,8 +4,8 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "dev": "vite dev --port=3004",
-    "build": "vite build",
+    "dev": "bun --bun vite dev --port=3004",
+    "build": "bun --bun vite build",
     "start": "node .output/server/index.mjs",
     "types:check": "fumadocs-mdx && tsc --noEmit",
     "postinstall": "fumadocs-mdx"

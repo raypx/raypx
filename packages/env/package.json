@@ -4,18 +4,15 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./server": "./src/server.ts",
-    "./web": "./src/web.ts"
+    ".": "./src/index.ts"
   },
   "dependencies": {
     "envin": "^1.1.12",
     "radash": "^12.1.1",
-    "dotenv": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@types/bun": "catalog:",
     "typescript": "catalog:"
   }
 }

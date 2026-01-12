@@ -26,10 +26,10 @@ ENV PORT=3000
 # Copy built application from builder
 # Note: Only copying the built output, no need for source code or dependencies
 COPY --from=builder /app/apps/docs/.env .env
-COPY --from=builder /app/apps/docs/.output .
+COPY --from=builder /app/apps/docs/.output .output
 
 # Expose the application port
 EXPOSE 3000
 
 # Start the production server
-CMD ["bun", "run", "./server/index.mjs"]
+CMD ["bun", "run", ".output/server/index.mjs"]

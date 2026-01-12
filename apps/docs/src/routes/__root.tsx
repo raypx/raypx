@@ -1,5 +1,5 @@
 import { RootProvider } from "@fumadocs/base-ui/provider/tanstack";
-import { Toaster } from "@raypx/ui/components/sonner";
+import { Toaster } from "@raypx/ui/components/toast";
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanstackProvider } from "fumadocs-core/framework/tanstack";
