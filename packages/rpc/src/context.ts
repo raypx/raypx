@@ -1,13 +1,12 @@
 import { auth } from "@raypx/auth";
-import type { Context as HonoContext } from "hono";
 
 export type CreateContextOptions = {
-  context: HonoContext;
+  request: Request;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
+export async function createContext({ request }: CreateContextOptions) {
   const session = await auth.api.getSession({
-    headers: context.req.raw.headers,
+    headers: request.headers,
   });
   return {
     session,

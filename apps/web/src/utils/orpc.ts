@@ -1,8 +1,4 @@
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
-import type { RouterClient } from "@orpc/server";
-import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { AppRouter } from "@raypx/rpc/routers/index";
+import { createClient, createQueryUtils } from "@raypx/rpc/client";
 import { toast } from "@raypx/ui/components/toast";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { env } from "../env";
@@ -20,20 +16,6 @@ export const queryClient = new QueryClient({
   }),
 });
 
-const link = new RPCLink({
-  url: `${env.VITE_AUTH_URL}/rpc`,
-  fetch(url, options) {
-    return fetch(url, {
-      ...options,
-      credentials: "include",
-    });
-  },
-});
+export const client = createClient({ baseUrl: env.VITE_AUTH_URL });
 
-const getORPCClient = () => {
-  return createORPCClient(link) as RouterClient<AppRouter>;
-};
-
-export const client: RouterClient<AppRouter> = getORPCClient();
-
-export const orpc = createTanstackQueryUtils(client);
+export const orpc = createQueryUtils(client);

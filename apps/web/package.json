@@ -11,9 +11,6 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@orpc/client": "catalog:",
-    "@orpc/server": "catalog:",
-    "@orpc/tanstack-query": "^1.13.2",
     "@raypx/auth": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/rpc": "workspace:*",

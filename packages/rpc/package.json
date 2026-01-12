@@ -14,11 +14,11 @@
     "@orpc/client": "catalog:",
     "@orpc/openapi": "^1.12.2",
     "@orpc/server": "catalog:",
+    "@orpc/tanstack-query": "^1.12.2",
     "@orpc/zod": "^1.12.2",
     "@raypx/auth": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
-    "hono": "^4.11.3",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -3,7 +3,7 @@
   "envMode": "loose",
   "remoteCache": { "signature": true },
   "concurrency": "16",
-  "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event"],
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event", "DATABASE_URL"],
   "tasks": {
     "build": {
       "cache": true,

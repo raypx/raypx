@@ -105,6 +105,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Full history for turbo caching
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -118,4 +120,8 @@ jobs:
           tags: raypx/${{ matrix.app }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            GIT_COMMIT_SHA=${{ github.sha }}
+            GIT_BRANCH=${{ github.ref_name }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp }}
 

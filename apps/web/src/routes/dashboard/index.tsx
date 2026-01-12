@@ -5,43 +5,51 @@ import {
   CardHeader,
   CardTitle,
 } from "@raypx/ui/components/card";
+import { Skeleton } from "@raypx/ui/components/skeleton";
 import { IconActivity, IconChartBar, IconCreditCard, IconUsers } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSession } from "@/lib/auth-client";
+import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/")({
   component: DashboardHome,
 });
 
-const stats = [
-  {
-    title: "Total Users",
-    value: "1,234",
-    change: "+12%",
-    icon: IconUsers,
-  },
-  {
-    title: "Revenue",
-    value: "$12,345",
-    change: "+8%",
-    icon: IconCreditCard,
-  },
-  {
-    title: "Active Sessions",
-    value: "567",
-    change: "+23%",
-    icon: IconActivity,
-  },
-  {
-    title: "Conversion Rate",
-    value: "3.2%",
-    change: "+2%",
-    icon: IconChartBar,
-  },
-];
-
 function DashboardHome() {
   const { data: session } = useSession();
+  const { data: userStats, isLoading: isLoadingUsers } = useQuery(orpc.users.stats.queryOptions());
+
+  const stats = [
+    {
+      title: "Total Users",
+      value: userStats?.total ?? 0,
+      change: `+${userStats?.change ?? 0}%`,
+      icon: IconUsers,
+      loading: isLoadingUsers,
+    },
+    {
+      title: "Revenue",
+      value: "$12,345",
+      change: "+8%",
+      icon: IconCreditCard,
+      loading: false,
+    },
+    {
+      title: "Active Sessions",
+      value: "567",
+      change: "+23%",
+      icon: IconActivity,
+      loading: false,
+    },
+    {
+      title: "Conversion Rate",
+      value: "3.2%",
+      change: "+2%",
+      icon: IconChartBar,
+      loading: false,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -60,7 +68,11 @@ function DashboardHome() {
               <stat.icon className="size-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="font-bold text-2xl">{stat.value}</div>
+              {stat.loading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <div className="font-bold text-2xl">{stat.value}</div>
+              )}
               <p className="text-muted-foreground text-xs">
                 <span className="text-green-500">{stat.change}</span> from last month
               </p>
