@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { z } from "zod";
-import { createEnv } from "./envs";
+import { createEnv } from "./env";
 
 export const env = createEnv({
   server: {
@@ -10,5 +10,4 @@ export const env = createEnv({
     CORS_ORIGIN: z.url(),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   },
-  env: process.env,
 });

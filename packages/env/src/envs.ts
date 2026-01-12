@@ -1,4 +1,4 @@
-export { defineEnv as createEnv } from "envin";
+export { createEnv } from "./env";
 export * from "./envs/analytics";
 export * from "./envs/auth";
 export * from "./envs/database";
