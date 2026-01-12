@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "React Library (with JSX + Vite)",
+  "display": "React Library",
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",

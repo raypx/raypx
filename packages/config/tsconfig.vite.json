@@ -5,6 +5,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": ["vite/client"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "useDefineForClassFields": true,
     "verbatimModuleSyntax": false,
     "noEmit": true,

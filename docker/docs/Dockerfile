@@ -1,34 +1,20 @@
-# Stage 1: Install Bun
-FROM node:22-alpine AS bun-base
-RUN apk add --no-cache curl
-RUN curl -fsSL https://bun.sh/install | bash
-ENV BUN_INSTALL="/root/.bun"
-ENV PATH="$BUN_INSTALL/bin:$PATH"
+FROM oven/bun:1
 
-# Stage 2: Builder
-FROM bun-base AS builder
 WORKDIR /app
 
-# Install dependencies
-COPY package.json bun.lock ./
-COPY apps/docs/package.json ./apps/docs/
-COPY packages ./packages
-
-RUN bun install --frozen-lockfile
-
-# Build docs
-COPY . .
-RUN bun run build --filter=docs
-
-# Stage 3: Runner
-FROM node:22-alpine AS runner
-WORKDIR /app
-
+# Set build and production environment
 ENV NODE_ENV=production
+ENV PORT=3000
 
-# Copy built files
-COPY --from=builder /app/apps/docs/.output ./
+# Copy everything (monorepo structure)
+COPY . .
 
-EXPOSE 4000
+# Install dependencies (postinstall scripts will run automatically)
+RUN bun install --frozen-lockfile
+RUN bun turbo build --filter=docs...
 
-CMD ["node", "server/index.mjs"]
+# Expose the application port
+EXPOSE 3000
+
+# Start the production server
+CMD ["bun", "run", "apps/docs/.output/server/index.mjs"]

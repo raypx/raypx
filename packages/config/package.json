@@ -7,7 +7,7 @@
     "./vitest": "./vitest.config.ts",
     "./tsconfig.base.json": "./tsconfig.base.json",
     "./tsconfig.vite.json": "./tsconfig.vite.json",
-    "./tsconfig.react-library.json": "./tsconfig.react-library.json"
+    "./tsconfig.react.json": "./tsconfig.react.json"
   },
   "devDependencies": {
     "@testing-library/dom": "catalog:",

@@ -9,9 +9,6 @@ import * as docsConfig from "./source.config";
 import { baseURL } from "./src/config/base";
 
 export default defineConfig({
-  server: {
-    port: 3000,
-  },
   base: baseURL,
   plugins: [
     mdx(docsConfig),
@@ -19,14 +16,10 @@ export default defineConfig({
     tsConfigPaths({
       projects: ["./tsconfig.json"],
     }),
-    tanstackStart({
-      prerender: {
-        enabled: true,
-      },
-    }),
+    tanstackStart(),
     react(),
     nitro({
-      // baseURL,
+      baseURL,
     }),
   ],
 });

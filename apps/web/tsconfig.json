@@ -8,7 +8,8 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@raypx/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }

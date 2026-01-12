@@ -13,7 +13,7 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "@raypx/api": "workspace:*",
+    "@raypx/rpc": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/db": "workspace:*",
     "@raypx/env": "workspace:*",

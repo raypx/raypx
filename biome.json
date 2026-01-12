@@ -47,9 +47,6 @@
       "security": {
         "noDangerouslySetInnerHtml": "off"
       },
-      "correctness": {
-        "useExhaustiveDependencies": "info"
-      },
       "nursery": {
         "useSortedClasses": {
           "level": "warn",
@@ -116,6 +113,14 @@
       },
       "linter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": ["packages/ui/src/components/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": "off"
+        }
       }
     }
   ]

@@ -1,8 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* Import base styles from UI package */
+@import "@raypx/ui/styles/index.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Project-specific customizations can be added below */
 
 :root {
   --background: oklch(1 0 0);

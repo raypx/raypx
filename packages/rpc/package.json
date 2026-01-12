@@ -1,5 +1,5 @@
 {
-  "name": "@raypx/api",
+  "name": "@raypx/rpc",
   "type": "module",
   "exports": {
     ".": {
@@ -19,6 +19,7 @@
     "@raypx/db": "workspace:*",
     "@raypx/env": "workspace:*",
     "dotenv": "catalog:",
+    "hono": "^4.11.3",
     "zod": "catalog:"
   },
   "devDependencies": {
