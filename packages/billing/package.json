@@ -1,0 +1,24 @@
+{
+  "name": "@raypx/billing",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@raypx/database": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
+    "stripe": "^20.1.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,3 @@
+[install]
+# Use hoisted linker for npm/yarn-like flat node_modules
+linker = "hoisted"

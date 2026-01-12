@@ -2,13 +2,13 @@
   "name": "@raypx/config",
   "version": "0.0.0",
   "private": true,
-  "main": "./index.ts",
   "exports": {
     "./vitest": "./vitest.config.ts",
-    "./tsconfig.base.json": "./tsconfig.base.json",
-    "./tsconfig.vite.json": "./tsconfig.vite.json",
-    "./tsconfig.react-library.json": "./tsconfig.react-library.json"
+    "./base.json": "./base.json",
+    "./vite.json": "./vite.json",
+    "./react.json": "./react.json"
   },
+  "main": "./index.ts",
   "devDependencies": {
     "@testing-library/dom": "catalog:",
     "@testing-library/react": "catalog:",

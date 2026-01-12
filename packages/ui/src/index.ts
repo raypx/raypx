@@ -30,4 +30,4 @@ export { Input } from "./components/input";
 export { Label } from "./components/label";
 export { Skeleton } from "./components/skeleton";
 export { Toaster } from "./components/sonner";
-export { cn } from "./utils";
+export { cn } from "./lib/utils";

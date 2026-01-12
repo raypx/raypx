@@ -1,0 +1,28 @@
+{
+  "name": "@raypx/rpc",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/openapi": "^1.12.2",
+    "@orpc/server": "catalog:",
+    "@orpc/zod": "^1.12.2",
+    "@raypx/auth": "workspace:*",
+    "@raypx/database": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "hono": "^4.11.3",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

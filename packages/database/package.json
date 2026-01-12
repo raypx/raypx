@@ -1,0 +1,30 @@
+{
+  "name": "@raypx/database",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db": "drizzle-kit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit -- --push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@raypx/env": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "postgres": "^3.4.5",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "drizzle-kit": "^0.31.8",
+    "typescript": "catalog:"
+  }
+}

@@ -5,20 +5,26 @@
     ".": {
       "default": "./src/index.ts"
     },
+    "./client": {
+      "default": "./src/client.ts"
+    },
     "./*": {
       "default": "./src/*.ts"
     }
   },
   "scripts": {},
   "dependencies": {
-    "@raypx/db": "workspace:*",
+    "@better-auth/core": "^1.4.11",
+    "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
     "better-auth": "catalog:",
-    "dotenv": "catalog:",
+    "react": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
+    "@types/react": "catalog:",
     "typescript": "catalog:"
   }
 }

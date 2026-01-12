@@ -1,24 +1,24 @@
 {
   "name": "docs",
   "private": true,
-  "type": "module",
   "sideEffects": false,
+  "type": "module",
   "scripts": {
-    "dev": "vite dev --port=4000",
-    "build": "vite build",
+    "build": "bun --bun vite build",
+    "dev": "bun --bun vite dev --port=3004",
+    "postinstall": "fumadocs-mdx",
     "start": "node .output/server/index.mjs",
-    "types:check": "fumadocs-mdx && tsc --noEmit",
-    "postinstall": "fumadocs-mdx"
+    "types:check": "fumadocs-mdx && tsc --noEmit"
   },
   "dependencies": {
-    "@fumadocs/base-ui": "16.4.6",
+    "@fumadocs/base-ui": "^16.4.6",
+    "@raypx/ui": "workspace:*",
     "@tabler/icons-react": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-devtools": "^1.149.0",
     "@tanstack/react-start": "catalog:",
-    "fumadocs-core": "16.4.6",
-    "fumadocs-mdx": "14.2.4",
-    "fumadocs-ui": "16.4.6",
+    "fumadocs-core": "^16.4.6",
+    "fumadocs-mdx": "^14.2.4",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tailwind-merge": "catalog:",
