@@ -57,8 +57,5 @@
     "**/migrations/**",
     "**/*.css"
   ],
-  "ignoreDependencies": [
-    "tailwindcss",
-    "tw-animate-css"
-  ]
+  "ignoreDependencies": ["tailwindcss", "tw-animate-css"]
 }

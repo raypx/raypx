@@ -22,7 +22,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { signIn, signUp } from "@/lib/auth-client";
 
-export const Route = createFileRoute("/signup")({
+export const Route = createFileRoute("/_auth/signup")({
   component: SignupPage,
 });
 

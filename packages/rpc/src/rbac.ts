@@ -1,6 +1,6 @@
 import { db } from "@raypx/database";
-import { member } from "@raypx/database/schema/auth";
 import { customPermission, DEFAULT_ROLE_PERMISSIONS } from "@raypx/database/schema";
+import { member } from "@raypx/database/schema/auth";
 import { and, eq } from "@raypx/database/sql";
 
 type Role = keyof typeof DEFAULT_ROLE_PERMISSIONS;

@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./styles/*.css": "./src/styles/*.css",
-    "./lib/utils": "./src/lib/utils.ts"
+    "./lib/utils": "./src/lib/utils.ts",
+    "./lib/theme-config": "./src/lib/theme-config.ts"
   },
   "main": "./src/index.ts",
   "scripts": {

@@ -1,15 +1,8 @@
 import { cn } from "@raypx/ui/lib/utils";
 import type * as React from "react";
-import {
-  Group,
-  Panel,
-  Separator as ResizeHandle,
-} from "react-resizable-panels";
+import { Group, Panel, Separator as ResizeHandle } from "react-resizable-panels";
 
-function ResizablePanelGroup({
-  className,
-  ...props
-}: React.ComponentProps<typeof Group>) {
+function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeof Group>) {
   return (
     <Group
       className={cn("flex h-full w-full data-[panel-group-direction=vertical]:flex-col", className)}
