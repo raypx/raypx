@@ -9,7 +9,11 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
+  },
   "dependencies": {
     "@orpc/client": "^1.12.2",
     "@orpc/openapi": "^1.12.2",
@@ -23,6 +27,10 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "typescript": "catalog:"
+    "@vitest/ui": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

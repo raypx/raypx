@@ -12,7 +12,11 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
+  },
   "dependencies": {
     "@better-auth/core": "^1.4.12",
     "@raypx/database": "workspace:*",
@@ -25,6 +29,10 @@
   "devDependencies": {
     "@raypx/config": "workspace:*",
     "@types/react": "catalog:",
-    "typescript": "catalog:"
+    "@vitest/ui": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

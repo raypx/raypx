@@ -11,8 +11,17 @@
     "radash": "^12.1.1",
     "zod": "catalog:"
   },
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
+  },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "typescript": "catalog:"
+    "@vitest/ui": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

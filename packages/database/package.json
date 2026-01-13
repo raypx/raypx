@@ -10,7 +10,10 @@
     }
   },
   "scripts": {
-    "db": "bun --env-file=../../.env drizzle-kit"
+    "db": "bun --env-file=../../.env drizzle-kit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@raypx/env": "workspace:*",
@@ -21,6 +24,10 @@
   "devDependencies": {
     "@raypx/config": "workspace:*",
     "drizzle-kit": "^0.31.8",
-    "typescript": "catalog:"
+    "@vitest/ui": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

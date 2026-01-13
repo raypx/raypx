@@ -16,3 +16,13 @@ pre-commit:
         - "*.mdx"
       root: "."
       stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    typecheck:
+      run: bun run typecheck
+      skip_on_merge: true
+    test:
+      run: bun run test
+      skip_on_merge: true

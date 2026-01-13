@@ -15,7 +15,11 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
+  },
   "dependencies": {
     "@raypx/env": "workspace:*",
     "@sentry/react": "^10.33.0",
@@ -23,6 +27,10 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "typescript": "catalog:"
+    "@vitest/ui": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
