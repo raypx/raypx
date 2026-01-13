@@ -27,7 +27,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
     "@types/mdx": "^2.0.13",
-    "@types/node": "^25.0.6",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",

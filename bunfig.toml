@@ -1,3 +1,5 @@
 [install]
-# Use hoisted linker for npm/yarn-like flat node_modules
+# Use hoisted linker for better compatibility
 linker = "hoisted"
+# Use official npm registry
+registry = "https://registry.npmjs.org/"
