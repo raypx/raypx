@@ -5,10 +5,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./styles/*.css": "./src/styles/*.css",
-    "./lib/*": "./src/lib/*.ts",
-    "./components": "./src/components/index.ts",
-    "./components/*": "./src/components/*.tsx",
-    "./hooks/*": "./src/hooks/*.ts"
+    "./lib/utils": "./src/lib/utils.ts"
   },
   "main": "./src/index.ts",
   "scripts": {

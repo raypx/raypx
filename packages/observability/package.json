@@ -2,18 +2,9 @@
   "name": "@raypx/observability",
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./sentry": {
-      "default": "./src/sentry.ts"
-    },
-    "./analytics": {
-      "default": "./src/analytics.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./sentry": "./src/sentry.ts",
+    "./analytics": "./src/analytics.ts"
   },
   "scripts": {
     "test": "vitest",

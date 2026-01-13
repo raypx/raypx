@@ -2,12 +2,10 @@
   "name": "@raypx/database",
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./schema/auth": "./src/schema/auth.ts",
+    "./sql": "./src/sql.ts"
   },
   "scripts": {
     "db": "bun --env-file=../../.env drizzle-kit",

@@ -10,11 +10,9 @@ export {
   requirePermission,
 } from "./rbac";
 
-export const o = os.$context<Context>();
+export const publicProcedure = os.$context<Context>();
 
-export const publicProcedure = o;
-
-const requireAuth = o.middleware(async ({ context, next }) => {
+const requireAuth = publicProcedure.middleware(async ({ context, next }) => {
   if (!context.session?.user) {
     throw new ORPCError("UNAUTHORIZED");
   }

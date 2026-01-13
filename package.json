@@ -57,11 +57,14 @@
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "update:deps": "bun update --interactive --recursive --latest",
+    "knip": "knip",
+    "knip:fix": "knip --fix",
     "prepare": "lefthook install"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
     "@raypx/config": "workspace:*",
+    "knip": "^5.80.2",
     "lefthook": "^2.0.14",
     "turbo": "^2.7.4"
   },

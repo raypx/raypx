@@ -2,12 +2,9 @@
   "name": "@raypx/rpc",
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
     "test": "vitest",
@@ -15,11 +12,11 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@orpc/client": "^1.12.2",
-    "@orpc/openapi": "^1.12.2",
-    "@orpc/server": "^1.12.2",
-    "@orpc/tanstack-query": "^1.12.2",
-    "@orpc/zod": "^1.12.2",
+    "@orpc/client": "^1.13.4",
+    "@orpc/openapi": "^1.13.4",
+    "@orpc/server": "^1.13.4",
+    "@orpc/tanstack-query": "^1.13.4",
+    "@orpc/zod": "^1.13.4",
     "@raypx/auth": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",

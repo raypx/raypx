@@ -2,12 +2,7 @@
   "name": "@raypx/billing",
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts"
   },
   "scripts": {
     "test": "vitest",

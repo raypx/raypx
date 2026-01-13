@@ -1,6 +1,6 @@
 import { db } from "@raypx/database";
 import { user } from "@raypx/database/schema/auth";
-import { count, desc, gte } from "drizzle-orm";
+import { count, desc, gte } from "@raypx/database/sql";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
 

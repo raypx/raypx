@@ -1,7 +1,7 @@
 import { db } from "@raypx/database";
-import { invoice, subscription } from "@raypx/database/schema/billing";
+import { invoice, subscription } from "@raypx/database/schema";
 import { createLogger } from "@raypx/logger";
-import { eq } from "drizzle-orm";
+import { eq } from "@raypx/database/sql";
 import type Stripe from "stripe";
 import { env } from "./env";
 import { stripe } from "./stripe";
