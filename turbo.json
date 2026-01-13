@@ -24,11 +24,6 @@
       "dependsOn": ["^typecheck"],
       "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"]
     },
-    "check-types": {
-      "cache": true,
-      "dependsOn": ["^check-types"],
-      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"]
-    },
     "format": {
       "cache": true,
       "outputs": [".cache/.biomecache"],
