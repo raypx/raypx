@@ -21,7 +21,7 @@ pre-push:
   parallel: true
   commands:
     typecheck:
-      run: bun run typecheck
+      run: bun run check-types
       skip_on_merge: true
     test:
       run: bun run test
