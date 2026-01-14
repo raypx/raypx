@@ -1,5 +1,6 @@
 {
   "name": "raypx",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "workspaces": {
@@ -10,10 +11,10 @@
     "catalog": {
       "@tabler/icons-react": "^3.36.1",
       "@tailwindcss/vite": "^4.1.18",
-      "@tanstack/react-router": "^1.147.3",
-      "@tanstack/react-start": "^1.149.2",
+      "@tanstack/react-router": "^1.149.3",
+      "@tanstack/react-start": "^1.149.4",
       "@testing-library/react": "^16.2.0",
-      "@types/node": "^25.0.7",
+      "@types/node": "^25.0.8",
       "@types/react": "^19.2.8",
       "@types/react-dom": "^19.2.3",
       "@vitejs/plugin-react": "^5.1.2",
@@ -43,7 +44,7 @@
     "check-types": "turbo typecheck",
     "clean": "turbo clean",
     "typecheck": "turbo typecheck",
-    "prune": "rm -rf node_modules apps/*/node_modules packages/*/node_modules && bun install",
+    "reinstall": "rm -rf node_modules apps/*/node_modules packages/*/node_modules && bun install",
     "db": "bun -F @raypx/database db",
     "dev": "turbo dev",
     "dev:docs": "bun --bun turbo -F docs dev",

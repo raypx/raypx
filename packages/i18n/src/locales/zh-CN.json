@@ -1,0 +1,38 @@
+{
+  "common": {
+    "hello": "你好",
+    "world": "世界",
+    "welcome": "欢迎",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "search": "搜索",
+    "submit": "提交",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "signOut": "登出",
+    "email": "邮箱",
+    "password": "密码",
+    "forgotPassword": "忘记密码？",
+    "rememberMe": "记住我"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "overview": "概览",
+    "settings": "设置",
+    "profile": "个人资料",
+    "organization": "组织",
+    "billing": "账单"
+  }
+}

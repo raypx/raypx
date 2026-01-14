@@ -1,6 +1,5 @@
 {
-  "name": "@raypx/rpc",
-  "version": "0.1.0",
+  "name": "@raypx/i18n",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -8,23 +7,19 @@
     "./server": "./src/server.ts"
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@orpc/client": "^1.13.4",
-    "@orpc/openapi": "^1.13.4",
-    "@orpc/server": "^1.13.4",
-    "@orpc/tanstack-query": "^1.13.4",
-    "@orpc/zod": "^1.13.4",
-    "@raypx/auth": "workspace:*",
-    "@raypx/database": "workspace:*",
-    "@raypx/env": "workspace:*",
-    "zod": "catalog:"
+    "i18next": "^25.7.4",
+    "react": "catalog:",
+    "react-i18next": "^16.5.3"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
+    "@types/react": "catalog:",
     "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "jsdom": "catalog:",

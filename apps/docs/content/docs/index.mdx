@@ -1,30 +1,84 @@
 ---
-title: Hello World
-description: Your favourite docs framework.
+title: Welcome to Raypx
+description: A modern full-stack design tool framework
 ---
 
-Hey there! Fumadocs is the docs framework that also works on Tanstack Start!
+# Welcome to Raypx
 
-## Heading
+Raypx is a modern full-stack framework for building collaborative design tools. Built with React, TypeScript, and TanStack Router.
 
-Hello World!
+## Features
 
-<Cards>
-  <Card title="Learn more about Tanstack Start" href="https://tanstack.com/start" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
-</Cards>
+- **Real-time Collaboration** - Work together with your team in real-time
+- **Modern Stack** - Built on React 19, TypeScript, and TanStack Router
+- **Authentication** - Built-in user authentication and organization management
+- **Internationalization** - Multi-language support out of the box
+- **Type Safety** - End-to-end type safety across the stack
 
-### CodeBlock
+## Quick Start
 
-```ts
-console.log('Hello World');
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/raypx.git
+cd raypx
+
+# Install dependencies
+bun install
+
+# Start the development server
+bun dev
 ```
 
-#### Table
+### Project Structure
 
-| Head                            | Description                         |
-| ------------------------------- | ----------------------------------- |
-| `hello`                         | Hello World                         |
-| very **important**              | Hey                                 |
-| _Surprisingly_                  | Fumadocs                            |
-| very long text that looks weird | hello world hello world hello world |
+```
+raypx/
+├── apps/
+│   ├── web/           # Main application
+│   └── docs/          # Documentation site
+└── packages/
+    ├── ui/            # UI component library
+    ├── auth/          # Authentication module
+    ├── i18n/          # Internationalization
+    └── rpc/           # RPC layer
+```
+
+## Getting Started
+
+### 1. Set up your environment
+
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+### 2. Run the development server
+
+```bash
+bun dev
+```
+
+### 3. Open your browser
+
+Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Documentation
+
+Explore the documentation to learn more:
+
+- [Authentication](/docs/auth)
+- [API Reference](/docs/api)
+- [Components](/docs/components)
+- [Deployment](/docs/deployment)
+
+## Community
+
+- GitHub: [https://github.com/yourusername/raypx](https://github.com/yourusername/raypx)
+- Discord: [Join our server](https://discord.gg/raypx)
+- Twitter: [@raypxdev](https://twitter.com/raypxdev)
+
+## License
+
+MIT License - see [LICENSE](https://github.com/yourusername/raypx/blob/main/LICENSE) for details.

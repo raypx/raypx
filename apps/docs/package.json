@@ -1,8 +1,10 @@
 {
   "name": "docs",
+  "version": "0.1.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "description": "Documentation site for Raypx",
   "scripts": {
     "build": "bun --bun vite build",
     "dev": "bun --bun vite dev --port=3004",
@@ -18,29 +20,30 @@
     "@raypx/ui": "workspace:*",
     "@tabler/icons-react": "catalog:",
     "@tanstack/react-router": "catalog:",
-    "@tanstack/react-router-devtools": "^1.149.0",
     "@tanstack/react-start": "catalog:",
     "fumadocs-core": "^16.4.7",
     "fumadocs-mdx": "^14.2.5",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tailwind-merge": "catalog:",
-    "vite": "catalog:"
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-router-devtools": "^1.149.3",
     "@testing-library/react": "catalog:",
     "@types/mdx": "^2.0.13",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitest/ui": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "nitro": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vite-tsconfig-paths": "catalog:",
     "vitest": "catalog:"
   }

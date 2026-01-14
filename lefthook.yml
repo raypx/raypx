@@ -1,6 +1,11 @@
 # Lefthook configuration
 # https://github.com/evilmartians/lefthook
 
+commit-msg:
+  commands:
+    no-coauthor:
+      run: "! grep -q 'Co-Authored-By:' {1}"
+
 pre-commit:
   parallel: true
   jobs:

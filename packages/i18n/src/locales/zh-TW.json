@@ -1,0 +1,38 @@
+{
+  "common": {
+    "hello": "你好",
+    "world": "世界",
+    "welcome": "歡迎",
+    "loading": "載入中...",
+    "error": "錯誤",
+    "success": "成功",
+    "cancel": "取消",
+    "confirm": "確認",
+    "save": "儲存",
+    "delete": "刪除",
+    "edit": "編輯",
+    "create": "建立",
+    "search": "搜尋",
+    "submit": "提交",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步"
+  },
+  "auth": {
+    "signIn": "登入",
+    "signUp": "註冊",
+    "signOut": "登出",
+    "email": "電子郵件",
+    "password": "密碼",
+    "forgotPassword": "忘記密碼？",
+    "rememberMe": "記住我"
+  },
+  "dashboard": {
+    "title": "儀表板",
+    "overview": "概覽",
+    "settings": "設定",
+    "profile": "個人資料",
+    "organization": "組織",
+    "billing": "帳單"
+  }
+}
