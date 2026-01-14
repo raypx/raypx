@@ -1,21 +1,19 @@
 {
-  "name": "@raypx/env",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@raypx/email",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
-  },
-  "dependencies": {
-    "envin": "^1.1.12",
-    "radash": "^12.1.1",
-    "zod": "catalog:"
   },
   "scripts": {
     "clean": "rm -rf dist node_modules",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
+    "resend": "^6.7.0"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",

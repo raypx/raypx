@@ -8,6 +8,7 @@
     "./server": "./src/server.ts"
   },
   "scripts": {
+    "clean": "rm -rf dist node_modules",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"

@@ -5,6 +5,9 @@
   "concurrency": "16",
   "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event", "DATABASE_URL"],
   "tasks": {
+    "clean": {
+      "cache": false
+    },
     "build": {
       "cache": true,
       "dependsOn": ["^build"],

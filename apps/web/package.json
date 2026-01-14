@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bun --bun vite build",
+    "clean": "rm -rf .output dist node_modules",
     "dev": "bun --bun vite dev",
     "shadcn": "shadcn add --overwrite",
     "test": "vitest",

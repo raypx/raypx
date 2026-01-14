@@ -7,6 +7,7 @@
     "./server": "./src/server.ts"
   },
   "scripts": {
+    "clean": "rm -rf dist node_modules",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",

@@ -7,6 +7,7 @@
   "description": "Documentation site for Raypx",
   "scripts": {
     "build": "bun --bun vite build",
+    "clean": "rm -rf .output dist node_modules",
     "dev": "bun --bun vite dev --port=3004",
     "postinstall": "fumadocs-mdx",
     "start": "node .output/server/index.mjs",

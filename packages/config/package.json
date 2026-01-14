@@ -10,6 +10,9 @@
     "./react.json": "./react.json"
   },
   "main": "./index.ts",
+  "scripts": {
+    "clean": "rm -rf dist node_modules"
+  },
   "devDependencies": {
     "@testing-library/react": "catalog:",
     "@vitejs/plugin-react": "^5.1.2",

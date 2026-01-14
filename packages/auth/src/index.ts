@@ -1,14 +1,12 @@
 import { db } from "@raypx/database";
 import * as schema from "@raypx/database/schema/auth";
-import { createLogger } from "@raypx/logger";
+import { sendEmailVerificationEmail, sendPasswordResetEmail } from "@raypx/email";
 import type { Auth } from "better-auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins/organization";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { env } from "./env";
-
-const logger = createLogger({ name: "auth" });
 
 export const auth: Auth = betterAuth({
   secret: env.AUTH_SECRET,
@@ -20,17 +18,22 @@ export const auth: Auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    resetPasswordTokenExpiresIn: 60 * 15, // 15 minutes
     sendResetPassword: async ({ user, url }) => {
-      // TODO: Implement email sending with Resend
-      logger.info(`Password reset for ${user.email}: ${url}`);
+      await sendPasswordResetEmail({
+        to: user.email,
+        url,
+      });
     },
   },
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      // TODO: Implement email sending with Resend
-      logger.info(`Verification email for ${user.email}: ${url}`);
+      await sendEmailVerificationEmail({
+        to: user.email,
+        url,
+      });
     },
   },
   socialProviders: {

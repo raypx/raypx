@@ -12,6 +12,7 @@
   },
   "main": "./src/index.ts",
   "scripts": {
+    "clean": "rm -rf dist node_modules",
     "shadcn": "shadcn add --overwrite",
     "typecheck": "tsc --noEmit",
     "test": "vitest",

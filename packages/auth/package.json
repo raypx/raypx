@@ -6,6 +6,7 @@
     "./client": "./src/client.ts"
   },
   "scripts": {
+    "clean": "rm -rf dist node_modules",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
@@ -13,6 +14,7 @@
   "dependencies": {
     "@better-auth/core": "^1.4.12",
     "@raypx/database": "workspace:*",
+    "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",
     "better-auth": "catalog:",
