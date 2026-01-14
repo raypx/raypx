@@ -17,7 +17,6 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@types/node": "catalog:",
     "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "jsdom": "catalog:",
