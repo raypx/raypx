@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "envin": "^1.1.12",
+    "envin": "^1.1.13",
     "radash": "^12.1.1",
     "zod": "catalog:"
   },
