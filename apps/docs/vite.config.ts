@@ -9,14 +9,7 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import * as docsConfig from "./source.config";
 import { env } from "./src/env";
 
-const deployPlugins = process.env.NETLIFY
-  ? [netlify()]
-  : [
-      nitro({
-        baseURL: env.BASE_URL,
-        preset: "netlify",
-      }),
-    ];
+const deployPlugin = process.env.NETLIFY ? netlify() : nitro({ baseURL: env.BASE_URL });
 
 export default defineConfig({
   base: env.BASE_URL,
@@ -28,6 +21,6 @@ export default defineConfig({
     }),
     tanstackStart(),
     react(),
-    ...deployPlugins,
+    deployPlugin,
   ],
 });

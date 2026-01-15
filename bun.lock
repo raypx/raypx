@@ -76,6 +76,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@netlify/vite-plugin-tanstack-start": "^1.2.6",
         "@raypx/config": "workspace:*",
         "@tailwindcss/vite": "catalog:",
         "@tanstack/react-query-devtools": "^5.91.2",

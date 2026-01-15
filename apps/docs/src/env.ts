@@ -3,6 +3,6 @@ import { createEnv, z } from "@raypx/env";
 export const env = createEnv({
   extends: [],
   shared: {
-    BASE_URL: z.string().optional().default("/"),
+    BASE_URL: z.string().optional(),
   },
 });
