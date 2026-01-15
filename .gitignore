@@ -51,3 +51,6 @@ coverage
 .cache
 tmp
 temp
+dist
+.netlify
+routeTree.gen.ts
