@@ -30,6 +30,7 @@
     "tw-animate-css": "catalog:"
   },
   "devDependencies": {
+    "@netlify/vite-plugin-tanstack-start": "^1.2.6",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-router-devtools": "^1.150.0",
     "@testing-library/react": "catalog:",
