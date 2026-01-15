@@ -6,10 +6,10 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import * as docsConfig from "./source.config";
-import { baseURL } from "./src/config/base";
+import { env } from "./src/env";
 
 export default defineConfig({
-  base: baseURL,
+  base: env.BASE_URL,
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
@@ -19,7 +19,7 @@ export default defineConfig({
     tanstackStart(),
     react(),
     nitro({
-      baseURL,
+      baseURL: env.BASE_URL,
     }),
   ],
 });
