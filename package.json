@@ -58,6 +58,7 @@
     "test": "turbo test",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
+    "test:coverage": "turbo test:coverage",
     "update:deps": "bun update --interactive --recursive --latest",
     "knip": "knip",
     "knip:fix": "knip --fix",
