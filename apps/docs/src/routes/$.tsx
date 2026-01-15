@@ -10,7 +10,7 @@ import defaultMdxComponents from "@fumadocs/base-ui/mdx";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
-
+import type { PropsWithChildren } from "react";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 
@@ -38,7 +38,7 @@ const serverLoader = createServerFn({
     };
   });
 
-const clientLoader = browserCollections.docs.createClientLoader<{}>({
+const clientLoader = browserCollections.docs.createClientLoader<PropsWithChildren>({
   component({ toc, frontmatter, default: MDX }) {
     return (
       <DocsPage toc={toc}>

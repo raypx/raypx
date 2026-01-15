@@ -53,6 +53,19 @@
       "outputs": [],
       "outputLogs": "new-only"
     },
+    "test:coverage": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.*",
+        "jest.config.*",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "outputs": ["coverage/**"],
+      "outputLogs": "new-only"
+    },
     "dev": {
       "cache": false,
       "dependsOn": ["^build"],
