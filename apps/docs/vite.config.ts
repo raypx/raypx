@@ -20,6 +20,7 @@ export default defineConfig({
     react(),
     nitro({
       baseURL: env.BASE_URL,
+      preset: 'netlify',
     }),
   ],
 });
