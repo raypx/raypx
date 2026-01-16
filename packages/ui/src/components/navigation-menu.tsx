@@ -1,6 +1,7 @@
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
+import { CaretDownIcon } from "@phosphor-icons/react";
+
 import { cn } from "@raypx/ui/lib/utils";
-import { IconChevronDown } from "@tabler/icons-react";
 import { cva } from "class-variance-authority";
 
 function NavigationMenu({ className, children, ...props }: NavigationMenuPrimitive.Root.Props) {
@@ -19,7 +20,7 @@ function NavigationMenu({ className, children, ...props }: NavigationMenuPrimiti
   );
 }
 
-function NavigationMenuList({ className, ...props }: NavigationMenuPrimitive.List.Props) {
+function NavigationMenuList({ className, ...props }: Omit<NavigationMenuPrimitive.List.Props, "ref">) {
   return (
     <NavigationMenuPrimitive.List
       className={cn("group flex flex-1 list-none items-center justify-center gap-0", className)}
@@ -29,7 +30,7 @@ function NavigationMenuList({ className, ...props }: NavigationMenuPrimitive.Lis
   );
 }
 
-function NavigationMenuItem({ className, ...props }: NavigationMenuPrimitive.Item.Props) {
+function NavigationMenuItem({ className, ...props }: Omit<NavigationMenuPrimitive.Item.Props, "ref">) {
   return (
     <NavigationMenuPrimitive.Item
       className={cn("relative", className)}
@@ -55,9 +56,9 @@ function NavigationMenuTrigger({
       {...props}
     >
       {children}{" "}
-      <IconChevronDown
+      <CaretDownIcon
         aria-hidden="true"
-        className="relative top-[1px] ml-1 size-3 transition duration-300 group-data-open/navigation-menu-trigger:rotate-180 group-data-popup-open/navigation-menu-trigger:rotate-180"
+        className="relative top-px ml-1 size-3 transition duration-300 group-data-open/navigation-menu-trigger:rotate-180 group-data-popup-open/navigation-menu-trigger:rotate-180"
       />
     </NavigationMenuPrimitive.Trigger>
   );
@@ -118,7 +119,7 @@ function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Lin
   );
 }
 
-function NavigationMenuIndicator({ className, ...props }: NavigationMenuPrimitive.Icon.Props) {
+function NavigationMenuIndicator({ className, ...props }: Omit<NavigationMenuPrimitive.Icon.Props, "ref">) {
   return (
     <NavigationMenuPrimitive.Icon
       className={cn(

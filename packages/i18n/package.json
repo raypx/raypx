@@ -8,10 +8,10 @@
   },
   "scripts": {
     "clean": "rm -rf dist node_modules",
-    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "i18next": "^25.7.4",
@@ -21,8 +21,8 @@
   "devDependencies": {
     "@raypx/config": "workspace:*",
     "@types/react": "catalog:",
-    "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

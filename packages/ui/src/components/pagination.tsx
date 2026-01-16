@@ -1,7 +1,6 @@
+import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
-
 import { cn } from "@raypx/ui/lib/utils";
-import { IconChevronLeft, IconChevronRight, IconDots } from "@tabler/icons-react";
 import type * as React from "react";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
@@ -62,7 +61,7 @@ function PaginationPrevious({ className, ...props }: React.ComponentProps<typeof
       size="default"
       {...props}
     >
-      <IconChevronLeft data-icon="inline-start" />
+      <CaretLeftIcon data-icon="inline-start" />
       <span className="hidden sm:block">Previous</span>
     </PaginationLink>
   );
@@ -77,7 +76,7 @@ function PaginationNext({ className, ...props }: React.ComponentProps<typeof Pag
       {...props}
     >
       <span className="hidden sm:block">Next</span>
-      <IconChevronRight data-icon="inline-end" />
+      <CaretRightIcon data-icon="inline-end" />
     </PaginationLink>
   );
 }
@@ -87,13 +86,13 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
     <span
       aria-hidden
       className={cn(
-        "flex size-8 items-center items-center justify-center justify-center [&_svg:not([class*='size-'])]:size-4",
+        "flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       data-slot="pagination-ellipsis"
       {...props}
     >
-      <IconDots />
+      <DotsThreeIcon />
       <span className="sr-only">More pages</span>
     </span>
   );

@@ -9,9 +9,9 @@
   "scripts": {
     "clean": "rm -rf dist node_modules",
     "test": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "consola": "^3.4.2",
@@ -19,8 +19,8 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "vitest": "catalog:"
   }

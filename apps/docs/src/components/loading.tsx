@@ -1,5 +1,5 @@
-import { IconLoader } from "@tabler/icons-react";
+import { SpinnerIcon } from "@phosphor-icons/react";
 
 export default function Loading() {
-  return <IconLoader className="mx-auto my-32 size-6 animate-spin" />;
+  return <SpinnerIcon className="mx-auto my-32 size-6 animate-spin" />;
 }

@@ -1,0 +1,11 @@
+[build]
+  base = "apps/web"
+  command = "bun turbo build:node --filter=web..."
+  publish = "dist"
+  functions = ".netlify/functions-internal"
+
+[[redirects]]
+  from = "/docs/*"
+  to = "https://raypx-docs.netlify.app/:splat"
+  status = 200
+  force = true

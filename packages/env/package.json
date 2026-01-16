@@ -6,21 +6,21 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "dependencies": {
-    "envin": "^1.1.13",
-    "radash": "^12.1.1",
-    "zod": "catalog:"
-  },
   "scripts": {
     "clean": "rm -rf dist node_modules",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
   },
+  "dependencies": {
+    "envin": "^1.1.13",
+    "radash": "^12.1.1",
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

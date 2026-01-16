@@ -1,4 +1,3 @@
-import netlify from "@netlify/vite-plugin-tanstack-start"; // ← add this
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
@@ -7,18 +6,21 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import * as docsConfig from "./source.config";
-import { env } from "./src/env";
 
-const deployPlugin = process.env.NETLIFY ? netlify() : nitro({ baseURL: env.BASE_URL });
+const deployPlugin = nitro({
+  preset: process.env.NETLIFY ? "netlify" : undefined,
+  // baseURL: '/docs',
+  apiBaseURL: '/docs',
+});
 
 export default defineConfig({
-  base: env.BASE_URL,
+  build: {
+    assetsDir: 'docs/assets'
+  },
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
-    tsConfigPaths({
-      projects: ["./tsconfig.json"],
-    }),
+    tsConfigPaths(),
     tanstackStart(),
     react(),
     deployPlugin,

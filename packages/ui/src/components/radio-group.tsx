@@ -2,9 +2,8 @@
 
 import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
-
+import { CircleIcon } from "@phosphor-icons/react";
 import { cn } from "@raypx/ui/lib/utils";
-import { IconCircle } from "@tabler/icons-react";
 
 function RadioGroup({ className, ...props }: RadioGroupPrimitive.Props) {
   return (
@@ -30,7 +29,7 @@ function RadioGroupItem({ className, ...props }: RadioPrimitive.Root.Props) {
         className="flex size-4 items-center justify-center text-primary group-aria-invalid/radio-group-item:text-destructive"
         data-slot="radio-group-indicator"
       >
-        <IconCircle className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 fill-current" />
+        <CircleIcon className="absolute top-1/2 left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 fill-current" />
       </RadioPrimitive.Indicator>
     </RadioPrimitive.Root>
   );

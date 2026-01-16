@@ -1,6 +1,7 @@
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { Button, buttonVariants } from "@raypx/ui/components/button";
+
 import { cn } from "@raypx/ui/lib/utils";
-import { IconChevronDown, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import * as React from "react";
 import { type DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
 
@@ -85,7 +86,7 @@ function Calendar({
           defaultClassNames.day,
         ),
         range_start: cn(
-          "elative isolate -z-0 rounded-l-(--cell-radius) bg-muted after:absolute after:inset-y-0 after:right-0 after:w-4 after:bg-muted",
+          "relative isolate -z-0 rounded-l-(--cell-radius) bg-muted after:absolute after:inset-y-0 after:right-0 after:w-4 after:bg-muted",
           defaultClassNames.range_start,
         ),
         range_middle: cn("rounded-none", defaultClassNames.range_middle),
@@ -111,14 +112,14 @@ function Calendar({
         },
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
-            return <IconChevronLeft className={cn("size-4", className)} {...props} />;
+            return <CaretLeftIcon className={cn("size-4", className)} {...props} />;
           }
 
           if (orientation === "right") {
-            return <IconChevronRight className={cn("size-4", className)} {...props} />;
+            return <CaretRightIcon className={cn("size-4", className)} {...props} />;
           }
 
-          return <IconChevronDown className={cn("size-4", className)} {...props} />;
+          return <CaretDownIcon className={cn("size-4", className)} {...props} />;
         },
         DayButton: CalendarDayButton,
         WeekNumber: ({ children, ...props }) => {

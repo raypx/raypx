@@ -1,4 +1,3 @@
-import netlify from "@netlify/vite-plugin-tanstack-start";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
@@ -7,11 +6,13 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import packageJson from "./package.json";
 
-const deployPlugin = process.env.NETLIFY ? netlify() : nitro();
+const deployPlugin = nitro({
+  preset: "netlify",
+});
 
 export default defineConfig({
   ssr: {
-    noExternal: ["@tabler/icons-react"],
+    noExternal: ["react-dom"],
   },
   optimizeDeps: {
     exclude: ["@raypx/ui"],

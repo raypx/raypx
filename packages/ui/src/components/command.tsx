@@ -1,3 +1,4 @@
+import { CheckIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import {
   Dialog,
   DialogContent,
@@ -6,13 +7,11 @@ import {
   DialogTitle,
 } from "@raypx/ui/components/dialog";
 import { InputGroup, InputGroupAddon } from "@raypx/ui/components/input-group";
-
 import { cn } from "@raypx/ui/lib/utils";
-import { IconCheck, IconSearch } from "@tabler/icons-react";
 import { Command as CommandPrimitive } from "cmdk-base";
-import type { ComponentProps, ReactNode } from "react";
+import type * as React from "react";
 
-function Command({ className, ...props }: ComponentProps<typeof CommandPrimitive>) {
+function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
     <CommandPrimitive
       className={cn(
@@ -32,12 +31,12 @@ function CommandDialog({
   className,
   showCloseButton = false,
   ...props
-}: Omit<ComponentProps<typeof Dialog>, "children"> & {
+}: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
   title?: string;
   description?: string;
   className?: string;
   showCloseButton?: boolean;
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <Dialog {...props}>
@@ -55,7 +54,10 @@ function CommandDialog({
   );
 }
 
-function CommandInput({ className, ...props }: ComponentProps<typeof CommandPrimitive.Input>) {
+function CommandInput({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div className="p-1 pb-0" data-slot="command-input-wrapper">
       <InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
@@ -68,14 +70,14 @@ function CommandInput({ className, ...props }: ComponentProps<typeof CommandPrim
           {...props}
         />
         <InputGroupAddon>
-          <IconSearch className="size-4 shrink-0 opacity-50" />
+          <MagnifyingGlassIcon className="size-4 shrink-0 opacity-50" />
         </InputGroupAddon>
       </InputGroup>
     </div>
   );
 }
 
-function CommandList({ className, ...props }: ComponentProps<typeof CommandPrimitive.List>) {
+function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
   return (
     <CommandPrimitive.List
       className={cn(
@@ -88,7 +90,10 @@ function CommandList({ className, ...props }: ComponentProps<typeof CommandPrimi
   );
 }
 
-function CommandEmpty({ className, ...props }: ComponentProps<typeof CommandPrimitive.Empty>) {
+function CommandEmpty({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Empty>) {
   return (
     <CommandPrimitive.Empty
       className={cn("py-6 text-center text-sm", className)}
@@ -98,7 +103,10 @@ function CommandEmpty({ className, ...props }: ComponentProps<typeof CommandPrim
   );
 }
 
-function CommandGroup({ className, ...props }: ComponentProps<typeof CommandPrimitive.Group>) {
+function CommandGroup({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Group>) {
   return (
     <CommandPrimitive.Group
       className={cn(
@@ -114,7 +122,7 @@ function CommandGroup({ className, ...props }: ComponentProps<typeof CommandPrim
 function CommandSeparator({
   className,
   ...props
-}: ComponentProps<typeof CommandPrimitive.Separator>) {
+}: React.ComponentProps<typeof CommandPrimitive.Separator>) {
   return (
     <CommandPrimitive.Separator
       className={cn("-mx-1 h-px bg-border", className)}
@@ -128,7 +136,7 @@ function CommandItem({
   className,
   children,
   ...props
-}: ComponentProps<typeof CommandPrimitive.Item>) {
+}: React.ComponentProps<typeof CommandPrimitive.Item>) {
   return (
     <CommandPrimitive.Item
       className={cn(
@@ -139,7 +147,7 @@ function CommandItem({
       {...props}
     >
       {children}
-      <IconCheck className="ml-auto opacity-0 group-has-[[data-slot=command-shortcut]]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
+      <CheckIcon className="ml-auto opacity-0 group-has-[[data-slot=command-shortcut]]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
     </CommandPrimitive.Item>
   );
 }

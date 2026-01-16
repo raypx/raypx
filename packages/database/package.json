@@ -22,9 +22,9 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "drizzle-kit": "^0.31.8",
-    "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
+    "drizzle-kit": "^0.31.8",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

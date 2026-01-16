@@ -1,3 +1,4 @@
+import { PlusCircleIcon, TrashIcon } from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Badge } from "@raypx/ui/components/badge";
 import { Button } from "@raypx/ui/components/button";
@@ -11,7 +12,6 @@ import {
 } from "@raypx/ui/components/card";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/settings/organization")({
@@ -57,7 +57,7 @@ function OrganizationSettings() {
             <CardDescription>Manage who has access to this organization.</CardDescription>
           </div>
           <Button size="sm">
-            <IconPlus className="mr-2 size-4" />
+            <PlusCircleIcon className="mr-2 size-4" />
             Invite Member
           </Button>
         </CardHeader>
@@ -84,7 +84,7 @@ function OrganizationSettings() {
                   </Badge>
                   {member.role !== "owner" && (
                     <Button size="sm" variant="ghost">
-                      <IconTrash className="size-4 text-destructive" />
+                      <TrashIcon className="size-4 text-destructive" />
                     </Button>
                   )}
                 </div>

@@ -1,3 +1,11 @@
+import {
+  BuildingIcon,
+  CreditCardIcon,
+  GearIcon,
+  HouseIcon,
+  SignOutIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@raypx/ui/components/avatar";
 import { Separator } from "@raypx/ui/components/separator";
 import {
@@ -15,14 +23,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@raypx/ui/components/sidebar";
-import {
-  IconBuildingStore,
-  IconCreditCard,
-  IconHome,
-  IconLogout,
-  IconSettings,
-  IconUser,
-} from "@tabler/icons-react";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { signOut, useSession } from "@/lib/auth-client";
 
@@ -31,14 +31,14 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const navItems = [
-  { title: "Dashboard", href: "/dashboard", icon: IconHome },
-  { title: "Settings", href: "/dashboard/settings", icon: IconSettings },
+  { title: "Dashboard", href: "/dashboard", icon: HouseIcon },
+  { title: "Settings", href: "/dashboard/settings", icon: GearIcon },
 ];
 
 const settingsItems = [
-  { title: "Profile", href: "/dashboard/settings/profile", icon: IconUser },
-  { title: "Organization", href: "/dashboard/settings/organization", icon: IconBuildingStore },
-  { title: "Billing", href: "/dashboard/settings/billing", icon: IconCreditCard },
+  { title: "Profile", href: "/dashboard/settings/profile", icon: UserIcon },
+  { title: "Organization", href: "/dashboard/settings/organization", icon: BuildingIcon },
+  { title: "Billing", href: "/dashboard/settings/billing", icon: CreditCardIcon },
 ];
 
 function DashboardLayout() {
@@ -114,7 +114,7 @@ function DashboardLayout() {
               onClick={handleSignOut}
               type="button"
             >
-              <IconLogout className="size-4" />
+              <SignOutIcon className="size-4" />
             </button>
           </div>
         </SidebarFooter>
