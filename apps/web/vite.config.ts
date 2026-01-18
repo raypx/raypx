@@ -7,7 +7,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import packageJson from "./package.json";
 
 const deployPlugin = nitro({
-  preset: "netlify",
+  preset: process.env.NETLIFY ? "netlify" : undefined,
 });
 
 export default defineConfig({

@@ -34,7 +34,7 @@
   "devDependencies": {
     "@netlify/vite-plugin-tanstack-start": "^1.2.6",
     "@tailwindcss/vite": "catalog:",
-    "@tanstack/react-router-devtools": "^1.151.2",
+    "@tanstack/react-router-devtools": "^1.151.3",
     "@testing-library/react": "catalog:",
     "@types/mdx": "^2.0.13",
     "@types/react": "catalog:",
