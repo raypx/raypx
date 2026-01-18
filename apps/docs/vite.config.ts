@@ -6,17 +6,14 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import * as docsConfig from "./source.config";
+import { env } from "./src/env";
 
 const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
-  // baseURL: '/docs',
-  apiBaseURL: '/docs',
 });
 
 export default defineConfig({
-  build: {
-    assetsDir: 'docs/assets'
-  },
+  base: env.BASE_URL,
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
