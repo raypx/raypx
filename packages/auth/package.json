@@ -6,7 +6,7 @@
     "./client": "./src/client.ts"
   },
   "scripts": {
-    "clean": "rm -rf dist node_modules",
+    "clean": "rm -rf dist node_modules .turbo",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"

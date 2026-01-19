@@ -12,7 +12,7 @@
   },
   "main": "./src/index.ts",
   "scripts": {
-    "clean": "rm -rf dist node_modules",
+    "clean": "rm -rf dist node_modules .turbo",
     "shadcn": "shadcn add --overwrite",
     "test": "vitest",
     "test:run": "vitest run",
