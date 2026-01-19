@@ -1,3 +1,4 @@
+import { ActivityIcon, ChartBarIcon, CreditCardIcon, UsersIcon } from "@phosphor-icons/react";
 import {
   Card,
   CardContent,
@@ -6,7 +7,6 @@ import {
   CardTitle,
 } from "@raypx/ui/components/card";
 import { Skeleton } from "@raypx/ui/components/skeleton";
-import { IconActivity, IconChartBar, IconCreditCard, IconUsers } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSession } from "@/lib/auth-client";
@@ -18,35 +18,38 @@ export const Route = createFileRoute("/dashboard/")({
 
 function DashboardHome() {
   const { data: session } = useSession();
-  const { data: userStats, isLoading: isLoadingUsers } = useQuery(orpc.users.stats.queryOptions());
+  const { data: userStats, isLoading: isLoadingUsers } = useQuery<{
+    total: number;
+    change: number;
+  }>(orpc.users.stats.queryOptions());
 
   const stats = [
     {
       title: "Total Users",
       value: userStats?.total ?? 0,
       change: `+${userStats?.change ?? 0}%`,
-      icon: IconUsers,
+      icon: UsersIcon,
       loading: isLoadingUsers,
     },
     {
       title: "Revenue",
       value: "$12,345",
       change: "+8%",
-      icon: IconCreditCard,
+      icon: CreditCardIcon,
       loading: false,
     },
     {
       title: "Active Sessions",
       value: "567",
       change: "+23%",
-      icon: IconActivity,
+      icon: ActivityIcon,
       loading: false,
     },
     {
       title: "Conversion Rate",
       value: "3.2%",
       change: "+2%",
-      icon: IconChartBar,
+      icon: ChartBarIcon,
       loading: false,
     },
   ];

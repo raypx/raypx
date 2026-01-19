@@ -7,7 +7,7 @@
     "./analytics": "./src/analytics.ts"
   },
   "scripts": {
-    "clean": "rm -rf dist node_modules",
+    "clean": "rm -rf dist node_modules .turbo",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
@@ -15,12 +15,12 @@
   "dependencies": {
     "@raypx/env": "workspace:*",
     "@sentry/react": "^10.34.0",
-    "posthog-js": "^1.321.2"
+    "posthog-js": "^1.328.0"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

@@ -6,13 +6,13 @@
     "./client": "./src/client.ts"
   },
   "scripts": {
-    "clean": "rm -rf dist node_modules",
+    "clean": "rm -rf dist node_modules .turbo",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@better-auth/core": "^1.4.13",
+    "@better-auth/core": "^1.4.15",
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
@@ -24,8 +24,8 @@
   "devDependencies": {
     "@raypx/config": "workspace:*",
     "@types/react": "catalog:",
-    "@vitest/ui": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

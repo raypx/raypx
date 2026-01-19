@@ -1,3 +1,4 @@
+import { CheckIcon, CreditCardIcon, DownloadIcon } from "@phosphor-icons/react";
 import { Badge } from "@raypx/ui/components/badge";
 import { Button } from "@raypx/ui/components/button";
 import {
@@ -8,7 +9,6 @@ import {
   CardTitle,
 } from "@raypx/ui/components/card";
 import { Progress } from "@raypx/ui/components/progress";
-import { IconCheck, IconCreditCard, IconDownload } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard/settings/billing")({
@@ -116,7 +116,7 @@ function BillingSettings() {
                 <ul className="mb-4 space-y-2">
                   {plan.features.map((feature) => (
                     <li className="flex items-center gap-2 text-sm" key={feature}>
-                      <IconCheck className="size-4 text-green-500" />
+                      <CheckIcon className="size-4 text-green-500" />
                       {feature}
                     </li>
                   ))}
@@ -143,7 +143,7 @@ function BillingSettings() {
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="flex items-center gap-4">
               <div className="flex size-10 items-center justify-center rounded-md bg-muted">
-                <IconCreditCard className="size-5" />
+                <CreditCardIcon className="size-5" />
               </div>
               <div>
                 <p className="font-medium text-sm">•••• •••• •••• 4242</p>
@@ -176,7 +176,7 @@ function BillingSettings() {
                 <div className="flex items-center gap-4">
                   <Badge variant="secondary">{invoice.status}</Badge>
                   <Button size="sm" variant="ghost">
-                    <IconDownload className="size-4" />
+                    <DownloadIcon className="size-4" />
                   </Button>
                 </div>
               </div>

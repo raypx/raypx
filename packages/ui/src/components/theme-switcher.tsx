@@ -1,3 +1,4 @@
+import { CheckIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
 import { Skeleton } from "@raypx/ui/components/skeleton";
 import { type ThemeKey, themeConfig, themeIcons } from "@raypx/ui/lib/theme-config";
 import { cn } from "@raypx/ui/lib/utils";
-import { IconCheck } from "@tabler/icons-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Icon } from "../components/icon";
 import { useTheme } from "../hooks/use-theme";
@@ -200,7 +200,7 @@ export const ThemeSwitcher = memo(({ mode = "light-dark-system", variant }: Them
                 <Icon className={ICON_SIZE} icon={theme.icon} />
                 <span className="text-sm">{theme.label}</span>
               </div>
-              {themeMode === theme.key && <IconCheck className="size-4 text-primary" />}
+              {themeMode === theme.key && <CheckIcon className="size-4 text-primary" />}
             </DropdownMenuItem>
           );
         })}

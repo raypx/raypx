@@ -21,6 +21,9 @@ function HomeComponent() {
         </h1>
         <p className="text-muted-foreground text-sm">Version: {version}</p>
         <Link to="/login">Login</Link>
+        <a href="/docs" rel="noopener noreferrer" target="_blank">
+          Docs
+        </a>
         <ThemeSwitcher />
       </div>
     </div>

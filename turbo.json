@@ -16,6 +16,13 @@
       "outputLogs": "new-only"
     },
     "shadcn": {},
+    "build:node": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**"],
+      "outputLogs": "new-only"
+    },
     "start": {
       "cache": true,
       "dependsOn": ["build", "^build"],

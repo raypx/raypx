@@ -1,3 +1,4 @@
+import { GithubLogoIcon, GoogleLogoIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
 import {
   Card,
@@ -16,7 +17,6 @@ import {
 import { Input } from "@raypx/ui/components/input";
 import { Spinner } from "@raypx/ui/components/spinner";
 import { toast } from "@raypx/ui/components/toast";
-import { IconBrandGithub, IconBrandGoogle } from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
@@ -197,7 +197,7 @@ function SignupPage() {
                   {socialLoading === "github" ? (
                     <Spinner className="size-4" />
                   ) : (
-                    <IconBrandGithub className="size-4" />
+                    <GithubLogoIcon className="size-4" />
                   )}
                   GitHub
                 </Button>
@@ -210,7 +210,7 @@ function SignupPage() {
                   {socialLoading === "google" ? (
                     <Spinner className="size-4" />
                   ) : (
-                    <IconBrandGoogle className="size-4" />
+                    <GoogleLogoIcon className="size-4" />
                   )}
                   Google
                 </Button>

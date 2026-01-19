@@ -1,7 +1,7 @@
 import { cn } from "@raypx/ui/lib/utils";
-import type { ComponentProps } from "react";
+import type * as React from "react";
 
-function Label({ className, ...props }: ComponentProps<"label">) {
+function Label({ className, ...props }: React.ComponentProps<"label">) {
   return (
     <label
       className={cn(

@@ -1,5 +1,5 @@
+import { ArrowLeftIcon, FileSearchIcon, HouseIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
-import { IconArrowLeft, IconHome, IconSearch } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 
 export default function NotFound() {
@@ -15,7 +15,7 @@ export default function NotFound() {
       <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
         {/* Animated Icon */}
         <div className="mb-8 flex size-24 items-center justify-center rounded-3xl bg-muted/50 shadow-inner ring-1 ring-border/50">
-          <IconSearch className="size-10 animate-pulse text-muted-foreground" />
+          <FileSearchIcon className="size-10 animate-pulse text-muted-foreground" />
         </div>
 
         <div className="mb-8 space-y-4">
@@ -41,14 +41,14 @@ export default function NotFound() {
             className="group w-full sm:w-auto"
             render={
               <Link to="/">
-                <IconHome className="mr-2 size-4 transition-transform group-hover:-translate-y-0.5" />
+                <HouseIcon className="mr-2 size-4 transition-transform group-hover:-translate-y-0.5" />
                 Back to Home
               </Link>
             }
             size="lg"
           />
           <Button className="group w-full sm:w-auto" size="lg" variant="outline">
-            <IconArrowLeft className="mr-2 size-4 transition-transform group-hover:-translate-x-0.5" />
+            <ArrowLeftIcon className="mr-2 size-4 transition-transform group-hover:-translate-x-0.5" />
             Go Back
           </Button>
         </div>

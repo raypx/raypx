@@ -183,7 +183,7 @@ function FieldError({
 
     const uniqueErrors = [...new Map(errors.map((error) => [error?.message, error])).values()];
 
-    if (uniqueErrors?.length === 1 || onlyFirstError) {
+    if (onlyFirstError || uniqueErrors?.length === 1) {
       return uniqueErrors[0]?.message;
     }
 
@@ -192,7 +192,7 @@ function FieldError({
         {uniqueErrors.map((error, index) => error?.message && <li key={index}>{error.message}</li>)}
       </ul>
     );
-  }, [children, errors, onlyFirstError]);
+  }, [children, errors]);
 
   if (!content) {
     return null;

@@ -1,8 +1,9 @@
 "use client";
 
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
+import { CaretRightIcon, CheckIcon } from "@phosphor-icons/react";
+
 import { cn } from "@raypx/ui/lib/utils";
-import { IconCheck, IconChevronRight } from "@tabler/icons-react";
 import type * as React from "react";
 
 function ContextMenu({ ...props }: ContextMenuPrimitive.Root.Props) {
@@ -124,7 +125,7 @@ function ContextMenuSubTrigger({
       {...props}
     >
       {children}
-      <IconChevronRight className="ml-auto" />
+      <CaretRightIcon className="ml-auto" />
     </ContextMenuPrimitive.SubmenuTrigger>
   );
 }
@@ -158,7 +159,7 @@ function ContextMenuCheckboxItem({
     >
       <span className="pointer-events-none absolute right-2">
         <ContextMenuPrimitive.CheckboxItemIndicator>
-          <IconCheck />
+          <CheckIcon />
         </ContextMenuPrimitive.CheckboxItemIndicator>
       </span>
       {children}
@@ -186,7 +187,7 @@ function ContextMenuRadioItem({
     >
       <span className="pointer-events-none absolute right-2">
         <ContextMenuPrimitive.RadioItemIndicator>
-          <IconCheck />
+          <CheckIcon />
         </ContextMenuPrimitive.RadioItemIndicator>
       </span>
       {children}

@@ -1,9 +1,9 @@
-import { IconLoader } from "@tabler/icons-react";
+import { SpinnerIcon } from "@phosphor-icons/react";
 
 export default function Loader() {
   return (
     <div className="flex h-full items-center justify-center pt-8">
-      <IconLoader className="animate-spin" />
+      <SpinnerIcon className="animate-spin" />
     </div>
   );
 }

@@ -1,0 +1,5 @@
+[build]
+  base = "apps/docs"
+  command = "bun turbo build:node --filter=docs..."
+  publish = "dist/docs"
+  functions = ".netlify/functions-internal"
