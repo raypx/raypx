@@ -25,14 +25,9 @@
     "@tanstack/react-router-ssr-query": "^1.151.6",
     "@tanstack/react-router-with-query": "^1.130.17",
     "@tanstack/react-start": "catalog:",
-    "embla-carousel-react": "^8.6.0",
-    "input-otp": "^1.4.2",
     "react": "catalog:",
-    "react-day-picker": "^9.13.0",
     "react-dom": "catalog:",
-    "react-resizable-panels": "^4.4.1",
     "shadcn": "catalog:",
-    "tw-animate-css": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

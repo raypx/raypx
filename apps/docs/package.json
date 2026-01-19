@@ -27,9 +27,7 @@
     "fumadocs-core": "^16.4.7",
     "fumadocs-mdx": "^14.2.5",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "tailwind-merge": "catalog:",
-    "tw-animate-css": "catalog:"
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@netlify/vite-plugin-tanstack-start": "^1.2.6",

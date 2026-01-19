@@ -10,6 +10,7 @@ import { env } from "./src/env";
 
 const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
+  baseURL: env.BASE_URL,
 });
 
 export default defineConfig({

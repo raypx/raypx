@@ -1,4 +1,4 @@
-// import { Image } from "@raypx/ui/components/image";
+import { Image } from "@raypx/ui/components/image";
 import { useTheme } from "@raypx/ui/hooks/use-theme";
 import { cn } from "@raypx/ui/lib/utils";
 import { useEffect, useState } from "react";
@@ -20,17 +20,16 @@ export function Logo({ className }: { className?: string }) {
   }, []);
 
   return (
-    // <Image
-    //   alt="Logo"
-    //   className={cn("size-8 object-cover", className)}
-    //   height={96}
-    //   layout="fixed"
-    //   priority
-    //   shape="rounded"
-    //   src={logo}
-    //   title="Logo"
-    //   width={96}
-    // />
-    <img alt="Logo" className={cn("size-8 object-cover", className)} src={logo} />
+    <Image
+      alt="Logo"
+      className={cn("size-8 object-cover", className)}
+      height={96}
+      layout="fixed"
+      priority
+      shape="rounded"
+      src={logo}
+      title="Logo"
+      width={96}
+    />
   );
 }
