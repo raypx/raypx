@@ -26,14 +26,14 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "fumadocs-core": "^16.4.7",
-    "fumadocs-mdx": "^14.2.5",
+    "fumadocs-mdx": "^14.2.6",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
     "@netlify/vite-plugin-tanstack-start": "^1.2.6",
     "@tailwindcss/vite": "catalog:",
-    "@tanstack/react-router-devtools": "^1.151.6",
+    "@tanstack/react-router-devtools": "^1.153.1",
     "@testing-library/react": "catalog:",
     "@types/mdx": "^2.0.13",
     "@types/react": "catalog:",

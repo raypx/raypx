@@ -13,7 +13,7 @@
   "dependencies": {
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",
-    "resend": "^6.7.0"
+    "resend": "^6.8.0"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",

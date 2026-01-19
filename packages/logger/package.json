@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "consola": "^3.4.2",
-    "pino": "^10.2.0"
+    "pino": "^10.2.1"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
