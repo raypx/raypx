@@ -7,17 +7,21 @@ export const Route = createFileRoute("/api/health")({
     handlers: {
       GET: async () => {
         const timestamp = new Date().toISOString();
+        let redisIsOk = false;
         try {
           const redis = new RedisClient(env.REDIS_URL);
           await redis.connect();
-          await redis.set("health-check-timestamp", timestamp);
+          await redis.ping();
+          redisIsOk = true;
           redis.close();
         } catch (error) {
           console.error(error);
+          redisIsOk = false;
         }
         return Response.json({
           status: "ok",
           timestamp,
+          redis: redisIsOk,
         });
       },
     },
