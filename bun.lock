@@ -20,6 +20,7 @@
       "dependencies": {
         "@fumadocs/base-ui": "^16.4.7",
         "@phosphor-icons/react": "^2.1.10",
+        "@raypx/core": "workspace:*",
         "@raypx/env": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-router": "catalog:",
@@ -55,6 +56,7 @@
       "dependencies": {
         "@phosphor-icons/react": "^2.1.10",
         "@raypx/auth": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/env": "workspace:*",
         "@raypx/rpc": "workspace:*",
         "@raypx/ui": "workspace:*",
@@ -140,6 +142,21 @@
         "@vitejs/plugin-react": "^5.1.2",
         "@vitest/ui": "catalog:",
         "jsdom": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
+    "packages/core": {
+      "name": "@raypx/core",
+      "version": "0.0.0",
+      "dependencies": {
+        "@types/bun": "^1.3.6",
+      },
+      "devDependencies": {
+        "@raypx/config": "workspace:*",
+        "@vitest/coverage-v8": "catalog:",
+        "@vitest/ui": "catalog:",
+        "jsdom": "catalog:",
+        "typescript": "catalog:",
         "vitest": "catalog:",
       },
     },
@@ -970,6 +987,8 @@
     "@raypx/billing": ["@raypx/billing@workspace:packages/billing"],
 
     "@raypx/config": ["@raypx/config@workspace:packages/config"],
+
+    "@raypx/core": ["@raypx/core@workspace:packages/core"],
 
     "@raypx/database": ["@raypx/database@workspace:packages/database"],
 

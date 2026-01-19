@@ -12,7 +12,7 @@ const deployPlugin = nitro({
 
 export default defineConfig({
   ssr: {
-    noExternal: ["react-dom"],
+    external: ["bun"],
   },
   optimizeDeps: {
     exclude: ["@raypx/ui"],

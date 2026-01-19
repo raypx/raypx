@@ -2,12 +2,12 @@ import type { IconProps as PhosphorIconProps } from "@phosphor-icons/react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import * as React from "react";
 
-export type TablerIcon = ForwardRefExoticComponent<
+export type PhosphorIcon = ForwardRefExoticComponent<
   PhosphorIconProps & RefAttributes<SVGSVGElement>
 >;
 
 export type IconProps = PhosphorIconProps & {
-  icon: TablerIcon;
+  icon: PhosphorIcon;
 };
 
 export const Icon = (props: IconProps) => {

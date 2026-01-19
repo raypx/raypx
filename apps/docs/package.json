@@ -20,8 +20,9 @@
   "dependencies": {
     "@fumadocs/base-ui": "^16.4.7",
     "@phosphor-icons/react": "^2.1.10",
-    "@raypx/ui": "workspace:*",
+    "@raypx/core": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "fumadocs-core": "^16.4.7",

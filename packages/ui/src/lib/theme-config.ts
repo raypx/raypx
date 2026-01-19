@@ -1,9 +1,9 @@
 import { DesktopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
-import type { TablerIcon } from "@raypx/ui/components/icon";
+import type { PhosphorIcon } from "@raypx/ui/components/icon";
 
 export type ThemeKey = "light" | "dark" | "system";
 
-export const themeIcons: Record<ThemeKey, TablerIcon> = {
+export const themeIcons: Record<ThemeKey, PhosphorIcon> = {
   light: SunIcon,
   dark: MoonIcon,
   system: DesktopIcon,

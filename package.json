@@ -54,7 +54,7 @@
     "lint": "biome check .",
     "prepare": "lefthook install",
     "reinstall": "rm -rf node_modules apps/*/node_modules packages/*/node_modules && bun install",
-    "shadcn": "bun --bun turbo -F @raypx/ui shadcn",
+    "shadcn": "bun -F web shadcn",
     "start": "turbo start",
     "test": "turbo test",
     "test:coverage": "turbo test:coverage",

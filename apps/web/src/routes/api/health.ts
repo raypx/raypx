@@ -1,8 +1,7 @@
+import { redis } from "@raypx/core";
 import { db } from "@raypx/database";
 import * as schema from "@raypx/database/schema";
 import { createFileRoute } from "@tanstack/react-router";
-import { RedisClient } from "bun";
-import { env } from "../../env";
 
 export const Route = createFileRoute("/api/health")({
   server: {
@@ -11,7 +10,6 @@ export const Route = createFileRoute("/api/health")({
         const timestamp = new Date().toISOString();
         let redisIsOk = false;
         try {
-          const redis = new RedisClient(env.REDIS_URL);
           await redis.connect();
           await redis.ping();
           redisIsOk = true;
