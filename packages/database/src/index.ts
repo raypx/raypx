@@ -1,6 +1,6 @@
-import { drizzle } from 'drizzle-orm/bun-sql';
+import { SQL } from "bun";
+import { drizzle } from "drizzle-orm/bun-sql";
 import { env } from "./env";
-import { SQL } from 'bun';
 import * as schema from "./schema";
 
 // const client = postgres(env.DATABASE_URL);

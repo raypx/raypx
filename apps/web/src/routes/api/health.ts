@@ -1,8 +1,8 @@
+import { db } from "@raypx/database";
+import * as schema from "@raypx/database/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { RedisClient } from "bun";
 import { env } from "../../env";
-import { db } from "@raypx/database";
-import * as schema from "@raypx/database/schema";
 
 export const Route = createFileRoute("/api/health")({
   server: {
@@ -20,7 +20,12 @@ export const Route = createFileRoute("/api/health")({
           console.error(error);
           redisIsOk = false;
         }
-        const dbIsOk = await db.select().from(schema.user).limit(1).then(() => true).catch(() => false);
+        const dbIsOk = await db
+          .select()
+          .from(schema.user)
+          .limit(1)
+          .then(() => true)
+          .catch(() => false);
         return Response.json({
           status: "ok",
           timestamp,
