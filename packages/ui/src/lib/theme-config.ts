@@ -1,5 +1,5 @@
-import type { TablerIcon } from "@raypx/ui/components/icon";
 import { DesktopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react";
+import type { TablerIcon } from "@raypx/ui/components/icon";
 
 export type ThemeKey = "light" | "dark" | "system";
 

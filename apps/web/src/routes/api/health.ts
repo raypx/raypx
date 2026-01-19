@@ -1,13 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { RedisClient } from "bun";
+import { env } from "../../env";
 
 export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
-      GET: () =>
-        Response.json({
+      GET: async () => {
+        const timestamp = new Date().toISOString();
+        try {
+          const redis = new RedisClient(env.REDIS_URL);
+          await redis.connect();
+          await redis.set("health-check-timestamp", timestamp);
+          redis.close();
+        } catch (error) {
+          console.error(error);
+        }
+        return Response.json({
           status: "ok",
-          timestamp: new Date().toISOString(),
-        }),
+          timestamp,
+        });
+      },
     },
   },
 });

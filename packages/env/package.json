@@ -13,7 +13,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "envin": "^1.1.13",
+    "envin": "^1.2.0",
     "radash": "^12.1.1",
     "zod": "catalog:"
   },

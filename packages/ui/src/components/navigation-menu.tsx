@@ -20,7 +20,10 @@ function NavigationMenu({ className, children, ...props }: NavigationMenuPrimiti
   );
 }
 
-function NavigationMenuList({ className, ...props }: Omit<NavigationMenuPrimitive.List.Props, "ref">) {
+function NavigationMenuList({
+  className,
+  ...props
+}: Omit<NavigationMenuPrimitive.List.Props, "ref">) {
   return (
     <NavigationMenuPrimitive.List
       className={cn("group flex flex-1 list-none items-center justify-center gap-0", className)}
@@ -30,7 +33,10 @@ function NavigationMenuList({ className, ...props }: Omit<NavigationMenuPrimitiv
   );
 }
 
-function NavigationMenuItem({ className, ...props }: Omit<NavigationMenuPrimitive.Item.Props, "ref">) {
+function NavigationMenuItem({
+  className,
+  ...props
+}: Omit<NavigationMenuPrimitive.Item.Props, "ref">) {
   return (
     <NavigationMenuPrimitive.Item
       className={cn("relative", className)}
@@ -119,7 +125,10 @@ function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Lin
   );
 }
 
-function NavigationMenuIndicator({ className, ...props }: Omit<NavigationMenuPrimitive.Icon.Props, "ref">) {
+function NavigationMenuIndicator({
+  className,
+  ...props
+}: Omit<NavigationMenuPrimitive.Icon.Props, "ref">) {
   return (
     <NavigationMenuPrimitive.Icon
       className={cn(

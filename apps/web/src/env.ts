@@ -1,5 +1,5 @@
-import { authEnv, createEnv, emailEnv } from "@raypx/env";
+import { authEnv, createEnv, emailEnv, redisEnv } from "@raypx/env";
 
 export const env = createEnv({
-  extends: [authEnv, emailEnv],
+  extends: [authEnv, emailEnv, redisEnv],
 });
