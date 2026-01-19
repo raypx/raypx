@@ -1,51 +1,59 @@
+import { redis } from "@raypx/core";
+import { db } from "@raypx/database";
+import { user } from "@raypx/database/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerOnlyFn } from "@tanstack/react-start";
 
+const getRedisHealth = createServerOnlyFn(async () => {
+  const redisTimes: Record<string, number> = {};
+  try {
+    const start = performance.now();
+    if (!redis.connected) {
+      await redis.connect();
+      redisTimes.connect = performance.now() - start;
+    }
+    const result = await redis.ping();
+    redisTimes.ping = performance.now() - start;
+    return {
+      success: result === "PONG",
+      times: redisTimes,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      times: redisTimes,
+    };
+  }
+});
+
+const getDbHealth = createServerOnlyFn(async () => {
+  const dbTimes: Record<string, number> = {};
+  try {
+    const start = performance.now();
+    await db.select().from(user).limit(1);
+    dbTimes.query = performance.now() - start;
+    return {
+      success: true,
+      times: dbTimes,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      times: dbTimes,
+    };
+  }
+});
+
 const getHealth = createServerOnlyFn(async () => {
   try {
-    const redisTimes: Record<string, number> = {}
-    const dbTimes: Record<string, number> = {}
-    const getRedisHealth = async () => {
-      try {
-        let start = performance.now();
-        const redis = await import("@raypx/core").then((m) => m.redis);
-        redisTimes["import"] = performance.now() - start;
-        await redis.connect();
-        redisTimes["connect"] = performance.now() - start;
-        const result = await redis.ping();
-        redisTimes["ping"] = performance.now() - start;
-        redis.close();
-        redisTimes["close"] = performance.now() - start;
-        return result === "PONG";
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    };
-
-    const getDbHealth = async () => {
-      try {
-        let start = performance.now();
-        const [db, schema] = await Promise.all([
-          import("@raypx/database").then((m) => m.db),
-          import("@raypx/database/schema"),
-        ]);
-        dbTimes["import"] = performance.now() - start;
-        await db.select().from(schema.user).limit(1);
-        dbTimes["query"] = performance.now() - start;
-        return true;
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    };
     const [redisHealth, dbHealth] = await Promise.all([getRedisHealth(), getDbHealth()]);
-
     return {
-      redis: redisHealth,
-      db: dbHealth,
-      redisTimes,
-      dbTimes,
+      redis: redisHealth.success,
+      db: dbHealth.success,
+      redisTimes: redisHealth.times,
+      dbTimes: dbHealth.times,
     };
   } catch (error) {
     console.error(error);

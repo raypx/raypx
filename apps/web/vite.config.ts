@@ -12,10 +12,10 @@ const deployPlugin = nitro({
 
 export default defineConfig({
   ssr: {
-    external: ["bun"],
+    external: ["bun", "@raypx/core"],
   },
   optimizeDeps: {
-    exclude: ["@raypx/ui"],
+    exclude: ["@raypx/ui", "@raypx/database", "@raypx/core"],
   },
   define: {
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
