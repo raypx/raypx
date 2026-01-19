@@ -1,34 +1,43 @@
-import { redis } from "@raypx/core";
-import { db } from "@raypx/database";
-import * as schema from "@raypx/database/schema";
 import { createFileRoute } from "@tanstack/react-router";
+import { createServerOnlyFn } from "@tanstack/react-start";
+
+const getHealth = createServerOnlyFn(async () => {
+  try {
+    const redis = await import("@raypx/core").then((m) => m.redis);
+    const db = await import("@raypx/database").then((m) => m.db);
+    const schema = await import("@raypx/database/schema");
+    return {
+      redis: await redis
+        .connect()
+        .then(() => true)
+        .catch(() => false),
+      db: await db
+        .select()
+        .from(schema.user)
+        .limit(1)
+        .then(() => true)
+        .catch(() => false),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      redis: false,
+      db: false,
+    };
+  }
+});
 
 export const Route = createFileRoute("/api/health")({
   server: {
     handlers: {
       GET: async () => {
         const timestamp = new Date().toISOString();
-        let redisIsOk = false;
-        try {
-          await redis.connect();
-          await redis.ping();
-          redisIsOk = true;
-          redis.close();
-        } catch (error) {
-          console.error(error);
-          redisIsOk = false;
-        }
-        const dbIsOk = await db
-          .select()
-          .from(schema.user)
-          .limit(1)
-          .then(() => true)
-          .catch(() => false);
+        const { redis, db } = await getHealth();
         return Response.json({
           status: "ok",
           timestamp,
-          redis: redisIsOk,
-          db: dbIsOk,
+          redis,
+          db,
         });
       },
     },
