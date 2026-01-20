@@ -17,21 +17,18 @@
     "apps/api": {
       "name": "api",
       "version": "0.1.0",
-      "dependencies": {
+      "devDependencies": {
         "@raypx/auth": "workspace:*",
-        "@raypx/billing": "workspace:*",
+        "@raypx/config": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/env": "workspace:*",
         "@raypx/logger": "workspace:*",
         "@raypx/rpc": "workspace:*",
-        "hono": "^4.11.3",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@raypx/config": "workspace:*",
         "@types/bun": "^1.3.6",
+        "hono": "^4.11.3",
         "tsdown": "^0.20.0-beta.4",
         "typescript": "catalog:",
+        "zod": "catalog:",
       },
     },
     "apps/docs": {
