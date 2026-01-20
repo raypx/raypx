@@ -25,11 +25,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       { name: "description", content: "Raypx" },
     ],
     links: [
-      {
-        rel: "preload",
-        href: appCss,
-        as: "style",
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico" },
     ],
   }),
   component: RootComponent,
