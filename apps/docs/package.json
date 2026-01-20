@@ -31,9 +31,9 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@netlify/vite-plugin-tanstack-start": "^1.2.6",
+    "@netlify/vite-plugin-tanstack-start": "^1.2.7",
     "@tailwindcss/vite": "catalog:",
-    "@tanstack/react-router-devtools": "^1.153.1",
+    "@tanstack/react-router-devtools": "^1.153.2",
     "@testing-library/react": "catalog:",
     "@types/mdx": "^2.0.13",
     "@types/react": "catalog:",

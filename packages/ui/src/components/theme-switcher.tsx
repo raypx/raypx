@@ -1,3 +1,5 @@
+"use client";
+
 import { CheckIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
 import {

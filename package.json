@@ -10,8 +10,8 @@
     ],
     "catalog": {
       "@tailwindcss/vite": "^4.1.18",
-      "@tanstack/react-router": "^1.153.1",
-      "@tanstack/react-start": "^1.153.1",
+      "@tanstack/react-router": "^1.153.2",
+      "@tanstack/react-start": "^1.154.0",
       "@testing-library/react": "^16.3.2",
       "@types/bun": "^1.1.13",
       "@types/react": "^19.2.8",
@@ -47,6 +47,7 @@
     "dev": "turbo dev",
     "dev:docs": "bun --bun turbo -F docs dev",
     "dev:server": "bun --bun turbo -F server dev",
+    "dev:app": "bun --bun turbo -F app dev",
     "dev:web": "bun --bun turbo -F web dev",
     "format": "biome check --write .",
     "knip": "knip",

@@ -30,6 +30,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Copy built application from builder
 COPY --from=builder /app/apps/web/.output .output
 
+# Display size of /app directory
+RUN echo "=== /app Directory Size ===" && du -hs /app && echo "============================"
+
 # Expose the application port
 EXPOSE 3000
 

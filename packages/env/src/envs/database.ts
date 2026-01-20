@@ -4,6 +4,14 @@ export const databaseEnv = {
   id: "database",
   server: {
     DATABASE_URL: z.string().min(1),
+    DATABASE_MAX_CONNECTIONS: z
+      .string()
+      .optional()
+      .transform((val) => (val ? Number.parseInt(val, 10) : undefined)),
+    DATABASE_PREPARE: z
+      .string()
+      .optional()
+      .transform((val) => val === "true" || val === "1"),
     VECTOR_URL: z
       .string()
       .optional()

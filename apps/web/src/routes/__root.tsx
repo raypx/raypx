@@ -21,7 +21,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
-      { title: "Raypx", description: "Raypx" },
+      { title: "Raypx" },
+      { name: "description", content: "Raypx" },
     ],
     links: [
       {

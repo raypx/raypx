@@ -31,7 +31,6 @@ const getDbHealth = createServerOnlyFn(async () => {
   const dbTimes: Record<string, number> = {};
   try {
     const start = performance.now();
-    await db.$client.connect();
     dbTimes.connect = performance.now() - start;
     await db.select().from(user).limit(1);
     dbTimes.query = performance.now() - start;
