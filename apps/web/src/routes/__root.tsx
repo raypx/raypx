@@ -26,8 +26,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     ],
     links: [
       {
-        rel: "stylesheet",
+        rel: "preload",
         href: appCss,
+        as: "style",
       },
     ],
   }),

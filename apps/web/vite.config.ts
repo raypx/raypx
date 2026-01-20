@@ -35,7 +35,11 @@ export default defineConfig({
         ],
       },
     }),
-    tailwindcss(),
+    tailwindcss({
+      optimize: {
+        minify: true,
+      },
+    }),
     deployPlugin,
   ],
 });
