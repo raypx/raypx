@@ -100,12 +100,3 @@ export default {
   port,
   fetch: app.fetch,
 };
-
-// For Bun.serve
-if (import.meta.main) {
-  Bun.serve({
-    port,
-    fetch: app.fetch,
-  });
-  logger.info(`🚀 API server running at http://localhost:${port}`);
-}
