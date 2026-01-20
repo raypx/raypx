@@ -7,8 +7,8 @@ export default defineConfig({
   target: "node20",
   outDir: "dist",
   clean: true,
-  dts: true,
-  sourcemap: true,
+  // dts: true,
+  // sourcemap: true,
   noExternal: [
     "@raypx/core",
     "@raypx/database",

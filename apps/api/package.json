@@ -15,6 +15,7 @@
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/rpc": "workspace:*",
+    "@hono/node-server": "^1.12.2",
     "hono": "^4.11.3",
     "zod": "catalog:",
     "@raypx/config": "workspace:*",
