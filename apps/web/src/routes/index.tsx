@@ -1,4 +1,4 @@
-import { ThemeSwitcher } from "@raypx/ui/components/theme-switcher";
+// import { ThemeSwitcher } from "@raypx/ui/components/theme-switcher";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
@@ -24,7 +24,7 @@ function HomeComponent() {
         <a href="/docs" rel="noopener noreferrer" target="_blank">
           Docs
         </a>
-        <ThemeSwitcher />
+        {/* <ThemeSwitcher /> */}
       </div>
     </div>
   );
