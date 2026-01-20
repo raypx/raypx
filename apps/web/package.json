@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun --bun vite build",
+    "build": "vite build",
     "build:node": "vite build",
     "start": "bun .output/server/index.mjs",
     "clean": "rm -rf .output dist node_modules .turbo .netlify",
