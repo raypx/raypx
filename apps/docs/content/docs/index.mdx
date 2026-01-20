@@ -1,84 +1,122 @@
 ---
 title: Welcome to Raypx
-description: A modern full-stack design tool framework
+description: A modern full-stack application framework with authentication, billing, and more
 ---
 
 # Welcome to Raypx
 
-Raypx is a modern full-stack framework for building collaborative design tools. Built with React, TypeScript, and TanStack Router.
+Raypx is a modern full-stack framework for building production-ready applications. Built with React 19, TypeScript, TanStack Start, and optimized for performance.
 
 ## Features
 
-- **Real-time Collaboration** - Work together with your team in real-time
-- **Modern Stack** - Built on React 19, TypeScript, and TanStack Router
-- **Authentication** - Built-in user authentication and organization management
-- **Internationalization** - Multi-language support out of the box
-- **Type Safety** - End-to-end type safety across the stack
+- 🔐 **Authentication** - Email/Password, GitHub, Google OAuth via better-auth
+- 💳 **Billing** - Stripe integration for subscription management
+- 📧 **Email** - Transactional emails with Resend
+- 📊 **Analytics** - PostHog and Google Analytics support
+- 🐛 **Observability** - Sentry error tracking
+- 🌍 **Internationalization** - Multi-language support via i18next
+- 📝 **Documentation** - Integrated docs site with Fumadocs
+- 🎨 **UI Components** - Shadcn UI component library
+- 🔍 **Type Safety** - End-to-end type safety with oRPC
+- ⚡ **Performance** - CSS preloading, Tailwind minification, and optimized builds
 
 ## Quick Start
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) >= 1.0
+- [PostgreSQL](https://www.postgresql.org/) >= 14
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/raypx.git
+git clone https://github.com/raypx/raypx.git
 cd raypx
 
 # Install dependencies
 bun install
 
-# Start the development server
-bun dev
+# Copy environment variables
+cp .env.example .env
+
+# Update .env with your configuration
 ```
 
-### Project Structure
+### Database Setup
+
+```bash
+# Generate database client
+bun run db:generate
+
+# Push migrations
+bun run db:push
+
+# (Optional) Seed database
+bun run db:seed
+```
+
+### Development
+
+```bash
+# Start development server
+bun run dev
+
+# Start specific app
+bun run dev:web      # Web application (http://localhost:3000)
+bun run dev:docs     # Documentation (http://localhost:3004)
+```
+
+## Project Structure
 
 ```
 raypx/
 ├── apps/
-│   ├── web/           # Main application
+│   ├── web/           # Main web application
 │   └── docs/          # Documentation site
 └── packages/
-    ├── ui/            # UI component library
-    ├── auth/          # Authentication module
+    ├── ui/            # Shared UI components
+    ├── auth/          # Authentication configuration
+    ├── billing/       # Stripe billing integration
+    ├── database/      # Database schema and client
+    ├── email/         # Email service with Resend
+    ├── env/           # Environment variables validation
     ├── i18n/          # Internationalization
-    └── rpc/           # RPC layer
+    ├── logger/        # Logging utilities
+    ├── observability/ # Analytics and error tracking
+    ├── rpc/           # Type-safe RPC API
+    └── config/        # Shared configuration
 ```
 
-## Getting Started
+## Performance Optimizations
 
-### 1. Set up your environment
+Raypx includes several performance optimizations out of the box:
 
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-### 2. Run the development server
-
-```bash
-bun dev
-```
-
-### 3. Open your browser
-
-Navigate to [http://localhost:3000](http://localhost:3000)
+- **CSS Preloading** - Critical CSS is preloaded for faster initial render
+- **Tailwind Minification** - Production builds include minified CSS
+- **Optimized Builds** - Turbo-powered monorepo for fast builds
+- **Code Splitting** - Automatic code splitting with TanStack Router
 
 ## Documentation
 
 Explore the documentation to learn more:
 
+- [Getting Started](/docs/getting-started)
 - [Authentication](/docs/auth)
 - [API Reference](/docs/api)
 - [Components](/docs/components)
 - [Deployment](/docs/deployment)
+- [Performance](/docs/performance)
 
 ## Community
 
-- GitHub: [https://github.com/yourusername/raypx](https://github.com/yourusername/raypx)
-- Discord: [Join our server](https://discord.gg/raypx)
-- Twitter: [@raypxdev](https://twitter.com/raypxdev)
+- 📖 [Documentation](https://raypx.com)
+- 💬 [Discord](https://discord.gg/raypx)
+- 🐛 [GitHub Issues](https://github.com/raypx/raypx/issues)
+- 📧 [Email Support](mailto:support@raypx.com)
 
 ## License
 
-MIT License - see [LICENSE](https://github.com/yourusername/raypx/blob/main/LICENSE) for details.
+[Apache-2.0](https://github.com/raypx/raypx/blob/main/LICENSE)
+
+Copyright 2025 https://raypx.com

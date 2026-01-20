@@ -30,10 +30,11 @@
 - **Validation**: [Zod](https://zod.dev/)
 
 ### Frontend
-- **UI**: [React 19](https://react.dev/) + [Tailwind CSS](https://tailwindcss.com/)
+- **UI**: [React 19](https://react.dev/) + [Tailwind CSS](https://tailwindcss.com/) (with minification)
 - **Components**: [Shadcn UI](https://ui.shadcn.com/)
 - **Routing**: [TanStack Router](https://tanstack.com/router)
 - **State**: [TanStack Query](https://tanstack.com/query)
+- **Performance**: CSS preloading and optimized asset delivery
 
 ### Infrastructure
 - **Email**: [Resend](https://resend.com/)
