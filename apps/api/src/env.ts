@@ -1,18 +1,15 @@
 import {
   authEnv,
-  billingEnv,
   createEnv,
   databaseEnv,
-  emailEnv,
-  observabilityEnv,
   redisEnv,
   z,
 } from "@raypx/env";
 
 export const env = createEnv({
-  extends: [authEnv, databaseEnv, billingEnv, emailEnv, observabilityEnv, redisEnv],
+  extends: [authEnv, databaseEnv, redisEnv],
   server: {
-    PORT: z.coerce.number().default(3001),
+    PORT: z.coerce.number().default(3000),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   },
 });

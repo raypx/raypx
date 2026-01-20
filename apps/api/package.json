@@ -6,12 +6,11 @@
   "scripts": {
     "build": "tsdown",
     "dev": "bun run src/index.ts",
-    "start": "bun run dist/index.js",
+    "start": "bun run dist/index.mjs",
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
     "@raypx/auth": "workspace:*",
-    "@raypx/billing": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",

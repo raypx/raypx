@@ -1,5 +1,4 @@
 import { auth } from "@raypx/auth";
-import { handleWebhook } from "@raypx/billing";
 import { createLogger } from "@raypx/logger";
 import { handleRPCRequest } from "@raypx/rpc/server";
 import { Hono } from "hono";
@@ -23,7 +22,7 @@ app.use(
     ],
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization", "Stripe-Signature"],
+    allowHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
@@ -60,24 +59,6 @@ app.all("/api/rpc/*", async (c) => {
   } catch (error) {
     logger.error("RPC handler error", error);
     return c.json({ error: "Internal server error" }, 500);
-  }
-});
-
-// Stripe webhook handler
-app.post("/api/webhooks/stripe", async (c) => {
-  try {
-    const body = await c.req.text();
-    const signature = c.req.header("stripe-signature") ?? "";
-
-    if (!signature) {
-      return c.json({ error: "Missing stripe-signature header" }, 400);
-    }
-
-    const { received } = await handleWebhook(body, signature);
-    return c.json({ received });
-  } catch (error) {
-    logger.error("Stripe webhook error", error);
-    return c.json({ error: "Webhook processing failed" }, 500);
   }
 });
 
