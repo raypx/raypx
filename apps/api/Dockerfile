@@ -41,4 +41,4 @@ HEALTHCHECK --interval=5s --timeout=10s \
   CMD curl http://0.0.0.0:${PORT}/health || exit 1
 
 # Start the production server
-CMD ["bun", "run", "dist/index.js"]
+CMD ["bun", "run", "dist/index.mjs"]
