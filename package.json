@@ -43,5 +43,12 @@
     "lefthook": "^2.0.14",
     "turbo": "^2.7.5"
   },
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "vite": "^8.0.0-0"
+      }
+    }
+  },
   "packageManager": "pnpm@10.14.0"
 }

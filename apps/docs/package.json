@@ -9,7 +9,8 @@
     "build": "vite build",
     "build:node": "vite build",
     "clean": "rm -rf .output dist node_modules .turbo .netlify",
-    "dev": "vite dev --port=3004",
+    "dev": "pnpm with-env vite dev --port=3004",
+    "with-env": "dotenvx run -f ../../.env --",
     "postinstall": "fumadocs-mdx",
     "start": "node .output/server/index.mjs",
     "test": "vitest",
@@ -33,7 +34,7 @@
   "devDependencies": {
     "@netlify/vite-plugin-tanstack-start": "^1.2.7",
     "@tailwindcss/vite": "catalog:",
-    "@tanstack/react-router-devtools": "^1.153.2",
+    "@tanstack/react-router-devtools": "^1.154.8",
     "@testing-library/react": "catalog:",
     "@types/mdx": "^2.0.13",
     "@types/react": "catalog:",
