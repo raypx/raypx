@@ -8,10 +8,10 @@ const getRedisHealth = createServerOnlyFn(async () => {
   const redisTimes: Record<string, number> = {};
   try {
     const start = performance.now();
-    if (!redis.connected) {
+    if (!redis.isReady) {
       await redis.connect();
-      redisTimes.connect = performance.now() - start;
     }
+    redisTimes.connect = performance.now() - start;
     const result = await redis.ping();
     redisTimes.ping = performance.now() - start;
     return {

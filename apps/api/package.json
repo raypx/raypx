@@ -1,0 +1,26 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "pnpm with-env tsx src/index.ts",
+    "with-env": "dotenvx ../../.env --",
+    "start": "node dist/index.mjs",
+    "clean": "rm -rf dist node_modules .turbo"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.12.2",
+    "@raypx/auth": "workspace:*",
+    "@raypx/config": "workspace:*",
+    "@raypx/database": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
+    "@raypx/rpc": "workspace:*",
+    "hono": "^4.11.3",
+    "tsdown": "^0.20.0",
+    "typescript": "catalog:",
+    "zod": "catalog:"
+  }
+}

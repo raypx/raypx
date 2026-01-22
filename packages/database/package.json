@@ -9,7 +9,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist node_modules .turbo",
-    "db": "bun --env-file=../../.env drizzle-kit",
+    "db": "dotenvx -e ../../.env -- pnpm exec drizzle-kit",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"

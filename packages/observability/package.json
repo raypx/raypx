@@ -15,7 +15,7 @@
   "dependencies": {
     "@raypx/env": "workspace:*",
     "@sentry/react": "^10.35.0",
-    "posthog-js": "^1.331.0"
+    "posthog-js": "^1.334.0"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",

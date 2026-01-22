@@ -1,5 +1,5 @@
 import { db } from "@raypx/database";
-import { invoice, subscription, usageRecord } from "@raypx/database/schema/billing";
+import { invoice, subscription, usageRecord } from "@raypx/database/schema";
 import { eq } from "@raypx/database/sql";
 import type { Stripe } from "./stripe";
 import { stripe } from "./stripe";

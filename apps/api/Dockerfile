@@ -16,7 +16,7 @@ COPY . .
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Build the application
-RUN pnpm turbo build --filter=web...
+RUN pnpm turbo build --filter=api...
 
 # Stage 2: Runner
 FROM node:22-alpine AS runner
@@ -31,7 +31,7 @@ ENV PORT=3000
 RUN apk add --no-cache curl
 
 # Copy built application from builder
-COPY --from=builder /app/apps/web/.output .output
+COPY --from=builder /app/apps/api/dist ./dist
 
 # Display size of /app directory
 RUN echo "=== /app Directory Size ===" && du -hs /app && echo "============================"
@@ -41,7 +41,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=5s --timeout=10s \
-  CMD curl http://0.0.0.0:3000/api/health || exit 1
+  CMD curl http://0.0.0.0:${PORT}/health || exit 1
 
 # Start the production server
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "dist/index.mjs"]

@@ -1,4 +1,11 @@
-import { RedisClient } from "bun";
+import { createClient } from "redis";
 import { env } from "./env";
 
-export const redis = new RedisClient(env.REDIS_URL);
+// Create a Redis client
+const redisClient = createClient({
+  url: env.REDIS_URL,
+});
+
+redisClient.on("error", (err) => console.error("Redis Client Error", err));
+
+export const redis = redisClient;

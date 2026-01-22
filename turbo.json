@@ -78,6 +78,10 @@
       "dependsOn": ["^build"],
       "persistent": true
     },
+    "api": {
+      "cache": false,
+      "persistent": true
+    },
     "db": {
       "cache": false
     },

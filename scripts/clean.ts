@@ -1,31 +1,31 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
  * Clean all build artifacts and turbo cache
  *
- * Usage: bun run scripts/clean.ts
+ * Usage: node scripts/clean.ts
  */
 
-import { $ } from "bun";
+import { execSync } from "node:child_process";
 import consola from "consola";
+
+function run(cmd: string) {
+  try {
+    execSync(cmd, { stdio: "pipe" });
+  } catch {
+    // Ignore errors
+  }
+}
 
 async function clean() {
   consola.start("🧹 Cleaning project...");
 
   // Run turbo clean
   consola.log("  Running turbo clean...");
-  try {
-    await $`turbo run clean`.quiet();
-  } catch {
-    // Ignore if turbo clean fails
-  }
+  run("pnpm turbo run clean");
 
   // Remove .turbo directory
   consola.log("  Removing .turbo directory...");
-  try {
-    await $`rm -rf .turbo`.quiet();
-  } catch {
-    // Ignore if directory doesn't exist
-  }
+  run("rm -rf .turbo");
 
   consola.success("Clean complete!");
 }
