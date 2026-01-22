@@ -9,7 +9,8 @@
     "clean": "rm -rf dist node_modules .turbo",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "with-env": "dotenvx run -f ../../.env --"
   },
   "dependencies": {
     "@better-auth/core": "^1.4.16",
