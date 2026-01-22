@@ -13,7 +13,7 @@
     "with-env": "dotenvx run -f ../../.env --"
   },
   "dependencies": {
-    "@better-auth/core": "^1.4.16",
+    "@better-auth/core": "^1.4.17",
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",

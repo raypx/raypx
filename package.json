@@ -36,11 +36,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
-    "@dotenvx/dotenvx": "^1.0.0",
+    "@dotenvx/dotenvx": "^1.51.4",
     "@raypx/config": "workspace:*",
     "consola": "^3.4.2",
     "knip": "^5.82.1",
-    "lefthook": "^2.0.14",
+    "lefthook": "^2.0.15",
     "turbo": "^2.7.5"
   },
   "pnpm": {
@@ -48,7 +48,10 @@
       "allowedVersions": {
         "vite": "^8.0.0-0"
       }
+    },
+    "overrides": {
+      "esbuild": "^0.27.2"
     }
   },
-  "packageManager": "pnpm@10.14.0"
+  "packageManager": "pnpm@10.28.1"
 }
