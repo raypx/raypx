@@ -6,7 +6,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "bun --bun vite build",
+    "build": "vite build",
     "build:node": "vite build",
     "clean": "rm -rf .output dist node_modules .turbo .netlify",
     "dev": "vite dev --port=3004",

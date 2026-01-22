@@ -1,3 +1,4 @@
+import { serve } from "@hono/node-server";
 import { auth } from "@raypx/auth";
 import { createLogger } from "@raypx/logger";
 import { handleRPCRequest } from "@raypx/rpc/server";
@@ -5,7 +6,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
 import { env } from "./env";
-import { serve } from '@hono/node-server'
 
 const app = new Hono();
 
@@ -78,10 +78,13 @@ const port = env.PORT;
 
 logger.info(`Starting API server on port ${port}`);
 
-serve({
-  fetch: app.fetch,
-  port,
-  hostname: '0.0.0.0',
-}, (info) => {
-  logger.info(`API server running on http://${info.address}:${info.port}`);
-});
+serve(
+  {
+    fetch: app.fetch,
+    port,
+    hostname: "0.0.0.0",
+  },
+  (info) => {
+    logger.info(`API server running on http://${info.address}:${info.port}`);
+  },
+);

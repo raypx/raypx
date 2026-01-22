@@ -1,10 +1,4 @@
-import {
-  authEnv,
-  createEnv,
-  databaseEnv,
-  redisEnv,
-  z,
-} from "@raypx/env";
+import { authEnv, createEnv, databaseEnv, redisEnv, z } from "@raypx/env";
 
 export const env = createEnv({
   extends: [authEnv, databaseEnv, redisEnv],

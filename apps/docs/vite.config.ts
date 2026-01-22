@@ -15,8 +15,10 @@ const deployPlugin = nitro({
 
 export default defineConfig({
   base: env.BASE_URL,
-  ssr: {
-    external: ["bun"],
+  build: {
+    rolldownOptions: {
+      external: [/@raypx\/[\w-]+/],
+    },
   },
   plugins: [
     mdx(docsConfig),

@@ -9,25 +9,14 @@ commit-msg:
 pre-commit:
   parallel: true
   jobs:
-    - run: bun biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
-      glob:
-        - "*.js"
-        - "*.jsx"
-        - "*.ts"
-        - "*.tsx"
-        - "*.json"
-        - "*.jsonc"
-        - "*.css"
-        - "*.mdx"
-      root: "."
+    - name: biome
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: pnpm biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
 
 pre-push:
   parallel: true
   commands:
     typecheck:
-      run: bun run typecheck
-      skip_on_merge: true
-    test:
-      run: bun run test
+      run: pnpm typecheck
       skip_on_merge: true

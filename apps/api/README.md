@@ -13,11 +13,11 @@ A standalone Hono API service providing authentication, RPC, and webhook functio
 
 ```bash
 # Start the API service
-bun dev:api
+pnpm dev:api
 
 # Or run directly
 cd apps/api
-bun run dev
+pnpm run dev
 ```
 
 Default port: `3001` (configurable via `PORT` env var)
@@ -27,12 +27,12 @@ Default port: `3001` (configurable via `PORT` env var)
 ```bash
 # Build the API service
 cd apps/api
-bun run build
+pnpm run build
 
 # The bundled output will be in dist/index.js
 ```
 
-The build uses `tsdown` to bundle TypeScript into a single ESM file optimized for Node.js/Bun runtime.
+The build uses `tsdown` to bundle TypeScript into a single ESM file optimized for Node.js runtime.
 
 ## Environment Variables
 
@@ -64,7 +64,7 @@ Modify CORS configuration in `src/index.ts` if needed.
 The Dockerfile uses a multi-stage build:
 1. Builds the TypeScript code with `tsdown` into `dist/index.js`
 2. Copies only the built file and production dependencies
-3. Runs the bundled file with Bun
+3. Runs the bundled file with Node.js
 
 ```bash
 docker build -f apps/api/Dockerfile -t api .
@@ -73,4 +73,4 @@ docker run -p 3001:3001 api
 
 ### Railway / Fly.io / Render
 
-Run `bun run src/index.ts` directly. Make sure all required environment variables are set.
+Run `tsx src/index.ts` directly. Make sure all required environment variables are set.

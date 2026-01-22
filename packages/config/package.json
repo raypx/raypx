@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "catalog:",
-    "@vitejs/plugin-react": "^5.1.2",
+    "@vitejs/plugin-react": "catalog:",
     "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "vitest": "catalog:"

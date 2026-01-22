@@ -24,7 +24,8 @@ Raypx is a modern full-stack framework for building production-ready application
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) >= 1.0
+- [Node.js](https://nodejs.org/) >= 22
+- [pnpm](https://pnpm.io/) >= 10
 - [PostgreSQL](https://www.postgresql.org/) >= 14
 
 ### Installation
@@ -35,7 +36,7 @@ git clone https://github.com/raypx/raypx.git
 cd raypx
 
 # Install dependencies
-bun install
+pnpm install
 
 # Copy environment variables
 cp .env.example .env
@@ -47,24 +48,24 @@ cp .env.example .env
 
 ```bash
 # Generate database client
-bun run db:generate
+pnpm run db:generate
 
 # Push migrations
-bun run db:push
+pnpm run db:push
 
 # (Optional) Seed database
-bun run db:seed
+pnpm run db:seed
 ```
 
 ### Development
 
 ```bash
 # Start development server
-bun run dev
+pnpm run dev
 
 # Start specific app
-bun run dev:web      # Web application (http://localhost:3000)
-bun run dev:docs     # Documentation (http://localhost:3004)
+pnpm run dev:web      # Web application (http://localhost:3000)
+pnpm run dev:docs     # Documentation (http://localhost:3004)
 ```
 
 ## Project Structure

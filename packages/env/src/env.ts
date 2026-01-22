@@ -33,7 +33,7 @@ export type CreateEnvOptions<
 };
 
 /**
- * Safely get import.meta.env if available (Vite/bundler environment)
+ * Safely get import.meta.env if available (Vite environment)
  */
 function getImportMetaEnv(): Record<string, string | undefined> {
   try {
