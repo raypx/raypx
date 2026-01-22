@@ -9,22 +9,19 @@
     "clean": "rm -rf dist node_modules .turbo",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "with-env": "dotenvx run -f ../../.env --"
   },
   "dependencies": {
-    "@better-auth/core": "^1.4.16",
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
-    "@raypx/logger": "workspace:*",
     "better-auth": "catalog:",
-    "react": "catalog:",
-    "zod": "catalog:"
+    "react": "catalog:"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
     "@types/react": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",

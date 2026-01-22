@@ -8,23 +8,13 @@ import packageJson from "./package.json";
 
 const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
+  builder: "rolldown",
 });
 
 export default defineConfig({
-  ssr: {
-    // noExternal: ["@raypx/core", "@raypx/database"],
-  },
-  optimizeDeps: {
-    include: ["@raypx/ui", "@raypx/database", "@raypx/core"],
-  },
   define: {
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
   },
-  // build: {
-  //   rolldownOptions: {
-  //     external: [/@raypx\/[\w-]+/],
-  //   },
-  // },
   plugins: [
     tsconfigPaths(),
     tanstackStart(),
@@ -40,11 +30,7 @@ export default defineConfig({
         ],
       },
     }),
-    tailwindcss({
-      optimize: {
-        minify: true,
-      },
-    }),
+    tailwindcss(),
     deployPlugin,
   ],
 });

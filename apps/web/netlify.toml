@@ -1,6 +1,6 @@
 [build]
   base = "apps/web"
-  command = "pnpm turbo build:node --filter=web..."
+  command = "bun turbo build:node --filter=web..."
   publish = "dist"
   functions = ".netlify/functions-internal"
 

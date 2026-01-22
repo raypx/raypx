@@ -13,11 +13,11 @@ A standalone Hono API service providing authentication, RPC, and webhook functio
 
 ```bash
 # Start the API service
-pnpm dev:api
+bun dev:api
 
 # Or run directly
 cd apps/api
-pnpm run dev
+bun run dev
 ```
 
 Default port: `3001` (configurable via `PORT` env var)
@@ -27,7 +27,7 @@ Default port: `3001` (configurable via `PORT` env var)
 ```bash
 # Build the API service
 cd apps/api
-pnpm run build
+bun run build
 
 # The bundled output will be in dist/index.js
 ```

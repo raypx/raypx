@@ -15,10 +15,9 @@
   },
   "dependencies": {
     "consola": "^3.4.2",
-    "pino": "^10.2.1"
+    "pino": "^10.3.0"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "jsdom": "catalog:",

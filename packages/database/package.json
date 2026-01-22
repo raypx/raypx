@@ -9,7 +9,8 @@
   },
   "scripts": {
     "clean": "rm -rf dist node_modules .turbo",
-    "db": "dotenvx -e ../../.env -- pnpm exec drizzle-kit",
+    "db": "dotenvx run -f ../../.env -- drizzle-kit",
+    "with-env": "dotenvx run -f ../../.env --",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
@@ -17,12 +18,10 @@
   "dependencies": {
     "@raypx/env": "workspace:*",
     "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.5",
-    "zod": "catalog:"
+    "postgres": "^3.4.8"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "drizzle-kit": "^0.31.8",
     "jsdom": "catalog:",

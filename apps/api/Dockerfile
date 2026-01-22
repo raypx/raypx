@@ -5,15 +5,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install pnpm
-RUN npm install -g pnpm@10.14.0
+# Enable pnpm using Corepack
+RUN corepack enable
 
 # Copy source code (including .git for turbo caching)
 COPY . .
 
 # Install all dependencies (including devDependencies for build)
-# --ignore-scripts skips prepare hook (lefthook install requires git hooks setup)
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile
 
 # Build the application
 RUN pnpm turbo build --filter=api...

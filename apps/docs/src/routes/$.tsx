@@ -10,7 +10,7 @@ import defaultMdxComponents from "@fumadocs/base-ui/mdx";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren, Suspense } from "react";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 
@@ -57,13 +57,11 @@ const clientLoader = browserCollections.docs.createClientLoader<PropsWithChildre
 });
 
 function Page() {
-  const data = Route.useLoaderData();
-  const { pageTree } = useFumadocsLoader(data);
-  const Content = clientLoader.getComponent(data.path);
+  const data = useFumadocsLoader(Route.useLoaderData());
 
   return (
-    <DocsLayout {...baseOptions()} tree={pageTree}>
-      <Content />
+    <DocsLayout {...baseOptions()} tree={data.pageTree}>
+      <Suspense>{clientLoader.useContent(data.path, {})}</Suspense>
     </DocsLayout>
   );
 }

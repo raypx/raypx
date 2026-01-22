@@ -8,18 +8,17 @@
     "clean": "rm -rf dist node_modules .turbo",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "with-env": "dotenvx run -f ../../.env --"
   },
   "dependencies": {
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",
-    "stripe": "^20.2.0",
-    "zod": "catalog:"
+    "stripe": "^20.2.0"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",

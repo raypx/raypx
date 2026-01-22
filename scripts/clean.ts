@@ -21,7 +21,7 @@ async function clean() {
 
   // Run turbo clean
   consola.log("  Running turbo clean...");
-  run("pnpm turbo run clean");
+  run("bun turbo run clean");
 
   // Remove .turbo directory
   consola.log("  Removing .turbo directory...");

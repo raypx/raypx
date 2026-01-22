@@ -5,8 +5,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install pnpm
-RUN npm install -g pnpm@10.14.0
+# Enable pnpm using Corepack
+RUN corepack enable
 
 # Copy source code (including .git for turbo caching)
 COPY . .
