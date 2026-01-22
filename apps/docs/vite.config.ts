@@ -15,11 +15,6 @@ const deployPlugin = nitro({
 
 export default defineConfig({
   base: env.BASE_URL,
-  build: {
-    rolldownOptions: {
-      external: [/@raypx\/[\w-]+/],
-    },
-  },
   plugins: [
     mdx(docsConfig),
     tailwindcss(),

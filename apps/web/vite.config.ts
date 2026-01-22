@@ -11,20 +11,12 @@ const deployPlugin = nitro({
 });
 
 export default defineConfig({
-  ssr: {
-    // noExternal: ["@raypx/core", "@raypx/database"],
-  },
   optimizeDeps: {
     include: ["@raypx/ui", "@raypx/database", "@raypx/core"],
   },
   define: {
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
   },
-  // build: {
-  //   rolldownOptions: {
-  //     external: [/@raypx\/[\w-]+/],
-  //   },
-  // },
   plugins: [
     tsconfigPaths(),
     tanstackStart(),

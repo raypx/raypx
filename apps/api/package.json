@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "pnpm with-env tsx src/index.ts",
-    "with-env": "dotenvx ../../.env --",
+    "with-env": "dotenvx run -f ../../.env --",
     "start": "node dist/index.mjs",
     "clean": "rm -rf dist node_modules .turbo"
   },
