@@ -20,9 +20,6 @@ const deployPlugin = nitro({
 
 export default defineConfig({
   base: env.BASE_URL,
-  ssr: {
-    noExternal: ["react"],
-  },
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
