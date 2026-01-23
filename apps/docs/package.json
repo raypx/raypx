@@ -18,14 +18,14 @@
     "types:check": "fumadocs-mdx && tsc --noEmit"
   },
   "dependencies": {
-    "@fumadocs/base-ui": "^16.4.7",
+    "@fumadocs/base-ui": "^16.4.8",
     "@phosphor-icons/react": "^2.1.10",
     "@raypx/core": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "fumadocs-core": "^16.4.7",
+    "fumadocs-core": "^16.4.8",
     "fumadocs-mdx": "^14.2.6",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@netlify/vite-plugin-tanstack-start": "^1.2.7",
     "@tailwindcss/vite": "catalog:",
-    "@tanstack/react-router-devtools": "^1.154.12",
+    "@tanstack/react-router-devtools": "^1.154.13",
     "@testing-library/react": "catalog:",
     "@types/mdx": "^2.0.13",
     "@types/react": "catalog:",
@@ -41,10 +41,10 @@
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
+    "babel-plugin-react-compiler": "^1.0.0",
     "jiti": "^2.6.1",
     "jsdom": "catalog:",
     "nitro": "catalog:",
-    "babel-plugin-react-compiler": "^1.0.0",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
