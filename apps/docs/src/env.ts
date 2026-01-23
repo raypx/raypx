@@ -6,3 +6,5 @@ export const env = createEnv({
     BASE_URL: z.string().optional(),
   },
 });
+
+export type Env = typeof env;

@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./envs/*": "./src/envs/*.ts"
   },
   "scripts": {
     "clean": "rm -rf dist node_modules .turbo",
