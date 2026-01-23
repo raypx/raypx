@@ -9,6 +9,7 @@ import packageJson from "./package.json";
 const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
   builder: "rolldown",
+  noExternals: ["react", "react-dom"],
 });
 
 export default defineConfig({
@@ -17,6 +18,9 @@ export default defineConfig({
   },
   define: {
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
+  },
+  ssr: {
+    noExternal: ["react", "react-dom"],
   },
   plugins: [
     tsconfigPaths(),

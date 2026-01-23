@@ -16,10 +16,14 @@ const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
   baseURL: env.BASE_URL,
   builder: "rolldown",
+  noExternals: ["react", "react-dom"],
 });
 
 export default defineConfig({
   base: env.BASE_URL,
+  ssr: {
+    noExternal: ["react", "react-dom"],
+  },
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
