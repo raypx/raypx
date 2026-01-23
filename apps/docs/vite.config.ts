@@ -16,13 +16,18 @@ const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
   baseURL: env.BASE_URL,
   builder: "rolldown",
-  noExternals: ["react", "react-dom"],
 });
 
 export default defineConfig({
   base: env.BASE_URL,
+  optimizeDeps: {
+    exclude: ["fumadocs-mdx"],
+  },
   ssr: {
-    noExternal: ["react", "react-dom"],
+    // 确保 react 和 react-dom 始终作为外部依赖
+    // 这样 fumadocs-mdx 会使用外部化的 react，而不是打包自己的副本
+    // external 优先级高于 noExternal，所以即使 fumadocs 在 noExternal 中，react 也不会被打包进它
+    external: ["react", "react-dom"],
   },
   plugins: [
     mdx(docsConfig),

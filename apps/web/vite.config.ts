@@ -9,18 +9,11 @@ import packageJson from "./package.json";
 const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
   builder: "rolldown",
-  noExternals: ["react", "react-dom"],
 });
 
 export default defineConfig({
-  optimizeDeps: {
-    include: ["@raypx/ui", "@raypx/database", "@raypx/core"],
-  },
   define: {
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
-  },
-  ssr: {
-    noExternal: ["react", "react-dom"],
   },
   plugins: [
     tsconfigPaths(),

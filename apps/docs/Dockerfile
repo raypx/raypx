@@ -27,8 +27,18 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Install curl for health check
-RUN apk add --no-cache curl
+# Install pnpm and curl
+RUN npm install -g pnpm@10.14.0 && \
+    apk add --no-cache curl
+
+# Copy package files for dependency installation
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/apps/docs/package.json ./apps/docs/
+# Copy all packages (source code needed for workspace:* dependencies)
+COPY --from=builder /app/packages ./packages
+
+# Install only production dependencies (react and react-dom are externalized)
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts --filter=docs...
 
 # Copy built application from builder
 COPY --from=builder /app/apps/docs/.output .output
