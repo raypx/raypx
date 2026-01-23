@@ -44,6 +44,7 @@
     "jiti": "^2.6.1",
     "jsdom": "catalog:",
     "nitro": "catalog:",
+    "babel-plugin-react-compiler": "^1.0.0",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

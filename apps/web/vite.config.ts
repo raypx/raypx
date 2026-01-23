@@ -8,6 +8,7 @@ import packageJson from "./package.json";
 
 const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
+  builder: "rolldown",
 });
 
 export default defineConfig({
@@ -32,11 +33,7 @@ export default defineConfig({
         ],
       },
     }),
-    tailwindcss({
-      optimize: {
-        minify: true,
-      },
-    }),
+    tailwindcss(),
     deployPlugin,
   ],
 });
