@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM oven-sh/bun:1-alpine AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN bun install --frozen-lockfile
 RUN bun turbo build --filter=api...
 
 # Stage 2: Runner
-FROM oven-sh/bun:1-alpine AS runner
+FROM oven/bun:1 AS runner
 
 WORKDIR /app
 
