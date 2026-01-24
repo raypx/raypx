@@ -9,7 +9,8 @@ ENV NODE_ENV=production
 COPY . .
 
 # Install all dependencies (including devDependencies for build)
-RUN bun install --frozen-lockfile
+# --ignore-scripts skips prepare hook (lefthook install requires git hooks setup)
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Build the application
 RUN bun turbo build --filter=web...
@@ -24,7 +25,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Install curl for health check
-RUN apk add --no-cache curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Copy built application from builder
 COPY --from=builder /app/apps/web/.output .output
@@ -40,4 +41,4 @@ HEALTHCHECK --interval=5s --timeout=10s \
   CMD curl http://0.0.0.0:3000/api/health || exit 1
 
 # Start the production server
-CMD ["node", ".output/server/index.mjs"]
+CMD ["bun", "run", ".output/server/index.mjs"]
