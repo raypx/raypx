@@ -9,7 +9,7 @@ Clean all build artifacts and turbo cache.
 
 **Usage:**
 ```bash
-pnpm run clean:all
+bun run clean:all
 ```
 
 **What it does:**

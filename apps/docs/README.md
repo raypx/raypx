@@ -14,16 +14,16 @@ This is the documentation site for [Raypx](https://github.com/raypx/raypx), buil
 
 ```bash
 # Install dependencies (from root)
-pnpm install
+bun install
 
 # Start development server
-pnpm run dev:docs
+bun run dev:docs
 
 # Build for production
-pnpm run build:docs
+bun run build:docs
 
 # Preview production build
-pnpm run start
+bun run start
 ```
 
 The documentation site will be available at `http://localhost:3004` during development.

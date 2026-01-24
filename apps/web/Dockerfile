@@ -1,25 +1,21 @@
 # Stage 1: Builder
-FROM node:22-alpine AS builder
+FROM oven-sh/bun:1-alpine AS builder
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install pnpm
-RUN npm install -g pnpm@10.14.0
-
 # Copy source code (including .git for turbo caching)
 COPY . .
 
 # Install all dependencies (including devDependencies for build)
-# --ignore-scripts skips prepare hook (lefthook install requires git hooks setup)
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN bun install --frozen-lockfile
 
 # Build the application
-RUN pnpm turbo build --filter=web...
+RUN bun turbo build --filter=web...
 
 # Stage 2: Runner
-FROM node:22-alpine AS runner
+FROM oven-sh/bun:1-alpine AS runner
 
 WORKDIR /app
 

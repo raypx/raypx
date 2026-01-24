@@ -1,25 +1,22 @@
 # Stage 1: Builder
-FROM node:22-alpine AS builder
+FROM oven-sh/bun:1-alpine AS builder
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-
-# Install pnpm
-RUN npm install -g pnpm@10.14.0
 
 # Copy source code (including .git for turbo caching)
 COPY . .
 
 # Install all dependencies (including devDependencies for build)
 # --ignore-scripts skips prepare hook (lefthook install requires git hooks setup)
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN bun install --frozen-lockfile
 
 # Build the application
-RUN pnpm turbo build --filter=docs...
+RUN bun turbo build --filter=docs...
 
 # Stage 2: Runner
-FROM node:22-alpine AS runner
+FROM oven-sh/bun:1-alpine AS runner
 
 WORKDIR /app
 
@@ -27,19 +24,18 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Install pnpm and curl
-RUN npm install -g pnpm@10.14.0 && \
-    apk add --no-cache curl
+# Install curl for health check
+RUN apk add --no-cache curl
 
 # Copy package files for dependency installation
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/package.json /app/bun.lockb /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/apps/docs/package.json ./apps/docs/
 # Copy all packages (source code needed for workspace:* dependencies)
 COPY --from=builder /app/packages ./packages
 
 # Install only production dependencies
 # React is now bundled into SSR build, so we only need runtime dependencies
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts --filter=docs...
+RUN bun install --frozen-lockfile --production --filter=docs...
 
 # Copy built application from builder
 COPY --from=builder /app/apps/docs/.output .output
