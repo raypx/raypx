@@ -24,10 +24,9 @@ export default defineConfig({
     exclude: ["fumadocs-mdx"],
   },
   ssr: {
-    // 确保 react 和 react-dom 始终作为外部依赖
-    // 这样 fumadocs-mdx 会使用外部化的 react，而不是打包自己的副本
-    // external 优先级高于 noExternal，所以即使 fumadocs 在 noExternal 中，react 也不会被打包进它
-    external: ["react", "react-dom"],
+    // 不再 external React，让它被打包进 SSR 代码
+    // 这样可以避免 Docker 部署时的 MODULE_NOT_FOUND 错误
+    noExternal: ["fumadocs-mdx"],
   },
   plugins: [
     mdx(docsConfig),

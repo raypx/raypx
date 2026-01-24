@@ -37,7 +37,8 @@ COPY --from=builder /app/apps/docs/package.json ./apps/docs/
 # Copy all packages (source code needed for workspace:* dependencies)
 COPY --from=builder /app/packages ./packages
 
-# Install only production dependencies (react and react-dom are externalized)
+# Install only production dependencies
+# React is now bundled into SSR build, so we only need runtime dependencies
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts --filter=docs...
 
 # Copy built application from builder

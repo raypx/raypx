@@ -35,7 +35,7 @@
     "update:deps": "pnpm update --interactive --recursive --latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.11",
+    "@biomejs/biome": "^2.3.12",
     "@dotenvx/dotenvx": "^1.52.0",
     "@raypx/config": "workspace:*",
     "consola": "^3.4.2",
