@@ -125,12 +125,9 @@ export function createEnv<
     extends: opts.extends,
   });
 }
-
-export { defineEnvCore };
 export type {
   ClientFormat,
   DefineEnv,
-  EnvOptions,
   ExtendsFormat,
   FinalSchema,
   Schema,

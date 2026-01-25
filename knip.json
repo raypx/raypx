@@ -6,7 +6,7 @@
       "project": ["src/**/*.{ts,tsx}"]
     },
     "apps/docs": {
-      "entry": ["src/router.tsx", "src/routeTree.gen.ts"],
+      "entry": ["src/router.tsx", "src/routeTree.gen.ts", "src/routes/**/*.tsx"],
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/ui": {

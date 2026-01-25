@@ -14,13 +14,11 @@
     "@hono/node-server": "^1.19.9",
     "@raypx/auth": "workspace:*",
     "@raypx/config": "workspace:*",
-    "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/rpc": "workspace:*",
     "hono": "^4.11.5",
     "tsdown": "^0.20.1",
-    "typescript": "catalog:",
-    "zod": "catalog:"
+    "typescript": "catalog:"
   }
 }

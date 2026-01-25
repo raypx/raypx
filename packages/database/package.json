@@ -18,12 +18,10 @@
   "dependencies": {
     "@raypx/env": "workspace:*",
     "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.8",
-    "zod": "catalog:"
+    "postgres": "^3.4.8"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "drizzle-kit": "^0.31.8",
     "jsdom": "catalog:",

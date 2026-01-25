@@ -15,18 +15,14 @@
   },
   "dependencies": {
     "@orpc/client": "^1.13.4",
-    "@orpc/openapi": "^1.13.4",
     "@orpc/server": "^1.13.4",
     "@orpc/tanstack-query": "^1.13.4",
-    "@orpc/zod": "^1.13.4",
     "@raypx/auth": "workspace:*",
     "@raypx/database": "workspace:*",
-    "@raypx/env": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",

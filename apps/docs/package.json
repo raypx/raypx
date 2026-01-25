@@ -18,9 +18,7 @@
     "types:check": "fumadocs-mdx && tsc --noEmit"
   },
   "dependencies": {
-    "@fumadocs/base-ui": "^16.4.8",
-    "@phosphor-icons/react": "^2.1.10",
-    "@raypx/core": "workspace:*",
+    "@fumadocs/base-ui": "latest",
     "@raypx/env": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
@@ -31,11 +29,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@netlify/vite-plugin-tanstack-start": "^1.2.7",
     "@tailwindcss/vite": "catalog:",
-    "@tanstack/react-router-devtools": "^1.157.5",
-    "@testing-library/react": "catalog:",
-    "@types/mdx": "^2.0.13",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",

@@ -7,7 +7,7 @@ type Role = keyof typeof DEFAULT_ROLE_PERMISSIONS;
 type Resource = keyof (typeof DEFAULT_ROLE_PERMISSIONS)["owner"];
 type Action = "create" | "read" | "update" | "delete" | "manage";
 
-export interface PermissionCheckParams {
+interface PermissionCheckParams {
   userId: string;
   organizationId: string;
   resource: Resource;

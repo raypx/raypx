@@ -18,7 +18,6 @@
     "pino": "^10.3.0"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
