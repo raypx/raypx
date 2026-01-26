@@ -11,6 +11,19 @@ build
 .vinxi
 *.tsbuildinfo
 
+# Tauri (Desktop app)
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# TanStack Start
+.tanstack
+.wrangler
+.vinxi
+dist-ssr
+*.local
+count.txt
+todos.json
+
 # Environment variables
 .env
 .env*.local
@@ -33,6 +46,7 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 lerna-debug.log*
 
 # Turbo
@@ -50,6 +64,5 @@ coverage
 .cache
 tmp
 temp
-dist
 .netlify
 routeTree.gen.ts
