@@ -2,10 +2,14 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
     "apps/web": {
-      "entry": ["src/router.tsx", "src/routeTree.gen.ts"],
+      "entry": ["src/router.tsx", "src/routeTree.gen.ts", "src/routes/**/*.tsx"],
       "project": ["src/**/*.{ts,tsx}"]
     },
     "apps/docs": {
+      "entry": ["src/router.tsx", "src/routeTree.gen.ts", "src/routes/**/*.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/desktop": {
       "entry": ["src/router.tsx", "src/routeTree.gen.ts", "src/routes/**/*.tsx"],
       "project": ["src/**/*.{ts,tsx}"]
     },
@@ -38,7 +42,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/rpc": {
-      "entry": ["src/index.ts", "src/client.ts", "src/server.ts"],
+      "entry": ["src/client.ts", "src/server.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/billing": {

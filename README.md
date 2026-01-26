@@ -18,7 +18,7 @@
 ## Tech Stack
 
 ### Core
-- **Package Manager**: [Bun](https://bun.sh/)
+- **Package Manager**: [pnpm](https://pnpm.io)
 - **Framework**: [TanStack Start](https://tanstack.com/start)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Monorepo**: [Turborepo](https://turbo.build/)
@@ -70,7 +70,7 @@ raypx/
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) >= 22
-- [Bun](https://bun.sh/) >= 1.2
+- [pnpm](https://pnpm.io) >= 1.2
 - [PostgreSQL](https://www.postgresql.org/) >= 14
 
 ### Installation
@@ -81,7 +81,7 @@ git clone https://github.com/raypx/raypx.git
 cd raypx
 
 # Install dependencies
-bun install
+pnpm install
 
 # Copy environment variables
 cp .env.example .env
@@ -93,35 +93,35 @@ cp .env.example .env
 
 ```bash
 # Generate database client
-bun run db:generate
+pnpm db:generate
 
 # Push migrations
-bun run db:push
+pnpm db:push
 
 # (Optional) Seed database
-bun run db:seed
+pnpm db:seed
 ```
 
 ### Development
 
 ```bash
 # Start development server
-bun run dev
+pnpm dev
 
 # Start specific app
-bun run dev:web      # Web application (http://localhost:3000)
-bun run dev:docs     # Documentation (http://localhost:3004)
+pnpm dev:web      # Web application (http://localhost:3000)
+pnpm dev:docs     # Documentation (http://localhost:3004)
 ```
 
 ### Build
 
 ```bash
 # Build all apps
-bun run build
+pnpm build
 
 # Build specific app
-bun run build:web
-bun run build:docs
+pnpm build:web
+pnpm build:docs
 ```
 
 ## Available Commands
@@ -129,45 +129,45 @@ bun run build:docs
 ### Development
 
 ```bash
-bun run dev              # Start all apps
-bun run dev:web          # Start web app
-bun run dev:docs         # Start docs site
+pnpm dev              # Start all apps
+pnpm dev:web          # Start web app
+pnpm dev:docs         # Start docs site
 ```
 
 ### Build
 
 ```bash
-bun run build            # Build all apps
-bun run build:web        # Build web app
-bun run build:docs       # Build docs site
+pnpm build            # Build all apps
+pnpm build:web        # Build web app
+pnpm build:docs       # Build docs site
 ```
 
 ### Code Quality
 
 ```bash
-bun run format           # Format code with Biome
-bun run lint             # Lint code with Biome
-bun run typecheck        # Run TypeScript type checking
-bun run test             # Run tests
-bun run knip             # Check for unused files
+pnpm format           # Format code with Biome
+pnpm lint             # Lint code with Biome
+pnpm typecheck        # Run TypeScript type checking
+pnpm test             # Run tests
+pnpm knip             # Check for unused files
 ```
 
 ### Database
 
 ```bash
-bun run db               # Run Drizzle Kit CLI
-bun run db:generate      # Generate database client
-bun run db:push          # Push migrations
-bun run db:migrate       # Run migrations
-bun run db:studio        # Open Drizzle Studio
+pnpm db               # Run Drizzle Kit CLI
+pnpm db:generate      # Generate database client
+pnpm db:push          # Push migrations
+pnpm db:migrate       # Run migrations
+pnpm db:studio        # Open Drizzle Studio
 ```
 
 ### Cleaning
 
 ```bash
-bun run clean            # Clean build artifacts
-bun run clean:all        # Clean build artifacts + turbo cache
-bun run reinstall        # Reinstall all dependencies
+pnpm clean            # Clean build artifacts
+pnpm clean:all        # Clean build artifacts + turbo cache
+pnpm reinstall        # Reinstall all dependencies
 ```
 
 ## Docker

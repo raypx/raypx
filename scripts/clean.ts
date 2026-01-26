@@ -2,11 +2,12 @@
 /**
  * Clean all build artifacts and turbo cache
  *
- * Usage: node scripts/clean.ts
+ * Usage: pnpm tsx scripts/clean.ts
  */
 
 import { execSync } from "node:child_process";
-import consola from "consola";
+import { rmSync } from "node:fs";
+import { join } from "node:path";
 
 function run(cmd: string) {
   try {
@@ -16,18 +17,26 @@ function run(cmd: string) {
   }
 }
 
+function log(message: string) {
+  console.log(`  ${message}`);
+}
+
 async function clean() {
-  consola.start("🧹 Cleaning project...");
+  log("🧹 Cleaning project...");
 
   // Run turbo clean
-  consola.log("  Running turbo clean...");
-  run("bun turbo run clean");
+  log("Running turbo clean...");
+  run("pnpm turbo run clean");
 
   // Remove .turbo directory
-  consola.log("  Removing .turbo directory...");
-  run("rm -rf .turbo");
+  log("Removing .turbo directory...");
+  rmSync(join(process.cwd(), ".turbo"), { recursive: true, force: true });
 
-  consola.success("Clean complete!");
+  // Remove node_modules from all packages
+  log("Removing node_modules from apps and packages...");
+  run("rm -rf apps/*/node_modules packages/*/node_modules");
+
+  console.log("✅ Clean complete!");
 }
 
 clean();

@@ -12,7 +12,8 @@ RUN corepack enable
 COPY . .
 
 # Install all dependencies (including devDependencies for build)
-RUN pnpm install --frozen-lockfile
+# --ignore-scripts skips prepare hook (lefthook install requires git)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Build the application
 RUN pnpm turbo build --filter=api...
