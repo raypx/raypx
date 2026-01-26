@@ -1,6 +1,6 @@
 [install]
 # Use hoisted linker for better compatibility
-linker = "hoisted"
+linker = "isolated"
 # Use official npm registry
 registry = "https://registry.npmjs.org/"
 # Optional: Reduce cache size by disabling some caches
