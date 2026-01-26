@@ -4,7 +4,7 @@ import { Toaster } from "@raypx/ui/components/toast";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { TanstackProvider } from "fumadocs-core/framework/tanstack";
 import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
-// import Loading from "@/components/loading";
+import Loading from "@/components/loading";
 import NotFound from "@/components/not-found";
 import { appName } from "@/config/base";
 import appCss from "@/styles/globals.css?url";
@@ -37,7 +37,7 @@ export const Route = createRootRoute({
       <DefaultCatchBoundary {...props} />
     </RootDocument>
   ),
-  // pendingComponent: () => <Loading />,
+  pendingComponent: () => <Loading />,
 });
 
 function RootComponent() {

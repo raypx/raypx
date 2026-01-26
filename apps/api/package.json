@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "dev": "bun with-env tsx src/index.ts",
+    "dev": "pnpm with-env tsx src/index.ts",
     "with-env": "dotenvx run -f ../../.env --",
     "start": "node dist/index.mjs",
     "clean": "rm -rf dist node_modules .turbo"
@@ -17,7 +17,7 @@
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",
     "@raypx/rpc": "workspace:*",
-    "hono": "^4.11.5",
+    "hono": "^4.11.6",
     "tsdown": "^0.20.1",
     "typescript": "catalog:"
   }

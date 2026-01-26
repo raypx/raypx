@@ -20,14 +20,6 @@ const deployPlugin = nitro({
 
 export default defineConfig({
   base: env.BASE_URL,
-  optimizeDeps: {
-    exclude: ["fumadocs-mdx"],
-  },
-  ssr: {
-    // 不再 external React，让它被打包进 SSR 代码
-    // 这样可以避免 Docker 部署时的 MODULE_NOT_FOUND 错误
-    noExternal: ["fumadocs-mdx"],
-  },
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
@@ -47,4 +39,8 @@ export default defineConfig({
     }),
     deployPlugin,
   ],
+  ssr: {
+    // Bundle dependencies into output instead of treating as external
+    noExternal: true,
+  },
 });

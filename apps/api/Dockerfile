@@ -1,21 +1,24 @@
 # Stage 1: Builder
-FROM oven/bun:1 AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Enable pnpm using Corepack
+RUN corepack enable
+
 # Copy source code (including .git for turbo caching)
 COPY . .
 
 # Install all dependencies (including devDependencies for build)
-RUN bun install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Build the application
-RUN bun turbo build --filter=api...
+RUN pnpm turbo build --filter=api...
 
 # Stage 2: Runner
-FROM oven/bun:1 AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
