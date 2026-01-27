@@ -39,7 +39,7 @@
     "jiti": "^2.6.1",
     "jsdom": "catalog:",
     "nitro": "catalog:",
-    "rolldown": "^1.0.0-rc.1",
+    "rolldown": "^1.0.0-rc.2",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
