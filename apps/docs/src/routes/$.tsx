@@ -17,7 +17,9 @@ import { source } from "@/lib/source";
 export const Route = createFileRoute("/$")({
   component: Page,
   loader: async ({ params }) => {
+    console.log("params", params._splat);
     const slugs = params._splat?.split("/") ?? [];
+    console.log("slugs", slugs);
     const data = await serverLoader({ data: slugs });
     await clientLoader.preload(data.path);
     return data;

@@ -12,11 +12,7 @@ function run(cmd: string) {
 }
 
 async function checkDeps() {
-  console.log("🔍 Checking for outdated dependencies...\n");
-
   run("pnpm outdated --recursive");
-
-  console.log("\n💡 To update dependencies, run: pnpm update --interactive --recursive --latest");
 }
 
 checkDeps();

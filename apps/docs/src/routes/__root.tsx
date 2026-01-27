@@ -57,7 +57,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider defaultTheme="system">
           <TanstackProvider>
-            <RootProvider>
+            <RootProvider
+              search={{
+                enabled: true,
+                options: {
+                  api: "/api/search",
+                },
+              }}
+            >
               {children}
               <Toaster />
             </RootProvider>

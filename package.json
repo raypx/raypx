@@ -26,6 +26,7 @@
     "reinstall": "rm -rf node_modules apps/*/node_modules packages/*/node_modules && pnpm install",
     "shadcn": "pnpm --filter web shadcn",
     "start": "turbo start",
+    "start:docs": "turbo -F docs start",
     "test": "turbo test",
     "start:web": "pnpm turbo -F web start",
     "test:coverage": "turbo test:coverage",

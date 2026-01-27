@@ -17,26 +17,15 @@ function run(cmd: string) {
   }
 }
 
-function log(message: string) {
-  console.log(`  ${message}`);
-}
-
 async function clean() {
-  log("🧹 Cleaning project...");
-
   // Run turbo clean
-  log("Running turbo clean...");
   run("pnpm turbo run clean");
 
   // Remove .turbo directory
-  log("Removing .turbo directory...");
   rmSync(join(process.cwd(), ".turbo"), { recursive: true, force: true });
 
   // Remove node_modules from all packages
-  log("Removing node_modules from apps and packages...");
   run("rm -rf apps/*/node_modules packages/*/node_modules");
-
-  console.log("✅ Clean complete!");
 }
 
 clean();

@@ -8,6 +8,7 @@ const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   scrollRestoration: true,
+  trailingSlash: "preserve",
   defaultNotFoundComponent: () => <NotFound />,
 });
 
