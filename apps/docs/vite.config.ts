@@ -16,10 +16,11 @@ import * as docsConfig from "./source.config";
 const deployPlugin = nitro({
   preset: process.env.NETLIFY ? "netlify" : undefined,
   builder: "rolldown",
+  baseURL: "https://docs.raypx.com",
 });
 
 export default defineConfig(({ command }) => ({
-  base: "//docs.raypx.com",
+  base: "https://docs.raypx.com",
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
