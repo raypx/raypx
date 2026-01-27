@@ -19,6 +19,7 @@ const deployPlugin = nitro({
 });
 
 export default defineConfig(({ command }) => ({
+  base: "//docs.raypx.com",
   plugins: [
     mdx(docsConfig),
     tailwindcss(),
