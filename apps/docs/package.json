@@ -2,47 +2,23 @@
   "name": "docs",
   "version": "0.1.0",
   "private": true,
-  "description": "Documentation site for Raypx",
-  "sideEffects": false,
-  "type": "module",
   "scripts": {
-    "build": "pnpm with-env vite build",
-    "clean": "rm -rf .output dist node_modules .turbo .netlify",
-    "dev": "pnpm with-env vite dev --port=3004",
-    "with-env": "dotenvx run -f ../../.env --",
-    "start": "pnpm with-env node .output/server/index.mjs",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "types:check": "fumadocs-mdx && tsc --noEmit"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "@fumadocs/base-ui": "latest",
-    "@phosphor-icons/react": "^2.1.10",
-    "@raypx/env": "workspace:*",
-    "@raypx/ui": "workspace:*",
-    "@tanstack/react-router": "catalog:",
-    "@tanstack/react-start": "catalog:",
-    "fumadocs-core": "^16.4.9",
-    "fumadocs-mdx": "^14.2.6",
+    "next": "^16.1.6",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "catalog:",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^25.0.10",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
-    "@vitest/ui": "catalog:",
-    "babel-plugin-react-compiler": "^1.0.0",
-    "jiti": "^2.6.1",
-    "jsdom": "catalog:",
-    "rolldown": "^1.0.0-rc.2",
+    "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:",
-    "vite-tsconfig-paths": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   }
 }

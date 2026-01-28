@@ -1,47 +1,67 @@
-# Stage 1: Builder
-FROM node:22-alpine AS builder
+# Use Node.js official image
+FROM node:22-alpine AS base
 
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+
+# Set working directory
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Dependencies installation stage
+FROM base AS deps
 
-# Enable pnpm using Corepack
-RUN corepack enable
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/docs/package.json ./apps/docs/
+COPY packages ./packages
 
-# Copy source code (including .git for turbo caching)
-COPY . .
-
-# Install all dependencies (including devDependencies for build)
-# --ignore-scripts skips prepare hook (lefthook install requires git hooks setup)
+# Install dependencies
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Build the application
-RUN pnpm turbo build --filter=docs...
+# Build stage
+FROM base AS builder
 
-# Stage 2: Runner
-FROM node:22-alpine AS runner
+# Copy dependencies
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/docs/node_modules ./apps/docs/node_modules
+COPY --from=deps /app/packages ./packages
+
+# Copy source code
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json turbo.json ./
+COPY apps/docs ./apps/docs
+COPY packages ./packages
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build application
+WORKDIR /app
+RUN pnpm --filter docs build
+
+# Runtime stage
+FROM base AS runner
 
 WORKDIR /app
 
-# Set production environment
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Install curl for health check
-RUN apk add --no-cache curl
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy built application from builder
-COPY --from=builder /app/apps/docs/.output .output
+# Copy necessary files
+COPY --from=builder --chown=nextjs:nodejs /app/apps/docs/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/docs/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/docs/.next/static ./.next/static
 
-# Display size of /app directory
-RUN echo "=== /app Directory Size ===" && du -hs /app && echo "============================"
+USER nextjs
 
-# Expose the application port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=5s --timeout=10s \
-  CMD curl http://0.0.0.0:3000/docs/api/health || exit 1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# Start the production server
-CMD ["node", ".output/server/index.mjs"]
+# Start application
+CMD ["node", "apps/docs/server.js"]
