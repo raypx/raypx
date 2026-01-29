@@ -10,7 +10,7 @@ import { env } from "./env";
 
 export const auth: Auth = betterAuth({
   secret: env.AUTH_SECRET,
-  baseURL: env.VITE_AUTH_URL,
+  baseURL: env.NEXT_PUBLIC_AUTH_URL,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: schema,

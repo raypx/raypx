@@ -16,6 +16,6 @@ export const queryClient = new QueryClient({
   }),
 });
 
-const client = createClient({ baseUrl: env.VITE_AUTH_URL });
+const client = createClient({ baseUrl: env.NEXT_PUBLIC_AUTH_URL });
 
 export const orpc = createQueryUtils(client);

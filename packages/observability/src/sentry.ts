@@ -5,15 +5,15 @@ let initialized = false;
 
 export function initSentry() {
   if (initialized) return;
-  if (!env.VITE_SENTRY_DSN) return;
+  if (!env.NEXT_PUBLIC_SENTRY_DSN) return;
 
   // Skip in development unless explicitly enabled
-  if (env.NODE_ENV === "development" && !env.VITE_SENTRY_ENABLE_DEV) {
+  if (env.NODE_ENV === "development" && !env.NEXT_PUBLIC_SENTRY_ENABLE_DEV) {
     return;
   }
 
   Sentry.init({
-    dsn: env.VITE_SENTRY_DSN,
+    dsn: env.NEXT_PUBLIC_SENTRY_DSN,
     environment: env.NODE_ENV,
     integrations: [
       Sentry.browserTracingIntegration(),

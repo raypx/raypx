@@ -2,9 +2,9 @@
 # https://github.com/evilmartians/lefthook
 
 commit-msg:
-  commands:
-    no-coauthor:
-      run: "! grep -q 'Co-Authored-By:' {1}"
+  skip:
+    - merge
+    - rebase
 
 pre-commit:
   parallel: true

@@ -9,6 +9,6 @@ export const storageEnv = {
     R2_BUCKET_NAME: z.string().min(1),
   },
   shared: {
-    VITE_R2_PUBLIC_URL: z.url(),
+    NEXT_PUBLIC_R2_PUBLIC_URL: z.url(),
   },
 } as const;

@@ -15,7 +15,7 @@ build
 src-tauri/target/
 src-tauri/gen/schemas/
 
-# TanStack Start
+# TanStack Start (legacy)
 .tanstack
 .wrangler
 .vinxi
@@ -23,6 +23,13 @@ dist-ssr
 *.local
 count.txt
 todos.json
+routeTree.gen.ts
+
+# Next.js (used by web and desktop apps)
+.next
+out
+next-env.d.ts
+.turbopack
 
 # Environment variables
 .env
@@ -65,4 +72,3 @@ coverage
 tmp
 temp
 .netlify
-routeTree.gen.ts

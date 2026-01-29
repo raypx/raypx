@@ -5,7 +5,7 @@ export const authEnv = {
   id: "auth",
   extends: [emailEnv],
   shared: {
-    VITE_AUTH_URL: z.url().optional(),
+    NEXT_PUBLIC_AUTH_URL: z.url(),
   },
   server: {
     AUTH_GITHUB_ID: z.string().min(1),

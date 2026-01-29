@@ -1,12 +1,11 @@
 {
-  "extends": "@raypx/config/vite.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx", "*.ts", "*.tsx"],
+  "extends": "@raypx/config/base.json",
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "baseUrl": ".",
-    "allowJs": false,
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "allowJs": true,
+    "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]

@@ -12,12 +12,12 @@ import type {
 import { pick } from "radash";
 
 /**
- * Default client prefix for Vite projects
+ * Default client prefix for Next.js projects
  */
-export const DEFAULT_CLIENT_PREFIX = "VITE_";
+export const DEFAULT_CLIENT_PREFIX = "NEXT_PUBLIC_";
 
 /**
- * Options for createEnv with configurable client prefix (defaults to VITE_)
+ * Options for createEnv with configurable client prefix (defaults to NEXT_PUBLIC_)
  */
 export type CreateEnvOptions<
   TPrefix extends string,
@@ -27,24 +27,10 @@ export type CreateEnvOptions<
   TExtends extends ExtendsFormat,
 > = Omit<EnvOptions<TPrefix, TShared, TServer, TClient, TExtends>, "envStrict" | "env"> & {
   /**
-   * Client prefix for environment variables (default: "VITE_")
+   * Client prefix for environment variables (default: "NEXT_PUBLIC_")
    */
   clientPrefix?: TPrefix;
 };
-
-/**
- * Safely get import.meta.env if available (Vite environment)
- */
-function getImportMetaEnv(): Record<string, string | undefined> {
-  try {
-    if (typeof import.meta !== "undefined" && import.meta.env) {
-      return import.meta.env as Record<string, string | undefined>;
-    }
-  } catch {
-    // import.meta not available
-  }
-  return {};
-}
 
 /**
  * Check if running on server side
@@ -60,31 +46,25 @@ function detectIsServer(): boolean {
     return true;
   }
 
-  // Check Vite SSR flag
-  const metaEnv = getImportMetaEnv();
-  if (metaEnv.SSR) {
-    return true;
-  }
-
   return false;
 }
 
 /**
- * Create a new environment variable schema with configurable client prefix (defaults to VITE_).
+ * Create a new environment variable schema with configurable client prefix (defaults to NEXT_PUBLIC_).
  *
  * @example
  * ```typescript
- * // Using default VITE_ prefix
+ * // Using default NEXT_PUBLIC_ prefix
  * const env = createEnv({
  *   server: { DATABASE_URL: z.string().url() },
- *   client: { VITE_APP_URL: z.string().url() },
+ *   client: { NEXT_PUBLIC_APP_URL: z.string().url() },
  * });
  *
  * // Using custom prefix
  * const env = createEnv({
- *   clientPrefix: "NEXT_PUBLIC_",
+ *   clientPrefix: "CUSTOM_",
  *   server: { DATABASE_URL: z.string().url() },
- *   client: { NEXT_PUBLIC_APP_URL: z.string().url() },
+ *   client: { CUSTOM_APP_URL: z.string().url() },
  * });
  * ```
  */
@@ -102,16 +82,13 @@ export function createEnv<
   const clientPrefix = (opts.clientPrefix ?? DEFAULT_CLIENT_PREFIX) as TPrefix;
   const isServer = opts.isServer ?? detectIsServer();
 
-  const metaEnv = getImportMetaEnv();
-
   // Build runtime environment
   // On client: only pick shared and client variables
   // On server: use full process.env
   const runtimeEnv = isServer
-    ? { ...process.env, ...metaEnv }
+    ? { ...process.env }
     : {
         ...pick(process.env, [...Object.keys(shared ?? {}), ...Object.keys(client)]),
-        ...metaEnv,
       };
 
   return defineEnvCore<TPrefix, TShared, TServer, TClient, TExtends, TFinalSchema>({

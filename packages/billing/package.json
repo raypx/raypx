@@ -15,7 +15,7 @@
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
     "@raypx/logger": "workspace:*",
-    "stripe": "^20.2.0"
+    "stripe": "^20.3.0"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",

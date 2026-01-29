@@ -5,18 +5,18 @@ let initialized = false;
 
 export function initAnalytics() {
   if (initialized) return;
-  if (env.VITE_PUBLIC_ANALYTICS_DISABLED) return;
-  if (!env.VITE_PUBLIC_POSTHOG_KEY) return;
+  if (env.NEXT_PUBLIC_ANALYTICS_DISABLED) return;
+  if (!env.NEXT_PUBLIC_POSTHOG_KEY) return;
 
-  posthog.init(env.VITE_PUBLIC_POSTHOG_KEY, {
-    api_host: env.VITE_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
+  posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
+    api_host: env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
     ui_host: "https://app.posthog.com",
     capture_pageview: true,
     capture_pageleave: true,
     autocapture: true,
     persistence: "localStorage",
     loaded: (ph) => {
-      if (env.VITE_PUBLIC_ANALYTICS_DEBUG) {
+      if (env.NEXT_PUBLIC_ANALYTICS_DEBUG) {
         ph.debug();
       }
     },
