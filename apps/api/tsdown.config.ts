@@ -7,6 +7,8 @@ export default defineConfig({
   target: "node20",
   outDir: "dist",
   clean: true,
+  // Only bundle the code itself, not dependencies
+  inlineOnly: true,
   // dts: true,
   // sourcemap: true,
   noExternal: [
