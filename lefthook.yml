@@ -2,9 +2,9 @@
 # https://github.com/evilmartians/lefthook
 
 commit-msg:
-  skip:
-    - merge
-    - rebase
+  commands:
+    no-coauthor:
+      run: "grep -q 'Co-Authored-By: Claude' {1} && echo '❌ Claude should not be a co-author' && exit 1 || true"
 
 pre-commit:
   parallel: true
