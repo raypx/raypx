@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GithubLogoIcon, GoogleLogoIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
 import {
@@ -10,53 +11,63 @@ import {
   CardTitle,
 } from "@raypx/ui/components/card";
 import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@raypx/ui/components/field";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@raypx/ui/components/form";
 import { Input } from "@raypx/ui/components/input";
 import { Spinner } from "@raypx/ui/components/spinner";
 import { toast } from "@raypx/ui/components/toast";
-import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod/v4";
 import { signIn } from "@/lib/auth-client";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<"github" | "google" | null>(null);
 
-  const form = useForm({
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
-    onSubmit: async ({ value }) => {
-      setIsLoading(true);
-      try {
-        const result = await signIn.email({
-          email: value.email,
-          password: value.password,
-        });
-
-        if (result.error) {
-          toast.error(result.error.message || "Failed to sign in");
-          return;
-        }
-
-        toast.success("Signed in successfully");
-        router.push("/dashboard");
-      } catch {
-        toast.error("An unexpected error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    },
   });
+
+  const onSubmit = async (values: LoginFormValues) => {
+    setIsLoading(true);
+    try {
+      const result = await signIn.email({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (result.error) {
+        toast.error(result.error.message || "Failed to sign in");
+        return;
+      }
+
+      toast.success("Signed in successfully");
+      router.push("/dashboard");
+    } catch {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSocialLogin = async (provider: "github" | "google") => {
     setSocialLoading(provider);
@@ -79,72 +90,64 @@ export default function LoginPage() {
           <CardDescription>Sign in to your account to continue</CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <form.Field name="email">
-                  {(field) => (
-                    <>
+          <Form {...form}>
+            <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
                       <Input
                         disabled={isLoading}
-                        id="email"
-                        onBlur={field.handleBlur}
-                        onChange={(e) => {
-                          const target = e.target as HTMLInputElement;
-                          field.handleChange(target.value);
-                        }}
                         placeholder="you@example.com"
-                        required
                         type="email"
-                        value={field.state.value}
+                        {...field}
                       />
-                      <FieldError errors={field.state.meta.errors} />
-                    </>
-                  )}
-                </form.Field>
-              </Field>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <form.Field name="password">
-                  {(field) => (
-                    <>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Password</FormLabel>
+                      <a className="text-primary text-sm hover:underline" href="/forgot-password">
+                        Forgot your password?
+                      </a>
+                    </div>
+                    <FormControl>
                       <Input
                         disabled={isLoading}
-                        id="password"
-                        onBlur={field.handleBlur}
-                        onChange={(e) => {
-                          const target = e.target as HTMLInputElement;
-                          field.handleChange(target.value);
-                        }}
                         placeholder="••••••••"
-                        required
                         type="password"
-                        value={field.state.value}
+                        {...field}
                       />
-                      <FieldError errors={field.state.meta.errors} />
-                    </>
-                  )}
-                </form.Field>
-                <FieldDescription>
-                  <a className="text-primary hover:underline" href="/forgot-password">
-                    Forgot your password?
-                  </a>
-                </FieldDescription>
-              </Field>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <Button className="w-full" disabled={isLoading} type="submit">
                 {isLoading && <Spinner className="size-4" />}
                 Sign in
               </Button>
 
-              <FieldSeparator>or continue with</FieldSeparator>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <Button
@@ -181,8 +184,8 @@ export default function LoginPage() {
                   Sign up
                 </a>
               </p>
-            </FieldGroup>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

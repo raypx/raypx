@@ -1,17 +1,15 @@
 import { db } from "@raypx/database";
 import { user } from "@raypx/database/schema/auth";
 import { count, desc, gte } from "@raypx/database/sql";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { protectedProcedure } from "../index";
 
 export const usersRouter = {
-  /** Get total user count */
   count: protectedProcedure.handler(async () => {
     const result = await db.select({ count: count() }).from(user);
     return result[0]?.count ?? 0;
   }),
 
-  /** Get user stats for dashboard */
   stats: protectedProcedure.handler(async () => {
     const now = new Date();
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
@@ -31,7 +29,6 @@ export const usersRouter = {
     };
   }),
 
-  /** List users with pagination */
   list: protectedProcedure
     .input(
       z.object({
@@ -61,4 +58,4 @@ export const usersRouter = {
         total: totalResult?.count ?? 0,
       };
     }),
-};
+} as const;

@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GithubLogoIcon, GoogleLogoIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
 import {
@@ -10,60 +11,74 @@ import {
   CardTitle,
 } from "@raypx/ui/components/card";
 import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@raypx/ui/components/field";
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@raypx/ui/components/form";
 import { Input } from "@raypx/ui/components/input";
 import { Spinner } from "@raypx/ui/components/spinner";
 import { toast } from "@raypx/ui/components/toast";
-import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod/v4";
 import { signIn, signUp } from "@/lib/auth-client";
+
+const signupSchema = z
+  .object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<"github" | "google" | null>(null);
 
-  const form = useForm({
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       name: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
-    onSubmit: async ({ value }) => {
-      if (value.password !== value.confirmPassword) {
-        toast.error("Passwords do not match");
+  });
+
+  const onSubmit = async (values: SignupFormValues) => {
+    setIsLoading(true);
+    try {
+      const result = await signUp.email({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (result.error) {
+        toast.error(result.error.message || "Failed to create account");
         return;
       }
 
-      setIsLoading(true);
-      try {
-        const result = await signUp.email({
-          name: value.name,
-          email: value.email,
-          password: value.password,
-        });
-
-        if (result.error) {
-          toast.error(result.error.message || "Failed to create account");
-          return;
-        }
-
-        toast.success("Account created! Please check your email to verify your account.");
-        router.push("/login");
-      } catch {
-        toast.error("An unexpected error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-  });
+      toast.success("Account created! Please check your email to verify your account.");
+      router.push("/login");
+    } catch {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSocialLogin = async (provider: "github" | "google") => {
     setSocialLoading(provider);
@@ -86,104 +101,93 @@ export default function SignupPage() {
           <CardDescription>Enter your details to get started</CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="name">Name</FieldLabel>
-                <form.Field name="name">
-                  {(field) => (
-                    <>
-                      <Input
-                        disabled={isLoading}
-                        id="name"
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="John Doe"
-                        required
-                        type="text"
-                        value={field.state.value}
-                      />
-                      <FieldError errors={field.state.meta.errors} />
-                    </>
-                  )}
-                </form.Field>
-              </Field>
+          <Form {...form}>
+            <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input disabled={isLoading} placeholder="John Doe" type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <form.Field name="email">
-                  {(field) => (
-                    <>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
                       <Input
                         disabled={isLoading}
-                        id="email"
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="you@example.com"
-                        required
                         type="email"
-                        value={field.state.value}
+                        {...field}
                       />
-                      <FieldError errors={field.state.meta.errors} />
-                    </>
-                  )}
-                </form.Field>
-              </Field>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <form.Field name="password">
-                  {(field) => (
-                    <>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
                       <Input
                         disabled={isLoading}
-                        id="password"
-                        minLength={8}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="••••••••"
-                        required
                         type="password"
-                        value={field.state.value}
+                        {...field}
                       />
-                      <FieldError errors={field.state.meta.errors} />
-                    </>
-                  )}
-                </form.Field>
-              </Field>
+                    </FormControl>
+                    <FormDescription>Must be at least 8 characters</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <Field>
-                <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                <form.Field name="confirmPassword">
-                  {(field) => (
-                    <>
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
                       <Input
                         disabled={isLoading}
-                        id="confirmPassword"
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
                         placeholder="••••••••"
-                        required
                         type="password"
-                        value={field.state.value}
+                        {...field}
                       />
-                      <FieldError errors={field.state.meta.errors} />
-                    </>
-                  )}
-                </form.Field>
-              </Field>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <Button className="w-full" disabled={isLoading} type="submit">
                 {isLoading && <Spinner className="size-4" />}
                 Create account
               </Button>
 
-              <FieldSeparator>or continue with</FieldSeparator>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <Button
@@ -220,8 +224,8 @@ export default function SignupPage() {
                   Sign in
                 </a>
               </p>
-            </FieldGroup>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

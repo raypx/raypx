@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { emailEnv } from "./email.ts";
 
 export const authEnv = {

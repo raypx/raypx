@@ -86,7 +86,7 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
     <span
       aria-hidden
       className={cn(
-        "flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
+        "flex size-8 items-center items-center justify-center justify-center [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       data-slot="pagination-ellipsis"

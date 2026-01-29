@@ -21,6 +21,7 @@
   "devDependencies": {
     "@raypx/config": "workspace:*",
     "@vitest/ui": "catalog:",
+    "@types/node": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

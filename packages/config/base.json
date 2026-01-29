@@ -1,9 +1,9 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig",
   "compilerOptions": {
-    "lib": ["ESNext"],
-    "target": "ESNext",
-    "module": "preserve",
+    "lib": ["esnext"],
+    "target": "esnext",
+    "module": "esnext",
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,

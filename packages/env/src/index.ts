@@ -1,4 +1,4 @@
-export { z } from "zod";
+export { z } from "zod/v4";
 export { createEnv } from "./env";
 export * from "./envs/analytics";
 export * from "./envs/auth";

@@ -26,6 +26,16 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./components/dropdown-menu";
+export {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  useFormField,
+} from "./components/form";
 export { Input } from "./components/input";
 export { Label } from "./components/label";
 export { Skeleton } from "./components/skeleton";

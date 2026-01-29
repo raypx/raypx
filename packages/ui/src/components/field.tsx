@@ -166,11 +166,11 @@ function FieldError({
   className,
   children,
   errors,
-  onlyFirstError = true,
+  showFirstError = true,
   ...props
 }: React.ComponentProps<"div"> & {
   errors?: Array<{ message?: string } | undefined>;
-  onlyFirstError?: boolean;
+  showFirstError?: boolean;
 }) {
   const content = useMemo(() => {
     if (children) {
@@ -183,7 +183,7 @@ function FieldError({
 
     const uniqueErrors = [...new Map(errors.map((error) => [error?.message, error])).values()];
 
-    if (onlyFirstError || uniqueErrors?.length === 1) {
+    if (uniqueErrors?.length === 1 || showFirstError) {
       return uniqueErrors[0]?.message;
     }
 

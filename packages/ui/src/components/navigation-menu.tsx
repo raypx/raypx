@@ -23,7 +23,7 @@ function NavigationMenu({ className, children, ...props }: NavigationMenuPrimiti
 function NavigationMenuList({
   className,
   ...props
-}: Omit<NavigationMenuPrimitive.List.Props, "ref">) {
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.List>) {
   return (
     <NavigationMenuPrimitive.List
       className={cn("group flex flex-1 list-none items-center justify-center gap-0", className)}
@@ -36,7 +36,7 @@ function NavigationMenuList({
 function NavigationMenuItem({
   className,
   ...props
-}: Omit<NavigationMenuPrimitive.Item.Props, "ref">) {
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Item>) {
   return (
     <NavigationMenuPrimitive.Item
       className={cn("relative", className)}
@@ -64,7 +64,7 @@ function NavigationMenuTrigger({
       {children}{" "}
       <CaretDownIcon
         aria-hidden="true"
-        className="relative top-px ml-1 size-3 transition duration-300 group-data-open/navigation-menu-trigger:rotate-180 group-data-popup-open/navigation-menu-trigger:rotate-180"
+        className="relative top-[1px] ml-1 size-3 transition duration-300 group-data-open/navigation-menu-trigger:rotate-180 group-data-popup-open/navigation-menu-trigger:rotate-180"
       />
     </NavigationMenuPrimitive.Trigger>
   );
@@ -128,7 +128,7 @@ function NavigationMenuLink({ className, ...props }: NavigationMenuPrimitive.Lin
 function NavigationMenuIndicator({
   className,
   ...props
-}: Omit<NavigationMenuPrimitive.Icon.Props, "ref">) {
+}: React.ComponentPropsWithRef<typeof NavigationMenuPrimitive.Icon>) {
   return (
     <NavigationMenuPrimitive.Icon
       className={cn(

@@ -5,6 +5,6 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": []
+    "types": ["react", "react-dom"]
   }
 }
