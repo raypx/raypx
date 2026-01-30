@@ -1,10 +1,3 @@
-import { defineConfig } from "vitest/config";
+import { createPackageConfig } from "@raypx/config/vitest";
 
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: "node",
-    include: ["**/*.{test,spec}.{js,ts,tsx}"],
-    passWithNoTests: true,
-  },
-});
+export default createPackageConfig();
