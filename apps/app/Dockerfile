@@ -12,7 +12,7 @@ FROM base AS deps
 
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json ./apps/web/
+COPY apps/app/package.json ./apps/app/
 COPY packages ./packages
 
 # Install dependencies
@@ -23,12 +23,12 @@ FROM base AS builder
 
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/apps/app/node_modules ./apps/app/node_modules
 COPY --from=deps /app/packages ./packages
 
 # Copy source code
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json turbo.json ./
-COPY apps/web ./apps/web
+COPY apps/app ./apps/app
 COPY packages ./packages
 
 # Set environment variables
@@ -37,7 +37,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build application
 WORKDIR /app
-RUN pnpm --filter web build
+RUN pnpm --filter app build
 
 # Runtime stage
 FROM base AS runner
@@ -52,13 +52,13 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy standalone build
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/app/.next/standalone ./
 
 # Copy static files to the correct location in standalone
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/app/.next/static ./apps/app/.next/static
 
 # Copy public files to the correct location in standalone
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/app/public ./apps/app/public
 
 USER nextjs
 
@@ -68,4 +68,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Start application
-CMD ["node", "apps/web/server.js"]
+CMD ["node", "apps/app/server.js"]

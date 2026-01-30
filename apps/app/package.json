@@ -1,0 +1,47 @@
+{
+  "name": "app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm with-env next build",
+    "start": "pnpm with-env next start",
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "dev": "pnpm with-env next dev --turbopack",
+    "with-env": "dotenvx run -f ../../.env --",
+    "shadcn": "shadcn add --overwrite --all",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@phosphor-icons/react": "^2.1.10",
+    "@raypx/auth": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "@raypx/database": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "@raypx/rpc": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "@tanstack/react-query": "^5.90.20",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-hook-form": "^7.71.1",
+    "shadcn": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "@vitest/ui": "catalog:",
+    "jiti": "^2.6.1",
+    "jsdom": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

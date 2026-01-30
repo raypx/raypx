@@ -20,8 +20,8 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@vitest/ui": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
