@@ -17,6 +17,12 @@ pre-commit:
 pre-push:
   parallel: true
   commands:
+    # Typecheck only changed packages (using turbo's smart filtering)
     typecheck:
-      run: pnpm typecheck
+      run: pnpm turbo typecheck --filter=[HEAD^1]
+      skip_on_merge: true
+
+    # Run tests for changed packages
+    test:
+      run: pnpm turbo test --filter=[HEAD^1]
       skip_on_merge: true
