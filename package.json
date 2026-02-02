@@ -45,7 +45,7 @@
     "knip": "^5.82.1",
     "lefthook": "^2.0.16",
     "tsx": "^4.21.0",
-    "turbo": "^2.8.0",
+    "turbo": "^2.8.1",
     "vitest": "^4.0.18"
   },
   "packageManager": "pnpm@10.28.2",

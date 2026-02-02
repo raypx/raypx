@@ -9,45 +9,53 @@ import {
   CardTitle,
 } from "@raypx/ui/components/card";
 import { Skeleton } from "@raypx/ui/components/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const { data: userStats, isLoading: isLoadingUsers } = useQuery<{
-    total: number;
-    change: number;
-  }>(orpc.users.stats.queryOptions());
+
+  // Use useQueries for parallel data fetching
+  const results = useQueries({
+    queries: [
+      orpc.users.stats.queryOptions(),
+      orpc.users.revenue.queryOptions(),
+      orpc.users.activeSessions.queryOptions(),
+      orpc.users.conversionRate.queryOptions(),
+    ],
+  });
+
+  const [userStats, revenueStats, sessionsStats, conversionStats] = results;
 
   const stats = [
     {
       title: "Total Users",
-      value: userStats?.total ?? 0,
-      change: `+${userStats?.change ?? 0}%`,
+      value: userStats.data?.total ?? 0,
+      change: `+${userStats.data?.change ?? 0}%`,
       icon: UsersIcon,
-      loading: isLoadingUsers,
+      loading: userStats.isLoading,
     },
     {
       title: "Revenue",
-      value: "$12,345",
-      change: "+8%",
+      value: `$${revenueStats.data?.current.toLocaleString() ?? "0"}`,
+      change: revenueStats.data?.change ?? "+0%",
       icon: CreditCardIcon,
-      loading: false,
+      loading: revenueStats.isLoading,
     },
     {
       title: "Active Sessions",
-      value: "567",
-      change: "+23%",
+      value: sessionsStats.data?.current ?? 0,
+      change: sessionsStats.data?.change ?? "+0%",
       icon: ActivityIcon,
-      loading: false,
+      loading: sessionsStats.isLoading,
     },
     {
       title: "Conversion Rate",
-      value: "3.2%",
-      change: "+2%",
+      value: conversionStats.data?.current ?? "0%",
+      change: conversionStats.data?.change ?? "+0%",
       icon: ChartBarIcon,
-      loading: false,
+      loading: conversionStats.isLoading,
     },
   ];
 

@@ -2,29 +2,34 @@
   "name": "@raypx/database",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts",
-    "./schema/auth": "./src/schema/auth.ts",
-    "./sql": "./src/sql.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "clean": "git clean -fdX -e node_modules -e .turbo",
-    "db": "dotenvx run -f ../../.env -- drizzle-kit",
+    "db": "dotenvx run -f ../../.env -- prisma",
+    "db:generate": "pnpm with-env prisma generate",
+    "db:migrate": "pnpm with-env prisma migrate dev",
+    "db:push": "pnpm with-env prisma db push",
+    "postinstall": "pnpm db:generate",
+    "db:studio": "pnpm with-env prisma studio",
     "with-env": "dotenvx run -f ../../.env --",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@raypx/env": "workspace:*",
-    "drizzle-orm": "^0.45.1",
-    "postgres": "^3.4.8"
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
+    "@raypx/env": "workspace:*"
   },
   "devDependencies": {
+    "@prisma/config": "^7.2.0",
     "@raypx/config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.16.0",
     "@vitest/ui": "catalog:",
-    "drizzle-kit": "^0.31.8",
     "jsdom": "catalog:",
+    "prisma": "^7.2.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

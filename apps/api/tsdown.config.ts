@@ -15,11 +15,8 @@ export default defineConfig({
     "@raypx/core",
     "@raypx/database",
     "@raypx/auth",
-    "@raypx/billing",
     "@raypx/rpc",
     "@raypx/logger",
     "@raypx/env",
-    "@raypx/observability",
-    "@raypx/redis",
   ],
 });

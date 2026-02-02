@@ -11,4 +11,13 @@ export const emailEnv = {
     MAIL_USER: z.string().min(1).optional(),
     MAIL_PASSWORD: z.string().min(1).optional(),
   },
+  env: {
+    RESEND_FROM: process.env.RESEND_FROM,
+    AUTH_RESEND_KEY: process.env.AUTH_RESEND_KEY,
+    MAIL_HOST: process.env.MAIL_HOST,
+    MAIL_PORT: process.env.MAIL_PORT,
+    MAIL_SECURE: process.env.MAIL_SECURE,
+    MAIL_USER: process.env.MAIL_USER,
+    MAIL_PASSWORD: process.env.MAIL_PASSWORD,
+  },
 } as const;

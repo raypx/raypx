@@ -16,6 +16,7 @@
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",
     "@raypx/env": "workspace:*",
+    "zod": "catalog:",
     "better-auth": "catalog:",
     "react": "catalog:"
   },

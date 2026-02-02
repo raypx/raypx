@@ -1,15 +1,8 @@
 {
   "extends": "@raypx/config/base.json",
-  "include": ["src/**/*.ts", "config/**/*.ts", "drizzle.config.ts"],
-  "exclude": ["node_modules"],
+  "include": ["src/**/*.ts", "prisma.config.ts"],
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true,
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": false
-  }
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
+  },
+  "exclude": ["node_modules"]
 }

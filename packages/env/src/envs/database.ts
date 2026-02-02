@@ -22,4 +22,11 @@ export const databaseEnv = {
       }),
     DATABASE_PREFIX: z.string().min(1).optional(),
   },
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    DATABASE_MAX_CONNECTIONS: process.env.DATABASE_MAX_CONNECTIONS,
+    DATABASE_PREPARE: process.env.DATABASE_PREPARE,
+    VECTOR_URL: process.env.VECTOR_URL,
+    DATABASE_PREFIX: process.env.DATABASE_PREFIX,
+  },
 } as const;
