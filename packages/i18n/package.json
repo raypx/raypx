@@ -1,0 +1,13 @@
+{
+  "name": "@raypx/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./locales": "./src/locales.ts",
+    "./messages/*": "./messages/*.json"
+  },
+  "dependencies": {
+    "next-intl": "catalog:"
+  }
+}

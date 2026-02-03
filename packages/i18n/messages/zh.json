@@ -1,0 +1,37 @@
+{
+  "common": {
+    "appName": "Raypx",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "signOut": "退出登录",
+    "email": "邮箱",
+    "password": "密码",
+    "forgotPassword": "忘记密码？",
+    "resetPassword": "重置密码",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "•••••••••",
+    "rememberMe": "记住我",
+    "dontHaveAccount": "还没有账号？",
+    "alreadyHaveAccount": "已有账号？",
+    "createAccount": "创建账号"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "welcome": "欢迎回来！",
+    "settings": "设置",
+    "users": "用户",
+    "profile": "个人资料",
+    "organization": "组织",
+    "billing": "计费"
+  },
+  "footer": {
+    "orContinueWith": "或继续使用",
+    "github": "GitHub",
+    "google": "谷歌"
+  }
+}

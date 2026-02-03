@@ -56,5 +56,8 @@
       "lodash": "4.17.23",
       "hono": "^4.11.7"
     }
+  },
+  "dependencies": {
+    "next-intl": "^4.8.2"
   }
 }

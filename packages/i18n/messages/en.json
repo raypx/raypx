@@ -1,0 +1,37 @@
+{
+  "common": {
+    "appName": "Raypx",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot your password?",
+    "resetPassword": "Reset Password",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "•••••••••",
+    "rememberMe": "Remember me",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "createAccount": "Create account"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back!",
+    "settings": "Settings",
+    "users": "Users",
+    "profile": "Profile",
+    "organization": "Organization",
+    "billing": "Billing"
+  },
+  "footer": {
+    "orContinueWith": "Or continue with",
+    "github": "GitHub",
+    "google": "Google"
+  }
+}

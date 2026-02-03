@@ -1,7 +1,7 @@
 {
   "extends": "@raypx/config/react.json",
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "src/app/sw.ts"],
   "compilerOptions": {
     "baseUrl": ".",
     "allowJs": true,

@@ -22,6 +22,7 @@
     "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/env": "workspace:*",
+    "@raypx/i18n": "workspace:*",
     "@raypx/rpc": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-form": "catalog:",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
+    "@serwist/next": "^9.5.3",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -42,6 +44,7 @@
     "@vitest/ui": "catalog:",
     "jiti": "^2.6.1",
     "jsdom": "catalog:",
+    "serwist": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

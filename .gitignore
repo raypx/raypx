@@ -31,6 +31,10 @@ out
 next-env.d.ts
 .turbopack
 
+# PWA
+workbox-*.js
+sw.js
+
 # Environment variables
 .env
 .env*.local
