@@ -1,7 +1,5 @@
 import { db } from "@raypx/database";
-import { customPermission, DEFAULT_ROLE_PERMISSIONS } from "@raypx/database/schema";
-import { member } from "@raypx/database/schema/auth";
-import { and, eq } from "@raypx/database/sql";
+import { DEFAULT_ROLE_PERMISSIONS } from "@raypx/database/schema";
 
 type Role = keyof typeof DEFAULT_ROLE_PERMISSIONS;
 type Resource = keyof (typeof DEFAULT_ROLE_PERMISSIONS)["owner"];
@@ -21,8 +19,11 @@ export async function hasPermission(params: PermissionCheckParams): Promise<bool
   const { userId, organizationId, resource, action } = params;
 
   // Get the user's membership in the organization
-  const membership = await db.query.member.findFirst({
-    where: and(eq(member.userId, userId), eq(member.organizationId, organizationId)),
+  const membership = await db.member.findFirst({
+    where: {
+      userId,
+      organizationId,
+    },
   });
 
   if (!membership) {
@@ -32,12 +33,12 @@ export async function hasPermission(params: PermissionCheckParams): Promise<bool
   const role = membership.role as Role;
 
   // Check for custom permission overrides
-  const custom = await db.query.customPermission.findFirst({
-    where: and(
-      eq(customPermission.memberId, membership.id),
-      eq(customPermission.resource, resource),
-      eq(customPermission.action, action),
-    ),
+  const custom = await db.customPermission.findFirst({
+    where: {
+      memberId: membership.id,
+      resource: resource as any,
+      action: action as any,
+    },
   });
 
   if (custom) {
@@ -70,8 +71,11 @@ export async function getUserPermissions(
   userId: string,
   organizationId: string,
 ): Promise<Record<Resource, Action[]>> {
-  const membership = await db.query.member.findFirst({
-    where: and(eq(member.userId, userId), eq(member.organizationId, organizationId)),
+  const membership = await db.member.findFirst({
+    where: {
+      userId,
+      organizationId,
+    },
   });
 
   if (!membership) {
@@ -82,8 +86,10 @@ export async function getUserPermissions(
   const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role];
 
   // Get custom permissions
-  const customPerms = await db.query.customPermission.findMany({
-    where: eq(customPermission.memberId, membership.id),
+  const customPerms = await db.customPermission.findMany({
+    where: {
+      memberId: membership.id,
+    },
   });
 
   // Build permissions object
@@ -126,8 +132,11 @@ export async function requirePermission(params: PermissionCheckParams): Promise<
  * Get user's role in an organization
  */
 export async function getUserRole(userId: string, organizationId: string): Promise<Role | null> {
-  const membership = await db.query.member.findFirst({
-    where: and(eq(member.userId, userId), eq(member.organizationId, organizationId)),
+  const membership = await db.member.findFirst({
+    where: {
+      userId,
+      organizationId,
+    },
   });
 
   return membership?.role as Role | null;

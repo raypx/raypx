@@ -9,7 +9,6 @@ import type {
   ServerFormat,
   SharedFormat,
 } from "envin/types";
-import { pick } from "radash";
 
 /**
  * Default client prefix for Next.js projects
@@ -86,22 +85,22 @@ export function createEnv<
   // Build runtime environment
   // On client: only pick shared and client variables
   // On server: use full process.env
-  const runtimeEnv = isServer
-    ? { ...process.env }
-    : {
-        ...pick(process.env, [...Object.keys(shared ?? {}), ...Object.keys(client)]),
-      };
-
-  return defineEnvCore<TPrefix, TShared, TServer, TClient, TExtends, TFinalSchema>({
-    skip: opts.skip,
-    shared,
-    client,
-    server,
-    isServer,
-    env: runtimeEnv,
-    clientPrefix,
-    extends: opts.extends,
-  });
+  const runtimeEnv = isServer ? { ...process.env } : { ...process.env };
+  try {
+    const env = defineEnvCore<TPrefix, TShared, TServer, TClient, TExtends, TFinalSchema>({
+      skip: opts.skip,
+      shared,
+      client,
+      server,
+      isServer,
+      env: runtimeEnv,
+      clientPrefix,
+      extends: opts.extends,
+    });
+    return env;
+  } catch (error) {
+    throw error;
+  }
 }
 export type {
   ClientFormat,

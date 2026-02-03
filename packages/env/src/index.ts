@@ -1,5 +1,5 @@
+export { defineEnv as createEnv } from "envin";
 export { z } from "zod/v4";
-export { createEnv } from "./env";
 export * from "./envs/analytics";
 export * from "./envs/auth";
 export * from "./envs/billing";

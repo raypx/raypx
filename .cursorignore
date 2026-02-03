@@ -12,10 +12,16 @@ out/
 .nitro/
 .source/
 .tanstack/
+.vinxi/
+.turbopack/
 
 # Generated files
 *.tsbuildinfo
 routeTree.gen.ts
+next-env.d.ts
+
+# Database
+packages/database/prisma/generated/
 
 # Testing
 coverage/
@@ -44,6 +50,7 @@ logs/
 # Temporary files
 *.tmp
 .cache/
+.alchemy/
 
 # Lock files (workspace handles these)
 pnpm-lock.yaml

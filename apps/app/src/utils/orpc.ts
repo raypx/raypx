@@ -19,3 +19,6 @@ export const queryClient = new QueryClient({
 const client = createClient({ baseUrl: env.NEXT_PUBLIC_AUTH_URL });
 
 export const orpc = createQueryUtils(client);
+
+// Export raw client for direct RPC calls
+export const rpc = client;

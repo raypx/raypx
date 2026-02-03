@@ -1,6 +1,5 @@
 import { redis } from "@raypx/core";
 import { db } from "@raypx/database";
-import { user } from "@raypx/database/schema";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +33,7 @@ async function getDbHealth() {
   try {
     const start = performance.now();
     dbTimes.connect = performance.now() - start;
-    await db.select().from(user).limit(1);
+    await db.user.findFirst({ take: 1 });
     dbTimes.query = performance.now() - start;
     return {
       success: true,

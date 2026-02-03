@@ -72,3 +72,6 @@ coverage
 tmp
 temp
 .netlify
+
+# Database
+packages/database/prisma/generated

@@ -5,4 +5,7 @@ export const redisEnv = {
   server: {
     REDIS_URL: z.url().min(1),
   },
+  env: {
+    REDIS_URL: process.env.REDIS_URL,
+  },
 } as const;

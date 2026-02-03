@@ -12,11 +12,66 @@ import {
 } from "@raypx/ui/components/card";
 import { Input } from "@raypx/ui/components/input";
 import { Label } from "@raypx/ui/components/label";
+import { toast } from "@raypx/ui/components/toast";
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
+import { rpc } from "@/utils/orpc";
 
 export default function ProfileSettingsPage() {
   const { data: session } = useSession();
   const user = session?.user;
+
+  const [name, setName] = useState(user?.name || "");
+  const [image, _setImage] = useState(user?.image || "");
+
+  const updateUser = useMutation({
+    mutationFn: (data: { name?: string; image?: string }) => rpc.users.update(data),
+    onSuccess: () => {
+      toast.success("Profile updated successfully", {
+        description: "Your changes have been saved.",
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Failed to update profile", {
+        description: err.message,
+      });
+    },
+  });
+
+  const deleteUser = useMutation({
+    mutationFn: () => rpc.users.delete(),
+    onSuccess: () => {
+      toast.success("Account deleted successfully", {
+        description: "Your account has been permanently deleted.",
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Failed to delete account", {
+        description: err.message,
+      });
+    },
+  });
+
+  const handleSave = () => {
+    updateUser.mutate({
+      name: name !== user?.name ? name : undefined,
+      image: image !== user?.image ? image : undefined,
+    });
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone.",
+    );
+    if (confirmed) {
+      await deleteUser.mutateAsync();
+      // Redirect or handle post-deletion
+    }
+  };
+
+  const isDirty = name !== user?.name || image !== user?.image;
+  const isLoading = updateUser.isPending || deleteUser.isPending;
 
   return (
     <div className="space-y-6">
@@ -27,13 +82,13 @@ export default function ProfileSettingsPage() {
         </CardHeader>
         <CardContent className="flex items-center gap-6">
           <Avatar className="size-20">
-            <AvatarImage src={user?.image || undefined} />
+            <AvatarImage src={image || undefined} />
             <AvatarFallback className="text-2xl">
-              {user?.name?.charAt(0).toUpperCase() || "U"}
+              {name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="space-y-2">
-            <Button size="sm" variant="outline">
+            <Button size="sm" type="button" variant="outline">
               Change avatar
             </Button>
             <p className="text-muted-foreground text-xs">JPG, GIF or PNG. Max size 2MB.</p>
@@ -50,7 +105,12 @@ export default function ProfileSettingsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input defaultValue={user?.name || ""} id="name" />
+              <Input
+                disabled={isLoading}
+                id="name"
+                onChange={(e) => setName(e.target.value)}
+                value={name}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -60,7 +120,9 @@ export default function ProfileSettingsPage() {
           </div>
         </CardContent>
         <CardFooter className="border-t pt-6">
-          <Button>Save changes</Button>
+          <Button disabled={!isDirty || isLoading} onClick={handleSave} type="button">
+            {isLoading ? "Saving..." : "Save changes"}
+          </Button>
         </CardFooter>
       </Card>
 
@@ -77,7 +139,9 @@ export default function ProfileSettingsPage() {
                 Use an authenticator app to generate one-time codes.
               </p>
             </div>
-            <Button variant="outline">Enable</Button>
+            <Button type="button" variant="outline">
+              Enable
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -95,7 +159,9 @@ export default function ProfileSettingsPage() {
                 Permanently delete your account and all associated data.
               </p>
             </div>
-            <Button variant="destructive">Delete Account</Button>
+            <Button disabled={isLoading} onClick={handleDelete} type="button" variant="destructive">
+              Delete Account
+            </Button>
           </div>
         </CardContent>
       </Card>
