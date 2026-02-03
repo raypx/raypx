@@ -18,18 +18,18 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
     "@raypx/env": "workspace:*"
   },
   "devDependencies": {
-    "@prisma/config": "^7.2.0",
+    "@prisma/config": "^7.3.0",
     "@raypx/config": "workspace:*",
     "@types/node": "catalog:",
     "@types/pg": "^8.16.0",
     "@vitest/ui": "catalog:",
     "jsdom": "catalog:",
-    "prisma": "^7.2.0",
+    "prisma": "^7.3.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
