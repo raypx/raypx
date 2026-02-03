@@ -1,0 +1,203 @@
+# Raypx
+
+> Modern full-stack application with authentication, billing, and more.
+
+## Features
+
+- 🔐 **Authentication** - Email/Password, GitHub, Google OAuth via [better-auth](https://www.better-auth.com/)
+- 💳 **Billing** - Stripe integration for subscription management
+- 📧 **Email** - Transactional emails with Resend
+- 📊 **Analytics** - PostHog and Google Analytics support
+- 🐛 **Observability** - Sentry error tracking
+- 🌍 **Internationalization** - Multi-language support via i18next
+- 📝 **Documentation** - Integrated docs site with Fumadocs
+- 🎨 **UI Components** - Shadcn UI component library
+- ⚡ **Fast Build** - Turbo-powered monorepo with Next.js Turbopack
+
+## Tech Stack
+
+### Core
+- **Package Manager**: [pnpm](https://pnpm.io)
+- **Framework**: [Next.js 16](https://nextjs.org/) with Turbopack
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Monorepo**: [Turborepo](https://turbo.build/)
+
+### Backend
+- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Drizzle ORM](https://orm.drizzle.team/)
+- **Auth**: [better-auth](https://www.better-auth.com/)
+- **Validation**: [Zod](https://zod.dev/)
+- **API**: Next.js App Router with Route Handlers
+
+### Frontend
+- **UI**: [React 19](https://react.dev/) + [Tailwind CSS](https://tailwindcss.com/)
+- **Components**: [Shadcn UI](https://ui.shadcn.com/)
+- **Routing**: [Next.js App Router](https://nextjs.org/docs/app)
+- **State**: [TanStack Query](https://tanstack.com/query)
+- **Styling**: Tailwind CSS with optimized asset delivery
+
+### Infrastructure
+- **Email**: [Resend](https://resend.com/)
+- **Payments**: [Stripe](https://stripe.com/)
+- **Analytics**: [PostHog](https://posthog.com/)
+- **Error Tracking**: [Sentry](https://sentry.io/)
+- **Storage**: [Cloudflare R2](https://developers.cloudflare.com/r2/)
+
+## Project Structure
+
+```
+raypx/
+├── apps/
+│   ├── docs/          # Documentation site
+│   └── web/           # Main web application (Next.js)
+├── packages/
+│   ├── auth/          # Authentication configuration
+│   ├── billing/       # Stripe billing integration
+│   ├── config/        # Shared configuration
+│   ├── database/      # Database schema and client
+│   ├── email/         # Email service with Resend
+│   ├── env/           # Environment variables validation
+│   ├── i18n/          # Internationalization
+│   ├── logger/        # Logging utilities
+│   ├── observability/ # Analytics and error tracking
+│   └── ui/            # Shared UI components
+└── scripts/           # Utility scripts
+```
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) >= 22
+- [pnpm](https://pnpm.io) >= 10
+- [PostgreSQL](https://www.postgresql.org/) >= 14
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/raypx/raypx.git
+cd raypx
+
+# Install dependencies
+pnpm install
+
+# Copy environment variables
+cp .env.example .env
+
+# Update .env with your configuration
+```
+
+### Database Setup
+
+```bash
+# Generate database client
+pnpm db:generate
+
+# Push migrations
+pnpm db:push
+
+# (Optional) Seed database
+pnpm db:seed
+```
+
+### Development
+
+```bash
+# Start development server
+pnpm dev
+
+# Start specific app
+pnpm dev:web      # Web application (http://localhost:3000)
+pnpm dev:docs     # Documentation (http://localhost:3004)
+```
+
+### Build
+
+```bash
+# Build all apps
+pnpm build
+
+# Build specific app
+pnpm build:web
+pnpm build:docs
+```
+
+## Available Commands
+
+### Development
+
+```bash
+pnpm dev              # Start all apps
+pnpm dev:web          # Start web app
+pnpm dev:docs         # Start docs site
+```
+
+### Build
+
+```bash
+pnpm build            # Build all apps
+pnpm build:web        # Build web app
+pnpm build:docs       # Build docs site
+```
+
+### Code Quality
+
+```bash
+pnpm format           # Format code with Biome
+pnpm lint             # Lint code with Biome
+pnpm typecheck        # Run TypeScript type checking
+pnpm test             # Run tests
+pnpm knip             # Check for unused files
+```
+
+### Database
+
+```bash
+pnpm db               # Run Drizzle Kit CLI
+pnpm db:generate      # Generate database client
+pnpm db:push          # Push migrations
+pnpm db:migrate       # Run migrations
+pnpm db:studio        # Open Drizzle Studio
+```
+
+### Cleaning
+
+```bash
+pnpm clean            # Clean build artifacts
+pnpm clean:all        # Clean build artifacts + turbo cache
+pnpm reinstall        # Reinstall all dependencies
+```
+
+## Docker
+
+```bash
+# Build web app
+docker build -f apps/web/Dockerfile -t raypx/web:latest .
+
+# Run container
+docker run -p 3000:3000 --env-file .env raypx/web:latest
+
+# Health check
+curl http://localhost:3000/api/health
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+[Apache-2.0](LICENSE)
+
+Copyright 2025 https://raypx.com
+
+## Support
+
+- 📖 [Documentation](https://raypx.com)
+- 💬 [Discord](https://discord.gg/raypx)
+- 🐛 [Issues](https://github.com/raypx/raypx/issues)
+- 📧 [Email](mailto:support@raypx.com)

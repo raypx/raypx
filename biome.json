@@ -1,0 +1,127 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "maxSize": 1048576,
+    "includes": [
+      "**/*.{tsx,ts,js,jsx,json,jsonc,css,mdx}",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/.git",
+      "!**/.turbo",
+      "!**/.source",
+      "!**/.tanstack",
+      "!**/.nitro",
+      "!**/.output",
+      "!**/coverage",
+      "!**/*.tsbuildinfo",
+      "!**/routeTree.gen.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "useSortedAttributes": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "level": "warn",
+          "fix": "safe",
+          "options": {
+            "functions": ["clsx", "cva", "cn"]
+          }
+        }
+      },
+      "suspicious": {
+        "noDocumentCookie": "off",
+        "noExplicitAny": "off",
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": ["warn", "error", "debug"]
+          }
+        },
+        "noArrayIndexKey": "off"
+      },
+      "style": {
+        "useImportType": "error",
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
+      }
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": true,
+      "semicolons": "always",
+      "quoteStyle": "double"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/*.mdx"],
+      "formatter": {
+        "enabled": true
+      },
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["packages/ui/src/components/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": "off"
+        }
+      }
+    }
+  ]
+}

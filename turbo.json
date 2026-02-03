@@ -1,0 +1,102 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "envMode": "loose",
+  "remoteCache": { "signature": true },
+  "concurrency": "16",
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event", "DATABASE_URL"],
+  "tasks": {
+    "clean": {
+      "cache": false
+    },
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "next.config.*"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".next/**"],
+      "outputLogs": "new-only"
+    },
+    "shadcn": {},
+    "build:node": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "next.config.*"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".next/**"],
+      "outputLogs": "new-only"
+    },
+    "start": {
+      "cache": true,
+      "dependsOn": ["build", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "next.config.*"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".next/**"]
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": ["^typecheck"],
+      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"]
+    },
+    "format": {
+      "cache": true,
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "check": {
+      "cache": true,
+      "outputs": [".cache/.biomecache"],
+      "outputLogs": "new-only"
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.*",
+        "jest.config.*",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "outputs": [],
+      "outputLogs": "new-only"
+    },
+    "test:coverage": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.*",
+        "jest.config.*",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "outputs": ["coverage/**"],
+      "outputLogs": "new-only"
+    },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "persistent": true
+    },
+    "api": {
+      "cache": false,
+      "persistent": true
+    },
+    "db": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    }
+  }
+}

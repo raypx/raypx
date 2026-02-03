@@ -1,0 +1,28 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+commit-msg:
+  commands:
+    no-coauthor:
+      run: "grep -q 'Co-Authored-By: Claude' {1} && echo '❌ Claude should not be a co-author' && exit 1 || true"
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: pnpm biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    # Typecheck only changed packages (using turbo's smart filtering)
+    typecheck:
+      run: pnpm turbo typecheck --filter=[HEAD^1]
+      skip_on_merge: true
+
+    # Run tests for changed packages
+    test:
+      run: pnpm turbo test --filter=[HEAD^1]
+      skip_on_merge: true

@@ -1,0 +1,14 @@
+{
+  "extends": "@raypx/config/react.json",
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "allowJs": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@raypx/ui/*": ["../../packages/ui/src/*"]
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@raypx/env",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./envs/*": "./src/envs/*.ts"
+  },
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "envin": "^1.2.0",
+    "radash": "^12.1.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@types/node": "catalog:",
+    "@vitest/ui": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

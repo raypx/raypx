@@ -1,0 +1,11 @@
+{
+  "extends": "@raypx/config/react.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@raypx/ui/*": ["./src/*"]
+    }
+  }
+}

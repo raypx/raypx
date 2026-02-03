@@ -1,0 +1,77 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+build
+.output
+.nitro
+.vinxi
+*.tsbuildinfo
+
+# Tauri (Desktop app)
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# TanStack Start (legacy)
+.tanstack
+.wrangler
+.vinxi
+dist-ssr
+*.local
+count.txt
+todos.json
+routeTree.gen.ts
+
+# Next.js (used by web and desktop apps)
+.next
+out
+next-env.d.ts
+.turbopack
+
+# Environment variables
+.env
+.env*.local
+
+# IDEs and editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Turbo
+.turbo
+
+# Better-T-Stack
+.alchemy
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+*.tgz
+.cache
+tmp
+temp
+.netlify
+
+# Database
+packages/database/prisma/generated

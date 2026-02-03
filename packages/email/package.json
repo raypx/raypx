@@ -1,0 +1,25 @@
+{
+  "name": "@raypx/email",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "with-env": "dotenvx run -f ../../.env --"
+  },
+  "dependencies": {
+    "@raypx/env": "workspace:*",
+    "@raypx/logger": "workspace:*",
+    "resend": "^6.9.1"
+  },
+  "devDependencies": {
+    "@vitest/ui": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

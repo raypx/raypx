@@ -1,0 +1,8 @@
+{
+  "extends": "@raypx/config/base.json",
+  "include": ["src/**/*.ts", "prisma.config.ts"],
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
+  },
+  "exclude": ["node_modules"]
+}

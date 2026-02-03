@@ -1,0 +1,79 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "apps/app": {
+      "entry": [
+        "src/app/**/page.tsx",
+        "src/app/**/layout.tsx",
+        "src/app/**/route.ts",
+        "src/lib/**/*.{ts,tsx}",
+        "src/utils/**/*.{ts,tsx}"
+      ],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/web": {
+      "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx", "src/app/**/route.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/docs": {
+      "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx", "src/app/**/route.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/desktop": {
+      "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx", "src/components/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/ui": {
+      "entry": ["src/components/*.tsx", "src/hooks/*.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/database": {
+      "entry": ["prisma/schema/*.prisma"],
+      "project": ["src/**/*.ts", "prisma/**/*.prisma"]
+    },
+    "packages/logger": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/config": {
+      "project": ["*.ts", "*.json"]
+    },
+    "packages/auth": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/env": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/rpc": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/core": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/email": {
+      "project": ["src/**/*.ts"]
+    }
+  },
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/*.config.{js,ts,mjs,cjs}",
+    "**/vitest.setup.{js,ts}",
+    "**/migrations/**",
+    "**/*.css",
+    "**/prisma/generated/**",
+    "**/routeTree.gen.ts",
+    "**/.env.*",
+    "**/loader.tsx",
+    "apps/api/tsdown.config.ts"
+  ],
+  "ignoreDependencies": [
+    "@prisma/client",
+    "@prisma/engines",
+    "@prisma/config",
+    "prisma",
+    "@types/pg"
+  ]
+}

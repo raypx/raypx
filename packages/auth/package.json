@@ -1,0 +1,31 @@
+{
+  "name": "@raypx/auth",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "clean": "git clean -fdX -e node_modules -e .turbo",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "with-env": "dotenvx run -f ../../.env --"
+  },
+  "dependencies": {
+    "@raypx/database": "workspace:*",
+    "@raypx/email": "workspace:*",
+    "@raypx/env": "workspace:*",
+    "better-auth": "catalog:",
+    "react": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@types/react": "catalog:",
+    "@vitest/ui": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
