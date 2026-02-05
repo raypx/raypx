@@ -1,71 +1,43 @@
-# Use Node.js official image
-FROM node:22-alpine AS base
+# Stage 1: Builder
+FROM node:22-alpine AS builder
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
-
-# Set working directory
 WORKDIR /app
 
-# Dependencies installation stage
-FROM base AS deps
+ENV NODE_ENV=production
 
-# Copy package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/tanstack/package.json ./apps/tanstack/
-COPY packages ./packages
+# Enable pnpm using Corepack
+RUN corepack enable
 
-# Install dependencies
+# Copy source code (including .git for turbo caching)
+COPY . .
+
+# Install all dependencies (including devDependencies for build)
+# --ignore-scripts skips prepare hook (lefthook install requires git hooks setup)
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Build stage
-FROM base AS builder
+# Build the application
+RUN pnpm turbo build --filter=tanstack...
 
-# Copy dependencies
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/tanstack/node_modules ./apps/tanstack/node_modules
-COPY --from=deps /app/packages ./packages
-
-# Copy source code
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json turbo.json ./
-COPY apps/tanstack ./apps/tanstack
-COPY packages ./packages
-
-# Set environment variables
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Build application
-WORKDIR /app
-RUN pnpm --filter tanstack build
-
-# Runtime stage
-FROM base AS runner
+# Stage 2: Runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
+# Set production environment
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Install curl for health check
+RUN apk add --no-cache curl
 
-# Copy standalone build
-COPY --from=builder --chown=nextjs:nodejs /app/apps/tanstack/.next/standalone ./
+# Copy built application from builder
+COPY --from=builder /app/apps/tanstack/.output .output
 
-# Copy static files to the correct location in standalone
-COPY --from=builder --chown=nextjs:nodejs /app/apps/tanstack/.next/static ./apps/tanstack/.next/static
+# Display size of /app directory
+RUN echo "=== /app Directory Size ===" && du -hs /app && echo "============================"
 
-# Copy public files to the correct location in standalone
-COPY --from=builder --chown=nextjs:nodejs /app/apps/tanstack/public ./apps/tanstack/public
-
-USER nextjs
-
+# Expose the application port
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-# Start application
-CMD ["node", "apps/tanstack/server.js"]
+# Start the production server
+CMD ["node", ".output/server/index.mjs"]

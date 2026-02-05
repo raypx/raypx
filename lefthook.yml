@@ -1,10 +1,11 @@
 # Lefthook configuration
 # https://github.com/evilmartians/lefthook
 
+# Strip Co-Authored-By lines from commit message (so they never appear in history)
 commit-msg:
   commands:
-    no-coauthor:
-      run: "grep -q 'Co-Authored-By: Claude' {1} && echo '❌ Claude should not be a co-author' && exit 1 || true"
+    strip-coauthor:
+      run: "grep -v Co-Authored-By {1} > {1}.tmp && mv {1}.tmp {1}"
 
 pre-commit:
   parallel: true
