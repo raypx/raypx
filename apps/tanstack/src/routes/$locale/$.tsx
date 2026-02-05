@@ -1,5 +1,5 @@
 import browserCollections from "fumadocs-mdx:collections/browser";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, useLoaderData } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
@@ -9,34 +9,37 @@ import { Suspense } from "react";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 
-export const Route = createFileRoute("/$")({
+export const Route = createFileRoute("/$locale/$")({
   component: Page,
   loader: async ({ params }) => {
-    const slugs = params._splat?.split("/") ?? [];
-    const data = await serverLoader({ data: slugs });
+    const data = await loader({
+      data: {
+        slugs: params._splat?.split("/") ?? [],
+        locale: params.locale,
+      },
+    });
     await clientLoader.preload(data.path);
     return data;
   },
 });
 
-const serverLoader = createServerFn({
+const loader = createServerFn({
   method: "GET",
 })
-  .inputValidator((slugs: string[]) => slugs)
-  .handler(async ({ data: slugs }) => {
-    const page = source.getPage(slugs);
+  .inputValidator((params: { slugs: string[]; locale?: string }) => params)
+  .handler(async ({ data: { slugs, locale } }) => {
+    const page = source.getPage(slugs, locale);
     if (!page) throw notFound();
 
     return {
       path: page.path,
-      pageTree: await source.serializePageTree(source.getPageTree()),
+      pageTree: await source.serializePageTree(source.getPageTree(locale)),
     };
   });
 
 const clientLoader = browserCollections.docs.createClientLoader({
   component(
     { toc, frontmatter, default: MDX },
-    // you can define props for the component
     props: {
       className?: string;
     },
@@ -58,10 +61,11 @@ const clientLoader = browserCollections.docs.createClientLoader({
 });
 
 function Page() {
+  const { locale } = Route.useParams();
   const data = useFumadocsLoader(Route.useLoaderData());
 
   return (
-    <DocsLayout {...baseOptions()} tree={data.pageTree}>
+    <DocsLayout {...baseOptions(locale)} tree={data.pageTree}>
       <Suspense>
         {clientLoader.useContent(data.path, {
           className: "",
