@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   output: "standalone",
   transpilePackages: ["@raypx/ui", "@raypx/i18n"],
-  basePath: "/docs",
+  basePath: process.env.NODE_ENV === "production" ? "/docs" : undefined,
 };
 
 export default withNextIntl(withMDX(nextConfig));

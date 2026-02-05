@@ -46,10 +46,14 @@ export default async function LocaleLayout({
             <DocsLayout
               i18n={i18n}
               nav={{
-                title: <a href="/">Raypx</a>,
-              }}
-              sidebar={{
-                prefetch: false,
+                title: () => (
+                  <a
+                    className="me-auto inline-flex items-center gap-2.5 font-medium text-[0.9375rem]"
+                    href="/"
+                  >
+                    Raypx
+                  </a>
+                ),
               }}
               tree={source.getPageTree(locale)}
             >
