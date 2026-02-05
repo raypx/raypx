@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 
-export const Route = createFileRoute("/docs/$")({
+export const Route = createFileRoute("/$")({
   component: Page,
   loader: async ({ params }) => {
     const slugs = params._splat?.split("/") ?? [];

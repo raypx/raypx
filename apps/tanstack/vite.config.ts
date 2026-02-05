@@ -8,7 +8,7 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
-const base = "/tanstack";
+const base = "/docs";
 
 const config = defineConfig({
   resolve: {
