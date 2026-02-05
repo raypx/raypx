@@ -18,7 +18,10 @@ export function NotFound() {
         </p>
         <Link
           className="mt-4 rounded-lg bg-fd-primary px-4 py-2 font-medium text-fd-primary-foreground text-sm transition-opacity hover:opacity-90"
-          to="/"
+          params={{
+            locale: "en",
+          }}
+          to="/$locale/$"
         >
           Back to Home
         </Link>

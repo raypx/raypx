@@ -10,8 +10,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fumadocs/base-ui": "^16.5.0",
     "@orama/tokenizers": "^3.1.18",
     "@phosphor-icons/react": "^2.1.10",
+    "@raypx/intl": "workspace:*",
+    "@raypx/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "^0.9.4",
     "@tanstack/react-router": "^1.158.1",
@@ -21,13 +24,12 @@
     "@tanstack/router-plugin": "^1.158.1",
     "fumadocs-core": "^16.5.0",
     "fumadocs-mdx": "^14.2.6",
-    "@fumadocs/base-ui": "^16.5.0",
-    "@raypx/ui": "workspace:*",
     "lucide-react": "^0.563.0",
     "nitro": "npm:nitro-nightly@latest",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.1.18",
+    "use-intl": "^4.8.2",
     "vite-tsconfig-paths": "^6.0.5"
   },
   "devDependencies": {
@@ -35,7 +37,7 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
     "@types/mdx": "^2.0.13",
-    "@types/node": "^25.2.0",
+    "@types/node": "^25.2.1",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.3",

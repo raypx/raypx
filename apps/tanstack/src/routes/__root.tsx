@@ -1,5 +1,6 @@
 import { defineI18nUI } from "@fumadocs/base-ui/i18n";
 import { RootProvider } from "@fumadocs/base-ui/provider/tanstack";
+import { defaultLocale } from "@raypx/intl";
 import { createRootRoute, HeadContent, Outlet, Scripts, useParams } from "@tanstack/react-router";
 import type * as React from "react";
 import appCss from "@/styles/globals.css?url";
@@ -45,7 +46,7 @@ const { provider } = defineI18nUI(i18n, {
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { locale = i18n.defaultLanguage } = useParams({ strict: false });
+  const { locale = defaultLocale } = useParams({ strict: false });
 
   return (
     <html lang={locale}>

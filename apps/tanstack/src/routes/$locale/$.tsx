@@ -11,6 +11,8 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { Suspense } from "react";
+import type { Locale } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/$locale/$")({
     const data = await loader({
       data: {
         slugs: params._splat?.split("/") ?? [],
-        locale: params.locale,
+        locale: params.locale as Locale,
       },
     });
     await clientLoader.preload(data.path);
@@ -68,9 +70,11 @@ const clientLoader = browserCollections.docs.createClientLoader({
 function Page() {
   const { locale } = Route.useParams();
   const data = useFumadocsLoader(Route.useLoaderData());
+  const t = useTranslations();
 
   return (
     <DocsLayout {...baseOptions(locale)} tree={data.pageTree}>
+      {t("title")}
       <Suspense>
         {clientLoader.useContent(data.path, {
           className: "",

@@ -1,0 +1,9 @@
+{
+  "title": "Hello World",
+  "defaultComponents": {
+    "error": "Something went wrong",
+    "loading": "Loading...",
+    "notFound": "The page you are looking for does not exist",
+    "returnToHomePage": "Return to Home page"
+  }
+}
