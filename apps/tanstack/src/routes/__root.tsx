@@ -1,8 +1,8 @@
+import { defineI18nUI } from "@fumadocs/base-ui/i18n";
+import { RootProvider } from "@fumadocs/base-ui/provider/tanstack";
 import { createRootRoute, HeadContent, Outlet, Scripts, useParams } from "@tanstack/react-router";
-import { defineI18nUI } from "fumadocs-ui/i18n";
-import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import type * as React from "react";
-import appCss from "@/styles/app.css?url";
+import appCss from "@/styles/globals.css?url";
 import { i18n } from "../lib/i18n";
 
 export const Route = createRootRoute({

@@ -1,5 +1,5 @@
+import { HomeLayout } from "@fumadocs/base-ui/layouts/home";
 import { Link } from "@tanstack/react-router";
-import { HomeLayout } from "fumadocs-ui/layouts/home";
 
 export function NotFound() {
   return (
