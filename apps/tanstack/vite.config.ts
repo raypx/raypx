@@ -8,18 +8,20 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
+const base = "/tanstack";
+
 const config = defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  // base: "/tanstack",
+  base,
   plugins: [
     mdx(await import("./source.config")),
     devtools(),
     nitro({
-      baseURL: "/tanstack",
+      baseURL: base,
     }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
