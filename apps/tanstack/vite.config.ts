@@ -14,7 +14,7 @@ const config = defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  base: "/tanstack",
+  // base: "/tanstack",
   plugins: [
     mdx(await import("./source.config")),
     devtools(),
