@@ -13,9 +13,6 @@ const config = defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  build: {
-    assetsDir: "tanstack/assets",
-  },
   base: "/tanstack",
   plugins: [
     devtools(),
