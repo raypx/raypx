@@ -13,7 +13,7 @@ const config = defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  base: "https://raypx.com/tanstack",
+  base: "/tanstack",
   plugins: [
     devtools(),
     nitro({
