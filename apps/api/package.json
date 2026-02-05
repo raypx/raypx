@@ -19,7 +19,7 @@
     "@raypx/logger": "workspace:*",
     "@raypx/rpc": "workspace:*",
     "hono": "^4.11.7",
-    "tsdown": "^0.20.1",
+    "tsdown": "^0.20.2",
     "typescript": "catalog:"
   }
 }

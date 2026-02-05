@@ -23,7 +23,7 @@
 - **Monorepo**: [Turborepo](https://turbo.build/)
 
 ### Backend
-- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Drizzle ORM](https://orm.drizzle.team/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
 - **Auth**: [better-auth](https://www.better-auth.com/)
 - **Validation**: [Zod](https://zod.dev/)
 - **API**: Next.js App Router with Route Handlers
@@ -153,11 +153,11 @@ pnpm knip             # Check for unused files
 ### Database
 
 ```bash
-pnpm db               # Run Drizzle Kit CLI
-pnpm db:generate      # Generate database client
-pnpm db:push          # Push migrations
+pnpm db               # Run Prisma CLI
+pnpm db:generate      # Generate Prisma client
+pnpm db:push          # Push schema to database
 pnpm db:migrate       # Run migrations
-pnpm db:studio        # Open Drizzle Studio
+pnpm db:studio        # Open Prisma Studio
 ```
 
 ### Cleaning

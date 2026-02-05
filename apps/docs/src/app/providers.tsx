@@ -8,12 +8,12 @@ import { useState } from "react";
 
 export function Providers({
   children,
-  locale,
   messages,
+  locale,
 }: {
   children: React.ReactNode;
-  locale: string;
   messages: Messages;
+  locale: string;
 }) {
   const [queryClient] = useState(
     () =>

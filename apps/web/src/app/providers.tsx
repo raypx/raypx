@@ -3,9 +3,18 @@
 import { ThemeProvider } from "@raypx/ui/components/theme-provider";
 import { Toaster } from "@raypx/ui/components/toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { type Messages, NextIntlClientProvider } from "next-intl";
 import { useState } from "react";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  locale,
+  messages,
+}: {
+  children: React.ReactNode;
+  locale: string;
+  messages: Messages;
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -19,10 +28,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system">
-        {children}
-        <Toaster />
-      </ThemeProvider>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <ThemeProvider defaultTheme="system">
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </NextIntlClientProvider>
     </QueryClientProvider>
   );
 }

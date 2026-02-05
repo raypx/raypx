@@ -11,13 +11,23 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fumadocs/base-ui": "^16.5.0",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
     "@raypx/ui": "workspace:*",
+    "@tanstack/react-query": "^5.90.20",
+    "@types/mdx": "^2.0.13",
+    "next-intl": "catalog:",
+    "fumadocs-core": "^16.5.0",
+    "fumadocs-mdx": "^14.2.6",
     "next": "^16.1.6",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "shadcn": "catalog:"
+    "shadcn": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@raypx/i18n": "workspace:*",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

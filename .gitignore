@@ -79,3 +79,5 @@ temp
 
 # Database
 packages/database/prisma/generated
+
+apps/docs/.source/

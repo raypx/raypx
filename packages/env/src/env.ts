@@ -86,21 +86,17 @@ export function createEnv<
   // On client: only pick shared and client variables
   // On server: use full process.env
   const runtimeEnv = isServer ? { ...process.env } : { ...process.env };
-  try {
-    const env = defineEnvCore<TPrefix, TShared, TServer, TClient, TExtends, TFinalSchema>({
-      skip: opts.skip,
-      shared,
-      client,
-      server,
-      isServer,
-      env: runtimeEnv,
-      clientPrefix,
-      extends: opts.extends,
-    });
-    return env;
-  } catch (error) {
-    throw error;
-  }
+  const env = defineEnvCore<TPrefix, TShared, TServer, TClient, TExtends, TFinalSchema>({
+    skip: opts.skip,
+    shared,
+    client,
+    server,
+    isServer,
+    env: runtimeEnv,
+    clientPrefix,
+    extends: opts.extends,
+  });
+  return env;
 }
 export type {
   ClientFormat,
