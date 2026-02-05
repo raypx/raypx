@@ -13,10 +13,12 @@ const config = defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-  base: "/tanstack",
+  base: "https://raypx.com/tanstack",
   plugins: [
     devtools(),
-    nitro(),
+    nitro({
+      baseURL: "/tanstack",
+    }),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ["./tsconfig.json"],
