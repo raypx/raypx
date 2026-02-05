@@ -7,18 +7,23 @@ import mdx from "fumadocs-mdx/vite";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
+import * as sourceConfig from "./source.config";
 
 const base = "/docs";
 
-const config = defineConfig({
+const config = defineConfig(({ command }) => ({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
   base,
+  ssr: {
+    // Bundle dependencies into output instead of treating as external
+    noExternal: command === "build" ? true : undefined,
+  },
   plugins: [
-    mdx(await import("./source.config")),
+    mdx(sourceConfig),
     devtools(),
     nitro({
       baseURL: base,
@@ -31,6 +36,6 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
   ],
-});
+}));
 
 export default config;
