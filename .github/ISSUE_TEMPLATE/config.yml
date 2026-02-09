@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://docs.raypx.com
+    about: For documentation and tutorials.
+  - name: Discord
+    url: https://raypx.link/discord
+    about: For chatting with the community and getting help.
+  - name: Administrative Requests (licenses, etc.)
+    url: https://raypx.com
+    about: Please report administrative requests here.

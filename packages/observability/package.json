@@ -1,0 +1,40 @@
+{
+  "name": "@raypx/observability",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sentry": "./src/sentry.ts",
+    "./sentry/client": "./src/sentry/client.ts",
+    "./sentry/server": "./src/sentry/server.ts",
+    "./envs": "./src/envs.ts"
+  },
+  "scripts": {
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@raypx/config": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "@sentry/node": "^10.38.0",
+    "@sentry/react": "^10.38.0",
+    "@sentry/tanstackstart-react": "^10.38.0"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "type-fest": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:react19"
+  }
+}

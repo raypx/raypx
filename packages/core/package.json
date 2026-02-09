@@ -1,27 +1,27 @@
 {
   "name": "@raypx/core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
-    "clean": "git clean -fdX -e node_modules -e .turbo",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "with-env": "dotenvx run -f ../../.env --"
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@raypx/env": "workspace:*",
-    "redis": "^5.10.0"
+    "@raypx/config": "workspace:*",
+    "vite": "catalog:"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
-    "@vitest/ui": "catalog:",
-    "jsdom": "catalog:",
+    "@raypx/tsconfig": "workspace:*",
+    "@tanstack/react-start": "catalog:",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   }
 }

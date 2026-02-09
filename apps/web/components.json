@@ -10,7 +10,7 @@
     "cssVariables": true,
     "prefix": ""
   },
-  "iconLibrary": "phosphor",
+  "iconLibrary": "tabler",
   "menuColor": "default",
   "menuAccent": "subtle",
   "aliases": {
@@ -18,6 +18,6 @@
     "utils": "@raypx/ui/lib/utils",
     "ui": "@raypx/ui/components",
     "lib": "@/lib",
-    "hooks": "@raypx/ui/hooks"
+    "hooks": "@/hooks"
   }
 }

@@ -1,8 +1,9 @@
 {
-  "extends": "@raypx/config/base.json",
-  "include": ["src/**/*.ts"],
   "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable"]
+    "baseUrl": ".",
+    "noEmit": true
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "extends": "@raypx/tsconfig/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

@@ -1,21 +1,38 @@
 {
   "name": "@raypx/config",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "exports": {
-    "./vitest": "./vitest.config.ts",
-    "./base.json": "./base.json",
-    "./vite.json": "./vite.json",
-    "./react.json": "./react.json"
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./envs": {
+      "types": "./dist/envs.d.mts",
+      "default": "./dist/envs.mjs"
+    },
+    "./package.json": "./package.json"
   },
-  "main": "./index.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "scripts": {
-    "clean": "git clean -fdX -e node_modules -e .turbo"
+    "build": "tsdown",
+    "clean": "rimraf dist .turbo",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "envin": "^1.2.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/ui": "catalog:",
-    "jsdom": "catalog:",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "radash": "^12.1.1",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

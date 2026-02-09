@@ -1,29 +1,51 @@
 {
   "name": "docs",
-  "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "clean": "git clean -fdX -e node_modules -e .turbo",
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "shadcn": "shadcn add",
-    "typecheck": "tsc --noEmit"
+    "build": "rr vite build",
+    "clean": "rimraf dist .turbo .tanstack .nitro .output .netlify",
+    "dev": "rr vite dev",
+    "serve": "rr vite preview",
+    "shadcn": "shadcn add --overwrite",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@fumadocs/base-ui": "^16.5.2",
+    "@raypx/config": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "next": "^16.1.6",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "shadcn": "catalog:"
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@tabler/icons-react": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "@types/three": "^0.182.0",
+    "fumadocs-core": "^16.5.2",
+    "fumadocs-mdx": "^14.2.7",
+    "nitro": "catalog:",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "shadcn": "^3.8.4",
+    "three": "^0.182.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@raypx/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "catalog:tailwindv4",
+    "@tanstack/devtools-vite": "^0.5.1",
+    "@tanstack/react-devtools": "^0.9.5",
+    "@tanstack/react-router-devtools": "^1.159.4",
     "@types/node": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "babel-plugin-react-compiler": "1.0.0",
-    "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
+    "tailwindcss": "catalog:tailwindv4",
+    "type-fest": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-inspect": "^11.3.3",
+    "vite-tsconfig-paths": "^6.1.0",
+    "vitest": "catalog:"
   }
 }

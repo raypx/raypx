@@ -1,0 +1,263 @@
+---
+title: Development Workflow
+description: Learn the day-to-day commands, QA expectations, and collaboration practices for Raypx.
+---
+
+## Environment Setup
+
+### Initial Setup
+
+1. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+2. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` with required values:
+   - `DATABASE_URL` - PostgreSQL connection string
+   - `BETTER_AUTH_SECRET` - Min 32 characters for auth encryption
+   - `BETTER_AUTH_URL` - Your app URL (http://localhost:3000 for dev)
+   - Optional: Redis, OAuth, Analytics, AI services (137+ env vars available)
+
+3. **Setup database**
+   ```bash
+   bun run --filter @raypx/database migrate
+   ```
+
+4. **Start development**
+   ```bash
+   bun dev  # All apps (web + docs)
+   # or
+   bun --filter web dev  # Just web app
+   ```
+
+### Environment Variables
+
+The project uses **type-safe environment variables** via `@raypx/config`:
+
+- **Validation**: All env vars validated with Zod schemas
+- **Organization**: Grouped by category (app, feature flags, database, auth, etc.)
+- **Type safety**: Full TypeScript support in code
+- **Examples**: See `.env.example` for all 137+ available variables
+
+## Common Scripts
+
+| Command | Description |
+| ------- | ----------- |
+| `bun dev` | Start all apps (web + docs) with hot reload |
+| `bun --filter web dev` | Just the TanStack Start web app |
+| `bun --filter docs dev` | Just the Fumadocs documentation site |
+| `bun --filter email dev` | Email template preview server |
+| `bun run build` | Production build of all apps (validates everything) |
+| `bun typecheck` | TypeScript validation across workspace |
+| `bun check` | Biome linting and formatting check |
+| `bun format` | Auto-format all code with Biome |
+| `bun test` | Run Vitest unit tests |
+| `bun coverage` | Generate HTML coverage reports |
+| `bun clean` | Remove build artifacts and caches |
+| `bun run --filter @raypx/database studio` | Open Drizzle Studio (database GUI) |
+| `bun run --filter @raypx/database migrate` | Run database migrations |
+| `bun run --filter @raypx/database generate` | Generate new migration from schema changes |
+| `bun shadcn` | Add shadcn/ui components to @raypx/ui |
+
+## Coding Standards
+
+### TypeScript
+
+- **Strict mode enabled**: All projects use strict TypeScript settings
+- **Explicit types**: Prefer explicit return types in shared packages
+- **Type over interface**: Use `type` over `interface` for consistency
+- **Avoid `any`**: Use `unknown` instead and narrow with type guards
+
+### Code Style
+
+- **Formatting**: Biome handles all formatting (replaces Prettier)
+- **Linting**: Biome enforces code quality rules (replaces ESLint)
+- **Pre-commit hooks**: Lefthook runs `bun format` before commits
+- **Variable names**: Use clear, descriptive names over short abbreviations
+
+### Project Structure
+
+- **Tests**: Co-locate tests next to modules (`*.test.ts[x]`) or in `__tests__/`
+- **Routes**: TanStack Start file-based routing in `apps/web/src/routes/`
+- **Components**: React components in `apps/web/src/components/`
+- **No build for packages**: All packages consumed as TypeScript source
+
+## Git Practices
+
+### Commit Convention
+
+Follow **Conventional Commits** format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+```
+
+**Types**: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `chore`, `ci`
+
+**Examples**:
+```bash
+git commit -m "feat(auth): add OAuth providers"
+git commit -m "fix(ui): resolve button hover state"
+git commit -m "docs: update environment setup guide"
+git commit -m "feat(web,auth): add login flow"
+```
+
+### Pre-push Checklist
+
+**Always run before pushing**:
+
+```bash
+bun typecheck  # TypeScript validation
+bun check      # Linting
+bun test       # Unit tests
+bun run build      # Verify production build
+```
+
+Build time is only 10-15 seconds, so always build before commits.
+
+### Branch Strategy
+
+- Work on feature branches (`feature/add-oauth`)
+- Avoid force-pushing shared branches
+- Use `git push --force-with-lease` if necessary (coordinate with team)
+
+## Testing
+
+### Current State
+
+⚠️ **Testing is a critical gap** (15% coverage):
+- ✅ Vitest framework configured
+- ✅ CI runs tests automatically
+- ✅ E2E tests with Playwright configured
+- ❌ Minimal test coverage
+
+### Testing Guidelines
+
+When adding tests:
+
+1. **Unit tests**: Test business logic and utilities
+   ```typescript
+   // packages/shared/__tests__/utils.test.ts
+   import { describe, it, expect } from 'vitest'
+   import { yourFunction } from '../utils'
+
+   describe('yourFunction', () => {
+     it('should handle valid input', () => {
+       expect(yourFunction('test')).toBe('expected')
+     })
+   })
+   ```
+
+2. **Integration tests**: Test API endpoints, database operations
+3. **E2E tests**: Use Playwright (configured and ready)
+
+### Running Tests
+
+```bash
+# Unit and integration tests
+pnpm test           # All tests
+pnpm test --watch   # Watch mode
+pnpm coverage       # Generate coverage report
+
+# E2E tests
+pnpm test:e2e              # Run all E2E tests
+pnpm test:e2e:ui           # Run with UI mode
+pnpm test:e2e:debug        # Run in debug mode
+pnpm test:e2e:codegen      # Generate test code interactively
+```
+
+### E2E Testing with Playwright
+
+E2E tests are located in `apps/web/e2e/` and use Playwright for browser automation.
+
+**Writing E2E tests:**
+```typescript
+// apps/web/e2e/example.spec.ts
+import { test, expect } from '@playwright/test'
+
+test('should load homepage', async ({ page }) => {
+  await page.goto('/')
+  await expect(page).toHaveTitle(/Raypx/i)
+})
+```
+
+**Configuration:**
+- Config file: `playwright.config.ts` (root)
+- Test directory: `apps/web/e2e/`
+- Supports multiple browsers: Chromium, Firefox, WebKit
+- Mobile testing: Chrome Mobile, Safari Mobile
+
+Coverage reports are uploaded to Codecov in CI.
+
+## Database Development
+
+### Workflow
+
+1. **Modify schema** in `packages/db/src/schemas/`
+2. **Generate migration**:
+   ```bash
+   bun run --filter @raypx/database generate
+   ```
+3. **Review migration** in `packages/db/drizzle/`
+4. **Apply migration**:
+   ```bash
+   bun run --filter @raypx/database migrate
+   ```
+5. **Verify in Drizzle Studio**:
+   ```bash
+   bun run --filter @raypx/database studio
+   ```
+
+### Database Tips
+
+- Use Drizzle's type-safe query builder
+- Leverage PostgreSQL features (JSONB, arrays, etc.)
+- Add indexes for frequently queried columns
+- Use migrations for all schema changes (never manual ALTER TABLE)
+
+> 📘 **Production Setup**: See [Database Hosting Guide](/docs/deploy/database) for setting up PostgreSQL in production environments (Neon, Supabase, Railway, etc.)
+
+## Working with Documentation
+
+- Documentation lives in `apps/docs/content/docs/`
+- Write documentation in MDX format (Markdown + JSX)
+- Run `bun --filter docs dev` to preview docs at http://localhost:3001
+- Fumadocs auto-generates navigation from file structure and frontmatter
+
+## Troubleshooting
+
+### Build Issues
+
+```bash
+# Clear all caches and rebuild
+pnpm clean
+rm -rf node_modules .turbo
+pnpm install
+pnpm run build
+```
+
+### TypeScript Errors
+
+1. Restart TypeScript server (VS Code: Cmd+Shift+P → "Restart TS Server")
+2. Clear TypeScript cache: `rm -rf tsconfig.tsbuildinfo`
+3. Reinstall dependencies: `pnpm install`
+
+### Common Errors
+
+- **"Cannot find module '@raypx/...'"** → Run `pnpm install`
+- **"Port 3000 in use"** → Kill process: `lsof -ti:3000 | xargs kill -9`
+- **"Type error in node_modules"** → Delete `node_modules` and reinstall
+- **Biome errors** → Run `bun format` to auto-fix
+
+### Getting Help
+
+- Check [CLAUDE.md](/CLAUDE.md) for architecture details
+- Review [TODO.md](/TODO.md) for known issues and roadmap
+- See `.env.example` for all environment variables

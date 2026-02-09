@@ -1,0 +1,381 @@
+---
+title: Redis Hosting
+description: Guide to setting up Redis for caching and session storage in production.
+---
+
+# Redis Hosting Guide
+
+This guide covers setting up Redis for caching and session storage with various hosting providers.
+
+## Overview
+
+Raypx uses **Redis** for:
+- **Caching**: API response caching, query result caching
+- **Session storage**: Optional session storage (Better Auth uses database by default)
+- **Rate limiting**: API rate limiting (if implemented)
+
+The project includes a Redis client package (`@raypx/redis`) that works with any Redis-compatible service.
+
+## Recommended Providers
+
+### 1. Upstash (Recommended for Serverless)
+
+**Upstash** is a serverless Redis platform perfect for serverless applications.
+
+#### Setup Steps
+
+1. **Create an Upstash account**
+   - Visit [upstash.com](https://upstash.com)
+   - Sign up with GitHub or email
+
+2. **Create a Redis database**
+   - Click "Create Database"
+   - Choose a database name
+   - Select region (choose closest to your deployment region)
+   - Select type: "Regional" (recommended) or "Global"
+   - Click "Create"
+
+3. **Get connection details**
+   - After creation, click on your database
+   - Copy the following:
+     - `UPSTASH_REDIS_REST_URL`
+     - `UPSTASH_REDIS_REST_TOKEN`
+
+4. **Configure environment variables**
+   ```bash
+   UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
+   UPSTASH_REDIS_REST_TOKEN=your-token
+   ```
+
+   Or use the REST API format:
+   ```bash
+   REDIS_URL=https://your-db.upstash.io
+   REDIS_TOKEN=your-token
+   ```
+
+5. **Verify connection**
+   ```bash
+   # Test Redis connection
+   bun --filter @raypx/redis run test
+   ```
+
+#### Upstash Features
+
+- ✅ Serverless (pay per request)
+- ✅ Global replication
+- ✅ Automatic backups
+- ✅ Free tier available (10K commands/day)
+- ✅ REST API (no persistent connections needed)
+- ✅ Built-in rate limiting
+
+### 2. Redis Cloud
+
+**Redis Cloud** (formerly Redis Labs) offers managed Redis with high availability.
+
+#### Setup Steps
+
+1. **Create a Redis Cloud account**
+   - Visit [redis.com/cloud](https://redis.com/cloud)
+   - Sign up for free account
+
+2. **Create a subscription**
+   - Choose a plan (free tier available)
+   - Select cloud provider and region
+
+3. **Create a database**
+   - Click "New Database"
+   - Configure:
+     - Database name
+     - Memory limit
+     - Replication (optional)
+   - Click "Activate"
+
+4. **Get connection string**
+   - Copy the connection string from database details
+   - Format: `redis://default:password@host:port`
+
+5. **Configure environment variable**
+   ```bash
+   REDIS_URL=redis://default:password@host:port
+   ```
+
+#### Redis Cloud Features
+
+- ✅ High availability
+- ✅ Automatic failover
+- ✅ Backup and restore
+- ✅ Free tier available (30MB)
+- ✅ Multiple cloud providers
+
+### 3. Railway
+
+**Railway** offers simple Redis hosting with easy deployment integration.
+
+#### Setup Steps
+
+1. **Create a Railway account**
+   - Visit [railway.app](https://railway.app)
+   - Sign up with GitHub
+
+2. **Create Redis service**
+   - Click "New Project"
+   - Add "Redis" service
+   - Railway will automatically create the Redis instance
+
+3. **Get connection string**
+   - Click on the Redis service
+   - Go to "Variables" tab
+   - Copy `REDIS_URL`
+
+4. **Configure environment variable**
+   ```bash
+   REDIS_URL=redis://default:password@host:port
+   ```
+
+### 4. Self-Hosted Redis
+
+For self-hosted Redis (Docker, VPS, etc.):
+
+#### Setup Steps
+
+1. **Install Redis**
+   ```bash
+   # Using Docker
+   docker run --name redis \
+     -p 6379:6379 \
+     -d redis:7-alpine
+   ```
+
+2. **Configure connection string**
+   ```bash
+   REDIS_URL=redis://localhost:6379
+   ```
+
+   With password:
+   ```bash
+   REDIS_URL=redis://:password@localhost:6379
+   ```
+
+3. **Verify connection**
+   ```bash
+   redis-cli ping
+   # Should return: PONG
+   ```
+
+## Environment Configuration
+
+### Development
+
+For local development, use `.env` file:
+
+```bash
+# Option 1: Direct Redis connection
+REDIS_URL=redis://localhost:6379
+
+# Option 2: Upstash REST API
+UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+```
+
+### Production
+
+For production deployments:
+
+#### Netlify
+- Add `REDIS_URL` in Site Settings → Environment Variables
+- Use production Redis connection details
+
+#### Other Platforms
+- Set `REDIS_URL` as an environment variable in your hosting platform
+- Ensure Redis is accessible from your application servers
+
+## Connection Types
+
+### Standard Redis Connection
+
+For traditional Redis clients:
+
+```bash
+REDIS_URL=redis://:password@host:port
+```
+
+### Upstash REST API
+
+For serverless environments (recommended):
+
+```bash
+UPSTASH_REDIS_REST_URL=https://your-db.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+```
+
+Benefits:
+- No persistent connections
+- Works with serverless functions
+- Automatic connection pooling
+- Better for edge deployments
+
+## Using Redis in Code
+
+### Cache Operations
+
+```typescript
+import { cache } from "@raypx/redis";
+
+// Set cache
+await cache.set("key", "value", { ttl: 3600 }); // 1 hour
+
+// Get cache
+const value = await cache.get("key");
+
+// Delete cache
+await cache.delete("key");
+
+// Check if exists
+const exists = await cache.exists("key");
+```
+
+### Session Storage
+
+If using Redis for sessions (Better Auth uses database by default):
+
+```typescript
+import { auth } from "@raypx/auth/server";
+
+// Configure Redis session storage in auth config
+// See packages/auth/src/server/auth.ts
+```
+
+## Monitoring
+
+### Redis Metrics
+
+Monitor these key metrics:
+
+- **Memory usage**: Redis memory consumption
+- **Commands per second**: Request rate
+- **Hit rate**: Cache hit/miss ratio
+- **Connection count**: Active connections
+- **Evictions**: Keys evicted due to memory limits
+
+### Tools
+
+- **Redis CLI**: `redis-cli` for command-line access
+- **Redis Insight**: GUI tool for Redis management
+- **Provider dashboards**: Use hosting provider's monitoring tools
+- **Application logs**: Check application logs for Redis errors
+
+## Best Practices
+
+### Caching Strategy
+
+1. **Set appropriate TTLs**
+   - Short TTL for frequently changing data
+   - Longer TTL for stable data
+   - Use cache invalidation for critical updates
+
+2. **Key naming conventions**
+   ```typescript
+   // Good: Namespaced keys
+   cache.set("user:123:profile", data);
+   cache.set("api:users:list", data);
+   
+   // Bad: Generic keys
+   cache.set("data", data);
+   ```
+
+3. **Handle cache misses**
+   ```typescript
+   let data = await cache.get("key");
+   if (!data) {
+     data = await fetchFromDatabase();
+     await cache.set("key", data, { ttl: 3600 });
+   }
+   return data;
+   ```
+
+### Memory Management
+
+1. **Set memory limits**: Configure max memory based on your plan
+2. **Use eviction policies**: `allkeys-lru` for cache, `noeviction` for critical data
+3. **Monitor memory usage**: Set up alerts for high memory usage
+4. **Clean up expired keys**: Redis automatically removes expired keys
+
+### Security
+
+1. **Use passwords**: Always set Redis password in production
+2. **Enable TLS**: Use `rediss://` for encrypted connections
+3. **Restrict access**: Use firewall rules to limit access
+4. **Rotate credentials**: Regularly rotate Redis passwords
+5. **Use environment variables**: Never commit credentials to version control
+
+## Troubleshooting
+
+### Connection Issues
+
+**Error: Connection refused**
+- Check if Redis is running
+- Verify connection string format
+- Check firewall/network settings
+- Verify Redis is accessible from your application
+
+**Error: Authentication failed**
+- Verify password is correct
+- Check if password is URL-encoded in connection string
+- Verify Redis ACL configuration
+
+**Error: Timeout**
+- Check network connectivity
+- Verify Redis server is responding
+- Check for connection pool exhaustion
+
+### Performance Issues
+
+**Slow operations**
+- Check Redis server resources (CPU, memory)
+- Monitor command execution times
+- Consider using pipelining for bulk operations
+- Review key sizes (large keys can slow down operations)
+
+**Memory issues**
+- Monitor memory usage
+- Review eviction policy
+- Consider key expiration
+- Upgrade plan if needed
+
+### Cache Issues
+
+**Cache not working**
+- Verify Redis connection is established
+- Check TTL settings
+- Review cache key naming
+- Check for cache invalidation logic
+
+**Stale data**
+- Review TTL settings
+- Implement cache invalidation
+- Use versioned cache keys
+- Consider cache warming strategies
+
+## Migration Checklist
+
+Before deploying to production:
+
+- [ ] Redis provider selected and configured
+- [ ] Connection string tested
+- [ ] Environment variables configured securely
+- [ ] TLS enabled (if supported)
+- [ ] Password set and secured
+- [ ] Memory limits configured
+- [ ] Eviction policy set
+- [ ] Monitoring set up
+- [ ] Backup strategy in place (if needed)
+- [ ] Cache strategy defined
+- [ ] Error handling implemented
+- [ ] Connection pooling configured (if needed)
+
+## Next Steps
+
+- Review [Database Hosting Guide](/docs/deploy/database) for PostgreSQL setup
+- Check [Development Workflow](/docs/dev) for Redis usage in code
+- Review `@raypx/redis` package for API documentation
+

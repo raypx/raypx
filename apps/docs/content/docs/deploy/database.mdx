@@ -1,0 +1,368 @@
+---
+title: Database Hosting
+description: Guide to setting up and managing PostgreSQL databases for production deployment.
+---
+
+# Database Hosting Guide
+
+This guide covers setting up PostgreSQL databases for production deployment with various hosting providers.
+
+## Overview
+
+Raypx uses **PostgreSQL** as the primary database with **Drizzle ORM** for type-safe database operations. The project is compatible with any PostgreSQL-compatible hosting service.
+
+## Recommended Providers
+
+### 1. Neon (Recommended for Serverless)
+
+**Neon** is a serverless PostgreSQL platform optimized for modern applications.
+
+#### Setup Steps
+
+1. **Create a Neon account**
+   - Visit [neon.tech](https://neon.tech)
+   - Sign up with GitHub or email
+
+2. **Create a new project**
+   - Click "Create Project"
+   - Choose a project name and region (select closest to your deployment region)
+   - Select PostgreSQL version (15+ recommended)
+
+3. **Get connection string**
+   - After project creation, copy the connection string from the dashboard
+   - Format: `postgresql://user:password@host.neon.tech/dbname?sslmode=require`
+
+4. **Configure environment variable**
+   ```bash
+   DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
+   ```
+
+5. **Run migrations**
+   ```bash
+   bun run --filter @raypx/database migrate
+   ```
+
+#### Neon Features
+
+- ✅ Serverless (auto-scaling)
+- ✅ Branching (database branching for dev/staging)
+- ✅ Point-in-time recovery
+- ✅ Free tier available
+- ✅ Built-in connection pooling
+- ✅ Automatic backups
+
+#### Connection Pooling
+
+Neon provides built-in connection pooling. For production, use the pooled connection string:
+
+```
+postgresql://user:password@host.neon.tech/dbname?sslmode=require&pgbouncer=true
+```
+
+### 2. Supabase
+
+**Supabase** provides PostgreSQL with additional features like real-time subscriptions and storage.
+
+#### Setup Steps
+
+1. **Create a Supabase project**
+   - Visit [supabase.com](https://supabase.com)
+   - Create a new project
+
+2. **Get connection string**
+   - Go to Project Settings → Database
+   - Copy the connection string (use "Connection pooling" for production)
+   - Format: `postgresql://postgres:[password]@[host]:5432/postgres`
+
+3. **Configure environment variable**
+   ```bash
+   DATABASE_URL=postgresql://postgres:[password]@[host]:5432/postgres
+   ```
+
+4. **Run migrations**
+   ```bash
+   bun run --filter @raypx/database migrate
+   ```
+
+#### Supabase Features
+
+- ✅ PostgreSQL with extensions
+- ✅ Real-time subscriptions
+- ✅ Storage integration
+- ✅ Auth integration (if needed)
+- ✅ Free tier available
+
+### 3. Railway
+
+**Railway** offers simple PostgreSQL hosting with easy deployment integration.
+
+#### Setup Steps
+
+1. **Create a Railway account**
+   - Visit [railway.app](https://railway.app)
+   - Sign up with GitHub
+
+2. **Create PostgreSQL service**
+   - Click "New Project"
+   - Add "PostgreSQL" service
+   - Railway will automatically create the database
+
+3. **Get connection string**
+   - Click on the PostgreSQL service
+   - Go to "Variables" tab
+   - Copy `DATABASE_URL`
+
+4. **Configure environment variable**
+   ```bash
+   DATABASE_URL=postgresql://postgres:[password]@[host]:5432/railway
+   ```
+
+5. **Run migrations**
+   ```bash
+   bun run --filter @raypx/database migrate
+   ```
+
+### 4. Self-Hosted PostgreSQL
+
+For self-hosted PostgreSQL (Docker, VPS, etc.):
+
+#### Setup Steps
+
+1. **Install PostgreSQL**
+   ```bash
+   # Using Docker
+   docker run --name postgres \
+     -e POSTGRES_PASSWORD=yourpassword \
+     -e POSTGRES_DB=raypx \
+     -p 5432:5432 \
+     -d postgres:15
+   ```
+
+2. **Configure connection string**
+   ```bash
+   DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/raypx
+   ```
+
+3. **Run migrations**
+   ```bash
+   bun run --filter @raypx/database migrate
+   ```
+
+## Environment Configuration
+
+### Development
+
+For local development, use `.env` file:
+
+```bash
+DATABASE_URL=postgresql://postgres:password@localhost:5432/raypx_dev
+```
+
+### Production
+
+For production deployments:
+
+#### Netlify
+- Add `DATABASE_URL` in Site Settings → Environment Variables
+- Use production database connection string
+
+#### Other Platforms
+- Set `DATABASE_URL` as an environment variable in your hosting platform
+- Ensure SSL is enabled (`?sslmode=require`)
+
+## Connection Pooling
+
+For production, use connection pooling to manage database connections efficiently:
+
+### Neon
+```bash
+DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require&pgbouncer=true
+```
+
+### Supabase
+Use the "Connection pooling" connection string from Supabase dashboard.
+
+### Custom Pooling (PgBouncer)
+If using custom pooling:
+```bash
+DATABASE_URL=postgresql://user:password@pooler-host:6543/dbname?sslmode=require
+```
+
+## Running Migrations
+
+### Development
+```bash
+bun run --filter @raypx/database migrate
+```
+
+### Production
+
+#### Option 1: Manual Migration
+```bash
+# Set DATABASE_URL environment variable
+export DATABASE_URL=your_production_connection_string
+
+# Run migrations
+bun run --filter @raypx/database migrate
+```
+
+#### Option 2: CI/CD Migration
+Add migration step to your deployment pipeline:
+
+```yaml
+# Example GitHub Actions
+- name: Run migrations
+  env:
+    DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  run: bun run --filter @raypx/database migrate
+```
+
+#### Option 3: Migration Script
+Create a migration script for your hosting platform:
+
+```bash
+#!/bin/bash
+# migrate.sh
+export DATABASE_URL=$1
+bun run --filter @raypx/database migrate
+```
+
+## Backup Strategy
+
+### Automated Backups
+
+Most providers offer automated backups:
+
+- **Neon**: Automatic daily backups with point-in-time recovery
+- **Supabase**: Daily backups (upgrade for more frequent)
+- **Railway**: Automatic backups (check plan details)
+
+### Manual Backups
+
+For manual backups:
+
+```bash
+# Export database
+pg_dump $DATABASE_URL > backup.sql
+
+# Restore database
+psql $DATABASE_URL < backup.sql
+```
+
+### Backup Best Practices
+
+1. **Regular backups**: Daily at minimum for production
+2. **Test restores**: Periodically test backup restoration
+3. **Off-site storage**: Store backups in separate location
+4. **Retention policy**: Keep backups for at least 30 days
+5. **Point-in-time recovery**: Use providers that support PITR
+
+## Security Considerations
+
+### SSL/TLS
+
+Always use SSL connections in production:
+
+```bash
+DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
+```
+
+### Connection Limits
+
+- Monitor connection usage
+- Use connection pooling for serverless environments
+- Configure appropriate connection limits based on your plan
+
+### Access Control
+
+- Use strong passwords
+- Limit database access to application servers only
+- Use IP whitelisting if supported
+- Rotate credentials regularly
+
+### Environment Variables
+
+- Never commit `DATABASE_URL` to version control
+- Use secure environment variable management
+- Rotate credentials if compromised
+
+## Monitoring
+
+### Database Metrics
+
+Monitor these key metrics:
+
+- **Connection count**: Active database connections
+- **Query performance**: Slow query identification
+- **Storage usage**: Database size and growth
+- **CPU/Memory**: Resource utilization
+
+### Tools
+
+- **Drizzle Studio**: `bun run --filter @raypx/database studio`
+- **Provider dashboards**: Use hosting provider's monitoring tools
+- **pgAdmin**: PostgreSQL administration tool
+- **PostgreSQL logs**: Check application logs for database errors
+
+## Troubleshooting
+
+### Connection Issues
+
+**Error: Connection refused**
+- Check if database is running
+- Verify connection string format
+- Check firewall/network settings
+
+**Error: SSL required**
+- Add `?sslmode=require` to connection string
+- Verify SSL certificate
+
+**Error: Too many connections**
+- Use connection pooling
+- Check for connection leaks
+- Increase connection limit (if possible)
+
+### Migration Issues
+
+**Error: Migration already applied**
+- Check migration status: `bun run --filter @raypx/database migrate`
+- Manually verify migration table
+
+**Error: Schema conflicts**
+- Review migration files
+- Test migrations on staging first
+- Consider rollback strategy
+
+### Performance Issues
+
+**Slow queries**
+- Add indexes for frequently queried columns
+- Use `EXPLAIN ANALYZE` to analyze queries
+- Consider query optimization
+
+**High connection usage**
+- Implement connection pooling
+- Review connection lifecycle in code
+- Check for connection leaks
+
+## Migration Checklist
+
+Before deploying to production:
+
+- [ ] Database provider selected and configured
+- [ ] Connection string tested
+- [ ] Migrations run successfully
+- [ ] SSL enabled (`sslmode=require`)
+- [ ] Connection pooling configured (if needed)
+- [ ] Backup strategy in place
+- [ ] Monitoring set up
+- [ ] Environment variables configured securely
+- [ ] Access controls configured
+- [ ] Tested restore from backup
+
+## Next Steps
+
+- Review [Development Workflow](/docs/dev) for database development practices
+- Check [Workspace Layout](/docs/start/workspace) for database package structure
+- Set up [Redis hosting](/docs/deploy/redis) for caching (optional)
+

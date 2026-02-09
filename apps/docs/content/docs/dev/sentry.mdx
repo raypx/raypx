@@ -1,0 +1,308 @@
+---
+title: Sentry Error Monitoring
+description: Configure and use Sentry for error tracking, performance monitoring, and session replay
+---
+
+## Overview
+
+Raypx uses [Sentry](https://sentry.io/) for comprehensive error monitoring, performance tracking, and session replay. The `@raypx/observability` package provides a unified interface for Sentry integration across both client and server-side code.
+
+## Features
+
+- **Error Tracking**: Automatic capture of JavaScript errors and exceptions
+- **Performance Monitoring**: Track page load times and API performance
+- **Session Replay**: Record user sessions for debugging (client-side only)
+- **Source Maps**: Full stack traces with source map support
+- **Environment-aware**: Different behavior for development vs production
+
+## Configuration
+
+### Environment Variables
+
+Add the following to your `.env` file:
+
+```bash
+# ===== Sentry Error Monitoring =====
+VITE_SENTRY_DSN=https://your-sentry-dsn.ingest.sentry.io/xxxxx
+VITE_SENTRY_ENABLE_DEV=false  # Set to true to enable Sentry in development
+```
+
+### Getting Your DSN
+
+1. Sign up for a [Sentry account](https://sentry.io/signup/)
+2. Create a new project (select React for client-side, Node.js for server-side)
+3. Copy the DSN from your project settings
+4. Add it to your `.env` file
+
+## Setup
+
+Sentry is already configured in the Raypx project. The initialization happens automatically:
+
+### Client-side (Browser)
+
+Sentry is initialized in `apps/web/src/router.tsx`:
+
+```typescript
+import { initSentryClient } from "@raypx/observability/sentry/client";
+
+// In router setup
+if (!router.isServer) {
+  initSentryClient({
+    router, // TanStack Router for route tracking
+  });
+}
+```
+
+### Server-side (Node.js)
+
+Sentry is initialized in `apps/web/src/start.ts`:
+
+```typescript
+import { createSentry } from "@raypx/observability/sentry/server";
+
+const sentry = createSentry();
+const sentryGlobalMiddleware = createMiddleware().server(
+  sentry.sentryGlobalServerMiddlewareHandler(),
+);
+```
+
+## Usage
+
+### Automatic Error Capture
+
+Sentry automatically captures:
+
+- Unhandled JavaScript errors
+- Unhandled promise rejections
+- React component errors (via Error Boundaries)
+- Server-side exceptions
+- API route errors
+
+### Manual Error Capture
+
+Capture errors manually in your code:
+
+```typescript
+import { captureException } from "@raypx/observability";
+
+try {
+  // Your code that might throw
+  await riskyOperation();
+} catch (error) {
+  // Log to Sentry
+  captureException(error);
+  
+  // Handle error locally
+  console.error("Operation failed:", error);
+}
+```
+
+### Adding Context
+
+Add additional context to error reports:
+
+```typescript
+import * as Sentry from "@sentry/react";
+
+// Set user context
+Sentry.setUser({
+  id: user.id,
+  email: user.email,
+  username: user.name,
+});
+
+// Add tags
+Sentry.setTag("feature", "checkout");
+Sentry.setTag("environment", "production");
+
+// Add extra context
+Sentry.setContext("checkout", {
+  cartId: cart.id,
+  itemCount: cart.items.length,
+  total: cart.total,
+});
+```
+
+### Performance Monitoring
+
+Track custom operations:
+
+```typescript
+import * as Sentry from "@sentry/react";
+
+// Start a transaction
+const transaction = Sentry.startTransaction({
+  name: "Checkout Process",
+  op: "checkout",
+});
+
+// Create spans for sub-operations
+const span = transaction.startChild({
+  op: "payment",
+  description: "Process payment",
+});
+
+try {
+  await processPayment();
+  span.setStatus("ok");
+} catch (error) {
+  span.setStatus("internal_error");
+  throw error;
+} finally {
+  span.finish();
+}
+
+transaction.finish();
+```
+
+## Configuration Details
+
+### Sample Rates
+
+The default configuration uses different sample rates for development and production:
+
+- **Development**: 100% of errors and sessions captured
+- **Production**: 
+  - Errors: 100% captured
+  - Performance traces: 10% sampled
+  - Session replay: 10% sampled (errors: 100%)
+
+### Development Mode
+
+By default, Sentry is **disabled in development** to avoid noise. To enable it:
+
+```bash
+VITE_SENTRY_ENABLE_DEV=true
+```
+
+This is useful when:
+- Testing error reporting
+- Debugging production-like issues locally
+- Verifying Sentry integration
+
+### Session Replay
+
+Session Replay is automatically enabled for client-side code:
+
+- **Production**: 10% of sessions recorded
+- **On Error**: 100% of error sessions recorded
+- **Development**: 100% of sessions recorded (if enabled)
+
+## Best Practices
+
+### 1. Don't Capture Sensitive Data
+
+Sentry automatically filters common sensitive fields, but be careful with:
+
+```typescript
+// ❌ Don't send passwords or tokens
+Sentry.setContext("auth", {
+  password: user.password, // BAD!
+  token: apiToken, // BAD!
+});
+
+// ✅ Send safe identifiers only
+Sentry.setContext("auth", {
+  userId: user.id,
+  authMethod: "oauth",
+});
+```
+
+### 2. Use Error Boundaries
+
+Wrap error-prone components:
+
+```typescript
+import { ErrorBoundary } from "@sentry/react";
+
+<ErrorBoundary fallback={<ErrorFallback />}>
+  <YourComponent />
+</ErrorBoundary>
+```
+
+### 3. Group Related Errors
+
+Use fingerprints to group similar errors:
+
+```typescript
+Sentry.withScope((scope) => {
+  scope.setFingerprint(["custom-error", error.code]);
+  captureException(error);
+});
+```
+
+### 4. Filter Noise
+
+Configure filters in Sentry dashboard to ignore:
+
+- Browser extension errors
+- Network errors from ad blockers
+- Known third-party library issues
+
+## Monitoring in Production
+
+### Dashboard
+
+Access your Sentry dashboard at:
+- **URL**: https://sentry.io/organizations/your-org/
+- **View**: Issues, Performance, Replays, Releases
+
+### Alerts
+
+Set up alerts in Sentry for:
+
+- New errors
+- Error rate spikes
+- Performance degradation
+- Release health
+
+### Releases
+
+Track releases to correlate errors with deployments:
+
+```bash
+# In your CI/CD pipeline
+export SENTRY_AUTH_TOKEN=your-token
+export SENTRY_ORG=your-org
+export SENTRY_PROJECT=your-project
+
+npx @sentry/cli releases new $VERSION
+npx @sentry/cli releases set-commits $VERSION --auto
+npx @sentry/cli releases files $VERSION upload-sourcemaps ./dist
+npx @sentry/cli releases finalize $VERSION
+```
+
+## Troubleshooting
+
+### Sentry Not Capturing Errors
+
+1. **Check DSN**: Verify `VITE_SENTRY_DSN` is set correctly
+2. **Check Environment**: Ensure `VITE_SENTRY_ENABLE_DEV=true` if testing in development
+3. **Check Console**: Look for Sentry initialization warnings
+4. **Verify Integration**: Check Sentry dashboard for test events
+
+### Too Many Errors in Development
+
+- Keep `VITE_SENTRY_ENABLE_DEV=false` in development
+- Use Sentry only in staging/production environments
+- Configure filters in Sentry dashboard
+
+### Missing Source Maps
+
+Ensure source maps are uploaded:
+
+```bash
+# Build with source maps
+bun run build
+
+# Upload to Sentry
+npx @sentry/cli releases files $VERSION upload-sourcemaps ./dist
+```
+
+## Related Documentation
+
+- [Sentry Documentation](https://docs.sentry.io/)
+- [@raypx/observability Package](/docs/start/workspace#observability)
+- [Environment Variables](/docs/dev#environment-variables)
+- [Deployment Guide](/docs/deploy/database)
+

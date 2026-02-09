@@ -1,35 +1,44 @@
 {
   "name": "@raypx/database",
+  "version": "0.0.1",
+  "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./envs": "./src/envs.ts",
+    "./schemas": "./src/schemas/pg/index.ts",
+    "./vectorSchemas": "./src/schemas/vector/index.ts",
+    "./types": "./src/types.ts"
   },
   "scripts": {
-    "clean": "git clean -fdX -e node_modules -e .turbo",
-    "db": "dotenvx run -f ../../.env -- prisma",
-    "db:generate": "pnpm with-env prisma generate",
-    "db:migrate": "pnpm with-env prisma migrate dev",
-    "db:push": "pnpm with-env prisma db push",
-    "postinstall": "pnpm db:generate",
-    "db:studio": "pnpm with-env prisma studio",
-    "with-env": "dotenvx run -f ../../.env --",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui"
+    "clean": "rimraf dist .turbo",
+    "generate": "rr drizzle-kit generate --config=config/drizzle.config.ts",
+    "generate:vector": "rr drizzle-kit generate --config=config/drizzle-vector.config.ts",
+    "migrate": "rr drizzle-kit migrate --config=config/drizzle.config.ts",
+    "migrate:vector": "rr drizzle-kit migrate --config=config/drizzle-vector.config.ts",
+    "push": "rr drizzle-kit push --config=config/drizzle.config.ts",
+    "push:vector": "rr drizzle-kit push --config=config/drizzle-vector.config.ts",
+    "seed": "rr tsx seed.ts",
+    "studio": "rr drizzle-kit studio --config=config/drizzle.config.ts",
+    "studio:vector": "rr drizzle-kit studio --config=config/drizzle-vector.config.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.3.0",
-    "@prisma/client": "^7.3.0",
-    "@raypx/env": "workspace:*"
+    "@raypx/config": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "drizzle-zod": "^0.8.3",
+    "nanoid": "^5.1.6",
+    "postgres": "^3.4.8",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@prisma/config": "^7.3.0",
-    "@raypx/config": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "@types/pg": "^8.16.0",
-    "@vitest/ui": "catalog:",
-    "jsdom": "catalog:",
-    "prisma": "^7.3.0",
+    "drizzle-kit": "^0.31.9",
+    "drizzle-seed": "^0.3.1",
+    "jiti": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

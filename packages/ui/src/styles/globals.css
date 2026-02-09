@@ -1,0 +1,15 @@
+/* ============================================
+   Raypx UI - Global Styles
+   ============================================ */
+
+@import "tailwindcss";
+@import "./theme.css";
+@import "./base.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+
+@source "../../../../{packages,apps}/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
+
+@custom-variant dark (&:is(.dark *));

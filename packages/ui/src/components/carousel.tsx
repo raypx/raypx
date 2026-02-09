@@ -1,9 +1,8 @@
 "use client";
 
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
-
 import { cn } from "@raypx/ui/lib/utils";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
 import * as React from "react";
 
@@ -184,7 +183,7 @@ function CarouselPrevious({
       variant={variant}
       {...props}
     >
-      <CaretLeftIcon />
+      <IconChevronLeft />
       <span className="sr-only">Previous slide</span>
     </Button>
   );
@@ -214,7 +213,7 @@ function CarouselNext({
       variant={variant}
       {...props}
     >
-      <CaretRightIcon />
+      <IconChevronRight />
       <span className="sr-only">Next slide</span>
     </Button>
   );

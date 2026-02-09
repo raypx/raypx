@@ -1,7 +1,6 @@
-import { createClient, createQueryUtils } from "@raypx/rpc/client";
+import type { orpc } from "@raypx/api/orpc";
 import { toast } from "@raypx/ui/components/toast";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import { env } from "../env";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -16,6 +15,4 @@ export const queryClient = new QueryClient({
   }),
 });
 
-const client = createClient({ baseUrl: env.NEXT_PUBLIC_AUTH_URL });
-
-export const orpc = createQueryUtils(client);
+export type ORPC = typeof orpc;

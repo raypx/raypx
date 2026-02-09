@@ -1,0 +1,91 @@
+---
+title: Quick Start
+description: Get Raypx running locally and learn the fundamentals of the workspace.
+---
+
+# Overview
+
+### What is Raypx?
+
+Raypx is a Turborepo-powered monorepo that hosts a TanStack Start application, React Email templates, documentation site, and 14 shared packages aligned around modern full-stack development.
+It provides a fully type-safe React 19 stack with Better Auth authentication, Drizzle ORM database layer, ORPC APIs, 60+ shadcn/ui components, and comprehensive infrastructure helpers so teams can ship production-ready features quickly.
+
+### Tech Stack Highlights
+
+- **Framework**: TanStack Start 1.135.2 + React 19 + TypeScript 5.9
+- **Database**: PostgreSQL + Drizzle ORM
+- **Auth**: Better Auth with OAuth, Magic Link, Email OTP
+- **API**: ORPC for type-safe APIs
+- **UI**: Tailwind CSS v4 + 60+ shadcn/ui components
+- **Email**: React Email with 8 pre-built templates
+- **Tooling**: Biome (linter/formatter), Vitest, Turborepo
+
+### Requirements
+
+Before you start, make sure the following tools are installed:
+
+- **Node.js** 20+ (LTS recommended)
+- **bun** 10.17+ (required - this project uses bun workspaces)
+- **PostgreSQL** database (local or cloud like Neon)
+- **Git** for version control
+
+> Tip: run `node --version` and `bun --version` to verify your versions.
+
+### First-Time Setup
+
+```bash title="1. Clone and install dependencies"
+git clone https://github.com/raypx/raypx.git
+cd raypx
+pnpm install
+```
+
+```bash title="2. Configure environment variables"
+cp .env.example .env
+# Edit .env with your configuration:
+# - DATABASE_URL (PostgreSQL connection string)
+# - BETTER_AUTH_SECRET (min 32 characters)
+# - BETTER_AUTH_URL (http://localhost:3000 for dev)
+```
+
+```bash title="3. Run database migrations"
+bun run --filter @raypx/database migrate
+```
+
+```bash title="4. Start the development server"
+bun dev
+# Web app: http://localhost:3000
+# Docs: http://localhost:3001
+```
+
+The web app runs at `http://localhost:3000` with hot-module reloading and TanStack's file-based routing enabled.
+
+## Everyday Commands
+
+| Task | Command | Notes |
+| ---- | ------- | ----- |
+| **Development** | `bun dev` | Starts all apps (web + docs) with hot reload |
+| **Web app only** | `bun --filter web dev` | Just the main TanStack Start app |
+| **Docs only** | `bun --filter docs dev` | Just the Fumadocs site |
+| **Email preview** | `bun --filter email dev` | Preview email templates |
+| **Format & lint** | `bun format` / `bun check` | Biome for formatting and linting |
+| **Type check** | `bun typecheck` | TypeScript across entire workspace |
+| **Tests** | `bun test` | Vitest unit tests |
+| **Coverage** | `bun coverage` | HTML coverage reports |
+| **Build** | `bun run build` | Full Turborepo production build |
+| **Clean** | `bun clean` | Remove build artifacts and caches |
+| **Database** | `bun run --filter @raypx/database studio` | Drizzle Studio (database GUI) |
+| **Add UI component** | `bun shadcn` | Add shadcn/ui components |
+
+## Recommended Workflow
+
+1. Start development with `bun dev` (or `bun --filter web dev` for web only)
+2. Make changes in the relevant app or package
+3. Run `bun typecheck` and `bun check` to validate changes
+4. Run `bun test` if you've added or modified business logic
+5. Build to verify everything compiles: `bun run build`
+6. Commit with conventional commits (e.g., `feat(auth): add OAuth providers`)
+
+## Learn More
+
+- Explore the [Workspace layout](/docs/start/workspace) to understand how apps and packages are organized
+- Review the [Development workflow](/docs/dev) for tooling, scripts, and commit guidance

@@ -1,60 +1,87 @@
 {
   "name": "raypx",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
-  "type": "module",
+  "description": "A modern web application built with TanStack Start and TypeScript",
+  "homepage": "https://raypx.com",
+  "bugs": {
+    "url": "https://github.com/raypx/raypx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raypx/raypx.git"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Raypx Team",
+    "email": "support@raypx.com"
+  },
   "scripts": {
     "build": "turbo build",
-    "build:docs": "turbo -F docs build",
-    "build:web": "turbo -F web build",
-    "check": "turbo check",
-    "check-types": "turbo typecheck",
-    "clean": "turbo clean",
-    "clean:all": "pnpm tsx scripts/clean.ts",
-    "db": "pnpm --filter @raypx/database db",
-    "dev": "turbo dev",
-    "with-env": "dotenvx run -f .env --",
-    "dev:api": "pnpm turbo -F api dev",
-    "dev:docs": "pnpm turbo -F docs dev",
-    "dev:server": "pnpm turbo -F server dev",
-    "dev:app": "pnpm turbo -F app dev",
-    "dev:web": "pnpm turbo -F web dev",
-    "format": "biome check --write .",
-    "knip": "pnpm with-env knip",
-    "knip:fix": "knip --fix",
-    "lint": "biome check .",
-    "prepare": "test -n \"$CI\" && echo 'Skipping lefthook' || lefthook install",
-    "reinstall": "rm -rf node_modules apps/*/node_modules packages/*/node_modules && pnpm install",
-    "shadcn": "pnpm --filter web shadcn",
-    "shadcn:web": "pnpm --filter web shadcn",
-    "shadcn:docs": "pnpm --filter docs shadcn",
-    "shadcn:ui": "pnpm --filter @raypx/ui shadcn",
+    "build:pkg": "turbo build --filter=@raypx/*",
+    "build:docs": "turbo build --filter=docs",
+    "changeset": "changeset",
+    "check": "biome check",
+    "clean": "raypx-scripts clean",
+    "coverage": "vitest --coverage",
+    "db": "raypx-scripts db",
+    "dev:docs": "turbo dev --filter=docs",
+    "dev:email": "turbo dev --filter=email",
+    "dev:web": "rr turbo dev --filter=web",
+    "docs:build": "turbo build --filter=docs",
+    "e2e:web": "pnpm --filter web test:e2e",
+    "format": "raypx-scripts format",
+    "preinstall": "npx only-allow pnpm",
+    "postinstall": "raypx-scripts postinstall",
+    "knip": "knip",
+    "knip:files": "knip --files",
+    "knip:production": "knip --production",
+    "setup": "raypx-scripts setup",
+    "shadcn": "pnpm --filter web run shadcn && pnpm -w format",
     "start": "turbo start",
-    "start:docs": "turbo -F docs start",
+    "start:web": "turbo start --filter=web",
     "test": "turbo test",
-    "start:web": "pnpm turbo -F web start",
-    "test:coverage": "turbo test:coverage",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "typecheck": "turbo typecheck",
-    "update:deps": "pnpm update --interactive --recursive --latest"
+    "turbo": "turbo",
+    "typecheck": "turbo typecheck --affected --cache-dir=.turbo",
+    "update:deps": "pnpm update --latest --interactive --recursive"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
+    "@biomejs/biome": "^2.3.14",
+    "@changesets/cli": "^2.29.8",
     "@dotenvx/dotenvx": "^1.52.0",
-    "@raypx/config": "workspace:*",
-    "knip": "^5.83.0",
-    "lefthook": "^2.0.16",
-    "tsx": "^4.21.0",
-    "turbo": "^2.8.1",
+    "@playwright/test": "^1.58.2",
+    "@raypx/scripts": "workspace:*",
+    "@types/node": "catalog:",
+    "@vitest/browser-playwright": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18",
+    "jsdom": "^28.0.0",
+    "knip": "^5.83.1",
+    "lefthook": "^2.1.0",
+    "playwright": "^1.58.2",
+    "rimraf": "^6.1.2",
+    "turbo": "^2.8.3",
+    "typescript": "^5.9.3",
+    "vite": "catalog:",
     "vitest": "^4.0.18"
   },
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@10.29.2",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.26.0"
+  },
   "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "vite": "^8.0.0-0"
+      }
+    },
     "overrides": {
-      "esbuild": "^0.27.2",
-      "lodash": "4.17.23",
-      "hono": "^4.11.7"
+      "esbuild": "^0.27.3"
+    },
+    "updateConfig": {
+      "ignoreDependencies": [
+        "@types/node"
+      ]
     }
   }
 }

@@ -1,0 +1,171 @@
+---
+title: Workspace Layout
+description: Understand how the Raypx Turborepo is structured and what each package delivers.
+---
+
+## Monorepo at a Glance
+
+Raypx is a bun monorepo orchestrated by Turborepo. It contains **2 applications** and **12 shared packages** that work together to provide a complete full-stack development platform.
+
+```files
+raypx/
+├── apps/
+│   ├── web/                # Main TanStack Start application
+│   │   ├── src/routes/     # File-based routing
+│   │   ├── src/components/ # React components
+│   │   └── public/         # Static assets
+│   └── docs/               # Fumadocs documentation site
+├── packages/               # 13 shared packages (see below)
+├── tooling/                # Biome config, TypeScript configs
+└── turbo.json              # Turborepo build pipeline
+```
+
+All packages use the `@raypx/*` namespace and are consumed as TypeScript source (no build step for packages, only apps).
+
+## Applications
+
+| App | Description | Port | Tech |
+|-----|-------------|------|------|
+| **web** | Main TanStack Start app with auth, UI, and API | 3000 | TanStack Start, React 19 |
+| **docs** | Documentation site powered by Fumadocs | 3001 | Fumadocs, Next.js |
+
+## Packages (12 Total)
+
+### Core Infrastructure
+
+| Package | Description | Key Features |
+| ------- | ----------- | ------------ |
+| **@raypx/auth** | Authentication system powered by Better Auth | OAuth, Magic Link, Email OTP, 2FA ready |
+| **@raypx/database** | Database layer with Drizzle ORM | PostgreSQL, migrations, Neon adapter |
+| **@raypx/api** | Type-safe API layer | ORPC, procedures, middleware |
+| **@raypx/redis** | Caching and session storage | Upstash Redis, 18k line cache system |
+| **@raypx/config** | Environment variable validation | Zod schemas, type-safe env vars (137+) |
+
+### UI & Frontend
+
+| Package | Description | Key Features |
+| ------- | ----------- | ------------ |
+| **@raypx/ui** | Component library | 60+ shadcn/ui components, Tailwind v4 |
+| **@raypx/email** | Email templates with preview | 8 React Email templates, built-in preview server (port 3002) |
+| **@raypx/i18n** | Internationalization (WIP) | ⚠️ Work in progress, not fully implemented yet |
+
+### Utilities & Validation
+
+| Package | Description | Key Features |
+| ------- | ----------- | ------------ |
+| **@raypx/shared** | Shared utilities | Pure functions, constants, types |
+
+### Development Tools
+
+| Package | Description | Key Features |
+| ------- | ----------- | ------------ |
+| **@raypx/cli** | Command-line tools | Project scaffolding, generators |
+| **@raypx/bundler** | Build utilities | Vite plugins, build configurations |
+| **@raypx/tsconfig** | TypeScript configs | Shared tsconfig presets |
+
+### Integrations
+
+| Package | Description | Key Features |
+| ------- | ----------- | ------------ |
+| **@raypx/analytics** | Analytics integrations | PostHog, GA4, Umami |
+
+### Package Dependencies
+
+Packages can depend on each other, but follow these rules:
+- **@raypx/shared** has zero dependencies (pure utilities)
+- **@raypx/ui** only depends on shared (presentation logic only)
+- **@raypx/auth** depends on db, email, redis
+- **@raypx/api** depends on auth, db for protected procedures
+
+## Tooling & Configuration
+
+### Development Tools
+
+- **Biome** (`biome.json`) – Replaces ESLint + Prettier for linting and formatting
+- **TypeScript** (`tooling/tsconfig/`) – Shared configs with strict mode enabled
+- **Turborepo** (`turbo.json`) – Build orchestration and caching
+- **Vitest** (`vitest.config.mts`) – Unit testing framework
+- **Lefthook** (`.lefthook.yml`) – Git hooks for pre-commit checks
+
+### Build System
+
+**IMPORTANT**: Only `apps/` have build scripts. All `packages/` are consumed as TypeScript source.
+
+- ✅ `apps/web`, `apps/docs` – Have build scripts (deployable)
+- ❌ `packages/*` – NO build scripts (consumed as TS source by apps)
+
+This approach:
+- Eliminates double-compilation
+- Provides better type errors in development
+- Speeds up development server startup
+
+## Working with the Monorepo
+
+### Running Commands
+
+```bash
+# Workspace-level commands (all packages)
+turbo dev                   # Start all apps (or bun dev for web only)
+turbo build                 # Build all apps
+turbo typecheck             # Check all TypeScript
+turbo format                # Format all code
+turbo test                  # Run all tests
+
+# App-specific commands
+turbo dev --filter=web      # Just web app
+turbo dev --filter=docs     # Just docs
+bun email-preview          # Email template preview (packages/email)
+
+# Package-specific commands (still use bun for non-turbo tasks)
+bun run --filter @raypx/database studio       # Drizzle Studio
+bun run --filter @raypx/database migrate       # Run migrations
+bun run --filter @raypx/ui shadcn add button  # Add UI component
+
+# Turborepo filters (for cached tasks)
+turbo build --filter=web              # Build web app only
+turbo test --filter=...^web           # Test web and its dependencies
+turbo build --filter=...^web          # Build web and its dependencies
+```
+
+### Adding Dependencies
+
+```bash
+# Add to specific package
+bun --filter web add react-query
+bun --filter @raypx/ui add -D @types/node
+
+# Add to workspace root (dev tools)
+bun add -D -w typescript
+
+# Use catalog dependencies (preferred)
+# Edit package.json catalog, then:
+pnpm install
+```
+
+### Catalog Dependencies
+
+This project uses **pnpm catalogs** (via package.json workspaces.catalog) for centralized version management:
+
+```yaml
+catalog:
+  react19: ^19.2.0
+  tailwindv4: ^4.1.17
+```
+
+Reference in package.json:
+```json
+{
+  "dependencies": {
+    "react": "catalog:react19",
+    "tailwindcss": "catalog:tailwindv4"
+  }
+}
+```
+
+## Generated Files
+
+- `apps/docs/source.generated.ts` – Fumadocs metadata (auto-generated)
+- `apps/web/.vinxi/` – TanStack Start build cache (gitignored)
+- `.turbo/` – Turborepo cache (gitignored)
+
+Do not edit generated files manually. They are recreated on build or dev server start.

@@ -1,31 +1,43 @@
 {
   "name": "@raypx/auth",
+  "version": "0.0.1",
+  "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./client": "./src/client.ts"
+    "./server": "./src/server.ts",
+    "./middleware": "./src/middleware.ts",
+    "./envs": "./src/envs.ts",
+    "./client": "./src/client/index.ts"
   },
   "scripts": {
-    "clean": "git clean -fdX -e node_modules -e .turbo",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "with-env": "dotenvx run -f ../../.env --"
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
+    "@raypx/config": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/email": "workspace:*",
-    "@raypx/env": "workspace:*",
-    "better-auth": "catalog:",
-    "react": "catalog:",
+    "@raypx/email-templates": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "@tabler/icons-react": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "better-auth": "^1.4.18",
+    "react": "catalog:react19",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
-    "@types/react": "catalog:",
-    "@vitest/ui": "catalog:",
-    "jsdom": "catalog:",
+    "@better-fetch/fetch": "^1.1.21",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "vitest": "catalog:"
   }
 }

@@ -31,15 +31,6 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on",
-        "useSortedAttributes": "on"
-      }
-    }
-  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -90,13 +81,21 @@
   "javascript": {
     "formatter": {
       "enabled": true,
-      "semicolons": "always",
-      "quoteStyle": "double"
+      "semicolons": "always"
     }
   },
   "css": {
     "parser": {
       "tailwindDirectives": true
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "useSortedAttributes": "on"
+      }
     }
   },
   "overrides": [

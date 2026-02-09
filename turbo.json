@@ -3,36 +3,30 @@
   "envMode": "loose",
   "remoteCache": { "signature": true },
   "concurrency": "16",
-  "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event", "DATABASE_URL"],
+  "globalPassThroughEnv": ["NODE_ENV", "CI", "NETLIFY", "npm_lifecycle_event"],
   "tasks": {
-    "clean": {
-      "cache": false
-    },
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "next.config.*"],
-      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".next/**"],
-      "outputLogs": "new-only"
-    },
-    "shadcn": {},
-    "build:node": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "next.config.*"],
-      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".next/**"],
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**"],
       "outputLogs": "new-only"
     },
     "start": {
       "cache": true,
       "dependsOn": ["build", "^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json", "next.config.*"],
-      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**", ".next/**"]
+      "inputs": ["$TURBO_DEFAULT$", ".env", "vite.config.*", "tsconfig.json"],
+      "outputs": ["dist/**", ".tanstack/**", ".output/**", ".nitro/**", ".netlify/**"]
     },
     "typecheck": {
       "cache": true,
       "dependsOn": ["^typecheck"],
       "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"]
+    },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "persistent": true
     },
     "format": {
       "cache": true,
@@ -44,8 +38,10 @@
       "outputs": [".cache/.biomecache"],
       "outputLogs": "new-only"
     },
-    "lint": {
-      "dependsOn": ["^lint"]
+    "generate": {
+      "cache": true,
+      "outputLogs": "new-only",
+      "outputs": ["generated/**", "**/*.generated.*"]
     },
     "test": {
       "cache": true,
@@ -60,43 +56,25 @@
       "outputs": [],
       "outputLogs": "new-only"
     },
-    "test:coverage": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "vitest.config.*",
-        "jest.config.*",
-        "**/*.test.*",
-        "**/*.spec.*"
-      ],
-      "outputs": ["coverage/**"],
-      "outputLogs": "new-only"
-    },
-    "dev": {
+    "test:e2e": {
       "cache": false,
       "dependsOn": ["^build"],
-      "persistent": true
+      "inputs": ["$TURBO_DEFAULT$", "playwright.config.*", "e2e/**"],
+      "outputs": ["test-results/**", "playwright-report/**"]
     },
-    "api": {
+    "shadcn": {
       "cache": false,
-      "persistent": true
+      "interactive": true
     },
-    "db": {
-      "cache": false
-    },
-    "db:push": {
-      "cache": false
-    },
-    "db:studio": {
+    "email-preview": {
       "cache": false,
-      "persistent": true
+      "dependsOn": ["^build"],
+      "persistent": true,
+      "outputs": []
     },
-    "db:migrate": {
-      "cache": false
-    },
-    "db:generate": {
-      "cache": false
+    "clean": {
+      "cache": false,
+      "outputLogs": "none"
     }
   }
 }

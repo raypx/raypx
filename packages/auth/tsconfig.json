@@ -1,15 +1,12 @@
 {
-  "extends": "@raypx/config/base.json",
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"],
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "noEmit": false
-  }
+    "noEmit": true
+  },
+  "exclude": ["node_modules"],
+  "extends": "@raypx/tsconfig/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

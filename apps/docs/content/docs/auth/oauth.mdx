@@ -1,0 +1,160 @@
+---
+title: OAuth Setup Guide
+description: Configure GitHub and Google OAuth providers for social login authentication.
+lastModified: 2026-01-09
+---
+
+This guide explains how to set up GitHub and Google OAuth for social login in your Raypx application.
+
+## GitHub OAuth Setup
+
+### 1. Create a GitHub OAuth App
+
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Click **"New OAuth App"** or **"Register a new application"**
+3. Fill in the application details:
+   - **Application name**: `Raypx` (or your app name)
+   - **Homepage URL**: `http://localhost:3000` (for development)
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+4. Click **"Register application"**
+5. You'll receive a **Client ID**
+6. Click **"Generate a new client secret"** to get your **Client Secret**
+
+### 2. Add GitHub Credentials to `.env`
+
+```bash title=".env"
+AUTH_GITHUB_ID="your_github_client_id"
+AUTH_GITHUB_SECRET="your_github_client_secret"
+```
+
+### 3. Production Setup
+
+For production, create another OAuth App with production URLs:
+- **Homepage URL**: `https://yourdomain.com`
+- **Authorization callback URL**: `https://yourdomain.com/api/auth/callback/github`
+
+---
+
+## Google OAuth Setup
+
+### 1. Create a Google OAuth Client
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the **Google+ API**:
+   - Go to **APIs & Services** > **Library**
+   - Search for "Google+ API" and enable it
+4. Go to **APIs & Services** > **Credentials**
+5. Click **"Create Credentials"** > **"OAuth client ID"**
+6. Configure the OAuth consent screen (if not already done):
+   - Choose **External** for user type
+   - Fill in the required fields (app name, user support email, etc.)
+7. Create OAuth client ID:
+   - **Application type**: Web application
+   - **Name**: `Raypx` (or your app name)
+   - **Authorized JavaScript origins**: `http://localhost:3000`
+   - **Authorized redirect URIs**: `http://localhost:3000/api/auth/callback/google`
+8. Click **"Create"**
+9. You'll receive a **Client ID** and **Client Secret**
+
+### 2. Add Google Credentials to `.env`
+
+```bash title=".env"
+AUTH_GOOGLE_ID="your_google_client_id.apps.googleusercontent.com"
+AUTH_GOOGLE_SECRET="your_google_client_secret"
+```
+
+### 3. Production Setup
+
+For production, add your production URLs to the OAuth client:
+- **Authorized JavaScript origins**: `https://yourdomain.com`
+- **Authorized redirect URIs**: `https://yourdomain.com/api/auth/callback/google`
+
+---
+
+## Complete Configuration
+
+Your `.env` file should include all authentication settings:
+
+```bash title=".env"
+# Core Authentication
+AUTH_SECRET="your-secret-key-min-32-chars"
+VITE_AUTH_URL="http://localhost:3000"
+
+# GitHub OAuth
+AUTH_GITHUB_ID="your_github_client_id"
+AUTH_GITHUB_SECRET="your_github_client_secret"
+
+# Google OAuth
+AUTH_GOOGLE_ID="your_google_client_id.apps.googleusercontent.com"
+AUTH_GOOGLE_SECRET="your_google_client_secret"
+```
+
+> **Note**: Generate `AUTH_SECRET` using `openssl rand -base64 32`
+
+---
+
+## Testing Social Login
+
+1. Start the development server:
+   ```bash
+   bun dev
+   ```
+
+2. Navigate to the sign-in page: `http://localhost:3000/sign-in`
+
+3. Click on **"Sign in with GitHub"** or **"Sign in with Google"**
+
+4. Complete the OAuth flow in the popup window
+
+5. After successful authentication, you should be redirected back to the app with an active session
+
+---
+
+## Troubleshooting
+
+### "Redirect URI mismatch" Error
+
+**GitHub**: Ensure the callback URL in your GitHub OAuth app matches exactly:
+```
+http://localhost:3000/api/auth/callback/github
+```
+
+**Google**: Verify the redirect URI is added to authorized redirect URIs:
+```
+http://localhost:3000/api/auth/callback/google
+```
+
+### "OAuth App Not Found"
+
+- Verify that your `AUTH_GITHUB_ID` and `AUTH_GOOGLE_ID` are correct
+- Make sure there are no extra spaces in your `.env` file
+- Ensure environment variables are properly formatted (no spaces around `=`)
+
+### Session Cookie Not Set
+
+- Ensure `reactStartCookies()` plugin is enabled in the auth configuration
+- Check that conflicting session plugins (`lastLoginMethod()`, `oneTap()`) are disabled
+- Refer to the [Better Auth documentation](https://www.better-auth.com/docs) for TanStack Start integration
+
+---
+
+## Security Best Practices
+
+> **Security Best Practices**
+>
+> - **Never commit your `.env` file** to version control
+> - Add `.env` to your `.gitignore` file
+> - Use different OAuth apps for development and production environments
+> - Rotate your secrets regularly
+> - Keep your `AUTH_SECRET` secure and random (minimum 32 characters)
+> - Use HTTPS in production for all OAuth callbacks
+
+---
+
+## Related Resources
+
+- [Better Auth Documentation](https://www.better-auth.com/docs)
+- [GitHub OAuth Documentation](https://docs.github.com/en/developers/apps/building-oauth-apps)
+- [Google OAuth Documentation](https://developers.google.com/identity/protocols/oauth2)
+- [Environment Variables Guide](/docs/dev#environment-variables)

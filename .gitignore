@@ -1,77 +1,67 @@
-# Dependencies
+# dependencies
 node_modules
-.pnp
-.pnp.js
 
-# Build outputs
-dist
-build
-.output
-.nitro
-.vinxi
-*.tsbuildinfo
+# temp files
+/temp
 
-# Tauri (Desktop app)
-src-tauri/target/
-src-tauri/gen/schemas/
-
-# TanStack Start (legacy)
-.tanstack
-.wrangler
-.vinxi
-dist-ssr
-*.local
-count.txt
-todos.json
-routeTree.gen.ts
-
-# Next.js (used by web and desktop apps)
-.next
+# output
 out
-next-env.d.ts
-.turbopack
+dist
+*.tgz
 
-# Environment variables
-.env
-.env*.local
+# code coverage
+coverage
+*.lcov
 
-# IDEs and editors
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.idea
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Logs
+# logs
 logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.*.local
+.env.local
+.env.*
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+
+# Fumadocs
+.source
 
 # Turbo
 .turbo
 
-# Better-T-Stack
-.alchemy
+# Claude Code personal settings
+.claude/settings.local.json
+.claude/auth.json
+.claude/cache/
+.claude/logs/
 
-# Testing
-coverage
-.nyc_output
+# Tanstack
+**/.tanstack
 
-# Misc
-*.tgz
-.cache
-tmp
-temp
 .netlify
+.vercel
 
-# Database
-packages/database/prisma/generated
+**/.nitro
+**/.output
+
+**/.raypx
+
+# pnpm
+.pnpm-store/
+
+# playwright
+test-results/
+playwright-report/

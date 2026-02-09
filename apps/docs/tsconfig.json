@@ -1,21 +1,14 @@
 {
-  "extends": "@raypx/config/react.json",
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
+  "extends": "@raypx/tsconfig/vite.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "*.ts", "*.tsx"],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "allowJs": false,
     "paths": {
+      "fumadocs-mdx:collections/*": [".source/*"],
       "~/*": ["./src/*"],
       "@raypx/ui/*": ["../../packages/ui/src/*"]
     }

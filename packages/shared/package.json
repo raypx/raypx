@@ -1,0 +1,50 @@
+{
+  "name": "@raypx/shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.mts",
+      "default": "./dist/config/index.mjs"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.mts",
+      "default": "./dist/utils/index.mjs"
+    },
+    "./logger": {
+      "types": "./dist/logger/index.d.mts",
+      "default": "./dist/logger/index.mjs"
+    },
+    "./registry": {
+      "types": "./dist/registry/index.d.mts",
+      "default": "./dist/registry/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@raypx/config": "workspace:*",
+    "consola": "^3.4.2",
+    "dayjs": "^1.11.19",
+    "nanoid": "^5.1.6",
+    "ua-parser-js": "^2.0.9",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "type-fest": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

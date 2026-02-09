@@ -1,25 +1,45 @@
 {
   "name": "@raypx/email",
+  "version": "0.0.1",
+  "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./envs": "./src/envs.ts",
+    "./dev": "./src/dev.ts",
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "clean": "git clean -fdX -e node_modules -e .turbo",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "with-env": "dotenvx run -f ../../.env --"
+    "clean": "rimraf dist .turbo tsconfig.tsbuildinfo",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@raypx/env": "workspace:*",
-    "@raypx/logger": "workspace:*",
-    "resend": "^6.9.1"
+    "@aws-sdk/client-ses": "^3.985.0",
+    "@raypx/config": "workspace:*",
+    "@raypx/shared": "workspace:*",
+    "@react-email/render": "^2.0.4",
+    "@sendgrid/mail": "^8.1.6",
+    "nodemailer": "^8.0.1",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "resend": "^6.9.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/ui": "catalog:",
-    "jsdom": "catalog:",
+    "@raypx/tsconfig": "workspace:*",
+    "@react-email/components": "^1.0.7",
+    "@types/node": "catalog:",
+    "@types/nodemailer": "^7.0.9",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:",
+    "babel-plugin-react-compiler": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@react-email/components": "^1.0.0"
   }
 }

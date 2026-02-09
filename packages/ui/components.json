@@ -10,14 +10,14 @@
     "cssVariables": true,
     "prefix": ""
   },
-  "iconLibrary": "phosphor",
+  "iconLibrary": "tabler",
   "menuColor": "default",
   "menuAccent": "subtle",
   "aliases": {
     "components": "@raypx/ui/components",
+    "utils": "@raypx/ui/lib/utils",
     "hooks": "@raypx/ui/hooks",
     "lib": "@raypx/ui/lib",
-    "ui": "@raypx/ui/components",
-    "utils": "@raypx/ui/lib/utils"
+    "ui": "@raypx/ui/components"
   }
 }

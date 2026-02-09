@@ -1,11 +1,15 @@
 {
-  "extends": "@raypx/config/react.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules"],
+  "extends": "@raypx/tsconfig/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": ["vite/client", "node"],
     "paths": {
       "@raypx/ui/*": ["./src/*"]
-    }
-  }
+    },
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
 }

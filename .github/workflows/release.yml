@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for changesets
+        id: check-changesets
+        run: |
+          if [ -z "$(find .changeset -name '*.md' -type f 2>/dev/null | head -1)" ]; then
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "No changeset files found, skipping release"
+          else
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "Changeset files found, proceeding with release"
+          fi
+
+      - name: Build all packages
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        run: pnpm run build
+
+      - name: Create Changeset PR or release
+        if: steps.check-changesets.outputs.has_changesets == 'true'
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          publish: pnpm changeset publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
