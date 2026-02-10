@@ -19,6 +19,9 @@ export default defineConfig(({ command }) => ({
   server: {
     port: 3004,
   },
+  ssr: {
+    noExternal: command === "build" ? true : undefined,
+  },
   plugins: [
     // Conditionally load MDX for faster startup (use SKIP_DOCS=true to skip)
     mdx(MdxConfig),

@@ -5,6 +5,7 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig, type UserConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import env from "./src/env";
+import { nitro } from "nitro/vite";
 
 export default defineConfig(({ command }) => {
   const isBuild = command === "build";
@@ -14,10 +15,7 @@ export default defineConfig(({ command }) => {
       port: env.PORT,
     },
     ssr: {
-      noExternal: ["@raypx/config", "@raypx/ui"],
-    },
-    build: {
-      chunkSizeWarningLimit: 1000,
+      noExternal: isBuild ? true : undefined,
     },
     plugins: [
       devtools({
@@ -41,6 +39,7 @@ export default defineConfig(({ command }) => {
         }),
       }),
       tailwindcss(),
+      nitro(),
     ],
   } satisfies UserConfig;
 });

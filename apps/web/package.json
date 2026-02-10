@@ -30,6 +30,7 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "catalog:",
+    "nitro": "catalog:",
     "tailwindcss": "catalog:tailwindv4",
     "typescript": "catalog:",
     "vite": "catalog:",
