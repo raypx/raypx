@@ -15,7 +15,6 @@ import {
   IconSparkles,
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ParticleBackground } from "~/components/particles";
 import { baseOptions } from "../lib/layout.shared";
 
 export const Route = createFileRoute("/")({
@@ -105,7 +104,6 @@ function RouteComponent() {
   const options = baseOptions();
   return (
     <>
-      <ParticleBackground />
       <HomeLayout {...options}>
         <main className="container mx-auto px-4 py-16">
           {/* Hero Section */}
