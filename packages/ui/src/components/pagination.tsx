@@ -1,7 +1,6 @@
+import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/button";
-
 import { cn } from "@raypx/ui/lib/utils";
-import { IconChevronLeft, IconChevronRight, IconDots } from "@tabler/icons-react";
 import type * as React from "react";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
@@ -54,7 +53,11 @@ function PaginationLink({ className, isActive, size = "icon", ...props }: Pagina
   );
 }
 
-function PaginationPrevious({ className, ...props }: React.ComponentProps<typeof PaginationLink>) {
+function PaginationPrevious({
+  className,
+  text = "Previous",
+  ...props
+}: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
       aria-label="Go to previous page"
@@ -62,13 +65,17 @@ function PaginationPrevious({ className, ...props }: React.ComponentProps<typeof
       size="default"
       {...props}
     >
-      <IconChevronLeft data-icon="inline-start" />
-      <span className="hidden sm:block">Previous</span>
+      <CaretLeftIcon data-icon="inline-start" />
+      <span className="hidden sm:block">{text}</span>
     </PaginationLink>
   );
 }
 
-function PaginationNext({ className, ...props }: React.ComponentProps<typeof PaginationLink>) {
+function PaginationNext({
+  className,
+  text = "Next",
+  ...props
+}: React.ComponentProps<typeof PaginationLink> & { text?: string }) {
   return (
     <PaginationLink
       aria-label="Go to next page"
@@ -76,8 +83,8 @@ function PaginationNext({ className, ...props }: React.ComponentProps<typeof Pag
       size="default"
       {...props}
     >
-      <span className="hidden sm:block">Next</span>
-      <IconChevronRight data-icon="inline-end" />
+      <span className="hidden sm:block">{text}</span>
+      <CaretRightIcon data-icon="inline-end" />
     </PaginationLink>
   );
 }
@@ -87,13 +94,13 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
     <span
       aria-hidden
       className={cn(
-        "flex size-8 items-center items-center justify-center justify-center [&_svg:not([class*='size-'])]:size-4",
+        "flex size-8 items-center justify-center [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       data-slot="pagination-ellipsis"
       {...props}
     >
-      <IconDots />
+      <DotsThreeIcon />
       <span className="sr-only">More pages</span>
     </span>
   );

@@ -1,7 +1,8 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
+import { CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
+
 import { cn } from "@raypx/ui/lib/utils";
-import { IconChevronRight, IconDots } from "@tabler/icons-react";
 import type * as React from "react";
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
@@ -14,7 +15,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   return (
     <ol
       className={cn(
-        "flex flex-wrap items-center gap-1.5 break-words text-muted-foreground text-sm",
+        "wrap-break-word flex flex-wrap items-center gap-1.5 text-muted-foreground text-sm",
         className,
       )}
       data-slot="breadcrumb-list"
@@ -71,7 +72,7 @@ function BreadcrumbSeparator({ children, className, ...props }: React.ComponentP
       role="presentation"
       {...props}
     >
-      {children ?? <IconChevronRight />}
+      {children ?? <CaretRightIcon />}
     </li>
   );
 }
@@ -85,7 +86,7 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span"
       role="presentation"
       {...props}
     >
-      <IconDots />
+      <DotsThreeIcon />
       <span className="sr-only">More</span>
     </span>
   );

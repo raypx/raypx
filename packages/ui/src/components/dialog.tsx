@@ -1,8 +1,9 @@
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Button } from "@raypx/ui/components/button";
+"use client";
 
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { XIcon } from "@phosphor-icons/react";
+import { Button } from "@raypx/ui/components/button";
 import { cn } from "@raypx/ui/lib/utils";
-import { IconX } from "@tabler/icons-react";
 import type * as React from "react";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -59,7 +60,7 @@ function DialogContent({
             data-slot="dialog-close"
             render={<Button className="absolute top-2 right-2" size="icon-sm" variant="ghost" />}
           >
-            <IconX />
+            <XIcon />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
@@ -102,7 +103,7 @@ function DialogFooter({
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
-      className={cn("font-medium text-sm leading-none", className)}
+      className={cn("font-medium text-base leading-none", className)}
       data-slot="dialog-title"
       {...props}
     />

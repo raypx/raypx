@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@raypx/ui/lib/utils";
 import type * as React from "react";
 

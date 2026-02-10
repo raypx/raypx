@@ -1,4 +1,3 @@
-import { auth } from "@raypx/auth/server";
 import { db } from "@raypx/database";
 
 export async function createContext({ req }: { req: Request }) {
@@ -8,8 +7,8 @@ export async function createContext({ req }: { req: Request }) {
       db,
     };
   }
-  const session = await auth.api.getSession({ headers: req.headers });
-  return { session, db };
+  // TODO: Implement session management
+  return { session: null, db };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

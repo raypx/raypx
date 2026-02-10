@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import fg from "fast-glob";
 import fs from "fs-extra";

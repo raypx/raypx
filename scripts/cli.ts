@@ -131,8 +131,6 @@ function parseArgs(args: string[]) {
   });
 }
 
-const cliStartTime = Date.now();
-
 /**
  * CLI entry point for raypx-scripts
  */

@@ -1,11 +1,13 @@
-import type { IconProps as TablerIconProps } from "@tabler/icons-react";
+import type { IconProps as PhosphorIconProps } from "@phosphor-icons/react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import * as React from "react";
 
-export type TablerIcon = ForwardRefExoticComponent<TablerIconProps & RefAttributes<SVGSVGElement>>;
+export type PhosphorIcon = ForwardRefExoticComponent<
+  PhosphorIconProps & RefAttributes<SVGSVGElement>
+>;
 
-export type IconProps = TablerIconProps & {
-  icon: TablerIcon;
+export type IconProps = PhosphorIconProps & {
+  icon: PhosphorIcon;
 };
 
 export const Icon = (props: IconProps) => {
