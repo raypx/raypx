@@ -15,7 +15,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * Vite configuration for email preview application
  * This is a dev-only TanStack Start app, not deployed to production
  */
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   resolve: {
     alias: {
       // Alias for email templates directory to use in import.meta.glob
@@ -24,7 +24,7 @@ export default defineConfig({
     },
   },
   ssr: {
-    noExternal: ["@tabler/icons-react"],
+    noExternal: command === "build" ? true : undefined,
   },
   plugins: [
     tsConfigPaths(),
@@ -49,4 +49,4 @@ export default defineConfig({
   server: {
     port: env.PORT || 3002,
   },
-});
+}));

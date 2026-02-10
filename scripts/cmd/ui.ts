@@ -6,9 +6,7 @@ const uiCmd = defineCommand({
   description: "Generate UI component exports",
   run: async () => {
     const tasks = [
-      createTask("Generate UI component exports", () =>
-        generateAllComponentExports(),
-      ),
+      createTask("Generate UI component exports", () => generateAllComponentExports()),
     ];
     await runTasks(tasks);
   },

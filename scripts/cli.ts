@@ -5,8 +5,7 @@ import dotenvx from "@dotenvx/dotenvx";
 import { createJiti } from "jiti";
 import yargsParser from "yargs-parser";
 import type { Command } from "./lib/task";
-import { formatDuration, PROJECT_ROOT } from "./utils";
-import { logger } from "./utils";
+import { formatDuration, logger, PROJECT_ROOT } from "./utils";
 
 const jiti = createJiti(import.meta.url);
 
@@ -186,9 +185,7 @@ async function cli(rawArgs: string[]) {
     }
 
     if (errorMessage.includes("not found") || errorMessage.includes("ENOENT")) {
-      logger.info(
-        "💡 Tip: Make sure the command exists and is properly configured",
-      );
+      logger.info("💡 Tip: Make sure the command exists and is properly configured");
     }
 
     process.exit(1);

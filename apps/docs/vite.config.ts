@@ -32,14 +32,14 @@ const deployPlugin = () => {
       ];
 };
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: "/docs/",
   server: {
     port: 3004,
     open: isDev,
   },
   ssr: {
-    noExternal: ["@tabler/icons-react"],
+    noExternal: command === "build" ? true : undefined,
   },
   resolve: {
     external: ["fumadocs-core", "fumadocs-ui", "@fumadocs/base-ui", "@raypx/ai"],
@@ -76,4 +76,4 @@ export default defineConfig({
     tailwindcss(),
     deployPlugin(),
   ],
-});
+}));

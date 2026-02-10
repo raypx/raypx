@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { join } from "node:path";
 import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import fg from "fast-glob";
 import fs from "fs-extra";
 import { CACHE_DIR, PROJECT_ROOT } from "./paths";

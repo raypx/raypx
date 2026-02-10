@@ -1,7 +1,6 @@
 import type { Simplify } from "type-fest";
-import { execCommand, formatDuration } from "../utils";
+import { execCommand, formatDuration, logger } from "../utils";
 import type { ExecOptions } from "../utils/exec";
-import { logger } from "../utils";
 
 /**
  * Task function type - receives a context object with helper methods
@@ -82,13 +81,10 @@ export function createTask(
 
   // Case 2 & 3: Shell command execution
   const commandSpec = titleOrCommand as CommandSpec;
-  const config =
-    typeof taskFnOrOpts === "string" ? { title: taskFnOrOpts } : taskFnOrOpts;
+  const config = typeof taskFnOrOpts === "string" ? { title: taskFnOrOpts } : taskFnOrOpts;
 
   const [command, args] = parseCommandSpec(commandSpec);
-  const commandDisplay = Array.isArray(commandSpec)
-    ? commandSpec.join(" ")
-    : commandSpec;
+  const commandDisplay = Array.isArray(commandSpec) ? commandSpec.join(" ") : commandSpec;
 
   const {
     title = commandDisplay,
@@ -128,9 +124,7 @@ export function createTask(
 
           if (attempts < maxAttempts) {
             ctx.title = `${title} (retry ${attempts}/${retries})`;
-            await new Promise((resolve) =>
-              setTimeout(resolve, Math.min(500 * attempts, 2000)),
-            );
+            await new Promise((resolve) => setTimeout(resolve, Math.min(500 * attempts, 2000)));
             continue;
           }
 
@@ -175,9 +169,7 @@ async function executeTask(task: Task): Promise<void> {
 /**
  * Run multiple tasks sequentially or concurrently
  */
-export async function runTasks(
-  _opts: RunTasksOptions | RunTasksOptions["tasks"],
-): Promise<void> {
+export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]): Promise<void> {
   const opts = Array.isArray(_opts) ? { tasks: _opts } : _opts;
   const { concurrent = false } = opts;
   const startTime = Date.now();

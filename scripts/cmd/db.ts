@@ -20,17 +20,8 @@ const DB_CONFIGS = {
 } as const;
 
 // Build commands dynamically to reduce duplication
-function buildDbCommand(
-  operation: DbOperation,
-  config: string,
-): [string, ...string[]] {
-  return [
-    "raypx-scripts",
-    "run",
-    "drizzle-kit",
-    operation,
-    `--config=config/${config}`,
-  ];
+function buildDbCommand(operation: DbOperation, config: string): [string, ...string[]] {
+  return ["raypx-scripts", "run", "drizzle-kit", operation, `--config=config/${config}`];
 }
 
 async function runDbCommand(
@@ -64,9 +55,7 @@ async function runDbCommand(
   });
 
   if (result.exitCode !== 0) {
-    throw new Error(
-      `Failed to ${operation} ${dbType} database. Exit code: ${result.exitCode}`,
-    );
+    throw new Error(`Failed to ${operation} ${dbType} database. Exit code: ${result.exitCode}`);
   }
 }
 
@@ -100,9 +89,7 @@ Examples:
   ],
   run: async (args?: string[]) => {
     if (!args || args.length === 0) {
-      logger.error(
-        "Missing operation. Usage: raypx-scripts db <operation> [database]",
-      );
+      logger.error("Missing operation. Usage: raypx-scripts db <operation> [database]");
       logger.log(`\nOperations: ${DB_OPERATIONS.join(", ")}`);
       logger.log(`Databases: ${DB_TYPES.join(", ")}`);
       process.exit(1);
@@ -127,9 +114,7 @@ Examples:
 
     // Studio doesn't support "all"
     if (operation === "studio" && dbType === "all") {
-      logger.error(
-        "Studio command doesn't support 'all'. Please specify 'main' or 'vector'.",
-      );
+      logger.error("Studio command doesn't support 'all'. Please specify 'main' or 'vector'.");
       process.exit(1);
     }
 

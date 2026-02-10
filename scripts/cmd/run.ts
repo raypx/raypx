@@ -22,9 +22,7 @@ Common use cases:
   ],
   run: async (args?: string[]) => {
     if (!args?.length) {
-      throw new Error(
-        "No command provided. Usage: raypx-scripts run <command> [args...]",
-      );
+      throw new Error("No command provided. Usage: raypx-scripts run <command> [args...]");
     }
 
     const [cmd, ...rest] = args;

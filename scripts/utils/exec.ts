@@ -36,12 +36,7 @@ export async function execCommand(
   args: string[] = [],
   options: ExecOptions = {},
 ): Promise<ExecResult> {
-  const {
-    cwd = PROJECT_ROOT,
-    timeout = DEFAULT_TIMEOUT,
-    env = {},
-    throwOnError = false,
-  } = options;
+  const { cwd = PROJECT_ROOT, timeout = DEFAULT_TIMEOUT, env = {}, throwOnError = false } = options;
 
   logger.debug(`Executing: ${command} ${args.join(" ")}`);
 
@@ -83,8 +78,7 @@ export async function execCommand(
 
     logger.debug(`Command failed: ${command} ${args.join(" ")}`, error);
 
-    const finalError =
-      error instanceof Error ? error : new Error(String(error));
+    const finalError = error instanceof Error ? error : new Error(String(error));
 
     if (throwOnError) throw finalError;
 

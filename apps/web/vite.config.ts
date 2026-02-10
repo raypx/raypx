@@ -53,7 +53,7 @@ export default defineConfig(({ command }) => {
       port: env.PORT,
     },
     ssr: {
-      noExternal: ["@tabler/icons-react"],
+      noExternal: command === "build" ? true : undefined,
     },
     build: {
       chunkSizeWarningLimit: 1000,
