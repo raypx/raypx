@@ -56,23 +56,25 @@ export function DocsPageComponent() {
   const tree = useMemo(() => transformPageTree(data.tree as PageTree.Folder), [data.tree]);
 
   return (
-    <DocsLayout
-      {...options}
-      nav={{ ...options.nav, mode: "top" }}
-      sidebar={{
-        collapsible: false,
-        tabs: [
-          {
-            title: "Docs",
-            url: "/docs",
-          },
-        ],
-      }}
-      tabMode="navbar"
-      tree={tree}
-    >
-      <Content path={data.path} />
-    </DocsLayout>
+    <main id="main-content">
+      <DocsLayout
+        {...options}
+        nav={{ ...options.nav, mode: "top" }}
+        sidebar={{
+          collapsible: false,
+          tabs: [
+            {
+              title: "Docs",
+              url: "/docs",
+            },
+          ],
+        }}
+        tabMode="navbar"
+        tree={tree}
+      >
+        <Content path={data.path} />
+      </DocsLayout>
+    </main>
   );
 }
 

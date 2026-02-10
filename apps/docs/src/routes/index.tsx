@@ -31,7 +31,7 @@ function RouteComponent() {
   return (
     <>
       <HomeLayout {...options}>
-        <main className="container mx-auto px-4 py-16">
+        <main id="main-content" className="container mx-auto px-4 py-16">
           {/* Hero Section */}
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="mb-6 font-bold text-5xl tracking-tight sm:text-6xl md:text-7xl">
