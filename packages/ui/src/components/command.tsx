@@ -8,7 +8,7 @@ import {
 } from "@raypx/ui/components/dialog";
 import { InputGroup, InputGroupAddon } from "@raypx/ui/components/input-group";
 import { cn } from "@raypx/ui/lib/utils";
-import { Command as CommandPrimitive } from "cmdk";
+import { Command as CommandPrimitive } from "cmdk-base";
 import type * as React from "react";
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {

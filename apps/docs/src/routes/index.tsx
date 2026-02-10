@@ -109,9 +109,9 @@ function RouteComponent() {
           {/* Hero Section */}
           <div className="mx-auto max-w-5xl text-center">
             {/* Badge */}
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-gradient-to-r from-primary/10 via-emerald-500/10 to-cyan-500/10 px-5 py-2 font-medium text-primary text-sm shadow-sm backdrop-blur-sm">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-linear-to-r from-primary/10 via-emerald-500/10 to-cyan-500/10 px-5 py-2 font-medium text-primary text-sm shadow-sm backdrop-blur-sm">
               <IconSparkles className="size-4" />
-              <span className="bg-gradient-to-r from-primary to-emerald-600 bg-clip-text font-semibold">
+              <span className="bg-linear-to-r from-primary to-emerald-600 bg-clip-text font-semibold">
                 Production-Ready Platform
               </span>
             </div>
@@ -120,7 +120,7 @@ function RouteComponent() {
             <h1 className="mb-8 font-bold text-6xl tracking-tight sm:text-7xl md:text-8xl lg:text-9xl">
               Build Modern
               <br />
-              <span className="bg-gradient-to-r from-primary via-emerald-500 to-cyan-500 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-primary via-emerald-500 to-cyan-500 bg-clip-text text-transparent">
                 AI-Powered Apps
               </span>
             </h1>
@@ -148,7 +148,7 @@ function RouteComponent() {
                 </span>
               </Link>
               <a
-                className="group inline-flex h-14 items-center justify-center gap-3 rounded-xl border-2 border-border/50 bg-gradient-to-br from-background to-muted/50 px-10 font-semibold text-base shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:border-primary/30 hover:bg-gradient-to-br hover:from-primary/5 hover:to-emerald-500/5 hover:shadow-primary/10 hover:shadow-xl active:scale-95"
+                className="group inline-flex h-14 items-center justify-center gap-3 rounded-xl border-2 border-border/50 bg-linear-to-br from-background to-muted/50 px-10 font-semibold text-base shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:border-primary/30 hover:bg-gradient-to-br hover:from-primary/5 hover:to-emerald-500/5 hover:shadow-primary/10 hover:shadow-xl active:scale-95"
                 href="https://github.com/raypx/raypx"
                 rel="noopener noreferrer"
                 target="_blank"
