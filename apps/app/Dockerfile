@@ -4,6 +4,8 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV LEFTHOOK=0
+ENV CI=true
 
 # Enable pnpm using Corepack
 RUN corepack enable
