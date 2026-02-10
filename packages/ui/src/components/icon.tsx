@@ -1,3 +1,6 @@
+export { Spinner } from "@phosphor-icons/react";
+export type { IconProps as PhosphorIconProps } from "@phosphor-icons/react";
+
 import type { IconProps as PhosphorIconProps } from "@phosphor-icons/react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import * as React from "react";
