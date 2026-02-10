@@ -5,61 +5,33 @@
 
 import { x } from "tinyexec";
 import { defineCommand } from "../lib/task";
-import { logger } from "../utils/logger";
+import { logger } from "../utils";
+import { PROJECT_ROOT } from "../utils/paths";
 
 type DatabaseType = "main" | "vector" | "all";
 type DbOperation = "generate" | "push" | "migrate" | "studio";
 
-const DB_COMMANDS = {
-  main: {
-    generate: [
-      "raypx-scripts",
-      "run",
-      "drizzle-kit",
-      "generate",
-      "--config=config/drizzle.config.ts",
-    ],
-    push: ["raypx-scripts", "run", "drizzle-kit", "push", "--config=config/drizzle.config.ts"],
-    migrate: [
-      "raypx-scripts",
-      "run",
-      "drizzle-kit",
-      "migrate",
-      "--config=config/drizzle.config.ts",
-    ],
-    studio: ["raypx-scripts", "run", "drizzle-kit", "studio", "--config=config/drizzle.config.ts"],
-  },
-  vector: {
-    generate: [
-      "raypx-scripts",
-      "run",
-      "drizzle-kit",
-      "generate",
-      "--config=config/drizzle-vector.config.ts",
-    ],
-    push: [
-      "raypx-scripts",
-      "run",
-      "drizzle-kit",
-      "push",
-      "--config=config/drizzle-vector.config.ts",
-    ],
-    migrate: [
-      "raypx-scripts",
-      "run",
-      "drizzle-kit",
-      "migrate",
-      "--config=config/drizzle-vector.config.ts",
-    ],
-    studio: [
-      "raypx-scripts",
-      "run",
-      "drizzle-kit",
-      "studio",
-      "--config=config/drizzle-vector.config.ts",
-    ],
-  },
+const DB_OPERATIONS: DbOperation[] = ["generate", "push", "migrate", "studio"];
+const DB_TYPES: DatabaseType[] = ["main", "vector", "all"];
+
+const DB_CONFIGS = {
+  main: "drizzle.config.ts",
+  vector: "drizzle-vector.config.ts",
 } as const;
+
+// Build commands dynamically to reduce duplication
+function buildDbCommand(
+  operation: DbOperation,
+  config: string,
+): [string, ...string[]] {
+  return [
+    "raypx-scripts",
+    "run",
+    "drizzle-kit",
+    operation,
+    `--config=config/${config}`,
+  ];
+}
 
 async function runDbCommand(
   dbType: DatabaseType,
@@ -68,38 +40,33 @@ async function runDbCommand(
 ): Promise<void> {
   if (dbType === "all") {
     // Run for both databases sequentially
-    logger.info(`Running ${operation} for main database...`);
-    await runDbCommand("main", operation, cwd);
-    logger.info(`Running ${operation} for vector database...`);
-    await runDbCommand("vector", operation, cwd);
+    for (const type of ["main", "vector"] as const) {
+      logger.info(`Running ${operation} for ${type} database...`);
+      await runDbCommand(type, operation, cwd);
+    }
     return;
   }
 
-  const commands = DB_COMMANDS[dbType];
-  const command = commands[operation];
-  const dbName = dbType === "main" ? "main" : "vector";
+  const config = DB_CONFIGS[dbType];
+  const command = buildDbCommand(operation, config);
 
-  if (!command || !command[0]) {
-    throw new Error(`Invalid command for ${dbType} ${operation}`);
-  }
+  logger.info(`Executing ${operation} for ${dbType} database...`);
 
-  logger.info(`Executing ${operation} for ${dbName} database...`);
-
-  // Use raypx-scripts run to execute drizzle-kit (same as package.json scripts)
-  // This ensures drizzle-kit is found in node_modules
   const [cmd, ...args] = command;
   const result = await x(cmd, args, {
     nodeOptions: {
       cwd,
       env: process.env,
       stdio: "inherit",
-      shell: true, // Use shell to resolve commands
+      shell: true,
     },
     throwOnError: false,
   });
 
   if (result.exitCode !== 0) {
-    throw new Error(`Failed to ${operation} ${dbName} database. Exit code: ${result.exitCode}`);
+    throw new Error(
+      `Failed to ${operation} ${dbType} database. Exit code: ${result.exitCode}`,
+    );
   }
 }
 
@@ -133,9 +100,11 @@ Examples:
   ],
   run: async (args?: string[]) => {
     if (!args || args.length === 0) {
-      logger.error("Missing operation. Usage: raypx-scripts db <operation> [database]");
-      logger.log("\nOperations: generate, push, migrate, studio");
-      logger.log("Databases: main (default), vector, all");
+      logger.error(
+        "Missing operation. Usage: raypx-scripts db <operation> [database]",
+      );
+      logger.log(`\nOperations: ${DB_OPERATIONS.join(", ")}`);
+      logger.log(`Databases: ${DB_TYPES.join(", ")}`);
       process.exit(1);
     }
 
@@ -143,34 +112,28 @@ Examples:
     const dbType = (args[1] || "main") as DatabaseType;
 
     // Validate operation
-    const validOperations: DbOperation[] = ["generate", "push", "migrate", "studio"];
-    if (!validOperations.includes(operation)) {
+    if (!DB_OPERATIONS.includes(operation)) {
       logger.error(`Invalid operation: ${operation}`);
-      logger.log(`Valid operations: ${validOperations.join(", ")}`);
+      logger.log(`Valid operations: ${DB_OPERATIONS.join(", ")}`);
       process.exit(1);
     }
 
     // Validate database type
-    const validDbTypes: DatabaseType[] = ["main", "vector", "all"];
-    if (!validDbTypes.includes(dbType)) {
+    if (!DB_TYPES.includes(dbType)) {
       logger.error(`Invalid database type: ${dbType}`);
-      logger.log(`Valid types: ${validDbTypes.join(", ")}`);
+      logger.log(`Valid types: ${DB_TYPES.join(", ")}`);
       process.exit(1);
     }
 
     // Studio doesn't support "all"
     if (operation === "studio" && dbType === "all") {
-      logger.error("Studio command doesn't support 'all'. Please specify 'main' or 'vector'.");
+      logger.error(
+        "Studio command doesn't support 'all'. Please specify 'main' or 'vector'.",
+      );
       process.exit(1);
     }
 
-    // Get database package directory
-    const { fileURLToPath } = await import("node:url");
-    const { dirname, join } = await import("node:path");
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    const projectRoot = join(__dirname, "../..");
-    const dbPackageDir = join(projectRoot, "packages/database");
+    const dbPackageDir = `${PROJECT_ROOT}/packages/database`;
 
     try {
       await runDbCommand(dbType, operation, dbPackageDir);

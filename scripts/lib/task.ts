@@ -1,7 +1,7 @@
 import type { Simplify } from "type-fest";
 import { execCommand, formatDuration } from "../utils";
 import type { ExecOptions } from "../utils/exec";
-import { logger } from "../utils/logger";
+import { logger } from "../utils";
 
 /**
  * Task function type - receives a context object with helper methods
@@ -52,10 +52,20 @@ export interface Task {
 }
 
 /**
+ * Parse command specification into command and args
+ */
+function parseCommandSpec(spec: CommandSpec): [string, string[]] {
+  if (Array.isArray(spec)) {
+    if (!spec[0]) throw new Error("Command array cannot be empty");
+    return [spec[0], spec.slice(1)];
+  }
+  const parts = spec.trim().split(/\s+/);
+  if (!parts[0]) throw new Error("Command string cannot be empty");
+  return [parts[0], parts.slice(1)];
+}
+
+/**
  * Creates a Task - supports task functions, command strings, and command arrays
- *
- * @param titleOrCommand - Task title (for functions) or command specification
- * @param taskFnOrOpts - Task function, config object, or simple title string
  */
 export function createTask(
   titleOrCommand: string | CommandSpec,
@@ -72,33 +82,13 @@ export function createTask(
 
   // Case 2 & 3: Shell command execution
   const commandSpec = titleOrCommand as CommandSpec;
-  const config = typeof taskFnOrOpts === "string" ? { title: taskFnOrOpts } : taskFnOrOpts;
+  const config =
+    typeof taskFnOrOpts === "string" ? { title: taskFnOrOpts } : taskFnOrOpts;
 
-  // Parse command specification
-  let command: string;
-  let args: string[];
-
-  if (Array.isArray(commandSpec)) {
-    // Command array: ["bun", "run", "build", "--watch"]
-    const [cmd, ...rest] = commandSpec;
-    if (!cmd) {
-      throw new Error("Command array cannot be empty");
-    }
-    command = cmd;
-    args = rest;
-  } else {
-    // Command string: "bun run build --watch" (backward compatible)
-    const parts = commandSpec.trim().split(/\s+/);
-    const [cmd, ...rest] = parts;
-    if (!cmd) {
-      throw new Error("Command string cannot be empty");
-    }
-    command = cmd;
-    args = rest;
-  }
-
-  // Default title from command if not provided
-  const commandDisplay = Array.isArray(commandSpec) ? commandSpec.join(" ") : commandSpec;
+  const [command, args] = parseCommandSpec(commandSpec);
+  const commandDisplay = Array.isArray(commandSpec)
+    ? commandSpec.join(" ")
+    : commandSpec;
 
   const {
     title = commandDisplay,
@@ -109,8 +99,8 @@ export function createTask(
     allowFailure = false,
   } = config ?? {};
 
-  const autoSuccessTitle = successTitle || `${title} completed`;
-  const autoFailureMessage = failureMessage || `${title} failed`;
+  const autoSuccessTitle = successTitle ?? `${title} completed`;
+  const autoFailureMessage = failureMessage ?? `${title} failed`;
 
   return {
     title,
@@ -131,15 +121,16 @@ export function createTask(
             return;
           }
 
-          throw result.error || new Error(`Command execution failed: ${commandDisplay}`);
+          throw result.error ?? new Error(`Command execution failed: ${commandDisplay}`);
         } catch (error) {
           attempts++;
           const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
           if (attempts < maxAttempts) {
             ctx.title = `${title} (retry ${attempts}/${retries})`;
-            // Exponential backoff: 500ms, 1s, 2s
-            await new Promise((resolve) => setTimeout(resolve, Math.min(500 * attempts, 2000)));
+            await new Promise((resolve) =>
+              setTimeout(resolve, Math.min(500 * attempts, 2000)),
+            );
             continue;
           }
 
@@ -157,66 +148,46 @@ export type RunTasksOptions = {
 };
 
 /**
- * Run multiple tasks sequentially or concurrently
- *
- * @param tasks - Array of Task objects
- * @param concurrent - Run tasks in parallel (default: false for safety)
+ * Execute a single task with logging
  */
-export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]): Promise<void> {
+async function executeTask(task: Task): Promise<void> {
+  const taskStart = Date.now();
+  logger.info(`⏳ ${task.title}...`);
+
+  try {
+    const ctx: TaskContext = { title: task.title };
+    await task.task(ctx);
+    const duration = Date.now() - taskStart;
+    logger.success(`✓ ${ctx.title} (${formatDuration(duration)})`);
+  } catch (error) {
+    const duration = Date.now() - taskStart;
+    logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
+
+    if (task.allowFailure) {
+      logger.warn(`⚠ ${task.title} failed but continuing (allowFailure=true)`);
+      return;
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Run multiple tasks sequentially or concurrently
+ */
+export async function runTasks(
+  _opts: RunTasksOptions | RunTasksOptions["tasks"],
+): Promise<void> {
   const opts = Array.isArray(_opts) ? { tasks: _opts } : _opts;
   const { concurrent = false } = opts;
   const startTime = Date.now();
   const tasks = opts.tasks.filter(Boolean) as Task[];
 
   if (concurrent) {
-    // Run all tasks in parallel
-    await Promise.all(
-      tasks.map(async (task) => {
-        const taskStart = Date.now();
-        logger.info(`⏳ ${task.title}...`);
-
-        try {
-          const ctx: TaskContext = { title: task.title };
-          await task.task(ctx);
-          const duration = Date.now() - taskStart;
-          logger.success(`✓ ${ctx.title} (${formatDuration(duration)})`);
-        } catch (error) {
-          const duration = Date.now() - taskStart;
-          logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
-
-          // If task allows failure, log warning and continue (don't throw)
-          if (task.allowFailure) {
-            logger.warn(`⚠ ${task.title} failed but continuing (allowFailure=true)`);
-            return; // Continue without throwing
-          }
-
-          throw error;
-        }
-      }),
-    );
+    await Promise.all(tasks.map(executeTask));
   } else {
-    // Run tasks sequentially
     for (const task of tasks) {
-      const taskStart = Date.now();
-      logger.info(`⏳ ${task.title}...`);
-
-      try {
-        const ctx: TaskContext = { title: task.title };
-        await task.task(ctx);
-        const duration = Date.now() - taskStart;
-        logger.success(`✓ ${ctx.title} (${formatDuration(duration)})`);
-      } catch (error) {
-        const duration = Date.now() - taskStart;
-        logger.error(`✗ ${task.title} failed (${formatDuration(duration)})`);
-
-        // If task allows failure, log warning and continue
-        if (task.allowFailure) {
-          logger.warn(`⚠ ${task.title} failed but continuing (allowFailure=true)`);
-          continue;
-        }
-
-        throw error;
-      }
+      await executeTask(task);
     }
   }
 
@@ -226,7 +197,6 @@ export async function runTasks(_opts: RunTasksOptions | RunTasksOptions["tasks"]
 
 /**
  * Simplified command definition type
- * Commands can use runTasks for task orchestration or execute directly
  */
 export type Command = {
   cmd: string;
@@ -238,7 +208,6 @@ export type Command = {
 
 /**
  * Define a command with simplified API
- * No more type discrimination - just a simple command object
  */
 export function defineCommand(opts: Command): Command {
   return opts;

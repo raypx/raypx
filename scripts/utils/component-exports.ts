@@ -1,14 +1,15 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
+import { readdir } from "node:fs/promises";
 import fg from "fast-glob";
 import fs from "fs-extra";
-import { NODE_MODULES_PATH, PROJECT_ROOT } from "./paths";
+import { CACHE_DIR, PROJECT_ROOT } from "./paths";
 
 /**
  * Get cache file path (computed lazily to avoid module initialization issues)
  */
 function getCacheFilePath(): string {
-  return join(NODE_MODULES_PATH, ".cache/raypx-scripts/component-exports.json");
+  return join(CACHE_DIR, "raypx-scripts/component-exports.json");
 }
 
 /**

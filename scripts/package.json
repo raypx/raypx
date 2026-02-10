@@ -18,8 +18,10 @@
     "consola": "^3.4.2",
     "fast-glob": "^3.3.3",
     "fs-extra": "catalog:",
-    "jiti": "catalog:",
+    "jiti": "^2.4.2",
+    "rimraf": "^6.0.1",
     "tinyexec": "^1.0.2",
+    "type-fest": "^4.33.0",
     "yargs-parser": "^22.0.0"
   },
   "devDependencies": {
@@ -27,7 +29,6 @@
     "@types/fs-extra": "catalog:",
     "@types/node": "catalog:",
     "@types/yargs-parser": "^21.0.3",
-    "type-fest": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

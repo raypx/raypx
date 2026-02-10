@@ -4,20 +4,21 @@ const postinstallCmd = defineCommand({
   cmd: "postinstall",
   description: "Run post-install tasks",
   run: async () => {
-    const tasks = [];
+    const tasks: ReturnType<typeof createTask>[] = [];
 
-    // Only install lefthook if not in CI environment (skip in Docker/CI)
+    // Only install lefthook if not in CI environment
     if (!process.env.CI) {
       tasks.push(
-        createTask("pnpm exec lefthook install", {
+        createTask(["pnpm", "exec", "lefthook", "install"], {
           title: "Install Lefthook",
-          allowFailure: true, // Allow failure without stopping the process
+          allowFailure: true,
         }),
       );
     }
 
-    // Serial execution to ensure proper setup order
-    await runTasks(tasks);
+    if (tasks.length > 0) {
+      await runTasks({ tasks });
+    }
   },
 });
 
