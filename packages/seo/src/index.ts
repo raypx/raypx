@@ -207,6 +207,7 @@ export function generateArticleSchema(
 export function generateRootHead(config: SiteConfig): HeadConfig {
   return {
     meta: [
+      { title: config.title },
       ...generateSeoMeta(config),
       ...generateOpenGraphMeta(config),
       ...generateTwitterCardMeta(config),
@@ -235,7 +236,7 @@ export function generatePageHead(
   const url = options.url ?? config.url;
 
   const meta: MetaTags[] = [
-    { name: "title", content: title },
+    { title },
     { name: "description", content: description },
     { property: "og:title", content: title },
     { property: "og:description", content: description },
