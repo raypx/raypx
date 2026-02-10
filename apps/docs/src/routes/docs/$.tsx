@@ -5,6 +5,7 @@ import { createFileRoute, notFound, redirect, useLoaderData } from "@tanstack/re
 import { createServerFn } from "@tanstack/react-start";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { useMemo } from "react";
+import { siteConfig } from "~/config/site";
 import { getMdxComponents } from "~/components/layout/mdx-components";
 import { baseOptions } from "~/lib/layout.shared";
 import { source } from "~/lib/source";
@@ -114,11 +115,62 @@ export const Route = createFileRoute("/docs/$")({
   },
   head: async (props) => {
     const { title, description } = props.loaderData ?? {};
+    const url = `${siteConfig.url}${props.location.pathname}`;
+
     return {
       meta: [
         {
-          title: `${title} - Raypx`,
-          description: description,
+          title: `${title} - ${siteConfig.brand.name}`,
+        },
+        {
+          name: "description",
+          content: description ?? siteConfig.description,
+        },
+        {
+          property: "og:title",
+          content: `${title} - ${siteConfig.brand.name}`,
+        },
+        {
+          property: "og:description",
+          content: description ?? siteConfig.description,
+        },
+        {
+          property: "og:type",
+          content: "article",
+        },
+        {
+          property: "og:url",
+          content: url,
+        },
+        {
+          property: "og:image",
+          content: `${siteConfig.url}${siteConfig.image}`,
+        },
+        {
+          name: "twitter:card",
+          content: "summary_large_image",
+        },
+        {
+          name: "twitter:title",
+          content: `${title} - ${siteConfig.brand.name}`,
+        },
+        {
+          name: "twitter:description",
+          content: description ?? siteConfig.description,
+        },
+        {
+          name: "twitter:image",
+          content: `${siteConfig.url}${siteConfig.image}`,
+        },
+        {
+          name: "article:published_time",
+          content: new Date().toISOString(),
+        },
+      ],
+      links: [
+        {
+          rel: "canonical",
+          href: url,
         },
       ],
     };

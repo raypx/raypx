@@ -1,3 +1,10 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+
+# Sitemap
+Sitemap: https://raypx.com/sitemap.xml
+
+# Disallow specific paths if needed
+# Disallow: /api/
+# Disallow: /private/

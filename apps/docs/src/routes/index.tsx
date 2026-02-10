@@ -1,9 +1,51 @@
 import { HomeLayout } from "@fumadocs/base-ui/layouts/home";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { siteConfig } from "~/config/site";
 import { baseOptions } from "../lib/layout.shared";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  name: siteConfig.brand.name,
+  description: siteConfig.description,
+  url: siteConfig.url,
+  codeRepository: siteConfig.links.github,
+  programmingLanguage: ["TypeScript", "React", "JavaScript"],
+  runtimePlatform: ["Node.js", "Browser"],
+  applicationCategory: "DeveloperApplication",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  license: "https://github.com/raypx/raypx/blob/main/LICENSE",
+};
 
 export const Route = createFileRoute("/")({
   component: () => <RouteComponent />,
+  head: () => ({
+    meta: [
+      { title: siteConfig.title },
+      { name: "description", content: siteConfig.description },
+      { name: "keywords", content: siteConfig.keywords.join(", ") },
+      { property: "og:title", content: siteConfig.title },
+      { property: "og:description", content: siteConfig.description },
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: `${siteConfig.url}${siteConfig.image}` },
+      { property: "og:url", content: siteConfig.url },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: siteConfig.title },
+      { name: "twitter:description", content: siteConfig.description },
+      { name: "twitter:image", content: `${siteConfig.url}${siteConfig.image}` },
+    ],
+    links: [{ rel: "canonical", href: siteConfig.url }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        innerHTML: JSON.stringify(jsonLd),
+      },
+    ],
+  }),
 });
 
 function RouteComponent() {
