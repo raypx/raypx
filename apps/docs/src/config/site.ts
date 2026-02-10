@@ -1,3 +1,5 @@
+import type { SiteConfig } from "@raypx/seo";
+
 export type SiteLinks = {
   docs: string;
   github: string;
@@ -16,10 +18,8 @@ export const links: SiteLinks = {
   github: "https://github.com/raypx/raypx",
 };
 
-export const siteConfig = {
-  brand,
-  links,
-  // SEO
+export const siteConfig: SiteConfig = {
+  name: brand.name,
   title: "Raypx - Modern Full-Stack Monorepo Template",
   description:
     "A production-ready monorepo template powered by Turborepo, featuring TanStack Start, React 19, TypeScript, Better Auth, Drizzle ORM, and more. Build scalable full-stack applications with enterprise-grade security and type safety.",
@@ -43,4 +43,5 @@ export const siteConfig = {
   url: "https://raypx.com",
   author: "Raypx",
   image: "/og.png",
+  github: links.github,
 };

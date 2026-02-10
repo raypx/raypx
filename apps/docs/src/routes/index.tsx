@@ -1,25 +1,8 @@
 import { HomeLayout } from "@fumadocs/base-ui/layouts/home";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { siteConfig } from "~/config/site";
+import { generateSoftwareSchema } from "@raypx/seo";
 import { baseOptions } from "../lib/layout.shared";
-
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareSourceCode",
-  name: siteConfig.brand.name,
-  description: siteConfig.description,
-  url: siteConfig.url,
-  codeRepository: siteConfig.links.github,
-  programmingLanguage: ["TypeScript", "React", "JavaScript"],
-  runtimePlatform: ["Node.js", "Browser"],
-  applicationCategory: "DeveloperApplication",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
-  license: "https://github.com/raypx/raypx/blob/main/LICENSE",
-};
 
 export const Route = createFileRoute("/")({
   component: () => <RouteComponent />,
@@ -39,12 +22,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: `${siteConfig.url}${siteConfig.image}` },
     ],
     links: [{ rel: "canonical", href: siteConfig.url }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        innerHTML: JSON.stringify(jsonLd),
-      },
-    ],
+    scripts: [generateSoftwareSchema(siteConfig)],
   }),
 });
 

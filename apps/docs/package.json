@@ -13,6 +13,7 @@
   "dependencies": {
     "@fumadocs/base-ui": "^16.5.2",
     "@raypx/config": "workspace:*",
+    "@raypx/seo": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",

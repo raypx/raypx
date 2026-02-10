@@ -1,19 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { siteConfig } from "~/config/site";
+import { generatePageHead } from "@raypx/seo";
 
 export const Route = createFileRoute("/_home")({
   component: HomePage,
-  head: () => ({
-    meta: [
-      { title: siteConfig.title },
-      { name: "description", content: siteConfig.description },
-      { property: "og:title", content: siteConfig.title },
-      { property: "og:description", content: siteConfig.description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:title", content: siteConfig.title },
-      { name: "twitter:description", content: siteConfig.description },
-    ],
-  }),
+  head: () => generatePageHead(siteConfig),
 });
 
 function HomePage() {

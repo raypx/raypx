@@ -119,60 +119,20 @@ export const Route = createFileRoute("/docs/$")({
 
     return {
       meta: [
-        {
-          title: `${title} - ${siteConfig.brand.name}`,
-        },
-        {
-          name: "description",
-          content: description ?? siteConfig.description,
-        },
-        {
-          property: "og:title",
-          content: `${title} - ${siteConfig.brand.name}`,
-        },
-        {
-          property: "og:description",
-          content: description ?? siteConfig.description,
-        },
-        {
-          property: "og:type",
-          content: "article",
-        },
-        {
-          property: "og:url",
-          content: url,
-        },
-        {
-          property: "og:image",
-          content: `${siteConfig.url}${siteConfig.image}`,
-        },
-        {
-          name: "twitter:card",
-          content: "summary_large_image",
-        },
-        {
-          name: "twitter:title",
-          content: `${title} - ${siteConfig.brand.name}`,
-        },
-        {
-          name: "twitter:description",
-          content: description ?? siteConfig.description,
-        },
-        {
-          name: "twitter:image",
-          content: `${siteConfig.url}${siteConfig.image}`,
-        },
-        {
-          name: "article:published_time",
-          content: new Date().toISOString(),
-        },
+        { title: `${title} - ${siteConfig.name}` },
+        { name: "description", content: description ?? siteConfig.description },
+        { property: "og:title", content: `${title} - ${siteConfig.name}` },
+        { property: "og:description", content: description ?? siteConfig.description },
+        { property: "og:type", content: "article" },
+        { property: "og:url", content: url },
+        { property: "og:image", content: `${siteConfig.url}${siteConfig.image}` },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: `${title} - ${siteConfig.name}` },
+        { name: "twitter:description", content: description ?? siteConfig.description },
+        { name: "twitter:image", content: `${siteConfig.url}${siteConfig.image}` },
+        { name: "article:published_time", content: new Date().toISOString() },
       ],
-      links: [
-        {
-          rel: "canonical",
-          href: url,
-        },
-      ],
+      links: [{ rel: "canonical", href: url }],
     };
   },
 });

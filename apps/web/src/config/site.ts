@@ -1,4 +1,6 @@
-export const siteConfig = {
+import type { SiteConfig } from "@raypx/seo";
+
+export const siteConfig: SiteConfig = {
   name: "Raypx",
   title: "Raypx - Modern Full-Stack Platform",
   description:
