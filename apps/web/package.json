@@ -4,17 +4,12 @@
   "type": "module",
   "scripts": {
     "build": "rr vite build",
-    "clean": "rimraf dist .turbo .tanstack .nitro .output .netlify playwright-report",
+    "clean": "rimraf dist .turbo .tanstack .nitro .output .netlify",
     "dev": "rr vite dev",
     "serve": "rr vite preview",
     "shadcn": "shadcn add --overwrite",
     "start": "rr node .output/server/index.mjs",
-    "test": "vitest run",
-    "test:e2e": "playwright test",
-    "test:e2e:codegen": "playwright codegen",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:report": "playwright show-report",
-    "test:e2e:ui": "playwright test --ui"
+    "test": "vitest run"
   },
   "dependencies": {
     "@fumadocs/base-ui": "^16.5.2",
@@ -53,7 +48,6 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
     "@raypx/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.5.1",
