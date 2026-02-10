@@ -45,9 +45,7 @@ function RootComponent() {
           >
             Skip to main content
           </a>
-          <div id="main-content" tabIndex={-1}>
-            <Outlet />
-          </div>
+          <Outlet />
           <Toaster />
         </ThemeProvider>
         <Scripts />

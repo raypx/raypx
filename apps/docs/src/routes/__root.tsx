@@ -57,9 +57,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               >
                 Skip to main content
               </a>
-              <div id="main-content" tabIndex={-1}>
-                {children}
-              </div>
+              {children}
               <Toaster />
             </RootProvider>
           </TanstackProvider>
