@@ -16,7 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.985.0",
+    "@aws-sdk/client-ses": "^3.986.0",
     "@raypx/config": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@react-email/render": "^2.0.4",

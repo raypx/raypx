@@ -16,10 +16,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@posthog/react": "^1.7.0",
+    "@posthog/react": "^1.7.1",
     "@raypx/config": "workspace:*",
     "@raypx/shared": "workspace:*",
-    "posthog-js": "^1.343.0"
+    "posthog-js": "^1.345.1"
   },
   "devDependencies": {
     "@raypx/tsconfig": "workspace:*",
