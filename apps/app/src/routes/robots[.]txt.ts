@@ -1,15 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getBaseUrl } from "~/lib/request-utils";
 
 export const Route = createFileRoute("/robots.txt")({
   server: {
     handlers: {
-      GET: async ({ request }) => {
-        const baseUrl = getBaseUrl(request);
+      GET: async () => {
         const robotsTxt = `User-agent: *
 Allow: /
 
-Sitemap: ${baseUrl}/sitemap.xml
+Sitemap: /sitemap.xml
 `;
 
         return new Response(robotsTxt, {

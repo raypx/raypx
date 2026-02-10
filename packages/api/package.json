@@ -18,9 +18,7 @@
     "@orpc/server": "^1.13.4",
     "@orpc/tanstack-query": "^1.13.4",
     "@orpc/zod": "^1.13.4",
-    "@raypx/core": "workspace:*",
     "@raypx/database": "workspace:*",
-    "@raypx/redis": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

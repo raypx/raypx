@@ -1,3 +1,3 @@
 export { z } from "zod";
-export { createEnv } from "./env";
-export * from "./envs";
+export { createEnv } from "./env.ts";
+export * from "./envs.ts";

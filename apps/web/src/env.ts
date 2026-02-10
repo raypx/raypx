@@ -1,25 +1,8 @@
-import {
-  analyticsEnv,
-  authEnv,
-  createEnv,
-  databaseEnv,
-  emailEnv,
-  observabilityEnv,
-  storageEnv,
-  z,
-} from "@raypx/config";
+import { z } from "zod";
 
-const env = createEnv({
-  extends: [databaseEnv, authEnv, emailEnv, analyticsEnv, observabilityEnv, storageEnv],
-  shared: {
-    NODE_ENV: z.enum(["development", "production"]).default("development"),
-    MODE: z.string().optional(),
-  },
-  server: {
-    PORT: z.coerce.number().optional().default(3000),
-    CRON_SECRET: z.string().optional(), // Secret for authenticating cron job requests
-  },
-  skip: process.env.NODE_ENV !== "production" || !!process.env.CI,
-});
+const env = {
+  NODE_ENV: (process.env.NODE_ENV as "development" | "production") ?? "development",
+  PORT: Number(process.env.PORT ?? 3001),
+} as const;
 
 export default env;
