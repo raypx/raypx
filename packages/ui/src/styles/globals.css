@@ -7,7 +7,6 @@
 @import "./base.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
 
 @source "../../../../{packages,apps}/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";

@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
-    "@fontsource-variable/inter": "^5.2.8",
     "@phosphor-icons/react": "^2.1.10",
     "@raypx/shared": "workspace:*",
     "@tanstack/react-query": "catalog:",
