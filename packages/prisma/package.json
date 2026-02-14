@@ -2,6 +2,7 @@
   "name": "@raypx/prisma",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -16,6 +17,7 @@
     "migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
     "studio": "prisma studio --schema=./prisma/schema.prisma",
     "clean": "rimraf .turbo node_modules generated",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
