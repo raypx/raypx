@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@raypx/config": "workspace:*",
+    "@raypx/prisma": "workspace:*",
     "@raypx/seo": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",

@@ -1,0 +1,37 @@
+{
+  "name": "@raypx/prisma",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "build": "prisma generate --no-hints --schema=./prisma/schema.prisma",
+    "generate": "prisma generate --no-hints --schema=./prisma/schema.prisma",
+    "push": "rr prisma db push --schema=./prisma/schema.prisma",
+    "migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
+    "studio": "prisma studio --schema=./prisma/schema.prisma",
+    "clean": "rimraf .turbo node_modules generated",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/client": "^7.4.0",
+    "@prisma/client-runtime-utils": "^7.4.0",
+    "pg": "^8.16.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.15.0",
+    "prisma": "^7.4.0",
+    "rimraf": "catalog:",
+    "typescript": "catalog:"
+  }
+}

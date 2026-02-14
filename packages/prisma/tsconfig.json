@@ -1,0 +1,11 @@
+{
+  "extends": "@raypx/tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "prisma/**/*.ts"],
+  "exclude": ["node_modules", "dist", "generated"]
+}
