@@ -11,13 +11,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fumadocs/base-ui": "^16.5.2",
+    "@fumadocs/base-ui": "^16.6.0",
     "@raypx/config": "workspace:*",
     "@raypx/seo": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "fumadocs-core": "^16.5.2",
+    "fumadocs-core": "^16.6.0",
     "fumadocs-mdx": "^14.2.7",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
@@ -29,7 +29,7 @@
     "@tailwindcss/vite": "catalog:tailwindv4",
     "@tanstack/devtools-vite": "^0.5.1",
     "@tanstack/react-devtools": "^0.9.5",
-    "@tanstack/react-router-devtools": "^1.159.5",
+    "@tanstack/react-router-devtools": "^1.159.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "catalog:",
@@ -40,7 +40,7 @@
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-inspect": "^11.3.3",
-    "vite-tsconfig-paths": "^6.1.0",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "catalog:"
   }
 }
