@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@raypx/logger": "workspace:*",
-    "unstorage": "catalog:",
-    "ioredis": "catalog:"
+    "ioredis": "catalog:",
+    "unstorage": "catalog:"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",

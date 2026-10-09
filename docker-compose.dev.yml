@@ -9,7 +9,7 @@ services:
     container_name: raypx-dev
     ports:
       - "3000:3000"
-      - "5173:5173"  # Vite HMR
+      - "5173:5173" # Vite HMR
     environment:
       - NODE_ENV=development
       - PORT=3000

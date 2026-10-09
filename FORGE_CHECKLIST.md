@@ -3,6 +3,7 @@
 ## What is a Forge Project?
 
 A **Forge project** is a production-ready, open-source template that others can fork and build upon. It should be:
+
 - Well-documented
 - Easy to set up
 - Production-ready
@@ -31,34 +32,35 @@ A **Forge project** is a production-ready, open-source template that others can 
   - Architecture diagram
   - Tech stack explanation
   - Demo/screenshots
-  
+
 - [ ] **CONTRIBUTING.md** - How to contribute
   - Development setup
   - Code style guide
   - Pull request process
   - Issue templates
-  
+
 - [ ] **LICENSE** - Open source license (MIT/Apache 2.0)
 
 - [ ] **CHANGELOG.md** - Version history
 
 - [ ] **Security Policy** (SECURITY.md)
   - How to report vulnerabilities
-  
+
 #### 2. Developer Experience
 
 - [ ] **Quick Start Script**
+
   ```bash
   bunx create-raypx my-app
   # or
   bun create raypx my-app
   ```
 
-- [ ] **Interactive Setup** 
+- [ ] **Interactive Setup**
   - Database choice
   - Auth provider selection
   - Deployment target
-  
+
 - [ ] **.env.example** - All required environment variables
 
 - [ ] **Development Scripts**
@@ -66,60 +68,60 @@ A **Forge project** is a production-ready, open-source template that others can 
   - `bun run dev` - Start development (already have)
   - `bun run test:all` - Run all tests
   - `bun run check:all` - Run all checks
-  
+
 #### 3. Code Quality
 
 - [ ] **Comprehensive Comments**
   - JSDoc for all public APIs
   - Inline comments for complex logic
   - TODO/FIXME removal
-  
+
 - [ ] **Test Coverage**
   - Unit tests (> 70%)
   - Integration tests
   - E2E tests
   - CI badge in README
-  
+
 - [ ] **Linting & Formatting**
   - Pre-commit hooks (Husky)
   - Lint-staged
   - Consistent code style
-  
+
 - [ ] **Type Safety**
   - No `any` types
   - Strict null checks
   - Proper error types
-  
+
 #### 4. Production Readiness
 
 - [ ] **Error Handling**
   - Global error boundary
   - API error responses
   - User-friendly error messages
-  
+
 - [ ] **Logging**
   - Structured logging (done with evlog)
   - Log levels properly used
   - Sensitive data redaction
-  
+
 - [ ] **Security**
   - Environment variable validation
   - CSRF protection
   - Rate limiting
   - SQL injection prevention
   - XSS protection
-  
+
 - [ ] **Performance**
   - Lazy loading
   - Code splitting
   - Image optimization
   - Database indexing
-  
+
 - [ ] **Monitoring**
   - Health check endpoint (have)
   - Metrics collection
   - Error tracking (Sentry integration)
-  
+
 #### 5. Deployment
 
 - [ ] **Multiple Deployment Options**
@@ -127,18 +129,18 @@ A **Forge project** is a production-ready, open-source template that others can 
   - Docker (self-hosted)
   - Railway/Render
   - AWS/GCP
-  
+
 - [ ] **CI/CD Pipeline**
   - GitHub Actions
   - Automated testing
   - Automated deployment
   - Version bumping
-  
+
 - [ ] **Database Migrations**
   - Production migration guide
   - Rollback strategy
   - Seed data
-  
+
 #### 6. Community
 
 - [ ] **GitHub Repository Setup**
@@ -146,12 +148,12 @@ A **Forge project** is a production-ready, open-source template that others can 
   - Description
   - Website link
   - Social preview image
-  
+
 - [ ] **Issue Templates**
   - Bug report
   - Feature request
   - Question
-  
+
 - [ ] **Pull Request Template**
 
 - [ ] **Code of Conduct**
@@ -170,23 +172,23 @@ A **Forge project** is a production-ready, open-source template that others can 
   - Blog example
   - E-commerce example
   - Dashboard example
-  
+
 - [ ] **Video Tutorials**
   - Setup walkthrough
   - Feature showcase
-  
+
 #### 8. API Documentation
 
 - [ ] **API Reference**
   - All endpoints documented
   - Request/response examples
   - Error codes
-  
+
 - [ ] **Package Documentation**
   - Each package has README
   - Usage examples
   - API reference
-  
+
 #### 9. Extensibility
 
 - [ ] **Plugin System** (optional)
@@ -196,17 +198,17 @@ A **Forge project** is a production-ready, open-source template that others can 
 - [ ] **Configuration Options**
   - Easy customization
   - Sensible defaults
-  
+
 #### 10. Maintenance
 
 - [ ] **Dependency Updates**
   - Renovate/Dependabot
   - Regular updates
-  
+
 - [ ] **Version Management**
   - Semantic versioning
   - Release notes
-  
+
 - [ ] **Backward Compatibility**
   - Migration guides
   - Deprecation warnings
@@ -216,17 +218,20 @@ A **Forge project** is a production-ready, open-source template that others can 
 ### Phase 1: Foundation (Week 1)
 
 **Day 1-2: Documentation**
+
 - [ ] Write comprehensive README.md
 - [ ] Add LICENSE (MIT)
 - [ ] Create CONTRIBUTING.md
 - [ ] Add .env.example
 
 **Day 3-4: Code Quality**
+
 - [ ] Add JSDoc comments to all packages
 - [ ] Remove TODO/FIXME or convert to issues
 - [ ] Add pre-commit hooks
 
 **Day 5: Setup Experience**
+
 - [ ] Create setup script
 - [ ] Test fresh install experience
 - [ ] Document common issues
@@ -234,11 +239,13 @@ A **Forge project** is a production-ready, open-source template that others can 
 ### Phase 2: Polish (Week 2)
 
 **Security & Error Handling**
+
 - [ ] Add global error boundary
 - [ ] Implement rate limiting
 - [ ] Add input validation everywhere
 
 **Testing**
+
 - [ ] Write unit tests for core packages
 - [ ] Add integration tests
 - [ ] Set up CI/CD
@@ -246,12 +253,14 @@ A **Forge project** is a production-ready, open-source template that others can 
 ### Phase 3: Community (Week 3)
 
 **GitHub Setup**
+
 - [ ] Add issue templates
 - [ ] Add PR template
 - [ ] Create CODE_OF_CONDUCT.md
 - [ ] Enable discussions
 
 **Examples**
+
 - [ ] Deploy live demo
 - [ ] Create example apps
 - [ ] Record demo video
@@ -259,6 +268,7 @@ A **Forge project** is a production-ready, open-source template that others can 
 ### Phase 4: Launch (Week 4)
 
 **Final Touches**
+
 - [ ] Performance audit
 - [ ] Security audit
 - [ ] Documentation review

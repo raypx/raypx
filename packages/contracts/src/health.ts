@@ -37,3 +37,12 @@ export const healthResponseSchema = z.object({
  * ```
  */
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+
+/** Dependency readiness probe. A failed probe returns this contract with HTTP 503. */
+export const readinessResponseSchema = z.strictObject({
+  status: z.enum(["ok", "unavailable"]),
+  service: z.literal("raypx-api"),
+  checks: z.record(z.string(), z.enum(["ok", "failed"])),
+});
+
+export type ReadinessResponse = z.infer<typeof readinessResponseSchema>;

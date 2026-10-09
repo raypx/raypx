@@ -4,17 +4,20 @@
  * Used for CLI <-> Desktop communication
  */
 
+import type { TaskStatus } from "./manager.js";
+import type { TaskProgress } from "./task.js";
+
 /**
  * Message types
  */
 export type MessageType =
-  | 'execute'
-  | 'cancel'
-  | 'status'
-  | 'list'
-  | 'progress'
-  | 'complete'
-  | 'error';
+  | "execute"
+  | "cancel"
+  | "status"
+  | "list"
+  | "progress"
+  | "complete"
+  | "error";
 
 /**
  * Base message
@@ -28,16 +31,16 @@ export interface BaseMessage {
  * Execute task message
  */
 export interface ExecuteMessage extends BaseMessage {
-  type: 'execute';
+  type: "execute";
   task: string;
-  options?: any;
+  options?: unknown;
 }
 
 /**
  * Cancel task message
  */
 export interface CancelMessage extends BaseMessage {
-  type: 'cancel';
+  type: "cancel";
   taskId: string;
 }
 
@@ -45,39 +48,39 @@ export interface CancelMessage extends BaseMessage {
  * Status request message
  */
 export interface StatusMessage extends BaseMessage {
-  type: 'status';
+  type: "status";
 }
 
 /**
  * List tasks message
  */
 export interface ListMessage extends BaseMessage {
-  type: 'list';
+  type: "list";
 }
 
 /**
  * Progress update message
  */
 export interface ProgressMessage extends BaseMessage {
-  type: 'progress';
+  type: "progress";
   taskId: string;
-  data: any;
+  data: TaskProgress;
 }
 
 /**
  * Task complete message
  */
 export interface CompleteMessage extends BaseMessage {
-  type: 'complete';
+  type: "complete";
   taskId: string;
-  result: any;
+  result: unknown;
 }
 
 /**
  * Task error message
  */
 export interface ErrorMessage extends BaseMessage {
-  type: 'error';
+  type: "error";
   taskId: string;
   error: string;
 }
@@ -101,9 +104,9 @@ export interface TaskStatusResponse {
   tasks: Array<{
     id: string;
     name: string;
-    status: string;
+    status: TaskStatus;
     startedAt: string;
-    progress?: any;
+    progress?: TaskProgress;
   }>;
 }
 

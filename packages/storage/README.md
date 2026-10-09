@@ -25,18 +25,18 @@ bun add ioredis
 ## Quick Start
 
 ```typescript
-import { getStorage } from '@raypx/storage';
+import { getStorage } from "@raypx/storage";
 
 const storage = getStorage();
 
 // Set value
-await storage.setItem('user:123', { name: 'John', email: 'john@example.com' });
+await storage.setItem("user:123", { name: "John", email: "john@example.com" });
 
 // Get value
-const user = await storage.getItem('user:123');
+const user = await storage.getItem("user:123");
 
 // Delete value
-await storage.removeItem('user:123');
+await storage.removeItem("user:123");
 ```
 
 ## Driver Selection
@@ -62,24 +62,24 @@ REDIS_URL=redis://localhost:6379
 ### Basic Operations
 
 ```typescript
-import { getStorage } from '@raypx/storage';
+import { getStorage } from "@raypx/storage";
 
 const storage = getStorage();
 
 // Store data
-await storage.setItem('key', { data: 'value' });
+await storage.setItem("key", { data: "value" });
 
 // Retrieve data
-const value = await storage.getItem('key');
+const value = await storage.getItem("key");
 
 // Check existence
-const exists = await storage.hasItem('key');
+const exists = await storage.hasItem("key");
 
 // Remove data
-await storage.removeItem('key');
+await storage.removeItem("key");
 
 // List keys
-const keys = await storage.getKeys('user:*');
+const keys = await storage.getKeys("user:*");
 
 // Clear all
 await storage.clear();
@@ -90,16 +90,16 @@ await storage.clear();
 Isolate storage by namespace:
 
 ```typescript
-import { createNamespacedStorage } from '@raypx/storage';
+import { createNamespacedStorage } from "@raypx/storage";
 
-const userCache = createNamespacedStorage('users');
-const postCache = createNamespacedStorage('posts');
+const userCache = createNamespacedStorage("users");
+const postCache = createNamespacedStorage("posts");
 
 // Keys are automatically prefixed
-await userCache.setItem('123', userData);  // Stored as "users:123"
-await postCache.setItem('456', postData);  // Stored as "posts:456"
+await userCache.setItem("123", userData); // Stored as "users:123"
+await postCache.setItem("456", postData); // Stored as "posts:456"
 
-const user = await userCache.getItem('123');  // Reads "users:123"
+const user = await userCache.getItem("123"); // Reads "users:123"
 ```
 
 ### Cache with TTL
@@ -107,13 +107,13 @@ const user = await userCache.getItem('123');  // Reads "users:123"
 Simple caching with automatic expiration:
 
 ```typescript
-import { cache } from '@raypx/storage';
-import { getDatabase } from '@raypx/db';
-import { users } from '@raypx/db/schema';
-import { eq } from 'drizzle-orm';
+import { cache } from "@raypx/storage";
+import { getDatabase } from "@raypx/db";
+import { users } from "@raypx/db/schema";
+import { eq } from "drizzle-orm";
 
 // Cache for 1 hour (3600 seconds)
-const user = await cache('user:123', 3600, async () => {
+const user = await cache("user:123", 3600, async () => {
   // This function only runs on cache miss
   const db = getDatabase();
   const [user] = await db.select().from(users).where(eq(users.id, 123));
@@ -121,7 +121,7 @@ const user = await cache('user:123', 3600, async () => {
 });
 
 // Second call returns cached value (no database query)
-const sameUser = await cache('user:123', 3600, async () => {
+const sameUser = await cache("user:123", 3600, async () => {
   // Not executed - cache hit
 });
 ```
@@ -129,60 +129,57 @@ const sameUser = await cache('user:123', 3600, async () => {
 ### Cache Invalidation
 
 ```typescript
-import { invalidate } from '@raypx/storage';
+import { invalidate } from "@raypx/storage";
 
 // Invalidate single key
-await invalidate('user:123');
+await invalidate("user:123");
 
 // Invalidate by pattern
-await invalidate('users:*');          // All users
-await invalidate('posts:user:123:*'); // All posts by user 123
+await invalidate("users:*"); // All users
+await invalidate("posts:user:123:*"); // All posts by user 123
 ```
 
 ### API Response Caching
 
 ```typescript
 // apps/web/src/routes/api.users.$userId.ts
-import { createFileRoute } from '@tanstack/react-router';
-import { cache } from '@raypx/storage';
-import { getDatabase } from '@raypx/db';
-import { users } from '@raypx/db/schema';
-import { eq } from 'drizzle-orm';
+import { createFileRoute } from "@tanstack/react-router";
+import { cache } from "@raypx/storage";
+import { getDatabase } from "@raypx/db";
+import { users } from "@raypx/db/schema";
+import { eq } from "drizzle-orm";
 
-export const Route = createFileRoute('/api/users/$userId')({
+export const Route = createFileRoute("/api/users/$userId")({
   server: {
     handlers: {
       async GET({ params }) {
         const userId = parseInt(params.userId);
-        
+
         // Cache user data for 5 minutes
         const user = await cache(`user:${userId}`, 300, async () => {
           const db = getDatabase();
-          const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, userId));
+          const [user] = await db.select().from(users).where(eq(users.id, userId));
           return user;
         });
-        
+
         if (!user) {
-          return Response.json({ error: 'User not found' }, { status: 404 });
+          return Response.json({ error: "User not found" }, { status: 404 });
         }
-        
+
         return Response.json(user);
       },
-      
+
       async PATCH({ params, request }) {
         const userId = parseInt(params.userId);
         const updates = await request.json();
-        
+
         // Update database
         const db = getDatabase();
         await db.update(users).set(updates).where(eq(users.id, userId));
-        
+
         // Invalidate cache
         await invalidate(`user:${userId}`);
-        
+
         return Response.json({ success: true });
       },
     },
@@ -193,9 +190,9 @@ export const Route = createFileRoute('/api/users/$userId')({
 ### Session Storage
 
 ```typescript
-import { createNamespacedStorage } from '@raypx/storage';
+import { createNamespacedStorage } from "@raypx/storage";
 
-const sessionStorage = createNamespacedStorage('sessions');
+const sessionStorage = createNamespacedStorage("sessions");
 
 // Store session (30 minutes TTL)
 export async function createSession(userId: string, data: any) {
@@ -211,13 +208,13 @@ export async function createSession(userId: string, data: any) {
 // Get session
 export async function getSession(sessionId: string) {
   const session = await sessionStorage.getItem(sessionId);
-  
+
   if (!session) return null;
   if (session.expires < Date.now()) {
     await sessionStorage.removeItem(sessionId);
     return null;
   }
-  
+
   return session;
 }
 
@@ -230,19 +227,19 @@ export async function destroySession(sessionId: string) {
 ### Rate Limiting
 
 ```typescript
-import { getStorage } from '@raypx/storage';
+import { getStorage } from "@raypx/storage";
 
 export async function checkRateLimit(
   key: string,
   maxRequests: number,
-  windowSeconds: number
+  windowSeconds: number,
 ): Promise<boolean> {
   const storage = getStorage();
   const rateLimitKey = `ratelimit:${key}`;
-  
+
   const data = await storage.getItem<{ count: number; expires: number }>(rateLimitKey);
   const now = Date.now();
-  
+
   if (!data || data.expires < now) {
     // New window
     await storage.setItem(rateLimitKey, {
@@ -251,28 +248,25 @@ export async function checkRateLimit(
     });
     return true;
   }
-  
+
   if (data.count >= maxRequests) {
     // Rate limit exceeded
     return false;
   }
-  
+
   // Increment counter
   await storage.setItem(rateLimitKey, {
     count: data.count + 1,
     expires: data.expires,
   });
-  
+
   return true;
 }
 
 // Usage in API route
 const allowed = await checkRateLimit(`api:${userId}`, 100, 60); // 100 req/min
 if (!allowed) {
-  return Response.json(
-    { error: 'Rate limit exceeded' },
-    { status: 429 }
-  );
+  return Response.json({ error: "Rate limit exceeded" }, { status: 429 });
 }
 ```
 
@@ -302,11 +296,11 @@ REDIS_URL=redis://username:password@host:6379
 ### Redis Configuration
 
 ```typescript
-import { getStorage } from '@raypx/storage';
+import { getStorage } from "@raypx/storage";
 
 // Custom configuration
 const storage = getStorage({
-  redis: 'redis://localhost:6379',
+  redis: "redis://localhost:6379",
 });
 ```
 
@@ -315,22 +309,22 @@ const storage = getStorage({
 Use memory driver for tests:
 
 ```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-import { getStorage, clearAll } from '@raypx/storage';
+import { describe, it, expect, beforeEach } from "vitest";
+import { getStorage, clearAll } from "@raypx/storage";
 
-describe('Storage', () => {
+describe("Storage", () => {
   beforeEach(async () => {
     // Clear before each test
     await clearAll();
   });
-  
-  it('should store and retrieve data', async () => {
+
+  it("should store and retrieve data", async () => {
     const storage = getStorage({ memory: true });
-    
-    await storage.setItem('key', { value: 'test' });
-    const data = await storage.getItem('key');
-    
-    expect(data).toEqual({ value: 'test' });
+
+    await storage.setItem("key", { value: "test" });
+    const data = await storage.getItem("key");
+
+    expect(data).toEqual({ value: "test" });
   });
 });
 ```
@@ -342,6 +336,7 @@ describe('Storage', () => {
 Get or create storage instance.
 
 **Parameters:**
+
 - `config.redis` - Redis URL
 - `config.fsBase` - Filesystem base path
 - `config.memory` - Use memory driver
@@ -353,6 +348,7 @@ Get or create storage instance.
 Create namespaced storage with automatic key prefixing.
 
 **Parameters:**
+
 - `namespace` - Namespace prefix
 
 **Returns:** Namespaced storage
@@ -362,6 +358,7 @@ Create namespaced storage with automatic key prefixing.
 Cache function result with TTL.
 
 **Parameters:**
+
 - `key` - Cache key
 - `ttl` - Time to live (seconds)
 - `fn` - Function to execute on cache miss
@@ -373,6 +370,7 @@ Cache function result with TTL.
 Invalidate cache by key or pattern.
 
 **Parameters:**
+
 - `pattern` - Key or glob pattern (`*` supported)
 
 ### `clearAll()`
@@ -394,26 +392,26 @@ Clear all cached data.
 ```typescript
 // Before
 const cache = new Map();
-cache.set('key', value);
+cache.set("key", value);
 
 // After
-import { getStorage } from '@raypx/storage';
+import { getStorage } from "@raypx/storage";
 const storage = getStorage();
-await storage.setItem('key', value);
+await storage.setItem("key", value);
 ```
 
 ### From Redis directly
 
 ```typescript
 // Before
-import Redis from 'ioredis';
+import Redis from "ioredis";
 const redis = new Redis();
-await redis.set('key', JSON.stringify(value));
+await redis.set("key", JSON.stringify(value));
 
 // After
-import { getStorage } from '@raypx/storage';
+import { getStorage } from "@raypx/storage";
 const storage = getStorage();
-await storage.setItem('key', value); // Auto-serialization
+await storage.setItem("key", value); // Auto-serialization
 ```
 
 ---

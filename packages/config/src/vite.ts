@@ -18,7 +18,7 @@ const shellQuote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 /** Explicit package specifiers keep server modules out of the browser graph. */
 export const serverOnlySpecifierPatterns = [
   /^bun(?:$|:)/,
-  /^@raypx\/(?:api|ai|auth|db|storage|logger)(?:\/|$)/,
+  /^@raypx\/(?:api|ai|auth|db|storage|logger|worker)(?:\/|$)/,
   /^@raypx\/env\/server(?:\/|$)/,
 ];
 

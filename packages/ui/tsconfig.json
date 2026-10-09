@@ -1,5 +1,5 @@
 {
-  "extends": "@raypx/config/tsconfig/react.json",
+  "extends": "@raypx/config/tsconfig-presets/react.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",

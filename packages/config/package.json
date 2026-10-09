@@ -16,10 +16,11 @@
     "./environment": {
       "types": "./src/environment.ts",
       "import": "./src/environment.ts"
-    }
+    },
+    "./tsconfig/*.json": "./tsconfig-presets/*.json",
+    "./tsconfig-presets/*.json": "./tsconfig-presets/*.json"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
     "@types/node": "^22.19.0",
     "citty": "^0.2.2",
     "consola": "^3.4.2",

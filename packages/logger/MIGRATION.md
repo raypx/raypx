@@ -15,37 +15,39 @@
 ### API Comparison
 
 **Before (Pino):**
+
 ```typescript
-import pino from 'pino';
+import pino from "pino";
 
 const logger = pino({
-  name: 'app',
-  level: 'info',
+  name: "app",
+  level: "info",
   transport: {
-    target: 'pino-pretty',
+    target: "pino-pretty",
     options: { colorize: true },
   },
 });
 ```
 
 **After (Evlog):**
+
 ```typescript
-import { createLogger } from 'evlog';
+import { createLogger } from "evlog";
 
 const logger = createLogger({
-  name: 'app',
-  level: 'info',
+  name: "app",
+  level: "info",
 });
 ```
 
 ### Usage Remains Simple
 
 ```typescript
-import { logger } from '@raypx/logger';
+import { logger } from "@raypx/logger";
 
 // No changes needed in your code
-logger.info('Message');
-logger.error('Error', { context });
+logger.info("Message");
+logger.error("Error", { context });
 ```
 
 ### Benefits

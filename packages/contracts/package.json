@@ -12,13 +12,20 @@
     "./health": {
       "types": "./dist/health.d.ts",
       "import": "./dist/health.js"
+    },
+    "./errors": {
+      "types": "./dist/errors.d.ts",
+      "import": "./dist/errors.js"
+    },
+    "./pagination": {
+      "types": "./dist/pagination.d.ts",
+      "import": "./dist/pagination.js"
     }
   },
   "dependencies": {
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
     "@raypx/config": "workspace:*",
     "@types/node": "^22.19.0",
     "vite": "catalog:",

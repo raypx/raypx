@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@raypx/ui/styles.css";
+
+/* Shared UI class names live outside the consuming application's source tree. */
+@source "../../../packages/ui/src";

@@ -3,12 +3,13 @@
 ## Current State
 
 All scripts are in root `package.json`:
+
 ```json
 {
   "scripts": {
     "dev": "raypx dev",
     "build": "raypx build",
-    "test": "raypx test",
+    "test": "raypx test"
     // ... etc
   }
 }
@@ -19,6 +20,7 @@ All scripts are in root `package.json`:
 ### Option 1: Keep in Root (Current) ✅
 
 **Structure:**
+
 ```
 raypx/
 ├── package.json          # All scripts here
@@ -29,12 +31,14 @@ raypx/
 ```
 
 **Pros:**
+
 - ✅ **Simple** - One place to look
 - ✅ **Standard** - Common monorepo pattern
 - ✅ **Easy to find** - Developers expect scripts in root
 - ✅ **Less abstraction** - Direct commands
 
 **Cons:**
+
 - ⚠️ Scripts can get long/complex
 - ⚠️ Hard to share script logic between packages
 
@@ -43,6 +47,7 @@ raypx/
 ### Option 2: Create Scripts Package
 
 **Structure:**
+
 ```
 raypx/
 ├── package.json          # Minimal, delegates to scripts
@@ -59,6 +64,7 @@ raypx/
 ```
 
 **Root package.json:**
+
 ```json
 {
   "scripts": {
@@ -70,12 +76,14 @@ raypx/
 ```
 
 **Pros:**
+
 - ✅ **Complex logic** - Full TypeScript power
 - ✅ **Reusable** - Share utilities across scripts
 - ✅ **Testable** - Can test script logic
 - ✅ **Maintainable** - Easier to refactor complex scripts
 
 **Cons:**
+
 - ❌ **More complex** - Extra layer of indirection
 - ❌ **Harder to discover** - Not in standard location
 - ❌ **Overkill** - For simple commands
@@ -85,6 +93,7 @@ raypx/
 ### Option 3: Hybrid Approach (Recommended) ⭐
 
 **Structure:**
+
 ```
 raypx/
 ├── package.json          # Simple scripts
@@ -99,6 +108,7 @@ raypx/
 ```
 
 **Root package.json:**
+
 ```json
 {
   "scripts": {
@@ -106,7 +116,7 @@ raypx/
     "dev": "raypx dev",
     "build": "raypx build",
     "test": "raypx test",
-    
+
     // Complex - Use scripts/
     "setup": "bun scripts/setup.ts",
     "docs:generate": "bun scripts/generate-docs.ts",
@@ -117,12 +127,12 @@ raypx/
 
 **When to use each:**
 
-| Type | Location | Example |
-|------|----------|---------|
-| **Simple commands** | Root scripts | `dev`, `build`, `test` |
-| **CLI commands** | `raypx` CLI | Common dev tasks |
-| **Complex scripts** | `scripts/` dir | Setup, release, codegen |
-| **Utilities** | `packages/config` | Shared build logic |
+| Type                | Location          | Example                 |
+| ------------------- | ----------------- | ----------------------- |
+| **Simple commands** | Root scripts      | `dev`, `build`, `test`  |
+| **CLI commands**    | `raypx` CLI       | Common dev tasks        |
+| **Complex scripts** | `scripts/` dir    | Setup, release, codegen |
+| **Utilities**       | `packages/config` | Shared build logic      |
 
 ---
 
@@ -145,40 +155,43 @@ raypx/
 You might need `scripts/` for:
 
 1. **Interactive Setup**
+
    ```typescript
    // scripts/setup.ts
-   import { select, text } from '@clack/prompts';
-   
+   import { select, text } from "@clack/prompts";
+
    const dbChoice = await select({
-     message: 'Choose database',
+     message: "Choose database",
      options: [
-       { value: 'sqlite', label: 'SQLite (default)' },
-       { value: 'postgres', label: 'PostgreSQL' },
+       { value: "sqlite", label: "SQLite (default)" },
+       { value: "postgres", label: "PostgreSQL" },
      ],
    });
-   
+
    const projectName = await text({
-     message: 'Project name?',
-     placeholder: 'my-app',
+     message: "Project name?",
+     placeholder: "my-app",
    });
-   
+
    // Generate config, update files, etc.
    ```
 
 2. **Code Generation**
+
    ```typescript
    // scripts/generate.ts
-   import { generateComponent } from './generators/component';
-   
+   import { generateComponent } from "./generators/component";
+
    const name = process.argv[2];
    generateComponent(name);
    ```
 
 3. **Release Automation**
+
    ```typescript
    // scripts/release.ts
-   import { exec } from 'node:child_process';
-   
+   import { exec } from "node:child_process";
+
    // Bump versions
    // Run tests
    // Build packages
@@ -189,9 +202,9 @@ You might need `scripts/` for:
 4. **Database Migrations**
    ```typescript
    // scripts/migrate.ts
-   import { getDatabase } from '@raypx/db';
-   import { migrate } from 'drizzle-orm';
-   
+   import { getDatabase } from "@raypx/db";
+   import { migrate } from "drizzle-orm";
+
    // Run migrations with confirmation
    ```
 
@@ -202,6 +215,7 @@ You might need `scripts/` for:
 ### Use Hybrid Approach ⭐
 
 **Keep simple scripts in root:**
+
 ```json
 {
   "scripts": {
@@ -214,6 +228,7 @@ You might need `scripts/` for:
 ```
 
 **Create `scripts/` directory for complex tasks:**
+
 ```
 scripts/
 ├── setup.ts              # Interactive project setup
@@ -226,13 +241,14 @@ scripts/
 ```
 
 **Usage:**
+
 ```json
 {
   "scripts": {
     // Simple (keep in root)
     "dev": "raypx dev",
     "build": "raypx build",
-    
+
     // Complex (use scripts/)
     "setup": "bun scripts/setup.ts",
     "generate": "bun scripts/generate.ts",
@@ -255,44 +271,44 @@ mkdir -p scripts/utils
 
 ```typescript
 // scripts/setup.ts
-import { intro, outro, text, select, spinner } from '@clack/prompts';
-import { writeFileSync } from 'node:fs';
+import { intro, outro, text, select, spinner } from "@clack/prompts";
+import { writeFileSync } from "node:fs";
 
 async function setup() {
-  intro('Raypx Setup');
-  
+  intro("Raypx Setup");
+
   const projectName = await text({
-    message: 'Project name?',
-    placeholder: 'my-app',
+    message: "Project name?",
+    placeholder: "my-app",
     validate: (value) => {
-      if (!value) return 'Required';
+      if (!value) return "Required";
     },
   });
-  
+
   const database = await select({
-    message: 'Choose database',
+    message: "Choose database",
     options: [
-      { value: 'sqlite', label: 'SQLite (simple)' },
-      { value: 'postgres', label: 'PostgreSQL (production)' },
+      { value: "sqlite", label: "SQLite (simple)" },
+      { value: "postgres", label: "PostgreSQL (production)" },
     ],
   });
-  
+
   const s = spinner();
-  s.start('Setting up project...');
-  
+  s.start("Setting up project...");
+
   // Generate .env
   const env = `
 DATABASE_PATH=./data/${projectName}.db
 SESSION_SECRET=${crypto.randomUUID()}
 PORT=3000
 `;
-  writeFileSync('.env', env);
-  
+  writeFileSync(".env", env);
+
   // Install dependencies
-  await execa('bun', ['install']);
-  
-  s.stop('Setup complete!');
-  outro('Ready to go! Run: bun run dev');
+  await execa("bun", ["install"]);
+
+  s.stop("Setup complete!");
+  outro("Ready to go! Run: bun run dev");
 }
 
 setup();
@@ -302,38 +318,38 @@ setup();
 
 ```typescript
 // scripts/generate.ts
-import { intro, outro, text, select } from '@clack/prompts';
-import { generateComponent } from './generators/component';
-import { generateAPI } from './generators/api';
+import { intro, outro, text, select } from "@clack/prompts";
+import { generateComponent } from "./generators/component";
+import { generateAPI } from "./generators/api";
 
 async function generate() {
-  intro('Code Generator');
-  
+  intro("Code Generator");
+
   const type = await select({
-    message: 'What to generate?',
+    message: "What to generate?",
     options: [
-      { value: 'component', label: 'React Component' },
-      { value: 'api', label: 'API Route' },
-      { value: 'hook', label: 'React Hook' },
+      { value: "component", label: "React Component" },
+      { value: "api", label: "API Route" },
+      { value: "hook", label: "React Hook" },
     ],
   });
-  
+
   const name = await text({
-    message: 'Name?',
-    placeholder: 'MyComponent',
+    message: "Name?",
+    placeholder: "MyComponent",
   });
-  
+
   switch (type) {
-    case 'component':
+    case "component":
       generateComponent(name);
       break;
-    case 'api':
+    case "api":
       generateAPI(name);
       break;
     // ...
   }
-  
-  outro('Generated successfully!');
+
+  outro("Generated successfully!");
 }
 
 generate();
@@ -343,12 +359,12 @@ generate();
 
 ## Decision Matrix
 
-| Script Complexity | Location | Example |
-|-------------------|----------|---------|
-| **One-liner** | Root `scripts` | `"dev": "raypx dev"` |
-| **2-3 commands** | Root `scripts` | `"check": "bun run build && bun run test"` |
-| **Logic/Prompts** | `scripts/*.ts` | Interactive setup |
-| **Shared utility** | `packages/config` | Build helpers |
+| Script Complexity  | Location          | Example                                    |
+| ------------------ | ----------------- | ------------------------------------------ |
+| **One-liner**      | Root `scripts`    | `"dev": "raypx dev"`                       |
+| **2-3 commands**   | Root `scripts`    | `"check": "bun run build && bun run test"` |
+| **Logic/Prompts**  | `scripts/*.ts`    | Interactive setup                          |
+| **Shared utility** | `packages/config` | Build helpers                              |
 
 ---
 
@@ -364,12 +380,14 @@ generate();
 3. **Don't create** a `packages/scripts` package (overkill)
 
 **Why:**
+
 - Simple scripts stay simple
 - Complex scripts get proper tooling
 - No unnecessary package overhead
 - Standard pattern (scripts/ is common)
 
 **Action:**
+
 - ✅ Keep current root scripts
 - ✅ Create `scripts/` when you need complex logic
 - ❌ Don't create `packages/scripts` package

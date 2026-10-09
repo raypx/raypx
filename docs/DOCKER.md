@@ -300,15 +300,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Build image
         run: docker build -t raypx:latest .
-      
+
       - name: Push to registry
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker push raypx:latest
-      
+
       - name: Deploy to server
         run: |
           ssh user@server "cd /app && docker compose pull && docker compose up -d"
@@ -317,6 +317,7 @@ jobs:
 ## Security Best Practices
 
 1. **Use secrets management**
+
    ```bash
    docker secret create session_secret secret.txt
    ```
@@ -324,12 +325,14 @@ jobs:
 2. **Run as non-root user** (already configured)
 
 3. **Regular updates**
+
    ```bash
    docker compose pull
    docker compose up -d
    ```
 
 4. **Network isolation**
+
    ```yaml
    networks:
      raypx-network:
@@ -343,7 +346,7 @@ jobs:
        deploy:
          resources:
            limits:
-             cpus: '1'
+             cpus: "1"
              memory: 512M
    ```
 

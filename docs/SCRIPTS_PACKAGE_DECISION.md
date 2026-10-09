@@ -3,6 +3,7 @@
 ## Current Situation
 
 We have created:
+
 - `scripts/setup.ts` - Interactive project setup
 - `scripts/install-hooks.ts` - Pre-commit hooks installation
 
@@ -11,6 +12,7 @@ We have created:
 ### Option 1: Keep as Scripts Directory ✅ (Recommended)
 
 **Structure:**
+
 ```
 scripts/
 ├── setup.ts
@@ -24,6 +26,7 @@ scripts/
 ```
 
 **Pros:**
+
 - ✅ **Standard pattern** - `scripts/` is conventional
 - ✅ **Simple** - No package overhead
 - ✅ **Fast** - Direct execution with `bun scripts/x.ts`
@@ -31,6 +34,7 @@ scripts/
 - ✅ **No exports needed** - Scripts are self-contained
 
 **Cons:**
+
 - ⚠️ Harder to share utilities between scripts
 - ⚠️ No formal package structure
 
@@ -41,6 +45,7 @@ scripts/
 ### Option 2: Create Scripts Package
 
 **Structure:**
+
 ```
 packages/
 └── scripts/
@@ -55,12 +60,14 @@ packages/
 ```
 
 **Pros:**
+
 - ✅ **Reusable** - Can publish to npm
 - ✅ **Testable** - Can write tests for scripts
 - ✅ **Structured** - Clear exports and APIs
 - ✅ **Versioned** - Can version scripts independently
 
 **Cons:**
+
 - ❌ **Overkill** - Adds complexity for simple scripts
 - ❌ **Build step** - Need to compile TypeScript
 - ❌ **Over-engineering** - Template doesn't need this
@@ -92,39 +99,39 @@ packages/
 
 ```typescript
 // scripts/utils/prompts.ts
-import { text, select, confirm } from '@clack/prompts';
+import { text, select, confirm } from "@clack/prompts";
 
 export async function askProjectName() {
   return await text({
-    message: 'Project name?',
-    placeholder: 'my-app',
+    message: "Project name?",
+    placeholder: "my-app",
     validate: (v) => {
-      if (!v) return 'Required';
-      if (!/^[a-z0-9-]+$/.test(v)) return 'Use lowercase, numbers, hyphens';
+      if (!v) return "Required";
+      if (!/^[a-z0-9-]+$/.test(v)) return "Use lowercase, numbers, hyphens";
     },
   });
 }
 
 export async function askDatabase() {
   return await select({
-    message: 'Choose database',
+    message: "Choose database",
     options: [
-      { value: 'sqlite', label: 'SQLite' },
-      { value: 'postgres', label: 'PostgreSQL' },
+      { value: "sqlite", label: "SQLite" },
+      { value: "postgres", label: "PostgreSQL" },
     ],
   });
 }
 
 // scripts/utils/exec.ts
-import { execSync } from 'node:child_process';
-import { spinner } from '@clack/prompts';
+import { execSync } from "node:child_process";
+import { spinner } from "@clack/prompts";
 
 export async function runCommand(cmd: string, message: string) {
   const s = spinner();
   s.start(message);
-  
+
   try {
-    execSync(cmd, { stdio: 'ignore' });
+    execSync(cmd, { stdio: "ignore" });
     s.stop(`${message} ✓`);
     return true;
   } catch (error) {
@@ -138,21 +145,21 @@ export async function runCommand(cmd: string, message: string) {
 
 ```typescript
 // scripts/setup.ts
-import { intro, outro } from '@clack/prompts';
-import { askProjectName, askDatabase } from './utils/prompts';
-import { runCommand } from './utils/exec';
+import { intro, outro } from "@clack/prompts";
+import { askProjectName, askDatabase } from "./utils/prompts";
+import { runCommand } from "./utils/exec";
 
 async function setup() {
-  intro('Setup');
-  
+  intro("Setup");
+
   const name = await askProjectName();
   const db = await askDatabase();
-  
+
   // Generate .env...
-  
-  await runCommand('bun install', 'Installing dependencies');
-  
-  outro('Done!');
+
+  await runCommand("bun install", "Installing dependencies");
+
+  outro("Done!");
 }
 
 setup();
@@ -165,6 +172,7 @@ setup();
 ### Use Hybrid Approach ⭐
 
 **Rationale:**
+
 1. **It's a template** - Users will customize scripts
 2. **Simple is better** - No package overhead
 3. **Share utilities** - Extract common logic to `scripts/utils/`
@@ -187,6 +195,7 @@ scripts/
 ```
 
 **Benefits:**
+
 - ✅ Scripts stay simple and readable
 - ✅ Shared logic in one place
 - ✅ No package overhead
@@ -220,10 +229,10 @@ mkdir -p scripts/utils
 
 ```typescript
 // scripts/utils/index.ts
-export * from './prompts';
-export * from './exec';
-export * from './files';
-export * from './git';
+export * from "./prompts";
+export * from "./exec";
+export * from "./files";
+export * from "./git";
 ```
 
 ### Step 3: Refactor Existing Scripts
@@ -242,13 +251,13 @@ Update `setup.ts` and `install-hooks.ts` to use utils.
 
 ## Comparison
 
-| Aspect | Scripts Dir | Scripts Package | Hybrid |
-|--------|-------------|-----------------|---------|
-| **Setup** | ⭐⭐⭐⭐⭐ Simple | ⭐⭐ Complex | ⭐⭐⭐⭐ Easy |
-| **Flexibility** | ⭐⭐⭐⭐⭐ High | ⭐⭐⭐ Medium | ⭐⭐⭐⭐⭐ High |
-| **Reusability** | ⭐⭐ Low | ⭐⭐⭐⭐⭐ High | ⭐⭐⭐⭐ Good |
-| **Maintenance** | ⭐⭐⭐ Medium | ⭐⭐ Hard | ⭐⭐⭐⭐ Easy |
-| **For Template** | ✅ Good | ❌ Overkill | ✅ Perfect |
+| Aspect           | Scripts Dir       | Scripts Package | Hybrid          |
+| ---------------- | ----------------- | --------------- | --------------- |
+| **Setup**        | ⭐⭐⭐⭐⭐ Simple | ⭐⭐ Complex    | ⭐⭐⭐⭐ Easy   |
+| **Flexibility**  | ⭐⭐⭐⭐⭐ High   | ⭐⭐⭐ Medium   | ⭐⭐⭐⭐⭐ High |
+| **Reusability**  | ⭐⭐ Low          | ⭐⭐⭐⭐⭐ High | ⭐⭐⭐⭐ Good   |
+| **Maintenance**  | ⭐⭐⭐ Medium     | ⭐⭐ Hard       | ⭐⭐⭐⭐ Easy   |
+| **For Template** | ✅ Good           | ❌ Overkill     | ✅ Perfect      |
 
 ---
 
@@ -262,6 +271,7 @@ Update `setup.ts` and `install-hooks.ts` to use utils.
 - Users can customize easily
 
 **Action:**
+
 1. Create `scripts/utils/` directory
 2. Move shared logic to utilities
 3. Keep scripts simple and readable

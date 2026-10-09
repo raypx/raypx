@@ -1,26 +1,42 @@
 # @raypx/config
 
-Engineering tool package, does not participate in product runtime, no initial build needed.
+Engineering tools and static TypeScript presets. Runtime application code must
+not import this package. Public tools use TypeScript source entrypoints and
+need no initial build.
 
-Shared TypeScript static configuration now independent in [`@raypx/tsconfig`](../tsconfig/README.md), this package preserves engineering tools.
+| Export                                  | Purpose                                                                                   |
+| --------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@raypx/config/vite`                    | Package tasks, transitive cache inputs, source aliases, and Start import protection       |
+| `@raypx/config/check-boundaries`        | AST checks for package dependencies, cycles, public exports, and browser/server isolation |
+| `@raypx/config/environment`             | Development runtime and package-manager version checks                                    |
+| `@raypx/config/tsconfig/*.json`         | Shared base, build, Node, React, and test presets                                         |
+| `@raypx/config/tsconfig-presets/*.json` | Compatibility exports pointing to the same presets                                        |
 
-- `@raypx/config/vite`: packageConfig, transitive dependency cache input, precise source aliases, and Start server import protection rules.
-- `@raypx/config/check-boundaries`: TypeScript AST package boundary validation, detects illegal dependencies, cycles, internal paths, server modules in browser, Node built-ins, and `bun`, `bun:*` built-ins.
-- `@raypx/config/environment`: `checkDevelopmentEnvironment` validates project-fixed development tool versions and declaration consistency.
+```json
+{
+  "extends": "@raypx/config/tsconfig/node.json"
+}
+```
 
-Style tools handle UI CSS copying, cleanup, and watching. Source and public tool entrypoints directly use `.ts`, relative imports also preserve `.ts` extension, do not depend on generated JavaScript or declaration files.
-Internal boundary and style scripts execute with Bun; Vite+ loads same tools via Node.js 22.21.1 native type stripping.
-`tsconfig.test.json` noEmit configuration allows TS extension imports, runtime package tsc ESM and declaration output conventions remain unchanged.
-Preserve tsc checking, do not replace type validation with Bun executable TypeScript.
+There is no separate active `@raypx/tsconfig` workspace. Style tools copy,
+clean, and watch UI CSS. Relative imports in engineering tools retain `.ts`
+extensions; internal scripts run with Bun, and Vite+ loads tools through Node's
+native type stripping. Source and test types are still checked by tsc.
+Runtime packages compile ESM and declarations and use a separate noEmit test
+configuration.
 
-Root directory `bun run check:boundaries` runs checking; config itself has real boundary, task, alias, and style tests. When adding packages or exports, synchronously update allowed dependency rules and tests.
+`bun run check:boundaries` runs the boundary checker. Package tests cover
+boundaries, task configuration, aliases, styles, and development environment
+checking. Update allowed dependencies and tests when adding packages or
+public exports.
 
-`bun run check:env` directly runs `src/environment.ts` with Bun, no dependency installation needed.
-Root `preinstall` and public root script pre hooks call same entrypoint, CI explicitly executes before frozen install.
-Checks actual Node.js 22.21.1, Bun 1.4.0 in PATH and available package manager identifier,
-requires `devEngines`, `.node-version`, `.bun-version`, `packageManager`, and `engines.bun` consistency.
-On version or declaration mismatch outputs actual vs expected values and exits non-zero.
-Bun 1.4.0 itself does not enforce `devEngines`, this tool only supports current project's exact versions and `onFail: "error"` declaration,
-does not provide auto-download or universal npm schema implementation. Node development toolchain and Bun production runtime remain unchanged.
+`bun run check:env` reads version declarations and checks actual Node and Bun
+versions. It runs without installed dependencies, through root pre hooks and
+explicitly before frozen installation in CI. Required versions come from
+`.node-version`, `.bun-version`, and consistent root manifest declarations;
+failure reports expected and actual tool versions and exits nonzero. The tool
+does not download runtimes or implement a universal package-manager validator.
 
-Author: Zack <heyloyep@gmail.com>
+Application variable parsing belongs to `@raypx/env/server`.
+`bun run check:runtime-env` validates those application values without starting
+the service; it is separate from development tool checks.

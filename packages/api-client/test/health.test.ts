@@ -29,6 +29,11 @@ test("requests the same-origin health endpoint and returns the validated contrac
 
   expect(await checkHealth()).toEqual(healthyResponse);
   expect(fetchMock).toHaveBeenCalledWith("/api/health", {
+    method: "GET",
+    headers: expect.any(Headers),
+    body: undefined,
+    credentials: "same-origin",
+    mode: "same-origin",
     signal: expect.any(AbortSignal),
   });
 });
@@ -50,14 +55,14 @@ test("rejects a successful response that does not match the health contract", as
       .mockResolvedValue(Response.json({ status: "ok", service: "other-service" })),
   );
 
-  await expect(checkHealth()).rejects.toThrow(/Invalid input/);
+  await expect(checkHealth()).rejects.toMatchObject({ kind: "invalid-response" });
 });
 
 test("propagates a failed network request", async () => {
   const error = new TypeError("Failed to fetch");
   vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockRejectedValue(error));
 
-  await expect(checkHealth()).rejects.toBe(error);
+  await expect(checkHealth()).rejects.toMatchObject({ kind: "network", cause: error });
 });
 
 test.each([

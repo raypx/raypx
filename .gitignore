@@ -11,3 +11,4 @@ coverage/
 .tanstack/
 routeTree.gen.ts
 .vitest/
+storybook-static/

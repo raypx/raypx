@@ -5,6 +5,7 @@ This document helps AI assistants understand the Raypx codebase and make effecti
 ## Project Overview
 
 **Raypx** is a production-ready, type-safe full-stack TypeScript template using:
+
 - **Bun** - Fast JavaScript runtime
 - **TanStack Start** - Full-stack React framework
 - **Drizzle ORM** - Type-safe database queries
@@ -14,9 +15,11 @@ This document helps AI assistants understand the Raypx codebase and make effecti
 ## Quick Context
 
 ### What This Project Does
+
 Provides a template for building modern web applications with end-to-end type safety, from database to UI. It's designed to be forked and customized.
 
 ### Target Users
+
 - Developers starting new full-stack projects
 - Teams wanting a type-safe foundation
 - Projects needing authentication and database out of the box
@@ -32,6 +35,7 @@ Infra   ← db, logger, config
 ```
 
 **Rules:**
+
 - Browser packages CANNOT import server packages
 - Server packages CAN import infrastructure packages
 - All layers can use contracts (Zod schemas)
@@ -46,17 +50,17 @@ Infra   ← db, logger, config
 
 Each package has a clear responsibility:
 
-| Package | Purpose | Can Import |
-|---------|---------|------------|
-| `db` | Database access | `logger` |
-| `auth` | Authentication | `db`, `logger` |
-| `logger` | Structured logging | Nothing |
-| `api` | Business logic | `db`, `auth`, `logger`, `contracts` |
-| `contracts` | Schemas | Nothing |
-| `api-client` | HTTP client | `contracts` |
-| `hooks` | React hooks | `api-client` |
-| `ui` | UI components | Nothing |
-| `config` | Build tools | Nothing |
+| Package      | Purpose            | Can Import                          |
+| ------------ | ------------------ | ----------------------------------- |
+| `db`         | Database access    | `logger`                            |
+| `auth`       | Authentication     | `db`, `logger`                      |
+| `logger`     | Structured logging | Nothing                             |
+| `api`        | Business logic     | `db`, `auth`, `logger`, `contracts` |
+| `contracts`  | Schemas            | Nothing                             |
+| `api-client` | HTTP client        | `contracts`                         |
+| `hooks`      | React hooks        | `api-client`                        |
+| `ui`         | UI components      | Nothing                             |
+| `config`     | Build tools        | Nothing                             |
 
 ## Code Patterns
 
@@ -64,15 +68,15 @@ Each package has a clear responsibility:
 
 ```typescript
 // ✅ Good - Type-safe, clear
-import { getDatabase } from '@raypx/db';
-import { users } from '@raypx/db/schema';
-import { eq } from 'drizzle-orm';
+import { getDatabase } from "@raypx/db";
+import { users } from "@raypx/db/schema";
+import { eq } from "drizzle-orm";
 
 const db = getDatabase();
 const user = await db.select().from(users).where(eq(users.id, userId));
 
 // ❌ Bad - Raw SQL, no types
-const user = await db.execute('SELECT * FROM users WHERE id = ?', [userId]);
+const user = await db.execute("SELECT * FROM users WHERE id = ?", [userId]);
 ```
 
 ### API Routes
@@ -93,7 +97,7 @@ export const Route = createFileRoute('/api/users')({
       async POST({ request }) {
         const body = await request.json();
         const data = requestSchema.parse(body); // Throws if invalid
-        
+
         // Use validated data...
         return Response.json({ success: true });
       },
@@ -113,21 +117,18 @@ async POST({ request }) {
 
 ```typescript
 // ✅ Good - Specific errors, logging
-import { logger } from '@raypx/logger';
+import { logger } from "@raypx/logger";
 
 try {
   const result = await riskyOperation();
   return Response.json(result);
 } catch (error) {
-  logger.error('Operation failed', {
-    error: error instanceof Error ? error.message : 'Unknown error',
+  logger.error("Operation failed", {
+    error: error instanceof Error ? error.message : "Unknown error",
     context: { userId, timestamp: Date.now() },
   });
-  
-  return Response.json(
-    { error: 'Operation failed' },
-    { status: 500 }
-  );
+
+  return Response.json({ error: "Operation failed" }, { status: 500 });
 }
 
 // ❌ Bad - Silent failure
@@ -143,12 +144,12 @@ try {
 
 ```typescript
 // ✅ Good - Check auth first
-import { requireAuth } from '@raypx/auth';
+import { requireAuth } from "@raypx/auth";
 
 export async function GET({ request }) {
   const session = await requireAuth(request);
   if (session instanceof Response) return session; // Not authenticated
-  
+
   // User is authenticated, safe to proceed
   const userId = session.user.id;
   // ...
@@ -167,6 +168,7 @@ export async function GET({ request }) {
 ### Adding a New API Endpoint
 
 1. **Define schema** in `packages/contracts/src/`
+
    ```typescript
    export const createUserSchema = z.object({
      name: z.string().min(1),
@@ -175,12 +177,13 @@ export async function GET({ request }) {
    ```
 
 2. **Create route** in `apps/web/src/routes/`
+
    ```typescript
    // apps/web/src/routes/api.users.ts
-   import { createFileRoute } from '@tanstack/react-router';
-   import { createUserSchema } from '@raypx/contracts';
-   
-   export const Route = createFileRoute('/api/users')({
+   import { createFileRoute } from "@tanstack/react-router";
+   import { createUserSchema } from "@raypx/contracts";
+
+   export const Route = createFileRoute("/api/users")({
      server: {
        handlers: {
          async POST({ request }) {
@@ -196,9 +199,9 @@ export async function GET({ request }) {
 3. **Add client function** in `packages/api-client/src/`
    ```typescript
    export async function createUser(data: CreateUser) {
-     const response = await fetch('/api/users', {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json' },
+     const response = await fetch("/api/users", {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
        body: JSON.stringify(data),
      });
      return response.json();
@@ -208,18 +211,21 @@ export async function GET({ request }) {
 ### Adding a Database Table
 
 1. **Define schema** in `packages/db/src/schema.ts`
+
    ```typescript
-   export const posts = sqliteTable('posts', {
-     id: integer('id').primaryKey({ autoIncrement: true }),
-     title: text('title').notNull(),
-     content: text('content').notNull(),
-     userId: integer('user_id').notNull().references(() => users.id),
-     createdAt: integer('created_at', { mode: 'timestamp' })
-       .$defaultFn(() => new Date()),
+   export const posts = sqliteTable("posts", {
+     id: integer("id").primaryKey({ autoIncrement: true }),
+     title: text("title").notNull(),
+     content: text("content").notNull(),
+     userId: integer("user_id")
+       .notNull()
+       .references(() => users.id),
+     createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
    });
    ```
 
 2. **Generate migration**
+
    ```bash
    cd packages/db
    bun drizzle-kit generate
@@ -228,36 +234,37 @@ export async function GET({ request }) {
 
 3. **Use in code**
    ```typescript
-   import { posts } from '@raypx/db/schema';
-   
+   import { posts } from "@raypx/db/schema";
+
    const allPosts = await db.select().from(posts);
    ```
 
 ### Adding a React Hook
 
 1. **Create hook** in `packages/hooks/src/`
+
    ```typescript
-   import { useState, useEffect } from 'react';
-   import { getUsers } from '@raypx/api-client';
-   
+   import { useState, useEffect } from "react";
+   import { getUsers } from "@raypx/api-client";
+
    export function useUsers() {
      const [users, setUsers] = useState([]);
      const [loading, setLoading] = useState(true);
-     
+
      useEffect(() => {
-       getUsers().then(data => {
+       getUsers().then((data) => {
          setUsers(data);
          setLoading(false);
        });
      }, []);
-     
+
      return { users, loading };
    }
    ```
 
 2. **Export from index**
    ```typescript
-   export { useUsers } from './users';
+   export { useUsers } from "./users";
    ```
 
 ## Testing Strategy
@@ -272,30 +279,30 @@ export async function GET({ request }) {
 ### Testing Pattern
 
 ```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from "vitest";
 
-describe('User API', () => {
+describe("User API", () => {
   beforeEach(() => {
     // Setup: Create fresh database
   });
-  
-  it('should create user with valid data', async () => {
-    const response = await fetch('/api/users', {
-      method: 'POST',
-      body: JSON.stringify({ name: 'Test', email: 'test@example.com' }),
+
+  it("should create user with valid data", async () => {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify({ name: "Test", email: "test@example.com" }),
     });
-    
+
     expect(response.status).toBe(201);
     const data = await response.json();
-    expect(data.user.email).toBe('test@example.com');
+    expect(data.user.email).toBe("test@example.com");
   });
-  
-  it('should reject invalid email', async () => {
-    const response = await fetch('/api/users', {
-      method: 'POST',
-      body: JSON.stringify({ name: 'Test', email: 'invalid' }),
+
+  it("should reject invalid email", async () => {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify({ name: "Test", email: "invalid" }),
     });
-    
+
     expect(response.status).toBe(400);
   });
 });
@@ -308,10 +315,10 @@ describe('User API', () => {
 ```typescript
 // ❌ WRONG - This will break!
 // In a browser-side component:
-import { getDatabase } from '@raypx/db'; // Server-only!
+import { getDatabase } from "@raypx/db"; // Server-only!
 
 // ✅ RIGHT - Use API client
-import { getUsers } from '@raypx/api-client';
+import { getUsers } from "@raypx/api-client";
 ```
 
 ### 2. Not Validating Input
@@ -335,12 +342,15 @@ const user = await db.select().from(users).where(eq(users.id, id));
 return Response.json(user); // Includes password!
 
 // ✅ RIGHT - Exclude sensitive fields
-const user = await db.select({
-  id: users.id,
-  name: users.name,
-  email: users.email,
-  // password intentionally omitted
-}).from(users).where(eq(users.id, id));
+const user = await db
+  .select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    // password intentionally omitted
+  })
+  .from(users)
+  .where(eq(users.id, id));
 return Response.json(user);
 ```
 
@@ -362,7 +372,7 @@ return Response.json(user);
 
 ### JSDoc Format
 
-```typescript
+````typescript
 /**
  * Fetches user by ID with caching
  *
@@ -381,7 +391,7 @@ return Response.json(user);
 export async function getUser(userId: string) {
   // Implementation...
 }
-```
+````
 
 ## Questions to Ask
 

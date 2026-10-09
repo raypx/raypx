@@ -45,11 +45,13 @@ Bun's workspace catalog feature allows you to centralize dependency versions acr
 ## When to Use Catalog
 
 ### ✅ Use for:
+
 - Shared infrastructure dependencies (evlog, drizzle-orm)
 - Build tools (vite, vite-plus)
 - Framework versions that must match across packages
 
 ### ❌ Don't use for:
+
 - Package-specific dependencies
 - Versions that legitimately differ between packages
 - Experimental/unstable packages
@@ -82,6 +84,7 @@ bun install
 ## Migration
 
 We've migrated key dependencies to catalog:
+
 - ✅ evlog
 - ✅ better-sqlite3
 - ✅ drizzle-orm

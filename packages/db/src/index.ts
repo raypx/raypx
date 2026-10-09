@@ -1,9 +1,9 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { createLogger } from '@raypx/logger';
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { createLogger } from "@raypx/logger";
 
-const logger = createLogger({ name: 'database' });
+const logger = createLogger({ name: "database" });
 
 /**
  * Database connection instance
@@ -11,6 +11,7 @@ const logger = createLogger({ name: 'database' });
  * Lazy-initialized SQLite database using Drizzle ORM
  */
 let db: BetterSQLite3Database | null = null;
+let sqlite: Database.Database | null = null;
 
 /**
  * Get or create the database connection
@@ -26,17 +27,17 @@ let db: BetterSQLite3Database | null = null;
  * const users = await db.select().from(usersTable);
  * ```
  */
-export function getDatabase(path = './data/raypx.db'): BetterSQLite3Database {
+export function getDatabase(path = "./data/raypx.db"): BetterSQLite3Database {
   if (!db) {
-    logger.info({ path }, 'Initializing database connection');
+    logger.info({ path }, "Initializing database connection");
 
-    const sqlite = new Database(path);
-    sqlite.pragma('journal_mode = WAL'); // Enable Write-Ahead Logging
-    sqlite.pragma('foreign_keys = ON');   // Enable foreign key constraints
+    sqlite = new Database(path);
+    sqlite.pragma("journal_mode = WAL"); // Enable Write-Ahead Logging
+    sqlite.pragma("foreign_keys = ON"); // Enable foreign key constraints
 
     db = drizzle(sqlite);
 
-    logger.info('Database connection established');
+    logger.info("Database connection established");
   }
 
   return db;
@@ -55,11 +56,13 @@ export function getDatabase(path = './data/raypx.db'): BetterSQLite3Database {
  */
 export function closeDatabase(): void {
   if (db) {
-    logger.info('Closing database connection');
+    logger.info("Closing database connection");
+    sqlite?.close();
+    sqlite = null;
     db = null;
   }
 }
 
 // Re-export Drizzle types for convenience
-export type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-export * from 'drizzle-orm';
+export type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+export * from "drizzle-orm";

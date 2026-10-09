@@ -5,5 +5,5 @@ export default defineConfig(
   packageConfig(import.meta.url, {
     name: "@raypx/storage",
     test: true,
-  })
+  }),
 );

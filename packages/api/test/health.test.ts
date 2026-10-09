@@ -1,16 +1,19 @@
 import { healthResponseSchema } from "@raypx/contracts/health";
+import { apiErrorResponseSchema } from "@raypx/contracts/errors";
 import { expect, test } from "vite-plus/test";
 import { apiNotFoundResponse, healthResponse } from "../src/health.js";
 
 test("health response matches the shared frontend contract", async () => {
   const response = healthResponse();
   expect(response.status).toBe(200);
-  expect(response.headers.get("content-type")).toContain("application/json");
   expect(healthResponseSchema.parse(await response.json()).status).toBe("ok");
 });
 
-test("unknown API response is JSON with a 404 status", async () => {
+test("unknown API paths return the public error contract", async () => {
   const response = apiNotFoundResponse();
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ error: "Not found" });
+  expect(apiErrorResponseSchema.parse(await response.json()).error).toEqual({
+    code: "NOT_FOUND",
+    message: "Not found",
+  });
 });

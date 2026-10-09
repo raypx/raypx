@@ -5,11 +5,11 @@
  * for CLI and desktop applications
  */
 
-export { defineTask, Task } from './task';
-export type { TaskDefinition, TaskContext } from './task';
+export { defineTask, Task, TaskCancelledError } from "./task.js";
+export type { TaskDefinition, TaskContext, TaskProgress } from "./task.js";
 
-export { WorkerManager, getWorkerManager } from './manager';
-export type { TaskStatus, RunningTask } from './manager';
+export { WorkerManager, getWorkerManager } from "./manager.js";
+export type { TaskStatus, RunningTask } from "./manager.js";
 
 export type {
   WorkerMessage,
@@ -22,4 +22,4 @@ export type {
   ErrorMessage,
   TaskStatusResponse,
   AvailableTasksResponse,
-} from './protocol';
+} from "./protocol.js";

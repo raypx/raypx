@@ -9,6 +9,7 @@ bunx taze major -r -w
 ```
 
 Options:
+
 - `major` - Include major version updates
 - `-r` - Recursive (all workspace packages)
 - `-w` - Write changes to package.json files

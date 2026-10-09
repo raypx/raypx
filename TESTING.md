@@ -11,15 +11,15 @@ test in filename indicates check scope, not Vitest runtime configuration. Static
 
 ## Test Layers
 
-| Project      | Environment                 | Validation Content                                                           |
-| ------------ | --------------------------- | ---------------------------------------------------------------------------- |
-| `contracts`  | Node                        | Health check contract accepts valid data and rejects missing or incorrect fields |
-| `api-client` | Node                        | Success, HTTP error, error contract, 5 second timeout, and caller cancellation |
-| `hooks`      | jsdom + Testing Library     | Loading/success/failure, retry, unmount cancellation, and stale request isolation |
-| `ui`         | jsdom + Testing Library     | Status display, button behavior, and accessibility semantics                 |
-| `api`        | Node                        | Health check Response, contract, and JSON 404                                |
-| `web`        | Node runner, Bun service    | After building Bun preset artifacts start with Bun, verify SSR, static assets, HTTP interfaces, and page 404 |
-| `config`     | Node                        | Dependency boundaries, transitive cache input, public entrypoint aliases, and style sync |
+| Project      | Environment              | Validation Content                                                                                           |
+| ------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `contracts`  | Node                     | Health check contract accepts valid data and rejects missing or incorrect fields                             |
+| `api-client` | Node                     | Success, HTTP error, error contract, 5 second timeout, and caller cancellation                               |
+| `hooks`      | jsdom + Testing Library  | Loading/success/failure, retry, unmount cancellation, and stale request isolation                            |
+| `ui`         | jsdom + Testing Library  | Status display, button behavior, and accessibility semantics                                                 |
+| `api`        | Node                     | Health check Response, contract, and JSON 404                                                                |
+| `web`        | Node runner, Bun service | After building Bun preset artifacts start with Bun, verify SSR, static assets, HTTP interfaces, and page 404 |
+| `config`     | Node                     | Dependency boundaries, transitive cache input, public entrypoint aliases, and style sync                     |
 
 Empty skeletons do not write placeholder tests; after adding real capabilities, configure corresponding test tasks.
 Test directories use `test/` or `*.test.ts`, `*.spec.ts` in `src/`, React packages also support TSX.

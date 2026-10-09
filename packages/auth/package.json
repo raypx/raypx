@@ -11,6 +11,7 @@
     }
   },
   "dependencies": {
+    "@raypx/contracts": "workspace:*",
     "@raypx/db": "workspace:*",
     "@raypx/logger": "workspace:*",
     "better-auth": "catalog:",

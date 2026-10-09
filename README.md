@@ -1,118 +1,102 @@
 # Raypx
 
-TypeScript monorepo for personal AI workbench, using Bun workspaces, Vite+, and TanStack Start.
-Currently implements basic engineering, homepage, and service connection check; sessions, model, database, login, and file storage not yet integrated.
+TypeScript monorepo for a personal AI workbench, using Bun workspaces, Vite+,
+and TanStack Start. The application currently provides a homepage, connection
+checks, validated runtime configuration, request logging and correlation, safe
+API errors, and readiness and shutdown infrastructure. Database, authentication,
+storage, and worker utilities exist as server packages; their product features
+are not wired into the web application.
 
 Author: Zack <heyloyep@gmail.com>
 
 ## Local Development
 
-Install Bun 1.4.0 (see `.bun-version`) and Node.js 22.21.1 (see `.node-version`).
-Bun handles workspaces, dependency installation, project scripts, and production service; Vite+, Vitest, Oxlint, and tsc currently still execute through compatible Node tool entrypoints. Bun does not replace TypeScript type checking.
-
-Root `package.json`'s `devEngines` declares development toolchain Node.js 22.21.1 and package manager Bun 1.4.0,
-consistent with version files, `packageManager`, and `engines.bun`.
-Bun 1.4.0 itself does not enforce `devEngines.onFail`, project supplements with native TypeScript environment checking:
-Before installation and all public root script execution, checks actual Node, Bun versions in PATH and available package manager identifier,
-while validating version declaration consistency. On failure outputs actual vs expected values and exits non-zero.
-Checking requires no dependency installation, nor automatically downloads runtimes; CI explicitly executes before frozen install.
+Use the versions in `.bun-version` and `.node-version` (currently Bun 1.4.2 and
+Node.js 22.21.1). Bun installs workspaces and runs production; Vite+, Vitest,
+Oxlint, and tsc retain Node-compatible tool entrypoints.
 
 ```sh
 bun run check:env
 bun install --frozen-lockfile
+bun run setup
+bun run check:runtime-env
 bun run dev
 ```
 
-Open http://127.0.0.1:5173. Start provides both pages and `/api` interfaces, homepage displays real connection status with retry support.
-Development command first builds all runtime packages, then starts package watching and Start dev server in parallel.
-No need to globally install `vp`, scripts use repository-fixed Vite+ 1.1.0.
-Workspace and catalog configuration in root `package.json`, dependencies locked in `bun.lock`.
-`bunfig.toml` explicitly adopts isolated linker, each workspace resolves packages by its own dependency declarations;
-when adding package dependencies, declare in the workspace using it, do not rely on accidentally visible transitive dependencies.
-Running project tests uses `bun run test`, executed by Vitest; `bun test` is Bun's own test command.
+Open http://127.0.0.1:5173. `setup` copies `apps/web/.env.example` to
+`apps/web/.env` without replacing an existing file. `check:env` verifies tool
+versions and declaration consistency; `check:runtime-env` validates application
+configuration without starting the service. Neither prints application values.
+Development first builds runtime packages, then runs package watchers and Start.
 
-## Project Structure
+Dependencies are declared by each workspace and locked in `bun.lock`.
+`bunfig.toml` uses the isolated linker. Scripts use the repository's Vite+
+installation; no global `vp` is required. `bun run test` uses Vitest, while
+`bun test` is Bun's separate test runner.
 
-`apps/web` is the only application, handles Start file routing, page assembly, SSR, server adapters, and deployment entrypoint.
-`packages/` contains 13 `@raypx/*` workspaces, reused through explicit public entrypoints and `workspace:*` dependencies.
+## Packages
 
-| Package      | Responsibility & Current Content                                                 |
-| ------------ | -------------------------------------------------------------------------------- |
-| `contracts`  | Browser-usable Zod contracts and types, health check entrypoint `@raypx/contracts/health` |
-| `api-client` | Health check HTTP request, response validation, 5 second timeout, and cancellation |
-| `hooks`      | React connection check state, retry, and unmount cancellation                    |
-| `ui`         | Button, connection status display, and base styles, no data fetching or routing  |
-| `api`        | Server health check and JSON 404 handling, entrypoint `@raypx/api/health`       |
-| `ai`         | Model integration skeleton, no model SDK or call implementation                  |
-| `db`         | Database skeleton, no connection, Schema, or migration implementation            |
-| `auth`       | Authentication skeleton, no login or session implementation                      |
-| `storage`    | Storage skeleton, no file or object storage implementation                       |
-| `env`        | Configuration skeleton, separately exposes `./client` and `./server`, no business variable parsing |
-| `logger`     | Server logging skeleton, no logging implementation                               |
-| `tsconfig`   | Static TypeScript configuration, entrypoint `@raypx/tsconfig/*.json`            |
-| `config`     | Tasks, boundaries, test aliases, and style tools, does not carry TypeScript static configuration |
+`apps/web` owns routing, SSR, server adapters, and deployment. Runtime packages
+expose explicit public entrypoints and reuse one another through `workspace:*`.
 
-Skeleton packages only provide buildable empty modules and responsibility descriptions. `shared` replaced by `contracts`.
-See [ARCHITECTURE.md](ARCHITECTURE.md) for dependency constraints and extension methods.
+| Package      | Current responsibility                                                                          |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| `contracts`  | Browser-safe Zod health, readiness, and API error contracts                                     |
+| `api-client` | Validated JSON requests, typed errors, timeout, and cancellation                                |
+| `hooks`      | Connection check state, retry, and unmount cancellation                                         |
+| `ui`         | shadcn primitives, forms, dialogs, feedback, and themes; examples at `/components`              |
+| `api`        | Request context, safe HTTP errors, probes, and runtime lifecycle                                |
+| `env`        | Validated server configuration and an isolated, currently empty public configuration entrypoint |
+| `logger`     | Structured evlog output, asynchronous context, levels, and credential redaction                 |
+| `db`         | Lazy SQLite connection through better-sqlite3 and Drizzle, with real connection close           |
+| `auth`       | Better Auth instance and session helpers; not mounted in web                                    |
+| `storage`    | unstorage helpers for memory, filesystem, and optional Redis                                    |
+| `worker`     | In-process task execution, progress, cooperative cancellation, and execution isolation          |
+| `config`     | Engineering tasks, boundaries, aliases, styles, and static TypeScript presets                   |
 
-## Common Commands
+TypeScript presets are exported as `@raypx/config/tsconfig/*.json`;
+`@raypx/config/tsconfig-presets/*.json` remains a compatibility alias to the same
+files. There is no separate active `@raypx/tsconfig` workspace or model SDK package.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for import constraints.
 
-| Command                    | Purpose                                                          |
-| -------------------------- | ---------------------------------------------------------------- |
-| `bun run dev`              | Initial compile then start package watching and Start, no cache  |
-| `bun run build`            | Build packages and application in dependency order, use local cache |
-| `bun run start`            | Start built full-stack service with Bun, no cache                |
-| `bun run lint`             | Oxlint check, warnings also fail check                           |
-| `bun run lint:fix`         | Fix auto-fixable lint issues                                     |
-| `bun run format`           | Oxfmt format, no cache                                           |
-| `bun run format:check`     | Only check format                                                |
-| `bun run check:env`        | Check actual dev tool versions and declaration consistency, no dependency installation needed |
-| `bun run check:boundaries` | Check package dependencies, cycles, public entrypoints, and client import boundaries |
-| `bun run typecheck`        | tsc type check, use cache                                        |
-| `bun run test`             | Each package unit tests and web production integration tests, use cache |
-| `bun run test:watch`       | Watch unit tests, exclude production integration tests           |
-| `bun run test:coverage`    | Complete tests and V8 coverage report                            |
-| `bun run check`            | Build, format, lint, boundaries, type, and test checks, for CI   |
+## Commands and Checks
 
-Run individual package tasks: `bun run vp run @raypx/contracts#build`.
-Task definitions in each package `vite.config.ts`, same-named package scripts do not duplicate definitions.
-Runtime packages use tsc to output ESM and declaration files; UI styles sync to artifacts and expose exports.
-`tsconfig` static JSON configuration and `config` TypeScript tool entrypoints directly consumable, no initial build needed; internal scripts executed by Bun,
-Vite+ tools run via Node.js 22.21.1 native type stripping. Neither replaces tsc type checking.
-Runtime package `tsconfig.json` handles build, `tsconfig.test.json` handles source, tests, and Vite configuration noEmit type checking.
-Start auto-generated route tree recovers with build cache.
+| Command                                   | Purpose                                                                |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| `bun run dev`                             | Build dependencies, then run watchers and Start                        |
+| `bun run build`                           | Build runtime packages and the application                             |
+| `bun run start`                           | Run the built server with Bun                                          |
+| `bun run setup`                           | Create application configuration without overwriting it                |
+| `bun run check:env`                       | Validate development tool versions and declarations                    |
+| `bun run check:runtime-env`               | Validate current application runtime configuration                     |
+| `bun run check:boundaries`                | Check package dependencies, exports, cycles, and browser isolation     |
+| `bun run typecheck`                       | Check source and test TypeScript                                       |
+| `bun run test`                            | Run package tests and production integration tests                     |
+| `bun run test:watch`                      | Watch tests, excluding production integration tests                    |
+| `bun run test:coverage`                   | Build and run tests with V8 coverage                                   |
+| `bun run lint` / `bun run lint:fix`       | Check or fix lint issues                                               |
+| `bun run format` / `bun run format:check` | Write or check formatting                                              |
+| `bun run check`                           | Build, format, lint, boundaries, type checking, and tests              |
+| `bun run storybook`                       | Explore UI components, states, Controls, Docs, and themes on port 6006 |
+| `bun run storybook:build`                 | Build the standalone static UI reference                               |
+| `bun run storybook:install`               | Install Chromium for browser story tests                               |
+| `bun run storybook:test`                  | Render stories and verify interactions and accessibility               |
 
-Build, type check, and tests use local cache, watching, format fix, and production start do not cache.
-Cache input includes transitive dependency source, configuration, and static assets. View recent task summary:
-`bun run vp run --last-details`; clean cache: `bun run vp cache clean`.
+Package tasks live in their `vite.config.ts`, for example
+`bun run vp run @raypx/contracts#build`. Runtime packages compile to ESM and
+TypeScript declarations. Engineering tools and JSON presets need no initial
+build. Test APIs import from `vite-plus/test`; Hooks and UI use jsdom, other
+packages use Node. Direct root `vp test` runs need existing production artifacts
+or must exclude `production.test.ts`.
 
-## Testing & Code Checks
+Storybook lives in `packages/ui` and runs independently of Start and server providers.
+The full check includes its static build; browser story tests have their own command.
+See the [UI package guide](packages/ui/README.md#storybook).
 
-Vite+ 1.1.0 provides Vitest 5.0.3, Oxlint 1.87.0, and Oxfmt 0.72.0.
-Root `vite.config.ts` manages test projects, TS/TSX coverage, and lint rules, each package defines actual test directories.
-Lint/fmt unified via `vp lint`, `vp fmt`, following root `vite.config.ts`; `.oxlintrc.json` only preserved as unadopted alternative configuration, current vp scripts do not use it.
-Package boundaries continue enforced by `packages/config/src/check-boundaries.ts` AST checking, included in complete check.
-Test API imports from `vite-plus/test`; default environment Node, Hooks and UI use jsdom and Testing Library.
-Tests use precise source aliases to access public package entrypoints, watch does not depend on package pre-compilation.
-
-Oxfmt uniformly uses root `vite.config.ts` `fmt` configuration: two-space indent, double quotes, semicolons, trailing commas, and LF line endings,
-skips generated route tree and build artifacts. `bun run format` writes format, `bun run format:check` only checks; CI's `bun run check` includes format check.
-VS Code workspace recommends Oxc extension, after installation auto-formats on save, using same root configuration.
-
-```sh
-bun run test
-bun run test:watch
-bun run test:coverage
-bun run vp test run --project contracts
-```
-
-Complete tests prepare artifacts needed for production integration tests. When running `vp test` directly in root directory, need to build first,
-or exclude `production.test.ts`. Coverage output to root `coverage/`, includes HTML and JSON summary,
-no coverage threshold currently set. Independently started production server not counted in Vitest unit test coverage.
-See [TESTING.md](TESTING.md) for more details.
-
-Oxlint checks TypeScript, React, JSX accessibility, and test rules, including floating Promises,
-incorrect async callbacks, Hooks usage, and `.only` tests. tsc handles complete type checking.
+Build, type check, and test tasks use local cache with transitive inputs;
+watching and production startup do not cache. Root `vite.config.ts` owns lint,
+formatting, test projects, and coverage. The AST boundary checker additionally
+protects package imports. See [TESTING.md](TESTING.md).
 
 ## Production Runtime
 
@@ -121,21 +105,31 @@ bun run build
 bun run start
 ```
 
-Default production port 3000, development port 5173. Copy `apps/web/.env.example` to `.env` in same directory,
-can configure production listen `HOST` and `PORT`; containers typically use `HOST=0.0.0.0`.
-Production task runs in web directory, uses Bun to read `.env` and run `.output/server/index.mjs`.
-Nitro fixed at `3.0.260903-beta`, using Bun preset; re-verify build and runtime on upgrade.
-See [ENV.md](ENV.md) for environment variables and configuration boundaries.
+Production startup runs in `apps/web`, loads its `.env`, and validates runtime
+values before creating the listener, including direct execution of the Nitro
+artifact. The effective listener defaults to `127.0.0.1:3000`; containers can
+set `HOST=0.0.0.0`. `NITRO_HOST` and `NITRO_PORT` override `HOST` and `PORT`.
+The Nitro plugin normalizes listener values, initializes logging, and wraps
+requests with isolated context and `x-request-id` response headers.
+See [ENV.md](ENV.md) for supported fields and empty-value behavior.
 
-`GET /api/health` returns `{ "status": "ok", "service": "raypx-api" }`.
-Unknown `/api` paths return JSON 404, unknown pages return Start page 404.
+`GET /api/health` is a lightweight liveness probe returning
+`{ "status": "ok", "service": "raypx-api" }`. `GET /api/ready` returns readiness
+with HTTP 200 or 503. It checks only explicitly registered resources and does
+not open unused databases, initialize authentication, or connect Redis.
+Currently no provider is registered. Shutdown marks readiness unavailable and
+releases registered resources once, in reverse order, with a bounded deadline.
 
-## Development Documentation
+Unknown API paths use the shared error contract; unknown pages use Start's 404.
+Request logs contain method, path, status, duration, and request ID. The optional
+observation hook allows an application to connect a metrics sink; no external
+error-monitoring service, metric backend, or alert delivery is configured.
 
-- [Architecture & Package Dependencies](ARCHITECTURE.md)
+## Documentation
+
+- [Architecture](ARCHITECTURE.md)
 - [Environment Variables](ENV.md)
+- [API Package](packages/api/README.md)
 - [Code Examples](EXAMPLES.md)
-- [Testing Conventions](TESTING.md)
-- [AI-Assisted Development Guide](CLAUDE.md)
-- [TanStack Start Guide](https://tanstack.com/start/latest/docs/framework/react/build-from-scratch)
-- [Vite+ Tasks & Cache](https://viteplus.dev/guide/run)
+- [Testing](TESTING.md)
+- [AI Development Guide](CLAUDE.md)

@@ -15,11 +15,13 @@ export default defineConfig(({ mode }) => ({
     mode === "test"
       ? []
       : lazyPlugins(async () => {
-          const [{ tanstackStart }, { nitro }, { default: react }] = await Promise.all([
-            import("@tanstack/react-start/plugin/vite"),
-            import("nitro/vite"),
-            import("@vitejs/plugin-react"),
-          ]);
+          const [{ tanstackStart }, { nitro }, { default: react }, { default: tailwindcss }] =
+            await Promise.all([
+              import("@tanstack/react-start/plugin/vite"),
+              import("nitro/vite"),
+              import("@vitejs/plugin-react"),
+              import("@tailwindcss/vite"),
+            ]);
           return [
             tanstackStart({
               importProtection: {
@@ -31,7 +33,11 @@ export default defineConfig(({ mode }) => ({
                 },
               },
             }),
-            nitro({ preset: "bun" }),
+            nitro({
+              preset: "bun",
+              plugins: [fileURLToPath(new URL("./server/plugins/runtime.ts", import.meta.url))],
+            }),
+            tailwindcss(),
             react(),
           ];
         }),

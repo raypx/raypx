@@ -12,13 +12,21 @@
     "./health": {
       "types": "./dist/health.d.ts",
       "import": "./dist/health.js"
+    },
+    "./http": {
+      "types": "./dist/http.d.ts",
+      "import": "./dist/http.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
     }
   },
   "dependencies": {
-    "@raypx/contracts": "workspace:*"
+    "@raypx/contracts": "workspace:*",
+    "@raypx/logger": "workspace:*"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
     "@raypx/config": "workspace:*",
     "@types/node": "^22.19.0",
     "vite": "catalog:",

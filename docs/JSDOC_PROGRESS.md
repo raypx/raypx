@@ -10,6 +10,7 @@
 ## Priority Order
 
 ### High Priority (User-facing APIs)
+
 1. **@raypx/logger** - 1 missing ✅ Easy
 2. **@raypx/db** - 1 missing ✅ Easy
 3. **@raypx/auth** - 2 missing ✅ Important
@@ -18,9 +19,11 @@
 6. **@raypx/hooks** - 2 missing
 
 ### Medium Priority
+
 7. **@raypx/ui** - 3 missing
 
 ### Low Priority (Internal)
+
 8. **@raypx/config** - 22 missing (internal tooling)
 
 ## Next Steps

@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 /**
  * Test suite for @raypx/storage
@@ -13,11 +16,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/tes
 
 // Mock logger to prevent actual logging during tests
 vi.mock("@raypx/logger", () => ({
-  createLogger: vi.fn(() => ({
-    info: vi.fn(),
-    debug: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
+  createLogger: vi.fn<
+    () => { info: () => void; debug: () => void; warn: () => void; error: () => void }
+  >(() => ({
+    info: vi.fn<() => void>(),
+    debug: vi.fn<() => void>(),
+    warn: vi.fn<() => void>(),
+    error: vi.fn<() => void>(),
   })),
 }));
 
@@ -25,6 +30,7 @@ vi.mock("@raypx/logger", () => ({
 const originalEnv = { ...process.env };
 
 beforeEach(() => {
+  vi.resetModules();
   // Set test environment to ensure memory storage
   process.env.NODE_ENV = "test";
   delete process.env.REDIS_URL;
@@ -41,9 +47,9 @@ describe("getStorage", () => {
     const storage = getStorage();
 
     expect(storage).toBeDefined();
-    expect(storage.setItem).toBeDefined();
-    expect(storage.getItem).toBeDefined();
-    expect(storage.removeItem).toBeDefined();
+    expect(typeof storage.setItem).toBe("function");
+    expect(typeof storage.getItem).toBe("function");
+    expect(typeof storage.removeItem).toBe("function");
   });
 
   test("should return singleton instance on subsequent calls", async () => {
@@ -62,6 +68,36 @@ describe("getStorage", () => {
     const value = await storage.getItem("test-key");
 
     expect(value).toBe("test-value");
+  });
+
+  test("filesystem driver writes and reads real JSON values", async () => {
+    process.env.NODE_ENV = "production";
+    const directory = await mkdtemp(join(tmpdir(), "raypx-storage-test-"));
+    const { getStorage } = await import("../src/index.js");
+    const storage = getStorage({ fsBase: directory });
+    try {
+      expect(storage.getMount().driver.name).toBe("fs");
+      await storage.setItem("persisted:entry", { enabled: true, count: 3 });
+      expect(await storage.getItem("persisted:entry")).toEqual({ enabled: true, count: 3 });
+    } finally {
+      await storage.dispose();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  test("Redis driver factory remains callable without opening a connection", async () => {
+    process.env.NODE_ENV = "production";
+    const { getStorage } = await import("../src/index.js");
+    const storage = getStorage({ redis: "redis://127.0.0.1:6379" });
+    try {
+      expect(storage.getMount().driver.name).toBe("redis");
+      expect(storage.getMount().driver.options).toMatchObject({
+        url: "redis://127.0.0.1:6379",
+        lazyConnect: true,
+      });
+    } finally {
+      await storage.dispose();
+    }
   });
 });
 
@@ -134,7 +170,7 @@ describe("cache", () => {
 
   test("should execute function on cache miss", async () => {
     const { cache } = await import("../src/index.js");
-    const fn = vi.fn(async () => ({ data: "fresh" }));
+    const fn = vi.fn<() => Promise<unknown>>(async () => ({ data: "fresh" }));
 
     const result = await cache("test-key", 3600, fn);
 
@@ -144,7 +180,7 @@ describe("cache", () => {
 
   test("should return cached value on cache hit before expiration", async () => {
     const { cache } = await import("../src/index.js");
-    const fn = vi.fn(async () => ({ data: "fresh" }));
+    const fn = vi.fn<() => Promise<unknown>>(async () => ({ data: "fresh" }));
 
     // First call - cache miss
     const result1 = await cache("test-key", 3600, fn);
@@ -159,7 +195,8 @@ describe("cache", () => {
 
   test("should re-execute function when cache expired", async () => {
     const { cache } = await import("../src/index.js");
-    const fn = vi.fn()
+    const fn = vi
+      .fn<() => Promise<{ data: string }>>()
       .mockResolvedValueOnce({ data: "first" })
       .mockResolvedValueOnce({ data: "second" });
 
@@ -184,7 +221,7 @@ describe("cache", () => {
       boolValue: true,
       stringValue: "test",
     };
-    const fn = vi.fn(async () => complexObject);
+    const fn = vi.fn<() => Promise<unknown>>(async () => complexObject);
 
     const result = await cache("complex-key", 3600, fn);
     expect(result).toEqual(complexObject);
@@ -196,7 +233,7 @@ describe("cache", () => {
 
   test("should handle zero TTL", async () => {
     const { cache } = await import("../src/index.js");
-    const fn = vi.fn(async () => "value");
+    const fn = vi.fn<() => Promise<unknown>>(async () => "value");
 
     await cache("zero-ttl", 0, fn);
 
@@ -209,7 +246,7 @@ describe("cache", () => {
 
   test("should handle negative TTL", async () => {
     const { cache } = await import("../src/index.js");
-    const fn = vi.fn(async () => "value");
+    const fn = vi.fn<() => Promise<unknown>>(async () => "value");
 
     await cache("negative-ttl", -1, fn);
 
@@ -220,7 +257,7 @@ describe("cache", () => {
 
   test("should handle undefined return value from function", async () => {
     const { cache } = await import("../src/index.js");
-    const fn = vi.fn(async () => undefined);
+    const fn = vi.fn<() => Promise<unknown>>(async () => undefined);
 
     const result = await cache("undefined-key", 3600, fn);
     expect(result).toBeUndefined();
@@ -232,7 +269,7 @@ describe("cache", () => {
 
   test("should handle null return value from function", async () => {
     const { cache } = await import("../src/index.js");
-    const fn = vi.fn(async () => null);
+    const fn = vi.fn<() => Promise<unknown>>(async () => null);
 
     const result = await cache("null-key", 3600, fn);
     expect(result).toBeNull();
@@ -245,7 +282,7 @@ describe("cache", () => {
   test("should propagate function execution errors", async () => {
     const { cache } = await import("../src/index.js");
     const error = new Error("Function failed");
-    const fn = vi.fn(async () => {
+    const fn = vi.fn<() => Promise<unknown>>(async () => {
       throw error;
     });
 
@@ -255,8 +292,8 @@ describe("cache", () => {
 
   test("should cache different keys independently", async () => {
     const { cache } = await import("../src/index.js");
-    const fn1 = vi.fn(async () => "value1");
-    const fn2 = vi.fn(async () => "value2");
+    const fn1 = vi.fn<() => Promise<unknown>>(async () => "value1");
+    const fn2 = vi.fn<() => Promise<unknown>>(async () => "value2");
 
     const result1 = await cache("key1", 3600, fn1);
     const result2 = await cache("key2", 3600, fn2);
@@ -332,7 +369,7 @@ describe("invalidate", () => {
 
   test("should invalidate cached entries", async () => {
     const { cache, invalidate } = await import("../src/index.js");
-    const fn = vi.fn(async () => "value");
+    const fn = vi.fn<() => Promise<unknown>>(async () => "value");
 
     // Cache the value
     await cache("cache-key", 3600, fn);
@@ -378,7 +415,7 @@ describe("clearAll", () => {
 
   test("should clear cached entries", async () => {
     const { cache, clearAll } = await import("../src/index.js");
-    const fn = vi.fn(async () => "value");
+    const fn = vi.fn<() => Promise<unknown>>(async () => "value");
 
     // Cache some values
     await cache("key1", 3600, fn);
@@ -405,7 +442,9 @@ describe("integration tests", () => {
     const userCache = createNamespacedStorage("users");
 
     // Cache some user data
-    const getUser = vi.fn(async (id: string) => ({ id, name: `User ${id}` }));
+    const getUser = vi.fn<(id: string) => Promise<{ id: string; name: string }>>(
+      async (id: string) => ({ id, name: `User ${id}` }),
+    );
 
     const user1 = await cache("users:1", 3600, () => getUser("1"));
     expect(user1).toEqual({ id: "1", name: "User 1" });

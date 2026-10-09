@@ -2,16 +2,16 @@
  * Worker manager for task execution and lifecycle management
  */
 
-import { EventEmitter } from 'node:events';
-import { createLogger } from '@raypx/logger';
-import type { Task } from './task';
+import { EventEmitter } from "node:events";
+import { createLogger } from "@raypx/logger";
+import type { Task, TaskProgress } from "./task.js";
 
-const logger = createLogger({ name: 'worker-manager' });
+const logger = createLogger({ name: "worker-manager" });
 
 /**
  * Task status
  */
-export type TaskStatus = 'pending' | 'running' | 'complete' | 'error' | 'cancelled';
+export type TaskStatus = "pending" | "running" | "complete" | "error" | "cancelled";
 
 /**
  * Running task info
@@ -21,7 +21,7 @@ export interface RunningTask {
   name: string;
   status: TaskStatus;
   startedAt: Date;
-  progress?: any;
+  progress?: TaskProgress;
 }
 
 /**
@@ -30,71 +30,69 @@ export interface RunningTask {
 export class WorkerManager extends EventEmitter {
   private tasks: Map<string, Task> = new Map();
   private running: Map<string, RunningTask> = new Map();
+  private executions: Map<string, Task> = new Map();
 
   /**
    * Register a task
    */
-  register(task: Task) {
+  register<TOptions, TResult>(task: Task<TOptions, TResult>) {
     if (this.tasks.has(task.name)) {
       throw new Error(`Task ${task.name} already registered`);
     }
 
-    logger.info('Registering task', { task: task.name });
-    this.tasks.set(task.name, task);
+    logger.info("Registering task", { task: task.name });
+    // Registration erases the options type at the dynamic task-name boundary.
+    this.tasks.set(task.name, task as Task);
   }
 
   /**
    * Execute a task
    */
-  async execute<TResult = any>(
-    taskName: string,
-    options?: any
-  ): Promise<TResult> {
-    const task = this.tasks.get(taskName);
-    if (!task) {
+  async execute<TResult = unknown>(taskName: string, options?: unknown): Promise<TResult> {
+    const definition = this.tasks.get(taskName);
+    if (!definition) {
       throw new Error(`Task ${taskName} not found`);
     }
+    const task = definition.createExecution();
 
     const id = crypto.randomUUID();
     const runningTask: RunningTask = {
       id,
       name: taskName,
-      status: 'running',
+      status: "running",
       startedAt: new Date(),
     };
 
     this.running.set(id, runningTask);
-    this.emit('task:start', runningTask);
+    this.executions.set(id, task);
+    this.emit("task:start", runningTask);
 
     // Listen to task events
-    const onProgress = (data: any) => {
+    const onProgress = (data: TaskProgress) => {
+      if (runningTask.status !== "running") return;
       runningTask.progress = data;
-      this.emit('task:progress', { ...runningTask, progress: data });
+      this.emit("task:progress", { ...runningTask, progress: data });
     };
 
-    const onComplete = (data: any) => {
-      runningTask.status = 'complete';
-      this.running.delete(id);
-      this.emit('task:complete', { ...runningTask, result: data.result });
-    };
-
-    const onError = (data: any) => {
-      runningTask.status = 'error';
-      this.running.delete(id);
-      this.emit('task:error', { ...runningTask, error: data.error });
-    };
-
-    task.on('progress', onProgress);
-    task.on('complete', onComplete);
-    task.on('error', onError);
+    task.on("progress", onProgress);
 
     try {
       const result = await task.execute(options);
-      return result;
+      if (runningTask.status === "running") {
+        runningTask.status = "complete";
+        this.emit("task:complete", { ...runningTask, result });
+      }
+      return result as TResult;
+    } catch (error) {
+      if (runningTask.status === "running") {
+        runningTask.status = "error";
+        this.emit("task:error", { ...runningTask, error });
+      }
+      throw error;
     } finally {
-      task.off('progress', onProgress);
-      task.off('complete', onComplete);
-      task.off('error', onError);
+      task.off("progress", onProgress);
+      this.running.delete(id);
+      this.executions.delete(id);
     }
   }
 
@@ -106,15 +104,15 @@ export class WorkerManager extends EventEmitter {
     if (!runningTask) {
       throw new Error(`Running task ${id} not found`);
     }
+    if (runningTask.status === "cancelled") return;
 
-    const task = this.tasks.get(runningTask.name);
-    if (task) {
-      await task.cancel();
+    runningTask.status = "cancelled";
+    try {
+      await this.executions.get(id)?.cancel();
+    } finally {
+      this.running.delete(id);
+      this.emit("task:cancel", runningTask);
     }
-
-    runningTask.status = 'cancelled';
-    this.running.delete(id);
-    this.emit('task:cancel', runningTask);
   }
 
   /**
@@ -128,7 +126,7 @@ export class WorkerManager extends EventEmitter {
    * Get list of available tasks
    */
   getAvailableTasks(): Array<{ name: string; description?: string }> {
-    return Array.from(this.tasks.values()).map(task => ({
+    return Array.from(this.tasks.values()).map((task) => ({
       name: task.name,
       description: task.description,
     }));
@@ -138,9 +136,9 @@ export class WorkerManager extends EventEmitter {
    * Cancel all running tasks
    */
   async cancelAll() {
-    logger.info('Cancelling all tasks');
+    logger.info("Cancelling all tasks");
 
-    const promises = Array.from(this.running.keys()).map(id => this.cancel(id));
+    const promises = Array.from(this.running.keys()).map((id) => this.cancel(id));
     await Promise.all(promises);
   }
 }

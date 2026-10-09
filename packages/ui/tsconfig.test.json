@@ -1,10 +1,10 @@
 {
-  "extends": "@raypx/config/tsconfig/test.json",
+  "extends": "@raypx/config/tsconfig-presets/test.json",
   "compilerOptions": {
     "rootDir": "../..",
     "noEmit": true,
     "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": ["src", "test", "vite.config.ts"]
+  "include": ["src", "test", "vite.config.ts", "stories", ".storybook", "vitest.config.ts"]
 }

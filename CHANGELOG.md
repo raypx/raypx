@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Initial project setup
 - Monorepo structure with Bun workspaces
 - Core packages: db, auth, logger, api, api-client, contracts, hooks, ui, config
@@ -20,18 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript strict mode throughout
 
 ### Changed
+
 - Migrated from Pino to Evlog for logging
 - Simplified boundary checking using Oxlint
 - Consolidated tsconfig into config package
 - Adopted Bun catalog for dependency management
 
 ### Removed
+
 - Empty placeholder packages (ai, storage, env)
 - Legacy boundary check implementation
 
 ## [0.1.0] - 2024-XX-XX
 
 ### Added
+
 - Initial release
 - Production-ready template for full-stack TypeScript applications
 - Comprehensive documentation and examples

@@ -29,7 +29,7 @@
     "format": "vp fmt",
     "typecheck": "vp run --filter \"@raypx/*\" typecheck",
     "test": "vp run --filter \"@raypx/*\" test",
-    "check": "vp run --filter \"@raypx/*\" build && vp fmt --check && vp lint --deny-warnings && bun packages/config/src/check-boundaries.ts && vp run --filter \"@raypx/*\" typecheck && vp run --filter \"@raypx/*\" test",
+    "check": "vp run --filter \"@raypx/*\" build && vp run @raypx/ui#storybook-build && vp fmt --check && vp lint --deny-warnings && bun packages/config/src/check-boundaries.ts && vp run --filter \"@raypx/*\" typecheck && vp run --filter \"@raypx/*\" test",
     "lint:fix": "vp lint --fix --deny-warnings",
     "format:check": "vp fmt --check",
     "test:watch": "vp test watch --exclude \"**/production.test.ts\"",
@@ -49,7 +49,16 @@
     "preformat:check": "bun packages/config/src/environment.ts",
     "pretest:watch": "bun packages/config/src/environment.ts",
     "pretest:coverage": "bun packages/config/src/environment.ts",
-    "precheck:boundaries": "bun packages/config/src/environment.ts"
+    "precheck:boundaries": "bun packages/config/src/environment.ts",
+    "setup": "bun scripts/setup.ts",
+    "check:runtime-env": "bun --cwd apps/web run ../../packages/env/src/cli.ts",
+    "storybook": "vp run @raypx/ui#storybook",
+    "storybook:build": "vp run @raypx/ui#storybook-build",
+    "storybook:test": "vp run @raypx/ui#storybook-test",
+    "storybook:install": "vp run @raypx/ui#storybook-install",
+    "prestorybook": "bun packages/config/src/environment.ts",
+    "prestorybook:build": "bun packages/config/src/environment.ts",
+    "prestorybook:test": "bun packages/config/src/environment.ts"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
@@ -65,7 +74,7 @@
   "devEngines": {
     "packageManager": {
       "name": "bun",
-      "version": "1.4.0",
+      "version": "1.4.2",
       "onFail": "error"
     },
     "runtime": {

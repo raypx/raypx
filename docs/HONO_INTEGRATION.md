@@ -5,10 +5,12 @@
 ### Added Hono API Framework
 
 **New Dependencies:**
+
 - `hono` - Fast web framework
 - `@hono/zod-validator` - Zod validation middleware
 
 **New Files:**
+
 - `apps/web/server/api/index.ts` - Main API router
 - `apps/web/server/api/routes/users.ts` - User routes
 - `apps/web/src/routes/api.$.ts` - TanStack Start integration
@@ -53,18 +55,17 @@
 
 ```typescript
 // apps/web/server/api/routes/users.ts
-export const userRoutes = new Hono()
-  .get('/', async (c) => {
-    const users = await db.select().from(users);
-    return c.json(users);
-  });
+export const userRoutes = new Hono().get("/", async (c) => {
+  const users = await db.select().from(users);
+  return c.json(users);
+});
 ```
 
 ### Client Side
 
 ```typescript
 // Anywhere in your React app
-import { apiClient, getUsers } from '@raypx/api-client';
+import { apiClient, getUsers } from "@raypx/api-client";
 
 // Method 1: Direct client
 const res = await apiClient.users.$get();
@@ -92,15 +93,17 @@ const users = await getUsers(); // Also fully typed!
 ## Migration Path
 
 **Old pattern (simple routes):**
+
 ```typescript
 // Keep for simple routes
-apps/web/src/routes/api.health.ts
+apps / web / src / routes / api.health.ts;
 ```
 
 **New pattern (complex routes):**
+
 ```typescript
 // Use Hono for complex APIs
-apps/web/server/api/routes/users.ts
+apps / web / server / api / routes / users.ts;
 ```
 
 Both patterns can coexist!

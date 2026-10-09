@@ -24,7 +24,8 @@ export const allowedPackageDependencies: Record<string, string[]> = {
   storage: ["env", "logger"],
   auth: ["contracts", "db", "env", "logger"],
   env: [],
-  logger: ["env"],
+  logger: [],
+  worker: ["logger"],
   config: [],
   tsconfig: [],
 };
@@ -43,6 +44,7 @@ const shortName = (name: string) => name.replace(/^@raypx\//, "");
 const ignoredDirectories = new Set([
   "node_modules",
   "dist",
+  "storybook-static",
   "coverage",
   ".output",
   ".tanstack",

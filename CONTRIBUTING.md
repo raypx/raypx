@@ -13,22 +13,26 @@ Thank you for your interest in contributing to Raypx! 🎉
 ### Setup
 
 1. **Fork and clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/raypx.git
    cd raypx
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Copy environment file**
+
    ```bash
    cp .env.example .env
    ```
 
 4. **Start development**
+
    ```bash
    bun run dev
    ```
@@ -51,6 +55,7 @@ Thank you for your interest in contributing to Raypx! 🎉
 ### Making Changes
 
 1. **Create a branch**
+
    ```bash
    git checkout -b feat/your-feature
    ```
@@ -62,6 +67,7 @@ Thank you for your interest in contributing to Raypx! 🎉
    - Update documentation
 
 3. **Test your changes**
+
    ```bash
    bun run test        # Run tests
    bun run typecheck   # Check types
@@ -69,6 +75,7 @@ Thank you for your interest in contributing to Raypx! 🎉
    ```
 
 4. **Commit with clear messages**
+
    ```bash
    git commit -m "feat: add user profile page"
    ```
@@ -109,7 +116,7 @@ Thank you for your interest in contributing to Raypx! 🎉
 - Explain **why**, not **what**
 - Keep comments up-to-date
 
-```typescript
+````typescript
 /**
  * Fetches user profile with caching
  *
@@ -124,7 +131,7 @@ Thank you for your interest in contributing to Raypx! 🎉
 export async function getUser(userId: string) {
   // Cache implementation...
 }
-```
+````
 
 ## Testing
 
@@ -132,11 +139,11 @@ export async function getUser(userId: string) {
 
 ```typescript
 // packages/db/test/database.test.ts
-import { describe, it, expect } from 'vitest';
-import { getDatabase } from '../src';
+import { describe, it, expect } from "vitest";
+import { getDatabase } from "../src";
 
-describe('Database', () => {
-  it('should connect successfully', () => {
+describe("Database", () => {
+  it("should connect successfully", () => {
     const db = getDatabase();
     expect(db).toBeDefined();
   });
@@ -157,11 +164,13 @@ bun test packages/db       # Specific package
 ### Adding a New Package
 
 1. Create package directory
+
    ```bash
    mkdir -p packages/my-package/src
    ```
 
 2. Add `package.json`
+
    ```json
    {
      "name": "@raypx/my-package",
@@ -198,15 +207,18 @@ bun test packages/db       # Specific package
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 How to test these changes
 
 ## Screenshots (if applicable)

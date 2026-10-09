@@ -18,7 +18,12 @@ export default defineConfig({
     singleQuote: false,
     trailingComma: "all",
     endOfLine: "lf",
-    ignorePatterns: ["**/routeTree.gen.ts", "**/.output/**", "**/dist/**"],
+    ignorePatterns: [
+      "**/routeTree.gen.ts",
+      "**/.output/**",
+      "**/dist/**",
+      "**/storybook-static/**",
+    ],
   },
   lint: {
     plugins: ["typescript", "unicorn", "oxc", "react", "jsx-a11y"],
@@ -40,7 +45,12 @@ export default defineConfig({
         },
       },
     ],
-    ignorePatterns: ["**/routeTree.gen.ts", "**/.output/**", "**/dist/**"],
+    ignorePatterns: [
+      "**/routeTree.gen.ts",
+      "**/.output/**",
+      "**/dist/**",
+      "**/storybook-static/**",
+    ],
     // Keep tsc as the authoritative type checker for both workspace packages.
     options: { typeAware: true, typeCheck: false },
   },

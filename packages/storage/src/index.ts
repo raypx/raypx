@@ -1,10 +1,28 @@
-import { createStorage, prefixStorage } from 'unstorage';
-import redisDriver from 'unstorage/drivers/redis';
-import fsDriver from 'unstorage/drivers/fs';
-import memoryDriver from 'unstorage/drivers/memory';
-import { createLogger } from '@raypx/logger';
+import { createStorage, prefixStorage } from "unstorage";
+import type { BuiltinDriverOptions, Driver } from "unstorage";
+import redisDriverModule from "unstorage/drivers/redis";
+import fsDriverModule from "unstorage/drivers/fs";
+import memoryDriverModule from "unstorage/drivers/memory";
+import { createLogger } from "@raypx/logger";
 
-const logger = createLogger({ name: 'storage' });
+const logger = createLogger({ name: "storage" });
+
+// unstorage 1.14's CJS declarations and ESM runtime disagree about default exports under NodeNext.
+// Validate the actual factory before giving it the official driver option type.
+function driverFactory<Options>(module: unknown): (options: Options) => Driver<Options, unknown> {
+  const factory =
+    typeof module === "function"
+      ? module
+      : module !== null && typeof module === "object" && "default" in module
+        ? module.default
+        : undefined;
+  if (typeof factory !== "function") throw new TypeError("Storage driver must export a factory");
+  return factory as (options: Options) => Driver<Options, unknown>;
+}
+
+const memoryDriver = driverFactory<void>(memoryDriverModule);
+const redisDriver = driverFactory<BuiltinDriverOptions["redis"]>(redisDriverModule);
+const fsDriver = driverFactory<BuiltinDriverOptions["fs"]>(fsDriverModule);
 
 /**
  * Storage configuration options
@@ -58,12 +76,12 @@ export function getStorage(config?: StorageConfig) {
   if (storage) return storage;
 
   const redisUrl = config?.redis || process.env.REDIS_URL;
-  const useMemory = config?.memory || process.env.NODE_ENV === 'test';
-  const fsBase = config?.fsBase || './data/cache';
+  const useMemory = config?.memory || process.env.NODE_ENV === "test";
+  const fsBase = config?.fsBase || "./data/cache";
 
   // Memory driver (testing)
   if (useMemory) {
-    logger.info('Using memory storage');
+    logger.info("Using memory storage");
     storage = createStorage({
       driver: memoryDriver(),
     });
@@ -72,7 +90,7 @@ export function getStorage(config?: StorageConfig) {
 
   // Redis driver (production)
   if (redisUrl) {
-    logger.info('Using Redis storage', { url: redisUrl.replace(/:[^:]*@/, ':***@') });
+    logger.info("Using Redis storage", { url: redisUrl.replace(/:[^:]*@/, ":***@") });
     storage = createStorage({
       driver: redisDriver({
         url: redisUrl,
@@ -83,7 +101,7 @@ export function getStorage(config?: StorageConfig) {
   }
 
   // Filesystem driver (fallback)
-  logger.info('Using filesystem storage', { base: fsBase });
+  logger.info("Using filesystem storage", { base: fsBase });
   storage = createStorage({
     driver: fsDriver({
       base: fsBase,
@@ -131,22 +149,25 @@ export function createNamespacedStorage(namespace: string) {
  * });
  * ```
  */
-export async function cache<T>(
-  key: string,
-  ttl: number,
-  fn: () => Promise<T>
-): Promise<T> {
+export async function cache<T>(key: string, ttl: number, fn: () => Promise<T>): Promise<T> {
   const storage = getStorage();
 
   // Check cache
-  const cached = await storage.getItem<{ value: T; expires: number }>(key);
-  if (cached && cached.expires > Date.now()) {
-    logger.debug('Cache hit', { key });
-    return cached.value;
+  const cached = await storage.getItem(key);
+  if (
+    cached !== null &&
+    typeof cached === "object" &&
+    "expires" in cached &&
+    typeof cached.expires === "number" &&
+    cached.expires > Date.now()
+  ) {
+    logger.debug("Cache hit", { key });
+    // This envelope is written by cache<T>; undefined values are omitted by JSON serialization.
+    return ("value" in cached ? cached.value : undefined) as T;
   }
 
   // Cache miss - execute function
-  logger.debug('Cache miss', { key });
+  logger.debug("Cache miss", { key });
   const value = await fn();
 
   // Store with expiration
@@ -174,14 +195,14 @@ export async function cache<T>(
 export async function invalidate(pattern: string) {
   const storage = getStorage();
 
-  if (pattern.includes('*')) {
+  if (pattern.includes("*")) {
     // Pattern matching
     const keys = await storage.getKeys(pattern);
-    logger.info('Invalidating cache', { pattern, count: keys.length });
-    await Promise.all(keys.map(key => storage.removeItem(key)));
+    logger.info("Invalidating cache", { pattern, count: keys.length });
+    await Promise.all(keys.map((key) => storage.removeItem(key)));
   } else {
     // Single key
-    logger.debug('Invalidating cache', { key: pattern });
+    logger.debug("Invalidating cache", { key: pattern });
     await storage.removeItem(pattern);
   }
 }
@@ -198,9 +219,9 @@ export async function invalidate(pattern: string) {
  */
 export async function clearAll() {
   const storage = getStorage();
-  logger.warn('Clearing all cache');
+  logger.warn("Clearing all cache");
   await storage.clear();
 }
 
 // Re-export unstorage types
-export type { Storage } from 'unstorage';
+export type { Storage } from "unstorage";

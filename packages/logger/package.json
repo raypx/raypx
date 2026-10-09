@@ -11,13 +11,11 @@
     }
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.9.1",
-    "evlog": "catalog:",
-    "hono": "catalog:"
+    "evlog": "catalog:"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
-    "@types/node": "^26.6.4",
+    "@types/node": "^22.19.0",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

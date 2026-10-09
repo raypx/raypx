@@ -1,104 +1,113 @@
 # Raypx Architecture
 
-Raypx uses Bun workspaces to manage technical layer packages. TanStack Start is the only full-stack application entrypoint,
-providing file routing, SSR, HTTP routing, and Nitro server artifacts. Bun manages dependencies and runs project scripts and production service,
-Vite+ handles package building, Vitest tests, Oxlint checks, and local cache; these tools currently preserve Node runtime entrypoints.
+TanStack Start in `apps/web` is the application's entrypoint for file routing,
+SSR, and HTTP. Nitro emits the Bun production server. Bun manages workspaces
+and runtime execution; Vite+ manages tasks, tests, lint, formatting, and local
+cache. Runtime packages compile to ESM and declarations with strict TypeScript.
 
-## Package Responsibilities
+## Responsibilities and Boundaries
 
-| Package                                 | Current Responsibility                      | Runtime Boundary    |
-| --------------------------------------- | ------------------------------------------- | ------------------- |
-| `web`                                   | Routing, page assembly, SSR, server adapters, and deployment | Full-stack app |
-| `contracts`                             | Zod health check contracts and inferred types | Browser & server   |
-| `api-client`                            | Health check fetch, contract validation, timeout, and cancellation | Browser-usable |
-| `hooks`                                 | Connection check state, retry, and lifecycle cleanup | React, SSR-capable |
-| `ui`                                    | Button, status display, and styles          | React, SSR-capable  |
-| `api`                                   | Health check and API JSON 404 response      | Server-side         |
-| `ai`, `db`, `auth`, `storage`, `logger` | Buildable empty modules, reserved capabilities | Server-side      |
-| `env`                                   | Empty client/server config entrypoints      | Isolated by entrypoint |
-| `tsconfig`                              | Shared strict TypeScript static JSON config | Engineering config  |
-| `config`                                | Tasks, boundaries, source aliases, and style tools | Engineering tools |
-
-`contracts` replaces original `shared`, only contains contracts and types shared by frontend and backend, does not read environment or execute requests.
-`api-client` is current explicit HTTP interface call layer, not a TanStack Start required layer.
-When adding Start server functions in future, web preserves framework adaptation, business capabilities continue in related packages.
-
-## Dependencies & Import Boundaries
-
-Current business dependency chain:
+| Package      | Responsibility                                                                | Boundary               |
+| ------------ | ----------------------------------------------------------------------------- | ---------------------- |
+| `web`        | Routing, pages, framework adapters, initialization, and deployment            | Full stack             |
+| `contracts`  | Zod health, readiness, and API error contracts                                | Browser and server     |
+| `api-client` | JSON requests, response validation, typed failures, timeout, and cancellation | Browser-safe           |
+| `hooks`      | Connection check state and lifecycle                                          | React                  |
+| `ui`         | Presentation components and styles                                            | React                  |
+| `api`        | HTTP context and errors, probes, registered resource lifecycle                | Server                 |
+| `env`        | Runtime parsing with separate client/server exports                           | Isolated by entrypoint |
+| `logger`     | evlog output, asynchronous context, and redaction                             | Server                 |
+| `db`         | Lazy SQLite and Drizzle access, connection close                              | Server                 |
+| `auth`       | Better Auth initialization and session helpers                                | Server                 |
+| `storage`    | unstorage cache and driver helpers                                            | Server                 |
+| `worker`     | In-process execution and cooperative cancellation                             | Server                 |
+| `config`     | Tasks, import boundaries, aliases, styles, and JSON TypeScript presets        | Engineering            |
 
 ```text
-web pages ──→ hooks ──→ api-client ──→ contracts
-         └──→ ui
-web HTTP routes ──→ .server.ts adapters ──→ api ──→ contracts
+web pages → hooks → api-client → contracts
+          → ui
+web server adapters → api → contracts / logger
+web runtime initialization → env/server / logger / api/runtime
+auth → db / logger
+db / storage / worker → logger
 ```
 
-Future server dependency directions available; only add `workspace:*` dependencies after code actually uses:
+The boundary checker permits additional server dependencies when a feature
+actually needs them; add each workspace dependency explicitly. Runtime code
+cannot import engineering tools from `config`. Browser packages cannot import
+server packages, Node/Bun built-ins, or `env/server`. Public configuration in
+`env/client` has no fields yet. There is no mixed env root export.
 
-```text
-api  → ai / auth / db / storage / env / logger
-     → contracts
-auth → db / env / logger / contracts
-ai / db / storage → env / logger
-```
+Package imports must use declared public exports, never another package's
+`src` or `dist`. Dependencies cannot point from packages to `web` or form
+cycles. Start import protection checks the client graph; the TypeScript AST
+checker validates declarations and source imports through
+`bun run check:boundaries`. Both run during the full project check.
 
-All packages prohibited from reverse-depending on web, circular dependencies prohibited. Cross-package only uses explicit `exports` in manifest,
-does not reference another package's `src` or `dist`. React in UI and Hooks uses peer dependency.
-`ui` does not depend on request layer or routing, `hooks` only executes connection check in client effect.
+## Runtime Initialization and Requests
 
-Web's `.server.ts` files are adaptation layer between Start routes and server packages.
-Server isolation jointly enforced by Start `importProtection` and engineering boundary checks, cannot rely solely on file naming.
-Client import graph prohibited from containing `api`, `ai`, `db`, `auth`, `storage`, `logger`, and `env/server`.
-Client also prohibited from Node built-ins and `bun`, `bun:*` built-ins.
-`env/client` only allows public configuration; secrets read server-side.
+`apps/web/src/server/runtime.server.ts` calls `loadServerEnv`, normalizes
+`NITRO_HOST` and `NITRO_PORT`, configures logging, and creates the lifecycle.
+The Nitro plugin loads it before creating the listener. Importing the env
+package alone does not read configuration or require provider credentials.
+Application parsing is independent of `check:env` toolchain version checks.
 
-`bun run check:boundaries` checks dependency declarations, cycles, allowed dependency directions, public entrypoints, and source imports.
-Checking continues using `packages/config/src/check-boundaries.ts` TypeScript AST implementation, included in complete `bun run check`.
-Lint/fmt uses Vite+ `vp lint`, `vp fmt`, unified configuration follows root `vite.config.ts`; `.oxlintrc.json` only preserved as unadopted alternative configuration, current vp scripts do not use it.
-Start build further checks actual client import graph. When adding entrypoints or packages, synchronously update boundary rules, cannot bypass checks.
+The Nitro plugin wraps request handling with `withHttpRequest`. Each request
+gets an isolated asynchronous context containing its ID, method, path, and
+logger; accepted request IDs are returned as `x-request-id`. Nested server
+adapters reuse this context and catch deliberate `HttpError` failures before
+framework fallback handling. Unexpected failures receive safe public errors,
+while details stay in redacted server logs. Completion logs include status and
+duration. An optional observation callback can feed a metrics sink without
+changing the HTTP response when that sink fails.
 
-## Current Data Flow
+Contracts define response shapes. API logic lives in `api`; web `.server.ts`
+adapters and Start routes expose it. Browser callers use `api-client` to
+validate successful payloads and distinguish HTTP, validation, timeout, abort,
+and network failures. Hooks manage loading, retry, and cancellation; UI renders
+that state without reading server configuration.
 
-Homepage SSR outputs initial connection state. After browser hydration, Hooks initiates health check:
+## Probes and Resource Lifecycle
 
-1. `hooks` creates this check and cancellation control, manages loading, success, and error states.
-2. `api-client` requests same-origin `/api/health`, handles HTTP errors, 5 second timeout, caller cancellation, and response contract validation.
-3. Start server route calls `api` via web server adapter.
-4. `api` returns `{ "status": "ok", "service": "raypx-api" }`, complying with `contracts/health` contract.
-5. `ui` displays Hook state; on failure clicking retry starts new request, unmount cancels old request.
+`/api/health` reports process liveness without accessing providers. `/api/ready`
+reports initialization and registered resource checks, returning 503 before
+readiness, during draining, or when a required check fails. Optional checks may
+fail without making the service unavailable. The current application registers
+no database, authentication, storage, or model resource.
 
-Unknown `/api` paths return `{ "error": "Not found" }` and HTTP 404; unknown pages return Start page 404.
-Current health check does not access database, model service, or login state.
+`RuntimeLifecycle` tracks only resources explicitly created and registered by
+the application. Register a provider check and disposer when its feature is
+activated; do not connect unused providers merely to answer a probe. Checks
+have a timeout. Shutdown marks the runtime draining, disposes resources in
+reverse registration order once, and uses one total deadline. Nitro owns
+signal-driven server close; the plugin marks readiness unavailable on SIGTERM
+and SIGINT and releases resources from the close hook.
 
-## Build & Development
+`getDatabase()` lazily opens a real better-sqlite3 connection and enables WAL
+and foreign keys; `closeDatabase()` closes it. Database paths are explicit
+function parameters, not part of the env schema. The auth module currently
+calls `getDatabase()` during import. Web does not import this module or expose
+auth routes. Importing auth therefore activates its database dependency and
+must be an intentional feature decision.
 
-Runtime packages use tsc to output ESM and declaration files in `dist/`, UI styles copy to artifacts and expose exports.
-`tsconfig` static JSON configuration and `config` tools do not depend on initial compilation, directly usable by each package.
-Runtime package `tsconfig.json` defines artifacts; `tsconfig.test.json` only checks source, tests, and Vite configuration, does not generate files.
-These packages reference two engineering packages via devDependencies, do not make them product runtime dependencies.
-Each package's Vite Task build executes in topological order via workspace dependencies `dependsOn`.
-Development first builds all runtime packages, then runs compilation watching, UI style watching, and Start in parallel.
+## Engineering and Extension
 
-Build, type check, and tests use local cache, input covers transitive dependency source, configuration, and static assets, excludes output.
-Start outputs `.output/` and generated route tree; after deleting output can recover from build cache.
-Development watching, format fix, and production start do not cache. Project has no remote cache or independent API process.
+Shared static presets are exported from `@raypx/config/tsconfig/*.json`.
+`@raypx/config/tsconfig-presets/*.json` is a compatibility path to the same
+files. They are not a separate active workspace. Engineering tools expose `.ts`
+entrypoints and use native TypeScript execution; tsc still checks their types.
+Runtime `tsconfig.json` produces artifacts; `tsconfig.test.json` checks source,
+tests, and Vite configuration without emitting files.
 
-## Extension Conventions
+Package builds follow workspace dependency order. Development first compiles
+runtime packages, then starts watchers and Start. Build, type check, and test
+caches include transitive source and configuration; startup and watching are
+not cached. The project has no separate API process or remote build cache.
 
-When adding interfaces, first define public contract in `contracts`, then implement handler logic in `api`,
-exposed via web server adapter and Start route; when browser HTTP call needed, wrap in `api-client`.
-New pages assembled by web, reuse UI and Hooks, do not reverse-place app routing into packages.
-
-Database, authentication, model, and storage have not yet selected providers or SDKs. Related packages currently only provide empty module skeletons.
-When implementing these capabilities, add runtime dependencies and tests in corresponding packages; server configuration parsing in `env/server`,
-logging in `logger`. Do not describe future interfaces, variables, or product features as existing capabilities.
-
-Bun workspaces and catalogs located in root `package.json`, installation results fixed via `bun.lock`.
-`config` directly exposes `.ts` tool entrypoints, internal relative imports also use `.ts`, no initial build needed.
-Internal boundary and style scripts execute with Bun; Vite+ loads same tools via Node.js 22.21.1 native type stripping.
-Directly executing TypeScript only solves runtime steps, does not execute complete type checking, config still checked by tsc noEmit configuration.
-Runtime packages continue using tsc to output ESM and declaration files, do not skip type checking because Bun supports TypeScript.
-
-Deployment uses Nitro Bun preset, runs `apps/web/.output/server/index.mjs` with Bun, default production port 3000.
-Currently fixed Bun 1.4.0, Node.js 22.21.1, Vite+ 1.1.0, and Nitro `3.0.260903-beta`.
-After framework and task version upgrades, re-verify SSR, hydration, interfaces, static assets, cache, and server isolation.
+New HTTP endpoints should add a contract, server handler, web adapter and route,
+and a browser client when needed. Use the shared request boundary and validated
+JSON helper. When adding provider configuration, update the env schema, its
+consumer, examples, and tests together. SQLite, Better Auth, unstorage, and
+evlog are already selected packages; application schemas, migrations, login
+routes, model integrations, and external monitoring backends are not complete
+product capabilities.

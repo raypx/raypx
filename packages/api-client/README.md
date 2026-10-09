@@ -1,211 +1,42 @@
 # @raypx/api-client
 
-Type-safe API client using Hono's `hc` (HTTP client).
+Browser-safe, same-origin JSON transport. Depends only on `@raypx/contracts`; it does not import application routes or server implementations.
 
-## Features
-
-- ✅ **End-to-end type safety** - Types flow from server to client
-- ✅ **Auto-completion** - Full IDE support
-- ✅ **REST semantics** - Standard HTTP methods
-- ✅ **Zero codegen** - Types inferred automatically
-- ✅ **Error handling** - Type-safe error responses
-
-## Quick Start
+Public entrypoints are `@raypx/api-client/health`, `@raypx/api-client/http`, and `@raypx/api-client/errors`. The root entrypoint re-exports them.
 
 ```typescript
-import { apiClient, getUsers, getUser } from '@raypx/api-client';
+import { checkHealth } from "@raypx/api-client/health";
+import { requestJson } from "@raypx/api-client/http";
+import { healthResponseSchema } from "@raypx/contracts/health";
 
-// Method 1: Direct client usage
-const res = await apiClient.users.$get();
-const users = await res.json(); // Fully typed!
-
-// Method 2: Helper functions
-const users = await getUsers();
-const user = await getUser('123');
-```
-
-## API Reference
-
-### `apiClient`
-
-Direct access to the type-safe Hono client.
-
-```typescript
-import { apiClient } from '@raypx/api-client';
-
-// GET /api/users
-const res = await apiClient.users.$get();
-const users = await res.json();
-
-// GET /api/users/:id
-const res = await apiClient.users[':id'].$get({
-  param: { id: '123' }
-});
-const user = await res.json();
-
-// POST /api/users
-const res = await apiClient.users.$post({
-  json: { name: 'John', email: 'john@example.com' }
-});
-const newUser = await res.json();
-
-// DELETE /api/users/:id
-const res = await apiClient.users[':id'].$delete({
-  param: { id: '123' }
+const controller = new AbortController();
+const health = await checkHealth({ signal: controller.signal, timeoutMs: 5000 });
+const retriedHealth = await requestJson({
+  path: "/api/health",
+  schema: healthResponseSchema,
+  signal: controller.signal,
+  retry: { maxRetries: 2, delayMs: 100 },
 });
 ```
 
-### Helper Functions
+`requestJson({ path, schema, method?, body?, headers?, signal?, timeoutMs?, retry? })` requires an absolute same-origin path beginning with a single `/`. It sets `mode` and `credentials` to `same-origin`, requests JSON, and validates the response using the supplied `parse(unknown)` schema. JSON request bodies reject cycles, non-finite numbers, and non-JSON objects. GET and HEAD cannot contain bodies. HEAD passes `undefined` to the response schema because HTTP HEAD has no response body.
 
-#### `healthCheck()`
-
-Check API health status.
+The default 5000 ms timeout covers the complete operation, including response reading and retry delays. Caller cancellation is preserved. Retry is disabled by default; explicit retries are limited to GET/HEAD, at most three retries and a delay of 0–1000 ms. Only network failures and HTTP 408, 429, 500, 502, 503, and 504 are retried. Invalid response contracts, cancellation, and timeouts are never retried. Writes cannot opt into retries.
 
 ```typescript
-const health = await healthCheck();
-console.log(health.status); // "ok"
-```
-
-#### `getUsers()`
-
-Get all users.
-
-```typescript
-const users = await getUsers();
-console.log(users); // User[]
-```
-
-#### `getUser(id)`
-
-Get user by ID.
-
-```typescript
-try {
-  const user = await getUser('123');
-  console.log(user.name);
-} catch (error) {
-  console.error('User not found');
-}
-```
-
-#### `createUser(data)`
-
-Create a new user.
-
-```typescript
-const user = await createUser({
-  name: 'John Doe',
-  email: 'john@example.com'
-});
-```
-
-#### `deleteUser(id)`
-
-Delete a user.
-
-```typescript
-await deleteUser('123');
-```
-
-## Usage in Components
-
-```typescript
-import { getUsers, createUser } from '@raypx/api-client';
-import { useState, useEffect } from 'react';
-
-function UserList() {
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    getUsers().then(setUsers);
-  }, []);
-
-  const handleCreate = async () => {
-    const newUser = await createUser({
-      name: 'New User',
-      email: 'new@example.com'
-    });
-    
-    setUsers([...users, newUser]);
-  };
-
-  return (
-    <div>
-      {users.map(user => (
-        <div key={user.id}>{user.name}</div>
-      ))}
-      <button onClick={handleCreate}>Add User</button>
-    </div>
-  );
-}
-```
-
-## Error Handling
-
-```typescript
-import { getUser } from '@raypx/api-client';
+import { ApiClientError } from "@raypx/api-client/errors";
 
 try {
-  const user = await getUser('invalid-id');
+  await checkHealth();
 } catch (error) {
-  if (error.message === 'User not found') {
-    // Handle 404
-  } else {
-    // Handle other errors
+  if (error instanceof ApiClientError) {
+    console.info(error.kind, error.code, error.status, error.requestId);
   }
 }
 ```
 
-## Type Safety
+`ApiClientError.kind` is `http`, `network`, `timeout`, `aborted`, `invalid-request`, or `invalid-response`. Valid server errors preserve their public `code`, `message`, field `errors`, and `requestId`; the `x-request-id` header is a fallback. Raw response bodies are never used as error messages. Non-JSON bodies, malformed JSON, and invalid success/error schemas are rejected. HEAD failures use the HTTP status and request ID header without requiring an error body. Timeout and cancellation errors retain the names `TimeoutError` and `AbortError`, with the original reason in `cause`.
 
-The client automatically infers types from the server:
+The health helper keeps its existing `signal` and `timeoutMs` options and uses the shared transport. Readiness probes have a dedicated response contract, including HTTP 503, and should be consumed by infrastructure probes rather than this business JSON transport.
 
-```typescript
-// Server defines this route:
-app.get('/users/:id', (c) => {
-  return c.json({ id: 1, name: 'John', email: 'john@example.com' });
-});
-
-// Client knows the exact return type!
-const res = await apiClient.users[':id'].$get({ param: { id: '1' } });
-const user = await res.json();
-
-// TypeScript knows:
-user.id     // number
-user.name   // string
-user.email  // string
-user.foo    // ❌ Type error - property doesn't exist
-```
-
-## Adding New Endpoints
-
-1. **Define route in server:**
-
-```typescript
-// apps/web/server/api/routes/posts.ts
-export const postRoutes = new Hono()
-  .get('/', (c) => c.json([/* posts */]))
-  .get('/:id', (c) => c.json({ id: 1, title: 'Post' }));
-```
-
-2. **Mount in main API:**
-
-```typescript
-// apps/web/server/api/index.ts
-import { postRoutes } from './routes/posts';
-
-const api = new Hono()
-  .route('/posts', postRoutes);
-```
-
-3. **Use in client (types flow automatically):**
-
-```typescript
-// Anywhere in your app
-const res = await apiClient.posts.$get();
-const posts = await res.json(); // Typed!
-```
-
----
-
-**Type-safe REST APIs made simple** 🎯
+To add an endpoint, define its schema in `contracts`, implement the server route through `api` and the web server adapter, then add a client function calling `requestJson`. UI components receive data and callbacks; Hooks manage request lifecycle.

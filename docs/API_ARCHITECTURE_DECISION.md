@@ -3,6 +3,7 @@
 ## Current State
 
 **Current Stack:**
+
 - TanStack Start (file-based routing)
 - Zod for validation
 - Manual API client
@@ -19,23 +20,24 @@
 End-to-end type-safe RPC framework, similar to tRPC.
 
 **Architecture:**
+
 ```typescript
 // Server
-import { createRouter } from 'orpc';
+import { createRouter } from "orpc";
 
-const userRouter = createRouter()
-  .query('getUser', {
-    input: z.object({ id: z.string() }),
-    resolve: async ({ input }) => {
-      return db.select().from(users).where(eq(users.id, input.id));
-    },
-  });
+const userRouter = createRouter().query("getUser", {
+  input: z.object({ id: z.string() }),
+  resolve: async ({ input }) => {
+    return db.select().from(users).where(eq(users.id, input.id));
+  },
+});
 
 // Client (auto-typed)
-const user = await client.user.getUser({ id: '123' }); // Fully typed!
+const user = await client.user.getUser({ id: "123" }); // Fully typed!
 ```
 
 ### Pros
+
 - ✅ **End-to-end type safety** - No manual typing
 - ✅ **No code generation** - Types flow naturally
 - ✅ **Better DX** - Auto-complete everywhere
@@ -43,12 +45,14 @@ const user = await client.user.getUser({ id: '123' }); // Fully typed!
 - ✅ **Zod integration** - Already using it
 
 ### Cons
+
 - ❌ **New dependency** - Another abstraction layer
 - ❌ **Learning curve** - Different mental model
 - ❌ **Less REST-ful** - RPC style, not REST
 - ❌ **Coupling** - Client depends on server types
 
 ### Best For
+
 - Internal APIs
 - Monorepo apps
 - Type-safety fanatics
@@ -63,28 +67,29 @@ const user = await client.user.getUser({ id: '123' }); // Fully typed!
 Type-safe HTTP client for Hono APIs.
 
 **Architecture:**
+
 ```typescript
 // Server (Hono)
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
-const app = new Hono()
-  .get('/users/:id', (c) => {
-    const id = c.req.param('id');
-    return c.json({ id, name: 'John' });
-  });
+const app = new Hono().get("/users/:id", (c) => {
+  const id = c.req.param("id");
+  return c.json({ id, name: "John" });
+});
 
 export type AppType = typeof app;
 
 // Client (hc)
-import { hc } from 'hono/client';
-import type { AppType } from './server';
+import { hc } from "hono/client";
+import type { AppType } from "./server";
 
-const client = hc<AppType>('/api');
-const res = await client.users[':id'].$get({ param: { id: '123' } });
+const client = hc<AppType>("/api");
+const res = await client.users[":id"].$get({ param: { id: "123" } });
 const data = await res.json(); // Typed!
 ```
 
 ### Pros
+
 - ✅ **Type-safe REST** - Keeps REST semantics
 - ✅ **Lightweight** - Hono is fast
 - ✅ **Standard HTTP** - Uses fetch, standard methods
@@ -92,11 +97,13 @@ const data = await res.json(); // Typed!
 - ✅ **Modern** - Great DX, simple API
 
 ### Cons
+
 - ⚠️ **Replaces TanStack Start routing** - Need migration
 - ⚠️ **Less integrated** - Not built for TanStack Start
 - ⚠️ **Extra setup** - Need to export types carefully
 
 ### Best For
+
 - REST APIs
 - Public APIs
 - Mixed client types (mobile, web)
@@ -111,6 +118,7 @@ const data = await res.json(); // Typed!
 Universal server toolkit (already used by TanStack Start).
 
 **Architecture:**
+
 ```typescript
 // Current: All in TanStack Start routes
 apps/web/src/routes/api.*.ts
@@ -132,6 +140,7 @@ apps/web/
 ```
 
 ### Pros
+
 - ✅ **Already using it** - TanStack Start uses Nitro
 - ✅ **Separation** - Clear API/frontend split
 - ✅ **Scalability** - Can deploy API separately
@@ -139,12 +148,14 @@ apps/web/
 - ✅ **Flexibility** - Can use any client library
 
 ### Cons
+
 - ⚠️ **Deployment complexity** - Two apps to deploy
 - ⚠️ **CORS** - Need to handle cross-origin
 - ⚠️ **Type sharing** - Manual type exports
 - ⚠️ **Overhead** - Might be overkill for template
 
 ### Best For
+
 - Microservices
 - Separate API/frontend teams
 - When API scales independently
@@ -154,16 +165,16 @@ apps/web/
 
 ## Comparison Matrix
 
-| Aspect | oRPC | Hono hc | Nitro Split | Current (TanStack) |
-|--------|------|---------|-------------|-------------------|
-| **Type Safety** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
-| **Setup Complexity** | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **REST Semantics** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **DX** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
-| **Scalability** | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Public API** | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Learning Curve** | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **Deployment** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Aspect               | oRPC       | Hono hc    | Nitro Split | Current (TanStack) |
+| -------------------- | ---------- | ---------- | ----------- | ------------------ |
+| **Type Safety**      | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐             |
+| **Setup Complexity** | ⭐⭐⭐     | ⭐⭐⭐⭐   | ⭐⭐        | ⭐⭐⭐⭐⭐         |
+| **REST Semantics**   | ⭐⭐       | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐  | ⭐⭐⭐⭐⭐         |
+| **DX**               | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐             |
+| **Scalability**      | ⭐⭐⭐     | ⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐  | ⭐⭐⭐             |
+| **Public API**       | ⭐⭐       | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐  | ⭐⭐⭐⭐⭐         |
+| **Learning Curve**   | ⭐⭐⭐     | ⭐⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐⭐⭐         |
+| **Deployment**       | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐      | ⭐⭐⭐⭐⭐         |
 
 ---
 
@@ -194,15 +205,15 @@ apps/web/src/
 
 ```typescript
 // apps/web/server/api/index.ts
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
 const api = new Hono()
-  .get('/users/:id', async (c) => {
-    const id = c.req.param('id');
+  .get("/users/:id", async (c) => {
+    const id = c.req.param("id");
     const user = await getUser(id);
     return c.json(user);
   })
-  .post('/users', async (c) => {
+  .post("/users", async (c) => {
     const body = await c.req.json();
     const user = await createUser(body);
     return c.json(user, 201);
@@ -212,10 +223,10 @@ export type ApiType = typeof api;
 export default api;
 
 // apps/web/src/routes/api.$.ts (mount Hono)
-import { createFileRoute } from '@tanstack/react-router';
-import api from '../../server/api';
+import { createFileRoute } from "@tanstack/react-router";
+import api from "../../server/api";
 
-export const Route = createFileRoute('/api/$')({
+export const Route = createFileRoute("/api/$")({
   server: {
     handlers: {
       GET: ({ request }) => api.fetch(request),
@@ -227,13 +238,13 @@ export const Route = createFileRoute('/api/$')({
 });
 
 // packages/api-client/src/index.ts
-import { hc } from 'hono/client';
-import type { ApiType } from '@raypx/api';
+import { hc } from "hono/client";
+import type { ApiType } from "@raypx/api";
 
-export const client = hc<ApiType>('/api');
+export const client = hc<ApiType>("/api");
 
 // Usage in components
-const res = await client.users[':id'].$get({ param: { id: '123' } });
+const res = await client.users[":id"].$get({ param: { id: "123" } });
 const user = await res.json(); // Fully typed!
 ```
 
@@ -267,7 +278,7 @@ If you prefer RPC style over REST:
 
 ```typescript
 // packages/api/src/router.ts
-import { createRouter } from 'orpc';
+import { createRouter } from "orpc";
 
 export const userRouter = createRouter({
   getUser: {
@@ -287,11 +298,11 @@ export const userRouter = createRouter({
 });
 
 // Client
-import { createClient } from 'orpc/client';
-import type { userRouter } from '@raypx/api';
+import { createClient } from "orpc/client";
+import type { userRouter } from "@raypx/api";
 
-const client = createClient<typeof userRouter>('/api');
-const user = await client.getUser({ id: '123' }); // Typed!
+const client = createClient<typeof userRouter>("/api");
+const user = await client.getUser({ id: "123" }); // Typed!
 ```
 
 ---
@@ -299,12 +310,14 @@ const user = await client.getUser({ id: '123' }); // Typed!
 ## Don't Do: Nitro Split (Yet)
 
 **Avoid splitting into separate API app** because:
+
 - ❌ Overkill for a template
 - ❌ Complicates deployment
 - ❌ Users expect simple structure
 - ❌ Can always split later
 
 **When to split:**
+
 - API needs separate scaling
 - Different teams own API/frontend
 - Multiple frontend consumers
@@ -341,6 +354,7 @@ Show users both approaches in docs
 ### For Raypx Template: Use Hono hc ⭐
 
 **Reasons:**
+
 1. ✅ Type-safe without RPC abstraction
 2. ✅ Keeps REST semantics
 3. ✅ Lightweight addition
@@ -348,6 +362,7 @@ Show users both approaches in docs
 5. ✅ Great DX
 
 **Don't use:**
+
 - ❌ Nitro split (overkill)
 - ⚠️ oRPC (unless you prefer RPC style)
 

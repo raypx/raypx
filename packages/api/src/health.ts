@@ -1,39 +1,22 @@
-import type { HealthResponse } from "@raypx/contracts/health";
+import type { HealthResponse, ReadinessResponse } from "@raypx/contracts/health";
+import { errorResponse, HttpError } from "./http.js";
+import type { RuntimeLifecycle } from "./runtime.js";
 
-/**
- * Health check endpoint handler
- *
- * Returns server status information for monitoring and load balancer probing
- *
- * @returns JSON response containing status and service fields
- *
- * @example
- * ```typescript
- * // Use in route
- * export const Route = createFileRoute("/api/health")({
- *   server: { handlers: { GET: healthResponse } },
- * });
- * ```
- */
+/** Lightweight liveness probe; it does not connect unused dependencies. */
 export function healthResponse(): Response {
   return Response.json({ status: "ok", service: "raypx-api" } satisfies HealthResponse);
 }
 
-/**
- * API 404 handler
- *
- * Catches unmatched /api/* paths, returns standardized JSON error response
- *
- * @returns JSON error response with status 404
- *
- * @example
- * ```typescript
- * // Use in wildcard route
- * export const Route = createFileRoute("/api/$")({
- *   server: { handlers: { GET: apiNotFoundResponse } },
- * });
- * ```
- */
+/** Reports initialization and the health of registered required dependencies. */
+export async function readinessResponse(runtime: RuntimeLifecycle): Promise<Response> {
+  const result = await runtime.checkReadiness();
+  return Response.json({ ...result, service: "raypx-api" } satisfies ReadinessResponse, {
+    status: result.status === "ok" ? 200 : 503,
+    headers: { "cache-control": "no-store" },
+  });
+}
+
+/** Unknown API routes use the same public error contract as business failures. */
 export function apiNotFoundResponse(): Response {
-  return Response.json({ error: "Not found" }, { status: 404 });
+  return errorResponse(new HttpError("NOT_FOUND"));
 }

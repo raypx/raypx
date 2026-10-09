@@ -56,6 +56,7 @@ packages/
 ```
 
 **Communication Flow:**
+
 ```
 ┌─────────────┐         IPC/HTTP        ┌─────────────┐
 │   Desktop   │ ◄──────────────────────► │   CLI App   │
@@ -134,24 +135,24 @@ raypx worker stop      # Stop worker
 
 ```typescript
 // In desktop app (Tauri/Electron)
-import { WorkerClient } from '@raypx/desktop-api';
+import { WorkerClient } from "@raypx/desktop-api";
 
 const client = new WorkerClient();
 
 // Start development server
-await client.execute('dev', {
+await client.execute("dev", {
   port: 3000,
   watch: true,
 });
 
 // Watch build progress
-client.on('build:progress', (progress) => {
+client.on("build:progress", (progress) => {
   updateUI(progress);
 });
 
 // Run database migration
-await client.execute('db:migrate', {
-  env: 'development',
+await client.execute("db:migrate", {
+  env: "development",
 });
 ```
 
@@ -161,16 +162,16 @@ await client.execute('db:migrate', {
 
 ```typescript
 // packages/worker/src/tasks/build.ts
-import { defineTask } from '@raypx/worker';
+import { defineTask } from "@raypx/worker";
 
 export const buildTask = defineTask({
-  name: 'build',
+  name: "build",
   async execute(options) {
     // Build logic
-    this.emit('progress', { percent: 50 });
-    
+    this.emit("progress", { percent: 50 });
+
     const result = await build(options);
-    
+
     return result;
   },
 });
@@ -184,24 +185,24 @@ export const buildTask = defineTask({
 
 ```typescript
 // packages/worker/src/manager.ts
-import { Worker } from 'node:worker_threads';
+import { Worker } from "node:worker_threads";
 
 export class WorkerManager {
   private workers: Map<string, Worker> = new Map();
 
   async execute(taskName: string, options: any) {
-    const worker = new Worker('./tasks/' + taskName + '.js');
-    
+    const worker = new Worker("./tasks/" + taskName + ".js");
+
     return new Promise((resolve, reject) => {
-      worker.on('message', (result) => {
-        if (result.type === 'complete') {
+      worker.on("message", (result) => {
+        if (result.type === "complete") {
           resolve(result.data);
-        } else if (result.type === 'progress') {
-          this.emit('progress', result.data);
+        } else if (result.type === "progress") {
+          this.emit("progress", result.data);
         }
       });
-      
-      worker.on('error', reject);
+
+      worker.on("error", reject);
       worker.postMessage(options);
     });
   }
@@ -220,14 +221,14 @@ export class WorkerManager {
 // packages/worker/src/ipc/protocol.ts
 export interface WorkerMessage {
   id: string;
-  type: 'execute' | 'cancel' | 'status';
+  type: "execute" | "cancel" | "status";
   task: string;
   options?: any;
 }
 
 export interface WorkerResponse {
   id: string;
-  type: 'progress' | 'complete' | 'error';
+  type: "progress" | "complete" | "error";
   data: any;
 }
 
@@ -235,7 +236,7 @@ export interface WorkerStatus {
   running: boolean;
   tasks: Array<{
     name: string;
-    status: 'pending' | 'running' | 'complete';
+    status: "pending" | "running" | "complete";
     progress?: number;
   }>;
 }
@@ -245,9 +246,9 @@ export interface WorkerStatus {
 
 ```typescript
 // packages/desktop-api/src/server.ts
-import { createServer } from 'node:http';
-import { WebSocketServer } from 'ws';
-import { WorkerManager } from '@raypx/worker';
+import { createServer } from "node:http";
+import { WebSocketServer } from "ws";
+import { WorkerManager } from "@raypx/worker";
 
 export class DesktopAPIServer {
   private wss: WebSocketServer;
@@ -255,29 +256,28 @@ export class DesktopAPIServer {
 
   constructor(port = 9000) {
     this.manager = new WorkerManager();
-    
+
     const server = createServer();
     this.wss = new WebSocketServer({ server });
-    
-    this.wss.on('connection', (ws) => {
-      ws.on('message', async (data) => {
+
+    this.wss.on("connection", (ws) => {
+      ws.on("message", async (data) => {
         const message = JSON.parse(data.toString());
-        
-        if (message.type === 'execute') {
-          const result = await this.manager.execute(
-            message.task,
-            message.options
+
+        if (message.type === "execute") {
+          const result = await this.manager.execute(message.task, message.options);
+
+          ws.send(
+            JSON.stringify({
+              id: message.id,
+              type: "complete",
+              data: result,
+            }),
           );
-          
-          ws.send(JSON.stringify({
-            id: message.id,
-            type: 'complete',
-            data: result,
-          }));
         }
       });
     });
-    
+
     server.listen(port);
   }
 }
@@ -290,17 +290,17 @@ export class DesktopAPIServer {
 export class WorkerClient extends EventEmitter {
   private ws: WebSocket;
 
-  constructor(url = 'ws://localhost:9000') {
+  constructor(url = "ws://localhost:9000") {
     super();
     this.ws = new WebSocket(url);
-    
-    this.ws.on('message', (data) => {
+
+    this.ws.on("message", (data) => {
       const response = JSON.parse(data.toString());
-      
-      if (response.type === 'progress') {
-        this.emit('progress', response.data);
-      } else if (response.type === 'complete') {
-        this.emit('complete', response.data);
+
+      if (response.type === "progress") {
+        this.emit("progress", response.data);
+      } else if (response.type === "complete") {
+        this.emit("complete", response.data);
       }
     });
   }
@@ -308,22 +308,24 @@ export class WorkerClient extends EventEmitter {
   async execute(task: string, options?: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const id = crypto.randomUUID();
-      
+
       const handler = (response: any) => {
-        if (response.id === id && response.type === 'complete') {
+        if (response.id === id && response.type === "complete") {
           resolve(response.data);
-          this.off('message', handler);
+          this.off("message", handler);
         }
       };
-      
-      this.on('message', handler);
-      
-      this.ws.send(JSON.stringify({
-        id,
-        type: 'execute',
-        task,
-        options,
-      }));
+
+      this.on("message", handler);
+
+      this.ws.send(
+        JSON.stringify({
+          id,
+          type: "execute",
+          task,
+          options,
+        }),
+      );
     });
   }
 }
@@ -352,7 +354,7 @@ async fn execute_task(task: String, options: serde_json::Value) -> Result<String
         .send()
         .await
         .map_err(|e| e.to_string())?;
-    
+
     Ok(response.text().await.unwrap())
 }
 
@@ -366,15 +368,15 @@ fn main() {
 
 ```typescript
 // Desktop app frontend
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from "@tauri-apps/api/tauri";
 
 async function runBuild() {
-  const result = await invoke('execute_task', {
-    task: 'build',
+  const result = await invoke("execute_task", {
+    task: "build",
     options: { production: true },
   });
-  
-  console.log('Build complete:', result);
+
+  console.log("Build complete:", result);
 }
 ```
 
@@ -386,26 +388,26 @@ async function runBuild() {
 
 ```typescript
 // packages/worker/src/tasks/build.ts
-import { watch } from 'node:fs';
-import { defineTask } from '../worker';
+import { watch } from "node:fs";
+import { defineTask } from "../worker";
 
 export const buildWatchTask = defineTask({
-  name: 'build:watch',
-  
+  name: "build:watch",
+
   async execute(options: { cwd: string }) {
     const watcher = watch(options.cwd, { recursive: true });
-    
-    watcher.on('change', async (eventType, filename) => {
-      this.emit('file-changed', { filename });
-      
-      this.emit('progress', { status: 'building' });
-      
+
+    watcher.on("change", async (eventType, filename) => {
+      this.emit("file-changed", { filename });
+
+      this.emit("progress", { status: "building" });
+
       // Run build
       await runBuild();
-      
-      this.emit('progress', { status: 'complete' });
+
+      this.emit("progress", { status: "complete" });
     });
-    
+
     // Keep running
     await new Promise(() => {});
   },
@@ -416,24 +418,24 @@ export const buildWatchTask = defineTask({
 
 ```typescript
 // packages/worker/src/tasks/db-migrate.ts
-import { defineTask } from '../worker';
-import { getDatabase } from '@raypx/db';
-import { migrate } from 'drizzle-orm/migrator';
+import { defineTask } from "../worker";
+import { getDatabase } from "@raypx/db";
+import { migrate } from "drizzle-orm/migrator";
 
 export const migrateTask = defineTask({
-  name: 'db:migrate',
-  
+  name: "db:migrate",
+
   async execute(options: { env: string }) {
-    this.emit('progress', { status: 'connecting' });
-    
+    this.emit("progress", { status: "connecting" });
+
     const db = getDatabase();
-    
-    this.emit('progress', { status: 'migrating', percent: 50 });
-    
-    await migrate(db, { migrationsFolder: './migrations' });
-    
-    this.emit('progress', { status: 'complete', percent: 100 });
-    
+
+    this.emit("progress", { status: "migrating", percent: 50 });
+
+    await migrate(db, { migrationsFolder: "./migrations" });
+
+    this.emit("progress", { status: "complete", percent: 100 });
+
     return { success: true };
   },
 });

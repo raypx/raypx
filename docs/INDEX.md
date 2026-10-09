@@ -13,12 +13,15 @@
 ## docs/ Directory
 
 ### User Documentation
+
 - **ARCHITECTURE.md** - System architecture overview
 - **DOCKER.md** - Docker deployment guide
 - **BUN_CATALOG.md** - Dependency management
 
 ### Package Documentation
+
 Each package has its own README.md:
+
 - `packages/logger/README.md`
 - `packages/db/README.md`
 - `packages/auth/README.md`

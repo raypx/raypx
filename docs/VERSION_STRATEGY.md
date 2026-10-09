@@ -7,9 +7,9 @@
 ```json
 {
   "catalog": {
-    "evlog": "2.30.1",           // Exact version
-    "unstorage": "1.14.1",       // Exact version
-    "better-auth": "1.6.1"       // Exact version
+    "evlog": "2.30.1", // Exact version
+    "unstorage": "1.14.1", // Exact version
+    "better-auth": "1.6.1" // Exact version
   }
 }
 ```
@@ -56,13 +56,14 @@
 ```json
 {
   "catalog": {
-    "evlog": "^2.30.1",          // 2.30.1 <= version < 3.0.0
-    "unstorage": "^1.14.1"       // 1.14.1 <= version < 2.0.0
+    "evlog": "^2.30.1", // 2.30.1 <= version < 3.0.0
+    "unstorage": "^1.14.1" // 1.14.1 <= version < 2.0.0
   }
 }
 ```
 
 **Allows:**
+
 - ✅ Minor updates (1.14.1 → 1.15.0)
 - ✅ Patch updates (1.14.1 → 1.14.2)
 - ❌ Major updates (1.x.x → 2.x.x)
@@ -74,13 +75,14 @@
 ```json
 {
   "catalog": {
-    "evlog": "~2.30.1",          // 2.30.1 <= version < 2.31.0
-    "unstorage": "~1.14.1"       // 1.14.1 <= version < 1.15.0
+    "evlog": "~2.30.1", // 2.30.1 <= version < 2.31.0
+    "unstorage": "~1.14.1" // 1.14.1 <= version < 1.15.0
   }
 }
 ```
 
 **Allows:**
+
 - ✅ Patch updates only (1.14.1 → 1.14.9)
 - ❌ Minor updates (1.14.x → 1.15.x)
 - ❌ Major updates
@@ -92,7 +94,7 @@
 ```json
 {
   "catalog": {
-    "evlog": ">=2.30.1 <3.0.0"   // Explicit range
+    "evlog": ">=2.30.1 <3.0.0" // Explicit range
   }
 }
 ```
@@ -131,7 +133,7 @@
       // Core framework (fixed for stability)
       "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0",
       "vite-plus": "1.1.0",
-      
+
       // Backend dependencies (fixed)
       "evlog": "2.30.1",
       "better-sqlite3": "11.8.1",
@@ -231,14 +233,14 @@ Use Renovate or Dependabot for PRs:
 
 ## Comparison Table
 
-| Aspect | Fixed | Caret (^) | Tilde (~) |
-|--------|-------|-----------|-----------|
-| **Predictability** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Security Patches** | Manual | Auto | Auto |
-| **Breaking Changes** | Never | Rare | Never |
-| **Maintenance** | Manual | Automated | Automated |
-| **Stability** | Highest | Medium | High |
-| **Freshness** | Manual | Automatic | Automatic |
+| Aspect               | Fixed      | Caret (^) | Tilde (~) |
+| -------------------- | ---------- | --------- | --------- |
+| **Predictability**   | ⭐⭐⭐⭐⭐ | ⭐⭐⭐    | ⭐⭐⭐⭐  |
+| **Security Patches** | Manual     | Auto      | Auto      |
+| **Breaking Changes** | Never      | Rare      | Never     |
+| **Maintenance**      | Manual     | Automated | Automated |
+| **Stability**        | Highest    | Medium    | High      |
+| **Freshness**        | Manual     | Automatic | Automatic |
 
 ---
 
@@ -247,6 +249,7 @@ Use Renovate or Dependabot for PRs:
 ### Keep Fixed Versions ✅
 
 **Rationale:**
+
 1. It's a **Forge template** - users clone a working baseline
 2. Predictability > Freshness for templates
 3. Users can upgrade on their own schedule
@@ -254,21 +257,26 @@ Use Renovate or Dependabot for PRs:
 5. Documentation stays accurate
 
 **But Provide Easy Updates:**
+
 ```bash
 # Users can update when ready
 bun run update
 ```
 
 **Document in README:**
-```markdown
+
+````markdown
 ## Updating Dependencies
 
 This template uses fixed versions for stability.
 
 To update to latest versions:
+
 ```bash
 bun run update
 ```
+````
+
 ```
 
 ---
@@ -287,3 +295,4 @@ bun run update
 ---
 
 **Stability first, updates on demand** 🔒
+```
