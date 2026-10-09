@@ -1,0 +1,48 @@
+:root {
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #20262b;
+  background: #fafafa;
+  line-height: 1.6;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+output {
+  display: block;
+  margin: 1em 0;
+}
+main {
+  max-width: 48rem;
+  margin: 12vh auto;
+  padding: 1.5rem;
+}
+h1 {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+h2 {
+  font-size: 1.25rem;
+}
+section {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid #c7cdd2;
+}
+button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: wait;
+}
+button:focus-visible {
+  outline: 3px solid #1b626d;
+  outline-offset: 3px;
+}

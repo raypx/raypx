@@ -1,0 +1,24 @@
+{
+  "name": "@raypx/logger",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.9.1",
+    "evlog": "catalog:",
+    "hono": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@types/node": "^26.6.4",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

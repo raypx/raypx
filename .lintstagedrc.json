@@ -1,0 +1,10 @@
+{
+  "*.{ts,tsx}": [
+    "oxfmt",
+    "oxlint --fix",
+    "tsc --noEmit"
+  ],
+  "*.{json,md}": [
+    "oxfmt"
+  ]
+}

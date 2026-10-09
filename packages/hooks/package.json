@@ -1,0 +1,37 @@
+{
+  "name": "@raypx/hooks",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./health": {
+      "types": "./dist/health.d.ts",
+      "import": "./dist/health.js"
+    }
+  },
+  "dependencies": {
+    "@raypx/api-client": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@raypx/config": "workspace:*",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "jsdom": "29.0.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "19.3.0"
+  }
+}

@@ -1,0 +1,74 @@
+# Docker ignore patterns
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+CHANGELOG*
+LICENSE
+
+# Development
+.vscode/
+.idea/
+*.log
+*.swp
+*.swo
+*~
+
+# Dependencies (will be installed in container)
+node_modules/
+.bun/
+bun.lock
+
+# Build artifacts (will be built in container)
+dist/
+.output/
+.tanstack/
+coverage/
+
+# Environment files (use docker-compose env)
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+test/
+*.test.ts
+*.spec.ts
+vitest.config.ts
+
+# Temp files
+*.tmp
+.cache/
+tmp/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Database (use volume)
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Logs (use volume)
+logs/
+*.log
+
+# Development Docker files
+docker-compose.dev.yml
+Dockerfile.dev
+
+# Editor configs
+.editorconfig
+.prettierrc*
+.eslintrc*

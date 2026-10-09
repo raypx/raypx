@@ -1,0 +1,9 @@
+# @raypx/hooks
+
+React data and lifecycle logic. Implements useHealthCheck, manages connection state, retry, and unmount cancellation. Supports SSR, network requests only execute in effect.
+
+Public entrypoint: `@raypx/hooks/health`. Import via package exports, cross-package direct access to src or dist prohibited.
+
+Runtime outputs ESM and TypeScript declarations. Static TypeScript configuration provided by @raypx/tsconfig, tasks provided by @raypx/config; build uses tsconfig.json, source/test/config checks use tsconfig.test.json, task definitions in this package's vite.config.ts.
+
+Author: Zack <heyloyep@gmail.com>

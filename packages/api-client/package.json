@@ -1,0 +1,22 @@
+{
+  "name": "@raypx/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "hono": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@types/node": "^22.19.0",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

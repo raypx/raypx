@@ -1,0 +1,7 @@
+{
+  "extends": "@raypx/config/tsconfig/test.json",
+  "compilerOptions": {
+    "rootDir": "../.."
+  },
+  "include": ["src", "test", "vite.config.ts", "../../scripts/**/*.ts"]
+}

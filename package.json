@@ -1,0 +1,82 @@
+{
+  "name": "raypx",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0",
+      "vite-plus": "1.1.0",
+      "evlog": "2.30.1",
+      "better-sqlite3": "11.8.1",
+      "drizzle-orm": "0.36.4",
+      "better-auth": "1.6.1",
+      "unstorage": "1.14.1",
+      "ioredis": "5.4.2",
+      "hono": "4.7.10"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vp run --filter \"@raypx/*\" --filter \"!@raypx/web\" build && vp run --filter \"@raypx/*\" --parallel dev",
+    "build": "vp run --filter \"@raypx/*\" build",
+    "start": "vp run @raypx/web#start",
+    "lint": "vp lint --deny-warnings",
+    "format": "vp fmt",
+    "typecheck": "vp run --filter \"@raypx/*\" typecheck",
+    "test": "vp run --filter \"@raypx/*\" test",
+    "check": "vp run --filter \"@raypx/*\" build && vp fmt --check && vp lint --deny-warnings && bun packages/config/src/check-boundaries.ts && vp run --filter \"@raypx/*\" typecheck && vp run --filter \"@raypx/*\" test",
+    "lint:fix": "vp lint --fix --deny-warnings",
+    "format:check": "vp fmt --check",
+    "test:watch": "vp test watch --exclude \"**/production.test.ts\"",
+    "test:coverage": "vp run --filter \"@raypx/*\" build && vp test run --coverage",
+    "check:boundaries": "bun packages/config/src/check-boundaries.ts",
+    "check:env": "bun packages/config/src/environment.ts",
+    "preinstall": "bun packages/config/src/environment.ts",
+    "predev": "bun packages/config/src/environment.ts",
+    "prebuild": "bun packages/config/src/environment.ts",
+    "prestart": "bun packages/config/src/environment.ts",
+    "prelint": "bun packages/config/src/environment.ts",
+    "preformat": "bun packages/config/src/environment.ts",
+    "pretypecheck": "bun packages/config/src/environment.ts",
+    "pretest": "bun packages/config/src/environment.ts",
+    "precheck": "bun packages/config/src/environment.ts",
+    "prelint:fix": "bun packages/config/src/environment.ts",
+    "preformat:check": "bun packages/config/src/environment.ts",
+    "pretest:watch": "bun packages/config/src/environment.ts",
+    "pretest:coverage": "bun packages/config/src/environment.ts",
+    "precheck:boundaries": "bun packages/config/src/environment.ts"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@vitest/coverage-v8": "5.0.3",
+    "typescript": "^5.9.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "5.0.3"
+  },
+  "overrides": {
+    "vite@*": "npm:@voidzero-dev/vite-plus-core@1.1.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "bun",
+      "version": "1.4.0",
+      "onFail": "error"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "22.21.1",
+      "onFail": "error"
+    }
+  },
+  "engines": {
+    "bun": "1.4.2",
+    "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+  },
+  "packageManager": "bun@1.4.2"
+}

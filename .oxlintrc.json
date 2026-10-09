@@ -1,0 +1,67 @@
+{
+  "$schema": "https://github.com/oxc-project/oxc/raw/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["import"],
+  "rules": {
+    // Import quality checks
+    "import/no-cycle": "error",
+    "import/no-self-import": "error",
+    "import/no-duplicates": "warn",
+
+    // Restrict Node.js built-ins in browser packages
+    "no-restricted-imports": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "packages/contracts/src/**/*.ts",
+        "packages/api-client/src/**/*.ts",
+        "packages/hooks/src/**/*.tsx",
+        "packages/ui/src/**/*.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["node:*", "bun:*"],
+                "message": "Node.js/Bun built-ins cannot be used in browser packages"
+              },
+              {
+                "group": [
+                  "@raypx/api",
+                  "@raypx/ai",
+                  "@raypx/auth",
+                  "@raypx/db",
+                  "@raypx/storage",
+                  "@raypx/logger"
+                ],
+                "message": "Browser packages cannot import server-only packages"
+              },
+              {
+                "group": ["@raypx/env/server"],
+                "message": "Browser packages cannot import server environment config"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@raypx/config", "@raypx/tsconfig"],
+                "message": "Runtime code cannot import engineering packages"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

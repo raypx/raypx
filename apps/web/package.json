@@ -1,0 +1,27 @@
+{
+  "name": "@raypx/web",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "type": "module",
+  "dependencies": {
+    "@raypx/api": "workspace:*",
+    "@raypx/hooks": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
+    "nitro": "3.0.260903-beta",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@raypx/contracts": "workspace:*",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@raypx/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./health": {
+      "types": "./dist/health.d.ts",
+      "import": "./dist/health.js"
+    }
+  },
+  "dependencies": {
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@raypx/config": "workspace:*",
+    "@types/node": "^22.19.0",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

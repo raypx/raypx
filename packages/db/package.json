@@ -1,0 +1,26 @@
+{
+  "name": "@raypx/db",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@raypx/logger": "workspace:*",
+    "better-sqlite3": "catalog:",
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.19.0",
+    "drizzle-kit": "^0.28.1",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

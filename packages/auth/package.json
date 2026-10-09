@@ -1,0 +1,25 @@
+{
+  "name": "@raypx/auth",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Zack <heyloyep@gmail.com>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@raypx/db": "workspace:*",
+    "@raypx/logger": "workspace:*",
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx/config": "workspace:*",
+    "@types/node": "^22.19.0",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}
