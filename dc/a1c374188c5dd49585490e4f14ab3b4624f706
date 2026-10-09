@@ -1,0 +1,619 @@
+packages/config/test/vite.test.ts
+  s_38400043e27b33::t_036f6e14cc64d4 8-9
+  s_38400043e27b33::t_8f27d02e690106 60-61,84
+  s_38400043e27b33::t_eee0700eca5e88 22-25,88,94-95,125,129,131,136-137,139,154-169
+  s_38400043e27b33::t_006a9824de9737 2-4,7,10-13,17-21,31-32,48-59,69-72,96-99,105-121,132-135,170
+  s_38400043e27b33::t_28a73936ece050 1,5-6,130,140-143,153
+  s_38400043e27b33::t_866392b44246e5 126-128,144-152
+  s_38400043e27b33::t_a3316a8a1faee2 62-68
+  s_38400043e27b33::t_56c8480c3e9c97 138
+  s_38400043e27b33::t_f9a87908493c57 89-91
+  s_38400043e27b33::t_12acb3c8854ad9 14-16,26-30,33-47,73-83,85-87,92-93,100-104,122-124
+.vscode/extensions.json
+  s_38400043e27b33::t_ddde3b1a8cae35 1-3
+.oxlintrc.json
+  s_38400043e27b33::t_84b80e6bfd499d 31-38
+  s_38400043e27b33::t_3206528cb81418 1-30,39-67
+packages/config/src/environment.ts
+  s_38400043e27b33::t_8733811290a62e 109-111,114-116
+  s_38400043e27b33::t_f7cedd7c960045 64
+  s_38400043e27b33::t_e68b931bcafabb 62-63
+  s_38400043e27b33::t_6f603d90b51a83 1-61,65-71,75-108,112-113,117-118
+  s_38400043e27b33::t_988372187033a1 72-74
+packages/db/tsconfig.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 8
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+packages/ui/src/index.tsx
+  s_38400043e27b33::t_db6992c548ab36 1-19
+packages/hooks/test/health.test.tsx
+  s_38400043e27b33::t_d9c11a2039e074 87,108,127
+  s_38400043e27b33::t_3d60d09121e2bb 7,121,152
+  s_38400043e27b33::t_0175d5efd79403 1-3,5-6,8-9,11-34,45-86,88-107,109-120,122-126,128-151,153-170
+  s_38400043e27b33::t_b5c0aca2e4d27c 10
+  s_38400043e27b33::t_fb272356676ade 4,35-44
+packages/ui/test/components.test.tsx
+  s_38400043e27b33::t_0175d5efd79403 1-9,11-20,22-51
+  s_38400043e27b33::t_3d60d09121e2bb 10,21
+packages/api/test/health.test.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1-16
+packages/api/README.md
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+packages/storage/vite.config.ts
+  s_38400043e27b33::t_6b0b33c2c18a7a 4-9
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+packages/auth/src/index.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 8,22,46,61,67-101
+  s_500b9b4bd4679b::t_901ebae5abc1a6 1-7,9-21,23-45,47-60,62-66
+README.md
+  s_38400043e27b33::t_c619d420df1596 14,20
+  s_38400043e27b33::t_6e09a0793831a2 4,27-29,37,39,55-57,79-80,85-87,93,96-97,110-113,115-116,125-126,128-129,132-140
+  s_38400043e27b33::t_2096b144522446 1-2,6-9,13,21,25-26,34-36,58-60,117-120,123
+  s_38400043e27b33::t_16313373875b28 40-52
+  s_38400043e27b33::t_181e66e9b8f8cd 5
+  s_38400043e27b33::t_dfd16b22f9eab2 15-19,22,70
+  s_38400043e27b33::t_821308d475d3cd 3,11-12,23-24,30-33,61-69,71-78,88,104-107,121-122,127
+  s_38400043e27b33::t_b4cfc1b0e927fa 53-54
+  s_38400043e27b33::t_2b89305c4a355b 89-91,102-103,108-109,114
+  s_38400043e27b33::t_acb20de1ae0997 82,84
+  s_38400043e27b33::t_ddde3b1a8cae35 92,98-101
+  s_38400043e27b33::t_f3c23548e7d3bd 94-95
+  s_38400043e27b33::t_877bdeb910e0f7 38,81,83
+  s_38400043e27b33::t_3f9a179cfb1d98 124,130-131,141
+  s_38400043e27b33::t_d108af1ba87e93 10
+packages/hooks/vite.config.ts
+  s_38400043e27b33::t_6b0b33c2c18a7a 4-6
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+packages/config/test/boundaries.test.ts
+  s_38400043e27b33::t_5c4e56814765f3 65-66,70
+  s_38400043e27b33::t_9e20355aae6a80 1-4,6-9,13-17,27-28,46-58,67-69,71-73,81-87,90-91,188-190,194,201-206,218-222,234-241,247
+  s_38400043e27b33::t_036f6e14cc64d4 5,78,105
+  s_38400043e27b33::t_12acb3c8854ad9 10-12,22-26,29-41,44-45,59-64,74-77,79-80,88-89,92-97,191-193,195-200,207-216,223-233,242-246
+  s_38400043e27b33::t_eee0700eca5e88 18-21
+  s_38400043e27b33::t_742a8a431954fe 101-104,106-116,186-187
+  s_38400043e27b33::t_a3316a8a1faee2 42-43,122-128,133-134,140-159,165-178,180-185
+  s_38400043e27b33::t_8f27d02e690106 117-121,129-132,135-139,160-164,179
+  s_38400043e27b33::t_86724558842e95 98-99,248,250-251,254-255,257,259,261
+  s_38400043e27b33::t_b36a75bd36da20 249,252-253,256,258,260
+  s_38400043e27b33::t_006a9824de9737 217
+  s_38400043e27b33::t_547f1a66ecff24 100
+apps/web/vite.config.ts
+  s_38400043e27b33::t_c8f49ac373c36c 34,58
+  s_38400043e27b33::t_2096b144522446 8
+  s_38400043e27b33::t_1268e62b281065 1,10-11,13,39-43
+  s_38400043e27b33::t_609915a18af938 7,9,14-22,37-38,44-50,56-57,59-61,63-66
+  s_38400043e27b33::t_72da42042b75dd 51-53
+  s_38400043e27b33::t_9b76854c690d86 2-6,12,23-33,35-36,54
+  s_38400043e27b33::t_bfdc1f8a34a40b 55
+  s_38400043e27b33::t_e1d43fbf6f1eb3 62
+apps/web/src/routes/index.tsx
+  s_38400043e27b33::t_609915a18af938 1-4
+packages/ui/package.json
+  s_38400043e27b33::t_83d80c0646f528 24
+  s_38400043e27b33::t_a5d67c00d3c55a 1-14,19-20,23,30-31
+  s_38400043e27b33::t_ed8b39441c8214 15-16,26
+  s_38400043e27b33::t_6b0b33c2c18a7a 17-18,21-22,25,27-29
+packages/contracts/README.md
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+packages/hooks/tsconfig.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+  s_38400043e27b33::t_6b0b33c2c18a7a 8
+packages/config/package.json
+  s_38400043e27b33::t_6f603d90b51a83 15-18
+  s_38400043e27b33::t_ed8b39441c8214 22,26
+  s_38400043e27b33::t_98574bdd87f03e 1-8,11-12,19-21,23-25,27-28
+  s_38400043e27b33::t_036f6e14cc64d4 9-10,13-14
+  s_38400043e27b33::t_42b129e868da22 29-31
+  s_fe71ecf26e0c41::t_4892f6b10baa0b 32-33
+bunfig.toml
+  s_38400043e27b33::t_868f6a776bdf5b 1-2
+packages/db/tsconfig.check.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-5,8
+  s_38400043e27b33::t_6b0b33c2c18a7a 6,9
+  s_500b9b4bd4679b::t_dfaf0a023edfc8 7
+apps/web/test/production.test.ts
+  s_38400043e27b33::t_6a6ea1274eed2c 93-101
+  s_38400043e27b33::t_8142c8bfe156ad 85
+  s_38400043e27b33::t_c8f49ac373c36c 3,23,29-32,56,65-75
+  s_38400043e27b33::t_a5d67c00d3c55a 6
+  s_38400043e27b33::t_e1d43fbf6f1eb3 1-2,4,7-22,25-28,33-40,43-55,57-64,76-84,86-92,102-121
+  s_38400043e27b33::t_1268e62b281065 5,24
+  s_38400043e27b33::t_1df7f1e32bd7a6 41-42
+packages/api-client/tsconfig.test.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 6-9
+  s_38400043e27b33::t_eb8d1d35d50d5c 3-5
+  s_38400043e27b33::t_48d99e8e94bd4d 10
+  s_fe71ecf26e0c41::t_f3e459bd0d2b92 1-2
+packages/hooks/src/index.ts
+  s_38400043e27b33::t_db6992c548ab36 1
+ENV.md
+  s_38400043e27b33::t_6e09a0793831a2 1,3-4,6,13-14,20-21,23,25-26,28,30-33,35-36,38,40-43,45,47-49,51,53,55
+  s_38400043e27b33::t_821308d475d3cd 8-11,15-16,19,54
+  s_38400043e27b33::t_9956dc299c60ba 2,5,7,12,17-18,22,24,27,29,34,37,39,44,46,50,52
+vite.config.ts
+  s_38400043e27b33::t_56a255e1659aed 1,23,26,46
+  s_38400043e27b33::t_fc5841499bdef7 2-3,47
+  s_38400043e27b33::t_83d80c0646f528 10
+  s_38400043e27b33::t_ddde3b1a8cae35 14-22
+  s_38400043e27b33::t_609915a18af938 43-45
+  s_38400043e27b33::t_1268e62b281065 4-9,11-13,24-25,27-42
+packages/api-client/test/health.test.ts
+  s_38400043e27b33::t_3cd00a9a82fbed 74,76
+  s_38400043e27b33::t_3d60d09121e2bb 53,89
+  s_38400043e27b33::t_87f51d18829966 37-40,48-50,66-73,75,77-79,98-100
+  s_38400043e27b33::t_0175d5efd79403 1-36,41-47,51-52,54-65,80-88,90-97,101
+packages/contracts/tsconfig.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 8
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+.github/workflows/ci.yml
+  s_38400043e27b33::t_988372187033a1 21
+  s_38400043e27b33::t_f646a5ee462af2 18-20,22-23
+  s_38400043e27b33::t_2096b144522446 1-17
+apps/web/src/routes/api.ts
+  s_38400043e27b33::t_609915a18af938 1-16
+packages/storage/README.md
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+  s_38400043e27b33::t_1bce3526ccd5c8 10-12
+  s_fe71ecf26e0c41::t_ce33d50f4b13b6 13-421
+.node-version
+  s_38400043e27b33::t_5b6ab218f3c2cd 1
+packages/auth/tsconfig.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+  s_38400043e27b33::t_0b2dd87c3aecc8 8
+packages/logger/tsconfig.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 8
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+apps/web/src/routes/api.$.ts
+  s_38400043e27b33::t_609915a18af938 1-16
+packages/api-client/src/health.ts
+  s_38400043e27b33::t_db6992c548ab36 1-18
+packages/config/src/check-boundaries-simple.ts
+  s_38400043e27b33::t_01f85bef656926 1,32,109
+  s_38400043e27b33::t_4e9ff087364209 2-31,33-39,41-108,110-111
+  s_38400043e27b33::t_f7cedd7c960045 40
+.gitignore
+  s_38400043e27b33::t_2096b144522446 1-9
+  s_38400043e27b33::t_609915a18af938 10-13
+packages/logger/src/index.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 3-55
+  s_500b9b4bd4679b::t_992e9269dde900 1-2
+packages/contracts/src/index.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1
+packages/config/test/styles.test.ts
+  s_38400043e27b33::t_622cd9931a6e02 1-2,6,35-42,46-73,75-101,103-114
+  s_38400043e27b33::t_9e20355aae6a80 3-5,7,9-18,25-27,31-34
+  s_38400043e27b33::t_036f6e14cc64d4 8,74
+  s_38400043e27b33::t_12acb3c8854ad9 19-24,28-30
+  s_38400043e27b33::t_f9a87908493c57 43-45,102
+apps/web/tsconfig.json
+  s_38400043e27b33::t_b8840b359a9d13 11
+  s_38400043e27b33::t_6b0b33c2c18a7a 4,10,13
+  s_38400043e27b33::t_2096b144522446 1,3,5-8,12,14
+  s_38400043e27b33::t_7cebb25dbfbe7c 2
+  s_38400043e27b33::t_6861b2c3d6b057 9
+.editorconfig
+  s_38400043e27b33::t_2096b144522446 1-12
+packages/config/vite.config.ts
+  s_38400043e27b33::t_9e20355aae6a80 1-2,4-20
+  s_38400043e27b33::t_036f6e14cc64d4 3
+.bun-version
+  s_38400043e27b33::t_868f6a776bdf5b 1
+packages/ui/src/styles.css
+  s_38400043e27b33::t_b07db51f6f8955 1-48
+packages/logger/vite.config.ts
+  s_38400043e27b33::t_6b0b33c2c18a7a 4-9
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+packages/ui/vite.config.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+  s_38400043e27b33::t_6b0b33c2c18a7a 4-6
+packages/api-client/README.md
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+packages/config/src/styles.ts
+  s_38400043e27b33::t_6a96e4dd4622ac 1-82
+packages/api/vite.config.ts
+  s_38400043e27b33::t_6b0b33c2c18a7a 4
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+packages/contracts/tsconfig.test.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 6-9
+  s_38400043e27b33::t_ce41d9a73c2f06 3-5
+  s_38400043e27b33::t_27bc3f9891726a 10
+  s_fe71ecf26e0c41::t_bdeb07f41b460b 1-2
+packages/ui/tsconfig.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7
+  s_38400043e27b33::t_6b0b33c2c18a7a 8-9
+packages/storage/package.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-13,15-16,18-19
+  s_38400043e27b33::t_ed8b39441c8214 14,17
+  s_38400043e27b33::t_258fc26204cae4 20-22
+  s_fe71ecf26e0c41::t_f239ea1fd07695 23-24
+packages/hooks/src/health.ts
+  s_38400043e27b33::t_db6992c548ab36 1-31
+packages/config/src/check-boundaries.ts
+  s_38400043e27b33::t_56c8480c3e9c97 33,225
+  s_38400043e27b33::t_036f6e14cc64d4 13-14,97-137,170,191-218,221,224,227,232,244,252
+  s_38400043e27b33::t_a3316a8a1faee2 159-163,235-236
+  s_38400043e27b33::t_87db566e7536b8 1-12,15-32,34-96,138-158,164-169,171-190,219-220,222-223,226,228-231,233-234,237-243,245-251,253-286
+packages/api/tsconfig.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+  s_38400043e27b33::t_0b2dd87c3aecc8 8
+scripts/migrate-tsconfig.ts
+  s_38400043e27b33::t_2241b1d0672c56 18-24,35,57,92,114,118-119
+  s_38400043e27b33::t_da1aa64ebdf229 72,80-84,86
+  s_38400043e27b33::t_5dd2028bdf547d 13-17,47,52-55,60-71,73-79,85,87-90,95-104,112,117
+  s_38400043e27b33::t_5d15ef958c2086 1-12,25-34,36-46,48-51,56,58-59,91,93-94,105-111,113,115-116,120-121
+packages/auth/package.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-13,15-16,18-19
+  s_38400043e27b33::t_ed8b39441c8214 14,17
+  s_500b9b4bd4679b::t_db0cff6b961224 20-25
+packages/api-client/vite.config.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+  s_38400043e27b33::t_6b0b33c2c18a7a 4
+packages/contracts/test/health.test.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1-19
+packages/hooks/tsconfig.test.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 6-9
+  s_38400043e27b33::t_f02fbc558583ad 3-5
+  s_38400043e27b33::t_1bc8f90016c026 10
+  s_fe71ecf26e0c41::t_46576b0ce64f75 1-2
+packages/hooks/package.json
+  s_38400043e27b33::t_6b0b33c2c18a7a 23-24,27-28,31,33-35
+  s_38400043e27b33::t_a5d67c00d3c55a 1-20,25-26,29,36-37
+  s_38400043e27b33::t_83d80c0646f528 30
+  s_38400043e27b33::t_ed8b39441c8214 21-22,32
+.vscode/settings.json
+  s_38400043e27b33::t_ddde3b1a8cae35 1-11
+TESTING.md
+  s_38400043e27b33::t_dfd16b22f9eab2 80,98-99,101-105
+  s_38400043e27b33::t_6e09a0793831a2 1-3,6-7,11-12,24-30,36-37,41-42,44-79,86-88,93-96,100,106-115
+  s_38400043e27b33::t_f3c23548e7d3bd 89,91
+  s_38400043e27b33::t_d038a261a87251 14-22
+  s_38400043e27b33::t_821308d475d3cd 4-5,31-35,38-40,43,81-85,90
+  s_38400043e27b33::t_acb20de1ae0997 92
+  s_38400043e27b33::t_877bdeb910e0f7 8-10
+  s_38400043e27b33::t_4f1e7cf608a251 13,23
+  s_38400043e27b33::t_3bbdd63946e304 97
+packages/db/vite.config.ts
+  s_38400043e27b33::t_6b0b33c2c18a7a 4-9
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+packages/logger/tsconfig.check.json
+  s_38400043e27b33::t_6b0b33c2c18a7a 6,9
+  s_38400043e27b33::t_a5d67c00d3c55a 1-5,8
+  s_38400043e27b33::t_dcecfa530db03c 7
+packages/config/tsconfig.test.json
+  s_38400043e27b33::t_a3316a8a1faee2 6
+  s_38400043e27b33::t_8b2f45ede8e1bf 3-5
+  s_38400043e27b33::t_604fd9b944780c 7
+  s_fe71ecf26e0c41::t_b0ee4503492c7d 1-2
+apps/web/src/router.tsx
+  s_38400043e27b33::t_609915a18af938 1-12
+packages/db/package.json
+  s_38400043e27b33::t_ed8b39441c8214 14-15,18
+  s_38400043e27b33::t_a5d67c00d3c55a 1-13,16-17,19-20
+  s_500b9b4bd4679b::t_bc9c3bc6213613 21-26
+packages/config/README.md
+  s_38400043e27b33::t_877bdeb910e0f7 5,13
+  s_38400043e27b33::t_4284ac5e4dd4e7 1-4,7,14-16,25-26
+  s_38400043e27b33::t_dfd16b22f9eab2 9,17-24
+  s_38400043e27b33::t_a3316a8a1faee2 6
+  s_38400043e27b33::t_acb20de1ae0997 8,11-12
+  s_38400043e27b33::t_e96ba71bd47f23 10
+CLAUDE.md
+  s_38400043e27b33::t_e67778412b1892 2,4,8,17,19,30,32,34,42,47,55,57,62,66,68,76-77,81,85-86,89-91
+  s_38400043e27b33::t_877bdeb910e0f7 28-29,37-39
+  s_38400043e27b33::t_f3c23548e7d3bd 50-51
+  s_38400043e27b33::t_acb20de1ae0997 10-11,36,45
+  s_38400043e27b33::t_6e09a0793831a2 1,3,5-7,9,14-16,18,20-27,31,33,35,40-41,43-44,46,48-49,52-54,56,58-61,63-65,67,69-75,78-80,82-84,87-88,92-98
+  s_38400043e27b33::t_36294e15d87bd9 12-13
+packages/api-client/src/index.ts
+  s_38400043e27b33::t_db6992c548ab36 1
+packages/config/src/workspace.ts
+  s_38400043e27b33::t_036f6e14cc64d4 5,15,17,43,69
+  s_38400043e27b33::t_74afe8facb245c 1-4,6-14,16,18-42,44-68,70-102
+packages/contracts/package.json
+  s_38400043e27b33::t_ed8b39441c8214 21-22,25
+  s_38400043e27b33::t_a5d67c00d3c55a 1-20,23-24,26-27
+packages/config/tsconfig.json
+  s_38400043e27b33::t_56c8480c3e9c97 1-3
+packages/logger/package.json
+  s_38400043e27b33::t_ed8b39441c8214 14-15,18
+  s_38400043e27b33::t_a5d67c00d3c55a 1-13,16-17,19-20
+  s_38400043e27b33::t_28f955be9c6e0d 21-22
+apps/web/.env.example
+  s_38400043e27b33::t_609915a18af938 2-4
+  s_38400043e27b33::t_5f8408747fce80 1
+packages/ui/README.md
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+packages/api/src/health.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1-39
+packages/storage/tsconfig.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+  s_38400043e27b33::t_0b2dd87c3aecc8 8
+apps/web/src/routes/__root.tsx
+  s_38400043e27b33::t_db6992c548ab36 2
+  s_38400043e27b33::t_609915a18af938 1,3-35
+packages/api/src/index.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1
+packages/hooks/README.md
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+apps/web/src/App.tsx
+  s_38400043e27b33::t_db6992c548ab36 1-2,5,13-16
+  s_38400043e27b33::t_2096b144522446 3-4,6-12,17-20
+packages/config/src/cli.ts
+  s_38400043e27b33::t_b740f488961f5e 17-52,64-66,68-70,81-133,137-144,148-167,172-176,180-195,199-252,255,258,261,264-273,276,279,282-284
+  s_38400043e27b33::t_8ee064e154f998 9-14,54,59,67,71-79,136,147,168,171,179,198,253,256,259,262,274,277,280,293-299
+  s_38400043e27b33::t_888c91caa0dc44 1-8,15-16,53,55-58,60-63,80,134-135,145-146,169-170,177-178,196-197,254,257,260,263,275,278,281,285-292,300
+packages/api/tsconfig.test.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 6-9
+  s_38400043e27b33::t_30c67884d6ee80 3-5
+  s_38400043e27b33::t_3b1b195df37788 10
+  s_fe71ecf26e0c41::t_ed374dc83d2974 1-2
+packages/contracts/vite.config.ts
+  s_38400043e27b33::t_6b0b33c2c18a7a 4
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+packages/ui/tsconfig.test.json
+  s_38400043e27b33::t_0b2dd87c3aecc8 6-9
+  s_38400043e27b33::t_a5012b15fbaf9c 3-5
+  s_38400043e27b33::t_777b9425d7934a 10
+  s_fe71ecf26e0c41::t_9404964d8d8091 1-2
+ARCHITECTURE.md
+  s_38400043e27b33::t_acb20de1ae0997 52,97-99
+  s_38400043e27b33::t_9956dc299c60ba 2,6,8,21,25,27,29,34-35,37,43-44,48,54,59,61,63,69,72,74,81,85,87,91,95
+  s_38400043e27b33::t_f3c23548e7d3bd 56-57
+  s_38400043e27b33::t_877bdeb910e0f7 76-78
+  s_38400043e27b33::t_6e09a0793831a2 1,3-5,7,22-24,26,28,30-33,36,38-42,45-47,49-51,53,55,58,60,62,64-68,70-71,73,75,79-80,82-84,86,88-90,92-94,102-104
+  s_38400043e27b33::t_16313373875b28 9-18
+  s_38400043e27b33::t_b4cfc1b0e927fa 19-20
+  s_38400043e27b33::t_c75a84e4a95b7b 96
+  s_38400043e27b33::t_d2574079d88299 100-101
+packages/storage/src/index.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 9,11,32,34,37,56,96,111,117,133,161-206
+  s_38400043e27b33::t_c0652414259038 6-8
+  s_38400043e27b33::t_27f4f050409118 10
+  s_38400043e27b33::t_33ea52c233d33e 12-14,29-31
+  s_38400043e27b33::t_cef21adef799ea 33
+  s_38400043e27b33::t_4b91074dbcd9c8 35-36
+  s_38400043e27b33::t_76ccee6df14454 38-40,53-55
+  s_38400043e27b33::t_ac72d4cc408844 57-59,93-95
+  s_38400043e27b33::t_13a8b160dc05ec 97-99,108-110
+  s_38400043e27b33::t_64615904c48197 112-116
+  s_38400043e27b33::t_20907dd54c362c 118-120,130-132
+  s_38400043e27b33::t_f8854bd53afca3 134-136,158-160
+  s_fe71ecf26e0c41::t_c3a82208ce1003 1-5,15-28,41-52,60-92,100-107,121-129,137-157
+packages/config/test/environment.test.ts
+  s_38400043e27b33::t_182fe661b3d576 1-80,82-93,101-121,127,129,131-145
+  s_38400043e27b33::t_016222e3e82e3d 94-100
+  s_38400043e27b33::t_c60770e30f2e1b 122-126,128,130
+  s_38400043e27b33::t_2a58cd82b50002 81
+apps/web/src/routes/api.health.ts
+  s_38400043e27b33::t_609915a18af938 1-6
+packages/api-client/package.json
+  s_38400043e27b33::t_ed8b39441c8214 21-22,25
+  s_38400043e27b33::t_a5d67c00d3c55a 1-20,23-24,26-27
+packages/db/README.md
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+packages/auth/vite.config.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1-3
+  s_38400043e27b33::t_6b0b33c2c18a7a 4-9
+EXAMPLES.md
+  s_38400043e27b33::t_30e229b250870d 128-160
+  s_38400043e27b33::t_6e09a0793831a2 3-88,102,104-127,161-170
+  s_38400043e27b33::t_e122fa13aa9edd 1-2,89-95,101,103
+  s_38400043e27b33::t_16313373875b28 96-100
+packages/config/src/vite.ts
+  s_38400043e27b33::t_036f6e14cc64d4 4,12,20,25-28,30,44-45,57,61-62,92,99-100,105,112,119-121,127,131,134
+  s_38400043e27b33::t_56c8480c3e9c97 71,141
+  s_38400043e27b33::t_ace759d599f1e8 1-3,5-11,13-19,21-24,29,31-43,46-56,58-60,63-70,72-91,93-98,101-104,106-111,113-118,122-126,128-130,132-133,135-140,142-167
+packages/contracts/src/health.ts
+  s_38400043e27b33::t_a6101fdfc5f733 1-39
+packages/api-client/tsconfig.json
+  s_38400043e27b33::t_a5d67c00d3c55a 1-7,9
+  s_38400043e27b33::t_0b2dd87c3aecc8 8
+packages/api/package.json
+  s_38400043e27b33::t_ed8b39441c8214 21-22,25
+  s_38400043e27b33::t_a5d67c00d3c55a 1-20,23-24,26-27
+apps/web/src/server/health.server.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 1
+packages/logger/README.md
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+  s_500b9b4bd4679b::t_d4089c398dd3df 10-247
+packages/auth/README.md
+  s_38400043e27b33::t_c2d6d6aa7fa465 1-6,8-9
+  s_38400043e27b33::t_b4cfc1b0e927fa 7
+  s_38400043e27b33::t_d26ae961df0342 10-12
+.gitattributes
+  s_38400043e27b33::t_2096b144522446 1
+package.json
+  s_38400043e27b33::t_b406a729015164 18-20,29-45
+  s_38400043e27b33::t_8cd80f54888d49 49
+  s_38400043e27b33::t_1df7f1e32bd7a6 6-15,74
+  s_38400043e27b33::t_2096b144522446 1-5,16-17,46,54,75
+  s_38400043e27b33::t_b8840b359a9d13 56
+  s_38400043e27b33::t_c619d420df1596 58-62,68,73
+  s_38400043e27b33::t_a592eafb4bd5ad 47,55,57
+  s_38400043e27b33::t_9eb3644b3145ad 21-22,25-27
+  s_38400043e27b33::t_9d0cccccf09707 28
+  s_38400043e27b33::t_552faddf6c44f5 52
+  s_38400043e27b33::t_dfc0ae54bc2bab 63-67,69-72
+  s_38400043e27b33::t_5b9e03bdd81142 50-51
+  s_38400043e27b33::t_95dd39a303067a 23-24
+  s_38400043e27b33::t_6b0b33c2c18a7a 48,53
+  s_38400043e27b33::t_f4cc0f9973b6b7 76-78
+  s_fe71ecf26e0c41::t_f0b3d4313b7a78 79-81
+packages/db/src/index.ts
+  s_38400043e27b33::t_a5d67c00d3c55a 34-65
+  s_500b9b4bd4679b::t_db1b9414fa653a 1-33
+apps/web/package.json
+  s_38400043e27b33::t_a592eafb4bd5ad 7,16
+  s_38400043e27b33::t_6b0b33c2c18a7a 8-10,15,18-19,25
+  s_38400043e27b33::t_b8840b359a9d13 11
+  s_38400043e27b33::t_2096b144522446 1-5,17,20-23,26-27
+  s_38400043e27b33::t_f2c30807e05027 6,12-14,24
+.lintstagedrc.json
+  s_500b9b4bd4679b::t_4f0bd986cae314 1-10
+HIGH_PRIORITY_PROGRESS.md
+  s_500b9b4bd4679b::t_c0c278f212924e 1-87
+docs/BUN_CATALOG.md
+  s_500b9b4bd4679b::t_8f81ddaaae80b3 1-94
+docs/INDEX.md
+  s_500b9b4bd4679b::t_371e82942895d2 1-29
+docs/JSDOC_PROGRESS.md
+  s_500b9b4bd4679b::t_5fb2dd23ef1844 1-34
+docs/SCRIPTS_PACKAGE_DECISION.md
+  s_500b9b4bd4679b::t_90dedbb3d48c26 1-273
+packages/auth/tsconfig.test.json
+  s_500b9b4bd4679b::t_2153cea4cc2985 1-4
+packages/config/tsconfig-presets/README.md
+  s_38400043e27b33::t_a34c9c5ec86f21 1-175
+packages/config/tsconfig-presets/base.json
+  s_38400043e27b33::t_24119dd897b3ed 1-17
+packages/config/tsconfig-presets/package.json
+  s_38400043e27b33::t_c8acb8167425e6 1-17
+packages/db/tsconfig.test.json
+  s_500b9b4bd4679b::t_54f40a5b2ddda2 1-4
+packages/logger/MIGRATION.md
+  s_500b9b4bd4679b::t_8ae3c879869906 1-60
+packages/logger/tsconfig.test.json
+  s_500b9b4bd4679b::t_559326234ad0ba 1-4
+scripts/install-hooks.ts
+  s_500b9b4bd4679b::t_d31c48791984d5 1-36
+scripts/setup.ts
+  s_500b9b4bd4679b::t_6db62f5a3ee306 1-131
+.dockerignore
+  s_fe71ecf26e0c41::t_9407e0b036d39c 1-74
+.env.example
+  s_ebf4621a2f0452::t_f1d0685a132675 1-37
+AGENTS.md
+  s_fe71ecf26e0c41::t_ade554db631f96 1-406
+CHANGELOG.md
+  s_fe71ecf26e0c41::t_90512edd416f90 1-40
+CONTRIBUTING.md
+  s_fe71ecf26e0c41::t_70e4e8baabd78f 1-254
+DOCKER_QUICKSTART.md
+  s_fe71ecf26e0c41::t_bfc563d6cb395c 1-63
+Dockerfile
+  s_fe71ecf26e0c41::t_8eee9264d1d58e 1-60
+Dockerfile.dev
+  s_fe71ecf26e0c41::t_3c99c5f79b7afa 1-25
+FORGE_CHECKLIST.md
+  s_ebf4621a2f0452::t_8072b062d30d2d 1-289
+LICENSE
+  s_37a0fa4b41edfa::t_0fedaa862c6758 1-21
+UPGRADE_LOG.md
+  s_fe71ecf26e0c41::t_3cbfe1578d325f 1-41
+bun.lock
+  s_fe71ecf26e0c41::t_1621d8269ef153 1-1243
+docker-compose.dev.yml
+  s_fe71ecf26e0c41::t_f75bbe8a671ea3 1-31
+docker-compose.yml
+  s_fe71ecf26e0c41::t_97446354336946 1-53
+docs/ARCHITECTURE.md
+  s_fe71ecf26e0c41::t_6b5f91f96f99f4 1-247
+docs/CLI_WORKER_ARCHITECTURE.md
+  s_fe71ecf26e0c41::t_18953a417a75b0 1-520
+docs/DOCKER.md
+  s_fe71ecf26e0c41::t_777dcdfcc08667 1-352
+docs/SCRIPTS_ORGANIZATION.md
+  s_fe71ecf26e0c41::t_c2caa5871cdaf3 1-379
+docs/VERSION_STRATEGY.md
+  s_fe71ecf26e0c41::t_7e37136e178996 1-289
+docs/VITE_VITEST_CONFIG.md
+  s_fe71ecf26e0c41::t_e0578e9a23847c 1-334
+nginx.conf
+  s_fe71ecf26e0c41::t_d968f3de237db1 1-114
+packages/config/tsconfig-presets/build.json
+  s_38400043e27b33::t_0028a406b27b6b 1-12
+packages/config/tsconfig-presets/node.json
+  s_38400043e27b33::t_945103100d7f01 1-7
+packages/config/tsconfig-presets/react.json
+  s_38400043e27b33::t_c407f7d864e555 1-9
+packages/config/tsconfig-presets/test.json
+  s_38400043e27b33::t_797801f800a148 1-12
+packages/storage/test/index.test.ts
+  s_ab4a86886c1c0e::t_b04758f366f43b 1-428
+packages/storage/tsconfig.test.json
+  s_fe71ecf26e0c41::t_6386968cc7df15 1-4
+packages/worker/README.md
+  s_fe71ecf26e0c41::t_348fec4e916934 1-234
+packages/worker/package.json
+  s_fe71ecf26e0c41::t_b121a6bb908af1 1-22
+packages/worker/src/index.ts
+  s_fe71ecf26e0c41::t_14ee6fe32dccc3 1-25
+packages/worker/src/manager.ts
+  s_fe71ecf26e0c41::t_95cdc012719d88 1-161
+packages/worker/src/protocol.ts
+  s_fe71ecf26e0c41::t_c0b7134c1fb7a2 1-118
+packages/worker/src/task.ts
+  s_fe71ecf26e0c41::t_3890d45e00b1ed 1-156
+packages/worker/tsconfig.json
+  s_fe71ecf26e0c41::t_1ef5f77876415a 1-9
+packages/worker/vite.config.ts
+  s_fe71ecf26e0c41::t_b5159b60ba94fc 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "dca1c374188c5dd49585490e4f14ab3b4624f706",
+  "prompts": {},
+  "humans": {
+    "h_2f444dd408c3f2": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_37a0fa4b41edfa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-afab779c8496c1730",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_38400043e27b33": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11f78-f707-7651-beed-61e9a4244840",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": null
+    },
+    "s_500b9b4bd4679b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11f54-aa0f-7721-91c3-2df9966926ff",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_ab4a86886c1c0e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-aef0d6d2f099d109d",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_ebf4621a2f0452": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a23e74ebf6277a3e5",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_fe71ecf26e0c41": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d00aeaa5-9b70-40cd-b0d0-60b2f0c63854",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
