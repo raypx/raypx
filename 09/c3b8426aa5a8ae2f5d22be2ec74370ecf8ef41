@@ -1,0 +1,33 @@
+.claude/console-log-analysis.md
+  s_3cc6a5ba50d6f4::t_6c9a0915739ebf 1-113
+.claude/optimization-opportunities.md
+  s_3cc6a5ba50d6f4::t_3996498e36d516 1-301
+.claude/ui-package-analysis.md
+  s_3cc6a5ba50d6f4::t_461c043713b843 1-192
+packages/auth/package.json
+  s_3cc6a5ba50d6f4::t_fd9341f1828581 11-22
+packages/auth/src/adapter.ts
+  s_3cc6a5ba50d6f4::t_83dff1cb8ffe52 1-119
+packages/auth/src/index.ts
+  s_3cc6a5ba50d6f4::t_8e1913789278e5 2,4-5,8-14,16-17,19-20
+packages/auth/src/session.ts
+  s_3cc6a5ba50d6f4::t_728626ff9c5f80 1-121
+packages/auth/src/validation.ts
+  s_3cc6a5ba50d6f4::t_697edc6b7de267 1-113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "09c3b8426aa5a8ae2f5d22be2ec74370ecf8ef41",
+  "prompts": {},
+  "sessions": {
+    "s_3cc6a5ba50d6f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc7527c-3e5e-472d-9e6c-4f8d364c95cb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
