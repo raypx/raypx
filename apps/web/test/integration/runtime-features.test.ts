@@ -1,7 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
-import { once } from "node:events";
 import { mkdtemp, rm } from "node:fs/promises";
-import { createServer } from "node:net";
 import { request as httpRequest } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,14 +8,14 @@ import { session } from "@raypx/db/schema";
 import { sessionResponseSchema, currentUserResponseSchema } from "@raypx/contracts/auth";
 import { apiErrorResponseSchema } from "@raypx/contracts/errors";
 import { afterAll, beforeAll, expect, test } from "vite-plus/test";
+import { startTestServer, type TestServer } from "../helpers/server.ts";
 
 const origin = "https://raypx.test";
 const token = "metrics-integration-token-".repeat(2);
 let directory: string;
 let databasePath: string;
-let processUnderTest: ChildProcess;
+let server: TestServer;
 let baseURL: string;
-let output = "";
 
 beforeAll(async () => {
   directory = await mkdtemp(join(tmpdir(), "raypx-foundations-"));
@@ -29,19 +26,11 @@ beforeAll(async () => {
   } finally {
     connection.close();
   }
-  const portReservation = createServer();
-  portReservation.listen(0, "127.0.0.1");
-  await once(portReservation, "listening");
-  const address = portReservation.address();
-  if (!address || typeof address === "string") throw new Error("No port available");
-  const port = address.port;
-  await new Promise<void>((resolve, reject) =>
-    portReservation.close((error) => (error ? reject(error) : resolve())),
-  );
-  baseURL = `http://127.0.0.1:${port}`;
-  processUnderTest = spawn("bun", ["--no-env-file", ".output/server/index.mjs"], {
-    cwd: fileURLToPath(new URL("../", import.meta.url)),
-    env: {
+  server = await startTestServer({
+    command: "bun",
+    args: () => ["--no-env-file", ".output/server/index.mjs"],
+    cwd: fileURLToPath(new URL("../../", import.meta.url)),
+    env: (port) => ({
       PATH: process.env.PATH,
       HOST: "127.0.0.1",
       PORT: String(port),
@@ -57,40 +46,18 @@ beforeAll(async () => {
       API_RATE_LIMIT_WINDOW_MS: "60000",
       API_BODY_MAX_BYTES: "1024",
       API_BODY_TIMEOUT_MS: "120",
-    },
-    stdio: ["ignore", "pipe", "pipe"],
+    }),
+    stopTimeoutMs: 3000,
   });
-  processUnderTest.stdout?.on("data", (chunk: Buffer) => {
-    output += chunk.toString();
-  });
-  processUnderTest.stderr?.on("data", (chunk: Buffer) => {
-    output += chunk.toString();
-  });
-  const deadline = Date.now() + 10_000;
-  while (Date.now() < deadline) {
-    if (processUnderTest.exitCode !== null) throw new Error(`Feature server failed: ${output}`);
-    try {
-      if ((await fetch(`${baseURL}/api/health`, { signal: AbortSignal.timeout(500) })).ok) return;
-    } catch {
-      /* Wait for the listener. */
-    }
-    await new Promise((resolve) => setTimeout(resolve, 25));
-  }
-  throw new Error("Feature server did not start");
-}, 15_000);
+  baseURL = server.baseURL;
+}, 20_000);
 
 afterAll(async () => {
-  if (processUnderTest?.pid && processUnderTest.exitCode === null) {
-    const closed = once(processUnderTest, "close");
-    processUnderTest.kill("SIGTERM");
-    const timeout = setTimeout(() => processUnderTest.kill("SIGKILL"), 3000);
-    try {
-      await closed;
-    } finally {
-      clearTimeout(timeout);
-    }
+  try {
+    await server?.stop();
+  } finally {
+    if (directory) await rm(directory, { recursive: true, force: true });
   }
-  if (directory) await rm(directory, { recursive: true, force: true });
 });
 
 test("authentication, safe account projection, revocation, metrics and rate protection work in the built server", async () => {
@@ -254,8 +221,8 @@ test("authentication, safe account projection, revocation, metrics and rate prot
   expect(error.error.requestId).toBe(blocked.headers.get("x-request-id"));
   expect((await fetch(`${baseURL}/api/health`)).status).toBe(200);
   expect((await fetch(`${baseURL}/api/ready`)).status).toBe(200);
-  expect(output).not.toContain("a-valid-test-password");
-  expect(output).not.toContain("auth-integration-secret-");
-  expect(output).not.toContain(token);
-  expect(output).not.toContain("private-oversized-body-sentinel");
+  expect(server.output()).not.toContain("a-valid-test-password");
+  expect(server.output()).not.toContain("auth-integration-secret-");
+  expect(server.output()).not.toContain(token);
+  expect(server.output()).not.toContain("private-oversized-body-sentinel");
 }, 15_000);

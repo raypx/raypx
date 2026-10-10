@@ -1,5 +1,9 @@
 # Scripts Organization Strategy
 
+> Historical proposal. Its examples describe an earlier layout and are not
+> current commands. The implemented Bun/citty CLI and policy/verify workflows
+> are documented in the [engineering scripts guide](../scripts/README.md).
+
 ## Current State
 
 All scripts are in root `package.json`:

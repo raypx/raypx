@@ -39,7 +39,7 @@ const workspaces: NonNullable<Configuration["workspaces"]> = {
       "scripts/browser/**/*.spec.ts",
       "playwright.consumer.config.ts",
     ],
-    project: ["scripts/**/*.ts", "*.ts"],
+    project: ["scripts/**/*.ts", "*.{ts,mts}"],
     // install-hooks addresses the Vite+ binary by filesystem path.
     ignoreDependencies: ["vp"],
   },

@@ -4,7 +4,7 @@ Vite+ 1.1.0 provides Vitest 5.0.3 and Oxlint 1.87.0, coverage uses same version 
 Project commands started by Bun; Vite+ and Vitest currently still run through Node tool entrypoints, not migrated to Bun native test framework.
 Use `bun run test` to execute package script, `bun test` calls another runner, not this project's acceptance command.
 Vitest APIs explicitly import from `vite-plus/test`; Playwright suites use `playwright/test`.
-Root `vite.config.ts` declares projects and coverage,
+Root `vite.config.ts` declares test projects, coverage configuration, and test reporters,
 each package configures its own unit test directories and environment. Root engineering
 tests use the separate `scripts/vite.config.ts` project. UI also has a dedicated browser Vitest configuration for Storybook.
 Runtime package `tsconfig.test.json` checked by tsc for source, tests, and Vite configuration, sets noEmit;
@@ -19,7 +19,8 @@ There is no separate active `tsconfig` workspace; `config` tools continue with r
 | `client`              | jsdom + Testing Library               | HTTP contracts, timeout/cancellation/retries; React query sharing, auth transitions, and isolated clients           |
 | `ui`                  | jsdom + Testing Library               | Component semantics, status states, and debounce cleanup (20 unit tests)                                            |
 | `api`                 | Node                                  | Health check Response, contract, and JSON 404                                                                       |
-| `web`                 | Node runner, Bun service              | After building Bun preset artifacts start with Bun, verify SSR, static assets, HTTP interfaces, and page 404        |
+| `web-unit`            | Node                                  | Real router/query isolation with a minimal route fixture; test-service startup, output limits, and cleanup          |
+| `web-integration`     | Node runner, built Bun service        | SSR, static assets, HTTP interfaces, lifecycle logs, auth, runtime protection, and page 404                         |
 | `config`              | Node                                  | Dependency boundaries, transitive cache input, public entrypoint aliases, and style sync                            |
 | `scripts`             | Node runner, Bun subprocesses         | Bin bootstrap, doctor diagnostics, CLI options, Knip entrypoints, locked dependency graphs, and process cleanup     |
 | Application E2E       | Chromium, dev and built Bun service   | Hydration, navigation, themes, form/toast, dialog focus, health recovery, and 404 navigation                        |
@@ -33,11 +34,16 @@ Unit tests use public package entrypoints via precise aliases corresponding to s
 
 ```sh
 bun run test
+bun run test:unit
+bun run test:integration
 bun run test:watch
 bun run test:coverage
 bun run test:scripts
 bun run typecheck:scripts
 bun run raypx --help
+bun run policy --json
+bun run verify
+bun run verify --verbose
 bun run raypx consumer --kind core
 bun run vp run @raypx/contracts#test
 bun run vp test run --project client
@@ -57,15 +63,32 @@ verify root help/version, environment checks, setup idempotence, and Bun invocat
 through symbolic links. Doctor keeps its own JSON, redaction, and exit-code checks.
 It does not run the independent consumer installation or Playwright suite. Script
 tests remain uncached because they exercise repository tooling and subprocesses.
-`bun run test:watch` excludes `production.test.ts` and `runtime-features.test.ts`, avoids starting production process on every source change.
-When running `vp test` directly in root directory, first execute `bun run build`, or explicitly exclude production tests:
+When projects run together, the scripts project uses a later sequence group so
+diagnostic subprocesses do not compete with workspace unit workers.
+`bun run test:unit` and `bun run test:watch` select projects excluding
+`web-integration`, so they do not require Nitro artifacts or start the application
+server. The `web-unit` configuration replaces the generated route tree with a
+minimal typed fixture while testing the real router and query-client wiring.
+Production suites live in `apps/web/test/integration/`, with their own
+`vite.integration.config.ts` project. `bun run test:integration` uses the web task
+that builds its required artifacts first. The existing `test` command still runs
+both layers.
+
+To run only web unit tests or explicitly select the production suites:
 
 ```sh
-bun run vp test run --exclude "**/production.test.ts" --exclude "**/runtime-features.test.ts"
+bun run vp test run --project web-unit
+bun run test:integration
 ```
 
-Production integration tests use independent idle port, wait for real health check readiness before verification, and stop process at end,
-does not depend on dev server or fixed port 3000.
+`apps/web/test/helpers/server.ts` supplies the shared local-service lifecycle for
+production integration tests and application E2E. Each service uses an available
+loopback port, an explicit synthetic environment, bounded stdout/stderr capture,
+and a successful HTTP readiness response before testing. Startup failures clean
+up before rejecting; shutdown is idempotent, escalates termination, and bounds
+waiting when descendants retain output pipes. Unit regressions exercise these
+behaviors with real Node subprocesses. Finite startup-error probes use the same
+process helper while asserting their actual exit status and sanitized output.
 
 Application E2E lives separately from Vitest and runs the same Chromium scenarios
 against development and production. Each suite starts its own loopback server on
@@ -120,6 +143,22 @@ Tests must not access real model services or production databases; when integrat
 
 ## Coverage & Static Checks
 
+`bun run verify` is the ordered acceptance workflow; `bun run check` is an alias
+for the same entrypoint. Source-only gates (environment, dependency versions,
+policy, format, boundaries, and unused code) run before builds. Typed lint and
+workspace/script types follow the build, then workspace/script tests, Storybook
+build, and independent package consumers. Consumers reuse those completed
+prerequisites inside verify; their standalone commands still prepare themselves.
+`--verbose` streams subprocess output. Failures stop later stages and include
+bounded diagnostic output; interrupts cancel child processes and clean fixtures.
+
+Policy regressions use temporary repositories for invalid workspace registration,
+broken or cyclic TypeScript inheritance, and local documentation links/indexes.
+They check JSON/text parity and that source files remain unchanged. Verify tests
+inject gate operations to check order, fail-fast behavior, and preparation reuse;
+the shared process tests cover real subprocess output, deadlines, cancellation,
+and descendant cleanup. Browser acceptance remains a separate CI job.
+
 Report outputs to root `coverage/`, includes `index.html`, text summary, and `coverage-summary.json`.
 Coverage includes application and package TS/TSX source plus `scripts/lib/**/*.ts`,
 excludes auto-generated Start route tree.
@@ -151,13 +190,21 @@ Start build verifies actual client import graph server isolation.
 
 ## CI & Migration Acceptance
 
-CI installs Bun 1.4.2 from `.bun-version`, uses Node.js 22.22.1 from `.node-version` for toolchain compatibility.
-First runs `bun run check:env` without dependencies, then uses `bun install --frozen-lockfile` to install per `bun.lock`, runs `bun run check`, installs Chromium once, and executes Storybook, application E2E, and independent consumer browser tests.
-Check first builds to generate routes, then checks format, lint,
-package boundaries, unused code/dependencies, types, tests, and independent consumers.
-On browser failure CI uploads Playwright reports, traces, and screenshots; local
-reports live in ignored `playwright-report/` and `test-results/` directories.
-Currently does not connect remote cache, coverage upload service, or external accounts.
+CI uses the repository's `.bun-version` and `.node-version` through a shared setup
+action. It validates tools before dependency installation, restores Bun's download
+cache, and always runs `bun install --frozen-lockfile`.
+The `quality` job runs the complete `bun run verify` once (`check` is its alias); the independent `browsers`
+job builds its prerequisites and runs Storybook, application E2E, and consumer
+browser acceptance in parallel with quality checks. Browser binaries are cached
+using the installed Playwright version and Chromium metadata; system dependencies
+and matching binary installation are checked even on cache hits.
+The final `check` status accepts only success from both jobs, so failed, cancelled,
+or skipped validation cannot pass the branch-protection gate.
+Failures retain command logs and available Playwright reports, traces, and
+screenshots. Local reports live in ignored `.ci-reports/`, `playwright-report/`,
+and `test-results/` directories. CI uses no external accounts, remote build cache,
+or coverage-upload service. See the [CI guide](.github/README.md) for cache keys,
+failure evidence, and remote acceptance limits.
 
 Before installation and public root script pre hooks both call the same environment check,
 which requires stable Node.js `>=22.22.1 <23.0.0` and exactly Bun 1.4.2 in PATH.

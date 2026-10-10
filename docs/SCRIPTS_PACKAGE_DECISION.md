@@ -1,5 +1,10 @@
 # Scripts Package Decision
 
+> Historical decision discussion. Raypx now uses the root `scripts/` directory,
+> a Bun entrypoint, and citty command adapters. Follow the
+> [engineering scripts guide](../scripts/README.md) for the implemented layout
+> and verification commands; the examples below are retained as historical context.
+
 ## Current Situation
 
 We have created:

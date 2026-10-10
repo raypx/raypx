@@ -1,0 +1,37 @@
+name: Setup Raypx
+description: Install the repository toolchain and locked dependencies with a Bun download cache.
+
+outputs:
+  cache-hit:
+    description: Whether the exact Bun download cache was restored.
+    value: ${{ steps.bun-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .node-version
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version-file: .bun-version
+    - name: Validate development toolchain
+      shell: bash
+      run: bun run check:env
+    - name: Resolve Bun cache location and version
+      id: bun
+      shell: bash
+      run: |
+        set -euo pipefail
+        printf 'version=%s\npath=%s\n' "$(bun --no-env-file --version)" "$(bun --no-env-file pm cache)" >> "$GITHUB_OUTPUT"
+    - name: Cache Bun downloads
+      id: bun-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.bun.outputs.path }}
+        key: bun-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.version }}-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          bun-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.version }}-
+    - name: Install locked dependencies
+      shell: bash
+      run: bun install --frozen-lockfile

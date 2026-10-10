@@ -1,5 +1,10 @@
 # Raypx AI-Assisted Development Guide
 
+## Git Commit Guidelines
+
+**Do NOT add Co-Authored-By or attribution lines to commits.**
+All commits should be authored by the repository owner directly.
+
 ## Project Status
 
 Raypx is a full-stack foundation using Bun workspaces, Vite+, React, and
@@ -61,7 +66,8 @@ Start generates `routeTree.gen.ts`; do not edit it. Web `.server.ts` modules
 adapt server packages, alongside Start's import protection. Secrets stay on
 the server, never use a `VITE_` prefix, and are not committed or logged.
 
-Root `vite.config.ts` owns Vite+ lint, formatting, and test projects.
+Root `vite.config.ts` owns Vite+ lint, formatting, and staged checks.
+Root `vitest.config.mts` owns test projects and coverage.
 `.oxlintrc.json` is an optional standalone configuration, not the current
 `vp lint` configuration. The TypeScript AST checker enforces dependencies,
 public exports, browser isolation, and client core/React separation in both
@@ -102,7 +108,11 @@ bun run check
 ```
 
 Development builds dependencies and starts watchers and Start on port 5173.
-The full check builds, then runs formatting, lint, boundaries, types, and tests.
+`check` and `verify` use the same ordered acceptance workflow. Environment,
+dependencies, policy, formatting, boundaries, and unused-code checks run first;
+builds precede typed lint and type checks, followed by tests, Storybook build,
+and independent consumers. `policy` checks workspace registration, TypeScript
+inheritance, and local documentation without writing files.
 Production integration tests need built artifacts. Run `bun run build` then
 `bun run start` for Nitro's Bun artifact. Production defaults to
 `127.0.0.1:3000`; validated HOST/PORT and NITRO overrides configure the listener.

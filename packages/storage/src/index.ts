@@ -1,64 +1,22 @@
-import { createStorage, prefixStorage } from "unstorage";
-import type { BuiltinDriverOptions, Driver } from "unstorage";
-import redisDriverModule from "unstorage/drivers/redis";
-import fsDriverModule from "unstorage/drivers/fs";
-import memoryDriverModule from "unstorage/drivers/memory";
+import { prefixStorage } from "unstorage";
+import type { Storage } from "unstorage";
 import { createLogger } from "@raypx/logger";
+import { createStorageInstance, type StorageConfig } from "./instance.js";
 
 const logger = createLogger({ name: "storage" });
-
-// unstorage 1.14's CJS declarations and ESM runtime disagree about default exports under NodeNext.
-// Validate the actual factory before giving it the official driver option type.
-function driverFactory<Options>(module: unknown): (options: Options) => Driver<Options, unknown> {
-  const factory =
-    typeof module === "function"
-      ? module
-      : module !== null && typeof module === "object" && "default" in module
-        ? module.default
-        : undefined;
-  if (typeof factory !== "function") throw new TypeError("Storage driver must export a factory");
-  return factory as (options: Options) => Driver<Options, unknown>;
-}
-
-const memoryDriver = driverFactory<void>(memoryDriverModule);
-const redisDriver = driverFactory<BuiltinDriverOptions["redis"]>(redisDriverModule);
-const fsDriver = driverFactory<BuiltinDriverOptions["fs"]>(fsDriverModule);
-
-/**
- * Storage configuration options
- */
-export interface StorageConfig {
-  /**
-   * Redis connection URL
-   * @example "redis://localhost:6379"
-   */
-  redis?: string;
-
-  /**
-   * Filesystem base path (fallback)
-   * @default "./data/cache"
-   */
-  fsBase?: string;
-
-  /**
-   * Use memory storage (for testing)
-   * @default false
-   */
-  memory?: boolean;
-}
 
 /**
  * Global storage instance
  */
-let storage: ReturnType<typeof createStorage> | null = null;
+let storage: Storage | null = null;
 
 /**
  * Get or create storage instance
  *
- * Automatically selects the best driver:
- * - Redis if REDIS_URL is set
- * - Filesystem as fallback
- * - Memory for testing
+ * Compatibility singleton: memory wins when requested or NODE_ENV=test, then
+ * explicit Redis or REDIS_URL, then explicit filesystem or ./data/cache.
+ * The first configuration remains active until closeStorage(). Prefer
+ * createStorageInstance() for explicit configuration and independent ownership.
  *
  * @param config - Storage configuration
  * @returns Storage instance
@@ -74,40 +32,12 @@ let storage: ReturnType<typeof createStorage> | null = null;
  */
 export function getStorage(config?: StorageConfig) {
   if (storage) return storage;
-
-  const redisUrl = config?.redis || process.env.REDIS_URL;
-  const useMemory = config?.memory || process.env.NODE_ENV === "test";
-  const fsBase = config?.fsBase || "./data/cache";
-
-  // Memory driver (testing)
-  if (useMemory) {
-    logger.info("Using memory storage");
-    storage = createStorage({
-      driver: memoryDriver(),
-    });
-    return storage;
-  }
-
-  // Redis driver (production)
-  if (redisUrl) {
-    logger.info("Using Redis storage", { url: redisUrl.replace(/:[^:]*@/, ":***@") });
-    storage = createStorage({
-      driver: redisDriver({
-        url: redisUrl,
-        lazyConnect: true,
-      }),
-    });
-    return storage;
-  }
-
-  // Filesystem driver (fallback)
-  logger.info("Using filesystem storage", { base: fsBase });
-  storage = createStorage({
-    driver: fsDriver({
-      base: fsBase,
-    }),
+  const redis = config?.redis || process.env.REDIS_URL;
+  storage = createStorageInstance({
+    ...(redis ? { redis } : {}),
+    memory: config?.memory || process.env.NODE_ENV === "test",
+    fsBase: config?.fsBase || "./data/cache",
   });
-
   return storage;
 }
 
@@ -232,6 +162,7 @@ export async function clearAll() {
 
 // Re-export unstorage types
 export type { Storage } from "unstorage";
+export { createStorageInstance, type StorageConfig } from "./instance.js";
 export { createCache, type CacheOptions, type CacheStore, type CacheResult } from "./cache.js";
 
 /** Disposes the active storage driver once and allows a later explicit initialization. */

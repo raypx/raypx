@@ -12,5 +12,11 @@
     "types": ["node", "bun"],
     "lib": ["ES2022", "DOM"]
   },
-  "include": ["**/*.ts", "../knip.ts", "../vite.config.ts", "../playwright.consumer.config.ts"]
+  "include": [
+    "**/*.ts",
+    "../knip.ts",
+    "../vite.config.ts",
+    "../vitest.config.mts",
+    "../playwright.consumer.config.ts"
+  ]
 }

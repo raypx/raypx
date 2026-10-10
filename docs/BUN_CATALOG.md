@@ -67,31 +67,13 @@ Bun's workspace catalog feature allows you to centralize dependency versions acr
 
 ## Updating Versions
 
-```bash
-# Update in root package.json catalog
-{
-  "catalog": {
-    "evlog": "2.31.0"  // <- Change here
-  }
-}
+Use `bun run deps:outdated` to inspect workspace updates. Edit selected versions
+in root `workspaces.catalog`, then run `bun install` to update `bun.lock`; keep
+workspace `catalog:` references intact. Review both files. Use
+`bun run deps:update '<package>@<version>'` for non-catalog declarations.
+The catalog also centralizes Vitest, its coverage/browser plugins, and Playwright;
+workspaces consume them through `catalog:`.
 
-# Then reinstall
-bun install
-
-# All packages using "evlog": "catalog:" will get 2.31.0
-```
-
-## Migration
-
-We've migrated key dependencies to catalog:
-
-- ✅ evlog
-- ✅ better-sqlite3
-- ✅ drizzle-orm
-- ✅ better-auth
-
-Other dependencies remain package-specific as they should be.
-
----
-
-**Centralized version management for consistency** 📦
+Vite+ upgrades additionally need the Vite alias override and matching bundled
+Vitest plugins. Run `bun run deps:check` after installation and follow the full
+[dependency maintenance workflow](VERSION_STRATEGY.md).

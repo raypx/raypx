@@ -11,7 +11,17 @@ export default defineConfig(({ mode }) => ({
   // E2E servers receive a synthetic environment and never load local .env files.
   envDir: mode === "e2e" ? false : undefined,
   resolve: {
-    alias: mode === "test" ? workspaceSourceAliases() : undefined,
+    alias:
+      mode === "test"
+        ? [
+            // Router cache unit tests need no generated application route tree.
+            {
+              find: "./routeTree.gen",
+              replacement: fileURLToPath(new URL("./test/fixtures/route-tree.ts", import.meta.url)),
+            },
+            ...workspaceSourceAliases(),
+          ]
+        : undefined,
   },
   plugins:
     mode === "test"
@@ -48,9 +58,10 @@ export default defineConfig(({ mode }) => ({
         }),
   server: { host: "127.0.0.1", port: 5173, strictPort: true },
   test: {
-    name: "web",
+    name: "web-unit",
     environment: "node",
     include: ["test/**/*.{test,spec}.{ts,tsx}", "src/**/*.{test,spec}.{ts,tsx}"],
+    exclude: ["test/integration/**"],
   },
   run: {
     tasks: {
@@ -69,7 +80,13 @@ export default defineConfig(({ mode }) => ({
       start: { command: "bun .output/server/index.mjs", cache: false },
       typecheck: { command: "tsc --noEmit && tsc -p tsconfig.e2e.json", dependsOn: ["build"] },
       test: {
-        command: "vp test run",
+        command:
+          "vp test run --config vite.config.ts && vp test run --config vite.integration.config.ts",
+        dependsOn: ["build"],
+      },
+      "test:unit": { command: "vp test run --project web-unit" },
+      "test:integration": {
+        command: "vp test run --config vite.integration.config.ts",
         dependsOn: ["build"],
       },
     },

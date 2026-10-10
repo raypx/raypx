@@ -34,6 +34,22 @@ signIn({email:"consumer@example.test"});
 // @ts-expect-error schema inference must retain the structured response
 const wrongResponse: Promise<number> = requestJson({path:"/api/health",schema:healthResponseSchema});
 ${
+  fixture.packages.has("@raypx/storage")
+    ? `
+import { createStorageInstance, type Storage, type StorageConfig } from "@raypx/storage";
+const storageConfig: StorageConfig = {memory:true};
+const firstStorage: Storage = createStorageInstance(storageConfig);
+const secondStorage: Storage = createStorageInstance({memory:true});
+const disposal: Promise<void> = firstStorage.dispose();
+void secondStorage; void disposal;
+// @ts-expect-error explicit driver selection must use a boolean
+createStorageInstance({memory:"true"});
+// @ts-expect-error the factory must retain the storage interface
+const wrongStorage: number = createStorageInstance({memory:true});
+`
+    : ""
+}
+${
   core
     ? ""
     : `

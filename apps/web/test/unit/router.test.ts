@@ -1,5 +1,5 @@
 import { expect, test } from "vite-plus/test";
-import { getRouter } from "../src/router";
+import { getRouter } from "../../src/router";
 
 test("independent SSR routers cannot share an account query cache", async () => {
   const first = getRouter();

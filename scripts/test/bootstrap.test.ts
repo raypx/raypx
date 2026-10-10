@@ -139,6 +139,10 @@ test.each([
   { args: ["consumer", "--help"] },
   { args: ["consumer-browser"] },
   { args: ["consumer-browser", "--help"] },
+  { args: ["policy"] },
+  { args: ["policy", "--help"] },
+  { args: ["verify"] },
+  { args: ["verify", "--help"] },
 ])("fresh-checkout $args requires installation without bootstrap actions", ({ args }) => {
   const checkout = fixture();
   writeFileSync(join(checkout.root, ".node-version"), "invalid\n");

@@ -2,7 +2,7 @@
 
 Shared TypeScript configurations for the Raypx monorepo. This package contains only static JSON files;
 it has no runtime code, build step, or placeholder tests. Engineering tasks and boundary tools remain in
-[`@raypx/config`](../config/README.md).
+[`@raypx/config`](../README.md).
 
 ## Available Configurations
 

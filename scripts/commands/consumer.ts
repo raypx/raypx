@@ -14,30 +14,7 @@ export default defineCommand({
   async run({ args }) {
     const { prepareConsumer } = await import("../lib/consumer/prepare.ts");
     await prepareConsumer();
-    const [
-      { buildBrowser, buildCoreBrowser },
-      { createFixture },
-      { checkRuntime },
-      { checkTypes },
-    ] = await Promise.all([
-      import("../lib/consumer/browser.ts"),
-      import("../lib/consumer/fixture.ts"),
-      import("../lib/consumer/runtime.ts"),
-      import("../lib/consumer/types.ts"),
-    ]);
-    const kinds = args.kind === "all" ? (["core", "server", "browser"] as const) : [args.kind];
-    for (const kind of kinds) {
-      const fixture = await createFixture(kind);
-      try {
-        await checkTypes(fixture);
-        if (kind === "browser") await buildBrowser(fixture);
-        else {
-          await checkRuntime(fixture, kind === "core");
-          if (kind === "core") await buildCoreBrowser(fixture);
-        }
-      } finally {
-        await fixture.cleanup();
-      }
-    }
+    const { runConsumers } = await import("../lib/consumer/run.ts");
+    await runConsumers(args.kind);
   },
 });

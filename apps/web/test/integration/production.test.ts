@@ -1,15 +1,13 @@
-import { spawn, type ChildProcess } from "node:child_process";
-import { once } from "node:events";
 import { readFile } from "node:fs/promises";
-import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import { apiErrorResponseSchema } from "@raypx/contracts/errors";
 import { healthResponseSchema, readinessResponseSchema } from "@raypx/contracts/health";
 import { afterAll, beforeAll, expect, test, vi } from "vite-plus/test";
 
-let server: ChildProcess;
+import { spawnTestProcess, startTestServer, type TestServer } from "../helpers/server.ts";
+
+let server: TestServer;
 let baseUrl: string;
-let serverOutput = "";
 const appVersion = "p0-production-version-sentinel";
 const observedRequestIds: string[] = [];
 
@@ -27,7 +25,7 @@ function productionEnvironment(overrides: NodeJS.ProcessEnv = {}): NodeJS.Proces
 
 function logRecords(): Record<string, unknown>[] {
   const records: Record<string, unknown>[] = [];
-  for (const line of serverOutput.split("\n")) {
+  for (const line of server.output().split("\n")) {
     try {
       const value: unknown = JSON.parse(line);
       if (value !== null && typeof value === "object" && !Array.isArray(value))
@@ -40,63 +38,23 @@ function logRecords(): Record<string, unknown>[] {
 }
 
 beforeAll(async () => {
-  const reservation = createServer();
-  reservation.listen(0, "127.0.0.1");
-  await once(reservation, "listening");
-  const address = reservation.address();
-  if (!address || typeof address === "string") throw new Error("No test port available");
-  const port = address.port;
-  await new Promise<void>((resolve, reject) =>
-    reservation.close((error) => (error ? reject(error) : resolve())),
-  );
-  baseUrl = `http://127.0.0.1:${port}`;
-  server = spawn("bun", ["--no-env-file", ".output/server/index.mjs"], {
-    cwd: fileURLToPath(new URL("../", import.meta.url)),
-    env: productionEnvironment({ PORT: String(port) }),
-    stdio: ["ignore", "pipe", "pipe"],
+  server = await startTestServer({
+    command: "bun",
+    args: () => ["--no-env-file", ".output/server/index.mjs"],
+    cwd: fileURLToPath(new URL("../../", import.meta.url)),
+    env: (port) => productionEnvironment({ PORT: String(port) }),
   });
-  let startupError: Error | undefined;
-  server.once("error", (error) => {
-    startupError = error;
-  });
-  server.stdout?.on("data", (chunk: Buffer) => {
-    serverOutput += chunk.toString();
-  });
-  server.stderr?.on("data", (chunk: Buffer) => {
-    serverOutput += chunk.toString();
-  });
-  const deadline = Date.now() + 10_000;
-  while (Date.now() < deadline) {
-    if (startupError)
-      throw new Error("Bun production server could not start", { cause: startupError });
-    if (server.exitCode !== null) throw new Error(`Production server exited: ${serverOutput}`);
-    try {
-      const response = await fetch(`${baseUrl}/api/health`, { signal: AbortSignal.timeout(500) });
-      if (response.ok) return;
-    } catch {
-      /* Wait for the listener to become available. */
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error(`Production server did not become ready: ${serverOutput}`);
-}, 15_000);
+  baseUrl = server.baseURL;
+}, 20_000);
 
 afterAll(async () => {
-  if (!server?.pid || server.exitCode !== null) return;
-  const closed = once(server, "close");
-  server.kill("SIGTERM");
-  const timeout = setTimeout(() => server.kill("SIGKILL"), 5000);
-  try {
-    await closed;
-  } finally {
-    clearTimeout(timeout);
-  }
+  await server?.stop();
 });
 
 test("production targets Bun while Vitest runs on Node", async () => {
   expect(process.versions.bun).toBeUndefined();
   const build = JSON.parse(
-    await readFile(new URL("../.output/nitro.json", import.meta.url), "utf8"),
+    await readFile(new URL("../../.output/nitro.json", import.meta.url), "utf8"),
   ) as { preset: unknown; serverEntry: unknown; commands: { preview: unknown } };
 
   expect(build.preset).toBe("bun");
@@ -257,8 +215,8 @@ test("production access logs contain request context and duration without query 
     expect(record?.durationMs).toBeTypeOf("number");
     expect(record?.durationMs).toBeGreaterThanOrEqual(0);
   });
-  expect(serverOutput).not.toContain("querysecret");
-  expect(serverOutput).not.toContain(secret);
+  expect(server.output()).not.toContain("querysecret");
+  expect(server.output()).not.toContain(secret);
 });
 
 test("production uses the supplied listen port and application version at runtime", async () => {
@@ -273,34 +231,32 @@ test("production uses the supplied listen port and application version at runtim
 test.each(["PORT", "NITRO_PORT"])(
   "direct production startup rejects invalid %s before listening without exposing its value",
   async (field) => {
-    const processUnderTest = spawn("bun", ["--no-env-file", ".output/server/index.mjs"], {
-      cwd: fileURLToPath(new URL("../", import.meta.url)),
+    const child = spawnTestProcess({
+      command: "bun",
+      args: ["--no-env-file", ".output/server/index.mjs"],
+      cwd: fileURLToPath(new URL("../../", import.meta.url)),
       env: productionEnvironment({ [field]: "abc" }),
-      stdio: ["ignore", "pipe", "pipe"],
     });
-    let output = "";
-    processUnderTest.stdout?.on("data", (chunk: Buffer) => {
-      output += chunk.toString();
-    });
-    processUnderTest.stderr?.on("data", (chunk: Buffer) => {
-      output += chunk.toString();
-    });
-    const deadline = setTimeout(() => processUnderTest.kill("SIGKILL"), 5000);
+    let deadline: ReturnType<typeof setTimeout> | undefined;
     try {
-      const [code, signal] = (await once(processUnderTest, "exit")) as [
-        number | null,
-        NodeJS.Signals | null,
-      ];
+      const { code, signal } = await Promise.race([
+        child.exited,
+        new Promise<never>((_, reject) => {
+          deadline = setTimeout(
+            () => reject(new Error("Invalid environment process did not exit")),
+            5000,
+          );
+        }),
+      ]);
       expect(signal).toBeNull();
       expect(code).toBeTypeOf("number");
       expect(code).not.toBe(0);
-      expect(output).toContain("Invalid server environment");
-      expect(output).toContain(`${field}:`);
-      expect(output).not.toContain("abc");
+      expect(child.output()).toContain("Invalid server environment");
+      expect(child.output()).toContain(`${field}:`);
+      expect(child.output()).not.toContain("abc");
     } finally {
       clearTimeout(deadline);
-      if (processUnderTest.exitCode === null && processUnderTest.signalCode === null)
-        processUnderTest.kill("SIGKILL");
+      await child.stop();
     }
   },
   10_000,

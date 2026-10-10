@@ -26,6 +26,12 @@ export const bootstrapCommands = {
 } as const;
 
 export const installedCommands = {
+  clean: { description: "Remove generated artifacts and local tool caches." },
+  deps: { description: "Check coupled dependency versions without changing files." },
+  policy: {
+    description: "Check workspace registration, TypeScript inheritance, and documentation.",
+  },
+  verify: { description: "Run the ordered repository acceptance gates." },
   consumer: { description: "Validate public packages in independent consumer installations." },
   "consumer-browser": { description: "Exercise the independent browser consumer in Chromium." },
 } as const;
@@ -56,7 +62,7 @@ export function printBootstrapUsage(root: string): void {
   for (const [name, command] of Object.entries({ ...bootstrapCommands, ...installedCommands }))
     console.log(`  ${name.padEnd(19)} ${command.description}`);
   console.log(
-    "\nUse raypx <command> --help for command options. Run bun install to enable consumer commands.",
+    "\nUse raypx <command> --help for command options. Run bun install to enable installed commands.",
   );
 }
 

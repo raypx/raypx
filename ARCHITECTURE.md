@@ -207,6 +207,13 @@ not cached. The project has no separate API process or remote build cache.
 
 Root commands are the authoritative engineering interface. Knip checks unused
 files and dependencies using public exports and explicit dynamic entrypoints.
+`raypx policy` checks workspace registration, TypeScript inheritance, and local
+documentation links without writes. `raypx verify` and its root `check` alias
+run one ordered gate: source checks, builds, typed lint/types, tests, Storybook
+build, and independent consumers. They stop at the first failure; consumers
+reuse the artifacts already prepared by that workflow. The policy/report and
+explicit gate separation adapts the local voidmix engineering CLI while
+preserving Raypx's Vite+ task graph and dependency-free diagnostic bootstrap.
 Application browser tests exercise dev and built servers. Separate consumers
 install public build outputs outside the repository, validating ESM, declarations,
 CSS, migrations, and browser boundaries without source aliases.

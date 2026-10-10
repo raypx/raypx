@@ -1,298 +1,91 @@
-# Dependency Version Strategy
+# Dependency maintenance
 
-## Current Approach: Fixed Versions
+`bun.lock` is the reproducible installation baseline. Shared runtime and toolchain
+versions live in the root `workspaces.catalog`; workspace manifests use `catalog:`.
+Some application dependencies retain semver ranges, so keep the lockfile in every
+upgrade and use `bun install --frozen-lockfile` in CI.
 
-### Why Fixed Versions?
+## Local workflow
 
-```json
-{
-  "catalog": {
-    "evlog": "2.30.1", // Exact version
-    "unstorage": "1.14.1", // Exact version
-    "better-auth": "1.6.1" // Exact version
-  }
-}
+```sh
+# Read registry availability for the root and every workspace; does not write files.
+bun run deps:outdated
+# Optionally restrict the report to a dependency family.
+bun run deps:outdated 'playwright*'
+
+# Upgrade a direct (non-catalog) declaration, after reviewing release notes.
+bun run deps:update 'citty@0.2.2'
+# Preview the same operation without writing files.
+bun run deps:update --dry-run 'citty@0.2.2'
+
+# Validate related versions against the installed toolchain.
+bun run deps:check
+# Equivalent repository CLI command; works from any cwd with the absolute bin path.
+bun raypx deps
+
+bun install --frozen-lockfile
+bun run check
+bun run storybook:test
+bun run test:e2e
+bun run test:consumer:browser
 ```
 
-### Advantages ✅
+The version above illustrates explicit selection, not a recommendation to downgrade
+or a promise that it is the newest release. `deps:update` delegates to
+`bun update --recursive`: with no package arguments it updates within existing
+ranges; exact pins stay pinned. `--latest` ignores those ranges, so select packages
+explicitly when crossing a pin or major version. For catalog dependencies, edit the version in root `workspaces.catalog`, then run
+`bun install` to update `bun.lock`. Keep workspace `catalog:` declarations intact.
+With the pinned Bun 1.4.2, an explicit `bun update package@version` may leave an
+exact catalog pin unchanged; do not treat a zero exit code as proof it upgraded.
+Review every manifest and lockfile change before merging.
+There is no Taze dependency or `update:minor`/`update:patch` wrapper.
 
-1. **Predictable Builds**
-   - Same code today = same code tomorrow
-   - No surprise breakages from dependency updates
-   - CI/CD runs are reproducible
+## Related upgrades
 
-2. **Team Consistency**
-   - Everyone on the team uses identical versions
-   - "Works on my machine" issues reduced
-   - Lock file ensures exact resolution
+| Group          | Update together                                                                                                                | Acceptance                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Vite+ / Vitest | Catalog `vite-plus`, aliased `vite`, root `overrides["vite@*"]`, `vitest`, `@vitest/coverage-v8`, `@vitest/browser-playwright` | `deps:check`, full check, Storybook and browser suites, coverage smoke       |
+| Storybook      | `storybook` and all `@storybook/*` packages in UI                                                                              | Same exact release, static build and browser stories                         |
+| Playwright     | Catalog `playwright`; root, web, and UI consume the same entry                                                                 | Install Chromium for the new release, run all browser suites                 |
+| Bun / Node     | Version files, `packageManager`, `devEngines`, `engines`, related type packages, CI and documentation                          | `check:env` before installation, frozen installation and complete acceptance |
 
-3. **Security**
-   - You control when updates happen
-   - Can audit changes before upgrading
-   - No automatic breaking changes
+Vite+ owns the test runner version. Read its installed `package.json` or release
+metadata to select the matching Vitest plugins; the newest standalone Vitest
+release may not match. Keep the Vite alias and override on the core version declared by that
+Vite+ release. `deps:check` rejects drift and stale installations and runs inside
+`bun run check`. It reads local manifests only and never installs or updates anything.
+Grouping an upgrade PR does not establish compatibility: failed checks must be
+resolved before merge. Tests include intentionally mismatched versions.
 
-4. **Debugging**
-   - Easier to trace issues to specific versions
-   - Stack traces match published code
-   - Community support references same version
+## Renovate
 
-### Disadvantages ❌
+The repository includes `renovate.json` with weekly Bun and GitHub Actions updates,
+separate groups for the three tool families, and lockfile maintenance. Automerge is
+disabled. Runtime pins are manual because multiple declarations must move together.
+The [Bun manager](https://docs.renovatebot.com/modules/manager/bun/) owns package
+ordinary manifests and `bun.lock`. Two scoped custom regex managers extract the
+root catalog and npm aliases (including the wildcard Vite override), which the
+validated Renovate version does not extract natively. All extracted versions
+join the same package groups. Recheck these managers when upgrading Renovate to
+avoid duplicate extraction if native support is added. Do not configure a second
+npm lockfile workflow.
 
-1. **Manual Updates Required**
-   - Need to actively check for updates
-   - Security patches require manual intervention
-   - Can fall behind quickly
+To activate automated PRs, a repository administrator must enable the Renovate
+GitHub App for their fork (or configure their own Renovate runner). This repository
+configuration does not install an app, grant permissions, or establish a running
+schedule by itself. The local commands above remain usable without an account.
+Require the final CI `check` status; it includes quality and browser jobs.
 
-2. **Maintenance Burden**
-   - Regular update cycle needed
-   - Testing after each update
+Validate configuration changes with the official validator using Node.js 24.10+
+in an isolated tools directory. The validator has its own runtime requirement;
+repository work continues to use the pinned Node.js 22 toolchain:
 
----
-
-## Alternative: Version Ranges
-
-### Caret Ranges (^)
-
-```json
-{
-  "catalog": {
-    "evlog": "^2.30.1", // 2.30.1 <= version < 3.0.0
-    "unstorage": "^1.14.1" // 1.14.1 <= version < 2.0.0
-  }
-}
+```sh
+# Run outside this checkout; use an absolute path to its renovate.json.
+npx --yes --package renovate@44.149.1 -- renovate-config-validator \
+  --strict --no-global /absolute/path/to/raypx/renovate.json
 ```
 
-**Allows:**
-
-- ✅ Minor updates (1.14.1 → 1.15.0)
-- ✅ Patch updates (1.14.1 → 1.14.2)
-- ❌ Major updates (1.x.x → 2.x.x)
-
-**Good for:** Stable, well-maintained packages following semver
-
-### Tilde Ranges (~)
-
-```json
-{
-  "catalog": {
-    "evlog": "~2.30.1", // 2.30.1 <= version < 2.31.0
-    "unstorage": "~1.14.1" // 1.14.1 <= version < 1.15.0
-  }
-}
-```
-
-**Allows:**
-
-- ✅ Patch updates only (1.14.1 → 1.14.9)
-- ❌ Minor updates (1.14.x → 1.15.x)
-- ❌ Major updates
-
-**Good for:** Conservative updates, security patches only
-
-### Greater/Less Than
-
-```json
-{
-  "catalog": {
-    "evlog": ">=2.30.1 <3.0.0" // Explicit range
-  }
-}
-```
-
-**Good for:** Complex compatibility requirements
-
----
-
-## Recommended Strategy
-
-### For Raypx Template
-
-**Use Fixed Versions Because:**
-
-1. **It's a Template**
-   - Users fork and customize
-   - They should get a known-working state
-   - Prevents "broken on clone" issues
-
-2. **Production-Ready Baseline**
-   - All versions tested together
-   - Known to work as a unit
-   - Users can upgrade on their own schedule
-
-3. **Documentation Accuracy**
-   - Docs match exact behavior
-   - Examples work as written
-   - Reduces support burden
-
-### Implementation
-
-```json
-{
-  "workspaces": {
-    "catalog": {
-      // Core framework (fixed for stability)
-      "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0",
-      "vite-plus": "1.1.0",
-
-      // Backend dependencies (fixed)
-      "evlog": "2.30.1",
-      "better-sqlite3": "11.8.1",
-      "drizzle-orm": "0.36.4",
-      "better-auth": "1.6.1",
-      "unstorage": "1.14.1",
-      "ioredis": "5.4.2"
-    }
-  },
-  "devDependencies": {
-    // Use taze for manual updates
-    "taze": "^0.17.2"
-  },
-  "scripts": {
-    "update": "taze major -r -w",
-    "update:minor": "taze minor -r -w",
-    "update:patch": "taze patch -r -w"
-  }
-}
-```
-
----
-
-## Update Strategy
-
-### Manual Updates with Taze
-
-```bash
-# Check for updates (don't write)
-bunx taze major -r
-
-# Update all to latest
-bun run update
-
-# Update minor/patch only (safer)
-bun run update:minor
-```
-
-### Automated Updates (Optional)
-
-Use Renovate or Dependabot for PRs:
-
-```json
-// renovate.json
-{
-  "extends": ["config:base"],
-  "packageRules": [
-    {
-      "matchManagers": ["bun"],
-      "enabled": true
-    }
-  ],
-  "schedule": ["every weekend"],
-  "automerge": false
-}
-```
-
----
-
-## When to Change Strategy
-
-### Use Ranges If:
-
-1. **Active Development Phase**
-   - Rapidly evolving codebase
-   - Want latest features immediately
-   - Team can handle breaking changes
-
-2. **Single Team Project**
-   - Not a template/library
-   - Controlled environment
-   - Quick feedback on issues
-
-3. **Following Specific Package**
-   - Trust package's semver adherence
-   - Need automatic security patches
-   - Example: `"zod": "^3.0.0"`
-
-### Keep Fixed If:
-
-1. **Public Template** ✅ (Raypx)
-   - Users expect stability
-   - Reduce support burden
-   - Known-working baseline
-
-2. **Production App**
-   - Zero tolerance for surprises
-   - Controlled update schedule
-   - Thorough testing required
-
-3. **Complex Dependencies**
-   - Packages with frequent breaking changes
-   - Immature ecosystem
-   - Need exact compatibility
-
----
-
-## Comparison Table
-
-| Aspect               | Fixed      | Caret (^) | Tilde (~) |
-| -------------------- | ---------- | --------- | --------- |
-| **Predictability**   | ⭐⭐⭐⭐⭐ | ⭐⭐⭐    | ⭐⭐⭐⭐  |
-| **Security Patches** | Manual     | Auto      | Auto      |
-| **Breaking Changes** | Never      | Rare      | Never     |
-| **Maintenance**      | Manual     | Automated | Automated |
-| **Stability**        | Highest    | Medium    | High      |
-| **Freshness**        | Manual     | Automatic | Automatic |
-
----
-
-## Recommendation for Raypx
-
-### Keep Fixed Versions ✅
-
-**Rationale:**
-
-1. It's a **Forge template** - users clone a working baseline
-2. Predictability > Freshness for templates
-3. Users can upgrade on their own schedule
-4. Reduces "doesn't work on my machine" issues
-5. Documentation stays accurate
-
-**But Provide Easy Updates:**
-
-```bash
-# Users can update when ready
-bun run update
-```
-
-**Document in README:**
-
-````markdown
-## Updating Dependencies
-
-This template uses fixed versions for stability.
-
-To update to latest versions:
-
-```bash
-bun run update
-```
-````
-
-```
-
----
-
-## Conclusion
-
-**For Raypx:** Fixed versions are the right choice because:
-- ✅ It's a template (not an app)
-- ✅ Stability matters more than freshness
-- ✅ Users expect it to "just work"
-- ✅ Reduce support burden
-- ✅ Provide update tools for user control
-
-**Users who want ranges can change them after forking.**
-
----
-
-**Stability first, updates on demand** 🔒
-```
+See [Renovate validation](https://docs.renovatebot.com/config-validation/),
+[Bun update](https://bun.com/docs/pm/cli/update), and [testing](../TESTING.md).

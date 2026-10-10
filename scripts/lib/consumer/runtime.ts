@@ -46,15 +46,29 @@ try {
   const auth = createAuth({database:connection.db,secret:"consumer-secret-".repeat(4),baseURL:"https://consumer.test",environment:"test"});
   assert.equal(await auth.api.getSession({headers:new Headers()}), null);
 } finally { connection.close(); }
-const { getStorage, closeStorage } = await import("@raypx/storage");
+const { createStorageInstance, getStorage, closeStorage } = await import("@raypx/storage");
 const { createCache } = await import("@raypx/storage/cache");
 const storage = getStorage({memory:true});
+const firstStorage = createStorageInstance({memory:true});
+const secondStorage = createStorageInstance({memory:true});
 try {
-  const cache = createCache({storage,namespace:"consumer",schema:{parse(value){if(typeof value!=="string")throw new Error("Invalid value");return value}}});
+  await firstStorage.setItem("shared-key", "first");
+  await secondStorage.setItem("shared-key", "second");
+  await storage.setItem("shared-key", "default");
+  assert.equal(await firstStorage.getItem("shared-key"), "first");
+  assert.equal(await secondStorage.getItem("shared-key"), "second");
+  const disposal = firstStorage.dispose();
+  assert.equal(firstStorage.dispose(), disposal);
+  await disposal;
+  await closeStorage();
+  assert.equal(await secondStorage.getItem("shared-key"), "second");
+  assert.equal(await firstStorage.getItem("shared-key"), null);
+  const cacheStorage = getStorage({memory:true});
+  const cache = createCache({storage:cacheStorage,namespace:"consumer",schema:{parse(value){if(typeof value!=="string")throw new Error("Invalid value");return value}}});
   assert.equal(await cache.getOrSet("key",30,()=>"value"), "value");
   assert.deepEqual(await cache.get("key"), {hit:true,value:"value"});
   await cache.invalidate("key"); assert.deepEqual(await cache.get("key"),{hit:false});
-} finally { await closeStorage(); }
+} finally { await Promise.all([firstStorage.dispose(),secondStorage.dispose(),closeStorage()]); }
 const { healthResponse } = await import("@raypx/api/health");
 assert.equal((await healthResponse().json()).status, "ok");
 `
@@ -63,11 +77,11 @@ console.log("Consumer runtime passed: " + (process.versions.bun ? "Bun" : "Node"
 `,
   );
   for (const runtime of ["node", "bun"]) {
-    const output = await run(
+    await run(
       runtime,
       runtime === "bun" ? ["--no-env-file", "smoke.mjs"] : ["smoke.mjs"],
       fixture.directory,
     );
-    scriptLogger.log(output.trim());
+    scriptLogger.success(`Consumer ${runtime}: public runtime checks passed.`);
   }
 }

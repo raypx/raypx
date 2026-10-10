@@ -12,35 +12,98 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Verify policy, source, build, tests, and independent consumers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci-reports
+          bun run verify 2>&1 | tee .ci-reports/quality.log
+      - name: Upload quality failure report
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@v4
         with:
-          bun-version-file: .bun-version
-      - run: bun run check:env
-      - run: bun install --frozen-lockfile
-      - run: bun run check
-      - name: Install Chromium
-        run: bunx --no-install playwright install --with-deps chromium
+          name: quality-reports
+          path: .ci-reports/
+          include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: ignore
+
+  browsers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Build browser acceptance prerequisites
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci-reports
+          bun run build 2>&1 | tee .ci-reports/build.log
+      - name: Set up cached Chromium and system dependencies
+        id: chromium
+        uses: ./.github/actions/chromium
       - name: Test UI interactions and accessibility
-        run: bun run storybook:test
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.chromium.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run storybook:test 2>&1 | tee .ci-reports/storybook.log
       - name: Test application in development and production
-        run: bun run test:e2e
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.chromium.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run test:e2e 2>&1 | tee .ci-reports/application.log
       - name: Test independent UI consumer
-        run: bun run test:consumer:browser
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.chromium.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run test:consumer:browser 2>&1 | tee .ci-reports/consumer.log
       - name: Upload browser failure reports
-        if: failure()
+        if: ${{ failure() || cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: browser-reports
           path: |
+            .ci-reports/
             apps/web/playwright-report/
             apps/web/test-results/
             playwright-report/
             test-results/
+          include-hidden-files: true
+          retention-days: 7
           if-no-files-found: ignore
+
+  # Keep the original status name for branch protection while work runs in parallel.
+  check:
+    name: check
+    if: ${{ always() }}
+    needs: [quality, browsers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every validation job to succeed
+        shell: bash
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          BROWSERS_RESULT: ${{ needs.browsers.result }}
+        run: |
+          set -euo pipefail
+          if [ "$QUALITY_RESULT" != success ] || [ "$BROWSERS_RESULT" != success ]; then
+            printf '::error::Required jobs did not both succeed (quality=%s, browsers=%s).\n' "$QUALITY_RESULT" "$BROWSERS_RESULT"
+            exit 1
+          fi
+          printf 'Quality and browser acceptance both succeeded.\n'

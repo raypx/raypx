@@ -77,43 +77,51 @@ an isolated QueryClient for SSR and browser navigation. See the
 
 ## Commands and Checks
 
-| Command                                   | Purpose                                                                           |
-| ----------------------------------------- | --------------------------------------------------------------------------------- |
-| `bun run dev`                             | Build dependencies, then run watchers and Start                                   |
-| `bun run build`                           | Build runtime packages and the application                                        |
-| `bun run start`                           | Run the built server with Bun                                                     |
-| `bun run setup`                           | Create application configuration without overwriting it                           |
-| `bun run raypx --help`                    | Show the unified repository CLI and its subcommands                               |
-| `bun run check:env`                       | Validate development tool versions and declarations                               |
-| `bun run check:runtime-env`               | Validate current application runtime configuration                                |
-| `bun --no-env-file run doctor`            | Diagnose local tools, configuration, dependencies, and hooks                      |
-| `bun run db:migrate`                      | Apply database migrations explicitly before enabling account features             |
-| `bun run check:boundaries`                | Check package dependencies, exports, cycles, and browser isolation                |
-| `bun run check:unused`                    | Audit unused files, exports, and dependencies with Knip                           |
-| `bun run check:consumer`                  | Verify built packages in independent Node, Bun, TypeScript, and browser consumers |
-| `bun run typecheck`                       | Check workspace and root script TypeScript                                        |
-| `bun run typecheck:scripts`               | Check engineering scripts and their test/configuration files                      |
-| `bun run test`                            | Run workspace, production integration, and root script tests                      |
-| `bun run test:scripts`                    | Run diagnostic, CLI, lock graph, and process regression tests                     |
-| `bun run test:watch`                      | Watch tests, excluding production integration tests                               |
-| `bun run test:coverage`                   | Build and run tests with V8 coverage                                              |
-| `bun run lint` / `bun run lint:fix`       | Check or fix lint issues                                                          |
-| `bun run format` / `bun run format:check` | Write or check formatting                                                         |
-| `bun run staged`                          | Validate tools, then lint and format staged files                                 |
-| `bun run check`                           | Build, format, lint, boundaries, unused code, types, tests, and consumers         |
-| `bun run test:e2e`                        | Test application pages in Chromium against development and production             |
-| `bun run test:consumer:browser`           | Test an independent UI consumer in Chromium                                       |
-| `bun run storybook`                       | Explore UI components, states, Controls, Docs, and themes on port 6006            |
-| `bun run storybook:build`                 | Build the standalone static UI reference                                          |
-| `bun run storybook:install`               | Install Chromium for browser story tests                                          |
-| `bun run storybook:test`                  | Render stories and verify interactions and accessibility                          |
+| Command                                    | Purpose                                                                           |
+| ------------------------------------------ | --------------------------------------------------------------------------------- |
+| `bun run dev`                              | Build dependencies, then run watchers and Start                                   |
+| `bun run build`                            | Build runtime packages and the application                                        |
+| `bun run clean`                            | Remove generated outputs and local tool caches; `--dry-run` previews paths        |
+| `bun run start`                            | Run the built server with Bun                                                     |
+| `bun run setup`                            | Create application configuration without overwriting it                           |
+| `bun run raypx --help`                     | Show the unified repository CLI and its subcommands                               |
+| `bun run check:env`                        | Validate development tool versions and declarations                               |
+| `bun run check:runtime-env`                | Validate current application runtime configuration                                |
+| `bun --no-env-file run doctor`             | Diagnose local tools, configuration, dependencies, and hooks                      |
+| `bun run db:migrate`                       | Apply database migrations explicitly before enabling account features             |
+| `bun run check:boundaries`                 | Check package dependencies, exports, cycles, and browser isolation                |
+| `bun run deps:check`                       | Check related Vite+, Vitest, Storybook, and Playwright versions                   |
+| `bun run deps:outdated`                    | Report available dependency updates across workspaces                             |
+| `bun run deps:update <package>@<version>`  | Update selected dependencies and the Bun lockfile                                 |
+| `bun run check:unused`                     | Audit unused files, exports, and dependencies with Knip                           |
+| `bun run check:consumer`                   | Verify built packages in independent Node, Bun, TypeScript, and browser consumers |
+| `bun run typecheck`                        | Check workspace and root script TypeScript                                        |
+| `bun run typecheck:scripts`                | Check engineering scripts and their test/configuration files                      |
+| `bun run test`                             | Run workspace, production integration, and root script tests                      |
+| `bun run test:unit`                        | Run source-based unit tests without a production build                            |
+| `bun run test:integration`                 | Build and test the production Bun service                                         |
+| `bun run test:scripts`                     | Run diagnostic, CLI, lock graph, and process regression tests                     |
+| `bun run test:watch`                       | Watch tests, excluding production integration tests                               |
+| `bun run test:coverage`                    | Build and run tests with V8 coverage                                              |
+| `bun run lint` / `bun run lint:fix`        | Check or fix lint issues                                                          |
+| `bun run format` / `bun run format:check`  | Write or check formatting                                                         |
+| `bun run staged`                           | Validate tools, then lint and format staged files                                 |
+| `bun run policy` / `bun run policy --json` | Check workspace registration, TypeScript inheritance, and local documentation     |
+| `bun run verify`                           | Run ordered source, build, type, test, and consumer acceptance gates              |
+| `bun run check`                            | Compatibility alias for the same verify workflow                                  |
+| `bun run test:e2e`                         | Test application pages in Chromium against development and production             |
+| `bun run test:consumer:browser`            | Test an independent UI consumer in Chromium                                       |
+| `bun run storybook`                        | Explore UI components, states, Controls, Docs, and themes on port 6006            |
+| `bun run storybook:build`                  | Build the standalone static UI reference                                          |
+| `bun run storybook:install`                | Install Chromium for browser story tests                                          |
+| `bun run storybook:test`                   | Render stories and verify interactions and accessibility                          |
 
 Package tasks live in their `vite.config.ts`, for example
 `bun run vp run @raypx/contracts#build`. Runtime packages compile to ESM and
 TypeScript declarations. Engineering tools and JSON presets need no initial
 build. Test APIs import from `vite-plus/test`; client React and UI tests use
-jsdom, server packages use Node. Direct root `vp test` runs need existing production artifacts
-or must exclude `production.test.ts`.
+jsdom, server packages use Node. `test:unit` and `test:watch` select source-based
+projects; `test:integration` builds and runs the separate production project.
 
 Storybook lives in `packages/ui` and runs independently of Start and server providers.
 The full check includes its static build; browser story tests have their own command.
@@ -131,11 +139,39 @@ and bootstrap boundaries are documented in the [scripts guide](scripts/README.md
 
 Build, type check, and test tasks use local cache with transitive inputs;
 watching and production startup do not cache. Root `vite.config.ts` owns lint,
-formatting, test projects, and coverage. Root script tests have their own uncached
+formatting, and staged checks; `vitest.config.mts` owns test projects and coverage.
+Root script tests have their own uncached
 `scripts` project; the Bun entrypoint `scripts/bin/raypx.ts` dispatches repository commands,
 with installed command definitions in `scripts/commands` and implementation in `scripts/lib`.
 The AST boundary checker additionally protects package imports.
 See [TESTING.md](TESTING.md) and the [scripts guide](scripts/README.md).
+Dependency upgrade steps and coupled toolchain rules live in
+[Dependency maintenance](docs/VERSION_STRATEGY.md).
+
+`verify` starts with environment, dependency, policy, formatting, boundary, and
+unused-code checks before building. Typed lint and type checks follow the build,
+then workspace/script tests, the Storybook build, and independent consumers.
+It stops at the first failed stage and reports its command and bounded output.
+Use `bun run verify --verbose` to stream subprocess output. `check` runs this same
+workflow; browser suites remain separate. Policy is read-only and reports fixes
+for workspace manifests, TypeScript inheritance, and local documentation links.
+See the [scripts guide](scripts/README.md) for its scope and report format.
+
+Stop development servers and watchers before cleaning generated files:
+
+```sh
+bun run clean --dry-run
+bun run clean
+# Equivalent unified CLI command:
+bun raypx clean
+```
+
+`clean` is an installed citty command. It removes known build outputs, reports,
+and local tool caches from a fixed allowlist; `bun run build` recreates build
+outputs afterward. Dependencies, global caches, `.env` files, local databases
+and `data/`, and installed Git hooks are preserved. It does not recursively
+search source directories or follow parent-directory symlinks. See the
+[cleaning guide](scripts/README.md#cleaning-generated-files) for the exact scope.
 
 ## Git Hooks
 

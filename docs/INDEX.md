@@ -1,33 +1,44 @@
-# Documentation Structure
+# Documentation index
 
-## Root Level
+Current implementation and verification commands are documented in the guides
+below. `bun run policy` checks local links and requires every Markdown document
+under `docs/` to be reachable from this index.
 
-- **README.md** - Main project documentation
-- **CONTRIBUTING.md** - How to contribute
-- **CHANGELOG.md** - Version history
-- **LICENSE** - MIT license
-- **AGENTS.md** - AI development guide
-- **CLAUDE.md** - Claude AI context
-- **FORGE_CHECKLIST.md** - Template quality checklist
+## Start here
 
-## docs/ Directory
+- [Project overview and commands](../README.md)
+- [Contributing](../CONTRIBUTING.md)
+- [Architecture and package boundaries](../ARCHITECTURE.md)
+- [Architecture guide and package references](ARCHITECTURE.md)
+- [Environment configuration](../ENV.md)
+- [Testing and verification](../TESTING.md)
+- [Engineering scripts, policy, verify, and clean](../scripts/README.md)
+- [Continuous integration](../.github/README.md)
+- [AI development rules](../AGENTS.md)
 
-### User Documentation
+## Foundations and engineering
 
-- **ARCHITECTURE.md** - System architecture overview
-- **FOUNDATIONS.md** - Reusable capabilities, activation, usage, and practical limits
-- **DOCKER.md** - Docker deployment guide
-- **BUN_CATALOG.md** - Dependency management
+- [Reusable foundations](FOUNDATIONS.md)
+- [Doctor diagnostics](DOCTOR.md)
+- [Independent consumer acceptance](CONSUMER_TESTING.md)
+- [Vite and Vitest configuration](VITE_VITEST_CONFIG.md)
+- [Dependency maintenance](VERSION_STRATEGY.md)
+- [Bun catalogs](BUN_CATALOG.md)
+- [Docker deployment guide](DOCKER.md)
 
-### Package Documentation
+Package interfaces and usage live in each package's README, linked from the
+[architecture guide](ARCHITECTURE.md) and [foundations guide](FOUNDATIONS.md).
 
-Each package has its own README.md:
+## Historical decisions and proposals
 
-- `packages/logger/README.md`
-- `packages/db/README.md`
-- `packages/auth/README.md`
-- `packages/storage/README.md`
+These documents preserve earlier reasoning or progress. They do not define
+current commands or promise that proposed capabilities are implemented; consult
+the current guides above for the supported behavior.
 
----
-
-All temporary decision documents and progress logs have been removed.
+- [Scripts organization proposal](SCRIPTS_ORGANIZATION.md)
+- [Scripts package discussion](SCRIPTS_PACKAGE_DECISION.md)
+- [API architecture decision](API_ARCHITECTURE_DECISION.md)
+- [CLI and worker architecture](CLI_WORKER_ARCHITECTURE.md)
+- [Database enhancement proposal](DATABASE_ENHANCEMENT_PLAN.md)
+- [Hono integration proposal](HONO_INTEGRATION.md)
+- [JSDoc progress record](JSDOC_PROGRESS.md)

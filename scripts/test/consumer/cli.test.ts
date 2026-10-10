@@ -62,7 +62,17 @@ test.each([{ args: [] }, { args: ["--help"] }, { args: ["-h"] }])(
     const result = await invoke(args);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("USAGE");
-    for (const name of ["doctor", "env", "setup", "consumer", "consumer-browser"]) {
+    for (const name of [
+      "doctor",
+      "env",
+      "setup",
+      "clean",
+      "deps",
+      "policy",
+      "verify",
+      "consumer",
+      "consumer-browser",
+    ]) {
       expect(result.stdout).toContain(name);
     }
     expect(result.stderr).toBe("");
@@ -78,6 +88,36 @@ test.each([
   expect(result.status).toBe(1);
   expect(result.stderr).toContain("Unknown command or root option");
   expect(result.stdout).toBe("");
+});
+
+test("dependency command help and invalid arguments have no preparation side effects", async () => {
+  const help = await invoke(["deps", "--help"]);
+  expect(help.status).toBe(0);
+  expect(help.stdout).toContain("raypx deps");
+  const invalid = await invoke(["deps", "--help", "--unknown"]);
+  expect(invalid.status).toBe(1);
+  expect(invalid.stderr).toContain("Unsupported arguments for deps");
+});
+
+describe.each(["policy", "verify"])("raypx %s has no help or argument side effects", (command) => {
+  test.each(["--help", "-h"])("renders %s without running gates", async (flag) => {
+    const result = await invoke([command, flag]);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain(`raypx ${command}`);
+    expect(result.stderr).toBe("");
+  });
+
+  test.each([
+    { args: ["--unknown"] },
+    { args: ["unexpected"] },
+    { args: ["--help", "--unknown"] },
+    { args: ["--skip-prepare"] },
+  ])("rejects $args without running gates", async ({ args }) => {
+    const result = await invoke([command, ...args]);
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toMatch(/Unknown option|Unexpected argument/);
+  });
 });
 
 describe.each(["consumer", "consumer-browser"])("raypx %s", (command) => {

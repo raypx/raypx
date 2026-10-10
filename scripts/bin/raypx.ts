@@ -24,7 +24,7 @@ else {
   } else if (!existsSync(join(root, "node_modules/citty/package.json"))) {
     if (help) printBootstrapUsage(root);
     else {
-      console.error("Consumer tooling is not installed. Run bun install first.");
+      console.error("Repository tooling is not installed. Run bun install first.");
       process.exitCode = 1;
     }
   } else {

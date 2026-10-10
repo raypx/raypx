@@ -11,7 +11,7 @@ scripts/
   bin/
     raypx.ts                 Bun CLI and dependency-free bootstrap routing
   cli.ts                     citty command registration and strict dispatch
-  commands/                  Installed consumer command definitions
+  commands/                  Installed repository command definitions
   doctor.ts                  Diagnostic CLI and Bun env bootstrap
   doctor-database.ts         Isolated read-only database probe
   check-consumer.ts          Compatibility entry for raypx consumer
@@ -22,6 +22,9 @@ scripts/
     cli/                     Bootstrap metadata, native help, and dispatch
     doctor/                  Local checks, probes, report, and orchestration
     consumer/                Lock graph, fixtures, types, runtimes, and browser
+    dependencies/            Offline toolchain compatibility checks
+    policy/                  Read-only workspace, TypeScript, and documentation rules
+    verify/                  Ordered acceptance gates and phase reporting
     logger.ts                Plain-text consumer phase logging with consola
     process.ts               Bounded subprocess execution and cleanup
   test/                      Node unit and subprocess regression tests
@@ -39,6 +42,13 @@ bun run raypx setup
 bun --no-env-file run raypx doctor --json
 bun run raypx consumer --kind core
 bun run raypx consumer-browser
+bun run raypx deps
+bun run policy
+bun run policy --json
+bun run verify
+bun run verify --verbose
+bun raypx clean --dry-run
+bun run clean
 bun run test:scripts
 bun run typecheck:scripts
 bun --no-env-file run doctor
@@ -73,16 +83,100 @@ or use the root Bun script. These flags disable env-file loading and automatic
 dependency installation. For doctor, the outer `bun --no-env-file` preserves application
 env loading in `apps/web`. A fresh checkout can use root help/version, doctor,
 development env checking, and setup without installing third-party packages;
-consumer commands require `bun install`.
+consumer, dependency, policy, and verify commands require `bun install`.
+
+`clean` also uses the installed citty command tree and requires `bun install`.
+Its help and dry-run do not build packages or create consumer fixtures.
+
+`raypx deps` checks coupled toolchain versions against root catalogs and the
+installed Vite+ runner, without network or writes. `deps:outdated` and `deps:update`
+are thin aliases for Bun’s native workspace commands. See
+[dependency maintenance](../docs/VERSION_STRATEGY.md) for the upgrade workflow.
 
 See [consumer acceptance](../docs/CONSUMER_TESTING.md) and
 [doctor diagnostics](../docs/DOCTOR.md) for behavior and options.
 
 The root `test`, `typecheck`, and `check` commands explicitly include script
 validation because workspace task filters exclude the repository root. Script
-tests run without a task cache. Root Vite+ configuration registers the project,
+tests run without a task cache. A later project sequence group runs tool diagnostics
+after workspace units in aggregate test/watch sessions, avoiding contention between
+their subprocesses. Root `vitest.config.mts` registers the project,
 and Knip declares tests and subprocess entrypoints explicitly; libraries remain
 reachable through real imports so unused modules are still detected.
+
+## Cleaning generated files
+
+Stop development servers, Storybook, and package watchers before running clean.
+These commands use the same installed command:
+
+```sh
+bun run clean --dry-run
+bun run clean
+bun raypx clean
+bun raypx clean --help
+```
+
+`--dry-run` prints candidate paths without removing them. Cleanup uses an
+allowlist at the repository root, `scripts`, and direct `apps/*` and `packages/*`
+workspace directories containing a regular `package.json` file:
+
+- `dist`, `.output`, `.tanstack`, `coverage`, `.vitest`, `storybook-static`,
+  `playwright-report`, `test-results`, and direct `*.tsbuildinfo` files.
+- Within each directory's `node_modules`, only `.vite`, `.vite-temp`, `.nitro`,
+  and `.cache/storybook`, `.cache/sb-vite-plugin-externals`, and `.cache/jiti`.
+- Root `.ci-reports` and `apps/web/src/routeTree.gen.ts`.
+
+It does not recursively search source directories or traverse parent-directory
+symlinks. Missing outputs are harmless. Installed dependencies, Bun and browser
+global caches, `.env` files, local databases and `data/`, storage data, database
+migrations, and the installed Git hook dispatcher remain intact.
+Run `bun run build` afterward to recreate package and application outputs;
+Storybook and test commands regenerate their own outputs when needed.
+
+## Repository policy and acceptance
+
+`raypx policy` checks repository structure without changing files or contacting
+external services. It reports missing or invalid workspace manifests, duplicate
+names, and workspaces omitted from the root declarations. TypeScript checks
+resolve configuration inheritance, including relative chains and both public
+config preset paths, and report missing targets or cycles. Intentional compiler
+option overrides remain valid.
+
+Documentation checks use first-party Markdown tracked by Git or untracked and
+not ignored. They check local link targets and reachability of documents under
+`docs/` from `docs/INDEX.md`; code examples, external URLs, and anchor fragments
+are excluded. Historical documents remain linked from the index and carry
+explicit historical notices. Dependency and build directories are excluded.
+
+The text report names each rule, repository-relative path, problem, and suggested
+fix. `--json` emits the same results as one JSON object containing `findings` and
+`errors`; each finding has `rule`, `path`, `message`, and `fix`. Success exits 0;
+findings or execution failures exit 1. There is no automatic-fix mode. Package
+boundaries, dependency compatibility, and unused code retain their existing
+dedicated checks.
+
+`raypx verify` runs the acceptance gates in this order:
+
+1. Development environment, dependency compatibility, policy, formatting,
+   package boundaries, and unused code.
+2. Workspace builds.
+3. Typed lint, workspace types, and script types.
+4. Workspace tests and script tests.
+5. Storybook's static build.
+6. Independent core, server, and browser-build consumers.
+
+The first failure stops the workflow. Default output reports stage results and
+elapsed time, with the failed command and bounded subprocess output on failure;
+`--verbose` streams subprocess output. Timeouts and interrupts clean up process
+groups, and an interrupt prevents later stages from starting. The workflow
+preserves the caller's environment; individual test and consumer fixtures keep
+their isolated environments.
+
+`bun run check` and `bun run verify` use the same entrypoint. Verify reuses its
+successful build and script-type stages when running consumers. Standalone
+`raypx consumer` still performs its own preparation; there is no public option
+to bypass it. CI's quality job runs verify once, while browser interaction suites
+remain in the separate browsers job. Vite+ continues to own the task graph.
 
 ## Adding a script
 
@@ -97,7 +191,7 @@ Keep parsers and validators independent of CLI printing and process exits.
 Avoid a shared barrel that loads Bun or browser machinery into Node unit tests.
 
 citty and consola are root development dependencies for installed tooling. Use
-`lib/logger.ts` for consumer phase summaries; leave child-process output intact.
+`lib/logger.ts` for repository phase summaries; leave child-process output intact.
 The logger uses plain text and an explicit info level so output remains visible
 in CI and `NODE_ENV=test`. Do not wrap global console methods. `check:env`,
 preinstall, setup, and doctor must continue working before dependencies are

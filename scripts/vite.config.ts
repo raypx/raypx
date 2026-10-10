@@ -7,5 +7,7 @@ export default defineConfig({
     name: "scripts",
     environment: "node",
     include: ["test/**/*.test.ts"],
+    // Subprocess diagnostics run after workspace units, keeping their deadlines meaningful.
+    sequence: { groupOrder: 1 },
   },
 });

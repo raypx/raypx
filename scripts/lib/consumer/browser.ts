@@ -144,7 +144,11 @@ export async function testBrowser(fixture: ConsumerFixture): Promise<void> {
       ["run", "playwright", "test", "--config", join(repository, "playwright.consumer.config.ts")],
       repository,
       120_000,
-      { RAYPX_CONSUMER_URL: String(server.url) },
+      {
+        RAYPX_CONSUMER_URL: String(server.url),
+        // CI keeps the browser binaries outside the default home cache.
+        PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH,
+      },
     );
     scriptLogger.log(output.trim());
   } finally {

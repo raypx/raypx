@@ -288,7 +288,7 @@ Create an issue with:
 
 ## Code of Conduct
 
-Be respectful, inclusive, and professional. See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+Be respectful, inclusive, and professional in issues, reviews, and discussions.
 
 ---
 

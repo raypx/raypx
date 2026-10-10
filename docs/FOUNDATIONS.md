@@ -131,6 +131,13 @@ The former `@raypx/api-client` and `@raypx/hooks` workspaces are removed.
 
 ## Feature cache
 
+Create owned drivers with `createStorageInstance(config)` from `@raypx/storage`
+and inject them into `createCache`. The factory uses only explicit configuration;
+separate instances own separate disposal. Memory takes precedence over Redis,
+then filesystem. `getStorage` remains a compatibility singleton with environment
+fallbacks. See the [storage guide](../packages/storage/README.md) for driver
+selection, shared-backend behavior, and lifecycle examples.
+
 ```typescript
 import { createCache } from "@raypx/storage/cache";
 import { sessionUserSchema } from "@raypx/contracts/auth";

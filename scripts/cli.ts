@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { parseArgs } from "node:util";
 import { defineCommand, runMain } from "citty";
 import { bootstrapCommands, isBootstrapCommand, toolVersion } from "./lib/cli/bootstrap.ts";
 import { validateConsumerArgs } from "./lib/consumer/cli.ts";
@@ -15,6 +16,10 @@ const command = defineCommand({
     doctor: { meta: { name: "doctor", description: bootstrapCommands.doctor.description } },
     env: { meta: { name: "env", description: bootstrapCommands.env.description } },
     setup: { meta: { name: "setup", description: bootstrapCommands.setup.description } },
+    clean: async () => (await import("./commands/clean.ts")).default,
+    deps: async () => (await import("./commands/deps.ts")).default,
+    policy: async () => (await import("./commands/policy.ts")).default,
+    verify: async () => (await import("./commands/verify.ts")).default,
     consumer: async () => (await import("./commands/consumer.ts")).default,
     "consumer-browser": async () => (await import("./commands/consumer-browser.ts")).default,
   },
@@ -26,6 +31,20 @@ export async function runCli(rawArgs: string[]): Promise<void> {
     const [name, ...args] = rawArgs;
     if (name === "consumer" || name === "consumer-browser") {
       validateConsumerArgs(args, name === "consumer");
+    } else if (name === "clean" || name === "policy" || name === "verify") {
+      const option = { clean: "dry-run", policy: "json", verify: "verbose" }[name];
+      parseArgs({
+        args,
+        options: {
+          help: { type: "boolean", short: "h" },
+          [option]: { type: "boolean" },
+        },
+        strict: true,
+        allowPositionals: false,
+      });
+    } else if (name === "deps") {
+      if (args.length && !(args.length === 1 && (args[0] === "--help" || args[0] === "-h")))
+        throw new Error("Unsupported arguments for deps. Use raypx deps --help.");
     } else if (isBootstrapCommand(name)) {
       if (args.length !== 1 || (args[0] !== "--help" && args[0] !== "-h")) {
         throw new Error(`Run raypx ${name} through scripts/bin/raypx.ts.`);
