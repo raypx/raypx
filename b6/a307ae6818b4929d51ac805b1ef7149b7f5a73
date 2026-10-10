@@ -1,0 +1,45 @@
+.claude/dependency-optimization.md
+  s_3cc6a5ba50d6f4::t_fd265a72b4a5c8 1-402
+apps/web/package.json
+  s_3cc6a5ba50d6f4::t_3d79adde60610f 20,25-26,31-33
+bun.lock
+  s_3cc6a5ba50d6f4::t_0c8df4d622f550 36,41-42,47-49,67,84,97-105,136,153,167,180,195,233-238,240,242-243,263,275-281,289,291-292
+package.json
+  s_3cc6a5ba50d6f4::t_f3281f5adfb77f 23-33
+packages/api/package.json
+  s_3cc6a5ba50d6f4::t_efdf2fc7ec2791 39
+packages/auth/package.json
+  s_3cc6a5ba50d6f4::t_077033e8bca801 22
+packages/client/package.json
+  s_3cc6a5ba50d6f4::t_4c5e55045864fb 58-66
+packages/contracts/package.json
+  s_3cc6a5ba50d6f4::t_15dd3e527d6402 34
+packages/db/package.json
+  s_3cc6a5ba50d6f4::t_ad8240a5d775d4 31
+packages/env/package.json
+  s_3cc6a5ba50d6f4::t_67906df1883d6f 22
+packages/logger/package.json
+  s_3cc6a5ba50d6f4::t_f1522771029b3f 18
+packages/storage/package.json
+  s_3cc6a5ba50d6f4::t_58238434eab45e 24
+packages/ui/package.json
+  s_3cc6a5ba50d6f4::t_d8eff8c061b534 189-194,196,198-199
+packages/worker/package.json
+  s_3cc6a5ba50d6f4::t_aff972ddaa23f6 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b6a307ae6818b4929d51ac805b1ef7149b7f5a73",
+  "prompts": {},
+  "sessions": {
+    "s_3cc6a5ba50d6f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc7527c-3e5e-472d-9e6c-4f8d364c95cb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
