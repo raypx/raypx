@@ -417,3 +417,22 @@ await storage.setItem("key", value); // Auto-serialization
 ---
 
 **Universal caching for your application** 📦
+
+## Validated feature caches
+
+`createCache` from `@raypx/storage/cache` accepts an explicitly owned storage
+driver, namespace, and structural `schema.parse` validator. `getOrSet` provides
+TTL and coalesces concurrent misses for the same key within one process.
+Invalid persisted values become misses. Failed loaders propagate and can be
+retried; storage-driver failures return fresh validated results.
+
+`invalidate(key)` and `clear()` prevent pending loads from writing stale data.
+Already-running callers may still receive their loaded result. Clear is scoped
+to the declared namespace. A failed invalidation or clear bypasses this cache
+instance until it is recreated, so stale persisted entries cannot mask fresh
+business data. Request coalescing has a bounded in-flight map and
+works within one cache instance; multiple replicas need an external lock or
+other coordination policy. Use JSON-serializable values and positive TTLs up
+to one year. `closeStorage()` disposes the compatibility singleton driver once
+and permits explicit reinitialization. Register it with the application
+lifecycle when activating a storage-backed feature.

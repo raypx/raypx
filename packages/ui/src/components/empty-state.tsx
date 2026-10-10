@@ -1,6 +1,6 @@
 import { Inbox } from "lucide-react";
 import { useId, type ComponentProps, type ReactNode } from "react";
-import { cn } from "../utils.js";
+import { cn } from "../lib/utils.js";
 
 export interface EmptyStateProps extends Omit<ComponentProps<"section">, "title"> {
   title: string;

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, expect, test } from "vite-plus/test";
 import { checkBoundaries } from "../src/check-boundaries.ts";
+import { checkBoundaries as checkSimpleBoundaries } from "../src/check-boundaries-simple.ts";
 
 const directories: string[] = [];
 
@@ -33,6 +34,8 @@ async function fixture() {
         exports: {
           ".": "./dist/index.js",
           "./health": "./dist/health.js",
+          "./react": "./dist/react/index.js",
+          "./hooks": "./dist/hooks/index.js",
           "./server": "./dist/server.js",
           "./styles.css": "./dist/styles.css",
         },
@@ -59,14 +62,14 @@ test("accepts declared public imports and app server adapters", async () => {
   await workspace("api", ["contracts"], {
     "src/index.ts": 'export type { Health } from "@raypx/contracts/health";',
   });
-  await workspace("api-client", ["contracts"], {
+  await workspace("client", ["contracts"], {
     "src/index.ts": 'import { schema } from "@raypx/contracts/health";',
   });
   await workspace("ui");
-  await workspace("web", ["api", "api-client", "ui"], {
+  await workspace("web", ["api", "client", "ui"], {
     "src/routes/api.health.ts": 'import { health } from "@raypx/api/health";',
     "src/health.server.ts": 'export { health } from "@raypx/api/health";',
-    "src/App.tsx": 'import { health } from "@raypx/api-client/health";',
+    "src/App.tsx": 'import { health } from "@raypx/client/health";',
     "src/routes/__root.tsx": 'import stylesheet from "@raypx/ui/styles.css?url";',
     "vite.config.ts": 'import { packageConfig } from "@raypx/config/vite";',
   });
@@ -84,7 +87,7 @@ test("accepts declared public imports and app server adapters", async () => {
 test("rejects undeclared dependencies and private package imports", async () => {
   const { root, workspace } = await fixture();
   await workspace("contracts");
-  await workspace("api-client", [], {
+  await workspace("client", [], {
     "src/index.ts":
       'import { schema } from "@raypx/contracts/src/index";\nexport { schema } from "@raypx/contracts/not-exported";',
   });
@@ -220,7 +223,7 @@ test("rejects server imports in frontend packages and app components", async () 
 test("inspects dynamic imports, require calls, reexports, and type imports", async () => {
   const { root, workspace } = await fixture();
   await workspace("contracts");
-  await workspace("api-client", [], {
+  await workspace("client", [], {
     "src/index.ts": [
       'const load = () => import("@raypx/contracts");',
       'const schema = require("@raypx/contracts");',
@@ -258,4 +261,128 @@ test("blocks runtime builtins in browser sources while allowing server and test 
     violation.message.includes("builtin"),
   );
   expect(violations.map((violation) => violation.line)).toEqual([1, 2, 3, 4]);
+});
+
+test("allows a framework-free client core and a separate React adapter", async () => {
+  const { root, workspace } = await fixture();
+  await workspace("contracts");
+  await workspace("client", ["contracts"], {
+    "src/index.ts": 'export { checkHealth } from "./health.js";',
+    "src/health.ts": 'import { schema } from "@raypx/contracts/health";',
+    "src/react/index.ts": 'export { useHealthCheck } from "./health.js";',
+    "src/react/health.ts":
+      'import { useQuery } from "@tanstack/react-query";\nimport { useEffect } from "react";\nimport { checkHealth } from "../health.js";',
+    "test/core.test.ts": 'import { renderHook } from "@testing-library/react";\nimport "react";',
+  });
+  await workspace("ui", [], {
+    "src/hooks/debounce.ts": 'import { useEffect } from "react";',
+  });
+  await workspace("web", ["client", "ui"], {
+    "src/App.tsx":
+      'import { useHealthCheck } from "@raypx/client/react";\nimport { useDebouncedValue } from "@raypx/ui/hooks";',
+  });
+  expect(checkBoundaries(root)).toEqual([]);
+  expect(checkSimpleBoundaries(root)).toEqual([]);
+});
+
+test("keeps every client core module free of React, including indirect reexports", async () => {
+  const { root, workspace } = await fixture();
+  await workspace("client", [], {
+    "src/index.ts": 'export * from "./shared.js";',
+    "src/shared.ts": [
+      'export { useEffect } from "react";',
+      'const load = () => import("react-dom/client");',
+      'const query = require("@tanstack/react-query");',
+      'type Node = import("react").ReactNode;',
+    ].join("\n"),
+  });
+  const violations = checkBoundaries(root);
+  expect(violations).toHaveLength(4);
+  expect(violations.map(({ file, line }) => ({ file, line }))).toEqual([
+    { file: "packages/client/src/shared.ts", line: 1 },
+    { file: "packages/client/src/shared.ts", line: 2 },
+    { file: "packages/client/src/shared.ts", line: 3 },
+    { file: "packages/client/src/shared.ts", line: 4 },
+  ]);
+  expect(violations.every(({ message }) => message.includes("client core"))).toBe(true);
+});
+
+test("blocks client core access to the React adapter through public and relative paths", async () => {
+  const { root, workspace } = await fixture();
+  await workspace("client", [], {
+    "src/index.ts": [
+      'export * from "./react/index.js";',
+      'export * from "@raypx/client/react";',
+      'const load = () => import("./helpers/../react/index.js?raw");',
+      'type Options = import("./react/options.js").Options;',
+      'const adapter = require("./react/index.js");',
+    ].join("\n"),
+    "src/react/index.ts": 'import "react";',
+  });
+  const violations = checkBoundaries(root);
+  expect(violations).toHaveLength(5);
+  expect(violations.map(({ line }) => line)).toEqual([1, 2, 3, 4, 5]);
+  expect(violations.every(({ message }) => message.includes("React adapter"))).toBe(true);
+});
+
+test("rejects JSX's implicit React dependency in the client core", async () => {
+  const { root, workspace } = await fixture();
+  await workspace("client", [], {
+    "src/index.tsx": "export const panel = <><span>Core</span></>;",
+    "src/react/provider.tsx": "export const panel = <span>Adapter</span>;",
+  });
+  expect(checkBoundaries(root)).toEqual([
+    {
+      file: "packages/client/src/index.tsx",
+      line: 1,
+      message: "JSX implicitly imports React and is forbidden in the client core",
+    },
+  ]);
+});
+
+test("keeps Start-specific dependencies and source out of the universal client", async () => {
+  const { root, workspace } = await fixture();
+  await workspace("client", [], {
+    "src/react/index.ts": 'import "@tanstack/react-start";\nimport "@tanstack/start-client-core";',
+  });
+  await writeFile(
+    join(root, "packages/client/package.json"),
+    JSON.stringify({
+      name: "@raypx/client",
+      dependencies: { "@tanstack/react-start": "1.0.0" },
+      devDependencies: { "@raypx/config": "workspace:*" },
+    }),
+  );
+  const violations = checkBoundaries(root);
+  expect(violations).toHaveLength(3);
+  expect(violations[0]?.message).toContain("framework-independent");
+  expect(violations.slice(1).every(({ message }) => message.includes("belongs in the app"))).toBe(
+    true,
+  );
+});
+
+test("rejects business workspace dependencies in UI and reverse client dependencies", async () => {
+  const { root, workspace } = await fixture();
+  await workspace("contracts");
+  await workspace("client", ["contracts", "ui"], {
+    "src/index.ts": 'import "@raypx/ui/hooks";',
+  });
+  await workspace("ui", ["contracts"], {
+    "src/hooks/index.ts": 'import type { Health } from "@raypx/contracts/health";',
+  });
+  const violations = checkBoundaries(root);
+  expect(violations).toHaveLength(4);
+  expect(violations.every(({ message }) => message.includes("cannot"))).toBe(true);
+  expect(checkSimpleBoundaries(root)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        package: "@raypx/client",
+        issue: expect.stringContaining("@raypx/ui"),
+      }),
+      expect.objectContaining({
+        package: "@raypx/ui",
+        issue: expect.stringContaining("@raypx/contracts"),
+      }),
+    ]),
+  );
 });

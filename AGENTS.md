@@ -29,16 +29,18 @@ Provides a template for building modern web applications with end-to-end type sa
 ### 1. Layer Separation
 
 ```
-Browser ← api-client, hooks, ui, contracts
+Browser ← client core, client/react, ui, ui/hooks, contracts
 Server  ← api, auth
-Infra   ← db, logger, config
+Infra   ← db, storage, env/server, logger
+Tools   ← config (development only)
 ```
 
 **Rules:**
 
 - Browser packages CANNOT import server packages
 - Server packages CAN import infrastructure packages
-- All layers can use contracts (Zod schemas)
+- Contracts are browser-safe; workspace imports must follow the table below.
+  UI keeps business contracts outside its component layer.
 
 ### 2. Type Safety
 
@@ -50,17 +52,49 @@ Infra   ← db, logger, config
 
 Each package has a clear responsibility:
 
-| Package      | Purpose            | Can Import                          |
-| ------------ | ------------------ | ----------------------------------- |
-| `db`         | Database access    | `logger`                            |
-| `auth`       | Authentication     | `db`, `logger`                      |
-| `logger`     | Structured logging | Nothing                             |
-| `api`        | Business logic     | `db`, `auth`, `logger`, `contracts` |
-| `contracts`  | Schemas            | Nothing                             |
-| `api-client` | HTTP client        | `contracts`                         |
-| `hooks`      | React hooks        | `api-client`                        |
-| `ui`         | UI components      | Nothing                             |
-| `config`     | Build tools        | Nothing                             |
+| Package     | Purpose                                      | Business workspace imports                            |
+| ----------- | -------------------------------------------- | ----------------------------------------------------- |
+| `db`        | SQLite schema, migrations, and lifecycle     | `env`, `logger`                                       |
+| `auth`      | Explicit auth factory and sessions           | `contracts`, `db`, `env`, `logger`                    |
+| `logger`    | Structured logging                           | None                                                  |
+| `api`       | HTTP boundaries and server logic             | `contracts`, `auth`, `db`, `storage`, `env`, `logger` |
+| `contracts` | Browser-safe schemas                         | None                                                  |
+| `client`    | React-free HTTP core; separate React adapter | `contracts`                                           |
+| `ui`        | Components and component behavior hooks      | None                                                  |
+| `storage`   | Storage drivers and validated cache          | `env`, `logger`                                       |
+| `worker`    | In-process task execution                    | `logger`                                              |
+| `env`       | Explicit client/server configuration exports | None                                                  |
+| `config`    | Build tools and static TypeScript presets    | None                                                  |
+
+`@raypx/client` and its HTTP subpaths must not import React, TanStack Query,
+or `client/src/react`, even through reexports or relative paths. Shared,
+browser-safe data hooks with a clear React adapter belong in `@raypx/client/react`;
+product-specific hooks start in `apps/web/src/features/<feature>/hooks`.
+Component behavior such as debounce belongs in `@raypx/ui/hooks`.
+The former `@raypx/api-client` and `@raypx/hooks` workspaces
+are removed without compatibility aliases.
+
+Start integration belongs in `apps/web`, not the universal client. Create a
+QueryClient for each SSR router/request and retain that router's client in the
+browser; never share a server query cache at module scope. SSR prefetching must
+use request-aware query functions. Private query keys include account identity,
+and auth changes must cancel and clear private cached data.
+
+Engineering `@raypx/config` dependencies are allowed only for development;
+runtime source cannot import its tools. Use its `tsconfig/*.json` presets.
+Run `bun run check:boundaries` after changing imports or dependencies.
+
+Promote application data capabilities to public packages only after real reuse
+across applications or independent consumers is demonstrated. Two components
+in one feature are not evidence that a new public API is needed. The promoted
+API must have stable validated contracts, browser-safe transport, explicit
+framework adaptation, and tests/documentation for its public exports. It must
+work without product routes, application stores, server configuration, or a
+shared server QueryClient. Keep product workflows and composition in web;
+the client is a reusable data boundary, not an application store.
+
+See [architecture references](ARCHITECTURE.md#references-for-these-boundaries)
+for the shadcn, LobeHub, and TanStack practices behind these boundaries.
 
 ## Code Patterns
 
@@ -167,46 +201,62 @@ export async function GET({ request }) {
 
 ### Adding a New API Endpoint
 
-1. **Define schema** in `packages/contracts/src/`
+The users endpoint below illustrates a new product feature; it is not an
+existing template API. Begin in web, colocating contracts, a browser client,
+server implementation, and hooks in `src/features/users/`. Declare any new
+external dependencies in the application. Reuse the existing public HTTP and
+request-boundary helpers without moving the entire feature into shared packages.
+
+1. **Define feature contracts** in `apps/web/src/features/users/contracts.ts`
 
    ```typescript
+   import { z } from "zod";
+
    export const createUserSchema = z.object({
      name: z.string().min(1),
      email: z.string().email(),
    });
+   export type CreateUser = z.infer<typeof createUserSchema>;
+   export const createUserResponseSchema = z.object({
+     user: z.object({ id: z.string(), name: z.string(), email: z.string().email() }),
+   });
    ```
 
-2. **Create route** in `apps/web/src/routes/`
+2. **Implement the feature's server handler** in
+   `apps/web/src/features/users/server/users.server.ts`, validating external input
+   and using the shared HTTP boundary. **Bind it to a route** in `apps/web/src/routes/`.
 
    ```typescript
    // apps/web/src/routes/api.users.ts
    import { createFileRoute } from "@tanstack/react-router";
-   import { createUserSchema } from "@raypx/contracts";
+   import { createUserResponse } from "../features/users/server/users.server";
 
    export const Route = createFileRoute("/api/users")({
-     server: {
-       handlers: {
-         async POST({ request }) {
-           const body = await request.json();
-           const data = createUserSchema.parse(body);
-           // Implement logic...
-         },
-       },
-     },
+     server: { handlers: { POST: createUserResponse } },
    });
    ```
 
-3. **Add client function** in `packages/api-client/src/`
+3. **Add a validated feature client** in `apps/web/src/features/users/client/users.ts`
+
    ```typescript
-   export async function createUser(data: CreateUser) {
-     const response = await fetch("/api/users", {
+   import { requestJson } from "@raypx/client/http";
+   import { createUserResponseSchema, type CreateUser } from "../contracts";
+
+   export function createUser(data: CreateUser) {
+     return requestJson({
+       path: "/api/users",
        method: "POST",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify(data),
+       body: data,
+       schema: createUserResponseSchema,
      });
-     return response.json();
    }
    ```
+
+4. **Compose query/mutation hooks** in `apps/web/src/features/users/hooks/`.
+   Keep product permissions, routing, and workflow state in the application.
+   When another application needs the same stable capability, promote its
+   contracts to `@raypx/contracts`, transport to `@raypx/client`, and React
+   adapter to `@raypx/client/react`, adding explicit public exports and tests.
 
 ### Adding a Database Table
 
@@ -239,33 +289,36 @@ export async function GET({ request }) {
    const allPosts = await db.select().from(posts);
    ```
 
-### Adding a React Hook
+### Adding React Data and Component Behavior
 
-1. **Create hook** in `packages/hooks/src/`
+Product data hooks start in `apps/web/src/features/<feature>/hooks` and use
+validated feature clients plus the application's QueryClient. Cross-application
+data capabilities can be promoted to `packages/client/src/react/` after meeting
+the reuse conditions above, with explicit `@raypx/client/react` exports.
+For the existing shared health capability:
 
-   ```typescript
-   import { useState, useEffect } from "react";
-   import { getUsers } from "@raypx/api-client";
+```tsx
+import { useHealthCheck } from "@raypx/client/react";
+import { Button, ConnectionStatus } from "@raypx/ui";
 
-   export function useUsers() {
-     const [users, setUsers] = useState([]);
-     const [loading, setLoading] = useState(true);
+export function ServiceStatus() {
+  const { status, retry } = useHealthCheck();
+  return (
+    <section aria-label="Service status">
+      <ConnectionStatus status={status} />
+      <Button disabled={status === "loading"} onClick={retry}>
+        Retry
+      </Button>
+    </section>
+  );
+}
+```
 
-     useEffect(() => {
-       getUsers().then((data) => {
-         setUsers(data);
-         setLoading(false);
-       });
-     }, []);
-
-     return { users, loading };
-   }
-   ```
-
-2. **Export from index**
-   ```typescript
-   export { useUsers } from "./users";
-   ```
+The application supplies its QueryClient provider. Generic consumers can use
+`createQueryClient` and `ClientProvider`; Start owns its SSR integration in web.
+Component-only hooks such as `useDebouncedValue` belong in
+`packages/ui/src/hooks/` and are exposed through `@raypx/ui/hooks`. UI must not
+import the client, contracts, routing, or business data modules.
 
 ## Testing Strategy
 
@@ -318,7 +371,7 @@ describe("User API", () => {
 import { getDatabase } from "@raypx/db"; // Server-only!
 
 // ✅ RIGHT - Use API client
-import { getUsers } from "@raypx/api-client";
+import { getSession } from "@raypx/client/session";
 ```
 
 ### 2. Not Validating Input

@@ -2,21 +2,39 @@
   "$schema": "https://github.com/oxc-project/oxc/raw/main/npm/oxlint/configuration_schema.json",
   "plugins": ["import"],
   "rules": {
-    // Import quality checks
     "import/no-cycle": "error",
     "import/no-self-import": "error",
     "import/no-duplicates": "warn",
-
-    // Restrict Node.js built-ins in browser packages
     "no-restricted-imports": "off"
   },
   "overrides": [
     {
+      "files": ["packages/*/src/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@raypx/config",
+                  "@raypx/config/*",
+                  "@raypx/tsconfig",
+                  "@raypx/tsconfig/*"
+                ],
+                "message": "Runtime code cannot import engineering packages"
+              }
+            ]
+          }
+        ]
+      },
+      "excludeFiles": ["**/*.{test,spec}.{ts,tsx}", "**/test/**", "**/__tests__/**"]
+    },
+    {
       "files": [
-        "packages/contracts/src/**/*.ts",
-        "packages/api-client/src/**/*.ts",
-        "packages/hooks/src/**/*.tsx",
-        "packages/ui/src/**/*.tsx"
+        "packages/contracts/src/**/*.{ts,tsx}",
+        "packages/client/src/**/*.{ts,tsx}",
+        "packages/ui/src/**/*.{ts,tsx}"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -24,17 +42,34 @@
           {
             "patterns": [
               {
-                "group": ["node:*", "bun:*"],
+                "group": [
+                  "@raypx/config",
+                  "@raypx/config/*",
+                  "@raypx/tsconfig",
+                  "@raypx/tsconfig/*"
+                ],
+                "message": "Runtime code cannot import engineering packages"
+              },
+              {
+                "group": ["node:*", "bun", "bun:*"],
                 "message": "Node.js/Bun built-ins cannot be used in browser packages"
               },
               {
                 "group": [
                   "@raypx/api",
+                  "@raypx/api/*",
                   "@raypx/ai",
+                  "@raypx/ai/*",
                   "@raypx/auth",
+                  "@raypx/auth/*",
                   "@raypx/db",
+                  "@raypx/db/*",
                   "@raypx/storage",
-                  "@raypx/logger"
+                  "@raypx/storage/*",
+                  "@raypx/logger",
+                  "@raypx/logger/*",
+                  "@raypx/worker",
+                  "@raypx/worker/*"
                 ],
                 "message": "Browser packages cannot import server-only packages"
               },
@@ -45,23 +80,148 @@
             ]
           }
         ]
-      }
+      },
+      "excludeFiles": ["**/*.{test,spec}.{ts,tsx}", "**/test/**", "**/__tests__/**"]
     },
     {
-      "files": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx"],
+      "files": ["packages/client/src/**/*.{ts,tsx}"],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "group": ["@raypx/config", "@raypx/tsconfig"],
+                "group": [
+                  "@raypx/config",
+                  "@raypx/config/*",
+                  "@raypx/tsconfig",
+                  "@raypx/tsconfig/*"
+                ],
                 "message": "Runtime code cannot import engineering packages"
+              },
+              {
+                "group": ["node:*", "bun", "bun:*"],
+                "message": "Node.js/Bun built-ins cannot be used in browser packages"
+              },
+              {
+                "group": [
+                  "@raypx/api",
+                  "@raypx/api/*",
+                  "@raypx/ai",
+                  "@raypx/ai/*",
+                  "@raypx/auth",
+                  "@raypx/auth/*",
+                  "@raypx/db",
+                  "@raypx/db/*",
+                  "@raypx/storage",
+                  "@raypx/storage/*",
+                  "@raypx/logger",
+                  "@raypx/logger/*",
+                  "@raypx/worker",
+                  "@raypx/worker/*"
+                ],
+                "message": "Browser packages cannot import server-only packages"
+              },
+              {
+                "group": ["@raypx/env/server"],
+                "message": "Browser packages cannot import server environment config"
+              },
+              {
+                "group": [
+                  "@tanstack/react-start",
+                  "@tanstack/react-start/*",
+                  "@tanstack/react-start-*",
+                  "@tanstack/start",
+                  "@tanstack/start/*",
+                  "@tanstack/start-*"
+                ],
+                "message": "Start integration belongs in apps/web, not the universal client"
               }
             ]
           }
         ]
-      }
+      },
+      "excludeFiles": ["**/*.{test,spec}.{ts,tsx}", "**/test/**", "**/__tests__/**"]
+    },
+    {
+      "files": ["packages/client/src/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@raypx/config",
+                  "@raypx/config/*",
+                  "@raypx/tsconfig",
+                  "@raypx/tsconfig/*"
+                ],
+                "message": "Runtime code cannot import engineering packages"
+              },
+              {
+                "group": ["node:*", "bun", "bun:*"],
+                "message": "Node.js/Bun built-ins cannot be used in browser packages"
+              },
+              {
+                "group": [
+                  "@raypx/api",
+                  "@raypx/api/*",
+                  "@raypx/ai",
+                  "@raypx/ai/*",
+                  "@raypx/auth",
+                  "@raypx/auth/*",
+                  "@raypx/db",
+                  "@raypx/db/*",
+                  "@raypx/storage",
+                  "@raypx/storage/*",
+                  "@raypx/logger",
+                  "@raypx/logger/*",
+                  "@raypx/worker",
+                  "@raypx/worker/*"
+                ],
+                "message": "Browser packages cannot import server-only packages"
+              },
+              {
+                "group": ["@raypx/env/server"],
+                "message": "Browser packages cannot import server environment config"
+              },
+              {
+                "group": [
+                  "@tanstack/react-start",
+                  "@tanstack/react-start/*",
+                  "@tanstack/react-start-*",
+                  "@tanstack/start",
+                  "@tanstack/start/*",
+                  "@tanstack/start-*"
+                ],
+                "message": "Start integration belongs in apps/web, not the universal client"
+              },
+              {
+                "group": [
+                  "react",
+                  "react/*",
+                  "react-dom",
+                  "react-dom/*",
+                  "@tanstack/react-query",
+                  "@tanstack/react-query/*",
+                  "@raypx/client/react",
+                  "@raypx/client/react/*",
+                  "./react",
+                  "./react/*"
+                ],
+                "message": "The client core cannot import React or its React adapter"
+              }
+            ]
+          }
+        ]
+      },
+      "excludeFiles": [
+        "**/*.{test,spec}.{ts,tsx}",
+        "**/test/**",
+        "**/__tests__/**",
+        "packages/client/src/react/**"
+      ]
     }
   ]
 }

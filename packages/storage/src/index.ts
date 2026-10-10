@@ -197,7 +197,14 @@ export async function invalidate(pattern: string) {
 
   if (pattern.includes("*")) {
     // Pattern matching
-    const keys = await storage.getKeys(pattern);
+    const prefix = pattern.slice(0, pattern.indexOf("*"));
+    const matcher = new RegExp(
+      `^${pattern
+        .split("*")
+        .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        .join(".*")}$`,
+    );
+    const keys = (await storage.getKeys(prefix)).filter((key) => matcher.test(key));
     logger.info("Invalidating cache", { pattern, count: keys.length });
     await Promise.all(keys.map((key) => storage.removeItem(key)));
   } else {
@@ -225,3 +232,11 @@ export async function clearAll() {
 
 // Re-export unstorage types
 export type { Storage } from "unstorage";
+export { createCache, type CacheOptions, type CacheStore, type CacheResult } from "./cache.js";
+
+/** Disposes the active storage driver once and allows a later explicit initialization. */
+export async function closeStorage(): Promise<void> {
+  const current = storage;
+  storage = null;
+  await current?.dispose();
+}

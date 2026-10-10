@@ -1,4 +1,7 @@
 {
   "extends": "@raypx/config/tsconfig-presets/test.json",
+  "compilerOptions": {
+    "types": ["node", "bun", "vite-plus/test"]
+  },
   "include": ["src/**/*", "test/**/*"]
 }

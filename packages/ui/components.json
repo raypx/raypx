@@ -13,7 +13,9 @@
   "aliases": {
     "components": "@raypx/ui/components",
     "ui": "@raypx/ui/components",
-    "utils": "@raypx/ui/utils"
+    "utils": "@raypx/ui/lib/utils",
+    "lib": "@raypx/ui/lib",
+    "hooks": "@raypx/ui/hooks"
   },
   "iconLibrary": "lucide"
 }

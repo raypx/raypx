@@ -3,9 +3,10 @@
 TypeScript monorepo for a personal AI workbench, using Bun workspaces, Vite+,
 and TanStack Start. The application currently provides a homepage, connection
 checks, validated runtime configuration, request logging and correlation, safe
-API errors, and readiness and shutdown infrastructure. Database, authentication,
-storage, and worker utilities exist as server packages; their product features
-are not wired into the web application.
+API errors, metrics and request protection, and readiness and shutdown infrastructure.
+Optional account endpoints use a migrated SQLite schema and an explicitly configured
+Better Auth instance. Cache helpers, async hooks, and shadcn components are reusable
+across features. See [Reusable foundations](docs/FOUNDATIONS.md) for activation and APIs.
 
 Author: Zack <heyloyep@gmail.com>
 
@@ -39,25 +40,32 @@ installation; no global `vp` is required. `bun run test` uses Vitest, while
 `apps/web` owns routing, SSR, server adapters, and deployment. Runtime packages
 expose explicit public entrypoints and reuse one another through `workspace:*`.
 
-| Package      | Current responsibility                                                                          |
-| ------------ | ----------------------------------------------------------------------------------------------- |
-| `contracts`  | Browser-safe Zod health, readiness, and API error contracts                                     |
-| `api-client` | Validated JSON requests, typed errors, timeout, and cancellation                                |
-| `hooks`      | Connection check state, retry, and unmount cancellation                                         |
-| `ui`         | shadcn primitives, forms, dialogs, feedback, and themes; examples at `/components`              |
-| `api`        | Request context, safe HTTP errors, probes, and runtime lifecycle                                |
-| `env`        | Validated server configuration and an isolated, currently empty public configuration entrypoint |
-| `logger`     | Structured evlog output, asynchronous context, levels, and credential redaction                 |
-| `db`         | Lazy SQLite connection through better-sqlite3 and Drizzle, with real connection close           |
-| `auth`       | Better Auth instance and session helpers; not mounted in web                                    |
-| `storage`    | unstorage helpers for memory, filesystem, and optional Redis                                    |
-| `worker`     | In-process task execution, progress, cooperative cancellation, and execution isolation          |
-| `config`     | Engineering tasks, boundaries, aliases, styles, and static TypeScript presets                   |
+| Package     | Current responsibility                                                                          |
+| ----------- | ----------------------------------------------------------------------------------------------- |
+| `contracts` | Browser-safe Zod health, readiness, account, pagination, and API error contracts                |
+| `client`    | React-free HTTP core; `client/react` adds business queries, mutations, and Query cache helpers  |
+| `ui`        | shadcn components, themes, and component behavior hooks; examples at `/components`              |
+| `api`       | Request context, safe errors, metrics, rate/origin guards, probes, and runtime lifecycle        |
+| `env`       | Validated server configuration and an isolated, currently empty public configuration entrypoint |
+| `logger`    | Structured evlog output, asynchronous context, levels, and credential redaction                 |
+| `db`        | Runtime-appropriate SQLite driver, Drizzle schema/migrations, transactions, and owned lifecycle |
+| `auth`      | Explicit Better Auth factory, session checks, and optional application endpoints                |
+| `storage`   | Driver helpers and validated namespaced caches with TTL, coalescing, and invalidation           |
+| `worker`    | In-process task execution, progress, cooperative cancellation, and execution isolation          |
+| `config`    | Engineering tasks, boundaries, aliases, styles, and static TypeScript presets                   |
 
 TypeScript presets are exported as `@raypx/config/tsconfig/*.json`;
 `@raypx/config/tsconfig-presets/*.json` remains a compatibility alias to the same
 files. There is no separate active `@raypx/tsconfig` workspace or model SDK package.
 See [ARCHITECTURE.md](ARCHITECTURE.md) for import constraints.
+
+Use `@raypx/client` or its HTTP subpaths without React, `@raypx/client/react`
+for business data hooks, and `@raypx/ui/hooks` for behavior such as debounce.
+`client` depends only on `contracts` among business workspaces; UI has none.
+The former `@raypx/api-client` and `@raypx/hooks` packages are removed without
+compatibility aliases. Start integration stays in web, where each router owns
+an isolated QueryClient for SSR and browser navigation. See the
+[client package guide](packages/client/README.md) for entrypoints and migration.
 
 ## Commands and Checks
 
@@ -69,6 +77,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for import constraints.
 | `bun run setup`                           | Create application configuration without overwriting it                |
 | `bun run check:env`                       | Validate development tool versions and declarations                    |
 | `bun run check:runtime-env`               | Validate current application runtime configuration                     |
+| `bun run db:migrate`                      | Apply database migrations explicitly before enabling account features  |
 | `bun run check:boundaries`                | Check package dependencies, exports, cycles, and browser isolation     |
 | `bun run typecheck`                       | Check source and test TypeScript                                       |
 | `bun run test`                            | Run package tests and production integration tests                     |
@@ -85,12 +94,13 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for import constraints.
 Package tasks live in their `vite.config.ts`, for example
 `bun run vp run @raypx/contracts#build`. Runtime packages compile to ESM and
 TypeScript declarations. Engineering tools and JSON presets need no initial
-build. Test APIs import from `vite-plus/test`; Hooks and UI use jsdom, other
-packages use Node. Direct root `vp test` runs need existing production artifacts
+build. Test APIs import from `vite-plus/test`; client React and UI tests use
+jsdom, server packages use Node. Direct root `vp test` runs need existing production artifacts
 or must exclude `production.test.ts`.
 
 Storybook lives in `packages/ui` and runs independently of Start and server providers.
 The full check includes its static build; browser story tests have their own command.
+Its 118 stories include component behavior hooks and interaction checks.
 See the [UI package guide](packages/ui/README.md#storybook).
 
 Build, type check, and test tasks use local cache with transitive inputs;
@@ -117,7 +127,7 @@ See [ENV.md](ENV.md) for supported fields and empty-value behavior.
 `{ "status": "ok", "service": "raypx-api" }`. `GET /api/ready` returns readiness
 with HTTP 200 or 503. It checks only explicitly registered resources and does
 not open unused databases, initialize authentication, or connect Redis.
-Currently no provider is registered. Shutdown marks readiness unavailable and
+Enabling authentication registers its database. Shutdown marks readiness unavailable and
 releases registered resources once, in reverse order, with a bounded deadline.
 
 Unknown API paths use the shared error contract; unknown pages use Start's 404.
@@ -127,6 +137,7 @@ error-monitoring service, metric backend, or alert delivery is configured.
 
 ## Documentation
 
+- [Reusable Foundations](docs/FOUNDATIONS.md)
 - [Architecture](ARCHITECTURE.md)
 - [Environment Variables](ENV.md)
 - [API Package](packages/api/README.md)

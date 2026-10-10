@@ -1,6 +1,14 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { ApiErrorCode, FieldErrors, ApiErrorResponse } from "@raypx/contracts/errors";
+import {
+  fieldErrorsSchema,
+  type ApiErrorCode,
+  type FieldErrors,
+  type ApiErrorResponse,
+} from "@raypx/contracts/errors";
 import { createLogger, withLogContext, type Logger } from "@raypx/logger";
+
+/** Compatible with native fetch headers in Node and Bun without requiring DOM types. */
+export type HttpHeaders = ConstructorParameters<typeof Headers>[0];
 
 const statuses: Record<ApiErrorCode, number> = {
   VALIDATION_ERROR: 400,
@@ -23,22 +31,77 @@ const messages: Record<ApiErrorCode, string> = {
   SERVICE_UNAVAILABLE: "Service unavailable",
 };
 
+const httpErrorBrand = Symbol.for("@raypx/api/http-error/v1");
+const registeredErrorsKey = Symbol.for("@raypx/api/http-error-instances/v1");
+const registered = globalThis as typeof globalThis & { [registeredErrorsKey]?: WeakSet<Error> };
+const registeredErrors = (registered[registeredErrorsKey] ??= new WeakSet<Error>());
+
 /** A deliberate, client-safe failure. Unexpected errors never expose their message. */
+export interface HttpErrorOptions {
+  /** Public response metadata, such as Retry-After. Never place secrets here. */
+  headers?: HttpHeaders;
+}
 export class HttpError extends Error {
+  readonly [httpErrorBrand] = true;
   readonly status: number;
+  readonly headers: Headers;
   constructor(
     readonly code: ApiErrorCode,
     readonly errors?: FieldErrors,
+    options: HttpErrorOptions = {},
   ) {
     super(messages[code]);
     this.name = "HttpError";
     this.status = statuses[code];
+    this.headers = new Headers(options.headers);
+    registeredErrors.add(this);
+  }
+}
+
+/**
+ * Recognizes deliberate failures minted by another bundle in this process.
+ * Plain wire objects and forged brands are not trusted. Even registered errors
+ * must retain their fixed public code/status/message and valid response metadata.
+ */
+export function isHttpError(value: unknown): value is HttpError {
+  if (!(value instanceof Error) || !registeredErrors.has(value)) return false;
+  const error = value as Error & {
+    [httpErrorBrand]?: unknown;
+    code?: unknown;
+    status?: unknown;
+    headers?: unknown;
+    errors?: unknown;
+  };
+  try {
+    for (const key of [httpErrorBrand, "name", "code", "status", "message", "headers", "errors"]) {
+      const property = Object.getOwnPropertyDescriptor(error, key);
+      if (!property || !("value" in property)) return false;
+    }
+    if (
+      error[httpErrorBrand] !== true ||
+      error.name !== "HttpError" ||
+      typeof error.code !== "string" ||
+      !Object.hasOwn(statuses, error.code)
+    )
+      return false;
+    const code = error.code as ApiErrorCode;
+    if (
+      error.status !== statuses[code] ||
+      error.message !== messages[code] ||
+      !(error.headers instanceof Headers)
+    )
+      return false;
+    return error.errors === undefined || fieldErrorsSchema.safeParse(error.errors).success;
+  } catch {
+    return false;
   }
 }
 export interface RequestContext {
   requestId: string;
   method: string;
   path: string;
+  /** Static application route label; never derive this from an unbounded URL. */
+  route: string;
   logger: Logger;
 }
 export interface RequestObservation {
@@ -46,10 +109,19 @@ export interface RequestObservation {
   status: number;
   durationMs: number;
   requestId: string;
+  route: string;
 }
+/** Runs before business work. Allowed guards may attach public response headers. */
+export type RequestGuard = (
+  request: Request,
+  context: RequestContext,
+) => void | HttpHeaders | Promise<void | HttpHeaders>;
 export interface HttpOptions {
   logger?: Logger;
   observe?: (observation: RequestObservation) => void;
+  /** A static route template or label, also usable by the enclosing observer. */
+  route?: string;
+  guards?: readonly RequestGuard[];
 }
 // Nitro and SSR can bundle this module separately in one process.
 const requestStorageKey = Symbol.for("@raypx/api/request-context/v1");
@@ -68,6 +140,12 @@ export function errorResponse(
   error: HttpError,
   requestId = getRequestContext()?.requestId,
 ): Response {
+  const headers = new Headers(error.headers);
+  headers.set("content-type", "application/json");
+  headers.set("cache-control", "no-store");
+  headers.delete("content-length");
+  headers.delete("content-encoding");
+  headers.delete("transfer-encoding");
   return Response.json(
     {
       error: {
@@ -77,8 +155,59 @@ export function errorResponse(
         ...(error.errors ? { errors: error.errors } : {}),
       },
     } satisfies ApiErrorResponse,
-    { status: error.status },
+    { status: error.status, headers },
   );
+}
+
+async function invokeHandler(
+  request: Request,
+  context: RequestContext,
+  handler: (context: RequestContext) => Response | Promise<Response>,
+  options: HttpOptions,
+): Promise<Response> {
+  const headers = new Headers();
+  let response: Response;
+  try {
+    for (const guard of options.guards ?? []) {
+      const result = await guard(request, context);
+      if (result) new Headers(result).forEach((value, key) => headers.set(key, value));
+    }
+    response = await handler(context);
+    // Frameworks may catch handler errors before they reach this boundary.
+    if (
+      /^\/api(?:\/|$)/.test(context.path) &&
+      context.path !== "/api/ready" &&
+      response.status >= 500
+    )
+      response = errorResponse(
+        new HttpError(
+          response.status === 503 ? "SERVICE_UNAVAILABLE" : "INTERNAL_ERROR",
+          undefined,
+          { headers: response.headers },
+        ),
+        context.requestId,
+      );
+  } catch (error) {
+    if (isHttpError(error)) response = errorResponse(error, context.requestId);
+    else {
+      context.logger.error("Unhandled request error", {
+        error,
+        method: context.method,
+        path: context.path,
+      });
+      response = errorResponse(new HttpError("INTERNAL_ERROR"), context.requestId);
+    }
+  }
+  // A nested adapter's more specific metadata takes precedence over outer guards.
+  const resultHeaders = new Headers(response.headers);
+  headers.forEach((value, key) => {
+    if (!resultHeaders.has(key)) resultHeaders.set(key, value);
+  });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: resultHeaders,
+  });
 }
 
 /** Validates external JSON before invoking business code and normalizes validation errors. */
@@ -123,17 +252,8 @@ export async function withHttpRequest(
   // framework converts deliberate domain failures into a generic 500 response.
   const parent = getRequestContext();
   if (parent) {
-    try {
-      return await handler(parent);
-    } catch (error) {
-      if (error instanceof HttpError) return errorResponse(error, parent.requestId);
-      parent.logger.error("Unhandled request error", {
-        error,
-        method: parent.method,
-        path: parent.path,
-      });
-      return errorResponse(new HttpError("INTERNAL_ERROR"), parent.requestId);
-    }
+    if (options.route) parent.route = options.route;
+    return invokeHandler(request, parent, handler, options);
   }
   const incomingId = request.headers.get("x-request-id");
   const requestId =
@@ -143,6 +263,7 @@ export async function withHttpRequest(
     requestId,
     method: request.method,
     path: url.pathname,
+    route: options.route ?? "unmatched",
     logger: (options.logger ?? defaultLogger).child({ requestId }),
   };
   const started = performance.now();
@@ -150,19 +271,9 @@ export async function withHttpRequest(
     withLogContext({ requestId }, async () => {
       let response: Response;
       try {
-        response = await handler(context);
-        // Frameworks may catch handler errors before they reach this boundary.
-        if (
-          /^\/api(?:\/|$)/.test(url.pathname) &&
-          url.pathname !== "/api/ready" &&
-          response.status >= 500
-        )
-          response = errorResponse(
-            new HttpError(response.status === 503 ? "SERVICE_UNAVAILABLE" : "INTERNAL_ERROR"),
-            requestId,
-          );
+        response = await invokeHandler(request, context, handler, options);
       } catch (error) {
-        if (error instanceof HttpError) response = errorResponse(error, requestId);
+        if (isHttpError(error)) response = errorResponse(error, requestId);
         else {
           context.logger.error("Unhandled request error", {
             error,
@@ -187,7 +298,13 @@ export async function withHttpRequest(
         durationMs,
       });
       try {
-        options.observe?.({ method: context.method, status: result.status, durationMs, requestId });
+        options.observe?.({
+          method: context.method,
+          status: result.status,
+          durationMs,
+          requestId,
+          route: context.route,
+        });
       } catch {
         /* Observability cannot change the HTTP response. */
       }

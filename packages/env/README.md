@@ -44,3 +44,20 @@ runtime configuration package.
 `bun run check:runtime-env` validates the application's current runtime values
 without starting the service. It prints a success message or sanitized field
 errors, never the parsed values.
+
+## Optional capabilities
+
+`AUTH_ENABLED` and `METRICS_ENABLED` accept `true`/`false` (or booleans in
+programmatic input). Omitted switches are disabled by the application. Auth
+requires `BETTER_AUTH_SECRET` (32–1024 characters) and `BETTER_AUTH_URL` (an
+HTTP(S) origin, HTTPS in production). `DATABASE_PATH` is an optional SQLite
+path; the app defaults to `./data/raypx.db` when auth is enabled. Migrations
+are an explicit deployment step, `bun run db:migrate`.
+
+Metrics require `METRICS_TOKEN` (32–1024 base64url characters: letters,
+digits, hyphens, or underscores). `APP_ORIGIN` may supply
+the canonical origin for write protection; otherwise auth uses its declared
+base URL. Origins exclude credentials, paths, query strings, and fragments.
+`API_RATE_LIMIT_MAX` and `API_RATE_LIMIT_WINDOW_MS` accept integers from 1 to
+1,000,000; web defaults to 120 requests per 60,000 ms. Credentials remain in
+server configuration and never enter the client export or validation output.

@@ -4,6 +4,6 @@ import { packageConfig } from "@raypx/config/vite";
 export default defineConfig(
   packageConfig(import.meta.url, {
     name: "@raypx/auth",
-    test: false,
+    test: true,
   }),
 );

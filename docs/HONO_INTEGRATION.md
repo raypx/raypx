@@ -1,4 +1,6 @@
-# Hono Integration Complete ✅
+# Historical Hono Integration Proposal
+
+This document records an earlier Hono integration direction, not the current implementation. The `hc`, `apiClient`, and `getUsers` examples below are historical and are not available exports. The former `api-client` workspace is now `@raypx/client`, with business React hooks in `@raypx/client/react`; component behavior belongs in `@raypx/ui/hooks`. Current HTTP uses validated JSON functions and Start route adapters. See [architecture](../ARCHITECTURE.md) and [working examples](../EXAMPLES.md).
 
 ## What Changed
 

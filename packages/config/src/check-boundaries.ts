@@ -15,8 +15,7 @@ import { serverOnlySpecifierPatterns } from "./vite.ts";
 
 export const allowedPackageDependencies: Record<string, string[]> = {
   contracts: [],
-  "api-client": ["contracts"],
-  hooks: ["api-client"],
+  client: ["contracts"],
   ui: [],
   api: ["contracts", "ai", "auth", "db", "storage", "env", "logger"],
   ai: ["env", "logger"],
@@ -30,8 +29,10 @@ export const allowedPackageDependencies: Record<string, string[]> = {
   tsconfig: [],
 };
 
-const browserPackages = new Set(["contracts", "api-client", "hooks", "ui"]);
+const browserPackages = new Set(["contracts", "client", "ui"]);
 const engineeringPackages = new Set(["@raypx/config", "@raypx/tsconfig"]);
+const reactSpecifier = /^(?:react(?:\/|$)|react-dom(?:\/|$)|@tanstack\/react-query(?:\/|$))/;
+const startSpecifier = /^@tanstack\/(?:react-start|start)(?:-|\/|$)/;
 const nodeBuiltins = new Set(builtinModules.map((name) => name.replace(/^node:/, "")));
 const dependencyFields = [
   "dependencies",
@@ -148,6 +149,12 @@ export function checkBoundaries(root = workspaceRoot(process.cwd())): BoundaryVi
     const graphDependencies: string[] = [];
     for (const field of dependencyFields) {
       for (const dependency of Object.keys(owner.manifest[field] ?? {})) {
+        if (name === "@raypx/client" && startSpecifier.test(dependency)) {
+          report(
+            join(owner.directory, "package.json"),
+            `${name} must remain framework-independent: ${dependency} belongs in the app`,
+          );
+        }
         if (!packages.has(dependency)) continue;
         if (!graphDependencies.includes(dependency)) graphDependencies.push(dependency);
         const target = packages.get(dependency)!;
@@ -176,18 +183,51 @@ export function checkBoundaries(root = workspaceRoot(process.cwd())): BoundaryVi
     for (const file of sourceFiles(owner.directory)) {
       const content = readFileSync(file, "utf8");
       const source = ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true);
+      const sourcePath = slash(relative(owner.directory, file));
+      const isTestModule =
+        /(?:^|\/)(?:test|__tests__)\//.test(sourcePath) ||
+        /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(sourcePath);
+      const isClientRuntime =
+        name === "@raypx/client" && sourcePath.startsWith("src/") && !isTestModule;
+      const isClientCore = isClientRuntime && !sourcePath.startsWith("src/react/");
+      if (isClientCore) {
+        let jsx: ts.Node | undefined;
+        function findJsx(node: ts.Node): void {
+          if (jsx) return;
+          if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node)) {
+            jsx = node;
+          } else ts.forEachChild(node, findJsx);
+        }
+        findJsx(source);
+        if (jsx) {
+          report(
+            file,
+            "JSX implicitly imports React and is forbidden in the client core",
+            source.getLineAndCharacterOfPosition(jsx.getStart(source)).line + 1,
+          );
+        }
+      }
       for (const { specifier: rawSpecifier, node } of moduleSpecifiers(source)) {
         const specifier = rawSpecifier.replace(/[?#].*$/, "");
         const line = source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
-        const sourcePath = slash(relative(owner.directory, file));
-        const isTestModule =
-          /(?:^|\/)(?:test|__tests__)\//.test(sourcePath) ||
-          /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(sourcePath);
         const isBrowserModule =
           (browserPackages.has(shortName(name)) &&
             sourcePath.startsWith("src/") &&
             !isTestModule) ||
           (name === "@raypx/web" && !serverModuleAllowed(owner, file));
+        if (isClientRuntime && startSpecifier.test(specifier)) {
+          report(
+            file,
+            `Start import ${specifier} belongs in the app, not the client package`,
+            line,
+          );
+        }
+        if (isClientCore && reactSpecifier.test(specifier)) {
+          report(file, `React import ${specifier} is forbidden in the client core`, line);
+        }
+        if (isClientCore && /^@raypx\/client\/react(?:\/|$)/.test(specifier)) {
+          report(file, "Client core must not import or reexport its React adapter", line);
+        }
         if (isBrowserModule && (specifier.startsWith("node:") || nodeBuiltins.has(specifier))) {
           report(file, `Node.js builtin ${specifier} is forbidden in browser code`, line);
         }
@@ -196,6 +236,9 @@ export function checkBoundaries(root = workspaceRoot(process.cwd())): BoundaryVi
         }
         if (specifier.startsWith(".") || specifier.startsWith("/")) {
           const targetPath = resolve(dirname(file), specifier);
+          if (isClientCore && inside(targetPath, join(owner.directory, "src/react"))) {
+            report(file, "Client core must not import or reexport its React adapter", line);
+          }
           const targetOwner = owners.find((candidate) => inside(targetPath, candidate.directory));
           if (targetOwner && targetOwner !== owner) {
             report(

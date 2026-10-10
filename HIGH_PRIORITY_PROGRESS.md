@@ -1,5 +1,7 @@
 # High Priority Tasks - Execution Log
 
+This is a historical execution log, not the current capability checklist. The former `@raypx/api-client` package is now `@raypx/client`; business hooks use `@raypx/client/react` and component behavior uses `@raypx/ui/hooks`. The independent `hooks` workspace has been removed. Setup currently copies the application environment example; see [README](README.md) and [FOUNDATIONS](docs/FOUNDATIONS.md) for active commands and APIs.
+
 ## Task 1: JSDoc Comments ✅ COMPLETED
 
 **Status**: Workflow completed

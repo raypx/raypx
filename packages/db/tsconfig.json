@@ -1,6 +1,7 @@
 {
   "extends": "@raypx/config/tsconfig-presets/node.json",
   "compilerOptions": {
+    "types": ["node", "bun"],
     "rootDir": "src",
     "outDir": "dist",
     "declaration": true

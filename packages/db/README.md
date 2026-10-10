@@ -1,34 +1,81 @@
 # @raypx/db
 
-Server-side SQLite access using better-sqlite3 and Drizzle. Import through
-`@raypx/db`; no cross-package `src` or `dist` paths are supported.
+Server-only SQLite with typed Drizzle queries. Bun uses native `bun:sqlite`;
+Node uses better-sqlite3. Importing the
+package opens no database and applies no migrations. Public entry points are
+`@raypx/db` and `@raypx/db/schema`.
 
 ```typescript
-import { getDatabase, closeDatabase } from "@raypx/db";
+import { createDatabase, eq } from "@raypx/db";
+import { user } from "@raypx/db/schema";
 
-const db = getDatabase(":memory:");
-// Use Drizzle queries with application tables defined by your feature.
-closeDatabase();
+const connection = createDatabase("./data/raypx.db");
+try {
+  connection.checkHealth();
+  const person = connection.db.select().from(user).where(eq(user.id, userId)).get();
+} finally {
+  connection.close();
+}
 ```
 
-Importing this package does not open SQLite. The first `getDatabase(path)`
-creates a cached connection with WAL and foreign-key checks enabled. The
-fallback path is `./data/raypx.db`, relative to the process working directory;
-create its parent directory before opening it. The first call selects the path
-until the connection is closed. `closeDatabase()` closes the underlying SQLite
-handle and clears both cached references, allowing a later call to reopen it.
+`createDatabase(path, { busyTimeoutMs? })` returns a `DatabaseConnection` with
+`db`, `checkHealth()`, and idempotent `close()`. File parent directories are
+created automatically, foreign keys are enforced, and file databases use WAL.
+The default lock timeout is 5000 ms. `:memory:` creates an isolated in-memory
+database. Register the handle's check and disposer with the application's
+runtime lifecycle only after creating it.
 
-`DATABASE_PATH` is not read by this helper and is not a supported env field.
-The package has no application table schema, schema export, migration config,
-seed runner, or PostgreSQL adapter. Installing Drizzle tooling does not create
-these artifacts or make migration commands ready to run.
+`getDatabase(path = "./data/raypx.db")` and `closeDatabase()` remain lazy
+compatibility helpers. The first path selects their singleton until it closes;
+independent `createDatabase` handles are unaffected. Runtime helpers do not read
+environment variables.
 
-Web probes do not call `getDatabase()`. When activating a database-backed
-feature, initialize it explicitly and register its health check and
-`closeDatabase` disposer with `RuntimeLifecycle` from `@raypx/api/runtime` in
-the application composition layer. Register only resources that were actually
-created. The auth package currently initializes this connection during auth
-module import; it is not imported by the web application.
+The schema includes Better Auth's `user`, `session`, `account`, and
+`verification` tables, string IDs, millisecond `Date` columns, unique email and
+session token constraints, lookup indexes, and user relations. Deleting a user
+cascades to sessions and accounts. Credential hashes and provider tokens belong
+to `account`; select public fields explicitly when exposing user information.
 
-Build and type checking use the engineering presets and tasks from
-`@raypx/config`. Runtime output is ESM with declarations.
+Apply migrations before enabling a database-backed feature or starting an
+application with authentication enabled:
+
+```bash
+# From the repository root; the CLI reads DATABASE_PATH or ./data/raypx.db.
+bun packages/db/src/cli.ts
+
+# Generate a checked-in migration after modifying the schema.
+cd packages/db
+bun run drizzle-kit generate --name=describe-change
+```
+
+`runMigrations(db, { migrationsFolder? })` is available for explicit deployment
+tools and test fixtures. Its default folder resolves from the module URL, works
+from `src` and `dist` independently of the working directory, and is included in
+package assets. Keep the package intact or supply a folder when bundling its
+migration runner. Applied migrations are recorded by Drizzle; repeated calls
+preserve rows. Opening a connection never runs DDL. The CLI prints fixed error
+messages without paths, environment values, or driver error details.
+
+Transactions use synchronous SQLite operations:
+
+```typescript
+import { withTransaction } from "@raypx/db";
+import { user } from "@raypx/db/schema";
+
+withTransaction(connection.db, (tx) => {
+  tx.insert(user).values({ id: "person", name: "Person", email: "person@example.com" }).run();
+  // Additional .run(), .get(), or .all() queries share this transaction.
+});
+```
+
+`RaypxDatabase` exposes the drivers' common synchronous Drizzle interface;
+driver-specific `.run()` results have type `unknown`. `withTransaction` rolls
+back on thrown errors and rejects async callbacks and
+Promise results. Never start asynchronous work inside a transaction. Nested
+`tx.transaction(...)` calls use savepoints. No connection pool is needed for
+this single-process SQLite foundation.
+
+Build, strict type checking, lint, and tests use `@raypx/config` tasks. Tests
+cover migration idempotence, file persistence and disposal, constraints and
+relations, transaction rollback and savepoints, connection isolation, and the
+actual Bun migration CLI. Auth tests also exercise the native Bun driver.

@@ -1,10 +1,11 @@
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import type { QueryClient } from "@raypx/client/react";
 import { Button } from "@raypx/ui/components/button";
 import { ErrorState } from "@raypx/ui/components/error-state";
 import { ThemeProvider, themeInitialization } from "../components/theme";
 import stylesheet from "../styles.css?url";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },

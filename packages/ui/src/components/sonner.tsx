@@ -1,7 +1,7 @@
 "use client";
 
 import { Toaster as Sonner, type ToasterProps } from "sonner";
-import { cn } from "../utils.js";
+import { cn } from "../lib/utils.js";
 
 const Toaster = ({ theme = "system", className, toastOptions, ...props }: ToasterProps) => {
   return (

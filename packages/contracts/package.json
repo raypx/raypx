@@ -20,6 +20,10 @@
     "./pagination": {
       "types": "./dist/pagination.d.ts",
       "import": "./dist/pagination.js"
+    },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.js"
     }
   },
   "dependencies": {

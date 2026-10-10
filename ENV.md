@@ -80,11 +80,38 @@ protection and the package boundary checker reject browser imports of
 Declare each supported server field in the server schema and wire it to its
 consumer. Update this document, `apps/web/.env.example`, and validation tests
 together. Provider credentials should become required only when their feature
-is configured and active. `DATABASE_PATH`, `SESSION_SECRET`, OAuth, email,
-Redis, and monitoring provider credentials are not part of this runtime schema.
+is configured and active. OAuth, email, Redis, and external error-tracking credentials are not part of
+this runtime schema.
 
 Public browser fields must be explicitly declared in the client schema and
 populated from public build inputs. `VITE_` values can enter browser artifacts;
 never give credentials that prefix. Public build configuration requires a
 rebuild when it changes. The health check uses same-origin `/api/health`, so it
 does not require a public API base URL.
+
+## Account and monitoring activation
+
+| Variable                   | Default in web                         | Validation                                                        |
+| -------------------------- | -------------------------------------- | ----------------------------------------------------------------- |
+| `AUTH_ENABLED`             | `false`                                | `true` or `false`                                                 |
+| `DATABASE_PATH`            | `./data/raypx.db` when auth is enabled | Nonempty SQLite path, at most 1024 characters                     |
+| `BETTER_AUTH_URL`          | Omitted                                | Required HTTP(S) origin when auth is enabled; HTTPS in production |
+| `BETTER_AUTH_SECRET`       | Omitted                                | 32–1024 characters; required when auth is enabled                 |
+| `APP_ORIGIN`               | Auth base URL                          | Optional canonical HTTP(S) origin for write requests              |
+| `METRICS_ENABLED`          | `false`                                | `true` or `false`                                                 |
+| `METRICS_TOKEN`            | Omitted                                | 32–1024 base64url characters; required when metrics are enabled   |
+| `API_RATE_LIMIT_MAX`       | `120`                                  | Integer from 1 to 1,000,000                                       |
+| `API_RATE_LIMIT_WINDOW_MS` | `60000`                                | Integer from 1 to 1,000,000 milliseconds                          |
+
+When a feature is disabled, its credentials are optional. Supplied credentials
+and settings are still validated. Before enabling authentication, run
+`bun run db:migrate` with the same `DATABASE_PATH` the application will use.
+This CLI runs from `apps/web`, just like `start`, so relative paths agree.
+Production origin settings describe the public HTTPS URL behind the reverse
+proxy; they do not change the internal listener.
+
+Generate independent random secrets, for example with
+`bun -e 'console.log(require("node:crypto").randomBytes(32).toString("base64url"))'`.
+Keep those generated values outside source control. Metrics callers must send
+`Authorization: Bearer <METRICS_TOKEN>`; the endpoint returns 404 while disabled.
+See [FOUNDATIONS.md](docs/FOUNDATIONS.md) for integration examples and limits.

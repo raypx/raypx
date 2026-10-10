@@ -63,6 +63,8 @@ export function workspaceCacheInputs(importMetaUrl: string | URL): WorkspaceCach
     const prefix = slash(relative(root, entry.directory));
     for (const suffix of [
       "src/**",
+      "migrations/**",
+      "drizzle.config.*",
       "test/**",
       "public/**",
       "assets/**",

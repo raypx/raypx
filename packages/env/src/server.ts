@@ -18,24 +18,100 @@ function isListenHost(value: string): boolean {
   );
 }
 
-const serverEnvSchema = z.object({
-  NODE_ENV: z.preprocess(
-    blankToUndefined,
-    z.enum(["development", "test", "production"]).default("development"),
-  ),
-  HOST: z.preprocess(blankToUndefined, z.string().refine(isListenHost).default("127.0.0.1")),
-  PORT: z.preprocess((value) => {
-    const normalized = blankToUndefined(value);
-    return typeof normalized === "string" && /^\d+$/.test(normalized)
-      ? Number(normalized)
-      : normalized;
-  }, z.number().int().min(1).max(65535).default(3000)),
-  LOG_LEVEL: z.preprocess(
-    blankToUndefined,
-    z.enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"]).optional(),
-  ),
-  APP_VERSION: z.preprocess(blankToUndefined, z.string().min(1).max(128).optional()),
-});
+const optionalBoolean = z.preprocess((value) => {
+  const normalized = blankToUndefined(value);
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+  return normalized;
+}, z.boolean().optional());
+const optionalPositiveInteger = z.preprocess((value) => {
+  const normalized = blankToUndefined(value);
+  return typeof normalized === "string" && /^\d+$/.test(normalized)
+    ? Number(normalized)
+    : normalized;
+}, z.number().int().min(1).max(1_000_000).optional());
+const optionalOrigin = z.preprocess(
+  blankToUndefined,
+  z
+    .string()
+    .refine((value) => {
+      try {
+        const url = new URL(value);
+        return (
+          ["http:", "https:"].includes(url.protocol) &&
+          !url.username &&
+          !url.password &&
+          url.pathname === "/" &&
+          !url.search &&
+          !url.hash
+        );
+      } catch {
+        return false;
+      }
+    })
+    .transform((value) => new URL(value).origin)
+    .optional(),
+);
+
+const serverEnvSchema = z
+  .object({
+    NODE_ENV: z.preprocess(
+      blankToUndefined,
+      z.enum(["development", "test", "production"]).default("development"),
+    ),
+    HOST: z.preprocess(blankToUndefined, z.string().refine(isListenHost).default("127.0.0.1")),
+    PORT: z.preprocess((value) => {
+      const normalized = blankToUndefined(value);
+      return typeof normalized === "string" && /^\d+$/.test(normalized)
+        ? Number(normalized)
+        : normalized;
+    }, z.number().int().min(1).max(65535).default(3000)),
+    LOG_LEVEL: z.preprocess(
+      blankToUndefined,
+      z.enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"]).optional(),
+    ),
+    APP_VERSION: z.preprocess(blankToUndefined, z.string().min(1).max(128).optional()),
+    APP_ORIGIN: optionalOrigin,
+    AUTH_ENABLED: optionalBoolean,
+    DATABASE_PATH: z.preprocess(
+      blankToUndefined,
+      z
+        .string()
+        .min(1)
+        .max(1024)
+        .refine((value) => !value.includes("\0"))
+        .optional(),
+    ),
+    BETTER_AUTH_URL: optionalOrigin,
+    BETTER_AUTH_SECRET: z.preprocess(blankToUndefined, z.string().min(32).max(1024).optional()),
+    METRICS_ENABLED: optionalBoolean,
+    METRICS_TOKEN: z.preprocess(
+      blankToUndefined,
+      z
+        .string()
+        .regex(/^[A-Za-z0-9_-]{32,1024}$/)
+        .optional(),
+    ),
+    API_RATE_LIMIT_MAX: optionalPositiveInteger,
+    API_RATE_LIMIT_WINDOW_MS: optionalPositiveInteger,
+  })
+  .superRefine((env, context) => {
+    if (env.AUTH_ENABLED) {
+      if (!env.BETTER_AUTH_SECRET)
+        context.addIssue({ code: "custom", path: ["BETTER_AUTH_SECRET"], message: "Required" });
+      if (
+        !env.BETTER_AUTH_URL ||
+        (env.NODE_ENV === "production" && !env.BETTER_AUTH_URL.startsWith("https://"))
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["BETTER_AUTH_URL"],
+          message: "Required secure origin",
+        });
+    }
+    if (env.METRICS_ENABLED && !env.METRICS_TOKEN)
+      context.addIssue({ code: "custom", path: ["METRICS_TOKEN"], message: "Required" });
+  });
 
 /** Validated server configuration, with types inferred from the runtime schema. */
 export type ServerEnv = Readonly<z.infer<typeof serverEnvSchema>>;
@@ -55,6 +131,17 @@ const fieldRules: Record<EnvironmentField, string> = {
   NITRO_PORT: "must be an integer between 1 and 65535",
   LOG_LEVEL: "must be trace, debug, info, warn, error, fatal, or silent",
   APP_VERSION: "must be a string of at most 128 characters",
+  APP_ORIGIN: "must be an HTTP(S) origin without credentials, a path, query, or fragment",
+  AUTH_ENABLED: "must be true or false",
+  DATABASE_PATH: "must be a nonempty path of at most 1024 characters without null bytes",
+  BETTER_AUTH_URL:
+    "must be an HTTP(S) origin; required when authentication is enabled, with HTTPS in production",
+  BETTER_AUTH_SECRET: "must contain 32 to 1024 characters; required when authentication is enabled",
+  METRICS_ENABLED: "must be true or false",
+  METRICS_TOKEN:
+    "must contain 32 to 1024 letters, digits, hyphens, or underscores; required when metrics are enabled",
+  API_RATE_LIMIT_MAX: "must be an integer between 1 and 1000000",
+  API_RATE_LIMIT_WINDOW_MS: "must be an integer between 1 and 1000000 milliseconds",
 };
 
 /** A configuration error containing field names and rules, never supplied values. */
@@ -87,6 +174,7 @@ export function parseServerEnv(input: Record<string, unknown>): ServerEnv {
   const hostField = nitroHost === undefined ? "HOST" : "NITRO_HOST";
   const portField = nitroPort === undefined ? "PORT" : "NITRO_PORT";
   const result = serverEnvSchema.safeParse({
+    ...input,
     NODE_ENV: input.NODE_ENV,
     HOST: nitroHost === undefined ? input.HOST : nitroHost,
     PORT: nitroPort === undefined ? input.PORT : nitroPort,

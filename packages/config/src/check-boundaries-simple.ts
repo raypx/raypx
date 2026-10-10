@@ -6,6 +6,7 @@ import { declaredDependencies, workspacePackages, workspaceRoot } from "./worksp
  * What we check:
  * 1. Circular dependencies (breaks builds)
  * 2. Browser importing server packages (security issue)
+ * 3. Client and UI business workspace dependency directions
  *
  * What we DON'T check (let TypeScript handle it):
  * - Type safety
@@ -13,7 +14,7 @@ import { declaredDependencies, workspacePackages, workspaceRoot } from "./worksp
  * - Import paths
  */
 
-const BROWSER_PACKAGES = ["contracts", "api-client", "hooks", "ui"];
+const BROWSER_PACKAGES = ["contracts", "client", "ui"];
 const SERVER_PACKAGES = ["api", "ai", "auth", "db", "storage", "logger"];
 
 export interface Violation {
@@ -55,6 +56,17 @@ export function checkBoundaries(root = workspaceRoot(process.cwd())): Violation[
         violations.push({
           package: name,
           issue: `Browser package cannot depend on server package ${dep}`,
+          severity: "error",
+        });
+      }
+      if (
+        packages.has(dep) &&
+        !["@raypx/config", "@raypx/tsconfig"].includes(dep) &&
+        ((shortName === "client" && dep !== "@raypx/contracts") || shortName === "ui")
+      ) {
+        violations.push({
+          package: name,
+          issue: `${name} cannot depend on business workspace ${dep}`,
           severity: "error",
         });
       }

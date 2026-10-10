@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useHealthCheck } from "@raypx/hooks/health";
+import { useHealthCheck } from "@raypx/client/react";
 import { Button, ConnectionStatus } from "@raypx/ui";
 import { ThemeSelect } from "./components/theme";
 

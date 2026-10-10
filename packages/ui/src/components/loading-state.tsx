@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/prefer-tag-over-role -- A loading region holds block placeholders; output is a form calculation element. */
 import type { ComponentProps } from "react";
-import { cn } from "../utils.js";
+import { cn } from "../lib/utils.js";
 import { Skeleton } from "./skeleton.js";
 
 export interface LoadingStateProps extends ComponentProps<"div"> {

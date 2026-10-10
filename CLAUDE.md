@@ -2,97 +2,110 @@
 
 ## Project Status
 
-Raypx is an engineering foundation for personal AI workbench, using Bun workspaces, Vite+, React, and TanStack Start.
-Currently implements homepage, health check, timeout/cancellation/retry, and technical layer package separation.
-AI sessions, model calls, database, login, and file storage are not yet implemented, do not describe skeleton as available features.
+Raypx is a full-stack foundation using Bun workspaces, Vite+, React, and
+TanStack Start. It provides runtime validation, safe HTTP boundaries, logging,
+metrics, provider lifecycle, explicit SQLite migrations and authentication,
+validated cache helpers, reusable query hooks, and shadcn components.
+Applications activate providers and add their own business rules.
 
-Fixed versions: Bun 1.4.0, Node.js 22.21.1, Vite+ 1.1.0.
-Bun is package manager, internal engineering script, and production service runtime; config tools directly expose `.ts` entrypoints, no initial build needed.
-Internal scripts execute TS with Bun; Vite+ loads same tools via Node.js 22.21.1 native type stripping.
-Vite+, Vitest, Oxlint, and tsc preserve Node tool entrypoints. Root `package.json` defines workspaces/catalogs, `bun.lock` fixes installation results.
-Bun can directly execute TypeScript but does not do complete type checking; must still run tsc and maintain strict configuration.
-Start and Nitro versions follow lockfile; Nitro is fixed beta version, upgrades require re-verification of production runtime.
-Git author and all package authors use `Zack <heyloyep@gmail.com>`.
+Use the versions in `.bun-version` and `.node-version` (Bun 1.4.2 and Node.js
+22.21.1). Bun installs dependencies and runs production; Node-compatible Vite+,
+Vitest, Oxlint, and tsc entrypoints remain part of the toolchain. Bun executing
+TypeScript does not replace strict type checking. Authors use
+`Zack <heyloyep@gmail.com>`.
 
 ## Code Placement
 
-- `apps/web`: Start file routing, page assembly, SSR, server adapters, and deployment entrypoint.
-- `packages/contracts`: Zod contracts and types, health check imports from `@raypx/contracts/health`.
-- `packages/api-client`: HTTP requests, response validation, timeout, and cancellation.
-- `packages/hooks`: React data state, retry, and lifecycle cleanup.
-- `packages/ui`: Pure presentation components and styles, no data fetching or route references.
-- `packages/api`: Server handler logic, health check entrypoint is `@raypx/api/health`.
-- `packages/ai`, `db`, `auth`, `storage`, `logger`: Server capability skeletons.
-- `packages/env`: Separately exposes client/server configuration entrypoints, no business configuration implementation yet.
-- `packages/tsconfig`: Shared strict TypeScript static configuration, use `@raypx/tsconfig/*.json` entrypoints.
-- `packages/config`: Tasks, boundaries, aliases, and style tools, directly consume TypeScript tool entrypoints.
+- `apps/web`: Start routing, SSR, framework adapters, initialization, and deployment.
+- `apps/web/src/features/<feature>/hooks`: Product-specific query, mutation, and workflow hooks; colocate feature contracts and clients in the same feature.
+- `packages/contracts`: Browser-safe Zod contracts and inferred types.
+- `packages/client`: React-free validated HTTP core, errors, timeout, and cancellation.
+- `packages/client/src/react`: Reusable browser-safe data hooks, auth mutations, and explicit React/TanStack Query adapters, exported as `@raypx/client/react`.
+- `packages/ui`: Components, styles, and component behavior hooks at `@raypx/ui/hooks`; no business workspace dependencies.
+- `packages/api`: Request context, safe errors, metrics, guards, probes, and lifecycle.
+- `packages/db`, `auth`, `storage`, `logger`, `worker`: Server capabilities with explicit activation and resource ownership.
+- `packages/env`: Separate client/server exports; no mixed root entrypoint.
+- `packages/config`: Engineering tools and static `@raypx/config/tsconfig/*.json` presets. The `tsconfig-presets` path is a compatibility export.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for complete responsibilities and dependency graph.
+The former `@raypx/api-client` and `@raypx/hooks` packages are removed without
+aliases. Migrate HTTP imports to `@raypx/client`, business hooks to
+`@raypx/client/react`, and component behavior to `@raypx/ui/hooks`.
+See [ARCHITECTURE.md](ARCHITECTURE.md) and [EXAMPLES.md](EXAMPLES.md).
 
 ## Engineering Conventions
 
-Use ESM and TypeScript strict, preserve `noUncheckedIndexedAccess`.
-Runtime packages output ESM and declaration files, React in UI and Hooks is peer dependency.
-Config tools use direct `.ts` entrypoints, checked via `tsconfig.test.json` noEmit configuration.
-Runtime packages preserve `tsconfig.json` build and `tsconfig.test.json` test/configuration checks, do not change ESM and declaration artifact conventions.
-Engineering configuration references `@raypx/tsconfig/*.json`, no longer references `@raypx/config/tsconfig/*`.
-Declare actually-used internal dependencies via `workspace:*`, use explicit public entrypoints, no cross-package `src` or `dist` access.
-Prohibit packages reverse-depending on web, circular dependencies, or cross-layer references; after adding dependencies run `bun run check:boundaries`.
+Use ESM and strict TypeScript with `noUncheckedIndexedAccess`; do not use `any`.
+Runtime packages output ESM and declarations. Separate `tsconfig.test.json`
+checks source, tests, and engineering configuration without emitting files.
+Engineering tools expose `.ts` entrypoints and need no initial build.
+Declare workspace dependencies explicitly and use public exports; never import
+another package's `src` or `dist`. Packages cannot depend on apps or form cycles.
 
-Start's route tree is auto-generated, do not manually edit `routeTree.gen.ts`.
-`.server.ts` is for web server adaptation, server package isolation alongside Start `importProtection`.
-Client must not import `api/ai/db/auth/storage/logger`, `env/server`, Node built-ins, or `bun`, `bun:*` built-ins.
-Secrets only read server-side, do not use `VITE_` prefix, do not commit `.env` or output to logs.
+The client may depend on `contracts`, and UI has no business workspace
+imports. Client core source cannot import React, React Query, or the React
+adapter through any path or reexport. Only `src/react` owns React dependencies;
+Start-specific modules belong in web. Browser code cannot import server
+packages, `env/server`, or Node/Bun built-ins. Engineering packages remain
+`devDependencies` and cannot be imported by runtime source.
 
-Vite+ configuration centralized in `vite.config.ts`; tasks and same-named package scripts do not duplicate definitions.
-`vp fmt` uses Oxfmt, `vp lint` uses Oxlint, complete type checking still executed by tsc.
-Unified lint/fmt configuration follows root `vite.config.ts`; `.oxlintrc.json` and Oxlint replacing boundary check documentation are alternative options not adopted, current vp scripts do not use this configuration.
-Preserve `packages/config/src/check-boundaries.ts` AST checking, both standalone `check:boundaries` and complete `check` execute it.
-Test API explicitly imports from `vite-plus/test`, default Node environment, Hooks/UI use jsdom.
-Running `bun run test` uses repository Vitest configuration; do not change to calling Bun native runner's `bun test`.
-Test files use `.test.ts`, `.spec.ts`, or corresponding TSX suffixes, cover actual behavior, do not write empty tests for empty skeletons.
+Web creates a QueryClient for each SSR router/request and preserves its browser
+router's cache through navigation. Never put a shared server query cache at
+module scope. SSR prefetches require request-aware query functions. Private
+queries include account identity and are cleared when authentication changes.
+UI hooks handle behavior such as debounce, not business requests or sessions.
+
+Start generates `routeTree.gen.ts`; do not edit it. Web `.server.ts` modules
+adapt server packages, alongside Start's import protection. Secrets stay on
+the server, never use a `VITE_` prefix, and are not committed or logged.
+
+Root `vite.config.ts` owns Vite+ lint, formatting, and test projects.
+`.oxlintrc.json` is an optional standalone configuration, not the current
+`vp lint` configuration. The TypeScript AST checker enforces dependencies,
+public exports, browser isolation, and client core/React separation in both
+`check:boundaries` and the full check. Test APIs import from `vite-plus/test`;
+React tests use jsdom and server tests use Node. Do not add placeholder tests.
 
 ## Common Modification Flows
 
-When adding HTTP capability, add contract and explicit export in `contracts`, implement handler in `api`,
-adapt via web `.server.ts` and expose through Start server route. Browser calls go to `api-client`,
-React state goes to `hooks`, presentation to `ui`, pages finally assembled by web.
-Do not pass server credentials to client components, nor put Node-specific logic in browser-usable packages.
+Begin product endpoints in `apps/web/src/features/<feature>/`: colocate their
+contracts, browser clients, `.server.ts` implementations, and `hooks`, then bind
+the Start route. Reuse shared HTTP boundaries and `requestJson`. Component
+behavior hooks such as debounce belong in `ui/hooks`.
 
-New pages go in Start file routing directory, reuse existing UI. New server capabilities implement in corresponding skeleton package,
-only install dependencies actually needed by selected solution, supplement input/output, failure paths, and runtime boundary validation.
-See [EXAMPLES.md](EXAMPLES.md) for code examples.
+Promote data capabilities to `contracts`, client core, and `client/react` only
+after demonstrated reuse across applications or independent consumers. Require
+stable validated contracts, browser-safe transport, explicit framework adapters,
+public exports, and meaningful tests/documentation. The shared client must work
+without product routes, workflows, application stores, or server configuration.
+Sharing among components of one product alone does not require a public package.
+Keep product state and composition in web so client does not become an application store.
+Start routing, providers, and SSR integration remain in web. Provider configuration requires
+schema validation, explicit activation, readiness, disposal, and failure tests.
 
-## Verification & Runtime
+See [architecture references](ARCHITECTURE.md#references-for-these-boundaries)
+for the specific boundaries borrowed from shadcn, LobeHub, and TanStack. Raypx
+retains its existing TanStack Query implementation and new-york/Radix UI registry.
+
+## Verification and Runtime
 
 ```sh
+bun run check:env
 bun install --frozen-lockfile
+bun run setup
+bun run check:runtime-env
 bun run dev
 bun run check:boundaries
 bun run check
-bun run test:watch
-bun run test:coverage
 ```
 
-Development command first builds all runtime packages, then watches in parallel, visit http://127.0.0.1:5173.
-Complete check first builds to generate Start routes, then executes format, lint, boundaries, type, and test checks.
-Production tests require `.output/`, watch excludes this test. Coverage currently has no enforced threshold.
+Development builds dependencies and starts watchers and Start on port 5173.
+The full check builds, then runs formatting, lint, boundaries, types, and tests.
+Production integration tests need built artifacts. Run `bun run build` then
+`bun run start` for Nitro's Bun artifact. Production defaults to
+`127.0.0.1:3000`; validated HOST/PORT and NITRO overrides configure the listener.
+Run `bun run db:migrate` explicitly before enabling account features.
+See [ENV.md](ENV.md), [TESTING.md](TESTING.md), and
+[Reusable foundations](docs/FOUNDATIONS.md).
 
-```sh
-bun run build
-bun run start
-```
-
-Production uses Nitro Bun preset, run by Bun at `.output/server/index.mjs`, default port 3000; web's `.env` can set HOST/PORT.
-See [ENV.md](ENV.md) and [TESTING.md](TESTING.md) for details.
-
-## Troubleshooting
-
-- Missing package declaration or artifacts: execute `bun run build`, do not bypass exports by importing other package source.
-- Route tree missing: start `bun run dev` or build, generated by Start.
-- Development port conflict: free 5173; production port configured by web `.env` `PORT`.
-- Cache anomaly: check `bun run vp run --last-details`, execute `bun run vp cache clean` when needed.
-- Client import protection failure: move server logic back to correct package/adapter, do not disable protection rules.
-
-Commit messages use Conventional Commits, like `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, or `chore:`.
-Preserve existing uncommitted content, distinguish implemented features from future directions when updating documentation.
+Use Conventional Commits. Preserve existing uncommitted content and distinguish
+implemented capabilities from future extensions when updating documentation.

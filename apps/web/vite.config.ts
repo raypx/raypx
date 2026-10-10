@@ -35,6 +35,9 @@ export default defineConfig(({ mode }) => ({
             }),
             nitro({
               preset: "bun",
+              // The sync DB factory resolves Bun's adapter dynamically at runtime.
+              // Trace both ESM/CJS adapter assets into the standalone server output.
+              traceDeps: ["drizzle-orm*"],
               plugins: [fileURLToPath(new URL("./server/plugins/runtime.ts", import.meta.url))],
             }),
             tailwindcss(),

@@ -1,5 +1,7 @@
 # JSDoc Documentation Progress
 
+This is a historical documentation snapshot; its counts are not current. The former `@raypx/api-client` and `@raypx/hooks` workspaces are removed. Use `@raypx/client` for HTTP, `@raypx/client/react` for business hooks, and `@raypx/ui/hooks` for component behavior. See [current architecture](../ARCHITECTURE.md).
+
 ## Summary
 
 - **Total Exports**: 53

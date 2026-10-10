@@ -15,6 +15,7 @@
 ### User Documentation
 
 - **ARCHITECTURE.md** - System architecture overview
+- **FOUNDATIONS.md** - Reusable capabilities, activation, usage, and practical limits
 - **DOCKER.md** - Docker deployment guide
 - **BUN_CATALOG.md** - Dependency management
 

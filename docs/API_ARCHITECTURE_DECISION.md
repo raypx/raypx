@@ -1,5 +1,7 @@
 # API Architecture Decision: oRPC vs Hono HC vs Nitro
 
+This is a historical architecture comparison and proposal. Its old package paths and Hono/RPC snippets are not the current public API. The former `api-client` and `hooks` workspaces are removed: use `@raypx/client`, `@raypx/client/react`, and `@raypx/ui/hooks` according to responsibility. Current architecture and supported examples are documented in [ARCHITECTURE](../ARCHITECTURE.md) and [EXAMPLES](../EXAMPLES.md).
+
 ## Current State
 
 **Current Stack:**

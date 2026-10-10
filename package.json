@@ -32,7 +32,7 @@
     "check": "vp run --filter \"@raypx/*\" build && vp run @raypx/ui#storybook-build && vp fmt --check && vp lint --deny-warnings && bun packages/config/src/check-boundaries.ts && vp run --filter \"@raypx/*\" typecheck && vp run --filter \"@raypx/*\" test",
     "lint:fix": "vp lint --fix --deny-warnings",
     "format:check": "vp fmt --check",
-    "test:watch": "vp test watch --exclude \"**/production.test.ts\"",
+    "test:watch": "vp test watch --exclude \"**/production.test.ts\" --exclude \"**/runtime-features.test.ts\"",
     "test:coverage": "vp run --filter \"@raypx/*\" build && vp test run --coverage",
     "check:boundaries": "bun packages/config/src/check-boundaries.ts",
     "check:env": "bun packages/config/src/environment.ts",
@@ -58,7 +58,8 @@
     "storybook:install": "vp run @raypx/ui#storybook-install",
     "prestorybook": "bun packages/config/src/environment.ts",
     "prestorybook:build": "bun packages/config/src/environment.ts",
-    "prestorybook:test": "bun packages/config/src/environment.ts"
+    "prestorybook:test": "bun packages/config/src/environment.ts",
+    "db:migrate": "bun --cwd apps/web run ../../packages/db/src/cli.ts"
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",

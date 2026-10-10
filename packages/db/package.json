@@ -3,11 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "author": "Zack <heyloyep@gmail.com>",
+  "files": [
+    "dist",
+    "migrations",
+    "README.md"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js"
     }
   },
   "dependencies": {
@@ -18,6 +27,7 @@
   "devDependencies": {
     "@raypx/config": "workspace:*",
     "@types/better-sqlite3": "^7.6.12",
+    "@types/bun": "^1.4.2",
     "@types/node": "^22.19.0",
     "drizzle-kit": "^0.28.1",
     "vite": "catalog:",

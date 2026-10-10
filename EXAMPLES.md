@@ -1,9 +1,11 @@
 # Raypx Code Examples
 
-Examples below focus on current health check capability, using explicit package entrypoints.
-AI calls, database, authentication, storage, and streaming sessions are not yet implemented, skeleton packages have no callable business interfaces.
+These examples use current public entrypoints. HTTP functions live in the
+React-free client core, business queries in `client/react`, and component
+behavior in `ui/hooks`. The old `api-client` and independent `hooks` workspaces
+have been removed without aliases.
 
-## Contracts & Types
+## Contracts and Server Routes
 
 ```ts
 import { healthResponseSchema, type HealthResponse } from "@raypx/contracts/health";
@@ -16,19 +18,13 @@ const payload = {
 const validated = healthResponseSchema.parse(payload);
 ```
 
-`contracts` handles browser-usable contracts; `satisfies` checks static types, Zod validates runtime input.
-When adding contracts, provide explicit exports in corresponding modules, do not put Node APIs, environment configuration, or request logic into contract layer.
-
-## Start HTTP Routes
-
-Web's server adapter references actual handler functions:
+Contracts contain browser-safe schemas and inferred types. Server handlers
+live in API, exposed through web `.server.ts` adapters and Start routes:
 
 ```ts
-// web's .server.ts adapter module
+// apps/web/src/server/health.server.ts
 export { healthResponse, apiNotFoundResponse } from "@raypx/api/health";
 ```
-
-Start route only handles matching and binding HTTP handlers:
 
 ```ts
 import { createFileRoute } from "@tanstack/react-router";
@@ -39,72 +35,104 @@ export const Route = createFileRoute("/api/health")({
 });
 ```
 
-Existing `GET /api/health` returns `{ "status": "ok", "service": "raypx-api" }`.
-Unknown APIs return JSON 404 via `apiNotFoundResponse`. Do not import these server entrypoints into browser components;
-Start's import protection and engineering boundary checks jointly enforce runtime boundaries.
+Do not import server entrypoints into browser components. Start's import
+protection and the AST boundary checker enforce this separation.
 
-## Health Check HTTP Call
+## HTTP Without React
 
 ```ts
-import { checkHealth } from "@raypx/api-client/health";
+import { checkHealth } from "@raypx/client/health";
+import { getSession } from "@raypx/client/session";
 
 const controller = new AbortController();
 const health = await checkHealth({ signal: controller.signal });
-// Caller cancels incomplete check by calling controller.abort().
+const { user } = await getSession();
+// controller.abort() cancels an unfinished request.
 ```
 
-`checkHealth` calls same-origin `/api/health`, default 5 second timeout; adjustable via `timeoutMs`.
-HTTP non-success status, network failure, timeout, cancellation, and invalid response contract all reject Promise, handled by caller.
-Return value is Zod-validated `HealthResponse`.
+The client validates successful responses and reports typed HTTP, validation,
+timeout, cancellation, and network failures. Requests default to a five-second
+deadline. GET/HEAD retries are opt-in; auth writes are never retried.
+HTTP entrypoints and the client root do not import React or TanStack Query.
 
-## Page Assembly
-
-New pages continue using Start file routing, assembled in web with components. UI package handles presentation, Hooks manage state,
-HTTP requests handled by api-client, pages do not re-implement timeout, cancellation, and response validation.
+## React Query and Page Assembly
 
 ```tsx
-import { useHealthCheck } from "@raypx/hooks/health";
+import { useHealthCheck, useSession } from "@raypx/client/react";
 import { Button, ConnectionStatus } from "@raypx/ui";
-import "@raypx/ui/styles.css";
 
 function ConnectionPanel() {
   const { status, retry } = useHealthCheck();
+  const session = useSession();
   return (
     <section aria-labelledby="connection-heading">
       <h2 id="connection-heading">Service Connection</h2>
       <ConnectionStatus status={status} />
       <Button disabled={status === "loading"} onClick={retry}>
-        Retry Connection
+        Retry
       </Button>
+      <p>{session.data?.user?.name ?? "Guest"}</p>
     </section>
   );
 }
 ```
 
-Hook state is `loading`, `connected`, or `error`; SSR maintains initial loading state, client effect makes request.
-Retry cancels old check, component unmount cancels request; calling retry during loading does not duplicate request.
-Base styles centrally loaded by root route, components need not re-import.
+The application supplies a QueryClient. Health and session consumers share
+requests and cache within that client. `useHealthCheck` returns `loading`,
+`connected`, or `error`; `useSession` exposes its public account projection,
+status, error, retry, and cancellation. UI renders these states without fetching
+business data or reading server configuration. Root web styles are loaded once.
+
+For a React application without Start, supply the generic provider:
 
 ```tsx
-import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { ClientProvider, createQueryClient } from "@raypx/client/react";
 
-export const Route = createFileRoute("/about")({
-  component: AboutPage,
-});
-
-function AboutPage() {
+function StandalonePanel() {
+  const [client] = useState(() => createQueryClient());
   return (
-    <main>
-      <h1>About Raypx</h1>
-    </main>
+    <ClientProvider client={client}>
+      <ConnectionPanel />
+    </ClientProvider>
   );
 }
 ```
 
-This is an example for adding new pages, current project has no `/about` page.
-After adding routes, generate route tree through Start development or build, do not manually modify generated files.
+Start's SSR query integration belongs in `apps/web`. Create a separate client
+for every router/server request and retain the browser router's client through
+navigation; never share a server cache at module scope. SSR prefetches must use
+request-aware query functions because the default browser-relative transport
+cannot forward incoming server request cookies.
 
-## Testing Contracts & Server Responses
+Use `accountQueryKey(accountId, ...resource)` for private business query keys.
+Auth mutation hooks cancel and remove account-private queries and synchronize
+session state after successful writes. Do not put passwords, tokens, or cookies
+in query keys.
+
+## Component Behavior
+
+```tsx
+import { useState } from "react";
+import { Input } from "@raypx/ui";
+import { useDebouncedValue } from "@raypx/ui/hooks";
+
+function SearchInput() {
+  const [value, setValue] = useState("");
+  const debounced = useDebouncedValue(value, 300);
+  return (
+    <section aria-label="Search preview">
+      <Input aria-label="Search" value={value} onChange={(event) => setValue(event.target.value)} />
+      <output aria-live="polite">{debounced}</output>
+    </section>
+  );
+}
+```
+
+UI hooks own behavior and cleanup. They do not depend on business contracts,
+clients, routing, or session state. Business requests belong in `client/react`.
+
+## Testing and TypeScript Configuration
 
 ```ts
 import { expect, test } from "vite-plus/test";
@@ -121,50 +149,34 @@ test("health response follows the contract", async () => {
 });
 ```
 
-Tests directly importing server handlers should be placed in Node projects allowing server dependencies,
-e.g., api package tests; browser-usable packages cannot add server dependencies for testing convenience.
-Test API uses `vite-plus/test`, see [TESTING.md](TESTING.md) for specific commands, mocks, and coverage.
+Place server-handler tests in Node projects with allowed server dependencies.
+React hook tests use a fresh QueryClient/provider and controlled fetches; verify
+cache sharing, cancellation, auth transitions, and independent SSR clients.
+See [TESTING.md](TESTING.md).
 
-## TypeScript Build & Check Configuration
-
-Static configuration provided by `@raypx/tsconfig`, task tools provided by `@raypx/config`.
-Non-React runtime package `tsconfig.json`:
+Shared presets come from the config package:
 
 ```json
 {
-  "extends": "@raypx/tsconfig/node.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist"
-  },
+  "extends": "@raypx/config/tsconfig/node.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "dist" },
   "include": ["src"]
 }
 ```
 
-React packages extend `@raypx/tsconfig/react.json`, preserving JSX and DOM configuration.
-`tsconfig.test.json` separately checks source, tests, and engineering configuration:
-
-```json
-{
-  "extends": "@raypx/tsconfig/test.json",
-  "compilerOptions": {
-    "rootDir": "../.."
-  },
-  "include": ["src", "test", "vite.config.ts"]
-}
-```
-
-Runtime package type tasks execute `tsc --noEmit` and `tsc -p tsconfig.test.json` in sequence.
-Test configuration here enables noEmit, cannot replace build configuration that generates ESM and declaration files.
-`config` tool directly consumes TS, both configurations are noEmit, no initial build step added.
+React packages extend `@raypx/config/tsconfig/react.json`.
+`tsconfig.test.json` extends `@raypx/config/tsconfig/test.json` and separately
+checks source, tests, and Vite configuration with `noEmit`. Runtime packages
+build ESM and declarations; engineering tools use direct TypeScript exports.
 
 ## Placement When Extending Capabilities
 
-- Model calls and provider adapters in `ai`, server configuration in `env/server`.
-- Database connection, Schema, and migrations in `db`; authentication and sessions in `auth`.
-- File and object storage in `storage`, server logging in `logger`.
-- Public interface logic in `api`, Start framework adaptation remains in web.
-- Common response contracts in `contracts`, browser state and presentation in `hooks` and `ui` respectively.
+- Public schemas in `contracts`; validated HTTP functions in `client`.
+- Business queries and mutations in `client/react`; component behavior in `ui/hooks`.
+- Server logic in `api`, auth in `auth`, schema/migrations in `db`, and caches in `storage`.
+- Start routes, request-aware SSR integration, provider activation, and deployment in web.
+- Runtime configuration in `env/server`; logging in `logger`; engineering tools in `config`.
 
-Before implementing these capabilities, first determine actual product interfaces and providers, then add dependencies, configuration, and validation.
-Only use actual public package entrypoints, do not directly import other package `src` or `dist`.
+Use declared public exports and run `bun run check:boundaries` after changing
+imports. See [Reusable foundations](docs/FOUNDATIONS.md) for database, auth,
+metrics, security, and cache APIs.
