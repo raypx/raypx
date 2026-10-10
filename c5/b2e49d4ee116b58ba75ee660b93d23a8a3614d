@@ -1,0 +1,31 @@
+.claude/implementation-plan.md
+  s_3cc6a5ba50d6f4::t_06d2300be1c5d9 1-1673
+TESTING.md
+  s_3cc6a5ba50d6f4::t_ffa7f88e7d1528 7
+apps/web/test/unit/router.test.ts
+  s_3cc6a5ba50d6f4::t_eb8da5e5a1809d 2
+apps/web/test/unit/server.test.ts
+  s_3cc6a5ba50d6f4::t_8910ac8544d223 4
+packages/storage/test/integration/instance.test.ts
+  s_3cc6a5ba50d6f4::t_c8649ece006a74 11
+packages/storage/test/unit/import.test.ts
+  s_3cc6a5ba50d6f4::t_b56ed8162ca6cb 18
+vite.config.ts
+  s_3cc6a5ba50d6f4::t_5044e31533e800 1,5,57-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c5b2e49d4ee116b58ba75ee660b93d23a8a3614d",
+  "prompts": {},
+  "sessions": {
+    "s_3cc6a5ba50d6f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc7527c-3e5e-472d-9e6c-4f8d364c95cb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
