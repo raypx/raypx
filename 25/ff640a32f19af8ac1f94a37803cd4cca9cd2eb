@@ -1,0 +1,35 @@
+.vscode/tasks.json
+  s_de2d79b0b75518::t_0a2734766d494e 1-46
+bun.lock
+  s_3cc6a5ba50d6f4::t_d4df693fdd8770 8,641,1747-1748
+oxlint-plugins/raypx-plugin.ts
+  s_3cc6a5ba50d6f4::t_fd05baee34f16d 1-174
+package.json
+  s_3cc6a5ba50d6f4::t_533342d3720ddd 94
+vite.config.ts
+  s_3cc6a5ba50d6f4::t_e83d87ce8e4c71 29-32,38-40,49-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "25ff640a32f19af8ac1f94a37803cd4cca9cd2eb",
+  "prompts": {},
+  "sessions": {
+    "s_3cc6a5ba50d6f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc7527c-3e5e-472d-9e6c-4f8d364c95cb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
