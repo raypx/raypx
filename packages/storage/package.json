@@ -12,6 +12,10 @@
     "./cache": {
       "types": "./dist/cache.d.ts",
       "import": "./dist/cache.js"
+    },
+    "./instance": {
+      "types": "./dist/instance.d.ts",
+      "import": "./dist/instance.js"
     }
   },
   "dependencies": {
