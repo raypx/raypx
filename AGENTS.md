@@ -1,469 +1,519 @@
-# AI Development Guide for Raypx
+# Raypx AI-Assisted Development Guide
 
-This document helps AI assistants understand the Raypx codebase and make effective contributions.
+## Git Commit Guidelines
 
-## Project Overview
+**Do NOT add Co-Authored-By or attribution lines to commits.**
+All commits should be authored by the repository owner directly.
 
-**Raypx** is a production-ready, type-safe full-stack TypeScript template using:
+## Project Status
 
-- **Bun** - Fast JavaScript runtime
-- **TanStack Start** - Full-stack React framework
-- **Drizzle ORM** - Type-safe database queries
-- **Better Auth** - Authentication system
-- **Monorepo** - Bun workspaces with clear boundaries
+Raypx is a full-stack foundation using Bun workspaces, Vite+, React, and
+TanStack Start. It provides runtime validation, safe HTTP boundaries, logging,
+metrics, provider lifecycle, explicit SQLite migrations and authentication,
+validated cache helpers, reusable query hooks, and shadcn components.
+Applications activate providers and add their own business rules.
 
-## Quick Context
+Use Bun 1.4.2 from `.bun-version` and stable Node.js `>=22.22.1 <23.0.0`
+(`devEngines.runtime.version: ^22.22.1`). `.node-version` recommends Node.js
+22.22.1 and fixes the CI version; later stable Node.js 22 releases are supported.
+The broader root `engines.node` range declares tool compatibility, while
+development requires Node.js 22. Bun installs dependencies and runs production;
+Node-compatible Vite+, Vitest, Oxlint, and tsc entrypoints remain part of the
+toolchain. Bun executing TypeScript does not replace strict type checking.
+Authors use `Zack <heyloyep@gmail.com>`.
 
-### What This Project Does
+## Code Placement
 
-Provides a template for building modern web applications with end-to-end type safety, from database to UI. It's designed to be forked and customized.
+- `apps/web`: Start routing, SSR, framework adapters, initialization, and deployment.
+- `apps/web/src/features/<feature>/hooks`: Product-specific query, mutation, and workflow hooks; colocate feature contracts and clients in the same feature.
+- `packages/contracts`: Browser-safe Zod contracts and inferred types.
+- `packages/client`: React-free validated HTTP core, errors, timeout, and cancellation.
+- `packages/client/src/react`: Reusable browser-safe data hooks, auth mutations, and explicit React/TanStack Query adapters, exported as `@raypx/client/react`.
+- `packages/ui`: Components, styles, and component behavior hooks at `@raypx/ui/hooks`; no business workspace dependencies.
+- `packages/api`: Request context, safe errors, metrics, guards, probes, and lifecycle.
+- `packages/db`, `auth`, `storage`, `logger`, `worker`: Server capabilities with explicit activation and resource ownership.
+- `packages/env`: Separate client/server exports; no mixed root entrypoint.
+- `packages/config`: Engineering tools and static `@raypx/config/tsconfig/*.json` presets. The `tsconfig-presets` path is a compatibility export.
 
-### Target Users
+The former `@raypx/api-client` and `@raypx/hooks` packages are removed without
+aliases. Migrate HTTP imports to `@raypx/client`, business hooks to
+`@raypx/client/react`, and component behavior to `@raypx/ui/hooks`.
+See [ARCHITECTURE.md](ARCHITECTURE.md) and [EXAMPLES.md](EXAMPLES.md).
 
-- Developers starting new full-stack projects
-- Teams wanting a type-safe foundation
-- Projects needing authentication and database out of the box
+## Development Workflow
 
-## Architecture Principles
+### Adding New Features
 
-### 1. Layer Separation
+1. **Evaluate feature placement**
+   - Product-specific features → `apps/web/src/features/<feature>/`
+   - Reusable data capabilities → Implement in feature first, promote to `packages/` after demonstrated reuse
+   - UI components → `packages/ui/src/`
+   - Server capabilities → Appropriate server package (`api`, `db`, `auth`, etc.)
 
-```
-Browser ← client core, client/react, ui, ui/hooks, contracts
-Server  ← api, auth
-Infra   ← db, storage, env/server, logger
-Tools   ← config (development only)
-```
+2. **Create feature directory structure** (for new features in web)
 
-**Rules:**
-
-- Browser packages CANNOT import server packages
-- Server packages CAN import infrastructure packages
-- Contracts are browser-safe; workspace imports must follow the table below.
-  UI keeps business contracts outside its component layer.
-
-### 2. Type Safety
-
-- **Strict TypeScript** - No `any` types allowed
-- **Runtime Validation** - Zod schemas for all external data
-- **Type Inference** - Drizzle provides database types automatically
-
-### 3. Package Boundaries
-
-Each package has a clear responsibility:
-
-| Package     | Purpose                                      | Business workspace imports                            |
-| ----------- | -------------------------------------------- | ----------------------------------------------------- |
-| `db`        | SQLite schema, migrations, and lifecycle     | `env`, `logger`                                       |
-| `auth`      | Explicit auth factory and sessions           | `contracts`, `db`, `env`, `logger`                    |
-| `logger`    | Structured logging                           | None                                                  |
-| `api`       | HTTP boundaries and server logic             | `contracts`, `auth`, `db`, `storage`, `env`, `logger` |
-| `contracts` | Browser-safe schemas                         | None                                                  |
-| `client`    | React-free HTTP core; separate React adapter | `contracts`                                           |
-| `ui`        | Components and component behavior hooks      | None                                                  |
-| `storage`   | Storage drivers and validated cache          | `env`, `logger`                                       |
-| `worker`    | In-process task execution                    | `logger`                                              |
-| `env`       | Explicit client/server configuration exports | None                                                  |
-| `config`    | Build tools and static TypeScript presets    | None                                                  |
-
-`@raypx/client` and its HTTP subpaths must not import React, TanStack Query,
-or `client/src/react`, even through reexports or relative paths. Shared,
-browser-safe data hooks with a clear React adapter belong in `@raypx/client/react`;
-product-specific hooks start in `apps/web/src/features/<feature>/hooks`.
-Component behavior such as debounce belongs in `@raypx/ui/hooks`.
-The former `@raypx/api-client` and `@raypx/hooks` workspaces
-are removed without compatibility aliases.
-
-Start integration belongs in `apps/web`, not the universal client. Create a
-QueryClient for each SSR router/request and retain that router's client in the
-browser; never share a server query cache at module scope. SSR prefetching must
-use request-aware query functions. Private query keys include account identity,
-and auth changes must cancel and clear private cached data.
-
-Engineering `@raypx/config` dependencies are allowed only for development;
-runtime source cannot import its tools. Use its `tsconfig/*.json` presets.
-Run `bun run check:boundaries` after changing imports or dependencies.
-
-Promote application data capabilities to public packages only after real reuse
-across applications or independent consumers is demonstrated. Two components
-in one feature are not evidence that a new public API is needed. The promoted
-API must have stable validated contracts, browser-safe transport, explicit
-framework adaptation, and tests/documentation for its public exports. It must
-work without product routes, application stores, server configuration, or a
-shared server QueryClient. Keep product workflows and composition in web;
-the client is a reusable data boundary, not an application store.
-
-See [architecture references](ARCHITECTURE.md#references-for-these-boundaries)
-for the shadcn, LobeHub, and TanStack practices behind these boundaries.
-
-## Code Patterns
-
-### Database Queries
-
-```typescript
-// ✅ Good - Type-safe, clear
-import { getDatabase } from "@raypx/db";
-import { users } from "@raypx/db/schema";
-import { eq } from "drizzle-orm";
-
-const db = getDatabase();
-const user = await db.select().from(users).where(eq(users.id, userId));
-
-// ❌ Bad - Raw SQL, no types
-const user = await db.execute("SELECT * FROM users WHERE id = ?", [userId]);
-```
-
-### API Routes
-
-```typescript
-// ✅ Good - Type-safe, validated
-import { createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
-
-const requestSchema = z.object({
-  name: z.string(),
-  email: z.string().email(),
-});
-
-export const Route = createFileRoute('/api/users')({
-  server: {
-    handlers: {
-      async POST({ request }) {
-        const body = await request.json();
-        const data = requestSchema.parse(body); // Throws if invalid
-
-        // Use validated data...
-        return Response.json({ success: true });
-      },
-    },
-  },
-});
-
-// ❌ Bad - No validation
-async POST({ request }) {
-  const body = await request.json();
-  const { name, email } = body; // Could be anything!
-  // ...
-}
-```
-
-### Error Handling
-
-```typescript
-// ✅ Good - Specific errors, logging
-import { logger } from "@raypx/logger";
-
-try {
-  const result = await riskyOperation();
-  return Response.json(result);
-} catch (error) {
-  logger.error("Operation failed", {
-    error: error instanceof Error ? error.message : "Unknown error",
-    context: { userId, timestamp: Date.now() },
-  });
-
-  return Response.json({ error: "Operation failed" }, { status: 500 });
-}
-
-// ❌ Bad - Silent failure
-try {
-  const result = await riskyOperation();
-  return Response.json(result);
-} catch (error) {
-  // Nothing!
-}
-```
-
-### Authentication
-
-```typescript
-// ✅ Good - Check auth first
-import { requireAuth } from "@raypx/auth";
-
-export async function GET({ request }) {
-  const session = await requireAuth(request);
-  if (session instanceof Response) return session; // Not authenticated
-
-  // User is authenticated, safe to proceed
-  const userId = session.user.id;
-  // ...
-}
-
-// ❌ Bad - No auth check
-export async function GET({ request }) {
-  // Directly access sensitive data without checking auth
-  const users = await db.select().from(users);
-  return Response.json(users); // Security issue!
-}
-```
-
-## Common Tasks
-
-### Adding a New API Endpoint
-
-The users endpoint below illustrates a new product feature; it is not an
-existing template API. Begin in web, colocating contracts, a browser client,
-server implementation, and hooks in `src/features/users/`. Declare any new
-external dependencies in the application. Reuse the existing public HTTP and
-request-boundary helpers without moving the entire feature into shared packages.
-
-1. **Define feature contracts** in `apps/web/src/features/users/contracts.ts`
-
-   ```typescript
-   import { z } from "zod";
-
-   export const createUserSchema = z.object({
-     name: z.string().min(1),
-     email: z.string().email(),
-   });
-   export type CreateUser = z.infer<typeof createUserSchema>;
-   export const createUserResponseSchema = z.object({
-     user: z.object({ id: z.string(), name: z.string(), email: z.string().email() }),
-   });
+   ```
+   apps/web/src/features/user-profile/
+   ├── components/    # React components
+   ├── hooks/         # Data hooks
+   ├── contracts/     # Zod schemas (if needed)
+   └── routes/        # Start routes
    ```
 
-2. **Implement the feature's server handler** in
-   `apps/web/src/features/users/server/users.server.ts`, validating external input
-   and using the shared HTTP boundary. **Bind it to a route** in `apps/web/src/routes/`.
+3. **Write tests first**
+   - Add unit tests in `test/unit/`
+   - Use `vp test run --project unit` for fast iteration
 
-   ```typescript
-   // apps/web/src/routes/api.users.ts
-   import { createFileRoute } from "@tanstack/react-router";
-   import { createUserResponse } from "../features/users/server/users.server";
+4. **Implement feature**
+   - Follow TypeScript strict mode
+   - Use public package exports only
+   - Avoid `any` types
 
-   export const Route = createFileRoute("/api/users")({
-     server: { handlers: { POST: createUserResponse } },
-   });
-   ```
-
-3. **Add a validated feature client** in `apps/web/src/features/users/client/users.ts`
-
-   ```typescript
-   import { requestJson } from "@raypx/client/http";
-   import { createUserResponseSchema, type CreateUser } from "../contracts";
-
-   export function createUser(data: CreateUser) {
-     return requestJson({
-       path: "/api/users",
-       method: "POST",
-       body: data,
-       schema: createUserResponseSchema,
-     });
-   }
-   ```
-
-4. **Compose query/mutation hooks** in `apps/web/src/features/users/hooks/`.
-   Keep product permissions, routing, and workflow state in the application.
-   When another application needs the same stable capability, promote its
-   contracts to `@raypx/contracts`, transport to `@raypx/client`, and React
-   adapter to `@raypx/client/react`, adding explicit public exports and tests.
-
-### Adding a Database Table
-
-1. **Define schema** in `packages/db/src/schema.ts`
-
-   ```typescript
-   export const posts = sqliteTable("posts", {
-     id: integer("id").primaryKey({ autoIncrement: true }),
-     title: text("title").notNull(),
-     content: text("content").notNull(),
-     userId: integer("user_id")
-       .notNull()
-       .references(() => users.id),
-     createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-   });
-   ```
-
-2. **Generate migration**
-
+5. **Verify**
    ```bash
-   cd packages/db
-   bun drizzle-kit generate
-   bun drizzle-kit migrate
+   vp test run --project unit    # Unit tests
+   vp check                      # Format, lint, types
+   vp run dev                    # Local verification
    ```
 
-3. **Use in code**
-   ```typescript
-   import { posts } from "@raypx/db/schema";
+### Fixing Bugs
 
-   const allPosts = await db.select().from(posts);
+1. **Reproduce the issue** locally
+2. **Write a failing test** that demonstrates the bug
+3. **Implement minimal fix** without over-refactoring
+4. **Verify fix**
+   ```bash
+   vp test run --project unit
+   vp test run                   # Full test suite
+   vp check
    ```
+5. **Check related code** - Does the same bug exist elsewhere?
 
-### Adding React Data and Component Behavior
+### Promoting Code to Shared Packages
 
-Product data hooks start in `apps/web/src/features/<feature>/hooks` and use
-validated feature clients plus the application's QueryClient. Cross-application
-data capabilities can be promoted to `packages/client/src/react/` after meeting
-the reuse conditions above, with explicit `@raypx/client/react` exports.
-For the existing shared health capability:
+**When to promote:**
 
-```tsx
-import { useHealthCheck } from "@raypx/client/react";
-import { Button, ConnectionStatus } from "@raypx/ui";
+- ✅ Used in multiple features
+- ✅ Has stable, validated API
+- ✅ Has complete tests
+- ✅ Has clear documentation
 
-export function ServiceStatus() {
-  const { status, retry } = useHealthCheck();
-  return (
-    <section aria-label="Service status">
-      <ConnectionStatus status={status} />
-      <Button disabled={status === "loading"} onClick={retry}>
-        Retry
-      </Button>
-    </section>
-  );
-}
-```
+**When NOT to promote:**
 
-The application supplies its QueryClient provider. Generic consumers can use
-`createQueryClient` and `ClientProvider`; Start owns its SSR integration in web.
-Component-only hooks such as `useDebouncedValue` belong in
-`packages/ui/src/hooks/` and are exposed through `@raypx/ui/hooks`. UI must not
-import the client, contracts, routing, or business data modules.
+- ❌ Only used in one product
+- ❌ API still changing rapidly
+- ❌ Contains product-specific logic
+
+**Promotion steps:**
+
+1. Confirm code is stable and reused
+2. Move to appropriate `packages/` directory
+3. Add public export to package's `index.ts`
+4. Add or update tests
+5. Update import paths in calling code
+6. Run `vp check` to verify boundaries
 
 ## Testing Strategy
 
-### What to Test
+### When to Run Which Tests
 
-1. **Database Queries** - Ensure schema matches expectations
-2. **API Routes** - Test validation and business logic
-3. **Authentication** - Verify protected routes work
-4. **Utilities** - Test pure functions
+**During development (fast feedback):**
 
-### Testing Pattern
-
-```typescript
-import { describe, it, expect, beforeEach } from "vitest";
-
-describe("User API", () => {
-  beforeEach(() => {
-    // Setup: Create fresh database
-  });
-
-  it("should create user with valid data", async () => {
-    const response = await fetch("/api/users", {
-      method: "POST",
-      body: JSON.stringify({ name: "Test", email: "test@example.com" }),
-    });
-
-    expect(response.status).toBe(201);
-    const data = await response.json();
-    expect(data.user.email).toBe("test@example.com");
-  });
-
-  it("should reject invalid email", async () => {
-    const response = await fetch("/api/users", {
-      method: "POST",
-      body: JSON.stringify({ name: "Test", email: "invalid" }),
-    });
-
-    expect(response.status).toBe(400);
-  });
-});
+```bash
+vp test run --project unit          # Only unit tests (< 30s)
+vp test run --project unit -t "specific test"
+vp test --project unit              # Watch mode
 ```
 
-## Common Pitfalls
+**Before commit (full verification):**
 
-### 1. Importing Server Code in Browser
-
-```typescript
-// ❌ WRONG - This will break!
-// In a browser-side component:
-import { getDatabase } from "@raypx/db"; // Server-only!
-
-// ✅ RIGHT - Use API client
-import { getSession } from "@raypx/client/session";
+```bash
+vp test run                         # All tests
+vp check                            # All checks
 ```
 
-### 2. Not Validating Input
+### Test Types
 
-```typescript
-// ❌ WRONG - Trust user input
-const { name } = await request.json();
-await db.insert(users).values({ name });
+**Unit Tests (test/unit/)**
 
-// ✅ RIGHT - Validate first
-const schema = z.object({ name: z.string().min(1).max(100) });
-const { name } = schema.parse(await request.json());
-await db.insert(users).values({ name });
+- Pure function logic
+- Data transformations
+- Validation logic
+- Mock external dependencies (HTTP, DB, filesystem)
+- Should be very fast (< 5s per file)
+
+**Integration Tests (test/integration/)**
+
+- Start real servers
+- Test HTTP endpoints
+- Test database interactions
+- Test filesystem operations
+- Allow longer timeout (< 30s per file)
+
+**UI Tests (\*.test.tsx)**
+
+- React component rendering
+- User interactions
+- State management
+- Use jsdom environment
+
+### Writing Good Tests
+
+**DO:**
+
+- ✅ Use descriptive test names
+- ✅ Follow arrange-act-assert pattern
+- ✅ Mock external dependencies
+- ✅ Clean up resources (afterEach, afterAll)
+- ✅ Test behavior, not implementation
+
+**DON'T:**
+
+- ❌ Test third-party libraries
+- ❌ Use random data (use fixed fixtures)
+- ❌ Access network or database in unit tests
+- ❌ Add placeholder tests without assertions
+
+## Architecture Principles
+
+### Package Boundaries
+
+**Dependency direction:**
+
+```
+apps/web
+  ↓
+packages/client, packages/ui
+  ↓
+packages/contracts
 ```
 
-### 3. Exposing Sensitive Data
+**Forbidden dependencies:**
 
-```typescript
-// ❌ WRONG - Return password hash
-const user = await db.select().from(users).where(eq(users.id, id));
-return Response.json(user); // Includes password!
+- ❌ Packages cannot depend on apps
+- ❌ No circular dependencies
+- ❌ Client and UI cannot import server packages
+- ❌ Cannot import other package's `src/` or `dist/`
 
-// ✅ RIGHT - Exclude sensitive fields
-const user = await db
-  .select({
-    id: users.id,
-    name: users.name,
-    email: users.email,
-    // password intentionally omitted
-  })
-  .from(users)
-  .where(eq(users.id, id));
-return Response.json(user);
+**Verification:**
+
+```bash
+vp run check:boundaries  # TypeScript AST check
+vp lint                  # Oxlint custom rules also check
 ```
 
-## Performance Considerations
+### Client/Server Separation
 
-### Database
+**Server-only packages:**
 
-- **Use indexes** for frequently queried columns
-- **Batch operations** when possible
-- **Avoid N+1 queries** - use joins or batch fetching
+- `@raypx/db`, `@raypx/auth`, `@raypx/storage`, `@raypx/logger`, `@raypx/worker`, `@raypx/api`
+- `@raypx/env/server`
 
-### API
+**Browser-safe packages:**
 
-- **Validate early** - Reject bad requests quickly
-- **Use pagination** for list endpoints
-- **Cache expensive operations**
+- `@raypx/client`, `@raypx/ui`, `@raypx/contracts`
+- `@raypx/env/client`
 
-## Documentation Standards
+**Usage in apps/web:**
 
-### JSDoc Format
+- Server packages only in `.server.ts` files
+- Start's import protection enforces this
 
-````typescript
-/**
- * Fetches user by ID with caching
- *
- * @param userId - User ID to fetch
- * @returns User object or null if not found
- * @throws {Error} If database connection fails
- *
- * @example
- * ```typescript
- * const user = await getUser('123');
- * if (user) {
- *   console.log(user.name);
- * }
- * ```
- */
-export async function getUser(userId: string) {
-  // Implementation...
+### Common Pitfalls
+
+**Pitfall 1: Module scope side effects in SSR**
+
+```typescript
+// ❌ Wrong: accesses localStorage at module load time
+const theme = localStorage.getItem("theme");
+
+// ✅ Right: access in component
+function App() {
+  const theme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
 }
-````
+```
 
-## Questions to Ask
+**Pitfall 2: Shared module-level state**
 
-When implementing a feature, consider:
+```typescript
+// ❌ Wrong: module-level QueryClient shared across SSR requests
+import { QueryClient } from "@tanstack/react-query";
+const queryClient = new QueryClient();
 
-1. **Is this browser-safe?** - Can it run in the browser or is it server-only?
-2. **Is input validated?** - Are we checking all external data?
-3. **Is it type-safe?** - Are we using proper TypeScript types?
-4. **Is it logged?** - Do we log errors and important events?
-5. **Is it tested?** - Do we have tests for the happy path and edge cases?
-6. **Is it documented?** - Do we have JSDoc comments?
+// ✅ Right: create new QueryClient per request
+// (web/src/routes/__root.tsx already handles this correctly)
+```
 
-## Getting Help
+**Pitfall 3: Node built-ins in browser code**
 
-- Check [ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design
-- Review existing implementations in similar packages
-- Look at tests for usage examples
-- Check TanStack Start and Drizzle docs for API patterns
+```typescript
+// ❌ Wrong: importing Node built-ins in browser code
+import fs from "node:fs";
 
----
+// ✅ Right: only use in .server.ts files
+// apps/web/src/routes/api.server.ts
+import fs from "node:fs";
+```
 
-**Remember:** This is a template. Make it your own, but maintain the type safety and clear boundaries.
+### Performance Principles
+
+**Minimize client bundle:**
+
+- Avoid importing large libraries in client components
+- Use dynamic imports for heavy components
+- Check bundle size: `vp run build`
+
+**Server-side lazy loading:**
+
+```typescript
+// ✅ Good: lazy import heavy features
+export async function action() {
+  if (needsImageProcessing) {
+    const { processImage } = await import("./image-processor");
+    await processImage();
+  }
+}
+```
+
+**Avoid module scope heavy work:**
+
+```typescript
+// ❌ Wrong: runs on every import
+const data = expensiveComputation();
+
+// ✅ Right: lazy evaluation
+let _data: Data | undefined;
+export function getData() {
+  if (!_data) _data = expensiveComputation();
+  return _data;
+}
+```
+
+## Git Workflow
+
+### Branch Strategy
+
+**Main branch:** `main`
+
+- Protected, cannot push directly
+- All PRs must pass CI
+- Use squash merge
+
+**Feature branch naming:**
+
+```bash
+feat/<feature-name>      # New features
+fix/<bug-description>    # Bug fixes
+refactor/<scope>         # Refactoring
+docs/<topic>             # Documentation
+chore/<task>             # Engineering tasks
+```
+
+### Commit Message Format
+
+Use Conventional Commits:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:**
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code change without behavior change
+- `docs`: Documentation
+- `test`: Tests
+- `chore`: Engineering tasks
+- `perf`: Performance optimization
+
+**Scopes:**
+
+- Package names: `client`, `ui`, `api`, `db`, `auth`, `storage`, `logger`, `worker`, `env`, `config`
+- App names: `web`
+- Feature modules: `user-profile`, `dashboard`
+
+**Examples:**
+
+```bash
+feat(client): add request timeout configuration
+fix(web): resolve hydration mismatch in dashboard
+refactor(storage): simplify instance lifecycle
+docs(readme): update installation instructions
+test(api): add middleware integration tests
+chore(deps): upgrade react-query to v6
+```
+
+### PR Workflow
+
+1. **Create branch:** `git checkout -b feat/new-feature`
+2. **Develop and commit**
+3. **Push:** `git push -u origin feat/new-feature`
+4. **Create PR:** `gh pr create --fill`
+5. **Wait for CI** - all checks must pass
+6. **Merge:** `gh pr merge --squash --delete-branch`
+
+### Common Git Tasks
+
+**Update branch:**
+
+```bash
+git checkout main
+git pull
+git checkout feat/my-feature
+git rebase main
+```
+
+**Amend last commit:**
+
+```bash
+git add -A
+git commit --amend --no-edit
+git push --force-with-lease
+```
+
+**Undo local changes:**
+
+```bash
+git checkout .           # Undo unstaged changes
+git reset HEAD <file>    # Unstage file
+git reset --hard HEAD    # Undo all changes (⚠️ destructive)
+```
+
+## Troubleshooting
+
+### Build Failures
+
+**Symptoms:** `vp run build` fails
+
+**Check:**
+
+1. Run `vp check` for type errors
+2. Check for circular dependencies
+3. Verify all import paths are correct
+4. Review full error stack
+
+### Test Failures
+
+**Symptoms:** Tests fail or timeout
+
+**Check:**
+
+1. Run test file independently: `vp test run <file>`
+2. Check for resource leaks (unclosed servers, connections)
+3. Review test timeout settings
+4. Look for race conditions
+
+### Type Check Failures
+
+**Symptoms:** `vp check:types` reports errors
+
+**Check:**
+
+1. Run `bun install` to ensure dependencies are current
+2. Verify `tsconfig.json` inheritance chain
+3. Confirm using workspace aliases for imports
+4. Check for `any` type leakage
+
+### Boundary Check Failures
+
+**Symptoms:** `vp run check:boundaries` reports violations
+
+**Common violations:**
+
+```typescript
+// ❌ Wrong examples
+import { db } from "@raypx/db"; // in client code
+import { helper } from "@raypx/client/src/utils"; // internal path
+```
+
+**Fix:** Use public exports and respect client/server boundaries
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) and [EXAMPLES.md](EXAMPLES.md).
+
+## Engineering Conventions
+
+Use ESM and strict TypeScript with `noUncheckedIndexedAccess`; do not use `any`.
+Runtime packages output ESM and declarations. Separate `tsconfig.test.json`
+checks source, tests, and engineering configuration without emitting files.
+Engineering tools expose `.ts` entrypoints and need no initial build.
+Declare workspace dependencies explicitly and use public exports; never import
+another package's `src` or `dist`. Packages cannot depend on apps or form cycles.
+
+The client may depend on `contracts`, and UI has no business workspace
+imports. Client core source cannot import React, React Query, or the React
+adapter through any path or reexport. Only `src/react` owns React dependencies;
+Start-specific modules belong in web. Browser code cannot import server
+packages, `env/server`, or Node/Bun built-ins. Engineering packages remain
+`devDependencies` and cannot be imported by runtime source.
+
+Web creates a QueryClient for each SSR router/request and preserves its browser
+router's cache through navigation. Never put a shared server query cache at
+module scope. SSR prefetches require request-aware query functions. Private
+queries include account identity and are cleared when authentication changes.
+UI hooks handle behavior such as debounce, not business requests or sessions.
+
+Start generates `routeTree.gen.ts`; do not edit it. Web `.server.ts` modules
+adapt server packages, alongside Start's import protection. Secrets stay on
+the server, never use a `VITE_` prefix, and are not committed or logged.
+
+Root `vite.config.ts` owns Vite+ lint, formatting, and staged checks.
+Root `vitest.config.mts` owns test projects and coverage.
+`.oxlintrc.json` is an optional standalone configuration, not the current
+`vp lint` configuration. The TypeScript AST checker enforces dependencies,
+public exports, browser isolation, and client core/React separation in both
+`check:boundaries` and the full check. Test APIs import from `vite-plus/test`;
+React tests use jsdom and server tests use Node. Do not add placeholder tests.
+
+## Common Modification Flows
+
+Begin product endpoints in `apps/web/src/features/<feature>/`: colocate their
+contracts, browser clients, `.server.ts` implementations, and `hooks`, then bind
+the Start route. Reuse shared HTTP boundaries and `requestJson`. Component
+behavior hooks such as debounce belong in `ui/hooks`.
+
+Promote data capabilities to `contracts`, client core, and `client/react` only
+after demonstrated reuse across applications or independent consumers. Require
+stable validated contracts, browser-safe transport, explicit framework adapters,
+public exports, and meaningful tests/documentation. The shared client must work
+without product routes, workflows, application stores, or server configuration.
+Sharing among components of one product alone does not require a public package.
+Keep product state and composition in web so client does not become an application store.
+Start routing, providers, and SSR integration remain in web. Provider configuration requires
+schema validation, explicit activation, readiness, disposal, and failure tests.
+
+See [architecture references](ARCHITECTURE.md#references-for-these-boundaries)
+for the specific boundaries borrowed from shadcn, LobeHub, and TanStack. Raypx
+retains its existing TanStack Query implementation and new-york/Radix UI registry.
+
+## Verification and Runtime
+
+```sh
+bun run check:env
+bun install --frozen-lockfile
+bun run setup
+bun run check:runtime-env
+bun run dev
+bun run check:boundaries
+bun run check
+```
+
+Development builds dependencies and starts watchers and Start on port 5173.
+`check` and `verify` use the same ordered acceptance workflow. Environment,
+dependencies, policy, formatting, boundaries, and unused-code checks run first;
+builds precede typed lint and type checks, followed by tests, Storybook build,
+and independent consumers. `policy` checks workspace registration, TypeScript
+inheritance, and local documentation without writing files.
+Production integration tests need built artifacts. Run `bun run build` then
+`bun run start` for Nitro's Bun artifact. Production defaults to
+`127.0.0.1:3000`; validated HOST/PORT and NITRO overrides configure the listener.
+Run `bun run db:migrate` explicitly before enabling account features.
+See [ENV.md](ENV.md), [TESTING.md](TESTING.md), and
+[Reusable foundations](docs/FOUNDATIONS.md).
+
+Use Conventional Commits. Preserve existing uncommitted content and distinguish
+implemented capabilities from future extensions when updating documentation.
