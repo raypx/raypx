@@ -1,0 +1,214 @@
+scripts/test-consumer-browser.ts
+  s_240cb2f68976a9::t_347be122e398fd 1,3
+vite.config.ts
+  s_240cb2f68976a9::t_6f0eec34332883 9,69
+  s_240cb2f68976a9::t_8d48757565f596 14-21
+TESTING.md
+  s_240cb2f68976a9::t_c0a24077ace6fb 124-125
+  s_240cb2f68976a9::t_8d48757565f596 126-127,130-131
+  s_240cb2f68976a9::t_9f4a2d03f4ed91 56-57
+  s_240cb2f68976a9::t_3553cfea8c5b40 53
+  s_240cb2f68976a9::t_31b3cc2ff3d152 8-9,38-39,50-52,58-59,91-95
+  s_240cb2f68976a9::t_dcec4b3090f003 24,40-41,54-55,85-88
+  s_4aa91a877df24b::t_52c0a453d98954 163-166
+  s_4aa91a877df24b::t_fbdca5e9968d5a 162
+  s_4aa91a877df24b::t_af499ea4aee9cd 167-169
+scripts/lib/consumer/prepare.ts
+  s_240cb2f68976a9::t_347be122e398fd 21-31
+  s_240cb2f68976a9::t_9ba6888c3dcb26 1-20,32-45
+scripts/test/bootstrap.test.ts
+  s_240cb2f68976a9::t_24d451a982243b 154-167
+  s_240cb2f68976a9::t_c8d27b5f70f4a8 51-55,94,125-129
+  s_240cb2f68976a9::t_5ac6123671e0b0 92
+  s_240cb2f68976a9::t_13e94930a98129 10,187-188,190-191,194,201-211
+  s_240cb2f68976a9::t_34ccb7e611b916 47,71,189,192-193,195
+  s_240cb2f68976a9::t_ae010087a0869f 1-9,11-46,48-50,56-70,72-91,93,95-124,130-136,169-186,212-236
+  s_240cb2f68976a9::t_20a1b5a96d6046 137-153,168
+  s_240cb2f68976a9::t_2834bd35729b9c 196-200
+package.json
+  s_240cb2f68976a9::t_59eac76de7d6ac 33-34,72-76,83-84,103
+  s_240cb2f68976a9::t_794f3f242d9e86 24,41-42,44,46,63
+  s_240cb2f68976a9::t_72da4a24bea650 35
+scripts/test/consumer/lock.test.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-53
+ARCHITECTURE.md
+  s_240cb2f68976a9::t_9f4a2d03f4ed91 189
+  s_240cb2f68976a9::t_31b3cc2ff3d152 197-198,220-226
+  s_240cb2f68976a9::t_3553cfea8c5b40 195-196
+  s_240cb2f68976a9::t_3d21e713f566e5 190-194,199
+  s_240cb2f68976a9::t_8099a1fd6cd6fb 227
+scripts/doctor.ts
+  s_240cb2f68976a9::t_ec25e4a0762991 10-15,63
+  s_240cb2f68976a9::t_696a21bd810bbf 3,5-8,17
+  s_240cb2f68976a9::t_ec4fea27dc1ef6 9,16,66
+scripts/cli.ts
+  s_240cb2f68976a9::t_9ba6888c3dcb26 1-30,32-48
+  s_240cb2f68976a9::t_794f3f242d9e86 31
+scripts/lib/doctor/database.ts
+  s_240cb2f68976a9::t_0d1ca9a4470072 1-71
+scripts/lib/consumer/fixture.ts
+  s_240cb2f68976a9::t_1c1b716c5db092 6,137
+  s_240cb2f68976a9::t_36e1394bf069fb 18-65,92
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-5,7-17,66-91,93-136,138-143
+scripts/lib/consumer/manifest.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-44
+scripts/test/consumer/process.test.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-69
+scripts/commands/consumer-browser.ts
+  s_240cb2f68976a9::t_9ba6888c3dcb26 1-24
+scripts/lib/logger.ts
+  s_240cb2f68976a9::t_1c1b716c5db092 1-4
+scripts/bin/raypx.ts
+  s_240cb2f68976a9::t_794f3f242d9e86 1-39
+knip.ts
+  s_240cb2f68976a9::t_282a9d3c2c970d 33,35-37
+  s_240cb2f68976a9::t_3d21e713f566e5 30
+  s_240cb2f68976a9::t_6f0eec34332883 31-32,34,38-41
+packages/config/test/environment.test.ts
+  s_4aa91a877df24b::t_a1d15a3dbbd8ba 128-141
+  s_4aa91a877df24b::t_754033fd4fb69a 39-60,62-101,104-114
+  s_4aa91a877df24b::t_1ed180f1d59950 115
+  s_d6bac6a1b043e6::t_ed3a80dd3c6428 26
+README.md
+  s_240cb2f68976a9::t_9f4a2d03f4ed91 135
+  s_240cb2f68976a9::t_91f6b7492cf7e0 95-96
+  s_240cb2f68976a9::t_31b3cc2ff3d152 94,134,137-138
+  s_4aa91a877df24b::t_52c0a453d98954 15-19
+  s_240cb2f68976a9::t_3d21e713f566e5 128,136
+  s_240cb2f68976a9::t_bfd8a9e34893fb 129-130
+  s_240cb2f68976a9::t_10fec66a864328 86
+  s_240cb2f68976a9::t_d0ccd0ecda847f 97
+  s_240cb2f68976a9::t_192f2e9be9c3a5 143-147
+scripts/lib/process.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-82
+scripts/test/knip.test.ts
+  s_240cb2f68976a9::t_9c3c40f4e9e976 1,11-25,28-36,42-46,67,69-92,98-135,137-146,148,151-171,174-178
+  s_240cb2f68976a9::t_7984380091ec07 37,41,47-48,51-54,56-58,66,68,93-97,147,150,172-173
+  s_240cb2f68976a9::t_ec9298898f0fb7 2-10,26-27
+  s_240cb2f68976a9::t_aca02377ec0716 38-39,49-50,136,149
+  s_240cb2f68976a9::t_e55e9a792b7298 40,55,59-65
+scripts/lib/cli/bootstrap.ts
+  s_240cb2f68976a9::t_282a9d3c2c970d 1-32,36-40,47-52,56-57,61-70,74-97
+  s_240cb2f68976a9::t_10fec66a864328 33-35,41-46,53-55,58-60,71-73
+packages/config/README.md
+  s_4aa91a877df24b::t_52c0a453d98954 35-40
+packages/config/test/vite.test.ts
+  s_240cb2f68976a9::t_6f0eec34332883 115,123-126
+scripts/lib/consumer/cli.ts
+  s_240cb2f68976a9::t_de49b2ff475a35 1-21
+packages/config/tsconfig.test.json
+  s_240cb2f68976a9::t_6f0eec34332883 3
+packages/config/src/environment.ts
+  s_4aa91a877df24b::t_0e81388aea150e 55-58,65-67
+  s_4aa91a877df24b::t_a33c0e0cb2eccf 62,81,83,88,90,92,98-101,136
+  s_4aa91a877df24b::t_3c0d5d9ef469ca 19-25,89,91,93-97
+scripts/lib/doctor/local-checks.ts
+  s_240cb2f68976a9::t_696a21bd810bbf 1-119,133-138,151-154,170-173,187-197,213-228,235-242,252-282,295-308,314
+  s_240cb2f68976a9::t_ec25e4a0762991 120-132,139-150,155-169,174-186,198-212,229-234,243-251,283-294,309-313
+docs/DOCTOR.md
+  s_240cb2f68976a9::t_9c3c40f4e9e976 57-65
+  s_240cb2f68976a9::t_3d21e713f566e5 54-55
+  s_240cb2f68976a9::t_9f4a2d03f4ed91 53
+scripts/lib/consumer/browser.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-3,5-63,65-120,124-148,150-153
+  s_240cb2f68976a9::t_1c1b716c5db092 4,64,121-123,149
+scripts/lib/consumer/runtime.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1,3-70,72-73
+  s_240cb2f68976a9::t_1c1b716c5db092 2,71
+scripts/tsconfig.json
+  s_240cb2f68976a9::t_6f0eec34332883 1-6,8-14,16
+  s_240cb2f68976a9::t_201f450386677f 15
+  s_240cb2f68976a9::t_86ea123bb1abeb 7
+scripts/README.md
+  s_240cb2f68976a9::t_3553cfea8c5b40 25,46,60,64-65,69-70,98-103,106
+  s_240cb2f68976a9::t_3d21e713f566e5 5-7,13-14,17-18,22,36-41,59,61-63,66-68,74-77,89-93,104-105
+  s_240cb2f68976a9::t_31b3cc2ff3d152 1-2,8-10,15-16,19-21,23-24,26-35,42-45,47-58,78-88,94-97,107-118
+  s_240cb2f68976a9::t_9f4a2d03f4ed91 3-4,11-12,71-73
+scripts/lib/doctor/probes.ts
+  s_240cb2f68976a9::t_0d1ca9a4470072 1-185
+scripts/commands/consumer.ts
+  s_240cb2f68976a9::t_9ba6888c3dcb26 1-16,28-43
+  s_240cb2f68976a9::t_347be122e398fd 17-27
+CONTRIBUTING.md
+  s_240cb2f68976a9::t_31b3cc2ff3d152 174-176,187
+  s_240cb2f68976a9::t_9f4a2d03f4ed91 184
+  s_240cb2f68976a9::t_3d21e713f566e5 185-186
+  s_240cb2f68976a9::t_0150633c356d43 188
+docs/CONSUMER_TESTING.md
+  s_240cb2f68976a9::t_36e1394bf069fb 60-62,82-83,89-99
+  s_240cb2f68976a9::t_de49b2ff475a35 63-66,70-71,75-81,100-101
+  s_240cb2f68976a9::t_3d21e713f566e5 68-69,72-74,84-88
+  s_240cb2f68976a9::t_9f4a2d03f4ed91 67
+scripts/test/consumer/cli.test.ts
+  s_240cb2f68976a9::t_d9d594d594e8a9 28,31-35,37-43,45
+  s_240cb2f68976a9::t_5dad95eb1285f6 47
+  s_240cb2f68976a9::t_90d130471551c9 108
+  s_240cb2f68976a9::t_651d34c1f5a525 59-61
+  s_240cb2f68976a9::t_de49b2ff475a35 3,5-8,16,18-19,44,46,50,52-57,82,86-87,89,91-96,99-107,109-110,113-118,120-121,135
+  s_240cb2f68976a9::t_347be122e398fd 1-2,4,9-15,20-27,29-30,36,48-49,51,58,62-81,83-85,88,90,97-98,111-112,119,122-134
+  s_240cb2f68976a9::t_794f3f242d9e86 17
+playwright.consumer.config.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 4-5
+scripts/browser/consumer.spec.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-38
+CLAUDE.md
+  s_4aa91a877df24b::t_1afb3b36ba9e81 16
+  s_4aa91a877df24b::t_52c0a453d98954 11-15
+  s_4aa91a877df24b::t_717dd80a02ab6b 17-18
+scripts/lib/consumer/lock.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1-97
+scripts/lib/consumer/types.ts
+  s_240cb2f68976a9::t_2a3a7a6c2f409b 1,3-74,76
+  s_240cb2f68976a9::t_1c1b716c5db092 2,75
+scripts/test/doctor.test.ts
+  s_240cb2f68976a9::t_2834bd35729b9c 95-102
+  s_240cb2f68976a9::t_34ccb7e611b916 62
+  s_240cb2f68976a9::t_0b0770edad9960 63-65,92-94,103-109,141,159,161,167-179,190,212-216,219,230-234,240-245,381,394
+  s_240cb2f68976a9::t_9c3c40f4e9e976 4,14,17-18,20,40,59-61,110-111,137-140,142-158,357
+scripts/lib/doctor/run.ts
+  s_240cb2f68976a9::t_696a21bd810bbf 1-16,24-36,42,63-73
+  s_240cb2f68976a9::t_ec25e4a0762991 17-23,37-41,43-62
+scripts/vite.config.ts
+  s_240cb2f68976a9::t_6f0eec34332883 1-11
+scripts/lib/doctor/report.ts
+  s_240cb2f68976a9::t_0d1ca9a4470072 1-48,57-63
+  s_240cb2f68976a9::t_ec25e4a0762991 49-56
+scripts/check-consumer.ts
+  s_240cb2f68976a9::t_347be122e398fd 1,3
+bun.lock
+  s_240cb2f68976a9::t_c0f288e1d3160a 12-13,1090,1736-1737
+scripts/doctor-database.ts
+  s_240cb2f68976a9::t_a16868ab19bd57 1,3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1258db54e591f70839ea3b0f8dd50972886db77c",
+  "prompts": {},
+  "sessions": {
+    "s_240cb2f68976a9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a120c5-5b48-7df3-9746-05b970628c12",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_4aa91a877df24b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11ff6-ed8a-71a3-ac56-09b242180aeb",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": null
+    },
+    "s_d6bac6a1b043e6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12001-a11b-7733-a10f-5572d9f5e8d3",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
