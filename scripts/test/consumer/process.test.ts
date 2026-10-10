@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vite-plus/test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { run } from "./harness.ts";
+import { run } from "../../lib/process.ts";
 
 test("deadline rejects even when the process handles termination with exit zero", async () => {
   let timeoutError: unknown;

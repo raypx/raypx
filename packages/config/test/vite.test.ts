@@ -112,7 +112,7 @@ test("source aliases match only explicit public exports and preserve CSS", async
   expect(aliases.some((alias) => alias.find.test("@raypx/config"))).toBe(false);
 });
 
-test("engineering checks track root tools and doctor source inputs without invalidating runtime builds", async () => {
+test("workspace caches do not own root script tests or unrelated doctor inputs", async () => {
   const { root, workspace } = await fixture();
   const configUrl = pathToFileURL(join(root, "packages/config/vite.config.ts")).href;
   const apiUrl = await workspace("api");
@@ -120,14 +120,10 @@ test("engineering checks track root tools and doctor source inputs without inval
     workspaceCacheInputs(url).flatMap((input) =>
       typeof input === "object" && "pattern" in input ? [input.pattern] : [],
     );
-  expect(patterns(configUrl)).toEqual(
-    expect.arrayContaining([
-      "scripts/**",
-      "knip.ts",
-      "packages/env/src/**",
-      "packages/db/migrations/**",
-    ]),
-  );
+  expect(patterns(configUrl)).not.toContain("scripts/**");
+  expect(patterns(configUrl)).not.toContain("knip.ts");
+  expect(patterns(configUrl)).not.toContain("packages/env/src/**");
+  expect(patterns(configUrl)).not.toContain("packages/db/migrations/**");
   expect(patterns(apiUrl)).not.toContain("scripts/**");
   expect(patterns(apiUrl)).not.toContain("knip.ts");
 });

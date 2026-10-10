@@ -77,17 +77,6 @@ export function workspaceCacheInputs(importMetaUrl: string | URL): WorkspaceCach
       inputs.push({ pattern: `${prefix}/${suffix}`, base: "workspace" });
     }
   }
-  if (current.manifest.name === "@raypx/config") {
-    // This workspace type-checks root tools and tests the source-first doctor.
-    for (const pattern of [
-      "scripts/**",
-      "knip.ts",
-      "packages/env/src/**",
-      "packages/db/migrations/**",
-    ]) {
-      inputs.push({ pattern, base: "workspace" });
-    }
-  }
   for (const pattern of [
     "!**/dist/**",
     "!**/.output/**",

@@ -12,9 +12,11 @@ Author: Zack <heyloyep@gmail.com>
 
 ## Local Development
 
-Use the versions in `.bun-version` and `.node-version` (currently Bun 1.4.2 and
-Node.js 22.22.1). Bun installs workspaces and runs production; Vite+, Vitest,
-Oxlint, and tsc retain Node-compatible tool entrypoints.
+Use Bun 1.4.2 from `.bun-version` and stable Node.js `>=22.22.1 <23.0.0`.
+`.node-version` recommends Node.js 22.22.1, which CI also uses; later stable
+Node.js 22 releases such as 22.23.3 are supported. Bun installs workspaces and
+runs production; Vite+, Vitest, Oxlint, and tsc retain Node-compatible tool
+entrypoints.
 
 ```sh
 bun run check:env
@@ -81,6 +83,7 @@ an isolated QueryClient for SSR and browser navigation. See the
 | `bun run build`                           | Build runtime packages and the application                                        |
 | `bun run start`                           | Run the built server with Bun                                                     |
 | `bun run setup`                           | Create application configuration without overwriting it                           |
+| `bun run raypx --help`                    | Show the unified repository CLI and its subcommands                               |
 | `bun run check:env`                       | Validate development tool versions and declarations                               |
 | `bun run check:runtime-env`               | Validate current application runtime configuration                                |
 | `bun --no-env-file run doctor`            | Diagnose local tools, configuration, dependencies, and hooks                      |
@@ -88,8 +91,10 @@ an isolated QueryClient for SSR and browser navigation. See the
 | `bun run check:boundaries`                | Check package dependencies, exports, cycles, and browser isolation                |
 | `bun run check:unused`                    | Audit unused files, exports, and dependencies with Knip                           |
 | `bun run check:consumer`                  | Verify built packages in independent Node, Bun, TypeScript, and browser consumers |
-| `bun run typecheck`                       | Check source and test TypeScript                                                  |
-| `bun run test`                            | Run package tests and production integration tests                                |
+| `bun run typecheck`                       | Check workspace and root script TypeScript                                        |
+| `bun run typecheck:scripts`               | Check engineering scripts and their test/configuration files                      |
+| `bun run test`                            | Run workspace, production integration, and root script tests                      |
+| `bun run test:scripts`                    | Run diagnostic, CLI, lock graph, and process regression tests                     |
 | `bun run test:watch`                      | Watch tests, excluding production integration tests                               |
 | `bun run test:coverage`                   | Build and run tests with V8 coverage                                              |
 | `bun run lint` / `bun run lint:fix`       | Check or fix lint issues                                                          |
@@ -120,19 +125,26 @@ They use isolated configuration and owned servers; CI runs all three browser
 suites after installing Chromium once. Consumer acceptance installs compiled
 packages outside the repository without source aliases or repository dependency
 links. See [TESTING.md](TESTING.md) for coverage and failure reports.
+Use `bun run raypx consumer --kind core` to choose a consumer scope; `server`,
+`browser`, and `all` are also available, with `all` as the default. Source CLI help
+and bootstrap boundaries are documented in the [scripts guide](scripts/README.md).
 
 Build, type check, and test tasks use local cache with transitive inputs;
 watching and production startup do not cache. Root `vite.config.ts` owns lint,
-formatting, test projects, and coverage. The AST boundary checker additionally
-protects package imports. See [TESTING.md](TESTING.md).
+formatting, test projects, and coverage. Root script tests have their own uncached
+`scripts` project; the Bun entrypoint `scripts/bin/raypx.ts` dispatches repository commands,
+with installed command definitions in `scripts/commands` and implementation in `scripts/lib`.
+The AST boundary checker additionally protects package imports.
+See [TESTING.md](TESTING.md) and the [scripts guide](scripts/README.md).
 
 ## Git Hooks
 
 `bun install` runs `prepare` to install the Vite+ dispatcher for the root
-`.vite-hooks/pre-commit` hook. Each commit validates the pinned Node/Bun versions,
-then runs `vp staged` using the `staged` rules in root `vite.config.ts`. JavaScript
-and TypeScript files run `vp check --fix` for formatting and lint fixes, with
-warnings treated as failures; supported document, style, and configuration files
+`.vite-hooks/pre-commit` hook. Each commit validates the Node compatibility range
+and pinned Bun version, then runs `vp staged` using the `staged` rules in root
+`vite.config.ts`. JavaScript and TypeScript files run `vp check --fix` for
+formatting and lint fixes, with warnings treated as failures; supported document,
+style, and configuration files
 are formatted.
 Vite+ includes staged-file tooling, and automatically adds successful fixes to
 the index while preserving unstaged changes. Full type checking, boundaries,

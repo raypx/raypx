@@ -32,9 +32,12 @@ public exports.
 
 `bun run check:env` reads version declarations and checks actual Node and Bun
 versions. It runs without installed dependencies, through root pre hooks and
-explicitly before frozen installation in CI. Required versions come from
-`.node-version`, `.bun-version`, and consistent root manifest declarations;
-failure reports expected and actual tool versions and exits nonzero. The tool
+explicitly before frozen installation in CI. Node must be a stable release in
+`>=22.22.1 <23.0.0`, declared by `devEngines.runtime.version: ^22.22.1`;
+`.node-version` recommends 22.22.1 and fixes the CI version. Bun remains exactly
+1.4.2, declared by `.bun-version` and consistent root manifest fields. The broader
+root `engines.node` range describes tool compatibility, not development requirements.
+Failure reports expected and actual tool versions and exits nonzero. The tool
 does not download runtimes or implement a universal package-manager validator.
 
 Application variable parsing belongs to `@raypx/env/server`.

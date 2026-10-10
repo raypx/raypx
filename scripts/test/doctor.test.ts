@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   copyFileSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -10,12 +11,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, expect, test, vi } from "vite-plus/test";
-import { doctorExitCode, runDoctor } from "../../../scripts/doctor.ts";
+import { doctorExitCode } from "../lib/doctor/report.ts";
+import { runDoctor } from "../lib/doctor/run.ts";
 
-const repository = fileURLToPath(new URL("../../../", import.meta.url));
+const repository = fileURLToPath(new URL("../../", import.meta.url));
 const directories: string[] = [];
 const environment = { PATH: process.env.PATH, NODE_ENV: "test" };
 
@@ -35,7 +37,7 @@ function fixture(installed = false): string {
     join(root, "package.json"),
     JSON.stringify({
       devEngines: {
-        runtime: { name: "node", version: process.versions.node, onFail: "error" },
+        runtime: { name: "node", version: `^${process.versions.node}`, onFail: "error" },
         packageManager: { name: "bun", version: bunVersion, onFail: "error" },
       },
       packageManager: `bun@${bunVersion}`,
@@ -54,6 +56,13 @@ function fixture(installed = false): string {
   );
   for (const name of ["doctor.ts", "doctor-database.ts"])
     copyFileSync(join(repository, "scripts", name), join(root, "scripts", name));
+  cpSync(join(repository, "scripts/lib/doctor"), join(root, "scripts/lib/doctor"), {
+    recursive: true,
+  });
+  cpSync(join(repository, "scripts/bin"), join(root, "scripts/bin"), { recursive: true });
+  cpSync(join(repository, "scripts/lib/cli"), join(root, "scripts/lib/cli"), {
+    recursive: true,
+  });
   if (installed) {
     copyFileSync(
       join(repository, "packages/env/src/server.ts"),
@@ -78,6 +87,26 @@ function fixture(installed = false): string {
     );
   }
   return root;
+}
+
+function invokeDoctor(root: string, args: string[] = [], values: Record<string, string> = {}) {
+  return spawnSync(
+    "bun",
+    [
+      "--no-env-file",
+      "--no-install",
+      join(root, "scripts/bin/raypx.ts"),
+      "doctor",
+      "--json",
+      ...args,
+    ],
+    {
+      cwd: tmpdir(),
+      env: { ...environment, ...values },
+      encoding: "utf8",
+      timeout: 15_000,
+    },
+  );
 }
 
 afterEach(() => {
@@ -105,19 +134,49 @@ test("a dependency-free checkout returns a bootstrap report without dist, networ
   expect(existsSync(join(root, "packages/env/dist"))).toBe(false);
 });
 
-test("the real source CLI bootstraps without dependencies from an unrelated cwd", () => {
+test.each(["-rc.1", "+build.1"])(
+  "preserves the Node version suffix %s when diagnosing the toolchain",
+  async (suffix) => {
+    const root = fixture();
+    const bin = join(root, "tool-bin");
+    mkdirSync(bin);
+    writeFileSync(
+      join(bin, "node"),
+      `#!/bin/sh\nprintf '%s\\n' 'v${process.versions.node}${suffix}'\n`,
+      { mode: 0o755 },
+    );
+    const report = await runDoctor({
+      root,
+      environment: { ...environment, PATH: `${bin}${delimiter}${environment.PATH ?? ""}` },
+    });
+    expect(report.checks).toContainEqual(
+      expect.objectContaining({ code: "TOOLCHAIN_MISMATCH", status: "error" }),
+    );
+    expect(doctorExitCode(report)).toBe(1);
+  },
+);
+
+test("the unified bin bootstraps doctor without dependencies from an unrelated cwd", () => {
   const root = fixture();
-  const result = spawnSync("bun", ["--no-env-file", join(root, "scripts/doctor.ts"), "--json"], {
-    cwd: tmpdir(),
-    env: environment,
-    encoding: "utf8",
-    timeout: 15_000,
-  });
+  const result = invokeDoctor(root);
   expect(result.status).toBe(0);
   const report: unknown = JSON.parse(result.stdout);
   expect(report).toMatchObject({ schemaVersion: 1, status: "warning" });
   expect(result.stderr).toBe("");
   expect(existsSync(join(root, "apps/web/data"))).toBe(false);
+  expect(existsSync(join(root, "node_modules"))).toBe(false);
+});
+
+test("the legacy doctor source CLI remains usable without dependencies", () => {
+  const root = fixture();
+  const result = spawnSync(
+    "bun",
+    ["--no-env-file", "--no-install", join(root, "scripts/doctor.ts"), "--json"],
+    { cwd: tmpdir(), env: environment, encoding: "utf8", timeout: 15_000 },
+  );
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.stdout)).toMatchObject({ schemaVersion: 1, status: "warning" });
+  expect(result.stderr).toBe("");
 });
 
 test("native application env loading preserves shell overrides, empty values, and Nitro precedence", () => {
@@ -128,12 +187,7 @@ test("native application env loading preserves shell overrides, empty values, an
     `PORT=invalid\nNITRO_PORT=${sentinel}\nAPP_VERSION=${sentinel}\n`,
   );
   writeFileSync(join(root, "apps/web/.env.test.local"), "NITRO_PORT=4200\n");
-  const run = (values: Record<string, string>) =>
-    spawnSync("bun", ["--no-env-file", join(root, "scripts/doctor.ts"), "--json"], {
-      env: { ...environment, ...values },
-      encoding: "utf8",
-      timeout: 15_000,
-    });
+  const run = (values: Record<string, string>) => invokeDoctor(root, [], values);
   const modeOverride = run({});
   expect(modeOverride.status).toBe(0);
   expect(JSON.parse(modeOverride.stdout)).toMatchObject({
@@ -155,14 +209,14 @@ test("native application env loading preserves shell overrides, empty values, an
 test("invalid configuration returns only its field names without configured values", async () => {
   const root = fixture(true);
   const sentinel = "private-override-sentinel";
+  const values = {
+    NITRO_PORT: sentinel,
+    DATABASE_PATH: join(root, sentinel),
+    BETTER_AUTH_SECRET: sentinel,
+  };
   const report = await runDoctor({
     root,
-    environment: {
-      ...environment,
-      NITRO_PORT: sentinel,
-      DATABASE_PATH: join(root, sentinel),
-      BETTER_AUTH_SECRET: sentinel,
-    },
+    environment: { ...environment, ...values },
   });
   expect(report.checks).toContainEqual(
     expect.objectContaining({
@@ -173,17 +227,22 @@ test("invalid configuration returns only its field names without configured valu
   expect(doctorExitCode(report)).toBe(1);
   expect(JSON.stringify(report)).not.toContain(sentinel);
   expect(JSON.stringify(report)).not.toContain(root);
+  const result = invokeDoctor(root, [], values);
+  expect(result.status).toBe(1);
+  expect(JSON.parse(result.stdout)).toMatchObject({ schemaVersion: 1, status: "error" });
+  expect(result.stdout + result.stderr).not.toContain(sentinel);
+  expect(result.stdout + result.stderr).not.toContain(root);
 });
 
 test("invalid CLI probe URLs and arguments return a single sanitized JSON report with exit 2", () => {
   const root = fixture();
   const sentinel = "private-url-sentinel";
-  for (const args of [["--probe", `https://user:${sentinel}@example.com`], [`--${sentinel}`]]) {
-    const result = spawnSync(
-      "bun",
-      ["--no-env-file", join(root, "scripts/doctor.ts"), "--json", ...args],
-      { env: environment, encoding: "utf8", timeout: 10_000 },
-    );
+  for (const args of [
+    ["--probe", `https://user:${sentinel}@example.com`],
+    [`--${sentinel}`],
+    ["--help"],
+  ]) {
+    const result = invokeDoctor(root, args);
     expect(result.status).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({ schemaVersion: 1, status: "error" });
     expect(result.stdout + result.stderr).not.toContain(sentinel);
@@ -295,7 +354,7 @@ test("an explicit database probe reports a missing file without creating it", as
 test("an explicit database probe verifies real migrations without changing database contents", () => {
   const root = fixture(true);
   const database = join(root, "existing.db");
-  const dbModule = fileURLToPath(new URL("../../db/src/index.ts", import.meta.url));
+  const dbModule = join(repository, "packages/db/src/index.ts");
   const initialize = spawnSync(
     "bun",
     [
@@ -319,11 +378,7 @@ test("an explicit database probe verifies real migrations without changing datab
     join(root, "packages/db/migrations/meta/_journal.json"),
   );
   const before = readFileSync(database);
-  const result = spawnSync(
-    "bun",
-    ["--no-env-file", join(root, "scripts/doctor.ts"), "--json", "--database"],
-    { env: { ...environment, DATABASE_PATH: database }, encoding: "utf8", timeout: 15_000 },
-  );
+  const result = invokeDoctor(root, ["--database"], { DATABASE_PATH: database });
   expect(result.status).toBe(0);
   expect(JSON.parse(result.stdout)).toMatchObject({
     checks: expect.arrayContaining([
@@ -336,11 +391,7 @@ test("an explicit database probe verifies real migrations without changing datab
     join(root, "packages/db/migrations/0000_auth-foundation.sql"),
     `${readFileSync(join(root, "packages/db/migrations/0000_auth-foundation.sql"), "utf8")}\n`,
   );
-  const drifted = spawnSync(
-    "bun",
-    ["--no-env-file", join(root, "scripts/doctor.ts"), "--json", "--database"],
-    { env: { ...environment, DATABASE_PATH: database }, encoding: "utf8", timeout: 15_000 },
-  );
+  const drifted = invokeDoctor(root, ["--database"], { DATABASE_PATH: database });
   expect(drifted.status).toBe(1);
   expect(JSON.parse(drifted.stdout)).toMatchObject({
     checks: expect.arrayContaining([

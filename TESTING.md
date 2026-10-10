@@ -5,7 +5,8 @@ Project commands started by Bun; Vite+ and Vitest currently still run through No
 Use `bun run test` to execute package script, `bun test` calls another runner, not this project's acceptance command.
 Vitest APIs explicitly import from `vite-plus/test`; Playwright suites use `playwright/test`.
 Root `vite.config.ts` declares projects and coverage,
-each package configures its own unit test directories and environment. UI also has a dedicated browser Vitest configuration for Storybook.
+each package configures its own unit test directories and environment. Root engineering
+tests use the separate `scripts/vite.config.ts` project. UI also has a dedicated browser Vitest configuration for Storybook.
 Runtime package `tsconfig.test.json` checked by tsc for source, tests, and Vite configuration, sets noEmit;
 test in filename indicates check scope, not Vitest runtime configuration. Static presets come from `@raypx/config/tsconfig/*.json`.
 There is no separate active `tsconfig` workspace; `config` tools continue with real tests.
@@ -20,6 +21,7 @@ There is no separate active `tsconfig` workspace; `config` tools continue with r
 | `api`                 | Node                                  | Health check Response, contract, and JSON 404                                                                       |
 | `web`                 | Node runner, Bun service              | After building Bun preset artifacts start with Bun, verify SSR, static assets, HTTP interfaces, and page 404        |
 | `config`              | Node                                  | Dependency boundaries, transitive cache input, public entrypoint aliases, and style sync                            |
+| `scripts`             | Node runner, Bun subprocesses         | Bin bootstrap, doctor diagnostics, CLI options, Knip entrypoints, locked dependency graphs, and process cleanup     |
 | Application E2E       | Chromium, dev and built Bun service   | Hydration, navigation, themes, form/toast, dialog focus, health recovery, and 404 navigation                        |
 | Independent consumers | Node, Bun, TypeScript, Vite, Chromium | Public compiled exports, optional React isolation, migrations, declarations, CSS, and browser dependency boundaries |
 
@@ -33,6 +35,10 @@ Unit tests use public package entrypoints via precise aliases corresponding to s
 bun run test
 bun run test:watch
 bun run test:coverage
+bun run test:scripts
+bun run typecheck:scripts
+bun run raypx --help
+bun run raypx consumer --kind core
 bun run vp run @raypx/contracts#test
 bun run vp test run --project client
 bun run check:unused
@@ -41,7 +47,16 @@ bun run test:e2e
 bun run test:consumer:browser
 ```
 
-`bun run test` prepares build artifacts via task dependencies. `bun run test:coverage` first builds, then runs all tests.
+`bun run test` prepares workspace build artifacts via task dependencies and then runs
+the root script project. `bun run test:coverage` first builds, then runs all tests.
+`bun run test:scripts` runs `scripts/test/**/*.test.ts` through Vite+/Vitest in Node,
+including the lock/process regressions previously invoked by consumer acceptance
+and unified bin help/invalid-option checks that must finish before preparation or
+fixture creation. Bootstrap tests use dependency-free temporary checkouts to
+verify root help/version, environment checks, setup idempotence, and Bun invocation
+through symbolic links. Doctor keeps its own JSON, redaction, and exit-code checks.
+It does not run the independent consumer installation or Playwright suite. Script
+tests remain uncached because they exercise repository tooling and subprocesses.
 `bun run test:watch` excludes `production.test.ts` and `runtime-features.test.ts`, avoids starting production process on every source change.
 When running `vp test` directly in root directory, first execute `bun run build`, or explicitly exclude production tests:
 
@@ -67,10 +82,17 @@ migrations; strict NodeNext/Bundler TypeScript consumers validate declarations.
 The React-free core fixture omits React peers, while the browser fixture supplies
 its peers explicitly and compiles Tailwind against the installed UI package.
 
-`check:consumer` includes runtime, type, and browser-build checks. Browser interaction
+`check:consumer` delegates to `raypx consumer` and includes runtime, type, and
+browser-build checks. Consumer commands validate arguments before checking the
+environment, building shared artifacts, and checking script types. Help does not
+run these preparation steps. Browser interaction
 checks run through `test:consumer:browser`; the full root `check` includes the static
 consumer checks and Knip, while browser suites remain separate commands. Root tool
-sources and consumer/Playwright configuration also receive TypeScript checking.
+sources and consumer/Playwright configuration also receive TypeScript checking
+through `scripts/tsconfig.json`. The root `typecheck`, `test`, and `check` commands
+include script checks explicitly; the `@raypx/*` workspace filter excludes root
+tools. `packages/config` checks and tests its own tools only. See the
+[scripts guide](scripts/README.md) for entrypoints, libraries, and test ownership.
 
 ## Writing Tests
 
@@ -99,9 +121,14 @@ Tests must not access real model services or production databases; when integrat
 ## Coverage & Static Checks
 
 Report outputs to root `coverage/`, includes `index.html`, text summary, and `coverage-summary.json`.
-Coverage includes application and package TS/TSX source, excludes auto-generated Start route tree.
+Coverage includes application and package TS/TSX source plus `scripts/lib/**/*.ts`,
+excludes auto-generated Start route tree.
+The include patterns support both repository and selected project roots, so
+`bun run vp test run --project scripts --coverage` also reports script libraries.
 No coverage threshold currently set; prioritize covering real contracts, request errors, and interaction paths.
 Nitro service in independent subprocess not counted in Vitest unit test coverage, cannot equate integration test pass with complete source coverage.
+Doctor's Bun probes and consumer subprocesses likewise run outside Node's unit
+coverage collection; their acceptance results verify behavior separately.
 
 ```sh
 bun run check:env
@@ -132,8 +159,14 @@ On browser failure CI uploads Playwright reports, traces, and screenshots; local
 reports live in ignored `playwright-report/` and `test-results/` directories.
 Currently does not connect remote cache, coverage upload service, or external accounts.
 
-Before installation and public root script pre hooks both call same environment check, requires actual Node.js 22.22.1, Bun 1.4.2 in PATH,
-checks available package manager identifier, `devEngines`, version files, `packageManager`, and `engines.bun` consistency.
+Before installation and public root script pre hooks both call the same environment check,
+which requires stable Node.js `>=22.22.1 <23.0.0` and exactly Bun 1.4.2 in PATH.
+`devEngines.runtime.version` declares `^22.22.1`; `.node-version` keeps 22.22.1
+as the recommended and CI version. Node.js 22.23.3 passes; older releases, other
+major versions, and prereleases fail. The broader root `engines.node` range
+declares tool compatibility rather than development requirements.
+The check validates the available package manager identifier, `devEngines`, version
+files, `packageManager`, and `engines.bun` consistency.
 Bun 1.4.2 itself does not enforce `devEngines`, this engineering check reports actual vs expected values on mismatch and exits non-zero,
 does not auto-download or switch tools. Development still needs Node toolchain, production service still run by Bun.
 

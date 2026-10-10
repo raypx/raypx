@@ -50,9 +50,19 @@ and 2 for invalid arguments or an internal diagnostic failure. JSON stdout is
 one report; text output is a human-readable equivalent.
 
 `runDoctor(options)` and `doctorExitCode(report)` are reusable exports from
-`scripts/doctor.ts`. `runDoctor` takes an explicit repository root and optional
+`scripts/doctor.ts`, reached through `scripts/bin/raypx.ts doctor` with Bun. The bin uses a native
+subprocess to preserve application env loading, output, and exit codes; it does
+not import citty or consola on this path. `runDoctor` takes an explicit repository root and optional
 environment; library callers supply already-loaded env values. Only the CLI
-performs Bun's application-cwd bootstrap.
+performs Bun's application-cwd bootstrap. These exports delegate to
+`scripts/lib/doctor/run.ts` and `report.ts`; `local-checks.ts` owns local
+configuration diagnostics, `probes.ts` owns opt-in subprocess/HTTP checks,
+and `database.ts` owns read-only SQLite inspection. The two source CLI paths
+remain stable, and importing the library does not bootstrap env or open SQLite.
+
+Script regression tests live in `scripts/test` and run in the root `scripts`
+Vitest project: `bun run test:scripts`. Doctor fixtures copy the source CLI and
+its library subtree, so they also verify first-clone operation without `dist`.
 
 Run `bun run check:unused` for Knip's dependency and dead-code audit. Its entries
 come from package public exports, actual framework routes/configurations, tests,

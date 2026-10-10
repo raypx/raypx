@@ -186,6 +186,17 @@ entrypoints and use native TypeScript execution; tsc still checks their types.
 The root doctor combines tool checks with source-first application configuration
 diagnostics. Database and HTTP checks are explicit, read-only probes; it does not
 initialize the web runtime, enable providers, or apply migrations.
+`scripts/bin/raypx.ts` is the repository CLI, run with Bun; existing root command names delegate to its
+subcommands. It dispatches bootstrap commands before importing the installed
+citty registry in `scripts/cli.ts`. Installed command definitions belong in
+`scripts/commands`, with diagnostic and consumer logic in `scripts/lib`.
+citty supplies help and options, and consola supplies phase summaries. Both are
+root development dependencies. Environment checks, setup,
+and doctor keep dependency-free bootstrap paths and native Bun env loading;
+doctor's machine-readable reports do not pass through the shared logger.
+Doctor and consumer regression tests belong to the independent `scripts` test
+project; `packages/config` owns reusable engineering tools and static presets.
+`scripts/tsconfig.json` checks the bin, root tools, tests, and consumer browser configuration.
 Runtime `tsconfig.json` produces artifacts; `tsconfig.test.json` checks source,
 tests, and Vite configuration without emitting files.
 
@@ -205,6 +216,14 @@ These additions follow the inspected vinext implementation's
 [stream execution boundary](https://github.com/cloudflare/vinext/blob/main/packages/vinext/src/server/app-route-handler-execution.ts),
 and [export-derived Knip configuration](https://github.com/cloudflare/vinext/blob/main/knip.ts).
 Raypx applies the patterns at its existing Nitro and package boundaries.
+
+The scripts structure also follows vinext's
+[thin integration command](https://github.com/cloudflare/vinext/blob/main/scripts/ci-integration-shard.mjs),
+[extracted planning logic](https://github.com/cloudflare/vinext/blob/main/scripts/lib/integration-shard-plan.mjs),
+and [explicit script test registration](https://github.com/cloudflare/vinext/blob/main/vite.config.ts).
+Raypx retains Bun entrypoints, separates Node unit tests from browser acceptance,
+and uses its existing temporary fixture and bounded process cleanup behavior.
+See [scripts/README.md](scripts/README.md) for placement rules.
 
 New product HTTP endpoints begin in their application feature with contracts,
 a server handler, a route, and a validated browser client when needed. Use the

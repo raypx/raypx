@@ -1,11 +1,19 @@
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, expect, test } from "vite-plus/test";
 
-const repository = fileURLToPath(new URL("../../../", import.meta.url));
+const repository = fileURLToPath(new URL("../../", import.meta.url));
 const directories: string[] = [];
 
 function write(root: string, path: string, content: string): void {
@@ -15,7 +23,8 @@ function write(root: string, path: string, content: string): void {
 }
 
 function fixture(): string {
-  const root = mkdtempSync(join(tmpdir(), "raypx-knip-"));
+  // Knip's resolver canonicalizes CLI entries, so its project root must match on macOS /var aliases.
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "raypx-knip-")));
   directories.push(root);
   write(
     root,
@@ -25,13 +34,38 @@ function fixture(): string {
       private: true,
       type: "module",
       workspaces: ["packages/*", "apps/*"],
-      scripts: { doctor: "bun scripts/doctor.ts" },
+      scripts: {
+        raypx: "bun --no-env-file --no-install scripts/bin/raypx.ts",
+        doctor: "bun --no-env-file --no-install scripts/bin/raypx.ts doctor",
+        preinstall: "bun packages/config/src/environment.ts",
+      },
       devDependencies: { knip: "6.16.0" },
     }),
   );
   copyFileSync(join(repository, "knip.ts"), join(root, "knip.ts"));
   symlinkSync(join(repository, "node_modules"), join(root, "node_modules"), "junction");
+  write(
+    root,
+    "scripts/bin/raypx.ts",
+    'import { fileURLToPath } from "node:url";\nimport { toolVersion } from "../lib/cli/bootstrap.ts";\nconst root = fileURLToPath(new URL("../../", import.meta.url));\nconst { runCli } = await import("../cli.ts");\nrunCli([toolVersion(root)]);\n',
+  );
+  write(
+    root,
+    "scripts/cli.ts",
+    'import { validateConsumerArgs } from "./lib/consumer/cli.ts";\nexport function runCli(args: string[]) { validateConsumerArgs(args); }\n',
+  );
+  write(
+    root,
+    "scripts/lib/cli/bootstrap.ts",
+    "export function toolVersion(root: string) { return root; }\n",
+  );
+  write(
+    root,
+    "scripts/lib/consumer/cli.ts",
+    "export function validateConsumerArgs(args: string[]) { return args; }\n",
+  );
   write(root, "scripts/doctor.ts", "export function doctor() {}\n");
+  write(root, "scripts/setup.ts", "export function setup() {}\n");
   write(root, "scripts/install-hooks.ts", "export function installHooks() {}\n");
   write(root, "playwright.consumer.config.ts", "export default {};\n");
   write(root, "apps/web/package.json", '{"name":"@fixture/web","private":true}');
@@ -56,6 +90,11 @@ function fixture(): string {
     }
   }
   write(root, "packages/config/src/styles.ts", "export function copyStyles() {}\n");
+  write(
+    root,
+    "packages/config/src/environment.ts",
+    "export function checkDevelopmentEnvironment() {}\n",
+  );
   write(root, "packages/env/src/cli.ts", "export function validateEnvironment() {}\n");
   write(root, "packages/db/src/cli.ts", "export function migrateDatabase() {}\n");
   write(
@@ -94,7 +133,7 @@ afterEach(() => {
     rmSync(directory, { recursive: true, force: true });
 });
 
-test("current audit rules preserve public exports and narrow dynamic source entries", () => {
+test("root Bun commands expose the unified scripts bin graph and narrow source entries", () => {
   const root = fixture();
   const result = audit(root);
   expect(result.error).toBeUndefined();
@@ -105,8 +144,10 @@ test("current audit rules preserve public exports and narrow dynamic source entr
   expect(JSON.parse(result.stdout)).toMatchObject({ issues: [] });
 }, 30_000);
 
-test("current audit rules detect a deliberate unused source file and dependency", () => {
+test("current audit rules detect unused bin, library, package source, and dependency", () => {
   const root = fixture();
+  write(root, "scripts/bin/unused-command.ts", "export function accidentalCommand() {}\n");
+  write(root, "scripts/lib/unused-helper.ts", "export function accidentalHelper() {}\n");
   write(
     root,
     "packages/client/src/unused-internal.ts",
@@ -128,6 +169,8 @@ test("current audit rules detect a deliberate unused source file and dependency"
   const result = audit(root);
   expect(result.error).toBeUndefined();
   expect(result.status).toBe(1);
+  expect(result.stdout).toContain("unused-command.ts");
+  expect(result.stdout).toContain("unused-helper.ts");
   expect(result.stdout).toContain("unused-internal.ts");
   expect(result.stdout).toContain("unused-fixture-dependency");
   expect(result.stdout).not.toContain("publicApi");

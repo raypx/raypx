@@ -6,12 +6,19 @@ export default defineConfig({
     "*.{json,jsonc,md,mdx,css,scss,html,yml,yaml}": "vp fmt --no-error-on-unmatched-pattern",
   },
   test: {
-    projects: ["apps/*/vite.config.ts", "packages/*/vite.config.ts"],
+    projects: ["apps/*/vite.config.ts", "packages/*/vite.config.ts", "scripts/vite.config.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json-summary"],
       reportsDirectory: "coverage",
-      include: ["apps/*/src/**/*.{ts,tsx}", "packages/*/src/**/*.{ts,tsx}"],
+      // --project makes coverage patterns relative to the selected project's root.
+      include: [
+        "apps/*/src/**/*.{ts,tsx}",
+        "packages/*/src/**/*.{ts,tsx}",
+        "scripts/lib/**/*.ts",
+        "src/**/*.{ts,tsx}",
+        "lib/**/*.ts",
+      ],
       exclude: ["**/routeTree.gen.ts"],
     },
   },
@@ -59,7 +66,7 @@ export default defineConfig({
       "**/playwright-report/**",
       "**/test-results/**",
     ],
-    // Keep tsc as the authoritative type checker for both workspace packages.
+    // Keep tsc as the authoritative type checker for workspaces and root scripts.
     options: { typeAware: true, typeCheck: false, denyWarnings: true },
   },
 });

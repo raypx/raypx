@@ -27,8 +27,18 @@ function exportsToSources(directory: string): string[] {
 type Configuration = Exclude<KnipConfig, (...args: never[]) => unknown>;
 const workspaces: NonNullable<Configuration["workspaces"]> = {
   ".": {
-    // Doctor is a source CLI even in fresh clones without any test caller or build.
-    entry: ["scripts/install-hooks.ts", "scripts/doctor.ts", "playwright.consumer.config.ts"],
+    // Bootstrap CLIs and the database probe run as subprocesses; legacy entries remain supported.
+    entry: [
+      "scripts/install-hooks.ts",
+      "scripts/doctor.ts",
+      "scripts/doctor-database.ts",
+      "scripts/setup.ts",
+      "scripts/check-consumer.ts",
+      "scripts/test-consumer-browser.ts",
+      "scripts/test/**/*.test.ts",
+      "scripts/browser/**/*.spec.ts",
+      "playwright.consumer.config.ts",
+    ],
     project: ["scripts/**/*.ts", "*.ts"],
     // install-hooks addresses the Vite+ binary by filesystem path.
     ignoreDependencies: ["vp"],

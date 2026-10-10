@@ -16,6 +16,13 @@ function record(value: unknown): Record<string, unknown> {
     : {};
 }
 
+function nodeRelease(version: string) {
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(version);
+  return match
+    ? { major: Number(match[1]), minor: Number(match[2]), patch: Number(match[3]) }
+    : undefined;
+}
+
 export function checkDevelopmentEnvironment(
   root: string,
   actual: DevelopmentEnvironment,
@@ -45,13 +52,19 @@ export function checkDevelopmentEnvironment(
 
   function engine(field: string, name: string): string | undefined {
     const declaration = record(devEngines[field]);
+    const versionPattern =
+      field === "runtime" ? /^\^[1-9]\d*\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/ : /^\d+\.\d+\.\d+$/;
+    const versionRequirement =
+      field === "runtime" ? "a ^major.minor.patch range" : "an exact version";
     if (
       declaration.name !== name ||
       typeof declaration.version !== "string" ||
-      !/^\d+\.\d+\.\d+$/.test(declaration.version) ||
+      !versionPattern.test(declaration.version) ||
       (declaration.onFail !== undefined && declaration.onFail !== "error")
     ) {
-      errors.push(`devEngines.${field} must pin ${name} to an exact version with onFail: error.`);
+      errors.push(
+        `devEngines.${field} must require ${name} using ${versionRequirement} with onFail: error.`,
+      );
       return undefined;
     }
     return declaration.version;
@@ -65,14 +78,27 @@ export function checkDevelopmentEnvironment(
     }
   }
 
-  const nodeVersion = engine("runtime", "node");
+  const nodeRange = engine("runtime", "node");
   const bunVersion = engine("packageManager", "bun");
-  match("devEngines.runtime / .node-version", nodePin, nodeVersion);
+  match("devEngines.runtime / .node-version", nodePin ? `^${nodePin}` : undefined, nodeRange);
   match("devEngines.packageManager / .bun-version", bunPin, bunVersion);
   const expectedBun = bunVersion ?? bunPin;
   match("packageManager", expectedBun ? `bun@${expectedBun}` : undefined, manifest.packageManager);
   match("engines.bun", expectedBun, record(manifest.engines).bun);
-  match("Node.js runtime", nodeVersion, actual.nodeVersion.replace(/^v/, ""));
+  if (nodeRange !== undefined) {
+    const minimum = nodeRelease(nodeRange.slice(1));
+    const found = actual.nodeVersion.replace(/^v/, "");
+    const release = nodeRelease(found);
+    if (
+      !minimum ||
+      !release ||
+      release.major !== minimum.major ||
+      release.minor < minimum.minor ||
+      (release.minor === minimum.minor && release.patch < minimum.patch)
+    ) {
+      errors.push(`Node.js runtime: expected ${nodeRange} (stable release), found ${found}.`);
+    }
+  }
   match("Bun runtime", bunVersion, actual.bunVersion.replace(/^v/, ""));
 
   if (actual.packageManagerName !== undefined) {
@@ -107,7 +133,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     console.error("Development environment check failed:");
     for (const error of errors) console.error(`- ${error}`);
     console.error(
-      "Use the versions in .node-version and .bun-version, then run bun run check:env.",
+      "Use a Node.js version satisfying devEngines.runtime (.node-version is the recommended version) and the Bun version in .bun-version, then run bun run check:env.",
     );
     process.exitCode = 1;
   } else {

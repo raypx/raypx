@@ -57,5 +57,45 @@ missing CSS content discovery, and browser/server boundary leaks.
 
 CI installs the same pinned Chromium once, then runs Storybook, application E2E,
 and consumer browser checks. Local browser tests are explicit commands;
-`check:consumer` requires no installed browser. Consumer harness source is checked
-with `tsc -p scripts/consumer/tsconfig.json`.
+`check:consumer` requires no installed browser. Script source is checked
+with `bun run typecheck:scripts` (`tsc -p scripts/tsconfig.json`).
+
+## Consumer CLI options
+
+The check command accepts `--kind all|core|server|browser`; omitting it runs core,
+server, then browser. Select one consumer with `bun run check:consumer --kind core`.
+Both root aliases delegate to the unified `scripts/bin/raypx.ts`. Toolchain checks,
+shared-package builds, and script type checks run only after option validation;
+help and invalid parameters do not build packages or create fixtures:
+
+```sh
+bun run raypx consumer --help
+bun run check:consumer --help
+bun run raypx consumer-browser --help
+```
+
+Both entrypoints use citty's generated help and reject unknown options, extra
+positional arguments, and repeated options before consumer work begins. The
+browser command always checks the browser consumer and accepts no `--kind`.
+Invalid arguments exit with a nonzero status; help exits successfully.
+
+## Script structure and regression tests
+
+The consumer command definitions live in `scripts/commands/` and are registered
+through `scripts/cli.ts`; the old script files are thin compatibility wrappers.
+Command implementations load only during execution and guarantee fixture cleanup.
+Implementation stays in `scripts/lib/consumer`: `prepare.ts` checks the toolchain
+and builds packages before acceptance, `fixture.ts`
+copies and installs artifacts, `manifest.ts` reads public entries, `lock.ts`
+projects and validates the registry graph, `types.ts` compiles consumer usage,
+`runtime.ts` exercises Node and Bun, and `browser.ts` builds and serves the
+independent browser consumer. Generated fixtures still live outside the repository.
+The Playwright scenario lives in `scripts/browser/consumer.spec.ts`.
+
+`bun run test:scripts` runs the five lock-graph regressions and two process
+cleanup/deadline regressions under the independent Node Vitest project, along with
+other script tests. The lock module and shared `scripts/lib/process.ts` helper do
+not import Bun. These regressions also run in `bun run check`; `check:consumer`
+focuses on real consumer installation, declarations, runtime and browser builds.
+Source CLI regressions also verify help and parameter failures in isolated child
+processes that cannot create consumer fixtures or start installations.

@@ -8,11 +8,14 @@ metrics, provider lifecycle, explicit SQLite migrations and authentication,
 validated cache helpers, reusable query hooks, and shadcn components.
 Applications activate providers and add their own business rules.
 
-Use the versions in `.bun-version` and `.node-version` (Bun 1.4.2 and Node.js
-22.22.1). Bun installs dependencies and runs production; Node-compatible Vite+,
-Vitest, Oxlint, and tsc entrypoints remain part of the toolchain. Bun executing
-TypeScript does not replace strict type checking. Authors use
-`Zack <heyloyep@gmail.com>`.
+Use Bun 1.4.2 from `.bun-version` and stable Node.js `>=22.22.1 <23.0.0`
+(`devEngines.runtime.version: ^22.22.1`). `.node-version` recommends Node.js
+22.22.1 and fixes the CI version; later stable Node.js 22 releases are supported.
+The broader root `engines.node` range declares tool compatibility, while
+development requires Node.js 22. Bun installs dependencies and runs production;
+Node-compatible Vite+, Vitest, Oxlint, and tsc entrypoints remain part of the
+toolchain. Bun executing TypeScript does not replace strict type checking.
+Authors use `Zack <heyloyep@gmail.com>`.
 
 ## Code Placement
 

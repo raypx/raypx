@@ -1,5 +1,5 @@
-import { describe, expect, test } from "bun:test";
-import { assertLockedGraph } from "./harness.ts";
+import { describe, expect, test } from "vite-plus/test";
+import { assertLockedGraph } from "../../lib/consumer/lock.ts";
 
 type Lock = Parameters<typeof assertLockedGraph>[0];
 function graph(): Lock {

@@ -171,13 +171,20 @@ describe("Database", () => {
 ### Running Tests
 
 ```bash
-bun run test               # Workspace tests and server integration
+bun run test               # Workspace, server integration, and script tests
+bun run test:scripts       # Engineering script regressions
+bun run typecheck:scripts  # Engineering source, tests, and configuration
 bun run test:watch         # Watch mode
 bun run test:coverage      # With coverage
 bun run vp run @raypx/db#test # Specific package
 bun run test:e2e           # Application Chromium tests
 bun run test:consumer:browser # Independent UI consumer
 ```
+
+Register repository commands through `scripts/bin/raypx.ts` and the installed registry in
+`scripts/cli.ts`; place definitions in `scripts/commands/` and extract logic into
+`scripts/lib/`. Add Node unit tests to `scripts/test/`, and keep independent
+consumer Playwright tests in `scripts/browser/`. See the [scripts guide](scripts/README.md).
 
 ## Package Development
 
