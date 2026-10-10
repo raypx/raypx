@@ -1,0 +1,19 @@
+CLAUDE.md
+  s_3cc6a5ba50d6f4::t_5c6af3ec8462b2 3-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8894cf11975011fd030530724fde318f7a2a49c1",
+  "prompts": {},
+  "sessions": {
+    "s_3cc6a5ba50d6f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc7527c-3e5e-472d-9e6c-4f8d364c95cb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
