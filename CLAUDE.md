@@ -9,7 +9,7 @@ validated cache helpers, reusable query hooks, and shadcn components.
 Applications activate providers and add their own business rules.
 
 Use the versions in `.bun-version` and `.node-version` (Bun 1.4.2 and Node.js
-22.21.1). Bun installs dependencies and runs production; Node-compatible Vite+,
+22.22.1). Bun installs dependencies and runs production; Node-compatible Vite+,
 Vitest, Oxlint, and tsc entrypoints remain part of the toolchain. Bun executing
 TypeScript does not replace strict type checking. Authors use
 `Zack <heyloyep@gmail.com>`.

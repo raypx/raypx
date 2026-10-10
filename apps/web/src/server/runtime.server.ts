@@ -1,4 +1,4 @@
-import { loadServerEnv, type ServerEnv } from "@raypx/env/server";
+import { loadServerEnv } from "@raypx/env/server";
 import { configureLogging, createLogger } from "@raypx/logger";
 import { RuntimeLifecycle } from "@raypx/api/runtime";
 
@@ -64,7 +64,6 @@ const shared = globalThis as typeof globalThis & { [key]?: ReturnType<typeof ini
 export const services = (shared[key] ??= initialize());
 export const runtime = services.runtime;
 export const runtimeLogger = createLogger({ name: "web" });
-export const runtimeEnv: ServerEnv = services.env;
 
 /** Maps only known routes to metric labels, keeping arbitrary paths out of metrics. */
 export function requestRoute(path: string): string {

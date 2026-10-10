@@ -27,7 +27,7 @@ export function ErrorState({ title, description, action, className, ...props }: 
           {title}
         </h3>
       </div>
-      {description && <p className="max-w-prose text-sm text-muted-foreground">{description}</p>}
+      {description && <p className="max-w-prose text-sm text-foreground/80">{description}</p>}
       {action && <div className="flex flex-wrap gap-2">{action}</div>}
     </section>
   );

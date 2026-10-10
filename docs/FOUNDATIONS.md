@@ -55,6 +55,18 @@ an endpoint. Nitro and SSR share one metrics/resource instance in a process.
 External collection, dashboards, alerting, and tracing exporters can be
 attached to the existing observation boundary.
 
+Legacy request counters and latency end at response-ready. The web boundary also
+records response-finished outcomes and total lifecycle duration, including stream
+errors and cancellation. Streaming preserves backpressure and request/log context;
+these observations describe application consumption rather than TCP delivery.
+
+`@raypx/api/http` exposes `readRequestBody` and `parseJsonBody` with bounded bytes,
+read deadlines, and cancellation. JSON also requires `application/json` or
+`application/*+json`; schema failures remain typed 400 responses. Size/type/deadline
+failures use the public 413/415/408 contracts. Auth passes bounded original bytes
+to Better Auth after the origin guard. Configure the application policy with
+`API_BODY_MAX_BYTES` and `API_BODY_TIMEOUT_MS`; see [API](../packages/api/README.md).
+
 `@raypx/api/security` exposes fixed-window `createRateLimiter`,
 `createRateLimitGuard`, and `createSameOriginGuard`. The web template defaults
 to a shared anonymous quota of 120 API requests per minute, configured with
@@ -150,10 +162,18 @@ bun run storybook
 bun run check
 bun run storybook:install
 bun run storybook:test
+bun run test:e2e
+bun run check:consumer
+bun run test:consumer:browser
+bun --no-env-file run doctor
 ```
 
-CI runs the complete workspace check, installs Chromium, and executes all
-Storybook browser tests. Adding a feature should include a contract, server
+CI runs the complete workspace check, installs Chromium once, and executes
+Storybook, application, and independent consumer browser tests. Knip audits unused
+code and dependencies through `check:unused`; consumer checks install public build
+outputs outside the repository. Doctor diagnoses configuration and tools before
+building, with optional read-only database and service probes.
+Adding a feature should include a contract, server
 handler, validated client, and query hooks within the application feature when
 needed. Promote public data capabilities after the reuse conditions above are
 met. Reusable UI states and component behavior hooks belong in `ui` and `ui/hooks`.

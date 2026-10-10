@@ -5,11 +5,14 @@ export {
   errorResponse,
   getRequestContext,
   parseJsonBody,
+  readRequestBody,
   withHttpRequest,
 } from "./http.js";
 export type {
   RequestContext,
   RequestObservation,
+  RequestLifecycleEvent,
+  RequestBodyOptions,
   RequestGuard,
   HttpOptions,
   HttpErrorOptions,

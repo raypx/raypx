@@ -40,3 +40,11 @@ does not download runtimes or implement a universal package-manager validator.
 Application variable parsing belongs to `@raypx/env/server`.
 `bun run check:runtime-env` validates those application values without starting
 the service; it is separate from development tool checks.
+
+`bun --no-env-file run doctor` adds source-first local diagnostics, including
+dependency installation and hook state, without starting providers. Explicit
+database/service probes and stable JSON reports are documented in
+[DOCTOR.md](../../docs/DOCTOR.md). `bun run check:unused` audits dependencies and
+unused code through the root Knip configuration. Root scripts are the command
+entrypoints; the former duplicate config CLI and historical tsconfig migration
+script are retired.

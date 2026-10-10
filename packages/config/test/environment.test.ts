@@ -6,7 +6,7 @@ import { checkDevelopmentEnvironment } from "../src/environment.ts";
 
 const directories: string[] = [];
 const actual = {
-  nodeVersion: "22.21.1",
+  nodeVersion: "22.22.1",
   bunVersion: "1.4.0",
   packageManagerName: "bun",
   packageManagerVersion: "1.4.0",
@@ -23,7 +23,7 @@ async function fixture() {
   directories.push(root);
   const manifest = {
     devEngines: {
-      runtime: { name: "node", version: "22.21.1", onFail: "error" },
+      runtime: { name: "node", version: "22.22.1", onFail: "error" },
       packageManager: { name: "bun", version: "1.4.0", onFail: "error" },
     },
     packageManager: "bun@1.4.0",
@@ -31,7 +31,7 @@ async function fixture() {
   };
   const writeManifest = () => writeFile(join(root, "package.json"), JSON.stringify(manifest));
   await writeManifest();
-  await writeFile(join(root, ".node-version"), "22.21.1\n");
+  await writeFile(join(root, ".node-version"), "22.22.1\n");
   await writeFile(join(root, ".bun-version"), "1.4.0\n");
   return { root, manifest, writeManifest };
 }
@@ -43,12 +43,12 @@ test("accepts the declared Node and Bun development environment", async () => {
 
 test("reports the actual and required Node version", async () => {
   const { root } = await fixture();
-  const errors = checkDevelopmentEnvironment(root, { ...actual, nodeVersion: "24.11.0" });
+  const errors = checkDevelopmentEnvironment(root, { ...actual, nodeVersion: "22.21.1" });
   expect(errors).toEqual(
     expect.arrayContaining([
       expect.stringMatching(/node/i),
       expect.stringContaining("22.21.1"),
-      expect.stringContaining("24.11.0"),
+      expect.stringContaining("22.22.1"),
     ]),
   );
 });

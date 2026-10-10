@@ -10,19 +10,12 @@ import type { TaskProgress } from "./task.js";
 /**
  * Message types
  */
-export type MessageType =
-  | "execute"
-  | "cancel"
-  | "status"
-  | "list"
-  | "progress"
-  | "complete"
-  | "error";
+type MessageType = "execute" | "cancel" | "status" | "list" | "progress" | "complete" | "error";
 
 /**
  * Base message
  */
-export interface BaseMessage {
+interface BaseMessage {
   id: string;
   type: MessageType;
 }

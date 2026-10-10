@@ -25,8 +25,22 @@ jobs:
       - run: bun run check:env
       - run: bun install --frozen-lockfile
       - run: bun run check
-      - name: Install Storybook browser
-        working-directory: packages/ui
+      - name: Install Chromium
         run: bunx --no-install playwright install --with-deps chromium
       - name: Test UI interactions and accessibility
         run: bun run storybook:test
+      - name: Test application in development and production
+        run: bun run test:e2e
+      - name: Test independent UI consumer
+        run: bun run test:consumer:browser
+      - name: Upload browser failure reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-reports
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore

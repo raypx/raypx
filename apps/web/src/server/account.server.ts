@@ -1,4 +1,4 @@
-import { HttpError, withHttpRequest, errorResponse } from "@raypx/api/http";
+import { HttpError, withHttpRequest, errorResponse, readRequestBody } from "@raypx/api/http";
 import type { SessionResponse } from "@raypx/contracts/auth";
 import { createSameOriginGuard } from "@raypx/api/security";
 import { services } from "./runtime.server";
@@ -17,24 +17,42 @@ async function readSession(request: Request) {
 export const authResponse = ({ request }: { request: Request }) =>
   withHttpRequest(
     request,
-    async () => {
+    async ({ signal }) => {
       if (!services.auth) throw new HttpError("NOT_FOUND");
-      const response = await services.auth.handler(request);
+      const providerRequest = request.body
+        ? new Request(request.url, {
+            method: request.method,
+            headers: request.headers,
+            body: await readRequestBody(request, {
+              maxBytes: services.env.API_BODY_MAX_BYTES,
+              timeoutMs: services.env.API_BODY_TIMEOUT_MS,
+              signal,
+            }),
+            signal,
+          })
+        : request;
+      const response = await services.auth.handler(providerRequest);
       if (response.ok || response.status < 400) return response;
       const code =
-        response.status === 401
-          ? "UNAUTHORIZED"
-          : response.status === 403
-            ? "FORBIDDEN"
-            : response.status === 404
-              ? "NOT_FOUND"
-              : response.status === 409
-                ? "CONFLICT"
-                : response.status === 429
-                  ? "RATE_LIMITED"
-                  : response.status >= 500
-                    ? "INTERNAL_ERROR"
-                    : "VALIDATION_ERROR";
+        response.status === 408
+          ? "REQUEST_TIMEOUT"
+          : response.status === 413
+            ? "PAYLOAD_TOO_LARGE"
+            : response.status === 415
+              ? "UNSUPPORTED_MEDIA_TYPE"
+              : response.status === 401
+                ? "UNAUTHORIZED"
+                : response.status === 403
+                  ? "FORBIDDEN"
+                  : response.status === 404
+                    ? "NOT_FOUND"
+                    : response.status === 409
+                      ? "CONFLICT"
+                      : response.status === 429
+                        ? "RATE_LIMITED"
+                        : response.status >= 500
+                          ? "INTERNAL_ERROR"
+                          : "VALIDATION_ERROR";
       return errorResponse(new HttpError(code, undefined, { headers: response.headers }));
     },
     { route: "/api/auth/*", guards: originGuard ? [originGuard] : [] },

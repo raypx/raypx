@@ -16,12 +16,14 @@
       "drizzle-orm": "0.36.4",
       "better-auth": "1.6.1",
       "unstorage": "1.14.1",
-      "ioredis": "5.4.2",
-      "hono": "4.7.10"
+      "ioredis": "5.4.2"
     }
   },
   "type": "module",
   "scripts": {
+    "prepare": "vp config --hooks-dir .vite-hooks --no-agent",
+    "staged": "vp staged",
+    "prestaged": "bun packages/config/src/environment.ts",
     "dev": "vp run --filter \"@raypx/*\" --filter \"!@raypx/web\" build && vp run --filter \"@raypx/*\" --parallel dev",
     "build": "vp run --filter \"@raypx/*\" build",
     "start": "vp run @raypx/web#start",
@@ -29,13 +31,22 @@
     "format": "vp fmt",
     "typecheck": "vp run --filter \"@raypx/*\" typecheck",
     "test": "vp run --filter \"@raypx/*\" test",
-    "check": "vp run --filter \"@raypx/*\" build && vp run @raypx/ui#storybook-build && vp fmt --check && vp lint --deny-warnings && bun packages/config/src/check-boundaries.ts && vp run --filter \"@raypx/*\" typecheck && vp run --filter \"@raypx/*\" test",
+    "check": "vp run --filter \"@raypx/*\" build && vp run @raypx/ui#storybook-build && vp fmt --check && vp lint --deny-warnings && bun packages/config/src/check-boundaries.ts && bun run check:unused && vp run --filter \"@raypx/*\" typecheck && vp run --filter \"@raypx/*\" test && bun run check:consumer",
     "lint:fix": "vp lint --fix --deny-warnings",
     "format:check": "vp fmt --check",
     "test:watch": "vp test watch --exclude \"**/production.test.ts\" --exclude \"**/runtime-features.test.ts\"",
     "test:coverage": "vp run --filter \"@raypx/*\" build && vp test run --coverage",
     "check:boundaries": "bun packages/config/src/check-boundaries.ts",
     "check:env": "bun packages/config/src/environment.ts",
+    "doctor": "bun --no-env-file scripts/doctor.ts",
+    "check:unused": "knip --config knip.ts",
+    "check:consumer": "vp run --filter \"@raypx/*\" --filter \"!@raypx/web\" build && tsc -p scripts/consumer/tsconfig.json && bun --no-env-file scripts/check-consumer.ts",
+    "test:e2e": "bun run build && bun --no-env-file run --cwd apps/web playwright test --config playwright.config.ts",
+    "test:consumer:browser": "vp run --filter \"@raypx/*\" --filter \"!@raypx/web\" build && bun --no-env-file scripts/test-consumer-browser.ts",
+    "precheck:unused": "bun packages/config/src/environment.ts",
+    "precheck:consumer": "bun packages/config/src/environment.ts",
+    "pretest:e2e": "bun packages/config/src/environment.ts",
+    "pretest:consumer:browser": "bun packages/config/src/environment.ts",
     "preinstall": "bun packages/config/src/environment.ts",
     "predev": "bun packages/config/src/environment.ts",
     "prebuild": "bun packages/config/src/environment.ts",
@@ -63,7 +74,11 @@
   },
   "devDependencies": {
     "@raypx/config": "workspace:*",
+    "@types/bun": "^1.4.2",
+    "@types/node": "^22.19.0",
     "@vitest/coverage-v8": "5.0.3",
+    "knip": "6.16.0",
+    "playwright": "1.64.0",
     "typescript": "^5.9.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
@@ -80,13 +95,13 @@
     },
     "runtime": {
       "name": "node",
-      "version": "22.21.1",
+      "version": "22.22.1",
       "onFail": "error"
     }
   },
   "engines": {
     "bun": "1.4.2",
-    "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+    "node": "^22.22.1 || ^24.11.0 || >=26.0.0"
   },
   "packageManager": "bun@1.4.2"
 }

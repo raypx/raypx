@@ -115,12 +115,21 @@ Application parsing is independent of `check:env` toolchain version checks.
 
 The Nitro plugin wraps request handling with `withHttpRequest`. Each request
 gets an isolated asynchronous context containing its ID, method, path, and
-logger; accepted request IDs are returned as `x-request-id`. Nested server
+logger and cancellation signal; accepted request IDs are returned as `x-request-id`. Nested server
 adapters reuse this context and catch deliberate `HttpError` failures before
 framework fallback handling. Unexpected failures receive safe public errors,
 while details stay in redacted server logs. Completion logs include status and
-duration. An optional observation callback can feed a metrics sink without
-changing the HTTP response when that sink fails.
+duration. The existing observation callback records response-ready latency;
+an additive lifecycle callback records application response stream completion,
+failure, or cancellation. Streaming retains backpressure and the originating
+request/log context; observer failures cannot change HTTP behavior.
+
+Bounded raw-body and JSON readers count actual bytes and enforce a read deadline.
+JSON parsing also validates the media type. Applications supply their body policy;
+the shared API package never reads env. The auth adapter checks origin, reads bounded
+raw bytes, and passes them to Better Auth without a second transport read. Listener
+limits remain a separate coarse runtime safeguard, and shared JSON limits do not
+implicitly limit every SSR or future upload endpoint.
 
 Shared contracts define reusable response shapes, and `api` provides common
 server boundaries. Product contracts and handlers stay in application features;
@@ -174,6 +183,9 @@ Shared static presets are exported from `@raypx/config/tsconfig/*.json`.
 `@raypx/config/tsconfig-presets/*.json` is a compatibility path to the same
 files. They are not a separate active workspace. Engineering tools expose `.ts`
 entrypoints and use native TypeScript execution; tsc still checks their types.
+The root doctor combines tool checks with source-first application configuration
+diagnostics. Database and HTTP checks are explicit, read-only probes; it does not
+initialize the web runtime, enable providers, or apply migrations.
 Runtime `tsconfig.json` produces artifacts; `tsconfig.test.json` checks source,
 tests, and Vite configuration without emitting files.
 
@@ -181,6 +193,18 @@ Package builds follow workspace dependency order. Development first compiles
 runtime packages, then starts watchers and Start. Build, type check, and test
 caches include transitive source and configuration; startup and watching are
 not cached. The project has no separate API process or remote build cache.
+
+Root commands are the authoritative engineering interface. Knip checks unused
+files and dependencies using public exports and explicit dynamic entrypoints.
+Application browser tests exercise dev and built servers. Separate consumers
+install public build outputs outside the repository, validating ESM, declarations,
+CSS, migrations, and browser boundaries without source aliases.
+
+These additions follow the inspected vinext implementation's
+[bounded text reader](https://github.com/cloudflare/vinext/blob/main/packages/vinext/src/utils/text-stream.ts),
+[stream execution boundary](https://github.com/cloudflare/vinext/blob/main/packages/vinext/src/server/app-route-handler-execution.ts),
+and [export-derived Knip configuration](https://github.com/cloudflare/vinext/blob/main/knip.ts).
+Raypx applies the patterns at its existing Nitro and package boundaries.
 
 New product HTTP endpoints begin in their application feature with contracts,
 a server handler, a route, and a validated browser client when needed. Use the

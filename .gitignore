@@ -12,3 +12,6 @@ coverage/
 routeTree.gen.ts
 .vitest/
 storybook-static/
+.vite-hooks/_/
+playwright-report/
+test-results/

@@ -10,14 +10,22 @@ export default definePlugin((app) => {
   app.fetch = (request) =>
     withHttpRequest(
       request,
-      ({ requestId }) => {
+      ({ requestId, signal }) => {
         const headers = new Headers(request.headers);
         headers.set("x-request-id", requestId);
-        return fetch(new Request(request, { headers }));
+        // Nitro dev may supply a Request facade without Undici's internal slots.
+        const init: RequestInit & { duplex?: "half" } = {
+          method: request.method,
+          headers,
+          signal,
+          ...(request.body ? { body: request.body, duplex: "half" } : {}),
+        };
+        return fetch(new Request(request.url, init));
       },
       {
         route: requestRoute(new URL(request.url).pathname),
         observe: services.metrics.observe,
+        observeLifecycle: services.metrics.observeLifecycle,
         guards: [
           (incoming, context) => {
             const path = new URL(incoming.url).pathname;
@@ -31,9 +39,15 @@ export default definePlugin((app) => {
       },
     );
   app.hooks.hook("error", (error) => {
+    const context = getRequestContext();
+    if (
+      context?.signal.aborted &&
+      (error === context.signal.reason || (error instanceof Error && error.name === "AbortError"))
+    )
+      return;
     runtimeLogger.error("Framework request failed", {
       error,
-      requestId: getRequestContext()?.requestId,
+      requestId: context?.requestId,
     });
   });
   const drain = () => runtime.markDraining();

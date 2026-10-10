@@ -7,6 +7,11 @@ not require deployment credentials. `bun run check:env` separately checks
 Node.js and Bun versions; it does not validate application configuration.
 `bun run check:runtime-env` validates application configuration without starting
 the server and reports only validity or sanitized field errors.
+`bun --no-env-file run doctor` combines those checks with tools, dependencies,
+and hooks. It loads configuration from the application directory through Bun,
+preserving inherited environment values as highest priority. Its optional
+`--database` and `--probe <origin>` checks never migrate or start the application.
+See [Doctor](docs/DOCTOR.md).
 
 ## Supported Variables
 
@@ -102,6 +107,8 @@ does not require a public API base URL.
 | `METRICS_TOKEN`            | Omitted                                | 32–1024 base64url characters; required when metrics are enabled   |
 | `API_RATE_LIMIT_MAX`       | `120`                                  | Integer from 1 to 1,000,000                                       |
 | `API_RATE_LIMIT_WINDOW_MS` | `60000`                                | Integer from 1 to 1,000,000 milliseconds                          |
+| `API_BODY_MAX_BYTES`       | `1048576` (1 MiB)                      | Integer from 1 to 67,108,864 bytes                                |
+| `API_BODY_TIMEOUT_MS`      | `10000` (10 seconds)                   | Integer from 1 to 120,000 milliseconds                            |
 
 When a feature is disabled, its credentials are optional. Supplied credentials
 and settings are still validated. Before enabling authentication, run
@@ -109,6 +116,15 @@ and settings are still validated. Before enabling authentication, run
 This CLI runs from `apps/web`, just like `start`, so relative paths agree.
 Production origin settings describe the public HTTPS URL behind the reverse
 proxy; they do not change the internal listener.
+
+Body settings bound the application's auth adapter and JSON handlers that opt
+into the shared reader with this policy. The reader counts actual bytes even
+without Content-Length, accepts the exact limit, and cancels on overflow or a
+read deadline. Oversize bodies return a safe 413, unsupported JSON media types
+return 415, and expired read deadlines return 408. Connection or caller cancellation
+remains cancellation. Better Auth receives raw bytes, preserving its supported
+media types. These settings do not pre-read every SSR/server-function request or
+set limits for future upload endpoints; Bun's listener safeguard is separate.
 
 Generate independent random secrets, for example with
 `bun -e 'console.log(require("node:crypto").randomBytes(32).toString("base64url"))'`.

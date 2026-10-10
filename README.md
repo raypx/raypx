@@ -13,7 +13,7 @@ Author: Zack <heyloyep@gmail.com>
 ## Local Development
 
 Use the versions in `.bun-version` and `.node-version` (currently Bun 1.4.2 and
-Node.js 22.21.1). Bun installs workspaces and runs production; Vite+, Vitest,
+Node.js 22.22.1). Bun installs workspaces and runs production; Vite+, Vitest,
 Oxlint, and tsc retain Node-compatible tool entrypoints.
 
 ```sh
@@ -29,6 +29,12 @@ Open http://127.0.0.1:5173. `setup` copies `apps/web/.env.example` to
 versions and declaration consistency; `check:runtime-env` validates application
 configuration without starting the service. Neither prints application values.
 Development first builds runtime packages, then runs package watchers and Start.
+
+For a combined local diagnosis, run `bun --no-env-file run doctor`, optionally
+with `--json`. It works before the initial build and reports missing dependencies,
+tool versions, application configuration, and hook setup. Database and service
+checks are explicit: add `--database` or `--probe http://127.0.0.1:3000`.
+See [Doctor](docs/DOCTOR.md) for report semantics and environment loading.
 
 Dependencies are declared by each workspace and locked in `bun.lock`.
 `bunfig.toml` uses the isolated linker. Scripts use the repository's Vite+
@@ -69,27 +75,33 @@ an isolated QueryClient for SSR and browser navigation. See the
 
 ## Commands and Checks
 
-| Command                                   | Purpose                                                                |
-| ----------------------------------------- | ---------------------------------------------------------------------- |
-| `bun run dev`                             | Build dependencies, then run watchers and Start                        |
-| `bun run build`                           | Build runtime packages and the application                             |
-| `bun run start`                           | Run the built server with Bun                                          |
-| `bun run setup`                           | Create application configuration without overwriting it                |
-| `bun run check:env`                       | Validate development tool versions and declarations                    |
-| `bun run check:runtime-env`               | Validate current application runtime configuration                     |
-| `bun run db:migrate`                      | Apply database migrations explicitly before enabling account features  |
-| `bun run check:boundaries`                | Check package dependencies, exports, cycles, and browser isolation     |
-| `bun run typecheck`                       | Check source and test TypeScript                                       |
-| `bun run test`                            | Run package tests and production integration tests                     |
-| `bun run test:watch`                      | Watch tests, excluding production integration tests                    |
-| `bun run test:coverage`                   | Build and run tests with V8 coverage                                   |
-| `bun run lint` / `bun run lint:fix`       | Check or fix lint issues                                               |
-| `bun run format` / `bun run format:check` | Write or check formatting                                              |
-| `bun run check`                           | Build, format, lint, boundaries, type checking, and tests              |
-| `bun run storybook`                       | Explore UI components, states, Controls, Docs, and themes on port 6006 |
-| `bun run storybook:build`                 | Build the standalone static UI reference                               |
-| `bun run storybook:install`               | Install Chromium for browser story tests                               |
-| `bun run storybook:test`                  | Render stories and verify interactions and accessibility               |
+| Command                                   | Purpose                                                                           |
+| ----------------------------------------- | --------------------------------------------------------------------------------- |
+| `bun run dev`                             | Build dependencies, then run watchers and Start                                   |
+| `bun run build`                           | Build runtime packages and the application                                        |
+| `bun run start`                           | Run the built server with Bun                                                     |
+| `bun run setup`                           | Create application configuration without overwriting it                           |
+| `bun run check:env`                       | Validate development tool versions and declarations                               |
+| `bun run check:runtime-env`               | Validate current application runtime configuration                                |
+| `bun --no-env-file run doctor`            | Diagnose local tools, configuration, dependencies, and hooks                      |
+| `bun run db:migrate`                      | Apply database migrations explicitly before enabling account features             |
+| `bun run check:boundaries`                | Check package dependencies, exports, cycles, and browser isolation                |
+| `bun run check:unused`                    | Audit unused files, exports, and dependencies with Knip                           |
+| `bun run check:consumer`                  | Verify built packages in independent Node, Bun, TypeScript, and browser consumers |
+| `bun run typecheck`                       | Check source and test TypeScript                                                  |
+| `bun run test`                            | Run package tests and production integration tests                                |
+| `bun run test:watch`                      | Watch tests, excluding production integration tests                               |
+| `bun run test:coverage`                   | Build and run tests with V8 coverage                                              |
+| `bun run lint` / `bun run lint:fix`       | Check or fix lint issues                                                          |
+| `bun run format` / `bun run format:check` | Write or check formatting                                                         |
+| `bun run staged`                          | Validate tools, then lint and format staged files                                 |
+| `bun run check`                           | Build, format, lint, boundaries, unused code, types, tests, and consumers         |
+| `bun run test:e2e`                        | Test application pages in Chromium against development and production             |
+| `bun run test:consumer:browser`           | Test an independent UI consumer in Chromium                                       |
+| `bun run storybook`                       | Explore UI components, states, Controls, Docs, and themes on port 6006            |
+| `bun run storybook:build`                 | Build the standalone static UI reference                                          |
+| `bun run storybook:install`               | Install Chromium for browser story tests                                          |
+| `bun run storybook:test`                  | Render stories and verify interactions and accessibility                          |
 
 Package tasks live in their `vite.config.ts`, for example
 `bun run vp run @raypx/contracts#build`. Runtime packages compile to ESM and
@@ -103,10 +115,42 @@ The full check includes its static build; browser story tests have their own com
 Its 118 stories include component behavior hooks and interaction checks.
 See the [UI package guide](packages/ui/README.md#storybook).
 
+Application E2E and independent consumer browser tests have separate commands.
+They use isolated configuration and owned servers; CI runs all three browser
+suites after installing Chromium once. Consumer acceptance installs compiled
+packages outside the repository without source aliases or repository dependency
+links. See [TESTING.md](TESTING.md) for coverage and failure reports.
+
 Build, type check, and test tasks use local cache with transitive inputs;
 watching and production startup do not cache. Root `vite.config.ts` owns lint,
 formatting, test projects, and coverage. The AST boundary checker additionally
 protects package imports. See [TESTING.md](TESTING.md).
+
+## Git Hooks
+
+`bun install` runs `prepare` to install the Vite+ dispatcher for the root
+`.vite-hooks/pre-commit` hook. Each commit validates the pinned Node/Bun versions,
+then runs `vp staged` using the `staged` rules in root `vite.config.ts`. JavaScript
+and TypeScript files run `vp check --fix` for formatting and lint fixes, with
+warnings treated as failures; supported document, style, and configuration files
+are formatted.
+Vite+ includes staged-file tooling, and automatically adds successful fixes to
+the index while preserving unstaged changes. Full type checking, boundaries,
+builds, and tests remain in `bun run check` and CI.
+
+Hooks require Git 2.32.0 or later. The generated `.vite-hooks/_/` dispatcher is
+ignored; the project hook and staged configuration belong in version control.
+For an existing clone, run `bun run prepare`, or explicitly enable hooks:
+
+```sh
+bun run vp hooks enable --hooks-dir .vite-hooks
+bun run vp hooks status
+bun run staged
+```
+
+`bun run vp hooks disable` records a local opt-out that survives installation;
+`bun run vp hooks enable` enables them again. `VP_GIT_HOOKS=0` skips hooks for
+one process or environment. See the [Vite+ commit hooks guide](https://viteplus.dev/guide/commit-hooks).
 
 ## Production Runtime
 
@@ -131,8 +175,11 @@ Enabling authentication registers its database. Shutdown marks readiness unavail
 releases registered resources once, in reverse order, with a bounded deadline.
 
 Unknown API paths use the shared error contract; unknown pages use Start's 404.
-Request logs contain method, path, status, duration, and request ID. The optional
-observation hook allows an application to connect a metrics sink; no external
+Request logs contain method, path, status, duration, and request ID. The request
+boundary tracks both response-ready and response-finished phases, including
+stream cancellation and failure. Existing request metrics retain their response-ready
+semantics; separate response metrics cover the complete application stream lifecycle.
+The optional observation hooks allow an application to connect a metrics sink; no external
 error-monitoring service, metric backend, or alert delivery is configured.
 
 ## Documentation

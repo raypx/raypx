@@ -3,7 +3,7 @@ import { expect, within } from "storybook/test";
 import type { ComponentProps } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../src/components/avatar.js";
 
-const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#145e66"/><text x="40" y="48" text-anchor="middle" font-family="sans-serif" font-size="28" fill="white">AL</text></svg>')}`;
+const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#262626"/><text x="40" y="48" text-anchor="middle" font-family="sans-serif" font-size="28" fill="white">AL</text></svg>')}`;
 type AvatarArgs = ComponentProps<typeof Avatar> & { src: string; name: string; initials: string };
 const meta = {
   title: "Primitives/Avatar",

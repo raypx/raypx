@@ -130,6 +130,26 @@ test("production serves SSR HTML and its browser assets", async () => {
   }
 });
 
+test("production records one ready event and one terminal event for a real SSR body", async () => {
+  const requestId = "production-ssr-lifecycle";
+  const response = await fetch(baseUrl, { headers: { "x-request-id": requestId } });
+  expect(response.status).toBe(200);
+  expect(await response.text()).toContain("Project ready, start building from here.");
+  await vi.waitFor(() => {
+    const ready = logRecords().filter(
+      (record) => record.requestId === requestId && record.phase === "response-ready",
+    );
+    const finished = logRecords().filter(
+      (record) => record.requestId === requestId && record.phase === "response-finished",
+    );
+    expect(ready).toHaveLength(1);
+    expect(finished).toEqual([
+      expect.objectContaining({ outcome: "complete", status: 200, route: "/" }),
+    ]);
+    expect(Number(finished[0]!.durationMs)).toBeGreaterThanOrEqual(Number(ready[0]!.durationMs));
+  });
+});
+
 test("production routes health and unknown API requests correctly", async () => {
   const response = await fetch(`${baseUrl}/api/health`);
   expect(response.status).toBe(200);

@@ -30,6 +30,14 @@ const optionalPositiveInteger = z.preprocess((value) => {
     ? Number(normalized)
     : normalized;
 }, z.number().int().min(1).max(1_000_000).optional());
+function defaultPositiveInteger(max: number, defaultValue: number) {
+  return z.preprocess((value) => {
+    const normalized = blankToUndefined(value);
+    return typeof normalized === "string" && /^\d+$/.test(normalized)
+      ? Number(normalized)
+      : normalized;
+  }, z.number().int().min(1).max(max).default(defaultValue));
+}
 const optionalOrigin = z.preprocess(
   blankToUndefined,
   z
@@ -94,6 +102,8 @@ const serverEnvSchema = z
     ),
     API_RATE_LIMIT_MAX: optionalPositiveInteger,
     API_RATE_LIMIT_WINDOW_MS: optionalPositiveInteger,
+    API_BODY_MAX_BYTES: defaultPositiveInteger(67_108_864, 1_048_576),
+    API_BODY_TIMEOUT_MS: defaultPositiveInteger(120_000, 10_000),
   })
   .superRefine((env, context) => {
     if (env.AUTH_ENABLED) {
@@ -142,6 +152,8 @@ const fieldRules: Record<EnvironmentField, string> = {
     "must contain 32 to 1024 letters, digits, hyphens, or underscores; required when metrics are enabled",
   API_RATE_LIMIT_MAX: "must be an integer between 1 and 1000000",
   API_RATE_LIMIT_WINDOW_MS: "must be an integer between 1 and 1000000 milliseconds",
+  API_BODY_MAX_BYTES: "must be an integer between 1 and 67108864 bytes",
+  API_BODY_TIMEOUT_MS: "must be an integer between 1 and 120000 milliseconds",
 };
 
 /** A configuration error containing field names and rules, never supplied values. */

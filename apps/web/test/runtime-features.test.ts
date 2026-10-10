@@ -2,6 +2,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import { mkdtemp, rm } from "node:fs/promises";
 import { createServer } from "node:net";
+import { request as httpRequest } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,8 +53,10 @@ beforeAll(async () => {
       BETTER_AUTH_SECRET: "auth-integration-secret-".repeat(2),
       METRICS_ENABLED: "true",
       METRICS_TOKEN: token,
-      API_RATE_LIMIT_MAX: "12",
+      API_RATE_LIMIT_MAX: "24",
       API_RATE_LIMIT_WINDOW_MS: "60000",
+      API_BODY_MAX_BYTES: "1024",
+      API_BODY_TIMEOUT_MS: "120",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -91,6 +94,59 @@ afterAll(async () => {
 });
 
 test("authentication, safe account projection, revocation, metrics and rate protection work in the built server", async () => {
+  const oversizedBody = "private-oversized-body-sentinel" + "x".repeat(1024);
+  const crossSiteOversized = await fetch(`${baseURL}/api/auth/sign-up/email`, {
+    method: "POST",
+    headers: { origin: "https://attacker.test", "content-type": "application/json" },
+    body: oversizedBody,
+  });
+  expect(crossSiteOversized.status).toBe(403);
+  expect(apiErrorResponseSchema.parse(await crossSiteOversized.json()).error.code).toBe(
+    "FORBIDDEN",
+  );
+  const oversized = await fetch(`${baseURL}/api/auth/sign-up/email`, {
+    method: "POST",
+    headers: { origin, "content-type": "application/json", "x-request-id": "built-body-limit" },
+    body: oversizedBody,
+  });
+  expect(oversized.status).toBe(413);
+  expect(oversized.headers.get("cache-control")).toBe("no-store");
+  expect(oversized.headers.get("x-request-id")).toBe("built-body-limit");
+  expect(apiErrorResponseSchema.parse(await oversized.json()).error).toMatchObject({
+    code: "PAYLOAD_TOO_LARGE",
+    requestId: "built-body-limit",
+  });
+  const timedOut = await new Promise<{ status: number; body: string }>((resolve, reject) => {
+    const outgoing = httpRequest(
+      `${baseURL}/api/auth/sign-up/email`,
+      {
+        method: "POST",
+        headers: {
+          origin,
+          "content-type": "application/json",
+          "content-length": "4",
+          "x-request-id": "built-body-deadline",
+        },
+      },
+      (incoming) => {
+        let body = "";
+        incoming.on("data", (chunk: Buffer) => {
+          body += chunk;
+        });
+        incoming.on("end", () => {
+          resolve({ status: incoming.statusCode!, body });
+          outgoing.destroy();
+        });
+      },
+    );
+    outgoing.on("error", reject);
+    outgoing.write("{");
+  });
+  expect(timedOut.status).toBe(408);
+  expect(apiErrorResponseSchema.parse(JSON.parse(timedOut.body)).error).toMatchObject({
+    code: "REQUEST_TIMEOUT",
+    requestId: "built-body-deadline",
+  });
   const anonymous = await fetch(`${baseURL}/api/session`);
   expect(sessionResponseSchema.parse(await anonymous.json())).toEqual({ user: null });
   const denied = await fetch(`${baseURL}/api/me`);
@@ -175,6 +231,12 @@ test("authentication, safe account projection, revocation, metrics and rate prot
   expect(metrics).not.toContain("arbitrary-user-id");
   expect(metrics).not.toContain(sentinel);
   expect(metrics).not.toContain(token);
+  expect(metrics).toContain(
+    'raypx_http_response_outcomes_total{route="/api/auth/*",method="POST",status="413",outcome="complete"} 1',
+  );
+  expect(metrics).toContain(
+    'raypx_http_response_outcomes_total{route="/api/auth/*",method="POST",status="408",outcome="complete"} 1',
+  );
   let blocked: Response | undefined;
   for (let index = 0; index < 15; index++) {
     const response = await fetch(`${baseURL}/api/session`, {
@@ -195,4 +257,5 @@ test("authentication, safe account projection, revocation, metrics and rate prot
   expect(output).not.toContain("a-valid-test-password");
   expect(output).not.toContain("auth-integration-secret-");
   expect(output).not.toContain(token);
+  expect(output).not.toContain("private-oversized-body-sentinel");
 }, 15_000);

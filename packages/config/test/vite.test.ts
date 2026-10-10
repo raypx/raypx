@@ -112,6 +112,26 @@ test("source aliases match only explicit public exports and preserve CSS", async
   expect(aliases.some((alias) => alias.find.test("@raypx/config"))).toBe(false);
 });
 
+test("engineering checks track root tools and doctor source inputs without invalidating runtime builds", async () => {
+  const { root, workspace } = await fixture();
+  const configUrl = pathToFileURL(join(root, "packages/config/vite.config.ts")).href;
+  const apiUrl = await workspace("api");
+  const patterns = (url: string) =>
+    workspaceCacheInputs(url).flatMap((input) =>
+      typeof input === "object" && "pattern" in input ? [input.pattern] : [],
+    );
+  expect(patterns(configUrl)).toEqual(
+    expect.arrayContaining([
+      "scripts/**",
+      "knip.ts",
+      "packages/env/src/**",
+      "packages/db/migrations/**",
+    ]),
+  );
+  expect(patterns(apiUrl)).not.toContain("scripts/**");
+  expect(patterns(apiUrl)).not.toContain("knip.ts");
+});
+
 test("package tasks use compiled outputs while test-free packages cannot collect root tests", async () => {
   const { workspace } = await fixture();
   const url = await workspace("ui");

@@ -1,6 +1,28 @@
 import { expect, test } from "vite-plus/test";
 import { parseServerEnv, ServerEnvironmentError } from "../src/server.js";
 
+test("body size and deadline default independently of optional providers", () => {
+  expect(parseServerEnv({ API_BODY_MAX_BYTES: " ", API_BODY_TIMEOUT_MS: "" })).toMatchObject({
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
+  });
+  expect(
+    parseServerEnv({ API_BODY_MAX_BYTES: "67108864", API_BODY_TIMEOUT_MS: 120000 }),
+  ).toMatchObject({
+    API_BODY_MAX_BYTES: 67_108_864,
+    API_BODY_TIMEOUT_MS: 120_000,
+  });
+  for (const value of [0, -1, false, null, "1.5", "1e3", "secret-body-limit"]) {
+    expect(() => parseServerEnv({ API_BODY_MAX_BYTES: value })).toThrow("API_BODY_MAX_BYTES");
+    expect(() => parseServerEnv({ API_BODY_TIMEOUT_MS: value })).toThrow("API_BODY_TIMEOUT_MS");
+  }
+  expect(() => parseServerEnv({ API_BODY_MAX_BYTES: 67_108_865 })).toThrow("API_BODY_MAX_BYTES");
+  expect(() => parseServerEnv({ API_BODY_TIMEOUT_MS: 120_001 })).toThrow("API_BODY_TIMEOUT_MS");
+  expect(() => parseServerEnv({ API_BODY_MAX_BYTES: "secret-body-limit" })).not.toThrow(
+    "secret-body-limit",
+  );
+});
+
 test("optional providers do not require credentials while disabled", () => {
   expect(parseServerEnv({ AUTH_ENABLED: "false", METRICS_ENABLED: "false" })).toMatchObject({
     AUTH_ENABLED: false,

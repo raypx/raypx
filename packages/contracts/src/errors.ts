@@ -8,6 +8,9 @@ export const apiErrorCodeSchema = z.enum([
   "NOT_FOUND",
   "CONFLICT",
   "RATE_LIMITED",
+  "PAYLOAD_TOO_LARGE",
+  "UNSUPPORTED_MEDIA_TYPE",
+  "REQUEST_TIMEOUT",
   "INTERNAL_ERROR",
   "SERVICE_UNAVAILABLE",
 ]);

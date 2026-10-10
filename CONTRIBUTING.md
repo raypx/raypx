@@ -6,9 +6,9 @@ Thank you for your interest in contributing to Raypx! 🎉
 
 ### Prerequisites
 
-- **Bun** 1.4.2+
-- **Node.js** 22.21.1+ (for some dev tools)
-- **Git**
+- **Bun** 1.4.2, matching `.bun-version`
+- **Node.js** 22.22.1, matching `.node-version` (including Vite+ staged checks)
+- **Git** 2.32.0 or later
 
 ### Setup
 
@@ -25,10 +25,11 @@ Thank you for your interest in contributing to Raypx! 🎉
    bun install
    ```
 
-3. **Copy environment file**
+3. **Create application configuration**
 
    ```bash
-   cp .env.example .env
+   bun run setup
+   bun --no-env-file run doctor
    ```
 
 4. **Start development**
@@ -43,6 +44,19 @@ Thank you for your interest in contributing to Raypx! 🎉
    ```
 
 ## Development Workflow
+
+### Commit Hooks
+
+`bun install` installs Vite+ hooks through the root `prepare` script. The
+`.vite-hooks/pre-commit` hook checks the development environment and runs
+`vp staged` with rules from root `vite.config.ts`. It fixes lint and formatting
+for staged files, adds fixes to the index, and preserves unstaged changes.
+Run `bun run staged` to check manually and `bun run vp hooks status` to inspect
+the installed dispatcher. Full acceptance remains `bun run check`.
+
+Existing clones can run `bun run prepare` to install hooks. To disable hooks
+locally, run `bun run vp hooks disable`; use `bun run vp hooks enable` to restore
+them. Commit `.vite-hooks/pre-commit` and ignore the generated `.vite-hooks/_/`.
 
 ### Branch Naming
 
@@ -139,13 +153,17 @@ export async function getUser(userId: string) {
 
 ```typescript
 // packages/db/test/database.test.ts
-import { describe, it, expect } from "vitest";
-import { getDatabase } from "../src";
+import { describe, it, expect } from "vite-plus/test";
+import { createDatabase } from "@raypx/db";
 
 describe("Database", () => {
   it("should connect successfully", () => {
-    const db = getDatabase();
-    expect(db).toBeDefined();
+    const connection = createDatabase(":memory:");
+    try {
+      expect(() => connection.checkHealth()).not.toThrow();
+    } finally {
+      connection.close();
+    }
   });
 });
 ```
@@ -153,10 +171,12 @@ describe("Database", () => {
 ### Running Tests
 
 ```bash
-bun test                    # Run all tests
-bun test --watch           # Watch mode
-bun test --coverage        # With coverage
-bun test packages/db       # Specific package
+bun run test               # Workspace tests and server integration
+bun run test:watch         # Watch mode
+bun run test:coverage      # With coverage
+bun run vp run @raypx/db#test # Specific package
+bun run test:e2e           # Application Chromium tests
+bun run test:consumer:browser # Independent UI consumer
 ```
 
 ## Package Development
@@ -200,6 +220,8 @@ bun test packages/db       # Specific package
 - [ ] Tests pass (`bun run test`)
 - [ ] Type check passes (`bun run typecheck`)
 - [ ] Linter passes (`bun run lint`)
+- [ ] Unused-code audit passes (`bun run check:unused`)
+- [ ] Independent package consumers pass (`bun run check:consumer`)
 - [ ] Documentation updated
 - [ ] No merge conflicts
 

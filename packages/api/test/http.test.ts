@@ -117,12 +117,20 @@ test("route boundaries preserve domain failures and emit one correlated access l
 
 test("normalizes malformed and invalid JSON into validation failures", async () => {
   await expect(
-    parseJsonBody(new Request("http://localhost", { method: "POST", body: "{" }), paginationSchema),
+    parseJsonBody(
+      new Request("http://localhost", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{",
+      }),
+      paginationSchema,
+    ),
   ).rejects.toMatchObject({ code: "VALIDATION_ERROR", status: 400 });
   await expect(
     parseJsonBody(
       new Request("http://localhost", {
         method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ page: 0, pageSize: 200 }),
       }),
       paginationSchema,
@@ -138,6 +146,7 @@ test("normalizes malformed and invalid JSON into validation failures", async () 
     parseJsonBody(
       new Request("http://localhost", {
         method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ page: 2, pageSize: 10 }),
       }),
       paginationSchema,

@@ -2,6 +2,14 @@ import { expect, test } from "vite-plus/test";
 import { apiErrorResponseSchema } from "../src/errors.js";
 import { paginationMetaSchema, paginationSchema } from "../src/pagination.js";
 
+test.each(["PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "REQUEST_TIMEOUT"])(
+  "accepts the public body boundary code %s",
+  (code) =>
+    expect(
+      apiErrorResponseSchema.safeParse({ error: { code, message: "Request rejected" } }).success,
+    ).toBe(true),
+);
+
 test("validates public errors with request correlation and field messages", () => {
   const payload = {
     error: {

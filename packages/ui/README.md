@@ -57,9 +57,9 @@ The UI build copies `styles.css` as **CSS source**; it does not compile Tailwind
 
 Import the application's compiled stylesheet in its root route. Do not load the UI theme as an independent CSS URL, because that bypasses Tailwind's theme and utility processing.
 
-Tokens preserve system fonts and a teal focus/primary color. `.dark` switches the semantic palette. The application owns theme persistence and SSR initialization; this package does not read local storage or modify the document. Pass the application's resolved theme to `<Toaster theme={theme} />` and mount one toaster in its root. `system` is the default when no theme is supplied. Shared tokens include semantic stacking levels and reduced-motion rules.
+Colors follow the official shadcn [neutral theme](https://ui.shadcn.com/docs/theming#default-theme-css), with dark primary actions on light surfaces and light primary actions in dark mode. System fonts remain in use. `.dark` switches the semantic palette. The application owns theme persistence and SSR initialization; this package does not read local storage or modify the document. Pass the application's resolved theme to `<Toaster theme={theme} />` and mount one toaster in its root. `system` is the default when no theme is supplied. Shared tokens include semantic stacking levels and reduced-motion rules.
 
-The light text/placeholder contrast is above 6:1 against the page background; dark text/placeholder contrast is above 8:1. Focus and active input boundaries meet 3:1. Recheck contrast when overriding tokens.
+The legacy Radix `destructive-foreground` token uses `primary-foreground` for readable text on destructive surfaces in each mode. Tabs use `secondary-foreground` on their muted surface, and ErrorState descriptions use `foreground/80` on their tinted surface so normal-sized text remains readable with the default neutral palette. Verify text, placeholders, focus indicators, and control boundaries when overriding the default palette; Storybook runs accessibility checks on rendered stories.
 
 ## Composition and accessibility
 

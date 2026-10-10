@@ -8,6 +8,8 @@ import { defineConfig, lazyPlugins } from "vite-plus";
 
 export default defineConfig(({ mode }) => ({
   root: fileURLToPath(new URL(".", import.meta.url)),
+  // E2E servers receive a synthetic environment and never load local .env files.
+  envDir: mode === "e2e" ? false : undefined,
   resolve: {
     alias: mode === "test" ? workspaceSourceAliases() : undefined,
   },
@@ -65,7 +67,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
       start: { command: "bun .output/server/index.mjs", cache: false },
-      typecheck: { command: "tsc --noEmit", dependsOn: ["build"] },
+      typecheck: { command: "tsc --noEmit && tsc -p tsconfig.e2e.json", dependsOn: ["build"] },
       test: {
         command: "vp test run",
         dependsOn: ["build"],

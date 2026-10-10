@@ -18,15 +18,17 @@ const { PORT, LOG_LEVEL } = getServerEnv();
 first use if startup has not already loaded it. An invalid explicit reload throws
 and leaves the last successful configuration intact.
 
-| Field         | Default       | Validation                                                   |
-| ------------- | ------------- | ------------------------------------------------------------ |
-| `NODE_ENV`    | `development` | `development`, `test`, or `production`                       |
-| `HOST`        | `127.0.0.1`   | IPv4, IPv6, or hostname; no scheme or port                   |
-| `PORT`        | `3000`        | Decimal integer between 1 and 65535                          |
-| `NITRO_HOST`  | uses `HOST`   | Overrides the effective listening host; same validation      |
-| `NITRO_PORT`  | uses `PORT`   | Overrides the effective listening port; same validation      |
-| `LOG_LEVEL`   | omitted       | `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent` |
-| `APP_VERSION` | omitted       | String of at most 128 characters                             |
+| Field                 | Default       | Validation                                                   |
+| --------------------- | ------------- | ------------------------------------------------------------ |
+| `NODE_ENV`            | `development` | `development`, `test`, or `production`                       |
+| `HOST`                | `127.0.0.1`   | IPv4, IPv6, or hostname; no scheme or port                   |
+| `PORT`                | `3000`        | Decimal integer between 1 and 65535                          |
+| `NITRO_HOST`          | uses `HOST`   | Overrides the effective listening host; same validation      |
+| `NITRO_PORT`          | uses `PORT`   | Overrides the effective listening port; same validation      |
+| `LOG_LEVEL`           | omitted       | `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent` |
+| `APP_VERSION`         | omitted       | String of at most 128 characters                             |
+| `API_BODY_MAX_BYTES`  | `1048576`     | Decimal integer from 1 through 67108864 bytes                |
+| `API_BODY_TIMEOUT_MS` | `10000`       | Decimal integer from 1 through 120000 milliseconds           |
 
 Leading and trailing whitespace is removed. Empty or whitespace-only strings
 count as unset, using defaults or omitting optional fields. Nonblank `NITRO_HOST`
@@ -61,3 +63,5 @@ base URL. Origins exclude credentials, paths, query strings, and fragments.
 `API_RATE_LIMIT_MAX` and `API_RATE_LIMIT_WINDOW_MS` accept integers from 1 to
 1,000,000; web defaults to 120 requests per 60,000 ms. Credentials remain in
 server configuration and never enter the client export or validation output.
+
+Body limits apply to the application's bounded JSON/auth readers, independently of auth/metrics enablement. The default is 1 MiB with a 10-second total read deadline. Whitespace/unset values use defaults; zero, negatives, fractions, scientific notation and values above the caps are rejected with sanitized field rules. These settings do not alter Bun's listener limit, upload-specific policies or streamed response lifetimes.

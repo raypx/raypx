@@ -11,13 +11,21 @@ test("uses defaults and omits unspecified optional configuration", () => {
     NODE_ENV: "development",
     HOST: "127.0.0.1",
     PORT: 3000,
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
   });
 });
 
 test("treats blank strings as unset instead of coercing PORT to zero", () => {
   expect(
     parseServerEnv({ NODE_ENV: " ", HOST: "", PORT: "\t", LOG_LEVEL: " ", APP_VERSION: "" }),
-  ).toEqual({ NODE_ENV: "development", HOST: "127.0.0.1", PORT: 3000 });
+  ).toEqual({
+    NODE_ENV: "development",
+    HOST: "127.0.0.1",
+    PORT: 3000,
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
+  });
 });
 
 test("parses and freezes supplied configuration while stripping unknown fields", () => {
@@ -27,6 +35,8 @@ test("parses and freezes supplied configuration while stripping unknown fields",
     PORT: "8080",
     LOG_LEVEL: "warn",
     APP_VERSION: "release-123",
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
     SESSION_SECRET: "private-test-value",
   });
   expect(env).toEqual({
@@ -35,6 +45,8 @@ test("parses and freezes supplied configuration while stripping unknown fields",
     PORT: 8080,
     LOG_LEVEL: "warn",
     APP_VERSION: "release-123",
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
   });
   expect(Object.isFrozen(env)).toBe(true);
 });
@@ -84,7 +96,13 @@ test("rejects invalid optional configuration", () => {
 test("uses Nitro overrides for the effective listener configuration", () => {
   expect(
     parseServerEnv({ HOST: "127.0.0.1", PORT: "3000", NITRO_HOST: "::1", NITRO_PORT: "9000" }),
-  ).toEqual({ NODE_ENV: "development", HOST: "::1", PORT: 9000 });
+  ).toEqual({
+    NODE_ENV: "development",
+    HOST: "::1",
+    PORT: 9000,
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
+  });
 });
 
 test("validates the effective values when Nitro overrides lower-priority values", () => {
@@ -95,13 +113,25 @@ test("validates the effective values when Nitro overrides lower-priority values"
       NITRO_HOST: "localhost",
       NITRO_PORT: "9000",
     }),
-  ).toEqual({ NODE_ENV: "development", HOST: "localhost", PORT: 9000 });
+  ).toEqual({
+    NODE_ENV: "development",
+    HOST: "localhost",
+    PORT: 9000,
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
+  });
 });
 
 test("falls back to HOST and PORT for blank Nitro overrides", () => {
   expect(
     parseServerEnv({ HOST: "localhost", PORT: "8080", NITRO_HOST: " ", NITRO_PORT: "" }),
-  ).toEqual({ NODE_ENV: "development", HOST: "localhost", PORT: 8080 });
+  ).toEqual({
+    NODE_ENV: "development",
+    HOST: "localhost",
+    PORT: 8080,
+    API_BODY_MAX_BYTES: 1_048_576,
+    API_BODY_TIMEOUT_MS: 10_000,
+  });
   expect(parseServerEnv({ NITRO_HOST: "", NITRO_PORT: "\t" }).PORT).toBe(3000);
 });
 

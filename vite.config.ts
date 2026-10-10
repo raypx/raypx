@@ -1,6 +1,10 @@
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  staged: {
+    "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}": "vp check --fix --no-error-on-unmatched-pattern",
+    "*.{json,jsonc,md,mdx,css,scss,html,yml,yaml}": "vp fmt --no-error-on-unmatched-pattern",
+  },
   test: {
     projects: ["apps/*/vite.config.ts", "packages/*/vite.config.ts"],
     coverage: {
@@ -23,6 +27,8 @@ export default defineConfig({
       "**/.output/**",
       "**/dist/**",
       "**/storybook-static/**",
+      "**/playwright-report/**",
+      "**/test-results/**",
     ],
   },
   lint: {
@@ -50,8 +56,10 @@ export default defineConfig({
       "**/.output/**",
       "**/dist/**",
       "**/storybook-static/**",
+      "**/playwright-report/**",
+      "**/test-results/**",
     ],
     // Keep tsc as the authoritative type checker for both workspace packages.
-    options: { typeAware: true, typeCheck: false },
+    options: { typeAware: true, typeCheck: false, denyWarnings: true },
   },
 });

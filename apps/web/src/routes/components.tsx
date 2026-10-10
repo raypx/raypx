@@ -11,7 +11,9 @@ function ComponentsPage() {
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <Button variant="link" className="h-auto p-0" asChild>
-            <Link to="/">Back to Home</Link>
+            <Link to="/" activeOptions={{ exact: true }}>
+              Back to Home
+            </Link>
           </Button>
           <h1 className="text-3xl font-semibold tracking-tight">UI components</h1>
         </div>

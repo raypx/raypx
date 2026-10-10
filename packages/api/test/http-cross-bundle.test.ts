@@ -3,7 +3,13 @@ import { fileURLToPath } from "node:url";
 import { apiErrorResponseSchema } from "@raypx/contracts/errors";
 import { createLogger } from "@raypx/logger";
 import { beforeAll, expect, test, vi } from "vite-plus/test";
-import { HttpError, isHttpError, withHttpRequest, type RequestObservation } from "../src/http.js";
+import {
+  HttpError,
+  isHttpError,
+  withHttpRequest,
+  type RequestObservation,
+  type RequestLifecycleEvent,
+} from "../src/http.js";
 
 let foreignSecurity: typeof import("../src/security.js");
 let foreignHttp: typeof import("../src/http.js");
@@ -157,4 +163,45 @@ test("tampering with a minted error's public code, status, message, headers or f
       message: "Internal server error",
     });
   }
+});
+
+test("independently bundled nested lifecycle shares context, cancellation and one finalizer", async () => {
+  const caller = new AbortController();
+  const events: RequestLifecycleEvent[] = [];
+  const incoming = new Request("http://localhost/stream");
+  const response = await withHttpRequest(
+    incoming,
+    () =>
+      foreignHttp.withHttpRequest(
+        incoming,
+        (context) =>
+          new Response(
+            new ReadableStream<Uint8Array>(
+              {
+                pull() {
+                  expect(foreignHttp.getRequestContext()).toBe(context);
+                },
+              },
+              { highWaterMark: 0 },
+            ),
+          ),
+        { signal: caller.signal, route: "/stream" },
+      ),
+    {
+      logger,
+      observeLifecycle: (event) => {
+        events.push(event);
+      },
+    },
+  );
+  const reading = response.body!.getReader().read();
+  const assertion = (async () => {
+    await expect(reading).rejects.toMatchObject({ name: "AbortError" });
+  })();
+  caller.abort();
+  await assertion;
+  expect(events).toEqual([
+    expect.objectContaining({ phase: "response-ready", route: "/stream" }),
+    expect.objectContaining({ phase: "response-finished", route: "/stream", outcome: "cancelled" }),
+  ]);
 });

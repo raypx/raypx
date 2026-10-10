@@ -2,6 +2,11 @@
 
 This is a historical execution log, not the current capability checklist. The former `@raypx/api-client` package is now `@raypx/client`; business hooks use `@raypx/client/react` and component behavior uses `@raypx/ui/hooks`. The independent `hooks` workspace has been removed. Setup currently copies the application environment example; see [README](README.md) and [FOUNDATIONS](docs/FOUNDATIONS.md) for active commands and APIs.
 
+The historical Husky/lint-staged setup below has been replaced by native Vite+
+hooks in root `.vite-hooks`, with staged rules in `vite.config.ts` and automatic
+installation through `prepare`. `scripts/install-hooks.ts` now enables Vite+
+hooks; the former `.lintstagedrc.json` has been removed.
+
 ## Task 1: JSDoc Comments ✅ COMPLETED
 
 **Status**: Workflow completed

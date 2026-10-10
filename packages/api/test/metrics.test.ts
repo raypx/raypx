@@ -92,3 +92,35 @@ test("escapes explicit static labels for valid Prometheus exposition", () => {
   metrics.observe(observation({ route }));
   expect(metrics.exportPrometheus()).toContain('route="label \\"quoted\\" \\\\ static"');
 });
+
+test("exports terminal outcomes and total duration separately from response-ready metrics", () => {
+  const metrics = createHttpMetrics({ routes: ["/api/items/$id"], bucketsSeconds: [0.1, 1] });
+  metrics.observe(observation({ durationMs: 20 }));
+  metrics.observeLifecycle({ ...observation({ durationMs: 20 }), phase: "response-ready" });
+  for (const outcome of ["complete", "cancelled", "error"] as const) {
+    metrics.observeLifecycle({
+      ...observation({ durationMs: 500 }),
+      phase: "response-finished",
+      outcome,
+    });
+  }
+  metrics.observeLifecycle({
+    ...observation({ durationMs: 25, route: "/private/secret?token=sensitive" }),
+    phase: "response-finished",
+    outcome: "cancelled",
+    status: null,
+  });
+  const output = metrics.exportPrometheus();
+  expect(output).toContain(
+    'raypx_http_requests_total{route="/api/items/$id",method="GET",status="200"} 1',
+  );
+  for (const outcome of ["complete", "cancelled", "error"]) {
+    const labels = `route="/api/items/$id",method="GET",status="200",outcome="${outcome}"`;
+    expect(output).toContain(`raypx_http_response_outcomes_total{${labels}} 1`);
+    expect(output).toContain(`raypx_http_response_duration_seconds_sum{${labels}} 0.5`);
+    expect(output).toContain(`raypx_http_response_duration_seconds_bucket{${labels},le="0.1"} 0`);
+    expect(output).toContain(`raypx_http_response_duration_seconds_bucket{${labels},le="1"} 1`);
+  }
+  expect(output).toContain('status="unknown",outcome="cancelled"');
+  expect(output).not.toMatch(/private|secret|sensitive|request-id/);
+});
