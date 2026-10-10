@@ -28,7 +28,7 @@
     "@raypx/config": "workspace:*",
     "@types/better-sqlite3": "^7.6.12",
     "@types/bun": "^1.4.2",
-    "@types/node": "^22.19.0",
+    "@types/node": "catalog:",
     "drizzle-kit": "^0.28.1",
     "vite": "catalog:",
     "vite-plus": "catalog:"
