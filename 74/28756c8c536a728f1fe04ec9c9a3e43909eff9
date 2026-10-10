@@ -1,0 +1,29 @@
+packages/storage/package.json
+  s_da5cd720c65f39::t_fba0e7e0736f5d 15-18
+.claude/optimization-summary.md
+  s_3cc6a5ba50d6f4::t_dd6fef922211ff 1-163
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7428756c8c536a728f1fe04ec9c9a3e43909eff9",
+  "prompts": {},
+  "sessions": {
+    "s_3cc6a5ba50d6f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc7527c-3e5e-472d-9e6c-4f8d364c95cb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_da5cd720c65f39": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12624-39ce-78b2-8e86-ce841d316ccd",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
