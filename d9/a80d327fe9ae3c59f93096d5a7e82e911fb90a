@@ -1,0 +1,327 @@
+scripts/bin/raypx.ts
+  s_240cb2f68976a9::t_ec19f81900ac33 27
+scripts/commands/deps.ts
+  s_240cb2f68976a9::t_1470a5c89e16fe 10-12
+  s_240cb2f68976a9::t_6b30153f35e415 14
+  s_240cb2f68976a9::t_ec19f81900ac33 1-9,13,15-16
+docs/BUN_CATALOG.md
+  s_240cb2f68976a9::t_0233c93fa8eb69 74-79
+  s_240cb2f68976a9::t_572017688a9a75 70-73
+scripts/lib/process.ts
+  s_240cb2f68976a9::t_2bd97ef926e520 1,4-26,33,35-38,57-59,61-96,102,105-123,125-126,128-165,167-174
+CLAUDE.md
+  s_3cc6a5ba50d6f4::t_5c6af3ec8462b2 3-7
+  s_240cb2f68976a9::t_658cb2677092eb 69-70
+  s_240cb2f68976a9::t_0d3c569acc714d 111-115
+TESTING.md
+  s_240cb2f68976a9::t_07fd748abcc273 193-195,197-207
+  s_240cb2f68976a9::t_5d59e598666b23 66-67
+  s_3cc6a5ba50d6f4::t_ffa7f88e7d1528 7
+  s_240cb2f68976a9::t_0d3c569acc714d 44-46,196
+  s_240cb2f68976a9::t_cec0665ba9a156 23
+  s_240cb2f68976a9::t_8ba741ebdc65db 146-161
+  s_240cb2f68976a9::t_1bf10decbd89c5 22,37-38,68-77,80-81,84-91
+CONTRIBUTING.md
+  s_240cb2f68976a9::t_8ba741ebdc65db 291
+vite.config.ts
+  s_3cc6a5ba50d6f4::t_5044e31533e800 1,5,72-98
+  s_3cc6a5ba50d6f4::t_e83d87ce8e4c71 29-32,38-40,49-57
+scripts/lib/dependencies/check.ts
+  s_240cb2f68976a9::t_0ca39f92181b2a 30-33
+  s_240cb2f68976a9::t_1470a5c89e16fe 16-19,37-41,51-56,62-67
+  s_240cb2f68976a9::t_ec19f81900ac33 1-15,20-24,26-29,35-36,42-50,57-61,68-103
+  s_240cb2f68976a9::t_7e7100df972a52 25,34
+scripts/test/consumer/process.test.ts
+  s_240cb2f68976a9::t_1cf11c56ed83b7 2,6-37,43-47,65-67,92-112,116-162,174,176-230,243-256,262-275,284,292-302,307-309,317-322,340-353,356-361,365-373,380-385,401-404
+  s_240cb2f68976a9::t_0ca5aa1632c656 82,285,287-289,291,374-375,379
+  s_240cb2f68976a9::t_17dbec0f8d7b17 323-325,336-339
+  s_240cb2f68976a9::t_d94f957b01b285 38-42,68-72,79-80,84,86-90,163-173,175,231-242,257-261,276-283,303-306,310-316,354-355,362-364,386-400
+  s_240cb2f68976a9::t_a0d86ea46a919b 286,290
+  s_240cb2f68976a9::t_5c3e86844429fd 326-335,376-378
+.github/workflows/ci.yml
+  s_240cb2f68976a9::t_7fe77c50a0d0ca 15,17,21-22,24-27,29-34,36-43,45-56,58-62,64-68,70-74,76,81,87,89-109
+  s_240cb2f68976a9::t_f707915109aeb7 23,28
+  s_240cb2f68976a9::t_cb1e6c492af804 35,86
+apps/web/tsconfig.json
+  s_240cb2f68976a9::t_9dce0cc8d60429 13
+scripts/lib/consumer/types.ts
+  s_240cb2f68976a9::t_9c2cecc85c8f73 36
+  s_240cb2f68976a9::t_104a5f90cd4164 37-51
+apps/web/test/helpers/server.ts
+  s_240cb2f68976a9::t_f7f56f19eaa5ad 160-162,172-174
+  s_240cb2f68976a9::t_e63ad0a5379a57 19
+  s_240cb2f68976a9::t_254b0ed113defe 1-18,20-21,23-60,65-80,84-150,152-159,163-171,175-179
+  s_240cb2f68976a9::t_e1bf2f979e38aa 22,61-64,81-83,151
+docs/VERSION_STRATEGY.md
+  s_240cb2f68976a9::t_28dcfa25fe8d06 67-72
+  s_240cb2f68976a9::t_0ca39f92181b2a 55-56
+  s_240cb2f68976a9::t_0233c93fa8eb69 1-15,18,20-30,33-36,42-46,48-54,57-66,73-79,83-87,90-91
+  s_240cb2f68976a9::t_33e240550caddd 47
+  s_240cb2f68976a9::t_572017688a9a75 16-17,19,37-41,80-82
+scripts/test/verify-consumer.test.ts
+  s_240cb2f68976a9::t_87cd27f6e82f3e 7-9,18-29,38-50,57-59,69-74,82-84
+  s_240cb2f68976a9::t_c4bac4c14cc978 1-6,10-17,30-37,51-56,60-68,75-81,85-86
+scripts/lib/verify/runtime.ts
+  s_240cb2f68976a9::t_4480ca9110e3d8 1-24
+bun.lock
+  s_3cc6a5ba50d6f4::t_d4df693fdd8770 8,641,1747-1748
+  s_240cb2f68976a9::t_24390b20c7906b 12,16,20,51,239,241,275-276,282,286
+.claude/implementation-plan.md
+  s_3cc6a5ba50d6f4::t_06d2300be1c5d9 1-1673
+scripts/lib/cli/bootstrap.ts
+  s_240cb2f68976a9::t_ec19f81900ac33 30,65
+  s_240cb2f68976a9::t_f707915109aeb7 34
+  s_240cb2f68976a9::t_1be016c2ee0254 31-33
+  s_240cb2f68976a9::t_79fc1f2685f3ea 29
+scripts/test/dependencies.test.ts
+  s_240cb2f68976a9::t_7e7100df972a52 45-53
+  s_240cb2f68976a9::t_1470a5c89e16fe 28-38
+  s_240cb2f68976a9::t_bf5bab102035a7 1-27,39-44,54-99
+docs/VITE_VITEST_CONFIG.md
+  s_240cb2f68976a9::t_658cb2677092eb 7-15
+  s_240cb2f68976a9::t_c0327025c5fc80 17-20
+  s_240cb2f68976a9::t_8224b16a111c80 1-6,16,21-52
+scripts/lib/logger.ts
+  s_240cb2f68976a9::t_dbc5f95a3bae90 3-4
+.claude/plan.md
+  s_240cb2f68976a9::t_ba21cdc00a1833 8-623
+  s_240cb2f68976a9::t_380fa1b9647c78 1-7,624-628
+knip.ts
+  s_240cb2f68976a9::t_06128bee610221 42
+packages/ui/package.json
+  s_240cb2f68976a9::t_688a3e964dfefd 195,197
+oxlint-plugins/raypx-plugin.ts
+  s_3cc6a5ba50d6f4::t_fd05baee34f16d 1-174
+package.json
+  s_240cb2f68976a9::t_f707915109aeb7 40-42
+  s_240cb2f68976a9::t_79fc1f2685f3ea 29
+  s_3cc6a5ba50d6f4::t_533342d3720ddd 94
+  s_240cb2f68976a9::t_688a3e964dfefd 19-23,45,82-91,98,102,106
+docs/SCRIPTS_PACKAGE_DECISION.md
+  s_240cb2f68976a9::t_0d3c569acc714d 3-7
+.github/README.md
+  s_240cb2f68976a9::t_7fe77c50a0d0ca 1-4,7-55
+  s_240cb2f68976a9::t_0d3c569acc714d 5-6
+docs/FOUNDATIONS.md
+  s_240cb2f68976a9::t_f2448b2bf97942 134-140
+scripts/lib/consumer/run.ts
+  s_240cb2f68976a9::t_3a7306eaefdcd9 16-22
+  s_240cb2f68976a9::t_87cd27f6e82f3e 34-35
+  s_240cb2f68976a9::t_fa6ac52302d644 23
+  s_240cb2f68976a9::t_4480ca9110e3d8 1-15,24-33,36-55
+.github/actions/setup/action.yml
+  s_240cb2f68976a9::t_7fe77c50a0d0ca 1-37
+apps/web/e2e/fixtures.ts
+  s_240cb2f68976a9::t_f7f56f19eaa5ad 3,18-35,37,49-53,56,58
+scripts/lib/verify/report.ts
+  s_240cb2f68976a9::t_9bd27dc5c0182b 26,39
+  s_240cb2f68976a9::t_4480ca9110e3d8 1-14,17-25,27-38
+  s_240cb2f68976a9::t_87cd27f6e82f3e 15-16
+renovate.json
+  s_240cb2f68976a9::t_1470a5c89e16fe 17-23
+  s_240cb2f68976a9::t_3ceed9963b3623 1-2,5,7-11,13-16,24-27,29-32,34-38,40-42,44-45,48,71-73
+  s_240cb2f68976a9::t_c9e1b2d60711c5 46-47,49,69-70
+  s_240cb2f68976a9::t_28dcfa25fe8d06 3-4,6,12,28,33,39,43,50-68
+apps/web/test/fixtures/route-tree.ts
+  s_240cb2f68976a9::t_9dce0cc8d60429 1-5
+scripts/lib/verify/run.ts
+  s_240cb2f68976a9::t_87cd27f6e82f3e 34-40,45-48,65-70,78-80,85-88,90-99,111-113
+  s_240cb2f68976a9::t_4480ca9110e3d8 1-33,41-44,49-53,60-64,71-77,81-84,89,103-110,114-115
+  s_240cb2f68976a9::t_6e78dd740a8611 100-102
+  s_240cb2f68976a9::t_53523b01d36165 54-59
+scripts/commands/consumer.ts
+  s_240cb2f68976a9::t_4480ca9110e3d8 17-18
+apps/web/test/unit/router.test.ts
+  s_3cc6a5ba50d6f4::t_eb8da5e5a1809d 2
+apps/web/vite.integration.config.ts
+  s_240cb2f68976a9::t_9dce0cc8d60429 1-16
+scripts/lib/policy/report.ts
+  s_240cb2f68976a9::t_75012c11ba8321 1-32
+docs/SCRIPTS_ORGANIZATION.md
+  s_240cb2f68976a9::t_0d3c569acc714d 3-6
+scripts/vite.config.ts
+  s_240cb2f68976a9::t_05362569840765 10-11
+packages/storage/src/instance.ts
+  s_240cb2f68976a9::t_264c64cdd19664 1-76
+packages/storage/test/unit/import.test.ts
+  s_3cc6a5ba50d6f4::t_b56ed8162ca6cb 18
+  s_3cc6a5ba50d6f4::t_de1121a43e54ca 15-17
+  s_3cc6a5ba50d6f4::t_31b6d1af80d6bc 19-21
+  s_3cc6a5ba50d6f4::t_9e555c0c561454 1-14,22-27
+scripts/test/verify-knip.test.ts
+  s_240cb2f68976a9::t_6b915e9a71053a 33-34
+  s_240cb2f68976a9::t_5b52958a726532 1-14,19-32,35-47
+  s_240cb2f68976a9::t_b5396369e1ac6f 15-18
+scripts/lib/consumer/browser.ts
+  s_240cb2f68976a9::t_55a2ed6f8bd26d 147-151
+apps/web/package.json
+  s_240cb2f68976a9::t_688a3e964dfefd 35
+apps/web/test/unit/server.test.ts
+  s_3cc6a5ba50d6f4::t_8910ac8544d223 4
+  s_3cc6a5ba50d6f4::t_74bcbc93230272 1-3
+  s_3cc6a5ba50d6f4::t_98b309c03dfe30 5-7
+  s_3cc6a5ba50d6f4::t_aba6bcaf815686 8-156
+README.md
+  s_240cb2f68976a9::t_281046248be62b 159-174
+  s_240cb2f68976a9::t_658cb2677092eb 142-143
+  s_240cb2f68976a9::t_0d3c569acc714d 150-158
+  s_240cb2f68976a9::t_0233c93fa8eb69 123-124,148-149
+  s_240cb2f68976a9::t_1be016c2ee0254 80-117
+scripts/test/policy.test.ts
+  s_240cb2f68976a9::t_2efcd28487e13f 169-199,247-258,264-267
+  s_240cb2f68976a9::t_8da3d30dfe9816 259-263,268-272
+  s_240cb2f68976a9::t_cb3d54b545e902 1-27,44-45,49,55-62,65-68,76,79-92,105-110,115-120,124-134,144-147,155-156,160,167-168,200-201,220,226-227,233-236,238,242-244,274-275,296-297,308-314,325-345,348-361
+  s_240cb2f68976a9::t_e1327b49d20c4d 28-43,46-48,50-54,63-64,69-75,77-78,93-104,111-114,121-123,135-143,148-154,157-159,161-166,202-219,221-225,228-232,237,239-241,245-246,273,276-295,298-307,315-324,346-347
+scripts/test/verify-runtime.test.ts
+  s_240cb2f68976a9::t_5b52958a726532 1-5,10-52
+  s_240cb2f68976a9::t_6b915e9a71053a 6-9
+ARCHITECTURE.md
+  s_240cb2f68976a9::t_0d3c569acc714d 210-216
+docs/INDEX.md
+  s_240cb2f68976a9::t_be90d72d587b75 1-44
+scripts/lib/policy/workspaces.ts
+  s_240cb2f68976a9::t_75012c11ba8321 1-5,7-17,30-32,37,41,64-68,73-81,89-91,109-113
+  s_240cb2f68976a9::t_fea1be4ffceb9f 6,18-29,33-36,38-40,42-63,69-72,82-88,92-108
+scripts/commands/verify.ts
+  s_240cb2f68976a9::t_87cd27f6e82f3e 34-35
+  s_240cb2f68976a9::t_6e78dd740a8611 15-18
+  s_240cb2f68976a9::t_4480ca9110e3d8 1-14,19-33,36-41
+scripts/README.md
+  s_240cb2f68976a9::t_281046248be62b 50-51,88-90,107-119,122-134
+  s_240cb2f68976a9::t_0233c93fa8eb69 14,25,45,91-94,194
+  s_240cb2f68976a9::t_658cb2677092eb 103
+  s_240cb2f68976a9::t_a1fc4072e433a5 87
+  s_240cb2f68976a9::t_296a701e0912aa 180
+  s_240cb2f68976a9::t_0d3c569acc714d 26-27,46-49,86,135-179
+  s_240cb2f68976a9::t_b58119b42d2205 101-102
+  s_240cb2f68976a9::t_b50f9d14cbf0ed 120-121
+packages/storage/README.md
+  s_240cb2f68976a9::t_754f711381172e 113-118
+  s_240cb2f68976a9::t_baba72c86bc5b4 129
+  s_240cb2f68976a9::t_f93b955434c425 3-5,7,9,12-20,23-27,29,31-33,35-38,41-42,45-47,49-53,56,59,61,63-65,68-75,77-81,85-89,91-96,98,100-101,103-106,108-109,111,120-122,124,126,130-131,134-137
+scripts/test/bootstrap.test.ts
+  s_240cb2f68976a9::t_f707915109aeb7 142-145
+apps/web/vite.config.ts
+  s_240cb2f68976a9::t_f4d56dd604dc7a 84
+  s_240cb2f68976a9::t_9dce0cc8d60429 14-24,61,64,85-89
+  s_240cb2f68976a9::t_f7f56f19eaa5ad 83
+scripts/lib/consumer/runtime.ts
+  s_240cb2f68976a9::t_104a5f90cd4164 49,52-53,55-67,71
+  s_240cb2f68976a9::t_5b52958a726532 80,85
+scripts/test/clean.test.ts
+  s_240cb2f68976a9::t_6acc6fcda45353 33-34,61-74,79-80,82-83,88-124,126-160
+  s_240cb2f68976a9::t_f1ca658838a714 1-32,35-60,75-78,81,84-87,125
+.vscode/tasks.json
+  s_de2d79b0b75518::t_0a2734766d494e 1-46
+scripts/lib/policy/markdown.ts
+  s_240cb2f68976a9::t_75012c11ba8321 1-6,21-25,38-43,50-58,61-71,76-84,94-96,100,107-111,119-129,137
+  s_240cb2f68976a9::t_2efcd28487e13f 26-37
+  s_240cb2f68976a9::t_e1327b49d20c4d 7-20,44-49,59-60,72-75,85-93,97-99,101-106,113-118,130-136
+  s_240cb2f68976a9::t_8da3d30dfe9816 112
+scripts/test/verify-cli.test.ts
+  s_240cb2f68976a9::t_c7d59b4cb1bbd6 1-6,16-33,40-50,55-66,71-85
+  s_240cb2f68976a9::t_3a7306eaefdcd9 7-15,34-39,51-54
+  s_240cb2f68976a9::t_9bd27dc5c0182b 67
+  s_240cb2f68976a9::t_53523b01d36165 68-70
+apps/web/test/integration/production.test.ts
+  s_240cb2f68976a9::t_e63ad0a5379a57 48
+  s_240cb2f68976a9::t_f7f56f19eaa5ad 1-47,49-274
+scripts/commands/policy.ts
+  s_240cb2f68976a9::t_fea1be4ffceb9f 10-11,14-25
+  s_240cb2f68976a9::t_75012c11ba8321 1-9,12-13,26-29
+.gitignore
+  s_240cb2f68976a9::t_b14baca4f61c90 18
+scripts/lib/policy/runtime.ts
+  s_240cb2f68976a9::t_fea1be4ffceb9f 6-19,57-62,79-81,85-87,108-110
+  s_240cb2f68976a9::t_75012c11ba8321 2-5,20-56,63-78,93-107,111-112
+  s_240cb2f68976a9::t_31302d13f6df97 1,82-84,88-92
+scripts/test/consumer/cli.test.ts
+  s_240cb2f68976a9::t_6acc6fcda45353 65-70,73-75
+  s_240cb2f68976a9::t_be90d72d587b75 100,102-122
+  s_240cb2f68976a9::t_bf5bab102035a7 93-99
+  s_240cb2f68976a9::t_f707915109aeb7 71-72
+  s_240cb2f68976a9::t_772e34c83f81bd 101
+packages/config/tsconfig-presets/README.md
+  s_240cb2f68976a9::t_8ba741ebdc65db 5
+apps/web/test/integration/runtime-features.test.ts
+  s_240cb2f68976a9::t_cc8d2f73976895 31
+  s_240cb2f68976a9::t_e63ad0a5379a57 53
+  s_240cb2f68976a9::t_f7f56f19eaa5ad 1-30,32-52,54-228
+scripts/lib/clean.ts
+  s_240cb2f68976a9::t_f1ca658838a714 17
+  s_240cb2f68976a9::t_79fc1f2685f3ea 1-16,18-74
+.github/actions/chromium/resolve-version.mjs
+  s_240cb2f68976a9::t_7fe77c50a0d0ca 1-32
+scripts/tsconfig.json
+  s_240cb2f68976a9::t_658cb2677092eb 15-21
+scripts/test/verify.test.ts
+  s_240cb2f68976a9::t_5b52958a726532 58
+  s_240cb2f68976a9::t_c4bac4c14cc978 1-20,26-29,33-36,51-52,66-68,72-74,79-80,86-99,105-116,121-135,140-143,153-173,181-189,198-211,214-219
+  s_240cb2f68976a9::t_fa6ac52302d644 53-57,59-65
+  s_240cb2f68976a9::t_6b915e9a71053a 75-78
+  s_240cb2f68976a9::t_6e78dd740a8611 139
+  s_240cb2f68976a9::t_87cd27f6e82f3e 21-25,30-32,37-50,69-71,81-85,100-104,117,144-152,174-180,190-197,212-213
+  s_240cb2f68976a9::t_3a7306eaefdcd9 118-120,136-138
+scripts/lib/policy/typescript.ts
+  s_240cb2f68976a9::t_2efcd28487e13f 10-13,27,29-53,64-76
+  s_240cb2f68976a9::t_6e98ec3906d96f 56-63,77-80,169
+  s_240cb2f68976a9::t_fea1be4ffceb9f 16-25,82-86,88-94,96-100,105-109,116-120,126-130,148-152,164-168,170-176
+  s_240cb2f68976a9::t_31302d13f6df97 141
+  s_240cb2f68976a9::t_75012c11ba8321 1-9,14-15,26,28,54-55,81,87,95,101-104,110-115,121-125,131-140,142-147,153-163,177-178
+packages/storage/src/index.ts
+  s_240cb2f68976a9::t_f25d8d62e155e3 35,37
+  s_240cb2f68976a9::t_264c64cdd19664 1-2,4,11,16-19,36,38-39,165
+packages/storage/test/integration/instance.test.ts
+  s_3cc6a5ba50d6f4::t_c8649ece006a74 11
+  s_3cc6a5ba50d6f4::t_72f9e708bd2af6 8-10
+  s_3cc6a5ba50d6f4::t_1d7242a9b2ba4c 12-14
+  s_3cc6a5ba50d6f4::t_eb8a47cd802bee 1-7,15-128
+scripts/lib/verify/gates.ts
+  s_240cb2f68976a9::t_87cd27f6e82f3e 12-17,19,54-59,67-72
+  s_240cb2f68976a9::t_fa6ac52302d644 18
+  s_240cb2f68976a9::t_4480ca9110e3d8 1-11,20-42,52-53,60-66,73-76
+  s_240cb2f68976a9::t_5b52958a726532 43-51
+scripts/commands/clean.ts
+  s_240cb2f68976a9::t_79fc1f2685f3ea 1-16,19-25
+  s_240cb2f68976a9::t_6acc6fcda45353 17-18
+scripts/cli.ts
+  s_240cb2f68976a9::t_79fc1f2685f3ea 2,19,36-39,41-44
+  s_240cb2f68976a9::t_f707915109aeb7 21-22,34-35,40
+  s_240cb2f68976a9::t_ec19f81900ac33 20,45-47
+.github/actions/chromium/action.yml
+  s_240cb2f68976a9::t_7fe77c50a0d0ca 1-33
+scripts/lib/policy/checks.ts
+  s_240cb2f68976a9::t_75012c11ba8321 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d9a80d327fe9ae3c59f93096d5a7e82e911fb90a",
+  "prompts": {},
+  "sessions": {
+    "s_240cb2f68976a9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a120c5-5b48-7df3-9746-05b970628c12",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_3cc6a5ba50d6f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc7527c-3e5e-472d-9e6c-4f8d364c95cb",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
