@@ -1,8 +1,12 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it, vi } from "vite-plus/test";
-import { createCloudPiAgent } from "./cloud-pi.js";
+import { beforeAll, expect, it, vi } from "vite-plus/test";
+import { checkPiRuntime, createCloudPiAgent } from "./cloud-pi.js";
+
+// The public SDK entry also loads the CLI and native dependencies on a cold install.
+// Give that preparation its own budget; the Gateway run still has a 15-second limit.
+beforeAll(() => checkPiRuntime(), 120_000);
 
 it("runs the real packaged Pi session through injected Gateway streaming without local metering or credentials", async () => {
   const directory = await mkdtemp(join(tmpdir(), "raypx-gateway-pi-"));

@@ -42,3 +42,7 @@ HTTP transport, authentication, database connections, domain rules, or UI.
 bun run --cwd packages/ai check
 bun run --cwd packages/ai test
 ```
+
+The real Pi integration test prepares the public SDK in `beforeAll` with a
+120-second cold-import limit. The injected Gateway session keeps its separate
+15-second execution limit; SDK preparation does not relax that assertion.

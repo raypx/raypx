@@ -4,7 +4,7 @@
 
 > Status: approved migration plan, partially implemented. The current committed
 > baseline is `fff2141218a5570cd83a69792ea3d4956ee1ced6` (`feat: complete
-project studio preview migration`), reviewed on September 9, 2026. The
+> project studio preview migration`), reviewed on September 9, 2026. The
 > working tree also contains uncommitted implementation changes; this document
 > labels those separately and does not treat them as released behavior.
 

@@ -8,6 +8,9 @@ const rawArgs = process.argv.slice(2);
 if (rawArgs[0] === "tasks") {
   const { runTasks } = await import("./commands/tasks.js");
   await runTasks(rawArgs.slice(1));
+} else if (rawArgs[0] === "e2e") {
+  const { runE2eCommand } = await import("./e2e/command.js");
+  await runE2eCommand(rawArgs.slice(1));
 } else if (rawArgs[0] === "env" && rawArgs.includes("--")) {
   const { runEnvCommand } = await import("./commands/env.js");
   await runEnvCommand(commandAfterSeparator(rawArgs));

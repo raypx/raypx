@@ -9,7 +9,7 @@ the `rpx` bin.
 ## Interface
 
 ```text
-src/cli.ts          bin entry; routes `tasks` and `env -- <cmd>` before citty
+src/cli.ts          bin entry; routes tasks, E2E and env arguments before citty
 src/root.ts         citty command registry
 src/commands/       adapters: tasks, clean, env, generate, desktop, verify, shadcn
 src/runtime/        action boundary, context, env, logger, process, repository
@@ -17,6 +17,9 @@ src/database/       command, operation and development/test destructive gate
 src/doctor/         command, checks, runtime probes, report rendering
 src/deps/           Bun dependency maintenance commands and operations
 src/skills/         repository skill maintenance commands and operations
+src/architecture/   shared workspace boundary model and import resolution
+src/lint/           Oxlint source-boundary plugin, metadata loading and rule tests
+src/e2e/            browser selection and Playwright argument forwarding
 src/policy/         command, orchestration, checks/<rule-domain>, manifest rules,
                     fixes, per-convention pure modules, report
 src/i18n/          catalog comparison, Oxc source inspection, rules and reporting
@@ -24,7 +27,7 @@ src/test-fixtures.ts shared isolated repository and injected dependency fixtures
 src/verify/         isolated Nitro runtime verification
 ```
 
-Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps check|update|dedupe|audit`, `skills update`, `clean [--dependencies] [--bun-cache]`, `db migrate|clean|push|studio`,
+Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] [Playwright flags/files]`, `env -- <command>`, `doctor`, `deps check|update|dedupe|audit`, `skills update`, `clean [--dependencies] [--bun-cache]`, `db migrate|clean|push|studio`,
 `generate`, `desktop build`, `policy`, `verify [--verbose]`,
 `shadcn update`.
 
@@ -61,9 +64,15 @@ Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps chec
   skills, TypeScript, and manifest checks live under `policy/checks/`; manifest
   script/dependency rules live under `policy/manifests/`. Preserve the public
   `runPolicy` and manifest-rule interfaces when splitting internals.
-- Architecture policy checks production dependency direction, cross-package
-  private imports (including relative paths and aliases), and workspace cycles.
+- Oxlint's `raypx/boundaries` rule owns source import diagnostics, including
+  private paths, aliases, renderer host boundaries and undeclared runtime edges.
+  Policy owns manifest production dependencies and complete workspace cycles,
+  including source edges. Both consume the single `architecture/` model.
   Enum parity tests compare Core, Contracts and DB without adding runtime edges.
+- The Node-loaded Oxlint plugin uses explicit `.ts` imports; the no-emit scripts
+  workspace alone enables `allowImportingTsExtensions` for that entrypoint.
+- E2E execution still enters Turbo; the E2E adapter forwards Playwright arguments
+  after Turbo's separator. `--list` skips builds, servers and database setup.
 - Applications use their unscoped directory name; packages and E2E retain the
   `@raypx/` scope. Filters and qualified Turbo tasks use the actual package name.
 - `desktop build` first runs root `build:desktop` through Turbo, then invokes the

@@ -1,56 +1,19 @@
-import { dirname, join, posix } from "node:path";
+import { join } from "node:path";
 import { parseSync, visitorKeys, type Node } from "oxc-parser";
+import {
+  allowedDependency,
+  createArchitectureIndex,
+  isArchitectureSource,
+  isRuntimeSource,
+  resolveWorkspaceImport,
+  workspaceForFile,
+  type WorkspaceManifest,
+} from "../../architecture/model.ts";
 import type { PolicyDependencies, PolicyFinding } from "../checks.js";
 import { findingFor } from "../findings.js";
 
-interface Manifest {
-  name: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  exports?: Record<string, unknown>;
-  imports?: Record<string, string>;
-}
-interface Workspace {
-  path: string;
-  manifest: Manifest;
-}
-const packagePrefix = "@raypx/";
 const report = findingFor("architecture.boundary");
-const packageRules: Record<string, readonly string[]> = {
-  shared: [],
-  tsconfig: [],
-  auth: ["shared"],
-  core: ["auth", "shared"],
-  db: ["core", "shared"],
-  application: ["core"],
-  ai: ["application", "core", "shared"],
-  mail: ["i18n", "shared"],
-  cache: ["shared"],
-  storage: ["core", "shared"],
-  client: ["contracts", "shared"],
-  contracts: [],
-  i18n: ["shared"],
-  ui: ["i18n", "shared"],
-  "agent-ui": ["ui", "contracts", "i18n", "shared"],
-};
-const rendererPackages = ["client", "contracts", "i18n", "ui", "agent-ui", "shared", "tsconfig"];
-function allowed(from: Workspace, to: Workspace) {
-  if (to.path.startsWith("apps/")) return false;
-  if (from.manifest.name === "@raypx/scripts" || from.path === "e2e") return true;
-  if (to.manifest.name === "@raypx/scripts") return false;
-  const toPackage = to.manifest.name.slice(packagePrefix.length);
-  if (["apps/web", "apps/desktop", "apps/storybook"].includes(from.path))
-    return rendererPackages.includes(toPackage);
-  if (from.path.startsWith("apps/")) return true;
-  const fromPackage = from.manifest.name.slice(packagePrefix.length);
-  return packageRules[fromPackage]?.includes(toPackage) ?? false;
-}
-function matches(pattern: string, value: string) {
-  const [prefix, suffix] = pattern.split("*");
-  return suffix === undefined
-    ? pattern === value
-    : value.startsWith(prefix!) && value.endsWith(suffix);
-}
+
 function imports(file: string, source: string): string[] {
   const result = parseSync(file, source);
   const found: string[] = [];
@@ -77,123 +40,71 @@ function imports(file: string, source: string): string[] {
   walk(result.program);
   return found;
 }
+
+/** Manifest direction and the complete graph stay repository-wide; Oxlint owns source diagnostics. */
 export async function checkArchitecture(
   deps: Pick<PolicyDependencies, "repositoryRoot" | "readFile" | "pathExists">,
   members: readonly string[],
   files: readonly string[],
 ): Promise<PolicyFinding[]> {
-  const workspaces: Workspace[] = await Promise.all(
-    members.map(async (path) => ({
-      path,
-      manifest: JSON.parse(
-        await deps.readFile(join(deps.repositoryRoot, path, "package.json")),
-      ) as Manifest,
-    })),
+  const index = createArchitectureIndex(
+    await Promise.all(
+      members.map(async (path) => {
+        const manifest = JSON.parse(
+          await deps.readFile(join(deps.repositoryRoot, path, "package.json")),
+        ) as WorkspaceManifest;
+        const config = join(deps.repositoryRoot, path, "tsconfig.json");
+        let aliases: Record<string, string[]> = {};
+        if (await deps.pathExists(config)) {
+          try {
+            aliases = JSON.parse(await deps.readFile(config)).compilerOptions?.paths ?? {};
+          } catch {
+            /* TypeScript policy owns malformed JSON. */
+          }
+        }
+        return { path, manifest, aliases };
+      }),
+    ),
   );
-  const byName = new Map(workspaces.map((w) => [w.manifest.name, w]));
   const findings: PolicyFinding[] = [];
-  const edges = new Map(workspaces.map((w) => [w.manifest.name, new Set<string>()]));
-  const violation = (file: string, message: string) =>
-    findings.push(
-      report(
-        file,
-        message,
-        "use the owning layer's public package entrypoint; keep test-only dependencies out of runtime code",
-      ),
-    );
-  for (const workspace of workspaces)
+  const edges = new Map(
+    index.workspaces.map((workspace) => [workspace.manifest.name, new Set<string>()]),
+  );
+
+  for (const workspace of index.workspaces)
     for (const name of Object.keys(workspace.manifest.dependencies ?? {})) {
-      const target = byName.get(name);
+      const target = index.byName.get(name);
       if (!target) continue;
       edges.get(workspace.manifest.name)!.add(name);
-      if (!allowed(workspace, target))
-        violation(
-          `${workspace.path}/package.json`,
-          `${workspace.manifest.name} must not depend on ${name}`,
+      if (!allowedDependency(workspace, target))
+        findings.push(
+          report(
+            `${workspace.path}/package.json`,
+            `${workspace.manifest.name} must not depend on ${name}`,
+            "use the owning layer's public package entrypoint; keep test-only dependencies out of runtime code",
+          ),
         );
     }
+
+  // Source edges are required even for undeclared imports and partial/incremental lint runs.
   for (const file of files) {
-    if (!/\.[cm]?[jt]sx?$/.test(file) || /routeTree\.gen\.ts$|\.d\.[cm]?ts$/.test(file)) continue;
-    const workspace = workspaces.find((w) => file.startsWith(`${w.path}/`));
+    if (!isArchitectureSource(file) || !isRuntimeSource(file)) continue;
+    const workspace = workspaceForFile(index, file);
     if (!workspace) continue;
-    const runtime =
-      /\/(src|server|runtime|native)\//.test(file) &&
-      !/(?:\.test|\.spec)\.[jt]sx?$|\/(?:tests?|test-fixtures)\//.test(file);
-    const aliases: Record<string, string[]> = {};
-    // Resolve local aliases as well as relative paths, so an alias cannot conceal a private cross-package import.
-    const config = join(deps.repositoryRoot, workspace.path, "tsconfig.json");
-    if (await deps.pathExists(config)) {
-      try {
-        Object.assign(aliases, JSON.parse(await deps.readFile(config)).compilerOptions?.paths);
-      } catch {
-        /* TypeScript policy owns malformed JSON. */
-      }
-    }
-    const source = await deps.readFile(join(deps.repositoryRoot, file));
-    for (const request of imports(file, source)) {
-      const renderer = runtime && file.startsWith("apps/desktop/src/");
-      if (
-        renderer &&
-        (request.startsWith("node:") ||
-          request.startsWith("bun:") ||
-          request.startsWith("@earendil-works/") ||
-          request === "electrobun" ||
-          /^electrobun\/(main|bun)(\/|$)/.test(request))
-      )
-        violation(file, `renderer must use the native bridge, not host dependency: ${request}`);
-      const name = request.startsWith("@")
-        ? request.split("/").slice(0, 2).join("/")
-        : request.split("/")[0]!;
-      let target = byName.get(name);
-      let privatePath = false;
-      if (!target) {
-        const alias = Object.entries(aliases).find(([pattern]) => matches(pattern, request));
-        const local: [string, string] | undefined = Object.entries(
-          workspace.manifest.imports ?? {},
-        ).find(([pattern]) => matches(pattern, request));
-        const mapped: string | undefined = local
-          ? local[1].replace("*", request.slice(local[0].split("*")[0]!.length))
-          : alias?.[1][0]?.replace("*", request.slice(alias[0].split("*")[0]!.length));
-        const path: string | null = request.startsWith(".")
-          ? posix.normalize(join(dirname(file), request))
-          : mapped
-            ? posix.normalize(join(workspace.path, mapped))
-            : null;
-        if (
-          renderer &&
-          path?.startsWith("apps/desktop/native/") &&
-          !/\/rpc(?:\.[cm]?ts)?$/.test(path)
-        )
-          violation(
-            file,
-            `renderer must use the window bridge, not native host source: ${request}`,
-          );
-        target = path ? workspaces.find((w) => path.startsWith(`${w.path}/`)) : undefined;
-        privatePath = !!target && target !== workspace;
-      }
-      if (!target || target === workspace) continue;
-      const subpath = request === name ? "." : `.${request.slice(name.length)}`;
-      if (
-        privatePath ||
-        !Object.keys(target.manifest.exports ?? {}).some((pattern) => matches(pattern, subpath))
-      )
-        violation(file, `private cross-package import: ${request}`);
-      if (runtime) {
+    for (const request of imports(file, await deps.readFile(join(deps.repositoryRoot, file)))) {
+      const target = resolveWorkspaceImport(index, file, request).target;
+      if (target && target !== workspace)
         edges.get(workspace.manifest.name)!.add(target.manifest.name);
-        if (!allowed(workspace, target))
-          violation(file, `forbidden runtime dependency: ${request}`);
-        if (!workspace.manifest.dependencies?.[target.manifest.name])
-          violation(file, `runtime import requires a declared production dependency: ${request}`);
-      }
     }
   }
-  const visited = new Set<string>(),
-    stack: string[] = [];
+
+  const visited = new Set<string>();
+  const stack: string[] = [];
   function visit(name: string) {
     if (stack.includes(name)) {
       findings.push(
         report(
-          byName.get(name)!.path,
+          index.byName.get(name)!.path,
           `workspace dependency cycle: ${[...stack.slice(stack.indexOf(name)), name].join(" -> ")}`,
           "remove the cycle using a lower-layer port",
         ),
@@ -206,6 +117,6 @@ export async function checkArchitecture(
     stack.pop();
     visited.add(name);
   }
-  for (const name of byName.keys()) visit(name);
+  for (const name of index.byName.keys()) visit(name);
   return findings;
 }

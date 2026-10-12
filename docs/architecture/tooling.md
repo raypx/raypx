@@ -109,7 +109,7 @@ Oxlint and Oxfmt ship inside Vite+ and are configured in the root
 manager to install:
 
 ```text
-bun run lint         vp lint          Oxlint, type-aware, with the vite-plus plugin
+bun run lint         vp lint          Oxlint, type-aware, with vite-plus and raypx plugins
 bun run format       vp fmt --check   fail on unformatted files
 bun run format:fix   vp fmt           rewrite files in place
 bun run knip:report  knip             report unused files, exports, dependencies, and duplicates
@@ -141,6 +141,23 @@ typechecks and tests validate the source that owns those generated files.
 Turbo prepares Desktop's uncached Electrobun devkit/declarations before root lint,
 so a clean checkout resolves the same SDK types as Desktop's strict checks.
 
+`raypx/boundaries` reports source import violations at the import location:
+layer direction, private cross-package paths and exports, renderer host access,
+and internal runtime imports without a declared production dependency. It covers
+static imports, re-exports, literal dynamic imports and TypeScript import types.
+Tests retain their existing reverse-dependency allowance; route trees and declaration
+files remain exempt. The plugin and policy share the workspace model under
+`packages/scripts/src/architecture/`, including alias and relative-path resolution.
+Policy still validates manifest dependencies and the complete dependency graph,
+including edges discovered in source, without repeating source diagnostics.
+
+The plugin loads workspace metadata once per invocation. Its source and metadata
+are included in the root Turbo lint task's inputs. Use the bundled authoring and
+test APIs from `vite-plus/lint/plugins` and `vite-plus/lint/plugins-dev`; do not add
+a standalone Oxlint dependency. Node loads the TypeScript plugin directly, so its
+internal imports use `.ts` and only the no-emit scripts workspace enables
+`allowImportingTsExtensions`.
+
 The `staged` block in `vite.config.ts` defines the pre-commit formatting and
 lint-fix pass. The committed `.vite-hooks/pre-commit` script invokes `vp staged`.
 Each developer opts in through `vp hooks enable`, which installs the generated
@@ -153,6 +170,7 @@ uncommitted.
 
 ```text
 tasks <task> [flags]   run the Turbo graph with platform and cache trust policy
+e2e [suite] [args]     select all/web/desktop, a functional group, and Playwright flags
 env -- <command>       run a child command with root development env files
 doctor                  check core and optional development prerequisites
 deps dedupe             remove duplicate dependency versions from bun.lock
@@ -202,9 +220,10 @@ oRPC uses `beta`, and Drizzle Kit/ORM use the same `rc5` build. Their `latest`
 tags still point to older stable lines, so a stable-only scan misses updates.
 Update Drizzle manually from `rc5`; the generic semver scan can recommend an
 older build when its hash happens to sort higher.
-Vite+ `1.0.0` bundles Vitest `5.0.1`. The coverage catalog pins
-`@vitest/coverage-v8` to `5.0.1` so its exact Vitest peer matches the runner.
-The separately published coverage `5.0.3` must wait for a matching Vite+ release.
+Vite+ `1.1.0` bundles Vitest `5.0.3`. The coverage catalog pins
+`@vitest/coverage-v8` to `5.0.3` so its exact Vitest and browser peers match
+the bundled runner. A newer coverage release must wait for the same runner
+version in Vite+.
 Dependency maintenance excludes the runner and
 coverage package at every major version; upgrade them together with Vite+ and
 the root `vite` alias/override, and verify coverage after resolving the lockfile.
@@ -269,6 +288,10 @@ builds or tests but that an agent reading the filesystem still treats as a place
 code belongs. `rpx verify` runs it first, because a structural failure should
 not wait for a build. Distinct from `doctor`, which asserts machine prerequisites
 and therefore cannot run in CI.
+
+Source boundary diagnostics run in Oxlint. Policy owns manifest production
+dependencies and full workspace cycle detection; both use the same architecture
+model, and policy's graph includes source imports as well as manifest edges.
 
 `fixes.ts` applies the findings whose remedy is a transformation rather than a
 decision: a canonical test script, a `build` that repeats its graph-owned `check`, a locally

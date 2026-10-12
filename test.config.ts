@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { defineConfig } from "vite-plus/test/config";
 
 /** Runner-only defaults; application Vite plugins never enter the test process. */
@@ -12,6 +13,8 @@ export function workspaceTests(
   return defineConfig({
     test: {
       environment: "node",
+      // Turbo already runs workspaces in parallel; bound each runner's process pool.
+      maxWorkers: Math.min(2, Math.max(availableParallelism() - 1, 1)),
       include: ["src/**/*.{test,spec}.{ts,tsx}"],
       coverage: { reporter: ["text", "json", "lcov"] },
       ...options,

@@ -49,112 +49,76 @@ function fixture(
     Object.keys(files),
   );
 }
-describe("architecture boundaries", () => {
+describe("architecture policy", () => {
   it("rejects reversed production edges and dependency cycles", async () => {
     const findings = await fixture({
       "packages/core": { deps: ["application"] },
       "packages/application": { deps: ["core"] },
     });
-    expect(findings.some((f) => f.message.includes("must not depend"))).toBe(true);
-    expect(findings.some((f) => f.message.includes("cycle:"))).toBe(true);
+    expect(findings.some((finding) => finding.message.includes("must not depend"))).toBe(true);
+    expect(findings.some((finding) => finding.message.includes("cycle:"))).toBe(true);
   });
-  it.each([
-    ['import {x} from "@raypx/db/src/private";', "private cross-package"],
-    ['export * from "../../../packages/db/src/index";', "private cross-package"],
-    ['const x=import("@raypx/scripts");', "forbidden runtime"],
-    ['type T=import("@raypx/db").T;', "forbidden runtime"],
-    ['import "@private/db";', "private cross-package"],
-  ])("checks static, dynamic, type and aliased imports: %s", async (source, message) => {
-    const findings = await fixture({
-      "apps/web": { source, paths: { "@private/*": ["../../packages/*/src/index.ts"] } },
-      "packages/db": {},
-      "packages/scripts": {},
-    });
-    expect(findings.some((f) => f.message.includes(message))).toBe(true);
-  });
-  it("rejects imports between apps", async () => {
+  it("rejects imports between apps in manifests", async () => {
     expect(
-      (await fixture({ "apps/web": { deps: ["desktop"] }, "apps/desktop": {} })).some((f) =>
-        f.message.includes("must not depend"),
+      (await fixture({ "apps/web": { deps: ["desktop"] }, "apps/desktop": {} })).some((finding) =>
+        finding.message.includes("must not depend"),
       ),
     ).toBe(true);
   });
-
-  it("rejects runtime imports from an unscoped app", async () => {
-    const findings = await fixture({
-      "apps/web": { source: 'import "desktop";' },
-      "apps/desktop": {},
-    });
-    expect(findings.some((finding) => finding.message.includes("forbidden runtime"))).toBe(true);
-  });
-  it("permits declared public subpaths and test-only reverse dependencies", async () => {
+  it("allows test-only reverse dependencies in manifests", async () => {
     expect(
       await fixture({
-        "apps/web": { deps: ["ui"], source: 'import "@raypx/ui/components/ui/button";' },
-        "packages/ui": { exports: { "./components/ui/*": "./src/components/ui/*.tsx" } },
         "packages/db": { deps: ["core"], dev: ["application"] },
         "packages/core": {},
         "packages/application": { deps: ["core"] },
       }),
     ).toEqual([]);
   });
-  it("does not allow a dev dependency to enter runtime source", async () => {
+  it("leaves individual source diagnostics to Oxlint", async () => {
     expect(
-      (
-        await fixture({
-          "packages/db": { dev: ["application"], source: 'import "@raypx/application";' },
-          "packages/application": {},
-        })
-      ).some((f) => f.message.includes("declared production dependency")),
-    ).toBe(true);
-  });
-  it("rejects the execution adapter as a Desktop dependency and renderer import", async () => {
-    const findings = await fixture({
-      "apps/desktop": {
-        deps: ["ai"],
-        sources: {
-          "src/main.ts": 'import "@raypx/ai";',
+      await fixture({
+        "apps/desktop": {
+          source: 'import "node:fs"; import "../native/main"; import "@raypx/ai";',
         },
-      },
-      "packages/ai": {},
-    });
-    expect(findings).toHaveLength(2);
-    expect(findings.some((item) => item.location === "apps/desktop/package.json")).toBe(true);
-    expect(findings.some((item) => item.location === "apps/desktop/src/main.ts")).toBe(true);
+        "packages/ai": {},
+      }),
+    ).toEqual([]);
   });
-  it("rejects direct provider and Node imports in the Desktop renderer", async () => {
+  it.each([
+    'import "@raypx/db";',
+    'export * from "../../db/src/index";',
+    'const value = import("@raypx/db");',
+    'type Value = import("@raypx/db").Value;',
+    'import "@db";',
+    'import "#db";',
+  ])("retains undeclared source edges in the complete graph: %s", async (source) => {
     const findings = await fixture({
-      "apps/desktop": {
-        sources: {
-          "src/main.ts": 'import "node:fs"; import "@earendil-works/pi-coding-agent";',
-        },
+      "packages/core": {
+        source,
+        paths: { "@db": ["../db/src/index.ts"] },
+        imports: { "#db": "../db/src/index.ts" },
       },
-    });
-    expect(findings).toHaveLength(2);
-  });
-  it("rejects Electrobun host and Bun imports in the Desktop renderer", async () => {
-    const findings = await fixture({
-      "apps/desktop": {
-        source:
-          'import "electrobun/main/browser-window"; import "electrobun/bun"; import "bun:ffi";',
-      },
-    });
-    expect(findings).toHaveLength(3);
-  });
-  it("allows the shared window contract while rejecting native host source", async () => {
-    const findings = await fixture({
-      "apps/desktop": {
-        source: 'import type { DesktopRpc } from "../native/rpc"; import "../native/main";',
-        sources: {
-          "native/rpc.ts": "export interface DesktopRpc {}",
-          "native/main.ts": "export {};",
-        },
-      },
+      "packages/db": { deps: ["core"] },
     });
     expect(findings).toHaveLength(1);
-    expect(findings[0]?.message).toContain("renderer must use the window bridge");
+    expect(findings[0]?.message).toContain("cycle:");
   });
-  it("permits business UI in applications and rejects transport ownership in the UI package", async () => {
+  it("keeps generated, declaration and test imports out of the runtime graph", async () => {
+    expect(
+      await fixture({
+        "packages/core": {
+          sources: {
+            "src/index.test.ts": 'import "@raypx/db";',
+            "tests/index.ts": 'import "@raypx/db";',
+            "src/routeTree.gen.ts": 'import "@raypx/db";',
+            "src/index.d.ts": 'import "@raypx/db";',
+          },
+        },
+        "packages/db": { deps: ["core"] },
+      }),
+    ).toEqual([]);
+  });
+  it("rejects transport ownership in the UI manifest", async () => {
     const findings = await fixture({
       "apps/web": { deps: ["agent-ui"] },
       "packages/agent-ui": { deps: ["ui", "contracts", "client"] },

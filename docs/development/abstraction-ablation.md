@@ -51,7 +51,7 @@ entry; other tools may still require that package transitively.
   the route import graph and both Desktop typecheck passes remain intact.
 - Negative control: removing the environment access guard makes
   `blocks server values on the client` fail with `expected [Function] to throw
-an error`. The guard is restored in the final implementation.
+  an error`. The guard is restored in the final implementation.
 
 Run the focused suites with:
 

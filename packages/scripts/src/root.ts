@@ -11,6 +11,13 @@ export const rootCommand = defineCommand({
     tasks: defineCommand({
       meta: { name: "tasks", description: "Run the Turbo workspace task graph" },
     }),
+    e2e: defineCommand({
+      meta: {
+        name: "e2e",
+        description:
+          "Run browser tests: [all|web|desktop] [--group <name>] [Playwright flags/files]",
+      },
+    }),
     env: () => import("./commands/env.js").then(({ envCommand }) => envCommand),
     doctor: () => import("./doctor/command.js").then(({ doctorCommand }) => doctorCommand),
     deps: () => import("./deps/command.js").then(({ depsCommand }) => depsCommand),

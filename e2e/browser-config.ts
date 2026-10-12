@@ -1,8 +1,8 @@
 import { defineConfig } from "@playwright/test";
 import { resolve } from "node:path";
 import { databaseUrl } from "./database.js";
+import { browserProjects, type BrowserSuite } from "./test-groups.js";
 
-type BrowserSuite = "all" | "web" | "desktop";
 const repositoryRoot = resolve(import.meta.dirname, "..");
 const basePort = Number(process.env.RAYPX_E2E_PORT ?? 3000);
 const origin = (offset: number) => `http://127.0.0.1:${basePort + offset}`;
@@ -30,26 +30,25 @@ function server(app: keyof typeof offsets) {
 }
 
 export function browserConfig(suite: BrowserSuite) {
-  const projects = [
-    {
-      name: "web",
-      testMatch:
-        /(?:^|[\\/])(?:web|homepage|workbench|redesign|authenticated-web|cloud|session-revocation-cloud)\.spec\.ts$/,
-      use: { baseURL: origin(0) },
-    },
-    {
-      name: "desktop",
-      testMatch: /(?:^|[\\/])desktop(?:-redesign)?\.spec\.ts$/,
-      use: { baseURL: origin(1) },
-    },
-  ];
-  const apps: Array<keyof typeof offsets> =
-    suite === "all" ? ["api", "web", "desktop"] : ["api", suite];
-  const reportFolder = suite === "all" ? "playwright-report" : `playwright-report/${suite}`;
+  const group = process.env.RAYPX_E2E_GROUP;
+  const projects = browserProjects(suite, group).map((project) => ({
+    ...project,
+    use: { baseURL: origin(offsets[project.name]) },
+  }));
+  const apps: Array<keyof typeof offsets> = ["api", ...projects.map(({ name }) => name)];
+  const listOnly = process.argv.includes("--list");
+  const shardIndex = process.argv.indexOf("--shard");
+  const shardArg =
+    process.argv.find((arg) => arg.startsWith("--shard="))?.slice("--shard=".length) ??
+    (shardIndex === -1 ? undefined : process.argv[shardIndex + 1]);
+  const shard =
+    shardArg && /^\d+\/\d+$/.test(shardArg) ? `shard-${shardArg.replace("/", "-of-")}` : undefined;
+  const reportScope = [suite === "all" ? "" : suite, group, shard].filter(Boolean).join("/");
+  const reportFolder = reportScope ? `playwright-report/${reportScope}` : "playwright-report";
   return defineConfig({
-    globalSetup: "./database.ts",
+    ...(listOnly ? {} : { globalSetup: "./database.ts", webServer: apps.map(server) }),
     testDir: "./tests",
-    ...(suite === "all" ? {} : { outputDir: `test-results/${suite}` }),
+    ...(reportScope ? { outputDir: `test-results/${reportScope}` } : {}),
     fullyParallel: true,
     forbidOnly: Boolean(process.env.CI),
     retries: process.env.CI ? 2 : 0,
@@ -57,7 +56,6 @@ export function browserConfig(suite: BrowserSuite) {
       ? [["dot"], ["html", { open: "never", outputFolder: reportFolder }]]
       : "list",
     use: { trace: "on-first-retry", locale: "en-US" },
-    projects: suite === "all" ? projects : projects.filter(({ name }) => name === suite),
-    webServer: apps.map(server),
+    projects,
   });
 }

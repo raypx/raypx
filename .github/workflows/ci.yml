@@ -67,15 +67,24 @@ jobs:
           git diff --exit-code
           test -z "$(git ls-files --others --exclude-standard)"
   e2e:
-    name: E2E (${{ matrix.suite }})
+    name: E2E (${{ matrix.suite }} ${{ matrix.shard }}/${{ matrix.shards }})
     strategy:
       fail-fast: false
       matrix:
         include:
           - suite: web
-            database: raypx_ci_e2e_web_test
+            shard: 1
+            shards: 2
+            database: raypx_ci_e2e_web_1_test
             port: 31000
+          - suite: web
+            shard: 2
+            shards: 2
+            database: raypx_ci_e2e_web_2_test
+            port: 32000
           - suite: desktop
+            shard: 1
+            shards: 1
             database: raypx_ci_e2e_desktop_test
             port: 33000
     runs-on: ubuntu-24.04
@@ -111,11 +120,11 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/canary'
         with:
           path: .turbo/cache
-          key: turbo-e2e-${{ matrix.suite }}-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
-          restore-keys: turbo-e2e-${{ matrix.suite }}-${{ runner.os }}-${{ runner.arch }}-
+          key: turbo-e2e-${{ matrix.suite }}-${{ matrix.shard }}-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          restore-keys: turbo-e2e-${{ matrix.suite }}-${{ matrix.shard }}-${{ runner.os }}-${{ runner.arch }}-
       - run: bun run --cwd e2e playwright install --with-deps chromium
       - name: Test ${{ matrix.suite }} browsers
-        run: bun run test:e2e:${{ matrix.suite }}
+        run: bun run test:e2e:${{ matrix.suite }} --shard=${{ matrix.shard }}/${{ matrix.shards }}
         env:
           NODE_ENV: test
       - name: Check generated files
@@ -125,7 +134,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-${{ matrix.suite }}-failure
+          name: playwright-${{ matrix.suite }}-${{ matrix.shard }}-failure
           path: |
             e2e/playwright-report/${{ matrix.suite }}
             e2e/test-results/${{ matrix.suite }}

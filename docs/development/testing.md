@@ -62,7 +62,7 @@ enable signed remote cache only on trusted canary pushes/manual runs; PRs use
 local-only caches. Missing remote credentials never prevent verification. Node and Bun versions come
 from the root `package.json`; dependencies use the frozen lockfile.
 
-There are three job definitions (five runners):
+There are three job definitions (six runners):
 
 - `typescript` uses Ubuntu 24.04 and one disposable PostgreSQL 17 service. It runs
   `bun run verify`, Drizzle generation and real database tests.
@@ -71,11 +71,11 @@ There are three job definitions (five runners):
   Its database suite resets only its dedicated test fixtures. The final clean-tree
   check catches both changed
   tracked files and newly generated untracked files, including route/Drizzle drift.
-- `e2e` runs an independent Web/Desktop matrix alongside TypeScript verification.
+- `e2e` runs two Web shards and one Desktop runner alongside TypeScript verification.
   Each runner has a separate PostgreSQL 17 database, port range and failure report.
   Web includes the cloud business flows and starts only API/Web; Desktop starts
   only API/Desktop and seeds only accounts/projects. Each task builds its actual
-  consumer applications; Worker is not an E2E dependency. Both runners retain
+  consumer applications; Worker is not an E2E dependency. All browser runners retain
   generated-file checks and the existing untrusted-PR cache policy.
 - `desktop` builds Electrobun native packages on macOS and Windows. Root
   `desktop:build` checks/builds the frontend through Turbo, then runs the stable
@@ -145,6 +145,9 @@ model, search API and private bucket described in
 Every application and test-bearing package owns a separate `vitest.config.ts`.
 They share runner-only defaults through root `test.config.ts`; each workspace
 keeps its own discovery, environment and setup overrides.
+Each runner uses at most two workers because Turbo already runs workspaces in
+parallel, and uses one on machines with at most two available CPUs. This bounds
+nested process concurrency without relaxing test limits or disabling file isolation.
 The test command is `vp test --run`, which reads that file; the application
 `vite.config.ts` is reserved for `dev`, `build`, and SSR. Unit tests therefore
 do not load TanStack Start, Nitro, React, Tailwind, or evlog application
@@ -225,13 +228,45 @@ component/integration files opt into jsdom with local setup, keeping globals out
 of server and library checks. E2E has Web and Desktop projects. Web covers
 public, authenticated and cloud flows; Desktop targets its own browser preview.
 
-Run a single browser project or inspect its report with:
+The root E2E commands use `rpx e2e` to forward Playwright arguments through
+Turbo. Select an application, a functional group, a file or a test title:
 
 ```bash
-bun run --cwd e2e e2e:web -- --grep "project creation"
-bun run --cwd e2e e2e:desktop
+bun run test:e2e:web --group cloud --list
+bun run test:e2e:web --group projects
+bun run test:e2e:web tests/authenticated-web.spec.ts --grep "project creation"
+bun run test:e2e:desktop --group smoke
+bun run test:e2e:web --shard=1/2
 bun run --cwd e2e test:report
 ```
+
+`--list` lists the selected tests without builds, application servers, browsers
+or database setup, so it needs no test database. Executing the tests still needs
+the guarded database environment described below. Omitting `--group` preserves
+the complete suite; file and `--grep` filters further narrow the selected group.
+
+| Group       | Web specs                           | Desktop specs      |
+| ----------- | ----------------------------------- | ------------------ |
+| `smoke`     | `web`, `homepage`                   | `desktop`          |
+| `projects`  | `authenticated-web`, `redesign`     | `desktop-redesign` |
+| `workbench` | `workbench`                         | —                  |
+| `cloud`     | `cloud`, `session-revocation-cloud` | —                  |
+
+Every `tests/**/*.spec.ts` must belong to exactly one entry in
+[`e2e/test-groups.ts`](../../e2e/test-groups.ts). Missing, stale and duplicate
+registrations fail during config loading; selecting an empty application/group
+combination also fails. Do not use `--pass-with-no-tests` to conceal a bad filter.
+
+CI runs the complete Web suite in two shards and Desktop in one. Each runner
+owns its checkout, PostgreSQL service, ports and report artifact; no tests are
+removed from full regression. Group and shard reports use separate directories
+under `playwright-report/` and `test-results/`. Shards split test counts rather
+than measured durations, so equal counts do not guarantee equal runtime.
+
+The `raypx/boundaries` Oxlint rule now owns source import diagnostics. Its
+RuleTester cases live in `packages/scripts/src/lint/`; policy tests retain
+manifest direction and complete dependency-cycle coverage. The two share one
+architecture model rather than maintaining separate boundary rules.
 
 ## Acceptance expectations
 
