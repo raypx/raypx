@@ -23,7 +23,6 @@ const ERROR_KEYS = {
   PROJECT_ACCESS_DENIED: "accessDenied",
   NOT_FOUND: "resourceNotFound",
   PROJECT_NOT_FOUND: "projectNotFound",
-  USER_NOT_FOUND: "userNotFound",
   MAIL_NOT_CONFIGURED: "mailNotConfigured",
   REGISTRATION_DISABLED: "registrationDisabled",
   EMAIL_VERIFICATION_DISABLED: "emailVerificationDisabled",

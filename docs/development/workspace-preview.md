@@ -1,5 +1,7 @@
 # Clean Signal Workspace
 
+> Historical preview record. Current authenticated routes use the cloud and canonical Project APIs; the preview/runtime paths below are no longer product capabilities. See [applications](../architecture/applications.md) and [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md).
+
 ## Routes and ownership
 
 Home (`/`) reads one aggregate Home View Model from the workspace data source.

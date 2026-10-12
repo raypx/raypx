@@ -17,9 +17,10 @@ for (const width of [390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await login(page);
     await page.goto("/chat/e2e-cloud-recorded");
-    await expect(
-      page.getByRole("heading", { name: "Recorded research", exact: true }),
-    ).toBeVisible();
+    // The dev server compiles the first authenticated module graph on demand.
+    await expect(page.getByRole("heading", { name: "Recorded research", exact: true })).toBeVisible(
+      { timeout: 15_000 },
+    );
     await expect(page.getByText("Recorded research answer [1].", { exact: true })).toBeVisible();
     if (width < 1024) await page.getByRole("tab", { name: "Execution", exact: true }).click();
     await expect(page.getByRole("link", { name: "Recorded source" })).toHaveAttribute(
@@ -43,7 +44,9 @@ for (const width of [390, 768, 1280]) {
 test("current delivery acceptance completes the actual task", async ({ page }) => {
   await login(page);
   await page.goto("/tasks/e2e-cloud-task-review");
-  await expect(page.getByText("Ready for review", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ready for review", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
   await page.getByRole("button", { name: "Accept this delivery", exact: true }).click();
   await expect(page.getByText("Delivery accepted", { exact: true })).toBeVisible();
   await page.reload();
@@ -83,16 +86,16 @@ test("SSR and browser account replacement isolate conversation content", async (
   try {
     const pa = await a.newPage(),
       pb = await b.newPage();
-    await Promise.all([login(pa, "admin"), login(pb)]);
-    const [adminHtml, memberHtml] = await Promise.all([
+    await Promise.all([login(pa, "primary"), login(pb)]);
+    const [primaryHtml, memberHtml] = await Promise.all([
       pa.request.get("/chat").then((r) => r.text()),
       pb.request.get("/chat").then((r) => r.text()),
     ]);
-    expect(adminHtml).toContain("Administrator private research");
-    expect(adminHtml).not.toContain("Recorded research");
-    expect(memberHtml).not.toContain("Administrator private research");
-    await pa.goto("/chat/e2e-cloud-admin-private");
-    await expect(pa.getByRole("heading", { name: "Administrator private research" })).toBeVisible();
+    expect(primaryHtml).toContain("Primary private research");
+    expect(primaryHtml).not.toContain("Recorded research");
+    expect(memberHtml).not.toContain("Primary private research");
+    await pa.goto("/chat/e2e-cloud-primary-private");
+    await expect(pa.getByRole("heading", { name: "Primary private research" })).toBeVisible();
     const signOut = await pa.request.post(`${api}/api/auth/sign-out`, {
       data: {},
       headers: { origin: api },
@@ -100,12 +103,10 @@ test("SSR and browser account replacement isolate conversation content", async (
     expect(signOut.ok()).toBe(true);
     await login(pa);
     await pa.evaluate("document.dispatchEvent(new Event('visibilitychange'))");
-    await expect(pa.getByRole("heading", { name: "Administrator private research" })).toHaveCount(
-      0,
-    );
-    await pb.goto("/chat/e2e-cloud-admin-private");
+    await expect(pa.getByRole("heading", { name: "Primary private research" })).toHaveCount(0);
+    await pb.goto("/chat/e2e-cloud-primary-private");
     await expect(pb.getByRole("alert")).toBeVisible();
-    await expect(pb.getByText("Administrator private research")).toHaveCount(0);
+    await expect(pb.getByText("Primary private research")).toHaveCount(0);
   } finally {
     await a.close();
     await b.close();
@@ -133,26 +134,4 @@ test("conversation list cursors and older history use the durable authorized pag
   await expect(
     page.getByRole("button", { name: "Load earlier messages", exact: true }),
   ).toHaveCount(0);
-});
-test("Admin inspects actual run and account usage while ordinary accounts cannot open it", async ({
-  page,
-}) => {
-  await login(page, "admin");
-  await page.goto("/chat");
-  await page
-    .getByRole("navigation", { name: "Navigation" })
-    .getByRole("link", { name: "Agent runs", exact: true })
-    .click();
-  await expect(page.getByRole("heading", { name: "Agent runs", exact: true })).toBeVisible();
-  await page.getByLabel("Account ID", { exact: true }).fill(accounts.member.id);
-  await page.getByRole("button", { name: "Filter", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Account usage", exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "e2e-cloud-run-recorded", exact: true }).click();
-  const inspection = page.getByRole("region", { name: "Run details", exact: true });
-  await expect(inspection.getByText("e2e-cloud-run-recorded", { exact: true })).toBeVisible();
-  await expect(inspection.getByText("Unknown usage calls", { exact: true })).toBeVisible();
-  await login(page);
-  await page.goto("/admin-runs?runId=e2e-cloud-run-recorded");
-  await expect(page.getByRole("alert")).toBeVisible();
-  await expect(page.getByText("e2e-cloud-run-recorded", { exact: true })).toHaveCount(0);
 });

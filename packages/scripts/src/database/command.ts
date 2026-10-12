@@ -1,5 +1,4 @@
 import { defineCommand } from "citty";
-import { v7 as uuidv7 } from "uuid";
 
 import { contextualCommand } from "../runtime/command.js";
 
@@ -13,24 +12,6 @@ const migrateCommand = contextualCommand("db migrate", "database", {
     await runMigrate(context.environment, {
       log: context.log,
       migrate: migrateDatabase,
-    });
-  },
-});
-
-const seedCommand = contextualCommand("db seed", "database", {
-  meta: { name: "seed", description: "Seed development or test data" },
-  async run(context) {
-    const [{ runSeed }, { openPostgresUsers }, domain] = await Promise.all([
-      import("./operation.js"),
-      import("./users.js"),
-      import("@voidmix/application"),
-    ]);
-    await runSeed(context.environment, {
-      createAdministration: domain.createUserAdministration,
-      log: context.log,
-      now: () => new Date(),
-      openUsers: openPostgresUsers,
-      uuidv7,
     });
   },
 });
@@ -68,7 +49,6 @@ export const databaseCommand = defineCommand({
     clean: cleanCommand,
     migrate: migrateCommand,
     push: pushCommand,
-    seed: seedCommand,
     studio: studioCommand,
   },
 });

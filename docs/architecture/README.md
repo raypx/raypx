@@ -3,13 +3,12 @@
 > Cloud platform direction: [ADR-0016](./decisions/0016-cloud-agent-platform.md).
 
 Voidmix is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud Web
-application with an independent Hono API and operations console, plus a Tauri
+application with an independent Hono API, plus an Electrobun
 desktop client.
 
 ## Design goals
 
-- Keep Web, Desktop, API, and the UI workbench independently runnable while
-  isolating Admin as a protected Web feature.
+- Keep Web, Desktop, API, Worker and the UI workbench independently runnable.
 - Share contracts, core business rules, UI primitives, and API clients without
   sharing platform-specific route trees.
 - Keep server-side business rules behind small, stable interfaces.
@@ -22,8 +21,8 @@ desktop client.
 
 ```mermaid
 flowchart LR
-  web["Web + Admin / TanStack Start"] --> client["@voidmix/client"]
-  desktop["Desktop / Tauri 2"] --> client
+  web["Web / TanStack Start"] --> client["@voidmix/client"]
+  desktop["Desktop / Electrobun 2"] --> client
   client --> rpc["oRPC contracts"]
   rpc --> api["apps/api"]
   api --> application["@voidmix/application"]
@@ -32,7 +31,7 @@ flowchart LR
   worker --> storage
   storage --> objects[("S3")]
   api --> shared["@voidmix/shared: env + logger"]
-  api --> auth["Auth + RBAC"]
+  api --> auth["Authentication and session"]
   api --> core["@voidmix/core"]
   api --> db["Repository adapter"]
   db --> core
@@ -43,8 +42,9 @@ The API is the business boundary. Web and Desktop never access the database
 directly.
 
 The [cloud platform](./cloud-platform.md) defines the current Search/Computer
-model, new database baseline, delivery review and usage ledger. Local execution
-and device delivery are later stages; the earlier workbench design is historical.
+model, new database baseline, delivery review and usage ledger. Desktop is a
+lightweight cloud project client; local execution and device routing are retired
+by [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md).
 
 The domain language and aggregate boundaries are recorded in the root
 [`CONTEXT.md`](../../CONTEXT.md). `@voidmix/core` is the domain-kernel package;
@@ -63,7 +63,7 @@ workspace is covered by [file structure](../development/file-structure.md).
 
 `apps/worker` owns durable Agent and outbox execution. API and Worker share
 application commands while remaining independently deployable. `features`,
-`admin-ui`, and a generic `config` package are intentionally not standalone
+and a generic `config` package are intentionally not standalone
 workspaces either.
 
 Environment validation belongs to `@voidmix/shared/env`; each application
@@ -86,13 +86,13 @@ apps/worker ───> shared/env + shared/logger
 apps/api ───> cache
 apps/worker ───> application + db + ai
 apps/api/worker ───> storage
-apps/web/desktop/storybook ───> agent-ui + ui
+apps/web/storybook ───> agent-ui + ui
+apps/desktop       ───> ui
 packages/storage ───> core + shared
 packages/db/mail/cache/scripts ───> shared/env + shared/logger
 packages/db ───> core
 packages/core/db ───> shared
 packages/scripts ───> db + core + shared
-packages/core ───> auth
 ```
 
 Rules:
@@ -100,7 +100,7 @@ Rules:
 1. Frontend applications never import `@voidmix/db`.
 2. `@voidmix/core` never imports React, Hono, Nitro, or Drizzle.
 3. `@voidmix/contracts` performs no network or database work.
-4. Every protected Admin operation is authorized by the API.
+4. API authenticates requests; Application enforces current resource capabilities.
 5. Operational logs never contain raw credentials or session tokens.
 6. New shared packages require a stable interface and at least two consumers.
 7. Domain rules stay in core; adapters provide storage, AI, mail, processing,

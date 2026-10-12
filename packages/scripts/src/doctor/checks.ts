@@ -149,6 +149,27 @@ async function checkOptionalTool(
   }
 }
 
+async function checkDesktopBootstrap(dependencies: DoctorDependencies): Promise<DoctorCheck> {
+  const bootstrap = "apps/desktop/node_modules/.bin/electrobun";
+  if (!(await dependencies.pathExists(join(dependencies.repositoryRoot, bootstrap))))
+    return {
+      name: "Electrobun",
+      status: "warn",
+      detail: `${bootstrap} is missing; install repository dependencies with bun install`,
+    };
+  const sdk = "apps/desktop/.hutch/devkit";
+  const prepared = await dependencies.pathExists(
+    join(dependencies.repositoryRoot, sdk, ".complete"),
+  );
+  return {
+    name: "Electrobun",
+    status: "ok",
+    detail: prepared
+      ? `local bootstrap is installed; SDK is available at ${sdk}`
+      : "local bootstrap is installed; prepare the SDK with bun run --cwd apps/desktop native:prepare",
+  };
+}
+
 function createDoctorReport(checks: DoctorCheck[]): DoctorReport {
   return {
     checks,
@@ -179,10 +200,7 @@ export async function runDoctor(dependencies: DoctorDependencies): Promise<Docto
 
   checks.push(
     checkEnvironment(dependencies),
-    await checkOptionalTool(dependencies, "Rust", [
-      ["rustc", "--version"],
-      ["cargo", "--version"],
-    ]),
+    await checkDesktopBootstrap(dependencies),
     await checkOptionalTool(dependencies, "Docker", [["docker", "--version"]]),
   );
   return createDoctorReport(checks);

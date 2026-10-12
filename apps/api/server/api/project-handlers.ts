@@ -1,4 +1,3 @@
-import { createExecutionHandlers } from "./execution-handlers.js";
 import { createApiError } from "./canonical-errors.js";
 import { actorInput, type RouterContext } from "./router-context.js";
 import { createReviewsHandlers } from "./reviews-handlers.js";
@@ -49,6 +48,5 @@ export function createProjectHandlers(context: RouterContext) {
     },
     reviews: createReviewsHandlers(context),
     assets: createAssetsHandlers(context),
-    agentRuns: createExecutionHandlers(context).agentRuns,
   };
 }

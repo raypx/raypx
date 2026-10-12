@@ -1,12 +1,10 @@
-import { createExecutionHandlers, decodeUpload } from "./execution-handlers.js";
+import { decodeUpload } from "./assets-handlers.js";
 import { createProjectHandlers } from "./project-handlers.js";
-import { createIdentityHandlers } from "./identity-handlers.js";
 import type { CreateApiRouterOptions } from "./api-types.js";
 import { createRouterContext } from "./router-context.js";
 import { createCloudHandlers } from "./cloud-handlers.js";
 export function createCanonicalApiRouter(options: CreateApiRouterOptions) {
   const context = createRouterContext(options);
-  const executionHandlers = createExecutionHandlers(context);
   const { os, authenticated, assets, command } = context;
   const contextCallComplete = (
     ctx: { principal: { user: { id: string } } },
@@ -29,9 +27,6 @@ export function createCanonicalApiRouter(options: CreateApiRouterOptions) {
   return os.router({
     cloud: createCloudHandlers(context),
     projects: createProjectHandlers(context),
-    devices: executionHandlers.devices,
-    runner: executionHandlers.runner,
-    admin: createIdentityHandlers(context, options),
     health: os.health.handler(() => ({
       status: "ok" as const,
       timestamp: options.now?.() ?? new Date(),

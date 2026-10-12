@@ -21,6 +21,9 @@ Page layout and product-specific composition stay in the owning application.
 | `./status-badge` and `./components/ui/switch`         | Visual status tones and accessible boolean control         |
 | `./lib/*`                                             | `cn` and CVA helpers                                       |
 
+`shadcn-components.json` lists the retained generated components consumed by
+the root `shadcn:update` command.
+
 ## Ownership
 
 - Own Base UI interactive primitives, shadcn `base-nova` conventions, Phosphor
@@ -50,6 +53,9 @@ Page layout and product-specific composition stay in the owning application.
 - Use Base UI, shadcn `base-nova`, Tailwind CSS v4, CVA, and Phosphor Icons. **Do
   not introduce Radix primitives or Lucide icons** without a recorded
   architecture decision.
+- Ship primitives used by a renderer or deterministic Storybook story. Retired
+  Card, Checkbox, Separator, Table and Toggle primitives are absent; their tests
+  do not justify restoring an unused public surface.
 - Maintain keyboard behavior, focus states, reduced-motion support, and useful
   accessible names on every interactive primitive.
 - Utility IconButton labels appear on hover and keyboard focus. HelpHint uses a

@@ -1,8 +1,6 @@
 import {
   AssetDomainError,
   CloudDomainError,
-  ExecutionDomainError,
-  AgentRunV2DomainError,
   DomainError,
   ProjectV2DomainError,
 } from "@voidmix/core";
@@ -32,15 +30,11 @@ export function mapDomainError(error: unknown): ORPCError<string, unknown> {
       ? cloudErrors[error.code]
       : error instanceof AssetDomainError
         ? assetErrors[error.code]
-        : error instanceof ExecutionDomainError
-          ? executionErrors[error.code]
-          : error instanceof ProjectV2DomainError
-            ? projectErrors[error.code]
-            : error instanceof AgentRunV2DomainError
-              ? agentErrors[error.code]
-              : error instanceof DomainError
-                ? userErrors[error.code]
-                : undefined;
+        : error instanceof ProjectV2DomainError
+          ? projectErrors[error.code]
+          : error instanceof DomainError
+            ? domainErrors[error.code]
+            : undefined;
   if (transportCode && error instanceof Error && "code" in error) {
     return createApiError(transportCode, String(error.code));
   }
@@ -55,32 +49,9 @@ const projectErrors = {
   PROJECT_SCOPE_INVALID: "BAD_REQUEST",
   PROJECT_ACCESS_DENIED: "FORBIDDEN",
 } satisfies Record<ProjectV2DomainError["code"], string>;
-const agentErrors = {
-  AGENT_RUN_INVALID_INPUT: "BAD_REQUEST",
-  AGENT_RUN_TERMINAL: "CONFLICT",
-} satisfies Record<AgentRunV2DomainError["code"], string>;
-const userErrors: Readonly<Record<string, string | undefined>> = {
-  USER_NOT_FOUND: "NOT_FOUND",
-  SELF_SUSPENSION: "CONFLICT",
-  LAST_ADMIN: "CONFLICT",
-  EMAIL_ALREADY_EXISTS: "CONFLICT",
+const domainErrors: Readonly<Record<string, string | undefined>> = {
   BAD_REQUEST: "BAD_REQUEST",
 } satisfies Partial<Record<DomainError["code"], string>>;
-
-const executionErrors = {
-  EXECUTION_ACCESS_DENIED: "FORBIDDEN",
-  DEVICE_UNAUTHORIZED: "UNAUTHORIZED",
-  DEVICE_NOT_BOUND: "CONFLICT",
-  RUN_NOT_FOUND: "NOT_FOUND",
-  RUN_ACTIVE: "CONFLICT",
-  RUN_TERMINAL: "CONFLICT",
-  RUN_INVALID_TRANSITION: "CONFLICT",
-  RUN_EVENT_GAP: "CONFLICT",
-  RUN_EVENT_CONFLICT: "CONFLICT",
-  RUN_CLAIM_INVALID: "FORBIDDEN",
-  COMMAND_INVALID: "BAD_REQUEST",
-  IDEMPOTENCY_CONFLICT: "CONFLICT",
-} satisfies Record<ExecutionDomainError["code"], string>;
 
 const assetErrors: Record<string, string> = {
   BLOB_TOO_LARGE: "BAD_REQUEST",

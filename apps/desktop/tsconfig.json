@@ -1,7 +1,11 @@
 {
   "extends": "@voidmix/tsconfig/browser.json",
   "compilerOptions": {
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "electrobun/view": ["./.hutch/devkit/api/browser/index.ts"],
+      "electrobun/rpc": ["./.hutch/devkit/api/sdks/main/entries/rpc.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

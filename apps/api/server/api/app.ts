@@ -215,12 +215,9 @@ export function createApiApp(options: CreateApiAppOptions) {
     const requestId = context.get("requestId");
     const request = context.req.raw;
     const locale = resolveRequestLocaleHint(request.headers);
-    const connectionHandler =
-      /\/cloud\/(?:runs|conversations)\/stream$|\/projects\/agentRuns\/events\/stream$/.test(
-        context.req.path,
-      )
-        ? streamHandler
-        : handler;
+    const connectionHandler = /\/cloud\/(?:runs|conversations)\/stream$/.test(context.req.path)
+      ? streamHandler
+      : handler;
     const { matched, response } = await connectionHandler.handle(request, {
       prefix: "/rpc",
       context: {

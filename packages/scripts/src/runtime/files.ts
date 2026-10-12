@@ -18,8 +18,14 @@ export async function walkFiles(
 
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      if (skippedDirectories.has(entry.name) || entry.name.startsWith(".")) continue;
-      await walkFiles(root, join(directory, entry.name), accept, found, skippedDirectories);
+      const child = join(directory, entry.name);
+      if (
+        skippedDirectories.has(entry.name) ||
+        skippedDirectories.has(child.split("\\").join("/")) ||
+        entry.name.startsWith(".")
+      )
+        continue;
+      await walkFiles(root, child, accept, found, skippedDirectories);
       continue;
     }
     if (entry.isFile() && accept(entry.name)) {

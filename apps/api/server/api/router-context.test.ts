@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { ORPCError } from "@orpc/server";
-import { AgentRunV2DomainError, DomainError, ProjectV2DomainError } from "@voidmix/core";
+import { CloudDomainError, DomainError, ProjectV2DomainError } from "@voidmix/core";
 import { actorInput, page } from "./router-context.js";
 import { mapDomainError } from "./canonical-errors.js";
 
@@ -25,8 +25,8 @@ describe("router boundaries", () => {
   });
   it.each([
     [new ProjectV2DomainError("PROJECT_ACCESS_DENIED", "private"), "FORBIDDEN"],
-    [new AgentRunV2DomainError("AGENT_RUN_TERMINAL", "private"), "CONFLICT"],
-    [new DomainError("USER_NOT_FOUND", "private"), "NOT_FOUND"],
+    [new CloudDomainError("CLOUD_RUN_TERMINAL", "private"), "CONFLICT"],
+    [new DomainError("BAD_REQUEST", "private"), "BAD_REQUEST"],
   ])("maps the domain error without diagnostic prose: %s", (error, code) => {
     const result = mapDomainError(error);
     expect(result.code).toBe(code);

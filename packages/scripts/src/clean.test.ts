@@ -29,8 +29,9 @@ describe("cleanRepository", () => {
       ["apps/web/node_modules/.vite", "metadata.json"],
       ["packages/core/coverage", "coverage.json"],
       ["e2e/test-results", "results.json"],
-      ["apps/desktop/src-tauri/target", "debug/voidmix"],
-      ["apps/desktop/src-tauri/gen/schemas", "schema.json"],
+      ["apps/desktop/.hutch", "devkit/.complete"],
+      ["apps/desktop/build", "stable/voidmix.app/Contents/MacOS/launcher"],
+      ["apps/desktop/artifacts", "voidmix.dmg"],
     ] as const;
     const removedPaths = artifacts.map(([root, file]) => join(root, file));
     const preservedPaths = [
@@ -40,6 +41,12 @@ describe("cleanRepository", () => {
       "apps/web/node_modules/example/package.json",
       "packages/db/drizzle/20260815142252_unusual_leech/migration.sql",
       "packages/shared/dist/index.js",
+      "apps/desktop/native/main.ts",
+      "apps/desktop/native/icons/icon.png",
+      "apps/desktop/profile/preferences.json",
+      "apps/desktop/user-data/runner/journal.sqlite",
+      "apps/desktop/src-tauri/target/debug/voidmix",
+      "apps/desktop/src-tauri/gen/schemas/schema.json",
     ];
 
     const repositoryRoot = await temporaryRepository(
@@ -51,13 +58,10 @@ describe("cleanRepository", () => {
     for (const path of removedPaths) {
       expect(existsSync(join(repositoryRoot, path))).toBe(false);
     }
-    expect(existsSync(join(repositoryRoot, "apps/desktop/src-tauri/gen"))).toBe(false);
     for (const path of preservedPaths) {
       expect(existsSync(join(repositoryRoot, path))).toBe(true);
     }
-    expect([...removed].sort()).toEqual(
-      [...artifacts.map(([root]) => root), "apps/desktop/src-tauri/gen"].sort(),
-    );
+    expect([...removed].sort()).toEqual(artifacts.map(([root]) => root).sort());
   });
 
   it("removes repository dependencies only when requested", async () => {

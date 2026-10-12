@@ -5,7 +5,7 @@ import { createApiClient, parseApiProblemDetails } from "./index.js";
 describe("createApiClient", () => {
   it("creates a typed lazy client without making a request", () => {
     const client = createApiClient({ baseUrl: "https://api.example.com/" });
-    expect(client.admin.users.list).toBeTypeOf("function");
+    expect(client.account.get).toBeTypeOf("function");
   });
 
   it("supports a relative same-origin transport", () => {
@@ -21,12 +21,17 @@ describe("createApiClient", () => {
       (client) => client.projects.reviews.update({ reviewId: "review-1", status: "approved" }),
     ],
     [
-      "Agent cancellation",
-      (client) => client.projects.agentRuns.cancel({ runId: "run-1", idempotencyKey: "cancel-1" }),
+      "Cloud cancellation",
+      (client) =>
+        client.cloud.runs.commands.create({
+          runId: "run-1",
+          type: "cancel",
+          idempotencyKey: "cancel-1",
+        }),
     ],
     [
-      "Agent retry",
-      (client) => client.projects.agentRuns.retry({ runId: "run-1", idempotencyKey: "retry-1" }),
+      "Cloud retry",
+      (client) => client.cloud.runs.retry({ runId: "run-1", idempotencyKey: "retry-1" }),
     ],
   ])("uses POST for %s so mutations cannot enter GET batching", async (_name, invoke) => {
     const methods: string[] = [];

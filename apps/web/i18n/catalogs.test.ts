@@ -7,7 +7,9 @@ import { messages } from "../tests/fixtures/messages";
 describe("web i18n catalogs", () => {
   it.each([
     ["common", "language"],
-    ["home", "askVoidmix"],
+    ["marketing", "projectWorkbench"],
+    ["cloudMarketing", "title"],
+    ["cloud", "search"],
     ["auth", "signIn"],
     ["errors", "unknown"],
   ] as const)("loads the %s namespace from each catalog", (namespace, key) => {

@@ -1,4 +1,4 @@
-# @voidmix/web
+# web
 
 ## Purpose
 
@@ -20,13 +20,10 @@ src/
     (auth)/route.tsx public authentication group layout
     (auth)/          login, signup, reset, and verification routes
     (app)/route.tsx  authenticated group layout and session gate
-    (app)/(admin)/route.tsx  Admin route group within the shared AppShell
-    (app)/(admin)/admin.tsx  protected Admin user-directory mount at /admin
     (app)/projects.index.tsx canonical project list route and page
     (app)/projects.$projectId.tsx canonical project detail route and page
   features/auth/     Better Auth forms, shared inputs, links and submission lifecycle
   features/projects/ shared project/task title form
-  features/admin/    users adapters, scoped Zustand, views and tests
   features/navigation/ AppShell, account menu, pending/error/retry and pagination
   lib/route-api.ts    request-scoped SSR client and credentialed browser client
   i18n/              catalog loaders, API error codes, recovery copy
@@ -40,7 +37,7 @@ server/
 
 - Product images are captures of actual routes using synthetic test data;
   regenerate them with the E2E workspace capture command.
-- Own public pages, authentication UI, protected Admin routes, React
+- Own public pages, authentication UI, protected cloud routes, React
   composition, SSR shell, and application-specific visual composition.
 - Own no shared primitive — those belong in `@voidmix/ui`.
 
@@ -48,17 +45,12 @@ server/
 
 - `/projects` and `/projects/$projectId` are authenticated canonical project routes backed by `@voidmix/client`; they do not render preview or Workspace compatibility data.
 
-- Project and Admin loaders own remote entities, AbortSignal and mutation
+- Project loaders own remote entities, AbortSignal and mutation
   invalidation. URL search owns filters and cursor; lists explicitly request 50.
 - SSR forwards only Better Auth cookies to the configured API. Protected loader
   data carries accountId; account changes hide stale data and clear route caches.
 - `start.ts` preserves public API error codes across hydration. Never serialize
   backend error messages, causes, stacks or request context in this adapter.
-- Admin DirectoryProvider creates one non-persisted Zustand store per page and
-  account. It owns selection, pending IDs and untranslated notice descriptors.
-  Filters/pages reset selection; disposal rejects late operation feedback.
-- Selection, batch writes and CSV export apply only to the current page. Preview
-  adapters may only be explicitly injected by tests; API errors never select them.
 - File-based routing. Add `src/routes/<path>.tsx` exporting
   `export const Route = createFileRoute("/path")({ component: X })`. Server-only
   endpoints may use `server.handlers` and omit `component`. The route tree
@@ -66,7 +58,7 @@ server/
 - Single-route pages live in their route files, including local form state and
   page composition. Keep page components module-private so Start can split them
   automatically. Colocate route-only helpers/tests with the `-` ignore prefix.
-  Shared features and Admin composition stay under `src/features/<feature>/`.
+  Shared feature composition stays under `src/features/<feature>/`.
   See [ADR-0011](../../docs/architecture/decisions/0011-colocate-single-route-pages.md).
 - Keep the project detail component keyed by `projectId` so navigating between
   projects resets drafts and pending form state.
@@ -105,9 +97,9 @@ server/
   retains the client-side session gate for hydration and stale-cookie recovery.
   It is navigation aid, not authorization enforcement; the API remains the
   final authorization boundary.
-- `(app)/route.tsx` owns AppShell, shared by projects and Admin. The Admin group
-  exposes the user directory; its navigation entry is visible only to owners
-  and admins. API authorization remains authoritative.
+- `(app)/route.tsx` owns AppShell, shared by cloud and project routes. Navigation
+  exposes conversations, tasks, notifications, usage and projects to every
+  authenticated account. API authorization remains authoritative.
 - All protected routes use the same Neutral AppShell. Public imagery comes from
   the guarded capture command and matches locale, theme and viewport. Its
   generated size manifest reserves space before image loading.

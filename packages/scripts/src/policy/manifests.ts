@@ -1,5 +1,6 @@
 import { parseJson, isObject, serializeJson } from "./json.js";
 import type { PolicyFinding } from "./checks.js";
+import { findingFor } from "./findings.js";
 import {
   canonicalScripts,
   engineFinding,
@@ -42,11 +43,21 @@ export function deriveWorkspaceShape(member: string, files: readonly string[]): 
 }
 
 interface Manifest {
+  name?: unknown;
   dependencies?: unknown;
   devDependencies?: unknown;
   devEngines?: unknown;
   peerDependencies?: unknown;
   scripts?: unknown;
+}
+
+const nameFinding = findingFor("manifest.name");
+
+function expectedWorkspaceName(location: string): string | undefined {
+  if (location === "e2e/package.json") return "@voidmix/e2e";
+  const member = /^(apps|packages)\/([^/]+)\/package\.json$/.exec(location);
+  if (!member) return undefined;
+  return member[1] === "apps" ? member[2] : `@voidmix/${member[2]}`;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -80,6 +91,17 @@ export function validateWorkspaceManifest(
   if (!isPlainObject(parsed)) return [structureFinding(location, "package.json")];
   const manifest = parsed as Manifest;
   const findings: PolicyFinding[] = [];
+
+  const name = expectedWorkspaceName(location);
+  if (name !== undefined && manifest.name !== name) {
+    findings.push(
+      nameFinding(
+        location,
+        `workspace name must be ${name}`,
+        `set name in ${location} to: ${name}`,
+      ),
+    );
+  }
 
   if (manifest.scripts === undefined) {
     findings.push(...validateScripts(location, {}, shape));

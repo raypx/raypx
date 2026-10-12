@@ -4,7 +4,7 @@ import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
 
 export const accounts = {
-  admin: { id: "e2e-admin", email: "admin@example.test", name: "E2E Administrator" },
+  primary: { id: "e2e-primary", email: "primary@example.test", name: "Primary Tester" },
   member: { id: "e2e-member", email: "member@example.test", name: "E2E Member" },
   pilot: { id: "e2e-pilot", email: "pilot@example.test", name: "Pilot Tester" },
 } as const;
@@ -34,7 +34,7 @@ export default async function setup() {
         id: account.id,
         email: account.email,
         displayName: account.name,
-        role: account.id === accounts.admin.id ? ("owner" as const) : ("user" as const),
+        role: "user" as const,
         emailVerified: true,
       })),
     );
@@ -47,20 +47,12 @@ export default async function setup() {
         password: hash,
       })),
     );
-    await connection.db.insert(users).values(
-      Array.from({ length: 120 }, (_, i) => ({
-        id: `e2e-person-${i.toString().padStart(3, "0")}`,
-        email: `person-${i}@example.test`,
-        displayName: `Directory person ${i.toString().padStart(3, "0")}`,
-        status: i === 0 ? ("suspended" as const) : ("active" as const),
-      })),
-    );
     await connection.db.insert(v2Projects).values([
       ...Array.from({ length: 52 }, (_, i) => ({
         id: `e2e-project-${i.toString().padStart(3, "0")}`,
-        title: `Admin film ${i.toString().padStart(3, "0")}`,
-        createdByUserId: accounts.admin.id,
-        personalOwnerId: accounts.admin.id,
+        title: `Project ${i.toString().padStart(3, "0")}`,
+        createdByUserId: accounts.primary.id,
+        personalOwnerId: accounts.primary.id,
       })),
       {
         id: "e2e-member-project",
@@ -83,7 +75,7 @@ export default async function setup() {
       for (const [suffix, actorId, title, status] of [
         ["recorded", accounts.member.id, "Recorded research", "waiting_input"],
         ["review", accounts.member.id, "Recorded delivery", "review"],
-        ["admin-private", accounts.admin.id, "Administrator private research", "waiting_input"],
+        ["primary-private", accounts.primary.id, "Primary private research", "waiting_input"],
       ] as const) {
         const conversationId = `e2e-cloud-${suffix}`,
           taskId = `e2e-cloud-task-${suffix}`,

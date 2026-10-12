@@ -145,8 +145,7 @@ for (const entry of await readdir(store))
 await writeFile(join(output, ".runtime-layout-v1"), "1\n");
 await writeFile(
   join(output, "package.json"),
-  JSON.stringify({ name: "@voidmix/worker-runtime", private: true, type: "module" }, null, 2) +
-    "\n",
+  JSON.stringify({ name: "worker-runtime", private: true, type: "module" }, null, 2) + "\n",
 );
 process.stdout.write(
   `Built Worker Node artifact with ${copied.size} runtime packages and their assets.\n`,

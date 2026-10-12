@@ -17,10 +17,12 @@ export type ApiClient = ContractRouterClient<typeof apiContract>;
 
 export type ApiHeaders = Record<string, string | undefined>;
 
+export type FetchCallable = (input: string, init?: RequestInit) => Promise<Response>;
+
 export interface CreateApiClientOptions {
   baseUrl?: string;
   headers?: ApiHeaders | (() => ApiHeaders | Promise<ApiHeaders>);
-  fetch?: typeof globalThis.fetch;
+  fetch?: FetchCallable;
 }
 
 export function createApiClient(options: CreateApiClientOptions = {}): ApiClient {

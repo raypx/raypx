@@ -62,10 +62,25 @@ describe("repository workflows", () => {
 
     await runDesktopBuild(deps);
 
-    expect(deps.runCommand).toHaveBeenCalledWith(
-      ["bun", "run", "--cwd", "apps/desktop", "tauri", "build"],
+    expect(deps.runCommand.mock.calls.map(([command]) => command)).toEqual([
+      ["bun", "run", "build:desktop"],
+      ["bun", "run", "--cwd", "apps/desktop", "native:build"],
+    ]);
+    expect(deps.runCommand.mock.calls.map(([, options]) => options)).toEqual([
       { cwd: "/repo", env: { ...deps.processEnv, CI: "true" } },
-    );
+      { cwd: "/repo", env: { ...deps.processEnv, CI: "true" } },
+    ]);
+  });
+
+  it("does not package Desktop when its Turbo renderer gate fails", async () => {
+    const deps = dependencies();
+    deps.runCommand.mockRejectedValue(new Error("Renderer check failed"));
+    await expect(runDesktopBuild(deps)).rejects.toThrow("Renderer check failed");
+    expect(deps.runCommand).toHaveBeenCalledOnce();
+    expect(deps.runCommand).toHaveBeenCalledWith(["bun", "run", "build:desktop"], {
+      cwd: "/repo",
+      env: { ...deps.processEnv, CI: "true" },
+    });
   });
 
   // This sequence is the definition of "everything is checked". A gate missing

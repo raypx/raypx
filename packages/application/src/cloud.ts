@@ -5,7 +5,6 @@ import { cloudRuns } from "./cloud/runs.js";
 import { cloudAssets } from "./cloud/assets.js";
 import { cloudUsage } from "./cloud/usage.js";
 import { cloudNotifications } from "./cloud/notifications.js";
-import { cloudAdmin } from "./cloud/admin.js";
 export type { CloudApplicationOptions } from "./cloud/context.js";
 export function createCloudApplication(options: CloudApplicationOptions) {
   const context = createCloudContext(options);
@@ -16,7 +15,6 @@ export function createCloudApplication(options: CloudApplicationOptions) {
     ...cloudAssets(context),
     ...cloudUsage(context),
     ...cloudNotifications(context),
-    ...cloudAdmin(context),
   };
 }
 export type CloudApplication = ReturnType<typeof createCloudApplication>;

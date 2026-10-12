@@ -1,5 +1,0 @@
-{
-  "extends": "@voidmix/tsconfig/node.json",
-  "compilerOptions": { "noEmit": true },
-  "include": ["./**/*.ts"]
-}

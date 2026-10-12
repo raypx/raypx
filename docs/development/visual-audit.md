@@ -1,5 +1,7 @@
 # Unified workbench visual audit
 
+> Historical verification evidence. Admin selection/batch/export and Desktop overview/Activity/Devices/local settings were subsequently retired by [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md); their captures and counts below describe that earlier delivery.
+
 This is the historical blue/violet redesign record. The current visual baseline
 and verification results are in [Neutral UI delivery](./neutral-ui.md).
 

@@ -6,7 +6,7 @@ WORKDIR /app
 FROM tools AS prune
 COPY . .
 RUN turbo_version=$(node -p "require('./package.json').workspaces.catalogs.tooling.turbo") && \
-    bun x "turbo@$turbo_version" prune @voidmix/worker --docker
+    bun x "turbo@$turbo_version" prune worker --docker
 
 FROM tools AS build
 COPY --from=prune /app/out/json/ ./

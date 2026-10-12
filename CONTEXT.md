@@ -4,6 +4,10 @@ This glossary defines the current cloud platform described in
 [ADR-0016](docs/architecture/decisions/0016-cloud-agent-platform.md). Earlier
 Workspace/device execution designs remain historical reference material.
 
+Desktop is a cloud project and task management client. Its former device runner
+and local execution protocol are retired by
+[ADR-0019](docs/architecture/decisions/0019-retire-legacy-desktop-execution.md).
+
 ## Identity and scope
 
 - **Actor** — the authenticated user or trusted host performing an operation.
@@ -71,8 +75,8 @@ Workspace/device execution designs remain historical reference material.
 - **Notification** — a durable user-facing state change with read state and
   optional email delivery governed by current preferences and permissions.
 - **Outbox event** — a fact committed with business state and later delivered.
-- **Audit event** — a durable record of sensitive administration, separate from
-  operational logs and product analytics.
+- **Historical audit event** — a retained database record from retired management
+  interfaces; the current product exposes no Admin audit API.
 - **Idempotency key** — caller-provided command identity. Reuse with a different
   payload conflicts; an HTTP retry does not create another effect.
 

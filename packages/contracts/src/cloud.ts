@@ -461,52 +461,7 @@ export const downloadCloudAsset = procedure(
 export const getCloudAsset = procedure(assetKey, cloudAssetVersionSchema);
 export const getCloudCapabilities = procedure({}, cloudCapabilitiesSchema);
 export const getCloudToolDetail = procedure({ callId: identifier }, cloudToolExecutionSchema);
-export const cloudAdminRunSummarySchema = z.object({
-  id: identifier,
-  scope: resourceScopeSchema,
-  requestedByUserId: identifier,
-  taskId: identifier.nullable(),
-  mode: cloudModeSchema,
-  status: cloudRunStatusSchema,
-  attempt: z.number().int().positive(),
-  ownerId: identifier.nullable(),
-  epoch: z.number().int().nonnegative(),
-  lastSequence: z.number().int().nonnegative(),
-  cancelRequested: z.boolean(),
-  startedAt: z.date().nullable(),
-  completedAt: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  failureCode: z.enum(["interrupted", "access_revoked", "execution_failed"]).nullable(),
-});
-export const listCloudAdminRuns = procedure(
-  {
-    status: cloudRunStatusSchema.optional(),
-    accountId: identifier.optional(),
-    limit: z.number().int().min(1).max(100).optional(),
-    cursor: z.string().min(1).max(2048).optional(),
-  },
-  cloudPageSchema(cloudAdminRunSummarySchema),
-);
-export const inspectCloudAdminRun = procedure(
-  runKey,
-  z.object({
-    run: cloudAdminRunSummarySchema,
-    usage: z.object({
-      calls: z.number().int().nonnegative(),
-      inputTokens: z.number().int().nonnegative(),
-      outputTokens: z.number().int().nonnegative(),
-      unknownCalls: z.number().int().nonnegative(),
-      estimatedCost: z.number().nonnegative(),
-    }),
-  }),
-);
-export const getCloudAdminUsage = procedure({ accountId: identifier }, cloudUsageSummarySchema);
 export const cloudContract = {
-  admin: {
-    runs: { list: listCloudAdminRuns, get: inspectCloudAdminRun },
-    usage: { get: getCloudAdminUsage },
-  },
   conversations: {
     create: createCloudConversation,
     list: listCloudConversations,
@@ -566,5 +521,3 @@ export type CloudToolDetailDto = z.infer<typeof cloudToolExecutionSchema>;
 export type CloudCommandDto = z.infer<typeof cloudCommandSchema>;
 
 export type CloudPreferencesDto = z.infer<typeof cloudPreferencesSchema>;
-
-export type CloudAdminRunSummaryDto = z.infer<typeof cloudAdminRunSummarySchema>;

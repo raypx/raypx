@@ -1,13 +1,12 @@
 /** @vitest-environment jsdom */
 
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { I18nProvider } from "@voidmix/i18n/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import type { ReactNode } from "react";
 
 import { messages } from "./i18n/messages";
-import { demoCloudSnapshot } from "./lib/cloud/demo";
 import { getRouter } from "./router";
 import { useDesktopPreferences } from "./lib/preferences";
 import { Route as rootRoute } from "./routes/__root";
@@ -18,7 +17,6 @@ const loaders = vi.hoisted(() => ({
   loadProject: vi.fn(),
   createProject: vi.fn(),
   createTask: vi.fn(),
-  loadCloudSnapshot: vi.fn(),
 }));
 
 function project(id: string, title: string) {
@@ -46,10 +44,6 @@ function deferred<Value>() {
 
 vi.mock("./lib/projects", () => loaders);
 vi.mock("./lib/account", () => ({ loadAccount: loaders.loadAccount }));
-vi.mock("./lib/cloud", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("./lib/cloud")>()),
-  loadCloudSnapshot: loaders.loadCloudSnapshot,
-}));
 vi.mock("./env", () => ({ env: {} }));
 
 function renderRoute(path: string) {
@@ -88,7 +82,6 @@ beforeEach(() => {
     status: "loaded",
     data: project("project-1", "Launch film"),
   });
-  loaders.loadCloudSnapshot.mockResolvedValue({ source: "unavailable" });
 });
 
 afterEach(() => {
@@ -108,34 +101,27 @@ describe("Desktop Start routes", () => {
     expect(document.documentElement.dataset.theme).toBe("dark");
   });
 
-  it("keeps settings after switching language and leaving the page", async () => {
+  it("keeps the theme after switching language and leaving settings", async () => {
     const router = renderRoute("/settings");
-    const setting = await screen.findByRole("switch", {
-      name: messages.en.settings.startWithSystem,
-    });
-    expect(setting.getAttribute("aria-disabled")).toBe("true");
-    act(() => useDesktopPreferences.setState({ startWithSystem: true }));
+    await screen.findByRole("heading", { name: "Settings" });
+    fireEvent.click(screen.getAllByRole("button", { name: "Light" })[1]!);
     fireEvent.click(screen.getByRole("button", { name: "简体中文" }));
-    expect(
-      (
-        await screen.findByRole("switch", { name: messages.zh.settings.startWithSystem })
-      ).getAttribute("aria-checked"),
-    ).toBe("true");
-    await act(() => router.navigate({ to: "/" }));
+    await screen.findByRole("heading", { name: messages.zh.settings.title });
+    expect(useDesktopPreferences.getState().theme).toBe("light");
+    await act(() => router.navigate({ to: "/projects" }));
     await act(() => router.navigate({ to: "/settings" }));
-    expect(
-      (
-        await screen.findByRole("switch", { name: messages.zh.settings.startWithSystem })
-      ).getAttribute("aria-checked"),
-    ).toBe("true");
+    expect(await screen.findByRole("heading", { name: messages.zh.settings.title })).toBeDefined();
+    expect(document.documentElement.dataset.theme).toBe("light");
   });
 
-  it("does not present unavailable data as a live sync session", async () => {
-    renderRoute("/");
-    expect(await screen.findByText(messages.en.overview.overviewUnavailable)).toBeDefined();
-    expect(screen.queryByRole("button", { name: "Pause sync" })).toBeNull();
-    expect(screen.queryByText("12,846")).toBeNull();
-    expect(useDesktopPreferences.getState().syncPaused).toBe(false);
+  it("opens projects directly from the root URL", async () => {
+    const router = renderRoute("/");
+    expect(await screen.findByRole("heading", { name: "Projects" })).toBeDefined();
+    expect(router.state.location.pathname).toBe("/projects");
+    const navigation = screen.getByRole("navigation", { name: "Primary navigation" });
+    expect(within(navigation).getAllByRole("link")).toHaveLength(2);
+    expect(within(navigation).getByRole("link", { name: "Projects" })).toBeDefined();
+    expect(within(navigation).getByRole("link", { name: "Settings" })).toBeDefined();
   });
 
   it("opens project details without rendering the project list over them", async () => {
@@ -143,6 +129,41 @@ describe("Desktop Start routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Launch film" })).toBeDefined();
     expect(screen.queryByRole("heading", { name: "Projects" })).toBeNull();
+  });
+
+  it("creates a project task and refreshes the detail route", async () => {
+    renderRoute("/projects/project-1");
+    await screen.findByRole("heading", { name: "Launch film" });
+    fireEvent.click(screen.getByRole("button", { name: "Add task" }));
+    const input = screen.getByRole("textbox", { name: "Add a task" });
+    fireEvent.change(input, { target: { value: "Research sources" } });
+    loaders.createTask.mockResolvedValue(undefined);
+    loaders.loadProject.mockResolvedValue({
+      status: "loaded",
+      data: {
+        ...project("project-1", "Launch film"),
+        tasks: [{ id: "task-1", title: "Research sources", status: "todo" }],
+      },
+    });
+    fireEvent.submit(input.closest("form")!);
+    expect(await screen.findByText("Research sources")).toBeDefined();
+    expect(loaders.createTask).toHaveBeenCalledWith("project-1", "Research sources");
+    expect(screen.queryByRole("textbox")).toBeNull();
+  });
+
+  it("keeps read-only project tasks visible without write controls", async () => {
+    loaders.loadProject.mockResolvedValue({
+      status: "loaded",
+      data: {
+        ...project("project-1", "Launch film"),
+        access: "read",
+        tasks: [{ id: "task-1", title: "Research sources", status: "todo" }],
+      },
+    });
+    renderRoute("/projects/project-1");
+    expect(await screen.findByText("Research sources")).toBeDefined();
+    expect(screen.getByText(messages.en.projects.readOnly)).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Add task" })).toBeNull();
   });
 
   it("renders a missing project through the route's not-found boundary", async () => {
@@ -249,47 +270,6 @@ describe("Desktop Start routes", () => {
     expect(await screen.findByRole("alert")).toBeDefined();
     expect((screen.getByRole("textbox") as HTMLInputElement).value).toBe("New film");
     expect(loaders.loadProjects).toHaveBeenCalledTimes(2);
-  });
-
-  it("refreshes the overview through its route loader", async () => {
-    renderRoute("/");
-    await screen.findByRole("heading", { name: messages.en.overview.title });
-    loaders.loadCloudSnapshot.mockResolvedValue({
-      snapshot: { ...demoCloudSnapshot, fileCount: 123456 },
-      source: "cloud",
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
-    expect(await screen.findByText("123,456")).toBeDefined();
-    expect(loaders.loadCloudSnapshot).toHaveBeenCalledTimes(3);
-  });
-
-  it("uses the cloud route data on the devices page", async () => {
-    loaders.loadCloudSnapshot.mockResolvedValue({
-      snapshot: {
-        ...demoCloudSnapshot,
-        devices: demoCloudSnapshot.devices.map((device) => ({
-          ...device,
-          name: "Remote workstation",
-        })),
-      },
-      source: "cloud",
-    });
-    renderRoute("/devices");
-    expect((await screen.findAllByText("Remote workstation")).length).toBe(
-      demoCloudSnapshot.devices.length,
-    );
-  });
-
-  it("preserves old activity URLs while clearly reporting unavailable records", async () => {
-    const router = renderRoute("/activity?filter=downloads");
-    expect(await screen.findByText(messages.en.activity.unavailable)).toBeDefined();
-    expect(screen.queryByText(messages.en.activity.productResearch)).toBeNull();
-    expect(screen.queryByText(messages.en.activity.campaignExports)).toBeNull();
-    expect(router.state.location.search).toMatchObject({ filter: "downloads" });
-    await act(() => router.navigate({ to: "/projects" }));
-    await act(() => router.history.back());
-    expect(await screen.findByText(messages.en.activity.unavailable)).toBeDefined();
-    expect(router.state.location.search).toMatchObject({ filter: "downloads" });
   });
 
   it("recovers a route loader error when retried", async () => {

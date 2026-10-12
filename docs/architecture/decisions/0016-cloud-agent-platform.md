@@ -1,6 +1,6 @@
 # ADR-0016: Cloud Agent platform and SaaS foundations
 
-Status: accepted; supersedes the initial delivery order in [ADR-0015](0015-local-agent-workbench.md).
+Status: accepted; supersedes the initial delivery order in [ADR-0015](0015-local-agent-workbench.md). Desktop delivery scope is superseded by [ADR-0019](0019-retire-legacy-desktop-execution.md). Administration scope is superseded by [ADR-0021](0021-retire-admin.md).
 
 ## Decision
 

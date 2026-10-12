@@ -1,17 +1,14 @@
 import { beforeAll, beforeEach, afterAll, describe, expect, it } from "vite-plus/test";
-import { sql, eq } from "drizzle-orm";
-import { createUserAdministration, createReviewApplication } from "@voidmix/application";
+import { sql } from "drizzle-orm";
+import { createReviewApplication } from "@voidmix/application";
 import {
   resolveProjectAccessV2,
-  type User,
-  type UserRepository,
   type ProjectMemberV2,
   type OrganizationMemberV2,
 } from "@voidmix/core";
 import { openTestDatabase } from "./database.js";
 import {
   users,
-  auditEvents,
   organizations,
   organizationMembers,
   v2ProjectMembers,
@@ -19,8 +16,6 @@ import {
   v2Activities,
   v2AssetVersions,
 } from "../src/schema.js";
-import { PostgresUserRepository } from "../src/identity/postgres.js";
-import { InMemoryUserRepository } from "../src/identity/memory.js";
 import { PostgresProjectV2Repository } from "../src/v2/projects.js";
 import { PostgresAssetV2Repository, PostgresAssetVersionV2Repository } from "../src/v2/assets.js";
 import { PostgresActivityV2Repository } from "../src/v2/activity.js";
@@ -28,11 +23,11 @@ import { PostgresReviewV2Repository, PostgresFeedbackV2Repository } from "../src
 
 let connection: Awaited<ReturnType<typeof openTestDatabase>>;
 const now = new Date("2026-01-01T00:00:00Z");
-const user = (id: string, role: User["role"] = "user"): User => ({
+const user = (id: string): typeof users.$inferInsert => ({
   id,
   email: `${id}@example.com`,
   displayName: id,
-  role,
+  role: "user",
   status: "active",
   createdAt: now,
 });
@@ -44,9 +39,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await connection.db.execute(sql`truncate table users cascade`);
-  await connection.db
-    .insert(users)
-    .values([user("owner", "owner"), user("admin", "admin"), user("reader"), user("other")]);
+  await connection.db.insert(users).values([user("owner"), user("reader"), user("other")]);
 });
 
 async function project(id: string, scope: "personal" | "organization" = "personal") {
@@ -63,113 +56,6 @@ async function project(id: string, scope: "personal" | "organization" = "persona
 }
 
 describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
-  it("returns the same administration results, guards, filtered pages and audits as Memory", async () => {
-    async function exercise(users: UserRepository) {
-      let sequence = 0;
-      const service = createUserAdministration({
-        users,
-        now: () => now,
-        id: () => `parity-${++sequence}`,
-      });
-      await service.updateStatus({ actorId: "owner", userId: "reader", status: "active" });
-      const changed = await service.updateStatus({
-        actorId: "owner",
-        userId: "admin",
-        status: "suspended",
-      });
-      const guards: string[] = [];
-      for (const [actorId, userId] of [
-        ["owner", "missing"],
-        ["owner", "owner"],
-        ["reader", "owner"],
-      ]) {
-        try {
-          await service.updateStatus({ actorId: actorId!, userId: userId!, status: "suspended" });
-        } catch (error) {
-          guards.push((error as { code: string }).code);
-        }
-      }
-      const input = { email: "PARITY@example.test", displayName: "Parity" };
-      const created = await Promise.all([service.ensureAdmin(input), service.ensureAdmin(input)]);
-      const page = await service.list({ limit: 1, role: "user", status: "active" });
-      const next = await service.list({
-        limit: 1,
-        role: "user",
-        status: "active",
-        cursor: page.nextCursor!,
-      });
-      const audits = await service.audit(100);
-      expect(guards).toEqual(["USER_NOT_FOUND", "SELF_SUSPENSION", "LAST_ADMIN"]);
-      expect(created[0]).toEqual(created[1]);
-      expect(audits).toHaveLength(2);
-      expect(changed.createdAt).toBeInstanceOf(Date);
-      expect(audits.every((event) => event.occurredAt instanceof Date)).toBe(true);
-      return { changed, guards, created, page, next, audits };
-    }
-    const memory = new InMemoryUserRepository([
-      user("owner", "owner"),
-      user("admin", "admin"),
-      user("reader"),
-      user("other"),
-    ]);
-    expect(await exercise(new PostgresUserRepository(connection.db))).toEqual(
-      await exercise(memory),
-    );
-  });
-  it("serializes competing administrator suspensions and commits exactly one audit", async () => {
-    const service = createUserAdministration({ users: new PostgresUserRepository(connection.db) });
-    const outcomes = await Promise.allSettled([
-      service.updateStatus({ actorId: "owner", userId: "admin", status: "suspended" }),
-      service.updateStatus({ actorId: "admin", userId: "owner", status: "suspended" }),
-    ]);
-    expect(outcomes.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(outcomes.find((result) => result.status === "rejected")).toMatchObject({
-      reason: { code: "LAST_ADMIN" },
-    });
-    expect(await new PostgresUserRepository(connection.db).countActiveAdministrators()).toBe(1);
-    expect(await connection.db.select().from(auditEvents)).toHaveLength(1);
-  });
-  it("rolls back a status write when its audit foreign key fails", async () => {
-    const service = createUserAdministration({ users: new PostgresUserRepository(connection.db) });
-    await expect(
-      service.updateStatus({ actorId: "missing-actor", userId: "reader", status: "suspended" }),
-    ).rejects.toThrow();
-    expect(await new PostgresUserRepository(connection.db).getById("reader")).toMatchObject({
-      status: "active",
-    });
-    expect(await connection.db.select().from(auditEvents)).toHaveLength(0);
-  });
-  it("creates an administrator once across concurrent CLI/API invocations", async () => {
-    const service = createUserAdministration({ users: new PostgresUserRepository(connection.db) });
-    const input = { email: "BOOTSTRAP@example.com", displayName: "Bootstrap" };
-    const [a, b] = await Promise.all([service.ensureAdmin(input), service.ensureAdmin(input)]);
-    expect(a).toEqual(b);
-    expect(a.email).toBe("bootstrap@example.com");
-    expect(await connection.db.select().from(auditEvents)).toHaveLength(1);
-  });
-  it("preserves no-op and self-suspension guard ordering", async () => {
-    const service = createUserAdministration({ users: new PostgresUserRepository(connection.db) });
-    await service.updateStatus({ actorId: "owner", userId: "reader", status: "active" });
-    expect(await connection.db.select().from(auditEvents)).toHaveLength(0);
-    await connection.db.update(users).set({ status: "suspended" }).where(eq(users.id, "owner"));
-    await expect(
-      service.updateStatus({ actorId: "owner", userId: "owner", status: "suspended" }),
-    ).rejects.toMatchObject({ code: "SELF_SUSPENSION" });
-  });
-  it("filters administrator pages before pagination and counts matches", async () => {
-    const repo = new PostgresUserRepository(connection.db);
-    const page = await repo.list({ limit: 1, role: "user", status: "active" });
-    expect(page.total).toBe(2);
-    expect(page.items).toHaveLength(1);
-    const next = await repo.list({
-      limit: 1,
-      role: "user",
-      status: "active",
-      cursor: page.nextCursor!,
-    });
-    expect(next.items[0]?.id).not.toBe(page.items[0]?.id);
-    expect(next.nextCursor).toBeNull();
-  });
   it("matches Core visibility across ownership and every membership combination", async () => {
     await connection.db
       .insert(organizations)

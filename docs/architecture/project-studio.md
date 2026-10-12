@@ -1,5 +1,7 @@
 # Project Studio migration
 
+> Historical migration record. Current product behavior follows [the cloud platform](./cloud-platform.md) and [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md); the local execution and device plans below are retired.
+
 > Status: approved migration plan, partially implemented. The current committed
 > baseline is `fff2141218a5570cd83a69792ea3d4956ee1ced6` (`feat: complete
 project studio preview migration`), reviewed on September 9, 2026. The

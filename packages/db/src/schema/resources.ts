@@ -2,7 +2,7 @@ import { dateColumn, createdAt, timestamps, requiredReference } from "./columns.
 import { boolean, index, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
 import { v2Projects } from "./projects.js";
 import { users } from "./identity.js";
-import { v2ReviewStatusEnum, v2AgentRunStatusEnum } from "./enums.js";
+import { v2ReviewStatusEnum } from "./enums.js";
 
 export const v2Assets = pgTable(
   "assets_v2",
@@ -76,25 +76,6 @@ export const v2Activities = pgTable(
     occurredAt: dateColumn("occurred_at").notNull().defaultNow(),
   },
   (table) => [index("activities_v2_project_occurred_idx").on(table.projectId, table.occurredAt)],
-);
-
-export const v2AgentRuns = pgTable(
-  "agent_runs_v2",
-  {
-    id: text("id").primaryKey(),
-    projectId: requiredReference("project_id", () => v2Projects.id, "cascade"),
-    requestedByUserId: requiredReference("requested_by_user_id", () => users.id, "restrict"),
-    assetVersionId: text("asset_version_id").references(() => v2AssetVersions.id, {
-      onDelete: "set null",
-    }),
-    status: v2AgentRunStatusEnum("status").notNull().default("queued"),
-    attempt: integer("attempt").notNull().default(1),
-    input: jsonb("input").$type<Record<string, unknown>>().notNull(),
-    output: jsonb("output").$type<Record<string, unknown> | null>(),
-    error: text("error"),
-    ...timestamps(),
-  },
-  (table) => [index("agent_runs_v2_project_status_idx").on(table.projectId, table.status)],
 );
 
 export const outboxEvents = pgTable(

@@ -68,6 +68,7 @@ and PDF previews. Repeat cancellation, provider failure and object-upload
 recovery against that environment before publishing the release.
 
 The review surfaces are `/chat`, `/tasks`, `/settings/usage`, `/notifications`
-and the authorized operational metadata page `/admin-runs`. Desktop cloud
-integration, browser/GUI execution, arbitrary code and payments remain later
-phases of ADR-0016.
+and the authorized operational metadata page `/admin-runs`. Desktop retains cloud
+project/task management under [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md);
+Desktop conversations, browser/GUI execution, arbitrary code and payments require
+separate future work.

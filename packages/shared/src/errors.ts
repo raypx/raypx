@@ -1,10 +1,4 @@
-export type DomainErrorCode =
-  | "USER_NOT_FOUND"
-  | "SELF_SUSPENSION"
-  | "LAST_ADMIN"
-  | "EMAIL_ALREADY_EXISTS"
-  | "BAD_REQUEST"
-  | "MAIL_NOT_CONFIGURED";
+export type DomainErrorCode = "BAD_REQUEST" | "MAIL_NOT_CONFIGURED";
 
 export type DomainErrorValues = Record<string, string | number | boolean | null>;
 

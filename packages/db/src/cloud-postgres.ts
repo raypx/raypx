@@ -286,7 +286,7 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
     },
     userProfile: async (actorId) => {
       const rows = await db
-        .select({ email: users.email, displayName: users.displayName, role: users.role })
+        .select({ email: users.email, displayName: users.displayName })
         .from(users)
         .where(eq(users.id, actorId))
         .limit(1);

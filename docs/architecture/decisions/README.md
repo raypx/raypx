@@ -52,3 +52,8 @@ source-boundary checks run with `bun run i18n:check` and are the first gate of
 - [ADR-0017: Fenced execution Gateway and immutable task rounds](./0017-gateway-and-task-rounds.md)
 
 - [ADR-0018: Turbo task orchestration with Vite+ leaf tools](./0018-turbo-task-orchestration.md)
+
+- [ADR-0019: Retire legacy Desktop execution](./0019-retire-legacy-desktop-execution.md)
+- [ADR-0020: Electrobun Desktop host](./0020-electrobun-desktop-host.md)
+- [ADR-0021: Retire Admin and unused management interfaces](./0021-retire-admin.md)
+- [ADR-0022: Unscoped application package names](./0022-unscoped-application-packages.md)

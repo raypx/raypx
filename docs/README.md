@@ -16,24 +16,23 @@ deployment boundaries, and coding-agent guidance.
   assets, sync, Agent runs, and boundary layers.
 - [Domain services and client state](./architecture/domain-services.md) — ownership,
   state lifetimes, compatibility and verification of the boundary migration.
-- [Applications](./architecture/applications.md) — Web (including Admin), Desktop, API,
+- [Applications](./architecture/applications.md) — Web, Desktop, API,
   and Storybook: what each is for, how it is built, and how it is deployed.
 - [Shared packages](./architecture/packages.md) — contracts, client, domain,
   auth, i18n, mail, shared foundation, DB, UI, scripts, and TypeScript presets.
 - [Product design](./architecture/design.md) — brand posture, cross-surface
   intensity, visual vocabulary, and accessibility rules.
-- [VoidMix delivery goal](./architecture/voidmix-delivery-goal.md) — the
-  complete Pi-powered cross-platform product, visual, and acceptance target.
-- [Project Studio migration](./architecture/project-studio.md) — approved
-  project-first product direction, current implementation audit, migration
-  sequence, compatibility, and acceptance criteria.
+- [VoidMix delivery goal](./architecture/voidmix-delivery-goal.md) — current cloud
+  product and lightweight Desktop acceptance target.
+- [Historical Project Studio migration](./architecture/project-studio.md) — the
+  earlier project-first migration, superseded by the cloud product decisions.
 - [Account-first canonical architecture](./architecture/account-first-v2.md) —
   the V2-only API, project ownership, permissions, Agent runs, and Organization
   reservation.
 - [Toolchain](./architecture/tooling.md) — Bun catalogs, Vite+, TypeScript,
   shadcn/Base UI, and repository automation.
 - [Runtime and deployment](./architecture/deployment.md) — production runtimes,
-  containers, Railway, PostgreSQL, and Tauri distribution.
+  containers, Railway, PostgreSQL, and Electrobun distribution.
 - [Decision records](./architecture/decisions/README.md) — decisions that
   constrain future work, and the conditions for revisiting them.
 - [Internationalization decisions](./architecture/decisions/0004-use-intl-static-catalogs.md)
@@ -50,12 +49,16 @@ deployment boundaries, and coding-agent guidance.
   expectations, and the Vite+/Vitest plugin boundary.
 - [Cloud release acceptance](./development/cloud-acceptance.md) — verified local
   results, real-provider boundaries and the remaining live release gate.
+- [Feature reduction and Electrobun acceptance](./development/feature-reduction-acceptance.md)
+  — historical first-batch verification and native deployment gates.
+- [Admin retirement and application naming acceptance](./development/admin-retirement-acceptance.md)
+  — current removal, unscoped apps and verification results.
 - [Web bundle baseline](./development/web-bundle.md) — how to compare the home
   route's initial client preloads and deferred interaction chunks.
-- [Workspace preview](./development/workspace-preview.md) — Clean Signal routes,
+- [Historical Workspace preview](./development/workspace-preview.md) — Clean Signal routes,
   preview data boundaries, project interactions, Pi states, and verification.
-- [Visual implementation audit](./development/visual-audit.md) — current UI
-  gaps and acceptance checks for the VoidMix visual target.
+- [Visual implementation audit](./development/visual-audit.md) — historical UI
+  findings and viewport acceptance checks.
 - [File structure](./development/file-structure.md) — where a new file goes
   inside a workspace, and the conventions policy enforces.
 - [Monolithic simplification](./development/monolithic-simplification.md) —

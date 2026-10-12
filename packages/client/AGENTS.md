@@ -8,12 +8,11 @@ absolute API origin and send credentialed requests.
 
 ## Interface
 
-| Path              | Purpose                                                                   |
-| ----------------- | ------------------------------------------------------------------------- |
-| `.`               | `createApiClient`, `ApiClient`, and client option types                   |
-| `./cloud-runs`    | Canonical cloud Run session and ordered event transport                   |
-| `./conversations` | Conversation session, live projection and explicit older pages            |
-| `./runs`          | `createRunSession`, `createApiRunTransport`, snapshot and transport types |
+| Path              | Purpose                                                        |
+| ----------------- | -------------------------------------------------------------- |
+| `.`               | `createApiClient`, `ApiClient`, and client option types        |
+| `./cloud-runs`    | Canonical cloud Run session and ordered event transport        |
+| `./conversations` | Conversation session, live projection and explicit older pages |
 
 ## Ownership
 
@@ -34,6 +33,8 @@ absolute API origin and send credentialed requests.
 - `fetch` is injectable and that is load-bearing: `apps/api/server/api`'s integration test
   passes the Hono app directly (`fetch: async (input, init) => app.fetch(new Request(input, init))`)
   to exercise the whole stack in-process with no network.
+- `FetchCallable` accepts the URL strings supplied by oRPC and standard `RequestInit`. Keep the
+  public injection independent of runtime-specific static fetch members or Bun options.
 - Procedures are never zero-arg. `client.health({})` needs the explicit `{}`.
 - Depend only on `@orpc/client`, `@orpc/contract`, and `@voidmix/contracts`.
   Never import `@voidmix/db`, `@voidmix/core`, or any application.
@@ -78,4 +79,5 @@ bun run --cwd apps/api test:integration   # real in-process exercise
   Conversation connection reuses a Router bootstrap; its stream begins with a
   fresh authorized projection. `settled` becomes true only after a terminal Run
   has refreshed its durable final facts. Auth/access denial clears private data.
-- `./runs` remains only for the deferred Desktop local-run integration.
+- Device-bound Run sessions, the former `./runs` subpath, and both Admin RPC
+  trees are retired. Client types derive that removal from the shared contract.

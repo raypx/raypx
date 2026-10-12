@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@voidmix/ui/components/ui/dropdown-menu";
 import { LazyThemeMenuItems, loadThemeMenuItems } from "../../components/theme-menu-lazy";
@@ -20,11 +19,11 @@ import { useTranslations } from "../../i18n/client";
 
 export function AccountMenu({
   name,
-  role,
+  email,
   onSignOut,
 }: {
   name: string;
-  role: string | undefined;
+  email: string | undefined;
   onSignOut: () => Promise<void>;
 }) {
   const locale = useLocale();
@@ -61,9 +60,9 @@ export function AccountMenu({
       />
       <DropdownMenuContent align="end" className="min-w-44" side="top" sideOffset={8}>
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="flex items-center gap-2">
+          <DropdownMenuLabel className="flex flex-col items-start gap-1">
             <span className="truncate text-foreground">{name}</span>
-            <DropdownMenuShortcut>{role ?? t("user")}</DropdownMenuShortcut>
+            {email ? <span className="truncate text-muted-foreground">{email}</span> : null}
           </DropdownMenuLabel>
         </DropdownMenuGroup>
 

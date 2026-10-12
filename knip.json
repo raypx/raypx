@@ -11,7 +11,9 @@
     "**/.output/**",
     "**/dist/**",
     "**/storybook-static/**",
-    "**/src-tauri/**",
+    "**/.hutch/**",
+    "apps/desktop/build/**",
+    "apps/desktop/artifacts/**",
     "packages/db/drizzle.config.ts",
     ".claude/worktrees/**"
   ],
@@ -26,13 +28,19 @@
       ]
     },
     "apps/desktop": {
-      "entry": ["src/router.tsx"]
+      "entry": [
+        "src/router.tsx",
+        "native/main.ts",
+        "native/smoke.ts",
+        "electrobun.config.ts",
+        "hutch.config.ts"
+      ]
     },
     "apps/web": {
       "entry": ["scripts/analyze-bundle.ts", "server/health.ts", "src/router.tsx"]
     },
     "apps/worker": {
-      "entry": ["src/index.ts", "src/runtime.ts"]
+      "entry": ["scripts/build.mjs", "scripts/dev.mjs", "src/main.ts", "src/runner-main.ts"]
     },
     "apps/storybook": {
       "entry": [".storybook/main.ts", ".storybook/preview.tsx"]
@@ -47,7 +55,14 @@
       "entry": ["src/cli.ts"]
     },
     "packages/db": {
-      "ignoreFiles": ["drizzle.config.ts"]
+      "ignoreFiles": ["drizzle.config.ts"],
+      "entry": [
+        "src/index.ts",
+        "src/env.ts",
+        "src/schema.ts",
+        "vitest.postgres.config.ts",
+        "tests/**/*.integration.test.ts"
+      ]
     },
     "packages/shared": {
       "entry": [

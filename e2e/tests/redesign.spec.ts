@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { accounts, password } from "../database.js";
 const port = Number(process.env.VOIDMIX_E2E_PORT ?? 3000);
 const api = `http://127.0.0.1:${port + 2}`;
-async function login(page: Page, account: keyof typeof accounts = "admin") {
+async function login(page: Page, account: keyof typeof accounts = "primary") {
   const response = await page.request.post(`${api}/api/auth/sign-in/email`, {
     data: { email: accounts[account].email, password },
     headers: { origin: api },
@@ -20,8 +20,7 @@ test("Web explains actual project access rejection without leaking the project",
   await expect(page.getByRole("alert")).toHaveText(
     /^(The project could not be found\.|Your account does not have permission to view this content\.)$/,
   );
-  await expect(page.getByText("Admin film 001", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "User management", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Project 001", { exact: true })).toHaveCount(0);
 });
 
 test("Desktop creates a long project and task through the real API at minimum width", async ({
@@ -76,13 +75,13 @@ test("Desktop connection failures show no demos and project retry restores real 
   });
   await page.unroute(unavailable);
   await page.reload();
-  await expect(page.getByRole("link", { name: /Admin film/ }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Project \d{3}/ }).first()).toBeVisible();
   await page.route("**/rpc/projects/list**", (route) => route.abort("connectionrefused"));
   await page.reload();
   await expect(page.getByRole("heading", { name: "Projects are unavailable" })).toBeVisible();
   await page.unroute("**/rpc/projects/list**");
   await page.getByRole("button", { name: "Refresh", exact: true }).click();
-  await expect(page.getByRole("link", { name: /Admin film/ }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Project \d{3}/ }).first()).toBeVisible();
 });
 async function contained(page: Page) {
   expect(
@@ -123,29 +122,17 @@ for (const scenario of [
         ).toBe(true);
     }
     await login(page);
-    for (const route of ["/projects", "/projects/e2e-project-001", "/admin"]) {
+    for (const route of ["/projects", "/projects/e2e-project-001"]) {
       await page.goto(route);
-      await expect(page.locator("#main-content")).toBeVisible();
+      await expect(page.locator("#main-content")).toBeVisible({ timeout: 15_000 });
       await contained(page);
       await page.screenshot({
         caret: "initial",
         path: info.outputPath(`app-${route.split("/").pop()}.png`),
-        fullPage: route !== "/admin",
+        fullPage: true,
       });
     }
-    const select = page.getByRole("checkbox", {
-      name: scenario.locale === "en" ? "Select all users" : "选择全部用户",
-    });
-    await select.check();
-    await expect(
-      page.getByRole("button", {
-        name: scenario.locale === "en" ? "Suspend selected" : "停用所选用户",
-      }),
-    ).toBeVisible();
     if (scenario.width < 768) {
-      const selectionTarget = await select.locator("..").boundingBox();
-      expect(selectionTarget?.width).toBeGreaterThanOrEqual(44);
-      expect(selectionTarget?.height).toBeGreaterThanOrEqual(44);
       const trigger = page.getByRole("button", { name: "打开导航" });
       await trigger.click();
       const dialog = page.getByRole("dialog", { name: "导航" });

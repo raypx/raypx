@@ -21,10 +21,7 @@ type State = {
   entities: { [K in CloudEntityKind]: Map<string, CloudEntities[K]> };
   events: Map<string, CloudRunEvent>;
   outbox: Map<string, OutboxEvent>;
-  users: Map<
-    string,
-    { active: boolean; email: string; displayName: string; role: "user" | "admin" | "owner" }
-  >;
+  users: Map<string, { active: boolean; email: string; displayName: string }>;
   projects: Map<string, ProjectV2>;
   members: Map<string, ProjectMemberV2>;
   organizations: Map<string, OrganizationMemberV2>;
@@ -208,7 +205,7 @@ function txFor(state: State): CloudTransaction {
     userActive: async (actorId) => state.users.get(actorId)?.active === true,
     userProfile: async (actorId) => {
       const user = state.users.get(actorId);
-      return user ? { email: user.email, displayName: user.displayName, role: user.role } : null;
+      return user ? { email: user.email, displayName: user.displayName } : null;
     },
     projectAccess: async (projectId, actorId) => {
       const project = state.projects.get(projectId);
@@ -262,7 +259,6 @@ export class InMemoryCloudRepository implements CloudRepository {
         active?: boolean;
         email?: string;
         displayName?: string;
-        role?: "user" | "admin" | "owner";
       }[];
       projects?: ProjectV2[];
       projectMembers?: ProjectMemberV2[];
@@ -280,7 +276,6 @@ export class InMemoryCloudRepository implements CloudRepository {
             active: u.active ?? true,
             email: u.email ?? `${u.id}@example.com`,
             displayName: u.displayName ?? u.id,
-            role: u.role ?? "user",
           },
         ]),
       ),

@@ -90,7 +90,7 @@ async function submitCredentials(
 describe("authentication forms", () => {
   it.each([
     ["opens cloud conversations", undefined, "/chat"],
-    ["returns to the requested workspace", "/admin?tab=users", "/admin?tab=users"],
+    ["returns to the requested workspace", "/projects?cursor=50", "/projects?cursor=50"],
   ])("signs in with email credentials and %s", async (_name, redirectTo, destination) => {
     mocks.signInEmail.mockResolvedValue({ data: {}, error: null });
     await submitCredentials({ mode: "login", ...(redirectTo ? { redirectTo } : {}) });
@@ -229,7 +229,7 @@ describe("password reset and email verification", () => {
   });
 
   it("renders the completed state when Better Auth redirects after verification", () => {
-    render(<VerifyEmail redirectTo="/admin" verified />);
+    render(<VerifyEmail redirectTo="/projects" verified />);
 
     expect(screen.getByRole("heading", { name: "Email verified" })).toBeVisible();
   });

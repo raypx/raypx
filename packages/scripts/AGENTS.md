@@ -13,8 +13,7 @@ src/cli.ts          bin entry; routes `tasks` and `env -- <cmd>` before citty
 src/root.ts         citty command registry
 src/commands/       adapters: tasks, clean, env, generate, desktop, verify, shadcn
 src/runtime/        action boundary, context, env, logger, process, repository
-src/database/       command, operation, policy, PostgreSQL user adapter
-src/admin/          command and administrator operation
+src/database/       command, operation and development/test destructive gate
 src/doctor/         command, checks, runtime probes, report rendering
 src/deps/           Bun dependency maintenance commands and operations
 src/skills/         repository skill maintenance commands and operations
@@ -25,8 +24,8 @@ src/test-fixtures.ts shared isolated repository and injected dependency fixtures
 src/verify/         isolated Nitro runtime verification
 ```
 
-Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps check|update|dedupe|audit`, `skills update`, `clean [--dependencies] [--bun-cache]`, `db migrate|seed|studio`,
-`admin create`, `generate`, `desktop build`, `policy`, `verify [--verbose]`,
+Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps check|update|dedupe|audit`, `skills update`, `clean [--dependencies] [--bun-cache]`, `db migrate|clean|push|studio`,
+`generate`, `desktop build`, `policy`, `verify [--verbose]`,
 `shadcn update`.
 
 ## Ownership
@@ -65,7 +64,10 @@ Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps chec
 - Architecture policy checks production dependency direction, cross-package
   private imports (including relative paths and aliases), and workspace cycles.
   Enum parity tests compare Core, Contracts and DB without adding runtime edges.
-- Admin and seed commands compose Identity from Application, not Core.
+- Applications use their unscoped directory name; packages and E2E retain the
+  `@voidmix/` scope. Filters and qualified Turbo tasks use the actual package name.
+- `desktop build` first runs root `build:desktop` through Turbo, then invokes the
+  Desktop `native:build` Electrobun packager. It never prepares a Node/Pi runner.
 - Dependency maintenance is explicit: `vmx deps dedupe` may rewrite `bun.lock`,
   `vmx deps dedupe --check` is read-only, and `vmx deps audit` is read-only.
 - Dependency check/update excludes Drizzle RC builds because hash suffixes do
@@ -78,6 +80,9 @@ Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps chec
 - Never print secret values loaded by the env runner.
 - Remote cache needs token, team and signature key; untrusted CI strips these.
   `VMX_REMOTE_CACHE_TRUSTED=true` is set only by the protected CI workflow.
+- Doctor probes only the local Electrobun bootstrap/SDK paths; it never downloads
+  the native toolchain. Clean removes Desktop build/artifacts/project SDK caches,
+  preserving native profiles and user data.
 - `verify` also starts the built Worker with `--check`; this probe needs no
   database or external providers and validates packaged imports and exporters.
 

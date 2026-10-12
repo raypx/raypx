@@ -10,8 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ActivityRouteRouteImport } from './routes/activity/route'
-import { Route as DevicesRouteRouteImport } from './routes/devices/route'
 import { Route as ProjectsRouteRouteImport } from './routes/projects/route'
 import { Route as SettingsRouteRouteImport } from './routes/settings/route'
 import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
@@ -20,16 +18,6 @@ import { Route as ProjectsProjectIdRouteImport } from './routes/projects/$projec
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ActivityRouteRoute = ActivityRouteRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevicesRouteRoute = DevicesRouteRouteImport.update({
-  id: '/devices',
-  path: '/devices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRouteRoute = ProjectsRouteRouteImport.update({
@@ -55,8 +43,6 @@ const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/activity': typeof ActivityRouteRoute
-  '/devices': typeof DevicesRouteRoute
   '/projects': typeof ProjectsRouteRouteWithChildren
   '/settings': typeof SettingsRouteRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
@@ -64,8 +50,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/activity': typeof ActivityRouteRoute
-  '/devices': typeof DevicesRouteRoute
   '/settings': typeof SettingsRouteRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects': typeof ProjectsIndexRoute
@@ -73,8 +57,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/activity': typeof ActivityRouteRoute
-  '/devices': typeof DevicesRouteRoute
   '/projects': typeof ProjectsRouteRouteWithChildren
   '/settings': typeof SettingsRouteRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
@@ -83,26 +65,12 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/activity'
-    | '/devices'
-    | '/projects'
-    | '/settings'
-    | '/projects/$projectId'
-    | '/projects/'
+    '/' | '/projects' | '/settings' | '/projects/$projectId' | '/projects/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/activity'
-    | '/devices'
-    | '/settings'
-    | '/projects/$projectId'
-    | '/projects'
+  to: '/' | '/settings' | '/projects/$projectId' | '/projects'
   id:
     | '__root__'
     | '/'
-    | '/activity'
-    | '/devices'
     | '/projects'
     | '/settings'
     | '/projects/$projectId'
@@ -111,8 +79,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ActivityRouteRoute: typeof ActivityRouteRoute
-  DevicesRouteRoute: typeof DevicesRouteRoute
   ProjectsRouteRoute: typeof ProjectsRouteRouteWithChildren
   SettingsRouteRoute: typeof SettingsRouteRoute
 }
@@ -124,20 +90,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/activity': {
-      id: '/activity'
-      path: '/activity'
-      fullPath: '/activity'
-      preLoaderRoute: typeof ActivityRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/devices': {
-      id: '/devices'
-      path: '/devices'
-      fullPath: '/devices'
-      preLoaderRoute: typeof DevicesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -187,8 +139,6 @@ const ProjectsRouteRouteWithChildren = ProjectsRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ActivityRouteRoute: ActivityRouteRoute,
-  DevicesRouteRoute: DevicesRouteRoute,
   ProjectsRouteRoute: ProjectsRouteRouteWithChildren,
   SettingsRouteRoute: SettingsRouteRoute,
 }

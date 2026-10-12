@@ -1,23 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { userSchema, projectScopeV2Schema, projectV2Schema } from "./index.js";
+import { apiContract, projectScopeV2Schema, projectV2Schema } from "./index.js";
 import { activitySchema } from "./account.js";
-
-describe("userSchema", () => {
-  it("preserves native Date values for the RPC protocol", () => {
-    const createdAt = new Date("2026-01-01T00:00:00.000Z");
-    const user = userSchema.parse({
-      id: "user-1",
-      email: "person@example.com",
-      displayName: "Person",
-      role: "user",
-      status: "active",
-      createdAt,
-    });
-
-    expect(user.createdAt).toBe(createdAt);
-  });
-});
 
 it("preserves Activity fields and native dates while rejecting string timestamps", () => {
   const occurredAt = new Date("2026-09-28T00:00:00Z");
@@ -74,4 +58,11 @@ describe("V2 account-first project contract", () => {
       }),
     ).toThrow();
   });
+});
+
+it("exposes account and Cloud capabilities without retired administration contracts", () => {
+  expect(apiContract).toHaveProperty("account.get");
+  expect(apiContract.cloud).toHaveProperty("usage.get");
+  expect(apiContract).not.toHaveProperty("admin");
+  expect(apiContract.cloud).not.toHaveProperty("admin");
 });

@@ -47,7 +47,7 @@ which is not something CI can assert about itself.
 
 `bun run knip:report` is also a separate advisory check. Knip finds unused
 files, exports, dependencies, and duplicate exports across the workspace graph.
-Its first reports are not a release gate because Nitro/Tauri entrypoints,
+Its first reports are not a release gate because Nitro/Electrobun entrypoints,
 dynamic imports, package public exports, and environment-backed build configs
 need explicit classification in [`knip.json`](../../knip.json). Once that
 baseline is clean, dependency and duplicate-export findings can be promoted to
@@ -71,10 +71,10 @@ There are two job definitions (three runners):
   Database and browser tests run sequentially against the same test database;
   each suite resets its fixtures. The final clean-tree check catches both changed
   tracked files and newly generated untracked files, including route/Drizzle drift.
-- `desktop` builds native packages on macOS and Windows, retaining the Rust cache.
-  Tauri's `beforeBuildCommand` prepares the pinned native runner resources uncached,
-  then enters `build:desktop`, which checks and builds the frontend through Turbo. Its Vitest
-  tests run once with all other workspace tests in the Linux verification job.
+- `desktop` builds Electrobun native packages on macOS and Windows. Root
+  `desktop:build` checks/builds the frontend through Turbo, then runs the stable
+  native packager. The pinned devkit is prepared before root lint and Desktop checks/Vite.
+  Vitest tests run with all other workspace tests in the Linux verification job.
 
 A newer push cancels the previous run for the same branch or pull request. Each
 job has a 30-minute timeout. Browser failure reports and traces are uploaded for
@@ -90,7 +90,7 @@ minimum coverage threshold). Knip remains a local advisory command, outside the
 required pipeline, so its framework/config discovery cannot block verification.
 
 `bun run test:e2e` starts API, Web and Desktop preview servers itself.
-It runs the `cloud`, `web`, `admin`, `authenticated`, `redesign`, `homepage`, `workbench` and `desktop` projects. Configure the
+It runs the `cloud`, `web`, `authenticated`, `redesign`, `homepage`, `workbench` and `desktop` projects. Configure the
 dedicated database as described below. Set `VOIDMIX_E2E_PORT` to
 choose the Web port (default 3000); Desktop uses +1 and API +2. The retired Project Studio suite and its
 mock API fixture have been removed; Web still checks the sign-in redirect for
@@ -108,10 +108,8 @@ running the browser tests in the Linux job.
 Desktop native checks:
 
 ```bash
-cd apps/desktop/src-tauri
-cargo fmt --check
-cargo check
-cargo clippy --all-targets -- -D warnings
+bun run --cwd apps/desktop check  # renderer, config and native TypeScript
+bun run desktop:build            # root frontend gate, then native packaging
 ```
 
 Each workspace must complete its local TypeScript check independently. The root
@@ -214,14 +212,14 @@ run `bun run policy` for the paste-ready fix in each workspace.
 
 Node workspaces use the Node test environment. DOM workspaces and individual
 component/integration files opt into jsdom with local setup, keeping globals out
-of server and library checks. E2E uses separate Web, Admin, authenticated and Desktop projects;
-Web/Admin target the Web server, while Desktop targets its own browser preview.
+of server and library checks. E2E uses separate Web, authenticated product and
+Desktop projects; Web targets the Web server, while Desktop targets its own
+browser preview.
 
 Run a single browser project or inspect its report with:
 
 ```bash
 bun run --cwd e2e e2e -- --project=web
-bun run --cwd e2e e2e -- --project=admin
 bun run --cwd e2e test:report
 ```
 
@@ -229,26 +227,24 @@ bun run --cwd e2e test:report
 
 - Browser, Node, React library, and Bun-specific types do not leak across
   workspace boundaries.
-- Web and Desktop share contracts/client types but not route trees; Admin routes
-  belong to Web's generated route tree.
-- Ordinary users cannot access protected Admin procedures.
-- Admin writes produce audit records and enforce self/final-admin protections.
-- Settings administration RPCs are retired. Adapter tests still cover partial
-  mutations, inherited defaults, secret redaction, no-op auditing and parity.
-  API tests preserve dynamic registration/domain/email-policy guards.
+- Web and Desktop share contracts/client types but not route trees.
+- Retired Admin and device/local execution RPCs return 404 for every role.
+- Private Cloud and Project resources enforce account and capability isolation.
+- Settings administration RPCs and unused writers are retired. Reader tests cover
+  inherited defaults and secret redaction; API tests preserve dynamic
+  registration/domain/email-policy guards and suspended-account denial.
 - The unauthenticated Auth capability procedure returns only three booleans;
   public registration and tokenless reset UI follows them, fails open on request
   failure, and keeps existing reset-token flows usable.
-- Settings tests distinguish omission (retain), `set`/`replace` (database
-  override), and `reset` (delete and inherit), including secret redaction and
-  source transitions.
+- Settings readers retain database overrides, environment fallbacks and field
+  sources without exposing credentials to clients.
 - Missing production mail configuration leaves health and login available while
   mail-dependent Auth operations return `MAIL_NOT_CONFIGURED` with HTTP 503.
 - Database scripts are tested against disposable development/test data.
 - CI builds Web/API on Linux and Desktop packages on macOS and Windows.
 - CI runs all Vitest layers once through `verify`; focused layer and coverage
   commands remain available locally.
-- CI runs real PostgreSQL tests followed by Web, Admin and Desktop Playwright
+- CI runs real PostgreSQL tests followed by Web and Desktop Playwright
   tests in the same Linux job after installing Chromium.
 
 ## Real database and authenticated browser gates
@@ -268,7 +264,7 @@ PostgreSQL 17 service for the sequential Linux database and browser tests. `VOID
 consecutive ports for concurrent local development.
 
 Database coverage includes Core/SQL visibility parity, keyset pagination,
-administrator concurrency, rollback and idempotence. Authenticated Playwright
-uses real Better Auth credentials and API/DB services for project creation,
-tasks, Admin filtering/status updates, SSR isolation, refresh/history and errors.
+owner fencing, rollback and idempotence. Authenticated Playwright uses real
+Better Auth credentials and API/DB services for project creation, tasks, Cloud
+delivery and acceptance, SSR isolation, refresh/history and errors.
 No actor-header authentication bypass is enabled.

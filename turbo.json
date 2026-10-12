@@ -96,18 +96,18 @@
       ]
     },
     "//#lint:leaf": {
+      "dependsOn": ["desktop#native:prepare"],
+      "outputs": []
+    },
+    "desktop#native:prepare": {
+      "cache": false,
       "outputs": []
     },
     "//#format:leaf": {
       "outputs": []
     },
     "e2e": {
-      "dependsOn": [
-        "@voidmix/web#build",
-        "@voidmix/api#build",
-        "@voidmix/worker#build",
-        "@voidmix/desktop#build"
-      ],
+      "dependsOn": ["web#build", "api#build", "worker#build", "desktop#build"],
       "cache": false,
       "outputs": [],
       "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]

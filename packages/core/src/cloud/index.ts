@@ -306,9 +306,7 @@ export interface CloudTransaction {
   remove<K extends CloudEntityKind>(kind: K, id: string): Promise<void>;
   save<K extends CloudEntityKind>(kind: K, entity: CloudEntities[K]): Promise<void>;
   userActive(actorId: string): Promise<boolean>;
-  userProfile(
-    actorId: string,
-  ): Promise<{ email: string; displayName: string; role: "user" | "admin" | "owner" } | null>;
+  userProfile(actorId: string): Promise<{ email: string; displayName: string } | null>;
   projectAccess(
     projectId: string,
     actorId: string,

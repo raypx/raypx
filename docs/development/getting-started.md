@@ -4,7 +4,7 @@
 
 - Bun `1.4.0`
 - Node.js `24.18.0`
-- Rust/Cargo for Desktop development and packaging
+- Electrobun native SDK (Desktop scripts prepare its pinned version)
 - PostgreSQL when persistent data is required
 
 Versions are pinned in the root repository configuration. Prefer repository
@@ -21,7 +21,7 @@ bun run dev
 ```
 
 `DATABASE_URL` is required by API and Worker and must point to a fresh PostgreSQL
-database for the cloud migration baseline. Admin authentication uses the
+database for the cloud migration baseline. Authentication uses the
 Better Auth cookie session; local auth emails are logged when Resend is not
 configured.
 
@@ -50,7 +50,7 @@ process.env > .env.local > .env > schema defaults
 ```
 
 Workspaces decide which scripts need file-backed environment values. Web,
-Admin, API, and Desktop use the runner for development and builds; database
+API, Worker and Desktop use the runner for development and builds; database
 and deployment-oriented repository commands use it as needed. Unit tests stay
 outside the runner and must provide `runtimeEnv` or test stubs explicitly
 rather than depend on values from a developer's files.
@@ -76,16 +76,15 @@ bun run build
 bun run db:migrate
 bun run db:push
 bun run db:clean
-bun run db:seed
 bun run db:studio
-bun run admin:create -- --email owner@example.com --name "Workspace Owner"
 bun run desktop:build
 bun run verify
 ```
 
-`desktop:build` sets `CI=true` for Tauri's bundler. On macOS this skips the
-optional Finder AppleScript that only positions DMG icons; it avoids requiring
-Automation permission and keeps local and CI DMG builds reproducible.
+`desktop:build` enters the root renderer build/check gate, then packages the
+Electrobun stable native bundle. Desktop scripts prepare the pinned SDK through
+the workspace-local bootstrap; Rust/Cargo and a global Hutch install are unnecessary.
+Use `bun run --cwd apps/desktop native:dev` for the native development shell.
 
 Those names are aliases for nested `vmx` commands, which is what the scripts call.
 Reach for the CLI directly when you need to pass an argument:
@@ -94,9 +93,7 @@ Reach for the CLI directly when you need to pass an argument:
 bun run vmx db migrate
 bun run vmx db push
 bun run vmx db clean
-bun run vmx db seed
 bun run vmx db studio
-bun run vmx admin create --email owner@example.com --name "Workspace Owner"
 bun run vmx desktop build
 ```
 
@@ -105,7 +102,6 @@ bun run vmx desktop build
 ```bash
 docker compose up -d postgres
 bun run db:migrate
-bun run db:seed
 bun run db:studio
 ```
 
@@ -130,10 +126,8 @@ database `DATABASE_URL` points at.
 
 ```text
 Web      http://localhost:3000
-Admin    http://localhost:3000/admin
-API      http://localhost:3000/rpc and http://localhost:3000/api/auth
-API                     http://localhost:3002
-Desktop  TanStack Start SPA dev server on port 1420 when launched through Tauri
+API      http://localhost:3002 (RPC and Auth)
+Desktop  TanStack Start SPA dev server on port 1420 for browser preview; native shell uses Electrobun
 ```
 
 See [Runtime and deployment](../architecture/deployment.md) for production

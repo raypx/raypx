@@ -3,7 +3,6 @@ import { join } from "node:path";
 import {
   connectDatabase,
   PostgresSystemSettingsRepository,
-  PostgresUserRepository,
   FileSystemBlobStorageRepository,
   PostgresCloudRepository,
   PostgresOrganizationMemberV2Repository,
@@ -234,7 +233,6 @@ export async function createApiRuntime({
       assets,
       reviews,
       activity,
-      users: new PostgresUserRepository(connection.db),
       settings,
       mailFallback,
       resolveAuthSettings: getAuthSettings,

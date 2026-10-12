@@ -32,7 +32,6 @@ export function routeCategory(pathname: string): string {
   if (pathname.startsWith("/tasks")) return "task";
   if (pathname.startsWith("/projects")) return "project";
   if (pathname.startsWith("/settings")) return "settings";
-  if (pathname.startsWith("/admin")) return "admin";
   return "public";
 }
 /** Keep code locations from built static chunks, never resource URLs or stack context. */

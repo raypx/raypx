@@ -5,6 +5,9 @@
 # drift checks.
 **/routeTree.gen.ts
 
+# Generated package build output; checks and formatting target its source.
+packages/*/dist/
+
 # Generated Drizzle migrations and metadata.
 packages/db/drizzle/
 packages/db/drizzle-cloud/

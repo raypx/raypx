@@ -308,8 +308,6 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
       runId: run.run.id,
       type: "run.failed",
     });
-    const diagnostics = await service.adminListRuns({ actorId: "alice" }).catch((error) => error);
-    expect(diagnostics).toMatchObject({ code: "CLOUD_ACCESS_DENIED" });
   });
   it("keeps verified files private until every delivery file is ready and durably claims expired objects", async () => {
     let time = new Date("2026-10-06T00:00:00Z");

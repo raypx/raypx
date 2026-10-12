@@ -1,11 +1,9 @@
 import {
   FolderSimple,
   Gear,
-  House,
   Moon,
   SidebarSimple,
   Sun,
-  Pulse,
   Translate,
   TrayArrowDown,
 } from "@phosphor-icons/react";
@@ -34,7 +32,7 @@ function WindowActions() {
   }
 
   return (
-    <div className="window-actions relative flex items-center gap-2">
+    <div className="window-actions electrobun-webkit-app-region-no-drag relative flex items-center gap-2">
       {message ? (
         <span className="window-message absolute right-0 top-11 w-65 p-3 border border-border rounded-[8px] bg-popover text-[12px] z-30">
           {message}
@@ -70,9 +68,7 @@ function DesktopShellContent() {
   const account = useDesktopAccount();
   const protectedPage = pathname !== "/settings";
   const navigation = [
-    { to: "/", label: t("home"), icon: House },
     { to: "/projects", label: t("projects"), icon: FolderSimple },
-    { to: "/activity", label: t("activity"), icon: Pulse },
     { to: "/settings", label: t("settings"), icon: Gear },
   ] as const;
   const theme = useDesktopPreferences((state) => state.theme);
@@ -115,8 +111,7 @@ function DesktopShellContent() {
             {t("control")}
           </p>
           {navigation.map(({ to, label, icon: Icon }) => {
-            const active =
-              to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
+            const active = pathname === to || pathname.startsWith(`${to}/`);
             const stateProps = {
               className: cn(
                 "nav-link flex min-h-10 items-center gap-3 rounded-[8px] px-3 py-2 text-sm leading-[1.6] font-medium text-muted-foreground transition-colors duration-180 hover:bg-muted hover:text-foreground aria-[current=page]:bg-secondary aria-[current=page]:text-foreground group-data-[collapsed]/desktop-shell:justify-center group-data-[collapsed]/desktop-shell:px-0 [&_svg]:shrink-0",
@@ -159,11 +154,9 @@ function DesktopShellContent() {
       </aside>
 
       <div className="app-frame min-w-0 flex-1 flex flex-col">
-        <header
-          className="titlebar shrink-0 flex items-center gap-2.5 h-14 py-0 px-6 border-b border-border bg-card"
-          data-tauri-drag-region
-        >
+        <header className="titlebar electrobun-webkit-app-region-drag shrink-0 flex items-center gap-2.5 h-14 py-0 px-6 border-b border-border bg-card">
           <IconButton
+            className="electrobun-webkit-app-region-no-drag"
             size="icon"
             variant="ghost"
             label={t(collapsed ? "expandNavigation" : "collapseNavigation")}
@@ -176,6 +169,7 @@ function DesktopShellContent() {
             {t("control")}
           </span>
           <IconButton
+            className="electrobun-webkit-app-region-no-drag"
             size="icon"
             variant="ghost"
             onClick={toggleTheme}
@@ -184,6 +178,7 @@ function DesktopShellContent() {
             {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
           </IconButton>
           <IconButton
+            className="electrobun-webkit-app-region-no-drag"
             size="icon"
             variant="ghost"
             onClick={() => void setLocale(nextLocale.value).catch(() => undefined)}

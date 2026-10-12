@@ -62,12 +62,11 @@ Above all, prefer the existing local pattern over a new abstraction.
 - Extend the owning contracts domain module and wire its procedure into the
   explicit `packages/contracts/src/index.ts` tree; see ADR-0013.
 - Keep dates as native `Date` end to end. Never serialize to ISO strings.
-- Apply the matching permission middleware to protected Admin procedures and
-  the principal middleware to authenticated canonical routes. Application
-  commands enforce project capabilities; cover rejected callers in tests.
-- Construct audit events in Core and append them in Application through the
-  administration transaction port, never from a handler. Keep operational logs
-  separate. See ADR-0014.
+- Apply principal middleware to authenticated routes. Application commands
+  enforce current account and project capabilities; cover rejected callers in
+  tests. Retired Admin procedures stay absent; see ADR-0021.
+- Keep durable Cloud transitions and their outbox intents atomic through the
+  repository ports. Keep operational logs separate from domain facts.
 - Prefer a narrower `AGENTS.md` over a broader one: if a rule only holds inside
   one workspace, it belongs to that workspace's file.
 - When a choice would relax a stated constraint, stop and write an
@@ -121,17 +120,16 @@ Vendored skills know their framework, not this repository. They never override a
 
 Currently adopted:
 
-| Skill                            | Source                                 | Why                                                                            |
-| -------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------ |
-| `shadcn`                         | `shadcn/ui`                            | documents the Base UI versus Radix API split and the configured icon library   |
-| `hono`                           | `yusukebe/hono-skill`                  | one file, matches the API's middleware and routing layer                       |
-| `postgres-drizzle`               | `ccheney/robust-skills`                | schema, query, migration, and index guidance for `packages/db`                 |
-| `tanstack-router-best-practices` | `deckardger/tanstack-agent-skills`     | the repository has no loader or route-guard precedent                          |
-| `tanstack-start-best-practices`  | `deckardger/tanstack-agent-skills`     | the repository has no server-function precedent                                |
-| `better-auth-best-practices`     | `better-auth/skills`                   | Better Auth configuration, sessions, adapters, plugins, and security           |
-| `tauri-v2`                       | `nodnarbnitram/claude-code-extensions` | Tauri v2 IPC, capabilities, Rust commands, and desktop deployment              |
-| `vercel-react-best-practices`    | `vercel-labs/agent-skills`             | React performance, bundle size, rendering, and data-fetching guidance          |
-| `vite`                           | `antfu/skills`                         | Vite configuration, plugin, SSR, and Rolldown guidance for the Vite+ toolchain |
+| Skill                            | Source                             | Why                                                                            |
+| -------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------ |
+| `shadcn`                         | `shadcn/ui`                        | documents the Base UI versus Radix API split and the configured icon library   |
+| `hono`                           | `yusukebe/hono-skill`              | one file, matches the API's middleware and routing layer                       |
+| `postgres-drizzle`               | `ccheney/robust-skills`            | schema, query, migration, and index guidance for `packages/db`                 |
+| `tanstack-router-best-practices` | `deckardger/tanstack-agent-skills` | the repository has no loader or route-guard precedent                          |
+| `tanstack-start-best-practices`  | `deckardger/tanstack-agent-skills` | the repository has no server-function precedent                                |
+| `better-auth-best-practices`     | `better-auth/skills`               | Better Auth configuration, sessions, adapters, plugins, and security           |
+| `vercel-react-best-practices`    | `vercel-labs/agent-skills`         | React performance, bundle size, rendering, and data-fetching guidance          |
+| `vite`                           | `antfu/skills`                     | Vite configuration, plugin, SSR, and Rolldown guidance for the Vite+ toolchain |
 
 Read [TanStack corrections](../../skills/voidmix-infra/references/tanstack.md)
 before acting on the two TanStack skills. They over-promise their rule indexes,
@@ -144,7 +142,10 @@ stops the same candidates being re-evaluated every few months:
 - `turborepo` — not yet adopted. Turbo now owns the task graph
   ([ADR-0018](../architecture/decisions/0018-turbo-task-orchestration.md)); review
   the candidate skill against the pinned tool before installing it.
-- `opentui` — a terminal UI framework; `apps/desktop` is a Tauri webview.
+- `opentui` — a terminal UI framework; `apps/desktop` uses a webview hosted by Electrobun.
+- `tauri-v2` — retired after Desktop moved to Electrobun
+  ([ADR-0020](../architecture/decisions/0020-electrobun-desktop-host.md)); no
+  current workspace uses Tauri.
 - `tanstack-query-best-practices` and `tanstack-integration-best-practices` — not
   yet adopted. Query is now used for ordinary resource data; review candidates
   against the installed Router integration and ClientSession ownership first.

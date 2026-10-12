@@ -10,7 +10,6 @@ import { Avatar } from "../avatar";
 import { Logo } from "../logo";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
 import { Field, FieldError, FieldLabel } from "./ui/field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 import { Toaster, toast } from "./ui/toast";
@@ -72,18 +71,6 @@ describe("Badge", () => {
 
     expect(screen.getByText("Active")).toHaveAttribute("data-slot", "badge");
     expect(screen.getByText("Active")).toHaveClass("bg-secondary");
-  });
-});
-
-describe("layout primitives", () => {
-  it("exposes base-nova card slots", () => {
-    render(
-      <Card>
-        <CardContent>Workspace summary</CardContent>
-      </Card>,
-    );
-
-    expect(screen.getByText("Workspace summary")).toHaveAttribute("data-slot", "card-content");
   });
 });
 

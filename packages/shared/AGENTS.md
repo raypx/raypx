@@ -23,7 +23,7 @@ This is the deepest common workspace in the repository.
 
 - Own the generic `DomainError` envelope used by framework-independent business
   rules, including primitive interpolation values.
-- Own setting source/mutation value types and the injectable `Clock` and
+- Own inherited setting value types and the injectable `Clock` and
   `IdGenerator` defaults used by deterministic domain and adapter code.
 - Keep domain errors and primitive types independent from authentication,
   persistence, transport, and UI dependencies.

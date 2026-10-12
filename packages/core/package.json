@@ -15,7 +15,6 @@
     "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "@voidmix/auth": "workspace:*",
     "@voidmix/shared": "workspace:*"
   },
   "devDependencies": {

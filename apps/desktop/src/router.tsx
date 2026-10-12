@@ -1,10 +1,13 @@
-import { createRouter } from "@tanstack/react-router";
+import { createHashHistory, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { DesktopRouteError, DesktopRoutePending } from "./features/shell/route-state";
 
 export function getRouter() {
   return createRouter({
     routeTree,
+    ...(typeof window !== "undefined" && window.location.protocol === "views:"
+      ? { history: createHashHistory() }
+      : {}),
     defaultPreload: "intent",
     defaultPendingComponent: DesktopRoutePending,
     defaultErrorComponent: DesktopRouteError,

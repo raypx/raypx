@@ -58,10 +58,7 @@ export const sourceFacadeAllowlist = new Set([
   "apps/desktop/src/i18n/client.ts",
 ]);
 
-export const sourceRecoveryAllowlist = new Set([
-  "apps/web/src/i18n/recovery-messages.ts",
-  "apps/web/src/i18n/error-message.ts",
-]);
+export const sourceRecoveryAllowlist = new Set(["apps/web/src/i18n/recovery-messages.ts"]);
 
 export const operationalSourceAllowlist = [
   /^packages\/mail\/src\/(?:env|service|transports)\//,

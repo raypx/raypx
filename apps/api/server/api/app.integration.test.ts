@@ -1,12 +1,8 @@
 import { domainFixtures } from "./test-fixtures.js";
 import { createApiClient } from "@voidmix/client";
-import {
-  InMemoryExecutionRepository,
-  InMemorySystemSettingsRepository,
-  InMemoryUserRepository,
-} from "@voidmix/db";
-import { createExecutionApplication, type ProjectApplication } from "@voidmix/application";
-import { ProjectV2DomainError, type MailSettingsFallback, type User } from "@voidmix/core";
+import { InMemorySystemSettingsRepository } from "@voidmix/db";
+import type { AssetApplication, ProjectApplication } from "@voidmix/application";
+import { ProjectV2DomainError, type MailSettingsFallback } from "@voidmix/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { createApiApp } from "./app.js";
@@ -14,25 +10,6 @@ import { createApiModules } from "./modules.js";
 import { createHeaderSessionResolver } from "./session.js";
 
 const now = new Date("2026-01-01T00:00:00.000Z");
-const users: User[] = [
-  {
-    id: "user-1",
-    email: "user@example.com",
-    displayName: "User",
-    role: "user",
-    status: "active",
-    createdAt: now,
-  },
-  {
-    id: "admin-1",
-    email: "admin@example.com",
-    displayName: "Admin",
-    role: "admin",
-    status: "active",
-    createdAt: now,
-  },
-];
-
 const project = {
   id: "project-1",
   createdByUserId: "user-1",
@@ -87,11 +64,8 @@ function createProjectApplication(): ProjectApplication {
   } as ProjectApplication;
 }
 
-function createApp() {
-  const userRepository = new InMemoryUserRepository(users);
-  const settings = new InMemorySystemSettingsRepository({
-    auditEvents: userRepository.auditEvents,
-  });
+function createApp(assetCompletion?: AssetApplication["completeAssetUpload"]) {
+  const settings = new InMemorySystemSettingsRepository();
   const mailFallback: MailSettingsFallback = {
     enabled: { value: false, source: "default" },
     from: { value: null, source: "missing" },
@@ -100,41 +74,17 @@ function createApp() {
     resendApiKey: { value: null, source: "missing" },
   };
   const projects = createProjectApplication();
-  const execution = createExecutionApplication({
-    repository: new InMemoryExecutionRepository(),
-    access: {
-      ...projects,
-      requireProject: async (actorId, projectId, capability) =>
-        projects.assertCapability({ actorId, projectId, capability }),
-    },
-    tasks: {
-      getById: async (id: string) =>
-        id === "task-1"
-          ? {
-              id,
-              projectId: project.id,
-              createdByUserId: "user-1",
-              title: "Goal",
-              status: "todo",
-              createdAt: now,
-              updatedAt: now,
-            }
-          : null,
-    } as never,
-    assetVersions: { getById: async () => null } as never,
-    issueCredential: async (owner, key) => `${owner}:${key}`,
-    hashCredential: async (credential) => credential,
-    now: () => now,
-  });
+  const domains = domainFixtures();
   return createApiApp({
     modules: createApiModules({
-      ...domainFixtures(),
-      users: userRepository,
+      ...domains,
+      assets: {
+        ...domains.assets,
+        ...(assetCompletion ? { completeAssetUpload: assetCompletion } : {}),
+      },
       settings,
       mailFallback,
       v2Projects: projects,
-      execution,
-      now: () => now,
     }),
     resolveSession: createHeaderSessionResolver(),
     allowedOrigins: ["http://voidmix.test"],
@@ -143,8 +93,7 @@ function createApp() {
   });
 }
 
-function clientFor(userId?: string, role = "user") {
-  const app = createApp();
+function clientFor(userId?: string, role = "user", app = createApp()) {
   return createApiClient({
     baseUrl: "http://voidmix.test",
     headers: userId
@@ -200,55 +149,112 @@ describe("canonical API", () => {
     expect((await client.projects.create({ title: "New project" })).personalOwnerId).toBe("user-1");
   });
 
-  it("creates, cancels and retries Agent runs through command dispatch", async () => {
-    const client = clientFor("user-1");
-    const { device } = await client.devices.register({
-      name: "Mac",
-      platform: "macos",
-      idempotencyKey: "enrollment",
-    });
-    await client.devices.bindProject({
-      deviceId: device.id,
-      projectId: project.id,
-      localBindingId: "folder-grant",
-    });
-    const runs = client.projects.agentRuns;
-    const created = await runs.create({
-      projectId: project.id,
-      taskId: "task-1",
-      targetDeviceId: device.id,
-      prompt: "Test",
-      idempotencyKey: "first",
-      input: {},
-    });
-    expect(created.status).toBe("queued");
-    expect(created.createdAt).toBeInstanceOf(Date);
-    const cancelled = await runs.cancel({ runId: created.id, idempotencyKey: "cancel" });
-    expect(cancelled.run.status).toBe("cancelled");
-    const retried = await runs.retry({ runId: cancelled.run.id, idempotencyKey: "retry" });
-    expect(retried).toMatchObject({ status: "queued", attempt: 2, requestedByUserId: "user-1" });
-    await expect(
-      runs.retry({ runId: retried.id, idempotencyKey: "retry-2" }),
-    ).rejects.toMatchObject({ code: "CONFLICT" });
-    await expect(
-      runs.cancel({ runId: "missing", idempotencyKey: "missing" }),
-    ).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(
-      clientFor("outsider").projects.agentRuns.create({
-        projectId: project.id,
-        taskId: "task-1",
-        targetDeviceId: device.id,
-        prompt: "Test",
-        idempotencyKey: "denied",
-        input: {},
-      }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  it.each([
+    "/admin/users/list",
+    "/admin/users/get",
+    "/admin/users/updateStatus",
+    "/admin/audit/list",
+    "/cloud/admin/runs/list",
+    "/cloud/admin/runs/get",
+    "/cloud/admin/usage/get",
+    "/devices/register",
+    "/devices/list",
+    "/devices/bindProject",
+    "/runner/heartbeat",
+    "/runner/claim",
+    "/runner/events/append",
+    "/runner/artifacts/upload",
+    "/projects/agentRuns/create",
+    "/projects/agentRuns/snapshot",
+    "/projects/agentRuns/events/stream",
+    "/projects/agentRuns/commands/create",
+  ])("returns the ordinary RPC not-found response for retired %s", async (path) => {
+    const app = createApp();
+    for (const role of [null, "user", "admin", "owner"]) {
+      const response = await app.request(`http://voidmix.test/rpc${path}`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(role ? { "x-voidmix-user-id": "user-1", "x-voidmix-role": role } : {}),
+        },
+        body: JSON.stringify({ json: {} }),
+      });
+      expect(response.status).toBe(404);
+      expect(await response.json()).toMatchObject({
+        json: { code: "NOT_FOUND", data: { error: { code: "NOT_FOUND" } } },
+      });
+    }
   });
 
-  it("keeps admin user routes behind admin capabilities", async () => {
-    await expect(clientFor("user-1").admin.users.list({})).rejects.toMatchObject({
-      code: "FORBIDDEN",
+  it("keeps both Project upload completion routes decoding bytes for the authenticated actor", async () => {
+    const body = new Uint8Array([0, 127, 128, 255]);
+    const calls: Parameters<AssetApplication["completeAssetUpload"]>[0][] = [];
+    const version = {
+      id: "version-1",
+      assetId: "asset-1",
+      projectId: project.id,
+      createdByUserId: "user-1",
+      objectKey: "objects/asset-1",
+      byteSize: body.byteLength,
+      mediaType: "application/octet-stream",
+      checksum: "a".repeat(64),
+      createdAt: now,
+    };
+    const client = clientFor(
+      "user-1",
+      "user",
+      createApp(async (input) => {
+        calls.push(input);
+        return version;
+      }),
+    );
+    const input = {
+      assetId: version.assetId,
+      uploadId: "upload-1",
+      byteSize: body.byteLength,
+      contentType: version.mediaType,
+      checksum: version.checksum,
+      bodyBase64: Buffer.from(body).toString("base64"),
+    };
+    for (const complete of [client.projects.assets.upload.complete, client.assets.upload.complete])
+      expect(await complete(input)).toEqual(version);
+    expect(calls).toHaveLength(2);
+    for (const call of calls) expect(call).toMatchObject({ actorId: "user-1", body });
+  });
+
+  it("rejects malformed and oversized upload bytes before calling the asset service", async () => {
+    let completions = 0;
+    const client = clientFor(
+      "user-1",
+      "user",
+      createApp(async () => {
+        completions += 1;
+        throw new Error("Invalid uploads must not reach the asset service.");
+      }),
+    );
+    const input = {
+      assetId: "asset-1",
+      uploadId: "upload-1",
+      byteSize: 1,
+      contentType: "text/plain",
+      checksum: "a".repeat(64),
+    };
+    for (const bodyBase64 of ["invalid!", "AAA", "AAAA=", "AAA===", "AA=A"])
+      await expect(
+        client.projects.assets.upload.complete({ ...input, bodyBase64 }),
+      ).rejects.toMatchObject({
+        code: "BAD_REQUEST",
+        data: { error: { code: "BLOB_CHECKSUM_MISMATCH" } },
+      });
+    await expect(
+      client.assets.upload.complete({
+        ...input,
+        bodyBase64: Buffer.alloc(10 * 1024 * 1024 + 1).toString("base64"),
+      }),
+    ).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      data: { error: { code: "BLOB_TOO_LARGE" } },
     });
-    expect((await clientFor("admin-1", "admin").admin.users.list({})).items).toHaveLength(2);
+    expect(completions).toBe(0);
   });
 });

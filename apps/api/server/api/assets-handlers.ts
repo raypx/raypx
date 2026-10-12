@@ -1,5 +1,16 @@
-import { decodeUpload } from "./execution-handlers.js";
+import { createApiError } from "./canonical-errors.js";
 import type { RouterContext } from "./router-context.js";
+
+export function decodeUpload(bodyBase64: string): Uint8Array {
+  const padding = bodyBase64.endsWith("==") ? 2 : bodyBase64.endsWith("=") ? 1 : 0;
+  const content = padding ? bodyBase64.slice(0, -padding) : bodyBase64;
+  if (bodyBase64.length % 4 !== 0 || /[^A-Za-z0-9+/]/.test(content))
+    throw createApiError("BAD_REQUEST", "BLOB_CHECKSUM_MISMATCH");
+  if ((bodyBase64.length / 4) * 3 - padding > 10 * 1024 * 1024)
+    throw createApiError("BAD_REQUEST", "BLOB_TOO_LARGE");
+  return new Uint8Array(Buffer.from(bodyBase64, "base64"));
+}
+
 export function createAssetsHandlers({
   authenticated,
   assets,

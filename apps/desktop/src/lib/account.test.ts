@@ -9,7 +9,7 @@ describe("desktop account loader", () => {
   beforeEach(() => createApiClient.mockReset());
 
   it("reports missing configuration without inventing an account", async () => {
-    await expect(loadAccount(undefined)).resolves.toEqual({ status: "unconfigured" });
+    await expect(loadAccount("")).resolves.toEqual({ status: "unconfigured" });
     expect(createApiClient).not.toHaveBeenCalled();
   });
 

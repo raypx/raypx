@@ -5,11 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { createCloudApplication } from "@voidmix/application";
 import { createApiClient, createStreamingApiClient } from "@voidmix/client";
-import {
-  InMemoryCloudRepository,
-  InMemorySystemSettingsRepository,
-  InMemoryUserRepository,
-} from "@voidmix/db";
+import { InMemoryCloudRepository, InMemorySystemSettingsRepository } from "@voidmix/db";
 import { createFilesystemStorage } from "@voidmix/storage";
 import { createApiApp } from "./app.js";
 import { createApiModules } from "./modules.js";
@@ -19,16 +15,11 @@ import { domainFixtures } from "./test-fixtures.js";
 
 async function fixture(resolveSession: SessionResolver = createHeaderSessionResolver()) {
   const directory = await mkdtemp(join(tmpdir(), "voidmix-cloud-api-"));
-  const now = new Date("2026-10-06T00:00:00Z");
-  const users = ["owner", "stranger", "administrator"].map((id) => ({
+  const users = ["owner", "stranger"].map((id) => ({
     id,
     email: `${id}@example.test`,
     displayName: id,
-    role: id === "administrator" ? ("admin" as const) : ("user" as const),
-    status: "active" as const,
-    createdAt: now,
   }));
-  const userRepository = new InMemoryUserRepository(users);
   const repository = new InMemoryCloudRepository({ users });
   const cloud = createCloudApplication({ repository });
   const secret = "voidmix-cloud-api-test-signing-secret";
@@ -49,7 +40,6 @@ async function fixture(resolveSession: SessionResolver = createHeaderSessionReso
         export: true,
         unavailableReason: null,
       },
-      users: userRepository,
       settings: new InMemorySystemSettingsRepository(),
       mailFallback: {
         enabled: { value: false, source: "default" },
@@ -202,36 +192,32 @@ describe("cloud API through typed client", () => {
       await f.close();
     }
   });
-  it("protects administrator metadata reads with grants and current database role", async () => {
+  it("rechecks live account access without elevating legacy session roles", async () => {
     const f = await fixture();
     try {
       const owner = f.client("owner");
       const conversation = await owner.cloud.conversations.create({
         title: "Private",
-        idempotencyKey: "admin-conversation",
+        idempotencyKey: "private-conversation",
       });
-      const result = await owner.cloud.conversations.sendTurn({
+      const { run } = await owner.cloud.conversations.sendTurn({
         conversationId: conversation.id,
         prompt: "Private prompt must stay private",
         mode: "search",
         attachmentIds: [],
-        idempotencyKey: "admin-turn",
+        idempotencyKey: "private-turn",
       });
-      await expect(owner.cloud.admin.runs.list({})).rejects.toMatchObject({ code: "FORBIDDEN" });
-      await expect(f.client("owner", "admin").cloud.admin.runs.list({})).rejects.toMatchObject({
+      const stranger = f.client("stranger", "admin");
+      await expect(stranger.cloud.runs.snapshot({ runId: run.id })).rejects.toMatchObject({
         code: "FORBIDDEN",
       });
-      const admin = f.client("administrator", "admin");
-      expect((await admin.cloud.admin.runs.list({})).items.map((run) => run.id)).toContain(
-        result.run.id,
-      );
-      const inspection = await admin.cloud.admin.runs.get({ runId: result.run.id });
-      expect(inspection.run).not.toHaveProperty("prompt");
-      expect(inspection.run).not.toHaveProperty("output");
-      expect(JSON.stringify(inspection)).not.toContain("Private prompt");
-      expect((await admin.cloud.admin.usage.get({ accountId: "owner" })).calls).toBe(0);
-      await f.repository.setUserActive("administrator", false);
-      await expect(admin.cloud.admin.runs.get({ runId: result.run.id })).rejects.toMatchObject({
+      await expect(
+        stranger.cloud.conversations.get({ conversationId: conversation.id }),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+      f.repository.setUserActive("owner", false);
+      await expect(owner.cloud.runs.snapshot({ runId: run.id })).rejects.toMatchObject({
         code: "FORBIDDEN",
       });
     } finally {

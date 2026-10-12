@@ -522,9 +522,9 @@ it("commits Search failure notifications with the parent Run scope and Conversat
   ).toHaveLength(1);
 });
 
-it("pages redacted Admin diagnostics and counts unread notifications independently of the visible window", async () => {
+it("counts unread notifications independently of the visible window", async () => {
   const repository = new InMemoryCloudRepository({
-    users: [{ id: "alice" }, { id: "admin", role: "admin" }],
+    users: [{ id: "alice" }, { id: "bob" }],
   });
   const service = createCloudApplication({ repository });
   const conversation = await service.createConversation({
@@ -550,26 +550,6 @@ it("pages redacted Admin diagnostics and counts unread notifications independent
       error: "SECRET ERROR",
     });
   }
-  const first = await service.adminListRuns({ actorId: "admin", status: "failed", limit: 1 });
-  const second = await service.adminListRuns({
-    actorId: "admin",
-    status: "failed",
-    limit: 1,
-    cursor: first.nextCursor!,
-  });
-  expect(first.items).toHaveLength(1);
-  expect(second.items).toHaveLength(1);
-  expect(second.items[0]!.id).not.toBe(first.items[0]!.id);
-  expect(second.nextCursor).toBeNull();
-  expect(JSON.stringify(first)).not.toContain("PRIVATE");
-  await expect(
-    service.adminListRuns({
-      actorId: "admin",
-      status: "queued",
-      limit: 1,
-      cursor: first.nextCursor!,
-    }),
-  ).rejects.toMatchObject({ code: "CLOUD_INVALID_INPUT" });
   const notifications = await service.listNotifications({ actorId: "alice", limit: 1 });
   expect(notifications.items).toHaveLength(1);
   expect(notifications.unreadCount).toBe(2);
@@ -695,32 +675,24 @@ it("replays completed uploads and notification reads with their original native 
   expect(await service.markNotificationRead(readArgs)).toEqual(firstRead);
 });
 
-it("restricts administration to stored identity roles and excludes private content from diagnostics", async () => {
+it("denies other accounts access to private Run snapshots", async () => {
   const repository = new InMemoryCloudRepository({
-    users: [{ id: "alice" }, { id: "admin", role: "admin" }],
+    users: [{ id: "alice" }, { id: "bob" }],
   });
   const service = createCloudApplication({ repository });
   const conversation = await service.createConversation({
     actorId: "alice",
     title: "PRIVATE TITLE",
-    idempotencyKey: "admin-c",
+    idempotencyKey: "private-c",
   });
   const { run } = await service.sendTurn({
     actorId: "alice",
     conversationId: conversation.id,
     prompt: "PRIVATE PROMPT",
     mode: "search",
-    idempotencyKey: "admin-turn",
+    idempotencyKey: "private-turn",
   });
-  await expect(service.adminListRuns({ actorId: "alice" })).rejects.toMatchObject({
-    code: "CLOUD_ACCESS_DENIED",
-  });
-  const list = await service.adminListRuns({ actorId: "admin" });
-  expect(list.items).toHaveLength(1);
-  const detail = await service.adminInspectRun({ actorId: "admin", runId: run.id });
-  expect(JSON.stringify(detail)).not.toContain("PRIVATE");
-  expect(detail.run.status).toBe("queued");
-  await expect(service.getRunSnapshot({ actorId: "admin", runId: run.id })).rejects.toMatchObject({
+  await expect(service.getRunSnapshot({ actorId: "bob", runId: run.id })).rejects.toMatchObject({
     code: "CLOUD_ACCESS_DENIED",
   });
 });

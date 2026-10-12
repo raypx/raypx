@@ -8,9 +8,9 @@ database, AI SDK, or renderer concerns.
 
 ## Interface
 
-| Path | Purpose                                                                                |
-| ---- | -------------------------------------------------------------------------------------- |
-| `.`  | Cloud, Identity, Projects, Assets, Reviews, Activity services and narrow ProjectAccess |
+| Path | Purpose                                                                      |
+| ---- | ---------------------------------------------------------------------------- |
+| `.`  | Cloud, Projects, Assets, Reviews, Activity services and narrow ProjectAccess |
 
 ## Ownership
 
@@ -45,15 +45,16 @@ database, AI SDK, or renderer concerns.
   use beforeSequence.
 - `index.ts` composes Projects from lifecycle, member and task commands. Assets,
   Reviews and Activity have separate factories with only their own ports.
-- `identity.ts` owns user queries, status changes and initial admin creation.
-  Core supplies rules, transaction ports and audit construction.
+- Cloud owns all Agent execution. Device-bound execution and the former
+  Project AgentRun application factories are retired.
+- User administration and Cloud administrator diagnostics are retired. All Cloud
+  access stays bound to the current actor, account state and resource scope.
 - `context.ts` exposes the narrow ProjectAccess interface for cross-domain use.
 - Resolve Project capabilities from personal ownership, Organization membership,
   and project-level grants.
 - Keep command/query orchestration independent of Hono, Drizzle, and React.
-- Execute Identity mutations and audit append through the Core administration
-  transaction port; DB implements atomicity. Outbox delivery and provider
-  lifecycle remain with adapters and hosting applications.
+- Outbox delivery and provider lifecycle remain with adapters and hosting
+  applications.
 
 ## Constraints
 

@@ -22,9 +22,7 @@
     "db:migrate": "vmx db migrate",
     "db:push": "vmx db push",
     "db:clean": "vmx db clean",
-    "db:seed": "vmx db seed",
     "db:studio": "vmx db studio",
-    "admin:create": "vmx admin create",
     "generate": "vmx generate",
     "desktop:build": "vmx desktop build",
     "verify": "vmx verify",
@@ -38,19 +36,16 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "catalog:tooling",
-    "@voidmix/application": "workspace:*",
-    "@voidmix/core": "workspace:*",
     "@voidmix/db": "workspace:*",
     "@voidmix/i18n": "workspace:*",
     "@voidmix/shared": "workspace:*",
     "citty": "catalog:tooling",
-    "esbuild": "catalog:tooling",
-    "oxc-parser": "catalog:tooling",
-    "uuid": "catalog:"
+    "oxc-parser": "catalog:tooling"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:tooling",
     "@voidmix/contracts": "workspace:*",
+    "@voidmix/core": "workspace:*",
     "@voidmix/tsconfig": "workspace:*"
   }
 }

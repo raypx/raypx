@@ -2,15 +2,13 @@
 
 ## Purpose
 
-Shared Agent business components for Web and Desktop. Applications assemble
-their own workspaces and supply data, actions and platform capabilities.
+Controlled cloud Agent business components used by Web and Storybook. Hosts
+assemble their own workspaces and supply data, actions and platform capabilities.
 
 ## Interface
 
 - `composer`: controlled prompt entry and submission feedback.
 - `runs`: timeline, message rendering and run controls.
-- `tools`: tool invocation/result presentation.
-- `approvals`: controlled approval decisions and pending acknowledgement.
 - `artifacts`: artifact selection, content and diff previews.
 - `conversation`, `research`, `tasks`: messages, source citations and delivery review.
 - `content`: private Markdown/diff wrappers.
@@ -29,7 +27,7 @@ their own workspaces and supply data, actions and platform capabilities.
 - Never import client, Auth, router, server runtime, native bridge or database.
 - Components are controlled through props and capability callbacks; no global
   business store, network fallback data or persisted state.
-- A pending approval/cancel command is not a completed Run transition.
+- A pending cancel command is not a completed Run transition.
 - Rich content has a readable server fallback; browser renderers load on demand.
 - Keep component subpath exports explicit. Do not expose a whole application shell.
 - Labels come from the host's locale catalog. Preserve keyboard, IME, visible

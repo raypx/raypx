@@ -6,8 +6,6 @@
   "exports": {
     "./composer": "./src/composer/index.ts",
     "./runs": "./src/runs/index.ts",
-    "./tools": "./src/tools/index.ts",
-    "./approvals": "./src/approvals/index.ts",
     "./artifacts": "./src/artifacts/index.ts",
     "./model": "./src/model/index.ts",
     "./styles.css": "./src/styles.css",
@@ -33,7 +31,6 @@
   "devDependencies": {
     "@testing-library/jest-dom": "catalog:tooling",
     "@testing-library/react": "catalog:tooling",
-    "@testing-library/user-event": "catalog:tooling",
     "@types/react": "catalog:tooling",
     "@vitest/coverage-v8": "catalog:tooling",
     "@voidmix/tsconfig": "workspace:*",

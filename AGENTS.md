@@ -43,17 +43,18 @@ or `packages/` without a `package.json`.
   interfaces owned by `@voidmix/core`.
 - `apps/api` performs final authentication and authorization checks; Web,
   Desktop, and Worker consume its contracts or shared application layer.
-- Admin-specific routes, tables, filters, and layouts stay in
-  `apps/web/src/features/admin`
-  until another real consumer justifies extraction.
+- Admin and its management RPCs are retired. Keep authentication, current account
+  status checks and project capability enforcement in their owning layers.
 - Runtime applications never import `@voidmix/scripts`.
 - `apps/worker` is the durable delivery and scheduling host. It may depend on
   `@voidmix/application` and adapters, but never on Web/Desktop composition.
-- Desktop's `runtime/` owns local Pi execution; its renderer uses the native bridge.
+- Desktop is a cloud project client; native code owns only its window and tray.
 
 ## Toolchain
 
 - Use Bun `1.4.0` for installation, the lockfile, and repository scripts.
+- Application package names match their `apps/` directory without a scope;
+  shared `packages/` and E2E keep `@voidmix/`. See ADR-0022.
 - Use the root Bun catalogs for third-party dependency versions and
   `workspace:*` for internal packages.
 - Turbo is the only workspace task runner and task cache; Vite+ owns leaf tools.
@@ -63,7 +64,8 @@ or `packages/` without a `package.json`.
   `bun run lint` and `bun run format`. Do not add a separate linter, formatter,
   or git-hook manager. The committed `.vite-hooks/pre-commit` runs the staged-file
   pass after `vp hooks enable`; generated `.vite-hooks/_` files stay local.
-- Node.js `24.18.0` is the initial production server runtime; Tauri uses Rust.
+- Node.js `24.18.0` is the production server runtime; Desktop uses Electrobun's
+  pinned Bun host. Hutch prepares/packages Desktop only; Bun/Turbo own the repository.
 - Keep Bun-specific types or APIs local to Bun workspaces rather than shared
   TypeScript presets.
 - Prefer root scripts to global tools so the repository-local versions run.
@@ -75,10 +77,10 @@ or `packages/` without a `package.json`.
 - `exactOptionalPropertyTypes` is on, so `{ key: undefined }` is illegal. Use
   conditional spread: `{ limit, ...(query ? { query } : {}) }`.
 - `verbatimModuleSyntax` is on, so type-only imports need `import type`.
-- A status or audit-action value is declared in **three** places with no shared
-  source: a literal union in `@voidmix/core`, a `z.enum` in
-  `@voidmix/contracts`, and a `pgEnum` in `@voidmix/db`. Missing one fails at
-  runtime, not at compile time.
+- Active protocol status values have matching declarations where used: a Core
+  literal union, a Contracts `z.enum`, and a DB `pgEnum`. Update each consumer
+  together. Historical audit enums remain DB compatibility data; do not restore
+  retired management contracts or workflows.
 - Relative import extensions are inconsistent per file. Mirror the neighbouring
   import rather than reasoning about it.
 - Keep package interfaces small and avoid cross-layer imports for convenience.
@@ -107,11 +109,11 @@ conventions, the two file layouts, and the accessibility requirements.
 
 - Use `@voidmix/shared/logger` instead of application-local logger configuration.
 - Import environment APIs from `@voidmix/shared/env` and its explicit subpaths.
-- Keep operational logs separate from durable Admin audit records.
+- Keep operational logs separate from durable domain facts.
 - Never log credentials, cookies, authorization headers, passwords, secrets,
   tokens, or API keys.
-- Admin writes must preserve authorization, audit, self-suspension, and
-  final-administrator protections.
+- Retired management tables and historical SQL are preserved; removing unused
+  source must not silently drop stored data or weaken current account/project access.
 - Destructive database scripts are limited to explicit development/test
   environments.
 

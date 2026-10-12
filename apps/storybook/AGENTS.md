@@ -1,4 +1,4 @@
-# @voidmix/storybook
+# storybook
 
 ## Purpose
 

@@ -1,9 +1,9 @@
 # Product design
 
-Voidmix uses one project-centered visual language across the public website,
-authentication, Web and Desktop. [DESIGN.md](../../DESIGN.md) defines the shipped
-colors, typography, sizing and page patterns. The future Agent execution vision
-in [the delivery goal](./voidmix-delivery-goal.md) is a separate capability roadmap.
+Voidmix uses one visual language across the cloud website, authentication, Web
+and lightweight Desktop. [DESIGN.md](../../DESIGN.md) defines the shipped colors,
+typography, sizing and page patterns. [The delivery goal](./voidmix-delivery-goal.md)
+defines the current cloud and Desktop boundaries.
 
 ## Responsibilities
 
@@ -14,33 +14,33 @@ flowchart TD
   Web --> Public[Website and authentication]
   Web --> Shell[Authenticated shell]
   Shell --> Projects[Projects and tasks]
-  Shell --> Admin[Admin user directory]
-  Desktop --> Routes[Overview, projects, activity, settings, devices]
+  Shell --> Cloud[Search, Computer and conversations]
+  Desktop --> Routes[Projects and Settings]
 ```
 
 The shared package owns modal focus, pending-state presentation, accessible
 controls and semantic tokens. Applications own navigation and domain labels.
-Admin tables, filtering and scoped selection remain private to Web. App shells
-are not imported across applications.
+App shells are not imported across applications. Admin is retired.
 
 Remote entities stay in route loaders, with AbortSignal and invalidation after
-writes. URL search retains cursors and Admin filters. The Admin page creates
-one non-persisted store per account/page; overlays and form drafts remain local.
-Desktop preferences retain their whitelist, migrations and delayed hydration.
-No HTTP/RPC contract, persisted schema or date representation changes here.
+writes. URL search retains cursors and project filters; overlays and form drafts
+remain local.
+Desktop stores only theme preferences, preserving its storage key/version,
+theme migration and storage-failure fallback. Language keeps its existing i18n
+storage. The native bridge owns window actions and runtime metadata.
 
 ## Truthful data
 
-Desktop's cloud loader returns either a validated snapshot or an explicit
-unconfigured/offline/unavailable state. Health connectivity alone cannot justify
-showing overview data. Demo fixtures are imported only by tests. The Activity
-route remains compatible with saved URLs but displays an unavailable state;
-fixed records and inert export controls are absent.
+Desktop's project loader returns either real authorized data or an explicit
+unconfigured/offline/unavailable state. Demo fixtures are imported only by tests.
+Overview, Activity, Devices and the local execution panel are retired; unknown
+routes return to Projects.
 
-Admin's count is the API's filtered total. An absent activity signal is unknown,
-not "connected". The shell contains no fabricated latency or audit timestamps.
-Preferences whose execution is not wired are disabled and labelled unavailable;
-stored values survive for compatibility. No new native permissions are granted.
+The shell contains no fabricated latency or audit timestamps.
+Unconnected sync/notification controls and folder authorization are removed.
+The Electrobun host grants no filesystem, local execution or credential API to
+the renderer. Admin pages, status changes, operational inspection and export
+are retired under [ADR-0021](./decisions/0021-retire-admin.md).
 
 ## Product imagery
 
@@ -58,9 +58,10 @@ product flows use the real test API and PostgreSQL in Playwright.
 ## Neutral component baseline
 
 All shipped surfaces use shadcn base-nova Neutral light/dark tokens. One Web
-shell serves project lists, details and Admin. The historical beUI route variant
-has been retired. Standard shadcn components provide keyboard Tabs, Dialog/Sheet,
-Table/Checkbox, ToggleGroup and state presentation. Page layout stays app-local.
+shell serves project lists, details and cloud tasks. The historical beUI route
+variant has been retired. Shared primitives provide keyboard navigation, menus,
+forms and state presentation. Unconsumed components and their exports are removed;
+page layout stays app-local.
 
 Utility actions share IconButton with labelled hover/focus tooltips. Setting
 explanations use HelpHint popovers that open by click, keyboard or touch; repeated

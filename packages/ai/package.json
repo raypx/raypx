@@ -16,9 +16,7 @@
   },
   "dependencies": {
     "@earendil-works/pi-ai": "catalog:",
-    "@earendil-works/pi-coding-agent": "catalog:",
-    "@voidmix/application": "workspace:*",
-    "@voidmix/core": "workspace:*"
+    "@earendil-works/pi-coding-agent": "catalog:"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:tooling",

@@ -6,7 +6,7 @@ People and teams who research topics, analyze files and turn findings into revie
 
 ## Product Purpose
 
-Voidmix starts as a Web-first cloud AI product. Search reads actual sources and returns attributed answers. Computer performs multi-step work with trusted tools and delivers reports, tables and presentations for user review. Desktop becomes a cloud client first; local execution follows. See [the cloud platform](docs/architecture/cloud-platform.md) for the current execution and publication boundaries.
+Voidmix is a Web-first cloud AI product. Search reads actual sources and returns attributed answers. Computer performs multi-step work with trusted tools and delivers reports, tables and presentations for user review. Desktop is a lightweight cloud project and task management client. See [the cloud platform](docs/architecture/cloud-platform.md) and [the Desktop retirement decision](docs/architecture/decisions/0019-retire-legacy-desktop-execution.md) for the execution and publication boundaries.
 
 ## Brand Personality
 
@@ -17,7 +17,7 @@ Calm, precise, technical, and collaborative. VoidMix should feel like an Agent S
 1. **Research and delivery.** Search explains evidence; Computer creates useful files. A personal task does not require creating a project.
 2. **Show the work.** Agent roles, messages, tool calls, files, steps, and decisions are visible as an understandable conversation, not a black box.
 3. **Truthful state.** Running, queued, waiting, failed, cancelled, offline, and unavailable states are explicit. Preview data is never presented as live.
-4. **Shared behavior, suitable layouts.** Web centers answers and deliveries, with sources and execution details nearby. Desktop later assembles a denser workbench from the same business components.
+4. **Suitable layouts.** Web centers answers and deliveries, with sources and execution details nearby. Desktop centers projects and tasks, with account, appearance and native window controls.
 5. **Explicit authority and acceptance.** Hosts bind identity and resource scope. Trusted tools use authorized files; the user accepts the current delivery to complete a Task. Credentials, prompts and private file content never enter telemetry.
 
 ## Visual Direction
@@ -38,4 +38,4 @@ Calm, precise, technical, and collaborative. VoidMix should feel like an Agent S
 
 ## Scope Boundaries
 
-Pi supplies isolated Agent sessions, model invocation and event streaming. Voidmix owns authorization, trusted tools, durable Task/Run state, usage reservations, private file publication, review, notification and Web/Desktop composition. Model and search providers, object storage and telemetry are explicit configuration seams. Sandbox code, browser/GUI operations, local devices, scheduling, payments and real-time editing follow separate stages; the first release does not promise them.
+Pi supplies isolated cloud Agent sessions, model invocation and event streaming. Voidmix owns authorization, trusted tools, durable Task/Run state, usage reservations, private file publication, review, notification and Web/Desktop composition. Model and search providers, object storage and telemetry are explicit configuration seams. Sandbox code, browser/GUI operations, scheduling, payments and real-time editing require separate designs. Desktop local execution and device routing are retired capabilities.

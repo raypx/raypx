@@ -1,32 +1,47 @@
-import { invoke } from "@tauri-apps/api/core";
+import type { DesktopRpc, DesktopRuntime } from "../../native/rpc";
 
-export interface DesktopRuntime {
-  appVersion: string;
-  platform: string;
-  trayEnabled: boolean;
+export type { DesktopRuntime } from "../../native/rpc";
+
+const browserRuntime: DesktopRuntime = {
+  appVersion: "0.1.0",
+  platform: "browser",
+  trayEnabled: false,
+};
+
+function isNativeRuntime(): boolean {
+  return typeof window !== "undefined" && "__electrobunWebviewId" in window;
 }
 
-function isTauriRuntime(): boolean {
-  return "__TAURI_INTERNALS__" in window;
+let nativeBridge: ReturnType<typeof createNativeBridge> | undefined;
+
+async function createNativeBridge() {
+  const { Electroview } = await import("electrobun/view");
+  const rpc = Electroview.defineRPC<DesktopRpc>({
+    maxRequestTime: 5000,
+    handlers: { requests: {}, messages: {} },
+  });
+  new Electroview({ rpc });
+  return rpc;
+}
+
+function getNativeBridge() {
+  nativeBridge ??= createNativeBridge();
+  return nativeBridge;
 }
 
 export async function getDesktopRuntime(): Promise<DesktopRuntime> {
-  if (!isTauriRuntime()) {
-    return { appVersion: "0.1.0", platform: "browser", trayEnabled: false };
-  }
-
+  if (!isNativeRuntime()) return browserRuntime;
   try {
-    return await invoke<DesktopRuntime>("desktop_runtime");
+    return await (await getNativeBridge()).request.getRuntime({});
   } catch {
-    return { appVersion: "0.1.0", platform: "unknown", trayEnabled: true };
+    return { ...browserRuntime, platform: "unknown" };
   }
 }
 
 export async function hideMainWindow(): Promise<boolean> {
-  if (!isTauriRuntime()) return false;
+  if (!isNativeRuntime()) return false;
   try {
-    await invoke("hide_main_window");
-    return true;
+    return await (await getNativeBridge()).request.hideWindow({});
   } catch {
     return false;
   }

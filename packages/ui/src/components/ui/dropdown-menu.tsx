@@ -131,12 +131,6 @@ const DropdownMenuSeparator = styledSlot(
   "-mx-1 my-1 h-px bg-border",
 );
 
-const DropdownMenuShortcut = styledSlot(
-  "span",
-  "dropdown-menu-shortcut",
-  "ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground",
-);
-
 export {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -147,5 +141,4 @@ export {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
 };

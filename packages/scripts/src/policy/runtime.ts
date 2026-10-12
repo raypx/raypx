@@ -19,6 +19,9 @@ const skippedDirectories = new Set([
   "node_modules",
   "target",
   "test-results",
+  "apps/desktop/build",
+  "apps/desktop/artifacts",
+  "apps/storybook/storybook-static",
 ]);
 
 /** Roots policy walks for markdown. Everything else is out of scope. */
@@ -108,14 +111,19 @@ async function listEmptyDirectories(): Promise<string[]> {
     const children: string[] = [];
     for (const entry of entries) {
       if (entry.isDirectory()) {
+        const child = join(directory, entry.name);
         // Skip tool-owned directories and anything dot-prefixed. Git cannot
         // track an empty directory at all, so excluding these hides nothing that
         // could have been repository content.
-        if (skippedDirectories.has(entry.name) || entry.name.startsWith(".")) {
+        if (
+          skippedDirectories.has(entry.name) ||
+          skippedDirectories.has(child.split("\\").join("/")) ||
+          entry.name.startsWith(".")
+        ) {
           hasFile = true;
           continue;
         }
-        children.push(join(directory, entry.name));
+        children.push(child);
         continue;
       }
       hasFile = true;
@@ -134,7 +142,7 @@ async function listEmptyDirectories(): Promise<string[]> {
   for (const root of ["apps", "packages"]) {
     if (!(await walk(root))) empty.push(root);
   }
-  return empty.sort();
+  return empty.map((directory) => directory.split("\\").join("/")).sort();
 }
 
 /**

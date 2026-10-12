@@ -8,7 +8,7 @@ duplicating them here.
 ## Web
 
 `apps/web` is the public/product-facing TanStack Start application and the
-browser composition root for authentication and Admin operations.
+browser composition root for authentication, Projects and the cloud product.
 
 - Uses `@voidmix/ui` and controlled `@voidmix/agent-ui` views; owns Web routes,
   metadata, SSR and content. Search/Computer live at `/chat` and Task deliveries
@@ -17,7 +17,7 @@ browser composition root for authentication and Admin operations.
   VoidMix name, launch scope, theme, and shared 512×512 brand mark for
   install-capable browsers.
 - Route files declare URLs and own single-route pages, including the canonical
-  project list/detail. Shared Auth and Admin features remain separate; the home
+  project list/detail. Shared Auth features remain separate; the home
   route mounts the public marketing page and its navigation.
 - Feature roots keep components, state, data, fixtures, tests, and styles;
   larger features place internal presentation components under a local
@@ -33,19 +33,14 @@ browser composition root for authentication and Admin operations.
   so the email flow returns to the Web verification state before the user signs
   in.
 - `(app)/route.tsx` resolves the account through the API before protected
-  loaders. Project list/detail and Admin directory own remote data in loaders,
+  loaders. Project list/detail own remote data in loaders,
   with request cancellation and mutation invalidation. SSR creates a client
   per request; account changes hide stale data and clear protected caches.
-- Admin URL search owns server filters and pagination. A page-scoped Zustand
-  store owns selection, pending IDs and message descriptors. It holds no user
-  entities and never persists. Preview adapters are only explicitly injected in
-  tests. The API remains authoritative for permissions and audits.
 - Public Auth pages consume a separate three-boolean capability view and fail
   open when it cannot be loaded; authentication and mail settings retain their
   server-side inheritance. Retired settings administration routes stay absent.
-- Admin-specific adapters, tables, filters, and layouts stay isolated under
-  `apps/web/src/features/admin`; fusion removes a deployment unit without
-  turning those modules into public-home concerns.
+- Admin pages, navigation and management RPCs are retired under
+  [ADR-0021](./decisions/0021-retire-admin.md).
 - Runs on port `3000` in development.
 - Produces a TanStack Start server bundle and a browser bundle.
 - Resolves locale from the `locale` Cookie, `Accept-Language`, then English; the
@@ -60,40 +55,36 @@ browser composition root for authentication and Admin operations.
 - Conversation/run sessions are scoped by account and resource. The app owns
   drafts and pending mutations, releases subscriptions on navigation and rejects
   late responses. Private routes are noindex and excluded from the public sitemap.
-- Admin adds `/admin-runs` for status, owner fencing and usage inspection.
-  Operational reads do not expose private prompts, results or file contents.
 - The API owns `DATABASE_URL`, Auth, mail, Redis, and persistence composition.
 
 ## Desktop
 
-`apps/desktop` is a Tauri 2 application with a TanStack Start SPA renderer.
+`apps/desktop` is an Electrobun 2 application with a TanStack Start SPA renderer.
 
-- Shares `@voidmix/ui`, `@voidmix/client`, and `@voidmix/contracts`.
+- Shares `@voidmix/ui` and `@voidmix/client`; contracts reach the renderer through Client.
 - Uses Start file routing and SPA mode with RSC disabled. The Start server build
-  is used only to prerender `dist/client/index.html`; Tauri embeds that client
-  directory and does not ship a JavaScript server runtime.
+  is used only to prerender `dist/client/index.html`; Electrobun packages that
+  client directory alongside a narrow TypeScript native host on Bun 1.4.0.
 - Resolves locale from localStorage, `navigator.language`, then English after
   hydrating the deterministic English build-time shell, and switches
   synchronously against the statically mounted catalog.
 - Uses Start's automatic route component splitting so page code loads separately
   from the shell and shared static catalog.
-- Desktop navigation exposes Home, Projects, Activity, and Settings. Devices
-  remains available from Settings. Home, Devices, and Project pages read data
-  through client-only route loaders, with shared pending and retry states.
-- Project creation and overview refresh invalidate the owning route. Route
-  cancellation reaches the API transport, and late responses cannot replace
-  a newer navigation. Activity filters live in validated URL search parameters.
-- Zustand owns renderer preferences shared across pages: theme, sync pause, and
-  the five settings toggles. Each control subscribes to the value it uses;
-  transient form fields remain local and remote data remains in route loaders.
-  The shell restores preferences after hydration so the prerendered document
-  starts deterministically. Persistence validates saved values, migrates the
-  previous theme key, and tolerates unavailable localStorage. These values are
-  renderer preferences; saving a toggle does not itself configure an OS service.
+- Desktop navigation exposes Projects and Settings; `/` redirects to `/projects`.
+  Project and task list/create/detail flows use client-only route loaders, with
+  shared pending and retry states. The former Home overview, Activity and Devices
+  pages are retired under [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md).
+- Project creation and refresh invalidate the owning route. Route cancellation
+  reaches the API transport, and late responses cannot replace newer navigation.
+- Zustand owns the renderer theme preference. Remote data remains in route loaders
+  and transient form fields remain local. The shell restores theme after hydration;
+  persistence validates the saved theme, migrates the previous theme key and
+  tolerates unavailable localStorage. Retired settings fields are ignored.
 - Owns no Start server functions or server routes. Runtime data continues to
   come from the cloud API through `@voidmix/client`.
-- Rust owns tray behavior, notifications, window lifecycle, and native
-  commands.
+- `native/` owns tray/window lifecycle and the typed runtime/window RPC. A
+  persistent WebView partition retains preferences and cookies; packaged SPA
+  navigation uses hash history so reloads resolve to the static entry.
 - Single-route pages live beside their route declarations; route-only formatting
   helpers and tests use the ignored `-` prefix. The shared Desktop shell remains
   in `src/features/shell/`. See
@@ -105,16 +96,18 @@ browser composition root for authentication and Admin operations.
 - `src/lib/projects.ts` uses the account-first V2 Project procedures for
   authenticated project listing, creation, and detail reads; page components
   do not own transport or validation. Project pages show unavailable states when
-  the API is absent; overview and device data retain their existing preview fallback.
+  the API is absent; production pages never substitute preview fixtures.
 - Routes use directories for URL segments: `route.tsx` defines the segment,
   `index.tsx` its index page, and `$projectId.tsx` the dynamic child. The
   `projects/route.tsx` layout renders an `Outlet` for the list and detail views.
   Missing projects have a route-specific
   not-found page with a link back to the list.
 
-The native seam lives in `apps/desktop/src-tauri/src/lib.rs`. Desktop accesses
-Agent capabilities through the API and does not embed the server-side AI
-adapter.
+The native seam lives in `apps/desktop/native/`. `desktop:build` enters the root
+`build:desktop` gate before `native:build`; `native:prepare` obtains the pinned
+Electrobun SDK before Vite and typechecking. Search/Computer and delivery review
+remain Web capabilities. See [ADR-0020](./decisions/0020-electrobun-desktop-host.md)
+for the main-process and packaging boundary.
 
 ## Worker
 
@@ -166,24 +159,23 @@ Current procedure groups:
 ```text
 health / account.get / auth.capabilities.get
 projects.* / library.assets.list / assets.upload.* / activity.list
-admin.users.* / admin.audit.list
 cloud.conversations.* / cloud.tasks.* / cloud.runs.*
 cloud.assets.* / cloud.usage.get / cloud.notifications.*
 cloud.preferences.* / cloud.capabilities.get / cloud.tools.get
-cloud.admin.runs.* / cloud.admin.usage.get
 ```
 
-Historical local execution contracts remain isolated while Desktop migration
-is deferred; the cloud runtime does not compose the former device runner or
-AgentRun database adapter. The new execution protocol is `cloud.*` and uses
-its own outbox event type and database baseline.
+The former `projects.agentRuns`, `devices` and `runner` contracts and their
+adapters are retired. Missing paths receive the ordinary 404 response. The
+execution protocol is `cloud.*` with the private Gateway, its own outbox event
+type and database baseline; [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md)
+records the retirement and data boundaries.
 
 `GET /health` is available on the standalone API and Web liveness shell. The
 runtime requires `DATABASE_URL`; the seeded in-memory repository is reserved
 for direct `apps/api/server/api` tests that inject it explicitly.
 
 The oRPC beta transport uses GET for read-only procedures and POST for every
-mutation, including asset commits, conflict resolution, Agent transitions, and
+mutation, including asset commits, review decisions, Cloud transitions, and
 lease operations. The client and Fetch handler batch concurrent reads, deduplicate
 identical in-flight reads, compress payloads above 1 KiB, propagate an
 `x-request-id` response header, retry rate-limited/unavailable reads when the
@@ -199,18 +191,18 @@ non-RPC routes, while the oRPC adapter records procedures and errors for
 
 Better Auth is mounted at `/api/auth/*` with credentialed CORS. Production
 sessions use parent-domain, HTTP-only, Secure, SameSite=None cookies so Web and
-Desktop can reuse the API session. Admin uses the
-HTTP-only cookie session; Search/Computer and Task pages require authentication. Auth email
+Desktop can reuse the API session. Search/Computer, Projects and Task pages
+require authentication. Auth email
 verification, password reset, and welcome messages are sent through the typed
 `@voidmix/mail` service. Database mail settings override environment fallbacks
-and are resolved for every send. Admin responses contain safe effective values,
-per-field sources, and inherited previews, while the server-only runtime result
-retains the Resend value. Mail-dependent Auth operations return 503 when
+and are resolved for every send. Configuration readers retain field sources
+and safe inherited previews; the server-only runtime result retains the Resend
+value. There is no configuration write RPC. Mail-dependent Auth operations return 503 when
 configuration is disabled or incomplete without taking down the host.
 
 Registration mode, exact allowed email domains, and verification/reset/welcome
 delivery switches are typed database settings. Relevant Auth requests resolve
-them immediately before handling, so an Owner update applies without restarting
+them immediately before handling, so a database configuration update applies without restarting
 the process. Public registration and recovery navigation receives only derived
 availability booleans, never the domain list, sources, missing fields, or secret
 state. Policy rejection uses stable code-only payloads and does not affect

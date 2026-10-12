@@ -31,7 +31,6 @@
     "jsdom": "catalog:tooling",
     "react": "catalog:",
     "typescript": "catalog:tooling",
-    "vite": "catalog:tooling",
     "vite-plus": "catalog:tooling"
   },
   "peerDependencies": {

@@ -1,7 +1,6 @@
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import type { User, UserRepository } from "@voidmix/core";
 import { getDatabaseScriptsEnv } from "./env.js";
 import { vi, onTestFinished, expect } from "vite-plus/test";
 
@@ -27,34 +26,6 @@ export function databaseEnvironment(overrides: Record<string, string> = {}) {
     DATABASE_URL: databaseUrl,
     ...overrides,
   });
-}
-
-export function user(overrides: Partial<User> = {}): User {
-  return {
-    id: "user-id",
-    email: "owner@voidmix.local",
-    displayName: "Owner",
-    role: "admin",
-    status: "active",
-    createdAt: new Date("2026-01-01T00:00:00.000Z"),
-    ...overrides,
-  };
-}
-
-export function userRepository(overrides: Partial<UserRepository> = {}): UserRepository {
-  const repository: UserRepository = {
-    runAdministration: async (operation) => operation(repository),
-    list: vi.fn(async () => ({ items: [], total: 0, nextCursor: null })),
-    getById: vi.fn(async () => null),
-    getByEmail: vi.fn(async () => null),
-    countActiveAdministrators: vi.fn(async () => 1),
-    save: vi.fn(async () => undefined),
-    updateStatus: vi.fn(async () => user()),
-    appendAudit: vi.fn(async () => undefined),
-    listAudit: vi.fn(async () => []),
-    ...overrides,
-  };
-  return repository;
 }
 
 /** Assert both finding cardinality and its stable diagnostic fields. */

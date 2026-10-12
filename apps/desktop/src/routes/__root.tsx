@@ -1,5 +1,11 @@
 import { TooltipProvider } from "@voidmix/ui/components/ui/tooltip";
-import { HeadContent, Navigate, Scripts, createRootRoute } from "@tanstack/react-router";
+import {
+  ClientOnly,
+  HeadContent,
+  Navigate,
+  Scripts,
+  createRootRoute,
+} from "@tanstack/react-router";
 import { normalizeLocale } from "@voidmix/i18n";
 import {
   I18nProvider,
@@ -10,13 +16,14 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { DesktopShell } from "../features/shell/desktop-shell";
+import { DesktopRoutePending } from "../features/shell/route-state";
 import { messages } from "../i18n/messages";
 import appCss from "../styles.css?url";
 
 const localeStorage = createLocalStorageLocaleStorage();
 
 export const Route = createRootRoute({
-  component: DesktopShell,
+  component: DesktopRootShell,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -29,9 +36,17 @@ export const Route = createRootRoute({
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
-  notFoundComponent: () => <Navigate to="/" replace />,
+  notFoundComponent: () => <Navigate to="/projects" replace />,
   shellComponent: RootDocument,
 });
+
+function DesktopRootShell() {
+  return (
+    <ClientOnly fallback={<DesktopRoutePending />}>
+      <DesktopShell />
+    </ClientOnly>
+  );
+}
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (

@@ -21,10 +21,9 @@ contains no Pi, Drizzle or S3 SDK types. Streams have independent connections.
 ## `@voidmix/application`
 
 The application command/query layer shared by the API and Agent Worker. It
-coordinates Identity, Projects, Assets, Reviews and Activity ports from Core.
+coordinates Projects, Assets, Reviews and Activity ports from Core.
 ProjectAccess supplies narrow capability checks across domains. Application owns
-workflow ordering and invokes the administration transaction port; DB implements
-atomicity and authorized list queries. HTTP, SQL, React and provider lifecycle
+workflow ordering; DB implements atomicity and authorized list queries. HTTP, SQL, React and provider lifecycle
 remain outside Application. See [domain services](./domain-services.md).
 
 The cloud application coordinates current personal/project authorization,
@@ -34,11 +33,11 @@ revision publication. API and Worker both use this same execution model;
 
 ## `@voidmix/ai`
 
-The server-side AI adapter for Pi. It owns provider lifecycle, SDK-specific
-session management, project tool registration, and conversion to stable
-Voidmix run events. It receives canonical `ProjectApplication` commands and authenticated context
-through dependency injection, never creates database connections, reads HTTP
-sessions, or exposes Pi SDK types to API and Web consumers.
+The server-side AI adapter for cloud Pi. It owns SDK-specific session lifecycle,
+model Gateway transport, research helpers and conversion to stable Voidmix run
+events. Hosts inject trusted tools and metering hooks. The local Desktop Provider
+and unused Project tool registry are retired; the package has no Application/Core
+runtime dependency, database connection or HTTP session ownership.
 
 ## `@voidmix/client`
 
@@ -67,12 +66,11 @@ latest message; the package owns no transport or second copy of server facts.
 ## API server modules (`apps/api/server/api`)
 
 The internal transport and composition modules of the standalone API app. They
-own Hono routes, oRPC handlers, Better Auth session resolution, permission
-enforcement, CORS, mail composition, dynamic authentication-policy enforcement,
+own Hono routes, oRPC handlers, Better Auth session resolution, resource authorization, CORS, mail composition, dynamic authentication-policy enforcement,
 and the pooled database runtime. They export process-scoped `ApiModules`,
 request-scoped Auth context types, factories, and an environment preset, but do
 not own the Nitro listener or process lifecycle.
-Hono resolves one application session per RPC request; oRPC permission middleware
+Hono resolves one application session per RPC request; oRPC principal middleware
 injects a non-null principal into protected handlers. Better Auth database IDs are
 generated as UUID v7 values so
 new records retain time-ordered locality while remaining globally unique.
@@ -89,7 +87,7 @@ Mail configuration remains database-backed.
 ## `@voidmix/shared`
 
 The foundation shared by domain and adapter packages. It owns
-the framework-independent `DomainError` envelope, setting source and mutation
+the framework-independent `DomainError` envelope, inherited setting
 value types, and injectable clock/ID interfaces with their default
 implementations. Core re-exports these primitives for compatibility, while DB
 consumes them directly so the dependency seam remains explicit.
@@ -116,20 +114,18 @@ initial output, while the root development and verification commands refresh it.
 Framework-independent business rules and repository interfaces. Its single
 public barrel is organized into bounded contexts:
 
-- `identity` owns users, audit events, status transitions, and administrator
-  protection.
 - `settings` owns typed mail/Auth policy, source and inheritance rules, and
   public Auth capability derivation.
 - `projects` owns the account-first V2 Project scope, ProjectMember roles,
   lifecycle, and centralized capability evaluator. V2 resources are modeled
   independently of Workspace and Project Studio.
-- Task models live within `projects`; `assets`, `reviews`, `activity` and
-  `agents` own their records and repository ports. Identity retains rules and
-  audit construction while Application owns its workflows.
+- Project Task models live within `projects`; `assets`, `reviews` and `activity`
+  own their records and repository ports. `cloud` owns Conversations, TaskRounds,
+  Runs, execution grants, usage, notifications and delivery revisions.
 - `assets` retains the blob upload/download port and errors used by V2.
-- `agents/outbox.ts` defines durable dispatch ports; Agent cancellation invariants
-  live in `agents/runs.ts`. Retired Workspace, Project Studio, scheduled-task,
-  asset-sync and legacy Agent implementations are removed.
+- `agents/outbox.ts` defines durable dispatch ports. Cloud cancellation and
+  execution invariants live in the cloud domain; legacy device execution and
+  Project AgentRun ports/adapters are retired.
 
 These contexts remain one package until a second independent server consumer
 creates a stable extraction seam. UI features under `apps/*/src/features` are
@@ -139,14 +135,10 @@ It does not import React, Hono, Nitro, or Drizzle.
 
 ## `@voidmix/auth`
 
-The authorization vocabulary: roles (`user`, `admin`, `owner`), permissions,
-session types, and `hasPermission`.
-
-The role grants are explicit permission allowlists; adding a permission to the
-vocabulary does not implicitly grant it to Admin or Owner.
-
-The retired settings administration permissions are removed. Authentication
-policy still controls registration and mail through API runtime guards.
+The session vocabulary and compatible stored roles (`user`, `admin`, `owner`).
+Admin permission grants and `hasPermission` are retired. Global roles do not
+grant access to another account's Cloud content. Authentication policy still
+controls registration and mail through API runtime guards.
 
 `apps/api/server/api` owns the Better Auth adapter and production cookie
 session resolver. The development header resolver remains available for
@@ -187,9 +179,9 @@ The database adapter package.
 
 - Drizzle PostgreSQL schema lives in domain modules under `src/schema/`,
   exposed by the small `src/schema.ts` entrypoint.
-- Identity, settings and V2 adapters live in separate domain directories.
-  Historical table definitions and migrations remain reference material; the
-  public runtime schema excludes the former local/legacy execution tables.
+- Settings readers, V2 and cloud adapters live in separate domain directories.
+  Historical migrations remain reference material; retired local execution table
+  definitions and adapters are removed while the active cloud baseline stays unchanged.
 - V2 Project, organization membership, Task, Asset, Review, Feedback, Activity,
   cloud execution and outbox adapters implement Core ports. Turn/Task/Run
   creation and its outbox event use one PostgreSQL transaction.
@@ -202,19 +194,18 @@ The database adapter package.
   and password-reset email switches. Only typed repository methods can access
   these fixed keys.
 - Resolution is field-scoped. Database values override mail environment/default
-  fallbacks; Auth values override built-in defaults. Omitted mutations retain a
-  row, `set`/`replace` upsert it, and `reset` deletes it. Repository views include
+  fallbacks; Auth values override built-in defaults. Runtime repositories are
+  read-only. Repository views include
   sources and safe inherited previews, while runtime resolvers omit that
   presentation metadata and retain server-only secret material.
-- Audit targets distinguish `user` from `system_setting`. `actor_id` always
-  references a user; the generated nullable `target_user_id` preserves a
-  restrictive user foreign key while allowing `target_id = mail` for settings.
+- Historical user/audit/configuration compatibility tables remain in the active
+  baseline. Retiring Admin does not drop stored data or rewrite migrations.
 - The new runtime schema and migrations use `schema/cloud-baseline.ts` and
   `drizzle-cloud/`; historical `drizzle/` migrations remain reference material.
 - Database tables and Drizzle details are not exposed to frontend apps.
 
-`settings/reader.ts`, `values.ts` and `mutations.ts` share decoding, inheritance
-and redacted audit semantics across memory and PostgreSQL. Authentication reads
+`settings/reader.ts` and `values.ts` share decoding and inheritance across memory
+and PostgreSQL. Unused writers and audit construction are retired. Authentication reads
 policy at each decision, optionally through the short-lived Redis cache. Mail
 resolves current configuration on each delivery; no process-lifetime cache exists.
 
@@ -228,13 +219,13 @@ Shared visual primitives and design-system utilities:
 - Tailwind CSS v4 variables and theme tokens.
 - SSR-safe `ThemeProvider`, `ThemeScript`, and `useTheme` for light, dark, and
   system themes.
-- Base-nova `Button`, `Badge`, `Avatar`, `Card`, `DropdownMenu`, and
+- Base-nova `Button`, `Badge`, `Avatar`, `DropdownMenu`, and
   form components, plus the product-specific `Logo`.
 - A lazy Toast manager bridge exposed through `@voidmix/ui/toast`; it loads the
   concrete Toast implementation only when the first notification is added.
-- `cn`, CVA and `styledSlot` helpers for composition. Unconsumed Sidebar,
-  Menubar, Sheet, Dialog, Tooltip, Skeleton and Separator trees are removed
-  together with exclusive dependencies and regeneration entries.
+- `cn`, CVA and `styledSlot` helpers for composition. Unconsumed Card, Checkbox,
+  Table, Separator and Toggle trees are removed together with exclusive exports
+  and regeneration entries.
 - Shared base-nova semantic colors, focus, radius, and motion tokens from
   `packages/ui/src/styles/globals.css`.
 
@@ -253,7 +244,7 @@ top-level subpaths. Renderer applications that need deferred notifications use
 
 ## `@voidmix/scripts`
 
-A private Bun CLI for procedural repository automation. Vite+ owns the task
+A private Bun CLI for procedural repository automation. Turbo owns the task
 graph; Scripts owns operations that understand the repository or database.
 Runtime applications must never import this package.
 

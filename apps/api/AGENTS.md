@@ -1,4 +1,4 @@
-# @voidmix/api
+# api
 
 ## Purpose
 
@@ -29,7 +29,7 @@ server/
 ## Constraints
 
 - Never import Web, Desktop, Worker, or renderer code.
-- Identity, Projects, Assets, Reviews and Activity services are required. Compose
+- Projects, Assets, Reviews and Activity services are required. Compose
   each service with its own ports. Cloud runtime composes the new repository,
   admission guard and object storage; direct tests may omit them explicitly.
 - Library aggregation and activity pagination belong in Application/DB, never
@@ -48,6 +48,10 @@ server/
 - Keep all Nitro host wiring under `server/`; `src/` is not a runtime source tree.
 - `cloud.*` procedures own conversations, tasks, runs, files, usage, preferences
   and notifications. Resolve the actor from the session on every operation.
+- The former `devices`, `runner`, and `projects.agentRuns` RPC trees are retired
+  and return the ordinary not-found response. The `admin` and `cloud.admin`
+  trees also return ordinary not-found responses for every session role. Project
+  CRUD/resources and account/auth admission remain.
 - `/internal/execution/*` is a separate private contract authenticated by a
   durable hashed RunGrant, current owner epoch, live lease and current permission.
   It owns model/search credentials, dispatch and trusted late usage reconciliation.
@@ -64,6 +68,9 @@ server/
   Redis is never injected into Better Auth. An initial Redis connection failure
   leaves history available and new production AI requests unavailable until
   the API restarts after Redis recovery.
+- New accounts use the database defaults `role=user` and `status=active`.
+  Do not recreate the retired first-user global owner bootstrap. Existing
+  owner/admin session values remain readable, and suspended accounts stay denied.
 - Sentry receives allowlisted metadata; request bodies, source content and
   signed object URLs never enter telemetry. See
   [cloud platform](../../docs/architecture/cloud-platform.md).

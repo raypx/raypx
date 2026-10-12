@@ -46,7 +46,7 @@ accessible in the DOM and through title text when truncated visually.
   with a plain text account link below the primary action. Below 900px use one
   column and show the Logo above the form. Registration and reset follow API
   capabilities. Autofill uses the same Neutral surface as the input and its addon.
-- **Web:** one 232px sidebar for conversations, tasks, projects, usage and Admin, a 56px context bar
+- **Web:** one 232px sidebar for conversations, tasks, projects and usage, a 56px context bar
   and content capped at 1400px. Below 1024px use an icon rail; below 768px use
   a Sheet with focus restoration. The Logo mark remains visible on icon rails.
 - **Conversation:** a central answer and composer, source references and expandable
@@ -57,17 +57,15 @@ accessible in the DOM and through title text when truncated visually.
 - **Projects:** divider rows show name, description, stage, ownership and update
   date. Creation uses a Dialog. Details put tasks beside 288px of project
   information; that information moves above tasks on narrow screens.
-- **Admin:** a compact header, filtered API total, filters and a table. Standard
-  ToggleGroup, Checkbox and Table primitives retain page-scoped selection and
-  batch feedback. Mobile rows preserve identity, selection and actions.
 - **Desktop:** the same Neutral components, a collapsible 224px navigation rail,
-  and an 800px native/renderer minimum. Settings group appearance, devices,
-  local folders and preferences. No extra native permissions are introduced.
+  and an 800px native/renderer minimum. Projects and Settings are the only
+  primary destinations; Settings exposes appearance. Theme and language remain
+  available in the shell. Native permissions cover window and tray behavior.
 
 ## State and interaction
 
 Loaders own remote data and retain content during background refresh. URL search
-owns filters and cursors. Admin Zustand remains page/account scoped. Forms and
+owns filters and cursors. Forms and
 overlays stay local; Desktop preferences retain migration and delayed hydration.
 
 Distinguish initial empty, empty pagination, filtered-empty, permission failure,

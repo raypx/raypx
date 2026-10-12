@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
 import {
-  userStatuses,
   projectStagesV2,
   projectMemberRolesV2,
   organizationRolesV2,
@@ -11,14 +10,8 @@ import {
   type CloudRunStatus,
   type CloudToolExecution,
   type CloudCommand,
-  type AuditAction,
-  type AuditTargetType,
-  type User,
 } from "@voidmix/core";
 import {
-  roleSchema,
-  userStatusSchema,
-  auditEventSchema,
   projectStageV2Schema,
   projectMemberRoleV2Schema,
   organizationRoleV2Schema,
@@ -32,10 +25,6 @@ import {
   cloudCommandSchema,
 } from "@voidmix/contracts";
 import {
-  roleEnum,
-  userStatusEnum,
-  auditActionEnum,
-  auditTargetTypeEnum,
   projectStageEnum,
   v2ProjectMemberRoleEnum,
   organizationRoleEnum,
@@ -48,14 +37,6 @@ import {
   cloudToolStatusEnum,
   cloudCommandStatusEnum,
 } from "@voidmix/db/schema";
-const roles = { user: true, admin: true, owner: true } satisfies Record<User["role"], true>;
-const actions = {
-  "user.status.changed": true,
-  "admin.created": true,
-  "system.settings.updated": true,
-  "system.mail.test.sent": true,
-} satisfies Record<AuditAction, true>;
-const targets = { user: true, system_setting: true } satisfies Record<AuditTargetType, true>;
 const cloudTasks = {
   open: true,
   in_progress: true,
@@ -84,20 +65,6 @@ const cloudCommands = { pending: true, applied: true, rejected: true } satisfies
 >;
 describe("Core/Contracts/PostgreSQL enum parity", () => {
   it.each([
-    ["role", Object.keys(roles), roleSchema.options, roleEnum.enumValues],
-    ["user status", userStatuses, userStatusSchema.options, userStatusEnum.enumValues],
-    [
-      "audit action",
-      Object.keys(actions),
-      auditEventSchema.shape.action.options,
-      auditActionEnum.enumValues,
-    ],
-    [
-      "audit target",
-      Object.keys(targets),
-      auditEventSchema.shape.targetType.options,
-      auditTargetTypeEnum.enumValues,
-    ],
     ["project stage", projectStagesV2, projectStageV2Schema.options, projectStageEnum.enumValues],
     [
       "project role",

@@ -10,8 +10,7 @@ export type MailNamespace =
   | "passwordReset"
   | "verification"
   | "welcome"
-  | "taskNotification"
-  | "test";
+  | "taskNotification";
 
 export function createMailTranslator(namespace: MailNamespace, locale: Locale): Translator {
   return createTranslator({

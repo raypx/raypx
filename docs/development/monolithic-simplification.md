@@ -1,5 +1,10 @@
 # Monolithic simplification
 
+> Historical measurements and verification for the frozen change below. Later
+> Desktop execution retirement and the Electrobun migration are recorded in
+> [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md) and
+> [ADR-0020](../architecture/decisions/0020-electrobun-desktop-host.md).
+
 ## Scope and measurements
 
 This change completes retirement of the unused Workspace and Project Studio

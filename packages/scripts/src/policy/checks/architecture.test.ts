@@ -15,14 +15,20 @@ function fixture(
   >,
 ) {
   const files: Record<string, string> = {};
+  const names = new Map(
+    Object.keys(entries).map((path) => {
+      const name = path.split("/").at(-1)!;
+      return [name, path.startsWith("apps/") ? name : `@voidmix/${name}`] as const;
+    }),
+  );
   for (const [path, item] of Object.entries(entries)) {
     files[`${path}/package.json`] = JSON.stringify({
-      name: `@voidmix/${path.split("/").at(-1)}`,
+      name: names.get(path.split("/").at(-1)!),
       dependencies: Object.fromEntries(
-        (item.deps ?? []).map((n) => [`@voidmix/${n}`, "workspace:*"]),
+        (item.deps ?? []).map((n) => [names.get(n) ?? `@voidmix/${n}`, "workspace:*"]),
       ),
       devDependencies: Object.fromEntries(
-        (item.dev ?? []).map((n) => [`@voidmix/${n}`, "workspace:*"]),
+        (item.dev ?? []).map((n) => [names.get(n) ?? `@voidmix/${n}`, "workspace:*"]),
       ),
       exports: item.exports ?? { ".": "./src/index.ts" },
       ...(item.imports ? { imports: item.imports } : {}),
@@ -73,6 +79,14 @@ describe("architecture boundaries", () => {
       ),
     ).toBe(true);
   });
+
+  it("rejects runtime imports from an unscoped app", async () => {
+    const findings = await fixture({
+      "apps/web": { source: 'import "desktop";' },
+      "apps/desktop": {},
+    });
+    expect(findings.some((finding) => finding.message.includes("forbidden runtime"))).toBe(true);
+  });
   it("permits declared public subpaths and test-only reverse dependencies", async () => {
     expect(
       await fixture({
@@ -94,47 +108,51 @@ describe("architecture boundaries", () => {
       ).some((f) => f.message.includes("declared production dependency")),
     ).toBe(true);
   });
-  it("permits the execution adapter in the Desktop host but rejects it in the renderer", async () => {
+  it("rejects the execution adapter as a Desktop dependency and renderer import", async () => {
     const findings = await fixture({
       "apps/desktop": {
         deps: ["ai"],
         sources: {
-          "runtime/main.ts": 'import "@voidmix/ai";',
           "src/main.ts": 'import "@voidmix/ai";',
         },
       },
       "packages/ai": {},
     });
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.location).toBe("apps/desktop/src/main.ts");
+    expect(findings).toHaveLength(2);
+    expect(findings.some((item) => item.location === "apps/desktop/package.json")).toBe(true);
+    expect(findings.some((item) => item.location === "apps/desktop/src/main.ts")).toBe(true);
   });
-  it.each([
-    ['import "../runtime/main";', undefined],
-    ['import "@host/main";', { "@host/*": ["runtime/*"] }],
-    ['import "#host/main";', undefined],
-  ])("rejects same-workspace renderer/host imports: %s", async (source, paths) => {
-    const findings = await fixture({
-      "apps/desktop": {
-        source,
-        ...(paths ? { paths } : {}),
-        imports: { "#host/*": "./runtime/*.ts" },
-        sources: { "runtime/main.ts": "export {};" },
-      },
-    });
-    expect(
-      findings.some((item) => item.message.includes("renderer must not import local runner")),
-    ).toBe(true);
-  });
-  it("rejects direct provider and Node imports in the renderer and React in the runner", async () => {
+  it("rejects direct provider and Node imports in the Desktop renderer", async () => {
     const findings = await fixture({
       "apps/desktop": {
         sources: {
           "src/main.ts": 'import "node:fs"; import "@earendil-works/pi-coding-agent";',
-          "runtime/main.ts": 'import "react";',
         },
       },
     });
+    expect(findings).toHaveLength(2);
+  });
+  it("rejects Electrobun host and Bun imports in the Desktop renderer", async () => {
+    const findings = await fixture({
+      "apps/desktop": {
+        source:
+          'import "electrobun/main/browser-window"; import "electrobun/bun"; import "bun:ffi";',
+      },
+    });
     expect(findings).toHaveLength(3);
+  });
+  it("allows the shared window contract while rejecting native host source", async () => {
+    const findings = await fixture({
+      "apps/desktop": {
+        source: 'import type { DesktopRpc } from "../native/rpc"; import "../native/main";',
+        sources: {
+          "native/rpc.ts": "export interface DesktopRpc {}",
+          "native/main.ts": "export {};",
+        },
+      },
+    });
+    expect(findings).toHaveLength(1);
+    expect(findings[0]?.message).toContain("renderer must use the window bridge");
   });
   it("permits business UI in applications and rejects transport ownership in the UI package", async () => {
     const findings = await fixture({

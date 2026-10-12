@@ -7,6 +7,8 @@ export default defineConfig({
     "*.{ts,tsx,json,md,css,toml}": ["vp fmt --write", "vp lint --fix"],
   },
   lint: {
+    // Tracked compiler output is verified through its source workspaces.
+    ignorePatterns: ["packages/*/dist/**"],
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     options: {
       typeAware: true,

@@ -95,10 +95,6 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: apps/desktop/src-tauri
       - run: bun install --frozen-lockfile
-      # beforeBuildCommand prepares runner resources, then checks/builds via Turbo.
-      - run: bun run --cwd apps/desktop tauri:build
+      # Turbo checks/builds the renderer before Electrobun packages the native host.
+      - run: bun run desktop:build

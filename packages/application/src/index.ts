@@ -8,8 +8,6 @@ export { createProjectAccess } from "./context.js";
 export { createAssetApplication } from "./assets.js";
 export { createReviewApplication } from "./reviews.js";
 export { createActivityApplication } from "./activity.js";
-export { createUserAdministration } from "./identity.js";
-export { createAgentRunApplication, type AgentRunApplication } from "./agent-v2.js";
 export type * from "./types.js";
 export type {
   OrganizationMemberV2Repository,
@@ -23,8 +21,6 @@ export function createProjectApplication(options: ProjectOptions): ProjectApplic
   const context = { options, ...executionContext(options), ...createProjectAccess(options) };
   return { ...projectsCommands(context), ...membersCommands(context), ...tasksCommands(context) };
 }
-
-export { createExecutionApplication, type ExecutionApplication } from "./agent-execution.js";
 
 export {
   createCloudApplication,

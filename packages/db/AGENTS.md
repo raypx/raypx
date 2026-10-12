@@ -14,15 +14,15 @@ interfaces owned by `@voidmix/core`.
 | `./schema` | Drizzle tables, enums, and the `schema` aggregate           |
 
 Source layout: small compatibility entrypoints (`schema.ts`, `postgres.ts`,
-`memory.ts`, `v2.ts`); domain implementations under `identity/`, `settings/`,
-`v2/`, and `schema/`. `settings/reader.ts`, `settings/values.ts`, and
-`settings/mutations.ts` share resolution, decoding, and mutations across adapters. Historical SQL remains under `drizzle/`; the independent current baseline lives
+`memory.ts`, `v2.ts`); domain implementations under `settings/`,
+`v2/`, and `schema/`. `settings/reader.ts` and `settings/values.ts` share read-only configuration
+resolution across adapters. Historical SQL remains under `drizzle/`; the independent current baseline lives
 under `drizzle-cloud/`.
 See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired-code.md).
 
 ## Ownership
 
-- Own the Drizzle schema, user, canonical V2 resource, outbox, blob, and
+- Own the Drizzle schema, canonical V2 resource, outbox, blob, and
   system-settings repositories in PostgreSQL and memory, plus migration
   execution.
 - Own `PostgresCloudRepository` and `InMemoryCloudRepository`, cloud indexes,
@@ -41,44 +41,34 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - Both adapters reject changes to an existing TaskRound. SQL enforces one active
   Run per Task and one round per goal version; Application guards acceptance and
   publication under the same account/Run/Task locks.
+- Shared Cloud test helpers under `tests/` stay TypeScript-only. Both Vitest
+  configs resolve the four helper imports to their `.ts` sources so incidental
+  CommonJS output cannot shadow them or enter the Vite+ runner.
 - Own no business rule and no interface definition — both belong to
   `@voidmix/core`.
 
 ## Constraints
 
-- Never expose tables or Drizzle types to frontend applications. Web (including
-  its Admin routes) and Desktop reach the backend through `@voidmix/client` and
+- Never expose tables or Drizzle types to frontend applications. Web and Desktop reach the backend through `@voidmix/client` and
   `@voidmix/contracts`.
 - PostgreSQL and in-memory implementations must be updated together when a
   domain repository interface changes.
-- User administration uses one transaction-level advisory lock for bootstrap
-  and status changes. Count, mutation and audit commit together. Memory serializes
-  the same operation and publishes its cloned state only on success.
 - Project visibility SQL must match Core for personal owners/collaborators and
   organization membership. Resource lists filter in SQL before keyset pagination.
 - No limit/cursor means a complete list. Paged queries sort timestamp + ID;
   cursors bind to actor and query scope and invalid cursors raise BAD_REQUEST.
 - Queued Agent creation inserts the run and outbox event in the same transaction.
   All statements in that operation use the transaction handle.
-- Legacy/local table definitions and adapter sources remain historical. They
-  are excluded from the runtime schema aggregate, public schema exports and
-  new migration baseline; do not apply the old baseline to a new database.
+- Legacy Workspace/local tables and their exclusive enum definitions have no
+  active source consumer and are retired. Preserve their historical SQL and
+  existing data; do not apply the old baseline to a new database.
+- Device-bound execution and Project AgentRun adapters/schema definitions are
+  retired. Preserve historical SQL and stored data; their removal needs no
+  change to the current Cloud migration baseline.
 - Auth policy reuses `system_settings` with the fixed keys
   `auth.registration_mode`, `auth.allowed_email_domains`,
   `mail.welcome_enabled`, `mail.verification_enabled`, and
   `mail.password_reset_enabled`; it never exposes an arbitrary key/value API.
-- Auth policy updates and their redacted `system.settings.updated` audit event
-  are one transaction in PostgreSQL. A no-op update must not append an audit
-  event.
-- Mail and Auth mutations are partial. Omitted fields are untouched, `set` or
-  `replace` upserts one fixed key, and `reset` deletes that key so resolution
-  falls back to environment/default state. An absent reset is a no-op.
-- Settings audit metadata contains only changed field names, mutation operations,
-  and the result. Never include domain lists, effective policy values, or secret
-  material.
-- `InMemoryUserRepository` must **clone on read and on write**
-  (`{ ...user }`, `{ ...event, metadata: { ...event.metadata } }`) so tests
-  cannot mutate stored state.
 - Schema idioms: enums first with the `Enum` suffix and a snake_case PostgreSQL
   name; the third `pgTable` argument is the **array** form (Drizzle 1.0 RC),
   not the legacy object form; index names are `<table>_<cols>_idx`; camelCase
@@ -87,7 +77,7 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - Export new tables from the owning schema domain module. `schema/tables.ts`
   aggregates those namespaces, while `schema.ts` exposes the schema subpath.
   Add a new domain to both entrypoints; export from the root only for a backend
-  consumer. Keep the historical scheduled-task aggregate exclusion intact.
+  consumer. Retired historical tables stay outside the active aggregate.
 - Keep runtime relations in `schema/relations.ts`. Better Auth uses relational
   queries; domain adapters use explicit joins. Persisted foreign keys belong
   to table definitions and are independent of this runtime relation graph.
@@ -104,7 +94,7 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   generate time.
 - `drizzle.config.ts` calls `getDatabaseEnv()` at module load, so `drizzle-kit`
   fails at import time when `DATABASE_URL` is missing or invalid.
-- `db seed`, `db push`, `db clean`, and `db studio` are restricted to
+- `db push`, `db clean`, and `db studio` are restricted to
   development and test by `@voidmix/scripts`; `db migrate` only requires a
   database URL.
 - `db push` applies the schema without a migration, so it is for a database in
@@ -114,9 +104,10 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - `resetDatabase` (`db clean`) drops the `drizzle` and `public` schemas and
   recreates an empty `public`. It destroys data and migration history without
   prompting, so the environment guard is the only protection.
-- A new audit-action value is also declared in `@voidmix/core` (literal union)
-  and `@voidmix/contracts` (`z.enum`). All three plus a migration must land
-  together.
+- User-administration repositories, settings mutation/audit adapters and Cloud
+  Admin diagnostics are retired. Keep persisted users, role/status enums,
+  system settings/secrets and audit tables for existing data and baseline
+  compatibility; no runtime audit consumer remains. Do not DROP them as code cleanup.
 
 ## Verification
 

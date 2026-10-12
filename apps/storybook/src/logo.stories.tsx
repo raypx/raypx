@@ -17,7 +17,7 @@ export const Default: Story = {};
 
 export const CustomLabel: Story = {
   args: {
-    label: "Voidmix Admin",
+    label: "Voidmix Projects",
   },
 };
 

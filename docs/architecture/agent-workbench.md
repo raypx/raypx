@@ -1,5 +1,7 @@
 # Agent workbench
 
+> Historical local workbench design, superseded by [the cloud platform](./cloud-platform.md) and [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md). The local runner, device protocol and packaging commands below are retired.
+
 The rebuild uses Account-first projects, a new database and coordinated new
 clients. [ADR-0015](./decisions/0015-local-agent-workbench.md) records the
 execution and UI boundaries. [Account-first](./account-first-v2.md) continues to

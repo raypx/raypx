@@ -29,7 +29,7 @@ describe("vmx CLI", () => {
     expect(help.status).toBe(0);
     expect(help.stdout).toContain("Voidmix repository automation");
     expect(help.stdout).toContain("db");
-    expect(help.stdout).toContain("admin");
+    expect(help.stdout).not.toContain("admin");
     expect(help.stdout).toContain("desktop");
     expect(help.stdout).toContain("doctor");
     expect(help.stdout).toContain("deps");
@@ -41,9 +41,8 @@ describe("vmx CLI", () => {
   it.each([
     [
       ["db", "--help"],
-      ["clean", "migrate", "push", "seed", "studio"],
+      ["clean", "migrate", "push", "studio"],
     ],
-    [["admin", "--help"], ["create"]],
     [["desktop", "--help"], ["build"]],
     [
       ["deps", "--help"],
@@ -57,7 +56,7 @@ describe("vmx CLI", () => {
     for (const command of expectedCommands) expect(result.stdout).toContain(command);
   });
 
-  it.each([["unknown"], ["db:migrate"], ["admin:create"], ["desktop:build"]])(
+  it.each([["unknown"], ["admin"], ["db:migrate"], ["admin:create"], ["desktop:build"]])(
     "rejects unsupported command %s",
     (command) => {
       const result = runCli([command]);
@@ -66,6 +65,23 @@ describe("vmx CLI", () => {
       expect(result.stderr).toContain(`Unknown command ${command}`);
     },
   );
+
+  it("rejects the retired Desktop runner preparation command", () => {
+    const help = runCli(["desktop", "--help"]);
+    expect(help.stdout).toContain("build");
+    expect(help.stdout).not.toContain("prepare");
+    const result = runCli(["desktop", "prepare"]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unknown command prepare");
+  });
+
+  it("rejects the retired user seeding command", () => {
+    const help = runCli(["db", "--help"]);
+    expect(help.stdout).not.toContain("seed");
+    const result = runCli(["db", "seed"]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Unknown command seed");
+  });
 
   it("shows help without initializing business environment schemas", () => {
     const environment = { ...runnerEnvironment, NODE_ENV: "invalid-for-schema" };

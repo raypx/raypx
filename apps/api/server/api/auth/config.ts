@@ -93,22 +93,6 @@ export function createApiAuth({
     session: { modelName: "authSessions", storeSessionInDatabase: true },
     account: { modelName: "authAccounts" },
     verification: { modelName: "authVerifications", storeInDatabase: true },
-    databaseHooks: {
-      user: {
-        create: {
-          before: async (data) => {
-            const [existing] = await connection.db.select({ id: users.id }).from(users).limit(1);
-            return {
-              data: {
-                ...data,
-                role: existing ? "user" : "owner",
-                status: "active",
-              },
-            };
-          },
-        },
-      },
-    },
     advanced: {
       database: { generateId: () => uuidv7(), joins: false },
       defaultCookieAttributes: {

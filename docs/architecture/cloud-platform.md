@@ -1,7 +1,8 @@
 # Cloud platform
 
 The target is [ADR-0016](decisions/0016-cloud-agent-platform.md), refined by
-[ADR-0017](decisions/0017-gateway-and-task-rounds.md).
+[ADR-0017](decisions/0017-gateway-and-task-rounds.md). Desktop scope is defined by
+[ADR-0019](decisions/0019-retire-legacy-desktop-execution.md).
 
 ## Boundaries
 

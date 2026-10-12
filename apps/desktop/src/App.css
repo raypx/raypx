@@ -26,6 +26,3 @@ a {
 button:disabled {
   cursor: not-allowed;
 }
-[data-tauri-drag-region] {
-  -webkit-app-region: drag;
-}

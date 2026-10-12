@@ -13,7 +13,7 @@ frontend: Zod schemas, the oRPC contract tree, and the DTOs derived from them.
 
 `src/index.ts` composes the explicit contract tree and public exports. Domain
 schemas and procedures live in `cloud.ts`, `account.ts`, `projects.ts`, `reviews.ts`,
-`assets.ts`, and `agents.ts`; `common.ts` owns shared fields, envelopes and
+and `assets.ts`; `common.ts` owns shared fields, envelopes and
 procedure construction. `methods.ts` owns HTTP method classification for API and client.
 See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired-code.md).
 
@@ -39,14 +39,15 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   envelope stable so Web and Desktop can translate codes without consuming
   server diagnostic messages.
 - The canonical Account-first tree is the only transport API. Retired Workspace,
-  Project Studio, scheduled-task, and settings procedures must not return.
+  Project Studio, device/runner, Project AgentRun, scheduled-task, and settings
+  and Admin procedures must not return. Cloud Runs use `cloud.runs` exclusively.
 - Own nothing else: no network calls, no database access, no business rules.
 
 ## Constraints
 
 - Schemas are exported (`export const fooSchema = z.object({...})`); procedure
   definitions are domain-module `const`s exported only to the tree composer named as camelCase verbs whose name
-  differs from their key in the tree (`listUsers` → `list`).
+  differs from their key in the tree (`listCloudTasks` → `list`).
 - `apiContract` is a plain nested object literal, **not** `oc.router()`.
 - DTOs are declared beside their domain schemas as `export type FooDto = z.infer<typeof fooSchema>`.
 - **Dates stay native `Date`.** Use `z.date()`; never serialize to ISO strings.
@@ -56,11 +57,10 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   message does not point at your edit.
 - Project/library/activity list inputs accept optional limit/cursor; omission
   preserves complete lists for installed clients. Activity uses an explicit DTO.
-  Admin list adds optional role/status filters without changing its pagination.
 - Public Auth capabilities expose only registration, verification-request, and
   password-reset-request booleans. Never add settings sources, domain lists,
   missing mail fields, or secret state to that public DTO.
-- **A status or audit-action value is declared in three places with no shared
+- **An active status value is declared in three places with no shared
   source**: the literal union in `@voidmix/core`, the `z.enum` here, and the
   `pgEnum` in `@voidmix/db`. Miss one and it fails at runtime (Zod output
   validation or a PostgreSQL enum error), not at compile time.

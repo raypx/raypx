@@ -1,3 +1,9 @@
-# TanStack Start writes client and build-time server output here. Tauri packages
-# only dist/client; native outputs are ignored by src-tauri/.gitignore.
+# Start output is embedded as the Electrobun view.
 /dist
+# Electrobun projects its pinned SDK and emits native bundles locally.
+/.hutch
+/.cottontail-tmp
+/build
+/artifacts
+# Retain ignored native artifacts from the retired Tauri build without shipping them.
+/src-tauri

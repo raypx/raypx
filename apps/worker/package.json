@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/worker",
+  "name": "worker",
   "version": "0.0.0",
   "private": true,
   "type": "module",

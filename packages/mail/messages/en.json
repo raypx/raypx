@@ -38,9 +38,5 @@
     "task_completed": "Your task is complete.",
     "subject": "Voidmix update",
     "button": "Open Voidmix"
-  },
-  "test": {
-    "subject": "Voidmix mail configuration test",
-    "body": "Your Voidmix mail configuration is working."
   }
 }

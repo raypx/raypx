@@ -15,7 +15,7 @@ export function getDesktopLocale(): Locale {
   return localeStorage.read() ?? normalizeLocale(globalThis.navigator?.language) ?? "en";
 }
 
-/** Headers shared by API clients and direct cloud requests. */
+/** Locale headers for the typed cloud API client. */
 export function getDesktopLocaleHeaders(): Record<string, string> {
   return { "accept-language": getDesktopLocale() };
 }

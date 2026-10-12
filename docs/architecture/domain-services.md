@@ -2,103 +2,89 @@
 
 [ADR-0014](./decisions/0014-domain-services-and-client-state.md) assigns workflows
 to Application, rules and ports to Core, persistence to DB and transport to API.
-The existing Account-first model and physical schema remain unchanged.
+[ADR-0021](./decisions/0021-retire-admin.md) retires Identity administration,
+management writes, audit consumption and the Admin page/store. The active
+Account/Project model and physical Cloud baseline remain unchanged.
 
 ```mermaid
 flowchart TD
-  URL[URL filters and cursor] --> Loader[Web / Desktop loaders]
-  Store[Page-scoped Admin Zustand] --> UI[Selection and operation feedback]
+  URL[Resource and cursor] --> Loader[Web / Desktop loaders]
   Loader --> Client[Client and Contracts]
   Client --> API[API authentication and domain handlers]
-  API --> Identity[Identity]
   API --> Projects[Projects and tasks/members]
   API --> Assets[Assets and library]
   API --> Reviews[Reviews and feedback]
   API --> Activity[Activity queries]
+  API --> Cloud[Conversation, execution and delivery]
   Assets --> Access[ProjectAccess]
   Reviews --> Access
   Activity --> Access
-  Identity --> Core[Core rules and transaction ports]
-  Projects --> Core
+  Projects --> Core[Core rules and transaction ports]
+  Cloud --> Core
   Access --> Core
   Core -. implemented by .-> DB[DB repositories and transactions]
 ```
 
 ## Ownership
 
-| Module   | Application responsibility                                  | Required ports                                       |
-| -------- | ----------------------------------------------------------- | ---------------------------------------------------- |
-| Identity | Listing, status changes, initial administrator              | User repository with administration transaction      |
-| Projects | Lifecycle, tasks, members, capability resolution            | Projects, tasks, project and organization membership |
-| Assets   | Assets, versions, existing upload, authorized library query | ProjectAccess, assets, versions, blob storage        |
-| Reviews  | Reviews/feedback and version association validation         | ProjectAccess, reviews, feedback, version lookup     |
-| Activity | Authorized activity query                                   | ProjectAccess, activity repository                   |
-| Settings | Existing decoding, inheritance and Auth/Mail resolution     | Existing settings repositories                       |
+| Module   | Application responsibility                                    | Required ports                                             |
+| -------- | ------------------------------------------------------------- | ---------------------------------------------------------- |
+| Projects | Lifecycle, tasks, members, capability resolution              | Projects, tasks and memberships                            |
+| Assets   | Assets, versions, upload and authorized library query         | ProjectAccess, assets, versions and blob storage           |
+| Reviews  | Reviews/feedback and version association validation           | ProjectAccess, reviews, feedback and version lookup        |
+| Activity | Authorized activity query                                     | ProjectAccess and activity repository                      |
+| Cloud    | Scoped conversations, executions, budgets, immutable delivery | Cloud transaction repository, storage and durable dispatch |
 
-Core constructs durable audit events. Application appends them with the mutation
-inside a transaction. PostgreSQL locks administration writes with
-`pg_advisory_xact_lock(1870034030, 1)`, shared by status changes and bootstrap.
-Memory serializes operations and publishes cloned state only after success.
-The original guard order and no-op audit behavior remain intact.
+API composes fixed-key DB settings readers for Auth and Mail. Core derives the
+public Auth capability view; Application owns no settings writer or service.
 
-Production composition requires every non-Agent service and repository. Missing
-wiring fails at construction/typechecking instead of becoming an empty response.
-Agent execution, activity event production and new upload protocols remain out
-of scope.
+API resolves current sessions and suspended-account status. Application rechecks
+personal/project access and coordinates atomic business writes. Worker uses the
+same Cloud execution boundary. The private Gateway and durable outbox remain
+required. No global management permission grants access to private cloud content.
 
 ## State and transport
 
-| State                                  | Owner and lifetime                                               |
-| -------------------------------------- | ---------------------------------------------------------------- |
-| Remote entities                        | Route loader; AbortSignal and invalidation after mutations       |
-| Filters and pagination                 | Validated URL search; filter changes return to first page        |
-| Admin selection, pending IDs, feedback | Page/account DirectoryProvider; no persistence                   |
-| Form drafts                            | Local React state                                                |
-| Desktop device preferences             | Existing validated, migrated and delayed-hydration Zustand store |
-| Theme and language                     | Existing providers                                               |
-
-Admin notices contain message codes and parameters, translated at render time.
-Selectors isolate row selection/pending subscriptions. Batch writes specify a
-target status and retain partial success counts. Selection, batches and export
-are restricted to the current page; filter/page changes clear selection. Disposed
-stores reject late results, and new accounts get new stores.
+Route loaders own remote resource snapshots, cancellation and invalidation after
+writes. Query owns ordinary Cloud resource data; Client sessions own active
+Run/Conversation projections. Forms and overlays keep local drafts. Desktop
+stores only its theme and the existing locale preference.
 
 SSR creates a client per request and forwards only Better Auth cookies to the
 configured API. Browser requests include credentials. Protected loader data is
 tagged with accountId; the layout hides data from another account while clearing
 cached protected routes and refreshing. No shared SSR singleton holds user data.
-The production Admin adapter propagates errors; preview data is test injection only.
 
-Authenticated browser checks also exposed three transport defects: Nitro's
-Request wrapper must be reconstructed through public fields before Better Auth;
-native fetch already decompresses responses, so the client must not decompress
-them twice; and credentialed oRPC batching requires its protocol headers in the
-configured-origin CORS policy. Auth fields remain disabled until hydration so
-early input cannot be lost. Regression tests cover these boundaries.
+Nitro Requests are reconstructed through public fields before Better Auth;
+native fetch owns decompression; credentialed oRPC batching uses the required
+CORS protocol headers. Auth fields wait for hydration so early input is retained.
 
 ## Compatibility
 
-- HTTP and RPC paths, error envelopes, native Date fields and persisted schema
-  are preserved. `projects.assets.*` and the existing upload alias remain.
-- Project, library and activity queries gain optional `limit` (1–100) and
-  `cursor`. Clients request 50 rows. Omitting both retains the complete-list
-  behavior required by installed Desktop versions.
-- SQL performs visibility filtering before pagination. Cursors bind actor and
-  query scope; every page rechecks current membership. Time plus ID gives a
-  deterministic order even for equal timestamps. Millisecond truncation matches
-  native JavaScript Date precision. Invalid cursors yield BAD_REQUEST.
-- Admin retains offset pagination and adds role/status filters in SQL before
-  counting and limiting; it never filters an arbitrary first 100 rows locally.
-- Core no longer exports createUserAdministration; backend callers import it
-  from Application. ProjectApplication no longer owns Assets/Reviews/Activity.
-  Their explicit factories and ProjectAccess replace the wide context.
+Cloud and retained Project paths, error envelopes and native Date fields remain.
+Retired device/Project AgentRun paths and Admin paths return ordinary 404s.
+Project, library and activity cursors bind actor/query scope and recheck current
+membership on every page. API and Worker share the same capability evaluator.
+
+The unused settings mutation/audit ports, initial administrator tooling,
+profile-only seed and isolated legacy schemas are removed. Auth/Mail reads,
+compatibility database columns/tables, historical SQL and user data are retained.
+No new migration or automatic cleanup is introduced.
 
 ## Enforcement and validation
 
-Policy rejects reversed runtime dependencies, app-to-app imports, runtime imports
-of scripts, private cross-package imports and workspace dependency cycles. Enum
-parity tests compare Core, Contracts and PostgreSQL. Shared remains a built package
-with explicit public entries.
+Policy rejects reversed runtime dependencies, application imports, private
+cross-package imports and workspace cycles. Active enum parity remains checked.
+Application names are unscoped under [ADR-0022](./decisions/0022-unscoped-application-packages.md);
+shared package names retain `@voidmix/`.
+
+Current results are recorded in
+[feature reduction acceptance](../development/feature-reduction-acceptance.md).
+
+## Historical validation before Admin retirement
+
+The results below describe the earlier ADR-0014 delivery, including its now
+retired Admin interfaces; they are retained as historical evidence.
 
 See [testing](../development/testing.md) for focused, full, PostgreSQL and browser
 commands. The clean baseline passed 599 tests. Local validation on 2026-09-28:

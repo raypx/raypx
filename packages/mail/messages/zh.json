@@ -38,9 +38,5 @@
     "task_completed": "你的任务已完成。",
     "subject": "Voidmix 更新",
     "button": "打开 Voidmix"
-  },
-  "test": {
-    "subject": "Voidmix 邮件配置测试",
-    "body": "你的 Voidmix 邮件配置正常工作。"
   }
 }

@@ -19,8 +19,8 @@ const mocks = vi.hoisted(() => ({
   clearQueries: vi.fn(),
   clearRoutes: vi.fn(),
   session: {
-    data: { user: { id: "account", name: "Ada Lovelace", role: "owner" } } as
-      | { user: { id?: string; name: string; role?: string } }
+    data: { user: { id: "account", name: "Ada Lovelace", email: "ada@example.test" } } as
+      | { user: { id?: string; name: string; email?: string } }
       | undefined,
   },
 }));
@@ -31,7 +31,7 @@ vi.mock("@tanstack/react-router", () => ({
       {children}
     </a>
   ),
-  Outlet: () => <p>Directory</p>,
+  Outlet: () => <p>Page content</p>,
   useLocation: () => mocks.pathname,
   useRouterState: () => false,
   useNavigate: () => mocks.navigate,
@@ -86,7 +86,7 @@ function renderShell() {
   };
 }
 
-describe.each(["/projects", "/admin"])("account menu at %s", (pathname) => {
+describe.each(["/projects", "/chat"])("account menu at %s", (pathname) => {
   beforeEach(() => {
     mocks.pathname = pathname;
   });
@@ -100,14 +100,14 @@ describe.each(["/projects", "/admin"])("account menu at %s", (pathname) => {
     expect(menu).toBeVisible();
   });
 
-  it("shows the operator name and role in the menu", async () => {
+  it("shows the account name and email in the menu", async () => {
     const { trigger, user } = renderShell();
 
     await user.click(trigger);
 
     const menu = await screen.findByRole("menu");
     expect(menu).toHaveTextContent("Ada Lovelace");
-    expect(menu).toHaveTextContent("owner");
+    expect(menu).toHaveTextContent("ada@example.test");
   });
 
   it("offers the three theme choices as a radio group", async () => {
@@ -150,27 +150,33 @@ describe.each(["/projects", "/admin"])("account menu at %s", (pathname) => {
   });
 });
 
-it("offers projects to every account and hides administrator navigation from members", () => {
-  mocks.session.data = { user: { name: "Member", role: "user" } };
+it("offers the cloud destinations to every account", () => {
+  mocks.session.data = { user: { name: "Member", email: "member@example.test" } };
   renderShell();
   expect(screen.getAllByRole("link", { name: "Projects" }).length).toBeGreaterThan(0);
-  expect(screen.queryByRole("link", { name: "User management" })).not.toBeInTheDocument();
+  for (const label of ["Conversations", "Tasks", "Notifications", "Usage and limits"])
+    expect(screen.getAllByRole("link", { name: label }).length).toBeGreaterThan(0);
   expect(screen.queryByText(/Production online|42 ms/)).not.toBeInTheDocument();
-  mocks.session.data = { user: { name: "Ada Lovelace", role: "owner" } };
+  mocks.session.data = { user: { id: "account", name: "Ada Lovelace", email: "ada@example.test" } };
 });
 
-it.each(["/projects", "/projects/", "/projects/example", "/admin"])(
-  "shares the workbench shell across protected routes: %s",
-  (pathname) => {
-    mocks.pathname = pathname;
-    const { container } = render(
-      <I18nProvider locale="en" messages={messages}>
-        <ThemeProvider disableScript storageKey={false}>
-          <AppShell />
-        </ThemeProvider>
-      </I18nProvider>,
-    );
-    expect(container.querySelector(".workbench-shell")).toBeInTheDocument();
-    expect(screen.getByRole("main")).toHaveTextContent("Directory");
-  },
-);
+it.each([
+  "/projects",
+  "/projects/",
+  "/projects/example",
+  "/chat",
+  "/tasks",
+  "/notifications",
+  "/settings/usage",
+])("shares the workbench shell across protected routes: %s", (pathname) => {
+  mocks.pathname = pathname;
+  const { container } = render(
+    <I18nProvider locale="en" messages={messages}>
+      <ThemeProvider disableScript storageKey={false}>
+        <AppShell />
+      </ThemeProvider>
+    </I18nProvider>,
+  );
+  expect(container.querySelector(".workbench-shell")).toBeInTheDocument();
+  expect(screen.getByRole("main")).toHaveTextContent("Page content");
+});

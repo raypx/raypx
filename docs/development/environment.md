@@ -48,8 +48,8 @@ Typed settings repositories retain independent `database`, `environment`,
 
 Development and test may omit the Resend key and sender address; the mail
 package then uses its logger transport and never makes a network request.
-Production starts without mail configuration so `/health`, login, and Admin
-remain available. Registration, password-reset requests and verification-email
+Production starts without mail configuration so `/health` and login remain
+available. Registration, password-reset requests and verification-email
 resends return HTTP 503 with
 `MAIL_NOT_CONFIGURED` until mail is ready. A failed welcome email after a
 successful verification is logged as a non-critical, redacted side effect.
@@ -78,6 +78,12 @@ Database, Auth, mail, and server logger values remain API-side and never enter
 the browser module graph. Web and Desktop use the explicit `VITE_API_URL` API
 origin for Better Auth and authenticated requests. Auth cookies are HTTP-only
 and requests include credentials.
+
+Packaged Electrobun views use the exact `views://main` origin. Include that origin
+in the API's `ALLOWED_ORIGINS`; do not trust opaque `null` origins. Packaged account
+requests require the production HTTPS API and its `SameSite=None; Secure` cookies.
+Loopback HTTP preview tests use the development cookie policy and do not establish
+that production WebView behavior.
 
 The example environment sets `VITE_API_URL=http://localhost:3002`; Web has no
 implicit local API default. The standalone API defaults `AUTH_URL` to

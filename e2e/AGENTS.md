@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Browser smoke tests for Web, protected Admin routes, and Desktop. A
+Browser smoke tests for Web and Desktop. A
 private workspace that is deliberately separate from Vitest.
 
 ## Interface
@@ -10,8 +10,7 @@ private workspace that is deliberately separate from Vitest.
 ```text
 playwright.config.ts   projects, baseURLs, and the webServer definitions
 tests/web.spec.ts      Web home, language switching, and project-access smoke tests
-tests/admin.spec.ts    Admin smoke project
-tests/authenticated-web.spec.ts real login, SSR isolation, project and Admin flows
+tests/authenticated-web.spec.ts real login, SSR isolation and project flows
 capture-product.ts    real-route product screenshots with guarded synthetic seed
 tests/redesign.spec.ts responsive, theme, locale and navigation coverage
 tests/workbench.spec.ts portal focus, failure/retry and cancellation
@@ -45,8 +44,7 @@ Scripts: `e2e` (the run), `test:ui`, `test:report`, `check`.
   `testMatch`. A file that matches no project pattern runs in no project
   and reports nothing.
 - `webServer` starts Web at `VOIDMIX_E2E_PORT` (default 3000), Desktop at +1,
-  and API at +2 with `NODE_ENV=test`. Web/Admin share Web; Desktop has its own
-  project. Admin verifies the unauthenticated redirect without actor headers.
+  and API at +2 with `NODE_ENV=test`. Desktop has its own project.
 - All runs require NODE_ENV=test and TEST_DATABASE_URL naming voidmix_*test.
   Global setup migrates and resets that dedicated database. Real API login uses
   seeded password hashes; do not introduce actor headers or production bypasses.

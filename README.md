@@ -7,7 +7,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-d22128?logo=apache&logoColor=fff)](./LICENSE)
 
 Voidmix is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud
-web app with a standalone typed Hono API, an operations console, and a Tauri
+web app with a standalone typed Hono API, an operations console, and an Electrobun
 desktop client.
 
 Dependency versions are centralized with Bun Catalogs in the root
@@ -29,11 +29,11 @@ request.
 
 ```text
 apps/web        TanStack Start user application
-apps/desktop    Tauri 2 desktop client
+apps/desktop    Electrobun cloud project client
 apps/api        Standalone Nitro API application
 apps/worker     Cloud Pi execution, trusted tools and durable outbox host
 apps/storybook  Storybook UI component workbench
-e2e             Playwright Web smoke tests, including protected Admin routes
+e2e             Playwright cloud, account, project and Desktop smoke tests
 
 packages/ui         Shared visual primitives
 packages/agent-ui   Shared controlled Agent business components
@@ -44,7 +44,7 @@ packages/cache      Redis cache facade and Better Auth secondary storage
 packages/client     Typed oRPC client
 packages/contracts  Runtime API contracts
 packages/core       Framework-independent business rules
-packages/auth       Sessions, roles, and permissions
+packages/auth       Sessions and compatible role values
 packages/i18n       use-intl facade, locale adapters, and formatting
 packages/mail       Typed auth email templates and transports
 packages/db         Drizzle schema and repository adapters
@@ -56,14 +56,15 @@ packages/tsconfig   Shared TypeScript presets
 `bun run policy` keeps this listing and the one in `AGENTS.md` in step with the
 workspaces Bun actually resolves, in both directions. The Worker owns durable
 outbox delivery, cloud Pi execution and trusted document generation. The Web-first
-release uses a fresh database and private object storage. Desktop cloud integration
-and local execution follow [the cloud platform decision](./docs/architecture/decisions/0016-cloud-agent-platform.md).
+release uses a fresh database and private object storage. Desktop manages cloud
+projects and tasks; its former local runtime is retired under
+[the Desktop execution decision](./docs/architecture/decisions/0019-retire-legacy-desktop-execution.md).
 
 ## Requirements
 
 - Bun 1.4.0
 - Node.js 24.18.0
-- Rust/Cargo for desktop builds
+- Electrobun's pinned native SDK (prepared by the Desktop scripts)
 - PostgreSQL for persistent API data
 
 ## Getting started
@@ -84,7 +85,7 @@ explicitly.
 
 The API and Worker require `DATABASE_URL` at startup; Web only needs the API
 origin (`VITE_API_URL`). Use the local PostgreSQL service from the commands
-below, or point it at another PostgreSQL instance. Admin authentication uses
+below, or point it at another PostgreSQL instance. Authentication uses
 Better Auth cookies; local auth mail is logged when Resend is not configured.
 
 ## Common commands
@@ -99,9 +100,7 @@ bun run build
 bun run db:migrate
 bun run db:push
 bun run db:clean
-bun run db:seed
 bun run db:studio
-bun run admin:create -- --email owner@example.com --name "Workspace Owner"
 bun run desktop:build
 bun run storybook
 bun run storybook:build
@@ -125,9 +124,12 @@ not part of production startup.
 ```bash
 docker compose up -d postgres
 bun run db:migrate
-bun run db:seed
 bun run db:studio
 ```
 
-The integrated `/admin` surface calls the standalone API origin through oRPC.
-Unavailable API states are surfaced in the Web UI.
+Web and Desktop call the standalone API origin through oRPC. Admin and its
+management interfaces are retired. Register an account through the actual Auth
+flow; the old profile-only development seed has been removed.
+
+Application workspace names are `web`, `api`, `desktop`, `worker` and `storybook`.
+Shared packages retain their `@voidmix/` scope.

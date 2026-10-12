@@ -42,6 +42,11 @@ describe("task cache trust", () => {
     expect(invocation.command.slice(0, separator)).toContain("--env-mode=strict");
     expect(invocation.command.slice(0, separator)).toContain("--cache=local:rw,remote:rw");
   });
+
+  it("forwards an unscoped application filter unchanged", () => {
+    const invocation = taskInvocation(["build", "--filter", "desktop"], {}, "darwin:arm64");
+    expect(invocation.command.slice(-3)).toEqual(["build", "--filter", "desktop"]);
+  });
   it("rejects flags that could bypass strict environment or cache policy", () => {
     expect(() => taskInvocation(["build", "--cache=remote:rw"], {}, "darwin")).toThrow("policy");
     expect(() => taskInvocation(["build", "--env-mode=loose"], {}, "darwin")).toThrow("policy");

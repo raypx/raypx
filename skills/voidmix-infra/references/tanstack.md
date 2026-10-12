@@ -8,10 +8,10 @@ hash. Corrections live here instead.
 
 ## Why they are vendored at all
 
-`apps/web` uses parenthesized `(auth)`, `(app)`, and nested `(admin)` route-group
-directories, with `route.tsx` as each group layout. `(app)/route.tsx` contains
-the Better Auth client session gate, while `(app)/(admin)/route.tsx` owns the
-AdminShell layout. Both applications use Start file routes. Desktop uses SPA
+`apps/web` uses parenthesized `(auth)` and `(app)` route-group directories,
+with `route.tsx` as each group layout. `(app)/route.tsx` resolves the account
+through the API before protected loaders. Admin routes are retired. Both
+applications use Start file routes. Desktop uses SPA
 mode with client-only route loaders and automatically split route pages; it is not a model
 for Web server functions or SSR data access.
 
@@ -49,8 +49,8 @@ TanStack version changes.
 
 It hand-rolls sessions with TanStack Start's `useSession` and Prisma-style
 queries (`db.users.findUnique`). Neither matches this repository: sessions are
-resolved behind `apps/api/server/api/src/session.ts`'s `SessionResolver` seam,
-roles and permissions come from `@voidmix/auth`, and persistence is Drizzle
+resolved behind `apps/api/server/api/session.ts`'s `SessionResolver` seam,
+session shapes come from `@voidmix/auth`, and persistence is Drizzle
 behind repository interfaces owned by `@voidmix/core`.
 
 Its cookie-hardening table (`httpOnly`, `secure`, `sameSite`, `maxAge`, a 32-plus
@@ -61,8 +61,8 @@ principles are sound and transferable. The code is not.
 
 `rules/auth-route-protection.md` shows `beforeLoad` throwing `redirect()` for
 unauthenticated users. The pattern is fine for navigation, but in this repository
-a client guard is never enforcement: `@voidmix/api` performs the final
-check through `requirePermission`. Web's `(app)/route.tsx` layout may redirect
+a client guard is never enforcement: `api` performs the final
+check through `requireAuthenticated` and application resource capabilities. Web's `(app)/route.tsx` layout may redirect
 unauthenticated navigation, but adding or changing that guard never lets you
 drop the server check.
 

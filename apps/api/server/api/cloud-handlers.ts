@@ -33,7 +33,7 @@ async function pause(signal?: AbortSignal) {
   });
 }
 export function createCloudHandlers(context: RouterContext) {
-  const { authenticated, cloud, objectStorage, command, call, os, requirePermission } = context;
+  const { authenticated, cloud, objectStorage, command, call } = context;
   const conversationGet = command(() => cloud().getConversation);
   const download = async (args: { actorId: string; assetVersionId: string }, preview = false) => {
     const asset = await call(() => cloud().getAsset(args));
@@ -48,21 +48,6 @@ export function createCloudHandlers(context: RouterContext) {
     return { asset, download: signed };
   };
   return {
-    admin: {
-      runs: {
-        list: os.cloud.admin.runs.list
-          .use(requirePermission("admin.runs.read"))
-          .handler(command(() => cloud().adminListRuns)),
-        get: os.cloud.admin.runs.get
-          .use(requirePermission("admin.runs.read"))
-          .handler(command(() => cloud().adminInspectRun)),
-      },
-      usage: {
-        get: os.cloud.admin.usage.get
-          .use(requirePermission("admin.usage.read"))
-          .handler(command(() => cloud().adminUsage)),
-      },
-    },
     conversations: {
       create: authenticated.cloud.conversations.create.handler(
         command(() => cloud().createConversation),

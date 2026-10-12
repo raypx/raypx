@@ -9,16 +9,18 @@ import {
 
 describe("authentication route search", () => {
   it("keeps internal destinations including their query and hash", () => {
-    expect(normalizeAuthRedirect("/admin?tab=users#invite")).toBe("/admin?tab=users#invite");
-    expect(validateAuthSearch({ redirect: "/admin" })).toEqual({ redirect: "/admin" });
+    expect(normalizeAuthRedirect("/projects?cursor=50#details")).toBe(
+      "/projects?cursor=50#details",
+    );
+    expect(validateAuthSearch({ redirect: "/projects" })).toEqual({ redirect: "/projects" });
   });
 
   it.each([
     "https://example.com/account",
     "//example.com/account",
     "/\\\\example.com/account",
-    " /admin",
-    "/admin\n",
+    " /projects",
+    "/projects\n",
     42,
     null,
   ])("rejects unsafe auth destinations: %j", (value) => {
@@ -30,14 +32,14 @@ describe("authentication route search", () => {
   });
 
   it("builds a same-origin verification callback and preserves a safe destination", () => {
-    expect(createVerificationCallbackUrl("https://voidmix.example", "/admin?tab=users")).toBe(
-      "https://voidmix.example/verify-email?verified=1&redirect=%2Fadmin%3Ftab%3Dusers",
+    expect(createVerificationCallbackUrl("https://voidmix.example", "/projects?cursor=50")).toBe(
+      "https://voidmix.example/verify-email?verified=1&redirect=%2Fprojects%3Fcursor%3D50",
     );
   });
 
   it("adds a safe destination to the password reset callback", () => {
-    expect(createPasswordResetCallbackUrl("https://voidmix.example", "/admin")).toBe(
-      "https://voidmix.example/reset-password?redirect=%2Fadmin",
+    expect(createPasswordResetCallbackUrl("https://voidmix.example", "/projects")).toBe(
+      "https://voidmix.example/reset-password?redirect=%2Fprojects",
     );
   });
 });

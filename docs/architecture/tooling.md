@@ -8,7 +8,7 @@ Turbo     workspace task graph, local/remote caching, pruned deployment
 Vite+     leaf dev/build/test/lint/fmt/pack commands
 Nitro     API and Web TanStack Start server build/deployment shell
 Node.js   Web, API and Worker production runtime (24.18.0)
-Rust      Tauri native runtime
+Electrobun Desktop native host/packaging, pinned Bun 1.4.0 main process
 ```
 
 Turbo replaces the Vite+ task runner; never run both task caches. Runtime services remain on Node.js until
@@ -22,7 +22,7 @@ The root `package.json` centralizes versions with Bun catalogs:
 | ------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `catalog:`         | Shared runtime and contracts        | React, TanStack Router/Start, oRPC, Better Auth, `use-intl`, UUID, Zod, Evlog                                                                            |
 | `catalog:backend`  | Server and data tooling             | Hono, Nitro, Drizzle, PostgreSQL, Redis, Nanoid                                                                                                          |
-| `catalog:frontend` | UI, email, and native surfaces      | Base UI, Phosphor Icons, Tailwind CSS, CVA, `cn`, Tauri, Resend                                                                                          |
+| `catalog:frontend` | UI, email, and native surfaces      | Base UI, Phosphor Icons, Tailwind CSS, CVA, `cn`, Electrobun, Resend                                                                                     |
 | `catalog:tooling`  | Build, test, and repository tooling | Turbo, Vite+, Vite alias, TypeScript, Storybook, Knip, `esbuild`, `jiti`, React types/plugin, Oxc transform, Citty, Dotenvx, Vitest coverage, Playwright |
 
 Vitest itself is absent from the catalogs because Vite+ bundles the runner;
@@ -117,7 +117,7 @@ bun run knip:report  knip             report unused files, exports, dependencies
 
 `bun run knip:report` is intentionally outside `verify` while the monorepo's
 framework entrypoints and public package exports are being classified. The
-configuration keeps explicit Nitro, Tauri, Worker, Storybook and mail-script
+configuration keeps explicit Nitro, Electrobun, Worker, Storybook and mail-script
 entries visible to the scan and excludes generated output plus the
 environment-validating Drizzle config. Once that baseline is clean, dependency
 and duplicate-export findings can be promoted to the verification gate
@@ -131,10 +131,15 @@ depend on generated translation files. It is deliberately not repointed at
 and lint).
 
 Oxfmt reads `.gitignore` and `.prettierignore`. `.prettierignore` remains for
-generated files that stay visible to git — the TanStack route trees and Drizzle metadata —
+generated files that stay visible to git — package compiler output, the TanStack route trees and Drizzle metadata —
 and for vendored agent skills. Formatting those files would be reverted by
 whichever tool owns them, producing permanent churn and defeating drift
 detection.
+
+Oxlint also excludes `packages/*/dist/**` through `vite.config.ts`; workspace
+typechecks and tests validate the source that owns those generated files.
+Turbo prepares Desktop's uncached Electrobun devkit/declarations before root lint,
+so a clean checkout resolves the same SDK types as Desktop's strict checks.
 
 The `staged` block in `vite.config.ts` defines the pre-commit formatting and
 lint-fix pass. The committed `.vite-hooks/pre-commit` script invokes `vp staged`.
@@ -160,13 +165,11 @@ clean [options]        remove rebuildable outputs and tool caches; optionally de
 db migrate             apply Drizzle migrations
 db push                push the schema without a migration in development/test
 db clean               drop every table and migration record in development/test
-db seed                seed development/test data
 db studio              open Drizzle Studio in development/test
-admin create           create an idempotent initial administrator
 policy [--fix]         check repository conventions; --fix rewrites the
                        findings that have exactly one possible remedy
 generate               regenerate Drizzle artifacts
-desktop build          build the Tauri application
+desktop build          build/check the renderer, then package Electrobun
 verify                  run every gate: policy, format, lint, check, test,
                         build, the Worker artifact check, and Nitro runtime probes
 verify --verbose        run every gate with full child-process output
@@ -209,9 +212,9 @@ the root `vite` alias/override, and verify coverage after resolving the lockfile
 Refresh a cross-platform lockfile with `bun install --lockfile-only --os '*' --cpu '*'`,
 then install locally with `bun install --frozen-lockfile`. This keeps the optional
 native packages required by Linux CI and Windows Desktop builds in the lockfile.
-Update Desktop's Rust dependency resolution with `cargo update` in
-`apps/desktop/src-tauri`, followed by the native checks in
-[Testing and verification](../development/testing.md).
+Electrobun upgrades change the exact frontend catalog and `hutch.config.ts`
+version together; prepare the matching SDK before native checks and packaging.
+See [ADR-0020](./decisions/0020-electrobun-desktop-host.md).
 
 The Bun commands are explicit maintenance operations rather than part of
 `doctor` or `verify`. `deps:dedupe` may rewrite only Bun's lockfile; its
@@ -244,11 +247,11 @@ env-file loading for development and build commands goes through this runner.
 
 `@voidmix/scripts` commands declare a `process`, `repository`, or `database`
 environment policy. A shared contextual action creates the matching copied
-environment and logger before invoking the command operation. Database and
-Admin commands load and validate repository env directly; generate, Desktop
+environment and logger before invoking the command operation. Database
+commands load and validate repository env directly; generate, Desktop
 build, and shadcn update load the raw repository env for child processes;
 clean and verify do not read env files. This avoids recursively invoking `vmx env` around another
-`vmx` process. External Vite, Drizzle, and Tauri workspace commands
+`vmx` process. External Vite, Drizzle, and Electrobun workspace commands
 continue to use the env runner.
 
 Citty modules remain thin adapters. Database policies, PostgreSQL resource
@@ -301,7 +304,7 @@ been resolved.
 `bun run clean` removes ignored, rebuildable outputs (including
 `storybook-static`, Nitro output, TanStack storage, TypeScript build metadata,
 and package archives), coverage and browser-test reports, root and workspace
-tool caches, and Tauri's generated schemas and Cargo `target` directory. It
+tool caches, and Desktop's Electrobun `build`, `artifacts` and `.hutch` output. It
 preserves dependencies, logs, databases, generated route trees, and Drizzle
 migrations. `bun run clean:all` additionally removes every repository
 `node_modules` and `node_modules.bun` directory, while
@@ -332,13 +335,17 @@ customizations before committing; never run it unattended.
 
 `bun run doctor` fails for incorrect Bun/Node versions, missing repository
 metadata, required local binaries, or invalid environment schemas. Missing
-Rust/Cargo or Docker tooling is reported as a warning because those workflows
-are optional. `bun run db:studio` and `bun run db:push` are interactive and
+An absent local Electrobun bootstrap or Docker tooling is reported as a warning
+because native packaging and containers are optional workflows. `bun run db:studio` and `bun run db:push` are interactive and
 bypass Turbo task orchestration.
 
-Tauri invokes root `build:desktop:native-prep`: uncached `desktop:prepare`
-creates the pinned native runner resources before `build:desktop` enters Turbo.
-Native packaging itself remains uncached.
+`desktop:build` invokes root `build:desktop` to check and build the renderer
+through Turbo, then Electrobun's stable native build. Desktop dev/build/check
+scripts prepare the exact 2.0.2 devkit before resolving SDK aliases. Hutch is an
+Electrobun leaf tool; Bun remains the package manager and Turbo the task runner.
+The former `desktop:prepare` and `build:desktop:native-prep` commands are retired;
+installers contain the pinned Bun host but no local Pi runner. Native preparation
+and packaging remain uncached.
 
 The Citty command tree provides `vmx --help`, nested command help such as
 `vmx db --help`, and `vmx --version`.
@@ -349,9 +356,9 @@ of a potentially different global `vp` binary.
 ## Browser verification
 
 The private `@voidmix/e2e` workspace owns Playwright configuration and browser
-smoke tests. Its public Web and protected Admin projects both target the
-integrated Web app on port `3000`; one Playwright `webServer` entry starts it for
-local and CI runs.
+smoke tests. Web and authenticated product projects target the Web app; Desktop
+targets its own browser preview. Playwright starts API, Web and Desktop servers
+for local and CI runs.
 Browser tests are not part of the default `bun run test` graph. Use
 `bun run test:e2e`, and install Chromium with
 `bun run --cwd e2e playwright install chromium`

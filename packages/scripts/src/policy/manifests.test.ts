@@ -67,6 +67,27 @@ describe("validateWorkspaceManifest", () => {
     expect(validate(manifest())).toEqual([]);
   });
 
+  it.each(["web", "api", "desktop", "worker", "storybook"])(
+    "accepts the unscoped %s application name",
+    (name) => {
+      expect(
+        validateWorkspaceManifest(`apps/${name}/package.json`, manifest({ name }), shape()),
+      ).toEqual([]);
+    },
+  );
+
+  it.each([
+    ["apps/desktop/package.json", "@voidmix/desktop", "desktop"],
+    ["packages/example/package.json", "example", "@voidmix/example"],
+    ["e2e/package.json", "e2e", "@voidmix/e2e"],
+  ])("rejects a workspace name that violates its owning path: %s", (path, name, expected) => {
+    expectOnlyFinding(validateWorkspaceManifest(path, manifest({ name }), shape()), {
+      check: "manifest.name",
+      location: path,
+      message: `workspace name must be ${expected}`,
+    });
+  });
+
   for (const name of Object.keys(canonicalScripts)) {
     it(`reports ${name} when it deviates, quoting the command to paste`, () => {
       const scripts: Record<string, string> = { ...defaultScripts };

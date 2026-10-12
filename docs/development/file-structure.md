@@ -36,12 +36,11 @@ bounded contexts live beside their ports and application services:
 
 ```text
 packages/core/src/
-  identity/   users and audit records
-  settings/   typed system policy and mail configuration
-  projects/   canonical personal/Organization project access
-  projects/   project/task ports and facade
-  assets/     immutable versions and sync conflicts
-  agents/     runs, steps, leases, and tool capabilities
+  settings/   typed system policy and mail configuration readers
+  projects/   canonical personal/Organization project and task access
+  assets/     immutable versions and upload validation
+  cloud/      conversations, runs, revisions, grants and usage
+  agents/     durable outbox ports
 
 packages/shared/
   src/        framework-independent errors, value types, and injected defaults
@@ -63,7 +62,7 @@ type belongs beside the thing it describes until a second consumer exists.
 ```text
 apps/<name>/
   src/routes/         route declarations, single-route pages, and local helpers
-  src/features/<f>/   shared features and application-specific Admin composition
+  src/features/<f>/   shared features and application-specific composition
   src/env.ts          browser-safe app environment composition
   server/             Nitro host wiring and server-only environment composition
   src/router.tsx      router construction and type registration
@@ -90,14 +89,14 @@ src/routes/projects/
 ```
 
 Do not create those extra directories until they are needed. Features shared
-across routes, plus Admin's existing adapters and composition, remain under
+across routes remain under
 `src/features/<feature>/`:
 
 ```text
-src/features/users/
-  client.ts             API facade, DTO to view-model mapping, fallback data
-  use-admin-users.ts    hooks, named use-<thing>.ts, taking the client as an argument
-  UserTable.tsx         feature-local components, flat while there are few
+src/features/cloud/
+  client.ts             API facade and DTO mapping
+  use-cloud-session.ts hooks, named use-<thing>.ts, taking the client as an argument
+  RunTimeline.tsx      feature-local components, flat while there are few
   components/           only once the feature has more than about three components
 ```
 
@@ -166,12 +165,12 @@ a generator owns is reverted on the next run, which is permanent churn and defea
 drift detection. Oxfmt reads both `.gitignore` and `.prettierignore`, so an
 excluded path may be listed in either:
 
-| Path                   | Produced by                                          | Excluded via           |
-| ---------------------- | ---------------------------------------------------- | ---------------------- |
-| `src/routeTree.gen.ts` | the TanStack Start Vite plugin, via `dev` or `build` | `.prettierignore`      |
-| `packages/db/drizzle/` | `bun run generate`                                   | `.prettierignore`      |
-| `.agents/`             | `bun run skills:update`                              | `.prettierignore`      |
-| `src-tauri/gen/`       | Tauri                                                | `src-tauri/.gitignore` |
+| Path                   | Produced by                                          | Excluded via         |
+| ---------------------- | ---------------------------------------------------- | -------------------- |
+| `src/routeTree.gen.ts` | the TanStack Start Vite plugin, via `dev` or `build` | `.prettierignore`    |
+| `packages/db/drizzle/` | `bun run generate`                                   | `.prettierignore`    |
+| `.agents/`             | `bun run skills:update`                              | `.prettierignore`    |
+| `apps/desktop/.hutch/` | Electrobun SDK projection                            | Desktop `.gitignore` |
 
 ## Repository root
 

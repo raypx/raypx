@@ -719,36 +719,6 @@ export function createCloudContext(options: CloudApplicationOptions) {
     await tx.save("assets", asset);
     return asset;
   };
-  const requireAdmin = async (tx: CloudTransaction, actorId: string) => {
-    if (!(await tx.userActive(actorId))) fail("CLOUD_ACCESS_DENIED", "Account unavailable.");
-    const user = required(await tx.userProfile(actorId));
-    if (user.role !== "admin" && user.role !== "owner")
-      fail("CLOUD_ACCESS_DENIED", "Administrator permission required.");
-  };
-  const adminSummary = (run: CloudRun) => ({
-    id: run.id,
-    scope: run.scope,
-    requestedByUserId: run.requestedByUserId,
-    taskId: run.taskId,
-    mode: run.mode,
-    status: run.status,
-    attempt: run.attempt,
-    ownerId: run.ownerId,
-    epoch: run.epoch,
-    lastSequence: run.lastSequence,
-    cancelRequested: run.cancelRequested,
-    startedAt: run.startedAt,
-    completedAt: run.completedAt,
-    createdAt: run.createdAt,
-    updatedAt: run.updatedAt,
-    failureCode: run.error
-      ? run.error === "interrupted"
-        ? ("interrupted" as const)
-        : run.error === "access_revoked"
-          ? ("access_revoked" as const)
-          : ("execution_failed" as const)
-      : null,
-  });
   return {
     repo,
     now,
@@ -777,8 +747,6 @@ export function createCloudContext(options: CloudApplicationOptions) {
     publishIn,
     assetIn,
     completeAssetIn,
-    requireAdmin,
-    adminSummary,
   };
 }
 export type CloudContext = ReturnType<typeof createCloudContext>;

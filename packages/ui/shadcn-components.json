@@ -4,8 +4,6 @@
     "avatar",
     "badge",
     "button",
-    "card",
-    "checkbox",
     "dialog",
     "dropdown-menu",
     "empty",
@@ -14,15 +12,11 @@
     "input-group",
     "label",
     "popover",
-    "separator",
     "sheet",
     "skeleton",
     "switch",
-    "table",
     "tabs",
     "toast",
-    "toggle",
-    "toggle-group",
     "tooltip"
   ]
 }

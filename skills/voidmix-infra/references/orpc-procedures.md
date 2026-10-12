@@ -1,7 +1,7 @@
 # oRPC Procedures
 
 Use this when adding, changing, or removing a procedure on the API surface, or
-when exposing new data to Web's public or Admin features.
+when exposing new data to Web or Desktop features.
 
 ## Ownership
 
@@ -9,7 +9,7 @@ when exposing new data to Web's public or Admin features.
   domain module; `index.ts` explicitly composes and exports the tree (ADR-0013).
 - Core owns business invariants and repository interfaces in domain modules.
   Application commands coordinate canonical resource ports and access checks.
-- DB adapters live under `identity/`, `settings/` and `v2/`, behind the existing
+- DB adapters live under `settings/` and `v2/`, behind the existing
   package entrypoints. Update every implementation of a changed port.
 - Handlers and runtime composition live in `apps/api/server/api/`. Web owns pages
   and SSR; API is the HTTP composition root.
@@ -18,8 +18,8 @@ when exposing new data to Web's public or Admin features.
   client methods. It may be edited for protocol upgrades, transport wiring, or
   oRPC plugins; new procedures still appear on `createApiClient(...)`
   automatically.
-- Browser-side Admin facades and hooks live under
-  `apps/web/src/features/admin/<feature>/`.
+- Browser-side cloud facades live under `apps/web/src/features/cloud/`;
+  Admin contracts, adapters and pages are retired.
 
 ## Order of edits
 
@@ -29,7 +29,7 @@ when exposing new data to Web's public or Admin features.
    order, native dates and optional-field semantics.
 3. **Repositories** — update matching implementations. Memory adapters preserve
    clone boundaries; PostgreSQL preserves transaction handles and atomic outbox writes.
-4. **Handler** — wire the matching canonical router path, permission/principal
+4. **Handler** — wire the matching canonical router path, authenticated principal
    middleware and owner-local `router-context.ts` helpers. `app.ts` mounts it at
    `/rpc/*`; add transport-visible domain codes to `canonical-errors.ts`.
 5. **Test** — exercise contract → real client → injected Hono fetch → router →
@@ -37,14 +37,14 @@ when exposing new data to Web's public or Admin features.
 
 ## Rules
 
-- **Apply the matching permission middleware through `.use(...)` on every
-  protected procedure.** It injects a non-null principal for the handler and
-  records the permission result. A new Admin procedure without it is public, so
-  add unauthenticated and ordinary-user rejection coverage for each one.
+- **Apply `requireAuthenticated` through `.use(...)` on every protected
+  procedure.** It injects a non-null principal for the handler. Application
+  commands recheck account/resource access; cover unauthenticated and
+  unauthorized callers. Global roles cannot bypass private Cloud scope.
 - Business rules `throw new DomainError(code, message)`. Only the API layer maps
   those to transport codes, via `mapDomainError`. The mapping preserves known transport
   errors and wraps unknown failures with their cause; add coverage for new codes.
-- Keep `packages/core` pure: its dependencies are `@voidmix/auth` and `@voidmix/shared`, and
+- Keep `packages/core` pure: its runtime dependency is `@voidmix/shared`, and
   `lib: ["ES2022"]` means no DOM types. No Zod, oRPC, Drizzle, Hono, or React.
 - Inject `now` and `id` with defaults in application factories — that is what makes
   tests deterministic.
@@ -53,9 +53,9 @@ when exposing new data to Web's public or Admin features.
 - **Dates stay native `Date` end to end**; never serialize to ISO strings.
   `z.date()` in contracts, `mode: "date"` in the Drizzle schema.
   Contracts tests lock native dates and canonical shapes.
-- Construct audit events in Core. Application appends them through the
-  administration transaction port together with the mutation, only on real
-  changes. Never append from a handler; operational logs stay separate.
+- Commit durable Cloud transitions and their outbox intents through repository
+  transaction ports. Keep provider effects outside transactions and operational
+  logs separate from domain facts. Retired management writers stay absent.
 - Enrich the current wide event with `context.log?.set({ actor, target, outcome })`
   — one event per request, not multiple log lines.
 - Procedures are never zero-arg: `client.health({})` needs the explicit `{}`.
@@ -69,16 +69,15 @@ when exposing new data to Web's public or Admin features.
 - Contract tree and router tree must match **exactly**. Adding one without the
   other is a type error deep inside `os.router()` whose message does not point at
   your edit.
-- A new audit action string needs the matching declarations in
-  `@voidmix/core`, `@voidmix/contracts`, and `@voidmix/db`, plus a generated
-  migration.
+- A new active status value needs matching Core, Contracts and DB declarations.
+  Existing historical audit enums remain compatibility data.
 - New request header → also add it to `allowHeaders` in
   `apps/api/server/api/app.ts` when cross-origin browser calls require it.
 - Web and Desktop provide an absolute `VITE_API_URL` for the standalone API origin. Authenticated browser requests include credentials; never
   restore actor identity headers as a production authentication mechanism.
 - Web's `(app)/route.tsx` session gate is navigation assistance only. Per
   `AGENTS.md`, the API performs the final check; a client-side guard never
-  replaces API permission middleware.
+  replaces API authentication and resource access checks.
 
 ## Verification
 

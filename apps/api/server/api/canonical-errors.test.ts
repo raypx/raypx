@@ -6,11 +6,11 @@ import { mapDomainError } from "./canonical-errors.js";
 
 describe("canonical API errors", () => {
   it("recognizes a DomainError exported through Core and maps it to oRPC", () => {
-    const mapped = mapDomainError(new DomainError("USER_NOT_FOUND", "User was not found."));
+    const mapped = mapDomainError(new DomainError("BAD_REQUEST", "Invalid pagination cursor."));
 
     expect(mapped).toMatchObject({
-      code: "NOT_FOUND",
-      data: { error: { code: "USER_NOT_FOUND" } },
+      code: "BAD_REQUEST",
+      data: { error: { code: "BAD_REQUEST" } },
     });
   });
 });

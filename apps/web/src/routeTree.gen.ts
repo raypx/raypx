@@ -18,14 +18,11 @@ import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as appadminRouteRouteImport } from './routes/(app)/(admin)/route'
 import { Route as appNotificationsRouteImport } from './routes/(app)/notifications'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
-import { Route as appadminAdminRouteImport } from './routes/(app)/(admin)/admin'
-import { Route as appadminAdminRunsRouteImport } from './routes/(app)/(admin)/admin-runs'
 import { Route as appChatIndexRouteImport } from './routes/(app)/chat.index'
 import { Route as appChatConversationIdRouteImport } from './routes/(app)/chat.$conversationId'
 import { Route as appProjectsIndexRouteImport } from './routes/(app)/projects.index'
@@ -77,10 +74,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const appadminRouteRoute = appadminRouteRouteImport.update({
-  id: '/(admin)',
-  getParentRoute: () => appRouteRoute,
-} as any)
 const appNotificationsRoute = appNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -105,16 +98,6 @@ const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
   getParentRoute: () => authRouteRoute,
-} as any)
-const appadminAdminRoute = appadminAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => appadminRouteRoute,
-} as any)
-const appadminAdminRunsRoute = appadminAdminRunsRouteImport.update({
-  id: '/admin-runs',
-  path: '/admin-runs',
-  getParentRoute: () => appadminRouteRoute,
 } as any)
 const appChatIndexRoute = appChatIndexRouteImport.update({
   id: '/chat/',
@@ -165,8 +148,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/admin': typeof appadminAdminRoute
-  '/admin-runs': typeof appadminAdminRunsRoute
   '/chat/$conversationId': typeof appChatConversationIdRoute
   '/projects/$projectId': typeof appProjectsProjectIdRoute
   '/settings/usage': typeof appSettingsUsageRoute
@@ -188,8 +169,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
-  '/admin': typeof appadminAdminRoute
-  '/admin-runs': typeof appadminAdminRunsRoute
   '/chat/$conversationId': typeof appChatConversationIdRoute
   '/projects/$projectId': typeof appProjectsProjectIdRoute
   '/settings/usage': typeof appSettingsUsageRoute
@@ -209,14 +188,11 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/(app)/(admin)': typeof appadminRouteRouteWithChildren
   '/(app)/notifications': typeof appNotificationsRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
-  '/(app)/(admin)/admin': typeof appadminAdminRoute
-  '/(app)/(admin)/admin-runs': typeof appadminAdminRunsRoute
   '/(app)/chat/$conversationId': typeof appChatConversationIdRoute
   '/(app)/projects/$projectId': typeof appProjectsProjectIdRoute
   '/(app)/settings/usage': typeof appSettingsUsageRoute
@@ -240,8 +216,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
-    | '/admin'
-    | '/admin-runs'
     | '/chat/$conversationId'
     | '/projects/$projectId'
     | '/settings/usage'
@@ -263,8 +237,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/verify-email'
-    | '/admin'
-    | '/admin-runs'
     | '/chat/$conversationId'
     | '/projects/$projectId'
     | '/settings/usage'
@@ -283,14 +255,11 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
-    | '/(app)/(admin)'
     | '/(app)/notifications'
     | '/(auth)/login'
     | '/(auth)/reset-password'
     | '/(auth)/signup'
     | '/(auth)/verify-email'
-    | '/(app)/(admin)/admin'
-    | '/(app)/(admin)/admin-runs'
     | '/(app)/chat/$conversationId'
     | '/(app)/projects/$projectId'
     | '/(app)/settings/usage'
@@ -377,13 +346,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(app)/(admin)': {
-      id: '/(app)/(admin)'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof appadminRouteRouteImport
-      parentRoute: typeof appRouteRoute
-    }
     '/(app)/notifications': {
       id: '/(app)/notifications'
       path: '/notifications'
@@ -418,20 +380,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/verify-email'
       preLoaderRoute: typeof authVerifyEmailRouteImport
       parentRoute: typeof authRouteRoute
-    }
-    '/(app)/(admin)/admin': {
-      id: '/(app)/(admin)/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof appadminAdminRouteImport
-      parentRoute: typeof appadminRouteRoute
-    }
-    '/(app)/(admin)/admin-runs': {
-      id: '/(app)/(admin)/admin-runs'
-      path: '/admin-runs'
-      fullPath: '/admin-runs'
-      preLoaderRoute: typeof appadminAdminRunsRouteImport
-      parentRoute: typeof appadminRouteRoute
     }
     '/(app)/chat/': {
       id: '/(app)/chat/'
@@ -485,22 +433,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface appadminRouteRouteChildren {
-  appadminAdminRoute: typeof appadminAdminRoute
-  appadminAdminRunsRoute: typeof appadminAdminRunsRoute
-}
-
-const appadminRouteRouteChildren: appadminRouteRouteChildren = {
-  appadminAdminRoute: appadminAdminRoute,
-  appadminAdminRunsRoute: appadminAdminRunsRoute,
-}
-
-const appadminRouteRouteWithChildren = appadminRouteRoute._addFileChildren(
-  appadminRouteRouteChildren,
-)
-
 interface appRouteRouteChildren {
-  appadminRouteRoute: typeof appadminRouteRouteWithChildren
   appNotificationsRoute: typeof appNotificationsRoute
   appChatConversationIdRoute: typeof appChatConversationIdRoute
   appProjectsProjectIdRoute: typeof appProjectsProjectIdRoute
@@ -512,7 +445,6 @@ interface appRouteRouteChildren {
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
-  appadminRouteRoute: appadminRouteRouteWithChildren,
   appNotificationsRoute: appNotificationsRoute,
   appChatConversationIdRoute: appChatConversationIdRoute,
   appProjectsProjectIdRoute: appProjectsProjectIdRoute,

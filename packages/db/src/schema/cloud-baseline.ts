@@ -1,4 +1,4 @@
-// Fresh database baseline. Historical migrations and local/legacy schemas remain separate.
+// Fresh database baseline. Historical local/legacy SQL remains archived separately.
 export * from "./identity.js";
 export * from "./projects.js";
 export {

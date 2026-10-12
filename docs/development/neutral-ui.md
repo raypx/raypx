@@ -1,5 +1,7 @@
 # Neutral UI delivery
 
+> This records the September Neutral delivery. Admin batch/export and Desktop local execution/unconnected destinations were subsequently retired under [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md). Historical captures and test counts below are not the current feature inventory.
+
 Voidmix uses the official shadcn base-nova Neutral theme across public pages,
 authentication, projects, Admin and Desktop. Logo and icon assets are unchanged.
 The baseline for this change is canary `2c14e20`.

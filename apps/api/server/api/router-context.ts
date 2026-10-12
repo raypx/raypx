@@ -1,4 +1,3 @@
-import { hasPermission, type Permission } from "@voidmix/auth";
 import { apiContract } from "@voidmix/contracts";
 import { DomainError } from "@voidmix/core";
 import { implement } from "@orpc/server";
@@ -23,24 +22,9 @@ export function createRouterContext(options: CreateApiRouterOptions) {
     if (!session) throw createApiError("UNAUTHORIZED");
     return next({ context: { principal: { session, user: session.user } } });
   });
-  const requirePermission = (permission: Permission) =>
-    requireAuthenticated.use(async ({ context, next }) => {
-      if (!hasPermission(context.principal.session, permission)) throw createApiError("FORBIDDEN");
-      return next({ context: { principal: context.principal } });
-    });
   const v2Projects = () => options.modules.v2Projects;
   const assets = () => options.modules.assets;
   const reviews = () => options.modules.reviews;
-  const agentRuns = () => {
-    if (!options.modules.v2AgentRuns)
-      throw createApiError("INTERNAL_SERVER_ERROR", "V2_AGENT_RUNS_NOT_CONFIGURED");
-    return options.modules.v2AgentRuns;
-  };
-  const execution = () => {
-    if (!options.modules.execution)
-      throw createApiError("SERVICE_UNAVAILABLE", "EXECUTION_NOT_CONFIGURED");
-    return options.modules.execution;
-  };
   const cloud = () => {
     if (!options.modules.cloud) throw createApiError("SERVICE_UNAVAILABLE", "CLOUD_NOT_CONFIGURED");
     return options.modules.cloud;
@@ -80,12 +64,9 @@ export function createRouterContext(options: CreateApiRouterOptions) {
   return {
     os,
     authenticated: os.use(requireAuthenticated),
-    requirePermission,
     v2Projects,
     assets,
     reviews,
-    agentRuns,
-    execution,
     cloud,
     objectStorage,
     cloudCapabilities: () =>

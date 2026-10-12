@@ -14,12 +14,6 @@ const scriptsEnv = {
 const databaseScriptsEnv = {
   id: "scripts-database",
   extends: [scriptsEnv, databaseEnv],
-  server: {
-    SEED_ADMIN_EMAIL: z.email().default("owner@voidmix.local"),
-    SEED_ADMIN_NAME: z.string().trim().min(1).default("Local Owner"),
-    ADMIN_EMAIL: z.email().optional(),
-    ADMIN_DISPLAY_NAME: z.string().trim().min(1).optional(),
-  },
 } as const satisfies Preset;
 
 export function getScriptsEnv(runtimeEnv: NodeJS.ProcessEnv | Record<string, string>) {

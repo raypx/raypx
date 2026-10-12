@@ -7,7 +7,7 @@ import { IconButton } from "@voidmix/ui/icon-button";
 import { useDesktopTranslations } from "../../i18n/client";
 
 export function RefreshButton({ routeId }: { routeId: string }) {
-  const t = useDesktopTranslations("overview");
+  const t = useDesktopTranslations("navigation");
   const router = useRouter();
   const loading = useRouterState({
     select: (state) =>

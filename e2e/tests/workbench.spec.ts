@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { accounts, password } from "../database.js";
 
 const api = `http://127.0.0.1:${Number(process.env.VOIDMIX_E2E_PORT ?? 3000) + 2}`;
-async function login(page: Page, account: keyof typeof accounts = "admin") {
+async function login(page: Page, account: keyof typeof accounts = "primary") {
   const response = await page.request.post(`${api}/api/auth/sign-in/email`, {
     data: { email: accounts[account].email, password },
     headers: { origin: api },
@@ -85,10 +85,11 @@ test("cancel a pending list navigation and preserve the destination", async ({ p
     timeout: 5_000,
   });
   await expect(page.getByRole("status", { name: "Loading…" })).toBeVisible();
-  await page.getByRole("link", { name: "User management", exact: true }).click();
+  await page.getByRole("link", { name: "Tasks", exact: true }).click();
   await failed;
   release();
-  await expect(page.getByRole("heading", { name: "User directory", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/tasks\/?$/);
+  await expect(page.getByRole("heading", { name: "Tasks", exact: true })).toBeVisible();
   await expect(page.locator(".workbench-shell")).toBeVisible();
 });
 

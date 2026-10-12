@@ -12,16 +12,15 @@ objects   private S3-compatible bucket
 desktop   macOS and Windows installers
 ```
 
-API is the primary HTTP deployment and includes Auth, Admin, Hono, and oRPC.
+API is the primary HTTP deployment and includes Auth, Hono, and oRPC.
 Web serves pages and SSR and calls the independent API origin.
-Desktop consumes the API origin and is distributed through Tauri installers.
+Desktop consumes the API origin and is distributed through Electrobun native bundles.
 
 ## Local PostgreSQL
 
 ```bash
 docker compose up -d postgres
 bun run db:migrate
-bun run db:seed
 bun run db:studio
 ```
 
@@ -147,7 +146,7 @@ missing optional files do not produce startup warnings. `.dockerignore`
 excludes local `.env` and `.env.local` files from image build contexts.
 
 Remaining `VITE_*` logging values are compiled into browser bundles. A runtime
-`/app/.env` mount cannot change them. Auth and Admin transport use the configured
+`/app/.env` mount cannot change them. Auth and product transport use the configured
 API origin with credentialed cookies.
 
 The shared API environment schema requires `DATABASE_URL` during startup. The
@@ -173,9 +172,19 @@ meaningful improvement.
 
 ## Desktop lifecycle
 
-Tauri's Rust process owns the tray, native notifications, and window lifecycle.
+Electrobun's narrow TypeScript main process owns the tray and window lifecycle.
 TanStack Start builds a static SPA shell at `dist/client/index.html`; the
 build-time `dist/server` output only prerenders that shell and is not included
 in the installer. The renderer is a cloud-backed client with no RSC, server
 function, or server-route runtime. The first version has no separate background
-daemon and no offline synchronization engine.
+daemon and no offline synchronization engine. Navigation contains Projects and
+Settings; Web owns cloud AI conversations and delivery review. Root `desktop:build`
+checks/builds the renderer through Turbo, then packages the pinned Bun 1.4.0
+Electrobun host. The persistent WebView uses hash history for static assets;
+[ADR-0020](./decisions/0020-electrobun-desktop-host.md) defines its native boundary.
+macOS uses system WebKit; Windows ships CEF with browser security enabled. Native
+API deployment must explicitly allow `views://main` and use HTTPS with the
+existing production `SameSite=None; Secure` cookies. A loopback HTTP renderer test
+does not establish packaged `views://` authentication or third-party cookie support. The former local execution
+protocol is retired under [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md),
+without deleting user-local journals, sessions or files.

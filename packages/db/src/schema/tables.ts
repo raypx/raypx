@@ -10,7 +10,7 @@ import {
   outboxEvents,
 } from "./resources.js";
 
-/** The runtime graph matches the fresh baseline; retired tables stay in historical modules. */
+/** The runtime graph matches the fresh baseline; retired tables stay in historical SQL. */
 export const schema = {
   ...identity,
   ...projects,

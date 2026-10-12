@@ -44,7 +44,6 @@ export default defineConfig({
     { name: "redesign", testMatch: /redesign\.spec\.ts/, use: { baseURL: webUrl } },
     { name: "web", testMatch: /(?:^|\/)web\.spec\.ts/, use: { baseURL: webUrl } },
     { name: "authenticated", testMatch: /authenticated-web\.spec\.ts/, use: { baseURL: webUrl } },
-    { name: "admin", testMatch: /admin\.spec\.ts/, use: { baseURL: webUrl } },
     { name: "desktop", testMatch: /desktop\.spec\.ts/, use: { baseURL: desktopUrl } },
   ],
   webServer: [server("api", 2), server("web", 0), server("desktop", 1)],

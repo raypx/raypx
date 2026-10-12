@@ -11,43 +11,36 @@ beforeEach(() => {
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("desktop preferences", () => {
-  it("keeps the prerendered defaults until the shell restores saved preferences", async () => {
+describe("desktop theme preferences", () => {
+  it("restores the theme after hydration and drops retired saved preferences", async () => {
     localStorage.setItem(
       storageKey,
-      JSON.stringify({ state: { theme: "light", syncPaused: true }, version: 1 }),
+      JSON.stringify({
+        state: { theme: "light", syncPaused: true, startWithSystem: true },
+        version: 1,
+      }),
     );
     const { useDesktopPreferences: store } = await import("./preferences");
     expect(store.getState().theme).toBe("dark");
     expect(store.persist.hasHydrated()).toBe(false);
     await store.persist.rehydrate();
-    expect(store.getState()).toMatchObject({
-      theme: "light",
-      syncPaused: true,
-      automaticDownloads: true,
-    });
+    expect(store.getState().theme).toBe("light");
+    expect(store.getState()).not.toHaveProperty("syncPaused");
+    expect(store.getState()).not.toHaveProperty("startWithSystem");
     expect(store.persist.hasHydrated()).toBe(true);
+    store.getState().toggleTheme();
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({
+      version: 1,
+      state: { theme: "dark" },
+    });
   });
 
-  it("persists preferences and restores them in a fresh renderer store", async () => {
+  it("persists the theme and restores it in a fresh renderer store", async () => {
     const { useDesktopPreferences: store } = await import("./preferences");
     await store.persist.rehydrate();
     store.getState().toggleTheme();
-    store.getState().togglePreference("startWithSystem");
-    store.getState().togglePreference("syncPaused");
     const saved = JSON.parse(localStorage.getItem(storageKey)!);
-    expect(saved).toEqual({
-      version: 1,
-      state: {
-        theme: "light",
-        syncPaused: true,
-        startWithSystem: true,
-        meteredNetworks: false,
-        automaticDownloads: true,
-        transferSummaries: true,
-        workspaceChanges: true,
-      },
-    });
+    expect(saved).toEqual({ version: 1, state: { theme: "light" } });
 
     vi.resetModules();
     const { useDesktopPreferences: restored } = await import("./preferences");
@@ -66,22 +59,13 @@ describe("desktop preferences", () => {
     localStorage.setItem(
       storageKey,
       JSON.stringify({
-        state: {
-          theme: "sepia",
-          syncPaused: "true",
-          automaticDownloads: false,
-          toggleTheme: "not-an-action",
-        },
+        state: { theme: "sepia", toggleTheme: "not-an-action" },
         version: 1,
       }),
     );
     const { useDesktopPreferences: store } = await import("./preferences");
     await store.persist.rehydrate();
-    expect(store.getState()).toMatchObject({
-      theme: "dark",
-      syncPaused: false,
-      automaticDownloads: false,
-    });
+    expect(store.getState().theme).toBe("dark");
     expect(store.getState().toggleTheme).toBeTypeOf("function");
   });
 
@@ -89,10 +73,10 @@ describe("desktop preferences", () => {
     localStorage.setItem(storageKey, "invalid json");
     const { useDesktopPreferences: store } = await import("./preferences");
     await store.persist.rehydrate();
-    expect(store.getState()).toMatchObject({ theme: "dark", syncPaused: false });
+    expect(store.getState().theme).toBe("dark");
   });
 
-  it("keeps in-memory controls working when browser storage is blocked", async () => {
+  it("keeps in-memory theme controls working when browser storage is blocked", async () => {
     const denied = () => {
       throw new Error("Storage access denied");
     };
@@ -100,10 +84,7 @@ describe("desktop preferences", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(denied);
     const { useDesktopPreferences: store } = await import("./preferences");
     await store.persist.rehydrate();
-    expect(() => {
-      store.getState().toggleTheme();
-      store.getState().togglePreference("syncPaused");
-    }).not.toThrow();
-    expect(store.getState()).toMatchObject({ theme: "light", syncPaused: true });
+    expect(() => store.getState().toggleTheme()).not.toThrow();
+    expect(store.getState().theme).toBe("light");
   });
 });

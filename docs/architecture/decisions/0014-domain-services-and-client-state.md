@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted.
+Accepted. Administration workflows and Admin state are superseded by
+[ADR-0021](0021-retire-admin.md).
 
 ## Context
 
