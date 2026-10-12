@@ -10,9 +10,6 @@ beforeAll(() => checkPiRuntime(), 120_000);
 
 it("runs the real packaged Pi session through injected Gateway streaming without local metering or credentials", async () => {
   const directory = await mkdtemp(join(tmpdir(), "raypx-gateway-pi-"));
-  const reserve = vi.fn(async () => {}),
-    start = vi.fn(async () => {}),
-    settle = vi.fn(async () => {});
   const events: { type: string }[] = [];
   const transport = vi.fn(async () =>
     (async function* () {
@@ -47,7 +44,6 @@ it("runs the real packaged Pi session through injected Gateway streaming without
       systemPrompt: "Trusted test session",
       tools: [],
       maxOutputTokens: 100,
-      hooks: { reserve, start, settle },
       signal: new AbortController().signal,
       onEvent: async (event) => {
         events.push(event);
@@ -56,9 +52,6 @@ it("runs the real packaged Pi session through injected Gateway streaming without
     expect(result).toEqual({ type: "completed", text: "Verified through Gateway" });
     expect(events.some((event) => event.type === "message_completed")).toBe(true);
     expect(transport).toHaveBeenCalledTimes(1);
-    expect(reserve).not.toHaveBeenCalled();
-    expect(start).not.toHaveBeenCalled();
-    expect(settle).not.toHaveBeenCalled();
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

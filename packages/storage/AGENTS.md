@@ -15,6 +15,10 @@ Core-owned `ObjectStorage` port. Credentials are injected by composition roots.
 - Local implementations for explicit development and isolated tests.
 - Filesystem storage may read an optional legacy directory after the primary
   directory. New writes use the primary directory; deletion removes both copies.
+- Filesystem writes stage content and metadata in one directory, then atomically
+  rename it to a key-hashed object path. Removal detaches that directory before
+  deleting it. Keep old flat paths readable; concurrent writers must agree on
+  immutable bytes and media type, including across processes.
 
 ## Constraints
 

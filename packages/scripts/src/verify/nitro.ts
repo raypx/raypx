@@ -1,10 +1,15 @@
-import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:net";
-import { isAbsolute, join, relative, resolve } from "node:path";
-import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import type { RepositoryProcessDependencies } from "../runtime/process-dependencies.js";
+import {
+  parseArtifactMetadata,
+  resolveArtifactEntry,
+  stageRuntimeArtifact,
+  type RuntimeArtifactStage,
+} from "./artifact.js";
 
 export interface NitroRuntimeTarget {
   directory: string;
@@ -20,22 +25,13 @@ export interface NitroRuntimeProbe {
   pathname: string;
 }
 
-interface NitroMetadata {
-  preset: string;
-  serverEntry: string;
-}
-
 interface NitroRuntimeVerificationOptions {
   captureOutput?: boolean;
   allocatePort?: () => Promise<number>;
   readMetadata?: (path: string) => Promise<string>;
-  stageOutput?: (sourceDirectory: string) => Promise<NitroRuntimeStage>;
+  stageOutput?: (sourceDirectory: string) => Promise<RuntimeArtifactStage>;
   targets?: readonly NitroRuntimeTarget[];
-}
-
-interface NitroRuntimeStage {
-  cleanup(): Promise<void>;
-  directory: string;
+  timeoutMs?: number;
 }
 
 const defaultTargets: readonly NitroRuntimeTarget[] = [
@@ -98,31 +94,6 @@ const nitroProbe = [
   "}",
 ].join("\n");
 
-function parseMetadata(raw: string, target: NitroRuntimeTarget): NitroMetadata {
-  const metadata: unknown = JSON.parse(raw);
-  if (!metadata || typeof metadata !== "object") {
-    throw new Error(`${target.name} Nitro metadata must be an object.`);
-  }
-
-  const { preset, serverEntry } = metadata as Record<string, unknown>;
-  if (preset !== "bun") {
-    throw new Error(`${target.name} Nitro output uses ${String(preset)} instead of bun.`);
-  }
-  if (typeof serverEntry !== "string" || serverEntry.length === 0) {
-    throw new Error(`${target.name} Nitro metadata is missing serverEntry.`);
-  }
-  return { preset, serverEntry };
-}
-
-function resolveServerEntry(outputDirectory: string, serverEntry: string): string {
-  const entry = resolve(outputDirectory, serverEntry);
-  const relativeEntry = relative(outputDirectory, entry);
-  if (relativeEntry.startsWith("..") || isAbsolute(relativeEntry)) {
-    throw new Error(`Nitro serverEntry points outside its output directory: ${serverEntry}`);
-  }
-  return entry;
-}
-
 function createRuntimeEnvironment(processEnv: NodeJS.ProcessEnv, port: number): NodeJS.ProcessEnv {
   const environment = { ...processEnv };
   delete environment.DATABASE_URL;
@@ -168,39 +139,25 @@ export async function allocateLocalPort(): Promise<number> {
   return address.port;
 }
 
-async function stageNitroOutput(sourceDirectory: string): Promise<NitroRuntimeStage> {
-  const stagingRoot = await mkdtemp(join(tmpdir(), "raypx-nitro-runtime-"));
-  const directory = join(stagingRoot, ".output");
-
-  try {
-    await cp(sourceDirectory, directory, { recursive: true, verbatimSymlinks: true });
-  } catch (error) {
-    await rm(stagingRoot, { force: true, recursive: true });
-    throw error;
-  }
-
-  return {
-    directory,
-    cleanup: () => rm(stagingRoot, { force: true, recursive: true }),
-  };
-}
-
 export async function verifyNitroRuntimes(
   dependencies: RepositoryProcessDependencies,
   options: NitroRuntimeVerificationOptions = {},
 ): Promise<void> {
   const allocatePort = options.allocatePort ?? allocateLocalPort;
   const readMetadata = options.readMetadata ?? ((path) => readFile(path, "utf8"));
-  const stageOutput = options.stageOutput ?? stageNitroOutput;
+  const stageOutput = options.stageOutput ?? stageRuntimeArtifact;
 
   for (const target of options.targets ?? defaultTargets) {
     const sourceDirectory = join(dependencies.repositoryRoot, target.directory, ".output");
-    const metadata = parseMetadata(await readMetadata(join(sourceDirectory, "nitro.json")), target);
-    resolveServerEntry(sourceDirectory, metadata.serverEntry);
+    const metadata = parseArtifactMetadata(
+      await readMetadata(join(sourceDirectory, "nitro.json")),
+      target,
+    );
+    resolveArtifactEntry(sourceDirectory, metadata.serverEntry);
     const stage = await stageOutput(sourceDirectory);
 
     try {
-      const serverEntry = resolveServerEntry(stage.directory, metadata.serverEntry);
+      const serverEntry = resolveArtifactEntry(stage.directory, metadata.serverEntry);
       const port = await allocatePort();
 
       dependencies.log("info", "verify.runtime.started", { service: target.name });
@@ -219,6 +176,7 @@ export async function verifyNitroRuntimes(
           captureOutput: options.captureOutput ?? false,
           cwd: stage.directory,
           env: createRuntimeEnvironment(dependencies.processEnv, port),
+          timeoutMs: options.timeoutMs ?? 30_000,
         },
       );
       dependencies.log("info", "verify.runtime.completed", { service: target.name });

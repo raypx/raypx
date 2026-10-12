@@ -34,6 +34,9 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   unread count.
 - Own the request and response shape of every procedure, and the DTO types that
   consumers import.
+- The private `./execution-gateway` tree has typed bootstrap, object, research
+  and per-operation execution outputs. Model SDK context/events and nested tool
+  values stay opaque; this tree is never part of `apiContract`.
 - API failures use the open transport code plus `data.error.code` and optional
   primitive `values` (`string`, `number`, `boolean`, or `null`). Keep that
   envelope stable so Web and Desktop can translate codes without consuming

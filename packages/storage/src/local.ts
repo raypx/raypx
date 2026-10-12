@@ -1,5 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { ObjectMetadata, ObjectStorage } from "@raypx/core";
 import { StorageUnavailableError, validateObjectInput, validateObjectKey } from "./index.js";
@@ -128,22 +128,49 @@ export function createFilesystemStorage(options: {
     validateObjectKey(key);
     return join(directory, key);
   };
+  const objectPathFor = (key: string, directory = options.directory) => {
+    validateObjectKey(key);
+    const hash = createHash("sha256").update(key).digest("hex");
+    return join(directory, ".objects", hash.slice(0, 2), hash);
+  };
   const locate = async (key: string) => {
     for (const directory of directories) {
-      const path = pathFor(key, directory);
-      try {
-        const metadata = JSON.parse(
-          await readFile(`${path}.metadata.json`, "utf8"),
-        ) as ObjectMetadata;
-        validateObjectInput(metadata);
-        return { metadata, path };
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      const objectPath = objectPathFor(key, directory);
+      const legacyPath = pathFor(key, directory);
+      for (const { metadataPath, path } of [
+        { metadataPath: join(objectPath, "metadata.json"), path: join(objectPath, "body") },
+        { metadataPath: `${legacyPath}.metadata.json`, path: legacyPath },
+      ]) {
+        try {
+          const metadata = JSON.parse(await readFile(metadataPath, "utf8")) as ObjectMetadata;
+          validateObjectInput(metadata);
+          return { metadata, path };
+        } catch (error) {
+          if (!["ENOENT", "ENOTDIR"].includes((error as NodeJS.ErrnoException).code ?? ""))
+            throw error;
+        }
       }
     }
     return null;
   };
   const head: ObjectStorage["head"] = async (key) => (await locate(key))?.metadata ?? null;
+  const immutableMetadata = (existing: ObjectMetadata | null, proposed: ObjectMetadata) => {
+    if (
+      !existing ||
+      existing.byteSize !== proposed.byteSize ||
+      existing.checksumSha256 !== proposed.checksumSha256 ||
+      existing.contentType !== proposed.contentType
+    )
+      throw new Error("Object key is immutable.");
+    return existing;
+  };
+  const immutableBytes = (bytes: Uint8Array, proposed: ObjectMetadata) => {
+    if (
+      bytes.byteLength !== proposed.byteSize ||
+      createHash("sha256").update(bytes).digest("hex") !== proposed.checksumSha256
+    )
+      throw new Error("Object key is immutable.");
+  };
   return {
     async put(input) {
       const metadata = {
@@ -155,30 +182,49 @@ export function createFilesystemStorage(options: {
       validateObjectInput(metadata);
       if (createHash("sha256").update(input.body).digest("hex") !== metadata.checksumSha256)
         throw new Error("Object checksum does not match content.");
-      const existing = await head(input.key);
+      const existing = await locate(input.key);
       if (existing) {
-        if (
-          existing.checksumSha256 !== metadata.checksumSha256 ||
-          existing.contentType !== metadata.contentType
-        )
-          throw new Error("Object key is immutable.");
-        return existing;
+        immutableMetadata(existing.metadata, metadata);
+        try {
+          immutableBytes(await readFile(existing.path), metadata);
+          return existing.metadata;
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+        }
       }
-      const path = pathFor(input.key);
-      await mkdir(dirname(path), { recursive: true });
+      // Preserve bytes left by the old flat layout's interrupted upload.
       try {
-        await writeFile(path, input.body, { flag: "wx", mode: 0o600 });
+        immutableBytes(await readFile(pathFor(input.key)), metadata);
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-        if (
-          createHash("sha256")
-            .update(await readFile(path))
-            .digest("hex") !== metadata.checksumSha256
-        )
-          throw new Error("Object key is immutable.");
+        if (!["ENOENT", "ENOTDIR", "EISDIR"].includes((error as NodeJS.ErrnoException).code ?? ""))
+          throw error;
       }
-      await writeFile(`${path}.metadata.json`, JSON.stringify(metadata), { mode: 0o600 });
-      return metadata;
+      const path = objectPathFor(input.key);
+      await mkdir(dirname(path), { recursive: true });
+      const stage = await mkdtemp(join(dirname(path), ".raypx-upload-"));
+      try {
+        const object = join(stage, "object");
+        await mkdir(object, { mode: 0o700 });
+        await writeFile(join(object, "body"), input.body, { mode: 0o600 });
+        await writeFile(join(object, "metadata.json"), JSON.stringify(metadata), { mode: 0o600 });
+        // A nonempty destination cannot be replaced; bytes and metadata publish together.
+        try {
+          await rename(object, path);
+        } catch (error) {
+          if (
+            !["EEXIST", "ENOTEMPTY", "EPERM"].includes((error as NodeJS.ErrnoException).code ?? "")
+          )
+            throw error;
+          const raced = await locate(input.key);
+          if (!raced) throw error;
+          immutableMetadata(raced.metadata, metadata);
+          immutableBytes(await readFile(raced.path), metadata);
+          return raced.metadata;
+        }
+        return metadata;
+      } finally {
+        await rm(stage, { recursive: true, force: true });
+      }
     },
     head,
     async read(key) {
@@ -200,18 +246,32 @@ export function createFilesystemStorage(options: {
     },
     async remove(key) {
       await Promise.all(
-        directories
-          .flatMap((directory) => {
-            const path = pathFor(key, directory);
-            return [path, `${path}.metadata.json`];
-          })
-          .map(async (path) => {
+        directories.map(async (directory) => {
+          const objectPath = objectPathFor(key, directory);
+          let stage: string | undefined;
+          try {
+            stage = await mkdtemp(join(dirname(objectPath), ".raypx-remove-"));
+            // Detach the whole object before deletion, so an overlapping put stays complete.
+            await rename(objectPath, join(stage, "object"));
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+          } finally {
+            if (stage) await rm(stage, { recursive: true, force: true });
+          }
+          const path = pathFor(key, directory);
+          for (const legacyPath of [path, `${path}.metadata.json`])
             try {
-              await unlink(path);
+              // A flat prefix directory may still own another object's bytes.
+              if (!(await lstat(legacyPath)).isDirectory()) await unlink(legacyPath);
             } catch (error) {
-              if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+              if (
+                !["ENOENT", "ENOTDIR", "EISDIR"].includes(
+                  (error as NodeJS.ErrnoException).code ?? "",
+                )
+              )
+                throw error;
             }
-          }),
+        }),
       );
     },
     async signUpload(input) {

@@ -4,9 +4,12 @@ import { BodyLimitPlugin, RPCHandler } from "@orpc/server/fetch";
 import {
   executionGatewayContract,
   executionPayloadSchemas,
+  executionOutputSchemas,
+  executionObjectOutputSchemas,
+  executionResearchOutputSchemas,
 } from "@raypx/contracts/execution-gateway";
 import type { CloudApplication } from "@raypx/application";
-import type { ObjectStorage } from "@raypx/core";
+import { cloudToolNames, type ObjectStorage } from "@raypx/core";
 import { createModelGateway, readPublicSource, searchWeb, type ModelCallHooks } from "@raypx/ai";
 
 export const digestExecutionToken = (value: string) =>
@@ -21,6 +24,7 @@ export async function createExecutionGateway(options: {
     ? await createModelGateway({
         model: { provider: options.model.provider, id: options.model.id },
         apiKey: options.model.apiKey,
+        allowedTools: cloudToolNames,
       }).catch(() => null)
     : null;
   const active = new Set<AbortController>();
@@ -85,50 +89,135 @@ export async function createExecutionGateway(options: {
           ([key]) => !["runId", "ownerId", "epoch"].includes(key),
         ),
       );
-      const validated = executionPayloadSchemas[input.operation].safeParse(candidate);
-      if (!validated.success) throw new ORPCError("BAD_REQUEST");
-      const payload: Record<string, unknown> = { ...validated.data, ...context.fence };
-      if (input.operation === "completeWorkerAsset") {
-        const assetVersionId = payload["assetVersionId"];
-        if (typeof assetVersionId !== "string") throw new ORPCError("BAD_REQUEST");
-        const asset = await options.app.getAsset({
-          actorId: context.run.requestedByUserId,
-          assetVersionId,
-        });
-        await options.app.workerAssetByKey({ ...context.fence, objectKey: asset.objectKey });
-        const stored = await options.storage.read(asset.objectKey);
-        if (!stored) throw new ORPCError("NOT_FOUND");
-        const hash = createHash("sha256");
-        let size = 0;
-        for await (const bytes of stored.body) {
-          size += bytes.byteLength;
-          hash.update(bytes);
-        }
-        if (size !== asset.byteSize || hash.digest("hex") !== asset.checksum)
+      const parse = <T>(schema: { parse(value: unknown): T }): T => {
+        try {
+          return schema.parse(candidate);
+        } catch {
           throw new ORPCError("BAD_REQUEST");
-        return options.app.completeWorkerAsset({
-          ...context.fence,
-          assetVersionId,
-          byteSize: size,
-          checksum: asset.checksum,
-        });
+        }
+      };
+      switch (input.operation) {
+        case "workerControl":
+          parse(executionPayloadSchemas.workerControl);
+          return executionOutputSchemas.workerControl.parse(
+            await options.app.workerControl(context.fence),
+          );
+        case "workerAssets":
+          parse(executionPayloadSchemas.workerAssets);
+          return executionOutputSchemas.workerAssets.parse(
+            await options.app.workerAssets(context.fence),
+          );
+        case "startExecution": {
+          const payload = parse(executionPayloadSchemas.startExecution);
+          return executionOutputSchemas.startExecution.parse(
+            await options.app.startExecution({
+              ...context.fence,
+              role: payload.role,
+              prompt: payload.prompt,
+              ...(payload.parentId !== undefined ? { parentId: payload.parentId } : {}),
+            }),
+          );
+        }
+        case "appendEvent": {
+          const payload = parse(executionPayloadSchemas.appendEvent);
+          return executionOutputSchemas.appendEvent.parse(
+            await options.app.appendEvent({
+              ...context.fence,
+              eventId: payload.eventId,
+              type: payload.type,
+              payload: payload.payload,
+              ...(payload.executionId !== undefined ? { executionId: payload.executionId } : {}),
+            }),
+          );
+        }
+        case "createWorkerAsset":
+          return executionOutputSchemas.createWorkerAsset.parse(
+            await options.app.createWorkerAsset({
+              ...parse(executionPayloadSchemas.createWorkerAsset),
+              ...context.fence,
+            }),
+          );
+        case "completeWorkerAsset": {
+          const { assetVersionId } = parse(executionPayloadSchemas.completeWorkerAsset);
+          const asset = await options.app.getAsset({
+            actorId: context.run.requestedByUserId,
+            assetVersionId,
+          });
+          await options.app.workerAssetByKey({ ...context.fence, objectKey: asset.objectKey });
+          const stored = await options.storage.read(asset.objectKey);
+          if (!stored) throw new ORPCError("NOT_FOUND");
+          const hash = createHash("sha256");
+          let size = 0;
+          for await (const bytes of stored.body) {
+            size += bytes.byteLength;
+            hash.update(bytes);
+          }
+          if (size !== asset.byteSize || hash.digest("hex") !== asset.checksum)
+            throw new ORPCError("BAD_REQUEST");
+          return executionOutputSchemas.completeWorkerAsset.parse(
+            await options.app.completeWorkerAsset({
+              ...context.fence,
+              assetVersionId,
+              byteSize: size,
+              checksum: asset.checksum,
+            }),
+          );
+        }
+        case "finishExecution": {
+          const payload = parse(executionPayloadSchemas.finishExecution);
+          return executionOutputSchemas.finishExecution.parse(
+            await options.app.finishExecution({
+              ...context.fence,
+              executionId: payload.executionId,
+              status: payload.status,
+              ...(payload.output !== undefined ? { output: payload.output } : {}),
+            }),
+          );
+        }
+        case "finish": {
+          const payload = parse(executionPayloadSchemas.finish);
+          return executionOutputSchemas.finish.parse(
+            await options.app.finish({
+              ...context.fence,
+              status: payload.status,
+              ...(payload.output !== undefined ? { output: payload.output } : {}),
+              ...(payload.error !== undefined ? { error: payload.error } : {}),
+            }),
+          );
+        }
+        case "finishWithRevision":
+          return executionOutputSchemas.finishWithRevision.parse(
+            await options.app.finishWithRevision({
+              ...parse(executionPayloadSchemas.finishWithRevision),
+              ...context.fence,
+            }),
+          );
+        case "interrupt":
+          parse(executionPayloadSchemas.interrupt);
+          return executionOutputSchemas.interrupt.parse(await options.app.interrupt(context.fence));
+        case "acknowledgeCommand":
+          return executionOutputSchemas.acknowledgeCommand.parse(
+            await options.app.acknowledgeCommand({
+              ...parse(executionPayloadSchemas.acknowledgeCommand),
+              ...context.fence,
+            }),
+          );
       }
-      const command = options.app[input.operation] as (
-        input: Record<string, unknown>,
-      ) => Promise<unknown>;
-      return command(payload);
     }),
     research: authorized.research.handler(async ({ input, signal }) =>
       input.type === "search"
-        ? searchWeb(input.query, {
-            ...(options.searchApiKey ? { apiKey: options.searchApiKey } : {}),
-            ...(signal ? { signal } : {}),
-          })
-        : readPublicSource(input.url, signal),
+        ? executionResearchOutputSchemas.search.parse(
+            await searchWeb(input.query, {
+              ...(options.searchApiKey ? { apiKey: options.searchApiKey } : {}),
+              ...(signal ? { signal } : {}),
+            }),
+          )
+        : executionResearchOutputSchemas.read.parse(await readPublicSource(input.url, signal)),
     ),
     object: authorized.object.handler(async ({ context, input }) => {
       const asset = await options.app.workerAssetByKey({ ...context.fence, objectKey: input.key });
-      if (input.operation === "head") return options.storage.head(asset.objectKey);
+      if (input.operation === "head")
+        return executionObjectOutputSchemas.head.parse(await options.storage.head(asset.objectKey));
       if (input.operation === "read") {
         const stored = await options.storage.read(asset.objectKey);
         if (!stored) return null;
@@ -139,7 +228,10 @@ export async function createExecutionGateway(options: {
           if (size > 10 * 1024 * 1024) throw new ORPCError("PAYLOAD_TOO_LARGE");
           chunks.push(chunk);
         }
-        return { metadata: stored.metadata, bytes: Buffer.concat(chunks).toString("base64") };
+        return executionObjectOutputSchemas.read.parse({
+          metadata: stored.metadata,
+          bytes: Buffer.concat(chunks).toString("base64"),
+        });
       }
       if (asset.runId !== context.run.id || asset.published || !input.bytes)
         throw new ORPCError("FORBIDDEN");
@@ -150,12 +242,14 @@ export async function createExecutionGateway(options: {
         createHash("sha256").update(bytes).digest("hex") !== asset.checksum
       )
         throw new ORPCError("BAD_REQUEST");
-      return options.storage.put({
-        key: asset.objectKey,
-        body: bytes,
-        contentType: asset.mediaType,
-        checksumSha256: asset.checksum,
-      });
+      return executionObjectOutputSchemas.put.parse(
+        await options.storage.put({
+          key: asset.objectKey,
+          body: bytes,
+          contentType: asset.mediaType,
+          checksumSha256: asset.checksum,
+        }),
+      );
     }),
     model: authorized.model.handler(async ({ input, context, signal }) => {
       if (!model) throw new ORPCError("SERVICE_UNAVAILABLE");

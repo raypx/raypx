@@ -24,6 +24,7 @@ src/
     (app)/projects.$projectId.tsx canonical project detail route and page
   features/auth/     Better Auth forms, shared inputs, links and submission lifecycle
   features/projects/ shared project/task title form
+  features/conversations/ Conversation workspace and Round/Turn submission hook
   features/navigation/ AppShell, account menu, pending/error/retry and pagination
   lib/route-api.ts    request-scoped SSR client and credentialed browser client
   i18n/              catalog loaders, API error codes, recovery copy
@@ -160,6 +161,9 @@ bun run test:e2e                         # Playwright smoke, needs browsers
   their existing authorization and return behavior.
 - Cloud features own account/resource-scoped session lifetimes, draft and action
   state. Account changes unmount them; pending requests and blob URLs are disposed.
+- Conversation submission owns retry intent and Round/Turn sequencing. Its
+  workspace keeps drafts, uploads and Session lifetime; submission reads the
+  current AbortSignal at call time and ignores responses after account exit.
 - Each Router/SSR request owns a QueryClient. Ordinary Task/Round/Revision,
   lists, file metadata, usage, notification, preference and capability reads use
   `lib/cloud-queries.ts` through Client; keys include actor/account and resource

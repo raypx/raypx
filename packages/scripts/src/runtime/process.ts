@@ -4,6 +4,7 @@ const forwardedSignals = ["SIGINT", "SIGTERM", "SIGHUP"] as const;
 const ansiEscapePattern = /\u001B\[[0-?]*[ -\\/]*[@-~]/g;
 const failureOutputMaxChars = 8_000;
 const failureOutputMaxLines = 80;
+const terminationGraceMs = 1_000;
 
 export interface ProcessResult {
   code: number | null;
@@ -18,6 +19,7 @@ export interface RunChildProcessOptions {
   env?: NodeJS.ProcessEnv;
   signalSource?: Pick<NodeJS.Process, "off" | "on">;
   stdio?: StdioOptions;
+  timeoutMs?: number;
 }
 
 export class ProcessError extends Error {
@@ -84,6 +86,9 @@ export async function runChildProcess(
 ): Promise<ProcessResult> {
   const [file, ...args] = command;
   if (!file) throw new ProcessError("Missing child process command.", command, null, null);
+  const timeoutMs = options.timeoutMs;
+  if (timeoutMs !== undefined && (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0))
+    throw new RangeError("Child process timeout must be a positive integer in milliseconds.");
 
   return await new Promise<ProcessResult>((resolve, reject) => {
     const captureOutput = options.captureOutput ?? false;
@@ -95,12 +100,31 @@ export async function runChildProcess(
     const stopForwardingSignals = forwardProcessSignals(child, options.signalSource ?? process);
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
+    let timedOut = false;
+    let killTimer: ReturnType<typeof setTimeout> | undefined;
+    const timeout =
+      timeoutMs === undefined
+        ? undefined
+        : setTimeout(() => {
+            timedOut = true;
+            child.kill("SIGTERM");
+            killTimer = setTimeout(() => {
+              if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+            }, terminationGraceMs);
+            killTimer.unref();
+          }, timeoutMs);
+    timeout?.unref();
+    const cleanup = () => {
+      if (timeout) clearTimeout(timeout);
+      if (killTimer) clearTimeout(killTimer);
+      stopForwardingSignals();
+    };
 
     child.stdout?.on("data", (chunk: Buffer | string) => stdout.push(Buffer.from(chunk)));
     child.stderr?.on("data", (chunk: Buffer | string) => stderr.push(Buffer.from(chunk)));
 
     child.once("error", (error) => {
-      stopForwardingSignals();
+      cleanup();
       reject(
         new ProcessError(`Failed to start ${file}: ${error.message}`, command, null, null, {
           cause: error,
@@ -108,13 +132,27 @@ export async function runChildProcess(
       );
     });
     child.once("close", (code, signal) => {
-      stopForwardingSignals();
-      resolve({
+      cleanup();
+      const result = {
         code,
         signal,
         stdout: Buffer.concat(stdout).toString("utf8"),
         stderr: Buffer.concat(stderr).toString("utf8"),
-      });
+      };
+      // Callers may delete staged artifacts only once the child has closed its handles.
+      if (timedOut) {
+        const output = captureOutput ? summarizeProcessOutput(result.stdout, result.stderr) : "";
+        reject(
+          new ProcessError(
+            [`${file} timed out after ${timeoutMs}ms`, output ? "\n" + output : undefined]
+              .filter(Boolean)
+              .join(""),
+            command,
+            code,
+            signal,
+          ),
+        );
+      } else resolve(result);
     });
   });
 }

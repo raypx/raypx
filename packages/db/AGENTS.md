@@ -34,6 +34,9 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - Cloud account/run/task advisory locks are acquired in sorted order. Active
   task Runs also have a partial unique index. User/project permission rows are
   read through the same transaction handle.
+- Account usage aggregates on that transaction handle without loading complete
+  histories. Monthly call totals and lifetime storage/active Runs match memory;
+  aggregate numeric values are converted to JavaScript numbers explicitly.
 - Run lease expiry, epoch, cancellation and account/round identities are indexed
   columns alongside their typed data. Critical active-Task and expired-Run queries
   have semantic Core ports; message projections and grant hashes commit durably.

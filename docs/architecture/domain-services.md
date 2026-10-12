@@ -50,6 +50,17 @@ writes. Query owns ordinary Cloud resource data; Client sessions own active
 Run/Conversation projections. Forms and overlays keep local drafts. Desktop
 stores only its theme and the existing locale preference.
 
+Project creation refreshes both the Projects Router loader and the current
+actor/account's project-list Query, including an inactive Chat cache. Other
+actors, accounts and resource caches remain untouched.
+
+Web's Conversation submission hook owns command intent and Round/Turn sequencing.
+The workspace owns its Session lifetime, draft, attachments and presentation.
+A retry preserves the intent key and any already-created Round, even if Task
+facts refresh; each submission reads the workspace's current AbortSignal and
+ignores late replies after account exit. Successful submission still updates
+ordinary facts through targeted invalidation and refreshes the existing Session.
+
 SSR creates a client per request and forwards only Better Auth cookies to the
 configured API. Browser requests include credentials. Protected loader data is
 tagged with accountId; the layout hides data from another account while clearing

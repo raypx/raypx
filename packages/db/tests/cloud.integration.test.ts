@@ -10,6 +10,7 @@ import {
   exerciseUTCMonthBudget,
   exerciseSearchBudget,
   exerciseComputerRunDuration,
+  exerciseAccountUsageAggregation,
 } from "./cloud-usage-limits.js";
 import { openTestDatabase, testDatabaseUrl } from "./database.js";
 import {
@@ -67,6 +68,9 @@ async function start(
   return { ...result, fence, execution };
 }
 describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
+  it("aggregates monthly calls and lifetime storage/runs inside the current transaction", async () => {
+    await exerciseAccountUsageAggregation(new PostgresCloudRepository(connection.db));
+  });
   it("resets account admission at the UTC month boundary while preserving round usage", async () => {
     await exerciseUTCMonthBudget(new PostgresCloudRepository(connection.db));
   });

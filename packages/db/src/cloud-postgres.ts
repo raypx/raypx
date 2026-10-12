@@ -5,6 +5,7 @@ import type {
   CloudRepository,
   CloudTransaction,
   CloudRunEvent,
+  CloudUsageTotals,
 } from "@raypx/core";
 import { sql, eq, and } from "drizzle-orm";
 import { CloudDomainError, sameCloudTaskRound } from "@raypx/core";
@@ -86,6 +87,44 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
   };
   return {
     lock,
+    accountUsage: async ({ ownerAccountId, from, until }) => {
+      const rows = await db.execute<{ [K in keyof CloudUsageTotals]: number | string }>(sql`
+        SELECT calls, "reservedCalls", "unknownCalls", "inputTokens", "outputTokens",
+          "estimatedCost", "storageBytes", "activeRuns"
+        FROM (
+          SELECT count(*) FILTER (WHERE state <> 'released') AS calls,
+            count(*) FILTER (WHERE state = 'reserved') AS "reservedCalls",
+            count(*) FILTER (WHERE state = 'unknown') AS "unknownCalls",
+            coalesce(sum((data->>'inputTokens')::double precision), 0) AS "inputTokens",
+            coalesce(sum((data->>'outputTokens')::double precision), 0) AS "outputTokens",
+            coalesce(sum((data->>'estimatedCost')::double precision), 0) AS "estimatedCost"
+          FROM cloud_usage_calls
+          WHERE owner_account_id = ${ownerAccountId}
+            AND created_at >= ${from.toISOString()} AND created_at < ${until.toISOString()}
+        ) usage
+        CROSS JOIN (
+          SELECT coalesce(sum((data->>'byteSize')::double precision), 0) AS "storageBytes"
+          FROM cloud_assets WHERE data->>'ownerAccountId' = ${ownerAccountId}
+        ) assets
+        CROSS JOIN (
+          SELECT count(*) AS "activeRuns" FROM cloud_runs
+          WHERE owner_account_id = ${ownerAccountId}
+            AND status NOT IN ('needs_input', 'succeeded', 'failed', 'cancelled')
+        ) runs
+      `);
+      const row = rows[0];
+      if (!row) throw new Error("Missing account usage aggregate.");
+      return {
+        calls: Number(row.calls),
+        reservedCalls: Number(row.reservedCalls),
+        unknownCalls: Number(row.unknownCalls),
+        inputTokens: Number(row.inputTokens),
+        outputTokens: Number(row.outputTokens),
+        estimatedCost: Number(row.estimatedCost),
+        storageBytes: Number(row.storageBytes),
+        activeRuns: Number(row.activeRuns),
+      };
+    },
     activeTaskRun: async (taskId) => {
       const rows = await db.execute<{ data: Record<string, unknown> }>(
         sql`SELECT data FROM cloud_runs WHERE task_id=${taskId} AND status IN ('queued','running') LIMIT 1`,

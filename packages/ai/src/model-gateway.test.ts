@@ -41,10 +41,15 @@ it("dispatches only after durable host reservations and uses the configured mode
   const gateway = await createModelGateway({
     model: { provider: "configured-provider", id: "configured-model" },
     apiKey: "host-only",
+    allowedTools: ["search"],
   });
   const h = hooks();
   const result = await gateway.stream(
-    { callId: "call", context: { messages: [] }, maxOutputTokens: 100 },
+    {
+      callId: "call",
+      context: { messages: [], tools: [{ name: "search" }] },
+      maxOutputTokens: 100,
+    },
     h,
     new AbortController().signal,
   );
@@ -70,22 +75,38 @@ it("dispatches only after durable host reservations and uses the configured mode
   );
   expect(mock.dispatch).toHaveBeenCalledWith(expect.objectContaining({ maxRetries: 0 }));
 });
-it("rejects unknown tools and exhausted quotas before provider dispatch", async () => {
+it.each(["read_source", "delegate", "shell"])(
+  "rejects %s outside the host's tool allowlist before metering or dispatch",
+  async (name) => {
+    const gateway = await createModelGateway({
+      model: { provider: "configured-provider", id: "configured-model" },
+      apiKey: "host-only",
+      allowedTools: ["search"],
+    });
+    const h = hooks();
+    await expect(
+      gateway.stream(
+        {
+          callId: "call",
+          context: { messages: [], tools: [{ name }] },
+          maxOutputTokens: 100,
+        },
+        h,
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow("MODEL_TOOL_FORBIDDEN");
+    expect(h.reserve).not.toHaveBeenCalled();
+    expect(h.start).not.toHaveBeenCalled();
+    expect(h.settle).not.toHaveBeenCalled();
+    expect(mock.dispatch).not.toHaveBeenCalled();
+  },
+);
+it("rejects exhausted quotas before provider dispatch", async () => {
   const gateway = await createModelGateway({
     model: { provider: "configured-provider", id: "configured-model" },
     apiKey: "host-only",
+    allowedTools: [],
   });
-  await expect(
-    gateway.stream(
-      {
-        callId: "call",
-        context: { messages: [], tools: [{ name: "shell" }] },
-        maxOutputTokens: 100,
-      },
-      hooks(),
-      new AbortController().signal,
-    ),
-  ).rejects.toThrow("MODEL_TOOL_FORBIDDEN");
   const h = hooks();
   h.reserve = async () => {
     throw new Error("quota");
@@ -104,6 +125,7 @@ it("records interrupted provider usage as unknown rather than zero", async () =>
   const gateway = await createModelGateway({
     model: { provider: "configured-provider", id: "configured-model" },
     apiKey: "host-only",
+    allowedTools: [],
   });
   const h = hooks();
   const result = await gateway.stream(

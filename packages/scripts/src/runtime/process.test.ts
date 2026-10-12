@@ -47,6 +47,79 @@ describe("runChildProcess", () => {
       signal: null,
     });
   });
+
+  it("terminates a stalled process and retains output and its actual signal", async () => {
+    const source = new EventEmitter();
+    const operation = runChildProcess(
+      [
+        process.execPath,
+        "--no-env-file",
+        "--no-install",
+        "--eval",
+        'console.error("initialization stalled"); setInterval(() => {}, 1_000);',
+      ],
+      {
+        captureOutput: true,
+        signalSource: source as unknown as Pick<NodeJS.Process, "off" | "on">,
+        timeoutMs: 500,
+      },
+    );
+    await expect(operation).rejects.toMatchObject({
+      name: "ProcessError",
+      signal: "SIGTERM",
+      message: expect.stringContaining("initialization stalled"),
+    });
+    expect(source.listenerCount("SIGINT")).toBe(0);
+    expect(source.listenerCount("SIGTERM")).toBe(0);
+    expect(source.listenerCount("SIGHUP")).toBe(0);
+  });
+
+  it("escalates when a timed-out process ignores SIGTERM", async () => {
+    const operation = runChildProcess(
+      [
+        process.execPath,
+        "--no-env-file",
+        "--no-install",
+        "--eval",
+        'process.on("SIGTERM", () => console.error("ignored termination")); setInterval(() => {}, 1_000);',
+      ],
+      { captureOutput: true, timeoutMs: 500 },
+    );
+    await expect(operation).rejects.toMatchObject({
+      name: "ProcessError",
+      signal: "SIGKILL",
+      message: expect.stringContaining("ignored termination"),
+    });
+    await expect(operation).rejects.toThrow("timed out after 500ms");
+  });
+
+  it("still reports timeout when termination handling exits successfully", async () => {
+    await expect(
+      runChildProcess(
+        [
+          process.execPath,
+          "--no-env-file",
+          "--no-install",
+          "--eval",
+          'process.on("SIGTERM", () => process.exit(0)); setInterval(() => {}, 1_000);',
+        ],
+        { captureOutput: true, timeoutMs: 500 },
+      ),
+    ).rejects.toMatchObject({
+      name: "ProcessError",
+      exitCode: 0,
+      signal: null,
+      message: expect.stringContaining("timed out after 500ms"),
+    });
+  });
+
+  it("leaves commands without a requested deadline running until natural completion", async () => {
+    const result = await runChildProcess(
+      [process.execPath, "--eval", 'setTimeout(() => console.log("completed"), 600);'],
+      { captureOutput: true },
+    );
+    expect(result).toEqual({ code: 0, signal: null, stdout: "completed\n", stderr: "" });
+  });
 });
 
 describe("runCommand", () => {

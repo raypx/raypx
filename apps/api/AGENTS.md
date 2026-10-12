@@ -59,6 +59,9 @@ server/
   It owns model/search credentials, dispatch and trusted late usage reconciliation.
   Runner inputs cannot supply identity, scope or fencing. Object transfers verify
   actual bytes and restrict keys to authorized inputs and outputs.
+- Dispatch private execution operations explicitly against their payload/output
+  schemas. The API injects Core's trusted tool directory into the model Gateway;
+  Runner requests cannot change that allowlist.
 - Run/conversation SSE uses a dedicated handler without batching or the ordinary
   15-second deadline. Revalidate the original login session in every polling
   round; revocation, expiry or changed identity terminates the connection.

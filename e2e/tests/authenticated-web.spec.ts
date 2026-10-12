@@ -8,6 +8,24 @@ async function login(page: Page, account: keyof typeof accounts) {
   });
   expect(response.ok()).toBe(true);
 }
+test("project creation refreshes the inactive Chat project picker", async ({ page }) => {
+  await login(page, "member");
+  await page.goto("/chat");
+  const picker = page.getByRole("combobox", { name: "Ownership" });
+  await expect(
+    picker.getByRole("option", { name: "Member private film", exact: true }),
+  ).toHaveCount(1);
+  const navigation = page.getByRole("navigation", { name: "Navigation", exact: true });
+  await navigation.getByRole("link", { name: "Projects", exact: true }).click();
+  await page.getByRole("button", { name: "New project", exact: true }).click();
+  await page.getByLabel("Project title").fill("Chat picker created project");
+  await page.getByLabel("Project title").press("Enter");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await navigation.getByRole("link", { name: "Conversations", exact: true }).click();
+  await expect(
+    picker.getByRole("option", { name: "Chat picker created project", exact: true }),
+  ).toHaveCount(1);
+});
 test("real login, project creation, task creation, refresh and paginated history", async ({
   page,
 }) => {

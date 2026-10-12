@@ -34,6 +34,9 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   credentials stay in trusted hosts. This is fault isolation; arbitrary code
   requires a future security sandbox.
 - The API Gateway dispatches and meters actual model attempts and compaction.
+- Parent-owned executors require the claimed Run and trusted conversation history.
+  Runner receives only execution operations; Host owns claiming, lease renewal,
+  conversation loading and model usage hooks.
 - Operational logs correlate outbox, Run, execution and tool ids without input
   or output bodies. Sentry captures sanitized errors and fixed Run duration spans.
 - Notification delivery rechecks current recipient access/preferences and global
@@ -50,6 +53,8 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 - Shutdown stops new claims and waits for currently running handlers to finish.
 - Pi receives only explicit trusted tools; never register built-in file, shell,
   dynamic extension, arbitrary MCP, browser or computer tools in this host.
+- Registered names use Core's `CloudToolName`. Computer with delegation matches
+  `cloudToolNames`; Search and child executions receive subsets, with no child delegation.
 - A document batch becomes available only after every object verifies and the
   revision, terminal Run, Task review and notifications commit together.
 - LibreOffice, Poppler and templates use fixed executable paths and argument
@@ -77,6 +82,9 @@ bun run --cwd apps/worker smoke
 `bun .output/server/index.mjs --check-documents` additionally requires the production
 fonts, LibreOffice and Poppler and verifies Chinese PDF/XLSX plus a real
 eight-page presentation preview. CI runs it in the built Worker container.
+Root `bun run verify` first relocates the complete `.output` outside the checkout,
+then runs `--check` with a bounded Bun child process. The host, sibling Runner
+and package assets must resolve from that isolated artifact.
 
 `bun run dev` uses Vite's builder watch to rebuild bundled workspace sources.
 After Nitro finishes packaging a successful build, it gracefully restarts the

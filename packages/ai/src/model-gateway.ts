@@ -12,11 +12,15 @@ export type ModelGatewayTransport = (
   signal: AbortSignal,
 ) => Promise<AsyncIterable<unknown>>;
 
-/** The provider request, credentials and metering belong to the trusted host. */
-export async function createModelGateway(options: {
+export interface ModelGatewayOptions {
   model: { provider: string; id: string };
   apiKey: string;
-}) {
+  allowedTools: readonly string[];
+}
+
+/** The provider request, credentials and metering belong to the trusted host. */
+export async function createModelGateway(options: ModelGatewayOptions) {
+  const allowed = new Set<string>(options.allowedTools);
   const runtime = await ModelRuntime.create({
     credentials: new InMemoryCredentialStore(),
     modelsPath: null,
@@ -33,16 +37,6 @@ export async function createModelGateway(options: {
       const context = request.context as Context;
       if (!context || !Array.isArray(context.messages) || context.messages.length > 1000)
         throw new Error("MODEL_CONTEXT_INVALID");
-      const allowed = new Set([
-        "search",
-        "read_source",
-        "extract_file",
-        "compute_table",
-        "render_report",
-        "render_table",
-        "render_deck",
-        "delegate",
-      ]);
       if (context.tools?.some((tool) => !allowed.has(tool.name)))
         throw new Error("MODEL_TOOL_FORBIDDEN");
       signal.throwIfAborted();

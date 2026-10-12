@@ -1,5 +1,9 @@
 export { createModelGateway } from "./model-gateway.js";
-export type { ModelGatewayRequest, ModelGatewayTransport } from "./model-gateway.js";
+export type {
+  ModelGatewayOptions,
+  ModelGatewayRequest,
+  ModelGatewayTransport,
+} from "./model-gateway.js";
 export { searchWeb, readPublicSource, isPublicAddress, validateSourceUrl } from "./research.js";
 export {
   createCloudPiAgent,

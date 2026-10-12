@@ -370,22 +370,12 @@ export function createCloudContext(options: CloudApplicationOptions) {
   const usageFor = async (tx: CloudTransaction, accountId: string) => {
     const ownerAccountId = accountId.includes(":") ? accountId : `user:${accountId}`;
     const time = now();
-    const monthStart = Date.UTC(time.getUTCFullYear(), time.getUTCMonth(), 1);
-    const monthEnd = Date.UTC(time.getUTCFullYear(), time.getUTCMonth() + 1, 1);
-    const calls = (await tx.list("usage", { ownerAccountId })).filter(
-      (call) => call.createdAt.getTime() >= monthStart && call.createdAt.getTime() < monthEnd,
-    );
-    const assets = await tx.list("assets", { ownerAccountId });
-    const runs = await tx.list("runs", { ownerAccountId });
     return {
-      calls: calls.filter((call) => call.state !== "released").length,
-      reservedCalls: calls.filter((call) => call.state === "reserved").length,
-      unknownCalls: calls.filter((call) => call.state === "unknown").length,
-      inputTokens: calls.reduce((n, c) => n + (c.inputTokens ?? 0), 0),
-      outputTokens: calls.reduce((n, c) => n + (c.outputTokens ?? 0), 0),
-      estimatedCost: calls.reduce((n, c) => n + (c.estimatedCost ?? 0), 0),
-      storageBytes: assets.reduce((n, a) => n + a.byteSize, 0),
-      activeRuns: runs.filter((run) => !isCloudTerminal(run.status)).length,
+      ...(await tx.accountUsage({
+        ownerAccountId,
+        from: new Date(Date.UTC(time.getUTCFullYear(), time.getUTCMonth(), 1)),
+        until: new Date(Date.UTC(time.getUTCFullYear(), time.getUTCMonth() + 1, 1)),
+      })),
       limits,
     };
   };

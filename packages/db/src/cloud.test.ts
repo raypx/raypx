@@ -9,6 +9,7 @@ import {
   exerciseUTCMonthBudget,
   exerciseSearchBudget,
   exerciseComputerRunDuration,
+  exerciseAccountUsageAggregation,
 } from "../tests/cloud-usage-limits.js";
 const checksum = "a".repeat(64);
 function fixture(limits: CloudApplicationOptions["limits"] = {}) {
@@ -46,6 +47,11 @@ function fixture(limits: CloudApplicationOptions["limits"] = {}) {
   return { service, repository, start };
 }
 describe("cloud application guarantees", () => {
+  it("aggregates monthly calls and lifetime storage/runs inside the current transaction", async () => {
+    await exerciseAccountUsageAggregation(
+      new InMemoryCloudRepository({ users: [{ id: "alice" }, { id: "bob" }] }),
+    );
+  });
   it("derives personal ownership, denies other accounts and checks live account status", async () => {
     const { service, repository, start } = fixture();
     const run = await start();

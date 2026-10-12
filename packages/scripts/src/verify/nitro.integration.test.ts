@@ -1,11 +1,14 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 
 import { expect, it, onTestFinished, vi } from "vite-plus/test";
 
 import { runCommand } from "../runtime/process.js";
 import { verifyNitroRuntimes } from "./nitro.js";
+import { stageRuntimeArtifact } from "./artifact.js";
+import { temporaryRepository } from "../test-fixtures.js";
 
 async function runtimeFixture(privateRouteStatus: 401 | 404): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), "raypx-nitro-probe-test-"));
@@ -62,3 +65,44 @@ it.each([
   },
   15_000,
 );
+
+it("bounds HTTP initialization before import resolves and then removes the staged artifact", async () => {
+  const root = await temporaryRepository({
+    "apps/stalled/.output/nitro.json": JSON.stringify({
+      preset: "bun",
+      serverEntry: "server/index.mjs",
+    }),
+    "apps/stalled/.output/server/index.mjs":
+      'console.error("HTTP initialization stalled"); setInterval(() => {}, 1_000); await new Promise(() => {});\n',
+  });
+  let directory: string | undefined;
+  await expect(
+    verifyNitroRuntimes(
+      {
+        log: vi.fn(),
+        processEnv: Object.fromEntries(
+          Object.entries(process.env).filter(
+            (entry): entry is [string, string] => entry[1] !== undefined,
+          ),
+        ),
+        repositoryRoot: root,
+        runCommand,
+      },
+      {
+        captureOutput: true,
+        timeoutMs: 500,
+        targets: [{ directory: "apps/stalled", name: "Stalled", probes: [{ pathname: "/" }] }],
+        async stageOutput(source) {
+          const stage = await stageRuntimeArtifact(source);
+          directory = stage.directory;
+          return stage;
+        },
+      },
+    ),
+  ).rejects.toMatchObject({
+    signal: "SIGTERM",
+    message: expect.stringContaining("HTTP initialization stalled"),
+  });
+  expect(directory).toBeDefined();
+  expect(existsSync(directory!)).toBe(false);
+});

@@ -1,5 +1,6 @@
 import { type CloudUsageCall } from "@raypx/core";
 import type { CloudContext, Actor, Fence } from "./context.js";
+import { usageSettlement, type UsageSettlementInput } from "./usage-settlement.js";
 
 export function cloudUsage(context: CloudContext) {
   const {
@@ -121,93 +122,25 @@ export function cloudUsage(context: CloudContext) {
         return call;
       }),
     /** Trusted provider reconciliation only; never exposed through runner RPC. It cannot publish output or reopen a Run. */
-    reconcileUsage: async (input: {
-      callId: string;
-      inputTokens?: number;
-      outputTokens?: number;
-      cacheReadTokens?: number;
-      cacheWriteTokens?: number;
-      started?: boolean;
-    }) => {
+    reconcileUsage: async (input: UsageSettlementInput & { callId: string }) => {
       const prior = required(await repo.read((tx) => tx.get("usage", input.callId)));
       return runTransaction(prior.runId, async (tx) => {
         const call = required(await tx.get("usage", input.callId));
         if (call.state === "settled" || call.state === "released") return call;
-        for (const value of [
-          input.inputTokens,
-          input.outputTokens,
-          input.cacheReadTokens,
-          input.cacheWriteTokens,
-        ])
-          if (value !== undefined && (!Number.isSafeInteger(value) || value < 0))
-            fail("CLOUD_INVALID_INPUT", "Invalid usage count.");
-        const known = input.inputTokens !== undefined && input.outputTokens !== undefined;
-        call.state = known
-          ? "settled"
-          : input.started === false && call.state === "reserved"
-            ? "released"
-            : "unknown";
-        call.inputTokens = input.inputTokens ?? null;
-        call.outputTokens = input.outputTokens ?? null;
-        call.cacheReadTokens = input.cacheReadTokens ?? null;
-        call.cacheWriteTokens = input.cacheWriteTokens ?? null;
-        call.estimatedCost = call.pricing
-          ? ((call.inputTokens ?? call.reservedTokens) * call.pricing.inputPerMillion +
-              (call.outputTokens ?? call.reservedTokens) * call.pricing.outputPerMillion +
-              (call.cacheReadTokens ?? 0) *
-                (call.pricing.cacheReadPerMillion ?? call.pricing.inputPerMillion) +
-              (call.cacheWriteTokens ?? 0) *
-                (call.pricing.cacheWritePerMillion ?? call.pricing.inputPerMillion)) /
-            1_000_000
-          : null;
+        Object.assign(call, usageSettlement(call, input));
         call.settledAt = now();
         call.updatedAt = now();
         await tx.save("usage", call);
         return call;
       });
     },
-    settleUsage: (
-      input: Fence & {
-        callId: string;
-        inputTokens?: number;
-        outputTokens?: number;
-        cacheReadTokens?: number;
-        cacheWriteTokens?: number;
-        started?: boolean;
-      },
-    ) =>
+    settleUsage: (input: Fence & UsageSettlementInput & { callId: string }) =>
       runTransaction(input.runId, async (tx) => {
         const run = await fenced(tx, input, false);
         const call = required(await tx.get("usage", input.callId));
         if (call.runId !== run.id) fail("CLOUD_ACCESS_DENIED", "Call mismatch.");
         if (call.state === "settled" || call.state === "released") return call;
-        for (const n of [
-          input.inputTokens,
-          input.outputTokens,
-          input.cacheReadTokens,
-          input.cacheWriteTokens,
-        ])
-          if (n !== undefined && (!Number.isSafeInteger(n) || n < 0))
-            fail("CLOUD_INVALID_INPUT", "Invalid usage count.");
-        const known = input.inputTokens !== undefined && input.outputTokens !== undefined;
-        call.state = known
-          ? "settled"
-          : input.started === false && call.state === "reserved"
-            ? "released"
-            : "unknown";
-        call.inputTokens = input.inputTokens ?? null;
-        call.outputTokens = input.outputTokens ?? null;
-        call.cacheReadTokens = input.cacheReadTokens ?? null;
-        call.cacheWriteTokens = input.cacheWriteTokens ?? null;
-        call.estimatedCost = call.pricing
-          ? ((call.inputTokens ?? call.reservedTokens) * call.pricing.inputPerMillion +
-              (call.outputTokens ?? call.reservedTokens) * call.pricing.outputPerMillion +
-              (call.cacheReadTokens ?? 0) *
-                (call.pricing.cacheReadPerMillion ?? call.pricing.inputPerMillion) +
-              (call.cacheWriteTokens ?? 0) *
-                (call.pricing.cacheWritePerMillion ?? call.pricing.inputPerMillion)) /
-            1_000_000
-          : null;
+        Object.assign(call, usageSettlement(call, input));
         call.settledAt = now();
         call.updatedAt = now();
         await tx.save("usage", call);

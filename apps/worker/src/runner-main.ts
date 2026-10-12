@@ -2,6 +2,7 @@ import { createCloudPiAgent, checkPiRuntime } from "@raypx/ai";
 import { createCloudExecutor } from "./cloud.js";
 import { createExecutionClient } from "./execution-client.js";
 import type { RunnerBootstrap } from "./process-executor.js";
+import { executionBootstrapSchema } from "@raypx/contracts/execution-gateway";
 
 const controller = new AbortController();
 if (process.argv.includes("--check")) {
@@ -30,18 +31,16 @@ function serve() {
 }
 async function run(bootstrap: RunnerBootstrap) {
   const gateway = createExecutionClient(bootstrap.gatewayUrl, bootstrap.credential);
-  const configuration = (await gateway.client.bootstrap({})) as {
-    model: { provider: string; id: string } | null;
-    history: string;
-  };
+  const configuration = executionBootstrapSchema.parse(await gateway.client.bootstrap({}));
+  const model = configuration.model;
   const executor = createCloudExecutor({
     app: gateway.app,
     agent: null,
-    ...(configuration.model
+    ...(model
       ? {
           agentForExecution: (executionId: string) =>
             createCloudPiAgent({
-              model: configuration.model!,
+              model,
               transport: (request, signal) =>
                 gateway.client.model({ ...request, executionId }, { signal }),
             }),

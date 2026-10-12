@@ -33,6 +33,9 @@ database, AI SDK, or renderer concerns.
   minutes per Run. Account call admission and usage summaries use the same UTC
   calendar month. Acceptance
   compares current round/version/revision and rejects an active Task.
+- Application supplies the UTC month window to Core's transaction usage query.
+  Pure settlement accounting is shared; fenced settlement and trusted late
+  reconciliation retain separate authorization, replay and event policies.
 - Project owner accounts pay for all collaborators. Managers may spend; editors
   need explicit spending grants. Cancellation and publication share the Run/Task
   transaction, so cancelled output cannot become a published Revision.

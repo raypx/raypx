@@ -12,6 +12,7 @@ function dependencies() {
     verifyI18n: vi.fn(async () => undefined),
     verifyPolicy: vi.fn(async () => undefined),
     verifyRuntimes: vi.fn(async (_options: { captureOutput: boolean }) => undefined),
+    verifyWorkerRuntime: vi.fn(async (_options: { captureOutput: boolean }) => undefined),
   };
 }
 
@@ -99,15 +100,24 @@ describe("repository workflows", () => {
       ["rpx", "tasks", "test:unit", "test:component", "--filter", "!@raypx/e2e"],
       ["rpx", "tasks", "test:integration", "--filter", "!@raypx/e2e"],
       ["rpx", "tasks", "build"],
-      ["bun", "--no-env-file", "--no-install", "apps/worker/.output/server/index.mjs", "--check"],
     ]);
     expect(deps.runCommand.mock.calls.map(([, options]) => options.env)).toEqual(
-      Array(7).fill(deps.processEnv),
+      Array(6).fill(deps.processEnv),
     );
     expect(deps.runCommand.mock.calls.map(([, options]) => options.captureOutput)).toEqual(
-      Array(7).fill(!verbose),
+      Array(6).fill(!verbose),
     );
     expect(deps.verifyRuntimes).toHaveBeenCalledWith({ captureOutput: !verbose });
+    expect(deps.verifyWorkerRuntime).toHaveBeenCalledWith({ captureOutput: !verbose });
+    expect(deps.runCommand.mock.calls.every(([, options]) => options.timeoutMs === undefined)).toBe(
+      true,
+    );
+    expect(deps.runCommand.mock.invocationCallOrder.at(-1)).toBeLessThan(
+      deps.verifyWorkerRuntime.mock.invocationCallOrder[0]!,
+    );
+    expect(deps.verifyWorkerRuntime.mock.invocationCallOrder[0]).toBeLessThan(
+      deps.verifyRuntimes.mock.invocationCallOrder[0]!,
+    );
   });
 
   it("checks formatting before spending minutes on a build", async () => {
@@ -121,6 +131,14 @@ describe("repository workflows", () => {
       ["rpx", "tasks", "format:leaf"],
     ]);
     expect(deps.verifyRuntimes).not.toHaveBeenCalled();
+    expect(deps.verifyWorkerRuntime).not.toHaveBeenCalled();
+  });
+
+  it("stops before HTTP probes when the relocated Worker probe fails", async () => {
+    const deps = dependencies();
+    deps.verifyWorkerRuntime.mockRejectedValue(new Error("Worker artifact failed"));
+    await expect(runVerify(deps)).rejects.toThrow("Worker artifact failed");
+    expect(deps.verifyRuntimes).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -133,5 +151,6 @@ describe("repository workflows", () => {
     if (gate === "verifyI18n") expect(deps.verifyPolicy).not.toHaveBeenCalled();
     expect(deps.runCommand).not.toHaveBeenCalled();
     expect(deps.verifyRuntimes).not.toHaveBeenCalled();
+    expect(deps.verifyWorkerRuntime).not.toHaveBeenCalled();
   });
 });

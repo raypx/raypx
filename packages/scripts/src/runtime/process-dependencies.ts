@@ -5,6 +5,7 @@ export interface RepositoryCommandOptions {
   captureOutput?: boolean;
   cwd: string;
   env: NodeJS.ProcessEnv;
+  timeoutMs?: number;
 }
 
 export interface RepositoryProcessDependencies {

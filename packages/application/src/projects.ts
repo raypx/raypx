@@ -1,7 +1,14 @@
-import { assertProjectScopeV2, canProjectCapabilityV2, ProjectV2DomainError } from "@raypx/core";
+import { assertProjectScopeV2, ProjectV2DomainError } from "@raypx/core";
 import type { ProjectApplication } from "./types.js";
 import { requireResource, type ProjectContext } from "./context.js";
-export function projectsCommands({ options, now, id, accessFor, requireProject }: ProjectContext) {
+export function projectsCommands({
+  options,
+  now,
+  id,
+  accessFor,
+  requireProject,
+  assertCapability,
+}: ProjectContext) {
   const setArchived =
     (archived: boolean, message: string): ProjectApplication["archiveProject"] =>
     async ({ actorId, projectId }) => {
@@ -64,13 +71,7 @@ export function projectsCommands({ options, now, id, accessFor, requireProject }
       });
     },
 
-    async assertCapability({ actorId, projectId, capability }) {
-      const result = await commands.get({ actorId, projectId });
-      if (!result || !canProjectCapabilityV2(result.access, capability)) {
-        throw new ProjectV2DomainError("PROJECT_ACCESS_DENIED", "Project access denied.");
-      }
-      return result.project;
-    },
+    assertCapability,
 
     async updateProject({ actorId, projectId, title, description, stage, deadline }) {
       await requireProject(actorId, projectId, "project.write", "Project update denied.");

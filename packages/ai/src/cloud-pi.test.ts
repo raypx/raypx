@@ -5,6 +5,7 @@ const mock = vi.hoisted(() => ({
   listener: (_event: unknown) => {},
   settings: vi.fn(),
   create: vi.fn(),
+  runtime: vi.fn(),
   loader: vi.fn(),
   auth: true,
   promptFailure: false,
@@ -21,16 +22,19 @@ const mock = vi.hoisted(() => ({
 }));
 vi.mock("@earendil-works/pi-coding-agent", () => ({
   ModelRuntime: {
-    create: async () => ({
-      setRuntimeApiKey: async () => {},
-      getPhysicalModel: () => ({
-        id: "model",
-        provider: "provider",
-        maxTokens: 16000,
-        cost: { input: 2, output: 6, cacheRead: 0.2, cacheWrite: 2.5 },
-      }),
-      getAuth: async () => (mock.auth ? {} : undefined),
-    }),
+    create: async () => {
+      mock.runtime();
+      return {
+        setRuntimeApiKey: async () => {},
+        getPhysicalModel: () => ({
+          id: "model",
+          provider: "provider",
+          maxTokens: 16000,
+          cost: { input: 2, output: 6, cacheRead: 0.2, cacheWrite: 2.5 },
+        }),
+        getAuth: async () => (mock.auth ? {} : undefined),
+      };
+    },
   },
   SettingsManager: {
     inMemory: (settings: unknown) => {
@@ -198,6 +202,24 @@ it("refuses missing credentials before issuing a model request", async () => {
     }),
   ).rejects.toThrow("credentials");
   expect(reserve).not.toHaveBeenCalled();
+});
+it("rejects a provider run without usage hooks before preparing the SDK session", async () => {
+  await expect(
+    createCloudPiAgent({ model: { provider: "provider", id: "model" } }).run({
+      cwd: "/tmp/isolated",
+      prompt: "Go",
+      systemPrompt: "",
+      tools: [],
+      maxOutputTokens: 1000,
+      signal: new AbortController().signal,
+      onEvent: async () => {},
+    }),
+  ).rejects.toThrow("MODEL_USAGE_HOOKS_REQUIRED");
+  expect(mock.runtime).not.toHaveBeenCalled();
+  expect(mock.settings).not.toHaveBeenCalled();
+  expect(mock.loader).not.toHaveBeenCalled();
+  expect(mock.create).not.toHaveBeenCalled();
+  expect(mock.requests).toEqual([]);
 });
 it("keeps unknown usage null and rejects non-finite/negative values", () => {
   expect(normalizeModelUsage(null)).toEqual({

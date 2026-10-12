@@ -9,7 +9,8 @@ tool registration, and conversion to Raypx-owned run events.
 
 `src/index.ts` exports `AiRunEvent` and the cloud Pi, model Gateway and research
 interfaces. `createCloudPiAgent` creates isolated server sessions with explicit trusted tools,
-required model identity and per-attempt usage hooks. `checkPiRuntime` validates
+required model identity and per-attempt host usage hooks. Gateway transport runs
+without local usage hooks. `checkPiRuntime` validates
 the packaged SDK without opening a model connection.
 `createModelGateway` dispatches the host's configured model and meters its actual
 request. Runner injects a `ModelGatewayTransport` without a provider credential.
@@ -33,6 +34,9 @@ HTTP transport, authentication, database connections, domain rules, or UI.
   same metered stream function; missing counts remain null.
 - Usage hooks are awaited before dispatch and before final settlement. A failed
   persistence hook aborts the session instead of producing an unmetered result.
+- Provider sessions reject missing usage hooks before SDK/session preparation.
+  The trusted host supplies the Gateway's allowed tool names; Runner request
+  context cannot extend that list.
 - Gateway sessions disable Pi retries. A disconnected request is an unknown
   attempt; host settlement continues independently of the Runner.
 

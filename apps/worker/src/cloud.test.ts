@@ -5,7 +5,12 @@ import { InMemoryCloudRepository } from "@raypx/db";
 import { createMemoryStorage } from "@raypx/storage";
 import { defaultCloudLimits } from "@raypx/core";
 import type { CloudPiAgent, CloudPiRunInput } from "@raypx/ai";
-import { createCloudDispatcher, createCloudExecutor, runCloudExecutions } from "./cloud.js";
+import {
+  createCloudDispatcher,
+  createCloudExecutor,
+  runCloudExecutions,
+  type CloudExecutionOperations,
+} from "./cloud.js";
 
 async function fixture(mode: "computer" | "search" = "search", calls = 40) {
   const repository = new InMemoryCloudRepository({
@@ -35,6 +40,8 @@ async function fixture(mode: "computer" | "search" = "search", calls = 40) {
   };
 }
 async function modelCall(input: CloudPiRunInput) {
+  expect(input.hooks).toBeDefined();
+  if (!input.hooks) throw new Error("Host model calls require usage hooks.");
   const callId = crypto.randomUUID();
   await input.hooks.reserve({
     callId,
@@ -58,6 +65,69 @@ const mailer = () => ({
 });
 afterEach(() => vi.restoreAllMocks());
 describe("durable cloud execution", () => {
+  it("runs a parent-owned lease with execution operations only and no local usage hooks", async () => {
+    const state = await fixture("computer");
+    const ownerId = "parent-host";
+    await state.app.acceptQueued({ runId: state.run.id });
+    const claimed = await state.app.claim({ runId: state.run.id, ownerId });
+    if (!claimed) throw new Error("The parent must claim the Run.");
+    const hostOperations = [
+      "claim",
+      "heartbeat",
+      "getConversation",
+      "reserveUsage",
+      "startUsage",
+      "settleUsage",
+    ] as const;
+    const hostCalls = hostOperations.map((operation) => vi.spyOn(state.app, operation));
+    const app: CloudExecutionOperations = {
+      workerControl: state.app.workerControl,
+      workerAssets: state.app.workerAssets,
+      acknowledgeCommand: state.app.acknowledgeCommand,
+      startExecution: state.app.startExecution,
+      appendEvent: state.app.appendEvent,
+      createWorkerAsset: state.app.createWorkerAsset,
+      completeWorkerAsset: state.app.completeWorkerAsset,
+      finishExecution: state.app.finishExecution,
+      finish: state.app.finish,
+      finishWithRevision: state.app.finishWithRevision,
+      interrupt: state.app.interrupt,
+    };
+    let children = 0;
+    const agent: CloudPiAgent = {
+      async run(input) {
+        expect(input).not.toHaveProperty("hooks");
+        const delegate = input.tools.find((tool) => tool.name === "delegate");
+        if (delegate) {
+          expect(input.prompt).toContain("Trusted bootstrap history");
+          await delegate.execute(
+            { tasks: [{ role: "research", prompt: "Child work" }] },
+            { callId: "delegate", signal: input.signal },
+          );
+        } else {
+          children++;
+          expect(input.prompt).not.toContain("Trusted bootstrap history");
+        }
+        return { type: "completed", text: "Execution done" };
+      },
+    };
+    await createCloudExecutor({
+      app,
+      agent,
+      storage: state.storage,
+      limits: state.limits,
+      ownerId,
+      parentOwnsLease: true,
+      claimed,
+      history: "Trusted bootstrap history",
+    })(state.run.id);
+    expect(children).toBe(1);
+    for (const call of hostCalls) expect(call).not.toHaveBeenCalled();
+    const snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
+    expect(snapshot.run.status).toBe("needs_input");
+    expect(snapshot.executions).toHaveLength(2);
+    expect((await state.app.getUsage({ actorId: "owner" })).calls).toBe(0);
+  });
   it("keeps successive assistant messages distinct and streams the next message after completion", async () => {
     const state = await fixture("computer");
     await state.app.acceptQueued({ runId: state.run.id });

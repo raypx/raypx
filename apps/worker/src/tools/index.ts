@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import type { CloudApplication } from "@raypx/application";
-import type { CloudRun, CloudAssetVersion, ObjectStorage } from "@raypx/core";
+import type { CloudRun, CloudAssetVersion, CloudToolName, ObjectStorage } from "@raypx/core";
 import type { TrustedAiTool } from "@raypx/ai";
 import { computeTable, extractFile, type TableData, type Cell } from "./files.js";
 import {
@@ -15,6 +15,8 @@ import { readPublicSource, searchWeb } from "./network.js";
 import { validateCitations } from "./citations.js";
 import { CloudExecutionError, publicFailureCode } from "../errors.js";
 
+export type TrustedCloudTool = Omit<TrustedAiTool, "name"> & { name: CloudToolName };
+
 export interface ToolContext {
   tables: Map<string, TableData>;
   sources: Map<string, { id: string; url: string; title: string; excerpt: string }>;
@@ -26,7 +28,7 @@ export interface ToolHost {
     CloudApplication,
     "workerControl" | "appendEvent" | "createWorkerAsset" | "completeWorkerAsset"
   >;
-  storage: ObjectStorage | null;
+  storage: Pick<ObjectStorage, "put" | "head" | "read"> | null;
   run: CloudRun;
   ownerId: string;
   epoch: number;
@@ -70,7 +72,7 @@ const textSchema = { type: "string", minLength: 1 };
 const arraySchema = (items: unknown, maxItems = 100) => ({ type: "array", items, maxItems });
 const sectionSchema = schema({ heading: textSchema, body: textSchema }, ["heading", "body"]);
 
-export function createTrustedTools(host: ToolHost): TrustedAiTool[] {
+export function createTrustedTools(host: ToolHost): TrustedCloudTool[] {
   const fence = { runId: host.run.id, ownerId: host.ownerId, epoch: host.epoch };
   const files = async (assetId: string) => {
     const asset = host.context.assets.get(assetId);
@@ -147,7 +149,7 @@ export function createTrustedTools(host: ToolHost): TrustedAiTool[] {
       byteSize: asset.byteSize,
     }));
   };
-  const tools: TrustedAiTool[] = [
+  const tools: TrustedCloudTool[] = [
     {
       name: "search",
       description:

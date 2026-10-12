@@ -10,6 +10,7 @@ import { EmptyState } from "@raypx/ui/empty-state";
 import { PageHeader } from "@raypx/ui/page-header";
 import { useFormatter, useTranslations } from "../../i18n/client";
 import { createRouteApiClient } from "../../lib/route-api";
+import { useCloudQueries } from "../../lib/use-cloud-queries";
 import { RouteError, PageNavigation, pageSearch } from "../../features/navigation/route-state";
 
 export const Route = createFileRoute("/(app)/projects/")({
@@ -36,9 +37,18 @@ function ProjectsPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const router = useRouter();
+  const { queries, queryClient } = useCloudQueries();
   async function createProject(title: string) {
     await createRouteApiClient().projects.create({ title });
-    await router.invalidate({ filter: (match) => match.routeId === Route.id, sync: true });
+    await Promise.all([
+      router.invalidate({ filter: (match) => match.routeId === Route.id, sync: true }),
+      queryClient.invalidateQueries({
+        queryKey: queries.projects().queryKey,
+        exact: true,
+        // Chat's loader can reuse its cache before a Query observer mounts.
+        refetchType: "all",
+      }),
+    ]);
   }
 
   return (

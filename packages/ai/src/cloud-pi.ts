@@ -46,7 +46,7 @@ export interface CloudPiRunInput {
   prompt: string;
   systemPrompt: string;
   tools: readonly TrustedAiTool[];
-  hooks: ModelCallHooks;
+  hooks?: ModelCallHooks;
   maxOutputTokens: number;
   onEvent: (event: AiRunEvent) => Promise<void>;
   signal: AbortSignal;
@@ -87,6 +87,9 @@ export function createCloudPiAgent(options: CloudPiOptions): CloudPiAgent {
     async run(input) {
       if (input.signal.aborted) return { type: "cancelled" };
       if (!options.model.provider || !options.model.id) throw new CloudModelUnavailableError();
+      const transport = options.transport;
+      const hooks = input.hooks;
+      if (!transport && !hooks) throw new Error("MODEL_USAGE_HOOKS_REQUIRED");
       const sdk = await import("@earendil-works/pi-coding-agent");
       const agentDir = join(input.cwd, ".pi");
       const runtime = await sdk.ModelRuntime.create({
@@ -156,62 +159,68 @@ export function createCloudPiAgent(options: CloudPiOptions): CloudPiAgent {
       });
       const stream = session.agent.streamFunction;
       const settlements: Promise<void>[] = [];
-      session.agent.streamFunction = async (requestModel, context, requestOptions) => {
-        input.signal.throwIfAborted();
-        const callId = crypto.randomUUID();
-        const maxTokens = Math.min(input.maxOutputTokens, requestModel.maxTokens);
-        if (options.transport) {
+      if (transport) {
+        session.agent.streamFunction = async (requestModel, context) => {
+          input.signal.throwIfAborted();
+          const callId = crypto.randomUUID();
+          const maxTokens = Math.min(input.maxOutputTokens, requestModel.maxTokens);
           return lazyStream(requestModel, async () => {
-            const events = await options.transport!(
+            const events = await transport(
               { callId, context, maxOutputTokens: maxTokens },
               input.signal,
             );
             return events as AsyncIterable<AssistantMessageEvent>;
           });
-        }
-        const pricing = requestModel.cost
-          ? {
-              inputPerMillion: requestModel.cost.input,
-              outputPerMillion: requestModel.cost.output,
-              cacheReadPerMillion: requestModel.cost.cacheRead,
-              cacheWritePerMillion: requestModel.cost.cacheWrite,
-            }
-          : null;
-        await input.hooks.reserve({
-          callId,
-          provider: requestModel.provider,
-          model: requestModel.id,
-          maxTokens,
-          pricing,
-        });
-        let started = false;
-        try {
+        };
+      } else if (hooks) {
+        session.agent.streamFunction = async (requestModel, context, requestOptions) => {
           input.signal.throwIfAborted();
-          await input.hooks.start(callId);
-          started = true;
-          const result = await stream(requestModel, context, {
-            ...requestOptions,
+          const callId = crypto.randomUUID();
+          const maxTokens = Math.min(input.maxOutputTokens, requestModel.maxTokens);
+          const pricing = requestModel.cost
+            ? {
+                inputPerMillion: requestModel.cost.input,
+                outputPerMillion: requestModel.cost.output,
+                cacheReadPerMillion: requestModel.cost.cacheRead,
+                cacheWritePerMillion: requestModel.cost.cacheWrite,
+              }
+            : null;
+          await hooks.reserve({
+            callId,
+            provider: requestModel.provider,
+            model: requestModel.id,
             maxTokens,
-            maxRetries: 0,
+            pricing,
           });
-          const settled = result.result().then(
-            (message) =>
-              input.hooks.settle({
-                callId,
-                usage: normalizeModelUsage(message.usage),
-                started: true,
-              }),
-            () => input.hooks.settle({ callId, usage: normalizeModelUsage(null), started: true }),
-          );
-          settlements.push(settled);
-          // Register rejection immediately; the host still awaits and surfaces it below.
-          void settled.catch(() => session.abort());
-          return result;
-        } catch (error) {
-          await input.hooks.settle({ callId, usage: normalizeModelUsage(null), started });
-          throw error;
-        }
-      };
+          let started = false;
+          try {
+            input.signal.throwIfAborted();
+            await hooks.start(callId);
+            started = true;
+            const result = await stream(requestModel, context, {
+              ...requestOptions,
+              maxTokens,
+              maxRetries: 0,
+            });
+            const settled = result.result().then(
+              (message) =>
+                hooks.settle({
+                  callId,
+                  usage: normalizeModelUsage(message.usage),
+                  started: true,
+                }),
+              () => hooks.settle({ callId, usage: normalizeModelUsage(null), started: true }),
+            );
+            settlements.push(settled);
+            // Register rejection immediately; the host still awaits and surfaces it below.
+            void settled.catch(() => session.abort());
+            return result;
+          } catch (error) {
+            await hooks.settle({ callId, usage: normalizeModelUsage(null), started });
+            throw error;
+          }
+        };
+      }
       let assistant: AssistantResult | undefined;
       let eventFailure: unknown;
       let delivery = Promise.resolve();

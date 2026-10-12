@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { CloudApplication } from "@raypx/application";
 import { isCloudTerminal, type CloudRun, type CloudLimits, type ObjectStorage } from "@raypx/core";
-import type { CloudPiAgent, AiRunEvent } from "@raypx/ai";
+import type { CloudPiAgent, AiRunEvent, ModelCallHooks } from "@raypx/ai";
 import type { Mailer } from "@raypx/mail/types";
 import { createTrustedTools, type ToolContext } from "./tools/index.js";
 import type { RendererOptions } from "./tools/render.js";
@@ -57,34 +57,26 @@ export function createCloudDispatcher(options: {
   };
 }
 
-export interface CloudExecutorOptions {
-  app: Pick<
-    CloudApplication,
-    | "claim"
-    | "heartbeat"
-    | "getConversation"
-    | "workerControl"
-    | "workerAssets"
-    | "acknowledgeCommand"
-    | "startExecution"
-    | "appendEvent"
-    | "createWorkerAsset"
-    | "completeWorkerAsset"
-    | "reserveUsage"
-    | "startUsage"
-    | "settleUsage"
-    | "finishExecution"
-    | "finish"
-    | "finishWithRevision"
-    | "interrupt"
-  >;
+export type CloudExecutionOperations = Pick<
+  CloudApplication,
+  | "workerControl"
+  | "workerAssets"
+  | "acknowledgeCommand"
+  | "startExecution"
+  | "appendEvent"
+  | "createWorkerAsset"
+  | "completeWorkerAsset"
+  | "finishExecution"
+  | "finish"
+  | "finishWithRevision"
+  | "interrupt"
+>;
+
+interface CloudExecutorSharedOptions {
   agent: CloudPiAgent | null;
   agentForExecution?: (executionId: string) => CloudPiAgent;
-  claimed?: { run: CloudRun; epoch: number };
-  history?: string;
-  parentOwnsLease?: boolean;
   research?: import("./tools/index.js").ToolHost["research"];
-  storage: ObjectStorage | null;
+  storage: Pick<ObjectStorage, "put" | "head" | "read"> | null;
   ownerId?: string;
   limits: CloudLimits;
   searchApiKey?: string;
@@ -95,6 +87,31 @@ export interface CloudExecutorOptions {
   onError?: (error: unknown, runId: string) => void;
   onActivity?: (activity: CloudActivity) => void;
 }
+
+export type CloudExecutorOptions = CloudExecutorSharedOptions &
+  (
+    | {
+        parentOwnsLease: true;
+        app: CloudExecutionOperations;
+        claimed: { run: CloudRun; epoch: number };
+        history: string;
+      }
+    | {
+        parentOwnsLease?: false;
+        app: CloudExecutionOperations &
+          Pick<
+            CloudApplication,
+            | "claim"
+            | "heartbeat"
+            | "getConversation"
+            | "reserveUsage"
+            | "startUsage"
+            | "settleUsage"
+          >;
+        claimed?: { run: CloudRun; epoch: number };
+        history?: string;
+      }
+  );
 
 export interface CloudActivity {
   event:
@@ -116,7 +133,9 @@ export function createCloudExecutor(
 ): (runId: string, hostSignal?: AbortSignal) => Promise<void> {
   const ownerId = options.ownerId ?? CLOUD_WORKER_OWNER;
   return async (runId, hostSignal) => {
-    const claimed = options.claimed ?? (await options.app.claim({ runId, ownerId }));
+    const claimed = options.parentOwnsLease
+      ? options.claimed
+      : (options.claimed ?? (await options.app.claim({ runId, ownerId })));
     if (!claimed) return;
     const runStartedAt = Date.now();
     options.onActivity?.({ event: "run.started", runId });
@@ -192,7 +211,7 @@ export function createCloudExecutor(
         generatedAssetIds: new Set(),
       };
       const conversation =
-        options.history !== undefined
+        options.parentOwnsLease || options.history !== undefined
           ? null
           : await options.app.getConversation({
               actorId: claimed.run.requestedByUserId,
@@ -304,6 +323,43 @@ export function createCloudExecutor(
           if (event.type === "message_completed") messageId = crypto.randomUUID();
         };
         try {
+          const hooks: ModelCallHooks | undefined = options.parentOwnsLease
+            ? undefined
+            : {
+                reserve: async (input) => {
+                  await options.app.reserveUsage({
+                    ...fence,
+                    executionId: execution.id,
+                    callId: input.callId,
+                    provider: input.provider,
+                    model: input.model,
+                    reservedTokens: input.maxTokens,
+                    pricing: input.pricing,
+                  });
+                },
+                start: async (callId) => {
+                  await options.app.startUsage({ ...fence, callId });
+                },
+                settle: async (input) => {
+                  await options.app.settleUsage({
+                    ...fence,
+                    callId: input.callId,
+                    started: input.started,
+                    ...(input.usage.inputTokens === null
+                      ? {}
+                      : { inputTokens: input.usage.inputTokens }),
+                    ...(input.usage.outputTokens === null
+                      ? {}
+                      : { outputTokens: input.usage.outputTokens }),
+                    ...(input.usage.cacheReadTokens === null
+                      ? {}
+                      : { cacheReadTokens: input.usage.cacheReadTokens }),
+                    ...(input.usage.cacheWriteTokens === null
+                      ? {}
+                      : { cacheWriteTokens: input.usage.cacheWriteTokens }),
+                  });
+                },
+              };
           const result = await (options.agentForExecution?.(execution.id) ?? options.agent!).run({
             cwd: temporary!,
             prompt: `${parentId ? "" : history ? `Previous conversation context:\n${history}\n\n` : ""}${prompt}\n\nAuthorized files: ${JSON.stringify(available)}`,
@@ -319,41 +375,7 @@ export function createCloudExecutor(
                   },
                 }
               : {}),
-            hooks: {
-              reserve: async (input) => {
-                await options.app.reserveUsage({
-                  ...fence,
-                  executionId: execution.id,
-                  callId: input.callId,
-                  provider: input.provider,
-                  model: input.model,
-                  reservedTokens: input.maxTokens,
-                  pricing: input.pricing,
-                });
-              },
-              start: async (callId) => {
-                await options.app.startUsage({ ...fence, callId });
-              },
-              settle: async (input) => {
-                await options.app.settleUsage({
-                  ...fence,
-                  callId: input.callId,
-                  started: input.started,
-                  ...(input.usage.inputTokens === null
-                    ? {}
-                    : { inputTokens: input.usage.inputTokens }),
-                  ...(input.usage.outputTokens === null
-                    ? {}
-                    : { outputTokens: input.usage.outputTokens }),
-                  ...(input.usage.cacheReadTokens === null
-                    ? {}
-                    : { cacheReadTokens: input.usage.cacheReadTokens }),
-                  ...(input.usage.cacheWriteTokens === null
-                    ? {}
-                    : { cacheWriteTokens: input.usage.cacheWriteTokens }),
-                });
-              },
-            },
+            ...(hooks ? { hooks } : {}),
           });
           if (result.type !== "completed")
             throw new Error(

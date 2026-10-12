@@ -18,6 +18,10 @@ transported or stored.
   fallbacks, read-only settings ports, and derived public Auth capabilities.
 - Own canonical cloud scopes, Conversations, Tasks, Runs, executions, artifact
   revisions, usage intents, notification preferences and transactional repository ports.
+- Own the fixed `cloudToolNames` vocabulary shared by API authorization and
+  Worker tool registration; mode and child execution select subsets.
+- Account usage totals are a transaction query: monthly calls/tokens/cost use an
+  inclusive start and exclusive end; stored bytes and active Runs span all time.
 - TaskRound freezes its goal, attachments and call/duration budgets. Task points
   to the current round and goal version; Runs and Revisions retain their round.
   Execution grants contain only token hashes and bind actions to a Run owner/epoch.

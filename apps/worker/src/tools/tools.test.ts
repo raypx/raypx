@@ -1,11 +1,70 @@
 import { describe, expect, it } from "vite-plus/test";
+import { createCloudApplication } from "@raypx/application";
+import { cloudToolNames } from "@raypx/core";
+import { InMemoryCloudRepository } from "@raypx/db";
 import { computeTable, parseCsv, validateXlsxArchive } from "./files.js";
 import { isPublicAddress, validateSourceUrl } from "./network.js";
 import { literalCell, renderTable } from "./render.js";
 import ExcelJS from "exceljs";
 import { validateCitations } from "./citations.js";
+import { createTrustedTools, type ToolHost } from "./index.js";
 
 describe("trusted data and network tools", () => {
+  it("keeps the registry aligned with authorized names and limits modes and children", async () => {
+    const app = createCloudApplication({
+      repository: new InMemoryCloudRepository({
+        users: [{ id: "owner", email: "owner@example.com" }],
+      }),
+    });
+    const conversation = await app.createConversation({
+      actorId: "owner",
+      title: "Tool registry",
+      idempotencyKey: "conversation",
+    });
+    const { run } = await app.sendTurn({
+      actorId: "owner",
+      conversationId: conversation.id,
+      prompt: "Research and produce deliverables",
+      mode: "computer",
+      idempotencyKey: "turn",
+    });
+    const host: ToolHost = {
+      app,
+      storage: null,
+      run,
+      ownerId: "owner",
+      epoch: run.epoch,
+      executionId: "registry",
+      context: {
+        tables: new Map(),
+        sources: new Map(),
+        assets: new Map(),
+        generatedAssetIds: new Set(),
+      },
+      renderer: { directory: "/unused" },
+    };
+    const computer = createTrustedTools({ ...host, delegate: async () => [] }).map(
+      (tool) => tool.name,
+    );
+    expect([...computer].sort()).toEqual([...cloudToolNames].sort());
+    expect(new Set(computer).size).toBe(computer.length);
+
+    const child = createTrustedTools(host).map((tool) => tool.name);
+    expect(child).not.toContain("delegate");
+    expect([...child].sort()).toEqual(cloudToolNames.filter((name) => name !== "delegate").sort());
+
+    const searchHost: ToolHost = { ...host, run: { ...run, mode: "search" } };
+    const search = createTrustedTools({ ...searchHost, delegate: async () => [] }).map(
+      (tool) => tool.name,
+    );
+    expect(search).toEqual(["search", "read_source", "extract_file", "compute_table", "delegate"]);
+    expect(search.every((name) => cloudToolNames.includes(name))).toBe(true);
+
+    const searchChild = createTrustedTools(searchHost).map((tool) => tool.name);
+    expect(searchChild).toEqual(["search", "read_source", "extract_file", "compute_table"]);
+    expect(searchChild).not.toContain("delegate");
+  });
+
   it("requires searched evidence and rejects invented citations including reference links", () => {
     const sources = [{ url: "https://example.com/research" }];
     expect(() =>

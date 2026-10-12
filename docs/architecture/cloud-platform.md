@@ -28,10 +28,28 @@ notifications and immutable artifact revisions. Object bytes belong to Storage.
 API and Worker inject storage credentials; renderer code imports neither DB nor
 Storage. Run events and model intents are durable, owner-fenced and idempotent.
 
+Local filesystem objects stage bytes and metadata in one directory, then publish
+both with an atomic rename on the same filesystem. Removal detaches the entire
+object directory before deletion, so an overlapping upload cannot leave metadata
+without bytes. Key-hashed paths keep prefix-related object keys independent.
+Concurrent writers must agree on immutable bytes and media type. Existing flat
+primary/legacy paths remain readable, and a matching retry can repair an old
+unpublished write or metadata-only record without changing its declared content.
+
 Each Worker host has a distinct identity. Run leases last 30 seconds and renew
 every ten seconds. Recovery interrupts expired owners only. Runner processes
 receive a minimal environment without DB, S3 or provider credentials. This is
 fault isolation; arbitrary code still requires a security sandbox.
+
+The private Gateway validates bootstrap, object, research and each execution
+response against its contract. Runner exposes only execution operations; the
+parent host owns claiming, renewal, history loading and usage hooks. Identity and
+fencing come from the durable grant. Dispatch forbids identity fields and replaces
+any supplied fence fields with that trusted context.
+The API injects Core's canonical tool names into the model Gateway; Worker tests
+verify its trusted registry matches that directory. SDK context and stream
+events remain opaque, while a direct provider run requires usage hooks before
+creating its session. Gateway transport uses API-owned metering.
 
 Query owns ordinary Task/Round/Revision, usage, notification and file metadata.
 Client Sessions own active Run/Conversation projections. SSR creates a QueryClient
@@ -63,6 +81,13 @@ main and child executions share their round's budget. Calls charge the resource
 owner account, including project work with explicit spending permission. Defaults
 are 100 calls per UTC month, two concurrent Runs and 100MiB storage. Dispatch is
 atomically claimed once per intent. Late reconciliation changes the ledger only.
+Application supplies the UTC `[monthStart, nextMonthStart)` window to the Core
+transaction usage query. PostgreSQL aggregates through the current transaction;
+memory returns the same totals. Released calls do not consume the call count,
+but any recorded tokens and cost still contribute. Stored bytes include all
+asset metadata until removal, and active Runs span all months. Fenced settlement
+and trusted provider reconciliation share pure token/cost accounting while
+keeping their authorization and event policies separate.
 Redis applies short-window request limits; PostgreSQL owns quotas and execution
 concurrency. Private S3 upload intents are bounded and checksum-verified.
 Auth sessions, revocation, verification and policy read PostgreSQL directly.

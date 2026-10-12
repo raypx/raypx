@@ -25,6 +25,10 @@ import { captureProductEvent } from "../../lib/product-telemetry";
 import { InputAttachments } from "../files/input-attachments";
 import { uploadInputFile } from "../files/upload";
 import { CloudRunView } from "../runs/cloud-run-view";
+import {
+  useConversationSubmission,
+  type ConversationTaskAction,
+} from "./use-conversation-submission";
 
 function subscribeWide(listener: () => void) {
   const media = window.matchMedia("(min-width: 1024px)");
@@ -51,7 +55,7 @@ export function ConversationWorkspace({
     refetchInterval: 15_000,
   });
   const [projectMessages] = useState(() => createConversationProjection());
-  const [taskAction, setTaskAction] = useState<"newTask" | "newRound" | "continueRound">("newTask");
+  const [taskAction, setTaskAction] = useState<ConversationTaskAction>("newTask");
   const api = useMemo(() => createWebApiClient(), []);
   const [session] = useState(() =>
     createConversationSession({
@@ -78,13 +82,6 @@ export function ConversationWorkspace({
   const [uploadFailed, setUploadFailed] = useState(false);
   const lifetime = useRef<AbortController | null>(null);
   const uploadIntents = useRef(new Map<string, string>());
-  const sendIntent = useRef<{
-    fingerprint: string;
-    key: string;
-    roundId?: string;
-    goalVersion?: number;
-    expectedGoalVersion?: number;
-  } | null>(null);
   const latest = [...data.runs].sort((a, b) => b.createdAt.valueOf() - a.createdAt.valueOf())[0];
   const selected = data.runs.find((run) => run.id === selection) ?? latest;
   const taskId = selected?.taskId;
@@ -118,87 +115,29 @@ export function ConversationWorkspace({
   const refresh = useCallback(() => {
     session.refresh();
   }, [session]);
-  async function send(prompt: string) {
-    const signal = lifetime.current?.signal;
-    if (!signal || signal.aborted) return;
-    const fingerprint = JSON.stringify({
-      prompt,
-      mode,
-      taskId: mode === "computer" && taskAction !== "newTask" ? taskId : null,
-      taskAction,
-      goalVersion: taskAction === "continueRound" ? selectedTask?.goalVersion : null,
-      roundId: taskAction === "continueRound" ? selectedTask?.currentRoundId : null,
-      attachments: attachments.map((asset) => asset.id),
-    });
-    if (sendIntent.current?.fingerprint !== fingerprint)
-      sendIntent.current = {
-        fingerprint,
-        key: crypto.randomUUID(),
-        ...(selectedTask && taskAction === "newRound"
-          ? { expectedGoalVersion: selectedTask.goalVersion }
-          : {}),
-      };
-    const intent = sendIntent.current;
-    const input = {
-      conversationId: data.conversation.id,
-      prompt,
-      mode,
-      attachmentIds: attachments.map((asset) => asset.id),
-      idempotencyKey: intent.key,
-    };
-    let result;
-    if (mode === "computer" && taskAction !== "newTask") {
-      if (!selectedTask || (taskAction === "continueRound" ? !canContinue : !canStartRound))
-        throw { code: "ROUND_CONTEXT_CHANGED" };
-      if (taskAction === "continueRound")
-        result = await api.cloud.tasks.continueRound(
-          {
-            ...input,
-            taskId: selectedTask.id,
-            roundId: selectedTask.currentRoundId,
-            goalVersion: selectedTask.goalVersion,
-          },
-          { signal },
-        );
-      else {
-        if (!intent.roundId || !intent.goalVersion) {
-          const next = await api.cloud.tasks.startRound(
-            {
-              taskId: selectedTask.id,
-              expectedGoalVersion: intent.expectedGoalVersion ?? selectedTask.goalVersion,
-              goal: prompt,
-              attachmentIds: input.attachmentIds,
-              idempotencyKey: intent.key,
-            },
-            { signal },
-          );
-          if (signal.aborted) return;
-          intent.roundId = next.round.id;
-          intent.goalVersion = next.round.goalVersion;
-        }
-        result = await api.cloud.conversations.sendTurn(
-          {
-            ...input,
-            taskId: selectedTask.id,
-            roundId: intent.roundId,
-            goalVersion: intent.goalVersion,
-          },
-          { signal },
-        );
-      }
-    } else result = await api.cloud.conversations.sendTurn(input, { signal });
-    if (signal.aborted) return;
-    sendIntent.current = null;
-    setDraft("");
-    setAttachments([]);
-    setSelection(result.run.id);
-    resources.markCreated(identity.accountId, result.run.id);
-    setTaskAction(result.task ? "continueRound" : "newTask");
-    void invalidateRunFacts(queryClient, identity, result.run.taskId);
-    captureProductEvent("turn_sent", { mode });
-    if (result.task && taskAction === "newTask") captureProductEvent("task_created", { mode });
-    session.refresh();
-  }
+  const send = useConversationSubmission({
+    api,
+    conversationId: data.conversation.id,
+    mode,
+    taskAction,
+    taskId,
+    selectedTask,
+    canContinue,
+    canStartRound,
+    attachmentIds: attachments.map((asset) => asset.id),
+    lifetime,
+    onSubmitted: (result) => {
+      setDraft("");
+      setAttachments([]);
+      setSelection(result.run.id);
+      resources.markCreated(identity.accountId, result.run.id);
+      setTaskAction(result.task ? "continueRound" : "newTask");
+      void invalidateRunFacts(queryClient, identity, result.run.taskId);
+      captureProductEvent("turn_sent", { mode });
+      if (result.task && taskAction === "newTask") captureProductEvent("task_created", { mode });
+      session.refresh();
+    },
+  });
   async function upload(file: File) {
     const signal = lifetime.current?.signal;
     if (!signal || signal.aborted || uploading) return;
@@ -268,9 +207,7 @@ export function ConversationWorkspace({
             id="task-action"
             className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
             value={taskAction}
-            onChange={(event) =>
-              setTaskAction(event.target.value as "newTask" | "newRound" | "continueRound")
-            }
+            onChange={(event) => setTaskAction(event.target.value as ConversationTaskAction)}
           >
             <option value="newTask">{t("newTask")}</option>
             <option value="continueRound" disabled={!canContinue}>

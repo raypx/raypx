@@ -22,17 +22,17 @@ alongside applications. Turbo builds shared before consumer checks and tests, in
 `rpx tasks` filters. Direct leaf commands bypass that graph: after editing shared,
 run `bun run --cwd packages/shared build` before a workspace's direct `check` or `test`.
 
-| Stage          | Command                                                                       | Purpose                                       |
-| -------------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
-| i18n / policy  | in-process                                                                    | cheap source and structural checks            |
-| format         | `rpx tasks format:leaf`                                                       | one repository-wide format check              |
-| lint           | `rpx tasks lint:leaf`                                                         | one type-aware lint pass                      |
-| check          | `rpx tasks check`                                                             | per-workspace typechecks; builds shared first |
-| unit/component | `rpx tasks test:unit test:component --filter '!@raypx/e2e'`                   | disjoint deterministic cached layers          |
-| integration    | `rpx tasks test:integration --filter '!@raypx/e2e'`                           | uncached API/adapter checks                   |
-| build          | `rpx tasks build`                                                             | graph-owned checks and output restoration     |
-| worker runtime | `bun --no-env-file --no-install apps/worker/.output/server/index.mjs --check` | uncached compiled imports and resource probe  |
-| runtime        | Bun probes of relocated Nitro artifacts                                       | uncached Web/API HTTP smoke checks            |
+| Stage          | Command                                                     | Purpose                                       |
+| -------------- | ----------------------------------------------------------- | --------------------------------------------- |
+| i18n / policy  | in-process                                                  | cheap source and structural checks            |
+| format         | `rpx tasks format:leaf`                                     | one repository-wide format check              |
+| lint           | `rpx tasks lint:leaf`                                       | one type-aware lint pass                      |
+| check          | `rpx tasks check`                                           | per-workspace typechecks; builds shared first |
+| unit/component | `rpx tasks test:unit test:component --filter '!@raypx/e2e'` | disjoint deterministic cached layers          |
+| integration    | `rpx tasks test:integration --filter '!@raypx/e2e'`         | uncached API/adapter checks                   |
+| build          | `rpx tasks build`                                           | graph-owned checks and output restoration     |
+| worker runtime | Bun `--check` of the relocated Worker artifact              | uncached compiled imports and resource probe  |
+| runtime        | Bun probes of relocated Nitro artifacts                     | uncached Web/API HTTP smoke checks            |
 
 Nothing else needs to be run in sequence. The remaining scripts narrow a failure
 down: `bun run policy` prints each finding with a `Fix:` line and
@@ -135,9 +135,17 @@ missing production route cannot pass as a healthy server. The probe supplies a
 non-routable database URL and exercises no database query. Probes disable
 automatic env-file loading and package installation so the artifact must run
 with its supplied environment and bundled/traced dependencies.
+HTTP and Worker probes share the complete artifact staging operation. Internal
+relative links stay intact; absolute, broken or escaping links fail verification
+and remove the temporary output. Each HTTP process has a 30-second overall
+deadline and Worker has 60 seconds, including module initialization. The parent
+sends SIGTERM on timeout and SIGKILL after one second if the child remains alive.
+It waits for child close before deleting staged files. Build and development
+commands have no default deadline.
 
-The Worker artifact check runs on Bun 1.4.0 and needs no database or model
-credentials. It verifies the isolated Runner, Pi loading, actual PDF/XLSX output
+The real Worker artifact check also relocates the entire `.output` outside the
+checkout and runs on Bun 1.4.0 without database or model credentials. It verifies
+the isolated Runner, Pi loading, actual PDF/XLSX output
 and Chinese task-notification mail rendering. Build integration fixtures verify
 Nitro's two executable entries and package assets in a relocated artifact that
 can run without its source workspace. Vite builder-watch coverage verifies that

@@ -1,49 +1,87 @@
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
-import { executionGatewayContract, executionOperations } from "@raypx/contracts/execution-gateway";
-import type { CloudApplication } from "@raypx/application";
-import type { ObjectMetadata, ObjectStorage } from "@raypx/core";
+import {
+  executionGatewayContract,
+  executionOutputSchemas,
+  executionObjectOutputSchemas,
+  executionResearchOutputSchemas,
+} from "@raypx/contracts/execution-gateway";
+import type { ObjectStorage } from "@raypx/core";
+import type { CloudExecutionOperations } from "./cloud.js";
 
-export function createExecutionClient(url: string, credential: string) {
+export function createExecutionClient(
+  url: string,
+  credential: string,
+  options: { fetch?: (url: string, init: RequestInit) => Promise<Response> } = {},
+) {
   const client: ContractRouterClient<typeof executionGatewayContract> = createORPCClient(
     new RPCLink({
       url: "/internal/execution",
       origin: new URL(url).origin,
       headers: { authorization: `Bearer ${credential}` },
+      ...options,
     }),
   );
-  const app = Object.fromEntries(
-    executionOperations.map((operation) => [
-      operation,
-      async (payload: Record<string, unknown>) => client.invoke({ operation, payload }),
-    ]),
-  ) as unknown as Pick<CloudApplication, (typeof executionOperations)[number]>;
-  const forbidden = async (): Promise<never> => {
-    throw new Error("Operation belongs to the trusted host.");
+  const app: CloudExecutionOperations = {
+    workerControl: async (payload) =>
+      executionOutputSchemas.workerControl.parse(
+        await client.invoke({ operation: "workerControl", payload }),
+      ),
+    workerAssets: async (payload) =>
+      executionOutputSchemas.workerAssets.parse(
+        await client.invoke({ operation: "workerAssets", payload }),
+      ),
+    startExecution: async (payload) =>
+      executionOutputSchemas.startExecution.parse(
+        await client.invoke({ operation: "startExecution", payload }),
+      ),
+    appendEvent: async (payload) =>
+      executionOutputSchemas.appendEvent.parse(
+        await client.invoke({ operation: "appendEvent", payload }),
+      ),
+    createWorkerAsset: async (payload) =>
+      executionOutputSchemas.createWorkerAsset.parse(
+        await client.invoke({ operation: "createWorkerAsset", payload }),
+      ),
+    completeWorkerAsset: async (payload) =>
+      executionOutputSchemas.completeWorkerAsset.parse(
+        await client.invoke({ operation: "completeWorkerAsset", payload }),
+      ),
+    finishExecution: async (payload) =>
+      executionOutputSchemas.finishExecution.parse(
+        await client.invoke({ operation: "finishExecution", payload }),
+      ),
+    finish: async (payload) =>
+      executionOutputSchemas.finish.parse(await client.invoke({ operation: "finish", payload })),
+    finishWithRevision: async (payload) =>
+      executionOutputSchemas.finishWithRevision.parse(
+        await client.invoke({ operation: "finishWithRevision", payload }),
+      ),
+    interrupt: async (payload) =>
+      executionOutputSchemas.interrupt.parse(
+        await client.invoke({ operation: "interrupt", payload }),
+      ),
+    acknowledgeCommand: async (payload) =>
+      executionOutputSchemas.acknowledgeCommand.parse(
+        await client.invoke({ operation: "acknowledgeCommand", payload }),
+      ),
   };
-  const executionApp = {
-    ...app,
-    claim: forbidden,
-    heartbeat: forbidden,
-    getConversation: forbidden,
-    reserveUsage: forbidden,
-    startUsage: forbidden,
-    settleUsage: forbidden,
-  };
-  const storage: ObjectStorage = {
+  const storage: Pick<ObjectStorage, "put" | "head" | "read"> = {
     put: async (input) =>
-      (await client.object({
-        operation: "put",
-        key: input.key,
-        bytes: Buffer.from(input.body).toString("base64"),
-      })) as ObjectMetadata,
-    head: async (key) => (await client.object({ operation: "head", key })) as ObjectMetadata | null,
+      executionObjectOutputSchemas.put.parse(
+        await client.object({
+          operation: "put",
+          key: input.key,
+          bytes: Buffer.from(input.body).toString("base64"),
+        }),
+      ),
+    head: async (key) =>
+      executionObjectOutputSchemas.head.parse(await client.object({ operation: "head", key })),
     read: async (key) => {
-      const result = (await client.object({ operation: "read", key })) as {
-        metadata: ObjectMetadata;
-        bytes: string;
-      } | null;
+      const result = executionObjectOutputSchemas.read.parse(
+        await client.object({ operation: "read", key }),
+      );
       return result
         ? {
             metadata: result.metadata,
@@ -53,27 +91,20 @@ export function createExecutionClient(url: string, credential: string) {
           }
         : null;
     },
-    remove: forbidden,
-    signUpload: forbidden,
-    signDownload: forbidden,
   };
   return {
     client,
-    app: executionApp,
+    app,
     storage,
     research: {
       search: async (query: string, signal?: AbortSignal) =>
-        (await client.research({ type: "search", query }, ...(signal ? [{ signal }] : []))) as {
-          url: string;
-          title: string;
-          excerpt: string;
-        }[],
+        executionResearchOutputSchemas.search.parse(
+          await client.research({ type: "search", query }, ...(signal ? [{ signal }] : [])),
+        ),
       read: async (url: string, signal?: AbortSignal) =>
-        (await client.research({ type: "read", url }, ...(signal ? [{ signal }] : []))) as {
-          url: string;
-          title: string;
-          text: string;
-        },
+        executionResearchOutputSchemas.read.parse(
+          await client.research({ type: "read", url }, ...(signal ? [{ signal }] : [])),
+        ),
     },
   };
 }

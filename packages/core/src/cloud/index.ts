@@ -19,6 +19,17 @@ export type CloudRunStatus =
   | "failed"
   | "cancelled";
 export type CloudMode = "search" | "computer";
+export const cloudToolNames = [
+  "search",
+  "read_source",
+  "extract_file",
+  "compute_table",
+  "render_report",
+  "render_table",
+  "render_deck",
+  "delegate",
+] as const;
+export type CloudToolName = (typeof cloudToolNames)[number];
 export interface CloudResource {
   id: string;
   scope: ResourceScope;
@@ -298,6 +309,12 @@ export interface CloudQuery {
 }
 export interface CloudTransaction {
   lock(keys: readonly string[]): Promise<void>;
+  /** Calls use the UTC [from, until) window; stored bytes and active Runs span all time. */
+  accountUsage(input: {
+    ownerAccountId: string;
+    from: Date;
+    until: Date;
+  }): Promise<CloudUsageTotals>;
   activeTaskRun(taskId: string): Promise<CloudRun | null>;
   readyRuns(limit: number): Promise<CloudRun[]>;
   expiredRuns(now: Date, limit: number): Promise<CloudRun[]>;
@@ -329,7 +346,7 @@ export interface CloudRepository {
     operation: (tx: CloudTransaction) => Promise<T>,
   ): Promise<T>;
 }
-export interface CloudUsageSummary {
+export interface CloudUsageTotals {
   calls: number;
   reservedCalls: number;
   unknownCalls: number;
@@ -338,6 +355,8 @@ export interface CloudUsageSummary {
   estimatedCost: number;
   storageBytes: number;
   activeRuns: number;
+}
+export interface CloudUsageSummary extends CloudUsageTotals {
   limits: CloudLimits;
 }
 export interface CloudLimits {

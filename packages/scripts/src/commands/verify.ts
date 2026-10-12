@@ -5,6 +5,7 @@ interface VerifyDependencies extends RepositoryProcessDependencies {
   verifyI18n: () => Promise<void>;
   verifyPolicy: () => Promise<void>;
   verifyRuntimes: (options: { captureOutput: boolean }) => Promise<void>;
+  verifyWorkerRuntime: (options: { captureOutput: boolean }) => Promise<void>;
 }
 
 export interface VerifyOptions {
@@ -25,16 +26,6 @@ const processGates = [
     command: ["rpx", "tasks", "test:integration", "--filter", "!@raypx/e2e"],
   },
   { task: "build", command: ["rpx", "tasks", "build"] },
-  {
-    task: "worker:runtime",
-    command: [
-      "bun",
-      "--no-env-file",
-      "--no-install",
-      "apps/worker/.output/server/index.mjs",
-      "--check",
-    ],
-  },
 ] satisfies Array<{ task: string; command: string[]; env?: NodeJS.ProcessEnv }>;
 
 export async function runVerify(
@@ -57,6 +48,8 @@ export async function runVerify(
       env: dependencies.processEnv,
     });
   }
+  dependencies.log("info", "verify.task.started", { task: "worker:runtime" });
+  await dependencies.verifyWorkerRuntime({ captureOutput });
   dependencies.log("info", "verify.task.started", { task: "runtime" });
   await dependencies.verifyRuntimes({ captureOutput });
   dependencies.log("info", "verify.completed");
@@ -78,6 +71,7 @@ export const verifyCommand = contextualCommand("verify", "process", {
   async run(context, { args }) {
     const [
       { verifyNitroRuntimes },
+      { verifyWorkerRuntime },
       { createI18nDependencies, runI18nCheck },
       i18nReport,
       policyRuntime,
@@ -85,6 +79,7 @@ export const verifyCommand = contextualCommand("verify", "process", {
       policyReport,
     ] = await Promise.all([
       import("../verify/nitro.js"),
+      import("../verify/worker.js"),
       import("../i18n/runtime.js"),
       import("../i18n/report.js"),
       import("../policy/runtime.js"),
@@ -102,6 +97,7 @@ export const verifyCommand = contextualCommand("verify", "process", {
           }
         },
         verifyRuntimes: (options) => verifyNitroRuntimes(dependencies, options),
+        verifyWorkerRuntime: (options) => verifyWorkerRuntime(dependencies, options),
         async verifyPolicy() {
           const report = await policyChecks.runPolicy(policyRuntime.createPolicyDependencies());
           if (report.errors > 0) {

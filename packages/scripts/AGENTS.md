@@ -25,7 +25,7 @@ src/policy/         command, orchestration, checks/<rule-domain>, manifest rules
                     fixes, per-convention pure modules, report
 src/i18n/          catalog comparison, Oxc source inspection, rules and reporting
 src/test-fixtures.ts shared isolated repository and injected dependency fixtures
-src/verify/         isolated Nitro runtime verification
+src/verify/         shared artifact staging, isolated HTTP and Worker verification
 ```
 
 Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] [Playwright flags/files]`, `env -- <command>`, `doctor`, `deps check|update|dedupe|audit`, `skills update`, `clean [--dependencies] [--bun-cache]`, `db migrate|clean|push|studio`,
@@ -102,13 +102,17 @@ Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] 
   CLI binaries through `bun --bun` rather than their Node shebangs. Cache keys
   identify Bun's actual version/revision, platform, architecture and libc; prior
   Node runtime artifacts never share those keys.
-- Nitro runtime verification requires the `bun` preset and stages the entire
-  output independently before running production HTTP/auth probes with Bun.
+- Nitro runtime verification requires the `bun` preset. HTTP and Worker probes
+  share complete artifact staging outside the checkout, preserving internal
+  relative links and rejecting links that could resolve outside the artifact.
+- Runtime probes alone request a parent-process deadline. Timeout sends SIGTERM,
+  then SIGKILL if needed; staging cleanup waits for child close. Build and dev
+  commands have no default deadline.
 - Doctor probes only the local Electrobun bootstrap/SDK paths; it never downloads
   the native toolchain. Clean removes Desktop build/artifacts/project SDK caches,
   preserving native profiles and user data.
-- `verify` also starts the built Worker with `--check`; this probe needs no
-  database or external providers and validates packaged imports and exporters.
+- `verify` starts the relocated Worker with `--check`; this probe needs no
+  database or external providers and validates the Runner, imports and exporters.
 
 ## Verification
 

@@ -29,7 +29,7 @@ export function tasksCommands({ options, now, id, requireProject }: ProjectConte
       await requireProject(actorId, task.projectId, "project.write", "Task access denied.");
       const updated = await options.tasks.update({
         id: taskId,
-        ...(title !== undefined ? { title: title.trim() } : {}),
+        ...(title !== undefined ? { title: requiredText(title, "Task title") } : {}),
         ...(status !== undefined ? { status } : {}),
         now: now(),
       });

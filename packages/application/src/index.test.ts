@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import {
   createApplicationFixture as createProjectApplication,
   type ProjectOptions,
@@ -175,6 +175,64 @@ describe("V2 project application", () => {
     ).rejects.toMatchObject({ code: "PROJECT_ACCESS_DENIED" });
   });
 
+  it.each(["", " \t\n "])("rejects blank task titles before persistence: %j", async (title) => {
+    const options = projectOptions();
+    const create = vi.fn(options.tasks.create);
+    const update = vi.fn(options.tasks.update);
+    options.tasks.create = create;
+    options.tasks.update = update;
+    options.tasks.getById = async () => task();
+    const app = createProjectApplication(options);
+    for (const operation of [
+      () => app.createTask({ actorId: "user-1", projectId: "project-1", title }),
+      () => app.updateTask({ actorId: "user-1", taskId: "task-1", title }),
+    ])
+      await expect(operation()).rejects.toMatchObject({
+        code: "PROJECT_SCOPE_INVALID",
+        message: "Task title is required.",
+      });
+    expect(create).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("trims task titles and preserves titles for status-only updates", async () => {
+    let current = task();
+    const options = projectOptions({
+      tasks: {
+        getById: async () => current,
+        create: async (input) => (current = task({ title: input.title })),
+        update: async (input) => (current = task({ ...current, ...input })),
+      },
+    });
+    const create = vi.fn(options.tasks.create);
+    const update = vi.fn(options.tasks.update);
+    options.tasks.create = create;
+    options.tasks.update = update;
+    const app = createProjectApplication(options);
+    await expect(
+      app.createTask({ actorId: "user-1", projectId: "project-1", title: "  New task\n" }),
+    ).resolves.toMatchObject({ title: "New task" });
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ title: "New task" }));
+    await expect(
+      app.updateTask({ actorId: "user-1", taskId: "task-1", title: "\tUpdated task  " }),
+    ).resolves.toMatchObject({ title: "Updated task" });
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ title: "Updated task" }));
+    await expect(
+      app.updateTask({ actorId: "user-1", taskId: "task-1", status: "done" }),
+    ).resolves.toMatchObject({ title: "Updated task", status: "done" });
+    expect(update.mock.calls.at(-1)?.[0]).not.toHaveProperty("title");
+  });
+
+  it("returns the authorized project for an explicit capability check", async () => {
+    await expect(
+      application().assertCapability({
+        actorId: "user-1",
+        projectId: "project-1",
+        capability: "project.manage",
+      }),
+    ).resolves.toEqual(project());
+  });
+
   it("manages project members through the project owner capability", async () => {
     let members: ProjectMemberV2[] = [];
     const app = application({
@@ -288,10 +346,16 @@ describe("resource authorization boundary", () => {
         role: "viewer",
         status: "active",
       });
+      const createTask = vi.fn(options.tasks.create);
+      const updateTask = vi.fn(options.tasks.update);
+      options.tasks.create = createTask;
+      options.tasks.update = updateTask;
+      options.tasks.getById = async () => task();
       const app = createProjectApplication(options);
       const input = { actorId: "user-2", projectId: "project-1" };
       for (const operation of [
         () => app.createTask({ ...input, title: "" }),
+        () => app.updateTask({ actorId: input.actorId, taskId: "task-1", title: " \t " }),
         () => app.createAsset({ ...input, name: "" }),
         () => app.createReview({ ...input, title: "", assetVersionId: null }),
         () =>
@@ -303,6 +367,14 @@ describe("resource authorization boundary", () => {
           }),
       ])
         await expect(operation()).rejects.toMatchObject({ code: "PROJECT_ACCESS_DENIED" });
+      expect(createTask).not.toHaveBeenCalled();
+      expect(updateTask).not.toHaveBeenCalled();
+      await expect(
+        app.assertCapability({ ...input, capability: "project.write" }),
+      ).rejects.toMatchObject({
+        code: "PROJECT_ACCESS_DENIED",
+        message: "Project access denied.",
+      });
     },
   );
 

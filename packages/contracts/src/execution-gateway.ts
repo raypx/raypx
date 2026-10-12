@@ -1,5 +1,13 @@
 import { eventIterator, oc } from "@orpc/contract";
 import { z } from "zod";
+import {
+  cloudRunSchema,
+  cloudCommandSchema,
+  cloudAgentExecutionSchema,
+  cloudAssetVersionSchema,
+  cloudArtifactRevisionSchema,
+  cloudRunEventSchema,
+} from "./cloud.js";
 
 /** Private execution protocol. Never compose this tree into the public API. */
 export const executionOperations = [
@@ -99,6 +107,62 @@ export const executionPayloadSchemas = {
     .strict(),
   acknowledgeCommand: z.object({ commandId: id, status: z.enum(["applied", "rejected"]) }).strict(),
 };
+const executionRunSchema = cloudRunSchema
+  .extend({ sourceTurnId: id.optional() })
+  .transform(({ sourceTurnId, ...run }) => ({
+    ...run,
+    ...(sourceTurnId !== undefined ? { sourceTurnId } : {}),
+  }));
+const executionAssetSchema = cloudAssetVersionSchema
+  .extend({ cleanupClaimed: z.boolean().optional() })
+  .transform(({ cleanupClaimed, ...asset }) => ({
+    ...asset,
+    ...(cleanupClaimed !== undefined ? { cleanupClaimed } : {}),
+  }));
+export const executionOutputSchemas = {
+  workerControl: z.object({ run: executionRunSchema, commands: z.array(cloudCommandSchema) }),
+  workerAssets: z.array(executionAssetSchema),
+  startExecution: cloudAgentExecutionSchema.extend({
+    status: z.literal("running"),
+    output: z.null(),
+  }),
+  appendEvent: cloudRunEventSchema,
+  createWorkerAsset: executionAssetSchema,
+  completeWorkerAsset: executionAssetSchema,
+  finishExecution: cloudAgentExecutionSchema,
+  finish: executionRunSchema,
+  finishWithRevision: z.object({ run: executionRunSchema, revision: cloudArtifactRevisionSchema }),
+  interrupt: executionRunSchema,
+  acknowledgeCommand: cloudCommandSchema,
+};
+export const executionBootstrapSchema = z
+  .object({
+    model: z.object({ provider: id, id }).strict().nullable(),
+    history: z.string().max(20_000),
+  })
+  .strict();
+export type ExecutionBootstrapDto = z.infer<typeof executionBootstrapSchema>;
+export const executionObjectMetadataSchema = z.object({
+  key: z.string().min(1).max(1000),
+  byteSize: z.number().int().nonnegative(),
+  contentType: z.string().min(1).max(200),
+  checksumSha256: z.string().regex(/^[a-f0-9]{64}$/),
+});
+export type ExecutionObjectMetadataDto = z.infer<typeof executionObjectMetadataSchema>;
+export const executionObjectOutputSchemas = {
+  put: executionObjectMetadataSchema,
+  head: executionObjectMetadataSchema.nullable(),
+  read: z
+    .object({
+      metadata: executionObjectMetadataSchema,
+      bytes: z.string().max(14_000_000),
+    })
+    .nullable(),
+};
+export const executionResearchOutputSchemas = {
+  search: z.array(z.object({ url: z.url(), title: z.string(), excerpt: z.string() })),
+  read: z.object({ url: z.url(), title: z.string(), text: z.string() }),
+};
 const invoke = oc
   .input(
     z.object({
@@ -106,7 +170,19 @@ const invoke = oc
       payload: z.record(z.string(), z.unknown()),
     }),
   )
-  .output(z.unknown());
+  .output(
+    z.union([
+      executionOutputSchemas.workerControl,
+      executionOutputSchemas.workerAssets,
+      executionOutputSchemas.startExecution,
+      executionOutputSchemas.finishExecution,
+      executionOutputSchemas.appendEvent,
+      executionOutputSchemas.createWorkerAsset,
+      executionOutputSchemas.finish,
+      executionOutputSchemas.finishWithRevision,
+      executionOutputSchemas.acknowledgeCommand,
+    ]),
+  );
 const model = oc
   .input(
     z.object({
@@ -124,7 +200,7 @@ const research = oc
       z.object({ type: z.literal("read"), url: z.url().max(4096) }),
     ]),
   )
-  .output(z.unknown());
+  .output(z.union([executionResearchOutputSchemas.search, executionResearchOutputSchemas.read]));
 const object = oc
   .input(
     z.object({
@@ -133,6 +209,8 @@ const object = oc
       bytes: z.string().max(14_000_000).optional(),
     }),
   )
-  .output(z.unknown());
-const bootstrap = oc.input(z.object({})).output(z.unknown());
+  .output(
+    z.union([executionObjectOutputSchemas.put, executionObjectOutputSchemas.read]).nullable(),
+  );
+const bootstrap = oc.input(z.object({})).output(executionBootstrapSchema);
 export const executionGatewayContract = { bootstrap, invoke, model, research, object };

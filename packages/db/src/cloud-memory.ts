@@ -145,6 +145,34 @@ export function cloudMatches<K extends CloudEntityKind>(
 function txFor(state: State): CloudTransaction {
   return {
     lock: async () => {},
+    accountUsage: async ({ ownerAccountId, from, until }) => {
+      const totals = {
+        calls: 0,
+        reservedCalls: 0,
+        unknownCalls: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCost: 0,
+        storageBytes: 0,
+        activeRuns: 0,
+      };
+      for (const call of state.entities.usage.values()) {
+        if (call.accountId !== ownerAccountId || call.createdAt < from || call.createdAt >= until)
+          continue;
+        if (call.state !== "released") totals.calls++;
+        if (call.state === "reserved") totals.reservedCalls++;
+        if (call.state === "unknown") totals.unknownCalls++;
+        totals.inputTokens += call.inputTokens ?? 0;
+        totals.outputTokens += call.outputTokens ?? 0;
+        totals.estimatedCost += call.estimatedCost ?? 0;
+      }
+      for (const asset of state.entities.assets.values())
+        if (asset.ownerAccountId === ownerAccountId) totals.storageBytes += asset.byteSize;
+      for (const run of state.entities.runs.values())
+        if (run.ownerAccountId === ownerAccountId && !isCloudTerminal(run.status))
+          totals.activeRuns++;
+      return totals;
+    },
     activeTaskRun: async (taskId) =>
       clone(
         [...state.entities.runs.values()].find(
