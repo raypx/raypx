@@ -1,14 +1,7 @@
-# Raypx AI-Assisted Development Guide
+# Voidmix Claude Code Instructions
 
-This file links to the main AI agent guide.
+@AGENTS.md
 
-See [AGENTS.md](AGENTS.md) for the complete development guide including:
-
-- Project status and code placement
-- Development workflows
-- Testing strategy
-- Architecture principles
-- Git workflow
-- Troubleshooting
-
-The AGENTS.md file contains all guidance for AI-assisted development in this project.
+Use `docs/README.md` as the documentation index. The imported repository rules
+are the shared source of truth for both Claude Code and Codex; do not duplicate
+or override them here unless Claude Code requires a tool-specific instruction.

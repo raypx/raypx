@@ -1,519 +1,175 @@
-# Raypx AI-Assisted Development Guide
+# Voidmix Repository Instructions
 
-## Git Commit Guidelines
+## Scope
 
-**Do NOT add Co-Authored-By or attribution lines to commits.**
-All commits should be authored by the repository owner directly.
+These instructions apply to the entire repository. Every workspace also has its
+own `AGENTS.md` whose rules apply only within that subtree and add more specific
+constraints. The nearest file wins; it never contradicts this one.
 
-## Project Status
+## Read first
 
-Raypx is a full-stack foundation using Bun workspaces, Vite+, React, and
-TanStack Start. It provides runtime validation, safe HTTP boundaries, logging,
-metrics, provider lifecycle, explicit SQLite migrations and authentication,
-validated cache helpers, reusable query hooks, and shadcn components.
-Applications activate providers and add their own business rules.
+1. This file.
+2. The `AGENTS.md` of the workspace being changed — it owns that workspace's
+   interface, ownership, constraints, and verification commands.
+3. `docs/README.md`, then the focused architecture or development document for
+   the area being changed.
+4. [Coding agents](docs/development/agents.md) for the read order, default
+   decisions, and verification checklist.
 
-Use Bun 1.4.2 from `.bun-version` and stable Node.js `>=22.22.1 <23.0.0`
-(`devEngines.runtime.version: ^22.22.1`). `.node-version` recommends Node.js
-22.22.1 and fixes the CI version; later stable Node.js 22 releases are supported.
-The broader root `engines.node` range declares tool compatibility, while
-development requires Node.js 22. Bun installs dependencies and runs production;
-Node-compatible Vite+, Vitest, Oxlint, and tsc entrypoints remain part of the
-toolchain. Bun executing TypeScript does not replace strict type checking.
-Authors use `Zack <heyloyep@gmail.com>`.
+Treat implementation and current tests as the final source of truth when a
+document is stale, then update the document in the same change.
 
-## Code Placement
+## Repository shape (dependencies flow downward only)
 
-- `apps/web`: Start routing, SSR, framework adapters, initialization, and deployment.
-- `apps/web/src/features/<feature>/hooks`: Product-specific query, mutation, and workflow hooks; colocate feature contracts and clients in the same feature.
-- `packages/contracts`: Browser-safe Zod contracts and inferred types.
-- `packages/client`: React-free validated HTTP core, errors, timeout, and cancellation.
-- `packages/client/src/react`: Reusable browser-safe data hooks, auth mutations, and explicit React/TanStack Query adapters, exported as `@raypx/client/react`.
-- `packages/ui`: Components, styles, and component behavior hooks at `@raypx/ui/hooks`; no business workspace dependencies.
-- `packages/api`: Request context, safe errors, metrics, guards, probes, and lifecycle.
-- `packages/db`, `auth`, `storage`, `logger`, `worker`: Server capabilities with explicit activation and resource ownership.
-- `packages/env`: Separate client/server exports; no mixed root entrypoint.
-- `packages/config`: Engineering tools and static `@raypx/config/tsconfig/*.json` presets. The `tsconfig-presets` path is a compatibility export.
+```text
+apps        web, desktop, api, worker, storybook    composition roots; never imported
+adapters    ai, application, cache, client, contracts, i18n, ui, agent-ui, storage    surfaces apps are allowed to use
+core        core, db, auth, mail        db implements interfaces owned by core
+foundation  shared, tsconfig                no dependency on anything above
+tooling     scripts, e2e                never imported by runtime code
+```
 
-The former `@raypx/api-client` and `@raypx/hooks` packages are removed without
-aliases. Migrate HTTP imports to `@raypx/client`, business hooks to
-`@raypx/client/react`, and component behavior to `@raypx/ui/hooks`.
-See [ARCHITECTURE.md](ARCHITECTURE.md) and [EXAMPLES.md](EXAMPLES.md).
+Each workspace's own `AGENTS.md` states its purpose, interface, and constraints.
+This listing is exhaustive: `bun run policy` fails if a workspace is missing from
+it, if it names one that does not exist, or if a directory appears under `apps/`
+or `packages/` without a `package.json`.
 
-## Development Workflow
+## Architecture rules
 
-### Adding New Features
+- Frontend applications access backend behavior through `@voidmix/client` and
+  `@voidmix/contracts`; they never import `@voidmix/db`.
+- `@voidmix/core` stays independent of React, Hono, Nitro, and Drizzle.
+- `@voidmix/db` hides Drizzle implementation details behind repository
+  interfaces owned by `@voidmix/core`.
+- `apps/api` performs final authentication and authorization checks; Web,
+  Desktop, and Worker consume its contracts or shared application layer.
+- Admin-specific routes, tables, filters, and layouts stay in
+  `apps/web/src/features/admin`
+  until another real consumer justifies extraction.
+- Runtime applications never import `@voidmix/scripts`.
+- `apps/worker` is the durable delivery and scheduling host. It may depend on
+  `@voidmix/application` and adapters, but never on Web/Desktop composition.
+- Desktop's `runtime/` owns local Pi execution; its renderer uses the native bridge.
 
-1. **Evaluate feature placement**
-   - Product-specific features → `apps/web/src/features/<feature>/`
-   - Reusable data capabilities → Implement in feature first, promote to `packages/` after demonstrated reuse
-   - UI components → `packages/ui/src/`
-   - Server capabilities → Appropriate server package (`api`, `db`, `auth`, etc.)
+## Toolchain
 
-2. **Create feature directory structure** (for new features in web)
+- Use Bun `1.4.0` for installation, the lockfile, and repository scripts.
+- Use the root Bun catalogs for third-party dependency versions and
+  `workspace:*` for internal packages.
+- Turbo is the only workspace task runner and task cache; Vite+ owns leaf tools.
+  Use root build scripts so Turbo runs checks first; do not use the Vite+ task runner.
+  See [ADR-0018](docs/architecture/decisions/0018-turbo-task-orchestration.md).
+- Oxlint and Oxfmt ship inside Vite+ and are configured in `vite.config.ts`. Use
+  `bun run lint` and `bun run format`. Do not add a separate linter, formatter,
+  or git-hook manager. The committed `.vite-hooks/pre-commit` runs the staged-file
+  pass after `vp hooks enable`; generated `.vite-hooks/_` files stay local.
+- Node.js `24.18.0` is the initial production server runtime; Tauri uses Rust.
+- Keep Bun-specific types or APIs local to Bun workspaces rather than shared
+  TypeScript presets.
+- Prefer root scripts to global tools so the repository-local versions run.
 
-   ```
-   apps/web/src/features/user-profile/
-   ├── components/    # React components
-   ├── hooks/         # Data hooks
-   ├── contracts/     # Zod schemas (if needed)
-   └── routes/        # Start routes
-   ```
+## Code and generated files
 
-3. **Write tests first**
-   - Add unit tests in `test/unit/`
-   - Use `vp test run --project unit` for fast iteration
+- The repository is ESM-first and TypeScript-strict. Preserve the compiler
+  options provided by `@voidmix/tsconfig`.
+- `exactOptionalPropertyTypes` is on, so `{ key: undefined }` is illegal. Use
+  conditional spread: `{ limit, ...(query ? { query } : {}) }`.
+- `verbatimModuleSyntax` is on, so type-only imports need `import type`.
+- A status or audit-action value is declared in **three** places with no shared
+  source: a literal union in `@voidmix/core`, a `z.enum` in
+  `@voidmix/contracts`, and a `pgEnum` in `@voidmix/db`. Missing one fails at
+  runtime, not at compile time.
+- Relative import extensions are inconsistent per file. Mirror the neighbouring
+  import rather than reasoning about it.
+- Keep package interfaces small and avoid cross-layer imports for convenience.
+- Use `bun run generate` for Drizzle artifacts. Route trees belong to the
+  TanStack Start Vite plugin and are produced by `dev` or `build`; there is no
+  standalone route-tree command, because the router CLI omits the Start
+  `Register` footer.
+- Do not hand-edit `routeTree.gen.ts` or generated Drizzle metadata unless the
+  task is specifically about repairing generated output. `.prettierignore` keeps
+  the formatter away from both for the same reason.
+- Preserve unrelated changes in a dirty worktree. Never reset, overwrite, or
+  delete user changes to simplify a task.
 
-4. **Implement feature**
-   - Follow TypeScript strict mode
-   - Use public package exports only
-   - Avoid `any` types
+## UI conventions
 
-5. **Verify**
-   ```bash
-   vp test run --project unit    # Unit tests
-   vp check                      # Format, lint, types
-   vp run dev                    # Local verification
-   ```
+- Reusable primitives live in `packages/ui`; page composition and
+  application-specific navigation stay in the owning application.
+- Shared Agent business views live in `packages/agent-ui`; apps own data and platform access.
+- Do not introduce Radix primitives or Lucide icons without a recorded
+  architecture decision under `docs/architecture/decisions/`.
 
-### Fixing Bugs
+See [`packages/ui/AGENTS.md`](packages/ui/AGENTS.md) for the primitive
+conventions, the two file layouts, and the accessibility requirements.
 
-1. **Reproduce the issue** locally
-2. **Write a failing test** that demonstrates the bug
-3. **Implement minimal fix** without over-refactoring
-4. **Verify fix**
-   ```bash
-   vp test run --project unit
-   vp test run                   # Full test suite
-   vp check
-   ```
-5. **Check related code** - Does the same bug exist elsewhere?
+## Logging, security, and data
 
-### Promoting Code to Shared Packages
+- Use `@voidmix/shared/logger` instead of application-local logger configuration.
+- Import environment APIs from `@voidmix/shared/env` and its explicit subpaths.
+- Keep operational logs separate from durable Admin audit records.
+- Never log credentials, cookies, authorization headers, passwords, secrets,
+  tokens, or API keys.
+- Admin writes must preserve authorization, audit, self-suspension, and
+  final-administrator protections.
+- Destructive database scripts are limited to explicit development/test
+  environments.
 
-**When to promote:**
+## Testing
 
-- ✅ Used in multiple features
-- ✅ Has stable, validated API
-- ✅ Has complete tests
-- ✅ Has clear documentation
-
-**When NOT to promote:**
-
-- ❌ Only used in one product
-- ❌ API still changing rapidly
-- ❌ Contains product-specific logic
-
-**Promotion steps:**
-
-1. Confirm code is stable and reused
-2. Move to appropriate `packages/` directory
-3. Add public export to package's `index.ts`
-4. Add or update tests
-5. Update import paths in calling code
-6. Run `vp check` to verify boundaries
-
-## Testing Strategy
-
-### When to Run Which Tests
-
-**During development (fast feedback):**
+Run the workspace's own narrowest test first — its `AGENTS.md` names it — then
+one command for everything else:
 
 ```bash
-vp test run --project unit          # Only unit tests (< 30s)
-vp test run --project unit -t "specific test"
-vp test --project unit              # Watch mode
+bun run verify
 ```
 
-**Before commit (full verification):**
-
-```bash
-vp test run                         # All tests
-vp check                            # All checks
-```
-
-### Test Types
-
-**Unit Tests (test/unit/)**
-
-- Pure function logic
-- Data transformations
-- Validation logic
-- Mock external dependencies (HTTP, DB, filesystem)
-- Should be very fast (< 5s per file)
-
-**Integration Tests (test/integration/)**
-
-- Start real servers
-- Test HTTP endpoints
-- Test database interactions
-- Test filesystem operations
-- Allow longer timeout (< 30s per file)
-
-**UI Tests (\*.test.tsx)**
-
-- React component rendering
-- User interactions
-- State management
-- Use jsdom environment
-
-### Writing Good Tests
-
-**DO:**
-
-- ✅ Use descriptive test names
-- ✅ Follow arrange-act-assert pattern
-- ✅ Mock external dependencies
-- ✅ Clean up resources (afterEach, afterAll)
-- ✅ Test behavior, not implementation
-
-**DON'T:**
-
-- ❌ Test third-party libraries
-- ❌ Use random data (use fixed fixtures)
-- ❌ Access network or database in unit tests
-- ❌ Add placeholder tests without assertions
-
-## Architecture Principles
-
-### Package Boundaries
-
-**Dependency direction:**
-
-```
-apps/web
-  ↓
-packages/client, packages/ui
-  ↓
-packages/contracts
-```
-
-**Forbidden dependencies:**
-
-- ❌ Packages cannot depend on apps
-- ❌ No circular dependencies
-- ❌ Client and UI cannot import server packages
-- ❌ Cannot import other package's `src/` or `dist/`
-
-**Verification:**
-
-```bash
-vp run check:boundaries  # TypeScript AST check
-vp lint                  # Oxlint custom rules also check
-```
-
-### Client/Server Separation
-
-**Server-only packages:**
-
-- `@raypx/db`, `@raypx/auth`, `@raypx/storage`, `@raypx/logger`, `@raypx/worker`, `@raypx/api`
-- `@raypx/env/server`
-
-**Browser-safe packages:**
-
-- `@raypx/client`, `@raypx/ui`, `@raypx/contracts`
-- `@raypx/env/client`
-
-**Usage in apps/web:**
-
-- Server packages only in `.server.ts` files
-- Start's import protection enforces this
-
-### Common Pitfalls
-
-**Pitfall 1: Module scope side effects in SSR**
-
-```typescript
-// ❌ Wrong: accesses localStorage at module load time
-const theme = localStorage.getItem("theme");
-
-// ✅ Right: access in component
-function App() {
-  const theme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
-}
-```
-
-**Pitfall 2: Shared module-level state**
-
-```typescript
-// ❌ Wrong: module-level QueryClient shared across SSR requests
-import { QueryClient } from "@tanstack/react-query";
-const queryClient = new QueryClient();
-
-// ✅ Right: create new QueryClient per request
-// (web/src/routes/__root.tsx already handles this correctly)
-```
-
-**Pitfall 3: Node built-ins in browser code**
-
-```typescript
-// ❌ Wrong: importing Node built-ins in browser code
-import fs from "node:fs";
-
-// ✅ Right: only use in .server.ts files
-// apps/web/src/routes/api.server.ts
-import fs from "node:fs";
-```
-
-### Performance Principles
-
-**Minimize client bundle:**
-
-- Avoid importing large libraries in client components
-- Use dynamic imports for heavy components
-- Check bundle size: `vp run build`
-
-**Server-side lazy loading:**
-
-```typescript
-// ✅ Good: lazy import heavy features
-export async function action() {
-  if (needsImageProcessing) {
-    const { processImage } = await import("./image-processor");
-    await processImage();
-  }
-}
-```
-
-**Avoid module scope heavy work:**
-
-```typescript
-// ❌ Wrong: runs on every import
-const data = expensiveComputation();
-
-// ✅ Right: lazy evaluation
-let _data: Data | undefined;
-export function getData() {
-  if (!_data) _data = expensiveComputation();
-  return _data;
-}
-```
-
-## Git Workflow
-
-### Branch Strategy
-
-**Main branch:** `main`
-
-- Protected, cannot push directly
-- All PRs must pass CI
-- Use squash merge
-
-**Feature branch naming:**
-
-```bash
-feat/<feature-name>      # New features
-fix/<bug-description>    # Bug fixes
-refactor/<scope>         # Refactoring
-docs/<topic>             # Documentation
-chore/<task>             # Engineering tasks
-```
-
-### Commit Message Format
-
-Use Conventional Commits:
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:**
-
-- `feat`: New feature
-- `fix`: Bug fix
-- `refactor`: Code change without behavior change
-- `docs`: Documentation
-- `test`: Tests
-- `chore`: Engineering tasks
-- `perf`: Performance optimization
-
-**Scopes:**
-
-- Package names: `client`, `ui`, `api`, `db`, `auth`, `storage`, `logger`, `worker`, `env`, `config`
-- App names: `web`
-- Feature modules: `user-profile`, `dashboard`
-
-**Examples:**
-
-```bash
-feat(client): add request timeout configuration
-fix(web): resolve hydration mismatch in dashboard
-refactor(storage): simplify instance lifecycle
-docs(readme): update installation instructions
-test(api): add middleware integration tests
-chore(deps): upgrade react-query to v6
-```
-
-### PR Workflow
-
-1. **Create branch:** `git checkout -b feat/new-feature`
-2. **Develop and commit**
-3. **Push:** `git push -u origin feat/new-feature`
-4. **Create PR:** `gh pr create --fill`
-5. **Wait for CI** - all checks must pass
-6. **Merge:** `gh pr merge --squash --delete-branch`
-
-### Common Git Tasks
-
-**Update branch:**
-
-```bash
-git checkout main
-git pull
-git checkout feat/my-feature
-git rebase main
-```
-
-**Amend last commit:**
-
-```bash
-git add -A
-git commit --amend --no-edit
-git push --force-with-lease
-```
-
-**Undo local changes:**
-
-```bash
-git checkout .           # Undo unstaged changes
-git reset HEAD <file>    # Unstage file
-git reset --hard HEAD    # Undo all changes (⚠️ destructive)
-```
-
-## Troubleshooting
-
-### Build Failures
-
-**Symptoms:** `vp run build` fails
-
-**Check:**
-
-1. Run `vp check` for type errors
-2. Check for circular dependencies
-3. Verify all import paths are correct
-4. Review full error stack
-
-### Test Failures
-
-**Symptoms:** Tests fail or timeout
-
-**Check:**
-
-1. Run test file independently: `vp test run <file>`
-2. Check for resource leaks (unclosed servers, connections)
-3. Review test timeout settings
-4. Look for race conditions
-
-### Type Check Failures
-
-**Symptoms:** `vp check:types` reports errors
-
-**Check:**
-
-1. Run `bun install` to ensure dependencies are current
-2. Verify `tsconfig.json` inheritance chain
-3. Confirm using workspace aliases for imports
-4. Check for `any` type leakage
-
-### Boundary Check Failures
-
-**Symptoms:** `vp run check:boundaries` reports violations
-
-**Common violations:**
-
-```typescript
-// ❌ Wrong examples
-import { db } from "@raypx/db"; // in client code
-import { helper } from "@raypx/client/src/utils"; // internal path
-```
-
-**Fix:** Use public exports and respect client/server boundaries
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) and [EXAMPLES.md](EXAMPLES.md).
-
-## Engineering Conventions
-
-Use ESM and strict TypeScript with `noUncheckedIndexedAccess`; do not use `any`.
-Runtime packages output ESM and declarations. Separate `tsconfig.test.json`
-checks source, tests, and engineering configuration without emitting files.
-Engineering tools expose `.ts` entrypoints and need no initial build.
-Declare workspace dependencies explicitly and use public exports; never import
-another package's `src` or `dist`. Packages cannot depend on apps or form cycles.
-
-The client may depend on `contracts`, and UI has no business workspace
-imports. Client core source cannot import React, React Query, or the React
-adapter through any path or reexport. Only `src/react` owns React dependencies;
-Start-specific modules belong in web. Browser code cannot import server
-packages, `env/server`, or Node/Bun built-ins. Engineering packages remain
-`devDependencies` and cannot be imported by runtime source.
-
-Web creates a QueryClient for each SSR router/request and preserves its browser
-router's cache through navigation. Never put a shared server query cache at
-module scope. SSR prefetches require request-aware query functions. Private
-queries include account identity and are cleared when authentication changes.
-UI hooks handle behavior such as debounce, not business requests or sessions.
-
-Start generates `routeTree.gen.ts`; do not edit it. Web `.server.ts` modules
-adapt server packages, alongside Start's import protection. Secrets stay on
-the server, never use a `VITE_` prefix, and are not committed or logged.
-
-Root `vite.config.ts` owns Vite+ lint, formatting, and staged checks.
-Root `vitest.config.mts` owns test projects and coverage.
-`.oxlintrc.json` is an optional standalone configuration, not the current
-`vp lint` configuration. The TypeScript AST checker enforces dependencies,
-public exports, browser isolation, and client core/React separation in both
-`check:boundaries` and the full check. Test APIs import from `vite-plus/test`;
-React tests use jsdom and server tests use Node. Do not add placeholder tests.
-
-## Common Modification Flows
-
-Begin product endpoints in `apps/web/src/features/<feature>/`: colocate their
-contracts, browser clients, `.server.ts` implementations, and `hooks`, then bind
-the Start route. Reuse shared HTTP boundaries and `requestJson`. Component
-behavior hooks such as debounce belong in `ui/hooks`.
-
-Promote data capabilities to `contracts`, client core, and `client/react` only
-after demonstrated reuse across applications or independent consumers. Require
-stable validated contracts, browser-safe transport, explicit framework adapters,
-public exports, and meaningful tests/documentation. The shared client must work
-without product routes, workflows, application stores, or server configuration.
-Sharing among components of one product alone does not require a public package.
-Keep product state and composition in web so client does not become an application store.
-Start routing, providers, and SSR integration remain in web. Provider configuration requires
-schema validation, explicit activation, readiness, disposal, and failure tests.
-
-See [architecture references](ARCHITECTURE.md#references-for-these-boundaries)
-for the specific boundaries borrowed from shadcn, LobeHub, and TanStack. Raypx
-retains its existing TanStack Query implementation and new-york/Radix UI registry.
-
-## Verification and Runtime
-
-```sh
-bun run check:env
-bun install --frozen-lockfile
-bun run setup
-bun run check:runtime-env
-bun run dev
-bun run check:boundaries
-bun run check
-```
-
-Development builds dependencies and starts watchers and Start on port 5173.
-`check` and `verify` use the same ordered acceptance workflow. Environment,
-dependencies, policy, formatting, boundaries, and unused-code checks run first;
-builds precede typed lint and type checks, followed by tests, Storybook build,
-and independent consumers. `policy` checks workspace registration, TypeScript
-inheritance, and local documentation without writing files.
-Production integration tests need built artifacts. Run `bun run build` then
-`bun run start` for Nitro's Bun artifact. Production defaults to
-`127.0.0.1:3000`; validated HOST/PORT and NITRO overrides configure the listener.
-Run `bun run db:migrate` explicitly before enabling account features.
-See [ENV.md](ENV.md), [TESTING.md](TESTING.md), and
-[Reusable foundations](docs/FOUNDATIONS.md).
-
-Use Conventional Commits. Preserve existing uncommitted content and distinguish
-implemented capabilities from future extensions when updating documentation.
+`verify` is the whole gate: i18n, policy, format, lint, per-workspace checks, tests,
+builds, and the Nitro runtime probe, cheapest first. The other scripts exist to
+narrow a failure down, not to be run in sequence:
+
+| verify fails at  | iterate with                                           |
+| ---------------- | ------------------------------------------------------ |
+| i18n             | `bun run i18n:check`                                   |
+| policy           | `bun run policy:fix`, then read what it could not fix  |
+| format or lint   | `bun run format:fix`, then `bun run lint`              |
+| check or test    | that workspace's own command, named in its `AGENTS.md` |
+| build or runtime | `bun run build:<app>`                                  |
+
+`bun run test:postgres` and `bun run test:e2e` stay outside it: both require an
+explicit test database, and E2E also needs a Playwright browser. `bun run doctor`
+asserts machine prerequisites and cannot run in CI. CI adds PostgreSQL 17,
+browser, clean-tree and operating-system checks to `verify`.
+
+Every application and test-bearing package owns an independent
+`vitest.config.ts`. Preserve that boundary, never rely on a globally installed
+`vp`, and leave `@voidmix/e2e` outside `bun run test`. Most `test` scripts carry
+`--passWithNoTests`, so confirm a new test actually ran.
+
+The runner is `vp test --run`; there is no direct `vitest` dependency, because
+Vite+ bundles it and the test API is imported from `vite-plus/test`. Deleting a
+workspace's `vitest.config.ts` admits its application Vite plugins into the
+runner and breaks React 19 — the configs are load-bearing, not boilerplate.
+
+The four `test:*` layer scripts are byte-identical across every workspace that
+owns a `vitest.config.ts`, and `bun run policy` holds them there. They select a
+layer with vitest's positional **substring filter**; a glob in that position
+matches nothing and still exits 0.
+
+[Testing and verification](docs/development/testing.md) is the authoritative
+command list and explains the layer table, the reasons behind the boundary, and
+Desktop's native checks.
+
+## Documentation
+
+- Update the workspace's own `AGENTS.md` when its interface, ownership,
+  constraints, or verification commands change. Keep those files at or below 200
+  lines and link to `docs/` instead of growing them.
+- Update the focused file under `docs/architecture/` or `docs/development/` when
+  architecture, tooling, commands, testing, or deployment behavior changes.
+- Keep `docs/README.md` as the navigation index.
+- `bun run policy` enforces these rules mechanically: workspace `AGENTS.md`
+  structure and line cap, the workspace listing above, every relative
+  documentation link, the project-skill wiring, workspace `.gitignore` anchoring,
+  the `package.json` script and dependency contracts, and TypeScript preset
+  inheritance. It fails on errors and prints warnings without failing.

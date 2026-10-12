@@ -1,0 +1,3 @@
+# TanStack Start writes client and build-time server output here. Tauri packages
+# only dist/client; native outputs are ignored by src-tauri/.gitignore.
+/dist

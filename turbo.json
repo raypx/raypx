@@ -1,0 +1,151 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "agentGuidance": false,
+  "cacheDir": ".turbo/cache",
+  "concurrency": "4",
+  "remoteCache": {
+    "signature": true
+  },
+  "globalDependencies": [
+    "tsconfig.json",
+    "packages/tsconfig/**/*.json",
+    "vite.config.ts",
+    ".prettierignore",
+    ".gitignore",
+    ".env",
+    ".env.local",
+    "test.config.ts"
+  ],
+  "globalEnv": ["VMX_CACHE_PLATFORM", "NODE_OPTIONS", "CI", "LANG", "TZ"],
+  "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"],
+      "outputs": []
+    },
+    "check": {
+      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "outputs": []
+    },
+    "@voidmix/shared#check": {
+      "dependsOn": ["^transit"],
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["check", "^build", "^transit"],
+      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"],
+      "outputs": ["dist/**", ".output/**", "storybook-static/**"]
+    },
+    "test": {
+      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "cache": false,
+      "outputs": []
+    },
+    "test:unit": {
+      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "env": ["NODE_ENV"],
+      "outputs": []
+    },
+    "test:component": {
+      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "env": ["NODE_ENV"],
+      "outputs": []
+    },
+    "test:integration": {
+      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": [
+        "TEST_DATABASE_URL",
+        "TEST_REDIS_URL",
+        "NODE_ENV",
+        "SOFFICE_BINARY",
+        "CLOUD_PDF_FONT_PATH",
+        "CLOUD_PDF_FONT_FAMILY",
+        "PDFTOTEXT_BINARY",
+        "PDFINFO_BINARY"
+      ]
+    },
+    "test:coverage": {
+      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "cache": false,
+      "outputs": ["coverage/**"]
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "VITE_*",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "AUTH_*",
+        "MAIL_*",
+        "RESEND_API_KEY",
+        "ALLOWED_ORIGINS",
+        "CLOUD_*",
+        "S3_*",
+        "SENTRY_*",
+        "OPENAI_*",
+        "ANTHROPIC_*",
+        "NODE_ENV",
+        "BLOB_STORAGE_DIR",
+        "SOFFICE_BINARY",
+        "PDFTOTEXT_BINARY",
+        "PDFINFO_BINARY",
+        "BRAVE_SEARCH_API_KEY"
+      ]
+    },
+    "//#lint:leaf": {
+      "outputs": []
+    },
+    "//#format:leaf": {
+      "outputs": []
+    },
+    "e2e": {
+      "dependsOn": [
+        "@voidmix/web#build",
+        "@voidmix/api#build",
+        "@voidmix/worker#build",
+        "@voidmix/desktop#build"
+      ],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]
+    },
+    "test:postgres": {
+      "dependsOn": ["@voidmix/shared#build"],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["TEST_DATABASE_URL", "NODE_ENV"]
+    },
+    "test:provider": {
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["TEST_*", "OPENAI_*", "ANTHROPIC_*"]
+    },
+    "smoke": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": []
+    },
+    "deploy": {
+      "cache": false,
+      "outputs": []
+    },
+    "generate": {
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["DATABASE_URL", "NODE_ENV"]
+    },
+    "db:migrate": {
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["DATABASE_URL", "NODE_ENV"]
+    },
+    "@voidmix/shared#build": {
+      "dependsOn": ["check", "^transit"],
+      "outputs": ["dist/**"],
+      "env": ["NODE_ENV"]
+    }
+  }
+}

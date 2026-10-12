@@ -1,23 +1,41 @@
-/**
- * @raypx/auth - Authentication and session management
- *
- * Provides Better Auth integration with Drizzle adapter, redirect validation,
- * and session management utilities.
- */
+export const roles = ["user", "admin", "owner"] as const;
+export type Role = (typeof roles)[number];
 
-// Core adapter and types
-export {
-  createAuth,
-  type CreateAuthOptions,
-  type AuthInstance,
-  type AuthSession,
-} from "./adapter.js";
+export const permissions = [
+  "admin.users.read",
+  "admin.users.write",
+  "admin.audit.read",
+  "admin.runs.read",
+  "admin.usage.read",
+] as const;
+export type Permission = (typeof permissions)[number];
 
-// Session management
-export { configureAuth, getAuth, auth, getSession, requireAuth } from "./session.js";
+export interface SessionUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role: Role;
+}
 
-// Validation utilities
-export { parseOrigin, validateRequestRedirects } from "./validation.js";
+export interface Session {
+  user: SessionUser;
+  expiresAt: Date;
+}
 
-// Re-export Better Auth types
-export type { Session, User } from "better-auth/types";
+const adminPermissions = [
+  "admin.users.read",
+  "admin.users.write",
+  "admin.audit.read",
+  "admin.runs.read",
+  "admin.usage.read",
+] as const satisfies readonly Permission[];
+
+const grants: Record<Role, ReadonlySet<Permission>> = {
+  user: new Set(),
+  admin: new Set(adminPermissions),
+  owner: new Set(adminPermissions),
+};
+
+export function hasPermission(session: Session | null, permission: Permission): boolean {
+  return session !== null && grants[session.user.role].has(permission);
+}

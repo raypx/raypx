@@ -1,94 +1,33 @@
-import { fileURLToPath } from "node:url";
-import {
-  serverOnlySpecifierPatterns,
-  workspaceCacheInputs,
-  workspaceSourceAliases,
-} from "@raypx/config/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import tailwindcss from "@tailwindcss/vite";
+import evlog from "@voidmix/shared/logger/vite";
+import viteReact from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
 import { defineConfig, lazyPlugins } from "vite-plus";
 
-export default defineConfig(({ mode }) => ({
-  root: fileURLToPath(new URL(".", import.meta.url)),
-  // E2E servers receive a synthetic environment and never load local .env files.
-  envDir: mode === "e2e" ? false : undefined,
-  resolve: {
-    alias:
-      mode === "test"
-        ? [
-            // Router cache unit tests need no generated application route tree.
-            {
-              find: "./routeTree.gen",
-              replacement: fileURLToPath(new URL("./test/fixtures/route-tree.ts", import.meta.url)),
-            },
-            ...workspaceSourceAliases(),
-          ]
-        : undefined,
-  },
+const config = defineConfig({
+  resolve: { tsconfigPaths: true },
   plugins:
-    mode === "test"
-      ? []
-      : lazyPlugins(async () => {
-          const [{ tanstackStart }, { nitro }, { default: react }, { default: tailwindcss }] =
-            await Promise.all([
-              import("@tanstack/react-start/plugin/vite"),
-              import("nitro/vite"),
-              import("@vitejs/plugin-react"),
-              import("@tailwindcss/vite"),
-            ]);
-          return [
-            tanstackStart({
-              importProtection: {
-                behavior: "error",
-                include: ["src/**", "../../packages/**"],
-                client: {
-                  specifiers: serverOnlySpecifierPatterns,
-                  excludeFiles: [],
-                },
-              },
-            }),
-            nitro({
-              preset: "bun",
-              // The sync DB factory resolves Bun's adapter dynamically at runtime.
-              // Trace both ESM/CJS adapter assets into the standalone server output.
-              traceDeps: ["drizzle-orm*"],
-              plugins: [fileURLToPath(new URL("./server/plugins/runtime.ts", import.meta.url))],
-            }),
-            tailwindcss(),
-            react(),
-          ];
-        }),
-  server: { host: "127.0.0.1", port: 5173, strictPort: true },
-  test: {
-    name: "web-unit",
-    environment: "node",
-    include: ["test/**/*.{test,spec}.{ts,tsx}", "src/**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["test/integration/**"],
-  },
-  run: {
-    tasks: {
-      dev: { command: "vp dev", cache: false },
-      build: {
-        command: "vp build",
-        dependsOn: [{ task: "build", from: "dependencies" }],
-        cache: {
-          // Shell depth and script metadata do not affect the build output.
-          env: ["!SHLVL", "!npm_lifecycle_event", "!npm_lifecycle_script"],
-          untrackedEnv: ["SHLVL", "npm_lifecycle_event", "npm_lifecycle_script"],
-          input: [...workspaceCacheInputs(import.meta.url), "!src/routeTree.gen.ts"],
-          output: [".output/**", "src/routeTree.gen.ts"],
-        },
-      },
-      start: { command: "bun .output/server/index.mjs", cache: false },
-      typecheck: { command: "tsc --noEmit && tsc -p tsconfig.e2e.json", dependsOn: ["build"] },
-      test: {
-        command:
-          "vp test run --config vite.config.ts && vp test run --config vite.integration.config.ts",
-        dependsOn: ["build"],
-      },
-      "test:unit": { command: "vp test run --project web-unit" },
-      "test:integration": {
-        command: "vp test run --config vite.integration.config.ts",
-        dependsOn: ["build"],
-      },
-    },
-  },
-}));
+    lazyPlugins(() => [
+      evlog({
+        service: "web",
+      }),
+      nitro({
+        compatibilityDate: "2026-08-23",
+        devServer: { hostname: "localhost" },
+        preset: "node-server",
+        routes: { "/health": { handler: "./server/health.ts", format: "web" } },
+        serverDir: false,
+        serverEntry: false,
+        // The node-server trace must retain React for the TanStack SSR entry.
+        // The runtime probe requests `/`, so removal is verified against the built artifact.
+        traceDeps: ["react"],
+      }),
+      tailwindcss(),
+      tanstackStart(),
+      viteReact({ compiler: true }),
+    ]) ?? [],
+  server: { port: 3000, strictPort: true },
+});
+
+export default config;

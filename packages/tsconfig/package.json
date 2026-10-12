@@ -1,0 +1,16 @@
+{
+  "name": "@voidmix/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./browser.json": "./browser.json",
+    "./node.json": "./node.json",
+    "./library.json": "./library.json",
+    "./react-library.json": "./react-library.json"
+  },
+  "scripts": {
+    "check": "node -e \"const {exports:e}=require('./package.json');for(const f of Object.values(e))JSON.parse(require('fs').readFileSync(f,'utf8'))\""
+  }
+}

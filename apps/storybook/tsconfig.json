@@ -1,0 +1,7 @@
+{
+  "extends": "@voidmix/tsconfig/browser.json",
+  "include": [".storybook/**/*.ts", ".storybook/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
+  "compilerOptions": {
+    "types": ["vite/client"]
+  }
+}

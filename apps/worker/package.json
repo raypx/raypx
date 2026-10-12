@@ -1,0 +1,41 @@
+{
+  "name": "@voidmix/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vmx env -- node scripts/dev.mjs",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "vp test --run --passWithNoTests integration.test",
+    "test:component": "vp test --run --passWithNoTests component.test",
+    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "build": "node scripts/build.mjs",
+    "start": "node --enable-source-maps dist/index.mjs",
+    "smoke": "node dist/index.mjs --check"
+  },
+  "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/contract": "catalog:",
+    "@orpc/server": "catalog:",
+    "@sentry/node": "catalog:backend",
+    "@voidmix/ai": "workspace:*",
+    "@voidmix/application": "workspace:*",
+    "@voidmix/contracts": "workspace:*",
+    "@voidmix/core": "workspace:*",
+    "@voidmix/db": "workspace:*",
+    "@voidmix/mail": "workspace:*",
+    "@voidmix/shared": "workspace:*",
+    "@voidmix/storage": "workspace:*",
+    "exceljs": "catalog:backend",
+    "pdfkit": "catalog:backend",
+    "pptxgenjs": "catalog:backend"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "catalog:tooling",
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "workspace:*",
+    "esbuild": "catalog:tooling"
+  }
+}

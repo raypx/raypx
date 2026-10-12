@@ -1,9 +1,7 @@
 {
-  "extends": "@raypx/config/tsconfig/react.json",
+  "extends": "@voidmix/tsconfig/library.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "declaration": true
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts"]
 }

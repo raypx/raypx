@@ -1,0 +1,11 @@
+/* Keep browser autofill in the Neutral theme, including the password addon. */
+.auth-card input:is(:autofill, :-webkit-autofill) {
+  -webkit-text-fill-color: var(--foreground);
+  caret-color: var(--foreground);
+  box-shadow:
+    0 0 0 1000px var(--card) inset,
+    var(--tw-ring-shadow, 0 0 transparent);
+}
+.auth-card [data-slot="input-group"]:has(input:is(:autofill, :-webkit-autofill)) {
+  background: var(--card);
+}

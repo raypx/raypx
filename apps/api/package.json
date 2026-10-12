@@ -1,0 +1,47 @@
+{
+  "name": "@voidmix/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vmx env -- vp dev",
+    "start": "node --enable-source-maps scripts/start.mjs",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "vp test --run --passWithNoTests integration.test",
+    "test:component": "vp test --run --passWithNoTests component.test",
+    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "build": "vmx env -- vp build"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "catalog:",
+    "@orpc/server": "catalog:",
+    "@sentry/node": "catalog:backend",
+    "@voidmix/ai": "workspace:*",
+    "@voidmix/application": "workspace:*",
+    "@voidmix/auth": "workspace:*",
+    "@voidmix/cache": "workspace:*",
+    "@voidmix/contracts": "workspace:*",
+    "@voidmix/core": "workspace:*",
+    "@voidmix/db": "workspace:*",
+    "@voidmix/i18n": "workspace:*",
+    "@voidmix/mail": "workspace:*",
+    "@voidmix/shared": "workspace:*",
+    "@voidmix/storage": "workspace:*",
+    "better-auth": "catalog:",
+    "hono": "catalog:backend",
+    "nanoid": "catalog:backend",
+    "uuid": "catalog:"
+  },
+  "devDependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/contract": "catalog:",
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/client": "workspace:*",
+    "@voidmix/tsconfig": "workspace:*",
+    "nitro": "catalog:backend",
+    "vite": "catalog:tooling",
+    "vite-plus": "catalog:tooling"
+  }
+}

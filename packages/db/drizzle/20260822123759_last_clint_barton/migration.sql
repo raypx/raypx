@@ -1,0 +1,3 @@
+CREATE INDEX "audit_events_actor_id_idx" ON "audit_events" ("actor_id");--> statement-breakpoint
+ALTER TABLE "audit_events" ADD CONSTRAINT "audit_events_actor_id_users_id_fkey" FOREIGN KEY ("actor_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;--> statement-breakpoint
+ALTER TABLE "audit_events" ADD CONSTRAINT "audit_events_target_id_users_id_fkey" FOREIGN KEY ("target_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

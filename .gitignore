@@ -1,18 +1,55 @@
-node_modules/
-dist/
-coverage/
-*.tsbuildinfo
+# Logs
 *.log
+
+# Database
+*.sqlite
+
+# Package manager artifacts
+node_modules.bun
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Coverage and instrumentation. Every workspace produces its own `coverage/`,
+# so these stay here rather than in 13 local files, but they are anchored to the
+# workspace root so a source directory named `coverage` is still committable.
+apps/*/coverage/
+packages/*/coverage/
+*.lcov
+
+# Tool caches
+node_modules/
+*.tsbuildinfo
+*.tgz
+.cache/
+.vite/
+.vite-plus/
+.turbo/
+out/
+.vite-hooks/_/
+
+# Environment. `*.local` is Vite's convention for machine-local overrides and
+# applies to every workspace, so it is hoisted here rather than repeated per app.
 .env
 .env.*
 !.env.example
+*.local
+
+# Editor artifacts. Shared `.vscode/` files are committed on purpose, so only
+# per-developer noise is listed.
+.idea/
+*.sw?
+
+# Local coding-agent preferences
+CLAUDE.local.md
+# Deny everything under .claude/ and share only the skill discovery symlinks.
+# Per-user settings, worktrees, and future agent state stay local by default.
+.claude/*
+!.claude/skills/
+!.claude/skills/*
+
+# Build outputs and test artifacts belong to the workspace that produces them.
+# Each app, `e2e`, and `src-tauri` anchors its own in a local .gitignore.
+
+# OS files
 .DS_Store
-.output/
-.tanstack/
-routeTree.gen.ts
-.vitest/
-storybook-static/
-.vite-hooks/_/
-playwright-report/
-test-results/
-.ci-reports/

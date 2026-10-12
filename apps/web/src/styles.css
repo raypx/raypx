@@ -1,6 +1,54 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "@raypx/ui/styles.css";
+@import "@voidmix/ui/styles.css";
+@import "@voidmix/agent-ui/styles.css";
+@import "./features/auth/auth.css";
 
-/* Shared UI class names live outside the consuming application's source tree. */
-@source "../../../packages/ui/src";
+:root {
+  color: var(--foreground);
+  background: var(--background);
+  color-scheme: light;
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  background: var(--background);
+  scroll-behavior: smooth;
+}
+
+:where(.dark, [data-theme="dark"]) {
+  color-scheme: dark;
+}
+
+body {
+  min-width: 320px;
+  background: var(--background);
+}
+
+a:not([data-slot="button"]) {
+  text-decoration: none;
+}
+
+@layer base {
+  svg {
+    height: 1em;
+    width: 1em;
+  }
+}
+
+a:not([data-slot="button"]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

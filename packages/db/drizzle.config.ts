@@ -1,9 +1,14 @@
-import { fileURLToPath } from "node:url";
 import { defineConfig } from "drizzle-kit";
 
-/** Schema generation only; runtime migration uses the explicit database CLI. */
+import { getDatabaseEnv } from "./src/env.js";
+
+const env = getDatabaseEnv();
+
 export default defineConfig({
-  dialect: "sqlite",
-  schema: fileURLToPath(new URL("./src/schema.ts", import.meta.url)),
-  out: fileURLToPath(new URL("./migrations/", import.meta.url)),
+  dialect: "postgresql",
+  schema: "./src/schema/cloud-baseline.ts",
+  out: "./drizzle-cloud",
+  dbCredentials: {
+    url: env.DATABASE_URL,
+  },
 });

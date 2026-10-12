@@ -1,0 +1,6 @@
+# TanStack Start build output and dev caches. `vp build` writes .output,
+# .tanstack, and .storage; it never writes a dist directory.
+/.output
+/.nitro
+/.storage
+/.tanstack

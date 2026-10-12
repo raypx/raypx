@@ -1,36 +1,33 @@
 {
-  "name": "@raypx/db",
-  "version": "0.1.0",
+  "name": "@voidmix/db",
+  "version": "0.0.0",
   "private": true,
-  "author": "Zack <heyloyep@gmail.com>",
-  "files": [
-    "dist",
-    "migrations",
-    "README.md"
-  ],
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./schema": {
-      "types": "./dist/schema.d.ts",
-      "import": "./dist/schema.js"
-    }
+    ".": "./src/index.ts",
+    "./env": "./src/env.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "vp test --run --passWithNoTests integration.test",
+    "test:component": "vp test --run --passWithNoTests component.test",
+    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "generate": "vmx env -- drizzle-kit generate --config drizzle.config.ts",
+    "test:postgres": "vp test --run --config vitest.postgres.config.ts"
   },
   "dependencies": {
-    "@raypx/logger": "workspace:*",
-    "better-sqlite3": "catalog:",
-    "drizzle-orm": "catalog:"
+    "@voidmix/core": "workspace:*",
+    "@voidmix/shared": "workspace:*",
+    "drizzle-orm": "catalog:backend",
+    "postgres": "catalog:backend"
   },
   "devDependencies": {
-    "@raypx/config": "workspace:*",
-    "@types/better-sqlite3": "^7.6.12",
-    "@types/bun": "^1.4.2",
-    "@types/node": "catalog:",
-    "drizzle-kit": "^0.28.1",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/application": "workspace:*",
+    "@voidmix/tsconfig": "workspace:*",
+    "drizzle-kit": "catalog:backend"
   }
 }

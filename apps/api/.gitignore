@@ -1,0 +1,3 @@
+# Nitro build output and dev cache.
+/.output
+/.nitro

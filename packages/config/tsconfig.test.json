@@ -1,4 +1,0 @@
-{
-  "extends": "@raypx/config/tsconfig/test.json",
-  "include": ["src", "test", "vite.config.ts"]
-}

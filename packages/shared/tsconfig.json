@@ -1,0 +1,4 @@
+{
+  "extends": "@voidmix/tsconfig/library.json",
+  "include": ["src/**/*.ts"]
+}

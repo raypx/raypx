@@ -1,0 +1,49 @@
+{
+  "name": "@voidmix/agent-ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./composer": "./src/composer/index.ts",
+    "./runs": "./src/runs/index.ts",
+    "./tools": "./src/tools/index.ts",
+    "./approvals": "./src/approvals/index.ts",
+    "./artifacts": "./src/artifacts/index.ts",
+    "./model": "./src/model/index.ts",
+    "./styles.css": "./src/styles.css",
+    "./conversation": "./src/conversation/index.tsx",
+    "./research": "./src/research/index.tsx",
+    "./tasks": "./src/tasks/index.tsx",
+    "./content": "./src/content/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vp test --run --passWithNoTests",
+    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "vp test --run --passWithNoTests integration.test",
+    "test:component": "vp test --run --passWithNoTests component.test",
+    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+  },
+  "dependencies": {
+    "@pierre/diffs": "catalog:frontend",
+    "@voidmix/contracts": "workspace:*",
+    "@voidmix/ui": "workspace:*",
+    "streamdown": "catalog:frontend"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "catalog:tooling",
+    "@testing-library/react": "catalog:tooling",
+    "@testing-library/user-event": "catalog:tooling",
+    "@types/react": "catalog:tooling",
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "workspace:*",
+    "jsdom": "catalog:tooling",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:tooling"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

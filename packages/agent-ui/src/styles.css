@@ -1,0 +1,218 @@
+@import "streamdown/styles.css";
+@source "./**/*.{ts,tsx}";
+@source not "./**/*.{test,spec}.{ts,tsx}";
+
+.agent-context {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.agent-actions,
+.agent-composer-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.agent-composer-footer {
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+.agent-composer {
+  min-width: 0;
+}
+.agent-timeline-shell {
+  min-width: 0;
+  position: relative;
+}
+.agent-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 12rem;
+  max-height: 38rem;
+  overflow: auto;
+  padding: 1rem 0.25rem;
+  overscroll-behavior: contain;
+}
+.agent-message {
+  min-width: 0;
+  max-width: 75ch;
+  overflow-wrap: anywhere;
+}
+.agent-message > strong {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--muted-foreground);
+}
+.agent-message-user {
+  background: var(--muted);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+}
+.agent-plain-text {
+  white-space: pre-wrap;
+}
+.agent-markdown {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.agent-markdown pre,
+.agent-tool pre {
+  overflow: auto;
+  max-height: 24rem;
+  max-width: 100%;
+  font-size: 0.75rem;
+}
+.agent-tool {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.agent-tool summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+.agent-tool summary code {
+  overflow-wrap: anywhere;
+}
+.agent-tool-content {
+  padding: 0 0.75rem 0.75rem;
+}
+.agent-tool-content h4 {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-block: 0.75rem 0.25rem;
+}
+.agent-approval {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+}
+.agent-approval p {
+  overflow-wrap: anywhere;
+}
+.agent-status {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.5rem;
+}
+.agent-latest {
+  position: sticky;
+  bottom: 0.5rem;
+  margin-left: auto;
+  display: flex;
+}
+.agent-artifacts h3,
+.agent-preview h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.agent-artifacts ul {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+.agent-preview {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.agent-preview header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.agent-preview img {
+  max-width: 100%;
+  max-height: 32rem;
+  object-fit: contain;
+}
+.agent-diff {
+  min-width: 0;
+  overflow: auto;
+}
+.agent-diff-fallback {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.agent-diff-fallback pre {
+  overflow: auto;
+  font-size: 0.75rem;
+}
+@media (max-width: 767px) {
+  .agent-timeline {
+    max-height: 30rem;
+  }
+  .agent-diff-fallback {
+    grid-template-columns: 1fr;
+  }
+}
+.agent-sources {
+  min-width: 0;
+}
+.agent-sources h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+.agent-sources ol {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.agent-sources li,
+.agent-sources a {
+  overflow-wrap: anywhere;
+}
+.agent-sources a,
+.agent-citation {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.agent-sources li p {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+}
+.agent-task-progress {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.agent-task-progress h2 {
+  font-weight: 600;
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.agent-execution-timeline {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+.agent-revision {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow-wrap: anywhere;
+}

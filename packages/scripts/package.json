@@ -1,0 +1,56 @@
+{
+  "name": "@voidmix/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "bin": {
+    "vmx": "./src/cli.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "doctor": "vmx doctor",
+    "deps:dedupe": "vmx deps dedupe",
+    "deps:dedupe:check": "vmx deps dedupe --check",
+    "deps:audit": "vmx deps audit",
+    "deps:check": "vmx deps check",
+    "deps:update": "vmx deps update",
+    "skills:update": "vmx skills update",
+    "policy": "vmx policy",
+    "i18n:check": "vmx i18n",
+    "clean": "vmx clean",
+    "clean:all": "vmx clean --dependencies",
+    "clean:bun-cache": "vmx clean --bun-cache",
+    "db:migrate": "vmx db migrate",
+    "db:push": "vmx db push",
+    "db:clean": "vmx db clean",
+    "db:seed": "vmx db seed",
+    "db:studio": "vmx db studio",
+    "admin:create": "vmx admin create",
+    "generate": "vmx generate",
+    "desktop:build": "vmx desktop build",
+    "verify": "vmx verify",
+    "shadcn:update": "vmx shadcn update",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "vp test --run --passWithNoTests integration.test",
+    "test:component": "vp test --run --passWithNoTests component.test",
+    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "catalog:tooling",
+    "@voidmix/application": "workspace:*",
+    "@voidmix/core": "workspace:*",
+    "@voidmix/db": "workspace:*",
+    "@voidmix/i18n": "workspace:*",
+    "@voidmix/shared": "workspace:*",
+    "citty": "catalog:tooling",
+    "esbuild": "catalog:tooling",
+    "oxc-parser": "catalog:tooling",
+    "uuid": "catalog:"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/contracts": "workspace:*",
+    "@voidmix/tsconfig": "workspace:*"
+  }
+}

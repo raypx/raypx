@@ -1,4 +1,0 @@
-{
-  "extends": "@raypx/config/tsconfig-presets/test.json",
-  "include": ["src/**/*", "test/**/*"]
-}

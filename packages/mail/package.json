@@ -1,0 +1,34 @@
+{
+  "name": "@voidmix/mail",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./types": "./src/types.ts",
+    "./env": "./src/env.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vp test --run",
+    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "vp test --run --passWithNoTests integration.test",
+    "test:component": "vp test --run --passWithNoTests component.test",
+    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "preview:email": "bun scripts/preview.ts"
+  },
+  "dependencies": {
+    "@voidmix/i18n": "workspace:*",
+    "@voidmix/shared": "workspace:*",
+    "react": "catalog:",
+    "react-email": "catalog:frontend",
+    "resend": "catalog:frontend"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:tooling",
+    "@types/react": "catalog:tooling",
+    "@voidmix/tsconfig": "workspace:*",
+    "typescript": "catalog:tooling",
+    "vite-plus": "catalog:tooling"
+  }
+}

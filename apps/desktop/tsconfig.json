@@ -1,0 +1,7 @@
+{
+  "extends": "@voidmix/tsconfig/browser.json",
+  "compilerOptions": {
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

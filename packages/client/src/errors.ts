@@ -1,37 +1,15 @@
-import type { ApiErrorCode, FieldErrors } from "@raypx/contracts/errors";
+import { apiProblemDetailsSchema, type ApiProblemDetails } from "@voidmix/contracts";
 
-export type ApiClientErrorKind =
-  | "http"
-  | "network"
-  | "timeout"
-  | "aborted"
-  | "invalid-request"
-  | "invalid-response";
-
-export interface ApiClientErrorDetails {
-  status?: number;
-  code?: ApiErrorCode;
-  requestId?: string;
-  errors?: FieldErrors;
-  cause?: unknown;
-}
-
-/** Typed failure with a safe public message and the original failure as cause. */
-export class ApiClientError extends Error {
-  readonly kind: ApiClientErrorKind;
-  readonly status: number | undefined;
-  readonly code: ApiErrorCode | undefined;
-  readonly requestId: string | undefined;
-  readonly errors: FieldErrors | undefined;
-
-  constructor(kind: ApiClientErrorKind, message: string, details: ApiClientErrorDetails = {}) {
-    super(message, { cause: details.cause });
-    this.name =
-      kind === "timeout" ? "TimeoutError" : kind === "aborted" ? "AbortError" : "ApiClientError";
-    this.kind = kind;
-    this.status = details.status;
-    this.code = details.code;
-    this.requestId = details.requestId;
-    this.errors = details.errors;
-  }
+/** Parse an RFC 9457 problem body returned by the API or embedded in an oRPC error. */
+export function parseApiProblemDetails(value: unknown): ApiProblemDetails | null {
+  const candidate =
+    value && typeof value === "object" && "data" in value
+      ? (value as { data?: unknown }).data
+      : value;
+  const problem =
+    candidate && typeof candidate === "object" && "problem" in candidate
+      ? (candidate as { problem?: unknown }).problem
+      : candidate;
+  const parsed = apiProblemDetailsSchema.safeParse(problem);
+  return parsed.success ? parsed.data : null;
 }

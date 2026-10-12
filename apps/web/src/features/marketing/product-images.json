@@ -1,0 +1,162 @@
+{
+  "projects-en-light": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "project-focus-en-light": {
+    "desktop": {
+      "width": 1808,
+      "height": 958
+    },
+    "mobile": {
+      "width": 716,
+      "height": 1348
+    }
+  },
+  "detail-en-light": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "task-focus-en-light": {
+    "desktop": {
+      "width": 1168,
+      "height": 480
+    },
+    "mobile": {
+      "width": 716,
+      "height": 478
+    }
+  },
+  "projects-en-dark": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "project-focus-en-dark": {
+    "desktop": {
+      "width": 1808,
+      "height": 958
+    },
+    "mobile": {
+      "width": 716,
+      "height": 1348
+    }
+  },
+  "detail-en-dark": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "task-focus-en-dark": {
+    "desktop": {
+      "width": 1168,
+      "height": 480
+    },
+    "mobile": {
+      "width": 716,
+      "height": 478
+    }
+  },
+  "projects-zh-light": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "project-focus-zh-light": {
+    "desktop": {
+      "width": 1808,
+      "height": 958
+    },
+    "mobile": {
+      "width": 716,
+      "height": 1348
+    }
+  },
+  "detail-zh-light": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "task-focus-zh-light": {
+    "desktop": {
+      "width": 1168,
+      "height": 480
+    },
+    "mobile": {
+      "width": 716,
+      "height": 478
+    }
+  },
+  "projects-zh-dark": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "project-focus-zh-dark": {
+    "desktop": {
+      "width": 1808,
+      "height": 958
+    },
+    "mobile": {
+      "width": 716,
+      "height": 1348
+    }
+  },
+  "detail-zh-dark": {
+    "desktop": {
+      "width": 2400,
+      "height": 1600
+    },
+    "mobile": {
+      "width": 780,
+      "height": 1360
+    }
+  },
+  "task-focus-zh-dark": {
+    "desktop": {
+      "width": 1168,
+      "height": 480
+    },
+    "mobile": {
+      "width": 716,
+      "height": 478
+    }
+  }
+}

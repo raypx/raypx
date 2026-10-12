@@ -1,1 +1,3 @@
-bun run staged
+#!/usr/bin/env sh
+
+vp staged

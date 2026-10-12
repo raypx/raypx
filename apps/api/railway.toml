@@ -1,0 +1,13 @@
+# Set this service's Railway config path to /apps/api/railway.toml.
+# Keep the Railway Root Directory at the repository root.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/api/Dockerfile"
+watchPatterns = ["/apps/api/**", "/packages/**", "/package.json", "/bun.lock", "/vite.config.ts"]
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

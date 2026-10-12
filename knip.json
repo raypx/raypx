@@ -1,0 +1,61 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": [
+    "apps/**/*.{js,mjs,ts,tsx}",
+    "e2e/**/*.{js,mjs,ts,tsx}",
+    "packages/**/*.{js,mjs,ts,tsx}"
+  ],
+  "ignoreFiles": [
+    "**/*.d.ts",
+    "**/*.gen.ts",
+    "**/.output/**",
+    "**/dist/**",
+    "**/storybook-static/**",
+    "**/src-tauri/**",
+    "packages/db/drizzle.config.ts",
+    ".claude/worktrees/**"
+  ],
+  "drizzle": false,
+  "workspaces": {
+    "apps/api": {
+      "entry": [
+        "scripts/start.mjs",
+        "server/app.ts",
+        "server/runtime.plugin.ts",
+        "server/runtime.ts"
+      ]
+    },
+    "apps/desktop": {
+      "entry": ["src/router.tsx"]
+    },
+    "apps/web": {
+      "entry": ["scripts/analyze-bundle.ts", "server/health.ts", "src/router.tsx"]
+    },
+    "apps/worker": {
+      "entry": ["src/index.ts", "src/runtime.ts"]
+    },
+    "apps/storybook": {
+      "entry": [".storybook/main.ts", ".storybook/preview.tsx"]
+    },
+    "e2e": {
+      "entry": ["tests/**/*.ts"]
+    },
+    "packages/mail": {
+      "entry": ["scripts/preview.ts"]
+    },
+    "packages/scripts": {
+      "entry": ["src/cli.ts"]
+    },
+    "packages/db": {
+      "ignoreFiles": ["drizzle.config.ts"]
+    },
+    "packages/shared": {
+      "entry": [
+        "src/index.ts",
+        "src/env/index.ts",
+        "src/env/runtime.ts",
+        "src/logger/{index,client,env,hono,orpc,vite}.ts"
+      ]
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "common": {
+    "footer": "This message was sent by Voidmix. If you did not request it, you can safely ignore it.",
+    "greeting": "Hi,",
+    "greetingNamed": "Hi {name},"
+  },
+  "verification": {
+    "subject": "Verify your Voidmix email",
+    "preview": "Confirm your email address to finish setting up Voidmix.",
+    "title": "Verify your email",
+    "button": "Verify email",
+    "body": "Confirm this email address to finish setting up your Voidmix account.",
+    "copyLink": "If the button does not work, copy the link below into your browser.",
+    "fallback": "If you did not create this account, you can safely ignore this message."
+  },
+  "passwordReset": {
+    "subject": "Reset your Voidmix password",
+    "preview": "Use this secure link to reset your Voidmix password.",
+    "title": "Reset your password",
+    "button": "Reset password",
+    "body": "We received a request to reset the password for your Voidmix account.",
+    "copyLink": "If the button does not work, copy the link below into your browser.",
+    "fallback": "If you did not request a password reset, you can safely ignore this message."
+  },
+  "welcome": {
+    "subject": "Welcome to Voidmix",
+    "preview": "Your Voidmix account is ready.",
+    "title": "Welcome to Voidmix",
+    "button": "Open Voidmix",
+    "body": "Your account is ready. You can now sign in and start working with your team.",
+    "textIntro": "Welcome to Voidmix. Your account is ready."
+  },
+  "taskNotification": {
+    "review_ready": "Your delivery is ready to review.",
+    "run_failed": "Your run stopped. Open Voidmix to review the result and retry.",
+    "waiting_input": "Your task needs additional input.",
+    "task_completed": "Your task is complete.",
+    "subject": "Voidmix update",
+    "button": "Open Voidmix"
+  },
+  "test": {
+    "subject": "Voidmix mail configuration test",
+    "body": "Your Voidmix mail configuration is working."
+  }
+}

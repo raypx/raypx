@@ -1,9 +1,4 @@
 {
-  "extends": "@raypx/config/tsconfig-presets/react.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "declaration": true
-  },
-  "include": ["src/**/*"]
+  "extends": "@voidmix/tsconfig/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }
