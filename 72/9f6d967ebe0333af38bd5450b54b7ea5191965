@@ -1,0 +1,573 @@
+e2e/tests/redesign.spec.ts
+  s_868e675aecceed::t_8abaaf350d9edd 5
+  s_868e675aecceed::t_b9d4e3a0bbad85 125,132
+  s_868e675aecceed::t_070ac467f00b3e 127
+  s_868e675aecceed::t_40bfaf5079eccb 23,78,84
+apps/api/server/api/assets-handlers.ts
+  s_868e675aecceed::t_1f4c994678bee8 1,3-4,8,12-13
+  s_868e675aecceed::t_33efcdda82032a 5-7,9-11
+docs/architecture/agent-workbench.md
+  s_868e675aecceed::t_7f611ce6a9771f 3-4
+packages/ai/package.json
+  s_868e675aecceed::t_1b232d1c58d6f1 19
+packages/scripts/src/doctor/checks.ts
+  s_868e675aecceed::t_764eda3216bd2d 161-163
+  s_868e675aecceed::t_2b0e511fb21065 152-160,164-172,203
+docs/architecture/decisions/0020-electrobun-desktop-host.md
+  s_868e675aecceed::t_827d6713a53467 1-32,38-52,56-63
+  s_868e675aecceed::t_9b5589630555d7 33-37,53-55
+packages/scripts/src/commands/workflows.test.ts
+  s_868e675aecceed::t_ac6db6faeb73d1 65-70,72-83
+docs/architecture/decisions/0016-cloud-agent-platform.md
+  s_868e675aecceed::t_f22d918799005b 3
+AGENTS.md
+  s_868e675aecceed::t_f22d918799005b 56-57
+  s_868e675aecceed::t_a88b069c810846 46-47,112,115-116
+  s_868e675aecceed::t_827d6713a53467 67-68
+  s_868e675aecceed::t_69da9d3cdfe910 80-83
+  s_868e675aecceed::t_26198b59463471 51
+packages/application/AGENTS.md
+  s_868e675aecceed::t_c23b7176eaaebd 13,50-51,56-57
+  s_868e675aecceed::t_f5b3ac966eb15f 48-49
+  s_868e675aecceed::t_9a82ee0fc9a133 11-12
+apps/desktop/src/routes/settings/route.tsx
+  s_868e675aecceed::t_ccd5030352482e 1,6,18,22-32
+docs/development/getting-started.md
+  s_868e675aecceed::t_8e1c48b33df0eb 7,84-87,130
+  s_868e675aecceed::t_da11df80293e69 24,53,129
+vite.config.ts
+  s_868e675aecceed::t_52cbcf96173a52 10-11
+apps/desktop/src/lib/preferences.ts
+  s_868e675aecceed::t_b91e2e46c225f2 60,63-64
+packages/db/src/settings/values.ts
+  s_868e675aecceed::t_9a82ee0fc9a133 50-55
+  s_868e675aecceed::t_014cb8c531dc16 3-4,30,34,44,48-49,60
+docs/architecture/deployment.md
+  s_868e675aecceed::t_8e1c48b33df0eb 17,175,181-183
+  s_868e675aecceed::t_da11df80293e69 15,149
+  s_868e675aecceed::t_69350c608a1757 180,189-190
+  s_868e675aecceed::t_9b5589630555d7 184-188
+packages/scripts/src/clean.ts
+  s_868e675aecceed::t_2b0e511fb21065 1
+  s_868e675aecceed::t_b6c49906867f4f 66
+packages/scripts/src/database/operation.test.ts
+  s_868e675aecceed::t_12ffc58bfbc2ca 4-5,27
+packages/contracts/src/index.test.ts
+  s_868e675aecceed::t_796a068fa67528 3,62-67
+  s_868e675aecceed::t_9507b44ea56bc3 68
+apps/worker/Dockerfile
+  s_868e675aecceed::t_6dbca35cd80788 9
+apps/desktop/messages/en.json
+  s_868e675aecceed::t_85ef30c0157c93 28,108-109
+packages/scripts/src/policy/runtime.test.ts
+  s_868e675aecceed::t_d7a43031c93dd2 23-25,37,57,62,66
+  s_868e675aecceed::t_6195e4143f7b52 1-2,4,6-11,13,15-22,26-36,38-43,45-56,58-61,63-65,67
+e2e/tests/cloud.spec.ts
+  s_868e675aecceed::t_2fb80eda19c788 21-23,47-49
+  s_868e675aecceed::t_070ac467f00b3e 20
+  s_868e675aecceed::t_9b8c8f9578b530 89-90,94-98,107,109
+  s_868e675aecceed::t_7b499102503c24 106
+packages/db/src/postgres.test.ts
+  s_868e675aecceed::t_9a82ee0fc9a133 8-11,18-20,23,25-26
+  s_868e675aecceed::t_ad01e4a582746e 1,3,5,12-17,33,51-54,56-59,62-71
+docs/development/file-structure.md
+  s_868e675aecceed::t_0ff672a1502b69 168-173
+  s_868e675aecceed::t_da11df80293e69 39-43,65,92,96-99
+apps/api/server/api/canonical-router.ts
+  s_868e675aecceed::t_1f4c994678bee8 1
+apps/desktop/native/close.html
+  s_868e675aecceed::t_defe070b928cc6 1-2,7-8
+  s_868e675aecceed::t_0da0236d3fe637 3-6
+packages/db/vitest.postgres.config.ts
+  s_868e675aecceed::t_a01125b557934f 1,3-10,12
+README.md
+  s_868e675aecceed::t_f22d918799005b 47
+  s_868e675aecceed::t_827d6713a53467 10,32,67
+  s_868e675aecceed::t_5a41b3080ebb65 36,88,130-135
+  s_868e675aecceed::t_e5004cccbd82f3 59-61
+apps/api/server/api/cloud.integration.test.ts
+  s_868e675aecceed::t_ef1c2aae510dc9 219
+  s_868e675aecceed::t_796a068fa67528 18,195,201,203,208,210-211,217-218,220
+  s_868e675aecceed::t_9a82ee0fc9a133 8,214-216
+packages/db/src/memory.test.ts
+  s_868e675aecceed::t_ad01e4a582746e 2,4-10,13-14,18,23,25,31,35-43,45,50,52-57,59,63-72,74-75,77-79
+packages/client/AGENTS.md
+  s_868e675aecceed::t_c23b7176eaaebd 82-83
+  s_868e675aecceed::t_31cd879c56aeb0 37
+  s_868e675aecceed::t_00202292423d7e 36
+  s_868e675aecceed::t_dda1bb96fa10c6 11-15
+apps/web/messages/en.json
+  s_868e675aecceed::t_6c00fe4c00a69c 3,139
+  s_868e675aecceed::t_222fdbaab3b6e6 58,76
+packages/agent-ui/AGENTS.md
+  s_868e675aecceed::t_26198b59463471 5-6,30
+docs/architecture/voidmix-delivery-goal.md
+  s_868e675aecceed::t_dfadaa56fe6047 3-6,10-11,14-15,18-21,23,25-29,31-34,36,38-40,47,49-51,53-57
+  s_868e675aecceed::t_da11df80293e69 41,43-45
+apps/desktop/native/window.test.ts
+  s_868e675aecceed::t_980318d4c0aad5 2-20,22-25,29,32-35,40-41,43,45-46,51-52,54-60
+  s_868e675aecceed::t_dff05f0c9cc261 21,28,30-31,36-37,42,53
+  s_868e675aecceed::t_541f18a4eb2e39 44,47
+apps/desktop/src/lib/account.test.ts
+  s_868e675aecceed::t_2fc7e942a30704 12
+apps/api/server/api/cloud-handlers.ts
+  s_868e675aecceed::t_68c2f0371a0b02 36
+apps/web/src/routes/robots[.]txt.ts
+  s_868e675aecceed::t_b9d4e3a0bbad85 8
+apps/web/src/features/navigation/account-menu.tsx
+  s_868e675aecceed::t_71e097d1b7c33a 22,26,63,65
+packages/contracts/src/index.ts
+  s_868e675aecceed::t_9a82ee0fc9a133 63-64
+packages/scripts/src/i18n/source-rules.ts
+  s_868e675aecceed::t_55586f165653ac 61
+apps/api/Dockerfile
+  s_868e675aecceed::t_6dbca35cd80788 9
+apps/desktop/vitest.config.ts
+  s_868e675aecceed::t_09f57eb1bf4986 6-8
+  s_868e675aecceed::t_980318d4c0aad5 1,4-5,9
+packages/client/src/index.ts
+  s_868e675aecceed::t_31cd879c56aeb0 21,25
+  s_868e675aecceed::t_f070301f8af053 20
+apps/web/src/features/auth/route-search.test.ts
+  s_868e675aecceed::t_b9d4e3a0bbad85 12,14-15,22-23,35-36,41-42
+  s_868e675aecceed::t_220ea8dfb677ec 13
+docs/architecture/domain-services.md
+  s_868e675aecceed::t_6cfb604df9862e 5-7,11,18,22-23,30,32-36,40-44,48-51,58-60,64-72,76-87
+  s_868e675aecceed::t_cabdb3fbdac21f 37-39
+  s_868e675aecceed::t_a330c98fe235f5 31
+apps/desktop/src/routes/__root.tsx
+  s_868e675aecceed::t_c1874d51af3e33 39
+  s_868e675aecceed::t_f2136585119a1b 2-6,8,19,26,43-49
+  s_868e675aecceed::t_428ad9bd27a336 7,50
+docs/architecture/decisions/0022-unscoped-application-packages.md
+  s_868e675aecceed::t_a88b069c810846 1-32
+packages/contracts/AGENTS.md
+  s_868e675aecceed::t_f5b3ac966eb15f 16,42
+  s_868e675aecceed::t_c23b7176eaaebd 43,50,63
+apps/web/src/features/navigation/app-shell.tsx
+  s_868e675aecceed::t_71e097d1b7c33a 44,91,110
+  s_868e675aecceed::t_bf4b8b2df1a4cd 114-122
+apps/api/package.json
+  s_868e675aecceed::t_6dbca35cd80788 2
+apps/desktop/tsconfig.node.json
+  s_868e675aecceed::t_781e86a49d9dd1 8-10
+  s_868e675aecceed::t_d2cbcabdc64369 5-7,12
+apps/worker/package.json
+  s_868e675aecceed::t_6dbca35cd80788 2
+apps/desktop/CHANGELOG.md
+  s_868e675aecceed::t_da97a690217978 5,7-10,12,20-25,29-30,33,35-38,41
+  s_868e675aecceed::t_83cbbdd9318b4d 16-18,31,40
+  s_868e675aecceed::t_f22d918799005b 14
+docs/architecture/packages.md
+  s_868e675aecceed::t_da11df80293e69 24,26,69,73,90,124,138-141,182,197-198,201-202,207-208,222
+  s_868e675aecceed::t_69350c608a1757 36-40,122-123,126-128,183-184,247
+  s_868e675aecceed::t_f22d918799005b 226-228
+apps/api/server/api/app.integration.test.ts
+  s_868e675aecceed::t_e7e8da16b93f4a 4,67,77,80-84,96,152,160-172,174-177,179-194,196-208,210-222,225-241,250-256,258
+  s_868e675aecceed::t_796a068fa67528 3,5,68,153-159,173,178
+  s_868e675aecceed::t_fe11bf6ca70eea 242-248
+  s_868e675aecceed::t_af124c2bbdc837 249
+docs/development/cloud-acceptance.md
+  s_868e675aecceed::t_69350c608a1757 71-74
+docs/architecture/decisions/0019-retire-legacy-desktop-execution.md
+  s_868e675aecceed::t_827d6713a53467 5
+  s_868e675aecceed::t_e5004cccbd82f3 1,3-4,8-62
+  s_868e675aecceed::t_5a41b3080ebb65 6-7
+packages/core/AGENTS.md
+  s_868e675aecceed::t_f5b3ac966eb15f 28-29
+  s_868e675aecceed::t_c23b7176eaaebd 13,17-18,44-45,58,60
+  s_868e675aecceed::t_e34f5fcd64267d 39,59
+  s_868e675aecceed::t_9a82ee0fc9a133 11-12
+apps/desktop/vite.config.ts
+  s_868e675aecceed::t_1b1840346db305 2-3,33-36,45-46
+.prettierignore
+  s_868e675aecceed::t_86a113bc2eb68e 8-10
+docs/development/environment.md
+  s_868e675aecceed::t_da11df80293e69 51-52
+  s_868e675aecceed::t_eee5ddf95ae339 82-87
+packages/scripts/AGENTS.md
+  s_868e675aecceed::t_6fe74c538bd78c 28
+  s_868e675aecceed::t_ac6db6faeb73d1 69-70
+  s_868e675aecceed::t_12ffc58bfbc2ca 16,27
+  s_868e675aecceed::t_bc9aa0f63a3a02 83-85
+  s_868e675aecceed::t_be07307cb86889 67-68
+docs/development/monolithic-simplification.md
+  s_868e675aecceed::t_eee5ddf95ae339 3-7
+apps/desktop/package.json
+  s_868e675aecceed::t_6dbca35cd80788 2
+  s_868e675aecceed::t_c63ff804e095db 20-21
+  s_868e675aecceed::t_12dbc2db440b55 22
+  s_868e675aecceed::t_cd53b981e6129c 18
+  s_868e675aecceed::t_55cf509cfa6545 7-8,10,19
+  s_868e675aecceed::t_ed8244ad002135 38,45
+docs/architecture/applications.md
+  s_868e675aecceed::t_2f1d1e1875ea77 62,66-67,85-87,106-110
+  s_868e675aecceed::t_69350c608a1757 64,73-82,99,167-171
+  s_868e675aecceed::t_da11df80293e69 11,20,36,42-43,178,194-195,198-200,205
+apps/desktop/messages/zh.json
+  s_868e675aecceed::t_85ef30c0157c93 28,108-109
+apps/desktop/src/lib/desktop.ts
+  s_868e675aecceed::t_0212edd30240a2 1,3-12,16,22,29-30,32-33,35,37,42,44
+  s_868e675aecceed::t_d2cbcabdc64369 15,17-21,23-24,27-28
+apps/desktop/src/i18n/client.ts
+  s_868e675aecceed::t_b70b2a8df0c63b 18
+packages/db/src/settings/memory.ts
+  s_868e675aecceed::t_014cb8c531dc16 3
+packages/mail/src/i18n.ts
+  s_868e675aecceed::t_9b8c46863bd734 13
+apps/worker/AGENTS.md
+  s_868e675aecceed::t_6dbca35cd80788 1
+apps/desktop/src/routes/index.tsx
+  s_868e675aecceed::t_ccd5030352482e 1,5-7
+packages/scripts/src/policy/manifests.ts
+  s_868e675aecceed::t_be07307cb86889 3,46,54-62,95-97,103-104
+  s_868e675aecceed::t_52a2370aacd0c9 98-102
+  s_868e675aecceed::t_25cab012e89392 105
+packages/ui/AGENTS.md
+  s_868e675aecceed::t_5280f719321b32 56-58
+  s_868e675aecceed::t_1f78b1be0840e5 24-26
+docs/architecture/account-first-v2.md
+  s_868e675aecceed::t_5a41b3080ebb65 11,24-25
+  s_868e675aecceed::t_7f611ce6a9771f 12,30-31,34-36
+docs/development/neutral-ui.md
+  s_868e675aecceed::t_7f611ce6a9771f 3-4
+apps/desktop/src/router.tsx
+  s_868e675aecceed::t_1b1840346db305 1,8-10
+package.json
+  s_868e675aecceed::t_6dbca35cd80788 132,137-140
+  s_868e675aecceed::t_4a46203614d469 52,142
+  s_868e675aecceed::t_81db9875fa5014 79
+packages/db/AGENTS.md
+  s_868e675aecceed::t_c23b7176eaaebd 17-19,25,52,97,107-110
+  s_868e675aecceed::t_cabdb3fbdac21f 80
+  s_868e675aecceed::t_a01125b557934f 44-46,62-64
+  s_868e675aecceed::t_f5b3ac966eb15f 65-67
+docs/architecture/decisions/README.md
+  s_868e675aecceed::t_827d6713a53467 57
+  s_868e675aecceed::t_e5004cccbd82f3 55-56
+  s_868e675aecceed::t_5a41b3080ebb65 58-59
+PRODUCT.md
+  s_868e675aecceed::t_26198b59463471 9,20,41
+packages/scripts/src/commands/desktop.ts
+  s_868e675aecceed::t_b91e2e46c225f2 29
+  s_868e675aecceed::t_ac6db6faeb73d1 9-13,21
+apps/desktop/electrobun.config.ts
+  s_868e675aecceed::t_0331ce788f1072 3,7-8,13
+  s_868e675aecceed::t_2541a0f22bf203 15-21,23
+  s_868e675aecceed::t_defe070b928cc6 27
+  s_868e675aecceed::t_a253f72a79b3db 1
+  s_868e675aecceed::t_705629b559ef77 12,14,24,31-32
+  s_868e675aecceed::t_5efb196d9ad22c 5-6,9,11,25-26,28-29,33
+  s_868e675aecceed::t_d6d75a22bf2f66 2,4,10,22,30
+docs/development/visual-audit.md
+  s_868e675aecceed::t_7f611ce6a9771f 3-4
+docs/development/agents.md
+  s_868e675aecceed::t_da11df80293e69 65-69
+  s_868e675aecceed::t_dd17661ea9a1cb 123-132
+  s_868e675aecceed::t_8e1c48b33df0eb 145
+  s_868e675aecceed::t_c838605bcdb5b3 146-148
+e2e/tests/workbench.spec.ts
+  s_868e675aecceed::t_9b8c8f9578b530 5
+  s_868e675aecceed::t_d5051dcbec5351 88,91-92
+packages/db/src/settings/postgres.ts
+  s_868e675aecceed::t_014cb8c531dc16 2,5
+knip.json
+  s_868e675aecceed::t_4e7308152e24b2 36
+  s_868e675aecceed::t_28dc9c02bc4a56 14-16
+  s_868e675aecceed::t_f22d918799005b 31-35,37,59-65
+  s_868e675aecceed::t_7b499102503c24 43,58
+packages/ai/AGENTS.md
+  s_868e675aecceed::t_26198b59463471 10-11,28-29
+apps/api/server/api/canonical-errors.test.ts
+  s_868e675aecceed::t_796a068fa67528 9,12-13
+packages/db/src/cloud-memory.ts
+  s_868e675aecceed::t_9a82ee0fc9a133 24
+  s_868e675aecceed::t_796a068fa67528 208
+packages/db/tests/domains.integration.test.ts
+  s_868e675aecceed::t_796a068fa67528 2-3,26,30
+  s_868e675aecceed::t_9a82ee0fc9a133 42
+packages/scripts/src/runtime/files.ts
+  s_868e675aecceed::t_6195e4143f7b52 21-28
+packages/shared/src/errors.ts
+  s_868e675aecceed::t_188ed69f82e70c 1
+apps/web/src/features/auth/auth-flows/component.test.tsx
+  s_868e675aecceed::t_b9d4e3a0bbad85 93,232
+apps/web/i18n/catalogs.test.ts
+  s_868e675aecceed::t_5280f719321b32 10-12
+skills/voidmix-infra/references/orpc-procedures.md
+  s_868e675aecceed::t_f22d918799005b 4,12,21-22,32,40-43,47,56-58,72-73,80
+apps/desktop/native/window.ts
+  s_868e675aecceed::t_dff05f0c9cc261 10,22-23
+  s_868e675aecceed::t_5c784d7086bc62 1
+  s_868e675aecceed::t_0212edd30240a2 3,5-8,11-20,24-37,39-40
+apps/api/server/api/app.ts
+  s_868e675aecceed::t_e7e8da16b93f4a 218-220
+docs/architecture/decisions/0015-local-agent-workbench.md
+  s_868e675aecceed::t_e5004cccbd82f3 5
+apps/api/server/api/modules.test.ts
+  s_868e675aecceed::t_796a068fa67528 2-3,18
+skills/voidmix-infra/references/tanstack.md
+  s_868e675aecceed::t_6cfb604df9862e 64
+  s_868e675aecceed::t_f22d918799005b 11-14,52-53,65
+apps/storybook/src/logo.stories.tsx
+  s_868e675aecceed::t_69da9d3cdfe910 20
+packages/shared/AGENTS.md
+  s_868e675aecceed::t_188ed69f82e70c 26
+e2e/tests/authenticated-web.spec.ts
+  s_868e675aecceed::t_222fdbaab3b6e6 50,55
+  s_868e675aecceed::t_8abaaf350d9edd 15,49
+  s_868e675aecceed::t_40bfaf5079eccb 23,26,28,59,68
+  s_868e675aecceed::t_465a21376ffebd 54,57
+packages/db/src/cloud-postgres.ts
+  s_868e675aecceed::t_796a068fa67528 289
+packages/scripts/src/policy/checks/architecture.test.ts
+  s_868e675aecceed::t_c1874d51af3e33 111,121-123,125,128-130,133
+  s_868e675aecceed::t_be07307cb86889 18-23,26,28,31,82-88
+  s_868e675aecceed::t_c602fdb1d24afa 135-142,144,147,149,154-155
+  s_868e675aecceed::t_268aa53b612c92 89,134,150
+packages/scripts/src/policy/runtime.ts
+  s_868e675aecceed::t_6195e4143f7b52 22,24,114,118-122,126
+  s_868e675aecceed::t_7aedac061502d9 145
+  s_868e675aecceed::t_d7a43031c93dd2 23
+docs/architecture/decisions/0014-domain-services-and-client-state.md
+  s_868e675aecceed::t_f22d918799005b 5-6
+docs/architecture/cloud-platform.md
+  s_868e675aecceed::t_69350c608a1757 4-5
+turbo.json
+  s_868e675aecceed::t_52a2370aacd0c9 110
+  s_868e675aecceed::t_6dbca35cd80788 99,102
+  s_868e675aecceed::t_1468c23b2e8296 100-101,103
+skills/voidmix-infra/SKILL.md
+  s_868e675aecceed::t_f22d918799005b 57-59
+docs/development/admin-retirement-acceptance.md
+  s_868e675aecceed::t_2fb80eda19c788 1-11,25-64
+  s_868e675aecceed::t_f9a0990749ab1c 12-14,16-24
+  s_868e675aecceed::t_738ef86bd2085c 15
+apps/api/AGENTS.md
+  s_868e675aecceed::t_b1b2e4da47edbf 71-73
+  s_868e675aecceed::t_6dbca35cd80788 1
+  s_868e675aecceed::t_f5b3ac966eb15f 51
+  s_868e675aecceed::t_c23b7176eaaebd 32,52-54
+docs/architecture/tooling.md
+  s_868e675aecceed::t_8e1c48b33df0eb 215-217,254,307,338-339,342-345,347-348
+  s_868e675aecceed::t_da11df80293e69 250-251,359-361
+  s_868e675aecceed::t_52cbcf96173a52 134,139-140
+  s_868e675aecceed::t_0ff672a1502b69 25
+  s_868e675aecceed::t_69350c608a1757 346
+  s_868e675aecceed::t_1468c23b2e8296 141-142
+  s_868e675aecceed::t_2f1d1e1875ea77 11,120,172
+  s_868e675aecceed::t_2f30b5fc0b4e54 143
+apps/web/Dockerfile
+  s_868e675aecceed::t_6dbca35cd80788 9
+apps/desktop/src/lib/preferences.test.ts
+  s_868e675aecceed::t_da97a690217978 14-15,18-19,21,27-29,31-35,38,43,62,68,76,79,87-88
+  s_868e675aecceed::t_1103b0c43e5a2c 20
+docs/architecture/README.md
+  s_868e675aecceed::t_2f1d1e1875ea77 25
+  s_868e675aecceed::t_69350c608a1757 45-47,89-90
+  s_868e675aecceed::t_5a41b3080ebb65 6,11,24,34,66,103
+docs/architecture/decisions/0009-pi-as-agent-runtime.md
+  s_868e675aecceed::t_e5004cccbd82f3 5
+apps/desktop/tsconfig.native.json
+  s_868e675aecceed::t_d2cbcabdc64369 3-5,7-8,17-18
+  s_868e675aecceed::t_0da0236d3fe637 6,9-16,19
+apps/storybook/package.json
+  s_868e675aecceed::t_6dbca35cd80788 2
+packages/auth/AGENTS.md
+  s_868e675aecceed::t_9a82ee0fc9a133 10-12
+  s_868e675aecceed::t_cabdb3fbdac21f 22-23
+  s_868e675aecceed::t_c23b7176eaaebd 5-6,16-18,24-27,29-30,37
+apps/desktop/hutch.config.ts
+  s_868e675aecceed::t_5efb196d9ad22c 1,3-4
+  s_868e675aecceed::t_705629b559ef77 2
+packages/client/src/index.test.ts
+  s_868e675aecceed::t_56fae75c7bb68f 24-30,33-34
+  s_868e675aecceed::t_796a068fa67528 8
+apps/desktop/native/rpc.ts
+  s_868e675aecceed::t_781e86a49d9dd1 1
+  s_868e675aecceed::t_0212edd30240a2 3-4,6,9-21
+apps/web/src/features/navigation/app-shell.component.test.tsx
+  s_868e675aecceed::t_71e097d1b7c33a 22-23,103,110,154,160
+  s_868e675aecceed::t_bf4b8b2df1a4cd 34,89,153,157-158,163-169,171-181
+  s_868e675aecceed::t_8f148b3dfcc41b 170,182
+docs/development/testing.md
+  s_868e675aecceed::t_8e1c48b33df0eb 50,74-75,77,111-112
+  s_868e675aecceed::t_1468c23b2e8296 76
+  s_868e675aecceed::t_da11df80293e69 93,215-217,230-235,239-240,247,267-269
+packages/db/src/index.ts
+  s_868e675aecceed::t_68c2f0371a0b02 15
+apps/worker/scripts/build.mjs
+  s_868e675aecceed::t_52a2370aacd0c9 148
+apps/api/server/api/router-context.test.ts
+  s_868e675aecceed::t_f9eaaf97a0aeee 29
+  s_868e675aecceed::t_169030fb13afb0 3,28
+apps/web/AGENTS.md
+  s_868e675aecceed::t_6dbca35cd80788 1
+  s_868e675aecceed::t_54ffae9dcfa6ad 40,48,61,100-102
+apps/desktop/tsconfig.json
+  s_868e675aecceed::t_d2cbcabdc64369 4-5,8
+  s_868e675aecceed::t_781e86a49d9dd1 6-7
+docs/development/feature-reduction-acceptance.md
+  s_868e675aecceed::t_f22d918799005b 3-4
+  s_868e675aecceed::t_ed2c7337f21c91 1-2,5-12,23-58,62-67
+  s_868e675aecceed::t_317c705dc3fcc5 13-22
+  s_868e675aecceed::t_45f118039aa11e 59-61
+packages/scripts/package.json
+  s_868e675aecceed::t_12ffc58bfbc2ca 43,48
+apps/desktop/src/router.integration.test.tsx
+  s_868e675aecceed::t_b70b2a8df0c63b 3,122-124
+  s_868e675aecceed::t_ad15ccf5a9e05a 104,106-107,109-111,113-114,117-121
+  s_868e675aecceed::t_255c980d7f90d1 134-168
+docs/development/workspace-preview.md
+  s_868e675aecceed::t_7f611ce6a9771f 3-4
+CONTEXT.md
+  s_868e675aecceed::t_e5004cccbd82f3 7-10
+  s_868e675aecceed::t_a88b069c810846 78-79
+apps/desktop/native/smoke.ts
+  s_868e675aecceed::t_980318d4c0aad5 1,4-20,24-25,37-40,45-47,49-51,53,55,67-70,72-84,87-91,94,96,113-116,119,121,134,139-142,145,147,149-152,155,157-158,165
+  s_868e675aecceed::t_1cb11315e45e19 26-27,29
+  s_868e675aecceed::t_f2136585119a1b 85-86
+  s_868e675aecceed::t_dd7838164c8452 135-138,148
+  s_868e675aecceed::t_a253f72a79b3db 2,65,163,169
+  s_868e675aecceed::t_b72147e040bf3c 23,35,44,71,97,166,168
+  s_868e675aecceed::t_7129f41b44f1e6 30-32,34,41-43,56-59,62,64,66,98,100-104,107,109-110,112,164
+  s_868e675aecceed::t_0331ce788f1072 36
+  s_868e675aecceed::t_0dbef82d7e6807 122-123,125-126,128-131,133
+  s_868e675aecceed::t_b2e1ed7e293a14 159-160,162
+  s_868e675aecceed::t_6c636fb39226ba 28,33,48,52,60,63,92-93,95,99,105-106,108,111,117-118,120,124,127,132,143-144,146,153-154,156,161,167
+docs/README.md
+  s_868e675aecceed::t_eee5ddf95ae339 35
+  s_868e675aecceed::t_5a41b3080ebb65 19
+  s_868e675aecceed::t_f22d918799005b 53,60-61
+  s_868e675aecceed::t_ed2c7337f21c91 52
+  s_868e675aecceed::t_2fb80eda19c788 54-55
+  s_868e675aecceed::t_1e3d5f77dc65e3 25-28,58
+packages/db/src/schema/cloud-baseline.ts
+  s_868e675aecceed::t_69da9d3cdfe910 1
+packages/scripts/src/doctor/checks.test.ts
+  s_868e675aecceed::t_764eda3216bd2d 74-76,106-107
+  s_868e675aecceed::t_2b0e511fb21065 41-45,89,94-105,108-113
+  s_868e675aecceed::t_2e131e2c524803 114
+packages/db/src/cloud.test.ts
+  s_868e675aecceed::t_796a068fa67528 525,527,678,680,686,693,695
+apps/desktop/src/lib/desktop.test.ts
+  s_868e675aecceed::t_980318d4c0aad5 1,3-30,32-41,43-50,53-59,61-62
+  s_868e675aecceed::t_229bf28f7285ce 31,42,51,60,63-64
+apps/storybook/AGENTS.md
+  s_868e675aecceed::t_6dbca35cd80788 1
+packages/core/src/settings/model.ts
+  s_868e675aecceed::t_014cb8c531dc16 1
+packages/scripts/src/cli.test.ts
+  s_868e675aecceed::t_876e0be7c236e5 69-75,84-85
+  s_868e675aecceed::t_6fe74c538bd78c 32,59
+  s_868e675aecceed::t_12ffc58bfbc2ca 44,76-83
+apps/api/server/api/canonical-errors.ts
+  s_868e675aecceed::t_68c2f0371a0b02 36,52
+  s_868e675aecceed::t_1f4c994678bee8 33-35,37
+apps/desktop/native/tsconfig.json
+  s_868e675aecceed::t_a253f72a79b3db 1-3
+packages/scripts/src/policy/manifests.test.ts
+  s_868e675aecceed::t_be07307cb86889 70-90
+.github/workflows/ci.yml
+  s_868e675aecceed::t_d326212d173b21 99-100
+docs/architecture/decisions/0021-retire-admin.md
+  s_868e675aecceed::t_a88b069c810846 1-63
+apps/web/package.json
+  s_868e675aecceed::t_6dbca35cd80788 2
+  s_868e675aecceed::t_b9d4e3a0bbad85 35
+docs/architecture/design.md
+  s_868e675aecceed::t_da11df80293e69 23,26-27,39,42-43,61-64
+  s_868e675aecceed::t_eee5ddf95ae339 3-6,17-18,28-30,34-37,40-41
+packages/scripts/src/policy/checks/architecture.ts
+  s_868e675aecceed::t_c1874d51af3e33 40
+  s_868e675aecceed::t_c602fdb1d24afa 117,132-139,159-165,167
+  s_868e675aecceed::t_ad15ccf5a9e05a 36,180
+  s_868e675aecceed::t_39f5872ac461e8 166
+packages/core/src/cloud/index.ts
+  s_868e675aecceed::t_9a82ee0fc9a133 309
+packages/db/src/schema/tables.ts
+  s_868e675aecceed::t_a01125b557934f 13
+docs/architecture/project-studio.md
+  s_868e675aecceed::t_7f611ce6a9771f 3-4
+apps/desktop/src/features/shell/route-state.tsx
+  s_868e675aecceed::t_85ef30c0157c93 10
+packages/auth/package.json
+  s_868e675aecceed::t_86592e74644d4c 11
+e2e/tests/desktop.spec.ts
+  s_868e675aecceed::t_da97a690217978 4,6,14-15,17,19,24-26,33-38,51
+  s_868e675aecceed::t_744f83dc05c1e3 5
+e2e/AGENTS.md
+  s_868e675aecceed::t_54ffae9dcfa6ad 5,13,47
+packages/db/src/settings/reader.ts
+  s_868e675aecceed::t_014cb8c531dc16 1,7,12,20,23,26
+packages/db/src/schema/resources.ts
+  s_868e675aecceed::t_56fae75c7bb68f 5
+apps/desktop/AGENTS.md
+  s_868e675aecceed::t_b2e1ed7e293a14 74-77,146-150
+  s_868e675aecceed::t_da97a690217978 16,18-21,25-26,28-31,45-46,50-58,60-72,78-84,115-116,119,122-124,130-131
+  s_868e675aecceed::t_6dbca35cd80788 1
+  s_868e675aecceed::t_defe070b928cc6 108-109
+  s_868e675aecceed::t_56e522063378af 110,144-145
+  s_868e675aecceed::t_2541a0f22bf203 97-98
+  s_868e675aecceed::t_83cbbdd9318b4d 5-6,24,27,32-39,44,59,85-96,99-107,111-114,117,120-121,135-137,139-143
+packages/scripts/src/clean.test.ts
+  s_868e675aecceed::t_2b0e511fb21065 32-34,44-49
+  s_868e675aecceed::t_764eda3216bd2d 64
+apps/desktop/native/main.ts
+  s_868e675aecceed::t_b72147e040bf3c 9
+  s_868e675aecceed::t_980318d4c0aad5 90
+  s_868e675aecceed::t_5c784d7086bc62 4-5,7-8
+  s_868e675aecceed::t_2541a0f22bf203 3,14
+  s_868e675aecceed::t_a253f72a79b3db 97-98,100,105-107,137,156-160,165
+  s_868e675aecceed::t_defe070b928cc6 99,133
+  s_868e675aecceed::t_cfc6dd970e70e1 31-34
+  s_868e675aecceed::t_dff05f0c9cc261 142-145,148
+  s_868e675aecceed::t_3fb796a75144c4 1-2
+  s_868e675aecceed::t_0212edd30240a2 10-13,29-30,35-39,54-58,60-89,91-92,95,102-104,150-155,161-164,166-167
+  s_868e675aecceed::t_83cbbdd9318b4d 93-94
+  s_868e675aecceed::t_3de555b72fda61 6,108-124,132,134-136,138-139,146,149
+  s_868e675aecceed::t_0da0236d3fe637 125-131
+  s_868e675aecceed::t_1cb11315e45e19 59
+  s_868e675aecceed::t_b2e1ed7e293a14 42-51
+  s_868e675aecceed::t_df5026db90a771 15-22,24-26,96,101
+  s_868e675aecceed::t_681028bc0146f6 147
+DESIGN.md
+  s_868e675aecceed::t_a88b069c810846 49,68
+  s_868e675aecceed::t_26198b59463471 61-63
+packages/scripts/src/commands/tasks.test.ts
+  s_868e675aecceed::t_be07307cb86889 45-49
+apps/desktop/src/features/shell/desktop-shell.tsx
+  s_868e675aecceed::t_d2cbcabdc64369 35,159,172,181
+  s_868e675aecceed::t_1b1840346db305 157
+  s_868e675aecceed::t_b91e2e46c225f2 114
+apps/desktop/.gitignore
+  s_868e675aecceed::t_d3b0972bcd8866 5
+  s_868e675aecceed::t_55cf509cfa6545 1,3-4,6-9
+packages/db/vitest.config.ts
+  s_868e675aecceed::t_a01125b557934f 1,4-12
+e2e/database.ts
+  s_868e675aecceed::t_a198423c8102ab 7,37,53-55,78
+apps/web/messages/zh.json
+  s_868e675aecceed::t_222fdbaab3b6e6 58,76
+  s_868e675aecceed::t_6c00fe4c00a69c 3,139
+apps/desktop/src/routeTree.gen.ts
+  s_868e675aecceed::t_85bef49d265ec5 68,70
+bun.lock
+  s_868e675aecceed::t_b9e8afedc23ee6 21,55,71,78,86,109,148,364,487,506,1302-1303,1530-1531,1598-1599,1714-1715,1754-1755,2492,2652-2653,2676-2677,2902,2982,2984,2986,2988,2990,2992,2994,2996,2998,3000,3002,3004,3006,3008,3010,3012,3014,3016,3018,3020,3022,3024,3026,3028,3030,3032,3034,3036,3038,3040,3042,3044,3046,3048,3050,3052,3054,3056,3058,3060,3062,3064,3066-3068,3070,3072-3074,3082-3085
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "729f6d967ebe0333af38bd5450b54b7ea5191965",
+  "prompts": {},
+  "sessions": {
+    "s_868e675aecceed": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12e26-fbc0-76f2-a127-6ea412b777b8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
