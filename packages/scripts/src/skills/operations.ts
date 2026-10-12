@@ -4,4 +4,6 @@ import {
 } from "../runtime/process-dependencies.js";
 
 export const runSkillsUpdate = (dependencies: RepositoryProcessDependencies) =>
-  runRepositoryCommands(dependencies, "skills.update", [["bunx", "skills", "update", "-p", "-y"]]);
+  runRepositoryCommands(dependencies, "skills.update", [
+    ["bunx", "--bun", "skills", "update", "-p", "-y"],
+  ]);

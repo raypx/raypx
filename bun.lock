@@ -168,7 +168,9 @@
         "@raypx/tsconfig": "workspace:*",
         "@types/pdfkit": "catalog:tooling",
         "@vitest/coverage-v8": "catalog:tooling",
-        "esbuild": "catalog:tooling",
+        "nitro": "catalog:backend",
+        "vite": "catalog:tooling",
+        "vite-plus": "catalog:tooling",
       },
     },
     "e2e": {

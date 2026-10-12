@@ -45,6 +45,7 @@ export async function runShadcnUpdate(dependencies: ShadcnUpdateDependencies): P
     [
       [
         "bunx",
+        "--bun",
         "shadcn@latest",
         "add",
         ...components,

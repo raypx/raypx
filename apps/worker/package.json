@@ -4,16 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "rpx env -- node scripts/dev.mjs",
-    "check": "tsc --noEmit -p tsconfig.json",
-    "test": "vp test --run",
-    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
-    "test:integration": "vp test --run --passWithNoTests integration.test",
-    "test:component": "vp test --run --passWithNoTests component.test",
-    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "build": "node scripts/build.mjs",
-    "start": "node --enable-source-maps dist/index.mjs",
-    "smoke": "node dist/index.mjs --check"
+    "dev": "rpx env -- bun --no-env-file --no-install scripts/dev.mjs",
+    "check": "bun --bun tsc --noEmit -p tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
+    "test:component": "bun --bun vp test --run --passWithNoTests component.test",
+    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "build": "rpx env -- bun --bun vp build",
+    "start": "bun --no-env-file --no-install .output/server/index.mjs",
+    "smoke": "bun --no-env-file --no-install .output/server/index.mjs --check"
   },
   "dependencies": {
     "@orpc/client": "catalog:",
@@ -36,6 +36,8 @@
     "@raypx/tsconfig": "workspace:*",
     "@types/pdfkit": "catalog:tooling",
     "@vitest/coverage-v8": "catalog:tooling",
-    "esbuild": "catalog:tooling"
+    "nitro": "catalog:backend",
+    "vite": "catalog:tooling",
+    "vite-plus": "catalog:tooling"
   }
 }

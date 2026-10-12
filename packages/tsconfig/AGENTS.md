@@ -28,7 +28,9 @@ matrix.
 - `verbatimModuleSyntax` and `exactOptionalPropertyTypes` are inherited from
   `base.json`. **Never disable either**; the whole repository's idioms depend on
   them (`import type`, and conditional spread instead of `key: undefined`).
-- Keep Bun-specific types and APIs in the Node preset rather than the shared base.
+- Keep Bun-specific types and APIs local to their owning workspaces rather than
+  shared presets. `node.json` describes Node-compatible module resolution and
+  standard API types; it does not require a Node executable.
 - Full TypeScript project references are deliberately deferred until editor or
   whole-repository type checking becomes measurably slow.
 

@@ -4,7 +4,7 @@ export default defineConfig({
   fmt: {},
   // `.vite-hooks/pre-commit` invokes this locally after `vp hooks enable`.
   staged: {
-    "*.{ts,tsx,json,md,css,toml}": ["vp fmt --write", "vp lint --fix"],
+    "*.{ts,tsx,json,md,css,toml}": ["bun --bun vp fmt --write", "bun --bun vp lint --fix"],
   },
   lint: {
     // Tracked compiler output is verified through its source workspaces.

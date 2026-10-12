@@ -1,2 +1,4 @@
-# Compiled Node process and copied production dependency assets.
+# Nitro production output, build cache, and legacy output.
+/.output
+/.nitro
 /dist

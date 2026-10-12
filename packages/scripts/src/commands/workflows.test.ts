@@ -99,7 +99,7 @@ describe("repository workflows", () => {
       ["rpx", "tasks", "test:unit", "test:component", "--filter", "!@raypx/e2e"],
       ["rpx", "tasks", "test:integration", "--filter", "!@raypx/e2e"],
       ["rpx", "tasks", "build"],
-      ["node", "apps/worker/dist/index.mjs", "--check"],
+      ["bun", "--no-env-file", "--no-install", "apps/worker/.output/server/index.mjs", "--check"],
     ]);
     expect(deps.runCommand.mock.calls.map(([, options]) => options.env)).toEqual(
       Array(7).fill(deps.processEnv),

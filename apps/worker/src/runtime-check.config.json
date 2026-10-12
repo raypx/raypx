@@ -1,0 +1,64 @@
+{
+  "runtime": {
+    "report": {
+      "title": "Runtime check",
+      "sections": [{ "heading": "Verification", "body": "Actual PDF output." }]
+    },
+    "spreadsheet": {
+      "title": "Runtime check",
+      "sheets": [{ "name": "Data", "columns": ["Value"], "rows": [[1]], "notes": [] }]
+    },
+    "mail": {
+      "input": {
+        "email": "runtime@example.invalid",
+        "kind": "task_completed",
+        "taskId": "runtime-check",
+        "taskUrl": "https://example.invalid/tasks/runtime-check"
+      },
+      "locale": "zh",
+      "expectedHtml": "lang=\"zh\"",
+      "expectedText": "/tasks/runtime-check"
+    },
+    "expectedPdfMediaType": "application/pdf",
+    "expectedSpreadsheetMediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  },
+  "documents": {
+    "font": {
+      "path": "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+      "family": "NotoSansCJKsc-Regular"
+    },
+    "report": {
+      "spec": {
+        "title": "云端研究报告",
+        "sections": [{ "heading": "分析结果", "body": "中文内容与真实数据。" }]
+      },
+      "fileName": "report.pdf",
+      "expectedText": "云端研究报告"
+    },
+    "spreadsheet": {
+      "title": "分析",
+      "sheets": [
+        { "name": "数据", "columns": ["名称", "值"], "rows": [["中文", 30]], "notes": [] }
+      ],
+      "fileName": "data.xlsx",
+      "expectedFirstCell": "中文"
+    },
+    "deck": {
+      "spec": {
+        "title": "研究汇报",
+        "slides": [
+          { "title": "分析 1", "bullets": ["已验证的数据", "可审阅的交付"] },
+          { "title": "分析 2", "bullets": ["已验证的数据", "可审阅的交付"] },
+          { "title": "分析 3", "bullets": ["已验证的数据", "可审阅的交付"] },
+          { "title": "分析 4", "bullets": ["已验证的数据", "可审阅的交付"] },
+          { "title": "分析 5", "bullets": ["已验证的数据", "可审阅的交付"] },
+          { "title": "分析 6", "bullets": ["已验证的数据", "可审阅的交付"] },
+          { "title": "分析 7", "bullets": ["已验证的数据", "可审阅的交付"] },
+          { "title": "分析 8", "bullets": ["已验证的数据", "可审阅的交付"] }
+        ]
+      },
+      "fileName": "preview.pdf",
+      "expectedText": "分析"
+    }
+  }
+}

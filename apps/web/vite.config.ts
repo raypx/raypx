@@ -15,11 +15,11 @@ const config = defineConfig({
       nitro({
         compatibilityDate: "2026-08-23",
         devServer: { hostname: "localhost" },
-        preset: "node-server",
+        preset: "bun",
         routes: { "/health": { handler: "./server/health.ts", format: "web" } },
         serverDir: false,
         serverEntry: false,
-        // The node-server trace must retain React for the TanStack SSR entry.
+        // The Bun artifact must retain React for the TanStack SSR entry.
         // The runtime probe requests `/`, so removal is verified against the built artifact.
         traceDeps: ["react"],
       }),

@@ -27,7 +27,13 @@ const processGates = [
   { task: "build", command: ["rpx", "tasks", "build"] },
   {
     task: "worker:runtime",
-    command: ["node", "apps/worker/dist/index.mjs", "--check"],
+    command: [
+      "bun",
+      "--no-env-file",
+      "--no-install",
+      "apps/worker/.output/server/index.mjs",
+      "--check",
+    ],
   },
 ] satisfies Array<{ task: string; command: string[]; env?: NodeJS.ProcessEnv }>;
 

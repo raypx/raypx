@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "storybook dev -p 6006",
-    "build": "storybook build",
-    "check": "tsc --noEmit -p tsconfig.json"
+    "dev": "bun --bun storybook dev -p 6006",
+    "build": "bun --bun storybook build",
+    "check": "bun --bun tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@raypx/agent-ui": "workspace:*",

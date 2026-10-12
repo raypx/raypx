@@ -148,7 +148,7 @@ root. Its internal `server/api` modules own Hono, oRPC, Auth, and persistence
 composition; Web does not host API routes.
 
 - Development runs on port `3002`.
-- Production emits Nitro's Node output under `.output/server/`.
+- Production emits Nitro's Bun output under `.output/server/`.
 - `scripts/start.mjs` starts the service while honoring `PORT` and
   `NITRO_PORT`.
 - `server/runtime.ts` memoizes the shared runtime and owns the host lifecycle.

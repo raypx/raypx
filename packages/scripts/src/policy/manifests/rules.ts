@@ -4,11 +4,11 @@ import type { WorkspaceShape } from "../manifests.js";
 
 export const canonicalScripts: Readonly<Record<string, string>> = {
   "test:unit":
-    "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
-  "test:integration": "vp test --run --passWithNoTests integration.test",
-  "test:component": "vp test --run --passWithNoTests component.test",
+    "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+  "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
+  "test:component": "bun --bun vp test --run --passWithNoTests component.test",
   "test:coverage":
-    "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
 };
 
 export const scriptFinding = findingFor("manifest.scripts");

@@ -36,9 +36,6 @@ jobs:
       TEST_DATABASE_URL: postgres://raypx_test:raypx_test@127.0.0.1:5432/raypx_ci_test
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: package.json
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
@@ -53,7 +50,7 @@ jobs:
       - name: Validate Worker container and real document exports
         run: |
           docker build -f apps/worker/Dockerfile -t raypx-worker-ci .
-          docker run --rm --network none --entrypoint node raypx-worker-ci dist/index.mjs --check-documents
+          docker run --rm --network none --entrypoint bun raypx-worker-ci --no-env-file --no-install .output/server/index.mjs --check-documents
       - run: bun run generate
         env:
           # Generation validates the URL but never connects to a database.
@@ -109,9 +106,6 @@ jobs:
       RAYPX_E2E_PORT: ${{ matrix.port }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: package.json
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
@@ -122,7 +116,7 @@ jobs:
           path: .turbo/cache
           key: turbo-e2e-${{ matrix.suite }}-${{ matrix.shard }}-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
           restore-keys: turbo-e2e-${{ matrix.suite }}-${{ matrix.shard }}-${{ runner.os }}-${{ runner.arch }}-
-      - run: bun run --cwd e2e playwright install --with-deps chromium
+      - run: bun --bun run --cwd e2e playwright install --with-deps chromium
       - name: Test ${{ matrix.suite }} browsers
         run: bun run test:e2e:${{ matrix.suite }} --shard=${{ matrix.shard }}/${{ matrix.shards }}
         env:
@@ -150,9 +144,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: package.json
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json

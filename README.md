@@ -2,11 +2,10 @@
 
 [![CI](https://github.com/raypx/raypx/actions/workflows/ci.yml/badge.svg)](https://github.com/raypx/raypx/actions/workflows/ci.yml)
 [![Bun 1.4.0](https://img.shields.io/badge/Bun-1.4.0-fbf0df?logo=bun&logoColor=000)](https://bun.sh/)
-[![Node.js 24.18.0](https://img.shields.io/badge/Node.js-24.18.0-339933?logo=nodedotjs&logoColor=fff)](https://nodejs.org/)
 [![TypeScript 7.0.2](https://img.shields.io/badge/TypeScript-7.0.2-3178c6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-d22128?logo=apache&logoColor=fff)](./LICENSE)
 
-Raypx is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud
+Raypx is a Bun-powered, Turbo orchestrated TypeScript monorepo for a cloud
 web app with a standalone typed Hono API, an operations console, and an Electrobun
 desktop client.
 
@@ -63,7 +62,6 @@ projects and tasks; its former local runtime is retired under
 ## Requirements
 
 - Bun 1.4.0
-- Node.js 24.18.0
 - Electrobun's pinned native SDK (prepared by the Desktop scripts)
 - PostgreSQL for persistent API data
 

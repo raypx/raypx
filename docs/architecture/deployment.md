@@ -3,9 +3,9 @@
 ## Deployment units
 
 ```text
-web       Node container
-api       Standalone API container
-worker    Node 24.18.0 Debian slim container; Pi and document converters
+web       Bun 1.4.0 container
+api       Bun 1.4.0 standalone API container
+worker    Bun 1.4.0 Debian container; Pi and document converters
 postgres  independent service
 redis     production AI admission limiter
 objects   private S3-compatible bucket
@@ -37,7 +37,7 @@ admissions. API and Worker share account quotas and private object storage.
 
 ## Containers and Railway
 
-Each deployable Node service owns its container and Railway configuration:
+Each deployable service owns its container and Railway configuration:
 
 ```text
 apps/web/Dockerfile       apps/web/railway.toml
@@ -53,17 +53,20 @@ pruned workspace manifest, copies source before
 shared postinstall, and invokes the root build gate. Only built production
 artifacts enter the runtime image.
 
-The tools stage copies only the `bun` executable from the Bun image. Invoke
-package binaries with `bun x`; the separate `bunx` executable is not copied into
-the Node image and is unavailable during pruning.
+Web and API use pinned Bun 1.4.0 Alpine builder/runtime images. Worker keeps
+Debian Bookworm and copies the pinned Bun executable into that converter image.
+Invoke package binaries with `bun x --bun`; the separate `bunx` executable is
+not copied into the Worker tools image.
 
-- Web serves Nitro's `.output/server/index.mjs` on Railway's `PORT` and exposes
+- Web runs `bun .output/server/index.mjs` on Railway's `PORT` and exposes
   page routes plus `/health`.
-- API starts through `apps/api/scripts/start.mjs` and exposes `/api/auth/*`,
+- API starts through `bun apps/api/scripts/start.mjs` and exposes `/api/auth/*`,
   `/rpc/*`, and `/health` on its own origin. Nitro also forwards the private
   `/internal/execution/*` Gateway and development-only `/api/cloud/storage/*`
   routes to Hono; production storage continues to use private S3.
-- Worker starts the compiled `dist/index.mjs`; its durable PostgreSQL leases are
+- Worker starts `bun .output/server/index.mjs`; Nitro packages the companion
+  `.output/server/runner.mjs`, shared chunks and runtime package assets in the
+  same artifact. Its durable PostgreSQL leases are
   independent from execution ownership. Deploy API and Worker against the same
   new database and object bucket.
 - API requires production values for database, Auth, and allowed external
@@ -94,7 +97,7 @@ and `CLOUD_PDF_FONT_PATH` can override their paths outside the image. A successf
 PPTX write is insufficient: publish only after its PDF preview converts.
 `PDFTOTEXT_BINARY` and `PDFINFO_BINARY` select the trusted text/page parsers;
 image-only PDFs report that OCR is unavailable.
-`node apps/worker/dist/index.mjs --check` validates the packaged runtime without
+`bun --no-env-file --no-install apps/worker/.output/server/index.mjs --check` validates the packaged runtime without
 database or provider credentials. Real converter tests need LibreOffice.
 The image's `--check-documents` probe generates and verifies Chinese reports,
 tables and an eight-page deck using the actual installed converters.
@@ -153,22 +156,31 @@ The shared API environment schema requires `DATABASE_URL` during startup. The
 in-memory repository remains available only to direct `createApiApp` tests that
 inject it explicitly; it is not a runtime fallback.
 
-Web and API hosts explicitly select Nitro's `node-server` preset
-and emit self-contained Node server bundles. Explicitly selecting the preset
-prevents a deployment-level `NITRO_PRESET` value from emitting a Bun server
-that cannot run in the Node 24 runtime. Runtime stages copy generated artifacts
-with `node:node` ownership before switching to the unprivileged `node` user.
+Web and API hosts explicitly select Nitro's `bun` preset and emit complete Bun
+server artifacts. Runtime stages copy generated artifacts with `bun:bun`
+ownership before switching to the unprivileged `bun` user.
 The Web image contains only the application package manifest and `.output`; it
 does not run a second filtered workspace install or copy repository
 `node_modules`. Its container sets `NITRO_HOST=0.0.0.0`, reads Railway's
-injected `PORT`, and declares the exact Node start command in `railway.toml`.
+injected `PORT`, and declares the Bun start command in `railway.toml`.
+Production entrypoints disable automatic package installation and load only
+explicit runtime environment values or the optional `/app/.env` file.
 
 ## Runtime policy
 
-Node.js 24.18.0 is the production runtime for Web, API and Worker. Bun 1.4.0 remains
-the package manager and script runtime. Move a production runtime to Bun only
-after compatibility tests pass and a representative benchmark demonstrates a
-meaningful improvement.
+Bun 1.4.0 is the package manager, repository JavaScript runtime and production
+runtime for Web, API, Worker and isolated Runner processes. JavaScript tools use
+explicit `bun --bun` commands to override package executable shebangs. Supported
+Node-compatible APIs, `@types/node` and TypeScript resolution presets remain
+available through Bun; they do not add a Node executable requirement.
+Worker uses
+Nitro's Bun preset with a custom durable-host entry; both the host and isolated
+Runner use the same Bun executable. Its complete `.output` directory is the
+deployment artifact; fixed document converters and fonts remain image-owned.
+See [ADR-0023](decisions/0023-worker-vite-nitro-artifact.md) for the Worker build
+and cache boundary, and [ADR-0024](decisions/0024-bun-runtime.md) for the repository
+runtime decision. Runtime compatibility, authentication, isolated-process and
+relocated-artifact checks remain required gates when the runtime pin changes.
 
 ## Desktop lifecycle
 

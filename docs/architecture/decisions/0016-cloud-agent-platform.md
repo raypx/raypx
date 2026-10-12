@@ -2,6 +2,9 @@
 
 Status: accepted; supersedes the initial delivery order in [ADR-0015](0015-local-agent-workbench.md). Desktop delivery scope is superseded by [ADR-0019](0019-retire-legacy-desktop-execution.md). Administration scope is superseded by [ADR-0021](0021-retire-admin.md).
 
+The Node runtime provisions below are superseded by
+[ADR-0024](0024-bun-runtime.md); the remaining decisions stay in force.
+
 ## Decision
 
 The first release is a Web-first cloud Search and Computer product. Worker owns

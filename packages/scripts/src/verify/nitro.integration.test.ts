@@ -15,26 +15,22 @@ async function runtimeFixture(privateRouteStatus: 401 | 404): Promise<string> {
     await mkdir(join(output, "server"), { recursive: true });
     await writeFile(
       join(output, "nitro.json"),
-      JSON.stringify({ preset: "node-server", serverEntry: "server/index.mjs" }),
+      JSON.stringify({ preset: "bun", serverEntry: "server/index.mjs" }),
     );
     // The API only returns the configured auth response for a correctly encoded
     // bootstrap POST. A wrong method, body or content type must fail the probe.
     await writeFile(
       join(output, "server/index.mjs"),
-      `import { createServer } from "node:http";
-const server = createServer(async (request, response) => {
-  if (${JSON.stringify(app)} === "api" && request.url === "/internal/execution/bootstrap") {
-    let body = "";
-    for await (const chunk of request) body += chunk;
+      `Bun.serve({ hostname: "127.0.0.1", port: Number(process.env.NITRO_PORT), async fetch(request) {
+  if (${JSON.stringify(app)} === "api" && new URL(request.url).pathname === "/internal/execution/bootstrap") {
+    const body = await request.text();
     const valid = request.method === "POST"
-      && request.headers["content-type"] === "application/json"
+      && request.headers.get("content-type") === "application/json"
       && body === JSON.stringify({ json: {} });
-    response.writeHead(valid ? ${privateRouteStatus} : 400).end();
-    return;
+    return new Response(null, { status: valid ? ${privateRouteStatus} : 400 });
   }
-  response.writeHead(200).end("Raypx");
-});
-await new Promise((resolve) => server.listen(Number(process.env.NITRO_PORT), "127.0.0.1", resolve));
+  return new Response("Raypx");
+}});
 `,
     );
   }

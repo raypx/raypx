@@ -8,15 +8,15 @@ describe("commandAfterSeparator", () => {
       commandAfterSeparator([
         "env",
         "--",
-        "node",
+        "bun",
         "script with spaces.mjs",
         "--flag=value",
         "positional",
       ]),
-    ).toEqual(["node", "script with spaces.mjs", "--flag=value", "positional"]);
+    ).toEqual(["bun", "script with spaces.mjs", "--flag=value", "positional"]);
   });
 
   it("returns an empty command when the separator is absent", () => {
-    expect(commandAfterSeparator(["env", "node", "script.mjs"])).toEqual([]);
+    expect(commandAfterSeparator(["env", "bun", "script.mjs"])).toEqual([]);
   });
 });

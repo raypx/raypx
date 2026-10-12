@@ -39,7 +39,9 @@ export const policyCommand = defineCommand({
           // is formatted — Oxfmt is, and it keeps a short array inline where
           // JSON.stringify would expand it. Handing the rewritten files back
           // stops `--fix` from leaving the tree failing `vp fmt --check`.
-          await runCommand(["vp", "fmt", ...changed], { cwd: dependencies.repositoryRoot });
+          await runCommand(["bun", "--bun", "vp", "fmt", ...changed], {
+            cwd: dependencies.repositoryRoot,
+          });
         }
         console.log(
           changed.length === 0

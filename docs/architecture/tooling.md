@@ -3,16 +3,18 @@
 ## Runtime responsibilities
 
 ```text
-Bun       dependency installation, lockfile, and repository scripts
+Bun       dependency installation, lockfile, all JavaScript tools and production runtimes (1.4.0)
 Turbo     workspace task graph, local/remote caching, pruned deployment
 Vite+     leaf dev/build/test/lint/fmt/pack commands
-Nitro     API and Web TanStack Start server build/deployment shell
-Node.js   Web, API and Worker production runtime (24.18.0)
+Nitro     Web/API server and Worker executable build/deployment shell
 Electrobun Desktop native host/packaging, pinned Bun 1.4.0 main process
 ```
 
-Turbo replaces the Vite+ task runner; never run both task caches. Runtime services remain on Node.js until
-real compatibility tests and benchmarks justify a change.
+Turbo replaces the Vite+ task runner; never run both task caches. Bun 1.4.0 runs
+Web/API, Worker and its isolated Runner, and repository JavaScript tools.
+Leaf commands explicitly use `bun --bun` so package executable shebangs resolve
+to the pinned runtime. [ADR-0024](decisions/0024-bun-runtime.md) records the
+runtime decision; [deployment](deployment.md) defines the artifact boundaries.
 
 ## Bun catalogs
 
@@ -65,7 +67,7 @@ regenerate `bun.lock`, and run the full verification suite.
 ```text
 base.json           strict shared rules, including an empty ambient `types`
 browser.json        Vite, TanStack Start, and WebView applications
-node.json           API, DB, Scripts, and E2E; widens `types` to ["node"]
+node.json           Node-compatible host APIs for API, DB, Scripts and E2E; types ["node"]
 library.json        platform-neutral packages
 react-library.json  shared React UI packages
 ```
@@ -81,6 +83,10 @@ because its `include` covers `vite.config.ts`, and
 `packages/client` widens `lib` for DOM APIs. Restating an inherited value is a
 `bun run policy` error, because the copy stops tracking the preset the moment the
 preset changes.
+
+The `node.json` name, `NodeNext` resolution and `node:*` APIs describe the
+compatibility interface supported by Bun. Keep Bun-specific ambient types local
+to workspaces that need them instead of widening shared presets.
 
 Shared presets do not define `include`, `exclude`, `rootDir`, `outDir`, `paths`,
 or workspace references. Full TypeScript Project References are deferred until
@@ -99,7 +105,7 @@ exports. The shared `moduleResolution: "Bundler"` preset resolves them without
 duplicate `tsconfig.paths` entries. `packages/ui/components.json` uses the same
 aliases, and the current shadcn CLI resolves component destination directories
 from the import mappings. Check `resolvedPaths` with
-`bunx shadcn@latest info --cwd packages/ui --json` when changing them, then run
+`bun x --bun shadcn@latest info --cwd packages/ui --json` when changing them, then run
 the UI component tests and `bun run verify` to cover consuming builds.
 
 ## Linting and formatting
@@ -109,10 +115,10 @@ Oxlint and Oxfmt ship inside Vite+ and are configured in the root
 manager to install:
 
 ```text
-bun run lint         vp lint          Oxlint, type-aware, with vite-plus and raypx plugins
-bun run format       vp fmt --check   fail on unformatted files
-bun run format:fix   vp fmt           rewrite files in place
-bun run knip:report  knip             report unused files, exports, dependencies, and duplicates
+bun run lint         bun --bun vp lint          Oxlint, type-aware, with vite-plus and raypx plugins
+bun run format       bun --bun vp fmt --check   fail on unformatted files
+bun run format:fix   bun --bun vp fmt           rewrite files in place
+bun run knip:report  bun --bun knip             report unused files, exports, dependencies, and duplicates
 ```
 
 `bun run knip:report` is intentionally outside `verify` while the monorepo's
@@ -152,15 +158,18 @@ Policy still validates manifest dependencies and the complete dependency graph,
 including edges discovered in source, without repeating source diagnostics.
 
 The plugin loads workspace metadata once per invocation. Its source and metadata
-are included in the root Turbo lint task's inputs. Use the bundled authoring and
-test APIs from `vite-plus/lint/plugins` and `vite-plus/lint/plugins-dev`; do not add
-a standalone Oxlint dependency. Node loads the TypeScript plugin directly, so its
-internal imports use `.ts` and only the no-emit scripts workspace enables
-`allowImportingTsExtensions`.
+are included in the root Turbo lint task's inputs. Use the bundled authoring API
+from `vite-plus/lint/plugins`; do not add a standalone Oxlint dependency. Bun
+loads the TypeScript plugin directly, so its internal imports use `.ts` and only
+the no-emit scripts workspace enables `allowImportingTsExtensions`.
+The JavaScript plugin host also runs on Bun. The 31 boundary cases exercise the
+bundled Oxlint CLI, with a runtime guard and a forbidden Node executable in PATH.
+This preserves source-import coverage while avoiding the bundled RuleTester
+library's unsupported Bun execution path; manifest and graph checks stay in policy.
 
 The `staged` block in `vite.config.ts` defines the pre-commit formatting and
-lint-fix pass. The committed `.vite-hooks/pre-commit` script invokes `vp staged`.
-Each developer opts in through `vp hooks enable`, which installs the generated
+lint-fix pass. The committed `.vite-hooks/pre-commit` script invokes `bun --bun vp staged`.
+Each developer opts in through `bun --bun vp hooks enable`, which installs the generated
 dispatcher under `.vite-hooks/_` and sets the local `core.hooksPath`; both remain
 uncommitted.
 
@@ -208,7 +217,7 @@ bun run skills:update   update installed repository skills non-interactively
 ```
 
 The update command scans all workspaces and Bun catalogs in `minor` mode. It
-includes exact pins, but deliberately excludes Bun/Node runtime versions,
+includes exact pins, but deliberately excludes the pinned Bun runtime version,
 Drizzle Kit/ORM RC builds (whose hash suffixes do not sort chronologically), and
 `@vitest/coverage-v8`, whose version must keep matching the Vitest that the
 pinned Vite+ release bundles — nothing else pins that Vitest now, so a Vite+
@@ -356,9 +365,9 @@ prop types).
 Always review the diff after running it and manually re-apply project
 customizations before committing; never run it unattended.
 
-`bun run doctor` fails for incorrect Bun/Node versions, missing repository
-metadata, required local binaries, or invalid environment schemas. Missing
-An absent local Electrobun bootstrap or Docker tooling is reported as a warning
+`bun run doctor` fails for an incorrect Bun version, missing repository
+metadata, required local binaries, or invalid environment schemas. An absent
+local Electrobun bootstrap or Docker tooling is reported as a warning
 because native packaging and containers are optional workflows. `bun run db:studio` and `bun run db:push` are interactive and
 bypass Turbo task orchestration.
 
@@ -387,10 +396,10 @@ runners with separate PostgreSQL services, ports and reports. Local parallel
 runs also need separate checkouts because shared build output can race.
 Browser tests are not part of the default `bun run test` graph. Use
 `bun run test:e2e`, and install Chromium with
-`bun run --cwd e2e playwright install chromium`
+`bun --bun run --cwd e2e playwright install chromium`
 when running locally. CI uses the same pinned catalog version and invokes the
 workspace-local Playwright binary to install Linux browser dependencies before
-the browser tests in the combined Linux CI job. See
+the browser tests in the Linux E2E matrix jobs. See
 [Testing and verification](../development/testing.md#github-actions) for the
 zero-secret workflow and optional local diagnostics.
 
@@ -405,7 +414,9 @@ repository. Direct workspace build commands are leaf tools, not shipping gates.
 
 Turbo uses strict environment mode. `VITE_*`, `NODE_ENV`, and `NITRO_PRESET` affect
 build keys. Root config, the shared test config, TS presets, catalogs, lockfile and env files also affect
-hashes. `rpx tasks` fingerprints the actual Node/Bun executable versions, OS,
+hashes. The shared DOM preload helpers under `packages/scripts/src/testing/**`
+are also global inputs, so changing the Bun/jsdom adaptation invalidates cached
+test results. `rpx tasks` fingerprints the actual Bun version and revision, OS,
 architecture and libc so native artifacts cannot cross incompatible hosts.
 Outputs are limited to `dist`, Nitro `.output`, Storybook and explicit coverage;
 never put user inputs, sessions, credentials or signed URLs inside these paths.
@@ -420,14 +431,37 @@ credentials and forces local-only mode.
 
 `verify` keeps cheap-to-expensive gates; unit and component tests are cached,
 integration and external effects are not. Real PostgreSQL/E2E, provider calls,
-Node probes, document conversion, migrations and deployment always execute.
+Bun artifact probes, document conversion, migrations and deployment always execute.
 `format:fix`, maintenance and database operations remain direct uncached commands.
 
 Docker prunes with the exact Turbo catalog version. The dependency layer installs
 `out/json` against the canonical lockfile frozen with scripts delayed; the source layer then supplies `out/full`
 and root TS/Vite/Turbo config, runs shared postinstall, and builds via Turbo.
-Builder images contain Node 24.18.0 and Bun 1.4.0. Final images keep only Node
+Builder images contain the pinned toolchain. Final images keep only compiled
 runtime artifacts; the Worker also keeps its fixed converters and fonts.
+
+Worker builds through Vite+ and Nitro. `vite.config.ts` owns the Vite plugin and
+workspace resolution; `nitro.config.ts` uses the Bun preset with a custom
+`src/main.ts` entry and a second Rolldown input for `src/runner-main.ts`. The
+resulting `.output/server/index.mjs` is the durable host, and `runner.mjs` is its
+isolated Run process. Shared chunks remain beside the entries so Runner lookup
+works relative to the host module URL. This custom executable entry starts the
+worker directly and does not add an HTTP listener.
+
+Nitro owns dependency tracing and copying. Explicit `traceDeps` entries retain
+complete Pi/PDF/XLSX/PPTX package assets, while workspace TypeScript and React
+Email's asset-free runtime entry are bundled. There is no custom esbuild builder,
+package-closure implementation or separate `runtime:prepare` prerequisite.
+Turbo caches `.output/**` as a complete artifact, so cache restoration includes
+both executable entries, their chunks and runtime dependencies/assets. Root
+build scripts still run checks and dependency builds first. Runtime checks are
+uncached. [ADR-0023](decisions/0023-worker-vite-nitro-artifact.md) supersedes only
+ADR-0018's earlier Worker compilation/runtime-preparation split.
+
+`scripts/dev.mjs` runs Vite's builder in watch mode. After Nitro finishes a
+successful rebuild, it gracefully stops the previous host and starts the new
+artifact using the current Bun executable. A failed build leaves the current
+host running. Restart dev after installed dependencies or manifests change.
 
 Turbo 2.11.7 can omit a development dependency that also appears as an optional
 peer when pruning Bun locks (`@raypx/shared` / `@orpc/server`). Builders therefore

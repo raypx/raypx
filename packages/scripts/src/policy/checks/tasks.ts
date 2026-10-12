@@ -16,6 +16,39 @@ const uncached = [
   "generate",
   "db:migrate",
 ];
+interface TaskDefinition {
+  dependsOn?: string[];
+  cache?: boolean;
+  outputs?: string[];
+}
+
+function workerDependsOn(task: TaskDefinition | undefined, edge: string): boolean {
+  return (
+    Array.isArray(task?.dependsOn) &&
+    task.dependsOn.some(
+      (dependency) =>
+        dependency === edge || (!edge.startsWith("^") && dependency === `worker#${edge}`),
+    )
+  );
+}
+
+/** Nitro owns one portable artifact, so cache restoration must include its complete output. */
+function checkWorkerArtifactTasks(
+  tasks: Record<string, TaskDefinition>,
+  add: (message: string) => void,
+) {
+  const build = tasks["worker#build"];
+  if (tasks["worker#runtime:prepare"] || workerDependsOn(build, "runtime:prepare"))
+    add("Worker Nitro builds must not retain the retired runtime:prepare task");
+  for (const edge of ["check", "^build", "^transit"])
+    if (!workerDependsOn(build, edge)) add(`worker#build must depend on ${edge}`);
+
+  const outputs = Array.isArray(build?.outputs) ? build.outputs : [];
+  if (outputs.length !== 1 || outputs[0] !== ".output/**")
+    add(
+      "worker#build must cache the complete .output/** Nitro artifact, including both executables and runtime dependencies",
+    );
+}
 
 export function validateTaskGraph(value: unknown): PolicyFinding[] {
   const findings: PolicyFinding[] = [];
@@ -32,7 +65,7 @@ export function validateTaskGraph(value: unknown): PolicyFinding[] {
     return findings;
   }
   const config = value as {
-    tasks?: Record<string, { dependsOn?: string[]; cache?: boolean; outputs?: string[] }>;
+    tasks?: Record<string, TaskDefinition>;
     globalEnv?: string[];
     remoteCache?: { signature?: boolean };
   };
@@ -55,6 +88,7 @@ export function validateTaskGraph(value: unknown): PolicyFinding[] {
   for (const [key, task] of Object.entries(config.tasks ?? {}))
     if (key.includes("#") && uncached.includes(key.split("#").at(-1)!) && task?.cache !== false)
       add(`${key} must execute every time`);
+  checkWorkerArtifactTasks(config.tasks ?? {}, add);
   return findings;
 }
 

@@ -128,7 +128,7 @@ export function validateWorkspaceManifest(
       engineFinding(
         location,
         "declares its own devEngines",
-        `remove the devEngines block from ${location}; the root package.json pins Bun and Node for every workspace`,
+        `remove the devEngines block from ${location}; the root package.json pins Bun for every workspace`,
       ),
     );
   }

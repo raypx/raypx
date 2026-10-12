@@ -113,9 +113,9 @@
     "build": "rpx tasks build",
     "check": "rpx tasks check",
     "lint": "rpx tasks lint:leaf",
-    "knip:report": "knip --no-progress --reporter compact --no-exit-code",
+    "knip:report": "bun --bun knip --no-progress --reporter compact --no-exit-code",
     "format": "rpx tasks format:leaf",
-    "format:fix": "vp fmt",
+    "format:fix": "bun --bun vp fmt",
     "test": "rpx tasks test --filter !@raypx/e2e",
     "test:unit": "rpx tasks test:unit --filter !@raypx/e2e",
     "test:integration": "rpx tasks test:integration --filter !@raypx/e2e",
@@ -130,8 +130,8 @@
     "db:studio": "rpx db studio",
     "generate": "rpx generate",
     "desktop:build": "rpx desktop build",
-    "storybook": "bun run --cwd apps/storybook dev",
-    "storybook:build": "rpx tasks build --filter storybook",
+    "storybook": "bun run --cwd apps/bun --bun storybook dev",
+    "storybook:build": "rpx tasks build --filter bun --bun storybook",
     "verify": "rpx verify",
     "shadcn:update": "rpx shadcn update",
     "postinstall": "bun run --cwd packages/shared build",
@@ -140,8 +140,8 @@
     "build:api": "rpx tasks build --filter api",
     "build:worker": "rpx tasks build --filter worker",
     "build:desktop": "rpx tasks build --filter desktop",
-    "lint:leaf": "vp lint",
-    "format:leaf": "vp fmt --check"
+    "lint:leaf": "bun --bun vp lint",
+    "format:leaf": "bun --bun vp fmt --check"
   },
   "devDependencies": {
     "@raypx/scripts": "workspace:*",
@@ -168,9 +168,9 @@
       "onFail": "error"
     },
     "runtime": {
-      "name": "node",
-      "version": "24.18.0",
-      "onFail": "download"
+      "name": "bun",
+      "version": "1.4.0",
+      "onFail": "error"
     }
   },
   "packageManager": "bun@1.4.0"

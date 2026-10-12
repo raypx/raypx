@@ -49,4 +49,51 @@ describe("task graph policy", () => {
     graph.remoteCache.signature = false;
     expect(validateTaskGraph(graph)).toHaveLength(5);
   });
+  it("rejects the retired Worker runtime preparation task", () => {
+    const graph = config();
+    graph.tasks["worker#runtime:prepare"] = {
+      dependsOn: ["check", "^build", "^transit"],
+      cache: false,
+      outputs: [],
+    };
+    expect(validateTaskGraph(graph).map((finding) => finding.message)).toContain(
+      "Worker Nitro builds must not retain the retired runtime:prepare task",
+    );
+  });
+  it.each(["runtime:prepare", "worker#runtime:prepare"])(
+    "rejects a stale Worker prerequisite on %s",
+    (dependency) => {
+      const graph = config();
+      graph.tasks["worker#build"].dependsOn.push(dependency);
+      expect(validateTaskGraph(graph).map((finding) => finding.message)).toContain(
+        "Worker Nitro builds must not retain the retired runtime:prepare task",
+      );
+    },
+  );
+  it("rejects Worker builds bypassing source propagation and standard checks", () => {
+    const graph = config();
+    graph.tasks["worker#build"].dependsOn = [];
+    for (const edge of ["check", "^build", "^transit"])
+      expect(validateTaskGraph(graph).map((finding) => finding.message)).toContain(
+        `worker#build must depend on ${edge}`,
+      );
+  });
+  it.each([
+    ["legacy bundles", ["dist/index.mjs", "dist/runner.mjs"]],
+    ["only the host", [".output/server/index.mjs"]],
+    ["only executable bundles", [".output/server/index.mjs", ".output/server/runner.mjs"]],
+    ["extra legacy output", [".output/**", "dist/**"]],
+    ["no output", []],
+  ])("rejects a partial Worker Nitro cache: %s", (_name, outputs) => {
+    const graph = config();
+    graph.tasks["worker#build"].outputs = outputs;
+    expect(validateTaskGraph(graph).map((finding) => finding.message)).toContain(
+      "worker#build must cache the complete .output/** Nitro artifact, including both executables and runtime dependencies",
+    );
+  });
+  it("accepts qualified local Worker prerequisites", () => {
+    const graph = config();
+    graph.tasks["worker#build"].dependsOn = ["worker#check", "^build", "^transit"];
+    expect(validateTaskGraph(graph)).toEqual([]);
+  });
 });

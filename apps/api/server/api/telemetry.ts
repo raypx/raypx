@@ -7,7 +7,7 @@ export function allowlistedErrorEvent(event: Sentry.ErrorEvent): Sentry.ErrorEve
     ...(event.event_id ? { event_id: event.event_id } : {}),
     ...(event.timestamp ? { timestamp: event.timestamp } : {}),
     level: event.level ?? "error",
-    platform: "node",
+    platform: "bun",
     ...(event.release ? { release: event.release } : {}),
     ...(event.environment ? { environment: event.environment } : {}),
     exception: {

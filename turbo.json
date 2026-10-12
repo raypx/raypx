@@ -14,9 +14,10 @@
     ".gitignore",
     ".env",
     ".env.local",
-    "test.config.ts"
+    "test.config.ts",
+    "packages/scripts/src/testing/**"
   ],
-  "globalEnv": ["RPX_CACHE_PLATFORM", "NODE_OPTIONS", "CI", "LANG", "TZ"],
+  "globalEnv": ["RPX_CACHE_PLATFORM", "BUN_OPTIONS", "CI", "LANG", "TZ"],
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"],
@@ -102,6 +103,11 @@
     "desktop#native:prepare": {
       "cache": false,
       "outputs": []
+    },
+    "worker#build": {
+      "dependsOn": ["check", "^build", "^transit"],
+      "outputs": [".output/**"],
+      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"]
     },
     "//#format:leaf": {
       "outputs": []

@@ -258,7 +258,7 @@ describe("fixWorkspaceManifest", () => {
   it("rewrites every deviating script, adds a missing one, and drops devEngines", () => {
     const { "test:component": _omitted, ...rest } = canonicalScripts;
     const content = manifest({
-      devEngines: { runtime: { name: "node" } },
+      devEngines: { runtime: { name: "bun" } },
       scripts: { ...rest, "test:unit": "vp test --run", check: checkCommand, build: checkCommand },
     });
 
@@ -305,7 +305,7 @@ describe("fixWorkspaceManifest", () => {
   it("leaves an invalid scripts field untouched", () => {
     const content = manifest({
       scripts: ["vp test --run"],
-      devEngines: { runtime: { name: "node" } },
+      devEngines: { runtime: { name: "bun" } },
     });
     const fixed = fix(content);
 

@@ -50,7 +50,7 @@ export function createWorkerRuntime(options: {
   };
 }
 
-/** Multi-instance delivery host; each claimed Run owns a fenced lease and Node child. */
+/** Multi-instance delivery host; each claimed Run owns a fenced lease and Bun child. */
 export async function createCloudWorkerRuntime(
   values?: Record<string, string | boolean | number | undefined>,
 ): Promise<WorkerRuntime> {

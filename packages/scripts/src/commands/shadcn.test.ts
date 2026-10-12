@@ -43,6 +43,7 @@ describe("runShadcnUpdate", () => {
     expect(dependencies.runCommand).toHaveBeenCalledWith(
       [
         "bunx",
+        "--bun",
         "shadcn@latest",
         "add",
         "button",

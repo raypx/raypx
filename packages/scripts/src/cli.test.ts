@@ -114,7 +114,7 @@ describe("rpx CLI", () => {
     const result = runCli([
       "env",
       "--",
-      "node",
+      "bun",
       "-e",
       "process.stdout.write(JSON.stringify(process.argv.slice(1)))",
       "--",
@@ -126,7 +126,7 @@ describe("rpx CLI", () => {
   });
 
   it("propagates the child exit code", () => {
-    const result = runCli(["env", "--", "node", "-e", "process.exit(7)"]);
+    const result = runCli(["env", "--", "bun", "-e", "process.exit(7)"]);
 
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(7);
@@ -134,7 +134,7 @@ describe("rpx CLI", () => {
   });
 
   it("propagates the child termination signal", () => {
-    const result = runCli(["env", "--", "node", "-e", 'process.kill(process.pid, "SIGTERM")']);
+    const result = runCli(["env", "--", "bun", "-e", 'process.kill(process.pid, "SIGTERM")']);
 
     expect(result.error).toBeUndefined();
     expect(result.status).toBeNull();

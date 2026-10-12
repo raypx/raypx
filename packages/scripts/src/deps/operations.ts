@@ -21,18 +21,16 @@ const tazeOptions = [
   "drizzle-orm",
   "--exclude",
   "bun",
-  "--exclude",
-  "node",
 ] as const;
 
 export const runDependencyCheck = (dependencies: DependencyMaintenanceDependencies) =>
   runRepositoryCommands(dependencies, "deps.check", [
-    ["taze", ...tazeOptions, "--fail-on-outdated"],
+    ["bun", "--bun", "taze", ...tazeOptions, "--fail-on-outdated"],
   ]);
 
 export const runDependencyUpdate = (dependencies: DependencyMaintenanceDependencies) =>
   runRepositoryCommands(dependencies, "deps.update", [
-    ["taze", ...tazeOptions, "-w"],
+    ["bun", "--bun", "taze", ...tazeOptions, "-w"],
     ["bun", "install"],
   ]);
 

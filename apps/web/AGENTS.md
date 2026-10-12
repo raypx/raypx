@@ -87,6 +87,8 @@ server/
 - Web owns only the liveness `/health` route; never add a catch-all API handler
   that can swallow TanStack routes.
 - Web does not initialize a database or API runtime.
+- Build with Nitro's `bun` preset and run the output with Bun 1.4.0. Execute
+  Vite+, TypeScript and test CLIs with explicit `bun --bun` to keep their runtime consistent.
 - The Docker build requires the public `VITE_API_URL` build argument. Keep its
   declaration and missing-value guard: runtime-only variables cannot repair an
   already-built browser bundle, and Web does not serve same-origin RPC/Auth.

@@ -15,11 +15,11 @@ export interface DoctorReport {
 }
 
 export interface DoctorDependencies {
-  pathExists(path: string): Promise<boolean>;
-  probe(command: readonly string[]): Promise<string>;
-  readFile(path: string): Promise<string>;
+  pathExists(this: void, path: string): Promise<boolean>;
+  probe(this: void, command: readonly string[]): Promise<string>;
+  readFile(this: void, path: string): Promise<string>;
   repositoryRoot: string;
-  validateEnvironment(): void;
+  validateEnvironment(this: void): void;
 }
 
 interface RepositoryManifest {
@@ -51,8 +51,8 @@ function validateRepositoryManifest(manifest: RepositoryManifest): void {
     manifest.name !== "raypx" ||
     packageManager?.name !== "bun" ||
     !packageManager.version ||
-    runtime?.name !== "node" ||
-    !runtime.version
+    runtime?.name !== "bun" ||
+    runtime.version !== packageManager.version
   ) {
     throw new Error("root package metadata is incomplete");
   }
@@ -89,7 +89,7 @@ async function checkRepositoryPath(
 }
 
 async function checkRepositoryBins(dependencies: DoctorDependencies): Promise<DoctorCheck> {
-  const bins = ["rpx", "vp", "vitest"] as const;
+  const bins = ["rpx", "vp"] as const;
   const missingBins: string[] = [];
   for (const bin of bins) {
     const path = join(dependencies.repositoryRoot, "node_modules/.bin", bin);
@@ -188,14 +188,8 @@ export async function runDoctor(dependencies: DoctorDependencies): Promise<Docto
   ];
 
   const expectedBun = repository.manifest?.devEngines?.packageManager?.version;
-  const expectedNode = repository.manifest?.devEngines?.runtime?.version;
   if (expectedBun) {
     checks.push(await checkRuntimeVersion(dependencies, "Bun", ["bun", "--version"], expectedBun));
-  }
-  if (expectedNode) {
-    checks.push(
-      await checkRuntimeVersion(dependencies, "Node.js", ["node", "--version"], expectedNode),
-    );
   }
 
   checks.push(

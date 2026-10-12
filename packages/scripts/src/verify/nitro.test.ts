@@ -25,27 +25,27 @@ function dependencies() {
 }
 
 describe("verifyNitroRuntimes", () => {
-  it("checks node-server metadata and starts the output with Node", async () => {
+  it("checks Bun metadata and starts the isolated output with Bun", async () => {
     const deps = dependencies();
     const cleanup = vi.fn(async () => undefined);
 
     await verifyNitroRuntimes(deps, {
       allocatePort: async () => 43210,
-      readMetadata: async () =>
-        JSON.stringify({ preset: "node-server", serverEntry: "server/index.mjs" }),
+      readMetadata: async () => JSON.stringify({ preset: "bun", serverEntry: "server/index.mjs" }),
       stageOutput: async () => ({ cleanup, directory: "/isolated/.output" }),
       targets: [target],
     });
 
     expect(deps.runCommand).toHaveBeenCalledOnce();
     const [command, options] = deps.runCommand.mock.calls[0] ?? [];
-    expect(command?.slice(0, 4)).toEqual([
-      "node",
-      "--input-type=module",
+    expect(command?.slice(0, 5)).toEqual([
+      "bun",
+      "--no-env-file",
+      "--no-install",
       "--eval",
       expect.any(String),
     ]);
-    expect(command?.slice(4)).toEqual([
+    expect(command?.slice(5)).toEqual([
       "file:///isolated/.output/server/index.mjs",
       "Example",
       JSON.stringify(target.probes),
@@ -74,13 +74,13 @@ describe("verifyNitroRuntimes", () => {
 
   it.each([
     [
-      "non-Node preset",
-      { preset: "bun", serverEntry: "server.mjs" },
-      "Example Nitro output uses bun instead of node-server",
+      "retired executor preset",
+      { preset: "node-server", serverEntry: "server.mjs" },
+      "Example Nitro output uses node-server instead of bun",
     ],
     [
       "outside output",
-      { preset: "node-server", serverEntry: "../../secret.mjs" },
+      { preset: "bun", serverEntry: "../../secret.mjs" },
       "points outside its output directory",
     ],
   ] as const)("rejects unsafe Nitro output: %s", async (_name, metadata, message) => {

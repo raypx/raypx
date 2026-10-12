@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "e2e": "playwright test",
-    "check": "tsc --noEmit -p tsconfig.json",
-    "test:ui": "playwright test --ui",
-    "test:report": "playwright show-report",
-    "capture:product": "bun run capture-product.ts",
-    "e2e:web": "playwright test --config=playwright.web.config.ts",
-    "e2e:desktop": "playwright test --config=playwright.desktop.config.ts"
+    "e2e": "bun --no-env-file --no-install --bun playwright test",
+    "check": "bun --bun tsc --noEmit -p tsconfig.json",
+    "test:ui": "bun --no-env-file --no-install --bun playwright test --ui",
+    "test:report": "bun --no-env-file --no-install --bun playwright show-report",
+    "capture:product": "bun --no-env-file --no-install capture-product.ts",
+    "e2e:web": "bun --no-env-file --no-install --bun playwright test --config=playwright.web.config.ts",
+    "e2e:desktop": "bun --no-env-file --no-install --bun playwright test --config=playwright.desktop.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "catalog:tooling",

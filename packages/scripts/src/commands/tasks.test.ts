@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { taskInvocation } from "./tasks.js";
+import { cachePlatform, taskInvocation } from "./tasks.js";
 
 const credentials = {
   TURBO_TOKEN: "test-token",
@@ -11,11 +11,12 @@ describe("task cache trust", () => {
     const invocation = taskInvocation(
       ["build"],
       { TURBO_TOKEN: "partial" },
-      "linux:x64:node24:glibc:bun1.4",
+      "linux:x64:bun-1.4.0:revision:glibc-2.41",
     );
     expect(invocation.command).toContain("--cache=local:rw");
     expect(invocation.env.TURBO_TOKEN).toBeUndefined();
-    expect(invocation.env.RPX_CACHE_PLATFORM).toBe("linux:x64:node24:glibc:bun1.4");
+    expect(invocation.env.RPX_CACHE_PLATFORM).toBe("linux:x64:bun-1.4.0:revision:glibc-2.41");
+    expect(invocation.command.slice(0, 3)).toEqual(["bun", "--bun", "turbo"]);
   });
   it("strips inherited remote credentials from an untrusted CI run", () => {
     const invocation = taskInvocation(["test:unit"], { ...credentials, CI: "true" }, "linux:x64");
@@ -50,5 +51,12 @@ describe("task cache trust", () => {
   it("rejects flags that could bypass strict environment or cache policy", () => {
     expect(() => taskInvocation(["build", "--cache=remote:rw"], {}, "darwin")).toThrow("policy");
     expect(() => taskInvocation(["build", "--env-mode=loose"], {}, "darwin")).toThrow("policy");
+  });
+  it("fingerprints the actual Bun executor rather than its compatibility process.version", () => {
+    const fingerprint = cachePlatform();
+    expect(fingerprint).toContain(
+      `${process.platform}:${process.arch}:bun-${process.versions.bun}:`,
+    );
+    expect(fingerprint).not.toContain(`:${process.version}:`);
   });
 });

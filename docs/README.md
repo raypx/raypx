@@ -30,7 +30,10 @@ deployment boundaries, and coding-agent guidance.
   the V2-only API, project ownership, permissions, Agent runs, and Organization
   reservation.
 - [Toolchain](./architecture/tooling.md) — Bun catalogs, Vite+, TypeScript,
-  shadcn/Base UI, and repository automation.
+  shadcn/Base UI, and repository automation; Worker executable packaging follows
+  [ADR-0023](./architecture/decisions/0023-worker-vite-nitro-artifact.md).
+- [Bun runtime decision](./architecture/decisions/0024-bun-runtime.md) — one pinned
+  runtime for production, tooling, tests and isolated Runner processes.
 - [Runtime and deployment](./architecture/deployment.md) — production runtimes,
   containers, Railway, PostgreSQL, and Electrobun distribution.
 - [Decision records](./architecture/decisions/README.md) — decisions that

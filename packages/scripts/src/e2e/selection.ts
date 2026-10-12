@@ -49,6 +49,8 @@ export function browserInvocation(selection: BrowserSelection) {
         task,
         "--filter",
         "@raypx/e2e",
+        // The adapter already built each consumer in production mode.
+        "--only",
         ...(selection.playwrightArgs.length ? ["--", ...selection.playwrightArgs] : []),
       ];
 }

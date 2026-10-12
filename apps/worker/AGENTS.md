@@ -7,16 +7,20 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 
 ## Interface
 
-| Path                      | Purpose                                                       |
-| ------------------------- | ------------------------------------------------------------- |
-| `src/index.ts`            | Outbox claim/dispatch loop and lifecycle contract             |
-| `src/runtime.ts`          | Multi-instance composition and expired-owner recovery         |
-| `src/cloud.ts`            | Cloud execution owner, cancellation, child agents and budgets |
-| `src/tools/`              | Fixed trusted search, parsing, computation and document tools |
-| `src/main.ts`             | Node executable and compiled runtime/document verification    |
-| `scripts/dev.mjs`         | Initial build, source watch and Node child restart            |
-| `src/process-executor.ts` | Atomic claim, lease renewal and child lifecycle               |
-| `src/runner-main.ts`      | Credential-free per-Run Node entry and private Gateway        |
+| Path                            | Purpose                                                       |
+| ------------------------------- | ------------------------------------------------------------- |
+| `src/index.ts`                  | Outbox claim/dispatch loop and lifecycle contract             |
+| `src/runtime.ts`                | Multi-instance composition and expired-owner recovery         |
+| `src/cloud.ts`                  | Cloud execution owner, cancellation, child agents and budgets |
+| `src/tools/`                    | Fixed trusted search, parsing, computation and document tools |
+| `src/main.ts`                   | Bun command dispatch and execution-host lifecycle             |
+| `src/runtime-checks.ts`         | Compiled runtime and real document verification               |
+| `src/runtime-check.config.json` | Deterministic samples, expected outputs and font defaults     |
+| `vite.config.ts`                | Vite+ build orchestration and workspace resolution            |
+| `nitro.config.ts`               | Nitro executable entries and standalone runtime artifact      |
+| `scripts/dev.mjs`               | Vite build watch and graceful Bun child restart               |
+| `src/process-executor.ts`       | Atomic claim, lease renewal and child lifecycle               |
+| `src/runner-main.ts`            | Credential-free per-Run Bun entry and private Gateway         |
 
 ## Ownership
 
@@ -25,7 +29,7 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   an independent execution loop atomically claims the canonical CloudRun.
 - Every host has a unique UUID. Recovery touches expired execution leases only.
   The host renews 30-second leases every ten seconds; expired owners cannot renew.
-- Each Run executes in a separate Node process with an explicit minimal
+- Each Run executes in a separate Bun process with an explicit minimal
   environment and scoped RunGrant. Database, S3, model and search master
   credentials stay in trusted hosts. This is fault isolation; arbitrary code
   requires a future security sandbox.
@@ -50,8 +54,16 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   revision, terminal Run, Task review and notifications commit together.
 - LibreOffice, Poppler and templates use fixed executable paths and argument
   lists, no shell or model code. The Debian image pins their snapshot and fonts.
-- Build bundles workspace TypeScript and copies third-party runtime assets with
-  their dependency graph; the artifact never requires the source checkout.
+- Vite+ and Nitro bundle workspace TypeScript into `.output/server/index.mjs`
+  and `.output/server/runner.mjs`. Worker uses a custom executable entry rather
+  than an HTTP server; do not replace its lifecycle with a request handler.
+- Nitro owns external dependency tracing and complete package assets through
+  `traceDeps`. The artifact must run without the source checkout.
+- Bundle React Email's asset-free runtime entry, keeping its preview CLI out of
+  the artifact. Preserve full assets for external SDK/document packages.
+- Turbo caches the complete `.output/**` artifact, including dependencies/assets.
+  Use the root build gate so checks and dependency builds precede the build.
+  There is no separate runtime-preparation task or package-copying pipeline.
 
 ## Verification
 
@@ -62,10 +74,14 @@ bun run build:worker
 bun run --cwd apps/worker smoke
 ```
 
-`node dist/index.mjs --check-documents` additionally requires the production
+`bun .output/server/index.mjs --check-documents` additionally requires the production
 fonts, LibreOffice and Poppler and verifies Chinese PDF/XLSX plus a real
 eight-page presentation preview. CI runs it in the built Worker container.
 
-`bun run dev` builds the runtime dependency closure once, then watches bundled
-workspace sources and gracefully restarts the real Node execution host. Changes
-to dependency manifests require restarting dev to refresh runtime packages.
+`bun run dev` uses Vite's builder watch to rebuild bundled workspace sources.
+After Nitro finishes packaging a successful build, it gracefully restarts the
+compiled execution host using the current Bun executable. Failed builds do not
+restart the host. Changes to installed dependencies or manifests require
+restarting dev. See [tooling](../../docs/architecture/tooling.md) and
+[ADR-0023](../../docs/architecture/decisions/0023-worker-vite-nitro-artifact.md)
+for the build and cache boundary.

@@ -1,12 +1,11 @@
 # syntax=docker/dockerfile:1
-FROM node:24.18.0-alpine AS tools
-COPY --from=oven/bun:1.4.0-alpine /usr/local/bin/bun /usr/local/bin/bun
+FROM oven/bun:1.4.0-alpine AS tools
 WORKDIR /app
 
 FROM tools AS prune
 COPY . .
-RUN turbo_version=$(node -p "require('./package.json').workspaces.catalogs.tooling.turbo") && \
-    bun x "turbo@$turbo_version" prune api --docker
+RUN turbo_version=$(bun --no-env-file -p "require('./package.json').workspaces.catalogs.tooling.turbo") && \
+    bun x --bun "turbo@$turbo_version" prune api --docker
 
 FROM tools AS build
 COPY --from=prune /app/out/json/ ./
@@ -20,15 +19,15 @@ COPY tsconfig.json test.config.ts vite.config.ts turbo.json .gitignore .prettier
 RUN bun run postinstall
 RUN bun run build:api
 
-FROM node:24.18.0-alpine AS runtime
+FROM oven/bun:1.4.0-alpine AS runtime
 ENV NODE_ENV=production
 
 WORKDIR /app/apps/api
 
-COPY --chown=node:node --from=build /app/apps/api/.output ./.output
-COPY --chown=node:node --from=build /app/apps/api/scripts ./scripts
+COPY --chown=bun:bun --from=build /app/apps/api/.output ./.output
+COPY --chown=bun:bun --from=build /app/apps/api/scripts ./scripts
 
-USER node
+USER bun
 EXPOSE 3002
 
-CMD ["sh", "-c", "if [ -f /app/.env ]; then exec node --env-file=/app/.env --enable-source-maps scripts/start.mjs; else exec node --enable-source-maps scripts/start.mjs; fi"]
+CMD ["sh", "-c", "if [ -f /app/.env ]; then exec bun --no-install --env-file=/app/.env scripts/start.mjs; else exec bun --no-install --no-env-file scripts/start.mjs; fi"]

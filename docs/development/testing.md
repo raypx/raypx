@@ -22,17 +22,17 @@ alongside applications. Turbo builds shared before consumer checks and tests, in
 `rpx tasks` filters. Direct leaf commands bypass that graph: after editing shared,
 run `bun run --cwd packages/shared build` before a workspace's direct `check` or `test`.
 
-| Stage          | Command                                                     | Purpose                                       |
-| -------------- | ----------------------------------------------------------- | --------------------------------------------- |
-| i18n / policy  | in-process                                                  | cheap source and structural checks            |
-| format         | `rpx tasks format:leaf`                                     | one repository-wide format check              |
-| lint           | `rpx tasks lint:leaf`                                       | one type-aware lint pass                      |
-| check          | `rpx tasks check`                                           | per-workspace typechecks; builds shared first |
-| unit/component | `rpx tasks test:unit test:component --filter '!@raypx/e2e'` | disjoint deterministic cached layers          |
-| integration    | `rpx tasks test:integration --filter '!@raypx/e2e'`         | uncached API/adapter checks                   |
-| build          | `rpx tasks build`                                           | graph-owned checks and output restoration     |
-| worker runtime | `node apps/worker/dist/index.mjs --check`                   | uncached compiled imports and resource probe  |
-| runtime        | in-process Node probes                                      | uncached Web/API HTTP smoke checks            |
+| Stage          | Command                                                                       | Purpose                                       |
+| -------------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
+| i18n / policy  | in-process                                                                    | cheap source and structural checks            |
+| format         | `rpx tasks format:leaf`                                                       | one repository-wide format check              |
+| lint           | `rpx tasks lint:leaf`                                                         | one type-aware lint pass                      |
+| check          | `rpx tasks check`                                                             | per-workspace typechecks; builds shared first |
+| unit/component | `rpx tasks test:unit test:component --filter '!@raypx/e2e'`                   | disjoint deterministic cached layers          |
+| integration    | `rpx tasks test:integration --filter '!@raypx/e2e'`                           | uncached API/adapter checks                   |
+| build          | `rpx tasks build`                                                             | graph-owned checks and output restoration     |
+| worker runtime | `bun --no-env-file --no-install apps/worker/.output/server/index.mjs --check` | uncached compiled imports and resource probe  |
+| runtime        | Bun probes of relocated Nitro artifacts                                       | uncached Web/API HTTP smoke checks            |
 
 Nothing else needs to be run in sequence. The remaining scripts narrow a failure
 down: `bun run policy` prints each finding with a `Fix:` line and
@@ -59,8 +59,9 @@ the verification gate independently.
 to `canary`, and can also be started with **Run workflow**. It needs no repository
 Secrets, Variables, `.env` file, or external database. Optional Turbo secrets
 enable signed remote cache only on trusted canary pushes/manual runs; PRs use
-local-only caches. Missing remote credentials never prevent verification. Node and Bun versions come
-from the root `package.json`; dependencies use the frozen lockfile.
+local-only caches. Missing remote credentials never prevent verification. The
+Bun 1.4.0 pin comes from the root `package.json`; dependencies use the frozen
+lockfile. CI installs Bun and executes JavaScript tools with explicit `bun --bun`.
 
 There are three job definitions (six runners):
 
@@ -108,11 +109,11 @@ unauthenticated access to `/projects`.
 Install the local browser once with:
 
 ```bash
-bun run --cwd e2e playwright install chromium
+bun --bun run --cwd e2e playwright install chromium
 ```
 
 CI installs Chromium and its Linux dependencies with the workspace-local
-`bun run --cwd e2e playwright install --with-deps chromium` command before
+`bun --bun run --cwd e2e playwright install --with-deps chromium` command before
 running the browser tests in the Linux job.
 
 Desktop native checks:
@@ -124,17 +125,32 @@ bun run desktop:build            # root frontend gate, then native packaging
 
 Each workspace must complete its local TypeScript check independently. The root
 Turbo task graph runs checks, tests, and builds across all applications and
-packages. Node deployments explicitly select `node-server`. After the
-build, it reads each Web and API `.output/nitro.json`, requires the `node-server`
-preset, and starts each generated server with the repository's Node runtime on
+packages. Web and API explicitly select Nitro's `bun` preset. After the
+build, verification reads each `.output/nitro.json`, requires the `bun` preset,
+relocates the complete output and starts each generated server with Bun 1.4.0 on
 a temporary loopback port. One Web process must serve both `/` and `/health`;
 the standalone API output must serve `/health` and reject an unauthenticated
 `POST /internal/execution/bootstrap` with HTTP 401. A 404 fails the probe, so a
 missing production route cannot pass as a healthy server. The probe supplies a
-non-routable database URL and exercises no database query.
+non-routable database URL and exercises no database query. Probes disable
+automatic env-file loading and package installation so the artifact must run
+with its supplied environment and bundled/traced dependencies.
 
-The Worker artifact check runs on Node 24.18.0 and needs no database or model
-credentials. Document integration tests additionally exercise LibreOffice when
+The Worker artifact check runs on Bun 1.4.0 and needs no database or model
+credentials. It verifies the isolated Runner, Pi loading, actual PDF/XLSX output
+and Chinese task-notification mail rendering. Build integration fixtures verify
+Nitro's two executable entries and package assets in a relocated artifact that
+can run without its source workspace. Vite builder-watch coverage verifies that
+successful rebuilds wait for the old host to exit before starting a replacement,
+failed builds retain the running host, and shutdown closes the host and watcher.
+Turbo caches the complete Worker `.output/**`, including dependencies and
+assets. A cache hit restores the whole artifact; no runtime-preparation
+prerequisite runs independently of the build. The runtime probe still executes
+after every root verification, including cache hits. The small Worker entry
+dispatches check flags to `runtime-checks.ts`, whose deterministic document and
+mail samples live in `runtime-check.config.json`; the compiled probes still
+exercise those samples and their expected results.
+Document integration tests additionally exercise LibreOffice when
 `SOFFICE_BINARY` is available, including an eight-page presentation and its real
 PDF preview. Provider-backed Search/Computer acceptance needs the configured
 model, search API and private bucket described in
@@ -148,7 +164,7 @@ keeps its own discovery, environment and setup overrides.
 Each runner uses at most two workers because Turbo already runs workspaces in
 parallel, and uses one on machines with at most two available CPUs. This bounds
 nested process concurrency without relaxing test limits or disabling file isolation.
-The test command is `vp test --run`, which reads that file; the application
+The test command is `bun --bun vp test --run`, which reads that file; the application
 `vite.config.ts` is reserved for `dev`, `build`, and SSR. Unit tests therefore
 do not load TanStack Start, Nitro, React, Tailwind, or evlog application
 plugins.
@@ -186,8 +202,8 @@ runner from the test API and can fail before the first test with
 safe because they resolve `vp` from the root `node_modules/.bin`, the same way
 they already resolve `tsc` without declaring TypeScript.
 
-`vp test` is Vite+'s built-in command and is the runner every workspace `test`
-script calls. Turbo runs workspace scripts; `bun run test` is the repository-wide uncached
+`vp test` is Vite+'s built-in command and runs under Bun through explicit
+`bun --bun vp` workspace scripts. Turbo runs workspace scripts; `bun run test` is the repository-wide uncached
 full-suite entry point, while focused unit/component runs use caches. There is no direct
 `vitest` dependency: Vite+ bundles the runner, and the test API is imported from
 `vite-plus/test`. `@vitest/coverage-v8` remains a direct dependency because
@@ -195,7 +211,7 @@ Vite+ does not bundle it; its version therefore has to keep matching the Vitest
 that Vite+ ships.
 
 The root `vitest.config.ts` excludes the Playwright `e2e/` workspace. It is a
-file-discovery smoke config only: a root `bunx vp test --run` collects every
+file-discovery smoke config only: a root `bun --bun vp test --run` collects every
 workspace's tests into one process, where per-workspace `setupFiles` and
 environments do not apply, so `jest-dom` matchers are missing and jsdom stubs
 such as `window.matchMedia` are absent. Expect failures from that invocation and
@@ -223,10 +239,20 @@ green. The four layer scripts are byte-identical in every workspace that owns a
 itself lives in `packages/scripts/src/policy/manifests/rules.ts`. Change it there, then
 run `bun run policy` for the paste-ready fix in each workspace.
 
-Node workspaces use the Node test environment. DOM workspaces and individual
-component/integration files opt into jsdom with local setup, keeping globals out
-of server and library checks. E2E has Web and Desktop projects. Web covers
+Server/library workspaces use Vitest's `node` compatibility environment under
+Bun. DOM workspaces and individual component/integration files opt into jsdom
+with local setup, keeping globals out of server and library checks. E2E has Web and Desktop projects. Web covers
 public, authenticated and cloud flows; Desktop targets its own browser preview.
+
+Bun 1.4.0 cannot preserve jsdom 30's private Window brands through a contextified
+VM WindowProxy. Root [`test.config.ts`](../../test.config.ts) preloads
+[`jsdom-preload.ts`](../../packages/scripts/src/testing/jsdom-preload.ts) before
+Vitest creates its DOM. The helper disables that VM contextification while
+retaining real JSDOM, React, user-event interactions, Vitest's error handling
+and cleanup. Tests that explicitly request `runScripts` fail with guidance to
+use a browser test; inline-script execution behavior belongs in Playwright.
+The helper directory is part of Turbo's `globalDependencies`, so helper changes
+invalidate cached tests instead of reusing results from a different environment.
 
 The root E2E commands use `rpx e2e` to forward Playwright arguments through
 Turbo. Select an application, a functional group, a file or a test title:
@@ -263,14 +289,36 @@ removed from full regression. Group and shard reports use separate directories
 under `playwright-report/` and `test-results/`. Shards split test counts rather
 than measured durations, so equal counts do not guarantee equal runtime.
 
-The `raypx/boundaries` Oxlint rule now owns source import diagnostics. Its
-RuleTester cases live in `packages/scripts/src/lint/`; policy tests retain
-manifest direction and complete dependency-cycle coverage. The two share one
-architecture model rather than maintaining separate boundary rules.
+The `raypx/boundaries` Oxlint rule owns source import diagnostics and its
+JavaScript plugin host runs on Bun. Its 31 cases now execute through the bundled
+Oxlint CLI in
+[`boundaries.integration.test.ts`](../../packages/scripts/src/lint/boundaries.integration.test.ts),
+with a Bun runtime guard and a forbidden Node executable in PATH. They retain
+the valid/invalid import cases and diagnostic line/column checks. The bundled
+RuleTester library is incompatible with Bun, so these tests exercise the real
+lint path. Policy tests retain manifest direction and complete dependency-cycle
+coverage; both consumers share one architecture model.
+
+Root E2E commands build the selected applications in production mode through Turbo and start their
+compiled artifacts: API/Web use Nitro's Bun server, while Desktop serves its
+compiled SPA through a plugin-free Vite preview config. This avoids starting a
+second development build and waiting for Nitro hot reload. The E2E adapter sets
+`VITE_API_URL` to the selected loopback API port before Turbo builds the browser
+bundle; that URL is a build input, so changing the test port rebuilds the client.
+Direct leaf Playwright execution requires those prepared artifacts and the same
+API port; use the root command for ordinary focused runs.
+The adapter then runs only the selected Turbo E2E task, so its dependencies are
+not rebuilt under the test driver's mode. Both stages continue to use Turbo's
+platform and cache policy.
+Playwright, the application servers and preview tool all execute with Bun.
+The driver and compiled servers disable automatic env-file loading and package
+installation. The test driver, database setup and API retain `NODE_ENV=test`. Only compiled
+Web SSR runs with `NODE_ENV=production`, matching the bundle's React runtime;
+the dedicated test-database guard still applies before either server starts.
 
 ## Acceptance expectations
 
-- Browser, Node, React library, and Bun-specific types do not leak across
+- Browser, Node-compatible host, React library, and Bun-specific types do not leak across
   workspace boundaries.
 - Web and Desktop share contracts/client types but not route trees.
 - Retired Admin and device/local execution RPCs return 404 for every role.

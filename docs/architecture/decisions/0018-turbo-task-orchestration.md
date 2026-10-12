@@ -5,6 +5,12 @@
 Accepted
 
 Supersedes [ADR-0002](0002-vite-plus-sole-orchestrator.md).
+The Worker compilation/runtime-preparation split is superseded by
+[ADR-0023](0023-worker-vite-nitro-artifact.md). The remaining task-orchestration
+decisions stay in force.
+
+The Node runtime provisions below are superseded by
+[ADR-0024](0024-bun-runtime.md); the remaining decisions stay in force.
 
 ## Context
 
@@ -29,6 +35,13 @@ Build depends on check and dependency builds. Transit nodes carry source-export
 package hashes to consumers even when those packages emit no JS. Shared owns the
 only library pack build and is built before consumer checks and tests. Leaf
 build scripts do not embed duplicate checks; shipping builds use root scripts.
+
+Worker compilation caches only its executable bundles and source maps. An
+uncached runtime-preparation prerequisite traces current sources in memory and
+prepares matching package assets before compilation or cache restoration. This
+avoids repeatedly archiving the complete runtime dependency tree while keeping
+a compile cache hit valid when assets are missing. Initial builds prepare those
+dependencies locally rather than restoring them from a Worker artifact cache.
 
 Deterministic checks, pure unit/component tests, lint and format checks are
 cacheable. Integration, PostgreSQL, E2E, providers, runtime probes, generation,

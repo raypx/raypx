@@ -10,7 +10,7 @@ Web composes Conversation, Task, file review, usage and notification pages.
 Agent UI shares controlled business views. Client owns replay, contiguous event
 sequences, reconnects and account/resource isolation. API authenticates every
 command and subscription; Application checks current personal/project scope.
-Worker claims Runs and starts separate Node Runners with registered trusted tools.
+Worker claims Runs and starts separate Bun Runners with registered trusted tools.
 API's private execution Gateway dispatches model and research requests; only API
 receives model/search credentials. Durable hashed RunGrants bind each Runner to
 its scope, Run, owner epoch and live lease.
@@ -78,7 +78,7 @@ delivery, recipient preferences and typed bilingual mail templates.
 ## Verification
 
 Run owning workspace checks/tests, then `bun run verify`. PostgreSQL concurrency
-and browser E2E use an explicit test database. Validate Node Worker artifact
+and browser E2E use an explicit test database. Validate Bun Worker artifact
 startup and real document exports separately from fake-provider tests.
 
 Acceptance: research with citations, analyze CSV, produce a report/table/deck,

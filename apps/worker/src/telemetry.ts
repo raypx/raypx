@@ -15,7 +15,7 @@ export function startWorkerTelemetry(dsn?: string): {
           type: undefined,
           ...(event.event_id ? { event_id: event.event_id } : {}),
           ...(event.timestamp ? { timestamp: event.timestamp } : {}),
-          platform: "node",
+          platform: "bun",
           ...(event.level ? { level: event.level } : {}),
           tags: {
             service: "raypx-worker",

@@ -105,8 +105,8 @@ function parseMetadata(raw: string, target: NitroRuntimeTarget): NitroMetadata {
   }
 
   const { preset, serverEntry } = metadata as Record<string, unknown>;
-  if (preset !== "node-server") {
-    throw new Error(`${target.name} Nitro output uses ${String(preset)} instead of node-server.`);
+  if (preset !== "bun") {
+    throw new Error(`${target.name} Nitro output uses ${String(preset)} instead of bun.`);
   }
   if (typeof serverEntry !== "string" || serverEntry.length === 0) {
     throw new Error(`${target.name} Nitro metadata is missing serverEntry.`);
@@ -206,8 +206,9 @@ export async function verifyNitroRuntimes(
       dependencies.log("info", "verify.runtime.started", { service: target.name });
       await dependencies.runCommand(
         [
-          "node",
-          "--input-type=module",
+          "bun",
+          "--no-env-file",
+          "--no-install",
           "--eval",
           nitroProbe,
           pathToFileURL(serverEntry).href,

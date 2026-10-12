@@ -1,12 +1,11 @@
 # syntax=docker/dockerfile:1
-FROM node:24.18.0-alpine AS tools
-COPY --from=oven/bun:1.4.0-alpine /usr/local/bin/bun /usr/local/bin/bun
+FROM oven/bun:1.4.0-alpine AS tools
 WORKDIR /app
 
 FROM tools AS prune
 COPY . .
-RUN turbo_version=$(node -p "require('./package.json').workspaces.catalogs.tooling.turbo") && \
-    bun x "turbo@$turbo_version" prune web --docker
+RUN turbo_version=$(bun --no-env-file -p "require('./package.json').workspaces.catalogs.tooling.turbo") && \
+    bun x --bun "turbo@$turbo_version" prune web --docker
 
 FROM tools AS build
 COPY --from=prune /app/out/json/ ./
@@ -27,16 +26,16 @@ ARG VITE_POSTHOG_HOST
 RUN : "${VITE_API_URL:?Set VITE_API_URL to the standalone API origin before building Web}" \
     && bun run build:web
 
-FROM node:24.18.0-alpine AS runtime
+FROM oven/bun:1.4.0-alpine AS runtime
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 
 WORKDIR /app/apps/web
 
-COPY --chown=node:node --from=build /app/apps/web/package.json ./package.json
-COPY --chown=node:node --from=build /app/apps/web/.output ./.output
+COPY --chown=bun:bun --from=build /app/apps/web/package.json ./package.json
+COPY --chown=bun:bun --from=build /app/apps/web/.output ./.output
 
-USER node
+USER bun
 EXPOSE 3000
 
-CMD ["sh", "-c", "if [ -f /app/.env ]; then exec node --env-file=/app/.env --enable-source-maps .output/server/index.mjs; else exec node --enable-source-maps .output/server/index.mjs; fi"]
+CMD ["sh", "-c", "if [ -f /app/.env ]; then exec bun --no-install --env-file=/app/.env .output/server/index.mjs; else exec bun --no-install --no-env-file .output/server/index.mjs; fi"]

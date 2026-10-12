@@ -3,7 +3,6 @@
 ## Requirements
 
 - Bun `1.4.0`
-- Node.js `24.18.0`
 - Electrobun native SDK (Desktop scripts prepare its pinned version)
 - PostgreSQL when persistent data is required
 

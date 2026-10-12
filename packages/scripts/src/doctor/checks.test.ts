@@ -12,14 +12,13 @@ function dependencies(overrides: Partial<DoctorDependencies> = {}): DoctorDepend
         packageManager: "bun@1.4.0",
         devEngines: {
           packageManager: { name: "bun", version: "1.4.0" },
-          runtime: { name: "node", version: "24.18.0" },
+          runtime: { name: "bun", version: "1.4.0" },
         },
       }),
     ),
     pathExists: vi.fn(async () => true),
     probe: vi.fn(async (command) => {
       if (command[0] === "bun") return "1.4.0\n";
-      if (command[0] === "node") return "v24.18.0\n";
       return `${command[0]} available`;
     }),
     validateEnvironment: vi.fn(),
@@ -36,7 +35,6 @@ describe("runDoctor", () => {
     expect(report.checks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "Bun", status: "ok" }),
-        expect.objectContaining({ name: "Node.js", status: "ok" }),
         expect.objectContaining({ name: "environment", status: "ok" }),
         expect.objectContaining({
           name: "Electrobun",
@@ -52,7 +50,6 @@ describe("runDoctor", () => {
       dependencies({
         probe: vi.fn(async (command) => {
           if (command[0] === "bun") return "1.3.13";
-          if (command[0] === "node") return "v24.18.0";
           return "available";
         }),
         validateEnvironment: vi.fn(() => {
@@ -68,6 +65,25 @@ describe("runDoctor", () => {
     expect(output).not.toContain("postgres://");
   });
 
+  it("requires the bundled Vite+ runner and never a standalone Vitest binary", async () => {
+    const deps = dependencies({
+      pathExists: vi.fn(async (path) => !path.endsWith("/vitest")),
+    });
+    const report = await runDoctor(deps);
+    expect(report.errors).toBe(0);
+    expect(deps.pathExists).toHaveBeenCalledWith("/repo/node_modules/.bin/vp");
+    expect(deps.pathExists).not.toHaveBeenCalledWith("/repo/node_modules/.bin/vitest");
+
+    const missingRunner = await runDoctor(
+      dependencies({ pathExists: vi.fn(async (path) => !path.endsWith("/vp")) }),
+    );
+    expect(missingRunner.checks).toContainEqual({
+      name: "dependencies",
+      status: "error",
+      detail: "missing binaries: vp",
+    });
+  });
+
   it("warns instead of failing when optional tools are absent", async () => {
     const report = await runDoctor(
       dependencies({
@@ -76,7 +92,6 @@ describe("runDoctor", () => {
         ),
         probe: vi.fn(async (command) => {
           if (command[0] === "bun") return "1.4.0";
-          if (command[0] === "node") return "24.18.0";
           throw new Error("missing");
         }),
       }),
@@ -106,10 +121,29 @@ describe("runDoctor", () => {
       detail:
         "local bootstrap is installed; prepare the SDK with bun run --cwd apps/desktop native:prepare",
     });
-    expect(deps.probe).toHaveBeenCalledTimes(3);
+    expect(deps.probe).toHaveBeenCalledTimes(2);
     expect(deps.probe).toHaveBeenCalledWith(["bun", "--version"]);
-    expect(deps.probe).toHaveBeenCalledWith(["node", "--version"]);
     expect(deps.probe).toHaveBeenCalledWith(["docker", "--version"]);
     expect(deps.pathExists).toHaveBeenCalledWith("/repo/apps/desktop/node_modules/.bin/electrobun");
+  });
+  it("rejects missing or divergent runtime pins without consulting another executor", async () => {
+    for (const runtime of [undefined, { name: "bun", version: "1.4.2" }]) {
+      const deps = dependencies({
+        readFile: vi.fn(async () =>
+          JSON.stringify({
+            name: "raypx",
+            devEngines: {
+              packageManager: { name: "bun", version: "1.4.0" },
+              ...(runtime ? { runtime } : {}),
+            },
+          }),
+        ),
+      });
+      const report = await runDoctor(deps);
+      expect(report.checks).toContainEqual(
+        expect.objectContaining({ name: "repository", status: "error" }),
+      );
+      expect(deps.probe).not.toHaveBeenCalledWith(["node", "--version"]);
+    }
   });
 });

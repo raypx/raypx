@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { runCliAction } from "./action.js";
 import { ProcessError } from "./process.js";
 
-const originalExitCode = process.exitCode;
+const originalExitCode = process.exitCode ?? 0;
 const originalNodeEnvironment = process.env.NODE_ENV;
 
 afterEach(() => {

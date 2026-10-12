@@ -10,7 +10,7 @@ describe("skills maintenance", () => {
 
     await runSkillsUpdate(dependencies);
 
-    expect(runCommand).toHaveBeenCalledWith(["bunx", "skills", "update", "-p", "-y"], {
+    expect(runCommand).toHaveBeenCalledWith(["bunx", "--bun", "skills", "update", "-p", "-y"], {
       cwd: "/repo",
       env: dependencies.processEnv,
     });

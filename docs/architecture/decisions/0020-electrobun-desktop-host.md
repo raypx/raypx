@@ -6,6 +6,9 @@ Accepted, October 12, 2026. Replaces the native-host and packaging details in
 [ADR-0019](0019-retire-legacy-desktop-execution.md); its product scope and
 retirement boundaries remain unchanged.
 
+The Node runtime provisions below are superseded by
+[ADR-0024](0024-bun-runtime.md); the remaining decisions stay in force.
+
 ## Context
 
 The user chose Electrobun after comparing it with Tauri v2. Desktop is now a

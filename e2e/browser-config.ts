@@ -11,7 +11,10 @@ const offsets = { web: 0, desktop: 1, api: 2 } as const;
 function server(app: keyof typeof offsets) {
   const offset = offsets[app];
   return {
-    command: `bun run --cwd apps/${app} dev -- --host 127.0.0.1 --port ${basePort + offset}`,
+    command:
+      app === "desktop"
+        ? `bun run --cwd apps/desktop preview -- --config ../../e2e/desktop-preview.config.ts --host 127.0.0.1 --port ${basePort + offset} --strictPort`
+        : `bun --no-env-file --no-install apps/${app}/.output/server/index.mjs`,
     cwd: repositoryRoot,
     env: {
       RAYPX_REPOSITORY_ENV: repositoryRoot,
@@ -20,8 +23,12 @@ function server(app: keyof typeof offsets) {
       AUTH_URL: app === "api" ? origin(2) : origin(0),
       VITE_API_URL: origin(2),
       DATABASE_URL: databaseUrl(),
-      NODE_ENV: "test",
+      // Built Web SSR and its external React packages must use the same production mode.
+      // The Playwright driver/setup and test API keep NODE_ENV=test and the guarded database.
+      NODE_ENV: app === "web" ? "production" : "test",
+      NITRO_HOST: "127.0.0.1",
       NITRO_PORT: String(basePort + offset),
+      PORT: String(basePort + offset),
     },
     url: `${origin(offset)}${app === "api" ? "/health" : ""}`,
     reuseExistingServer: !process.env.CI,

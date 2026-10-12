@@ -21,7 +21,7 @@ server/
 
 ## Ownership
 
-- Own port 3002, the standalone Node artifact, Docker/Railway compatibility,
+- Own port 3002, the standalone Bun artifact, Docker/Railway compatibility,
   and host lifecycle wiring.
 - Own the HTTP host lifecycle and API composition. Domain commands stay in
   `@raypx/application` and `@raypx/core`; persistence stays in `@raypx/db`.
@@ -36,6 +36,8 @@ server/
   a per-project loop or missing-module fallback in an HTTP handler.
 - Initialize exactly one runtime per process and close it idempotently through
   Nitro's `close` hook.
+- Build with Nitro's `bun` preset and run the output with Bun 1.4.0. Execute
+  Vite+, TypeScript and test CLIs with explicit `bun --bun` to keep their runtime consistent.
 - Keep the standalone `AUTH_URL` default at `http://localhost:3002`; production
   must provide its public URL explicitly.
 - Preserve `/api/auth/*`, `/rpc/*`, and `/health` as stable public endpoints.

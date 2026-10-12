@@ -64,8 +64,10 @@ or `packages/` without a `package.json`.
   `bun run lint` and `bun run format`. Do not add a separate linter, formatter,
   or git-hook manager. The committed `.vite-hooks/pre-commit` runs the staged-file
   pass after `vp hooks enable`; generated `.vite-hooks/_` files stay local.
-- Node.js `24.18.0` is the production server runtime; Desktop uses Electrobun's
-  pinned Bun host. Hutch prepares/packages Desktop only; Bun/Turbo own the repository.
+- Bun `1.4.0` is the server, Worker/Runner, tooling and test runtime; Desktop uses
+  Electrobun's pinned Bun host. Run JavaScript tool CLIs with `bun --bun` so their
+  shebang cannot select Node. Hutch prepares/packages Desktop only; Bun/Turbo own
+  the repository. See ADR-0024.
 - Keep Bun-specific types or APIs local to Bun workspaces rather than shared
   TypeScript presets.
 - Prefer root scripts to global tools so the repository-local versions run.
@@ -148,7 +150,7 @@ Every application and test-bearing package owns an independent
 `vp`, and leave `@raypx/e2e` outside `bun run test`. Most `test` scripts carry
 `--passWithNoTests`, so confirm a new test actually ran.
 
-The runner is `vp test --run`; there is no direct `vitest` dependency, because
+The runner is `bun --bun vp test --run`; there is no direct `vitest` dependency, because
 Vite+ bundles it and the test API is imported from `vite-plus/test`. Deleting a
 workspace's `vitest.config.ts` admits its application Vite plugins into the
 runner and breaks React 19 — the configs are load-bearing, not boilerplate.

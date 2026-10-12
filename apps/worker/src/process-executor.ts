@@ -1,6 +1,6 @@
 import { fork } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { fileURLToPath } from "node:url";
+import { dirname, join, resolve } from "node:path";
 import type { CloudApplication } from "@raypx/application";
 import type { CloudLimits, CloudRun } from "@raypx/core";
 import type { RendererOptions } from "./tools/render.js";
@@ -38,11 +38,12 @@ export function createProcessExecutor(options: {
     const grantId = crypto.randomUUID(),
       token = randomBytes(32).toString("base64url");
     const child = fork(
-      options.runnerEntry ?? fileURLToPath(new URL("./runner.mjs", import.meta.url)),
+      options.runnerEntry ?? join(dirname(resolve(process.argv[1]!)), "runner.mjs"),
       [],
       {
         env: runnerEnvironment(),
-        execArgv: [],
+        execPath: process.execPath,
+        execArgv: ["--no-env-file", "--no-install"],
         serialization: "advanced",
         stdio: ["ignore", "ignore", "ignore", "ipc"],
       },

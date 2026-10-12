@@ -4,17 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "rpx env -- vp dev --port 3000",
-    "build": "rpx env -- vp build",
-    "start": "node --enable-source-maps .output/server/index.mjs",
-    "preview": "rpx env -- vp preview",
+    "dev": "rpx env -- bun --bun vp dev --port 3000",
+    "build": "rpx env -- bun --bun vp build",
+    "start": "bun --no-env-file --no-install .output/server/index.mjs",
+    "preview": "rpx env -- bun --bun vp preview",
     "bundle:analyze": "bun run scripts/analyze-bundle.ts",
-    "check": "tsc --noEmit -p tsconfig.json",
-    "test": "vp test --run --passWithNoTests",
-    "test:unit": "vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
-    "test:integration": "vp test --run --passWithNoTests integration.test",
-    "test:component": "vp test --run --passWithNoTests component.test",
-    "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+    "check": "bun --bun tsc --noEmit -p tsconfig.json",
+    "test": "bun --bun vp test --run --passWithNoTests",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
+    "test:component": "bun --bun vp test --run --passWithNoTests component.test",
+    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
     "@phosphor-icons/react": "catalog:frontend",

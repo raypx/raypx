@@ -13,7 +13,7 @@ desktop client.
   sharing platform-specific route trees.
 - Keep server-side business rules behind small, stable interfaces.
 - Use Bun for dependency installation and repository scripts while keeping
-  Node.js as the initial production server runtime.
+  Bun 1.4.0 as the production server and repository runtime.
 - Extract a workspace package only after a stable seam and multiple real
   consumers exist.
 

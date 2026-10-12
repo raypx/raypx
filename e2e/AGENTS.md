@@ -10,6 +10,7 @@ private workspace that is deliberately separate from Vitest.
 ```text
 browser-config.ts     shared Web/Desktop projects and required API/app servers
 test-groups.ts        exhaustive smoke/projects/workbench/cloud spec catalog
+desktop-preview.config.ts plugin-free preview of the compiled Desktop SPA
 playwright.config.ts   full browser run
 playwright.web.config.ts Web suite, including cloud flows
 playwright.desktop.config.ts Desktop-only suite
@@ -55,8 +56,16 @@ Scripts: `e2e` (full run), `e2e:web`, `e2e:desktop`, `test:ui`, `test:report`, `
 - The full run starts API, Web and Desktop. Web-only starts API/Web; Desktop-only
   starts API/Desktop. Web includes Search/Computer, deliveries, acceptance,
   notifications, usage and real session isolation; there is no separate Cloud project.
+- Root commands build the owning applications through Turbo, then run API/Web's
+  compiled Bun Nitro servers and the compiled Desktop SPA preview. Playwright
+  also executes with Bun via explicit `bun --bun`; driver/server entrypoints
+  disable automatic env-file loading and package installation. They bind
+  `VITE_API_URL` to the test API before building; do not reuse a bundle built for
+  another port. Leaf Playwright commands require those prepared artifacts.
 - `webServer` starts Web at `RAYPX_E2E_PORT` (default 3000), Desktop at +1,
-  and API at +2 with `NODE_ENV=test`. Group reports use separate suite directories.
+  and API at +2. The driver, setup and API use `NODE_ENV=test`; compiled Web SSR
+  uses `production` to keep React's runtime consistent with the bundle.
+  Group and shard reports use separate directories.
 - Executing tests requires NODE_ENV=test and TEST_DATABASE_URL naming raypx_*test.
   Global setup migrates and resets that dedicated database. Desktop seeds only
   accounts/projects; Web and full runs also seed cloud facts. Real API login uses

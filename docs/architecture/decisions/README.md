@@ -57,3 +57,5 @@ source-boundary checks run with `bun run i18n:check` and are the first gate of
 - [ADR-0020: Electrobun Desktop host](./0020-electrobun-desktop-host.md)
 - [ADR-0021: Retire Admin and unused management interfaces](./0021-retire-admin.md)
 - [ADR-0022: Unscoped application package names](./0022-unscoped-application-packages.md)
+- [ADR-0023: Worker Vite and Nitro artifact](./0023-worker-vite-nitro-artifact.md)
+- [ADR-0024: Bun as the repository and production runtime](./0024-bun-runtime.md)

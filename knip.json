@@ -40,7 +40,7 @@
       "entry": ["scripts/analyze-bundle.ts", "server/health.ts", "src/router.tsx"]
     },
     "apps/worker": {
-      "entry": ["scripts/build.mjs", "scripts/dev.mjs", "src/main.ts", "src/runner-main.ts"]
+      "entry": ["vite.config.ts", "src/main.ts", "src/runner-main.ts"]
     },
     "apps/storybook": {
       "entry": [".storybook/main.ts", ".storybook/preview.tsx"]

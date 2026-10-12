@@ -10,7 +10,7 @@ describe("repositoryRoot", () => {
     const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
 
     expect(manifest.workspaces).toBeDefined();
-    await expect(access(join(repositoryRoot, "bun.lock"))).resolves.toBeUndefined();
-    await expect(access(join(repositoryRoot, "packages/scripts"))).resolves.toBeUndefined();
+    await access(join(repositoryRoot, "bun.lock"));
+    await access(join(repositoryRoot, "packages/scripts"));
   });
 });

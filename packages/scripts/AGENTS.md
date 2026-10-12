@@ -19,6 +19,7 @@ src/deps/           Bun dependency maintenance commands and operations
 src/skills/         repository skill maintenance commands and operations
 src/architecture/   shared workspace boundary model and import resolution
 src/lint/           Oxlint source-boundary plugin, metadata loading and rule tests
+src/testing/        Bun/jsdom compatibility preload and DOM runtime verification
 src/e2e/            browser selection and Playwright argument forwarding
 src/policy/         command, orchestration, checks/<rule-domain>, manifest rules,
                     fixes, per-convention pure modules, report
@@ -69,14 +70,22 @@ Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] 
   Policy owns manifest production dependencies and complete workspace cycles,
   including source edges. Both consume the single `architecture/` model.
   Enum parity tests compare Core, Contracts and DB without adding runtime edges.
-- The Node-loaded Oxlint plugin uses explicit `.ts` imports; the no-emit scripts
+- The Bun-loaded Oxlint plugin uses explicit `.ts` imports; the no-emit scripts
   workspace alone enables `allowImportingTsExtensions` for that entrypoint.
+- Oxlint's bundled `RuleTester` rejects Bun. Boundary cases run against the real
+  bundled CLI with a Bun-host assertion, preserving source and diagnostic coverage.
+- The shared Vitest preload keeps jsdom's real DOM in Bun without its unsupported
+  VM WindowProxy. Explicit jsdom script execution must use a browser test; focus,
+  events, errors and teardown remain verified and component tests are never skipped.
 - E2E execution still enters Turbo; the E2E adapter forwards Playwright arguments
-  after Turbo's separator. `--list` skips builds, servers and database setup.
+  after Turbo's separator and binds the compiled client's API URL to the selected
+  test port before building in production mode. The subsequent test task uses
+  `--only` to avoid rebuilding dependencies in the driver's test mode.
+  `--list` skips builds, servers and database setup.
 - Applications use their unscoped directory name; packages and E2E retain the
   `@raypx/` scope. Filters and qualified Turbo tasks use the actual package name.
 - `desktop build` first runs root `build:desktop` through Turbo, then invokes the
-  Desktop `native:build` Electrobun packager. It never prepares a Node/Pi runner.
+  Desktop `native:build` Electrobun packager. It never prepares a local Pi runner.
 - Dependency maintenance is explicit: `rpx deps dedupe` may rewrite `bun.lock`,
   `rpx deps dedupe --check` is read-only, and `rpx deps audit` is read-only.
 - Dependency check/update excludes Drizzle RC builds because hash suffixes do
@@ -89,6 +98,12 @@ Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] 
 - Never print secret values loaded by the env runner.
 - Remote cache needs token, team and signature key; untrusted CI strips these.
   `RPX_REMOTE_CACHE_TRUSTED=true` is set only by the protected CI workflow.
+- Scripts and production probes run with the root-pinned Bun. Force JavaScript
+  CLI binaries through `bun --bun` rather than their Node shebangs. Cache keys
+  identify Bun's actual version/revision, platform, architecture and libc; prior
+  Node runtime artifacts never share those keys.
+- Nitro runtime verification requires the `bun` preset and stages the entire
+  output independently before running production HTTP/auth probes with Bun.
 - Doctor probes only the local Electrobun bootstrap/SDK paths; it never downloads
   the native toolchain. Clean removes Desktop build/artifacts/project SDK caches,
   preserving native profiles and user data.
