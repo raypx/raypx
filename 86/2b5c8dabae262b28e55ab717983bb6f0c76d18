@@ -1,0 +1,32 @@
+packages/tsconfig/package.json
+  s_9414da358c359c::t_fddc95cadaab70 2-3,8,10-14
+apps/web/vite.config.ts
+  s_9414da358c359c::t_0879bfad6f7c82 1-5,8-9,11-33
+packages/tsconfig/react-library.json
+  s_38400043e27b33::t_c407f7d864e555 5
+  s_38400043e27b33::t_14318f19c1f6d0 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "862b5c8dabae262b28e55ab717983bb6f0c76d18",
+  "prompts": {},
+  "sessions": {
+    "s_38400043e27b33": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a11f78-f707-7651-beed-61e9a4244840",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": null
+    },
+    "s_9414da358c359c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a105dc-5f28-7d43-b027-5ce50511bde2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
