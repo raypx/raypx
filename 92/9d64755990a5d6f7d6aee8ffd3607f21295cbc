@@ -1,0 +1,19 @@
+.gitignore
+  s_868e675aecceed::t_8a59aab924d8dd 57-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "929d64755990a5d6f7d6aee8ffd3607f21295cbc",
+  "prompts": {},
+  "sessions": {
+    "s_868e675aecceed": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12e26-fbc0-76f2-a127-6ea412b777b8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
