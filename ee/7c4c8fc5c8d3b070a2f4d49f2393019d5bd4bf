@@ -1,0 +1,329 @@
+apps/worker/package.json
+  s_378db368f9f27e::t_537315c5a9356d 14,39-41
+  s_29d2da1ea73272::t_4b0cfeecdf5c1d 8-13
+  s_378db368f9f27e::t_dae8a11765e7e2 7,15-16
+README.md
+  s_29d2da1ea73272::t_18310f9b4f55cd 8
+packages/scripts/src/policy/manifests/rules.ts
+  s_29d2da1ea73272::t_2443a8a46e4d47 7-9,11
+e2e/desktop-preview.config.ts
+  s_29d2da1ea73272::t_678b31e8487817 1-10
+apps/worker/AGENTS.md
+  s_378db368f9f27e::t_de1a5490fb501d 32,57-61,64-66,77,81-87
+  s_29d2da1ea73272::t_9661ca9ec7a70d 10-23
+  s_29d2da1ea73272::t_22945cadb8866a 62-63
+apps/web/vite.config.ts
+  s_29d2da1ea73272::t_a50d8802bcc5ca 18,22
+packages/ui/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 41-46
+docs/development/testing.md
+  s_29d2da1ea73272::t_660fce10566dbb 34,62-64,112,116,128-130,135-137,149-152,167,205-206,214,242-244,247-256,292-300,303,313-315,321
+  s_29d2da1ea73272::t_fd9eee7653e584 304-309
+  s_29d2da1ea73272::t_0f683ab9f854ed 302,310-312
+  s_29d2da1ea73272::t_407903226849b9 316-317
+  s_378db368f9f27e::t_4d0bfb816732e4 144-145
+  s_29d2da1ea73272::t_76e2e1e7e08ed2 25-33,35
+  s_378db368f9f27e::t_373a1d3e8ae70e 139,141-143,146-148
+  s_29d2da1ea73272::t_9307fd341c9916 140,153
+  s_29d2da1ea73272::t_c4c5cd45f33910 138,301
+packages/scripts/src/runtime/repository.test.ts
+  s_29d2da1ea73272::t_40a7e29771edf0 13-14
+packages/scripts/package.json
+  s_29d2da1ea73272::t_2443a8a46e4d47 30-35
+apps/api/package.json
+  s_29d2da1ea73272::t_cf5e40b2555aa7 8
+  s_29d2da1ea73272::t_a50d8802bcc5ca 7,9-15
+apps/api/AGENTS.md
+  s_29d2da1ea73272::t_a50d8802bcc5ca 24,39-40
+apps/web/Dockerfile
+  s_378db368f9f27e::t_6321b16d9e7877 2,7-8,29,35-36,38,41
+apps/worker/.gitignore
+  s_378db368f9f27e::t_537315c5a9356d 1-3
+packages/application/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 10-15
+apps/api/server/api/compression.integration.test.ts
+  s_29d2da1ea73272::t_8078d0f4efb2d8 18,21-22
+packages/tsconfig/AGENTS.md
+  s_29d2da1ea73272::t_18310f9b4f55cd 31-33
+apps/worker/tsconfig.json
+  s_29d2da1ea73272::t_fd2465f28fe87f 3
+  s_378db368f9f27e::t_537315c5a9356d 4
+packages/scripts/src/e2e/selection.test.ts
+  s_29d2da1ea73272::t_592f53269b6344 177-184
+  s_29d2da1ea73272::t_ed0cf435cb4c04 82-85,104-117,134-142,144,175-176
+  s_29d2da1ea73272::t_acba20e0bfb27a 14,39,96-103,118-133,146-151,163,168-174
+  s_29d2da1ea73272::t_6f8cbf7512ed71 152-162,164-167
+packages/db/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 12-17,19
+apps/worker/src/runtime-checks.ts
+  s_29d2da1ea73272::t_fd2465f28fe87f 1-14,16-19,21-27,29-40,45-66,70-73,81-84,88-96
+  s_378db368f9f27e::t_e1b6b676a0fa05 41-44,67-69,74-80,85-87
+  s_29d2da1ea73272::t_f852fc06f41099 15,20
+  s_29d2da1ea73272::t_55eed88f663040 28
+packages/scripts/src/testing/jsdom-preload.integration.test.ts
+  s_29d2da1ea73272::t_3a85121e6da1ae 2,4-5,9-12,14-15,17,19-34,37,52-53
+  s_29d2da1ea73272::t_f6139473eaf997 1,3,6-8,13,16,18,35-36,38-40,50
+  s_29d2da1ea73272::t_e17421b0ae1930 41-49,51
+vite.config.ts
+  s_29d2da1ea73272::t_b7fb19aba5e97c 7
+packages/scripts/src/verify/nitro.integration.test.ts
+  s_29d2da1ea73272::t_e9c24c3a26aff3 18,24-26,28,30,32-33
+apps/api/vite.config.ts
+  s_29d2da1ea73272::t_a50d8802bcc5ca 6
+packages/scripts/AGENTS.md
+  s_29d2da1ea73272::t_3a85121e6da1ae 22,75-79
+  s_29d2da1ea73272::t_0f683ab9f854ed 82-84
+  s_29d2da1ea73272::t_fd9eee7653e584 81
+  s_29d2da1ea73272::t_2443a8a46e4d47 73,88,101-106
+docs/architecture/tooling.md
+  s_29d2da1ea73272::t_1c1a9e6b4339d7 6,13-17,70,87-90,118-121,161-168,172,220,368-370,399,417-419,434
+  s_378db368f9f27e::t_373a1d3e8ae70e 9,440,443-464
+  s_29d2da1ea73272::t_d38ddfcb450d0e 465
+  s_29d2da1ea73272::t_660fce10566dbb 108
+  s_29d2da1ea73272::t_4e7bcf8a94a97f 171,402
+docs/architecture/decisions/0024-bun-runtime.md
+  s_29d2da1ea73272::t_66134f25b09b27 1-58
+packages/scripts/src/verify/nitro.ts
+  s_29d2da1ea73272::t_2443a8a46e4d47 108-109,209
+  s_29d2da1ea73272::t_e14af9369f1385 210-211
+packages/scripts/src/cli.test.ts
+  s_29d2da1ea73272::t_fbda88476ee413 117,129,137
+apps/worker/src/process-executor.test.ts
+  s_29d2da1ea73272::t_fd2465f28fe87f 27,69,76-77
+  s_29d2da1ea73272::t_4b0cfeecdf5c1d 10,26,67-68,74-75
+  s_29d2da1ea73272::t_c9a2cc64240943 14,16,50-51,89
+e2e/package.json
+  s_29d2da1ea73272::t_e093b6d4325e12 11
+  s_29d2da1ea73272::t_a50d8802bcc5ca 8
+  s_29d2da1ea73272::t_cf5e40b2555aa7 7,9-10,12-13
+packages/scripts/src/policy/manifests.test.ts
+  s_29d2da1ea73272::t_fbda88476ee413 261,308
+docs/architecture/deployment.md
+  s_29d2da1ea73272::t_1c1a9e6b4339d7 6-7,56-59,61,63,100,159-161,165-167,171-176,181-183
+  s_378db368f9f27e::t_373a1d3e8ae70e 8,40,67-69,177-180
+docs/architecture/cloud-platform.md
+  s_378db368f9f27e::t_ae34592545e822 13,81
+packages/contracts/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 11-16
+docs/architecture/decisions/0016-cloud-agent-platform.md
+  s_29d2da1ea73272::t_18310f9b4f55cd 5-7
+packages/scripts/src/lint/boundaries.integration.test.ts
+  s_29d2da1ea73272::t_25fcede0a5d5c0 1-5,59,174-189,193-208,211,215-217,220-226,246-248,253-257,261-266,268-269,273,276,279-281
+  s_29d2da1ea73272::t_e17421b0ae1930 49-58,60-173,190-192,209-210,212-214,218-219,227-242,244-245,249-252,258-260,267,270-272,274-275,277-278
+apps/api/Dockerfile
+  s_378db368f9f27e::t_6321b16d9e7877 2,7-8,22,27-28,30,33
+packages/scripts/src/commands/workflows.test.ts
+  s_378db368f9f27e::t_f0c9a5f6c00604 102
+packages/i18n/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 15-20
+apps/desktop/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 7-9,11-22
+packages/agent-ui/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 18-23
+packages/scripts/src/commands/tasks.test.ts
+  s_29d2da1ea73272::t_e9c24c3a26aff3 2,14,18-19,55-56,60
+  s_378db368f9f27e::t_aa59320e5c49fd 57-59
+  s_378db368f9f27e::t_2f95b1c4d593e3 61
+apps/worker/scripts/dev.mjs
+  s_378db368f9f27e::t_1f0b56a211ab06 49-52,76-77,105,115,120-123
+  s_29d2da1ea73272::t_21ad4e85c7c533 1,9-10,14-16,18,30,43-44,47-48,53-61,63-75,79-82,84-104,106-114,124-126
+  s_378db368f9f27e::t_224fb54b24b50a 62
+  s_378db368f9f27e::t_d81b5049666d11 36-41,116-119
+  s_378db368f9f27e::t_15c8f189b89624 78
+packages/scripts/src/verify/nitro.test.ts
+  s_378db368f9f27e::t_aa59320e5c49fd 34
+  s_29d2da1ea73272::t_e9c24c3a26aff3 28,42,77-79,83
+  s_29d2da1ea73272::t_e14af9369f1385 41,43-44,48
+packages/mail/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 12-17
+turbo.json
+  s_29d2da1ea73272::t_4a05c4ca781205 20
+  s_29d2da1ea73272::t_0f4d607a6eab61 107,110-111
+  s_378db368f9f27e::t_188126e31ee038 108-109
+  s_29d2da1ea73272::t_8c45d3f96231fd 17-18
+package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 116,118,133-134,143-144,171-173
+knip.json
+  s_378db368f9f27e::t_cfa13e1519435e 43
+packages/scripts/src/policy/command.ts
+  s_378db368f9f27e::t_aa59320e5c49fd 42-44
+packages/auth/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 10-15
+apps/worker/railway.toml
+  s_378db368f9f27e::t_dae8a11765e7e2 7
+e2e/browser-config.ts
+  s_29d2da1ea73272::t_bfb18322841019 26-28
+  s_29d2da1ea73272::t_ed0cf435cb4c04 29,31
+  s_29d2da1ea73272::t_592f53269b6344 14-16
+  s_29d2da1ea73272::t_cf5e40b2555aa7 17
+packages/client/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 12-17
+packages/scripts/src/runtime/action.test.ts
+  s_29d2da1ea73272::t_40a7e29771edf0 6
+apps/worker/src/process-executor.ts
+  s_29d2da1ea73272::t_f852fc06f41099 3,41
+  s_29d2da1ea73272::t_4b0cfeecdf5c1d 45
+  s_29d2da1ea73272::t_fd2465f28fe87f 46
+docs/architecture/decisions/README.md
+  s_378db368f9f27e::t_20ce49a0cad290 60
+  s_29d2da1ea73272::t_18310f9b4f55cd 61
+packages/scripts/src/deps/operations.ts
+  s_29d2da1ea73272::t_2443a8a46e4d47 28,33
+docs/architecture/README.md
+  s_29d2da1ea73272::t_18310f9b4f55cd 16
+packages/tsconfig/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 14
+packages/scripts/src/commands/shadcn.ts
+  s_29d2da1ea73272::t_2443a8a46e4d47 48
+.github/workflows/ci.yml
+  s_378db368f9f27e::t_3b609b49923ec2 53
+  s_378db368f9f27e::t_6321b16d9e7877 119
+packages/scripts/src/commands/tasks.ts
+  s_378db368f9f27e::t_aa59320e5c49fd 18,20,22,30-31
+  s_29d2da1ea73272::t_d507aef5499025 26-27
+  s_29d2da1ea73272::t_e17421b0ae1930 24-25,28
+  s_29d2da1ea73272::t_2443a8a46e4d47 9,11-12,15-17,19,21,23,29,32-33,53-54
+docs/architecture/decisions/0023-worker-vite-nitro-artifact.md
+  s_378db368f9f27e::t_20ce49a0cad290 1-4,6-65
+  s_378db368f9f27e::t_314744f2bf5aab 5
+packages/scripts/src/commands/shadcn.test.ts
+  s_29d2da1ea73272::t_fbda88476ee413 46
+apps/worker/src/runner-main.ts
+  s_29d2da1ea73272::t_4b0cfeecdf5c1d 9
+packages/cache/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 11-16
+apps/web/AGENTS.md
+  s_29d2da1ea73272::t_a50d8802bcc5ca 90-91
+apps/storybook/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 7-9
+apps/web/railway.toml
+  s_29d2da1ea73272::t_e093b6d4325e12 10
+packages/core/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 10-15
+apps/worker/src/dev.integration.test.ts
+  s_378db368f9f27e::t_d81b5049666d11 76-81,111-116,119,121-207,227-229,231-232
+  s_378db368f9f27e::t_7f5bc5e570475d 1-24,26-75,82-110,117-118,120,214,218,224,234-237
+  s_378db368f9f27e::t_1f0b56a211ab06 25
+  s_378db368f9f27e::t_e97cfec2787f02 208-213,215-217,219-223,225-226,230,233
+docs/architecture/applications.md
+  s_29d2da1ea73272::t_18310f9b4f55cd 151
+AGENTS.md
+  s_29d2da1ea73272::t_4a05c4ca781205 67-69,153
+  s_29d2da1ea73272::t_66134f25b09b27 70
+apps/worker/src/main.ts
+  s_29d2da1ea73272::t_f852fc06f41099 7-8
+  s_29d2da1ea73272::t_fd2465f28fe87f 2-6
+packages/shared/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 45-52
+apps/worker/src/telemetry.ts
+  s_29d2da1ea73272::t_f852fc06f41099 18
+docs/architecture/decisions/0018-turbo-task-orchestration.md
+  s_29d2da1ea73272::t_70b2f7e354d7e6 39-45
+  s_378db368f9f27e::t_20ce49a0cad290 8-10
+  s_29d2da1ea73272::t_18310f9b4f55cd 12-13
+  s_29d2da1ea73272::t_383126b17a335a 11
+packages/scripts/src/e2e/selection.ts
+  s_29d2da1ea73272::t_acba20e0bfb27a 52-53
+apps/worker/src/build-artifact.integration.test.ts
+  s_378db368f9f27e::t_453d4f0944f0ae 1-2,14-15,17-19,21-44,48-63,68-70,75-77,84-90,97,99-100,108-121,123-125,131-135,137-143,147-149,160-164,170-175,180-181,185-189,195-200
+  s_378db368f9f27e::t_74d46234107b10 6-9,12,45-47,64-67,71-74,78-83,92-96,101-107,126-129,144-146,150-159,165-168,176-179,182-184,190-194
+  s_378db368f9f27e::t_a6dc019316a5eb 16
+packages/scripts/src/policy/tasks.test.ts
+  s_29d2da1ea73272::t_ea170fa90dc36d 53,59,61-62,66,71-72,88,92-95,97-98
+  s_378db368f9f27e::t_569ab8a5a74259 52,54-58,60,63-65,67-70,73-87,89-91
+  s_29d2da1ea73272::t_7cfcf85920b71d 96
+docs/README.md
+  s_378db368f9f27e::t_20ce49a0cad290 33-34
+  s_29d2da1ea73272::t_18310f9b4f55cd 35-36
+.vite-hooks/pre-commit
+  s_29d2da1ea73272::t_4a05c4ca781205 3
+packages/scripts/src/testing/jsdom-preload.ts
+  s_29d2da1ea73272::t_b2f35d1642e2b5 2-3,9,25-29,38
+  s_29d2da1ea73272::t_85a1c596845cc9 1,4-8,10-24,30-31,35-37
+  s_378db368f9f27e::t_aa59320e5c49fd 32-34
+e2e/AGENTS.md
+  s_29d2da1ea73272::t_cf5e40b2555aa7 61-62
+  s_29d2da1ea73272::t_407903226849b9 66-68
+  s_29d2da1ea73272::t_fd9eee7653e584 13,59,63-64
+  s_29d2da1ea73272::t_a50d8802bcc5ca 60
+packages/scripts/src/policy/checks/tasks.ts
+  s_378db368f9f27e::t_188126e31ee038 35,41-44,47,49
+  s_29d2da1ea73272::t_ea170fa90dc36d 19-25,32-34,40,45-46,51,68,91
+  s_29d2da1ea73272::t_cc00704e61836e 26-31,36-39,48,50
+packages/scripts/src/e2e/operation.ts
+  s_29d2da1ea73272::t_ed0cf435cb4c04 7-11
+  s_29d2da1ea73272::t_acba20e0bfb27a 20-29
+packages/scripts/src/doctor/checks.ts
+  s_29d2da1ea73272::t_2da354bc670626 18-20,22
+  s_29d2da1ea73272::t_d2029dbd3572f8 92
+  s_29d2da1ea73272::t_2443a8a46e4d47 54-55
+packages/scripts/src/doctor/checks.test.ts
+  s_29d2da1ea73272::t_d2029dbd3572f8 68-86,148
+  s_378db368f9f27e::t_aa59320e5c49fd 131-141,143-145
+  s_29d2da1ea73272::t_e9c24c3a26aff3 15,124,129-130,142,146-147
+apps/worker/src/runtime-check.config.json
+  s_29d2da1ea73272::t_fd2465f28fe87f 1-39,43-64
+  s_378db368f9f27e::t_e1b6b676a0fa05 40-42
+packages/scripts/src/commands/verify.ts
+  s_378db368f9f27e::t_f0c9a5f6c00604 30-34,36
+  s_29d2da1ea73272::t_bbd127f07769e3 35
+test.config.ts
+  s_29d2da1ea73272::t_b2f35d1642e2b5 2
+  s_29d2da1ea73272::t_2da354bc670626 21-22
+  s_378db368f9f27e::t_aa59320e5c49fd 20,23-25
+  s_29d2da1ea73272::t_3a85121e6da1ae 19
+apps/worker/src/runtime.ts
+  s_29d2da1ea73272::t_4b0cfeecdf5c1d 53
+docs/architecture/decisions/0020-electrobun-desktop-host.md
+  s_29d2da1ea73272::t_18310f9b4f55cd 9-11
+apps/worker/Dockerfile
+  s_378db368f9f27e::t_6321b16d9e7877 2,4-5,10-11,25,28,38-39
+  s_378db368f9f27e::t_3b609b49923ec2 40-41
+apps/worker/nitro.config.ts
+  s_378db368f9f27e::t_537315c5a9356d 1-31
+packages/scripts/src/skills/operations.test.ts
+  s_29d2da1ea73272::t_40a7e29771edf0 13
+packages/ai/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 10-15
+packages/scripts/src/skills/operations.ts
+  s_378db368f9f27e::t_aa59320e5c49fd 7-9
+apps/api/server/api/telemetry.ts
+  s_29d2da1ea73272::t_e093b6d4325e12 10
+apps/web/package.json
+  s_29d2da1ea73272::t_cf5e40b2555aa7 9
+  s_29d2da1ea73272::t_a50d8802bcc5ca 7-8,10,12-17
+apps/worker/vite.config.ts
+  s_378db368f9f27e::t_537315c5a9356d 1-7
+packages/storage/package.json
+  s_29d2da1ea73272::t_f6aabfc51c90ed 10-15
+packages/scripts/src/arguments.test.ts
+  s_29d2da1ea73272::t_fbda88476ee413 11,16,20
+packages/scripts/src/policy/manifests.ts
+  s_29d2da1ea73272::t_2443a8a46e4d47 131
+bun.lock
+  s_378db368f9f27e::t_7f6ff6e92ff1d7 171-173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ee7c4c8fc5c8d3b070a2f4d49f2393019d5bd4bf",
+  "prompts": {},
+  "sessions": {
+    "s_29d2da1ea73272": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12f68-d872-7963-b308-ef1a17895496",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_378db368f9f27e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1301b-0c27-7a11-a7b2-1c936e134c22",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
