@@ -1,0 +1,21 @@
+apps/web/vite.config.ts
+  s_9414da358c359c::t_0879bfad6f7c82 1-5,8-9,11-33
+packages/tsconfig/package.json
+  s_9414da358c359c::t_fddc95cadaab70 2-3,8,10-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "492cca93bf912049c8ebd4c0d4c2d68f790acbc0",
+  "prompts": {},
+  "sessions": {
+    "s_9414da358c359c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a105dc-5f28-7d43-b027-5ce50511bde2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
