@@ -9,6 +9,8 @@ const uncached = [
   "test:postgres",
   "test:provider",
   "e2e",
+  "e2e:web",
+  "e2e:desktop",
   "smoke",
   "deploy",
   "generate",

@@ -23,6 +23,7 @@ node_modules/
 *.tgz
 .cache/
 .vite/
+dist/
 .vite-plus/
 .turbo/
 out/

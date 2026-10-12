@@ -356,9 +356,12 @@ of a potentially different global `vp` binary.
 ## Browser verification
 
 The private `@voidmix/e2e` workspace owns Playwright configuration and browser
-smoke tests. Web and authenticated product projects target the Web app; Desktop
-targets its own browser preview. Playwright starts API, Web and Desktop servers
-for local and CI runs.
+smoke tests. The Web project includes public, authenticated and cloud flows;
+Desktop targets its own browser preview. `test:e2e:web` builds/starts API and Web,
+while `test:e2e:desktop` builds/starts API and Desktop. `test:e2e` keeps the full
+run. Worker is not a browser dependency. CI runs both suites on independent
+runners with separate PostgreSQL services, ports and reports. Local parallel
+runs also need separate checkouts because shared build output can race.
 Browser tests are not part of the default `bun run test` graph. Use
 `bun run test:e2e`, and install Chromium with
 `bun run --cwd e2e playwright install chromium`

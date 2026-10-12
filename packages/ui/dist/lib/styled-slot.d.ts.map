@@ -1,1 +1,0 @@
-{"version":3,"file":"styled-slot.d.ts","sourceRoot":"","sources":["../../src/lib/styled-slot.ts"],"names":[],"mappings":"AAAA,OAAO,EAAiB,KAAK,cAAc,EAAE,KAAK,WAAW,EAAE,MAAM,OAAO,CAAC;AAG7E,yFAAyF;AACzF,wBAAgB,UAAU,CAAC,CAAC,SAAS,WAAW,EAAE,OAAO,EAAE,CAAC,EAAE,IAAI,EAAE,MAAM,EAAE,GAAG,OAAO,EAAE,MAAM,EAAE;8BACjD,cAAc,CAAC,CAAC,CAAC;;EAS/D"}

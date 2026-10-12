@@ -24,6 +24,24 @@ describe("task graph policy", () => {
       "@voidmix/e2e#e2e must execute every time",
     ]);
   });
+  it.each(["e2e:web", "e2e:desktop"])("rejects caching the %s browser suite", (task) => {
+    const graph = config();
+    graph.tasks[task].cache = true;
+    expect(validateTaskGraph(graph).map((f) => f.message)).toEqual([
+      `${task} must execute every time`,
+    ]);
+  });
+  it.each(["e2e:web", "e2e:desktop"])(
+    "rejects workspace overrides that cache the %s browser suite",
+    (task) => {
+      const graph = config();
+      const qualifiedTask = `@voidmix/e2e#${task}`;
+      graph.tasks[qualifiedTask] = { cache: true };
+      expect(validateTaskGraph(graph).map((f) => f.message)).toEqual([
+        `${qualifiedTask} must execute every time`,
+      ]);
+    },
+  );
   it("rejects a graph that bypasses checks or omits the platform and signature boundaries", () => {
     const graph = config();
     graph.tasks.build.dependsOn = [];

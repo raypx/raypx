@@ -62,15 +62,21 @@ enable signed remote cache only on trusted canary pushes/manual runs; PRs use
 local-only caches. Missing remote credentials never prevent verification. Node and Bun versions come
 from the root `package.json`; dependencies use the frozen lockfile.
 
-There are two job definitions (three runners):
+There are three job definitions (five runners):
 
 - `typescript` uses Ubuntu 24.04 and one disposable PostgreSQL 17 service. It runs
-  `bun run verify`, Drizzle generation, real database tests and Chromium E2E.
+  `bun run verify`, Drizzle generation and real database tests.
   It also builds the Worker image and runs real Chinese document exports with
   network disabled, exercising the fixed LibreOffice/Poppler/font dependencies.
-  Database and browser tests run sequentially against the same test database;
-  each suite resets its fixtures. The final clean-tree check catches both changed
+  Its database suite resets only its dedicated test fixtures. The final clean-tree
+  check catches both changed
   tracked files and newly generated untracked files, including route/Drizzle drift.
+- `e2e` runs an independent Web/Desktop matrix alongside TypeScript verification.
+  Each runner has a separate PostgreSQL 17 database, port range and failure report.
+  Web includes the cloud business flows and starts only API/Web; Desktop starts
+  only API/Desktop and seeds only accounts/projects. Each task builds its actual
+  consumer applications; Worker is not an E2E dependency. Both runners retain
+  generated-file checks and the existing untrusted-PR cache policy.
 - `desktop` builds Electrobun native packages on macOS and Windows. Root
   `desktop:build` checks/builds the frontend through Turbo, then runs the stable
   native packager. The pinned devkit is prepared before root lint and Desktop checks/Vite.
@@ -89,10 +95,14 @@ CI does not repeat those layers again for coverage. Run
 minimum coverage threshold). Knip remains a local advisory command, outside the
 required pipeline, so its framework/config discovery cannot block verification.
 
-`bun run test:e2e` starts API, Web and Desktop preview servers itself.
-It runs the `cloud`, `web`, `authenticated`, `redesign`, `homepage`, `workbench` and `desktop` projects. Configure the
-dedicated database as described below. Set `VOIDMIX_E2E_PORT` to
-choose the Web port (default 3000); Desktop uses +1 and API +2. The retired Project Studio suite and its
+`bun run test:e2e` runs both `web` and `desktop` projects and starts all three
+servers. Use `bun run test:e2e:web` or `bun run test:e2e:desktop` to build and start
+only API and the selected application. Cloud is part of Web coverage; the
+cloud spec files retain their business assertions without a separate project.
+Configure the dedicated database as described below. Set `VOIDMIX_E2E_PORT` to
+choose the Web port (default 3000); Desktop uses +1 and API +2.
+Scoped runs write reports to `playwright-report/<suite>` and results to
+`test-results/<suite>`; the full run keeps the original report locations. The retired Project Studio suite and its
 mock API fixture have been removed; Web still checks the sign-in redirect for
 unauthenticated access to `/projects`.
 Install the local browser once with:
@@ -212,14 +222,14 @@ run `bun run policy` for the paste-ready fix in each workspace.
 
 Node workspaces use the Node test environment. DOM workspaces and individual
 component/integration files opt into jsdom with local setup, keeping globals out
-of server and library checks. E2E uses separate Web, authenticated product and
-Desktop projects; Web targets the Web server, while Desktop targets its own
-browser preview.
+of server and library checks. E2E has Web and Desktop projects. Web covers
+public, authenticated and cloud flows; Desktop targets its own browser preview.
 
 Run a single browser project or inspect its report with:
 
 ```bash
-bun run --cwd e2e e2e -- --project=web
+bun run --cwd e2e e2e:web -- --grep "project creation"
+bun run --cwd e2e e2e:desktop
 bun run --cwd e2e test:report
 ```
 
@@ -244,8 +254,8 @@ bun run --cwd e2e test:report
 - CI builds Web/API on Linux and Desktop packages on macOS and Windows.
 - CI runs all Vitest layers once through `verify`; focused layer and coverage
   commands remain available locally.
-- CI runs real PostgreSQL tests followed by Web and Desktop Playwright
-  tests in the same Linux job after installing Chromium.
+- CI runs real PostgreSQL tests in the TypeScript job and Web/Desktop Playwright
+  suites independently on separate Linux runners after installing Chromium.
 
 ## Real database and authenticated browser gates
 
@@ -259,8 +269,8 @@ NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test bun run te
 Both require an explicit dedicated database named `voidmix_*test`; missing or
 unsafe configuration fails. Each suite applies committed migrations and resets
 its own fixture data. Never point these commands at development or production
-data. Use separate databases when running both simultaneously. CI supplies one
-PostgreSQL 17 service for the sequential Linux database and browser tests. `VOIDMIX_E2E_PORT` reserves Web/Desktop/API on three
+data. Use separate databases when running both simultaneously. CI gives
+PostgreSQL tests and each browser suite its own PostgreSQL 17 service. `VOIDMIX_E2E_PORT` reserves Web/Desktop/API on three
 consecutive ports for concurrent local development.
 
 Database coverage includes Core/SQL visibility parity, keyset pagination,
@@ -268,3 +278,7 @@ owner fencing, rollback and idempotence. Authenticated Playwright uses real
 Better Auth credentials and API/DB services for project creation, tasks, Cloud
 delivery and acceptance, SSR isolation, refresh/history and errors.
 No actor-header authentication bypass is enabled.
+
+For local parallel Web/Desktop runs, use separate checkouts, databases and port
+ranges. Two browser commands in the same checkout can still race while rebuilding
+shared output, even when their databases are separate.

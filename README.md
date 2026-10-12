@@ -96,6 +96,8 @@ bun run clean
 bun run check
 bun run test
 bun run test:e2e
+bun run test:e2e:web
+bun run test:e2e:desktop
 bun run build
 bun run db:migrate
 bun run db:push

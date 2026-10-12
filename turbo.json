@@ -107,7 +107,19 @@
       "outputs": []
     },
     "e2e": {
-      "dependsOn": ["web#build", "api#build", "worker#build", "desktop#build"],
+      "dependsOn": ["web#build", "api#build", "desktop#build"],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]
+    },
+    "e2e:web": {
+      "dependsOn": ["web#build", "api#build"],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]
+    },
+    "e2e:desktop": {
+      "dependsOn": ["api#build", "desktop#build"],
       "cache": false,
       "outputs": [],
       "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]

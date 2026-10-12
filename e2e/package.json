@@ -8,7 +8,9 @@
     "check": "tsc --noEmit -p tsconfig.json",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
-    "capture:product": "bun run capture-product.ts"
+    "capture:product": "bun run capture-product.ts",
+    "e2e:web": "playwright test --config=playwright.web.config.ts",
+    "e2e:desktop": "playwright test --config=playwright.desktop.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "catalog:tooling",

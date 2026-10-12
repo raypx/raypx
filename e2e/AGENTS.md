@@ -8,11 +8,15 @@ private workspace that is deliberately separate from Vitest.
 ## Interface
 
 ```text
-playwright.config.ts   projects, baseURLs, and the webServer definitions
+browser-config.ts     shared Web/Desktop projects and required API/app servers
+playwright.config.ts   full browser run
+playwright.web.config.ts Web suite, including cloud flows
+playwright.desktop.config.ts Desktop-only suite
 tests/web.spec.ts      Web home, language switching, and project-access smoke tests
 tests/authenticated-web.spec.ts real login, SSR isolation and project flows
 capture-product.ts    real-route product screenshots with guarded synthetic seed
-tests/redesign.spec.ts responsive, theme, locale and navigation coverage
+tests/redesign.spec.ts Web responsive, theme, locale and navigation coverage
+tests/desktop-redesign.spec.ts Desktop layouts, real writes and retry coverage
 tests/workbench.spec.ts portal focus, failure/retry and cancellation
 tests/homepage.spec.ts public cloud website, docs/SEO, locales and responsive containment
 tests/cloud.spec.ts   real authorized cloud facts, review, usage and account isolation
@@ -21,7 +25,7 @@ database.ts           isolated migration/seed with synthetic credential accounts
 tests/desktop.spec.ts  Desktop theme, locale, navigation, settings and keyboard checks
 ```
 
-Scripts: `e2e` (the run), `test:ui`, `test:report`, `check`.
+Scripts: `e2e` (full run), `e2e:web`, `e2e:desktop`, `test:ui`, `test:report`, `check`.
 
 ## Ownership
 
@@ -36,18 +40,27 @@ Scripts: `e2e` (the run), `test:ui`, `test:report`, `check`.
 - **This workspace has no `test` script on purpose.** `vp run -r test` therefore
   skips it, which is what keeps E2E out of the default test command — it starts
   application servers and needs browser binaries. Do not add a `test` script.
-- Run it explicitly with `bun run test:e2e`; install browsers with
+- Run all browsers with `bun run test:e2e`, or select the independent
+  `bun run test:e2e:web` / `bun run test:e2e:desktop` entry. Install browsers with
   `bun run --cwd e2e playwright install chromium`.
 - Import from `@playwright/test`, **not** `vite-plus/test`. This is the one
   test-bearing workspace where that is correct.
 - Spec files live in `tests/` and are named `*.spec.ts`, matched per project by
   `testMatch`. A file that matches no project pattern runs in no project
   and reports nothing.
+- The full run starts API, Web and Desktop. Web-only starts API/Web; Desktop-only
+  starts API/Desktop. Web includes Search/Computer, deliveries, acceptance,
+  notifications, usage and real session isolation; there is no separate Cloud project.
 - `webServer` starts Web at `VOIDMIX_E2E_PORT` (default 3000), Desktop at +1,
-  and API at +2 with `NODE_ENV=test`. Desktop has its own project.
+  and API at +2 with `NODE_ENV=test`. Group reports use separate suite directories.
 - All runs require NODE_ENV=test and TEST_DATABASE_URL naming voidmix_*test.
-  Global setup migrates and resets that dedicated database. Real API login uses
+  Global setup migrates and resets that dedicated database. Desktop seeds only
+  accounts/projects; Web and full runs also seed cloud facts. Real API login uses
   seeded password hashes; do not introduce actor headers or production bypasses.
+- CI suites run on separate runners with their own PostgreSQL 17 database, ports
+  and reports. Locally run sequentially in one checkout, or use separate checkouts,
+  test databases and port ranges for parallel runs; shared build output is not isolated
+  by distinct databases alone.
 - `reuseExistingServer` is off in CI and on locally. Do not invert that.
 - Cloud fixture records are explicitly synthetic persisted facts, created only by
   the guarded test setup. Production UI uses the real API and never supplies demo
@@ -61,5 +74,7 @@ Scripts: `e2e` (the run), `test:ui`, `test:report`, `check`.
 ```bash
 bun run --cwd e2e check
 bun run --cwd e2e playwright install chromium   # first run only
-NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test bun run test:e2e
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test bun run test:e2e:web
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test bun run test:e2e:desktop
+# Use bun run test:e2e when both suites are required.
 ```

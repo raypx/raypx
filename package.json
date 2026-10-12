@@ -122,6 +122,8 @@
     "test:component": "vmx tasks test:component --filter !@voidmix/e2e",
     "test:coverage": "vmx tasks test:coverage --filter !@voidmix/e2e",
     "test:e2e": "vmx tasks e2e --filter @voidmix/e2e",
+    "test:e2e:web": "vmx tasks e2e:web --filter @voidmix/e2e",
+    "test:e2e:desktop": "vmx tasks e2e:desktop --filter @voidmix/e2e",
     "db:migrate": "vmx db migrate",
     "db:push": "vmx db push",
     "db:clean": "vmx db clean",

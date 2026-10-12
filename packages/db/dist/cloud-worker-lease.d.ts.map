@@ -1,1 +1,0 @@
-{"version":3,"file":"cloud-worker-lease.d.ts","sourceRoot":"","sources":["../src/cloud-worker-lease.ts"],"names":[],"mappings":"AACA,qGAAqG;AACrG,wBAAsB,uBAAuB,CAC3C,WAAW,EAAE,MAAM,EACnB,OAAO,EAAE,MAAM,EACf,MAAM,CAAC,EAAE,CAAC,KAAK,EAAE,KAAK,KAAK,IAAI,GAC9B,OAAO,CAAC;IAAE,KAAK,IAAI,OAAO,CAAC,IAAI,CAAC,CAAA;CAAE,CAAC,CAyCrC"}

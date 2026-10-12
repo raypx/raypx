@@ -1,3 +1,4 @@
+import type { FullConfig } from "@playwright/test";
 import { connectDatabase, migrateDatabase, PostgresCloudRepository } from "@voidmix/db";
 import { authAccounts, users, v2Projects } from "@voidmix/db/schema";
 import { hashPassword } from "better-auth/crypto";
@@ -22,7 +23,7 @@ export function databaseUrl() {
     );
   return url;
 }
-export default async function setup() {
+export default async function setup(config: FullConfig) {
   const url = databaseUrl();
   await migrateDatabase(url);
   const connection = connectDatabase(url);
@@ -61,6 +62,8 @@ export default async function setup() {
         personalOwnerId: accounts.member.id,
       },
     ]);
+    if (!config.projects.some(({ name }) => name === "web")) return;
+
     // Recorded, synthetic cloud facts exercise the real authorized API and UI.
     // No production route supplies fixture data or pretends to execute a model.
     const repository = new PostgresCloudRepository(connection.db);
