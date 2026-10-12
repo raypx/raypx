@@ -1,5 +1,5 @@
-import type { Translator } from "@voidmix/i18n";
-import { toast } from "@voidmix/ui/toast";
+import type { Translator } from "@raypx/i18n";
+import { toast } from "@raypx/ui/toast";
 
 import { translateKnownApiError } from "../../../i18n/api-errors";
 import type { WebTranslator } from "../../i18n/client";

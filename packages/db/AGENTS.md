@@ -1,9 +1,9 @@
-# @voidmix/db
+# @raypx/db
 
 ## Purpose
 
 The database adapter. It hides Drizzle and PostgreSQL behind the repository
-interfaces owned by `@voidmix/core`.
+interfaces owned by `@raypx/core`.
 
 ## Interface
 
@@ -25,6 +25,8 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - Own the Drizzle schema, canonical V2 resource, outbox, blob, and
   system-settings repositories in PostgreSQL and memory, plus migration
   execution.
+- Local blob storage may read a legacy root for existing blobs and upload
+  intents. New writes use the current root; deletion removes both copies.
 - Own `PostgresCloudRepository` and `InMemoryCloudRepository`, cloud indexes,
   JSON-backed typed records with indexed ownership/parent/intent columns, ordered
   events and atomic outbox writes. Reads restore native Date fields without
@@ -45,12 +47,12 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   configs resolve the four helper imports to their `.ts` sources so incidental
   CommonJS output cannot shadow them or enter the Vite+ runner.
 - Own no business rule and no interface definition — both belong to
-  `@voidmix/core`.
+  `@raypx/core`.
 
 ## Constraints
 
-- Never expose tables or Drizzle types to frontend applications. Web and Desktop reach the backend through `@voidmix/client` and
-  `@voidmix/contracts`.
+- Never expose tables or Drizzle types to frontend applications. Web and Desktop reach the backend through `@raypx/client` and
+  `@raypx/contracts`.
 - PostgreSQL and in-memory implementations must be updated together when a
   domain repository interface changes.
 - Project visibility SQL must match Core for personal owners/collaborators and
@@ -95,7 +97,7 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - `drizzle.config.ts` calls `getDatabaseEnv()` at module load, so `drizzle-kit`
   fails at import time when `DATABASE_URL` is missing or invalid.
 - `db push`, `db clean`, and `db studio` are restricted to
-  development and test by `@voidmix/scripts`; `db migrate` only requires a
+  development and test by `@raypx/scripts`; `db migrate` only requires a
   database URL.
 - `db push` applies the schema without a migration, so it is for a database in
   flux only. Committed schema changes still ship as generated `drizzle-cloud/` migrations.
@@ -114,7 +116,7 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 ```bash
 bun run --cwd packages/db check
 bun run --cwd packages/db test
-NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_local_test bun run test:postgres
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/raypx_local_test bun run test:postgres
 bun run --cwd packages/db generate   # or repo-wide: bun run generate
 bun run db:migrate
 ```

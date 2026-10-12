@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { StatusBadge } from "@voidmix/ui/status-badge";
+import { Button } from "@raypx/ui/components/ui/button";
+import { StatusBadge } from "@raypx/ui/status-badge";
 import type {
   CloudStatus,
   CloudTimelineItem,

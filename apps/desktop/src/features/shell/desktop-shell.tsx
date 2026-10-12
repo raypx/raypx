@@ -7,11 +7,11 @@ import {
   Translate,
   TrayArrowDown,
 } from "@phosphor-icons/react";
-import { LOCALE_OPTIONS } from "@voidmix/i18n";
+import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { IconButton } from "@voidmix/ui/icon-button";
-import { Logo } from "@voidmix/ui/logo";
-import { cn } from "@voidmix/ui/lib/utils";
+import { IconButton } from "@raypx/ui/icon-button";
+import { Logo } from "@raypx/ui/logo";
+import { cn } from "@raypx/ui/lib/utils";
 import { useEffect, useState } from "react";
 import { getDesktopRuntime, hideMainWindow, type DesktopRuntime } from "../../lib/desktop";
 import { useDesktopPreferences } from "../../lib/preferences";
@@ -103,7 +103,7 @@ function DesktopShellContent() {
           className="brand group-data-[collapsed]/desktop-shell:px-0 group-data-[collapsed]/desktop-shell:justify-center group-data-[collapsed]/desktop-shell:[&_[data-slot=logo]>span]:hidden flex pt-0 pb-7 px-3 text-foreground [&_img]:size-7"
           aria-label={t("projects")}
         >
-          <Logo label="VoidMix" />
+          <Logo label="Raypx" />
         </Link>
 
         <nav className="primary-nav flex flex-col gap-1.5" aria-label={t("primaryNavigation")}>

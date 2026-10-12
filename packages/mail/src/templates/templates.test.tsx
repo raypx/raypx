@@ -4,8 +4,8 @@ import { passwordResetEmail, verificationEmail, welcomeEmail } from "./index.js"
 
 describe("authentication email templates", () => {
   it.each([
-    ["verification", verificationEmail, "Verify your Voidmix email"],
-    ["password reset", passwordResetEmail, "Reset your Voidmix password"],
+    ["verification", verificationEmail, "Verify your Raypx email"],
+    ["password reset", passwordResetEmail, "Reset your Raypx password"],
   ])("renders deterministic %s HTML and text", async (_name, template, subject) => {
     const input = {
       email: "alex@example.com",
@@ -30,8 +30,8 @@ describe("authentication email templates", () => {
       appUrl: "https://admin.example.com",
     });
 
-    expect(rendered.subject).toBe("Welcome to Voidmix");
-    expect(rendered.html).toContain("Open Voidmix");
+    expect(rendered.subject).toBe("Welcome to Raypx");
+    expect(rendered.html).toContain("Open Raypx");
     expect(rendered.text).toContain("https://admin.example.com");
   });
 
@@ -57,7 +57,7 @@ describe("authentication email templates", () => {
     const second = await verificationEmail(input, "zh");
 
     expect(first).toEqual(second);
-    expect(first.subject).toBe("验证你的 Voidmix 邮箱");
+    expect(first.subject).toBe("验证你的 Raypx 邮箱");
     expect(first.html).toContain('lang="zh"');
     expect(first.html).toContain("你好，小明：");
     expect(first.text).toContain("验证邮箱");

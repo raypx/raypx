@@ -4,12 +4,31 @@ API and Worker require `DATABASE_URL`. API uses Better Auth with
 `AUTH_SECRET` and `AUTH_URL`. External browser origins are listed in
 `ALLOWED_ORIGINS`.
 
+The Raypx rename retains existing data. PostgreSQL migration history is unchanged;
+run `bun run db:migrate` to update the default issuer for new auth accounts.
+Both the current and former development `AUTH_SECRET` defaults are rejected in
+production. Existing production secrets and Better Auth cookie names remain valid.
+Within the same browser profile, Desktop theme and localStorage locale settings
+migrate from the old keys only when the new Raypx keys are absent. The native bundle identifier and WebView
+partition are now `com.raypx.desktop` and `persist:raypx`; an existing native
+installation requires signing in again because its previous WebView profile is separate.
+
+Without an explicit `BLOB_STORAGE_DIR`, development API and Worker write cloud
+objects to the temporary `raypx-cloud-objects` directory and read existing objects
+from `voidmix-cloud-objects` as a fallback. The API's local project blobs likewise
+write to `.raypx/blobs` and read `.voidmix/blobs`; deletion removes both copies.
+An explicit storage directory keeps its existing path and production S3 settings
+are unaffected. The duplicate Worker identity advisory lock keeps its previous
+namespace so old and new processes remain mutually exclusive during deployment.
+The default Redis prefix is now `raypx`, so limiter counters start a new window
+unless deployment explicitly preserves `CACHE_PREFIX`.
+
 Redis is optional in development and required for production AI admission.
 Only API uses these server-only variables:
 
 ```text
 REDIS_URL                         optional Redis connection URL
-CACHE_PREFIX                     key namespace, defaults to `voidmix`
+CACHE_PREFIX                     key namespace, defaults to `raypx`
 CACHE_REDIS_CONNECT_TIMEOUT_MS   connection timeout, defaults to `10000`
 CACHE_REDIS_OPERATION_TIMEOUT_MS command timeout, defaults to `5000`
 CACHE_REDIS_MAX_RETRIES_PER_REQUEST defaults to `1`

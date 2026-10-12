@@ -2,22 +2,22 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useCloudQueries } from "../../lib/use-cloud-queries";
 import { invalidateRunFacts } from "../../lib/cloud-queries";
-import { createConversationProjection } from "@voidmix/agent-ui/model";
+import { createConversationProjection } from "@raypx/agent-ui/model";
 import { Link } from "@tanstack/react-router";
 import type {
   CloudAssetVersionDto,
   CloudConversationSnapshotDto,
   CloudRunSnapshotDto,
-} from "@voidmix/contracts";
+} from "@raypx/contracts";
 import {
   createConversationSession,
   createConversationTransport,
-} from "@voidmix/client/conversations";
-import { Composer } from "@voidmix/agent-ui/composer";
-import { ConversationFeed } from "@voidmix/agent-ui/conversation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@voidmix/ui/components/ui/tabs";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { Field, FieldLabel } from "@voidmix/ui/components/ui/field";
+} from "@raypx/client/conversations";
+import { Composer } from "@raypx/agent-ui/composer";
+import { ConversationFeed } from "@raypx/agent-ui/conversation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
+import { Button } from "@raypx/ui/components/ui/button";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { env } from "../../env";
 import { useTranslations } from "../../i18n/client";
 import { createWebApiClient } from "../../lib/api-client";

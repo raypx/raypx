@@ -5,7 +5,7 @@ import { expect, it, vi } from "vite-plus/test";
 import { createCloudPiAgent } from "./cloud-pi.js";
 
 it("runs the real packaged Pi session through injected Gateway streaming without local metering or credentials", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "voidmix-gateway-pi-"));
+  const directory = await mkdtemp(join(tmpdir(), "raypx-gateway-pi-"));
   const reserve = vi.fn(async () => {}),
     start = vi.fn(async () => {}),
     settle = vi.fn(async () => {});

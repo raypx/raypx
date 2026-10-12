@@ -1,8 +1,8 @@
 import { domainFixtures } from "./test-fixtures.js";
-import { createApiClient } from "@voidmix/client";
-import { InMemorySystemSettingsRepository } from "@voidmix/db";
-import type { AssetApplication, ProjectApplication } from "@voidmix/application";
-import { ProjectV2DomainError, type MailSettingsFallback } from "@voidmix/core";
+import { createApiClient } from "@raypx/client";
+import { InMemorySystemSettingsRepository } from "@raypx/db";
+import type { AssetApplication, ProjectApplication } from "@raypx/application";
+import { ProjectV2DomainError, type MailSettingsFallback } from "@raypx/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { createApiApp } from "./app.js";
@@ -69,7 +69,7 @@ function createApp(assetCompletion?: AssetApplication["completeAssetUpload"]) {
   const mailFallback: MailSettingsFallback = {
     enabled: { value: false, source: "default" },
     from: { value: null, source: "missing" },
-    fromName: { value: "Voidmix", source: "default" },
+    fromName: { value: "Raypx", source: "default" },
     templatesBaseUrl: { value: null, source: "missing" },
     resendApiKey: { value: null, source: "missing" },
   };
@@ -87,7 +87,7 @@ function createApp(assetCompletion?: AssetApplication["completeAssetUpload"]) {
       v2Projects: projects,
     }),
     resolveSession: createHeaderSessionResolver(),
-    allowedOrigins: ["http://voidmix.test"],
+    allowedOrigins: ["http://raypx.test"],
     authHandler: async () => new Response(null, { status: 404 }),
     now: () => now,
   });
@@ -95,13 +95,13 @@ function createApp(assetCompletion?: AssetApplication["completeAssetUpload"]) {
 
 function clientFor(userId?: string, role = "user", app = createApp()) {
   return createApiClient({
-    baseUrl: "http://voidmix.test",
+    baseUrl: "http://raypx.test",
     headers: userId
       ? {
-          "x-voidmix-user-id": userId,
-          "x-voidmix-role": role,
-          "x-voidmix-email": `${userId}@example.com`,
-          "x-voidmix-display-name": userId,
+          "x-raypx-user-id": userId,
+          "x-raypx-role": role,
+          "x-raypx-email": `${userId}@example.com`,
+          "x-raypx-display-name": userId,
         }
       : {},
     fetch: async (input, init) => app.fetch(new Request(input, init)),
@@ -111,8 +111,8 @@ function clientFor(userId?: string, role = "user", app = createApp()) {
 describe("canonical API", () => {
   it("permits credentialed oRPC batch/compression preflight only from configured origins", async () => {
     const app = createApp();
-    for (const origin of ["http://voidmix.test", "https://untrusted.test"]) {
-      const response = await app.request("http://voidmix.test/rpc/__batch__", {
+    for (const origin of ["http://raypx.test", "https://untrusted.test"]) {
+      const response = await app.request("http://raypx.test/rpc/__batch__", {
         method: "OPTIONS",
         headers: {
           origin,
@@ -121,7 +121,7 @@ describe("canonical API", () => {
         },
       });
       expect(response.headers.get("access-control-allow-origin")).toBe(
-        origin === "http://voidmix.test" ? origin : null,
+        origin === "http://raypx.test" ? origin : null,
       );
       expect(response.headers.get("access-control-allow-credentials")).toBe("true");
       const allowed = response.headers.get("access-control-allow-headers")!.toLowerCase();
@@ -171,11 +171,11 @@ describe("canonical API", () => {
   ])("returns the ordinary RPC not-found response for retired %s", async (path) => {
     const app = createApp();
     for (const role of [null, "user", "admin", "owner"]) {
-      const response = await app.request(`http://voidmix.test/rpc${path}`, {
+      const response = await app.request(`http://raypx.test/rpc${path}`, {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          ...(role ? { "x-voidmix-user-id": "user-1", "x-voidmix-role": role } : {}),
+          ...(role ? { "x-raypx-user-id": "user-1", "x-raypx-role": role } : {}),
         },
         body: JSON.stringify({ json: {} }),
       });

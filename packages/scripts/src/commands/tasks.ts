@@ -25,13 +25,13 @@ export function taskInvocation(
   environment: NodeJS.ProcessEnv,
   platform: string,
 ) {
-  const env: NodeJS.ProcessEnv = { ...environment, VMX_CACHE_PLATFORM: platform };
-  const trusted = !env.CI || env.VMX_REMOTE_CACHE_TRUSTED === "true";
+  const env: NodeJS.ProcessEnv = { ...environment, RPX_CACHE_PLATFORM: platform };
+  const trusted = !env.CI || env.RPX_REMOTE_CACHE_TRUSTED === "true";
   const remote = trusted && remoteKeys.every((key) => !!env[key]);
   if (!remote) for (const key of [...remoteKeys, "TURBO_API"]) delete env[key];
   // Prevent callers from accidentally bypassing the cache trust boundary.
   if (args.some((arg) => /^--(?:cache|env-mode)(?:=|$)/.test(arg)))
-    throw new Error("Cache and environment policy belong to vmx tasks, not caller flags.");
+    throw new Error("Cache and environment policy belong to rpx tasks, not caller flags.");
   return {
     command: [
       "turbo",

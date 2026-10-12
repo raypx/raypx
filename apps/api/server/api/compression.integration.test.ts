@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { gzipSync } from "node:zlib";
 import { expect, it } from "vite-plus/test";
-import { createApiClient } from "@voidmix/client";
+import { createApiClient } from "@raypx/client";
 it("decodes a compressed response once through real native fetch", async () => {
   const profile = { id: "account", email: "account@example.test", displayName: "A".repeat(2048) };
   const server = createServer((_request, response) => {

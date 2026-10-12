@@ -1,6 +1,6 @@
 import { expect } from "vite-plus/test";
-import { createCloudApplication } from "@voidmix/application";
-import type { CloudRepository } from "@voidmix/core";
+import { createCloudApplication } from "@raypx/application";
+import type { CloudRepository } from "@raypx/core";
 
 /** Shared black-box cases run against both adapters; the clock is injected at the application seam. */
 export async function exerciseRoundAndLease(repository: CloudRepository) {

@@ -1,4 +1,4 @@
-import { isMutationProcedure } from "@voidmix/contracts";
+import { isMutationProcedure } from "@raypx/contracts";
 import { COMMON_ERROR_STATUS_MAP, ORPCError, RPCSerializer } from "@orpc/server";
 import { BodyLimitPlugin, RPCHandler } from "@orpc/server/fetch";
 import {
@@ -10,15 +10,15 @@ import {
   ResponseHeadersHandlerPlugin,
   TimeoutHandlerPlugin,
 } from "@orpc/server/plugins";
-import { createLoggerConfig, toMiddlewareOptions, type EvlogConfig } from "@voidmix/shared/logger";
-import { evlog as honoEvlog, type EvlogVariables } from "@voidmix/shared/logger/hono";
-import { withEvlog } from "@voidmix/shared/logger/orpc";
-import { resolveRequestLocaleHint } from "@voidmix/i18n/server";
+import { createLoggerConfig, toMiddlewareOptions, type EvlogConfig } from "@raypx/shared/logger";
+import { evlog as honoEvlog, type EvlogVariables } from "@raypx/shared/logger/hono";
+import { withEvlog } from "@raypx/shared/logger/orpc";
+import { resolveRequestLocaleHint } from "@raypx/i18n/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
 import { nanoid } from "nanoid";
-import type { ObjectStorage } from "@voidmix/core";
+import type { ObjectStorage } from "@raypx/core";
 import { mountLocalStorage } from "./local-storage.js";
 
 import { createCanonicalApiRouter } from "./canonical-router.js";
@@ -42,7 +42,7 @@ export interface CreateApiAppOptions {
 type ApiEnv = {
   Variables: EvlogVariables["Variables"] & {
     requestId: string;
-    locale?: import("@voidmix/i18n/types").Locale;
+    locale?: import("@raypx/i18n/types").Locale;
     auth: ApiRequestAuthContext;
   };
 };

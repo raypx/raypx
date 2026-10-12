@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { accounts, password } from "../database.js";
-const port = Number(process.env.VOIDMIX_E2E_PORT ?? 3000);
+const port = Number(process.env.RAYPX_E2E_PORT ?? 3000);
 const api = `http://127.0.0.1:${port + 2}`;
 async function login(page: Page, account: keyof typeof accounts = "primary") {
   const response = await page.request.post(`${api}/api/auth/sign-in/email`, {

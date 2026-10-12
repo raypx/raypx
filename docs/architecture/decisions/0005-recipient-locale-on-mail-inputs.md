@@ -37,18 +37,18 @@ operation, so an operator can verify either supported catalog without changing
 the process default.
 
 This supersedes only the recipient-locale clause of ADR-0004. The current ADR-0004
-decision uses the `@voidmix/i18n` facade with static JSON catalogs.
+decision uses the `@raypx/i18n` facade with static JSON catalogs.
 
 It does not add a locale column to the user record. A stored preference would
 outrank a request header, and it needs the status-value treatment the repository
-already requires: a literal union in `@voidmix/core`, a `z.enum` in
-`@voidmix/contracts`, a `pgEnum` in `@voidmix/db`, and a migration.
+already requires: a literal union in `@raypx/core`, a `z.enum` in
+`@raypx/contracts`, a `pgEnum` in `@raypx/db`, and a migration.
 
 ## Consequences
 
 Mail matches the language of the request that caused it, for the three flows
 Better Auth triggers. Admin test mail uses the locale supplied by its request.
-`apps/api/server/api` now depends on `@voidmix/i18n`, which is a same-tier
+`apps/api/server/api` now depends on `@raypx/i18n`, which is a same-tier
 adapter dependency.
 
 Mail sent without a triggering request — a future scheduled or administrative

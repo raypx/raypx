@@ -6,7 +6,7 @@ it("consults current database mail settings and respects disabling on every deli
     settings: {
       enabled: false,
       from: "sender@example.com",
-      fromName: "Voidmix",
+      fromName: "Raypx",
       templatesBaseUrl: null,
       configurationState: "disabled" as const,
       missing: [],

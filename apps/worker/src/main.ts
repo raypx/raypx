@@ -1,6 +1,6 @@
 import { createCloudWorkerRuntime } from "./runtime.js";
 import { renderReport, renderTable, renderDeck } from "./tools/render.js";
-import { checkPiRuntime } from "@voidmix/ai";
+import { checkPiRuntime } from "@raypx/ai";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -31,13 +31,13 @@ export async function checkRuntime(): Promise<void> {
   )
     throw new Error("Document runtime check failed.");
   process.stdout.write(
-    "Voidmix Worker and isolated Runner Node artifacts, Pi assets, PDF and XLSX runtime verified.\n",
+    "Raypx Worker and isolated Runner Node artifacts, Pi assets, PDF and XLSX runtime verified.\n",
   );
 }
 
 export async function checkDocuments(): Promise<void> {
   const env = getDocumentEnvironment();
-  const directory = await mkdtemp(join(tmpdir(), "voidmix-document-check-"));
+  const directory = await mkdtemp(join(tmpdir(), "raypx-document-check-"));
   const options = {
     directory,
     fontPath: env.CLOUD_PDF_FONT_PATH ?? "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
@@ -83,7 +83,7 @@ export async function checkDocuments(): Promise<void> {
     )
       throw new Error("Chinese presentation PDF text verification failed.");
     process.stdout.write(
-      "Voidmix Chinese PDF, XLSX and actual eight-page PPTX/PDF conversion verified.\n",
+      "Raypx Chinese PDF, XLSX and actual eight-page PPTX/PDF conversion verified.\n",
     );
   } finally {
     await rm(directory, { recursive: true, force: true });

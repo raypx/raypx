@@ -1,4 +1,4 @@
-# Voidmix domain language
+# Raypx domain language
 
 This glossary defines the current cloud platform described in
 [ADR-0016](docs/architecture/decisions/0016-cloud-agent-platform.md). Earlier

@@ -8,10 +8,10 @@ import {
   TimeoutLinkPlugin,
 } from "@orpc/client/plugins";
 import type { ContractRouterClient } from "@orpc/contract";
-import { apiContract, isMutationProcedure } from "@voidmix/contracts";
+import { apiContract, isMutationProcedure } from "@raypx/contracts";
 
 export { parseApiProblemDetails } from "./errors.js";
-export type { ApiProblemDetails } from "@voidmix/contracts";
+export type { ApiProblemDetails } from "@raypx/contracts";
 
 export type ApiClient = ContractRouterClient<typeof apiContract>;
 

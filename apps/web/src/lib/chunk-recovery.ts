@@ -4,7 +4,7 @@ const CHUNK_LOAD_ERROR_PATTERNS = [
   "error loading dynamically imported module",
 ] as const;
 
-export const CHUNK_RECOVERY_STORAGE_KEY = "voidmix:chunk-recovery";
+export const CHUNK_RECOVERY_STORAGE_KEY = "raypx:chunk-recovery";
 
 const CHUNK_RECOVERY_WINDOW_MS = 10_000;
 

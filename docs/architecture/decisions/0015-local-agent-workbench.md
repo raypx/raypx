@@ -13,7 +13,7 @@ identify a task or device and cannot recover progress from durable events.
 ## Decision
 
 Keep Core, Application, Contracts and Client as separate ownership boundaries.
-Add `@voidmix/agent-ui` for controlled Agent business views; applications keep
+Add `@raypx/agent-ui` for controlled Agent business views; applications keep
 their routing, authentication, loaders, drafts and platform capabilities.
 Base UI, shadcn Neutral and Phosphor remain the primitive system.
 

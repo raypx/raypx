@@ -32,7 +32,7 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mocks.navigate,
 }));
 
-vi.mock("@voidmix/i18n/client", async () => {
+vi.mock("@raypx/i18n/client", async () => {
   const { default: messages } = await import("../../../../messages/en.json");
   return {
     useTranslations: (namespace: keyof typeof messages) => (key: string) => {

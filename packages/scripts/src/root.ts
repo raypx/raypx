@@ -2,9 +2,9 @@ import { defineCommand } from "citty";
 
 export const rootCommand = defineCommand({
   meta: {
-    name: "vmx",
+    name: "rpx",
     version: "0.0.0",
-    description: "Voidmix repository automation",
+    description: "Raypx repository automation",
   },
   subCommands: {
     // cli.ts intercepts tasks to preserve Turbo flags without Citty parsing.

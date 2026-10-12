@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { ApiClient } from "@voidmix/client";
-import type { CloudRunSnapshotDto, CloudCommandDto } from "@voidmix/contracts";
-import { createCloudRunSession, createCloudRunTransport } from "@voidmix/client/cloud-runs";
-import { isCloudRunTerminal, createCloudTimelineProjection } from "@voidmix/agent-ui/model";
+import type { ApiClient } from "@raypx/client";
+import type { CloudRunSnapshotDto, CloudCommandDto } from "@raypx/contracts";
+import { createCloudRunSession, createCloudRunTransport } from "@raypx/client/cloud-runs";
+import { isCloudRunTerminal, createCloudTimelineProjection } from "@raypx/agent-ui/model";
 import { env } from "../../env";
 import { captureProductEvent } from "../../lib/product-telemetry";
 import { useCloudQueries } from "../../lib/use-cloud-queries";

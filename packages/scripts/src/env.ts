@@ -1,7 +1,7 @@
-import { databaseEnv } from "@voidmix/db/env";
-import { createEnv, type Preset, z } from "@voidmix/shared/env";
-import { runtimeEnv } from "@voidmix/shared/env/runtime";
-import { loggerEnv } from "@voidmix/shared/logger/env";
+import { databaseEnv } from "@raypx/db/env";
+import { createEnv, type Preset, z } from "@raypx/shared/env";
+import { runtimeEnv } from "@raypx/shared/env/runtime";
+import { loggerEnv } from "@raypx/shared/logger/env";
 
 const scriptsEnv = {
   id: "scripts-runtime",

@@ -14,7 +14,7 @@ an external Redis service.
 
 ## Decision
 
-Add `@voidmix/cache` as the server-side Redis boundary. It provides the Laravel-like
+Add `@raypx/cache` as the server-side Redis boundary. It provides the Laravel-like
 cache facade and the Better Auth secondary-storage adapter using `ioredis`, with
 prefix-scoped keys, atomic consume/counter operations, direct error propagation,
 and explicit RESP3 connections with native reply mapping.

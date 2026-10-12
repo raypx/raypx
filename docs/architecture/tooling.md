@@ -60,7 +60,7 @@ regenerate `bun.lock`, and run the full verification suite.
 
 ## TypeScript presets
 
-`@voidmix/tsconfig` exports:
+`@raypx/tsconfig` exports:
 
 ```text
 base.json           strict shared rules, including an empty ambient `types`
@@ -88,10 +88,10 @@ editor or full-repository type checking becomes measurably slow.
 
 ### Package-local imports
 
-`@voidmix/ui` defines `#lib/*`, `#hooks/*`, and `#components/*` in its own
+`@raypx/ui` defines `#lib/*`, `#hooks/*`, and `#components/*` in its own
 `package.json#imports` for deep internal imports and package self-references.
 Nearby relative imports remain valid. Other workspaces consume the existing
-`@voidmix/ui/...` public exports; private aliases do not cross package boundaries
+`@raypx/ui/...` public exports; private aliases do not cross package boundaries
 or inherit from the root manifest.
 
 The mappings target `.ts`/`.tsx` source files, matching this package's source
@@ -123,7 +123,7 @@ environment-validating Drizzle config. Once that baseline is clean, dependency
 and duplicate-export findings can be promoted to the verification gate
 independently.
 
-`check` is `vmx tasks check` — per-workspace typecheck scripts. Desktop
+`check` is `rpx tasks check` — per-workspace typecheck scripts. Desktop
 and Mail typecheck their statically imported JSON catalogs directly, while Web
 typechecks its explicit locale-to-dynamic-import map. A clean checkout does not
 depend on generated translation files. It is deliberately not repointed at
@@ -149,7 +149,7 @@ uncommitted.
 
 ## Repository scripts
 
-`@voidmix/scripts` exposes:
+`@raypx/scripts` exposes:
 
 ```text
 tasks <task> [flags]   run the Turbo graph with platform and cache trust policy
@@ -238,20 +238,20 @@ independent lines — `router-cli` 1.167.x against `react-router` 1.170.x and
 `react-start` 1.168.x — so a version mismatch is not the cause and aligning
 them is not the fix.
 
-Use `vmx env -- <command>` only in workspace scripts that need root env
+Use `rpx env -- <command>` only in workspace scripts that need root env
 files. The runner uses the Dotenvx API directly rather than starting a second
 CLI process. It loads `.env.local`, then `.env`, without overriding inherited
 environment values. Tests are intentionally not wrapped. Do not add Vite
 `envDir` settings or workspace-relative env paths; all repository-configured
 env-file loading for development and build commands goes through this runner.
 
-`@voidmix/scripts` commands declare a `process`, `repository`, or `database`
+`@raypx/scripts` commands declare a `process`, `repository`, or `database`
 environment policy. A shared contextual action creates the matching copied
 environment and logger before invoking the command operation. Database
 commands load and validate repository env directly; generate, Desktop
 build, and shadcn update load the raw repository env for child processes;
-clean and verify do not read env files. This avoids recursively invoking `vmx env` around another
-`vmx` process. External Vite, Drizzle, and Electrobun workspace commands
+clean and verify do not read env files. This avoids recursively invoking `rpx env` around another
+`rpx` process. External Vite, Drizzle, and Electrobun workspace commands
 continue to use the env runner.
 
 Citty modules remain thin adapters. Database policies, PostgreSQL resource
@@ -266,7 +266,7 @@ filesystem adapters, and `report.ts` renders each finding with a copy-pasteable
 `Fix:` line. It resolves workspaces from Bun's globs rather than a directory walk,
 and reports any glob match lacking a `package.json` — a directory that nothing
 builds or tests but that an agent reading the filesystem still treats as a place
-code belongs. `vmx verify` runs it first, because a structural failure should
+code belongs. `rpx verify` runs it first, because a structural failure should
 not wait for a build. Distinct from `doctor`, which asserts machine prerequisites
 and therefore cannot run in CI.
 
@@ -310,9 +310,9 @@ migrations. `bun run clean:all` additionally removes every repository
 `node_modules` and `node_modules.bun` directory, while
 `bun run clean:bun-cache` runs the standard clean and also clears Bun's shared
 machine-wide install cache, affecting every checkout on that machine.
-Every root script for this package calls the `vmx` bin directly — `bun run
-db:migrate` is `vmx db migrate` — so the colon-separated names are aliases for
-nested CLI commands, and `bun run vmx <command>` reaches anything without one.
+Every root script for this package calls the `rpx` bin directly — `bun run
+db:migrate` is `rpx db migrate` — so the colon-separated names are aliases for
+nested CLI commands, and `bun run rpx <command>` reaches anything without one.
 [ADR-0018](decisions/0018-turbo-task-orchestration.md) records why they no
 longer route through a task runner.
 
@@ -347,15 +347,15 @@ The former `desktop:prepare` and `build:desktop:native-prep` commands are retire
 installers contain the pinned Bun host but no local Pi runner. Native preparation
 and packaging remain uncached.
 
-The Citty command tree provides `vmx --help`, nested command help such as
-`vmx db --help`, and `vmx --version`.
+The Citty command tree provides `rpx --help`, nested command help such as
+`rpx db --help`, and `rpx --version`.
 
 Use root Bun scripts so the repository-local Vite+ version is selected instead
 of a potentially different global `vp` binary.
 
 ## Browser verification
 
-The private `@voidmix/e2e` workspace owns Playwright configuration and browser
+The private `@raypx/e2e` workspace owns Playwright configuration and browser
 smoke tests. The Web project includes public, authenticated and cloud flows;
 Desktop targets its own browser preview. `test:e2e:web` builds/starts API and Web,
 while `test:e2e:desktop` builds/starts API and Desktop. `test:e2e` keeps the full
@@ -373,7 +373,7 @@ zero-secret workflow and optional local diagnostics.
 
 ## Turbo task graph and cache trust
 
-Root scripts call `vmx tasks`, which delegates to the local Turbo binary.
+Root scripts call `rpx tasks`, which delegates to the local Turbo binary.
 `build` depends on `check`, dependency builds, and transitive source hashes.
 Packages that export TypeScript source have transit nodes rather than fake
 no-emit builds. Shared pack is a prerequisite of consumer checks/tests; build
@@ -382,7 +382,7 @@ repository. Direct workspace build commands are leaf tools, not shipping gates.
 
 Turbo uses strict environment mode. `VITE_*`, `NODE_ENV`, and `NITRO_PRESET` affect
 build keys. Root config, the shared test config, TS presets, catalogs, lockfile and env files also affect
-hashes. `vmx tasks` fingerprints the actual Node/Bun executable versions, OS,
+hashes. `rpx tasks` fingerprints the actual Node/Bun executable versions, OS,
 architecture and libc so native artifacts cannot cross incompatible hosts.
 Outputs are limited to `dist`, Nitro `.output`, Storybook and explicit coverage;
 never put user inputs, sessions, credentials or signed URLs inside these paths.
@@ -407,7 +407,7 @@ Builder images contain Node 24.18.0 and Bun 1.4.0. Final images keep only Node
 runtime artifacts; the Worker also keeps its fixed converters and fonts.
 
 Turbo 2.11.7 can omit a development dependency that also appears as an optional
-peer when pruning Bun locks (`@voidmix/shared` / `@orpc/server`). Builders therefore
+peer when pruning Bun locks (`@raypx/shared` / `@orpc/server`). Builders therefore
 overlay the canonical root `bun.lock` before frozen installation. Bun 1.4 skips
 workspaces absent from the pruned manifest and installs only the included closure.
 This keeps exact resolutions and trades some lock-layer cache granularity for

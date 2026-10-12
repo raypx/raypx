@@ -12,7 +12,7 @@
   "iconLibrary": "phosphor",
   "aliases": {
     "components": "@/components",
-    "utils": "@voidmix/ui/lib/utils",
+    "utils": "@raypx/ui/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"

@@ -1,8 +1,8 @@
 import type { RouterContext } from "./router-context.js";
 import { actorInput } from "./router-context.js";
 import { createApiError, mapDomainError } from "./canonical-errors.js";
-import { isCloudTerminal } from "@voidmix/core";
-import type { Session } from "@voidmix/auth";
+import { isCloudTerminal } from "@raypx/core";
+import type { Session } from "@raypx/auth";
 
 async function requireStreamSession(context: {
   auth: { revalidateSession?: () => Promise<Session | null> };

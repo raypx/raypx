@@ -76,7 +76,7 @@ No new migration or automatic cleanup is introduced.
 Policy rejects reversed runtime dependencies, application imports, private
 cross-package imports and workspace cycles. Active enum parity remains checked.
 Application names are unscoped under [ADR-0022](./decisions/0022-unscoped-application-packages.md);
-shared package names retain `@voidmix/`.
+shared package names retain `@raypx/`.
 
 Current results are recorded in
 [feature reduction acceptance](../development/feature-reduction-acceptance.md).
@@ -89,18 +89,18 @@ retired Admin interfaces; they are retained as historical evidence.
 See [testing](../development/testing.md) for focused, full, PostgreSQL and browser
 commands. The clean baseline passed 599 tests. Local validation on 2026-09-28:
 
-| Gate                                                                               | Result                                                                                                  |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `bun run verify --verbose`                                                         | Passed: 636 tests; i18n, policy, format, lint, workspace checks, builds and Web/API Node runtime probes |
-| `bun run test:unit`                                                                | 573 passed                                                                                              |
-| `bun run test:integration`                                                         | 21 passed                                                                                               |
-| `bun run test:component`                                                           | 47 passed                                                                                               |
-| `bun run test:coverage`                                                            | 636 passed, coverage reports generated                                                                  |
-| `NODE_ENV=test TEST_DATABASE_URL=… bun run test:postgres`                          | 10 passed against isolated PostgreSQL 17.11, including direct Memory parity and concurrent writes       |
-| PostgreSQL command without `TEST_DATABASE_URL`                                     | Failed explicitly as required; no database fallback                                                     |
-| `NODE_ENV=test TEST_DATABASE_URL=… VOIDMIX_E2E_PORT=59430 bun run test:e2e`        | 13 passed, including 3 authenticated API/database scenarios                                             |
-| `DATABASE_URL=postgres://voidmix:ci@example.invalid:5432/voidmix bun run generate` | No schema changes or migration drift                                                                    |
-| Route generation and `git diff --check`                                            | No generated-route drift or whitespace errors                                                           |
+| Gate                                                                           | Result                                                                                                  |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `bun run verify --verbose`                                                     | Passed: 636 tests; i18n, policy, format, lint, workspace checks, builds and Web/API Node runtime probes |
+| `bun run test:unit`                                                            | 573 passed                                                                                              |
+| `bun run test:integration`                                                     | 21 passed                                                                                               |
+| `bun run test:component`                                                       | 47 passed                                                                                               |
+| `bun run test:coverage`                                                        | 636 passed, coverage reports generated                                                                  |
+| `NODE_ENV=test TEST_DATABASE_URL=… bun run test:postgres`                      | 10 passed against isolated PostgreSQL 17.11, including direct Memory parity and concurrent writes       |
+| PostgreSQL command without `TEST_DATABASE_URL`                                 | Failed explicitly as required; no database fallback                                                     |
+| `NODE_ENV=test TEST_DATABASE_URL=… RAYPX_E2E_PORT=59430 bun run test:e2e`      | 13 passed, including 3 authenticated API/database scenarios                                             |
+| `DATABASE_URL=postgres://raypx:ci@example.invalid:5432/raypx bun run generate` | No schema changes or migration drift                                                                    |
+| Route generation and `git diff --check`                                        | No generated-route drift or whitespace errors                                                           |
 
 Layer counts are not additive: the component substring selector includes
 `*.component.test.tsx`, while unit excludes only the exact `component.test.tsx`

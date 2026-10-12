@@ -1,6 +1,6 @@
 import { SettingsReader } from "./reader.js";
 import { type StoredConfigurationValue } from "./values.js";
-import type { SystemSettingsRepository } from "@voidmix/core";
+import type { SystemSettingsRepository } from "@raypx/core";
 export class InMemorySystemSettingsRepository
   extends SettingsReader
   implements SystemSettingsRepository

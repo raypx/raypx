@@ -39,7 +39,7 @@ export async function extractPdfText(
   bytes: Uint8Array,
   options: PdfParserOptions = {},
 ): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), "voidmix-pdf-extract-"));
+  const directory = await mkdtemp(join(tmpdir(), "raypx-pdf-extract-"));
   const input = join(directory, "input.pdf");
   try {
     await writeFile(input, bytes, { mode: 0o600 });

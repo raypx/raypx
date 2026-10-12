@@ -1,4 +1,4 @@
-# Contributing to Voidmix
+# Contributing to Raypx
 
 Setup and commands are in [README.md](./README.md). The rules you must follow are
 in [AGENTS.md](./AGENTS.md) and the `AGENTS.md` of the workspace you are changing

@@ -1,5 +1,5 @@
-import { Button } from "@voidmix/ui/components/ui/button";
-import { EmptyState } from "@voidmix/ui/empty-state";
+import { Button } from "@raypx/ui/components/ui/button";
+import { EmptyState } from "@raypx/ui/empty-state";
 import { MarkdownContent } from "../runs/markdown-content";
 export interface FileView {
   id: string;

@@ -1,9 +1,9 @@
 ---
-name: Voidmix
+name: Raypx
 description: A precise project workbench using shadcn Neutral across every surface.
 ---
 
-# Voidmix visual system
+# Raypx visual system
 
 The cloud product centers research conversations and reviewable Task deliveries. The roadmap in
 [PRODUCT.md](PRODUCT.md) does not describe capabilities that the current UI can

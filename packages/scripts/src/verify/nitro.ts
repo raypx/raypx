@@ -42,7 +42,7 @@ const defaultTargets: readonly NitroRuntimeTarget[] = [
   {
     directory: "apps/web",
     name: "Web",
-    probes: [{ expectedText: "Voidmix", pathname: "/" }, { pathname: "/health" }],
+    probes: [{ expectedText: "Raypx", pathname: "/" }, { pathname: "/health" }],
   },
   {
     directory: "apps/api",
@@ -128,8 +128,8 @@ function createRuntimeEnvironment(processEnv: NodeJS.ProcessEnv, port: number): 
   delete environment.DATABASE_URL;
   return {
     ...environment,
-    DATABASE_URL: "postgres://voidmix:verify@example.invalid:5432/voidmix",
-    S3_BUCKET: "voidmix-runtime-probe",
+    DATABASE_URL: "postgres://raypx:verify@example.invalid:5432/raypx",
+    S3_BUCKET: "raypx-runtime-probe",
     CLOUD_SEARCH_ENABLED: "false",
     CLOUD_COMPUTER_ENABLED: "false",
     REDIS_URL: "",
@@ -138,8 +138,8 @@ function createRuntimeEnvironment(processEnv: NodeJS.ProcessEnv, port: number): 
     AUTH_SECRET: "verify-only-secret-that-is-long-enough-for-better-auth",
     AUTH_URL: "http://127.0.0.1:" + port,
     RESEND_API_KEY: "verify-resend-key",
-    MAIL_FROM: "verify@voidmix.local",
-    MAIL_FROM_NAME: "Voidmix Verify",
+    MAIL_FROM: "verify@raypx.local",
+    MAIL_FROM_NAME: "Raypx Verify",
     LOG_LEVEL: "error",
     LOG_PRETTY: "false",
     NITRO_HOST: "127.0.0.1",
@@ -169,7 +169,7 @@ export async function allocateLocalPort(): Promise<number> {
 }
 
 async function stageNitroOutput(sourceDirectory: string): Promise<NitroRuntimeStage> {
-  const stagingRoot = await mkdtemp(join(tmpdir(), "voidmix-nitro-runtime-"));
+  const stagingRoot = await mkdtemp(join(tmpdir(), "raypx-nitro-runtime-"));
   const directory = join(stagingRoot, ".output");
 
   try {

@@ -27,7 +27,7 @@ measure the size of those slices, not performance or overall repository quality.
 | Browser environment access guard     | Temporarily remove the guard and run the existing browser-access test. It fails because accessing a server variable no longer throws. Restore the guard.                                                                                                | No retained change   | Reject removal |
 
 The four retained removals reduce their implementation from 994 to 644 lines
-(350 lines, about 35%). Three implementation files disappear. `@voidmix/shared/env`
+(350 lines, about 35%). Three implementation files disappear. `@raypx/shared/env`
 also loses its direct `type-fest` dependency and the repository's unused catalog
 entry; other tools may still require that package transitively.
 

@@ -10,7 +10,7 @@ import {
   type CloudRunStatus,
   type CloudToolExecution,
   type CloudCommand,
-} from "@voidmix/core";
+} from "@raypx/core";
 import {
   projectStageV2Schema,
   projectMemberRoleV2Schema,
@@ -23,7 +23,7 @@ import {
   cloudRunStatusSchema,
   cloudToolExecutionSchema,
   cloudCommandSchema,
-} from "@voidmix/contracts";
+} from "@raypx/contracts";
 import {
   projectStageEnum,
   v2ProjectMemberRoleEnum,
@@ -36,7 +36,7 @@ import {
   cloudRunStatusEnum,
   cloudToolStatusEnum,
   cloudCommandStatusEnum,
-} from "@voidmix/db/schema";
+} from "@raypx/db/schema";
 const cloudTasks = {
   open: true,
   in_progress: true,

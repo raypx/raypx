@@ -3,18 +3,19 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: voidmix
+      POSTGRES_DB: ${RAYPX_POSTGRES_DB:-raypx}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
-      - voidmix-postgres:/var/lib/postgresql/data
+      - raypx-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d voidmix"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${RAYPX_POSTGRES_DB:-raypx}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  voidmix-postgres:
+  raypx-postgres:
+    name: ${RAYPX_POSTGRES_VOLUME:-raypx-postgres}

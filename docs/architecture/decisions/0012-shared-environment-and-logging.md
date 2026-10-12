@@ -19,7 +19,7 @@ entry points.
 
 ## Decision
 
-Move environment and logger implementations into `@voidmix/shared`, retaining
+Move environment and logger implementations into `@raypx/shared`, retaining
 the explicit `env`, `env/runtime`, `logger`, `logger/client`, `logger/env`,
 `logger/hono`, `logger/orpc`, and `logger/vite` subpaths. The root export
 continues to own framework-independent primitives. Core keeps its compatibility
@@ -48,7 +48,7 @@ dependencies and optional adapter peers, so its boundary is broader than the
 former zero-dependency primitive package. This change targets consistency; it
 does not claim faster application execution or smaller bundles.
 
-The old `@voidmix/env` and `@voidmix/logger` package names are removed without
+The old `@raypx/env` and `@raypx/logger` package names are removed without
 compatibility aliases. Repository consumers and documentation use the new
 subpaths.
 

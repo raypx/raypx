@@ -1,6 +1,6 @@
 import { cursorPage, timestampKey } from "../pagination.js";
 import { projectVisibility } from "./visibility.js";
-import type { VisibleResourceQuery } from "@voidmix/core";
+import type { VisibleResourceQuery } from "@raypx/core";
 import { first, inserted } from "./results.js";
 import type {
   OrganizationMemberV2,
@@ -9,7 +9,7 @@ import type {
   ProjectMemberV2Repository,
   ProjectV2,
   ProjectV2Repository,
-} from "@voidmix/core";
+} from "@raypx/core";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { organizationMembers, v2ProjectMembers, v2Projects } from "../schema.js";
 import type { Database } from "./types.js";

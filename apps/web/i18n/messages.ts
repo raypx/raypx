@@ -1,4 +1,4 @@
-import type { Locale, LocaleCatalogLoader, MessageCatalog } from "@voidmix/i18n/types";
+import type { Locale, LocaleCatalogLoader, MessageCatalog } from "@raypx/i18n/types";
 
 const webCatalogLoaders = {
   en: () => import("../messages/en.json").then(({ default: messages }) => messages),

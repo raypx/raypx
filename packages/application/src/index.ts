@@ -16,7 +16,7 @@ export type {
   ProjectTaskV2Repository,
   FeedbackV2Repository,
   ReviewV2Repository,
-} from "@voidmix/core";
+} from "@raypx/core";
 export function createProjectApplication(options: ProjectOptions): ProjectApplication {
   const context = { options, ...executionContext(options), ...createProjectAccess(options) };
   return { ...projectsCommands(context), ...membersCommands(context), ...tasksCommands(context) };

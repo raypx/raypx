@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from "@voidmix/client";
+import { createApiClient, type ApiClient } from "@raypx/client";
 import { env } from "../env";
 import { getDesktopLocaleHeaders } from "../i18n/client";
 

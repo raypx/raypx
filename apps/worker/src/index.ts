@@ -1,9 +1,9 @@
-import type { OutboxEvent, OutboxRepository } from "@voidmix/core";
+import type { OutboxEvent, OutboxRepository } from "@raypx/core";
 export { createCloudDispatcher, createCloudExecutor, runCloudExecutions } from "./cloud.js";
 export type { CloudExecutorOptions } from "./cloud.js";
 
 export type OutboxItem = OutboxEvent;
-export type { OutboxRepository } from "@voidmix/core";
+export type { OutboxRepository } from "@raypx/core";
 
 export interface WorkerOptions {
   outbox: OutboxRepository;

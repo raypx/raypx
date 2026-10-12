@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/client",
+  "name": "@raypx/client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -19,10 +19,10 @@
   "dependencies": {
     "@orpc/client": "catalog:",
     "@orpc/contract": "catalog:",
-    "@voidmix/contracts": "workspace:*"
+    "@raypx/contracts": "workspace:*"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*"
+    "@raypx/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "catalog:tooling"
   }
 }

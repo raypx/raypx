@@ -2,8 +2,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { cloudQueries } from "../../lib/cloud-queries";
 import { useCloudQueries } from "../../lib/use-cloud-queries";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PageHeader } from "@voidmix/ui/page-header";
-import { StatusBadge } from "@voidmix/ui/status-badge";
+import { PageHeader } from "@raypx/ui/page-header";
+import { StatusBadge } from "@raypx/ui/status-badge";
 import { useTranslations } from "../../i18n/client";
 import { createRouteApiClient } from "../../lib/route-api";
 import {

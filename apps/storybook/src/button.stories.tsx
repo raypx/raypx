@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "@voidmix/ui/components/ui/button";
+import { Button } from "@raypx/ui/components/ui/button";
 
 const meta = {
   title: "Primitives/Button",

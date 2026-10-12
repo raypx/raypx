@@ -26,7 +26,7 @@ function shape(overrides: Partial<WorkspaceShape> = {}): WorkspaceShape {
 const defaultScripts = { ...canonicalScripts, check: checkCommand, build: checkCommand };
 function manifest(overrides: Record<string, unknown> = {}) {
   return JSON.stringify({
-    name: "@voidmix/example",
+    name: "@raypx/example",
     private: true,
     scripts: defaultScripts,
     ...overrides,
@@ -77,9 +77,9 @@ describe("validateWorkspaceManifest", () => {
   );
 
   it.each([
-    ["apps/desktop/package.json", "@voidmix/desktop", "desktop"],
-    ["packages/example/package.json", "example", "@voidmix/example"],
-    ["e2e/package.json", "e2e", "@voidmix/e2e"],
+    ["apps/desktop/package.json", "@raypx/desktop", "desktop"],
+    ["packages/example/package.json", "example", "@raypx/example"],
+    ["e2e/package.json", "e2e", "@raypx/e2e"],
   ])("rejects a workspace name that violates its owning path: %s", (path, name, expected) => {
     expectOnlyFinding(validateWorkspaceManifest(path, manifest({ name }), shape()), {
       check: "manifest.name",
@@ -170,10 +170,10 @@ describe("validateWorkspaceManifest", () => {
     },
     {
       name: "reports an internal dependency that bypasses the workspace protocol",
-      content: manifest({ devDependencies: { "@voidmix/tsconfig": "^0.0.0" } }),
+      content: manifest({ devDependencies: { "@raypx/tsconfig": "^0.0.0" } }),
       shape: shape(),
       expected: {
-        message: expect.stringContaining("devDependencies pins @voidmix/tsconfig"),
+        message: expect.stringContaining("devDependencies pins @raypx/tsconfig"),
         fix: expect.stringContaining("workspace:*"),
       },
     },
@@ -199,7 +199,7 @@ describe("validateWorkspaceManifest", () => {
       check: "bun run typecheck && bun run typecheck:node",
       typecheck: checkCommand,
       "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
-      build: "vmx env -- vp build",
+      build: "rpx env -- vp build",
     };
 
     expect(

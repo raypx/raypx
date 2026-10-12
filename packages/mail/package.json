@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/mail",
+  "name": "@raypx/mail",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,16 +18,16 @@
     "preview:email": "bun scripts/preview.ts"
   },
   "dependencies": {
-    "@voidmix/i18n": "workspace:*",
-    "@voidmix/shared": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/shared": "workspace:*",
     "react": "catalog:",
     "react-email": "catalog:frontend",
     "resend": "catalog:frontend"
   },
   "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*",
     "typescript": "catalog:tooling",
     "vite-plus": "catalog:tooling"
   }

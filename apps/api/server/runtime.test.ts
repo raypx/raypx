@@ -14,7 +14,7 @@ vi.mock("./api/index.js", () => ({
   createApiRuntime: mocks.createApiRuntime,
 }));
 
-vi.mock("@voidmix/shared/logger", () => ({
+vi.mock("@raypx/shared/logger", () => ({
   configureLogger: vi.fn(() => ({ service: "api" })),
   logger: vi.fn(() => ({ error: vi.fn(), emit: vi.fn(), set: vi.fn() })),
 }));

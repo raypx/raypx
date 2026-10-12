@@ -1,8 +1,8 @@
-import { LoadingState } from "@voidmix/ui/loading-state";
+import { LoadingState } from "@raypx/ui/loading-state";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { EmptyState } from "@voidmix/ui/empty-state";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { StatusBadge } from "@voidmix/ui/status-badge";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { Button } from "@raypx/ui/components/ui/button";
+import { StatusBadge } from "@raypx/ui/status-badge";
 
 const meta = {
   title: "Patterns/States",

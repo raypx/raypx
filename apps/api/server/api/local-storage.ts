@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import type { ObjectStorage } from "@voidmix/core";
-import { verifyFilesystemDownload, verifyFilesystemUpload } from "@voidmix/storage";
+import type { ObjectStorage } from "@raypx/core";
+import { verifyFilesystemDownload, verifyFilesystemUpload } from "@raypx/storage";
 import { bodyLimit } from "hono/body-limit";
 import type { Hono, Env } from "hono";
 

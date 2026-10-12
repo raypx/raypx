@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { Button } from "@voidmix/ui/components/ui/button";
+import { Button } from "@raypx/ui/components/ui/button";
 import type { ConversationMessage } from "../model/cloud";
 import { MarkdownContent } from "../runs/markdown-content";
 

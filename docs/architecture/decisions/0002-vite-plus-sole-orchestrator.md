@@ -32,19 +32,19 @@ run: `lint`, `format`, `format:fix`, `check`, `test`, `build`, `policy`,
 `verify`.
 
 Procedural automation that needs to understand the repository or the database
-lives in `@voidmix/scripts` (the `vmx` CLI). That is a different concern from
+lives in `@raypx/scripts` (the `rpx` CLI). That is a different concern from
 orchestration, so it is not an exception to this decision.
 
 **Amended.** This originally said such automation is invoked _by_ a Vite+ task,
 not alongside it, and the root scripts routed through
-`vp run @voidmix/scripts#<task>`. The clause bought nothing it claimed to:
+`vp run @raypx/scripts#<task>`. The clause bought nothing it claimed to:
 `vite.config.ts` defines no `run.tasks`, so those were plain `package.json`
 scripts that Vite+ neither cached nor ordered — the extra hop added a process and
 a log frame. It also left the rule half-followed, with `doctor`, `clean`, and
 `db:studio` calling the workspace directly while nine siblings did not.
 
-Root scripts now invoke the CLI directly (`vmx policy --fix`), one style for all
-twelve. Vite+ remains the only orchestrator: `vmx` orders nothing across
+Root scripts now invoke the CLI directly (`rpx policy --fix`), one style for all
+twelve. Vite+ remains the only orchestrator: `rpx` orders nothing across
 workspaces, and anything that does — `check`, `test`, `build` — still goes through
 `vp run`. Should one of these commands ever need a place in the task graph, define
 it as a real Vite+ task rather than reinstating the hop.

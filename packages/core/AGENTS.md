@@ -1,4 +1,4 @@
-# @voidmix/core
+# @raypx/core
 
 ## Purpose
 
@@ -30,15 +30,15 @@ transported or stored.
 - Ownership is distinct from authorship. Organization capability is a ceiling;
   a project membership can narrow it but cannot elevate it.
 - Own the **repository interfaces**. The dependency direction is inverted on
-  purpose: `@voidmix/db` depends on this package to learn what to implement.
+  purpose: `@raypx/db` depends on this package to learn what to implement.
 - Own no transport concern. Business rules throw `DomainError`; only the API
   layer maps those to transport codes.
 
 ## Constraints
 
-- **The runtime dependency is `@voidmix/shared`.** No React, Hono, Nitro, Drizzle,
+- **The runtime dependency is `@raypx/shared`.** No React, Hono, Nitro, Drizzle,
   Zod, or oRPC. `lib: ["ES2022"]` means there are no DOM types either.
-- Shared primitives are owned by `@voidmix/shared` and re-exported here for
+- Shared primitives are owned by `@raypx/shared` and re-exported here for
   compatibility.
 - Entities are plain `interface`s with no methods and no classes.
 - Do not restore retired user-administration workflows, audit constructors,
@@ -56,8 +56,8 @@ transported or stored.
 - Runtime authentication uses exact lowercase email domains. An empty allowlist
   permits every domain. Settings administration factories are retired; the
   repository ports remain only for Auth/Mail resolution.
-- An active protocol status value is also declared in `@voidmix/contracts`
-  (`z.enum`) and `@voidmix/db` (`pgEnum`). Active protocol values must change together; a
+- An active protocol status value is also declared in `@raypx/contracts`
+  (`z.enum`) and `@raypx/db` (`pgEnum`). Active protocol values must change together; a
   missing one fails at runtime, not at compile time.
 
 ## Verification

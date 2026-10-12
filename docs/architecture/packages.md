@@ -5,7 +5,7 @@ does. Each package's own `AGENTS.md` owns its export surface, constraints, and
 verification commands; keep those details there rather than duplicating them
 here.
 
-## `@voidmix/contracts`
+## `@raypx/contracts`
 
 The runtime contract seam. It contains Zod schemas, DTOs, and the oRPC contract
 tree, but performs no network calls and exposes no database implementation.
@@ -18,7 +18,7 @@ DTO contains only three booleans; settings administration RPCs are retired.
 notification and preference protocol. It retains native `Date` DTO fields and
 contains no Pi, Drizzle or S3 SDK types. Streams have independent connections.
 
-## `@voidmix/application`
+## `@raypx/application`
 
 The application command/query layer shared by the API and Agent Worker. It
 coordinates Projects, Assets, Reviews and Activity ports from Core.
@@ -31,15 +31,15 @@ idempotent commands, owner-fenced execution, model reservations and atomic
 revision publication. API and Worker both use this same execution model;
 `cloud.run.queued` is distinct from historical delivery events.
 
-## `@voidmix/ai`
+## `@raypx/ai`
 
 The server-side AI adapter for cloud Pi. It owns SDK-specific session lifecycle,
-model Gateway transport, research helpers and conversion to stable Voidmix run
+model Gateway transport, research helpers and conversion to stable Raypx run
 events. Hosts inject trusted tools and metering hooks. The local Desktop Provider
 and unused Project tool registry are retired; the package has no Application/Core
 runtime dependency, database connection or HTTP session ownership.
 
-## `@voidmix/client`
+## `@raypx/client`
 
 The transport adapter. `createApiClient({ baseUrl?, headers, fetch })` returns a
 typed client generated from the shared contract. Web and Desktop provide
@@ -49,14 +49,14 @@ Framework-independent conversation/run sessions own replay, deduplication,
 contiguous cursors and reconnects. Apps own session lifetimes by account and
 resource; React reads the external store with `useSyncExternalStore`.
 
-## `@voidmix/storage`
+## `@raypx/storage`
 
 Server-only implementation of Core's object-storage port, shared by API and
 Worker. It supplies private S3 transfers, signed bounded uploads, authorized
 downloads and memory/filesystem test adapters. DB keeps metadata, never object
 bytes or provider credentials. Frontend applications cannot import this package.
 
-## `@voidmix/agent-ui`
+## `@raypx/agent-ui`
 
 Controlled business views for composing messages, research sources, execution
 progress, tools and artifact review. Apps inject snapshots, actions and platform
@@ -75,7 +75,7 @@ injects a non-null principal into protected handlers. Better Auth database IDs a
 generated as UUID v7 values so
 new records retain time-ordered locality while remaining globally unique.
 
-## `@voidmix/cache`
+## `@raypx/cache`
 
 The optional server-side Redis adapter provides JSON `remember` with TTLs and
 raw-string Better Auth secondary storage. Atomic token consumption and rate
@@ -84,7 +84,7 @@ admission; Better Auth sessions, verification and policy use PostgreSQL directly
 The adapter has no fallback store and no unused generic add/pull/flush facade.
 Mail configuration remains database-backed.
 
-## `@voidmix/shared`
+## `@raypx/shared`
 
 The foundation shared by domain and adapter packages. It owns
 the framework-independent `DomainError` envelope, inherited setting
@@ -95,11 +95,11 @@ consumes them directly so the dependency seam remains explicit.
 The package also owns two framework-oriented subpath families while keeping
 those dependencies isolated from the root and from each other:
 
-- `@voidmix/shared/env` and `@voidmix/shared/env/runtime` compose and validate
+- `@raypx/shared/env` and `@raypx/shared/env/runtime` compose and validate
   caller-supplied environment values. Applications still own their variables;
   this package never reads `.env` files. Blank strings normalize to `undefined`,
   defaults apply before validation, and browser access rejects server values.
-- `@voidmix/shared/logger` and its `client`, `env`, `hono`, `orpc`, and `vite`
+- `@raypx/shared/logger` and its `client`, `env`, `hono`, `orpc`, and `vite`
   subpaths configure Evlog, provide the central redaction policy, and expose
   optional surface adapters. Operational logs remain separate from durable
   audit records.
@@ -109,7 +109,7 @@ Evlog are runtime dependencies; Hono, oRPC, and Vite are optional adapter peers.
 The source remains the target for tests and type checks. Installation builds the
 initial output, while the root development and verification commands refresh it.
 
-## `@voidmix/core`
+## `@raypx/core`
 
 Framework-independent business rules and repository interfaces. Its single
 public barrel is organized into bounded contexts:
@@ -133,7 +133,7 @@ composition and presentation modules, not domain modules.
 
 It does not import React, Hono, Nitro, or Drizzle.
 
-## `@voidmix/auth`
+## `@raypx/auth`
 
 The session vocabulary and compatible stored roles (`user`, `admin`, `owner`).
 Admin permission grants and `hasPermission` are retired. Global roles do not
@@ -145,14 +145,14 @@ session resolver. The development header resolver remains available for
 injected tests and local preview only; the oRPC router and core services do
 not depend on the provider.
 
-## `@voidmix/mail`
+## `@raypx/mail`
 
 Typed mail delivery for verification, password reset, welcome and opt-in Task
 notifications. Task templates cover review, failure, waiting input and completion
 without including prompts or file content.
 Verification and reset share a link template; typed senders share current
 configuration resolution and delivery. The unused Admin test-mail method is removed.
-Its JSON catalogs are rendered through the server-only `@voidmix/i18n`
+Its JSON catalogs are rendered through the server-only `@raypx/i18n`
 translator using `MAIL_DEFAULT_LOCALE`, which falls back to English.
 React Email templates always provide HTML and plain-text output. Resend is the
 production transport; development and test use a logger transport without
@@ -160,7 +160,7 @@ network access. Production throws `MailUnavailableError` at delivery time when
 configuration is unavailable, rather than failing process startup or silently
 using the logger transport. The package exposes only server-side mail interfaces.
 
-## `@voidmix/i18n`
+## `@raypx/i18n`
 
 The locale and translation facade shared by renderer and server packages. It
 owns the supported locale list and native language metadata, `en`/`zh` normalization, Accept-Language and Cookie parsing, browser and
@@ -173,7 +173,7 @@ loader or generated runtime output. Web uses the async provider with its own
 explicit locale-to-import map; Desktop and Mail remain synchronous. Domain and
 contracts remain independent of i18n.
 
-## `@voidmix/db`
+## `@raypx/db`
 
 The database adapter package.
 
@@ -209,7 +209,7 @@ and PostgreSQL. Unused writers and audit construction are retired. Authenticatio
 policy at each decision, optionally through the short-lived Redis cache. Mail
 resolves current configuration on each delivery; no process-lifetime cache exists.
 
-## `@voidmix/ui`
+## `@raypx/ui`
 
 Shared visual primitives and design-system utilities:
 
@@ -221,7 +221,7 @@ Shared visual primitives and design-system utilities:
   system themes.
 - Base-nova `Button`, `Badge`, `Avatar`, `DropdownMenu`, and
   form components, plus the product-specific `Logo`.
-- A lazy Toast manager bridge exposed through `@voidmix/ui/toast`; it loads the
+- A lazy Toast manager bridge exposed through `@raypx/ui/toast`; it loads the
   concrete Toast implementation only when the first notification is added.
 - `cn`, CVA and `styledSlot` helpers for composition. Unconsumed Card, Checkbox,
   Table, Separator and Toggle trees are removed together with exclusive exports
@@ -235,20 +235,20 @@ route trees, and product-specific visual composition remain in their owning
 application so migration can happen incrementally.
 
 Import generated UI primitives through their explicit
-`@voidmix/ui/components/ui/<component>` subpath. The package root intentionally
+`@raypx/ui/components/ui/<component>` subpath. The package root intentionally
 does not re-export components so bundlers can tree-shake each primitive
 independently. Product wrappers such as `Avatar` and `Logo` retain their own
 top-level subpaths. Renderer applications that need deferred notifications use
-`@voidmix/ui/toast`; the concrete Toast implementation remains available at
-`@voidmix/ui/components/ui/toast` for direct UI-package tests and composition.
+`@raypx/ui/toast`; the concrete Toast implementation remains available at
+`@raypx/ui/components/ui/toast` for direct UI-package tests and composition.
 
-## `@voidmix/scripts`
+## `@raypx/scripts`
 
 A private Bun CLI for procedural repository automation. Turbo owns the task
 graph; Scripts owns operations that understand the repository or database.
 Runtime applications must never import this package.
 
-The existing `vmx` bin also exposes `vmx env -- <command>`. This
+The existing `rpx` bin also exposes `rpx env -- <command>`. This
 development/build runner uses Dotenvx's programming API to load root
 `.env.local` and `.env` into a copied child environment, preserves the caller's
 working directory and stdio, forwards termination signals, and avoids loading
@@ -272,7 +272,7 @@ The i18n checker separates catalog comparison, source inspection and reporting.
 `oxc-parser` owns JSX/TypeScript syntax; FormatJS through the i18n testing subpath
 owns ICU syntax, including plural/select branches and apostrophe quoting.
 
-## `@voidmix/tsconfig`
+## `@raypx/tsconfig`
 
 Shared strict TypeScript presets. They define compiler behavior but never own
 consumer `include`, `exclude`, `paths`, output directories, or project

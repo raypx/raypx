@@ -1,5 +1,5 @@
-import { createApiClient, type ApiClient } from "@voidmix/client";
-import { readErrorCode } from "@voidmix/i18n";
+import { createApiClient, type ApiClient } from "@raypx/client";
+import { readErrorCode } from "@raypx/i18n";
 import { env } from "../env";
 import { getDesktopLocaleHeaders } from "../i18n/client";
 

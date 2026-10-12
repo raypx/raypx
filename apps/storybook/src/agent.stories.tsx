@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Composer } from "@voidmix/agent-ui/composer";
-import { ConversationFeed } from "@voidmix/agent-ui/conversation";
-import { SourceList } from "@voidmix/agent-ui/research";
-import { CloudRunControls, CloudRunTimeline, type CloudRunLabels } from "@voidmix/agent-ui/runs";
-import { TaskProgress, RevisionReview } from "@voidmix/agent-ui/tasks";
+import { Composer } from "@raypx/agent-ui/composer";
+import { ConversationFeed } from "@raypx/agent-ui/conversation";
+import { SourceList } from "@raypx/agent-ui/research";
+import { CloudRunControls, CloudRunTimeline, type CloudRunLabels } from "@raypx/agent-ui/runs";
+import { TaskProgress, RevisionReview } from "@raypx/agent-ui/tasks";
 const labels: CloudRunLabels = {
   status: {
     queued: "Queued",
@@ -39,7 +39,7 @@ const meta = {
     labels: {
       title: "Conversation",
       user: "You",
-      assistant: "Voidmix",
+      assistant: "Raypx",
       latest: "Jump to latest",
       empty: "Start with a question",
     },

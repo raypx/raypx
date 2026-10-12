@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Logo } from "@voidmix/ui/logo";
+import { Logo } from "@raypx/ui/logo";
 import { useId, type ReactNode } from "react";
 import { useTranslations } from "../../i18n/client";
 

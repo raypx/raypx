@@ -25,6 +25,6 @@ const buildDesktopCommand = contextualCommand("desktop build", "repository", {
 });
 
 export const desktopCommand = defineCommand({
-  meta: { name: "desktop", description: "Manage the Voidmix desktop application" },
+  meta: { name: "desktop", description: "Manage the Raypx desktop application" },
   subCommands: { build: buildDesktopCommand },
 });

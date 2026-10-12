@@ -21,13 +21,13 @@ function runCli(args: readonly string[], environment: NodeJS.ProcessEnv = runner
   });
 }
 
-describe("vmx CLI", () => {
+describe("rpx CLI", () => {
   it("shows root help and version metadata", () => {
     const help = runCli(["--help"]);
     const version = runCli(["--version"]);
 
     expect(help.status).toBe(0);
-    expect(help.stdout).toContain("Voidmix repository automation");
+    expect(help.stdout).toContain("Raypx repository automation");
     expect(help.stdout).toContain("db");
     expect(help.stdout).not.toContain("admin");
     expect(help.stdout).toContain("desktop");

@@ -18,7 +18,7 @@ async function fallbackLog(command: string, message: string): Promise<void> {
       message,
     });
   } catch {
-    console.error(`vmx ${command} failed: ${message}`);
+    console.error(`rpx ${command} failed: ${message}`);
   }
 }
 
@@ -43,12 +43,12 @@ export async function runCliAction(
 
     const message = error instanceof Error ? error.message : String(error);
     if (options.plainErrors) {
-      console.error(`vmx ${command} failed: ${message}`);
+      console.error(`rpx ${command} failed: ${message}`);
     } else if (commandLogger) {
       try {
         commandLogger("error", "command.failed", { command, message });
       } catch {
-        console.error(`vmx ${command} failed: ${message}`);
+        console.error(`rpx ${command} failed: ${message}`);
       }
     } else {
       await fallbackLog(command, message);

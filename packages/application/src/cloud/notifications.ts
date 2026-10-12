@@ -1,4 +1,4 @@
-import { CloudDomainError } from "@voidmix/core";
+import { CloudDomainError } from "@raypx/core";
 import type { CloudContext, Actor, Intent } from "./context.js";
 
 export function cloudNotifications(context: CloudContext) {

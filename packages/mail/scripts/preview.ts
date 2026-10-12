@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { passwordResetEmail, verificationEmail, welcomeEmail } from "../src/templates/index.js";
 
 const baseUrl = "http://localhost:3000";
-const directory = await mkdtemp(join(tmpdir(), "voidmix-email-preview-"));
+const directory = await mkdtemp(join(tmpdir(), "raypx-email-preview-"));
 const previews = [
   {
     file: "email-verification.html",
@@ -38,7 +38,7 @@ await Promise.all(
 );
 await writeFile(
   join(directory, "index.html"),
-  `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Voidmix email previews</title></head><body><h1>Voidmix email previews</h1><ul>${previews.map(({ file, rendered }) => `<li><a href="./${file}">${rendered.subject}</a></li>`).join("")}</ul></body></html>`,
+  `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Raypx email previews</title></head><body><h1>Raypx email previews</h1><ul>${previews.map(({ file, rendered }) => `<li><a href="./${file}">${rendered.subject}</a></li>`).join("")}</ul></body></html>`,
 );
 
 process.stdout.write(`${join(directory, "index.html")}\n`);

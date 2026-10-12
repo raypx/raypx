@@ -94,7 +94,7 @@ describe("theme provider", () => {
     });
 
     render(
-      <ThemeProvider disableScript initialTheme="light" storageKey="voidmix-test-theme">
+      <ThemeProvider disableScript initialTheme="light" storageKey="raypx-test-theme">
         <ThemeProbe />
       </ThemeProvider>,
     );

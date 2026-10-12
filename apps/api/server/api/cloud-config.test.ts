@@ -22,9 +22,6 @@ describe("cloud admission", () => {
     expect(() => cloudConfiguration({ ...production, S3_ACCESS_KEY_ID: "only-one-field" })).toThrow(
       "both credential",
     );
-    expect(() =>
-      cloudConfiguration({ ...production, AUTH_SECRET: "voidmix-development-secret-change-me" }),
-    ).toThrow("AUTH_SECRET");
     expect(
       cloudConfiguration({
         ...production,
@@ -35,6 +32,12 @@ describe("cloud admission", () => {
       }).flags.search,
     ).toBe(true);
   });
+  it.each(["raypx-development-secret-change-me", "voidmix-development-secret-change-me"])(
+    "rejects the development secret in production: %s",
+    (AUTH_SECRET) => {
+      expect(() => cloudConfiguration({ ...production, AUTH_SECRET })).toThrow("AUTH_SECRET");
+    },
+  );
   it("keeps expensive requests unavailable when production limiter is absent", async () => {
     const admit = createCloudAdmission({
       production: true,

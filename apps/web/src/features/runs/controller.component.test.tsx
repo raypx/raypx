@@ -1,8 +1,8 @@
 /** @vitest-environment jsdom */
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import type { CloudRunSessionState } from "@voidmix/client/cloud-runs";
-import type { ApiClient } from "@voidmix/client";
+import type { CloudRunSessionState } from "@raypx/client/cloud-runs";
+import type { ApiClient } from "@raypx/client";
 
 const mocks = vi.hoisted(() => ({
   state: null as unknown as CloudRunSessionState,
@@ -30,7 +30,7 @@ vi.mock("../../lib/use-cloud-queries", () => ({
   }),
 }));
 vi.mock("../../lib/cloud-queries", () => ({ invalidateRunFacts: mocks.invalidate }));
-vi.mock("@voidmix/client/cloud-runs", () => ({
+vi.mock("@raypx/client/cloud-runs", () => ({
   createCloudRunTransport: () => ({}),
   createCloudRunSession: () => ({
     getSnapshot: () => mocks.state,

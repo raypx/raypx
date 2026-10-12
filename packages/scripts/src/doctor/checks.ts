@@ -48,7 +48,7 @@ function validateRepositoryManifest(manifest: RepositoryManifest): void {
   const packageManager = manifest.devEngines?.packageManager;
   const runtime = manifest.devEngines?.runtime;
   if (
-    manifest.name !== "voidmix" ||
+    manifest.name !== "raypx" ||
     packageManager?.name !== "bun" ||
     !packageManager.version ||
     runtime?.name !== "node" ||
@@ -89,7 +89,7 @@ async function checkRepositoryPath(
 }
 
 async function checkRepositoryBins(dependencies: DoctorDependencies): Promise<DoctorCheck> {
-  const bins = ["vmx", "vp", "vitest"] as const;
+  const bins = ["rpx", "vp", "vitest"] as const;
   const missingBins: string[] = [];
   for (const bin of bins) {
     const path = join(dependencies.repositoryRoot, "node_modules/.bin", bin);

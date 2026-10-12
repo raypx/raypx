@@ -12,27 +12,27 @@ stage is cheaper than the one after it, so the first failure is usually the
 fastest one to reproduce:
 
 `bun run verify` captures child-process output by default, so successful checks
-do not flood the terminal or an agent context. If a gate fails, `vmx` reports a
+do not flood the terminal or an agent context. If a gate fails, `rpx` reports a
 sanitized tail of that command's output. Use `bun run verify --verbose` when
 interactive debugging needs the full live output.
 
-Installation builds `@voidmix/shared` once because its public exports resolve
+Installation builds `@raypx/shared` once because its public exports resolve
 from `packages/shared/dist`. The root `dev` command runs the shared pack watcher
 alongside applications. Turbo builds shared before consumer checks and tests, including focused
-`vmx tasks` filters. Direct leaf commands bypass that graph: after editing shared,
+`rpx tasks` filters. Direct leaf commands bypass that graph: after editing shared,
 run `bun run --cwd packages/shared build` before a workspace's direct `check` or `test`.
 
-| Stage          | Command                                                       | Purpose                                       |
-| -------------- | ------------------------------------------------------------- | --------------------------------------------- |
-| i18n / policy  | in-process                                                    | cheap source and structural checks            |
-| format         | `vmx tasks format:leaf`                                       | one repository-wide format check              |
-| lint           | `vmx tasks lint:leaf`                                         | one type-aware lint pass                      |
-| check          | `vmx tasks check`                                             | per-workspace typechecks; builds shared first |
-| unit/component | `vmx tasks test:unit test:component --filter '!@voidmix/e2e'` | disjoint deterministic cached layers          |
-| integration    | `vmx tasks test:integration --filter '!@voidmix/e2e'`         | uncached API/adapter checks                   |
-| build          | `vmx tasks build`                                             | graph-owned checks and output restoration     |
-| worker runtime | `node apps/worker/dist/index.mjs --check`                     | uncached compiled imports and resource probe  |
-| runtime        | in-process Node probes                                        | uncached Web/API HTTP smoke checks            |
+| Stage          | Command                                                     | Purpose                                       |
+| -------------- | ----------------------------------------------------------- | --------------------------------------------- |
+| i18n / policy  | in-process                                                  | cheap source and structural checks            |
+| format         | `rpx tasks format:leaf`                                     | one repository-wide format check              |
+| lint           | `rpx tasks lint:leaf`                                       | one type-aware lint pass                      |
+| check          | `rpx tasks check`                                           | per-workspace typechecks; builds shared first |
+| unit/component | `rpx tasks test:unit test:component --filter '!@raypx/e2e'` | disjoint deterministic cached layers          |
+| integration    | `rpx tasks test:integration --filter '!@raypx/e2e'`         | uncached API/adapter checks                   |
+| build          | `rpx tasks build`                                           | graph-owned checks and output restoration     |
+| worker runtime | `node apps/worker/dist/index.mjs --check`                   | uncached compiled imports and resource probe  |
+| runtime        | in-process Node probes                                      | uncached Web/API HTTP smoke checks            |
 
 Nothing else needs to be run in sequence. The remaining scripts narrow a failure
 down: `bun run policy` prints each finding with a `Fix:` line and
@@ -99,7 +99,7 @@ required pipeline, so its framework/config discovery cannot block verification.
 servers. Use `bun run test:e2e:web` or `bun run test:e2e:desktop` to build and start
 only API and the selected application. Cloud is part of Web coverage; the
 cloud spec files retain their business assertions without a separate project.
-Configure the dedicated database as described below. Set `VOIDMIX_E2E_PORT` to
+Configure the dedicated database as described below. Set `RAYPX_E2E_PORT` to
 choose the Web port (default 3000); Desktop uses +1 and API +2.
 Scoped runs write reports to `playwright-report/<suite>` and results to
 `test-results/<suite>`; the full run keeps the original report locations. The retired Project Studio suite and its
@@ -170,7 +170,7 @@ Run repository tests through:
 ```bash
 bun run test
 # or, for one workspace through the graph:
-bun run vmx tasks test --filter @voidmix/scripts
+bun run rpx tasks test --filter @raypx/scripts
 # or, directly inside a workspace:
 bun run --cwd packages/scripts test
 ```
@@ -262,15 +262,15 @@ bun run --cwd e2e test:report
 PostgreSQL 17 runs independently of the four identical Vitest layer commands:
 
 ```bash
-NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_local_test bun run test:postgres
-NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test bun run test:e2e
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/raypx_local_test bun run test:postgres
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/raypx_e2e_test bun run test:e2e
 ```
 
-Both require an explicit dedicated database named `voidmix_*test`; missing or
+Both require an explicit dedicated database named `raypx_*test`; missing or
 unsafe configuration fails. Each suite applies committed migrations and resets
 its own fixture data. Never point these commands at development or production
 data. Use separate databases when running both simultaneously. CI gives
-PostgreSQL tests and each browser suite its own PostgreSQL 17 service. `VOIDMIX_E2E_PORT` reserves Web/Desktop/API on three
+PostgreSQL tests and each browser suite its own PostgreSQL 17 service. `RAYPX_E2E_PORT` reserves Web/Desktop/API on three
 consecutive ports for concurrent local development.
 
 Database coverage includes Core/SQL visibility parity, keyset pagination,

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Modal } from "@voidmix/ui/modal";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { Input } from "@voidmix/ui/components/ui/input";
-import { Field, FieldLabel } from "@voidmix/ui/components/ui/field";
+import { Modal } from "@raypx/ui/modal";
+import { Button } from "@raypx/ui/components/ui/button";
+import { Input } from "@raypx/ui/components/ui/input";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 const meta = { title: "Patterns/Modal", component: Modal, tags: ["autodocs"] } satisfies Meta<
   typeof Modal
 >;

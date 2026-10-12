@@ -6,7 +6,7 @@ import {
   type ProjectV2,
   type ProjectAccessV2,
   type ProjectCapabilityV2,
-} from "@voidmix/core";
+} from "@raypx/core";
 import type { ProjectOptions } from "./types.js";
 export function createProjectAccess(
   options: Pick<ProjectOptions, "projects" | "projectMembers" | "organizationMembers">,

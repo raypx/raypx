@@ -74,8 +74,8 @@ screenshots. It is an accompanying artifact, not application runtime content.
 The four committed marketing PNGs are reproducible using:
 
 ```bash
-NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test \
-  VOIDMIX_E2E_PORT=3000 bun run --cwd e2e capture:product
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/raypx_e2e_test \
+  RAYPX_E2E_PORT=3000 bun run --cwd e2e capture:product
 ```
 
 Run API and Web on the configured loopback ports first. This command only upserts

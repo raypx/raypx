@@ -14,7 +14,7 @@ import {
   PostgresAssetV2Repository,
   PostgresAssetVersionV2Repository,
   PostgresActivityV2Repository,
-} from "@voidmix/db";
+} from "@raypx/db";
 import {
   createCloudApplication,
   createProjectApplication,
@@ -22,12 +22,12 @@ import {
   createAssetApplication,
   createReviewApplication,
   createActivityApplication,
-} from "@voidmix/application";
-import type { RedisCacheConnection } from "@voidmix/cache";
-import type { AuthSettings, MailSettingsFallback, ObjectStorage } from "@voidmix/core";
-import { createLoggerConfig, type EvlogConfig } from "@voidmix/shared/logger";
-import { getMailEnv } from "@voidmix/mail/env";
-import { createMailer } from "@voidmix/mail/server";
+} from "@raypx/application";
+import type { RedisCacheConnection } from "@raypx/cache";
+import type { AuthSettings, MailSettingsFallback, ObjectStorage } from "@raypx/core";
+import { createLoggerConfig, type EvlogConfig } from "@raypx/shared/logger";
+import { getMailEnv } from "@raypx/mail/env";
+import { createMailer } from "@raypx/mail/server";
 
 import { createApiApp } from "./app.js";
 import { createExecutionGateway } from "./execution-gateway.js";
@@ -36,7 +36,7 @@ import type { ApiRuntimeEnvironment } from "./env.js";
 import { createApiModules } from "./modules.js";
 import { createBetterAuthSessionResolver } from "./session.js";
 import { createProblemDetails, problemContentType } from "./problem.js";
-import { createS3Storage, createFilesystemStorage } from "@voidmix/storage";
+import { createS3Storage, createFilesystemStorage } from "@raypx/storage";
 import { cloudConfiguration, createCloudAdmission } from "./cloud-config.js";
 import { createErrorReporter } from "./telemetry.js";
 import { connectAdmissionCache } from "./admission-cache.js";
@@ -144,7 +144,10 @@ export async function createApiRuntime({
             : {}),
         })
       : createFilesystemStorage({
-          directory: environment.BLOB_STORAGE_DIR ?? join(tmpdir(), "voidmix-cloud-objects"),
+          directory: environment.BLOB_STORAGE_DIR ?? join(tmpdir(), "raypx-cloud-objects"),
+          ...(!environment.BLOB_STORAGE_DIR
+            ? { legacyDirectory: join(tmpdir(), "voidmix-cloud-objects") }
+            : {}),
           signingSecret: environment.AUTH_SECRET,
           publicBaseUrl: environment.AUTH_URL,
         });
@@ -194,7 +197,8 @@ export async function createApiRuntime({
       assets: new PostgresAssetV2Repository(connection.db),
       assetVersions,
       blobStorage: new FileSystemBlobStorageRepository(
-        environment.BLOB_STORAGE_DIR ?? ".voidmix/blobs",
+        environment.BLOB_STORAGE_DIR ?? ".raypx/blobs",
+        !environment.BLOB_STORAGE_DIR ? { legacyRoot: ".voidmix/blobs" } : {},
       ),
     });
     const reviews = createReviewApplication({
@@ -357,7 +361,7 @@ function toMailFallback(environment: ApiRuntimeEnvironment): MailSettingsFallbac
       : { value: null, source: "missing" },
     fromName: environment.MAIL_FROM_NAME
       ? { value: environment.MAIL_FROM_NAME, source: "environment" }
-      : { value: "Voidmix", source: "default" },
+      : { value: "Raypx", source: "default" },
     templatesBaseUrl: environment.EMAIL_TEMPLATES_BASE_URL
       ? { value: environment.EMAIL_TEMPLATES_BASE_URL, source: "environment" }
       : { value: null, source: "missing" },

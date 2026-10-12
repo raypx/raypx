@@ -44,7 +44,7 @@ when exposing new data to Web or Desktop features.
 - Business rules `throw new DomainError(code, message)`. Only the API layer maps
   those to transport codes, via `mapDomainError`. The mapping preserves known transport
   errors and wraps unknown failures with their cause; add coverage for new codes.
-- Keep `packages/core` pure: its runtime dependency is `@voidmix/shared`, and
+- Keep `packages/core` pure: its runtime dependency is `@raypx/shared`, and
   `lib: ["ES2022"]` means no DOM types. No Zod, oRPC, Drizzle, Hono, or React.
 - Inject `now` and `id` with defaults in application factories — that is what makes
   tests deterministic.

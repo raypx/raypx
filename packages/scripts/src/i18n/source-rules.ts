@@ -36,7 +36,7 @@ export const uiVariableSuffix =
 // use the same property for arbitrary user data.
 export const conditionalUiPropertyNames = new Set([...uiPropertyNames, "content"]);
 
-const allowedLiteralValues = new Set(["Pi", "VoidMix", "Voidmix", "VOIDMIX", "Northstar"]);
+const allowedLiteralValues = new Set(["Pi", "Raypx", "Raypx", "RAYPX", "Northstar"]);
 
 const technicalJsxTextPatterns = [
   // Keyboard shortcuts and initials are visual affordances, not locale copy.
@@ -46,7 +46,7 @@ const technicalJsxTextPatterns = [
   // Size/unit suffixes are structural metadata (for example `· ≤512 KB`).
   /^[·•]\s*[<>=≤≥]?\s*\d+(?:\.\d+)?\s*(?:B|KB|MB|GB|TB)$/iu,
   // Product/workspace breadcrumbs keep a brand and a route-like segment.
-  /^(?:VOIDMIX|Voidmix)(?:\s*\/\s*[A-Za-z][A-Za-z0-9 _-]*)?\s*\/?$/u,
+  /^(?:RAYPX|Raypx)(?:\s*\/\s*[A-Za-z][A-Za-z0-9 _-]*)?\s*\/?$/u,
   // A separator followed by a route-like segment is the other half of a
   // dynamic brand breadcrumb (`{workspace} / Chat`).
   /^\/\s*[A-Za-z][A-Za-z0-9 _-]*$/u,

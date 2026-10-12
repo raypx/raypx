@@ -35,7 +35,7 @@ if (!pdfToTextPath)
 it.skipIf(!existsSync(fontPath) || !pdfToTextPath)(
   "renders a real Chinese PDF and extracts its text layer",
   async () => {
-    const directory = await mkdtemp(join(tmpdir(), "voidmix-pdf-test-"));
+    const directory = await mkdtemp(join(tmpdir(), "raypx-pdf-test-"));
     try {
       const files = await renderReport(
         {
@@ -61,7 +61,7 @@ it.skipIf(!existsSync(fontPath) || !pdfToTextPath)(
 it.skipIf(!office || !pdfInfoPath)(
   "converts a real eight-slide PPTX into an eight-page PDF preview",
   async () => {
-    const directory = await mkdtemp(join(tmpdir(), "voidmix-deck-test-"));
+    const directory = await mkdtemp(join(tmpdir(), "raypx-deck-test-"));
     try {
       const files = await renderDeck(
         {

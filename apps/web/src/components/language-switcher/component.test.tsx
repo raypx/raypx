@@ -3,7 +3,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { I18nProvider } from "@voidmix/i18n/client";
+import { I18nProvider } from "@raypx/i18n/client";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { messages } from "../../../tests/fixtures/messages";

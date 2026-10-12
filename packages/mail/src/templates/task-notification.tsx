@@ -1,5 +1,5 @@
 import { render, Text } from "react-email";
-import type { Locale } from "@voidmix/i18n/types";
+import type { Locale } from "@raypx/i18n/types";
 import type { SendTaskNotificationInput } from "../types.js";
 import { createMailTranslator } from "../i18n.js";
 import { MailLayout } from "./layout.js";

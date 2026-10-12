@@ -1,4 +1,4 @@
-import type { MessageCatalog } from "@voidmix/i18n/types";
+import type { MessageCatalog } from "@raypx/i18n/types";
 
 import type { WebNamespaceKey } from "./client";
 
@@ -26,7 +26,7 @@ export function localizedRouteHead(
   const common = messages && isRecord(messages.common) ? (messages.common as MessageCatalog) : null;
   return {
     meta: [
-      { title: (common ? readMessage(common, titleKey) : undefined) ?? "Voidmix" },
+      { title: (common ? readMessage(common, titleKey) : undefined) ?? "Raypx" },
       {
         name: "description",
         content: (common ? readMessage(common, descriptionKey) : undefined) ?? "",

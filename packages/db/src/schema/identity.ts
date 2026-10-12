@@ -39,7 +39,7 @@ export const authAccounts = pgTable(
   "auth_accounts",
   {
     id: text("id").primaryKey(),
-    issuer: text("issuer").notNull().default("voidmix"),
+    issuer: text("issuer").notNull().default("raypx"),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: requiredReference("user_id", () => users.id, "cascade"),

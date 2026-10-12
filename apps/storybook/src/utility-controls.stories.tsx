@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ArrowsClockwise, DownloadSimple, X } from "@phosphor-icons/react";
-import { IconButton } from "@voidmix/ui/icon-button";
-import { HelpHint } from "@voidmix/ui/help-hint";
+import { IconButton } from "@raypx/ui/icon-button";
+import { HelpHint } from "@raypx/ui/help-hint";
 
 const meta = {
   title: "Components/Utility controls",

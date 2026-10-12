@@ -4,10 +4,10 @@ import { BodyLimitPlugin, RPCHandler } from "@orpc/server/fetch";
 import {
   executionGatewayContract,
   executionPayloadSchemas,
-} from "@voidmix/contracts/execution-gateway";
-import type { CloudApplication } from "@voidmix/application";
-import type { ObjectStorage } from "@voidmix/core";
-import { createModelGateway, readPublicSource, searchWeb, type ModelCallHooks } from "@voidmix/ai";
+} from "@raypx/contracts/execution-gateway";
+import type { CloudApplication } from "@raypx/application";
+import type { ObjectStorage } from "@raypx/core";
+import { createModelGateway, readPublicSource, searchWeb, type ModelCallHooks } from "@raypx/ai";
 
 export const digestExecutionToken = (value: string) =>
   createHash("sha256").update(value).digest("hex");

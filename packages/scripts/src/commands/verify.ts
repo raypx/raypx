@@ -13,18 +13,18 @@ export interface VerifyOptions {
 
 /** Explicit ordered gates keep task selection separate from subprocess execution. */
 const processGates = [
-  { task: "format", command: ["vmx", "tasks", "format:leaf"] },
-  { task: "lint", command: ["vmx", "tasks", "lint:leaf"] },
-  { task: "check", command: ["vmx", "tasks", "check"] },
+  { task: "format", command: ["rpx", "tasks", "format:leaf"] },
+  { task: "lint", command: ["rpx", "tasks", "lint:leaf"] },
+  { task: "check", command: ["rpx", "tasks", "check"] },
   {
     task: "test",
-    command: ["vmx", "tasks", "test:unit", "test:component", "--filter", "!@voidmix/e2e"],
+    command: ["rpx", "tasks", "test:unit", "test:component", "--filter", "!@raypx/e2e"],
   },
   {
     task: "integration",
-    command: ["vmx", "tasks", "test:integration", "--filter", "!@voidmix/e2e"],
+    command: ["rpx", "tasks", "test:integration", "--filter", "!@raypx/e2e"],
   },
-  { task: "build", command: ["vmx", "tasks", "build"] },
+  { task: "build", command: ["rpx", "tasks", "build"] },
   {
     task: "worker:runtime",
     command: ["node", "apps/worker/dist/index.mjs", "--check"],

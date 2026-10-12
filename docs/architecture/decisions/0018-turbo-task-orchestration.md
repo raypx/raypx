@@ -19,11 +19,11 @@ implementation of dev, build, test, lint, fmt, pack, staged files and hooks.
 Keep the Vite configs, independent Vitest configs and `vite-plus/test` imports.
 Do not add another linter, formatter, test runner or hook manager.
 
-Root scripts enter `vmx tasks`, which supplies a platform fingerprint and strict
+Root scripts enter `rpx tasks`, which supplies a platform fingerprint and strict
 cache trust policy, then invokes the repository-local Turbo. `turbo.json` owns
 ordering, inputs, outputs and caching. Do not invoke the Vite+ task runner or
 configure its task cache. The CLI does not implement a competing task graph.
-Procedural database, policy and maintenance commands still call `vmx` directly.
+Procedural database, policy and maintenance commands still call `rpx` directly.
 
 Build depends on check and dependency builds. Transit nodes carry source-export
 package hashes to consumers even when those packages emit no JS. Shared owns the

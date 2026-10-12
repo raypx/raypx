@@ -1,4 +1,4 @@
-import type { ApiProblemDetails } from "@voidmix/contracts";
+import type { ApiProblemDetails } from "@raypx/contracts";
 
 const titles: Record<string, string> = {
   BAD_REQUEST: "Bad request",
@@ -17,7 +17,7 @@ export function createProblemDetails(
   values: Record<string, string | number | boolean | null> = {},
 ): ApiProblemDetails {
   return {
-    type: `https://api.voidmix.dev/problems/${encodeURIComponent(code)}`,
+    type: `https://api.raypx.dev/problems/${encodeURIComponent(code)}`,
     title: titles[code] ?? "Request failed",
     status,
     code,

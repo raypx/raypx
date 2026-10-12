@@ -1,9 +1,4 @@
-import {
-  AssetDomainError,
-  CloudDomainError,
-  DomainError,
-  ProjectV2DomainError,
-} from "@voidmix/core";
+import { AssetDomainError, CloudDomainError, DomainError, ProjectV2DomainError } from "@raypx/core";
 import { ORPCError } from "@orpc/server";
 
 type ApiErrorValues = Record<string, string | number | boolean | null>;

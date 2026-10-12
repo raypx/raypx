@@ -1,16 +1,24 @@
-import { databaseEnv } from "@voidmix/db/env";
-import { cacheEnv } from "@voidmix/cache/env";
-import { type Preset, z } from "@voidmix/shared/env";
-import { runtimeEnv } from "@voidmix/shared/env/runtime";
-import type { LogLevel } from "@voidmix/shared/logger";
-import { loggerEnv } from "@voidmix/shared/logger/env";
-import { mailEnv } from "@voidmix/mail/env";
+import { databaseEnv } from "@raypx/db/env";
+import { cacheEnv } from "@raypx/cache/env";
+import { type Preset, z } from "@raypx/shared/env";
+import { runtimeEnv } from "@raypx/shared/env/runtime";
+import type { LogLevel } from "@raypx/shared/logger";
+import { loggerEnv } from "@raypx/shared/logger/env";
+import { mailEnv } from "@raypx/mail/env";
 
 const splitOrigins = (value: string): string[] =>
   value
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
+
+export function isDevelopmentAuthSecret(secret: string): boolean {
+  // Reject the previous development default in existing deployment settings too.
+  return (
+    secret === "raypx-development-secret-change-me" ||
+    secret === "voidmix-development-secret-change-me"
+  );
+}
 
 export const apiRuntimeEnv = {
   id: "api",
@@ -21,7 +29,7 @@ export const apiRuntimeEnv = {
       .default("http://localhost:3000")
       .transform(splitOrigins)
       .pipe(z.array(z.url())),
-    AUTH_SECRET: z.string().trim().min(32).default("voidmix-development-secret-change-me"),
+    AUTH_SECRET: z.string().trim().min(32).default("raypx-development-secret-change-me"),
     AUTH_URL: z.url(),
     AUTH_DOMAIN: z.string().trim().min(1).optional(),
     BLOB_STORAGE_DIR: z.string().trim().min(1).optional(),

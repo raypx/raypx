@@ -3,8 +3,8 @@ import {
   cloudRunSnapshotSchema,
   cloudSourceEvidenceSchema,
   cloudAssetVersionSchema,
-} from "@voidmix/contracts";
-import type { CloudRunEventDto, CloudRunSnapshotDto } from "@voidmix/contracts";
+} from "@raypx/contracts";
+import type { CloudRunEventDto, CloudRunSnapshotDto } from "@raypx/contracts";
 import { createApiClient, createStreamingApiClient, type CreateApiClientOptions } from "./index.js";
 import { parseApiProblemDetails } from "./errors.js";
 import {

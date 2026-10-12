@@ -4,7 +4,7 @@ import {
   type CloudEntityKind,
   type CloudQuery,
   type CloudTransaction,
-} from "@voidmix/core";
+} from "@raypx/core";
 export interface CloudPageInput {
   actorId: string;
   limit?: number;

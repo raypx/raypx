@@ -43,7 +43,7 @@ hutch.config.ts      exact devkit pin and external Bun package manager
 
 - Own the desktop shell, Electrobun window bridge, and desktop-specific routing.
 - Own no shared primitive, backend behaviour, or Agent execution; cloud project
-  access goes through `@voidmix/client`.
+  access goes through `@raypx/client`.
 
 ## Constraints
 
@@ -81,7 +81,7 @@ hutch.config.ts      exact devkit pin and external Bun package manager
   whose graph checks the existing route types.
 - Desktop has no runtime server or local Agent runner. Do not add Start server
   functions/routes, provider credentials, Node resources, or local file access.
-  Backend behaviour remains behind `@voidmix/client` and `VITE_API_URL`.
+  Backend behaviour remains behind `@raypx/client` and `VITE_API_URL`.
 - Start writes `dist/client/index.html`. Electrobun copies the entire client
   directory to `views/main`; build-time `dist/server` is never packaged.
 - Bun and Turbo own dependencies and the task graph. Hutch is only Electrobun's
@@ -97,8 +97,8 @@ hutch.config.ts      exact devkit pin and external Bun package manager
 - macOS uses native WebKit. Windows bundles CEF and explicitly preserves web
   security; the host rejects Windows builds without the configured CEF runtime.
 - Native RPC exposes only runtime metadata and window hiding. Business requests,
-  cookie authentication and permissions stay on `@voidmix/client` and the API.
-- Native uses a `persist:voidmix` WebView partition for cookies and preferences.
+  cookie authentication and permissions stay on `@raypx/client` and the API.
+- Native uses a `persist:raypx` WebView partition for cookies and preferences.
   Electrobun 2.0.2 does not forward partition from BrowserWindow; replace its empty
   initial view before loading the SPA. Keep auto-resize and the active view ID.
 - Only trusted bundled/loopback-development content receives the native bridge.
@@ -119,7 +119,7 @@ hutch.config.ts      exact devkit pin and external Bun package manager
   changes in [`CHANGELOG.md`](./CHANGELOG.md); keep `package.json`,
   `electrobun.config.ts` versions in step. Keep the framework pin in root catalogs
   and `hutch.config.ts` synchronized.
-- Use shared shadcn Neutral tokens, `@voidmix/ui` primitives and Phosphor icons;
+- Use shared shadcn Neutral tokens, `@raypx/ui` primitives and Phosphor icons;
   do not introduce Radix or Lucide. Keep page layouts in Tailwind classes and
   CSS entries limited to tokens, global renderer rules and native behaviour.
 
@@ -137,14 +137,14 @@ bun run --cwd apps/desktop native:prepare
 bun run --cwd apps/desktop native:dev
 ```
 
-Native acceptance uses `VOIDMIX_NATIVE_SMOKE=1` with `native:dev`, a loopback
+Native acceptance uses `RAYPX_NATIVE_SMOKE=1` with `native:dev`, a loopback
 isolated test API, synthetic account credentials and expected project title.
-Run `VOIDMIX_NATIVE_SMOKE_PHASE=write`, then `read` in a second process to verify
+Run `RAYPX_NATIVE_SMOKE_PHASE=write`, then `read` in a second process to verify
 native lifecycle, SPA assets, real authenticated reads and restart persistence.
-Use `VOIDMIX_NATIVE_SMOKE_PHASE=shell` for bundled `views:` asset, bridge and
+Use `RAYPX_NATIVE_SMOKE_PHASE=shell` for bundled `views:` asset, bridge and
 native lifecycle acceptance without an API or authentication claim.
 The smoke entry uses its own application identity and persistent test partition,
-never ordinary builds. `VOIDMIX_NATIVE_SMOKE_VIEW_URL` may select a loopback HTTP
+never ordinary builds. `RAYPX_NATIVE_SMOKE_VIEW_URL` may select a loopback HTTP
 preview for same-site test cookies. Report that separately from packaged `views:`
 acceptance; production `SameSite=None; Secure` cookies require an HTTPS deployment.
 See [testing](../../docs/development/testing.md) for the test database gate.

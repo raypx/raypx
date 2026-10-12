@@ -30,8 +30,8 @@ describe("cleanRepository", () => {
       ["packages/core/coverage", "coverage.json"],
       ["e2e/test-results", "results.json"],
       ["apps/desktop/.hutch", "devkit/.complete"],
-      ["apps/desktop/build", "stable/voidmix.app/Contents/MacOS/launcher"],
-      ["apps/desktop/artifacts", "voidmix.dmg"],
+      ["apps/desktop/build", "stable/raypx.app/Contents/MacOS/launcher"],
+      ["apps/desktop/artifacts", "raypx.dmg"],
     ] as const;
     const removedPaths = artifacts.map(([root, file]) => join(root, file));
     const preservedPaths = [
@@ -45,7 +45,7 @@ describe("cleanRepository", () => {
       "apps/desktop/native/icons/icon.png",
       "apps/desktop/profile/preferences.json",
       "apps/desktop/user-data/runner/journal.sqlite",
-      "apps/desktop/src-tauri/target/debug/voidmix",
+      "apps/desktop/src-tauri/target/debug/raypx",
       "apps/desktop/src-tauri/gen/schemas/schema.json",
     ];
 

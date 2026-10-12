@@ -25,15 +25,15 @@ describe("shared primitives", () => {
 
 describe("public exports", () => {
   const publicEntries = [
-    "@voidmix/shared",
-    "@voidmix/shared/env",
-    "@voidmix/shared/env/runtime",
-    "@voidmix/shared/logger",
-    "@voidmix/shared/logger/client",
-    "@voidmix/shared/logger/env",
-    "@voidmix/shared/logger/hono",
-    "@voidmix/shared/logger/orpc",
-    "@voidmix/shared/logger/vite",
+    "@raypx/shared",
+    "@raypx/shared/env",
+    "@raypx/shared/env/runtime",
+    "@raypx/shared/logger",
+    "@raypx/shared/logger/client",
+    "@raypx/shared/logger/env",
+    "@raypx/shared/logger/hono",
+    "@raypx/shared/logger/orpc",
+    "@raypx/shared/logger/vite",
   ] as const;
 
   it.each(publicEntries)("loads %s from the built package", async (entry) => {

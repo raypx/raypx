@@ -4,7 +4,7 @@ import {
   sameResourceScope,
   type CloudAssetVersion,
   type CloudTransaction,
-} from "@voidmix/core";
+} from "@raypx/core";
 import type { CloudContext, Actor, Intent, Fence } from "./context.js";
 
 export function cloudAssets(context: CloudContext) {

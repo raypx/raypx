@@ -1,5 +1,5 @@
-import { cloudConversationSnapshotSchema } from "@voidmix/contracts";
-import type { CloudConversationSnapshotDto, CloudRunDto, CloudTurnDto } from "@voidmix/contracts";
+import { cloudConversationSnapshotSchema } from "@raypx/contracts";
+import type { CloudConversationSnapshotDto, CloudRunDto, CloudTurnDto } from "@raypx/contracts";
 import { createApiClient, createStreamingApiClient, type CreateApiClientOptions } from "./index.js";
 import { parseApiProblemDetails } from "./errors.js";
 import type { ResourceSession, SessionSnapshot } from "./ordered-session.js";

@@ -8,7 +8,7 @@ project studio preview migration`), reviewed on September 9, 2026. The
 > working tree also contains uncommitted implementation changes; this document
 > labels those separately and does not treat them as released behavior.
 
-This document is the handoff and execution plan for changing Voidmix from a
+This document is the handoff and execution plan for changing Raypx from a
 Workspace-led collaboration product into a project-first studio for individual
 creators. It records the target product, migration order, current implementation
 state, and acceptance criteria. The existing architecture documents describe
@@ -16,7 +16,7 @@ the running system until each phase below lands.
 
 ## Product decision
 
-Voidmix becomes a **Project Studio** that helps a creator move from an idea to a
+Raypx becomes a **Project Studio** that helps a creator move from an idea to a
 finished delivery:
 
 ```text
@@ -121,7 +121,7 @@ not a generic administration dashboard.
 - Both themes, keyboard focus, 390px layouts, and WCAG 2.2 AA contrast are part
   of component acceptance, not a later polish pass.
 
-Reusable primitives belong in `@voidmix/ui` only after two application surfaces
+Reusable primitives belong in `@raypx/ui` only after two application surfaces
 need the same interface. Product-specific composition remains in its app.
 The planned vocabulary is `ProjectCard`, `ProjectStageBadge`, `MetricCard`,
 `CommandComposer`, `QuickActionCard`, `ActivityTimeline`, `ReviewSummary`,
@@ -132,9 +132,9 @@ The planned vocabulary is `ProjectCard`, `ProjectStageBadge`, `MetricCard`,
 
 The first live boundary is an account-scoped Project Studio snapshot containing
 account profile, projects, project members, assets and versions, reviews,
-activities, and Pi sessions. Contracts live in `@voidmix/contracts`; Web and
-Desktop access them through `@voidmix/client`. Domain rules stay in
-`@voidmix/core`, and persistence remains behind core-owned repository ports.
+activities, and Pi sessions. Contracts live in `@raypx/contracts`; Web and
+Desktop access them through `@raypx/client`. Domain rules stay in
+`@raypx/core`, and persistence remains behind core-owned repository ports.
 The current snapshot implementation returns up to 100 project summaries,
 review attention, recent activity, and active session summaries when the
 corresponding repositories are configured. Review, Feedback, Activity, and
@@ -143,8 +143,8 @@ the implementation audit below.
 
 The browser preview moves from `WorkspaceDataSource` / `WorkspaceSnapshot` to
 `ProjectStudioDataSource` / `StudioSnapshot`. Introduce preview schema version 2
-under `voidmix.project-studio.preview.v2` and migrate
-`voidmix.workspace.preview.v1` once. Preserve projects, tasks, activity, and
+under `raypx.project-studio.preview.v2` and migrate
+`raypx.workspace.preview.v1` once. Preserve projects, tasks, activity, and
 sessions; derive missing stage, cover, deadline, asset, and review fields from
 documented defaults. A failed migration keeps the old value intact and starts a
 labelled fresh preview rather than partially restoring data.
@@ -632,7 +632,7 @@ explicit migration test; an unverified absence of use is not a removal gate.
 ## Preview migration runbook
 
 The implemented preview v2 envelope is `{ version: 2, migratedFrom: 1, data }`
-at `voidmix.project-studio.preview.v2`. The `data` payload is the validated
+at `raypx.project-studio.preview.v2`. The `data` payload is the validated
 Project Studio shape and still contains the view snapshot's `version: 1`; the
 two version numbers must not be conflated. The v1 value remains untouched until
 v2 validates and writes successfully. A successful write is the migration

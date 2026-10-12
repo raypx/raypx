@@ -35,7 +35,7 @@ implementation detail; put that in the owning workspace's `AGENTS.md` instead.
 - [ADR-0006: Optional Redis cache and Better Auth secondary storage](./0006-redis-cache-and-auth-secondary-storage.md)
 - [ADR-0007: Web locale catalogs load by locale](./0007-web-locale-catalog-loading.md)
 - [ADR-0008: Keep domain contexts in one core package until stable consumers exist](./0008-domain-contexts-stay-in-core.md)
-- [ADR-0009: Pi SDK as the VoidMix Agent runtime](./0009-pi-as-agent-runtime.md)
+- [ADR-0009: Pi SDK as the Raypx Agent runtime](./0009-pi-as-agent-runtime.md)
 - [ADR-0010: Account-first Project V2](./0010-account-first-project-v2.md)
 - [ADR-0011: Colocate single-route pages with their routes](./0011-colocate-single-route-pages.md)
 - [ADR-0012: Merge environment and logging into the shared foundation](./0012-shared-environment-and-logging.md)

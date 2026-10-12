@@ -2,9 +2,9 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { createCloudApplication } from "@voidmix/application";
-import { InMemoryCloudRepository } from "@voidmix/db";
-import { defaultCloudLimits } from "@voidmix/core";
+import { createCloudApplication } from "@raypx/application";
+import { InMemoryCloudRepository } from "@raypx/db";
+import { defaultCloudLimits } from "@raypx/core";
 import { createProcessExecutor, runnerEnvironment } from "./process-executor.js";
 
 describe("isolated Node Runner", () => {
@@ -12,7 +12,7 @@ describe("isolated Node Runner", () => {
     expect(Object.keys(runnerEnvironment()).sort()).toEqual(["LANG", "NODE_ENV", "PATH", "TZ"]);
   });
   it("starts one process for a duplicate claim and interrupts an exited unfinished Run", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "voidmix-process-test-"));
+    const directory = await mkdtemp(join(tmpdir(), "raypx-process-test-"));
     try {
       const entry = join(directory, "runner.mjs"),
         evidence = join(directory, "evidence.json");

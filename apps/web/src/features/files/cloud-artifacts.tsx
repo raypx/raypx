@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCloudQueries } from "../../lib/use-cloud-queries";
-import type { ApiClient } from "@voidmix/client";
-import type { CloudAssetVersionDto } from "@voidmix/contracts";
-import { ArtifactList, ArtifactPreview, type ArtifactContent } from "@voidmix/agent-ui/artifacts";
+import type { ApiClient } from "@raypx/client";
+import type { CloudAssetVersionDto } from "@raypx/contracts";
+import { ArtifactList, ArtifactPreview, type ArtifactContent } from "@raypx/agent-ui/artifacts";
 import { useTranslations } from "../../i18n/client";
 
 export function CloudArtifacts({

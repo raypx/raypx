@@ -1,6 +1,6 @@
 # Coding Agents
 
-Voidmix keeps one shared instruction set. The root [`AGENTS.md`](../../AGENTS.md)
+Raypx keeps one shared instruction set. The root [`AGENTS.md`](../../AGENTS.md)
 holds repository-wide constraints, every workspace has its own `AGENTS.md` for
 local constraints, and [`CLAUDE.md`](../../CLAUDE.md) is a one-line import of the
 root file so Codex and Claude Code read the same rules. Start either agent from
@@ -15,7 +15,7 @@ it disagrees with the nearest `AGENTS.md`, the `AGENTS.md` wins.
 | ----------- | --------------------- | --------------------------------------- |
 | `AGENTS.md` | what is forbidden     | repository root and every workspace     |
 | `docs/`     | why the seam is there | this directory and `docs/architecture/` |
-| `skills/`   | how to do the task    | `skills/voidmix-infra/`                 |
+| `skills/`   | how to do the task    | `skills/raypx-infra/`                   |
 
 A rule belongs in exactly one of them. `skills/` never restates an `AGENTS.md`
 rule, and `AGENTS.md` never explains its own reasoning at length.
@@ -47,7 +47,7 @@ Read the smallest useful set before editing:
 Then, by task:
 
 - Adding or changing an API procedure:
-  [oRPC procedures](../../skills/voidmix-infra/references/orpc-procedures.md).
+  [oRPC procedures](../../skills/raypx-infra/references/orpc-procedures.md).
 - Tests or the verification loop: [Testing and verification](./testing.md).
 - Commands, presets, or the linter: [Toolchain](../architecture/tooling.md).
 - Local setup and services: [Getting started](./getting-started.md).
@@ -92,9 +92,9 @@ skipped, say that.
 
 ## Skills
 
-`skills/voidmix-infra/` is the project skill: task-scoped procedures and the
+`skills/raypx-infra/` is the project skill: task-scoped procedures and the
 specific ways this repository bites. It is the canonical copy;
-`.claude/skills/voidmix-infra` is a symlink to it, and `bun run policy` verifies
+`.claude/skills/raypx-infra` is a symlink to it, and `bun run policy` verifies
 the symlink's literal target text so it keeps working in a fresh clone. Never
 maintain a second copy under a discovery directory.
 
@@ -113,7 +113,7 @@ upstream bytes and invalidate the hash.
 
 **Never hand-edit a vendored skill.** An update would overwrite the edit
 silently, leaving a fork that still looks upstream. Corrections go in
-`skills/voidmix-infra/references/`, which is ours.
+`skills/raypx-infra/references/`, which is ours.
 
 Vendored skills know their framework, not this repository. They never override an
 `AGENTS.md` rule.
@@ -131,7 +131,7 @@ Currently adopted:
 | `vercel-react-best-practices`    | `vercel-labs/agent-skills`         | React performance, bundle size, rendering, and data-fetching guidance          |
 | `vite`                           | `antfu/skills`                     | Vite configuration, plugin, SSR, and Rolldown guidance for the Vite+ toolchain |
 
-Read [TanStack corrections](../../skills/voidmix-infra/references/tanstack.md)
+Read [TanStack corrections](../../skills/raypx-infra/references/tanstack.md)
 before acting on the two TanStack skills. They over-promise their rule indexes,
 disagree with the installed API on the server-function validator name, and their
 session guidance targets a stack this repository does not use.

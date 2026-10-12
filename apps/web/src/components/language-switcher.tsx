@@ -1,9 +1,9 @@
 import { Globe } from "@phosphor-icons/react";
 import { useHydrated } from "@tanstack/react-router";
-import { LOCALE_OPTIONS } from "@voidmix/i18n";
+import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { useLocale, useSetLocale, useTranslations } from "../i18n/client";
-import type { Locale } from "@voidmix/i18n/types";
-import { IconButton } from "@voidmix/ui/icon-button";
+import type { Locale } from "@raypx/i18n/types";
+import { IconButton } from "@raypx/ui/icon-button";
 import { lazy, Suspense, useState } from "react";
 
 const LazyLanguageMenu = lazy(async () => {

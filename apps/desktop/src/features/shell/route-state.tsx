@@ -1,9 +1,9 @@
-import { Alert, AlertDescription } from "@voidmix/ui/components/ui/alert";
-import { LoadingState } from "@voidmix/ui/loading-state";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
+import { LoadingState } from "@raypx/ui/loading-state";
 import { useRouter, useRouterState } from "@tanstack/react-router";
 import { ArrowsClockwise } from "@phosphor-icons/react";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { IconButton } from "@voidmix/ui/icon-button";
+import { Button } from "@raypx/ui/components/ui/button";
+import { IconButton } from "@raypx/ui/icon-button";
 import { useDesktopTranslations } from "../../i18n/client";
 
 export function RefreshButton({ routeId }: { routeId: string }) {

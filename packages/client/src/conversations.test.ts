@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { CloudConversationSnapshotDto } from "@voidmix/contracts";
+import type { CloudConversationSnapshotDto } from "@raypx/contracts";
 import { createConversationSession, type ConversationTransport } from "./conversations.js";
 const now = new Date("2026-10-06T00:00:00Z");
 function snapshot(id = "conversation-a"): CloudConversationSnapshotDto {

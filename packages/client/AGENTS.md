@@ -1,4 +1,4 @@
-# @voidmix/client
+# @raypx/client
 
 ## Purpose
 
@@ -21,23 +21,23 @@ absolute API origin and send credentialed requests.
 - Keep that policy limited to safe read batching/deduplication and mutation
   safety; the client type remains `ContractRouterClient<typeof apiContract>` —
   **fully generic**.
-- `@voidmix/contracts` owns `isMutationProcedure` in `methods.ts`. Client and API both
+- `@raypx/contracts` owns `isMutationProcedure` in `methods.ts`. Client and API both
   consume it so safe-read batching and mutation POST routing cannot diverge.
 
 ## Constraints
 
 - **`src/index.ts` normally needs no edit when the API changes.** New procedures
   appear on `createApiClient(...)` automatically because the type is derived from
-  `@voidmix/contracts`. If you find yourself adding a per-procedure method here,
-  the change belongs in `@voidmix/contracts` instead.
+  `@raypx/contracts`. If you find yourself adding a per-procedure method here,
+  the change belongs in `@raypx/contracts` instead.
 - `fetch` is injectable and that is load-bearing: `apps/api/server/api`'s integration test
   passes the Hono app directly (`fetch: async (input, init) => app.fetch(new Request(input, init))`)
   to exercise the whole stack in-process with no network.
 - `FetchCallable` accepts the URL strings supplied by oRPC and standard `RequestInit`. Keep the
   public injection independent of runtime-specific static fetch members or Bun options.
 - Procedures are never zero-arg. `client.health({})` needs the explicit `{}`.
-- Depend only on `@orpc/client`, `@orpc/contract`, and `@voidmix/contracts`.
-  Never import `@voidmix/db`, `@voidmix/core`, or any application.
+- Depend only on `@orpc/client`, `@orpc/contract`, and `@raypx/contracts`.
+  Never import `@raypx/db`, `@raypx/core`, or any application.
 - Native fetch owns HTTP response decompression. Do not install the oRPC
   response decompressor on this Fetch transport; it would decompress twice.
   Request compression and server response compression remain enabled.

@@ -1,5 +1,5 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { Logo } from "@voidmix/ui/logo";
+import { Logo } from "@raypx/ui/logo";
 import { ThemeSwitcher } from "../../components/theme-switcher";
 import { LanguageSwitcher } from "../../components/language-switcher";
 import { ProductImage } from "../marketing/product-image";

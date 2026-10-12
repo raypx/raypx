@@ -1,11 +1,11 @@
 import type { ElectrobunConfig } from "./.hutch/devkit/api/config/ElectrobunConfig";
 
-const nativeSmoke = process.env.VOIDMIX_NATIVE_SMOKE === "1";
+const nativeSmoke = process.env.RAYPX_NATIVE_SMOKE === "1";
 
 export default {
   app: {
-    name: nativeSmoke ? "VoidMix Native Smoke" : "VoidMix",
-    identifier: nativeSmoke ? "com.voidmix.desktop.native-smoke" : "com.voidmix.desktop",
+    name: nativeSmoke ? "Raypx Native Smoke" : "Raypx",
+    identifier: nativeSmoke ? "com.raypx.desktop.native-smoke" : "com.raypx.desktop",
     version: "0.1.0",
   },
   build: {

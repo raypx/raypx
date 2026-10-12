@@ -1,5 +1,5 @@
-import { DEFAULT_LOCALE, isLocale } from "@voidmix/i18n";
-import type { Locale } from "@voidmix/i18n/types";
+import { DEFAULT_LOCALE, isLocale } from "@raypx/i18n";
+import type { Locale } from "@raypx/i18n/types";
 
 /**
  * The root error and not-found pages cannot read the `common` namespace the way
@@ -13,7 +13,7 @@ import type { Locale } from "@voidmix/i18n/types";
  */
 const RECOVERY_MESSAGES = {
   en: {
-    refreshing: "Refreshing Voidmix…",
+    refreshing: "Refreshing Raypx…",
     pageNeedsRefresh: "This page needs a refresh",
     somethingWentWrong: "Something went wrong",
     newerPageAvailable: "A newer version of this page is available. Reload it to continue.",
@@ -25,7 +25,7 @@ const RECOVERY_MESSAGES = {
     pageNotFoundDescription: "The workspace page you requested does not exist.",
   },
   zh: {
-    refreshing: "正在刷新 Voidmix…",
+    refreshing: "正在刷新 Raypx…",
     pageNeedsRefresh: "此页面需要刷新",
     somethingWentWrong: "出错了",
     newerPageAvailable: "此页面已有新版本，请刷新后继续。",

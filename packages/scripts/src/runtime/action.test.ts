@@ -26,7 +26,7 @@ describe("runCliAction", { concurrent: false }, () => {
           });
         throw new Error("expected failure");
       });
-      expect(consoleError).toHaveBeenCalledWith("vmx example failed: expected failure");
+      expect(consoleError).toHaveBeenCalledWith("rpx example failed: expected failure");
       expect(process.exitCode).toBe(1);
     },
   );

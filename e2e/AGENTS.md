@@ -1,4 +1,4 @@
-# @voidmix/e2e
+# @raypx/e2e
 
 ## Purpose
 
@@ -31,7 +31,7 @@ Scripts: `e2e` (full run), `e2e:web`, `e2e:desktop`, `test:ui`, `test:report`, `
 
 - Own Playwright projects and startup for API, Web and the Desktop browser preview.
 - `capture:product` requires the same guarded test database and already-running
-  loopback API/Web servers (ports selected by VOIDMIX_E2E_PORT). It upserts only
+  loopback API/Web servers (ports selected by RAYPX_E2E_PORT). It upserts only
   dedicated visual-example records and writes Web public product WebP images and their measured size manifest.
 - Own no unit or integration coverage. Those live beside the code they test.
 
@@ -51,9 +51,9 @@ Scripts: `e2e` (full run), `e2e:web`, `e2e:desktop`, `test:ui`, `test:report`, `
 - The full run starts API, Web and Desktop. Web-only starts API/Web; Desktop-only
   starts API/Desktop. Web includes Search/Computer, deliveries, acceptance,
   notifications, usage and real session isolation; there is no separate Cloud project.
-- `webServer` starts Web at `VOIDMIX_E2E_PORT` (default 3000), Desktop at +1,
+- `webServer` starts Web at `RAYPX_E2E_PORT` (default 3000), Desktop at +1,
   and API at +2 with `NODE_ENV=test`. Group reports use separate suite directories.
-- All runs require NODE_ENV=test and TEST_DATABASE_URL naming voidmix_*test.
+- All runs require NODE_ENV=test and TEST_DATABASE_URL naming raypx_*test.
   Global setup migrates and resets that dedicated database. Desktop seeds only
   accounts/projects; Web and full runs also seed cloud facts. Real API login uses
   seeded password hashes; do not introduce actor headers or production bypasses.
@@ -74,7 +74,7 @@ Scripts: `e2e` (full run), `e2e:web`, `e2e:desktop`, `test:ui`, `test:report`, `
 ```bash
 bun run --cwd e2e check
 bun run --cwd e2e playwright install chromium   # first run only
-NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test bun run test:e2e:web
-NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/voidmix_e2e_test bun run test:e2e:desktop
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/raypx_e2e_test bun run test:e2e:web
+NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/raypx_e2e_test bun run test:e2e:desktop
 # Use bun run test:e2e when both suites are required.
 ```

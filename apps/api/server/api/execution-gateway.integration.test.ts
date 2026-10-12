@@ -3,10 +3,10 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
 import { describe, expect, it } from "vite-plus/test";
-import { createCloudApplication } from "@voidmix/application";
-import { InMemoryCloudRepository } from "@voidmix/db";
-import { createMemoryStorage } from "@voidmix/storage";
-import { executionGatewayContract } from "@voidmix/contracts/execution-gateway";
+import { createCloudApplication } from "@raypx/application";
+import { InMemoryCloudRepository } from "@raypx/db";
+import { createMemoryStorage } from "@raypx/storage";
+import { executionGatewayContract } from "@raypx/contracts/execution-gateway";
 import { createExecutionGateway, digestExecutionToken } from "./execution-gateway.js";
 
 async function fixture() {

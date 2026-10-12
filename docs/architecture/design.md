@@ -1,8 +1,8 @@
 # Product design
 
-Voidmix uses one visual language across the cloud website, authentication, Web
+Raypx uses one visual language across the cloud website, authentication, Web
 and lightweight Desktop. [DESIGN.md](../../DESIGN.md) defines the shipped colors,
-typography, sizing and page patterns. [The delivery goal](./voidmix-delivery-goal.md)
+typography, sizing and page patterns. [The delivery goal](./raypx-delivery-goal.md)
 defines the current cloud and Desktop boundaries.
 
 ## Responsibilities

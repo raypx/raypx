@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { CloudRunEventDto, CloudRunSnapshotDto } from "@voidmix/contracts";
+import type { CloudRunEventDto, CloudRunSnapshotDto } from "@raypx/contracts";
 import { createCloudRunSession } from "./cloud-runs.js";
 const now = new Date("2026-10-08T00:00:00Z");
 function fixture(cursor = 200): CloudRunSnapshotDto {

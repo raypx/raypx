@@ -55,7 +55,7 @@ describe("verifyNitroRuntimes", () => {
       cwd: "/isolated/.output",
       env: expect.objectContaining({
         ALLOWED_ORIGINS: "http://localhost:3000",
-        DATABASE_URL: "postgres://voidmix:verify@example.invalid:5432/voidmix",
+        DATABASE_URL: "postgres://raypx:verify@example.invalid:5432/raypx",
         LOG_LEVEL: "error",
         LOG_PRETTY: "false",
         NITRO_HOST: "127.0.0.1",
@@ -67,7 +67,7 @@ describe("verifyNitroRuntimes", () => {
     });
     expect(options?.env).toHaveProperty(
       "DATABASE_URL",
-      "postgres://voidmix:verify@example.invalid:5432/voidmix",
+      "postgres://raypx:verify@example.invalid:5432/raypx",
     );
     expect(cleanup).toHaveBeenCalledOnce();
   });

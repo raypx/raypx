@@ -1,4 +1,4 @@
-# @voidmix/auth
+# @raypx/auth
 
 ## Purpose
 

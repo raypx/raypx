@@ -1,5 +1,5 @@
-import type { CloudAssetVersionDto } from "@voidmix/contracts";
-import { Button } from "@voidmix/ui/components/ui/button";
+import type { CloudAssetVersionDto } from "@raypx/contracts";
+import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "../../i18n/client";
 export function InputAttachments({
   attachments,

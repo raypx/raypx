@@ -2,7 +2,7 @@
 
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { I18nProvider } from "@voidmix/i18n/client";
+import { I18nProvider } from "@raypx/i18n/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import type { ReactNode } from "react";
 

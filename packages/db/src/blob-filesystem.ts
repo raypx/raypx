@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { BlobDownload, BlobStorageRepository, BlobUpload } from "@voidmix/core";
-import { AssetDomainError } from "@voidmix/core";
-import { defaultClock, defaultIdGenerator } from "@voidmix/shared";
+import type { BlobDownload, BlobStorageRepository, BlobUpload } from "@raypx/core";
+import { AssetDomainError } from "@raypx/core";
+import { defaultClock, defaultIdGenerator } from "@raypx/shared";
 
 const MAX_BLOB_SIZE = 10 * 1024 * 1024;
 
@@ -13,7 +13,12 @@ export class FileSystemBlobStorageRepository implements BlobStorageRepository {
 
   constructor(
     private readonly root: string,
-    private readonly options: { now?: () => Date; id?: () => string; uploadTtlMs?: number } = {},
+    private readonly options: {
+      now?: () => Date;
+      id?: () => string;
+      uploadTtlMs?: number;
+      legacyRoot?: string;
+    } = {},
   ) {}
 
   async createUpload(
@@ -57,6 +62,7 @@ export class FileSystemBlobStorageRepository implements BlobStorageRepository {
         "Blob checksum does not match the body.",
       );
     }
+    await mkdir(this.uploadDirectory(upload.workspaceId), { recursive: true });
     await writeFile(this.blobPath(upload.workspaceId, input.blobHash), bytes);
     await writeFile(
       this.metadataPath(upload.workspaceId, input.blobHash),
@@ -64,7 +70,9 @@ export class FileSystemBlobStorageRepository implements BlobStorageRepository {
       "utf8",
     );
     this.uploads.delete(input.uploadId);
-    await rm(this.uploadPath(input.uploadId), { force: true });
+    await Promise.all(
+      this.roots.map((root) => rm(this.uploadPath(input.uploadId, root), { force: true })),
+    );
     return { blobHash: input.blobHash, byteSize: bytes.byteLength, contentType: input.contentType };
   }
 
@@ -72,30 +80,36 @@ export class FileSystemBlobStorageRepository implements BlobStorageRepository {
     workspaceId: string;
     blobHash: string;
   }): Promise<BlobDownload | null> {
-    try {
-      const bytes = new Uint8Array(
-        await readFile(this.blobPath(input.workspaceId, input.blobHash)),
-      );
-      const metadata = JSON.parse(
-        await readFile(this.metadataPath(input.workspaceId, input.blobHash), "utf8"),
-      ) as { contentType?: string };
-      return {
-        blobHash: input.blobHash,
-        byteSize: bytes.byteLength,
-        contentType: metadata.contentType ?? null,
-        body: (async function* () {
-          yield bytes;
-        })(),
-      };
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-      throw error;
+    for (const root of this.roots) {
+      try {
+        const bytes = new Uint8Array(
+          await readFile(this.blobPath(input.workspaceId, input.blobHash, root)),
+        );
+        const metadata = JSON.parse(
+          await readFile(this.metadataPath(input.workspaceId, input.blobHash, root), "utf8"),
+        ) as { contentType?: string };
+        return {
+          blobHash: input.blobHash,
+          byteSize: bytes.byteLength,
+          contentType: metadata.contentType ?? null,
+          body: (async function* () {
+            yield bytes;
+          })(),
+        };
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
     }
+    return null;
   }
 
   async delete(input: { workspaceId: string; blobHash: string }): Promise<void> {
-    await rm(this.blobPath(input.workspaceId, input.blobHash), { force: true });
-    await rm(this.metadataPath(input.workspaceId, input.blobHash), { force: true });
+    await Promise.all(
+      this.roots.flatMap((root) => [
+        rm(this.blobPath(input.workspaceId, input.blobHash, root), { force: true }),
+        rm(this.metadataPath(input.workspaceId, input.blobHash, root), { force: true }),
+      ]),
+    );
   }
 
   private assertSize(byteSize: number): void {
@@ -107,33 +121,38 @@ export class FileSystemBlobStorageRepository implements BlobStorageRepository {
   private now(): Date {
     return (this.options.now ?? defaultClock.now)();
   }
-  private uploadDirectory(workspaceId: string): string {
-    return join(this.root, encodeURIComponent(workspaceId));
+  private get roots(): string[] {
+    return [this.root, ...(this.options.legacyRoot ? [this.options.legacyRoot] : [])];
   }
-  private blobPath(workspaceId: string, hash: string): string {
-    return join(this.uploadDirectory(workspaceId), `${hash}.blob`);
+  private uploadDirectory(workspaceId: string, root = this.root): string {
+    return join(root, encodeURIComponent(workspaceId));
   }
-  private metadataPath(workspaceId: string, hash: string): string {
-    return join(this.uploadDirectory(workspaceId), `${hash}.json`);
+  private blobPath(workspaceId: string, hash: string, root = this.root): string {
+    return join(this.uploadDirectory(workspaceId, root), `${hash}.blob`);
   }
-  private uploadPath(id: string): string {
-    return join(this.root, "uploads", `${encodeURIComponent(id)}.json`);
+  private metadataPath(workspaceId: string, hash: string, root = this.root): string {
+    return join(this.uploadDirectory(workspaceId, root), `${hash}.json`);
+  }
+  private uploadPath(id: string, root = this.root): string {
+    return join(root, "uploads", `${encodeURIComponent(id)}.json`);
   }
   private async getUpload(id: string): Promise<BlobUpload | undefined> {
     const memory = this.uploads.get(id);
     if (memory) return memory;
-    try {
-      const stored = JSON.parse(await readFile(this.uploadPath(id), "utf8")) as Omit<
-        BlobUpload,
-        "expiresAt"
-      > & {
-        expiresAt: string;
-      };
-      return { ...stored, expiresAt: new Date(stored.expiresAt) };
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-      throw error;
+    for (const root of this.roots) {
+      try {
+        const stored = JSON.parse(await readFile(this.uploadPath(id, root), "utf8")) as Omit<
+          BlobUpload,
+          "expiresAt"
+        > & {
+          expiresAt: string;
+        };
+        return { ...stored, expiresAt: new Date(stored.expiresAt) };
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
     }
+    return undefined;
   }
 }
 

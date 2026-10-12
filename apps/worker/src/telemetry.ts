@@ -18,7 +18,7 @@ export function startWorkerTelemetry(dsn?: string): {
           platform: "node",
           ...(event.level ? { level: event.level } : {}),
           tags: {
-            service: "voidmix-worker",
+            service: "raypx-worker",
             ...(event.tags?.runId ? { runId: event.tags.runId } : {}),
             ...(event.tags?.errorCode ? { errorCode: event.tags.errorCode } : {}),
           },
@@ -38,13 +38,13 @@ export function startWorkerTelemetry(dsn?: string): {
                 trace: {
                   trace_id: trace.trace_id,
                   span_id: trace.span_id,
-                  op: "voidmix.run",
+                  op: "raypx.run",
                   ...(trace.status ? { status: trace.status } : {}),
                 },
               }
             : {},
           tags: {
-            service: "voidmix-worker",
+            service: "raypx-worker",
             ...(event.tags?.runId ? { runId: event.tags.runId } : {}),
           },
           spans: [],
@@ -63,7 +63,7 @@ export function startWorkerTelemetry(dsn?: string): {
       return Sentry.withIsolationScope(async (scope) => {
         scope.setTag("runId", runId);
         return Sentry.startNewTrace(() =>
-          Sentry.startSpan({ name: "cloud.run", op: "voidmix.run" }, operation),
+          Sentry.startSpan({ name: "cloud.run", op: "raypx.run" }, operation),
         );
       });
     },

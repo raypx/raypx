@@ -1,7 +1,7 @@
 import { first, inserted } from "./results.js";
 import { asc, desc, eq } from "drizzle-orm";
 import type { Database } from "./types.js";
-import type { FeedbackV2, FeedbackV2Repository, ReviewV2, ReviewV2Repository } from "@voidmix/core";
+import type { FeedbackV2, FeedbackV2Repository, ReviewV2, ReviewV2Repository } from "@raypx/core";
 import { v2Feedback, v2Reviews } from "../schema.js";
 export class PostgresReviewV2Repository implements ReviewV2Repository {
   constructor(private readonly db: Database) {}

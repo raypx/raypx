@@ -1,4 +1,4 @@
-import { translateKnownErrorCode, type ErrorCodeMap, type Translator } from "@voidmix/i18n";
+import { translateKnownErrorCode, type ErrorCodeMap, type Translator } from "@raypx/i18n";
 import type { WebTranslator } from "../src/i18n/client";
 
 /**

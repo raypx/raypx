@@ -7,6 +7,6 @@ export * from "./activity/index.js";
 export * from "./assets/index.js";
 export * from "./projects/index.js";
 export * from "./settings/index.js";
-export * from "@voidmix/shared";
+export * from "@raypx/shared";
 
 export * from "./cloud/index.js";

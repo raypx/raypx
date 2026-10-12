@@ -1,4 +1,4 @@
-import { DomainError } from "@voidmix/shared";
+import { DomainError } from "@raypx/shared";
 import type { ProjectV2, ProjectMemberV2, OrganizationMemberV2, OutboxEvent } from "../index.js";
 
 export type ResourceScope =

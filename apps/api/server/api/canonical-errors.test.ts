@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { DomainError } from "@voidmix/core";
+import { DomainError } from "@raypx/core";
 
 import { mapDomainError } from "./canonical-errors.js";
 

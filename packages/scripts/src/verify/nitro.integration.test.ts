@@ -8,7 +8,7 @@ import { runCommand } from "../runtime/process.js";
 import { verifyNitroRuntimes } from "./nitro.js";
 
 async function runtimeFixture(privateRouteStatus: 401 | 404): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "voidmix-nitro-probe-test-"));
+  const root = await mkdtemp(join(tmpdir(), "raypx-nitro-probe-test-"));
   onTestFinished(() => rm(root, { recursive: true, force: true }));
   for (const app of ["web", "api"]) {
     const output = join(root, "apps", app, ".output");
@@ -32,7 +32,7 @@ const server = createServer(async (request, response) => {
     response.writeHead(valid ? ${privateRouteStatus} : 400).end();
     return;
   }
-  response.writeHead(200).end("Voidmix");
+  response.writeHead(200).end("Raypx");
 });
 await new Promise((resolve) => server.listen(Number(process.env.NITRO_PORT), "127.0.0.1", resolve));
 `,

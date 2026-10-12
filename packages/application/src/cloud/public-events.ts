@@ -1,4 +1,4 @@
-import type { CloudRunEvent } from "@voidmix/core";
+import type { CloudRunEvent } from "@raypx/core";
 /** Tool bodies stay in the detail endpoint; replay and SSE carry the same bounded summary. */
 export function publicCloudEvent(event: CloudRunEvent): CloudRunEvent {
   if (event.type !== "tool.started" && event.type !== "tool.completed") return event;

@@ -1,9 +1,9 @@
-# @voidmix/ai
+# @raypx/ai
 
 ## Purpose
 
 The server-side AI adapter. It owns Pi SDK integration, provider lifecycle,
-tool registration, and conversion to Voidmix-owned run events.
+tool registration, and conversion to Raypx-owned run events.
 
 ## Interface
 

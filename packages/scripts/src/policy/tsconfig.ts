@@ -15,7 +15,7 @@ export function isPresetFile(file: string): boolean {
 }
 
 /** The specifier prefix a workspace uses to reach them. */
-export const presetSpecifier = "@voidmix/tsconfig/";
+export const presetSpecifier = "@raypx/tsconfig/";
 
 /** A workspace does not inherit from the shared presets. */
 const presetFinding = findingFor("tsconfig.preset");
@@ -36,7 +36,7 @@ interface InheritedOption {
   value: unknown;
 }
 
-/** Resolves the `@voidmix/tsconfig/` specifier a workspace uses. */
+/** Resolves the `@raypx/tsconfig/` specifier a workspace uses. */
 function resolveConsumerPreset(specifier: unknown): string | null {
   if (typeof specifier !== "string" || !specifier.startsWith(presetSpecifier)) return null;
   return `${presetRoot}/${specifier.slice(presetSpecifier.length)}`;

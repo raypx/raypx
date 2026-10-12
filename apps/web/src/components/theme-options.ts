@@ -1,4 +1,4 @@
-import type { UserTheme } from "@voidmix/ui/theme";
+import type { UserTheme } from "@raypx/ui/theme";
 import type { WebNamespaceKey } from "../i18n/client";
 
 export const themeOptions: ReadonlyArray<{

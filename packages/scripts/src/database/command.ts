@@ -7,7 +7,7 @@ const migrateCommand = contextualCommand("db migrate", "database", {
   async run(context) {
     const [{ runMigrate }, { migrateDatabase }] = await Promise.all([
       import("./operation.js"),
-      import("@voidmix/db"),
+      import("@raypx/db"),
     ]);
     await runMigrate(context.environment, {
       log: context.log,
@@ -21,7 +21,7 @@ const cleanCommand = contextualCommand("db clean", "database", {
   async run(context) {
     const [{ runClean }, { resetDatabase }] = await Promise.all([
       import("./operation.js"),
-      import("@voidmix/db"),
+      import("@raypx/db"),
     ]);
     await runClean(context.environment, { log: context.log, reset: resetDatabase });
   },
@@ -44,7 +44,7 @@ const studioCommand = contextualCommand("db studio", "database", {
 });
 
 export const databaseCommand = defineCommand({
-  meta: { name: "db", description: "Manage the Voidmix database" },
+  meta: { name: "db", description: "Manage the Raypx database" },
   subCommands: {
     clean: cleanCommand,
     migrate: migrateCommand,

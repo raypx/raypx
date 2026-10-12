@@ -4,9 +4,9 @@ import { join } from "node:path";
 import type { PolicyDependencies, PolicyFinding } from "../checks.js";
 import { parseSkillsLock, validateVendoredSkills, vendoredSkillLinks } from "../skills.js";
 
-const projectSkill = "skills/voidmix-infra/SKILL.md";
-const skillSymlink = ".claude/skills/voidmix-infra";
-const expectedSkillTarget = "../../skills/voidmix-infra";
+const projectSkill = "skills/raypx-infra/SKILL.md";
+const skillSymlink = ".claude/skills/raypx-infra";
+const expectedSkillTarget = "../../skills/raypx-infra";
 const skillsLock = "skills-lock.json";
 
 export async function checkProjectSkill(
@@ -27,7 +27,7 @@ export async function checkProjectSkill(
       report(
         projectSkill,
         "frontmatter is missing a name field",
-        `add "name: voidmix-infra" to the frontmatter of ${projectSkill}`,
+        `add "name: raypx-infra" to the frontmatter of ${projectSkill}`,
       );
     }
     if (!/^---\n[\s\S]*?\bdescription:\s*\S/m.test(content)) {

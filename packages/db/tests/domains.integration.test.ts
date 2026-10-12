@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, afterAll, describe, expect, it } from "vite-plus/test";
 import { sql } from "drizzle-orm";
-import { createReviewApplication } from "@voidmix/application";
+import { createReviewApplication } from "@raypx/application";
 import {
   resolveProjectAccessV2,
   type ProjectMemberV2,
   type OrganizationMemberV2,
-} from "@voidmix/core";
+} from "@raypx/core";
 import { openTestDatabase } from "./database.js";
 import {
   users,

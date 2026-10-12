@@ -52,7 +52,7 @@ try {
     "Persistent BrowserView did not resize with its window",
   );
 
-  const phase = process.env.VOIDMIX_NATIVE_SMOKE_PHASE ?? "write";
+  const phase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "write";
   if (phase === "shell") {
     assert.equal(
       await evaluate("return location.protocol"),
@@ -64,14 +64,14 @@ try {
     );
     handleTrayAction("quit");
   } else {
-    const api = process.env.VOIDMIX_NATIVE_SMOKE_API;
-    const project = process.env.VOIDMIX_NATIVE_SMOKE_PROJECT;
+    const api = process.env.RAYPX_NATIVE_SMOKE_API;
+    const project = process.env.RAYPX_NATIVE_SMOKE_PROJECT;
     if (!api || !project || !["127.0.0.1", "localhost"].includes(new URL(api).hostname))
       throw new Error("Native smoke requires a loopback test API and expected synthetic project");
     stage = "native authentication";
     if (phase === "write") {
-      const email = process.env.VOIDMIX_NATIVE_SMOKE_EMAIL;
-      const password = process.env.VOIDMIX_NATIVE_SMOKE_PASSWORD;
+      const email = process.env.RAYPX_NATIVE_SMOKE_EMAIL;
+      const password = process.env.RAYPX_NATIVE_SMOKE_PASSWORD;
       if (!email || !password)
         throw new Error("Native smoke requires synthetic test account credentials");
       const authenticated = await evaluate(`return (async () => {
@@ -121,13 +121,13 @@ try {
       );
       assert.equal(
         await evaluate(
-          'return JSON.parse(localStorage.getItem("voidmix.desktop.preferences")).state.theme',
+          'return JSON.parse(localStorage.getItem("raypx.desktop.preferences")).state.theme',
         ),
         "light",
         "Native theme was not written to localStorage",
       );
       assert.equal(
-        await evaluate('return localStorage.getItem("voidmix_locale")'),
+        await evaluate('return localStorage.getItem("raypx_locale")'),
         "zh",
         "Native locale was not written to localStorage",
       );
@@ -156,7 +156,7 @@ try {
         "Native account cookie did not survive a restart",
       );
     } else throw new Error("Unknown native smoke phase");
-    const transport = process.env.VOIDMIX_NATIVE_SMOKE_VIEW_URL ? "HTTP preview" : "packaged views";
+    const transport = process.env.RAYPX_NATIVE_SMOKE_VIEW_URL ? "HTTP preview" : "packaged views";
     console.info(
       `Native smoke ${phase} passed (${transport}): tray, close, restore, resize, renderer assets and authenticated projects.`,
     );

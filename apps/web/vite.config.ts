@@ -1,6 +1,6 @@
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
-import evlog from "@voidmix/shared/logger/vite";
+import evlog from "@raypx/shared/logger/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig, lazyPlugins } from "vite-plus";

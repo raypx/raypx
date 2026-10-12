@@ -4,7 +4,7 @@ import {
   isCloudTerminal,
   type CloudRunEvent,
   type CloudCommand,
-} from "@voidmix/core";
+} from "@raypx/core";
 import type { CloudContext, Actor, Intent, Fence } from "./context.js";
 
 export function cloudRuns(context: CloudContext) {

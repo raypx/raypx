@@ -1,6 +1,6 @@
-import { createEnv } from "@voidmix/shared/env";
-import { createMailer, getMailEnv, mailEnv } from "@voidmix/mail/server";
-import type { MailSettingsFallback, SystemSettingsRepository } from "@voidmix/core";
+import { createEnv } from "@raypx/shared/env";
+import { createMailer, getMailEnv, mailEnv } from "@raypx/mail/server";
+import type { MailSettingsFallback, SystemSettingsRepository } from "@raypx/core";
 
 /** Re-resolve persisted settings for each delivery, including global disabling. */
 export function createWorkerMailer(options: {
@@ -18,7 +18,7 @@ export function createWorkerMailer(options: {
       : { value: null, source: "missing" },
     fromName: environment.MAIL_FROM_NAME
       ? { value: environment.MAIL_FROM_NAME, source: "environment" }
-      : { value: "Voidmix", source: "default" },
+      : { value: "Raypx", source: "default" },
     templatesBaseUrl: environment.EMAIL_TEMPLATES_BASE_URL
       ? { value: environment.EMAIL_TEMPLATES_BASE_URL, source: "environment" }
       : { value: null, source: "missing" },

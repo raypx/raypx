@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Switch } from "@voidmix/ui/components/ui/switch";
+import { Switch } from "@raypx/ui/components/ui/switch";
 
 const meta = {
   title: "Primitives/Switch",

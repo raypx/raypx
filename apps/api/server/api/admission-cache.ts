@@ -1,5 +1,5 @@
-import { createRedisCache, type RedisCacheOptions } from "@voidmix/cache";
-import { logger } from "@voidmix/shared/logger";
+import { createRedisCache, type RedisCacheOptions } from "@raypx/cache";
+import { logger } from "@raypx/shared/logger";
 
 export async function connectAdmissionCache(
   options: RedisCacheOptions,

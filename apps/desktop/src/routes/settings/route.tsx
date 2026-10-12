@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@voidmix/ui/page-header";
-import { IconButton } from "@voidmix/ui/icon-button";
+import { PageHeader } from "@raypx/ui/page-header";
+import { IconButton } from "@raypx/ui/icon-button";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { useDesktopTranslations } from "../../i18n/client";
 import { useDesktopPreferences } from "../../lib/preferences";

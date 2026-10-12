@@ -1,13 +1,13 @@
 import { chromium, expect } from "@playwright/test";
-import { connectDatabase, migrateDatabase } from "@voidmix/db";
-import { authAccounts, users, v2Projects, cloudTasks, cloudTaskRounds } from "@voidmix/db/schema";
+import { connectDatabase, migrateDatabase } from "@raypx/db";
+import { authAccounts, users, v2Projects, cloudTasks, cloudTaskRounds } from "@raypx/db/schema";
 import { hashPassword } from "better-auth/crypto";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { databaseUrl, password } from "./database.js";
 
 // Uses only the guarded test database and loopback application servers.
-const port = Number(process.env.VOIDMIX_E2E_PORT ?? 3000);
+const port = Number(process.env.RAYPX_E2E_PORT ?? 3000);
 const web = `http://127.0.0.1:${port}`;
 const api = `http://127.0.0.1:${port + 2}`;
 const output = resolve(import.meta.dirname, "../apps/web/public/product");

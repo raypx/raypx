@@ -1,6 +1,6 @@
-import type { ApiClient } from "@voidmix/client";
+import type { ApiClient } from "@raypx/client";
 type Project = Awaited<ReturnType<ApiClient["projects"]["get"]>>["project"];
-import { StatusBadge, type StatusTone } from "@voidmix/ui/status-badge";
+import { StatusBadge, type StatusTone } from "@raypx/ui/status-badge";
 import { useTranslations } from "../../i18n/client";
 
 const tones = {

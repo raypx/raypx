@@ -1,9 +1,9 @@
-# @voidmix/application
+# @raypx/application
 
 ## Purpose
 
 Application commands and queries shared by the API and asynchronous Worker.
-This package coordinates domain ports from `@voidmix/core`; it owns no HTTP,
+This package coordinates domain ports from `@raypx/core`; it owns no HTTP,
 database, AI SDK, or renderer concerns.
 
 ## Interface
@@ -58,7 +58,7 @@ database, AI SDK, or renderer concerns.
 
 ## Constraints
 
-- Depend only on `@voidmix/core`.
+- Depend only on `@raypx/core`.
 - Non-Agent ports are required; production must never substitute an empty list
   for a missing repository. Test doubles belong in explicit fixtures.
 - Validate a Review asset version exists and belongs to the requested project.

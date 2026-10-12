@@ -1,10 +1,10 @@
-# @voidmix/scripts
+# @raypx/scripts
 
 ## Purpose
 
 The private repository CLI. Turbo owns the task graph; this package owns
 procedural operations that understand the repository or the database. It exposes
-the `vmx` bin.
+the `rpx` bin.
 
 ## Interface
 
@@ -48,12 +48,12 @@ Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps chec
   policy, and the shared contextual action creates that context and registers its
   logger before invoking the operation.
 - Commands must support non-interactive CI execution, explicit exit codes, and
-  structured logging via `@voidmix/shared/logger`.
+  structured logging via `@raypx/shared/logger`.
 - **Destructive database operations are restricted to development and test.**
   `database/policy.ts` owns that gate; do not bypass it.
-- `vmx env -- <command>` uses the Dotenvx programming API directly, loads
+- `rpx env -- <command>` uses the Dotenvx programming API directly, loads
   `.env.local` then `.env` without overriding inherited values, never mutates
-  global `process.env`, and must not recursively wrap another `vmx` process.
+  global `process.env`, and must not recursively wrap another `rpx` process.
   Tests are intentionally not wrapped.
 - Use domain directories for naming context (`database/policy.ts`,
   `doctor/checks.ts`) instead of repeating prefixes in filenames.
@@ -65,21 +65,21 @@ Commands: `tasks <task> [Turbo flags]`, `env -- <command>`, `doctor`, `deps chec
   private imports (including relative paths and aliases), and workspace cycles.
   Enum parity tests compare Core, Contracts and DB without adding runtime edges.
 - Applications use their unscoped directory name; packages and E2E retain the
-  `@voidmix/` scope. Filters and qualified Turbo tasks use the actual package name.
+  `@raypx/` scope. Filters and qualified Turbo tasks use the actual package name.
 - `desktop build` first runs root `build:desktop` through Turbo, then invokes the
   Desktop `native:build` Electrobun packager. It never prepares a Node/Pi runner.
-- Dependency maintenance is explicit: `vmx deps dedupe` may rewrite `bun.lock`,
-  `vmx deps dedupe --check` is read-only, and `vmx deps audit` is read-only.
+- Dependency maintenance is explicit: `rpx deps dedupe` may rewrite `bun.lock`,
+  `rpx deps dedupe --check` is read-only, and `rpx deps audit` is read-only.
 - Dependency check/update excludes Drizzle RC builds because hash suffixes do
   not sort chronologically. Update Kit and ORM together from the `rc5` tag.
 - Reuse `runtime/command.ts` for command adapters, `process-dependencies.ts` for
   repository subprocesses, and `runtime/files.ts` for traversal. Policy uses
   shared findings and strict JSON helpers without changing diagnostic content.
-- Oxc owns JSX/TypeScript parsing; FormatJS through `@voidmix/i18n/testing` owns
+- Oxc owns JSX/TypeScript parsing; FormatJS through `@raypx/i18n/testing` owns
   ICU parsing. Keep source exemptions and diagnostic locations covered.
 - Never print secret values loaded by the env runner.
 - Remote cache needs token, team and signature key; untrusted CI strips these.
-  `VMX_REMOTE_CACHE_TRUSTED=true` is set only by the protected CI workflow.
+  `RPX_REMOTE_CACHE_TRUSTED=true` is set only by the protected CI workflow.
 - Doctor probes only the local Electrobun bootstrap/SDK paths; it never downloads
   the native toolchain. Clean removes Desktop build/artifacts/project SDK caches,
   preserving native profiles and user data.

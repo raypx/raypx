@@ -1,6 +1,6 @@
 import { UserCircle } from "@phosphor-icons/react";
 import { useDesktopTranslations } from "../../i18n/client";
-import { Avatar } from "@voidmix/ui/avatar";
+import { Avatar } from "@raypx/ui/avatar";
 import { useDesktopAccount } from "./account-provider";
 
 export function AccountControl() {

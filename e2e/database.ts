@@ -1,6 +1,6 @@
 import type { FullConfig } from "@playwright/test";
-import { connectDatabase, migrateDatabase, PostgresCloudRepository } from "@voidmix/db";
-import { authAccounts, users, v2Projects } from "@voidmix/db/schema";
+import { connectDatabase, migrateDatabase, PostgresCloudRepository } from "@raypx/db";
+import { authAccounts, users, v2Projects } from "@raypx/db/schema";
 import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
 
@@ -10,16 +10,16 @@ export const accounts = {
   pilot: { id: "e2e-pilot", email: "pilot@example.test", name: "Pilot Tester" },
 } as const;
 // Synthetic, test-only credentials. Never read or copy a developer account.
-export const password = "Voidmix-test-login-only-2026!";
+export const password = "Raypx-test-login-only-2026!";
 export function databaseUrl() {
   const url = process.env.TEST_DATABASE_URL;
   if (
     !url ||
     process.env.NODE_ENV !== "test" ||
-    !/^\/voidmix_[a-z0-9_]*test$/.test(new URL(url).pathname)
+    !/^\/raypx_[a-z0-9_]*test$/.test(new URL(url).pathname)
   )
     throw new Error(
-      "E2E requires NODE_ENV=test and TEST_DATABASE_URL pointing to a dedicated voidmix_*test database.",
+      "E2E requires NODE_ENV=test and TEST_DATABASE_URL pointing to a dedicated raypx_*test database.",
     );
   return url;
 }

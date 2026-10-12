@@ -53,14 +53,14 @@ describe("Logo", () => {
   it("uses the shared generated mark while keeping the accessible wordmark", () => {
     render(<Logo />);
 
-    expect(screen.getByText("Voidmix")).toBeVisible();
+    expect(screen.getByText("Raypx")).toBeVisible();
     expect(document.querySelector('[data-slot="logo-mark"]')).toMatchObject({
       height: 28,
       width: 28,
     });
     expect(document.querySelector('[data-slot="logo-mark"]')).toHaveAttribute(
       "src",
-      expect.stringContaining("voidmix-mark.webp"),
+      expect.stringContaining("raypx-mark.webp"),
     );
   });
 });

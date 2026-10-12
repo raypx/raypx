@@ -2,8 +2,8 @@ import { AuthLink } from "./auth-link";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useHydrated } from "@tanstack/react-router";
 import { useTranslations } from "../../i18n/client";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { FieldError, FieldGroup } from "@voidmix/ui/components/ui/field";
+import { Button } from "@raypx/ui/components/ui/button";
+import { FieldError, FieldGroup } from "@raypx/ui/components/ui/field";
 import { signIn, signUp } from "../../lib/auth-client";
 import { AuthCard } from "./auth-card";
 import { useAuthCapabilities } from "./capabilities";
@@ -95,7 +95,7 @@ export function AuthForm({
         mode === "login" ? (
           capabilities.registrationAvailable ? (
             <span>
-              {t("newToVoidmix")}{" "}
+              {t("newToRaypx")}{" "}
               <AuthLink next={next} to="/signup">
                 {t("createAccount")}
               </AuthLink>

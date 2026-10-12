@@ -104,7 +104,7 @@ export function checkSourceFile(source: SourceInput): I18nFinding[] {
     switch (node.type) {
       case "ImportDeclaration": {
         if (sourceFacadeAllowlist.has(source.location)) break;
-        if (node.source.value === "@voidmix/i18n/client") {
+        if (node.source.value === "@raypx/i18n/client") {
           for (const specifier of node.specifiers) {
             if (
               specifier.type === "ImportSpecifier" &&
@@ -113,7 +113,7 @@ export function checkSourceFile(source: SourceInput): I18nFinding[] {
             ) {
               add(
                 specifier.start,
-                "imports useTranslations directly from @voidmix/i18n/client",
+                "imports useTranslations directly from @raypx/i18n/client",
                 "import the surface-local typed translation facade instead",
                 "source.facade",
               );
@@ -124,7 +124,7 @@ export function checkSourceFile(source: SourceInput): I18nFinding[] {
           add(
             node.source.start,
             "imports the use-intl implementation directly",
-            "keep use-intl behind @voidmix/i18n",
+            "keep use-intl behind @raypx/i18n",
             "source.facade",
           );
         break;

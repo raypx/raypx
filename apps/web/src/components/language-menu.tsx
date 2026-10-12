@@ -4,9 +4,9 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@voidmix/ui/components/ui/dropdown-menu";
-import { LOCALE_OPTIONS } from "@voidmix/i18n";
-import type { Locale } from "@voidmix/i18n/types";
+} from "@raypx/ui/components/ui/dropdown-menu";
+import { LOCALE_OPTIONS } from "@raypx/i18n";
+import type { Locale } from "@raypx/i18n/types";
 import type { ReactElement } from "react";
 
 export interface LanguageMenuProps {

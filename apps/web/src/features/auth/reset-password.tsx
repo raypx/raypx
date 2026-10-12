@@ -1,7 +1,7 @@
 import { AuthLink } from "./auth-link";
 import { CheckCircle } from "@phosphor-icons/react";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { FieldError, FieldGroup } from "@voidmix/ui/components/ui/field";
+import { Button } from "@raypx/ui/components/ui/button";
+import { FieldError, FieldGroup } from "@raypx/ui/components/ui/field";
 import { useState, type FormEvent } from "react";
 
 import { authClient } from "../../lib/auth-client";

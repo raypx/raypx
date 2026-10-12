@@ -1,4 +1,4 @@
-import { assertProjectScopeV2, canProjectCapabilityV2, ProjectV2DomainError } from "@voidmix/core";
+import { assertProjectScopeV2, canProjectCapabilityV2, ProjectV2DomainError } from "@raypx/core";
 import type { ProjectApplication } from "./types.js";
 import { requireResource, type ProjectContext } from "./context.js";
 export function projectsCommands({ options, now, id, accessFor, requireProject }: ProjectContext) {

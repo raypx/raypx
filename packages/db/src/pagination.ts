@@ -1,4 +1,4 @@
-import { DomainError, type CursorQuery, type CursorPage } from "@voidmix/core";
+import { DomainError, type CursorQuery, type CursorPage } from "@raypx/core";
 import { sql, type SQL, type AnyColumn } from "drizzle-orm";
 
 export function timestampKey(column: AnyColumn) {

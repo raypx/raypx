@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { ORPCError } from "@orpc/server";
-import { CloudDomainError, DomainError, ProjectV2DomainError } from "@voidmix/core";
+import { CloudDomainError, DomainError, ProjectV2DomainError } from "@raypx/core";
 import { actorInput, page } from "./router-context.js";
 import { mapDomainError } from "./canonical-errors.js";
 

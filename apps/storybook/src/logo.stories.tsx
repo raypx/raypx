@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Logo } from "@voidmix/ui/logo";
+import { Logo } from "@raypx/ui/logo";
 
 const meta = {
   title: "Primitives/Logo",
   component: Logo,
   tags: ["autodocs"],
   args: {
-    label: "Voidmix",
+    label: "Raypx",
   },
 } satisfies Meta<typeof Logo>;
 
@@ -17,7 +17,7 @@ export const Default: Story = {};
 
 export const CustomLabel: Story = {
   args: {
-    label: "Voidmix Projects",
+    label: "Raypx Projects",
   },
 };
 

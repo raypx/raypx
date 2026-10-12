@@ -31,7 +31,7 @@ packages/<name>/
   package.json        the exports map is the public interface — keep it narrow
 ```
 
-`@voidmix/core` is the deliberate exception to a single flat source file. Its
+`@raypx/core` is the deliberate exception to a single flat source file. Its
 bounded contexts live beside their ports and application services:
 
 ```text
@@ -52,7 +52,7 @@ under `apps/*/src/features/` and owns presentation, transport facades, and
 fallback data.
 
 The small cross-context primitives used by both Core and adapters live in
-`@voidmix/shared`; do not recreate them inside a domain context.
+`@raypx/shared`; do not recreate them inside a domain context.
 
 Do not add a `src/types.ts`, `src/utils.ts`, or `src/constants.ts` by reflex. A
 type belongs beside the thing it describes until a second consumer exists.

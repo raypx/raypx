@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { createDefaultAuthSettings, type AuthSettings } from "@voidmix/core";
+import { createDefaultAuthSettings, type AuthSettings } from "@raypx/core";
 
 import { createMailProtectedAuthHandler } from "./runtime.js";
 
@@ -16,7 +16,7 @@ function authHandler(
   return { handler, guarded };
 }
 function request(path: string, body?: object) {
-  return new Request(`http://voidmix.test/api/auth/${path}`, {
+  return new Request(`http://raypx.test/api/auth/${path}`, {
     method: "POST",
     ...(body
       ? { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }

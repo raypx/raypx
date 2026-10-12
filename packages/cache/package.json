@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/cache",
+  "name": "@raypx/cache",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -16,11 +16,11 @@
     "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "@voidmix/shared": "workspace:*",
+    "@raypx/shared": "workspace:*",
     "ioredis": "catalog:backend"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*"
+    "@raypx/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "catalog:tooling"
   }
 }

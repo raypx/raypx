@@ -78,7 +78,7 @@ export async function readPublicSource(
         {
           signal,
           timeout: 15_000,
-          headers: { "User-Agent": "VoidmixResearch/1.0", Accept: "text/html,text/plain" },
+          headers: { "User-Agent": "RaypxResearch/1.0", Accept: "text/html,text/plain" },
           lookup: (_hostname, options, callback) =>
             callback(null, options.all ? [address] : address.address, address.family),
         },

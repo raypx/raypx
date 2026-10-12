@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 const api = vi.hoisted(() => ({
   projects: { list: vi.fn(), get: vi.fn(), create: vi.fn(), tasks: { list: vi.fn() } },
 }));
-vi.mock("@voidmix/client", () => ({ createApiClient: () => api }));
+vi.mock("@raypx/client", () => ({ createApiClient: () => api }));
 vi.mock("../env", () => ({ env: { VITE_API_URL: "https://api.example.test" } }));
 
 import { loadProject, loadProjects } from "./projects";

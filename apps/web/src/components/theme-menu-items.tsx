@@ -3,8 +3,8 @@ import { useTranslations } from "../i18n/client";
 import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-} from "@voidmix/ui/components/ui/dropdown-menu";
-import { useTheme, type UserTheme } from "@voidmix/ui/theme";
+} from "@raypx/ui/components/ui/dropdown-menu";
+import { useTheme, type UserTheme } from "@raypx/ui/theme";
 import { themeOptions } from "./theme-options";
 
 const themeIcons: Record<UserTheme, typeof Sun> = {

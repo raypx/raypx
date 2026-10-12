@@ -3,7 +3,7 @@ import {
   type AuthSettings,
   type MailRuntimeConfiguration,
   type MailSettingsFallback,
-} from "@voidmix/core";
+} from "@raypx/core";
 export interface StoredConfigurationValue {
   value: string;
   updatedAt: Date;

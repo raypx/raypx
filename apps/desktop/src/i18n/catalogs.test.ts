@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { assertMessageCatalogParity } from "@voidmix/i18n/testing";
+import { assertMessageCatalogParity } from "@raypx/i18n/testing";
 import { messages } from "./messages";
 
 describe("desktop i18n catalogs", () => {

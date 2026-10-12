@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import type { ObjectMetadata, ObjectStorage } from "@voidmix/core";
+import type { ObjectMetadata, ObjectStorage } from "@raypx/core";
 import { validateObjectInput, validateObjectKey } from "./index.js";
 
 export interface S3StorageOptions {

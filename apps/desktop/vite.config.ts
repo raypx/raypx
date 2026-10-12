@@ -4,7 +4,7 @@ import { electrobunViteAliases } from "./.hutch/devkit/api/config/electrobun-vit
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import evlog from "@voidmix/shared/logger/vite";
+import evlog from "@raypx/shared/logger/vite";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 const vitePlugins = [

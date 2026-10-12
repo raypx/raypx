@@ -39,11 +39,11 @@ server/
   regenerate them with the E2E workspace capture command.
 - Own public pages, authentication UI, protected cloud routes, React
   composition, SSR shell, and application-specific visual composition.
-- Own no shared primitive — those belong in `@voidmix/ui`.
+- Own no shared primitive — those belong in `@raypx/ui`.
 
 ## Constraints
 
-- `/projects` and `/projects/$projectId` are authenticated canonical project routes backed by `@voidmix/client`; they do not render preview or Workspace compatibility data.
+- `/projects` and `/projects/$projectId` are authenticated canonical project routes backed by `@raypx/client`; they do not render preview or Workspace compatibility data.
 
 - Project loaders own remote entities, AbortSignal and mutation
   invalidation. URL search owns filters and cursor; lists explicitly request 50.
@@ -77,12 +77,12 @@ server/
   (`src/lib/request-preferences.ts`) — both providers need the value before the
   first render or they paint a wrong one and correct it in an effect. Root
   composition supplies the server-resolved current catalog to
-  `AsyncI18nProvider` from `@voidmix/i18n`; `i18n/messages.ts` owns the
+  `AsyncI18nProvider` from `@raypx/i18n`; `i18n/messages.ts` owns the
   locale-specific dynamic import map and feature modules select namespaces with
   the facade hook.
 - `noUnusedLocals` and `noUnusedParameters` are enabled here, so an unused
   import fails `check`.
-- Better Auth and `@voidmix/client` use the configured independent API origin
+- Better Auth and `@raypx/client` use the configured independent API origin
   with credentials. Desktop remains an absolute-origin API consumer.
 - Web owns only the liveness `/health` route; never add a catch-all API handler
   that can swallow TanStack routes.
@@ -107,7 +107,7 @@ server/
   tokenless reset entry points follow those booleans, an existing reset token
   remains usable, and capability-request failures fail open so the server remains
   the final policy boundary.
-- Stylesheets: `src/styles.css` imports `@voidmix/ui/styles.css`, then the root
+- Stylesheets: `src/styles.css` imports `@raypx/ui/styles.css`, then the root
   route imports that single entry with `?url` and feeds it through `head().links`.
 - Keep page layouts and responsive states in component Tailwind classes. CSS
   entries retain shared tokens, global document rules and browser autofill fixes.
@@ -124,8 +124,8 @@ server/
   persistence remains owned by the root i18n provider.
   Language names use fixed native labels (`English`, `简体中文`); only the
   surrounding control copy is translated.
-- Web feature code uses `@voidmix/ui/toast` for Toast notifications. The bridge
-  loads `@voidmix/ui/components/ui/toast` on the first `toast.add()` call and
+- Web feature code uses `@raypx/ui/toast` for Toast notifications. The bridge
+  loads `@raypx/ui/components/ui/toast` on the first `toast.add()` call and
   the root's `AsyncToaster` mounts its UI only after that module is ready. Do not
   import the concrete UI Toast subpath directly from Web routes or features.
 - Import extensions are inconsistent per file (`../env.js` vs `./routeTree.gen`).

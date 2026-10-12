@@ -1,12 +1,9 @@
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
-import {
-  executionGatewayContract,
-  executionOperations,
-} from "@voidmix/contracts/execution-gateway";
-import type { CloudApplication } from "@voidmix/application";
-import type { ObjectMetadata, ObjectStorage } from "@voidmix/core";
+import { executionGatewayContract, executionOperations } from "@raypx/contracts/execution-gateway";
+import type { CloudApplication } from "@raypx/application";
+import type { ObjectMetadata, ObjectStorage } from "@raypx/core";
 
 export function createExecutionClient(url: string, credential: string) {
   const client: ContractRouterClient<typeof executionGatewayContract> = createORPCClient(

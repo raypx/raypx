@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MagnifyingGlass, Files, Cloud } from "@phosphor-icons/react";
-import { buttonVariants } from "@voidmix/ui/components/ui/button";
-import { Logo } from "@voidmix/ui/logo";
+import { buttonVariants } from "@raypx/ui/components/ui/button";
+import { Logo } from "@raypx/ui/logo";
 import { LanguageSwitcher } from "../../components/language-switcher";
 import { useTranslations } from "../../i18n/client";
 
@@ -15,7 +15,7 @@ export function PublicHome() {
   return (
     <div className="min-h-svh bg-background text-foreground">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-6">
-        <Link to="/" aria-label="Voidmix">
+        <Link to="/" aria-label="Raypx">
           <Logo />
         </Link>
         <nav className="flex items-center gap-4">

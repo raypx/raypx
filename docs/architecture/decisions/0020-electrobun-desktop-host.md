@@ -28,7 +28,7 @@ removes the Rust workspace and its separate build toolchain.
   use its explicit main/view/config aliases instead of importing the npm shim.
 - `apps/desktop/native` owns TypeScript window/tray lifecycle and typed RPC.
   The renderer may request runtime information and window actions only; cloud
-  account/project behavior still uses `@voidmix/client`. No model, local tool,
+  account/project behavior still uses `@raypx/client`. No model, local tool,
   device execution, credential storage or filesystem API is exposed by RPC.
 - macOS uses the native WebKit renderer. Windows bundles CEF and explicitly
   disables the framework's `disable-web-security` flag; the native WebView2

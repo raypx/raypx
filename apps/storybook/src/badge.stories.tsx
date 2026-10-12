@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Badge } from "@voidmix/ui/components/ui/badge";
+import { Badge } from "@raypx/ui/components/ui/badge";
 
 const meta = {
   title: "Primitives/Badge",

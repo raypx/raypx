@@ -1,15 +1,15 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import type { DatabaseConnection } from "@voidmix/db";
-import { authAccounts, authSessions, authVerifications, users } from "@voidmix/db/schema";
-import type { AuthSettings } from "@voidmix/core";
-import { resolveRequestLocaleHint } from "@voidmix/i18n/server";
-import type { Locale } from "@voidmix/i18n/types";
-import { logger } from "@voidmix/shared/logger";
-import type { Mailer } from "@voidmix/mail/types";
+import type { DatabaseConnection } from "@raypx/db";
+import { authAccounts, authSessions, authVerifications, users } from "@raypx/db/schema";
+import type { AuthSettings } from "@raypx/core";
+import { resolveRequestLocaleHint } from "@raypx/i18n/server";
+import type { Locale } from "@raypx/i18n/types";
+import { logger } from "@raypx/shared/logger";
+import type { Mailer } from "@raypx/mail/types";
 import { v7 as uuidv7 } from "uuid";
 import { betterAuth } from "better-auth";
 
-import type { ApiRuntimeEnvironment } from "../env.js";
+import { isDevelopmentAuthSecret, type ApiRuntimeEnvironment } from "../env.js";
 
 /**
  * Better Auth hands each mail callback the request that triggered it, so the
@@ -37,7 +37,7 @@ export function createApiAuth({
   getAuthSettings,
 }: CreateApiAuthOptions) {
   const production = environment.NODE_ENV === "production";
-  if (production && environment.AUTH_SECRET === "voidmix-development-secret-change-me") {
+  if (production && isDevelopmentAuthSecret(environment.AUTH_SECRET)) {
     throw new Error("AUTH_SECRET must be explicitly configured in production.");
   }
   if (production && environment.AUTH_URL.startsWith("http://localhost")) {

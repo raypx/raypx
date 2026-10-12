@@ -37,7 +37,7 @@ reduction gates:
 | Other text, configuration and assets                         |    3,956 |  3,947 |
 
 Run the following from the repository root with Python 3. Save it outside the
-checkout as `/tmp/voidmix-loc.py`, then run `python3 /tmp/voidmix-loc.py --both`.
+checkout as `/tmp/raypx-loc.py`, then run `python3 /tmp/raypx-loc.py --both`.
 It measures unique tracked and nonignored added files, skips deleted files and
 binary data, and reproduces both frozen baselines. Once committed, every file in
 the final numerator is tracked. Test classification is filename-based, matching
@@ -176,7 +176,7 @@ was reviewed for lost retained assertions and formatting-only reductions.
 | bun run test:integration                  | Passed: 18 tests; 17 workspace scripts completed.                                                                                                                            |
 | bun run test:component                    | Passed: 47 tests; 17 workspace scripts completed.                                                                                                                            |
 | bun run test:coverage                     | Passed: 599 tests; 17 workspace scripts completed.                                                                                                                           |
-| VOIDMIX_E2E_PORT=3410 bun run test:e2e    | Passed: 10 tests across Web, Admin and Desktop in 18.3 seconds.                                                                                                              |
+| RAYPX_E2E_PORT=3410 bun run test:e2e      | Passed: 10 tests across Web, Admin and Desktop in 18.3 seconds.                                                                                                              |
 | cargo fmt --check                         | Passed in apps/desktop/src-tauri.                                                                                                                                            |
 | cargo check                               | Passed in apps/desktop/src-tauri.                                                                                                                                            |
 | cargo clippy --all-targets -- -D warnings | Passed in apps/desktop/src-tauri.                                                                                                                                            |

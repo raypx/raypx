@@ -10,7 +10,7 @@ export type {
   ObjectStorage,
   SignedObjectRequest,
   SignedObjectUpload,
-} from "@voidmix/core";
+} from "@raypx/core";
 
 export class StorageUnavailableError extends Error {
   readonly code = "STORAGE_UNAVAILABLE";

@@ -15,7 +15,7 @@ describe("task cache trust", () => {
     );
     expect(invocation.command).toContain("--cache=local:rw");
     expect(invocation.env.TURBO_TOKEN).toBeUndefined();
-    expect(invocation.env.VMX_CACHE_PLATFORM).toBe("linux:x64:node24:glibc:bun1.4");
+    expect(invocation.env.RPX_CACHE_PLATFORM).toBe("linux:x64:node24:glibc:bun1.4");
   });
   it("strips inherited remote credentials from an untrusted CI run", () => {
     const invocation = taskInvocation(["test:unit"], { ...credentials, CI: "true" }, "linux:x64");
@@ -25,7 +25,7 @@ describe("task cache trust", () => {
   it("enables signed remote caching for an explicitly trusted CI run", () => {
     const invocation = taskInvocation(
       ["build"],
-      { ...credentials, CI: "true", VMX_REMOTE_CACHE_TRUSTED: "true" },
+      { ...credentials, CI: "true", RPX_REMOTE_CACHE_TRUSTED: "true" },
       "linux:arm64",
     );
     expect(invocation.command).toContain("--cache=local:rw,remote:rw");
@@ -33,8 +33,8 @@ describe("task cache trust", () => {
   });
   it("keeps orchestration policy before forwarded leaf arguments", () => {
     const invocation = taskInvocation(
-      ["e2e", "--filter", "@voidmix/e2e", "--", "--workers=2"],
-      { ...credentials, CI: "true", VMX_REMOTE_CACHE_TRUSTED: "true" },
+      ["e2e", "--filter", "@raypx/e2e", "--", "--workers=2"],
+      { ...credentials, CI: "true", RPX_REMOTE_CACHE_TRUSTED: "true" },
       "linux:x64",
     );
     const separator = invocation.command.indexOf("--");

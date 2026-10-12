@@ -9,9 +9,12 @@ export async function acquireCloudWorkerLease(
   const session = await client.reserve();
   let closing = false;
   let lost = false;
+  // Persist the lock namespace across the rename so old and new hosts still
+  // reject duplicate identities during a rolling deployment.
+  const lockKey = `voidmix:cloud-worker:identity:${ownerId}`;
   const lock = await session<
     { locked: boolean }[]
-  >`select pg_try_advisory_lock(hashtextextended(${`voidmix:cloud-worker:identity:${ownerId}`},0)) as locked`;
+  >`select pg_try_advisory_lock(hashtextextended(${lockKey},0)) as locked`;
   if (!lock[0]?.locked) {
     session.release();
     await client.end();
@@ -37,8 +40,7 @@ export async function acquireCloudWorkerLease(
       closing = true;
       clearInterval(heartbeat);
       try {
-        if (!lost)
-          await session`select pg_advisory_unlock(hashtextextended(${`voidmix:cloud-worker:identity:${ownerId}`},0))`;
+        if (!lost) await session`select pg_advisory_unlock(hashtextextended(${lockKey},0))`;
       } finally {
         session.release();
         await client.end();

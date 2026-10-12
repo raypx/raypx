@@ -1,4 +1,4 @@
-import { DomainError } from "@voidmix/shared";
+import { DomainError } from "@raypx/shared";
 
 export type AssetDomainErrorCode =
   | "BLOB_NOT_FOUND"

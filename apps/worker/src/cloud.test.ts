@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { createCloudApplication } from "@voidmix/application";
-import { InMemoryCloudRepository } from "@voidmix/db";
-import { createMemoryStorage } from "@voidmix/storage";
-import { defaultCloudLimits } from "@voidmix/core";
-import type { CloudPiAgent, CloudPiRunInput } from "@voidmix/ai";
+import { createCloudApplication } from "@raypx/application";
+import { InMemoryCloudRepository } from "@raypx/db";
+import { createMemoryStorage } from "@raypx/storage";
+import { defaultCloudLimits } from "@raypx/core";
+import type { CloudPiAgent, CloudPiRunInput } from "@raypx/ai";
 import { createCloudDispatcher, createCloudExecutor, runCloudExecutions } from "./cloud.js";
 
 async function fixture(mode: "computer" | "search" = "search", calls = 40) {
@@ -121,7 +121,7 @@ describe("durable cloud execution", () => {
     const dispatch = createCloudDispatcher({
       app: state.app,
       mailer: mailer(),
-      webUrl: "https://voidmix.example",
+      webUrl: "https://raypx.example",
     });
     const item = { id: "event", type: "cloud.run.queued", payload: { runId: state.run.id } };
     await dispatch(item);
@@ -338,7 +338,7 @@ describe("durable cloud execution", () => {
     const dispatch = createCloudDispatcher({
       app: state.app,
       mailer: transport,
-      webUrl: "https://voidmix.example",
+      webUrl: "https://raypx.example",
     });
     await dispatch({
       id: "notify",
@@ -431,7 +431,7 @@ describe("durable cloud execution", () => {
     await createCloudDispatcher({
       app: state.app,
       mailer: transport,
-      webUrl: "https://voidmix.example",
+      webUrl: "https://raypx.example",
     })({
       id: "search-mail",
       type: "cloud.notification.created",
@@ -441,7 +441,7 @@ describe("durable cloud execution", () => {
       expect.objectContaining({
         kind: "run_failed",
         taskId: state.run.conversationId,
-        taskUrl: `https://voidmix.example/chat/${state.run.conversationId}`,
+        taskUrl: `https://raypx.example/chat/${state.run.conversationId}`,
       }),
     );
   });

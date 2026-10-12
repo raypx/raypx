@@ -30,7 +30,7 @@ const channel = await Updater.localInfo.channel();
 let url = "views://main/index.html";
 if (
   channel === "dev" &&
-  !(process.env.VOIDMIX_NATIVE_SMOKE === "1" && process.env.VOIDMIX_NATIVE_SMOKE_PHASE === "shell")
+  !(process.env.RAYPX_NATIVE_SMOKE === "1" && process.env.RAYPX_NATIVE_SMOKE_PHASE === "shell")
 ) {
   try {
     await fetch("http://localhost:1420", { method: "HEAD", signal: AbortSignal.timeout(1000) });
@@ -39,8 +39,8 @@ if (
     // Native dev also works with the last built SPA when Vite is not running.
   }
 }
-const smokeViewUrl = process.env.VOIDMIX_NATIVE_SMOKE_VIEW_URL;
-if (process.env.VOIDMIX_NATIVE_SMOKE === "1" && smokeViewUrl) {
+const smokeViewUrl = process.env.RAYPX_NATIVE_SMOKE_VIEW_URL;
+if (process.env.RAYPX_NATIVE_SMOKE === "1" && smokeViewUrl) {
   const testView = new URL(smokeViewUrl);
   if (
     channel !== "dev" ||
@@ -55,7 +55,7 @@ if (process.env.VOIDMIX_NATIVE_SMOKE === "1" && smokeViewUrl) {
 // BrowserView. Replace the empty view before loading the app so cookies and
 // preferences use one persistent native partition on every launch.
 export const mainWindow = new BrowserWindow({
-  title: "VoidMix",
+  title: "Raypx",
   url: null,
   hidden: true,
   frame: { width: 1120, height: 720 },
@@ -91,7 +91,7 @@ export const view = new BrowserView({
   windowId: mainWindow.id,
   url,
   partition:
-    process.env.VOIDMIX_NATIVE_SMOKE === "1" ? "persist:voidmix-native-smoke" : "persist:voidmix",
+    process.env.RAYPX_NATIVE_SMOKE === "1" ? "persist:raypx-native-smoke" : "persist:raypx",
   frame: { x: 0, y: 0, width: 1120, height: 720 },
   navigationRules: JSON.stringify([
     "^*",
@@ -148,10 +148,10 @@ export const windowActions = wireWindow(
 );
 ElectrobunEvents.on("reopen", () => windowActions.show());
 tray.setMenu([
-  { type: "normal", label: "Show VoidMix", action: "show" },
+  { type: "normal", label: "Show Raypx", action: "show" },
   { type: "normal", label: "Hide window", action: "hide" },
   { type: "separator" },
-  { type: "normal", label: "Quit VoidMix", action: "quit" },
+  { type: "normal", label: "Quit Raypx", action: "quit" },
 ]);
 export function handleTrayAction(action: unknown) {
   if (action === "show") windowActions.show();

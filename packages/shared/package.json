@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/shared",
+  "name": "@raypx/shared",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -57,8 +57,8 @@
   },
   "devDependencies": {
     "@orpc/server": "catalog:",
+    "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*",
     "hono": "catalog:backend",
     "vite": "catalog:tooling"
   },

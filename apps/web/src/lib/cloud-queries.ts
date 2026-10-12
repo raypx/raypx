@@ -1,5 +1,5 @@
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
-import type { ApiClient } from "@voidmix/client";
+import type { ApiClient } from "@raypx/client";
 
 export interface QueryIdentity {
   actorId: string;

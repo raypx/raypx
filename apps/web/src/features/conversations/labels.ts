@@ -1,4 +1,4 @@
-import type { CloudRunLabels } from "@voidmix/agent-ui/runs";
+import type { CloudRunLabels } from "@raypx/agent-ui/runs";
 import type { WebTranslator } from "../../i18n/client";
 export function runLabels(t: WebTranslator<"cloud">): CloudRunLabels {
   return {

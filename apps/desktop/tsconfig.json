@@ -1,5 +1,5 @@
 {
-  "extends": "@voidmix/tsconfig/browser.json",
+  "extends": "@raypx/tsconfig/browser.json",
   "compilerOptions": {
     "resolveJsonModule": true,
     "paths": {

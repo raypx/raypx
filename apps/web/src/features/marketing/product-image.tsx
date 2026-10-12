@@ -1,4 +1,4 @@
-import { useTheme } from "@voidmix/ui/theme";
+import { useTheme } from "@raypx/ui/theme";
 import { useLocale, useTranslations } from "../../i18n/client";
 import images from "./product-images.json";
 

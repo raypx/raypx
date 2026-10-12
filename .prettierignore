@@ -14,5 +14,5 @@ packages/db/drizzle-cloud/
 
 # Vendored agent skills. These are upstream bytes reproduced verbatim so
 # `skills update` can replace them and the lockfile hash stays meaningful.
-# Never hand-edit or reformat them; corrections belong in skills/voidmix-infra/.
+# Never hand-edit or reformat them; corrections belong in skills/raypx-infra/.
 .agents/

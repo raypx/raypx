@@ -1,4 +1,4 @@
-import type { CursorQuery, CursorPage } from "@voidmix/core";
+import type { CursorQuery, CursorPage } from "@raypx/core";
 import {
   type ProjectAccessV2,
   type ProjectCapabilityV2,
@@ -23,7 +23,7 @@ import {
   type ReviewV2Repository,
   type ActivityV2,
   type ActivityV2Repository,
-} from "@voidmix/core";
+} from "@raypx/core";
 
 type Command<Input, Output> = (input: Input & { actorId: string }) => Promise<Output>;
 type ProjectCommand<Input, Output> = Command<Input & { projectId: string }, Output>;

@@ -1,7 +1,7 @@
-import { TooltipProvider } from "@voidmix/ui/components/ui/tooltip";
+import { TooltipProvider } from "@raypx/ui/components/ui/tooltip";
 import "../src/preview.css";
 
-import { ThemeProvider } from "@voidmix/ui/theme";
+import { ThemeProvider } from "@raypx/ui/theme";
 import type { Decorator, Preview } from "@storybook/react-vite";
 
 const withThemeProvider: Decorator = (Story, context) => {

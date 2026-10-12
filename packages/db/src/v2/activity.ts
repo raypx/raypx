@@ -2,7 +2,7 @@ import { desc, eq, and } from "drizzle-orm";
 import type { Database } from "./types.js";
 import { cursorPage, timestampKey } from "../pagination.js";
 import { resourceVisibility } from "./visibility.js";
-import type { ActivityV2, ActivityV2Repository, VisibleResourceQuery } from "@voidmix/core";
+import type { ActivityV2, ActivityV2Repository, VisibleResourceQuery } from "@raypx/core";
 import { v2Activities } from "../schema.js";
 export class PostgresActivityV2Repository implements ActivityV2Repository {
   constructor(private readonly db: Database) {}

@@ -9,13 +9,13 @@ import type {
   ProjectV2,
   ProjectMemberV2,
   OrganizationMemberV2,
-} from "@voidmix/core";
+} from "@raypx/core";
 import {
   CloudDomainError,
   sameResourceScope,
   isCloudTerminal,
   sameCloudTaskRound,
-} from "@voidmix/core";
+} from "@raypx/core";
 
 type State = {
   entities: { [K in CloudEntityKind]: Map<string, CloudEntities[K]> };

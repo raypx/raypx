@@ -106,7 +106,7 @@ export class RedisCache implements Cache {
 
 export function createRedisSecondaryStorage(
   client: RedisClientLike,
-  prefix = "voidmix:better-auth",
+  prefix = "raypx:better-auth",
 ): SecondaryStorage {
   // Better Auth stores already-serialized strings, so this adapter must bypass
   // the generic JSON facade while sharing the same Redis connection.
@@ -168,7 +168,7 @@ export async function createRedisCache(options: RedisCacheOptions): Promise<Redi
     throw error;
   }
 
-  const prefix = options.prefix?.trim() || "voidmix";
+  const prefix = options.prefix?.trim() || "raypx";
   return {
     cache: new RedisCache(client, `${prefix}:cache`),
     secondaryStorage: createRedisSecondaryStorage(client, `${prefix}:better-auth`),

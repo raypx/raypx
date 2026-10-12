@@ -1,4 +1,4 @@
-# @voidmix/mail
+# @raypx/mail
 
 ## Purpose
 

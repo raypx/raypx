@@ -1,7 +1,7 @@
-import { createApiClient, type ApiClient, type CreateApiClientOptions } from "@voidmix/client";
+import { createApiClient, type ApiClient, type CreateApiClientOptions } from "@raypx/client";
 import { env } from "../env";
 
-export type { ApiClient } from "@voidmix/client";
+export type { ApiClient } from "@raypx/client";
 
 /** Browser/SSR transport configured for the standalone API origin. */
 export function createWebApiClient(

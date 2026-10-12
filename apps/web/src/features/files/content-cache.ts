@@ -1,4 +1,4 @@
-import type { ArtifactContent } from "@voidmix/agent-ui/artifacts";
+import type { ArtifactContent } from "@raypx/agent-ui/artifacts";
 
 export interface LoadedFileContent {
   content: ArtifactContent;

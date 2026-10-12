@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-const storageKey = "voidmix.desktop.preferences";
+const storageKey = "raypx.desktop.preferences";
 
 beforeEach(() => {
   vi.resetModules();
@@ -49,7 +49,48 @@ describe("desktop theme preferences", () => {
   });
 
   it("preserves a theme saved by the previous desktop implementation", async () => {
+    localStorage.setItem("raypx.desktop.theme", "light");
+    const { useDesktopPreferences: store } = await import("./preferences");
+    await store.persist.rehydrate();
+    expect(store.getState().theme).toBe("light");
+  });
+
+  it.each(["preferences", "theme"])("migrates the previous brand's %s key", async (format) => {
+    localStorage.setItem(
+      `voidmix.desktop.${format}`,
+      format === "preferences"
+        ? JSON.stringify({ state: { theme: "light", syncPaused: true }, version: 1 })
+        : "light",
+    );
+    const { useDesktopPreferences: store } = await import("./preferences");
+    await store.persist.rehydrate();
+    expect(store.getState().theme).toBe("light");
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({
+      state: { theme: "light" },
+      version: 1,
+    });
+  });
+
+  it("preserves current preferences when the previous brand's settings are different", async () => {
+    localStorage.setItem(storageKey, JSON.stringify({ state: { theme: "dark" }, version: 1 }));
+    localStorage.setItem(
+      "voidmix.desktop.preferences",
+      JSON.stringify({ state: { theme: "light" }, version: 1 }),
+    );
+    const { useDesktopPreferences: store } = await import("./preferences");
+    await store.persist.rehydrate();
+    expect(store.getState().theme).toBe("dark");
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({
+      state: { theme: "dark" },
+      version: 1,
+    });
+  });
+
+  it("restores the previous theme when migration writes are blocked", async () => {
     localStorage.setItem("voidmix.desktop.theme", "light");
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("Storage writes denied");
+    });
     const { useDesktopPreferences: store } = await import("./preferences");
     await store.persist.rehydrate();
     expect(store.getState().theme).toBe("light");

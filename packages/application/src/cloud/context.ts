@@ -22,7 +22,7 @@ import {
   type CloudNotification,
   type CloudArtifactRevision,
   type CloudTaskRound,
-} from "@voidmix/core";
+} from "@raypx/core";
 
 export type Actor = { actorId: string };
 export type Intent = { idempotencyKey: string };

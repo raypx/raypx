@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
-import { createCloudApplication } from "@voidmix/application";
+import { createCloudApplication } from "@raypx/application";
 import { InMemoryCloudRepository } from "./cloud-memory.js";
 import { exerciseSharedTaskBudget } from "../tests/cloud-budget.js";
-import type { CloudApplicationOptions } from "@voidmix/application";
+import type { CloudApplicationOptions } from "@raypx/application";
 import { exerciseRoundAndLease, exercisePublicationCAS } from "../tests/cloud-rounds.js";
 import { exerciseMessageProjection, exerciseActiveRunRace } from "../tests/cloud-projection.js";
 import {

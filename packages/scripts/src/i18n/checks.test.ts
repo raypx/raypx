@@ -72,7 +72,7 @@ describe("i18n source checks", () => {
     ],
     [
       "technical fragments",
-      "<div><small>v{version}</small><kbd>K</kbd><span>· ≤512 KB</span><span>Voidmix / Chat</span><span>{workspace} / Chat</span></div>",
+      "<div><small>v{version}</small><kbd>K</kbd><span>· ≤512 KB</span><span>Raypx / Chat</span><span>{workspace} / Chat</span></div>",
     ],
     ["structural email examples", '<input placeholder="mail@example.com" type="email" />'],
     [
@@ -121,7 +121,7 @@ describe("i18n source checks", () => {
     ],
     [
       "conditional metadata",
-      'const head = [{ title: locale === "zh" ? "Voidmix | 创意工作" : "Voidmix | Creative work" }, { name: "description", content: locale === "zh" ? "中文描述" : "English description" }];',
+      'const head = [{ title: locale === "zh" ? "Raypx | 创意工作" : "Raypx | Creative work" }, { name: "description", content: locale === "zh" ? "中文描述" : "English description" }];',
       [property("title"), property("title"), property("content"), property("content")],
     ],
   ] as const)("reports all literals in %s", (_name, source, messages) => {
@@ -154,9 +154,9 @@ describe("i18n source checks", () => {
   it.each([
     [
       "client facade",
-      'import { useTranslations } from "@voidmix/i18n/client";',
+      'import { useTranslations } from "@raypx/i18n/client";',
       "apps/web/src/page.tsx",
-      "imports useTranslations directly from @voidmix/i18n/client",
+      "imports useTranslations directly from @raypx/i18n/client",
     ],
     [
       "core implementation",
@@ -178,7 +178,7 @@ describe("i18n source checks", () => {
   it("allows the approved translation facade", () => {
     expect(
       inspect(
-        'import { useTranslations } from "@voidmix/i18n/client";',
+        'import { useTranslations } from "@raypx/i18n/client";',
         "apps/web/src/i18n/client.ts",
       ),
     ).toEqual([]);

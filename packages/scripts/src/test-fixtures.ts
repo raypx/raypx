@@ -6,7 +6,7 @@ import { vi, onTestFinished, expect } from "vite-plus/test";
 
 /** Isolated files for CLI tests, removed even when an assertion fails. */
 export async function temporaryRepository(files: Record<string, string> = {}): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "voidmix-test-"));
+  const root = await mkdtemp(join(tmpdir(), "raypx-test-"));
   onTestFinished(() => rm(root, { recursive: true, force: true }));
   await Promise.all(
     Object.entries(files).map(async ([path, content]) => {
@@ -18,7 +18,7 @@ export async function temporaryRepository(files: Record<string, string> = {}): P
   return root;
 }
 
-export const databaseUrl = "postgres://voidmix:voidmix@localhost:5432/voidmix";
+export const databaseUrl = "postgres://raypx:raypx@localhost:5432/raypx";
 
 export function databaseEnvironment(overrides: Record<string, string> = {}) {
   return getDatabaseScriptsEnv({

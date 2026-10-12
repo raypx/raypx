@@ -1,8 +1,8 @@
 /** @vitest-environment jsdom */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ApiClient } from "@voidmix/client";
-import type { CloudAssetVersionDto } from "@voidmix/contracts";
+import type { ApiClient } from "@raypx/client";
+import type { CloudAssetVersionDto } from "@raypx/contracts";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { createFileContentCache } from "./content-cache";
 
@@ -24,7 +24,7 @@ vi.mock("../../lib/use-cloud-queries", () => ({
     },
   }),
 }));
-vi.mock("@voidmix/agent-ui/artifacts", () => ({
+vi.mock("@raypx/agent-ui/artifacts", () => ({
   ArtifactList: ({
     artifacts,
     onSelect,

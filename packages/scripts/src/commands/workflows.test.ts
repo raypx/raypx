@@ -93,12 +93,12 @@ describe("repository workflows", () => {
     expect(deps.verifyI18n).toHaveBeenCalledOnce();
 
     expect(deps.runCommand.mock.calls.map(([command]) => command)).toEqual([
-      ["vmx", "tasks", "format:leaf"],
-      ["vmx", "tasks", "lint:leaf"],
-      ["vmx", "tasks", "check"],
-      ["vmx", "tasks", "test:unit", "test:component", "--filter", "!@voidmix/e2e"],
-      ["vmx", "tasks", "test:integration", "--filter", "!@voidmix/e2e"],
-      ["vmx", "tasks", "build"],
+      ["rpx", "tasks", "format:leaf"],
+      ["rpx", "tasks", "lint:leaf"],
+      ["rpx", "tasks", "check"],
+      ["rpx", "tasks", "test:unit", "test:component", "--filter", "!@raypx/e2e"],
+      ["rpx", "tasks", "test:integration", "--filter", "!@raypx/e2e"],
+      ["rpx", "tasks", "build"],
       ["node", "apps/worker/dist/index.mjs", "--check"],
     ]);
     expect(deps.runCommand.mock.calls.map(([, options]) => options.env)).toEqual(
@@ -118,7 +118,7 @@ describe("repository workflows", () => {
 
     await expect(runVerify(deps)).rejects.toThrow("Format issues found");
     expect(deps.runCommand.mock.calls.map(([command]) => command)).toEqual([
-      ["vmx", "tasks", "format:leaf"],
+      ["rpx", "tasks", "format:leaf"],
     ]);
     expect(deps.verifyRuntimes).not.toHaveBeenCalled();
   });

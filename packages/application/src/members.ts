@@ -1,4 +1,4 @@
-import { ProjectV2DomainError } from "@voidmix/core";
+import { ProjectV2DomainError } from "@raypx/core";
 import type { ProjectApplication } from "./types.js";
 import type { ProjectContext } from "./context.js";
 export function membersCommands({ options, now, requireProject }: ProjectContext) {

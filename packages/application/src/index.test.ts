@@ -4,8 +4,8 @@ import {
   type ProjectOptions,
   type ProjectV2Repository,
 } from "./test-fixtures.js";
-import type { ProjectMemberV2, ProjectV2 } from "@voidmix/core";
-import type { TaskV2 } from "@voidmix/core";
+import type { ProjectMemberV2, ProjectV2 } from "@raypx/core";
+import type { TaskV2 } from "@raypx/core";
 
 const project = (overrides: Partial<ProjectV2> = {}): ProjectV2 => ({
   id: "project-1",

@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
-import { Field, FieldLabel } from "@voidmix/ui/components/ui/field";
-import { Input } from "@voidmix/ui/components/ui/input";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Input } from "@raypx/ui/components/ui/input";
 
 export function AuthInput({
   label,

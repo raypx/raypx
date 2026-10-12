@@ -16,10 +16,10 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { useState } from "react";
-import { IconButton } from "@voidmix/ui/icon-button";
-import { Avatar } from "@voidmix/ui/avatar";
-import { Logo } from "@voidmix/ui/logo";
-import { Modal } from "@voidmix/ui/modal";
+import { IconButton } from "@raypx/ui/icon-button";
+import { Avatar } from "@raypx/ui/avatar";
+import { Logo } from "@raypx/ui/logo";
+import { Modal } from "@raypx/ui/modal";
 import { signOut, useSession } from "../../lib/auth-client";
 import { useTranslations } from "../../i18n/client";
 import { AccountMenu } from "./account-menu";

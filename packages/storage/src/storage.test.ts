@@ -14,9 +14,44 @@ import {
 const bytes = new TextEncoder().encode("可信文件内容");
 const checksum = createHash("sha256").update(bytes).digest("hex");
 describe("private object transport", () => {
+  it("reads old directory objects, writes new objects to the current directory and removes both copies", async () => {
+    const root = await mkdtemp(join(tmpdir(), "raypx-storage-migration-"));
+    try {
+      const directory = join(root, "current");
+      const legacyDirectory = join(root, "previous");
+      const previous = createFilesystemStorage({ directory: legacyDirectory });
+      const current = createFilesystemStorage({ directory });
+      const storage = createFilesystemStorage({ directory, legacyDirectory });
+      const object = {
+        key: "cloud/old/version",
+        body: bytes,
+        contentType: "text/plain",
+        checksumSha256: checksum,
+      };
+      await previous.put(object);
+      expect(await storage.head(object.key)).toMatchObject({ checksumSha256: checksum });
+      const read = await storage.read(object.key);
+      const chunks: Uint8Array[] = [];
+      for await (const chunk of read!.body) chunks.push(chunk);
+      expect(Buffer.concat(chunks).toString()).toBe("可信文件内容");
+      await expect(storage.put({ ...object, contentType: "text/html" })).rejects.toThrow(
+        "immutable",
+      );
+      await storage.put({ ...object, key: "cloud/new/version" });
+      expect(await current.head("cloud/new/version")).not.toBeNull();
+      expect(await previous.head("cloud/new/version")).toBeNull();
+      await current.put({ ...object, contentType: "text/html" });
+      expect(await storage.head(object.key)).toMatchObject({ contentType: "text/html" });
+      await storage.remove(object.key);
+      expect(await current.head(object.key)).toBeNull();
+      expect(await previous.head(object.key)).toBeNull();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
   it("signs S3 POST policies with exact byte size, media type and verified SHA256", async () => {
     const storage = createS3Storage({
-      bucket: "private-voidmix",
+      bucket: "private-raypx",
       region: "us-east-1",
       credentials: { accessKeyId: "test-key", secretAccessKey: "test-secret" },
     });
@@ -75,7 +110,7 @@ describe("private object transport", () => {
     expect(await storage.head("cloud/file/version")).toBeNull();
   });
   it("signs exact upload metadata, checks expiry, and separates upload/download signatures", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "voidmix-storage-test-"));
+    const directory = await mkdtemp(join(tmpdir(), "raypx-storage-test-"));
     try {
       const storage = createFilesystemStorage({
         directory,

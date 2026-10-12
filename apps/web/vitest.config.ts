@@ -4,6 +4,6 @@ export default workspaceTests({
   include: ["{src,server,i18n,tests}/**/*.{test,spec}.{ts,tsx}"],
   env: {
     AUTH_URL: "http://localhost:3000",
-    DATABASE_URL: "postgres://voidmix:test@example.invalid:5432/voidmix",
+    DATABASE_URL: "postgres://raypx:test@example.invalid:5432/raypx",
   },
 });

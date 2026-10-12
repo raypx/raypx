@@ -1,4 +1,4 @@
-# ADR-0009: Pi SDK as the VoidMix Agent runtime
+# ADR-0009: Pi SDK as the Raypx Agent runtime
 
 ## Status
 
@@ -6,22 +6,22 @@ Superseded by [ADR-0019](0019-retire-legacy-desktop-execution.md).
 
 ## Context
 
-VoidMix needs one Agent execution contract across a local Desktop process and
+Raypx needs one Agent execution contract across a local Desktop process and
 cloud-visible Project Studio sessions. The product must expose role-aware
 streaming events, tool calls, cancellation, and project-local context without
 putting model or file-system details in Web UI or API handlers.
 
 ## Decision
 
-Embed `@earendil-works/pi-coding-agent` behind `@voidmix/ai`. Pi owns model
+Embed `@earendil-works/pi-coding-agent` behind `@raypx/ai`. Pi owns model
 sessions, prompt execution, built-in/custom tools, streaming lifecycle, and
-abort/steer behavior. VoidMix owns authorization, project/workflow
+abort/steer behavior. Raypx owns authorization, project/workflow
 orchestration, persistence, event projections, device routing, and UI.
 
 Every Pi session receives a unique provider ID and an explicitly authorized
 project working directory. Tools default to none; Desktop supplies an explicit
 allowlist after the user grants project access. Pi events are normalized to the
-VoidMix event vocabulary before persistence or transport. Missing credentials,
+Raypx event vocabulary before persistence or transport. Missing credentials,
 models, or local runtime produce an unavailable/failed state and never a fake
 success.
 

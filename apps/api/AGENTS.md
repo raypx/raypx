@@ -24,7 +24,7 @@ server/
 - Own port 3002, the standalone Node artifact, Docker/Railway compatibility,
   and host lifecycle wiring.
 - Own the HTTP host lifecycle and API composition. Domain commands stay in
-  `@voidmix/application` and `@voidmix/core`; persistence stays in `@voidmix/db`.
+  `@raypx/application` and `@raypx/core`; persistence stays in `@raypx/db`.
 
 ## Constraints
 

@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, afterAll, describe, it, expect } from "vite-plus/test";
 import { sql } from "drizzle-orm";
-import { createCloudApplication } from "@voidmix/application";
+import { createCloudApplication } from "@raypx/application";
 import { PostgresCloudRepository } from "../src/cloud-postgres.js";
 import { acquireCloudWorkerLease } from "../src/cloud-worker-lease.js";
 import { exerciseSharedTaskBudget } from "./cloud-budget.js";

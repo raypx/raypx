@@ -14,8 +14,8 @@ export function normalizeAuthRedirect(value: unknown): string | undefined {
   }
 
   try {
-    const parsed = new URL(value, "https://voidmix.invalid");
-    if (parsed.origin !== "https://voidmix.invalid") return undefined;
+    const parsed = new URL(value, "https://raypx.invalid");
+    if (parsed.origin !== "https://raypx.invalid") return undefined;
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
     return undefined;

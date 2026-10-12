@@ -1,4 +1,4 @@
-import type { CloudConversationSnapshotDto, CloudRunSnapshotDto } from "@voidmix/contracts";
+import type { CloudConversationSnapshotDto, CloudRunSnapshotDto } from "@raypx/contracts";
 import type { CloudTimelineItem, ConversationMessage } from "./cloud";
 
 /** Cache the durable conversation index; token updates replace only their assistant row. */

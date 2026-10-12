@@ -4,7 +4,7 @@ import { databaseUrl } from "./database.js";
 
 type BrowserSuite = "all" | "web" | "desktop";
 const repositoryRoot = resolve(import.meta.dirname, "..");
-const basePort = Number(process.env.VOIDMIX_E2E_PORT ?? 3000);
+const basePort = Number(process.env.RAYPX_E2E_PORT ?? 3000);
 const origin = (offset: number) => `http://127.0.0.1:${basePort + offset}`;
 const offsets = { web: 0, desktop: 1, api: 2 } as const;
 
@@ -14,7 +14,7 @@ function server(app: keyof typeof offsets) {
     command: `bun run --cwd apps/${app} dev -- --host 127.0.0.1 --port ${basePort + offset}`,
     cwd: repositoryRoot,
     env: {
-      VOIDMIX_REPOSITORY_ENV: repositoryRoot,
+      RAYPX_REPOSITORY_ENV: repositoryRoot,
       ALLOWED_ORIGINS: `${origin(0)},${origin(1)}`,
       AUTH_SECRET: "e2e-only-secret-that-is-long-enough-for-better-auth",
       AUTH_URL: app === "api" ? origin(2) : origin(0),

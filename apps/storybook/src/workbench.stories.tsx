@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@voidmix/ui/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@voidmix/ui/components/ui/alert";
-import { LoadingState } from "@voidmix/ui/loading-state";
-import { PageHeader } from "@voidmix/ui/page-header";
-import { StatusBadge } from "@voidmix/ui/status-badge";
+import { Button } from "@raypx/ui/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@raypx/ui/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@raypx/ui/components/ui/alert";
+import { LoadingState } from "@raypx/ui/loading-state";
+import { PageHeader } from "@raypx/ui/page-header";
+import { StatusBadge } from "@raypx/ui/status-badge";
 
 const meta = {
   title: "Patterns/Neutral workbench",

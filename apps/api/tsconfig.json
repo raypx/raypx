@@ -1,5 +1,5 @@
 {
-  "extends": "@voidmix/tsconfig/node.json",
+  "extends": "@raypx/tsconfig/node.json",
   "include": ["server/**/*.ts", "nitro.config.ts", "vite.config.ts", "vitest.config.ts"],
   "compilerOptions": {
     "jsx": "react-jsx"

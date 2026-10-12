@@ -15,7 +15,7 @@ That produces three directories and, at six skills, eleven symlinks:
 
 ```text
 .agents/skills/<name>/   vendored upstream bytes, one real copy
-skills/<name>            symlink, except voidmix-infra which is the real copy
+skills/<name>            symlink, except raypx-infra which is the real copy
 .claude/skills/<name>    symlink
 ```
 

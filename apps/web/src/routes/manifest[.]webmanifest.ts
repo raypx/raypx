@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { normalizeLocale } from "@voidmix/i18n";
-import { resolveRequestLocale } from "@voidmix/i18n/server";
-import type { Locale, MessageCatalog } from "@voidmix/i18n/types";
+import { normalizeLocale } from "@raypx/i18n";
+import { resolveRequestLocale } from "@raypx/i18n/server";
+import type { Locale, MessageCatalog } from "@raypx/i18n/types";
 
 import { loadWebMessages } from "../../i18n/messages";
 import type { CommonMessageKey } from "../i18n/route-meta";
@@ -46,8 +46,8 @@ export const Route = createFileRoute("/manifest.webmanifest")({
         const messages = await loadWebMessages(locale);
         const localized = {
           ...manifest,
-          name: commonMessage(messages, "manifestName") ?? "Voidmix",
-          short_name: commonMessage(messages, "manifestShortName") ?? "Voidmix",
+          name: commonMessage(messages, "manifestName") ?? "Raypx",
+          short_name: commonMessage(messages, "manifestShortName") ?? "Raypx",
           description: commonMessage(messages, "manifestDescription") ?? "",
           lang: locale,
         };

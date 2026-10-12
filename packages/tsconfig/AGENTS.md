@@ -1,4 +1,4 @@
-# @voidmix/tsconfig
+# @raypx/tsconfig
 
 ## Purpose
 

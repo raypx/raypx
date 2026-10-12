@@ -1,4 +1,4 @@
-# @voidmix/shared
+# @raypx/shared
 
 ## Purpose
 
@@ -54,7 +54,7 @@ This is the deepest common workspace in the repository.
 ## Verification
 
 ```bash
-bun run vmx tasks build --filter @voidmix/shared
+bun run rpx tasks build --filter @raypx/shared
 bun run --cwd packages/shared check
 bun run --cwd packages/shared test
 ```

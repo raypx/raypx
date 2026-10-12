@@ -8,7 +8,7 @@ import {
 const fallback: MailSettingsFallback = {
   enabled: { value: true, source: "default" },
   from: { value: null, source: "missing" },
-  fromName: { value: "Voidmix", source: "default" },
+  fromName: { value: "Raypx", source: "default" },
   templatesBaseUrl: { value: null, source: "missing" },
   resendApiKey: { value: null, source: "missing" },
 };
@@ -22,7 +22,7 @@ describe("public auth capabilities", () => {
           settings: {
             enabled: true,
             from: "mail@example.com",
-            fromName: "Voidmix",
+            fromName: "Raypx",
             templatesBaseUrl: null,
             configurationState: "incomplete",
             missing: ["RESEND_API_KEY", "MAIL_FROM"],

@@ -113,14 +113,14 @@ Actual server secrets must remain runtime-only or use build secret mounts when
 needed during a build.
 
 Set `VITE_API_URL` on the Railway **Web** service before building (for the hosted
-Voidmix deployment, `https://api.voidmix.com`). The Dockerfile declares this
+Raypx deployment, `https://api.raypx.com`). The Dockerfile declares this
 public build argument so Railway makes it available to Vite. Missing or empty
 values stop the image build instead of shipping a browser that requests
 `/rpc/*` and `/api/auth/*` from the Web host and receives 404 responses. For a
 manual Docker build, pass the same argument:
 
 ```bash
-docker build -f apps/web/Dockerfile --build-arg VITE_API_URL=https://api.example.com -t voidmix-web .
+docker build -f apps/web/Dockerfile --build-arg VITE_API_URL=https://api.example.com -t raypx-web .
 ```
 
 Changing a runtime variable on an existing Web image is insufficient: rebuild
@@ -129,17 +129,17 @@ include the exact Web origin (scheme and hostname, no trailing slash), and
 `AUTH_URL` must point to the public API origin. Keep any other permitted origins
 when updating the comma-separated allowlist. For sibling production domains,
 set API's `AUTH_DOMAIN` to their common cookie domain (for example,
-`voidmix.com`), so Web SSR receives the same session cookie as the API.
+`raypx.com`), so Web SSR receives the same session cookie as the API.
 
 To diagnose a protected-page failure, inspect the failing request URL first.
-`https://voidmix.com/rpc/account/get` returning plain 404 means the Web bundle
-has no API origin. The same read on `https://api.voidmix.com` should return a
+`https://raypx.com/rpc/account/get` returning plain 404 means the Web bundle
+has no API origin. The same read on `https://api.raypx.com` should return a
 structured `UNAUTHORIZED` response without a session; it must also include
-`Access-Control-Allow-Origin: https://voidmix.com` and
+`Access-Control-Allow-Origin: https://raypx.com` and
 `Access-Control-Allow-Credentials: true` for requests from Web. A healthy
 `/health` alone does not verify RPC routing or browser CORS.
 
-Production startup does not use the private `vmx` CLI. Railway and other
+Production startup does not use the private `rpx` CLI. Railway and other
 platforms inject values through `process.env`; a `/app/.env` file is optional,
 not required. The container entrypoints load that file only when it exists, so
 missing optional files do not produce startup warnings. `.dockerignore`

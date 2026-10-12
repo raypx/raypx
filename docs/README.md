@@ -1,4 +1,4 @@
-# Voidmix Documentation
+# Raypx Documentation
 
 This directory is the source of truth for architecture, development workflows,
 deployment boundaries, and coding-agent guidance.
@@ -22,7 +22,7 @@ deployment boundaries, and coding-agent guidance.
   auth, i18n, mail, shared foundation, DB, UI, scripts, and TypeScript presets.
 - [Product design](./architecture/design.md) — brand posture, cross-surface
   intensity, visual vocabulary, and accessibility rules.
-- [VoidMix delivery goal](./architecture/voidmix-delivery-goal.md) — current cloud
+- [Raypx delivery goal](./architecture/raypx-delivery-goal.md) — current cloud
   product and lightweight Desktop acceptance target.
 - [Historical Project Studio migration](./architecture/project-studio.md) — the
   earlier project-first migration, superseded by the cloud product decisions.
@@ -36,7 +36,7 @@ deployment boundaries, and coding-agent guidance.
 - [Decision records](./architecture/decisions/README.md) — decisions that
   constrain future work, and the conditions for revisiting them.
 - [Internationalization decisions](./architecture/decisions/0004-use-intl-static-catalogs.md)
-  — the `@voidmix/i18n` facade, `en`/`zh` catalogs, Web loading, and recipient
+  — the `@raypx/i18n` facade, `en`/`zh` catalogs, Web loading, and recipient
   locale behavior.
 
 ## Development

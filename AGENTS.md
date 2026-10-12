@@ -1,4 +1,4 @@
-# Voidmix Repository Instructions
+# Raypx Repository Instructions
 
 ## Scope
 
@@ -36,25 +36,25 @@ or `packages/` without a `package.json`.
 
 ## Architecture rules
 
-- Frontend applications access backend behavior through `@voidmix/client` and
-  `@voidmix/contracts`; they never import `@voidmix/db`.
-- `@voidmix/core` stays independent of React, Hono, Nitro, and Drizzle.
-- `@voidmix/db` hides Drizzle implementation details behind repository
-  interfaces owned by `@voidmix/core`.
+- Frontend applications access backend behavior through `@raypx/client` and
+  `@raypx/contracts`; they never import `@raypx/db`.
+- `@raypx/core` stays independent of React, Hono, Nitro, and Drizzle.
+- `@raypx/db` hides Drizzle implementation details behind repository
+  interfaces owned by `@raypx/core`.
 - `apps/api` performs final authentication and authorization checks; Web,
   Desktop, and Worker consume its contracts or shared application layer.
 - Admin and its management RPCs are retired. Keep authentication, current account
   status checks and project capability enforcement in their owning layers.
-- Runtime applications never import `@voidmix/scripts`.
+- Runtime applications never import `@raypx/scripts`.
 - `apps/worker` is the durable delivery and scheduling host. It may depend on
-  `@voidmix/application` and adapters, but never on Web/Desktop composition.
+  `@raypx/application` and adapters, but never on Web/Desktop composition.
 - Desktop is a cloud project client; native code owns only its window and tray.
 
 ## Toolchain
 
 - Use Bun `1.4.0` for installation, the lockfile, and repository scripts.
 - Application package names match their `apps/` directory without a scope;
-  shared `packages/` and E2E keep `@voidmix/`. See ADR-0022.
+  shared `packages/` and E2E keep `@raypx/`. See ADR-0022.
 - Use the root Bun catalogs for third-party dependency versions and
   `workspace:*` for internal packages.
 - Turbo is the only workspace task runner and task cache; Vite+ owns leaf tools.
@@ -73,7 +73,7 @@ or `packages/` without a `package.json`.
 ## Code and generated files
 
 - The repository is ESM-first and TypeScript-strict. Preserve the compiler
-  options provided by `@voidmix/tsconfig`.
+  options provided by `@raypx/tsconfig`.
 - `exactOptionalPropertyTypes` is on, so `{ key: undefined }` is illegal. Use
   conditional spread: `{ limit, ...(query ? { query } : {}) }`.
 - `verbatimModuleSyntax` is on, so type-only imports need `import type`.
@@ -107,8 +107,8 @@ conventions, the two file layouts, and the accessibility requirements.
 
 ## Logging, security, and data
 
-- Use `@voidmix/shared/logger` instead of application-local logger configuration.
-- Import environment APIs from `@voidmix/shared/env` and its explicit subpaths.
+- Use `@raypx/shared/logger` instead of application-local logger configuration.
+- Import environment APIs from `@raypx/shared/env` and its explicit subpaths.
 - Keep operational logs separate from durable domain facts.
 - Never log credentials, cookies, authorization headers, passwords, secrets,
   tokens, or API keys.
@@ -145,7 +145,7 @@ browser, clean-tree and operating-system checks to `verify`.
 
 Every application and test-bearing package owns an independent
 `vitest.config.ts`. Preserve that boundary, never rely on a globally installed
-`vp`, and leave `@voidmix/e2e` outside `bun run test`. Most `test` scripts carry
+`vp`, and leave `@raypx/e2e` outside `bun run test`. Most `test` scripts carry
 `--passWithNoTests`, so confirm a new test actually ran.
 
 The runner is `vp test --run`; there is no direct `vitest` dependency, because

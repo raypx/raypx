@@ -10,11 +10,11 @@ duplicating them here.
 `apps/web` is the public/product-facing TanStack Start application and the
 browser composition root for authentication, Projects and the cloud product.
 
-- Uses `@voidmix/ui` and controlled `@voidmix/agent-ui` views; owns Web routes,
+- Uses `@raypx/ui` and controlled `@raypx/agent-ui` views; owns Web routes,
   metadata, SSR and content. Search/Computer live at `/chat` and Task deliveries
   at `/tasks`; file review, notifications and account usage use the cloud API.
 - Serves `/manifest.webmanifest` through a TanStack Start server route with the
-  VoidMix name, launch scope, theme, and shared 512×512 brand mark for
+  Raypx name, launch scope, theme, and shared 512×512 brand mark for
   install-capable browsers.
 - Route files declare URLs and own single-route pages, including the canonical
   project list/detail. Shared Auth features remain separate; the home
@@ -46,7 +46,7 @@ browser composition root for authentication, Projects and the cloud product.
 - Resolves locale from the `locale` Cookie, `Accept-Language`, then English; the
   document and React provider share the loader result for hydration safety.
 - Loads only the resolved Web locale catalog before SSR through the root loader
-  and mounts it with `AsyncI18nProvider` from `@voidmix/i18n`. The Web-owned
+  and mounts it with `AsyncI18nProvider` from `@raypx/i18n`. The Web-owned
   loader map dynamically imports the other locale on language switch; feature
   components select namespaces through the facade. Recovery pages retain their
   independent static copy.
@@ -61,7 +61,7 @@ browser composition root for authentication, Projects and the cloud product.
 
 `apps/desktop` is an Electrobun 2 application with a TanStack Start SPA renderer.
 
-- Shares `@voidmix/ui` and `@voidmix/client`; contracts reach the renderer through Client.
+- Shares `@raypx/ui` and `@raypx/client`; contracts reach the renderer through Client.
 - Uses Start file routing and SPA mode with RSC disabled. The Start server build
   is used only to prerender `dist/client/index.html`; Electrobun packages that
   client directory alongside a narrow TypeScript native host on Bun 1.4.0.
@@ -81,7 +81,7 @@ browser composition root for authentication, Projects and the cloud product.
   persistence validates the saved theme, migrates the previous theme key and
   tolerates unavailable localStorage. Retired settings fields are ignored.
 - Owns no Start server functions or server routes. Runtime data continues to
-  come from the cloud API through `@voidmix/client`.
+  come from the cloud API through `@raypx/client`.
 - `native/` owns tray/window lifecycle and the typed runtime/window RPC. A
   persistent WebView partition retains preferences and cookies; packaged SPA
   navigation uses hash history so reloads resolve to the static entry.
@@ -131,14 +131,14 @@ for the main-process and packaging boundary.
 
 ## Storybook
 
-`apps/storybook` is the development workbench for `@voidmix/ui` primitives.
+`apps/storybook` is the development workbench for `@raypx/ui` primitives.
 
 - Runs on port `6006` in development.
 - Owns component stories and visual documentation, not product routes or API
   calls.
 - Loads the shared Tailwind v4 tokens and `packages/ui/src/styles.css` so
   stories exercise the same design system as the applications.
-- Provides a Light/Dark toolbar backed by `@voidmix/ui`'s `ThemeProvider`.
+- Provides a Light/Dark toolbar backed by `@raypx/ui`'s `ThemeProvider`.
 - Is not a production runtime or deployment target.
 
 ## API application
@@ -194,7 +194,7 @@ sessions use parent-domain, HTTP-only, Secure, SameSite=None cookies so Web and
 Desktop can reuse the API session. Search/Computer, Projects and Task pages
 require authentication. Auth email
 verification, password reset, and welcome messages are sent through the typed
-`@voidmix/mail` service. Database mail settings override environment fallbacks
+`@raypx/mail` service. Database mail settings override environment fallbacks
 and are resolved for every send. Configuration readers retain field sources
 and safe inherited previews; the server-only runtime result retains the Resend
 value. There is no configuration write RPC. Mail-dependent Auth operations return 503 when

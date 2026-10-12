@@ -50,8 +50,8 @@ TanStack version changes.
 It hand-rolls sessions with TanStack Start's `useSession` and Prisma-style
 queries (`db.users.findUnique`). Neither matches this repository: sessions are
 resolved behind `apps/api/server/api/session.ts`'s `SessionResolver` seam,
-session shapes come from `@voidmix/auth`, and persistence is Drizzle
-behind repository interfaces owned by `@voidmix/core`.
+session shapes come from `@raypx/auth`, and persistence is Drizzle
+behind repository interfaces owned by `@raypx/core`.
 
 Its cookie-hardening table (`httpOnly`, `secure`, `sameSite`, `maxAge`, a 32-plus
 character secret) and the "store minimal data, rotate on privilege change"

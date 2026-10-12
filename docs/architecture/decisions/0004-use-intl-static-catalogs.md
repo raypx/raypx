@@ -8,14 +8,14 @@ accepted.
 
 ## Context
 
-Voidmix needs one translation model across the server-rendered Web app, the
+Raypx needs one translation model across the server-rendered Web app, the
 Tauri renderer, API errors, and authentication email. The app also needs stable
 SSR/hydration output: translation lookup must not introduce a Promise or a
 late catalog swap during the first render.
 
 ## Decision
 
-`@voidmix/i18n` is the only translation facade exposed to business code. It
+`@raypx/i18n` is the only translation facade exposed to business code. It
 owns locale normalization, Accept-Language parsing, Cookie and localStorage
 adapters, locale state, formatting helpers, and the React/server integration.
 `use-intl` is an implementation dependency of that package; applications and
@@ -25,12 +25,12 @@ Web, Desktop, and Mail own their English and Chinese `messages/*.json` files.
 Desktop statically imports both catalogs and mounts them through the shared
 `I18nProvider`. Components select a namespace with
 `useTranslations("namespace")`. Mail creates a synchronous translator from
-the same static catalogs through `@voidmix/i18n/server`. Web's catalog loading
+the same static catalogs through `@raypx/i18n/server`. Web's catalog loading
 is defined by ADR-0007.
 
 Web resolves the unprefixed `locale` Cookie, then `Accept-Language`, then `en`,
 and persists changes in a one-year SameSite=Lax Cookie. Desktop resolves
-`localStorage.voidmix_locale`, then `navigator.language`, then `en`. The shared
+`localStorage.raypx_locale`, then `navigator.language`, then `en`. The shared
 locale provider updates its in-memory state and storage before invoking the
 document synchronization callback, so a callback failure cannot leave the UI
 and persisted locale out of sync. Web renders the document `lang` attribute
@@ -47,7 +47,7 @@ timezone, and effective format definitions.
 API boundaries return a stable transport code and a `data.error` envelope with
 the localizable detail code and optional primitive interpolation values;
 diagnostic messages remain server-side. Web and Desktop translate that envelope
-from their local `errors` namespace. `@voidmix/core` and `@voidmix/contracts`
+from their local `errors` namespace. `@raypx/core` and `@raypx/contracts`
 define the value shape but do not depend on i18n.
 
 Mail uses `input.locale` when supplied, otherwise `MAIL_DEFAULT_LOCALE`,

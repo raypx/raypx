@@ -1,5 +1,5 @@
-import type { Session } from "@voidmix/auth";
-import type { Locale } from "@voidmix/i18n/types";
+import type { Session } from "@raypx/auth";
+import type { Locale } from "@raypx/i18n/types";
 
 export interface ApiRequestAuthContext {
   session: Session | null;

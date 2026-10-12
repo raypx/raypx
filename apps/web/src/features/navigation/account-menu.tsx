@@ -1,10 +1,10 @@
 import { DotsThree, SignOut, Globe } from "@phosphor-icons/react";
-import { LOCALE_OPTIONS } from "@voidmix/i18n";
+import { LOCALE_OPTIONS } from "@raypx/i18n";
 import { Link } from "@tanstack/react-router";
 import { useLocale, useSetLocale } from "../../i18n/client";
 import { Suspense, useState } from "react";
 
-import { IconButton } from "@voidmix/ui/icon-button";
+import { IconButton } from "@raypx/ui/icon-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@voidmix/ui/components/ui/dropdown-menu";
+} from "@raypx/ui/components/ui/dropdown-menu";
 import { LazyThemeMenuItems, loadThemeMenuItems } from "../../components/theme-menu-lazy";
 import { useTranslations } from "../../i18n/client";
 

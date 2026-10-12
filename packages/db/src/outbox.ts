@@ -1,4 +1,4 @@
-import type { OutboxEvent, OutboxRepository } from "@voidmix/core";
+import type { OutboxEvent, OutboxRepository } from "@raypx/core";
 import { sql } from "drizzle-orm";
 
 import type { DatabaseConnection } from "./postgres.js";

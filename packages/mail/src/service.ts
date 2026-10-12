@@ -1,5 +1,5 @@
 import { getMailEnv, type MailEnvironment } from "./env.js";
-import type { Locale } from "@voidmix/i18n/types";
+import type { Locale } from "@raypx/i18n/types";
 import {
   passwordResetEmail,
   verificationEmail,
@@ -62,7 +62,7 @@ export function createMailer(options: CreateMailerOptions = {}): Mailer {
     }
 
     const rendered = await render(configuration);
-    const from = configuration.from ?? "noreply@voidmix.local";
+    const from = configuration.from ?? "noreply@raypx.local";
     const message: MailMessage = {
       template,
       from: { email: from, name: configuration.fromName },

@@ -1,6 +1,6 @@
 import { AuthLink } from "./auth-link";
 import { CheckCircle, CircleNotch, WarningCircle } from "@phosphor-icons/react";
-import { FieldError } from "@voidmix/ui/components/ui/field";
+import { FieldError } from "@raypx/ui/components/ui/field";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { authClient } from "../../lib/auth-client";

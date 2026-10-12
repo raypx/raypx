@@ -1,11 +1,11 @@
-import { Alert, AlertDescription } from "@voidmix/ui/components/ui/alert";
+import { Alert, AlertDescription } from "@raypx/ui/components/ui/alert";
 import { CaretLineLeft, CaretRight, WarningCircle } from "@phosphor-icons/react";
-import { IconButton } from "@voidmix/ui/icon-button";
-import { LoadingState } from "@voidmix/ui/loading-state";
+import { IconButton } from "@raypx/ui/icon-button";
+import { LoadingState } from "@raypx/ui/loading-state";
 import { translateKnownApiError } from "../../../i18n/api-errors";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useRouter } from "@tanstack/react-router";
-import { Button } from "@voidmix/ui/components/ui/button";
+import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "../../i18n/client";
 export function RoutePending() {
   const t = useTranslations("navigation");

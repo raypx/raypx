@@ -54,10 +54,10 @@ interface Manifest {
 const nameFinding = findingFor("manifest.name");
 
 function expectedWorkspaceName(location: string): string | undefined {
-  if (location === "e2e/package.json") return "@voidmix/e2e";
+  if (location === "e2e/package.json") return "@raypx/e2e";
   const member = /^(apps|packages)\/([^/]+)\/package\.json$/.exec(location);
   if (!member) return undefined;
-  return member[1] === "apps" ? member[2] : `@voidmix/${member[2]}`;
+  return member[1] === "apps" ? member[2] : `@raypx/${member[2]}`;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

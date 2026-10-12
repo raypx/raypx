@@ -1,4 +1,4 @@
-import { TooltipProvider } from "@voidmix/ui/components/ui/tooltip";
+import { TooltipProvider } from "@raypx/ui/components/ui/tooltip";
 import {
   ClientOnly,
   HeadContent,
@@ -6,13 +6,13 @@ import {
   Scripts,
   createRootRoute,
 } from "@tanstack/react-router";
-import { normalizeLocale } from "@voidmix/i18n";
+import { normalizeLocale } from "@raypx/i18n";
 import {
   I18nProvider,
   createLocalStorageLocaleStorage,
   useLocale,
   useSetLocale,
-} from "@voidmix/i18n/client";
+} from "@raypx/i18n/client";
 import { useEffect, type ReactNode } from "react";
 
 import { DesktopShell } from "../features/shell/desktop-shell";
@@ -32,7 +32,7 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1.0, viewport-fit=cover",
       },
       { name: "theme-color", content: "#171717" },
-      { title: "VoidMix" },
+      { title: "Raypx" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),

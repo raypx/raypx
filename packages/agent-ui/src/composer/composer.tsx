@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@voidmix/ui/components/ui/field";
-import { Textarea } from "@voidmix/ui/textarea";
+import { Button } from "@raypx/ui/components/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Textarea } from "@raypx/ui/textarea";
 
 export interface ComposerProps {
   value: string;

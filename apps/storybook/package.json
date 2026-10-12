@@ -9,20 +9,20 @@
     "check": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@voidmix/agent-ui": "workspace:*",
-    "@voidmix/ui": "workspace:*",
+    "@raypx/agent-ui": "workspace:*",
+    "@raypx/ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
     "@phosphor-icons/react": "catalog:frontend",
+    "@raypx/tsconfig": "workspace:*",
     "@storybook/addon-a11y": "catalog:tooling",
     "@storybook/addon-docs": "catalog:tooling",
     "@storybook/react-vite": "catalog:tooling",
     "@tailwindcss/vite": "catalog:frontend",
     "@types/react": "catalog:tooling",
     "@types/react-dom": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*",
     "storybook": "catalog:tooling",
     "typescript": "catalog:tooling",
     "vite": "catalog:tooling"

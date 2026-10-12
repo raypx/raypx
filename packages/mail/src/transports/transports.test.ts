@@ -7,7 +7,7 @@ import { createResendTransport } from "./resend.js";
 
 const message: MailMessage = {
   template: "email-verification",
-  from: { email: "mail@example.com", name: "Voidmix" },
+  from: { email: "mail@example.com", name: "Raypx" },
   to: { email: "alex@example.com", name: "Alex" },
   replyTo: { email: "support@example.com" },
   subject: "Verify",
@@ -54,7 +54,7 @@ describe("mail transports", () => {
     );
 
     expect(send).toHaveBeenCalledWith({
-      from: "Voidmix <mail@example.com>",
+      from: "Raypx <mail@example.com>",
       to: "Alex <alex@example.com>",
       replyTo: "support@example.com",
       subject: "Verify",

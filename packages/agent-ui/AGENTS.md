@@ -1,4 +1,4 @@
-# @voidmix/agent-ui
+# @raypx/agent-ui
 
 ## Purpose
 
@@ -19,7 +19,7 @@ assemble their own workspaces and supply data, actions and platform capabilities
 
 - Own business presentation and transient focus, expansion and follow state.
 - Own Streamdown and Pierre wrappers; vendor interfaces remain private.
-- Consume public contracts as type-only imports and reusable `@voidmix/ui` primitives.
+- Consume public contracts as type-only imports and reusable `@raypx/ui` primitives.
 - Apps own routing, identity, requests, run subscriptions, drafts and platform IPC.
 
 ## Constraints

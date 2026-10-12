@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/db",
+  "name": "@raypx/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,19 +15,19 @@
     "test:integration": "vp test --run --passWithNoTests integration.test",
     "test:component": "vp test --run --passWithNoTests component.test",
     "test:coverage": "vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "generate": "vmx env -- drizzle-kit generate --config drizzle.config.ts",
+    "generate": "rpx env -- drizzle-kit generate --config drizzle.config.ts",
     "test:postgres": "vp test --run --config vitest.postgres.config.ts"
   },
   "dependencies": {
-    "@voidmix/core": "workspace:*",
-    "@voidmix/shared": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "@raypx/shared": "workspace:*",
     "drizzle-orm": "catalog:backend",
     "postgres": "catalog:backend"
   },
   "devDependencies": {
+    "@raypx/application": "workspace:*",
+    "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/application": "workspace:*",
-    "@voidmix/tsconfig": "workspace:*",
     "drizzle-kit": "catalog:backend"
   }
 }

@@ -1,5 +1,5 @@
 import { cloudPage } from "./pagination.js";
-import { sameResourceScope, type CloudMode } from "@voidmix/core";
+import { sameResourceScope, type CloudMode } from "@raypx/core";
 import type { CloudContext, Actor, Intent } from "./context.js";
 
 export function cloudConversations(context: CloudContext) {

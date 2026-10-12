@@ -7,7 +7,7 @@ import type { MailTransport } from "./types.js";
 const developmentEnv = getMailEnv({
   NODE_ENV: "development",
   MAIL_FROM: "mail@example.com",
-  MAIL_FROM_NAME: "Voidmix",
+  MAIL_FROM_NAME: "Raypx",
   EMAIL_TEMPLATES_BASE_URL: "https://admin.example.com",
 });
 
@@ -34,7 +34,7 @@ describe("mailer", () => {
       "welcome",
     ]);
     expect(send.mock.calls[0]?.[0]).toMatchObject({
-      from: { email: "mail@example.com", name: "Voidmix" },
+      from: { email: "mail@example.com", name: "Raypx" },
       to: { email: "alex@example.com", name: "Alex" },
     });
   });
@@ -55,8 +55,8 @@ describe("mail environment", () => {
   it("uses a network-free development fallback configuration", () => {
     expect(getMailEnv({ NODE_ENV: "test" })).toMatchObject({
       NODE_ENV: "test",
-      MAIL_FROM: "noreply@voidmix.local",
-      MAIL_FROM_NAME: "Voidmix",
+      MAIL_FROM: "noreply@raypx.local",
+      MAIL_FROM_NAME: "Raypx",
       MAIL_DEFAULT_LOCALE: "en",
     });
   });
@@ -90,7 +90,7 @@ describe("mail environment", () => {
       resolveConfiguration: async () => ({
         enabled: true,
         from,
-        fromName: "Voidmix",
+        fromName: "Raypx",
         templatesBaseUrl: null,
         resendApiKey: "resend-key",
       }),
@@ -124,7 +124,7 @@ describe("mail environment", () => {
         ...recipient,
       });
       const [message] = send.mock.calls[0]!;
-      expect(message.subject).toBe("验证你的 Voidmix 邮箱");
+      expect(message.subject).toBe("验证你的 Raypx 邮箱");
       expect(message.html).toContain('lang="zh"');
     },
   );

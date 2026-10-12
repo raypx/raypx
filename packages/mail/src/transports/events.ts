@@ -1,4 +1,4 @@
-import { logger } from "@voidmix/shared/logger";
+import { logger } from "@raypx/shared/logger";
 
 import type { MailDeliveryRecorder } from "../types.js";
 

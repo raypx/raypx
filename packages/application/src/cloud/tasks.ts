@@ -4,7 +4,7 @@ import {
   canProjectCapabilityV2,
   resolveProjectAccessV2,
   type CloudTask,
-} from "@voidmix/core";
+} from "@raypx/core";
 import { cloudConversations } from "./conversations.js";
 import type { CloudContext, Actor, Intent } from "./context.js";
 

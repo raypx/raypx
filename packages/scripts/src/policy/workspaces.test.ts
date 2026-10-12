@@ -11,7 +11,7 @@ import {
 } from "./workspaces.js";
 
 const rootAgents = [
-  "# Voidmix Repository Instructions",
+  "# Raypx Repository Instructions",
   "",
   "## Repository shape (dependencies flow downward only)",
   "",
@@ -121,7 +121,7 @@ describe("findNonWorkspaceDirectories", () => {
 });
 
 const readme = [
-  "# Voidmix",
+  "# Raypx",
   "",
   "## Workspace map",
   "",

@@ -1,4 +1,4 @@
-import { type CloudUsageCall } from "@voidmix/core";
+import { type CloudUsageCall } from "@raypx/core";
 import type { CloudContext, Actor, Fence } from "./context.js";
 
 export function cloudUsage(context: CloudContext) {

@@ -35,7 +35,7 @@ existing Blob/Pi repository slices are implementation seams; their presence
 does not make the corresponding UI or production boundary complete.
 
 The adapter keeps projects, tasks, activities and conversations together in
-`sessionStorage` under `voidmix.project-studio.preview.v2`. A versioned schema
+`sessionStorage` under `raypx.project-studio.preview.v2`. A versioned schema
 validates restored data and revives dates at this browser-storage boundary.
 Malformed data returns to the seed; storage unavailability leaves in-memory
 editing usable. Normal updates persist across a refresh in the same tab.
@@ -46,8 +46,8 @@ Views use a stable snapshot subscription and named operations from the facade;
 the home asks for an aggregate, rather than issuing per-widget requests.
 Hydration has loading, failure and retry UI. Source injection permits tests
 without network access. The live adapter maps authorized oRPC DTOs from
-`@voidmix/client` into these same view models and surfaces real failures; it
-does not import the server-side `@voidmix/ai` package into Web.
+`@raypx/client` into these same view models and surfaces real failures; it
+does not import the server-side `@raypx/ai` package into Web.
 
 ## Interaction contract
 

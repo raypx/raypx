@@ -1,14 +1,14 @@
 ---
-name: voidmix-infra
+name: raypx-infra
 description: >
-  Project-specific workflows and footguns for the Voidmix monorepo. Use when
-  changing apps/web, apps/api, apps/desktop, or any @voidmix package —
+  Project-specific workflows and footguns for the Raypx monorepo. Use when
+  changing apps/web, apps/api, apps/desktop, or any @raypx package —
   oRPC contracts and procedures, Drizzle schema and migrations, domain rules,
   TanStack Start routes, packages/ui primitives, auth and permissions, audit
   records, logging, or the test and verification loop.
 ---
 
-# Develop Voidmix
+# Develop Raypx
 
 `AGENTS.md` holds the constraints and `docs/` holds the reasoning. This skill
 holds neither — it holds the **procedures**: which files to touch in which order,
@@ -68,7 +68,7 @@ things that mislead in the moment and belong to no single rule:
 - **Never use a globally installed `vp`.** Its bundled Vitest is a different
   physical dependency tree from the workspace's `vite-plus/test` and fails with
   `Cannot read properties of undefined (reading 'config')`. `vp test` is the leaf test runner;
-  `vmx tasks test` runs that script across the Turbo graph. Never use `vp run`.
+  `rpx tasks test` runs that script across the Turbo graph. Never use `vp run`.
 
 ## Verification
 

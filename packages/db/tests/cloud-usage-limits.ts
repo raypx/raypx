@@ -1,7 +1,7 @@
 import { expect } from "vite-plus/test";
-import { createCloudApplication } from "@voidmix/application";
-import type { CloudApplication } from "@voidmix/application";
-import type { CloudRepository } from "@voidmix/core";
+import { createCloudApplication } from "@raypx/application";
+import type { CloudApplication } from "@raypx/application";
+import type { CloudRepository } from "@raypx/core";
 
 async function claim(service: CloudApplication, runId: string) {
   await service.acceptQueued({ runId });

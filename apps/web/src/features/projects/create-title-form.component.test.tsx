@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { I18nProvider } from "@voidmix/i18n/client";
+import { I18nProvider } from "@raypx/i18n/client";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { messages } from "../../../tests/fixtures/messages";
 import { CreateTitleForm } from "./create-title-form";

@@ -3,9 +3,9 @@ import { expect, test } from "@playwright/test";
 test("renders the public workspace home", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page).toHaveTitle(/Voidmix/);
+  await expect(page).toHaveTitle(/Raypx/);
   await expect(page.getByRole("heading", { name: /From questions to usable work/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Open Voidmix/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Open Raypx/i }).first()).toBeVisible();
 });
 
 for (const width of [390, 1440]) {

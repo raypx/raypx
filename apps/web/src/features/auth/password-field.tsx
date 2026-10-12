@@ -1,11 +1,7 @@
 import { Eye, EyeSlash } from "@phosphor-icons/react";
-import { IconButton } from "@voidmix/ui/icon-button";
-import { Field, FieldLabel } from "@voidmix/ui/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@voidmix/ui/components/ui/input-group";
+import { IconButton } from "@raypx/ui/icon-button";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
 import { useState, type ComponentProps, type ReactNode } from "react";
 import { useTranslations } from "../../i18n/client";
 

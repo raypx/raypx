@@ -1,6 +1,6 @@
 import { expect } from "vite-plus/test";
-import { createCloudApplication, type CloudApplication } from "@voidmix/application";
-import type { CloudRepository } from "@voidmix/core";
+import { createCloudApplication, type CloudApplication } from "@raypx/application";
+import type { CloudRepository } from "@raypx/core";
 
 /** Both adapters must charge the same Task across distinct requesting accounts. */
 export async function exerciseSharedTaskBudget(

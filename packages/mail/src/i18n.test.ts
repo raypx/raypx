@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { assertMessageCatalogParity } from "@voidmix/i18n/testing";
+import { assertMessageCatalogParity } from "@raypx/i18n/testing";
 import en from "../messages/en.json" with { type: "json" };
 import zh from "../messages/zh.json" with { type: "json" };
 

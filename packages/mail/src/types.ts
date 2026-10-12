@@ -1,4 +1,4 @@
-import type { Locale } from "@voidmix/i18n/types";
+import type { Locale } from "@raypx/i18n/types";
 
 export type MailAddress = {
   email: string;

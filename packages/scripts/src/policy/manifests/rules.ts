@@ -116,7 +116,7 @@ export function validateDependencies(
 ): PolicyFinding[] {
   const { findings, report } = collectFindings(dependencyFinding);
   for (const [name, version] of Object.entries(dependencies)) {
-    if (name.startsWith("@voidmix/")) {
+    if (name.startsWith("@raypx/")) {
       if (version === "workspace:*") continue;
       report(
         location,

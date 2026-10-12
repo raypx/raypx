@@ -41,9 +41,7 @@ describe("runChildProcess", () => {
   });
 
   it("wraps process startup failures", async () => {
-    await expect(
-      runChildProcess([join(tmpdir(), "missing-voidmix-command")]),
-    ).rejects.toMatchObject({
+    await expect(runChildProcess([join(tmpdir(), "missing-raypx-command")])).rejects.toMatchObject({
       name: "ProcessError",
       exitCode: null,
       signal: null,

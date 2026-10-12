@@ -1,6 +1,6 @@
 import { domainFixtures } from "./test-fixtures.js";
-import { InMemorySystemSettingsRepository } from "@voidmix/db";
-import type { MailSettingsFallback } from "@voidmix/core";
+import { InMemorySystemSettingsRepository } from "@raypx/db";
+import type { MailSettingsFallback } from "@raypx/core";
 import { describe, expect, it } from "vite-plus/test";
 
 import { createApiModules } from "./modules.js";
@@ -8,7 +8,7 @@ import { createApiModules } from "./modules.js";
 const fallback: MailSettingsFallback = {
   enabled: { value: true, source: "default" },
   from: { value: null, source: "missing" },
-  fromName: { value: "Voidmix", source: "default" },
+  fromName: { value: "Raypx", source: "default" },
   templatesBaseUrl: { value: null, source: "missing" },
   resendApiKey: { value: null, source: "missing" },
 };

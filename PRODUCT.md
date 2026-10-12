@@ -6,11 +6,11 @@ People and teams who research topics, analyze files and turn findings into revie
 
 ## Product Purpose
 
-Voidmix is a Web-first cloud AI product. Search reads actual sources and returns attributed answers. Computer performs multi-step work with trusted tools and delivers reports, tables and presentations for user review. Desktop is a lightweight cloud project and task management client. See [the cloud platform](docs/architecture/cloud-platform.md) and [the Desktop retirement decision](docs/architecture/decisions/0019-retire-legacy-desktop-execution.md) for the execution and publication boundaries.
+Raypx is a Web-first cloud AI product. Search reads actual sources and returns attributed answers. Computer performs multi-step work with trusted tools and delivers reports, tables and presentations for user review. Desktop is a lightweight cloud project and task management client. See [the cloud platform](docs/architecture/cloud-platform.md) and [the Desktop retirement decision](docs/architecture/decisions/0019-retire-legacy-desktop-execution.md) for the execution and publication boundaries.
 
 ## Brand Personality
 
-Calm, precise, technical, and collaborative. VoidMix should feel like an Agent Signal Room: multiple capable roles working in one legible system, with enough energy to show live execution without turning the product into a toy.
+Calm, precise, technical, and collaborative. Raypx should feel like an Agent Signal Room: multiple capable roles working in one legible system, with enough energy to show live execution without turning the product into a toy.
 
 ## Product Principles
 
@@ -38,4 +38,4 @@ Calm, precise, technical, and collaborative. VoidMix should feel like an Agent S
 
 ## Scope Boundaries
 
-Pi supplies isolated cloud Agent sessions, model invocation and event streaming. Voidmix owns authorization, trusted tools, durable Task/Run state, usage reservations, private file publication, review, notification and Web/Desktop composition. Model and search providers, object storage and telemetry are explicit configuration seams. Sandbox code, browser/GUI operations, scheduling, payments and real-time editing require separate designs. Desktop local execution and device routing are retired capabilities.
+Pi supplies isolated cloud Agent sessions, model invocation and event streaming. Raypx owns authorization, trusted tools, durable Task/Run state, usage reservations, private file publication, review, notification and Web/Desktop composition. Model and search providers, object storage and telemetry are explicit configuration seams. Sandbox code, browser/GUI operations, scheduling, payments and real-time editing require separate designs. Desktop local execution and device routing are retired capabilities.

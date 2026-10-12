@@ -6,7 +6,7 @@ Accepted, October 12, 2026.
 
 ## Context
 
-The user requested application package names without the `@voidmix/` prefix.
+The user requested application package names without the `@raypx/` prefix.
 Application workspaces are private composition roots, while the scoped packages
 under `packages/` are shared interfaces.
 

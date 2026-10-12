@@ -1,4 +1,4 @@
-import { apiProblemDetailsSchema, type ApiProblemDetails } from "@voidmix/contracts";
+import { apiProblemDetailsSchema, type ApiProblemDetails } from "@raypx/contracts";
 
 /** Parse an RFC 9457 problem body returned by the API or embedded in an oRPC error. */
 export function parseApiProblemDetails(value: unknown): ApiProblemDetails | null {

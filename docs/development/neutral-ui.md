@@ -2,7 +2,7 @@
 
 > This records the September Neutral delivery. Admin batch/export and Desktop local execution/unconnected destinations were subsequently retired under [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md). Historical captures and test counts below are not the current feature inventory.
 
-Voidmix uses the official shadcn base-nova Neutral theme across public pages,
+Raypx uses the official shadcn base-nova Neutral theme across public pages,
 authentication, projects, Admin and Desktop. Logo and icon assets are unchanged.
 The baseline for this change is canary `2c14e20`.
 
@@ -54,7 +54,7 @@ Desktop preference restoration remain in their owning layers.
 ## Product images
 
 `bun run --cwd e2e capture:product` uses guarded synthetic accounts and loopback
-servers selected by `VOIDMIX_E2E_PORT`. It produces 32 local WebP files: four
+servers selected by `RAYPX_E2E_PORT`. It produces 32 local WebP files: four
 views, two locales, two themes and two sizes. The browser encodes the screenshots,
 so no new image-processing dependency is needed. Measured dimensions are written
 to the marketing image manifest to reserve layout space. Old PNGs are removed

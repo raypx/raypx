@@ -1,4 +1,4 @@
-# VoidMix delivery goal
+# Raypx delivery goal
 
 > Status: current product target, October 12, 2026. The former local-first
 > workbench goal is replaced by [the cloud platform](./cloud-platform.md),
@@ -7,7 +7,7 @@
 
 ## Product outcome
 
-Voidmix helps people research sources, analyze files and create reviewable
+Raypx helps people research sources, analyze files and create reviewable
 reports, spreadsheets and presentations. Web owns the primary flow:
 
 ```text

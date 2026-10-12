@@ -1,7 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { ObjectMetadata, ObjectStorage } from "@voidmix/core";
+import type { ObjectMetadata, ObjectStorage } from "@raypx/core";
 import { StorageUnavailableError, validateObjectInput, validateObjectKey } from "./index.js";
 
 export function createMemoryStorage(): ObjectStorage {
@@ -116,25 +116,34 @@ export function verifyFilesystemDownload(input: {
 }
 export function createFilesystemStorage(options: {
   directory: string;
+  legacyDirectory?: string;
   signingSecret?: string;
   publicBaseUrl?: string;
 }): ObjectStorage {
-  const pathFor = (key: string) => {
+  const directories = [
+    options.directory,
+    ...(options.legacyDirectory ? [options.legacyDirectory] : []),
+  ];
+  const pathFor = (key: string, directory = options.directory) => {
     validateObjectKey(key);
-    return join(options.directory, key);
+    return join(directory, key);
   };
-  const head: ObjectStorage["head"] = async (key) => {
-    try {
-      const metadata = JSON.parse(
-        await readFile(`${pathFor(key)}.metadata.json`, "utf8"),
-      ) as ObjectMetadata;
-      validateObjectInput(metadata);
-      return metadata;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-      throw error;
+  const locate = async (key: string) => {
+    for (const directory of directories) {
+      const path = pathFor(key, directory);
+      try {
+        const metadata = JSON.parse(
+          await readFile(`${path}.metadata.json`, "utf8"),
+        ) as ObjectMetadata;
+        validateObjectInput(metadata);
+        return { metadata, path };
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
     }
+    return null;
   };
+  const head: ObjectStorage["head"] = async (key) => (await locate(key))?.metadata ?? null;
   return {
     async put(input) {
       const metadata = {
@@ -173,9 +182,10 @@ export function createFilesystemStorage(options: {
     },
     head,
     async read(key) {
-      const metadata = await head(key);
-      if (!metadata) return null;
-      const bytes = await readFile(pathFor(key));
+      const stored = await locate(key);
+      if (!stored) return null;
+      const { metadata, path } = stored;
+      const bytes = await readFile(path);
       if (
         bytes.byteLength !== metadata.byteSize ||
         createHash("sha256").update(bytes).digest("hex") !== metadata.checksumSha256
@@ -190,13 +200,18 @@ export function createFilesystemStorage(options: {
     },
     async remove(key) {
       await Promise.all(
-        [pathFor(key), `${pathFor(key)}.metadata.json`].map(async (path) => {
-          try {
-            await unlink(path);
-          } catch (error) {
-            if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-          }
-        }),
+        directories
+          .flatMap((directory) => {
+            const path = pathFor(key, directory);
+            return [path, `${path}.metadata.json`];
+          })
+          .map(async (path) => {
+            try {
+              await unlink(path);
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+            }
+          }),
       );
     },
     async signUpload(input) {

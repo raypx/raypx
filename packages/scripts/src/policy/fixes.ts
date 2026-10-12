@@ -9,7 +9,7 @@ import { fixWorkspaceTypeScriptConfig, isPresetFile } from "./tsconfig.js";
  * Applies the findings that have exactly one possible remedy and returns the
  * repository-relative files it rewrote.
  *
- * Deliberately separate from `runPolicy`: the checker is the gate `vmx verify`
+ * Deliberately separate from `runPolicy`: the checker is the gate `rpx verify`
  * runs, and a gate that edits the tree it is judging would report on a repository
  * nobody has seen. Whether a fix applied is not asserted here either — the caller
  * re-runs the checks afterwards, so what survives is the answer.

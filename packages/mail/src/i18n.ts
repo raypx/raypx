@@ -1,5 +1,5 @@
-import { createTranslator } from "@voidmix/i18n/server";
-import type { Locale, Translator } from "@voidmix/i18n/types";
+import { createTranslator } from "@raypx/i18n/server";
+import type { Locale, Translator } from "@raypx/i18n/types";
 
 import en from "../messages/en.json" with { type: "json" };
 import zh from "../messages/zh.json" with { type: "json" };

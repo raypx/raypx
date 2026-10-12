@@ -4,7 +4,7 @@ import { accounts, password } from "../database.js";
 test("opens Desktop projects and preserves theme, locale and keyboard controls", async ({
   page,
 }) => {
-  const api = `http://127.0.0.1:${Number(process.env.VOIDMIX_E2E_PORT ?? 3000) + 2}`;
+  const api = `http://127.0.0.1:${Number(process.env.RAYPX_E2E_PORT ?? 3000) + 2}`;
   const signedIn = await page.request.post(`${api}/api/auth/sign-in/email`, {
     data: { email: accounts.member.email, password },
     headers: { origin: api },

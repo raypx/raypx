@@ -1,12 +1,12 @@
-import { normalizeLocale } from "@voidmix/i18n";
-import type { Locale } from "@voidmix/i18n/types";
+import { normalizeLocale } from "@raypx/i18n";
+import type { Locale } from "@raypx/i18n/types";
 import {
   createLocalStorageLocaleStorage,
   useFormatter,
   useLocale,
   useSetLocale,
   useTranslations,
-} from "@voidmix/i18n/client";
+} from "@raypx/i18n/client";
 
 const localeStorage = createLocalStorageLocaleStorage();
 

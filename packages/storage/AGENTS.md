@@ -1,4 +1,4 @@
-# @voidmix/storage
+# @raypx/storage
 
 ## Purpose
 
@@ -13,6 +13,8 @@ Core-owned `ObjectStorage` port. Credentials are injected by composition roots.
 
 - Private object transfer, bounded signatures, checksum verification and deletion.
 - Local implementations for explicit development and isolated tests.
+- Filesystem storage may read an optional legacy directory after the primary
+  directory. New writes use the primary directory; deletion removes both copies.
 
 ## Constraints
 

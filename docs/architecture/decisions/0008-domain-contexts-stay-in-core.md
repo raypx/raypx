@@ -6,8 +6,8 @@ Application-service ownership superseded by [ADR-0014](./0014-domain-services-an
 
 ## Context
 
-Voidmix needs additional business areas for Workspaces, Projects, Assets and
-sync, and Agent runs. The existing `@voidmix/core` package already owns the
+Raypx needs additional business areas for Workspaces, Projects, Assets and
+sync, and Agent runs. The existing `@raypx/core` package already owns the
 business rules and repository ports, while application features live under the
 Web and Desktop applications. Naming both a `core` package and a parallel
 `domain` package would make ownership unclear and invite duplicate models.
@@ -19,7 +19,7 @@ underlying business rules have not changed.
 
 ## Decision
 
-Keep `@voidmix/core` as the single domain-kernel package. Organize its source by
+Keep `@raypx/core` as the single domain-kernel package. Organize its source by
 bounded context (`identity`, `workspace`, `projects`, `assets`, `agents`, and
 `settings`) and keep each context's model, policies, application services, and
 ports close together. The package root remains the narrow public export surface.
@@ -28,10 +28,10 @@ Use **feature** to describe an application-owned user capability. Web and
 Desktop features may call contracts and client facades; they do not become
 domain modules and do not compose server repositories.
 
-Application services may remain inside `@voidmix/core` while there is one server
-consumer. Extract a separate `@voidmix/application` package only when at least
+Application services may remain inside `@raypx/core` while there is one server
+consumer. Extract a separate `@raypx/application` package only when at least
 two independent server consumers need the same orchestration and the split
-reduces coupling. Extract `@voidmix/domain` only if a separately released or
+reduces coupling. Extract `@raypx/domain` only if a separately released or
 deployed pure domain kernel is justified; never maintain `core` and `domain` as
 parallel sources of truth.
 

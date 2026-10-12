@@ -1,4 +1,4 @@
-# @voidmix/cache
+# @raypx/cache
 
 ## Purpose
 

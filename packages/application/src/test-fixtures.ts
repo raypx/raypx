@@ -15,7 +15,7 @@ export type ProjectOptions = Projects &
   Omit<AssetOptions, "access"> &
   Omit<ReviewOptions, "access"> &
   Pick<ActivityOptions, "activity">;
-export type { ProjectV2Repository } from "@voidmix/core";
+export type { ProjectV2Repository } from "@raypx/core";
 export function createApplicationFixture(options: ProjectOptions) {
   const access = createProjectAccess(options);
   return {

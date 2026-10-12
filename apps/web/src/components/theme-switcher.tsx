@@ -2,9 +2,9 @@ import { useRef, type KeyboardEvent } from "react";
 
 import { Desktop, Moon, Sun } from "@phosphor-icons/react";
 
-import { IconButton } from "@voidmix/ui/icon-button";
-import { cn } from "@voidmix/ui/lib/utils";
-import { useTheme, type UserTheme } from "@voidmix/ui/theme";
+import { IconButton } from "@raypx/ui/icon-button";
+import { cn } from "@raypx/ui/lib/utils";
+import { useTheme, type UserTheme } from "@raypx/ui/theme";
 
 import { useTranslations } from "../i18n/client";
 import { themeOptions } from "./theme-options";

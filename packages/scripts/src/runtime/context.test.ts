@@ -6,7 +6,7 @@ import { createCommandContext } from "./context.js";
 import { REPOSITORY_ENV_KEY, resolveProcessEnvironment } from "./env.js";
 
 const environmentFiles = {
-  ".env": "FILE_VALUE=base\nDATABASE_URL=postgresql://voidmix:voidmix@localhost:5432/voidmix\n",
+  ".env": "FILE_VALUE=base\nDATABASE_URL=postgresql://raypx:raypx@localhost:5432/raypx\n",
   ".env.local": "FILE_VALUE=local\n",
 };
 
@@ -51,9 +51,7 @@ describe("command environment policies", () => {
       repositoryRoot: root,
     });
 
-    expect(context.environment.DATABASE_URL).toBe(
-      "postgresql://voidmix:voidmix@localhost:5432/voidmix",
-    );
+    expect(context.environment.DATABASE_URL).toBe("postgresql://raypx:raypx@localhost:5432/raypx");
     expect(context.processEnv.FILE_VALUE).toBe("local");
     expect(context.repositoryRoot).toBe(root);
   });

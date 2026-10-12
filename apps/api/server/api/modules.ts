@@ -3,16 +3,16 @@ import {
   type AuthSettings,
   type MailSettingsFallback,
   type SystemSettingsRepository,
-} from "@voidmix/core";
+} from "@raypx/core";
 import {
   type ProjectApplication,
   type AssetApplication,
   type ReviewApplication,
   type ActivityApplication,
   type CloudApplication,
-} from "@voidmix/application";
-import type { ObjectStorage } from "@voidmix/core";
-import type { CloudCapabilitiesDto } from "@voidmix/contracts";
+} from "@raypx/application";
+import type { ObjectStorage } from "@raypx/core";
+import type { CloudCapabilitiesDto } from "@raypx/contracts";
 
 interface CloudApiModules {
   cloud?: CloudApplication;

@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
-import type { CloudApplication } from "@voidmix/application";
-import type { CloudRun, CloudAssetVersion, ObjectStorage } from "@voidmix/core";
-import type { TrustedAiTool } from "@voidmix/ai";
+import type { CloudApplication } from "@raypx/application";
+import type { CloudRun, CloudAssetVersion, ObjectStorage } from "@raypx/core";
+import type { TrustedAiTool } from "@raypx/ai";
 import { computeTable, extractFile, type TableData, type Cell } from "./files.js";
 import {
   renderReport,

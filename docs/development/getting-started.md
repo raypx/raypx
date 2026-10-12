@@ -25,6 +25,12 @@ database for the cloud migration baseline. Authentication uses the
 Better Auth cookie session; local auth emails are logged when Resend is not
 configured.
 
+Compose creates the `raypx` database in the `raypx-postgres` volume. To reuse
+an existing local database after the rename, set `RAYPX_POSTGRES_DB` and
+`RAYPX_POSTGRES_VOLUME` to its existing names before starting Compose, and keep
+`DATABASE_URL` pointed at that database. Inspect volume names with
+`docker volume ls`; keep the existing volume until its data has been backed up.
+
 Redis is optional for local development. Production AI admission requires
 `REDIS_URL`; authentication always uses PostgreSQL. See
 [deployment](../architecture/deployment.md) for model, search, storage and
@@ -37,10 +43,10 @@ local values in root `.env` and machine-specific overrides in root
 `.env.local`. Env-sensitive development and build scripts use:
 
 ```bash
-vmx env -- <command>
+rpx env -- <command>
 ```
 
-The runner resolves the repository root from `@voidmix/scripts`, so it behaves
+The runner resolves the repository root from `@raypx/scripts`, so it behaves
 the same from the repository root or a workspace directory. It loads
 `.env.local` before `.env`, while Dotenvx preserves values already provided by
 the calling shell. The resulting priority is:
@@ -55,7 +61,7 @@ and deployment-oriented repository commands use it as needed. Unit tests stay
 outside the runner and must provide `runtimeEnv` or test stubs explicitly
 rather than depend on values from a developer's files.
 
-Dotenvx only loads files. `@voidmix/shared/env` still owns schema composition,
+Dotenvx only loads files. `@raypx/shared/env` still owns schema composition,
 defaults, normalization, and validation. Unknown variables are ignored.
 
 ## Common commands
@@ -86,15 +92,15 @@ Electrobun stable native bundle. Desktop scripts prepare the pinned SDK through
 the workspace-local bootstrap; Rust/Cargo and a global Hutch install are unnecessary.
 Use `bun run --cwd apps/desktop native:dev` for the native development shell.
 
-Those names are aliases for nested `vmx` commands, which is what the scripts call.
+Those names are aliases for nested `rpx` commands, which is what the scripts call.
 Reach for the CLI directly when you need to pass an argument:
 
 ```bash
-bun run vmx db migrate
-bun run vmx db push
-bun run vmx db clean
-bun run vmx db studio
-bun run vmx desktop build
+bun run rpx db migrate
+bun run rpx db push
+bun run rpx db clean
+bun run rpx db studio
+bun run rpx desktop build
 ```
 
 ## Local PostgreSQL

@@ -1,4 +1,4 @@
-import { createCloudPiAgent, checkPiRuntime } from "@voidmix/ai";
+import { createCloudPiAgent, checkPiRuntime } from "@raypx/ai";
 import { createCloudExecutor } from "./cloud.js";
 import { createExecutionClient } from "./execution-client.js";
 import type { RunnerBootstrap } from "./process-executor.js";
@@ -6,7 +6,7 @@ import type { RunnerBootstrap } from "./process-executor.js";
 const controller = new AbortController();
 if (process.argv.includes("--check")) {
   await checkPiRuntime();
-  process.stdout.write("Voidmix isolated Runner runtime verified.\n");
+  process.stdout.write("Raypx isolated Runner runtime verified.\n");
 } else serve();
 function serve() {
   let started = false;

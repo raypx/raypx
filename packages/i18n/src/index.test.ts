@@ -36,8 +36,8 @@ describe("locale runtime", () => {
   });
 
   it("only reads the canonical locale cookie", () => {
-    expect(getLocaleCookie("voidmix_locale=zh")).toBeUndefined();
-    expect(getLocaleCookie("voidmix_locale=zh; locale=en")).toBe("en");
+    expect(getLocaleCookie("raypx_locale=zh")).toBeUndefined();
+    expect(getLocaleCookie("raypx_locale=zh; locale=en")).toBe("en");
   });
 
   it("honors Accept-Language quality and stable ordering", () => {

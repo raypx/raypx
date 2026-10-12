@@ -12,14 +12,14 @@
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------ |
 | 删除 Desktop Library、项目进度和旧详情选择器                                    | 当前代码没有生产调用；`App.css` 从 1209 行降至 962 行，选择器计数从 206 降至 168                 | 保留删除           |
 | 去掉公共 Button 上的旧 `primary-button`、`secondary-button`、`icon-button` 覆盖 | Button 的 `variant`/`size` 已承担控件外观，页面只保留布局和特殊窗口样式                          | 保留删除           |
-| 删除 Desktop 重复主题块及 `--muted` 文本别名                                    | Web/Desktop 共用 `@voidmix/ui` 语义变量，文字改用 `--ink-muted`，`--muted` 恢复为表面语义        | 保留删除           |
+| 删除 Desktop 重复主题块及 `--muted` 文本别名                                    | Web/Desktop 共用 `@raypx/ui` 语义变量，文字改用 `--ink-muted`，`--muted` 恢复为表面语义          | 保留删除           |
 | 删除 `CommandInput`                                                             | 无生产调用，只有包内测试和导出；删除实现、测试场景和导出                                         | 保留删除           |
 | 内联 Admin `FilterButton`                                                       | 该封装集中 `aria-pressed`、Button variant 和选中状态；静态对照显示内联后调用点会重复维护这些行为 | 拒绝删除，保留封装 |
 | 内联 Avatar                                                                     | 多个 Web/Admin/Desktop 调用需要图片回退、姓名缩写、尺寸映射和可访问名称；内联会复制行为          | 拒绝删除，保留封装 |
 
 ## 实现记录
 
-- `@voidmix/ui` 新增 Base UI `Switch`，支持受控 `checked`、`onCheckedChange`、`disabled`、标签和小尺寸变体。
+- `@raypx/ui` 新增 Base UI `Switch`，支持受控 `checked`、`onCheckedChange`、`disabled`、标签和小尺寸变体。
 - Desktop 设置使用 `Switch`；偏好存储和切换逻辑仍属于 Desktop。
 - Web 项目列表和详情使用公共 `Input`、`Button`、`EmptyState`、`StatusBadge`。
 - `StatusBadge` 只接受通用视觉 tone，并组合共享 `Badge` 与 Phosphor 图标；项目和任务状态由应用 feature 映射到视觉 tone。

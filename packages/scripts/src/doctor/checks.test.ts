@@ -8,7 +8,7 @@ function dependencies(overrides: Partial<DoctorDependencies> = {}): DoctorDepend
     repositoryRoot: "/repo",
     readFile: vi.fn(async () =>
       JSON.stringify({
-        name: "voidmix",
+        name: "raypx",
         packageManager: "bun@1.4.0",
         devEngines: {
           packageManager: { name: "bun", version: "1.4.0" },

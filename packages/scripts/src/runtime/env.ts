@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { repositoryRoot } from "./repository.js";
 
-export const REPOSITORY_ENV_KEY = "VOIDMIX_REPOSITORY_ENV";
+export const REPOSITORY_ENV_KEY = "RAYPX_REPOSITORY_ENV";
 
 export type ProcessEnvironment = Record<string, string>;
 export type ProcessEnvironmentSource = "process" | "repository";

@@ -1,4 +1,4 @@
-import type { MailSettingsFallback } from "@voidmix/core";
+import type { MailSettingsFallback } from "@raypx/core";
 import { describe, expect, it } from "vite-plus/test";
 import { InMemorySystemSettingsRepository } from "./memory.js";
 import { PostgresSystemSettingsRepository } from "./postgres.js";
@@ -43,7 +43,7 @@ class FakePostgresDatabase {
 const fallback: MailSettingsFallback = {
   enabled: { value: true, source: "default" },
   from: { value: "environment@example.com", source: "environment" },
-  fromName: { value: "Voidmix", source: "default" },
+  fromName: { value: "Raypx", source: "default" },
   templatesBaseUrl: { value: null, source: "missing" },
   resendApiKey: { value: "environment-key", source: "environment" },
 };

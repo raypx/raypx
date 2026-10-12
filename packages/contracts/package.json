@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/contracts",
+  "name": "@raypx/contracts",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*"
+    "@raypx/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "catalog:tooling"
   }
 }

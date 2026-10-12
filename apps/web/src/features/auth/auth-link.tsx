@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Button } from "@voidmix/ui/components/ui/button";
+import { Button } from "@raypx/ui/components/ui/button";
 
 /** Keep the validated destination through every step of the authentication flow. */
 export function AuthLink({

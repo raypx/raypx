@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { createApiClient, createStreamingApiClient } from "@voidmix/client";
+import { createApiClient, createStreamingApiClient } from "@raypx/client";
 import { accounts, password } from "../database.js";
 
-const api = `http://127.0.0.1:${Number(process.env.VOIDMIX_E2E_PORT ?? 3000) + 2}`;
+const api = `http://127.0.0.1:${Number(process.env.RAYPX_E2E_PORT ?? 3000) + 2}`;
 
 test("real Better Auth sign-out revokes an already-open private conversation stream", async ({
   page,

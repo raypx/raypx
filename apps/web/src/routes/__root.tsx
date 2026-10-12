@@ -1,4 +1,4 @@
-import { TooltipProvider } from "@voidmix/ui/components/ui/tooltip";
+import { TooltipProvider } from "@raypx/ui/components/ui/tooltip";
 import {
   HeadContent,
   Scripts,
@@ -6,13 +6,13 @@ import {
   useRouter,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { AsyncI18nProvider, createBrowserLocaleStorage, useLocale } from "@voidmix/i18n/client";
-import type { Locale } from "@voidmix/i18n/types";
-import { AsyncToaster } from "@voidmix/ui/toast";
+import { AsyncI18nProvider, createBrowserLocaleStorage, useLocale } from "@raypx/i18n/client";
+import type { Locale } from "@raypx/i18n/types";
+import { AsyncToaster } from "@raypx/ui/toast";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { Button } from "@voidmix/ui/components/ui/button";
-import { ThemeProvider, ThemeScript, type UserTheme } from "@voidmix/ui/theme";
+import { Button } from "@raypx/ui/components/ui/button";
+import { ThemeProvider, ThemeScript, type UserTheme } from "@raypx/ui/theme";
 import { env } from "../env.js";
 import { loadWebMessages } from "../../i18n/messages";
 import { createRecoveryTranslator, readDocumentLocale } from "../../i18n/recovery-messages";
@@ -136,7 +136,7 @@ function RootErrorPage({ error, reset }: ErrorComponentProps) {
     <main className="flex min-h-dvh items-center justify-center bg-background px-6 py-16 text-foreground">
       <section className="w-full max-w-md rounded-xl border border-border bg-card p-8 text-center shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Voidmix
+          Raypx
         </p>
         <h1 className="mt-3 text-2xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
@@ -164,7 +164,7 @@ function NotFoundPage() {
     <main className="flex min-h-dvh items-center justify-center bg-background px-6 py-16 text-foreground">
       <section className="w-full max-w-md rounded-xl border border-border bg-card p-8 text-center shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Voidmix
+          Raypx
         </p>
         <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("pageNotFound")}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">

@@ -1,4 +1,4 @@
-import type { MailSettingsFallback } from "@voidmix/core";
+import type { MailSettingsFallback } from "@raypx/core";
 import {
   authSettingKeys,
   mailSettingKeys,

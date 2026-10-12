@@ -9,7 +9,7 @@ import type {
   AssetVersionV2,
   AssetVersionV2Repository,
   VisibleResourceQuery,
-} from "@voidmix/core";
+} from "@raypx/core";
 import { v2Assets, v2AssetVersions } from "../schema.js";
 export class PostgresAssetV2Repository implements AssetV2Repository {
   constructor(private readonly db: Database) {}

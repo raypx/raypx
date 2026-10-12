@@ -60,7 +60,7 @@ export const bundleOptions = {
         builder.onResolve({ filter: /^[^./]/ }, async (args) => {
           if (builtins.has(args.path) || args.path.startsWith("node:"))
             return { path: args.path, external: true };
-          if (args.path.startsWith("@voidmix/")) return;
+          if (args.path.startsWith("@raypx/")) return;
           const name = packageName(args.path);
           const directory = await locate(name, args.resolveDir || workspace);
           external.set(directory, name);
@@ -107,8 +107,7 @@ while (pending.length) {
   copied.set(directory, target);
   let complete = false;
   try {
-    complete =
-      (await readFile(join(target, ".voidmix-copy-complete"), "utf8")) === manifest.version;
+    complete = (await readFile(join(target, ".raypx-copy-complete"), "utf8")) === manifest.version;
   } catch {}
   if (!complete) {
     await rm(target, { recursive: true, force: true });
@@ -118,7 +117,7 @@ while (pending.length) {
       dereference: true,
       filter: (source) => basename(source) !== "node_modules",
     });
-    await writeFile(join(target, ".voidmix-copy-complete"), manifest.version);
+    await writeFile(join(target, ".raypx-copy-complete"), manifest.version);
   }
   // Nested ESM package.json files can suppress Node's automatic self-reference.
   await link(join(target, "node_modules", manifest.name), target);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { assertMessageCatalogParity } from "@voidmix/i18n/testing";
+import { assertMessageCatalogParity } from "@raypx/i18n/testing";
 import { loadWebMessages } from "./messages";
 import { messages } from "../tests/fixtures/messages";
 

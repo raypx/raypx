@@ -1,4 +1,4 @@
-# @voidmix/ui
+# @raypx/ui
 
 ## Purpose
 
@@ -65,7 +65,7 @@ the root `shadcn:update` command.
   - hand-written primitives are flat kebab-case files in `src/` (for example
     `avatar.tsx` and `logo.tsx`);
   - shadcn-generated components live directly in `src/components/ui/` and are
-    imported by consumers through `@voidmix/ui/components/ui/<name>`.
+    imported by consumers through `@raypx/ui/components/ui/<name>`.
 - Use package-local `imports` aliases (`#lib/*`, `#components/*`)
   for deep internal imports and package self-references. Nearby relative imports
   remain valid; consumers continue to use the public `exports` paths.
@@ -81,7 +81,7 @@ the root `shadcn:update` command.
   keep `src/index.ts` empty so consumers do not pull a component barrel.
 - Keep `src/toast/index.tsx` as the public lazy Toast wrapper and
   `src/components/ui/toast.tsx` as the concrete Toast implementation. Consumers
-  that need deferred Toast behavior import `@voidmix/ui/toast`.
+  that need deferred Toast behavior import `@raypx/ui/toast`.
 - **`vitest.config.ts` includes all `src/**/*.{test,spec}.{ts,tsx}` files.** The
   four layer scripts select unit, integration, component, or coverage runs;
   `--passWithNoTests` can still hide a filter that matches nothing. Component

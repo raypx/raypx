@@ -1,4 +1,4 @@
-# @voidmix/i18n
+# @raypx/i18n
 
 ## Purpose
 
@@ -8,11 +8,11 @@ Shared locale negotiation, React runtime helpers, Intl formatting, and the
 ## Interface
 
 ```text
-@voidmix/i18n         locale constants, parsing, formatting, translation
-@voidmix/i18n/client  React provider/hooks and browser/Desktop storage
-@voidmix/i18n/server  request locale resolution and sync translator factory
-@voidmix/i18n/types   runtime-only public types
-@voidmix/i18n/testing recursive catalog parity and ICU argument test helpers
+@raypx/i18n         locale constants, parsing, formatting, translation
+@raypx/i18n/client  React provider/hooks and browser/Desktop storage
+@raypx/i18n/server  request locale resolution and sync translator factory
+@raypx/i18n/types   runtime-only public types
+@raypx/i18n/testing recursive catalog parity and ICU argument test helpers
 ```
 
 ## Ownership

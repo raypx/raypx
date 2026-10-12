@@ -2,7 +2,7 @@
 
 > Cloud platform direction: [ADR-0016](./decisions/0016-cloud-agent-platform.md).
 
-Voidmix is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud Web
+Raypx is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud Web
 application with an independent Hono API, plus an Electrobun
 desktop client.
 
@@ -21,18 +21,18 @@ desktop client.
 
 ```mermaid
 flowchart LR
-  web["Web / TanStack Start"] --> client["@voidmix/client"]
+  web["Web / TanStack Start"] --> client["@raypx/client"]
   desktop["Desktop / Electrobun 2"] --> client
   client --> rpc["oRPC contracts"]
   rpc --> api["apps/api"]
-  api --> application["@voidmix/application"]
+  api --> application["@raypx/application"]
   worker["Worker / Pi / trusted tools"] --> application
   api --> storage["Private object storage adapter"]
   worker --> storage
   storage --> objects[("S3")]
-  api --> shared["@voidmix/shared: env + logger"]
+  api --> shared["@raypx/shared: env + logger"]
   api --> auth["Authentication and session"]
-  api --> core["@voidmix/core"]
+  api --> core["@raypx/core"]
   api --> db["Repository adapter"]
   db --> core
   db --> postgres[("PostgreSQL")]
@@ -47,7 +47,7 @@ lightweight cloud project client; local execution and device routing are retired
 by [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md).
 
 The domain language and aggregate boundaries are recorded in the root
-[`CONTEXT.md`](../../CONTEXT.md). `@voidmix/core` is the domain-kernel package;
+[`CONTEXT.md`](../../CONTEXT.md). `@raypx/core` is the domain-kernel package;
 its source is organized by business context rather than by application
 features. Application features remain in `apps/web/src/features/` and
 `apps/desktop/src/features/`. See [ADR-0008](./decisions/0008-domain-contexts-stay-in-core.md)
@@ -66,7 +66,7 @@ application commands while remaining independently deployable. `features`,
 and a generic `config` package are intentionally not standalone
 workspaces either.
 
-Environment validation belongs to `@voidmix/shared/env`; each application
+Environment validation belongs to `@raypx/shared/env`; each application
 assembles and validates its own configuration. Environment and logger APIs are
 subpaths of the shared foundation package.
 
@@ -97,9 +97,9 @@ packages/scripts ───> db + core + shared
 
 Rules:
 
-1. Frontend applications never import `@voidmix/db`.
-2. `@voidmix/core` never imports React, Hono, Nitro, or Drizzle.
-3. `@voidmix/contracts` performs no network or database work.
+1. Frontend applications never import `@raypx/db`.
+2. `@raypx/core` never imports React, Hono, Nitro, or Drizzle.
+3. `@raypx/contracts` performs no network or database work.
 4. API authenticates requests; Application enforces current resource capabilities.
 5. Operational logs never contain raw credentials or session tokens.
 6. New shared packages require a stable interface and at least two consumers.

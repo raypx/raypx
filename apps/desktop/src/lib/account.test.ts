@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const { createApiClient } = vi.hoisted(() => ({ createApiClient: vi.fn() }));
-vi.mock("@voidmix/client", () => ({ createApiClient }));
+vi.mock("@raypx/client", () => ({ createApiClient }));
 
 import { loadAccount } from "./account";
 

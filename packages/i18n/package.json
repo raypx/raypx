@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/i18n",
+  "name": "@raypx/i18n",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -24,10 +24,10 @@
     "use-intl": "catalog:"
   },
   "devDependencies": {
+    "@raypx/tsconfig": "workspace:*",
     "@testing-library/react": "catalog:tooling",
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*",
     "jsdom": "catalog:tooling",
     "react": "catalog:",
     "typescript": "catalog:tooling",

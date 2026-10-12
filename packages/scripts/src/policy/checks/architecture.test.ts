@@ -18,17 +18,17 @@ function fixture(
   const names = new Map(
     Object.keys(entries).map((path) => {
       const name = path.split("/").at(-1)!;
-      return [name, path.startsWith("apps/") ? name : `@voidmix/${name}`] as const;
+      return [name, path.startsWith("apps/") ? name : `@raypx/${name}`] as const;
     }),
   );
   for (const [path, item] of Object.entries(entries)) {
     files[`${path}/package.json`] = JSON.stringify({
       name: names.get(path.split("/").at(-1)!),
       dependencies: Object.fromEntries(
-        (item.deps ?? []).map((n) => [names.get(n) ?? `@voidmix/${n}`, "workspace:*"]),
+        (item.deps ?? []).map((n) => [names.get(n) ?? `@raypx/${n}`, "workspace:*"]),
       ),
       devDependencies: Object.fromEntries(
-        (item.dev ?? []).map((n) => [names.get(n) ?? `@voidmix/${n}`, "workspace:*"]),
+        (item.dev ?? []).map((n) => [names.get(n) ?? `@raypx/${n}`, "workspace:*"]),
       ),
       exports: item.exports ?? { ".": "./src/index.ts" },
       ...(item.imports ? { imports: item.imports } : {}),
@@ -59,10 +59,10 @@ describe("architecture boundaries", () => {
     expect(findings.some((f) => f.message.includes("cycle:"))).toBe(true);
   });
   it.each([
-    ['import {x} from "@voidmix/db/src/private";', "private cross-package"],
+    ['import {x} from "@raypx/db/src/private";', "private cross-package"],
     ['export * from "../../../packages/db/src/index";', "private cross-package"],
-    ['const x=import("@voidmix/scripts");', "forbidden runtime"],
-    ['type T=import("@voidmix/db").T;', "forbidden runtime"],
+    ['const x=import("@raypx/scripts");', "forbidden runtime"],
+    ['type T=import("@raypx/db").T;', "forbidden runtime"],
     ['import "@private/db";', "private cross-package"],
   ])("checks static, dynamic, type and aliased imports: %s", async (source, message) => {
     const findings = await fixture({
@@ -90,7 +90,7 @@ describe("architecture boundaries", () => {
   it("permits declared public subpaths and test-only reverse dependencies", async () => {
     expect(
       await fixture({
-        "apps/web": { deps: ["ui"], source: 'import "@voidmix/ui/components/ui/button";' },
+        "apps/web": { deps: ["ui"], source: 'import "@raypx/ui/components/ui/button";' },
         "packages/ui": { exports: { "./components/ui/*": "./src/components/ui/*.tsx" } },
         "packages/db": { deps: ["core"], dev: ["application"] },
         "packages/core": {},
@@ -102,7 +102,7 @@ describe("architecture boundaries", () => {
     expect(
       (
         await fixture({
-          "packages/db": { dev: ["application"], source: 'import "@voidmix/application";' },
+          "packages/db": { dev: ["application"], source: 'import "@raypx/application";' },
           "packages/application": {},
         })
       ).some((f) => f.message.includes("declared production dependency")),
@@ -113,7 +113,7 @@ describe("architecture boundaries", () => {
       "apps/desktop": {
         deps: ["ai"],
         sources: {
-          "src/main.ts": 'import "@voidmix/ai";',
+          "src/main.ts": 'import "@raypx/ai";',
         },
       },
       "packages/ai": {},
@@ -163,6 +163,6 @@ describe("architecture boundaries", () => {
       "packages/client": {},
     });
     expect(findings).toHaveLength(1);
-    expect(findings[0]?.message).toContain("must not depend on @voidmix/client");
+    expect(findings[0]?.message).toContain("must not depend on @raypx/client");
   });
 });

@@ -4,7 +4,7 @@ import { resolveManifestLocale } from "./manifest[.]webmanifest";
 
 describe("manifest locale resolution", () => {
   it("uses a supported query locale before request preferences", () => {
-    const request = new Request("https://voidmix.invalid/manifest.webmanifest?locale=zh");
+    const request = new Request("https://raypx.invalid/manifest.webmanifest?locale=zh");
     const headers = new Headers({
       cookie: "locale=en",
       "accept-language": "en-US",
@@ -17,11 +17,11 @@ describe("manifest locale resolution", () => {
     const headers = new Headers({ "accept-language": "zh-CN, en;q=0.8" });
 
     expect(
-      resolveManifestLocale(new Request("https://voidmix.invalid/manifest.webmanifest"), headers),
+      resolveManifestLocale(new Request("https://raypx.invalid/manifest.webmanifest"), headers),
     ).toBe("zh");
     expect(
       resolveManifestLocale(
-        new Request("https://voidmix.invalid/manifest.webmanifest?locale=fr"),
+        new Request("https://raypx.invalid/manifest.webmanifest?locale=fr"),
         headers,
       ),
     ).toBe("zh");

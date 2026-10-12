@@ -8,12 +8,12 @@ describe("web root route", () => {
   it.each([
     [
       "en",
-      "Voidmix | Your project workbench",
+      "Raypx | Your project workbench",
       "Give every project a place. Organize tasks, see what needs attention, and keep your work in context on Web and Desktop.",
     ],
     [
       "zh",
-      "Voidmix | 让项目工作，清晰有序",
+      "Raypx | 让项目工作，清晰有序",
       "让每个项目都有清晰的位置。组织任务、查看进展，在 Web 与 Desktop 中接续工作。",
     ],
   ] as const)(

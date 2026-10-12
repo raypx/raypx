@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Avatar } from "@voidmix/ui/avatar";
+import { Avatar } from "@raypx/ui/avatar";
 
 const meta = {
   title: "Primitives/Avatar",

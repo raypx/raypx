@@ -1,4 +1,4 @@
-import type { ApiClient } from "@voidmix/client";
+import type { ApiClient } from "@raypx/client";
 const mediaTypes: Record<string, string> = {
   csv: "text/csv",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

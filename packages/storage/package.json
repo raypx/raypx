@@ -1,5 +1,5 @@
 {
-  "name": "@voidmix/storage",
+  "name": "@raypx/storage",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,10 +18,10 @@
     "@aws-sdk/client-s3": "catalog:backend",
     "@aws-sdk/s3-presigned-post": "catalog:backend",
     "@aws-sdk/s3-request-presigner": "catalog:backend",
-    "@voidmix/core": "workspace:*"
+    "@raypx/core": "workspace:*"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "workspace:*"
+    "@raypx/tsconfig": "workspace:*",
+    "@vitest/coverage-v8": "catalog:tooling"
   }
 }

@@ -1,4 +1,4 @@
-import type { InheritedSetting } from "@voidmix/shared";
+import type { InheritedSetting } from "@raypx/shared";
 
 export interface MailRuntimeSettings {
   enabled: boolean;

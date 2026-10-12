@@ -1,5 +1,5 @@
 import type { CursorPage, VisibleResourceQuery } from "../pagination.js";
-import { DomainError } from "@voidmix/shared";
+import { DomainError } from "@raypx/shared";
 
 /** The canonical V2 project lifecycle. */
 export const projectStagesV2 = ["draft", "in_progress", "review", "delivered"] as const;

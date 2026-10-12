@@ -1,4 +1,4 @@
-import { EmptyState } from "@voidmix/ui/empty-state";
+import { EmptyState } from "@raypx/ui/empty-state";
 import { useDesktopTranslations } from "../../i18n/client";
 import type { ProjectLoadFailure } from "../../lib/projects";
 import { RefreshButton } from "./route-state";

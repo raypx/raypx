@@ -55,7 +55,7 @@ describe("createApiClient", () => {
       parseApiProblemDetails({
         data: {
           problem: {
-            type: "https://api.voidmix.dev/problems/PROJECT_ACCESS_DENIED",
+            type: "https://api.raypx.dev/problems/PROJECT_ACCESS_DENIED",
             title: "Project access denied",
             status: 403,
             code: "PROJECT_ACCESS_DENIED",

@@ -14,6 +14,7 @@ interface Workspace {
   path: string;
   manifest: Manifest;
 }
+const packagePrefix = "@raypx/";
 const report = findingFor("architecture.boundary");
 const packageRules: Record<string, readonly string[]> = {
   shared: [],
@@ -35,12 +36,14 @@ const packageRules: Record<string, readonly string[]> = {
 const rendererPackages = ["client", "contracts", "i18n", "ui", "agent-ui", "shared", "tsconfig"];
 function allowed(from: Workspace, to: Workspace) {
   if (to.path.startsWith("apps/")) return false;
-  if (from.manifest.name === "@voidmix/scripts" || from.path === "e2e") return true;
-  if (to.manifest.name === "@voidmix/scripts") return false;
+  if (from.manifest.name === "@raypx/scripts" || from.path === "e2e") return true;
+  if (to.manifest.name === "@raypx/scripts") return false;
+  const toPackage = to.manifest.name.slice(packagePrefix.length);
   if (["apps/web", "apps/desktop", "apps/storybook"].includes(from.path))
-    return rendererPackages.includes(to.manifest.name.slice(9));
+    return rendererPackages.includes(toPackage);
   if (from.path.startsWith("apps/")) return true;
-  return packageRules[from.manifest.name.slice(9)]?.includes(to.manifest.name.slice(9)) ?? false;
+  const fromPackage = from.manifest.name.slice(packagePrefix.length);
+  return packageRules[fromPackage]?.includes(toPackage) ?? false;
 }
 function matches(pattern: string, value: string) {
   const [prefix, suffix] = pattern.split("*");

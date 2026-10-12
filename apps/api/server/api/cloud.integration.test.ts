@@ -3,10 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { createCloudApplication } from "@voidmix/application";
-import { createApiClient, createStreamingApiClient } from "@voidmix/client";
-import { InMemoryCloudRepository, InMemorySystemSettingsRepository } from "@voidmix/db";
-import { createFilesystemStorage } from "@voidmix/storage";
+import { createCloudApplication } from "@raypx/application";
+import { createApiClient, createStreamingApiClient } from "@raypx/client";
+import { InMemoryCloudRepository, InMemorySystemSettingsRepository } from "@raypx/db";
+import { createFilesystemStorage } from "@raypx/storage";
 import { createApiApp } from "./app.js";
 import { createApiModules } from "./modules.js";
 import { createHeaderSessionResolver } from "./session.js";
@@ -14,7 +14,7 @@ import type { SessionResolver } from "./session.js";
 import { domainFixtures } from "./test-fixtures.js";
 
 async function fixture(resolveSession: SessionResolver = createHeaderSessionResolver()) {
-  const directory = await mkdtemp(join(tmpdir(), "voidmix-cloud-api-"));
+  const directory = await mkdtemp(join(tmpdir(), "raypx-cloud-api-"));
   const users = ["owner", "stranger"].map((id) => ({
     id,
     email: `${id}@example.test`,
@@ -22,11 +22,11 @@ async function fixture(resolveSession: SessionResolver = createHeaderSessionReso
   }));
   const repository = new InMemoryCloudRepository({ users });
   const cloud = createCloudApplication({ repository });
-  const secret = "voidmix-cloud-api-test-signing-secret";
+  const secret = "raypx-cloud-api-test-signing-secret";
   const storage = createFilesystemStorage({
     directory,
     signingSecret: secret,
-    publicBaseUrl: "http://voidmix.test",
+    publicBaseUrl: "http://raypx.test",
   });
   const app = createApiApp({
     modules: createApiModules({
@@ -44,24 +44,24 @@ async function fixture(resolveSession: SessionResolver = createHeaderSessionReso
       mailFallback: {
         enabled: { value: false, source: "default" },
         from: { value: null, source: "missing" },
-        fromName: { value: "Voidmix", source: "default" },
+        fromName: { value: "Raypx", source: "default" },
         templatesBaseUrl: { value: null, source: "missing" },
         resendApiKey: { value: null, source: "missing" },
       },
     }),
-    allowedOrigins: ["http://voidmix.test"],
+    allowedOrigins: ["http://raypx.test"],
     authHandler: async () => new Response(null, { status: 404 }),
     resolveSession,
     localStorage: { storage, signingSecret: secret },
   });
   const client = (actorId?: string, role: "user" | "admin" = "user") =>
     createApiClient({
-      baseUrl: "http://voidmix.test",
+      baseUrl: "http://raypx.test",
       headers: actorId
         ? {
-            "x-voidmix-user-id": actorId,
-            "x-voidmix-role": role,
-            "x-voidmix-email": `${actorId}@example.test`,
+            "x-raypx-user-id": actorId,
+            "x-raypx-role": role,
+            "x-raypx-email": `${actorId}@example.test`,
           }
         : {},
       fetch: async (input, init) => app.fetch(new Request(input, init)),
@@ -106,8 +106,8 @@ describe("cloud API through typed client", () => {
         await f.cloud.acceptQueued({ runId: run.id });
         await f.cloud.claim({ runId: run.id, ownerId: "private-worker" });
         const streams = createStreamingApiClient({
-          baseUrl: "http://voidmix.test",
-          headers: { "x-voidmix-user-id": "owner" },
+          baseUrl: "http://raypx.test",
+          headers: { "x-raypx-user-id": "owner" },
           fetch: async (input, init) => f.app.fetch(new Request(input, init)),
         });
         const conversationEvents = (
@@ -164,11 +164,11 @@ describe("cloud API through typed client", () => {
       });
       await f.cloud.finish({ ...fence, status: "succeeded", output: "Research answer" });
       const streams = createStreamingApiClient({
-        baseUrl: "http://voidmix.test",
+        baseUrl: "http://raypx.test",
         headers: {
-          "x-voidmix-user-id": "owner",
-          "x-voidmix-role": "user",
-          "x-voidmix-email": "owner@example.test",
+          "x-raypx-user-id": "owner",
+          "x-raypx-role": "user",
+          "x-raypx-email": "owner@example.test",
         },
         fetch: async (input, init) => f.app.fetch(new Request(input, init)),
       });

@@ -4,8 +4,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { I18nProvider } from "@voidmix/i18n/client";
-import { ThemeProvider } from "@voidmix/ui/theme";
+import { I18nProvider } from "@raypx/i18n/client";
+import { ThemeProvider } from "@raypx/ui/theme";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { messages } from "../../../tests/fixtures/messages";

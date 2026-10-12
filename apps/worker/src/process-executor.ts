@@ -1,8 +1,8 @@
 import { fork } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import type { CloudApplication } from "@voidmix/application";
-import type { CloudLimits, CloudRun } from "@voidmix/core";
+import type { CloudApplication } from "@raypx/application";
+import type { CloudLimits, CloudRun } from "@raypx/core";
 import type { RendererOptions } from "./tools/render.js";
 
 export interface RunnerBootstrap {

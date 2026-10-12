@@ -1,5 +1,5 @@
-import { createDefaultAuthSettings } from "@voidmix/core";
-import type { Mailer } from "@voidmix/mail/types";
+import { createDefaultAuthSettings } from "@raypx/core";
+import type { Mailer } from "@raypx/mail/types";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { recipientLocale, sendWelcomeEmailIfEnabled } from "./config.js";
@@ -20,7 +20,7 @@ describe("welcome email policy", () => {
     ["no headers", {}, {}],
     ["no request", undefined, {}],
   ])("resolves recipient locale: %s", (_name, headers, expected) => {
-    const request = headers ? new Request("https://voidmix.test/api/auth", { headers }) : undefined;
+    const request = headers ? new Request("https://raypx.test/api/auth", { headers }) : undefined;
     expect(recipientLocale(request)).toEqual(expected);
   });
 

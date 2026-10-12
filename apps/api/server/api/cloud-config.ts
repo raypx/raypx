@@ -1,11 +1,8 @@
-import type { ApiRuntimeEnvironment } from "./env.js";
+import { isDevelopmentAuthSecret, type ApiRuntimeEnvironment } from "./env.js";
 import { createApiError } from "./canonical-errors.js";
 
 export function cloudConfiguration(environment: ApiRuntimeEnvironment) {
-  if (
-    environment.NODE_ENV === "production" &&
-    environment.AUTH_SECRET === "voidmix-development-secret-change-me"
-  )
+  if (environment.NODE_ENV === "production" && isDevelopmentAuthSecret(environment.AUTH_SECRET))
     throw new Error("Production requires an explicitly configured AUTH_SECRET.");
   const flags = {
     search: environment.CLOUD_SEARCH_ENABLED ?? false,

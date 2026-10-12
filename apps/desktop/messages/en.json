@@ -1,7 +1,7 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "common": {
-    "brand": "VoidMix",
+    "brand": "Raypx",
     "primaryNavigation": "Primary navigation",
     "control": "Control",
     "projects": "Projects",
@@ -10,7 +10,7 @@
     "desktopReady": "Desktop shell ready",
     "browserPreview": "Browser preview",
     "trayMessage": "Tray controls are available in the desktop build.",
-    "hideToTray": "Hide VoidMix to the system tray",
+    "hideToTray": "Hide Raypx to the system tray",
     "account": "Account",
     "accountLoading": "Loading account…",
     "accountUnconfigured": "Connection not configured",

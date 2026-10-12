@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { ProjectV2DomainError, type AssetVersionV2 } from "@voidmix/core";
+import { ProjectV2DomainError, type AssetVersionV2 } from "@raypx/core";
 import { createReviewApplication } from "./reviews.js";
 import type { ReviewOptions } from "./types.js";
 const version: AssetVersionV2 = {

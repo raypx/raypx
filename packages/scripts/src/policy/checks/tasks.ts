@@ -36,7 +36,7 @@ export function validateTaskGraph(value: unknown): PolicyFinding[] {
     globalEnv?: string[];
     remoteCache?: { signature?: boolean };
   };
-  if (!Array.isArray(config.globalEnv) || !config.globalEnv.includes("VMX_CACHE_PLATFORM"))
+  if (!Array.isArray(config.globalEnv) || !config.globalEnv.includes("RPX_CACHE_PLATFORM"))
     add("cache keys must include the executable platform fingerprint");
   if (config.remoteCache?.signature !== true) add("remote cache artifacts must require signatures");
   for (const edge of ["check", "^build", "^transit"])

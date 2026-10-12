@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
-import { Button } from "@voidmix/ui/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@voidmix/ui/components/ui/field";
-import { Input } from "@voidmix/ui/components/ui/input";
+import { Button } from "@raypx/ui/components/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Input } from "@raypx/ui/components/ui/input";
 import { useTranslations } from "../../i18n/client";
 
 const copy = {

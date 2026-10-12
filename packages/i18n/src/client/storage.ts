@@ -29,7 +29,18 @@ export function createLocalStorageLocaleStorage(): LocaleStorage {
   return {
     read() {
       try {
-        return normalizeLocale(globalThis.localStorage?.getItem(LOCALE_STORAGE_KEY));
+        const stored = globalThis.localStorage?.getItem(LOCALE_STORAGE_KEY);
+        if (stored !== null && stored !== undefined) return normalizeLocale(stored);
+        // Migrate only an absent key, preserving an explicit Raypx preference.
+        const previous = normalizeLocale(globalThis.localStorage?.getItem("voidmix_locale"));
+        if (previous) {
+          try {
+            globalThis.localStorage?.setItem(LOCALE_STORAGE_KEY, previous);
+          } catch {
+            // Keep the old preference usable when storage is read-only.
+          }
+        }
+        return previous;
       } catch {
         return undefined;
       }

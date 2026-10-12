@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { cloudQueries } from "../../lib/cloud-queries";
 import { useCloudQueries } from "../../lib/use-cloud-queries";
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@voidmix/ui/page-header";
+import { PageHeader } from "@raypx/ui/page-header";
 import { useTranslations, useFormatter } from "../../i18n/client";
 import { createRouteApiClient } from "../../lib/route-api";
 import { RouteError, RoutePending } from "../../features/navigation/route-state";

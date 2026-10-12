@@ -1,4 +1,4 @@
-# Changelog — Voidmix Desktop
+# Changelog — Raypx Desktop
 
 ## Unreleased
 
@@ -11,7 +11,10 @@
 
 ### Changed
 
-- Rename the application workspace to `desktop`; native product identity stays Voidmix.
+- Rename product text, window and tray labels to Raypx, with the native identity
+  `com.raypx.desktop` and a Raypx WebView profile. Existing native installations
+  require signing in again; browser theme and language preferences migrate.
+- Rename the application workspace to `desktop`.
 
 - Replace the Tauri/Rust shell with Electrobun 2 and its pinned Bun native host.
 - Preserve application icons, the 800px window minimum and close-to-tray controls.

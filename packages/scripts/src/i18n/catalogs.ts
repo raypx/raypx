@@ -1,4 +1,4 @@
-import { compareMessageCatalogs } from "@voidmix/i18n/testing";
+import { compareMessageCatalogs } from "@raypx/i18n/testing";
 import { finding, type CatalogInput, type I18nFinding } from "./model.js";
 type MessageNode = string | { [key: string]: MessageNode };
 function isRecord(value: unknown): value is Record<string, unknown> {

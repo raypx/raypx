@@ -16,17 +16,17 @@
     ".env.local",
     "test.config.ts"
   ],
-  "globalEnv": ["VMX_CACHE_PLATFORM", "NODE_OPTIONS", "CI", "LANG", "TZ"],
+  "globalEnv": ["RPX_CACHE_PLATFORM", "NODE_OPTIONS", "CI", "LANG", "TZ"],
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"],
       "outputs": []
     },
     "check": {
-      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "dependsOn": ["^transit", "@raypx/shared#build"],
       "outputs": []
     },
-    "@voidmix/shared#check": {
+    "@raypx/shared#check": {
       "dependsOn": ["^transit"],
       "outputs": []
     },
@@ -36,22 +36,22 @@
       "outputs": ["dist/**", ".output/**", "storybook-static/**"]
     },
     "test": {
-      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "dependsOn": ["^transit", "@raypx/shared#build"],
       "cache": false,
       "outputs": []
     },
     "test:unit": {
-      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "dependsOn": ["^transit", "@raypx/shared#build"],
       "env": ["NODE_ENV"],
       "outputs": []
     },
     "test:component": {
-      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "dependsOn": ["^transit", "@raypx/shared#build"],
       "env": ["NODE_ENV"],
       "outputs": []
     },
     "test:integration": {
-      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "dependsOn": ["^transit", "@raypx/shared#build"],
       "cache": false,
       "outputs": [],
       "passThroughEnv": [
@@ -66,7 +66,7 @@
       ]
     },
     "test:coverage": {
-      "dependsOn": ["^transit", "@voidmix/shared#build"],
+      "dependsOn": ["^transit", "@raypx/shared#build"],
       "cache": false,
       "outputs": ["coverage/**"]
     },
@@ -110,22 +110,22 @@
       "dependsOn": ["web#build", "api#build", "desktop#build"],
       "cache": false,
       "outputs": [],
-      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]
+      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "RAYPX_E2E_*"]
     },
     "e2e:web": {
       "dependsOn": ["web#build", "api#build"],
       "cache": false,
       "outputs": [],
-      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]
+      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "RAYPX_E2E_*"]
     },
     "e2e:desktop": {
       "dependsOn": ["api#build", "desktop#build"],
       "cache": false,
       "outputs": [],
-      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "VOIDMIX_E2E_*"]
+      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "RAYPX_E2E_*"]
     },
     "test:postgres": {
-      "dependsOn": ["@voidmix/shared#build"],
+      "dependsOn": ["@raypx/shared#build"],
       "cache": false,
       "outputs": [],
       "passThroughEnv": ["TEST_DATABASE_URL", "NODE_ENV"]
@@ -154,7 +154,7 @@
       "outputs": [],
       "passThroughEnv": ["DATABASE_URL", "NODE_ENV"]
     },
-    "@voidmix/shared#build": {
+    "@raypx/shared#build": {
       "dependsOn": ["check", "^transit"],
       "outputs": ["dist/**"],
       "env": ["NODE_ENV"]

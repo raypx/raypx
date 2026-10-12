@@ -3,7 +3,7 @@ import type {
   CloudConversationSnapshotDto,
   CloudRunEventDto,
   CloudRunSnapshotDto,
-} from "@voidmix/contracts";
+} from "@raypx/contracts";
 import { createCloudTimelineProjection, createConversationProjection } from "./cloud-projection";
 const now = new Date("2026-10-08T00:00:00Z");
 const event = (

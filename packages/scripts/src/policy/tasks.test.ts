@@ -19,9 +19,9 @@ describe("task graph policy", () => {
   });
   it("rejects workspace overrides that cache external effects", () => {
     const graph = config();
-    graph.tasks["@voidmix/e2e#e2e"] = { cache: true };
+    graph.tasks["@raypx/e2e#e2e"] = { cache: true };
     expect(validateTaskGraph(graph).map((f) => f.message)).toEqual([
-      "@voidmix/e2e#e2e must execute every time",
+      "@raypx/e2e#e2e must execute every time",
     ]);
   });
   it.each(["e2e:web", "e2e:desktop"])("rejects caching the %s browser suite", (task) => {
@@ -35,7 +35,7 @@ describe("task graph policy", () => {
     "rejects workspace overrides that cache the %s browser suite",
     (task) => {
       const graph = config();
-      const qualifiedTask = `@voidmix/e2e#${task}`;
+      const qualifiedTask = `@raypx/e2e#${task}`;
       graph.tasks[qualifiedTask] = { cache: true };
       expect(validateTaskGraph(graph).map((f) => f.message)).toEqual([
         `${qualifiedTask} must execute every time`,

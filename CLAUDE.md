@@ -1,4 +1,4 @@
-# Voidmix Claude Code Instructions
+# Raypx Claude Code Instructions
 
 @AGENTS.md
 

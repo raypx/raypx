@@ -1,0 +1,1 @@
+ALTER TABLE "auth_accounts" ALTER COLUMN "issuer" SET DEFAULT 'raypx';

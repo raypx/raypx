@@ -35,7 +35,7 @@ const utf8 = (text: string) => new TextEncoder().encode(text);
 const safeLabel = (name: string) =>
   // Filesystem labels must exclude the full ASCII control range.
   // eslint-disable-next-line no-control-regex
-  name.replace(/[\x00-\x1f<>:"/\\|?*]/g, "_").slice(0, 100) || "Voidmix";
+  name.replace(/[\x00-\x1f<>:"/\\|?*]/g, "_").slice(0, 100) || "Raypx";
 
 export async function renderReport(
   spec: ReportSpec,
@@ -64,7 +64,7 @@ export async function renderReport(
   const document = new PDFDocument({
     size: "A4",
     margin: 48,
-    info: { Title: spec.title, Author: "Voidmix" },
+    info: { Title: spec.title, Author: "Raypx" },
   });
   const chunks: Buffer[] = [];
   const completed = new Promise<Buffer>((resolve, reject) => {
@@ -111,7 +111,7 @@ const csvValue = (value: Cell) => {
 export async function renderTable(title: string, tables: TableData[]): Promise<GeneratedFile[]> {
   if (!tables.length || tables.length > 20) throw new Error("Spreadsheet requires 1–20 sheets.");
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Voidmix";
+  workbook.creator = "Raypx";
   const files: GeneratedFile[] = [];
   const labels = new Set<string>();
   for (const table of tables) {
@@ -184,9 +184,9 @@ export async function renderDeck(
   await mkdir(options.directory, { recursive: true });
   const presentation = new Pptx();
   presentation.layout = "LAYOUT_WIDE";
-  presentation.author = "Voidmix";
+  presentation.author = "Raypx";
   presentation.title = spec.title;
-  presentation.subject = "Voidmix deliverable";
+  presentation.subject = "Raypx deliverable";
   const fontFace = options.fontFace ?? "Noto Sans CJK SC";
   presentation.theme = { headFontFace: fontFace, bodyFontFace: fontFace };
   for (const item of spec.slides) {

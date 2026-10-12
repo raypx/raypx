@@ -1,5 +1,5 @@
 import { render, Text } from "react-email";
-import type { Locale } from "@voidmix/i18n/types";
+import type { Locale } from "@raypx/i18n/types";
 import type { SendLinkEmailInput } from "../types.js";
 import { MailLayout } from "./layout.js";
 import { linkFallback } from "./shared.js";

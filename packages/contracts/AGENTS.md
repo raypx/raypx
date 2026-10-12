@@ -1,4 +1,4 @@
-# @voidmix/contracts
+# @raypx/contracts
 
 ## Purpose
 
@@ -61,15 +61,15 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   password-reset-request booleans. Never add settings sources, domain lists,
   missing mail fields, or secret state to that public DTO.
 - **An active status value is declared in three places with no shared
-  source**: the literal union in `@voidmix/core`, the `z.enum` here, and the
-  `pgEnum` in `@voidmix/db`. Miss one and it fails at runtime (Zod output
+  source**: the literal union in `@raypx/core`, the `z.enum` here, and the
+  `pgEnum` in `@raypx/db`. Miss one and it fails at runtime (Zod output
   validation or a PostgreSQL enum error), not at compile time.
 - Depend only on `@orpc/contract` and `zod`. Never import a runtime package.
 - `exactOptionalPropertyTypes` is on repo-wide: mark optional inputs
   `.optional()` and let consumers use conditional spread rather than passing
   `undefined`.
 
-See [`skills/voidmix-infra/references/orpc-procedures.md`](../../skills/voidmix-infra/references/orpc-procedures.md)
+See [`skills/raypx-infra/references/orpc-procedures.md`](../../skills/raypx-infra/references/orpc-procedures.md)
 for the full edit order across contracts, domain, db, and the API.
 
 ## Verification

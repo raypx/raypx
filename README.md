@@ -1,12 +1,12 @@
-# Voidmix
+# Raypx
 
-[![CI](https://github.com/voidmix/voidmix/actions/workflows/ci.yml/badge.svg)](https://github.com/voidmix/voidmix/actions/workflows/ci.yml)
+[![CI](https://github.com/raypx/raypx/actions/workflows/ci.yml/badge.svg)](https://github.com/raypx/raypx/actions/workflows/ci.yml)
 [![Bun 1.4.0](https://img.shields.io/badge/Bun-1.4.0-fbf0df?logo=bun&logoColor=000)](https://bun.sh/)
 [![Node.js 24.18.0](https://img.shields.io/badge/Node.js-24.18.0-339933?logo=nodedotjs&logoColor=fff)](https://nodejs.org/)
 [![TypeScript 7.0.2](https://img.shields.io/badge/TypeScript-7.0.2-3178c6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-d22128?logo=apache&logoColor=fff)](./LICENSE)
 
-Voidmix is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud
+Raypx is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud
 web app with a standalone typed Hono API, an operations console, and an Electrobun
 desktop client.
 
@@ -78,7 +78,7 @@ bun run dev
 ```
 
 Use the root `.env.local` for machine-specific overrides. Env-sensitive
-workspace scripts run through `vmx env -- <command>`, which loads root
+workspace scripts run through `rpx env -- <command>`, which loads root
 `.env.local` and then root `.env` without overriding values already present in
 the shell. Unit tests do not use this runner and must provide their environment
 explicitly.
@@ -109,10 +109,10 @@ bun run storybook:build
 bun run verify
 ```
 
-The direct repository CLI uses nested commands such as `vmx db migrate`,
+The direct repository CLI uses nested commands such as `rpx db migrate`,
 while the root Bun script names above remain stable aliases.
 
-Turbo owns task orchestration and caching; Vite+ owns leaf tools. `@voidmix/scripts` is reserved for procedural
+Turbo owns task orchestration and caching; Vite+ owns leaf tools. `@raypx/scripts` is reserved for procedural
 automation such as database setup, generated artifacts, and desktop packaging.
 Using the Bun scripts also guarantees that the repository-local Vite+ version
 is used even when a different global `vp` is installed.
@@ -134,4 +134,4 @@ management interfaces are retired. Register an account through the actual Auth
 flow; the old profile-only development seed has been removed.
 
 Application workspace names are `web`, `api`, `desktop`, `worker` and `storybook`.
-Shared packages retain their `@voidmix/` scope.
+Shared packages retain their `@raypx/` scope.

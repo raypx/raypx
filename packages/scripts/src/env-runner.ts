@@ -12,7 +12,7 @@ export async function runWithRepositoryEnv(
   command: readonly string[],
   options: RunWithRepositoryEnvOptions = {},
 ): Promise<ProcessResult> {
-  if (command.length === 0) throw new Error("Missing command. Use: vmx env -- <command>");
+  if (command.length === 0) throw new Error("Missing command. Use: rpx env -- <command>");
 
   return await runChildProcess(command, {
     cwd: options.cwd ?? process.cwd(),

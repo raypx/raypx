@@ -32,14 +32,14 @@ describe("authentication route search", () => {
   });
 
   it("builds a same-origin verification callback and preserves a safe destination", () => {
-    expect(createVerificationCallbackUrl("https://voidmix.example", "/projects?cursor=50")).toBe(
-      "https://voidmix.example/verify-email?verified=1&redirect=%2Fprojects%3Fcursor%3D50",
+    expect(createVerificationCallbackUrl("https://raypx.example", "/projects?cursor=50")).toBe(
+      "https://raypx.example/verify-email?verified=1&redirect=%2Fprojects%3Fcursor%3D50",
     );
   });
 
   it("adds a safe destination to the password reset callback", () => {
-    expect(createPasswordResetCallbackUrl("https://voidmix.example", "/projects")).toBe(
-      "https://voidmix.example/reset-password?redirect=%2Fprojects",
+    expect(createPasswordResetCallbackUrl("https://raypx.example", "/projects")).toBe(
+      "https://raypx.example/reset-password?redirect=%2Fprojects",
     );
   });
 });

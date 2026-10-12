@@ -3,11 +3,11 @@ import {
   PostgresOutboxRepository,
   PostgresCloudRepository,
   PostgresSystemSettingsRepository,
-} from "@voidmix/db";
-import { createCloudApplication } from "@voidmix/application";
-import { defaultCloudLimits } from "@voidmix/core";
-import { createS3Storage, createFilesystemStorage } from "@voidmix/storage";
-import { configureLogger, logger } from "@voidmix/shared/logger";
+} from "@raypx/db";
+import { createCloudApplication } from "@raypx/application";
+import { defaultCloudLimits } from "@raypx/core";
+import { createS3Storage, createFilesystemStorage } from "@raypx/storage";
+import { configureLogger, logger } from "@raypx/shared/logger";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getWorkerEnvironment } from "./env.js";
@@ -66,7 +66,7 @@ export async function createCloudWorkerRuntime(
     throw new Error("Production Worker requires private S3 storage.");
   if (Boolean(env.S3_ACCESS_KEY_ID) !== Boolean(env.S3_SECRET_ACCESS_KEY))
     throw new Error("S3 credentials require both fields.");
-  configureLogger({ service: "voidmix-worker" });
+  configureLogger({ service: "raypx-worker" });
   const controller = new AbortController();
   const connection = connectDatabase(env.DATABASE_URL);
   const storage = env.S3_BUCKET
@@ -85,7 +85,10 @@ export async function createCloudWorkerRuntime(
           : {}),
       })
     : createFilesystemStorage({
-        directory: env.BLOB_STORAGE_DIR ?? join(tmpdir(), "voidmix-cloud-objects"),
+        directory: env.BLOB_STORAGE_DIR ?? join(tmpdir(), "raypx-cloud-objects"),
+        ...(!env.BLOB_STORAGE_DIR
+          ? { legacyDirectory: join(tmpdir(), "voidmix-cloud-objects") }
+          : {}),
       });
   const limits = {
     ...defaultCloudLimits,
@@ -115,7 +118,7 @@ export async function createCloudWorkerRuntime(
       /^[A-Z_0-9]{1,60}$/.test(error.code)
         ? error.code
         : "WORKER_OPERATION_FAILED";
-    logger({ service: "voidmix-worker", ...(runId ? { runId } : {}), errorCode: code }).emit();
+    logger({ service: "raypx-worker", ...(runId ? { runId } : {}), errorCode: code }).emit();
     telemetry.capture(code, runId);
   };
   const baseExecute = createProcessExecutor({
@@ -155,7 +158,7 @@ export async function createCloudWorkerRuntime(
       const dispatch: WorkerOptions["dispatch"] = async (item) => {
         await dispatchCloud(item);
         logger({
-          service: "voidmix-worker",
+          service: "raypx-worker",
           event: "outbox.accepted",
           outboxId: item.id,
           ...(typeof item.payload.runId === "string" ? { runId: item.payload.runId } : {}),
