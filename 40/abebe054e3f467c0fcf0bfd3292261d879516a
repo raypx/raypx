@@ -1,0 +1,105 @@
+apps/worker/src/process-executor.test.ts
+  s_29d2da1ea73272::t_a551336db10391 14,18,27,29-30,51,71,80
+packages/scripts/src/policy/tasks.test.ts
+  s_29d2da1ea73272::t_a676c8d7321bf7 91
+apps/worker/src/runner.ts
+  s_29d2da1ea73272::t_916aeb47e79b19 94
+  s_29d2da1ea73272::t_eb60a4c6ccdbd5 3-30,32-54,57-64,66-74,84-85,100
+docs/architecture/decisions/README.md
+  s_29d2da1ea73272::t_485bbfed903360 60,62
+apps/worker/AGENTS.md
+  s_29d2da1ea73272::t_90c1bab00dc679 43-45
+  s_29d2da1ea73272::t_34ba3539a73f70 14-15,17,21
+  s_29d2da1ea73272::t_70b5d0c665c2bf 24
+  s_29d2da1ea73272::t_cd33ad4d62de25 37-40,52-54
+  s_29d2da1ea73272::t_485bbfed903360 41-42,49-51,77,102-103,111-112
+  s_29d2da1ea73272::t_f4568158252be6 78-80
+  s_29d2da1ea73272::t_5add84dc1f8de9 46-48
+docs/architecture/cloud-platform.md
+  s_29d2da1ea73272::t_485bbfed903360 14-16,53-56
+  s_29d2da1ea73272::t_90c1bab00dc679 60-62
+  s_29d2da1ea73272::t_5add84dc1f8de9 63-65
+  s_29d2da1ea73272::t_cd33ad4d62de25 48-52,57-59
+apps/worker/src/execution.ts
+  s_29d2da1ea73272::t_8b77870b488ffb 1-29,31-70,74-168,170-231,233-330
+  s_29d2da1ea73272::t_47635db96c8246 30,169,232
+  s_29d2da1ea73272::t_1e875297f18745 71-73
+docs/development/testing.md
+  s_29d2da1ea73272::t_485bbfed903360 148-151,162-164
+  s_29d2da1ea73272::t_cd33ad4d62de25 165-166
+apps/worker/src/build-artifact.integration.test.ts
+  s_29d2da1ea73272::t_47dfd3b9dcf874 33,35-37,42-49,54-60,65-68,70-71,73-74,142,153,165,171-172,192
+  s_29d2da1ea73272::t_c45d9c0fe9c07d 38-41
+  s_29d2da1ea73272::t_1bd992dfe0d177 50-53,69,72
+  s_29d2da1ea73272::t_2841a2283470e8 173-175
+apps/worker/src/cloud.ts
+  s_29d2da1ea73272::t_8b77870b488ffb 4-5
+packages/scripts/AGENTS.md
+  s_29d2da1ea73272::t_485bbfed903360 114-116
+docs/architecture/deployment.md
+  s_29d2da1ea73272::t_485bbfed903360 67-70,103-104,180-184,189,193-194
+  s_29d2da1ea73272::t_cd33ad4d62de25 185-188
+docs/README.md
+  s_29d2da1ea73272::t_485bbfed903360 34-37
+packages/scripts/src/verify/worker.integration.test.ts
+  s_29d2da1ea73272::t_a676c8d7321bf7 34,40,46-54
+apps/worker/src/runtime-checks.ts
+  s_29d2da1ea73272::t_a551336db10391 15,20,47
+apps/worker/src/process-executor.ts
+  s_29d2da1ea73272::t_8d94dfee69ef37 44,46-47,49-50,58-63,65-68,70-83,98-105,107,109,111-145,147,150-152,154-178,180-187,191-197
+  s_29d2da1ea73272::t_00915f3baf05f6 57,64
+  s_29d2da1ea73272::t_ff8473da9791fc 3,45
+  s_29d2da1ea73272::t_916aeb47e79b19 4-5,16,38,42-43,199,201-203
+  s_29d2da1ea73272::t_a85dc22a3de2f8 48,55,84-97,106,108,110,188-190
+  s_29d2da1ea73272::t_a551336db10391 33,69
+apps/worker/src/process-executor.integration.test.ts
+  s_29d2da1ea73272::t_2df4e7a0e5877d 3-46,48-56,147,150-152,154-158,162-165,168-174,176-183,185,187-192,195-196,200-209,211-213,217-220,224,228,235-238,240-243,245-248,250-253,256,260-261
+  s_29d2da1ea73272::t_d4ab674fe59191 61-62,71-72,91-92,107-112,127-129,133-135,137-139
+  s_29d2da1ea73272::t_ccda6cce4702cf 126
+  s_29d2da1ea73272::t_00915f3baf05f6 148-149,159-161,193-194,197-199,214-215,222-223,225-227,229-231,249,257-259
+  s_29d2da1ea73272::t_bf25d58bbdd34a 2,47,232-234,239,244,254-255
+  s_29d2da1ea73272::t_52274008fe4e0c 210,216
+  s_29d2da1ea73272::t_c66030621881db 57-60,63-70,73-90,93-106,113-125,130-132,136,140-146
+  s_29d2da1ea73272::t_eb60a4c6ccdbd5 221
+  s_29d2da1ea73272::t_916aeb47e79b19 1,153,166-167,175,184,186
+apps/worker/src/dev.integration.test.ts
+  s_29d2da1ea73272::t_a676c8d7321bf7 63,188-194,197,204
+docs/architecture/decisions/0023-worker-vite-nitro-artifact.md
+  s_29d2da1ea73272::t_485bbfed903360 5-10
+apps/worker/src/main.ts
+  s_29d2da1ea73272::t_eb60a4c6ccdbd5 1
+  s_29d2da1ea73272::t_a551336db10391 2-5,10,16
+docs/architecture/decisions/0025-worker-single-entry-execution.md
+  s_29d2da1ea73272::t_cd33ad4d62de25 48-52,63-65
+  s_29d2da1ea73272::t_5add84dc1f8de9 42-44
+  s_29d2da1ea73272::t_90c1bab00dc679 38-41,45
+  s_29d2da1ea73272::t_485bbfed903360 1-37,46-47,53-62,66-91
+packages/scripts/src/policy/checks/tasks.ts
+  s_29d2da1ea73272::t_a676c8d7321bf7 49
+docs/architecture/tooling.md
+  s_29d2da1ea73272::t_485bbfed903360 445-449,456,460-461
+apps/worker/src/cloud.test.ts
+  s_29d2da1ea73272::t_581146b8e2bd65 328,349
+  s_29d2da1ea73272::t_31b7ee3e85a2c6 16,43,50-54,64-66,71-82,85-90,92-94,98,101,112-126,138-139,237,338,354,450,519,546,600,612,632,666
+  s_29d2da1ea73272::t_d2cdd2534787fd 56-61
+  s_29d2da1ea73272::t_47635db96c8246 2-5,19-24,55,62-63,67,140,155-156,183,205,214
+  s_29d2da1ea73272::t_1e875297f18745 68-70,102-103,105-108,127-137,306-309,391-393,425-427
+  s_29d2da1ea73272::t_6c45bc33e20f2d 365-390,394-424,428
+  s_29d2da1ea73272::t_0c48149b757c62 310
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "40abebe054e3f467c0fcf0bfd3292261d879516a",
+  "prompts": {},
+  "sessions": {
+    "s_29d2da1ea73272": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12f68-d872-7963-b308-ef1a17895496",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
