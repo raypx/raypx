@@ -58,13 +58,11 @@ describe("locale runtime", () => {
     expect(chinese.dateTime(date, { timeZone: "UTC", year: "numeric" })).toContain("2026");
   });
 
-  it("caches formatters by locale and timezone and preserves named presets", () => {
+  it("preserves timezone-specific results and named presets", () => {
     const date = new Date("2026-08-24T00:30:00.000Z");
     const utc = createFormatter("en", { timeZone: "UTC" });
     const losAngeles = createFormatter("en", { timeZone: "America/Los_Angeles" });
 
-    expect(createFormatter("en", { timeZone: "UTC" })).toBe(utc);
-    expect(utc).not.toBe(losAngeles);
     expect(utc.dateTime(date, { day: "numeric" })).toBe("24");
     expect(losAngeles.dateTime(date, { day: "numeric" })).toBe("23");
     expect(utc.number(1_200, "compact")).toMatch(/1.2K/i);

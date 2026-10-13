@@ -1,11 +1,12 @@
 {
   "package": "@raypx/intl",
-  "version": "0.1.0",
-  "artifact": "raypx-intl-0.1.0.f56ef51.tgz",
+  "version": "0.0.0",
+  "artifact": "raypx-intl-0.0.0.64e419e.tgz",
   "sourceRepository": "https://github.com/raypx/packages",
-  "sourceCommit": "f56ef516c07647140c13e1a39ac91adf715ac60d",
-  "sha256": "2d0a3eb26663c12f3d265ff70f6ac9b2e7922fc281c56cd43a41aa482caca78f",
+  "sourceCommit": "64e419e45e39e377da98dd9aaacb700886fa7dde",
+  "sha256": "f55514e25a3a6e46e8aa46d84641cb4cdadf51f3a194411202dd6226d3e40610",
   "registryPublication": "pending",
   "reactPeer": "^19.0.0",
-  "reactOptional": true
+  "reactOptional": false,
+  "useIntlDependency": "4.14.9"
 }

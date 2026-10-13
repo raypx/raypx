@@ -57,7 +57,7 @@
         "zustand": "^5.0.15",
         "@tanstack/react-query": "5.104.2",
         "@tanstack/react-router-ssr-query": "1.167.3",
-        "@raypx/intl": "file:vendor/raypx-intl-0.1.0.f56ef51.tgz"
+        "@raypx/intl": "file:vendor/raypx-intl-0.0.0.64e419e.tgz"
       },
       "tooling": {
         "@dotenvx/dotenvx": "^2.34.2",

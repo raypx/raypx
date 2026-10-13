@@ -148,7 +148,7 @@ describe("Desktop Start routes", () => {
     fireEvent.submit(input.closest("form")!);
     expect(await screen.findByText("Research sources")).toBeDefined();
     expect(loaders.createTask).toHaveBeenCalledWith("project-1", "Research sources");
-    expect(screen.queryByRole("textbox")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("textbox")).toBeNull());
   });
 
   it("keeps read-only project tasks visible without write controls", async () => {

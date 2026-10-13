@@ -1,5 +1,6 @@
 import type { TranslationValues } from "./types.js";
-import type { Translator } from "./translator.js";
+
+type ErrorTranslator = (key: string, values?: TranslationValues) => string;
 
 export type ErrorCodeMap = Readonly<Record<string, string>>;
 
@@ -71,7 +72,7 @@ export function readErrorDetails(error: unknown): LocalizedErrorDetails | undefi
 
 export function translateErrorCode(
   error: unknown,
-  translator: Translator,
+  translator: ErrorTranslator,
   errorKeys: ErrorCodeMap,
   fallbackKey = "unknown",
 ): string {
@@ -86,7 +87,7 @@ export function translateErrorCode(
 
 export function translateKnownErrorCode(
   error: unknown,
-  translator: Translator,
+  translator: ErrorTranslator,
   errorKeys: ErrorCodeMap,
 ): string | null {
   const details = readErrorDetails(error);

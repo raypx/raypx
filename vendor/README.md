@@ -1,6 +1,6 @@
 # Toolkit package snapshots
 
-Raypx consumes `@raypx/drizzle@0.1.0` and `@raypx/intl@0.1.0` from versioned
+Raypx consumes `@raypx/drizzle` and `@raypx/intl` from versioned
 compiled archives until npm publication. Reusable implementations are maintained
 only in [raypx/packages](https://github.com/raypx/packages).
 
@@ -10,6 +10,8 @@ sourcemaps, API documentation and licenses. Drizzle's complete source notices
 and licenses are package-root files. No archive imports a product workspace.
 Root Bun catalogs point to these archives; Docker install stages copy `vendor/`
 before frozen dependency installation.
+Intl delegates translation, formatting and providers to `use-intl`; React is a
+required peer for its root, server and client entries.
 
 These snapshots are intentionally tracked and are not editable source forks,
 npm publication claims or cross-checkout links.

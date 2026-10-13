@@ -22,9 +22,12 @@ internationalization lives in the independently released `@raypx/intl` package.
 - Keep the `voidmix_locale` preference migration in this product adapter.
 - Own translation of the stable `data.error` envelope and safe primitive values;
   never expose server diagnostic prose as translated UI text.
+  Error helpers accept a plain translation function without requiring rich-text methods.
 - Configure an immutable `@raypx/intl` locale runtime and React client factory.
   Translation, formatting, sync/async providers, request negotiation and ICU
-  catalog validation are maintained in the standalone library.
+  catalog validation are maintained in the standalone library. Its translation,
+  formatting and IntlProvider use `use-intl` 4.14.9; React is a required peer,
+  including for server consumers.
 - Applications and Mail own their message catalogs and catalog loaders.
 - Preserve locale transitions, async catalog race guards, default UTC formatting,
   provider format/timezone overrides and callback failure behavior.
