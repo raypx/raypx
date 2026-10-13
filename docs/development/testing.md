@@ -371,7 +371,11 @@ PostgreSQL tests and each browser suite its own PostgreSQL 17 service. `RAYPX_E2
 consecutive ports for concurrent local development.
 
 Database coverage includes Core/SQL visibility parity, keyset pagination,
-owner fencing, rollback and idempotence. Authenticated Playwright uses real
+owner fencing, rollback and idempotence. PostgreSQL outbox regressions under
+`packages/db/tests` cover per-item availability/backoff, healthy work progressing
+past failed items, and stale-attempt acknowledgement/release fencing, including
+reused host identities. Worker tests cover persisted-attempt delays and surfaced
+release failures. Authenticated Playwright uses real
 Better Auth credentials and API/DB services for project creation, tasks, Cloud
 delivery and acceptance, SSR isolation, refresh/history and errors.
 No actor-header authentication bypass is enabled.

@@ -31,6 +31,9 @@ transported or stored.
 - Own canonical V2 personal/Organization project access, resource ports,
   Cloud Run cancellation rules, outbox contracts, and the blob-storage port.
   Device-bound execution and the former Project AgentRun ports are retired.
+- Outbox claims expose persisted `attempts`; `OutboxLease` carries
+  `id`, `workerId` and `attempts` to fence acknowledgement and release to the
+  current claim. Release additionally carries `retryDelayMs`; enqueue is unchanged.
 - Ownership is distinct from authorship. Organization capability is a ceiling;
   a project membership can narrow it but cannot elevate it.
 - Own the **repository interfaces**. The dependency direction is inverted on

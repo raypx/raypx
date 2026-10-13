@@ -4,8 +4,18 @@ export interface OutboxEvent {
   payload: Record<string, unknown>;
 }
 
+export interface OutboxClaim extends OutboxEvent {
+  attempts: number;
+}
+
+export interface OutboxLease {
+  id: string;
+  workerId: string;
+  attempts: number;
+}
+
 export interface OutboxRepository {
-  claim(input: { workerId: string; limit: number; leaseMs: number }): Promise<OutboxEvent[]>;
-  acknowledge(input: { id: string; workerId: string }): Promise<void>;
-  release(input: { id: string; workerId: string }): Promise<void>;
+  claim(input: { workerId: string; limit: number; leaseMs: number }): Promise<OutboxClaim[]>;
+  acknowledge(input: OutboxLease): Promise<void>;
+  release(input: OutboxLease & { retryDelayMs: number }): Promise<void>;
 }

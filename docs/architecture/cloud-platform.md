@@ -117,6 +117,19 @@ explicit events, with no autocapture or replay. Fixed server flags govern new
 runs; cancellation is a separate action. Task notifications use durable outbox
 delivery, recipient preferences and typed bilingual mail templates.
 
+Outbox delivery remains at least once. Worker uses each claim's persisted
+`attempts` for exponential retry delay, starting at one second and capped at
+60 seconds; release updates only that item's `availableAt`. Claims order eligible
+rows by `availableAt`, `createdAt` and `id`, so a failing batch does not sleep the
+whole consumer or starve healthy work. `OutboxLease` binds acknowledgement and
+release to `id`, `workerId` and `attempts`, rejecting stale claim generations even
+when a host identity is reused. Dispatch errors remain reported, and provider
+idempotency keys remain stable. A database release failure propagates as an
+infrastructure failure; lease expiry makes the item reclaimable. There is no
+retry limit, dead-letter path or automatic acknowledgement of failed items.
+Enqueue and schema stay unchanged; PostgreSQL owns consumption while the memory
+Cloud repository continues to record transactional outbox writes only.
+
 ## Verification
 
 Run owning workspace checks/tests, then `bun run verify`. PostgreSQL concurrency

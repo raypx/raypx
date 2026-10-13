@@ -17,10 +17,18 @@ export interface WorkerOptions {
 }
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const initialRetryDelayMs = 1_000;
+const maximumRetryDelayMs = 60_000;
+const maximumRetryExponent = Math.ceil(Math.log2(maximumRetryDelayMs / initialRetryDelayMs));
+
+function retryDelayMs(attempts: number): number {
+  const exponent = Math.max(0, Math.min(maximumRetryExponent, attempts - 1));
+  return Math.min(maximumRetryDelayMs, initialRetryDelayMs * 2 ** exponent);
+}
 
 /**
  * Run the Agent outbox loop. The repository owns the atomic lease operation;
- * dispatch failures release the item so another attempt can reclaim it.
+ * dispatch failures schedule only that item for a later retry.
  */
 export async function runWorker(options: WorkerOptions, signal?: AbortSignal): Promise<void> {
   const pollMs = options.pollMs ?? 1_000;
@@ -28,7 +36,6 @@ export async function runWorker(options: WorkerOptions, signal?: AbortSignal): P
   const batchSize = options.batchSize ?? 10;
   const workerId = options.workerId ?? "worker-default";
   const sleep = options.sleep ?? defaultSleep;
-  let retryDelay = pollMs;
 
   while (!signal?.aborted) {
     const items = await options.outbox.claim({ workerId, limit: batchSize, leaseMs });
@@ -37,16 +44,15 @@ export async function runWorker(options: WorkerOptions, signal?: AbortSignal): P
       continue;
     }
 
-    let handledFailure = false;
     const results = await Promise.allSettled(
       items.map(async (item) => {
+        const lease = { id: item.id, workerId, attempts: item.attempts };
         try {
           await options.dispatch(item);
-          await options.outbox.acknowledge({ id: item.id, workerId });
+          await options.outbox.acknowledge(lease);
         } catch (error) {
-          await options.outbox.release({ id: item.id, workerId });
+          await options.outbox.release({ ...lease, retryDelayMs: retryDelayMs(item.attempts) });
           if (options.onError) {
-            handledFailure = true;
             options.onError(error, item);
           } else throw error;
         }
@@ -54,9 +60,5 @@ export async function runWorker(options: WorkerOptions, signal?: AbortSignal): P
     );
     const failed = results.find((result) => result.status === "rejected");
     if (failed?.status === "rejected") throw failed.reason;
-    if (handledFailure && !signal?.aborted) {
-      await sleep(retryDelay);
-      retryDelay = Math.min(60_000, retryDelay * 2);
-    } else retryDelay = pollMs;
   }
 }

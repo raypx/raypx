@@ -26,6 +26,9 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 ## Ownership
 
 - Claim durable work using a lease and invoke an injected dispatcher.
+- Failed outbox items use their persisted `attempts` for per-item exponential
+  backoff: one second initially, capped at 60 seconds. Release carries the current
+  lease identity and `retryDelayMs`; failures never make the whole batch sleep.
 - `cloud.run.queued` persists acceptance before the outbox acknowledgement;
   an independent execution loop atomically claims the canonical CloudRun.
 - Every host has a unique UUID. Recovery touches expired execution leases only.
@@ -63,8 +66,9 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 
 - Never read HTTP sessions or browser state.
 - Never import React, route modules, or Desktop code.
-- Every claimed item must either be acknowledged or have its lease expire for a
-  later worker to reclaim it.
+- Acknowledge outbox items only after successful dispatch. Failures remain
+  retryable and reported; a failed database release propagates and relies on
+  lease expiry for recovery. Never auto-acknowledge or discard failed items.
 - Shutdown stops new claims and waits for currently running handlers to finish.
 - Pi receives only explicit trusted tools; never register built-in file, shell,
   dynamic extension, arbitrary MCP, browser or computer tools in this host.
