@@ -1,0 +1,39 @@
+packages/db/NOTICE.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 4-5,8-9,14-15
+package.json
+  s_8cb2ae3aaeefff::t_f897e940043ead 40,60
+docs/architecture/intl.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 54-57
+docs/architecture/decisions/0030-independent-intl-library.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 43-44,47-48,58-59,61-62
+docs/architecture/drizzle-extensions.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 6,88-91
+docs/architecture/tooling.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 35-38
+docs/architecture/decisions/0031-postgres-js-only-drizzle.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 38-39
+packages/i18n/AGENTS.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 44-45
+docs/architecture/decisions/0029-toolkit-drizzle-extraction.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 26-31,55-56
+packages/db/AGENTS.md
+  s_8cb2ae3aaeefff::t_f897e940043ead 21-22
+bun.lock
+  s_8cb2ae3aaeefff::t_7a9f53b1160d28 448,465,1016,1022
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "59a930cbb2214d09e96d340dde4fb5c7905fca27",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
