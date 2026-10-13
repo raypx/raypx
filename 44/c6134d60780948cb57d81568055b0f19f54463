@@ -1,0 +1,92 @@
+packages/db/src/v2/activity.ts
+  s_8cb2ae3aaeefff::t_93348115b44957 2
+packages/db/src/schema/relations.ts
+  s_8cb2ae3aaeefff::t_5eccefeacf46d9 2
+  s_8cb2ae3aaeefff::t_3aaa553a367c25 5-19
+docs/README.md
+  s_8cb2ae3aaeefff::t_159f4313660f49 23-24
+packages/db/src/schema/migrations.ts
+  s_8cb2ae3aaeefff::t_5eccefeacf46d9 1-7
+packages/db/src/memory.test.ts
+  s_8cb2ae3aaeefff::t_f4d1f506a07e43 2
+packages/db/src/repositories/settings/postgres.ts
+  s_8cb2ae3aaeefff::t_f4d1f506a07e43 1,5-11,13-14,16-17,20-21,25,27-34
+packages/db/src/cloud-records.test.ts
+  s_8cb2ae3aaeefff::t_ab3adcc518bea4 1-53
+packages/db/src/schema/cloud-columns.ts
+  s_8cb2ae3aaeefff::t_c3412b5a6f8a7f 1-40
+packages/db/src/index.ts
+  s_8cb2ae3aaeefff::t_93348115b44957 15,27-28,31
+  s_8cb2ae3aaeefff::t_f8d5a77fc7fece 29-30
+packages/db/src/repositories/settings/memory.ts
+  s_8cb2ae3aaeefff::t_f4d1f506a07e43 1-11,31-43
+packages/db/src/v2/reviews.ts
+  s_8cb2ae3aaeefff::t_93348115b44957 3
+docs/architecture/database.md
+  s_8cb2ae3aaeefff::t_f8d5a77fc7fece 10-14
+  s_8cb2ae3aaeefff::t_159f4313660f49 1-9,15-69
+packages/db/src/postgres.test.ts
+  s_8cb2ae3aaeefff::t_f4d1f506a07e43 3-4
+packages/db/drizzle.config.ts
+  s_8cb2ae3aaeefff::t_5eccefeacf46d9 9
+packages/db/src/schema/tables.ts
+  s_8cb2ae3aaeefff::t_5eccefeacf46d9 3,5-22,24,28-45
+packages/db/src/schema/cloud.ts
+  s_8cb2ae3aaeefff::t_c3412b5a6f8a7f 13-14,50-55,59,72,87,116-119,123,137,152
+packages/db/src/cloud.test.ts
+  s_8cb2ae3aaeefff::t_ab3adcc518bea4 65-69
+packages/db/src/v2/projects.ts
+  s_8cb2ae3aaeefff::t_93348115b44957 15
+docs/architecture/packages.md
+  s_8cb2ae3aaeefff::t_159f4313660f49 206-209,212-214
+packages/db/src/schema/identity.ts
+  s_8cb2ae3aaeefff::t_f3e8781da6cc9e 2-3
+packages/db/src/connection.ts
+  s_8cb2ae3aaeefff::t_93348115b44957 4,11
+  s_8cb2ae3aaeefff::t_fb9bf5197a1d7b 12
+packages/db/src/repositories/cloud/memory.ts
+  s_8cb2ae3aaeefff::t_c31ec58851e5fb 42
+  s_8cb2ae3aaeefff::t_b1383957d7efda 18,23,28,44,48,51,57,157,216,249
+packages/db/src/repositories/cloud/records.ts
+  s_8cb2ae3aaeefff::t_b1383957d7efda 1-81
+packages/db/src/v2/tasks.ts
+  s_8cb2ae3aaeefff::t_93348115b44957 3
+packages/db/tests/domains.integration.test.ts
+  s_8cb2ae3aaeefff::t_6b188bab43d8f6 2,20,23-25,49-58,66,122-124,126-131,134-147,150,210
+  s_8cb2ae3aaeefff::t_342501a3decc52 19,21,103,148-149
+packages/db/src/schema.ts
+  s_8cb2ae3aaeefff::t_5eccefeacf46d9 1-7
+packages/db/src/v2/assets.ts
+  s_8cb2ae3aaeefff::t_93348115b44957 3
+packages/db/src/schema.test.ts
+  s_8cb2ae3aaeefff::t_77ef903bf86782 1-6,8-40,42-52
+  s_8cb2ae3aaeefff::t_3aaa553a367c25 7,41
+packages/db/tests/cloud.integration.test.ts
+  s_8cb2ae3aaeefff::t_77c7a1a036aa70 25,472-477
+  s_8cb2ae3aaeefff::t_93348115b44957 24
+packages/db/AGENTS.md
+  s_8cb2ae3aaeefff::t_159f4313660f49 16-23,92-94,96
+packages/db/src/schema/compatibility.ts
+  s_8cb2ae3aaeefff::t_f3e8781da6cc9e 1-61
+packages/db/src/repositories/cloud/postgres.ts
+  s_8cb2ae3aaeefff::t_1c0fb978656618 10,12,14,18-21,71,74,76-77,79-81,83,85-86,88,94,144-145,149,153,158
+  s_8cb2ae3aaeefff::t_8f66bdfdd0271b 164-213,215-216,222-224,271-272,274,276,279,282,285
+  s_8cb2ae3aaeefff::t_c31ec58851e5fb 218-219,221
+  s_8cb2ae3aaeefff::t_d24578eb98ae3f 217
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "44c6134d60780948cb57d81568055b0f19f54463",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
