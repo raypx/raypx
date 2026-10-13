@@ -1,0 +1,42 @@
+docs/architecture/decisions/0030-independent-intl-library.md
+  s_8cb2ae3aaeefff::t_b08af94ef0b895 21-35,56-59
+  s_8cb2ae3aaeefff::t_2cd72e1214adf1 60
+docs/architecture/intl.md
+  s_8cb2ae3aaeefff::t_b08af94ef0b895 15-29,45-48,59
+docs/architecture/decisions/0004-use-intl-static-catalogs.md
+  s_8cb2ae3aaeefff::t_b08af94ef0b895 6-7
+packages/i18n/AGENTS.md
+  s_8cb2ae3aaeefff::t_9790b64a30e5c6 25
+  s_8cb2ae3aaeefff::t_b08af94ef0b895 28-30
+package.json
+  s_8cb2ae3aaeefff::t_9c52491c1496e0 60
+packages/i18n/src/errors.ts
+  s_8cb2ae3aaeefff::t_9790b64a30e5c6 3,75,90
+  s_8cb2ae3aaeefff::t_9d1ead614a74b5 2
+apps/desktop/src/router.integration.test.tsx
+  s_8cb2ae3aaeefff::t_508752973f9052 151
+packages/i18n/src/index.test.ts
+  s_8cb2ae3aaeefff::t_d00c04fac7a8ba 61
+bun.lock
+  s_8cb2ae3aaeefff::t_66d1a69e581682 465,1022,1072-1073,1872-1873,2608-2609
+vendor/intl.json
+  s_8cb2ae3aaeefff::t_31c91bd878510c 3-4,6-7,10-11
+vendor/README.md
+  s_8cb2ae3aaeefff::t_12e58f32b6d8f8 3,13-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2d8cb04e132ec7e76a596e057f27e6edb76c4a82",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
