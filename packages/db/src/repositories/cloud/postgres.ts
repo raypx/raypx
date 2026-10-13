@@ -13,7 +13,7 @@ import type { DatabaseConnection } from "../../connection.js";
 import { isUniqueViolation } from "@raypx/drizzle/errors";
 import { users, v2Projects, v2ProjectMembers, organizationMembers } from "../../schema.js";
 import { cloudRecords, cloudActorId, cloudParentIds, hydrateCloudRecord } from "./records.js";
-import { excludedColumn, jsonText, jsonBoolean } from "@raypx/drizzle/pg";
+import { excludedColumn, jsonText, jsonBoolean } from "@raypx/drizzle/postgres";
 import { accountUsageQuery, readyRunsQuery, expiredRunsQuery } from "./queries.js";
 
 type Database = DatabaseConnection["db"];

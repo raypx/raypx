@@ -176,6 +176,11 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
     await expect(rejected).rejects.toBeInstanceOf(DrizzleQueryError);
     const error = await rejected.catch((failure: unknown) => failure);
     expect(isUniqueViolation(error, "cloud_events_run_event_idx")).toBe(true);
+    expect((error as DrizzleQueryError).cause).toHaveProperty(
+      "constraint_name",
+      "cloud_events_run_event_idx",
+    );
+    expect((error as DrizzleQueryError).cause).not.toHaveProperty("constraint");
     expect(await repository.read((tx) => tx.get("conversations", conversation.id))).toEqual(
       conversation,
     );

@@ -1,7 +1,7 @@
 # Drizzle extensions and Toolkit ownership
 
 The extension library is maintained in the independent
-[raypx/toolkit repository](https://github.com/raypx/packages), as `@raypx/drizzle`.
+[raypx/packages repository](https://github.com/raypx/packages), as `@raypx/drizzle`.
 [ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md) records extraction,
 independent releases and the pre-publication archive bridge.
 
@@ -23,13 +23,27 @@ All upstream capabilities are recorded whether or not Raypx uses them. Inventori
 are not lists of implemented exports. Declared-but-unimplemented rules, generated
 private modules and actual published entrypoints are identified separately.
 
+[ADR-0031](./decisions/0031-postgres-js-only-drizzle.md) records the driver scope
+and entrypoint migration.
+
+## Supported database and driver
+
+The implementation targets PostgreSQL through `postgres` (postgres.js) and
+`drizzle-orm/postgres-js` only. Public SQL helpers use `@raypx/drizzle/postgres`;
+the earlier `/pg` export is removed. Drizzle's `pg-core`, `PgTable` and `PgDialect`
+remain its canonical PostgreSQL schema and SQL APIs.
+
+The extension does not support node-postgres (`pg`), Bun SQL, PGlite, MySQL or
+SQLite. Complete upstream inventories retain their capabilities as reference,
+with other drivers/dialects explicitly outside the implementation plan.
+
 ## Current consumer surface
 
 | Package import               | Raypx use                                                                    |
 | ---------------------------- | ---------------------------------------------------------------------------- |
 | `@raypx/drizzle`             | Typed member-column omission                                                 |
-| `@raypx/drizzle/pg`          | Explicit UPSERT fields; bound JSONB paths and CASE-guarded scalar conversion |
-| `@raypx/drizzle/errors`      | Exact PostgreSQL uniqueness recognition before Core error translation        |
+| `@raypx/drizzle/postgres`    | Explicit UPSERT fields; bound JSONB paths and CASE-guarded scalar conversion |
+| `@raypx/drizzle/errors`      | postgres.js `constraint_name` recognition before Core error translation      |
 | `@raypx/drizzle/results`     | Nullable select and required returning-row unwrapping                        |
 | `@raypx/drizzle/diagnostics` | EXPLAIN construction and sanitized node metrics                              |
 

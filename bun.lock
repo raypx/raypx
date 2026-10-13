@@ -445,7 +445,7 @@
       "@aws-sdk/client-s3": "^3.1149.0",
       "@aws-sdk/s3-presigned-post": "^3.1149.0",
       "@aws-sdk/s3-request-presigner": "^3.1149.0",
-      "@raypx/drizzle": "file:vendor/raypx-drizzle-0.1.0.f56ef51.tgz",
+      "@raypx/drizzle": "file:vendor/raypx-drizzle-0.1.0.29357e7.tgz",
       "@sentry/node": "^11.6.0",
       "drizzle-kit": "1.0.0-rc.5-5935859",
       "drizzle-orm": "1.0.0-rc.5-5935859",
@@ -1013,7 +1013,7 @@
 
     "@raypx/db": ["@raypx/db@workspace:packages/db"],
 
-    "@raypx/drizzle": ["@raypx/drizzle@vendor/raypx-drizzle-0.1.0.f56ef51.tgz", { "peerDependencies": { "drizzle-orm": "1.0.0-rc.5-5935859" } }, "sha512-pqEPvM6ZGr2TQHljq4KwJqe2NBImyLTLP7DUU3XNUA+kXOgD2GezVjklJXa1Fi6GKRcgasZhf1C/MlGe7aMy5A=="],
+    "@raypx/drizzle": ["@raypx/drizzle@vendor/raypx-drizzle-0.1.0.29357e7.tgz", { "peerDependencies": { "drizzle-orm": "1.0.0-rc.5-5935859", "postgres": "3.4.9" }, "optionalPeers": ["postgres"] }, "sha512-yRm/SX+bYVEjaSmay8CHn+1r0Gp6HY7pWUt3YepELMrTRKQ6gYi5kSGT8FTWTi6We5XZbok7CWv+3G4qPyNwRA=="],
 
     "@raypx/e2e": ["@raypx/e2e@workspace:e2e"],
 

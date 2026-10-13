@@ -77,3 +77,8 @@ NODE_ENV=test TEST_DATABASE_URL=postgres://localhost/raypx_local_test bun run te
 Project visibility and cursor tests instantiate the real PostgreSQL repository.
 Cloud tests cover concurrent admission/claim, ownership fencing, transactional
 rollback, Date replay and unknown JSON, usage aggregation and immutable rounds.
+
+## Supported driver
+
+PostgreSQL uses `postgres` (postgres.js) and `drizzle-orm/postgres-js`.
+The extension does not accept node-postgres `constraint` metadata.

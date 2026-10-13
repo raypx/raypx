@@ -66,3 +66,5 @@ source-boundary checks run with `bun run i18n:check` and are the first gate of
 - [ADR-0029: Independently released Toolkit libraries](./0029-toolkit-drizzle-extraction.md)
 
 - [ADR-0030: Independent internationalization](0030-independent-intl-library.md) — public Intl runtime and private product configuration.
+
+- [ADR-0031: PostgreSQL and postgres.js extension scope](0031-postgres-js-only-drizzle.md) — one driver and explicit Postgres helper entrypoint.

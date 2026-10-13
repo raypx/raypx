@@ -14,7 +14,7 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { organizationMembers, v2ProjectMembers, v2Projects } from "../schema.js";
 import type { Database } from "../connection.js";
 import { withoutColumns } from "@raypx/drizzle";
-import { excludedColumns } from "@raypx/drizzle/pg";
+import { excludedColumns } from "@raypx/drizzle/postgres";
 
 const memberColumns = withoutColumns(v2ProjectMembers, "id", "createdAt", "updatedAt");
 const organizationMemberColumns = withoutColumns(

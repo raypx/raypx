@@ -70,6 +70,9 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 
 - Never expose tables or Drizzle types to frontend applications. Web and Desktop reach the backend through `@raypx/client` and
   `@raypx/contracts`.
+- The only SQL driver is `postgres` (postgres.js), through Drizzle
+  `postgres-js`; do not add `pg`/node-postgres adapters. `pg-core` remains
+  Drizzle's PostgreSQL schema API.
 - PostgreSQL and in-memory implementations must be updated together when a
   domain repository interface changes and both implement that port.
 - Project visibility SQL must match Core for personal owners/collaborators and
