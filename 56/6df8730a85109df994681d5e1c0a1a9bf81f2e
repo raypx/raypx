@@ -1,0 +1,128 @@
+apps/worker/nitro.config.ts
+  s_8cb2ae3aaeefff::t_658efbb3a1f9da 13
+docs/architecture/tooling.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 42-43,452-454
+apps/worker/src/runtime-checks.ts
+  s_8cb2ae3aaeefff::t_b5ed8802f3128e 1-77
+apps/worker/src/tools/index.ts
+  s_8cb2ae3aaeefff::t_928ccfb98ed9d4 16-21,154-157,206-208,281
+  s_8cb2ae3aaeefff::t_fca155a5564af1 158-174,176-194,203-204
+apps/worker/src/process-executor.integration.test.ts
+  s_8cb2ae3aaeefff::t_dd3aae4b4a0e11 50,197-212,214-216,218
+  s_8cb2ae3aaeefff::t_b5ed8802f3128e 114
+packages/scripts/src/policy/checks/architecture.test.ts
+  s_8cb2ae3aaeefff::t_4d617a20dfc5ab 81,83
+docs/README.md
+  s_8cb2ae3aaeefff::t_545f1cad7d06b9 40-42
+packages/db/src/v2.ts
+  s_8cb2ae3aaeefff::t_dadeb7ebb0e32c 3-6
+CONTEXT.md
+  s_8cb2ae3aaeefff::t_71ff22110c32f4 7-10,56-57,70-71,79-81,90
+docs/architecture/decisions/0009-pi-as-agent-runtime.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 7-9
+  s_8cb2ae3aaeefff::t_9827bc16323fd3 19
+apps/api/AGENTS.md
+  s_8cb2ae3aaeefff::t_1cc252bf40d778 61-62
+  s_8cb2ae3aaeefff::t_15219eaae10a18 65-66
+docs/architecture/cloud-platform.md
+  s_8cb2ae3aaeefff::t_545f1cad7d06b9 8-10,18,22-26,63-64,68,80-82,143,145-149
+apps/worker/src/tools/tools.test.ts
+  s_8cb2ae3aaeefff::t_b5ed8802f3128e 11,44-47
+  s_8cb2ae3aaeefff::t_818298ed902037 69-75
+apps/api/server/api/execution-gateway.ts
+  s_8cb2ae3aaeefff::t_e1cd2cbdf8b59b 11,48,191-193,231-232,240,255
+docs/architecture/README.md
+  s_8cb2ae3aaeefff::t_545f1cad7d06b9 5-8,33,68,91,110-111
+packages/scripts/AGENTS.md
+  s_8cb2ae3aaeefff::t_4d617a20dfc5ab 88,115-118
+apps/api/server/api/runtime.ts
+  s_8cb2ae3aaeefff::t_a269bc0c33a7bd 170,202-203,209
+docs/architecture/applications.md
+  s_8cb2ae3aaeefff::t_545f1cad7d06b9 116,121-126
+docs/architecture/decisions/0025-worker-single-entry-execution.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 17-20
+docs/development/monolithic-simplification.md
+  s_8cb2ae3aaeefff::t_9827bc16323fd3 26
+  s_8cb2ae3aaeefff::t_144385be0b253f 7-8
+apps/worker/src/process-executor.ts
+  s_8cb2ae3aaeefff::t_658efbb3a1f9da 144
+turbo.json
+  s_8cb2ae3aaeefff::t_69485c190d8e02 93
+PRODUCT.md
+  s_8cb2ae3aaeefff::t_71ff22110c32f4 11-12,43
+AGENTS.md
+  s_8cb2ae3aaeefff::t_4d617a20dfc5ab 26,54-56
+docs/architecture/decisions/README.md
+  s_8cb2ae3aaeefff::t_545f1cad7d06b9 64
+package.json
+  s_8cb2ae3aaeefff::t_c2bc35faf1d5b2 174
+apps/worker/src/execution.ts
+  s_8cb2ae3aaeefff::t_aaaf1bee186550 2,32,37,41,46-48,50-56,58-59,61-64,66,68,70-71,73,75,77
+  s_8cb2ae3aaeefff::t_fca155a5564af1 21-24,72
+packages/scripts/src/testing/jsdom-preload.integration.test.ts
+  s_8cb2ae3aaeefff::t_cd47b8edfc4c47 40,51,54
+  s_8cb2ae3aaeefff::t_71ff22110c32f4 12
+packages/scripts/src/verify/worker.integration.test.ts
+  s_8cb2ae3aaeefff::t_71ff22110c32f4 41
+docs/architecture/raypx-delivery-goal.md
+  s_8cb2ae3aaeefff::t_545f1cad7d06b9 3,22-24,37-38,43-46,61
+docs/development/cloud-acceptance.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 3-7
+.env.example
+  s_8cb2ae3aaeefff::t_69485c190d8e02 38,44
+apps/worker/AGENTS.md
+  s_8cb2ae3aaeefff::t_97e78dae3e7895 10-14,16-24
+  s_8cb2ae3aaeefff::t_cd6908e927edc1 15,36-39,51,58-59,69-74,104
+docs/architecture/packages.md
+  s_8cb2ae3aaeefff::t_71ff22110c32f4 20,67-70
+apps/api/server/api/execution-gateway.integration.test.ts
+  s_8cb2ae3aaeefff::t_dbb459d59054e2 93-100,102-104
+  s_8cb2ae3aaeefff::t_1cc252bf40d778 5,16,46,49,74-92,101,105,171
+apps/worker/src/runner.ts
+  s_8cb2ae3aaeefff::t_fca155a5564af1 70
+  s_8cb2ae3aaeefff::t_658efbb3a1f9da 7,10-15
+packages/scripts/src/lint/boundaries.integration.test.ts
+  s_8cb2ae3aaeefff::t_4d617a20dfc5ab 28,44,145,150,201
+docs/architecture/decisions/0027-remove-pi-sdk.md
+  s_8cb2ae3aaeefff::t_98e37ee25507c1 1,5,7-12,14,16-21,25-56,60-75
+docs/development/workspace-preview.md
+  s_8cb2ae3aaeefff::t_9827bc16323fd3 54
+  s_8cb2ae3aaeefff::t_144385be0b253f 5-8
+apps/worker/src/execution.test.ts
+  s_8cb2ae3aaeefff::t_818298ed902037 1-45,51-137
+  s_8cb2ae3aaeefff::t_fca155a5564af1 46-50
+docs/architecture/decisions/0017-gateway-and-task-rounds.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 12-15
+docs/development/getting-started.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 35-38
+docs/architecture/decisions/0023-worker-vite-nitro-artifact.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 12-15
+docs/architecture/decisions/0016-cloud-agent-platform.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 11-14
+packages/db/tests/domains.integration.test.ts
+  s_8cb2ae3aaeefff::t_fca155a5564af1 119-121,145,179-182,185-187,219
+README.md
+  s_8cb2ae3aaeefff::t_71ff22110c32f4 33,56-59
+docs/development/testing.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 149-152,162-163
+docs/architecture/deployment.md
+  s_8cb2ae3aaeefff::t_144385be0b253f 8,85-88,93-94,103-104,182
+packages/db/src/index.ts
+  s_8cb2ae3aaeefff::t_dadeb7ebb0e32c 21-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "566df8730a85109df994681d5e1c0a1a9bf81f2e",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
