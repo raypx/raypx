@@ -50,10 +50,6 @@ export const apiRuntimeEnv = {
       .default("true")
       .transform((value) => value === "true"),
     CLOUD_ACCOUNT_MODEL_CALL_LIMIT: z.coerce.number().int().positive().optional(),
-    CLOUD_MODEL_PROVIDER: z.string().min(1).optional(),
-    CLOUD_MODEL_ID: z.string().min(1).optional(),
-    CLOUD_MODEL_API_KEY: z.string().min(1).optional(),
-    BRAVE_SEARCH_API_KEY: z.string().min(1).optional(),
     CLOUD_ACCOUNT_CONCURRENCY: z.coerce.number().int().positive().optional(),
     CLOUD_ACCOUNT_STORAGE_BYTES: z.coerce.number().int().positive().optional(),
     CLOUD_REQUEST_LIMIT: z.coerce.number().int().positive().default(20),
@@ -88,10 +84,6 @@ export interface ApiRuntimeEnvironment {
   CLOUD_DELEGATION_ENABLED?: boolean | undefined;
   CLOUD_EXPORT_ENABLED?: boolean | undefined;
   CLOUD_ACCOUNT_MODEL_CALL_LIMIT?: number | undefined;
-  CLOUD_MODEL_PROVIDER?: string | undefined;
-  CLOUD_MODEL_ID?: string | undefined;
-  CLOUD_MODEL_API_KEY?: string | undefined;
-  BRAVE_SEARCH_API_KEY?: string | undefined;
   CLOUD_ACCOUNT_CONCURRENCY?: number | undefined;
   CLOUD_ACCOUNT_STORAGE_BYTES?: number | undefined;
   CLOUD_REQUEST_LIMIT?: number | undefined;

@@ -14,6 +14,10 @@ Host dispatch responsibilities are superseded by
 [ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md). The single entry,
 isolated task processes, deadline and cleanup decisions remain in force.
 
+Pi execution and provider runtime checks are superseded by
+[ADR-0027](0027-remove-pi-sdk.md). The single executable, isolated Runner,
+deadline, cleanup and independent document verification remain required.
+
 ## Context
 
 Host and Runner use the same pinned Bun runtime and deployment artifact, but two

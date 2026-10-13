@@ -9,6 +9,10 @@ Only the dual-entry artifact provisions are superseded by
 dependency tracing, complete artifact cache and development-watch decisions
 remain in force. The record below preserves the original two-entry decision.
 
+Pi dependency tracing and runtime checks are superseded by
+[ADR-0027](0027-remove-pi-sdk.md). Document assets and relocated-artifact checks
+remain required.
+
 Supersedes only the Worker compilation/runtime-preparation split in
 [ADR-0018](0018-turbo-task-orchestration.md). Turbo remains the sole workspace
 task runner and cache; Vite+ remains the leaf toolchain.

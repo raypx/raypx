@@ -3,13 +3,12 @@ import { createCloudApplication } from "@raypx/application";
 import { cloudToolNames } from "@raypx/core";
 import { InMemoryCloudRepository } from "@raypx/db";
 import { computeTable, parseCsv, validateXlsxArchive } from "./files.js";
-import { isPublicAddress, validateSourceUrl } from "./network.js";
 import { literalCell, renderTable } from "./render.js";
 import ExcelJS from "exceljs";
 import { validateCitations } from "./citations.js";
 import { createTrustedTools, type ToolHost } from "./index.js";
 
-describe("trusted data and network tools", () => {
+describe("trusted data and document tools", () => {
   it("keeps the registry aligned with authorized names and limits modes and children", async () => {
     const app = createCloudApplication({
       repository: new InMemoryCloudRepository({
@@ -42,6 +41,10 @@ describe("trusted data and network tools", () => {
         generatedAssetIds: new Set(),
       },
       renderer: { directory: "/unused" },
+      research: {
+        search: async () => [],
+        read: async (url) => ({ url, title: "Source", text: "Evidence" }),
+      },
     };
     const computer = createTrustedTools({ ...host, delegate: async () => [] }).map(
       (tool) => tool.name,
@@ -63,6 +66,13 @@ describe("trusted data and network tools", () => {
     const searchChild = createTrustedTools(searchHost).map((tool) => tool.name);
     expect(searchChild).toEqual(["search", "read_source", "extract_file", "compute_table"]);
     expect(searchChild).not.toContain("delegate");
+
+    const { research: _research, ...withoutResearch } = host;
+    const local = createTrustedTools(withoutResearch).map((tool) => tool.name);
+    expect(local).not.toContain("search");
+    expect(local).not.toContain("read_source");
+    expect(local).toContain("extract_file");
+    expect(local).toContain("render_table");
   });
 
   it("requires searched evidence and rejects invented citations including reference links", () => {
@@ -118,34 +128,5 @@ describe("trusted data and network tools", () => {
     expect(literalCell("  @import")).toBe("'  @import");
     expect(() => validateXlsxArchive(generated[0]!.body)).not.toThrow();
     expect(() => validateXlsxArchive(new Uint8Array(100))).toThrow("invalid");
-  });
-  it("blocks private, loopback, metadata, mapped and documentation addresses", () => {
-    for (const address of [
-      "127.0.0.1",
-      "10.1.0.1",
-      "169.254.169.254",
-      "172.16.0.1",
-      "192.168.1.1",
-      "100.64.0.1",
-      "::1",
-      "fe80::1",
-      "fd00::1",
-      "::ffff:127.0.0.1",
-      "2001:db8::1",
-      "2001:0db8:0000:0000::1",
-      "2001:0000:0000::1",
-      "2002:0a00:0101::",
-    ])
-      expect(isPublicAddress(address), address).toBe(false);
-    expect(isPublicAddress("1.1.1.1")).toBe(true);
-    expect(isPublicAddress("2606:4700:4700::1111")).toBe(true);
-    for (const url of [
-      "file:///etc/passwd",
-      "http://127.0.0.1",
-      "http://localhost",
-      "https://user:pass@example.com",
-      "http://example.com:8080",
-    ])
-      expect(() => validateSourceUrl(url)).toThrow();
   });
 });

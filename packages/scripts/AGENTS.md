@@ -85,7 +85,7 @@ Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] 
 - Applications use their unscoped directory name; packages and E2E retain the
   `@raypx/` scope. Filters and qualified Turbo tasks use the actual package name.
 - `desktop build` first runs root `build:desktop` through Turbo, then invokes the
-  Desktop `native:build` Electrobun packager. It never prepares a local Pi runner.
+  Desktop `native:build` Electrobun packager.
 - Dependency maintenance is explicit: `rpx deps dedupe` may rewrite `bun.lock`,
   `rpx deps dedupe --check` is read-only, and `rpx deps audit` is read-only.
 - Dependency check/update excludes Drizzle RC builds because hash suffixes do
@@ -112,8 +112,10 @@ Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] 
   the native toolchain. Clean removes Desktop build/artifacts/project SDK caches,
   preserving native profiles and user data.
 - `verify` starts the relocated Worker with `--check`; its same-entry
-  `--runner --check` child validates Pi. This probe needs no database or external
-  providers and validates the single executable, shared chunks and exporters.
+  `--runner --check` child validates Runner startup. This probe needs no database
+  or external providers and validates the single executable, shared chunks and
+  document exporters. Model and research execution are unavailable under
+  [ADR-0027](../../docs/architecture/decisions/0027-remove-pi-sdk.md).
 
 ## Verification
 

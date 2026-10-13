@@ -116,7 +116,9 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
           const actual = allProjects
             .filter((p) => {
               const projectMember = projectMembers.find((m) => m.projectId === p.id);
-              const organizationMember = orgMembers.find((m) => m.organizationId === p.organizationId);
+              const organizationMember = orgMembers.find(
+                (m) => m.organizationId === p.organizationId,
+              );
               return (
                 resolveProjectAccessV2({
                   actorId,
@@ -140,10 +142,7 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
             )
             .map((p) => p.id)
             .sort();
-          expect(
-            actual,
-            JSON.stringify({ actorId, grant, membership }),
-          ).toEqual(expected);
+          expect(actual, JSON.stringify({ actorId, grant, membership })).toEqual(expected);
         }
       }
   }, 30_000);
@@ -177,12 +176,15 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
       let startIndex = 0;
       if (cursor) {
         const [cursorTime, cursorId] = cursor.split(":");
-        startIndex = visibleProjects.findIndex(
-          (p) => p.updatedAt.toISOString() === cursorTime && p.id === cursorId
-        ) + 1;
+        startIndex =
+          visibleProjects.findIndex(
+            (p) => p.updatedAt.toISOString() === cursorTime && p.id === cursorId,
+          ) + 1;
       }
 
-      const items = limit ? visibleProjects.slice(startIndex, startIndex + limit) : visibleProjects.slice(startIndex);
+      const items = limit
+        ? visibleProjects.slice(startIndex, startIndex + limit)
+        : visibleProjects.slice(startIndex);
       const nextCursor =
         limit && items.length === limit && startIndex + limit < visibleProjects.length
           ? `${items[items.length - 1]!.updatedAt.toISOString()}:${items[items.length - 1]!.id}`
@@ -214,9 +216,7 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
     );
     const visible = await listVisible("reader", 1);
     await connection.db.update(v2ProjectMembers).set({ status: "removed" });
-    expect(
-      (await listVisible("reader", 1, visible.nextCursor!)).items,
-    ).toEqual([]);
+    expect((await listVisible("reader", 1, visible.nextCursor!)).items).toEqual([]);
   });
   it("queries cross-project assets and activities with the same visibility and pagination", async () => {
     await project("p");

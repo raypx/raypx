@@ -54,9 +54,6 @@ process.send({type:'ready'});`,
         ownerId: "host",
         gatewayUrl: "http://localhost:3002",
         limits: defaultCloudLimits,
-        renderer: {},
-        delegationEnabled: true,
-        exportEnabled: true,
       });
       await Promise.all([execute(run.id), execute(run.id)]);
       const result = JSON.parse(await readFile(evidence, "utf8")) as {

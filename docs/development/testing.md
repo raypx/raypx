@@ -146,7 +146,10 @@ commands have no default deadline.
 The real Worker artifact check also relocates the entire `.output` outside the
 checkout and runs on Bun 1.4.0 without database or model credentials. It verifies
 the isolated Runner through the same `index.mjs --runner --check` executable,
-Pi loading, actual PDF/XLSX output and Chinese task-notification mail rendering.
+Runner dependency loading and actual PDF/XLSX output. Pi and retired task-mail
+checks are removed under
+[ADR-0027](../architecture/decisions/0027-remove-pi-sdk.md); Chinese document
+conversion remains covered by the `--check-documents` probe.
 Build integration fixtures verify Nitro's single executable, shared chunks and
 package assets in a relocated artifact that
 can run without its source workspace. Vite builder-watch coverage verifies that
@@ -156,8 +159,8 @@ Turbo caches the complete Worker `.output/**`, including dependencies and
 assets. A cache hit restores the whole artifact; no runtime-preparation
 prerequisite runs independently of the build. The runtime probe still executes
 after every root verification, including cache hits. The small Worker entry
-dispatches check flags to `runtime-checks.ts`, whose deterministic document and
-mail samples live in `runtime-check.config.json`; the compiled probes still
+dispatches check flags to `runtime-checks.ts`, whose deterministic document
+samples live in `runtime-check.config.json`; the compiled probes still
 exercise those samples and their expected results.
 Run-process lifecycle tests additionally cover IPC readiness before bootstrap,
 the Host deadline from claim through initialization, cooperative abort followed

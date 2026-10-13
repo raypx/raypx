@@ -5,6 +5,9 @@ The target is [ADR-0016](decisions/0016-cloud-agent-platform.md), refined by
 [ADR-0019](decisions/0019-retire-legacy-desktop-execution.md). Direct Run scheduling
 and retirement of task notifications follow
 [ADR-0026](decisions/0026-direct-run-queue-and-retire-task-notifications.md).
+The AI package and provider execution are retired under
+[ADR-0027](decisions/0027-remove-pi-sdk.md). The Search/Computer flow remains a
+product target; live model and public research requests are unavailable.
 
 ## Boundaries
 
@@ -12,13 +15,15 @@ Web composes Conversation, Task, file review and usage pages.
 Agent UI shares controlled business views. Client owns replay, contiguous event
 sequences, reconnects and account/resource isolation. API authenticates every
 command and subscription; Application checks current personal/project scope.
-Worker claims Runs and starts separate Bun Runners with registered trusted tools.
+Worker claims Runs and starts separate Bun Runners.
 Host and Runner share one compiled entry: default Host mode and `--runner`
 task mode dynamically load their own composition. Task execution remains in a
 separate process under [ADR-0025](decisions/0025-worker-single-entry-execution.md).
-API's private execution Gateway dispatches model and research requests; only API
-receives model/search credentials. Durable hashed RunGrants bind each Runner to
-its scope, Run, owner epoch and live lease.
+API's private execution Gateway retains bootstrap, lifecycle and object operations.
+Bootstrap reports no model, and model/research requests return unavailable even
+with a valid grant. Durable hashed RunGrants bind each Runner to its scope, Run,
+owner epoch and live lease. Existing claimed Runs fail with `MODEL_UNAVAILABLE`
+after current control and cancellation checks.
 Both private SSE streams revalidate the original Better Auth session on every
 poll, bypass cookie caching, and terminate on revocation, expiry or changed
 identity. Application independently rechecks current account and project access.
@@ -55,12 +60,12 @@ dispatch-ready value is false. No outbox delivery or acceptance callback is need
 
 The private Gateway validates bootstrap, object, research and each execution
 response against its contract. Runner consumes an execution-only port and gets
-trusted conversation history from API Gateway bootstrap. API owns model metering
-hooks; Worker Host owns claiming, renewal, grants and the overall deadline.
+trusted conversation history from API Gateway bootstrap. Stored model usage
+remains readable; Worker Host owns claiming, renewal, grants and the overall deadline.
 Identity and fencing come from the durable grant. Dispatch forbids identity
 fields and replaces any supplied fence fields with that trusted context.
 Host also owns the total deadline from the claim's `startedAt`, including grant
-setup, child readiness and Pi initialization. Search has 60 seconds; Computer
+setup and child readiness. Search has 60 seconds; Computer
 uses `limits.taskDurationMs`. Timeout asks the child to abort, then force-kills
 after the existing two-second grace if necessary. Host waits for exit before
 revoking the grant. Timeout finishes an unfinished Run as `failed` with
@@ -72,10 +77,9 @@ success, abort or timeout, including force-killed children.
 Linux/macOS use a detached POSIX group; Host force-kills remaining same-group
 descendants after every Runner exit before scratch cleanup. Windows fallback
 targets only the direct Runner process.
-The API injects Core's canonical tool names into the model Gateway; Worker tests
-verify its trusted registry matches that directory. SDK context and stream
-events remain opaque, while a direct provider run requires usage hooks before
-creating its session. Gateway transport uses API-owned metering.
+Worker tests verify its trusted registry against Core's canonical tool names.
+Research tools require an explicitly injected implementation. Document helpers
+remain independently tested; no model adapter dispatches them automatically.
 
 Query owns ordinary Task/Round/Revision, usage and file metadata.
 Client Sessions own active Run/Conversation projections. SSR creates a QueryClient
@@ -136,12 +140,13 @@ write them. No migration, data cleanup or old-notification replay is introduced.
 
 Run owning workspace checks/tests, then `bun run verify`. PostgreSQL concurrency
 and browser E2E use an explicit test database. Validate Bun Worker artifact
-startup and real document exports separately from fake-provider tests.
+startup and real document exports independently of model providers.
 
-Acceptance: research with citations, analyze CSV, produce a report/table/deck,
-revise the same Task, accept its current revision and inspect usage. Cover event
-gaps, direct queued-Run pickup, duplicate claims, owner fencing, cancellation races,
-unknown model usage, permissions, storage failures and account switching.
+Verify unavailable model/research requests, disabled admission, saved Cloud data,
+direct queued-Run pickup, duplicate claims, owner fencing, cancellation races,
+permissions, storage failures and account switching. Future provider acceptance
+must cover cited research, file analysis, automatic delivery, task revision and
+actual metered usage before restoring live Search/Computer.
 
 See [cloud release acceptance](../development/cloud-acceptance.md) for recorded
 local results and the remaining provider/deployment gate.

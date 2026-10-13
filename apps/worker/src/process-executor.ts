@@ -5,7 +5,6 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { CloudApplication } from "@raypx/application";
 import type { CloudLimits, CloudRun } from "@raypx/core";
-import type { RendererOptions } from "./tools/render.js";
 
 export interface RunnerBootstrap {
   run: CloudRun;
@@ -14,10 +13,6 @@ export interface RunnerBootstrap {
   credential: string;
   gatewayUrl: string;
   directory: string;
-  limits: CloudLimits;
-  renderer: Omit<RendererOptions, "directory" | "signal">;
-  delegationEnabled: boolean;
-  exportEnabled: boolean;
 }
 export function runnerEnvironment(): NodeJS.ProcessEnv {
   return { NODE_ENV: "production", PATH: "/usr/bin:/bin", LANG: "C.UTF-8", TZ: "UTC" };
@@ -27,9 +22,6 @@ export function createProcessExecutor(options: {
   ownerId: string;
   gatewayUrl: string;
   limits: CloudLimits;
-  renderer: RunnerBootstrap["renderer"];
-  delegationEnabled: boolean;
-  exportEnabled: boolean;
   workerEntry?: string;
   onError?: (error: unknown, runId: string) => void;
 }) {
@@ -149,7 +141,7 @@ export function createProcessExecutor(options: {
           grantId,
           tokenHash: createHash("sha256").update(token).digest("hex"),
           expiresAt: claimed.run.leaseExpiresAt!,
-          actions: ["bootstrap", "invoke", "model", "research", "object"],
+          actions: ["bootstrap", "invoke"],
         });
         if ((await ready) && !stopping && alive())
           child.send(
@@ -162,10 +154,6 @@ export function createProcessExecutor(options: {
                 credential: `${grantId}.${token}`,
                 gatewayUrl: options.gatewayUrl,
                 directory,
-                limits: options.limits,
-                renderer: options.renderer,
-                delegationEnabled: options.delegationEnabled,
-                exportEnabled: options.exportEnabled,
               } satisfies RunnerBootstrap,
             },
             (error) => {

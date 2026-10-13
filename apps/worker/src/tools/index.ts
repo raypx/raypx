@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import type { CloudApplication } from "@raypx/application";
 import type { CloudRun, CloudAssetVersion, CloudToolName, ObjectStorage } from "@raypx/core";
-import type { TrustedAiTool } from "@raypx/ai";
 import { computeTable, extractFile, type TableData, type Cell } from "./files.js";
 import {
   renderReport,
@@ -11,11 +10,15 @@ import {
   type GeneratedFile,
   type RendererOptions,
 } from "./render.js";
-import { readPublicSource, searchWeb } from "./network.js";
 import { validateCitations } from "./citations.js";
 import { CloudExecutionError, publicFailureCode } from "../errors.js";
 
-export type TrustedCloudTool = Omit<TrustedAiTool, "name"> & { name: CloudToolName };
+export interface TrustedCloudTool {
+  name: CloudToolName;
+  description: string;
+  parameters: Record<string, unknown>;
+  execute(input: unknown, context: { callId: string; signal?: AbortSignal }): Promise<unknown>;
+}
 
 export interface ToolContext {
   tables: Map<string, TableData>;
@@ -35,7 +38,6 @@ export interface ToolHost {
   executionId: string;
   context: ToolContext;
   renderer: RendererOptions;
-  searchApiKey?: string;
   research?: {
     search(
       query: string,
@@ -149,22 +151,47 @@ export function createTrustedTools(host: ToolHost): TrustedCloudTool[] {
       byteSize: asset.byteSize,
     }));
   };
-  const tools: TrustedCloudTool[] = [
-    {
-      name: "search",
-      description:
-        "Search public web sources. Returns evidence ids, links and excerpts. Search is unavailable when its provider is not configured.",
-      parameters: schema({ query: textSchema }, ["query"]),
-      async execute(input, context) {
-        const args = object(input);
-        const results = host.research
-          ? await host.research.search(string(args.query, 2000), context.signal)
-          : await searchWeb(string(args.query, 2000), {
-              ...(host.searchApiKey ? { apiKey: host.searchApiKey } : {}),
-              ...(context.signal ? { signal: context.signal } : {}),
+  const tools: TrustedCloudTool[] = [];
+  if (host.research) {
+    const research = host.research;
+    tools.push(
+      {
+        name: "search",
+        description:
+          "Search public web sources. Returns evidence ids, links and excerpts. Search is unavailable when its provider is not configured.",
+        parameters: schema({ query: textSchema }, ["query"]),
+        async execute(input, context) {
+          const args = object(input);
+          const results = await research.search(string(args.query, 2000), context.signal);
+          for (const result of results) {
+            const source = { ...result, id: crypto.randomUUID() };
+            host.context.sources.set(source.id, source);
+            await host.app.appendEvent({
+              ...fence,
+              eventId: crypto.randomUUID(),
+              type: "source.created",
+              executionId: host.executionId,
+              payload: source,
             });
-        for (const result of results) {
-          const source = { ...result, id: crypto.randomUUID() };
+          }
+          return results.map((result) =>
+            [...host.context.sources.values()].find((source) => source.url === result.url),
+          );
+        },
+      },
+      {
+        name: "read_source",
+        description:
+          "Read text from a public HTTP(S) source without running scripts. Internal network access is forbidden.",
+        parameters: schema({ url: textSchema }, ["url"]),
+        async execute(input, context) {
+          const result = await research.read(string(object(input).url, 4096), context.signal);
+          const source = {
+            id: crypto.randomUUID(),
+            url: result.url,
+            title: result.title,
+            excerpt: result.text.slice(0, 2000),
+          };
           host.context.sources.set(source.id, source);
           await host.app.appendEvent({
             ...fence,
@@ -173,38 +200,12 @@ export function createTrustedTools(host: ToolHost): TrustedCloudTool[] {
             executionId: host.executionId,
             payload: source,
           });
-        }
-        return results.map((result) =>
-          [...host.context.sources.values()].find((source) => source.url === result.url),
-        );
+          return { ...source, text: result.text };
+        },
       },
-    },
-    {
-      name: "read_source",
-      description:
-        "Read text from a public HTTP(S) source without running scripts. Internal network access is forbidden.",
-      parameters: schema({ url: textSchema }, ["url"]),
-      async execute(input, context) {
-        const result = host.research
-          ? await host.research.read(string(object(input).url, 4096), context.signal)
-          : await readPublicSource(string(object(input).url, 4096), context.signal);
-        const source = {
-          id: crypto.randomUUID(),
-          url: result.url,
-          title: result.title,
-          excerpt: result.text.slice(0, 2000),
-        };
-        host.context.sources.set(source.id, source);
-        await host.app.appendEvent({
-          ...fence,
-          eventId: crypto.randomUUID(),
-          type: "source.created",
-          executionId: host.executionId,
-          payload: source,
-        });
-        return { ...source, text: result.text };
-      },
-    },
+    );
+  }
+  tools.push(
     {
       name: "extract_file",
       description:
@@ -277,7 +278,7 @@ export function createTrustedTools(host: ToolHost): TrustedCloudTool[] {
         };
       },
     },
-  ];
+  );
   if (host.run.mode === "computer")
     tools.push(
       {

@@ -7,7 +7,6 @@ const uncached = [
   "test",
   "test:integration",
   "test:postgres",
-  "test:provider",
   "e2e",
   "e2e:web",
   "e2e:desktop",

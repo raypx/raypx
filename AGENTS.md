@@ -23,7 +23,7 @@ document is stale, then update the document in the same change.
 
 ```text
 apps        web, desktop, api, worker, storybook    composition roots; never imported
-adapters    ai, application, cache, client, contracts, i18n, ui, agent-ui, storage    surfaces apps are allowed to use
+adapters    application, cache, client, contracts, i18n, ui, agent-ui, storage    surfaces apps are allowed to use
 core        core, db, auth, mail        db implements interfaces owned by core
 foundation  shared, tsconfig                no dependency on anything above
 tooling     scripts, e2e                never imported by runtime code
@@ -51,6 +51,9 @@ or `packages/` without a `package.json`.
 - Task notifications, preferences and outbox dispatch are retired under ADR-0026.
   Preserve their stored data and schema compatibility; Auth emails remain active.
 - Desktop is a cloud project client; native code owns only its window and tray.
+- The AI package and provider execution are retired under ADR-0027. Preserve
+  Cloud data, authorization, owner fences and private file contracts; model and
+  research requests remain unavailable until a replacement design is accepted.
 
 ## Toolchain
 

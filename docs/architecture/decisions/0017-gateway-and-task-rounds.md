@@ -9,6 +9,10 @@ Queue admission is refined by
 [ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md). The execution
 fences, grants, immutable rounds and authorization decisions remain in force.
 
+Provider dispatch and Pi execution are superseded by
+[ADR-0027](0027-remove-pi-sdk.md). Bootstrap, execution lifecycle, object transfers
+and their grant checks remain active; model and research operations are unavailable.
+
 ## Context
 
 An in-process Worker shares credentials with its Agent and a crash can interrupt

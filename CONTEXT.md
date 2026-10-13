@@ -4,6 +4,10 @@ This glossary defines the current cloud platform described in
 [ADR-0016](docs/architecture/decisions/0016-cloud-agent-platform.md). Earlier
 Workspace/device execution designs remain historical reference material.
 
+Live model and public research execution are unavailable under
+[ADR-0027](docs/architecture/decisions/0027-remove-pi-sdk.md). The terms below
+continue to describe stored Cloud records and their authorization boundaries.
+
 Desktop is a cloud project and task management client. Its former device runner
 and local execution protocol are retired by
 [ADR-0019](docs/architecture/decisions/0019-retire-legacy-desktop-execution.md).
@@ -49,8 +53,8 @@ and local execution protocol are retired by
   joins snapshot, history and live delivery without dropping events.
 - **Run command** — a durable, idempotent cancellation or steering request with
   an execution result. Disconnecting the client is not cancellation.
-- **Delivery lease** — a Worker claim on an outbox record. Acknowledging it means
-  the execution intent was durably accepted, not that the Run has completed.
+- **Execution lease** — a time-limited Worker claim on a durable queued Run.
+  Renewing it preserves ownership; it does not complete the Run.
 - **Execution owner / epoch** — the host ownership fence rejecting old writers.
   A lost heartbeat alone does not authorize replaying unknown tool effects.
 - **Source evidence** — an actual source URL, title and excerpt associated with
@@ -63,8 +67,8 @@ and local execution protocol are retired by
 - **Object** — private file bytes in object storage, separate from DB metadata.
   A successful object transfer does not publish a delivery.
 - **Artifact set revision** — the complete file collection for one delivery.
-  Its publication, Run result, Task review state and notification intent commit
-  atomically. The user accepts the current Revision, not an obsolete version.
+  Its publication, Run result and Task review state commit atomically. The user
+  accepts the current Revision, not an obsolete version.
 
 ## Usage and records
 
@@ -72,9 +76,9 @@ and local execution protocol are retired by
   retries and compaction consume real quotas; logs and Redis are not the ledger.
 - **Reservation** — quota held before a physical model call. Confirmed unstarted
   calls release it; unknown started calls remain explicitly unknown and estimated.
-- **Notification** — a durable user-facing state change with read state and
-  optional email delivery governed by current preferences and permissions.
-- **Outbox event** — a fact committed with business state and later delivered.
+- **Historical notification / outbox event** — retained records from retired
+  task-notification and outbox dispatch workflows. Active execution polls Runs
+  directly; Auth email delivery remains separate.
 - **Historical audit event** — a retained database record from retired management
   interfaces; the current product exposes no Admin audit API.
 - **Idempotency key** — caller-provided command identity. Reuse with a different
@@ -83,7 +87,7 @@ and local execution protocol are retired by
 ## Boundaries
 
 Core owns rules and ports. Application coordinates use cases and transactions.
-Adapters implement database, storage, model and mail access. Contracts define
+Adapters implement database, storage and Auth mail access. Contracts define
 public protocol; Client owns transport and replay. Applications own routes,
 account/resource lifetimes, drafts and platform access. Agent UI receives
 controlled facts and actions and owns only local presentation state.

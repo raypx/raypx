@@ -18,3 +18,16 @@ export {
 export { InMemoryCloudRepository } from "./repositories/cloud/memory.js";
 export { PostgresCloudRepository } from "./repositories/cloud/postgres.js";
 export { acquireCloudWorkerLease } from "./repositories/cloud/worker-lease.js";
+
+// Canonical V2 repositories
+export {
+  PostgresOrganizationMemberV2Repository,
+  PostgresProjectMemberV2Repository,
+  PostgresProjectTaskV2Repository,
+  PostgresProjectV2Repository,
+  PostgresReviewV2Repository,
+  PostgresFeedbackV2Repository,
+  PostgresAssetV2Repository,
+  PostgresAssetVersionV2Repository,
+  PostgresActivityV2Repository,
+} from "./v2.js";

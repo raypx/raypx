@@ -4,6 +4,9 @@
 
 Superseded by [ADR-0019](0019-retire-legacy-desktop-execution.md).
 
+The later cloud AI package and provider execution are also retired by
+[ADR-0027](0027-remove-pi-sdk.md). The original decision below is historical.
+
 ## Context
 
 Raypx needs one Agent execution contract across a local Desktop process and
@@ -13,7 +16,7 @@ putting model or file-system details in Web UI or API handlers.
 
 ## Decision
 
-Embed `@earendil-works/pi-coding-agent` behind `@raypx/ai`. Pi owns model
+Embed `@earendil-works/pi-coding-agent` behind the former server-side adapter. Pi owns model
 sessions, prompt execution, built-in/custom tools, streaming lifecycle, and
 abort/steer behavior. Raypx owns authorization, project/workflow
 orchestration, persistence, event projections, device routing, and UI.

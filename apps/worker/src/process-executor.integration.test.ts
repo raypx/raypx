@@ -38,9 +38,6 @@ async function fixture(source: string, duration = 500) {
     ownerId: "host",
     gatewayUrl: "http://127.0.0.1:1",
     limits,
-    renderer: {},
-    delegationEnabled: false,
-    exportEnabled: false,
     workerEntry: entry,
   });
   return { app, repository, run, execute, evidence, entry };
@@ -50,6 +47,7 @@ async function expectReleased(state: Awaited<ReturnType<typeof fixture>>) {
   const grants = await state.repository.read((tx) => tx.list("executionGrants"));
   expect(grants).toHaveLength(1);
   expect(grants[0]?.revokedAt).toBeInstanceOf(Date);
+  expect(grants[0]?.actions).toEqual(["bootstrap", "invoke"]);
   expect((await state.app.getUsage({ actorId: "owner" })).activeRuns).toBe(0);
 }
 
@@ -113,7 +111,7 @@ setInterval(() => {}, 1000);
       await state.execute(state.run.id);
       evidence = JSON.parse(await readFile(state.evidence, "utf8"));
       if (!evidence) throw new Error("Missing converter process evidence.");
-      expect(evidence.runtime).toBe("1.4.2");
+      expect(evidence.runtime).toBe("1.4.0");
       await expect.poll(() => processStopped(evidence!.pid), { timeout: 2000 }).toBe(true);
       await expect.poll(() => processStopped(evidence!.converterPid), { timeout: 2000 }).toBe(true);
       expect(evidence.ownGroup).toBe(true);
@@ -196,20 +194,28 @@ setInterval(() => {}, 1000);
 `,
     1000,
   );
-  const operation = state.execute(state.run.id);
-  let snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
-  while (snapshot.run.status === "queued") {
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
-  }
-  await state.app.finish({
-    runId: state.run.id,
+  const execute = createProcessExecutor({
+    app: {
+      ...state.app,
+      registerExecutionGrant: async (input) => {
+        const grant = await state.app.registerExecutionGrant(input);
+        // Commit inside setup before yielding to the deliberately blocked Runner.
+        await state.app.finish({
+          runId: input.runId,
+          ownerId: input.ownerId,
+          epoch: input.epoch,
+          status: "needs_input",
+          output: "Committed result",
+        });
+        return grant;
+      },
+    },
     ownerId: "host",
-    epoch: snapshot.run.epoch,
-    status: "needs_input",
-    output: "Committed result",
+    gatewayUrl: "http://127.0.0.1:1",
+    limits: { ...defaultCloudLimits, taskDurationMs: 1000 },
+    workerEntry: state.entry,
   });
-  await operation;
+  await execute(state.run.id);
   expect(
     (await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id })).run,
   ).toMatchObject({ status: "needs_input", output: "Committed result", error: null });
@@ -237,9 +243,6 @@ await startRunner();
     ownerId: "host",
     gatewayUrl: `http://127.0.0.1:${address.port}`,
     limits: defaultCloudLimits,
-    renderer: {},
-    delegationEnabled: false,
-    exportEnabled: false,
     workerEntry: state.entry,
   });
   const operation = execute(state.run.id, controller.signal);

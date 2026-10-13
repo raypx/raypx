@@ -4,10 +4,15 @@ type RunnerMessage =
   | { type: "start"; bootstrap: RunnerBootstrap }
   | { type: "abort"; reason?: "budget_exceeded" | "interrupted" };
 
-/** Task mode installs IPC before loading the Agent or adapters; Host waits for readiness. */
+/** Task mode installs IPC before loading execution adapters; Host waits for readiness. */
 export async function startRunner(): Promise<void> {
   if (process.argv.includes("--check")) {
-    // Runtime check removed - pi SDK dependency eliminated
+    const [{ createCloudExecutor }, { createExecutionClient }] = await Promise.all([
+      import("./execution.js"),
+      import("./execution-client.js"),
+    ]);
+    if (typeof createCloudExecutor !== "function" || typeof createExecutionClient !== "function")
+      throw new Error("Runner execution runtime is unavailable.");
     process.stdout.write("Raypx isolated Bun Runner runtime verified.\n");
     return;
   }
@@ -62,26 +67,14 @@ async function run(bootstrap: RunnerBootstrap, signal: AbortSignal): Promise<voi
   ]);
   signal.throwIfAborted();
   const gateway = createExecutionClient(bootstrap.gatewayUrl, bootstrap.credential);
-  const configuration = executionBootstrapSchema.parse(
-    await gateway.client.bootstrap({}, { signal }),
-  );
+  executionBootstrapSchema.parse(await gateway.client.bootstrap({}, { signal }));
   signal.throwIfAborted();
   const { createCloudExecutor } = await import("./execution.js");
   signal.throwIfAborted();
-  // AI capabilities removed - model execution disabled
   const executor = createCloudExecutor({
     app: gateway.app,
-    agent: null,
-    storage: gateway.storage,
-    research: gateway.research,
     ownerId: bootstrap.ownerId,
     claimed: { run: bootstrap.run, epoch: bootstrap.epoch },
-    history: configuration.history,
-    directory: bootstrap.directory,
-    limits: bootstrap.limits,
-    renderer: bootstrap.renderer,
-    delegationEnabled: bootstrap.delegationEnabled,
-    exportEnabled: bootstrap.exportEnabled,
   });
   await executor(bootstrap.run.id, signal);
 }

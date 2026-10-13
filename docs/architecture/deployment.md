@@ -5,7 +5,7 @@
 ```text
 web       Bun 1.4.0 container
 api       Bun 1.4.0 standalone API container
-worker    Bun 1.4.0 Debian container; Pi and document converters
+worker    Bun 1.4.0 Debian container; Run queue and document converters
 postgres  independent service
 redis     production AI admission limiter
 objects   private S3-compatible bucket
@@ -82,16 +82,16 @@ uploads; preview/download URLs are short-lived and authorized by the API.
 Development hosts can share `BLOB_STORAGE_DIR`, an absolute directory; the
 default uses the operating system temporary directory.
 
-Enable Search/Computer only after setting positive account model-call,
-concurrency and storage limits, `CLOUD_MODEL_PROVIDER`, `CLOUD_MODEL_ID`,
-`CLOUD_MODEL_API_KEY` and `BRAVE_SEARCH_API_KEY` on API only. Worker receives
+Model and public research execution are unavailable under
+[ADR-0027](decisions/0027-remove-pi-sdk.md). Provider credentials and server flags
+cannot enable Search/Computer. Existing queued Runs settle with fenced
+`MODEL_UNAVAILABLE` failures after control and cancellation checks. Worker receives
 `CLOUD_EXECUTION_GATEWAY_URL` for the API's private network origin. Keep the
 `/internal/execution/*` path off public ingress when the deployment supports
 private routing; durable RunGrants authenticate each request. Runner children
 receive neither provider nor database/object-store credentials. Worker has no
-task-mail configuration or notification-link URL. Search, Computer, delegation and export flags are fixed
-typed server configuration. Changing a flag stops new admissions; cancel a
-running task with its separate command.
+task-mail configuration or notification-link URL. Cloud history, Tasks, private
+files and review remain available. Cancel a running task with its separate command.
 
 Worker's image includes pinned LibreOffice, Poppler and Chinese fonts. `SOFFICE_BINARY`
 and `CLOUD_PDF_FONT_PATH` can override their paths outside the image. A successful
@@ -100,8 +100,8 @@ PPTX write is insufficient: publish only after its PDF preview converts.
 image-only PDFs report that OCR is unavailable.
 `bun --no-env-file --no-install apps/worker/.output/server/index.mjs --check` validates the packaged runtime without
 database or provider credentials. Real converter tests need LibreOffice.
-The Host probe starts the same executable with `--runner --check` to verify Pi
-without initializing Host in the child.
+The Host probe starts the same executable with `--runner --check` to verify
+Runner dependency loading without initializing Host in the child.
 The image's `--check-documents` probe generates and verifies Chinese reports,
 tables and an eight-page deck using the actual installed converters.
 
@@ -179,7 +179,7 @@ available through Bun; they do not add a Node executable requirement.
 Worker uses
 Nitro's Bun preset with one executable: default Host mode and isolated `--runner`
 mode use the same Bun runtime. Host's total Run deadline starts at the successful
-claim's `startedAt`, including grant setup, child startup and Pi initialization.
+claim's `startedAt`, including grant setup and child startup.
 Search has 60 seconds; Computer uses `limits.taskDurationMs` (20 minutes by
 default). Timeout requests cooperative abort, then SIGKILL after the existing
 two-second grace if needed. Host waits for exit and revokes the grant. It finishes

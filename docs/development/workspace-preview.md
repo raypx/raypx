@@ -2,6 +2,10 @@
 
 > Historical preview record. Current authenticated routes use the cloud and canonical Project APIs; the preview/runtime paths below are no longer product capabilities. See [applications](../architecture/applications.md) and [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md).
 
+> The former server AI adapter is removed under
+> [ADR-0027](../architecture/decisions/0027-remove-pi-sdk.md). Package references
+> below describe the historical preview boundary.
+
 ## Routes and ownership
 
 Home (`/`) reads one aggregate Home View Model from the workspace data source.
@@ -47,7 +51,7 @@ the home asks for an aggregate, rather than issuing per-widget requests.
 Hydration has loading, failure and retry UI. Source injection permits tests
 without network access. The live adapter maps authorized oRPC DTOs from
 `@raypx/client` into these same view models and surfaces real failures; it
-does not import the server-side `@raypx/ai` package into Web.
+does not import the former server-side model adapter into Web.
 
 ## Interaction contract
 

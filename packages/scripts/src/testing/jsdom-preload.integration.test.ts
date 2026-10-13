@@ -9,7 +9,7 @@ it("keeps real DOM focus, events and uncaught-error reporting under Bun", async 
   const source = `
 import assert from "node:assert/strict";
 import { builtinEnvironments } from ${JSON.stringify(import.meta.resolve("vite-plus/test/runtime"))};
-assert.equal(process.versions.bun, "1.4.2");
+assert.equal(process.versions.bun, "1.4.0");
 console.error("runtime imported");
 await assert.rejects(async () => builtinEnvironments.jsdom.setup(globalThis, { jsdom: { runScripts: "dangerously" } }), /cannot execute scripts inside jsdom/);
 const environment = await builtinEnvironments.jsdom.setup(globalThis, {});
@@ -37,6 +37,7 @@ console.log(JSON.stringify({ focused: true, events, errors }));
 `;
   // Asynchronous waiting keeps the runner responsive; timeout failures include
   // the child phase markers and terminate it instead of leaving a hung worker.
+  // Allow bounded cold-runtime startup while Turbo verifies workspaces in parallel.
   const result = await execute(
     process.execPath,
     [
@@ -47,7 +48,7 @@ console.log(JSON.stringify({ focused: true, events, errors }));
       "--eval",
       source,
     ],
-    { encoding: "utf8", timeout: 12_000 },
+    { encoding: "utf8", timeout: 30_000 },
   );
   expect(JSON.parse(result.stdout)).toEqual({ focused: true, events: 1, errors: 1 });
-}, 15_000);
+}, 35_000);

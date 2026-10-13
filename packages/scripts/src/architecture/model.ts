@@ -27,7 +27,6 @@ const packageRules: Record<string, readonly string[]> = {
   core: ["auth", "shared"],
   db: ["core", "shared"],
   application: ["core"],
-  ai: ["application", "core", "shared"],
   mail: ["i18n", "shared"],
   cache: ["shared"],
   storage: ["core", "shared"],
@@ -132,7 +131,6 @@ export function sourceImportViolations(
     renderer &&
     (request.startsWith("node:") ||
       request.startsWith("bun:") ||
-      request.startsWith("@earendil-works/") ||
       request === "electrobun" ||
       /^electrobun\/(main|bun)(\/|$)/.test(request))
   )

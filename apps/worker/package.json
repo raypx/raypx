@@ -23,7 +23,6 @@
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
     "@raypx/db": "workspace:*",
-    "@raypx/mail": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@raypx/storage": "workspace:*",
     "@sentry/node": "catalog:backend",

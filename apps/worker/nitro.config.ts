@@ -10,13 +10,7 @@ export default defineConfig({
   noPublicDir: true,
   sourcemap: true,
   // These packages read runtime assets relative to their own modules.
-  traceDeps: [
-    "@earendil-works/pi-coding-agent*",
-    "@earendil-works/pi-ai*",
-    "pdfkit*",
-    "exceljs*",
-    "pptxgenjs*",
-  ],
+  traceDeps: ["pdfkit*", "exceljs*", "pptxgenjs*"],
   rolldownConfig: {
     input: {
       index: fileURLToPath(new URL("./src/main.ts", import.meta.url)),

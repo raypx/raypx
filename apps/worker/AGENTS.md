@@ -7,21 +7,21 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 
 ## Interface
 
-| Path                            | Purpose                                                       |
-| ------------------------------- | ------------------------------------------------------------- |
-| `src/index.ts`                  | Execution loop and executor exports                           |
-| `src/runtime.ts`                | Multi-instance composition and expired-owner recovery         |
-| `src/cloud.ts`                  | Queued Run polling and execution-owner lifecycle              |
-| `src/execution.ts`              | Execution-only orchestration, child agents and budgets        |
-| `src/tools/`                    | Fixed trusted search, parsing, computation and document tools |
-| `src/main.ts`                   | Single Bun entry: default Host and `--runner` mode dispatch   |
-| `src/runtime-checks.ts`         | Compiled runtime and real document verification               |
-| `src/runtime-check.config.json` | Deterministic samples, expected outputs and font defaults     |
-| `vite.config.ts`                | Vite+ build orchestration and workspace resolution            |
-| `nitro.config.ts`               | One Nitro executable and standalone runtime artifact          |
-| `scripts/dev.mjs`               | Vite build watch and graceful Bun child restart               |
-| `src/process-executor.ts`       | Atomic claim, lease renewal and child lifecycle               |
-| `src/runner.ts`                 | Internal `startRunner` task mode and private Gateway          |
+| Path                            | Purpose                                                     |
+| ------------------------------- | ----------------------------------------------------------- |
+| `src/index.ts`                  | Execution loop and executor exports                         |
+| `src/runtime.ts`                | Multi-instance composition and expired-owner recovery       |
+| `src/cloud.ts`                  | Queued Run polling and execution-owner lifecycle            |
+| `src/execution.ts`              | Fenced unavailable-model settlement and cancellation        |
+| `src/tools/`                    | Trusted parsing, computation and document helpers           |
+| `src/main.ts`                   | Single Bun entry: default Host and `--runner` mode dispatch |
+| `src/runtime-checks.ts`         | Compiled runtime and real document verification             |
+| `src/runtime-check.config.json` | Deterministic samples, expected outputs and font defaults   |
+| `vite.config.ts`                | Vite+ build orchestration and workspace resolution          |
+| `nitro.config.ts`               | One Nitro executable and standalone runtime artifact        |
+| `scripts/dev.mjs`               | Vite build watch and graceful Bun child restart             |
+| `src/process-executor.ts`       | Atomic claim, lease renewal and child lifecycle             |
+| `src/runner.ts`                 | Internal `startRunner` task mode and private Gateway        |
 
 ## Ownership
 
@@ -33,8 +33,10 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   environment and scoped RunGrant. Database, S3, model and search master
   credentials stay in trusted hosts. This is fault isolation; arbitrary code
   requires a future security sandbox.
-- API Gateway bootstrap supplies trusted conversation history to Runner; API
-  dispatches and meters actual model attempts and compaction.
+- Runner authenticates through API Gateway bootstrap, then checks the current
+  execution fence and pending commands. Model execution is unavailable; settle
+  claimed Runs with `failed/MODEL_UNAVAILABLE` and reject unapplied steering.
+  Cancellation, interruption, budget abort and newer owners retain precedence.
 - Runner receives only execution operations. Worker Host owns claiming, lease
   renewal, grant lifecycle and the overall deadline.
 - Host forks its own executable with `--runner` after claiming. IPC readiness
@@ -46,15 +48,15 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   descendants after every Runner exit before scratch cleanup. Windows fallback
   targets only the direct Runner process.
 - Host owns the total deadline from the claim's `startedAt`, including grant setup
-  and child/Pi initialization: Search 60 seconds, Computer `limits.taskDurationMs`.
+  and child initialization: Search 60 seconds, Computer `limits.taskDurationMs`.
   Abort is cooperative first; after two seconds Host force-kills if needed, waits
   for exit and revokes the grant. Timeout uses fenced `failed/BUDGET_EXCEEDED`
   completion; shutdown or owner loss uses interruption. Terminal Runs and newer
   owners remain protected.
 - Operational logs correlate Run, execution and tool ids without input
   or output bodies. Sentry captures sanitized errors and fixed Run duration spans.
-- Search has 60 seconds and six calls. Computer has 20 minutes per Run and 40
-  calls per immutable TaskRound, with two concurrent children at depth one.
+- RunGrant actions are limited to bootstrap and execution operations. No model,
+  research or object capability is granted to the unavailable-model Runner.
 
 ## Constraints
 
@@ -64,10 +66,12 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   lifecycle before closing host resources.
 - Task notifications, notification preferences and outbox adapters are retired;
   Worker has no Mail dependency. Keep Auth email delivery in the API.
-- Pi receives only explicit trusted tools; never register built-in file, shell,
-  dynamic extension, arbitrary MCP, browser or computer tools in this host.
-- Registered names use Core's `CloudToolName`. Computer with delegation matches
-  `cloudToolNames`; Search and child executions receive subsets, with no child delegation.
+- Document and data helpers use Worker-owned `TrustedCloudTool` and Core's
+  `CloudToolName`. Research tools require an explicitly injected trusted transport;
+  there is no direct network-provider fallback. Helpers are independently tested
+  and are not invoked by the unavailable-model Runner.
+- Never add built-in file, shell, dynamic extension, arbitrary MCP, browser or
+  computer access to this host.
 - A document batch becomes available only after every object verifies and the
   revision, terminal Run and Task review commit together.
 - LibreOffice, Poppler and templates use fixed executable paths and argument
@@ -97,7 +101,7 @@ fonts, LibreOffice and Poppler and verifies Chinese PDF/XLSX plus a real
 eight-page presentation preview. CI runs it in the built Worker container.
 Root `bun run verify` first relocates the complete `.output` outside the checkout,
 then runs `--check` with a bounded Bun child process. Host's same-entry
-`--runner --check` child validates Pi; the executable, shared chunks
+`--runner --check` child loads the execution client and executor; the executable, shared chunks
 and package assets must resolve from that isolated artifact.
 
 `bun run dev` uses Vite's builder watch to rebuild bundled workspace sources.

@@ -2,6 +2,10 @@
 
 > Cloud platform direction: [ADR-0016](./decisions/0016-cloud-agent-platform.md).
 
+Live model and public research execution are unavailable following
+[ADR-0027](./decisions/0027-remove-pi-sdk.md). Stored Cloud content, authorization,
+private files and independently verified document helpers remain.
+
 Raypx is a Bun-managed, Turbo orchestrated TypeScript monorepo for a cloud Web
 application with an independent Hono API, plus an Electrobun
 desktop client.
@@ -26,7 +30,7 @@ flowchart LR
   client --> rpc["oRPC contracts"]
   rpc --> api["apps/api"]
   api --> application["@raypx/application"]
-  worker["Worker / Pi / trusted tools"] --> application
+  worker["Worker / Run queue / document tools"] --> application
   api --> storage["Private object storage adapter"]
   worker --> storage
   storage --> objects[("S3")]
@@ -61,7 +65,7 @@ both in step with what Bun resolves. [Shared packages](./packages.md) and
 [applications](./applications.md) describe each one. Organisation _inside_ a
 workspace is covered by [file structure](../development/file-structure.md).
 
-`apps/worker` owns durable Agent and outbox execution. API and Worker share
+`apps/worker` owns durable Run claims and isolated Runner lifecycle. API and Worker share
 application commands while remaining independently deployable. `features`,
 and a generic `config` package are intentionally not standalone
 workspaces either.
@@ -84,7 +88,7 @@ apps/api ───> shared/env + shared/logger + Hono/oRPC adapters
 apps/web/desktop ───> shared/env + shared/logger (Vite client integration)
 apps/worker ───> shared/env + shared/logger
 apps/api ───> cache
-apps/worker ───> application + db + ai
+apps/worker ───> application + db
 apps/api/worker ───> storage
 apps/web/storybook ───> agent-ui + ui
 apps/desktop       ───> ui
@@ -103,8 +107,8 @@ Rules:
 4. API authenticates requests; Application enforces current resource capabilities.
 5. Operational logs never contain raw credentials or session tokens.
 6. New shared packages require a stable interface and at least two consumers.
-7. Domain rules stay in core; adapters provide storage, AI, mail, processing,
-   export, and notification capabilities through explicit ports.
+7. Domain rules stay in core; adapters provide storage, Auth mail, processing
+   and export capabilities through explicit ports.
 8. Hono owns HTTP and streaming mechanics; oRPC owns typed structured procedure
    contracts. Neither transport layer owns domain rules.
 

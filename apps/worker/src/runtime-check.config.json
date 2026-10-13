@@ -8,17 +8,6 @@
       "title": "Runtime check",
       "sheets": [{ "name": "Data", "columns": ["Value"], "rows": [[1]], "notes": [] }]
     },
-    "mail": {
-      "input": {
-        "email": "runtime@example.invalid",
-        "kind": "task_completed",
-        "taskId": "runtime-check",
-        "taskUrl": "https://example.invalid/tasks/runtime-check"
-      },
-      "locale": "zh",
-      "expectedHtml": "lang=\"zh\"",
-      "expectedText": "/tasks/runtime-check"
-    },
     "expectedPdfMediaType": "application/pdf",
     "expectedSpreadsheetMediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   },

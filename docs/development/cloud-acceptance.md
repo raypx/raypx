@@ -1,5 +1,10 @@
 # Cloud release acceptance
 
+> Historical verification results from the dates below. Model and public research
+> execution are now unavailable under
+> [ADR-0027](../architecture/decisions/0027-remove-pi-sdk.md); earlier provider
+> results do not describe current runtime capabilities.
+
 Implementation boundaries are recorded in [the cloud platform](../architecture/cloud-platform.md)
 and [ADR-0016](../architecture/decisions/0016-cloud-agent-platform.md), refined by
 [ADR-0017](../architecture/decisions/0017-gateway-and-task-rounds.md) and

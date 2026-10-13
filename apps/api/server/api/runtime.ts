@@ -162,36 +162,18 @@ export async function createApiRuntime({
           }
         : {}),
     });
-    let modelReady = false;
     const cloud = createCloudApplication({
       repository: new PostgresCloudRepository(connection.db),
       limits: cloudConfig.limits,
       admitRun: async ({ actorId, mode }) => {
         await admission(actorId, mode);
-        if (!modelReady) throw createApiError("SERVICE_UNAVAILABLE", "CLOUD_MODEL_UNAVAILABLE");
-        if (mode === "search" && !environment.BRAVE_SEARCH_API_KEY)
-          throw createApiError("SERVICE_UNAVAILABLE", "CLOUD_SEARCH_UNAVAILABLE");
+        throw createApiError("SERVICE_UNAVAILABLE", "CLOUD_MODEL_UNAVAILABLE");
       },
     });
     const executionGateway = await createExecutionGateway({
       app: cloud,
       storage: objectStorage,
-      ...(environment.CLOUD_MODEL_PROVIDER &&
-      environment.CLOUD_MODEL_ID &&
-      environment.CLOUD_MODEL_API_KEY
-        ? {
-            model: {
-              provider: environment.CLOUD_MODEL_PROVIDER,
-              id: environment.CLOUD_MODEL_ID,
-              apiKey: environment.CLOUD_MODEL_API_KEY,
-            },
-          }
-        : {}),
-      ...(environment.BRAVE_SEARCH_API_KEY
-        ? { searchApiKey: environment.BRAVE_SEARCH_API_KEY }
-        : {}),
     });
-    modelReady = executionGateway.modelReady;
     const assets = createAssetApplication({
       access,
       assets: new PostgresAssetV2Repository(connection.db),
@@ -217,20 +199,14 @@ export async function createApiRuntime({
       objectStorage,
       cloudCapabilities: {
         ...cloudConfig.flags,
-        search: cloudConfig.flags.search && modelReady && !!environment.BRAVE_SEARCH_API_KEY,
-        computer: cloudConfig.flags.computer && modelReady,
+        search: false,
+        computer: false,
         unavailableReason:
           environment.NODE_ENV === "production" && !cacheConnection
             ? "CLOUD_RATE_LIMIT_UNAVAILABLE"
             : !cloudConfig.flags.search && !cloudConfig.flags.computer
               ? "CLOUD_CAPABILITY_DISABLED"
-              : !modelReady
-                ? "CLOUD_MODEL_UNAVAILABLE"
-                : cloudConfig.flags.search &&
-                    !cloudConfig.flags.computer &&
-                    !environment.BRAVE_SEARCH_API_KEY
-                  ? "CLOUD_SEARCH_UNAVAILABLE"
-                  : null,
+              : "CLOUD_MODEL_UNAVAILABLE",
       },
       reportError: reporter.report,
       traceOperation: reporter.trace,

@@ -17,7 +17,6 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",
     "@orpc/server": "catalog:",
-    "@raypx/ai": "workspace:*",
     "@raypx/application": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/cache": "workspace:*",

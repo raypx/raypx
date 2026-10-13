@@ -4,6 +4,8 @@
 > Desktop execution retirement and the Electrobun migration are recorded in
 > [ADR-0019](../architecture/decisions/0019-retire-legacy-desktop-execution.md) and
 > [ADR-0020](../architecture/decisions/0020-electrobun-desktop-host.md).
+> The AI workspace measured below was later removed under
+> [ADR-0027](../architecture/decisions/0027-remove-pi-sdk.md).
 
 ## Scope and measurements
 
@@ -21,7 +23,7 @@ The branch starts at `bf512e2efe80be6ba507d289817424bba655a127` and targets
 | Implementation excluding tests     |   31,994 | 21,732 |  10,262 |    32.07% |          22,395 |
 
 Both 30% gates pass. The largest retained handwritten implementation module is
-`packages/ai/src/index.ts` at 310 lines; every retained implementation module is
+the former server-side adapter entrypoint at 310 lines; every retained implementation module is
 below 400 formatted lines. Physical line counts include blank lines and comments.
 Files moved into domain modules remain in the count. Newly added files count too.
 

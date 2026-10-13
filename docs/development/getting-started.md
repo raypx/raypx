@@ -32,8 +32,10 @@ an existing local database after the rename, set `RAYPX_POSTGRES_DB` and
 
 Redis is optional for local development. Production AI admission requires
 `REDIS_URL`; authentication always uses PostgreSQL. See
-[deployment](../architecture/deployment.md) for model, search, storage and
-document converter configuration before enabling Search or Computer.
+[deployment](../architecture/deployment.md) for storage and document converter
+configuration. Live Search/Computer remains unavailable after
+[the AI package removal](../architecture/decisions/0027-remove-pi-sdk.md);
+provider credentials cannot enable it.
 
 ## Environment files
 

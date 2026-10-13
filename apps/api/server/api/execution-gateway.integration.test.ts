@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
-import { describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it } from "vite-plus/test";
 import { createCloudApplication } from "@raypx/application";
 import { InMemoryCloudRepository } from "@raypx/db";
 import { createMemoryStorage } from "@raypx/storage";
@@ -12,13 +12,8 @@ import {
   executionObjectOutputSchemas,
 } from "@raypx/contracts/execution-gateway";
 import { createExecutionGateway, digestExecutionToken } from "./execution-gateway.js";
-import * as ai from "@raypx/ai";
-import { cloudToolNames } from "@raypx/core";
 
-async function fixture(
-  model?: { provider: string; id: string; apiKey: string },
-  mode: "search" | "computer" = "search",
-) {
+async function fixture(mode: "search" | "computer" = "search") {
   let now = new Date();
   const app = createCloudApplication({
     repository: new InMemoryCloudRepository({
@@ -48,10 +43,10 @@ async function fixture(
     grantId,
     tokenHash: digestExecutionToken(token),
     expiresAt: claimed.run.leaseExpiresAt!,
-    actions: ["bootstrap", "invoke", "object", "model"],
+    actions: ["bootstrap", "invoke", "object", "model", "research"],
   });
   const storage = createMemoryStorage();
-  const gateway = await createExecutionGateway({ app, storage, ...(model ? { model } : {}) });
+  const gateway = await createExecutionGateway({ app, storage });
   const client = (
     credential = `${grantId}.${token}`,
   ): ContractRouterClient<typeof executionGatewayContract> =>
@@ -76,29 +71,38 @@ async function fixture(
   };
 }
 describe("private execution Gateway", () => {
-  it("injects the trusted tool directory and bootstrap exposes no provider credentials", async () => {
-    const factory = vi.spyOn(ai, "createModelGateway").mockResolvedValue({
-      stream: async () => {
-        throw new Error("provider dispatch is not expected");
-      },
-    });
-    try {
-      const f = await fixture({
-        provider: "provider",
-        id: "model",
-        apiKey: "test-only-credential",
-      });
-      expect(factory).toHaveBeenCalledWith(
-        expect.objectContaining({ allowedTools: cloudToolNames }),
-      );
-      expect(await f.client().bootstrap({})).toEqual({
-        model: { provider: "provider", id: "model" },
-        history: "",
-      });
-      await f.gateway.close();
-    } finally {
-      factory.mockRestore();
-    }
+  it("bootstrap reports unavailable model execution", async () => {
+    const f = await fixture();
+    expect(f.gateway.modelReady).toBe(false);
+    expect(await f.client().bootstrap({})).toEqual({ model: null, history: "" });
+    await f.gateway.close();
+  });
+  it("rejects model and research calls after validating the current grant", async () => {
+    const f = await fixture();
+    const modelInput = {
+      executionId: "execution",
+      callId: crypto.randomUUID(),
+      context: {},
+      maxOutputTokens: 100,
+    };
+    const calls = (credential?: string) => [
+      f.client(credential).model(modelInput),
+      f.client(credential).research({ type: "search", query: "research" }),
+      f.client(credential).research({ type: "read", url: "https://example.test/source" }),
+    ];
+    await Promise.all(
+      calls("invalid.token").map((call) =>
+        expect(call).rejects.toMatchObject({ code: "FORBIDDEN" }),
+      ),
+    );
+    await Promise.all(
+      calls().map((call) => expect(call).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" })),
+    );
+    await f.app.revokeExecutionGrant({ grantId: f.grantId });
+    await Promise.all(
+      calls().map((call) => expect(call).rejects.toMatchObject({ code: "FORBIDDEN" })),
+    );
+    await f.gateway.close();
   });
   it("requires a persistent current grant and never accepts runner identity", async () => {
     const f = await fixture();
@@ -164,7 +168,7 @@ describe("private execution Gateway", () => {
     await f.gateway.close();
   });
   it("verifies transferred bytes and confines objects to the claimed Run", async () => {
-    const f = await fixture(undefined, "computer");
+    const f = await fixture("computer");
     const body = Buffer.from("verified content");
     const checksum = createHash("sha256").update(body).digest("hex");
     const asset = executionOutputSchemas.createWorkerAsset.parse(

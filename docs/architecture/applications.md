@@ -113,17 +113,17 @@ for the main-process and packaging boundary.
 
 ## Worker
 
-`apps/worker` is the durable cloud Pi execution host.
+`apps/worker` is the durable Run queue and isolated Runner host.
 
 - Polls committed queued CloudRuns directly. The owner-fenced executor atomically
   claims each Run before starting its isolated Bun process; duplicate poll
   candidates cannot assign duplicate owners.
-- Runs one main Pi Agent and at most two children with a shared Task budget.
-  Registers only trusted research, extraction, calculation, document rendering
-  and delegation tools. Built-in shell/files, dynamic extensions and arbitrary
-  MCP startup remain disabled.
-- Publishes validated Markdown/PDF, XLSX/CSV and PPTX/PDF deliverables through
-  the same atomic revision workflow used by the API.
+- Model execution is unavailable under
+  [ADR-0027](./decisions/0027-remove-pi-sdk.md). Existing claimed Runs settle as
+  fenced `failed/MODEL_UNAVAILABLE` after control and cancellation checks.
+- Retains independently verified extraction, calculation and Markdown/PDF,
+  XLSX/CSV and PPTX/PDF generation helpers. Automatic delivery requires a future
+  execution adapter; the private revision workflow and stored files remain.
 - Owns expired upload cleanup. Provider effects remain outside SQL transactions,
   with durable intents and completion checks. Task-notification mail is retired;
   Auth mail remains API-owned.

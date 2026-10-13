@@ -17,7 +17,7 @@ DTO contains only three booleans; settings administration RPCs are retired.
 `cloud` defines the conversation, Task/Run, immutable file, review, usage
 and capability protocol. Task notifications and notification preferences are
 retired. It retains native `Date` DTO fields and
-contains no Pi, Drizzle or S3 SDK types. Streams have independent connections.
+contains no provider, Drizzle or S3 SDK types. Streams have independent connections.
 
 ## `@raypx/application`
 
@@ -32,14 +32,6 @@ idempotent commands, owner-fenced execution, model reservations and atomic
 revision publication. API and Worker both use this same execution model.
 Queued Runs commit with their Turn/Round and admission facts and are directly
 claimable, without an outbox event or acceptance command.
-
-## `@raypx/ai`
-
-The server-side AI adapter for cloud Pi. It owns SDK-specific session lifecycle,
-model Gateway transport, research helpers and conversion to stable Raypx run
-events. Hosts inject trusted tools and metering hooks. The local Desktop Provider
-and unused Project tool registry are retired; the package has no Application/Core
-runtime dependency, database connection or HTTP session ownership.
 
 ## `@raypx/client`
 
@@ -72,6 +64,10 @@ own Hono routes, oRPC handlers, Better Auth session resolution, resource authori
 and the pooled database runtime. They export process-scoped `ApiModules`,
 request-scoped Auth context types, factories, and an environment preset, but do
 not own the Nitro listener or process lifecycle.
+The retired AI adapter has no replacement. Private model and research operations
+return unavailable; bootstrap exposes no model. Existing execution grants,
+authorization, object transfer validation and Cloud records remain active under
+[ADR-0027](./decisions/0027-remove-pi-sdk.md).
 Hono resolves one application session per RPC request; oRPC principal middleware
 injects a non-null principal into protected handlers. Better Auth database IDs are
 generated as UUID v7 values so

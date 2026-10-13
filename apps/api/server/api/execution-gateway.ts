@@ -6,29 +6,16 @@ import {
   executionPayloadSchemas,
   executionOutputSchemas,
   executionObjectOutputSchemas,
-  executionResearchOutputSchemas,
 } from "@raypx/contracts/execution-gateway";
 import type { CloudApplication } from "@raypx/application";
-import { cloudToolNames, type ObjectStorage } from "@raypx/core";
-import { createModelGateway, readPublicSource, searchWeb, type ModelCallHooks } from "@raypx/ai";
+import type { ObjectStorage } from "@raypx/core";
 
 export const digestExecutionToken = (value: string) =>
   createHash("sha256").update(value).digest("hex");
 export async function createExecutionGateway(options: {
   app: CloudApplication;
   storage: ObjectStorage;
-  model?: { provider: string; id: string; apiKey: string };
-  searchApiKey?: string;
 }) {
-  const model = options.model
-    ? await createModelGateway({
-        model: { provider: options.model.provider, id: options.model.id },
-        apiKey: options.model.apiKey,
-        allowedTools: cloudToolNames,
-      }).catch(() => null)
-    : null;
-  const active = new Set<AbortController>();
-  const settlements = new Set<Promise<void>>();
   const os = implement(executionGatewayContract).$context<{ credential: string }>();
   const authorized = os.use(async ({ context, next, path }) => {
     const separator = context.credential.indexOf(".");
@@ -58,10 +45,7 @@ export async function createExecutionGateway(options: {
         conversationId: context.run.conversationId,
       });
       return {
-        model:
-          model && options.model
-            ? { provider: options.model.provider, id: options.model.id }
-            : null,
+        model: null,
         history: conversation.runs
           .filter(
             (run) =>
@@ -204,16 +188,9 @@ export async function createExecutionGateway(options: {
           );
       }
     }),
-    research: authorized.research.handler(async ({ input, signal }) =>
-      input.type === "search"
-        ? executionResearchOutputSchemas.search.parse(
-            await searchWeb(input.query, {
-              ...(options.searchApiKey ? { apiKey: options.searchApiKey } : {}),
-              ...(signal ? { signal } : {}),
-            }),
-          )
-        : executionResearchOutputSchemas.read.parse(await readPublicSource(input.url, signal)),
-    ),
+    research: authorized.research.handler(async () => {
+      throw new ORPCError("SERVICE_UNAVAILABLE");
+    }),
     object: authorized.object.handler(async ({ context, input }) => {
       const asset = await options.app.workerAssetByKey({ ...context.fence, objectKey: input.key });
       if (input.operation === "head")
@@ -251,87 +228,8 @@ export async function createExecutionGateway(options: {
         }),
       );
     }),
-    model: authorized.model.handler(async ({ input, context, signal }) => {
-      if (!model) throw new ORPCError("SERVICE_UNAVAILABLE");
-      const controller = new AbortController();
-      active.add(controller);
-      const stop = () => controller.abort("connection_closed");
-      signal?.addEventListener("abort", stop, { once: true });
-      if (signal?.aborted) stop();
-      const monitor = setInterval(() => {
-        void options.app.validateFence(context.fence).then(
-          (run) => {
-            if (run.cancelRequested) controller.abort("cancelled");
-          },
-          () => controller.abort("ownership_lost"),
-        );
-      }, 1000);
-      monitor.unref();
-      const remaining =
-        (context.run.mode === "search" ? 60_000 : 20 * 60_000) -
-        (Date.now() - (context.run.startedAt?.getTime() ?? Date.now()));
-      const deadline = setTimeout(() => controller.abort("deadline"), Math.max(0, remaining));
-      deadline.unref();
-      const clear = () => {
-        clearInterval(monitor);
-        clearTimeout(deadline);
-        active.delete(controller);
-        signal?.removeEventListener("abort", stop);
-      };
-      const hooks: ModelCallHooks = {
-        reserve: async (call) => {
-          await options.app.reserveUsage({
-            ...context.fence,
-            callId: call.callId,
-            executionId: input.executionId,
-            provider: call.provider,
-            model: call.model,
-            reservedTokens: call.maxTokens,
-            pricing: call.pricing,
-          });
-        },
-        start: async (callId) => {
-          await options.app.startUsage({ ...context.fence, callId, dispatchOnce: true });
-        },
-        settle: async (call) => {
-          await options.app.reconcileUsage({
-            callId: call.callId,
-            started: call.started,
-            ...(call.usage.inputTokens === null ? {} : { inputTokens: call.usage.inputTokens }),
-            ...(call.usage.outputTokens === null ? {} : { outputTokens: call.usage.outputTokens }),
-            ...(call.usage.cacheReadTokens === null
-              ? {}
-              : { cacheReadTokens: call.usage.cacheReadTokens }),
-            ...(call.usage.cacheWriteTokens === null
-              ? {}
-              : { cacheWriteTokens: call.usage.cacheWriteTokens }),
-          });
-        },
-      };
-      try {
-        const stream = await model.stream(input, hooks, controller.signal);
-        settlements.add(stream.settled);
-        void stream.settled.then(
-          () => settlements.delete(stream.settled),
-          () => settlements.delete(stream.settled),
-        );
-        return (async function* () {
-          try {
-            for await (const event of stream.events) yield event;
-            await stream.settled;
-          } finally {
-            controller.abort("stream_closed");
-            try {
-              await stream.settled;
-            } finally {
-              clear();
-            }
-          }
-        })();
-      } catch {
-        clear();
-        throw new ORPCError("BAD_REQUEST", { message: "MODEL_CALL_REJECTED" });
-      }
+    model: authorized.model.handler(async () => {
+      throw new ORPCError("SERVICE_UNAVAILABLE");
     }),
   };
   const handler = new RPCHandler(router, {
@@ -339,7 +237,7 @@ export async function createExecutionGateway(options: {
     allowMethods: (method) => method === "POST",
   });
   return {
-    modelReady: model !== null,
+    modelReady: false,
     async fetch(request: Request) {
       const credential = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
       try {
@@ -354,9 +252,6 @@ export async function createExecutionGateway(options: {
         return Response.json({ error: "EXECUTION_GATEWAY_REJECTED" }, { status: 403 });
       }
     },
-    async close() {
-      for (const controller of active) controller.abort("shutdown");
-      await Promise.allSettled([...settlements]);
-    },
+    close: () => Promise.resolve(),
   };
 }

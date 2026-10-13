@@ -8,7 +8,6 @@
       "e2e"
     ],
     "catalog": {
-      "@anthropic-ai/sdk": "^0.133.0",
       "@better-auth/drizzle-adapter": "^1.7.7",
       "@orpc/client": "2.0.0-beta.43",
       "@orpc/contract": "2.0.0-beta.43",
@@ -172,8 +171,5 @@
       "onFail": "error"
     }
   },
-  "packageManager": "bun@1.4.2",
-  "dependencies": {
-    "@anthropic-ai/sdk": "catalog:"
-  }
+  "packageManager": "bun@1.4.0"
 }

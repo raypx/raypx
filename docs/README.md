@@ -37,6 +37,9 @@ deployment boundaries, and coding-agent guidance.
   — one executable, isolated task processes and Host-owned Run deadlines.
 - [Direct Run queue decision](./architecture/decisions/0026-direct-run-queue-and-retire-task-notifications.md)
   — Worker claims queued Runs directly; task notifications and outbox dispatch are retired.
+- [AI package removal](./architecture/decisions/0027-remove-pi-sdk.md)
+  — model and public research execution are unavailable; Cloud records, security
+  and independent document verification remain.
 - [Bun runtime decision](./architecture/decisions/0024-bun-runtime.md) — one pinned
   runtime for production, tooling, tests and isolated Runner processes.
 - [Runtime and deployment](./architecture/deployment.md) — production runtimes,

@@ -58,12 +58,12 @@ server/
   not-found responses. Auth verification, password reset and welcome mail remain.
 - `/internal/execution/*` is a separate private contract authenticated by a
   durable hashed RunGrant, current owner epoch, live lease and current permission.
-  It owns model/search credentials, dispatch and trusted late usage reconciliation.
+  Model and research operations validate that same grant, then return unavailable;
+  bootstrap reports no model. New Search/Computer admissions fail closed.
   Runner inputs cannot supply identity, scope or fencing. Object transfers verify
   actual bytes and restrict keys to authorized inputs and outputs.
-- Dispatch private execution operations explicitly against their payload/output
-  schemas. The API injects Core's trusted tool directory into the model Gateway;
-  Runner requests cannot change that allowlist.
+- Dispatch private domain operations explicitly against their payload/output
+  schemas.
 - Run/conversation SSE uses a dedicated handler without batching or the ordinary
   15-second deadline. Revalidate the original login session in every polling
   round; revocation, expiry or changed identity terminates the connection.

@@ -39,8 +39,8 @@ Most stable third-party dependencies use caret semver ranges (`^`), including
 to the runner bundled by Vite+. Pre-release dependencies remain exact: oRPC
 beta, Drizzle RC, and Nitro beta. Vite+ and its Vite alias use matching stable
 caret ranges.
-Turbo, Pi AI and the Query/Router integration are initially pinned exactly so
-the validated orchestration and SDK combination does not drift. The committed
+Turbo and the Query/Router integration are initially pinned exactly so
+the validated orchestration and framework combination does not drift. The committed
 `bun.lock` records exact resolved versions for frozen installs.
 
 Storybook packages and Lightning CSS also use ranges, but their resolved
@@ -449,8 +449,9 @@ dependencies dynamically. Shared chunks remain in the artifact; no companion
 Runner executable is needed. The custom entry does not add an HTTP listener.
 
 Nitro owns dependency tracing and copying. Explicit `traceDeps` entries retain
-complete Pi/PDF/XLSX/PPTX package assets, while workspace TypeScript and React
-Email's asset-free runtime entry are bundled. There is no custom esbuild builder,
+complete PDF/XLSX/PPTX package assets, while workspace TypeScript is bundled.
+The provider adapter and Pi dependency tracing are removed under
+[ADR-0027](decisions/0027-remove-pi-sdk.md). There is no custom esbuild builder,
 package-closure implementation or separate `runtime:prepare` prerequisite.
 Turbo caches `.output/**` as a complete artifact, so cache restoration includes
 the executable, its chunks and runtime dependencies/assets. Root

@@ -1,135 +1,75 @@
-# ADR-0027: Remove Pi SDK and Simplify AI Architecture
+# ADR-0027: Remove the AI package and provider execution
 
 ## Status
 
-Proposed
+Accepted
+
+Supersedes the cloud provider and Pi execution provisions of
+[ADR-0016](0016-cloud-agent-platform.md),
+[ADR-0017](0017-gateway-and-task-rounds.md),
+[ADR-0023](0023-worker-vite-nitro-artifact.md) and
+[ADR-0025](0025-worker-single-entry-execution.md). Their Cloud data, authorization,
+process isolation, artifact and deadline decisions remain in force.
 
 ## Context
 
-The current AI execution layer depends on `@earendil-works/pi-ai` and 
-`@earendil-works/pi-coding-agent` SDKs. These add complexity:
-
-1. **Heavy abstraction** - The pi SDK wraps model calls, tool execution, 
-   session management with its own abstractions
-2. **Limited flexibility** - Hard to customize behavior or swap providers
-3. **Maintenance burden** - External dependency on proprietary SDK
-4. **Complexity** - `@raypx/ai` acts as an adapter between pi SDK and our domain
+The AI workspace and its Pi SDK implementation have been removed. Remaining
+workspace imports, API dispatch and Worker execution code still depend on that
+missing adapter. Keeping those references makes installation, type checks and
+runtime behavior inconsistent with the repository's actual workspace set.
+The earlier proposed direct-provider migration has not been implemented and
+there is no replacement model or public research adapter.
 
 ## Decision
 
-Remove pi SDK dependencies and implement a simplified AI layer that:
+Remove the AI workspace from dependency manifests, lockfile, architecture rules
+and current workspace documentation. Remove unused provider SDK dependencies,
+tracing entries, provider-only test commands and configuration. Do not create
+another adapter or add a provider as part of this removal.
 
-1. **Direct model integration** - Use Anthropic SDK (or others) directly
-2. **Minimal abstraction** - Only wrap what we actually need
-3. **Clear boundaries** - Keep AI concerns in `@raypx/ai`, domain logic in `@raypx/application`
+The private execution Gateway retains its grant-authenticated bootstrap,
+execution lifecycle and private object operations. Bootstrap reports no model;
+model readiness is false. Model and public research requests return
+`SERVICE_UNAVAILABLE`, including requests made with a valid RunGrant. Provider
+configuration cannot enable these operations. Cloud capability reporting keeps
+new Search and Computer admissions unavailable.
 
-## Implementation Plan
+Worker still polls durable queued Runs, atomically claims them, renews leases
+and launches an isolated Runner from its single Bun executable. Without a model
+adapter, an existing claimed Run settles as fenced `failed/MODEL_UNAVAILABLE`
+after current control and cancellation checks. Host ownership, epoch fencing,
+RunGrants, deadlines, cancellation, scratch cleanup and shutdown remain active.
+The Worker retains document extraction, computation and generation helpers for
+independent verification; they do not imply live model execution or automatic
+delivery. Research tools require an explicitly injected research implementation.
 
-### Phase 1: Create New Simplified Implementation (parallel to existing)
+Preserve stored conversations, Tasks, Runs, events, usage, immutable file metadata
+and review history. Preserve current account and project authorization, private
+object byte/checksum validation, and contracts used to access these records.
+Do not drop schema, rewrite historical migrations, restore retired notifications
+or outbox dispatch, or expose credentials to Runner processes.
 
-Create new files in `packages/ai/src/`:
-
-```typescript
-// agent.ts - Core AI agent interface
-export interface AgentOptions {
-  model: { provider: string; id: string };
-  apiKey?: string;
-  baseURL?: string;
-}
-
-export interface AgentRunInput {
-  cwd: string;
-  prompt: string;
-  systemPrompt: string;
-  tools: readonly Tool[];
-  maxOutputTokens: number;
-  onEvent: (event: RunEvent) => Promise<void>;
-  signal: AbortSignal;
-}
-
-export interface Agent {
-  run(input: AgentRunInput): Promise<RunEvent>;
-}
-
-// anthropic-agent.ts - Anthropic implementation
-export function createAnthropicAgent(options: AgentOptions): Agent {
-  // Direct Anthropic SDK usage
-}
-
-// events.ts - Simplified event types
-export type RunEvent = 
-  | { type: "text_delta"; text: string }
-  | { type: "tool_use"; toolName: string; input: unknown }
-  | { type: "tool_result"; toolName: string; output: unknown }
-  | { type: "completed"; usage: ModelUsage }
-  | { type: "error"; error: string }
-  | { type: "cancelled" };
-```
-
-### Phase 2: Update Worker to Use New Implementation
-
-1. Replace `CloudPiAgent` with `Agent` in `apps/worker/src/execution.ts`
-2. Update tool adapters to match new interface
-3. Keep event handlers compatible
-
-### Phase 3: Remove Pi Dependencies
-
-1. Remove `@earendil-works/pi-ai` and `@earendil-works/pi-coding-agent` from `packages/ai/package.json`
-2. Delete old files:
-   - `packages/ai/src/cloud-pi.ts`
-   - `packages/ai/src/pi-events.ts`
-   - `packages/ai/src/gateway-pi.integration.test.ts`
-3. Update `packages/ai/src/index.ts` exports
-
-### Phase 4: Update API Gateway
-
-1. Simplify `apps/api/server/api/execution-gateway.ts` model gateway
-2. Remove pi-specific transport layer
-3. Keep hooks interface for usage tracking
+Keep Worker artifact checks independent of providers. The relocated executable
+must support `--check` and its same-entry `--runner --check` child, verify real
+PDF/XLSX output, and retain Chinese document/converter coverage through
+`--check-documents`. Pi and retired task-mail checks are removed. Auth verification,
+password reset and welcome mail remain API-owned.
 
 ## Consequences
 
-### Positive
+- Bun resolves only existing workspaces and provider-free dependency artifacts.
+- API and Worker report explicit unavailable/failed results rather than importing
+  missing modules or claiming successful execution.
+- Saved Cloud content and security boundaries remain usable without a model
+  adapter or a database migration.
+- Search answers, live Agent streaming, delegation and automatic document
+  delivery remain unavailable. Document helper checks still verify their formats,
+  package assets and converters independently.
 
-- **Simpler codebase** - Remove 2 external dependencies and adapter layer
-- **Direct control** - Customize model calls, retries, streaming as needed
-- **Easier testing** - Mock at a higher level, clearer test boundaries
-- **Better types** - No more adapting between pi types and our domain types
-- **Easier to extend** - Add new providers (OpenAI, etc.) without SDK constraints
+## Follow-up
 
-### Negative
-
-- **Loss of pi features** - Session management, resource loading, settings
-  - Mitigation: We weren't using most of these features anyway
-- **Migration effort** - ~3-5 days to implement and test
-  - Mitigation: Parallel implementation keeps existing code working
-- **Maintain model integration** - We own the integration code
-  - Mitigation: Anthropic SDK is stable, well-documented
-
-## Alternatives Considered
-
-### Keep Pi SDK
-
-- Pro: No migration work
-- Con: Continued complexity, limited flexibility
-
-### Use LangChain or Similar
-
-- Pro: Multi-provider support, many features
-- Con: Another heavy abstraction layer, overkill for our needs
-
-### Build Provider-Agnostic Layer
-
-- Pro: Easy to add providers
-- Con: Over-engineering before we need multiple providers
-
-## Implementation Status
-
-- [ ] Phase 1: New simplified implementation
-- [ ] Phase 2: Update worker
-- [ ] Phase 3: Remove pi dependencies
-- [ ] Phase 4: Update API gateway
-- [ ] Integration tests passing
-- [ ] E2E tests passing
-- [ ] Documentation updated
-
+A future accepted design must define a replacement execution adapter, trusted
+research access, event handling, metered model dispatch and cancellation before
+live Search or Computer is enabled. Verify those behaviors against real providers
+and the final isolated deployment artifact; configuration alone cannot restore
+execution.

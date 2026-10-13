@@ -78,9 +78,9 @@ describe("architecture policy", () => {
     expect(
       await fixture({
         "apps/desktop": {
-          source: 'import "node:fs"; import "../native/main"; import "@raypx/ai";',
+          source: 'import "node:fs"; import "../native/main"; import "@raypx/storage";',
         },
-        "packages/ai": {},
+        "packages/storage": {},
       }),
     ).toEqual([]);
   });

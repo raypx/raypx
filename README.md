@@ -30,7 +30,7 @@ request.
 apps/web        TanStack Start user application
 apps/desktop    Electrobun cloud project client
 apps/api        Standalone Nitro API application
-apps/worker     Cloud Pi execution, trusted tools and durable outbox host
+apps/worker     Durable Run queue host and trusted document tools
 apps/storybook  Storybook UI component workbench
 e2e             Playwright cloud, account, project and Desktop smoke tests
 
@@ -38,7 +38,6 @@ packages/ui         Shared visual primitives
 packages/agent-ui   Shared controlled Agent business components
 packages/storage    Private S3-compatible object storage adapter
 packages/application Shared cloud and Project use cases for API and Worker
-packages/ai         Server-side Pi Agent adapter
 packages/cache      Redis cache facade and Better Auth secondary storage
 packages/client     Typed oRPC client
 packages/contracts  Runtime API contracts
@@ -54,7 +53,10 @@ packages/tsconfig   Shared TypeScript presets
 
 `bun run policy` keeps this listing and the one in `AGENTS.md` in step with the
 workspaces Bun actually resolves, in both directions. The Worker owns durable
-outbox delivery, cloud Pi execution and trusted document generation. The Web-first
+Run claims and independently verified document helpers. Model and public research
+execution are unavailable following
+[the AI package removal](./docs/architecture/decisions/0027-remove-pi-sdk.md).
+Cloud history, private files, authorization and review remain available. The Web-first
 release uses a fresh database and private object storage. Desktop manages cloud
 projects and tasks; its former local runtime is retired under
 [the Desktop execution decision](./docs/architecture/decisions/0019-retire-legacy-desktop-execution.md).

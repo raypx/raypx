@@ -25,7 +25,7 @@ const index = createArchitectureIndex([
     "apps/desktop",
     {
       name: "desktop",
-      dependencies: { "@raypx/ai": "*" },
+      dependencies: { "@raypx/storage": "*" },
       imports: { "#native/*": "./native/*" },
     },
     { "@native/*": ["./native/*"] },
@@ -41,7 +41,7 @@ const index = createArchitectureIndex([
   }),
   workspace("packages/application", { name: "@raypx/application", exports }),
   workspace("packages/scripts", { name: "@raypx/scripts", exports }),
-  workspace("packages/ai", { name: "@raypx/ai", exports }),
+  workspace("packages/storage", { name: "@raypx/storage", exports }),
 ]);
 const web = "/repo/apps/web/src/index.ts";
 const desktop = "/repo/apps/desktop/src/index.ts";
@@ -142,12 +142,12 @@ const cases: { valid: RuleCase[]; invalid: RuleCase[] } = {
     },
     {
       filename: desktop,
-      code: 'import "@raypx/ai";',
+      code: 'import "@raypx/storage";',
       errors: [{ message: /forbidden runtime/ }],
     },
     {
       filename: desktop,
-      code: 'import "node:fs"; import "@earendil-works/pi-coding-agent";',
+      code: 'import "node:fs"; import "bun:ffi";',
       errors: 2,
     },
     {
@@ -198,7 +198,7 @@ const base = createBoundariesRule(() => index, "/");
 export default definePlugin({ meta: { name: "raypx" }, rules: { boundaries: {
   ...base,
   create(context) {
-    if (process.versions.bun !== "1.4.2") throw new Error("Boundary plugin must execute with Bun 1.4.2.");
+    if (process.versions.bun !== "1.4.0") throw new Error("Boundary plugin must execute with Bun 1.4.0.");
     const segments = context.filename.split(String.fromCharCode(92)).join("/").split("/");
     const position = segments.findIndex(segment => segment.startsWith("case-"));
     if (position < 0) throw new Error("Missing boundary test case directory.");

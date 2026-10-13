@@ -8,6 +8,10 @@ The Node runtime provisions below are superseded by
 The outbox dispatch and task-notification provisions are superseded by
 [ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md).
 
+The provider and Pi execution provisions are superseded by
+[ADR-0027](0027-remove-pi-sdk.md). Cloud data, authorization, review and storage
+decisions remain in force; live model and public research execution are unavailable.
+
 ## Decision
 
 The first release is a Web-first cloud Search and Computer product. Worker owns

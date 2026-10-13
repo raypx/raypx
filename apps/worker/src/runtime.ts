@@ -91,16 +91,6 @@ export async function createCloudWorkerRuntime(
     ownerId: CLOUD_WORKER_OWNER,
     gatewayUrl: env.CLOUD_EXECUTION_GATEWAY_URL,
     limits,
-    delegationEnabled: env.CLOUD_DELEGATION_ENABLED,
-    exportEnabled: env.CLOUD_EXPORT_ENABLED,
-    renderer: {
-      libreOfficePath: env.SOFFICE_BINARY,
-      fontFace: env.CLOUD_PPTX_FONT_FACE,
-      pdfToTextPath: env.PDFTOTEXT_BINARY,
-      pdfInfoPath: env.PDFINFO_BINARY,
-      ...(env.CLOUD_PDF_FONT_PATH ? { fontPath: env.CLOUD_PDF_FONT_PATH } : {}),
-      ...(env.CLOUD_PDF_FONT_FAMILY ? { fontFamily: env.CLOUD_PDF_FONT_FAMILY } : {}),
-    },
     onError: report,
   });
   const execute = (runId: string, signal?: AbortSignal) =>
