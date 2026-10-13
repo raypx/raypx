@@ -1,0 +1,98 @@
+packages/i18n/package.json
+  s_8cb2ae3aaeefff::t_a51d2d66af9cfd 23
+packages/i18n/src/resolve.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1,3
+packages/db/AGENTS.md
+  s_8cb2ae3aaeefff::t_7fa9eceb8e957a 21
+packages/db/THIRD_PARTY_LICENSES
+  s_8cb2ae3aaeefff::t_7fa9eceb8e957a 1-233
+docs/architecture/database.md
+  s_8cb2ae3aaeefff::t_7fa9eceb8e957a 54
+docs/architecture/decisions/0028-selective-drizzle-helpers.md
+  s_8cb2ae3aaeefff::t_7fa9eceb8e957a 47
+packages/i18n/src/client.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1-18
+packages/i18n/src/normalize.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1,3
+packages/i18n/src/types.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1-6,11-22
+packages/i18n/src/server.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1-2,4-5
+  s_8cb2ae3aaeefff::t_998449adecb28f 6
+packages/i18n/src/runtime.ts
+  s_8cb2ae3aaeefff::t_fb50db96562902 1-16
+package.json
+  s_8cb2ae3aaeefff::t_a51d2d66af9cfd 59
+  s_8cb2ae3aaeefff::t_857861384c7723 40,60
+docs/architecture/decisions/0004-use-intl-static-catalogs.md
+  s_8cb2ae3aaeefff::t_feda27fe68ca65 5-7
+packages/i18n/src/client/storage.ts
+  s_8cb2ae3aaeefff::t_a51d2d66af9cfd 25,27
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1-4,7,11,15,20-21,35
+packages/i18n/src/formats.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1
+docs/architecture/packages.md
+  s_8cb2ae3aaeefff::t_feda27fe68ca65 163-168,172-174
+  s_8cb2ae3aaeefff::t_48be703f3552a3 175,177
+packages/i18n/src/translator.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1-3,5-6,8-9
+docs/README.md
+  s_8cb2ae3aaeefff::t_feda27fe68ca65 8-9
+packages/i18n/src/formatter.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1-3,5,8
+packages/i18n/src/cookie.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1,3
+packages/db/NOTICE.md
+  s_8cb2ae3aaeefff::t_7fa9eceb8e957a 1-3,6-18
+  s_8cb2ae3aaeefff::t_6a70ddc1b40676 4-5
+packages/i18n/src/accept-language.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1
+docs/architecture/decisions/README.md
+  s_8cb2ae3aaeefff::t_feda27fe68ca65 67-68
+packages/i18n/src/testing.ts
+  s_8cb2ae3aaeefff::t_7ddbc061be67c3 1-6
+packages/scripts/src/policy/manifests.test.ts
+  s_8cb2ae3aaeefff::t_c81420dc5563dc 70,72
+  s_8cb2ae3aaeefff::t_0bc1213444c212 71
+packages/scripts/src/policy/manifests/rules.ts
+  s_8cb2ae3aaeefff::t_a51d2d66af9cfd 120
+docs/architecture/decisions/0030-independent-intl-library.md
+  s_8cb2ae3aaeefff::t_feda27fe68ca65 1-17,19-20,25-47
+  s_8cb2ae3aaeefff::t_338c2fe96508de 21-24
+  s_8cb2ae3aaeefff::t_2c5e1f8d1d410b 18
+docs/architecture/intl.md
+  s_8cb2ae3aaeefff::t_feda27fe68ca65 1-3,5-14,19-52
+  s_8cb2ae3aaeefff::t_338c2fe96508de 15-18
+  s_8cb2ae3aaeefff::t_59847c31b299a1 4
+packages/i18n/AGENTS.md
+  s_8cb2ae3aaeefff::t_338c2fe96508de 39
+  s_8cb2ae3aaeefff::t_feda27fe68ca65 5-6,11-15,20-32,36-38,40-44
+bun.lock
+  s_8cb2ae3aaeefff::t_1a0bc4d97bff48 299,448,465,1016,1022-1023
+docs/architecture/decisions/0029-toolkit-drizzle-extraction.md
+  s_8cb2ae3aaeefff::t_29c28929364de8 17
+docs/architecture/drizzle-extensions.md
+  s_8cb2ae3aaeefff::t_439ec5e6a30f2d 4,12,15,18
+vendor/README.md
+  s_8cb2ae3aaeefff::t_1d32cf213d46a5 1,3-5,7-12,14-15,20-21,23-26,28-32
+vendor/drizzle.json
+  s_8cb2ae3aaeefff::t_07340e9722e2c4 4-9
+vendor/intl.json
+  s_8cb2ae3aaeefff::t_9eae9ee1362440 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e812193cbb1fc14d6d880e94e55a07a55171ffbd",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
