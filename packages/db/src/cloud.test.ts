@@ -62,6 +62,11 @@ describe("cloud application guarantees", () => {
     await expect(service.heartbeat(run.fence)).rejects.toMatchObject({
       code: "CLOUD_ACCESS_DENIED",
     });
+    repository.setUserActive("alice", true);
+    expect(await repository.read((tx) => tx.userActive("alice"))).toBe(true);
+    repository.setUserActive("unknown", true);
+    expect(await repository.read((tx) => tx.userActive("unknown"))).toBe(false);
+    repository.setUserActive("alice", false);
     await service.interrupt(run.fence);
     expect(
       (

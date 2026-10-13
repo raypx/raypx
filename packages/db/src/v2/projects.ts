@@ -12,7 +12,7 @@ import type {
 } from "@raypx/core";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { organizationMembers, v2ProjectMembers, v2Projects } from "../schema.js";
-import type { Database } from "./types.js";
+import type { Database } from "../connection.js";
 
 const memberColumns = {
   projectId: v2ProjectMembers.projectId,

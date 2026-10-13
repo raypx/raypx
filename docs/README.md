@@ -20,6 +20,8 @@ deployment boundaries, and coding-agent guidance.
   and Storybook: what each is for, how it is built, and how it is deployed.
 - [Shared packages](./architecture/packages.md) — contracts, client, domain,
   auth, i18n, mail, shared foundation, DB, UI, scripts, and TypeScript presets.
+- [Database](./architecture/database.md) — active repositories, Auth relations,
+  physical migration compatibility and PostgreSQL verification.
 - [Product design](./architecture/design.md) — brand posture, cross-surface
   intensity, visual vocabulary, and accessibility rules.
 - [Raypx delivery goal](./architecture/raypx-delivery-goal.md) — current cloud

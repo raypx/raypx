@@ -1,6 +1,6 @@
 import { first, inserted } from "./results.js";
 import { desc, eq } from "drizzle-orm";
-import type { Database } from "./types.js";
+import type { Database } from "../connection.js";
 import type { ProjectTaskV2Repository, TaskV2 } from "@raypx/core";
 import { v2ProjectTasks } from "../schema.js";
 export class PostgresProjectTaskV2Repository implements ProjectTaskV2Repository {

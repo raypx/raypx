@@ -1,7 +1,7 @@
 import type { MailSettingsFallback } from "@raypx/core";
 import { describe, expect, it } from "vite-plus/test";
-import { InMemorySystemSettingsRepository } from "./memory.js";
-import { PostgresSystemSettingsRepository } from "./postgres.js";
+import { InMemorySystemSettingsRepository } from "./repositories/settings/memory.js";
+import { PostgresSystemSettingsRepository } from "./repositories/settings/postgres.js";
 import { systemSecrets, systemSettings } from "./schema.js";
 
 class FakePostgresDatabase {

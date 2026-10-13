@@ -1,30 +1,36 @@
-import { SettingsReader } from "./reader.js";
-import type { SystemSettingsRepository } from "@raypx/core";
+import type { MailSettingsFallback, SystemSettingsRepository } from "@raypx/core";
 import { eq, inArray } from "drizzle-orm";
 import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { systemSecrets, systemSettings } from "../../schema.js";
+import {
+  authSettingKeys,
+  mailSettingKeys,
+  mailSecretKey,
+  resolveAuthSettings,
+  resolveMailConfiguration,
+} from "./values.js";
 
-export class PostgresSystemSettingsRepository
-  extends SettingsReader
-  implements SystemSettingsRepository
-{
-  constructor(private readonly db: PostgresJsDatabase) {
-    super();
+export class PostgresSystemSettingsRepository implements SystemSettingsRepository {
+  constructor(private readonly db: PostgresJsDatabase) {}
+
+  async resolveAuthSettings() {
+    return resolveAuthSettings(await this.readSettings(authSettingKeys));
   }
 
-  protected async readSettings(keys: readonly string[]) {
+  async resolveMailConfiguration(fallback: MailSettingsFallback) {
+    const settings = await this.readSettings(mailSettingKeys);
+    const [row] = await this.db
+      .select()
+      .from(systemSecrets)
+      .where(eq(systemSecrets.key, mailSecretKey))
+      .limit(1);
+    return resolveMailConfiguration(settings, row ?? null, fallback);
+  }
+
+  private async readSettings(keys: readonly string[]) {
     return this.db
       .select()
       .from(systemSettings)
       .where(inArray(systemSettings.key, [...keys]));
-  }
-
-  protected async readSecret(key: string) {
-    const [row] = await this.db
-      .select()
-      .from(systemSecrets)
-      .where(eq(systemSecrets.key, key))
-      .limit(1);
-    return row ?? null;
   }
 }

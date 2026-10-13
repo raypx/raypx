@@ -15,74 +15,18 @@ import {
   isCloudTerminal,
   sameCloudTaskRound,
 } from "@raypx/core";
+import { cloudRecords, cloudActorId, cloudParentIds } from "./records.js";
 
 type State = {
   entities: { [K in CloudEntityKind]: Map<string, CloudEntities[K]> };
   events: Map<string, CloudRunEvent>;
-  users: Map<string, { active: boolean; email: string; displayName: string }>;
+  users: Map<string, boolean>;
   projects: Map<string, ProjectV2>;
   members: Map<string, ProjectMemberV2>;
   organizations: Map<string, OrganizationMemberV2>;
 };
-const kinds: CloudEntityKind[] = [
-  "mutations",
-  "conversations",
-  "turns",
-  "tasks",
-  "rounds",
-  "spendingGrants",
-  "messages",
-  "executionGrants",
-  "runs",
-  "executions",
-  "tools",
-  "sources",
-  "assets",
-  "revisions",
-  "usage",
-  "commands",
-];
+const kinds = Object.keys(cloudRecords) as CloudEntityKind[];
 const clone = <T>(value: T): T => structuredClone(value);
-export function cloudParentIds(
-  kind: CloudEntityKind,
-  value: CloudEntities[CloudEntityKind],
-): string[] {
-  const entity = value as unknown as Record<string, unknown>;
-  const keys: Record<CloudEntityKind, readonly string[]> = {
-    mutations: [],
-    conversations: [],
-    turns: ["conversationId", "runId"],
-    tasks: ["conversationId"],
-    rounds: ["taskId"],
-    spendingGrants: [],
-    messages: ["runId"],
-    executionGrants: ["runId"],
-    runs: ["conversationId", "taskId"],
-    executions: ["runId"],
-    tools: ["runId"],
-    sources: ["runId"],
-    assets: ["runId"],
-    revisions: ["taskId", "runId"],
-    usage: ["runId"],
-    commands: ["runId"],
-  };
-  return keys[kind]
-    .map((key) => entity[key])
-    .filter((value): value is string => typeof value === "string");
-}
-export function cloudActorId(
-  kind: CloudEntityKind,
-  value: CloudEntities[CloudEntityKind],
-): string | null {
-  const entity = value as unknown as Record<string, unknown>;
-  const actor =
-    kind === "usage"
-      ? typeof entity["accountId"] === "string" && entity["accountId"].startsWith("user:")
-        ? entity["accountId"].slice(5)
-        : null
-      : (entity["actorId"] ?? entity["requestedByUserId"] ?? entity["createdByUserId"]);
-  return typeof actor === "string" ? actor : null;
-}
 export function cloudMatches<K extends CloudEntityKind>(
   kind: K,
   entity: CloudEntities[K],
@@ -95,30 +39,22 @@ export function cloudMatches<K extends CloudEntityKind>(
   )
     return false;
   if (query.roundId && record["roundId"] !== query.roundId) return false;
-  if (
-    query.published !== undefined &&
-    (entity as unknown as Record<string, unknown>)["published"] !== query.published
-  )
-    return false;
+  if (query.published !== undefined && record["published"] !== query.published) return false;
   if (query.runIds) {
-    const runId = (entity as unknown as Record<string, unknown>)["runId"];
+    const runId = record["runId"];
     if (typeof runId !== "string" || !query.runIds.includes(runId)) return false;
   }
   if (query.turnIds) {
-    const run = entity as unknown as Record<string, unknown>;
-    const turnId = run["sourceTurnId"] ?? run["turnId"];
+    const turnId = record["sourceTurnId"] ?? record["turnId"];
     if (typeof turnId !== "string" || !query.turnIds.includes(turnId)) return false;
   }
-  if (query.status && (entity as unknown as Record<string, unknown>)["status"] !== query.status)
-    return false;
+  if (query.status && record["status"] !== query.status) return false;
   if (query.scope && !sameResourceScope(query.scope, entity.scope)) return false;
   if (query.parentId && !cloudParentIds(kind, entity).includes(query.parentId)) return false;
   if (query.actorId && cloudActorId(kind, entity) !== query.actorId) return false;
   if (
     query.idempotencyKey &&
-    (entity as unknown as Record<string, unknown>)[
-      kind === "runs" ? "turnId" : "idempotencyKey"
-    ] !== query.idempotencyKey
+    record[kind === "runs" ? "turnId" : "idempotencyKey"] !== query.idempotencyKey
   )
     return false;
   if (
@@ -218,7 +154,7 @@ function txFor(state: State): CloudTransaction {
       }
       (state.entities[kind] as Map<string, typeof entity>).set(entity.id, clone(entity));
     },
-    userActive: async (actorId) => state.users.get(actorId)?.active === true,
+    userActive: async (actorId) => state.users.get(actorId) === true,
     projectAccess: async (projectId, actorId) => {
       const project = state.projects.get(projectId);
       return project
@@ -277,16 +213,7 @@ export class InMemoryCloudRepository implements CloudRepository {
     this.state = {
       entities: Object.fromEntries(kinds.map((kind) => [kind, new Map()])) as State["entities"],
       events: new Map(),
-      users: new Map(
-        (input.users ?? []).map((u) => [
-          u.id,
-          {
-            active: u.active ?? true,
-            email: u.email ?? `${u.id}@example.com`,
-            displayName: u.displayName ?? u.id,
-          },
-        ]),
-      ),
+      users: new Map((input.users ?? []).map((user) => [user.id, user.active ?? true])),
       projects: new Map((input.projects ?? []).map((p) => [p.id, clone(p)])),
       members: new Map(
         (input.projectMembers ?? []).map((m) => [`${m.projectId}:${m.userId}`, clone(m)]),
@@ -319,7 +246,6 @@ export class InMemoryCloudRepository implements CloudRepository {
     }
   }
   setUserActive(actorId: string, active: boolean): void {
-    const user = this.state.users.get(actorId);
-    if (user) this.state.users.set(actorId, { ...user, active });
+    if (this.state.users.has(actorId)) this.state.users.set(actorId, active);
   }
 }

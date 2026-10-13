@@ -16,12 +16,13 @@ import { openTestDatabase, testDatabaseUrl } from "./database.js";
 import {
   users,
   cloudEvents,
-  outboxEvents,
   cloudRuns,
   organizations,
   organizationMembers,
 } from "../src/schema.js";
 import { v2Projects, v2ProjectMembers } from "../src/schema.js";
+import { outboxEvents } from "../src/schema/compatibility.js";
+import { PostgresProjectMemberV2Repository } from "../src/v2/projects.js";
 let connection: Awaited<ReturnType<typeof openTestDatabase>>;
 beforeAll(async () => {
   connection = await openTestDatabase();
@@ -468,20 +469,12 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
       await hold;
     });
     await acquired;
-    const narrowed = connection.db
-      .insert(v2ProjectMembers)
-      .values({
-        id: "project-bob",
-        projectId: "project",
-        userId: "bob",
-        role: "viewer",
-        createdAt: now,
-        updatedAt: now,
-      })
-      .onConflictDoUpdate({
-        target: [v2ProjectMembers.projectId, v2ProjectMembers.userId],
-        set: { role: "viewer", updatedAt: now },
-      });
+    const narrowed = new PostgresProjectMemberV2Repository(connection.db).upsert({
+      projectId: "project",
+      userId: "bob",
+      role: "viewer",
+      now,
+    });
     try {
       await expect
         .poll(

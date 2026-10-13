@@ -12,7 +12,7 @@ export {
   migrateDatabase,
   resetDatabase,
   type DatabaseConnection,
-} from "./postgres.js";
+} from "./connection.js";
 
 // Cloud
 export { InMemoryCloudRepository } from "./repositories/cloud/memory.js";
@@ -23,11 +23,9 @@ export { acquireCloudWorkerLease } from "./repositories/cloud/worker-lease.js";
 export {
   PostgresOrganizationMemberV2Repository,
   PostgresProjectMemberV2Repository,
-  PostgresProjectTaskV2Repository,
   PostgresProjectV2Repository,
-  PostgresReviewV2Repository,
-  PostgresFeedbackV2Repository,
-  PostgresAssetV2Repository,
-  PostgresAssetVersionV2Repository,
-  PostgresActivityV2Repository,
-} from "./v2.js";
+} from "./v2/projects.js";
+export { PostgresProjectTaskV2Repository } from "./v2/tasks.js";
+export { PostgresReviewV2Repository, PostgresFeedbackV2Repository } from "./v2/reviews.js";
+export { PostgresAssetV2Repository, PostgresAssetVersionV2Repository } from "./v2/assets.js";
+export { PostgresActivityV2Repository } from "./v2/activity.js";

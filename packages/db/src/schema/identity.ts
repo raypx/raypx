@@ -1,7 +1,6 @@
 import { dateColumn, timestamps, requiredReference } from "./columns.js";
-import { sql } from "drizzle-orm";
-import { boolean, index, jsonb, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { roleEnum, userStatusEnum, auditActionEnum, auditTargetTypeEnum } from "./enums.js";
+import { boolean, index, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { roleEnum, userStatusEnum } from "./enums.js";
 
 export const users = pgTable(
   "users",
@@ -68,33 +67,6 @@ export const authVerifications = pgTable(
     ...timestamps(),
   },
   (table) => [index("auth_verifications_identifier_idx").on(table.identifier)],
-);
-
-export const auditEvents = pgTable(
-  "audit_events",
-  {
-    id: text("id").primaryKey(),
-    actorId: text("actor_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "restrict", onUpdate: "cascade" }),
-    action: auditActionEnum("action").notNull(),
-    targetType: auditTargetTypeEnum("target_type").notNull().default("user"),
-    targetId: text("target_id").notNull(),
-    targetUserId: text("target_user_id")
-      .generatedAlwaysAs(sql`case when "target_type" = 'user' then "target_id" else null end`)
-      // No `onUpdate`: PostgreSQL rejects a referential action that would have
-      // to write a generated column ("invalid ON UPDATE action for foreign key
-      // constraint containing generated column"). `restrict` never writes.
-      .references(() => users.id, { onDelete: "restrict" }),
-    occurredAt: dateColumn("occurred_at").notNull().defaultNow(),
-    metadata: jsonb("metadata").$type<Record<string, string>>().notNull(),
-  },
-  (table) => [
-    index("audit_events_occurred_at_idx").on(table.occurredAt),
-    index("audit_events_actor_id_idx").on(table.actorId),
-    index("audit_events_target_id_idx").on(table.targetId),
-    index("audit_events_target_user_id_idx").on(table.targetUserId),
-  ],
 );
 
 export const systemSettings = pgTable(

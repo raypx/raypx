@@ -4,15 +4,6 @@ export const roleEnum = pgEnum("role", ["user", "admin", "owner"]);
 
 export const userStatusEnum = pgEnum("user_status", ["active", "suspended"]);
 
-export const auditActionEnum = pgEnum("audit_action", [
-  "user.status.changed",
-  "admin.created",
-  "system.settings.updated",
-  "system.mail.test.sent",
-]);
-
-export const auditTargetTypeEnum = pgEnum("audit_target_type", ["user", "system_setting"]);
-
 export const projectStageEnum = pgEnum("project_stage", [
   "draft",
   "in_progress",

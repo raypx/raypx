@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { InMemorySystemSettingsRepository } from "./memory.js";
+import { InMemorySystemSettingsRepository } from "./repositories/settings/memory.js";
 
 const fallback = {
   enabled: { value: true, source: "default" },

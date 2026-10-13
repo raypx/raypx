@@ -203,12 +203,15 @@ The database adapter package.
   remain schema-local compatibility data. Active runtime ports and writes are
   retired without migration or notification replay; see
   [ADR-0026](./decisions/0026-direct-run-queue-and-retire-task-notifications.md).
-- The new runtime schema and migrations use `schema/cloud-baseline.ts` and
-  `drizzle-cloud/`; historical `drizzle/` migrations remain reference material.
+- Active tables are exposed by `schema.ts`; `schema/migrations.ts` adds the
+  retained compatibility definitions for generation into `drizzle-cloud/`.
+  Historical `drizzle/` migrations remain reference material. See
+  [database architecture](./database.md) for the separate runtime and physical graphs.
 - Database tables and Drizzle details are not exposed to frontend apps.
 
-`settings/reader.ts` and `values.ts` share decoding and inheritance across memory
-and PostgreSQL. Unused writers and audit construction are retired. Authentication reads
+`repositories/settings/values.ts` shares pure decoding and configuration resolution
+across the memory and PostgreSQL adapters. Both expose the same two read methods
+without an inherited reader. Unused writers and audit construction are retired. Authentication reads
 policy at each decision, optionally through the short-lived Redis cache. Mail
 resolves current configuration on each delivery; no process-lifetime cache exists.
 

@@ -1,5 +1,5 @@
 import { desc, eq, and } from "drizzle-orm";
-import type { Database } from "./types.js";
+import type { Database } from "../connection.js";
 import { cursorPage, timestampKey } from "../pagination.js";
 import { resourceVisibility } from "./visibility.js";
 import type { ActivityV2, ActivityV2Repository, VisibleResourceQuery } from "@raypx/core";

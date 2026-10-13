@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
-  check,
   index,
   integer,
   jsonb,
@@ -11,9 +10,8 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { dateColumn, timestamps } from "./columns.js";
-import { users } from "./identity.js";
-import { v2Projects } from "./projects.js";
+import { dateColumn } from "./columns.js";
+import { cloudColumns, cloudResourceTable } from "./cloud-columns.js";
 
 export const cloudTaskStatusEnum = pgEnum("cloud_task_status", [
   "open",
@@ -49,50 +47,16 @@ export const cloudCommandStatusEnum = pgEnum("cloud_command_status", [
   "applied",
   "rejected",
 ]);
-function columns() {
-  return {
-    id: text("id").primaryKey(),
-    scopeType: text("scope_type").notNull(),
-    ownerUserId: text("owner_user_id").references(() => users.id, { onDelete: "restrict" }),
-    projectId: text("project_id").references(() => v2Projects.id, { onDelete: "restrict" }),
-    actorId: text("actor_id").references(() => users.id, { onDelete: "restrict" }),
-    parentId: text("parent_id"),
-    secondaryParentId: text("secondary_parent_id"),
-    idempotencyKey: text("idempotency_key"),
-    data: jsonb("data").$type<Record<string, unknown>>().notNull(),
-    ...timestamps(),
-  };
-}
-function resourceTable(name: string) {
-  return pgTable(name, columns(), (t) => [
-    check(
-      `${name}_scope_check`,
-      sql`(${t.scopeType}='personal' AND ${t.ownerUserId} IS NOT NULL AND ${t.projectId} IS NULL) OR (${t.scopeType}='project' AND ${t.ownerUserId} IS NULL AND ${t.projectId} IS NOT NULL)`,
-    ),
-    index(`${name}_scope_created_idx`).on(
-      t.scopeType,
-      t.ownerUserId,
-      t.projectId,
-      t.createdAt,
-      t.id,
-    ),
-    index(`${name}_parent_idx`).on(t.parentId),
-    index(`${name}_secondary_parent_idx`).on(t.secondaryParentId),
-    index(`${name}_actor_idx`).on(t.actorId),
-    uniqueIndex(`${name}_actor_intent_idx`).on(t.actorId, t.idempotencyKey),
-  ]);
-}
-export const cloudMutations = resourceTable("cloud_mutations");
-export const cloudPreferences = resourceTable("cloud_preferences");
-export const cloudConversations = resourceTable("cloud_conversations");
-export const cloudTurns = resourceTable("cloud_turns");
-export const cloudSpendingGrants = resourceTable("cloud_spending_grants");
-export const cloudMessages = resourceTable("cloud_messages");
-export const cloudExecutionGrants = resourceTable("cloud_execution_grants");
+export const cloudMutations = cloudResourceTable("cloud_mutations");
+export const cloudConversations = cloudResourceTable("cloud_conversations");
+export const cloudTurns = cloudResourceTable("cloud_turns");
+export const cloudSpendingGrants = cloudResourceTable("cloud_spending_grants");
+export const cloudMessages = cloudResourceTable("cloud_messages");
+export const cloudExecutionGrants = cloudResourceTable("cloud_execution_grants");
 export const cloudTasks = pgTable(
   "cloud_tasks",
   {
-    ...columns(),
+    ...cloudColumns(),
     status: cloudTaskStatusEnum("status").notNull(),
     currentRoundId: text("current_round_id").notNull(),
     goalVersion: integer("goal_version").notNull(),
@@ -105,7 +69,7 @@ export const cloudTasks = pgTable(
 export const cloudTaskRounds = pgTable(
   "cloud_task_rounds",
   {
-    ...columns(),
+    ...cloudColumns(),
     taskId: text("task_id")
       .notNull()
       .references(() => cloudTasks.id, { onDelete: "restrict" }),
@@ -120,7 +84,7 @@ export const cloudTaskRounds = pgTable(
 export const cloudRuns = pgTable(
   "cloud_runs",
   {
-    ...columns(),
+    ...cloudColumns(),
     taskId: text("task_id").references(() => cloudTasks.id, { onDelete: "restrict" }),
     roundId: text("round_id").references(() => cloudTaskRounds.id, { onDelete: "restrict" }),
     ownerAccountId: text("owner_account_id").notNull(),
@@ -149,14 +113,14 @@ export const cloudRuns = pgTable(
     index("cloud_runs_task_idx").on(t.taskId),
   ],
 );
-export const cloudExecutions = resourceTable("cloud_executions");
-export const cloudTools = resourceTable("cloud_tools");
-export const cloudSources = resourceTable("cloud_sources");
-export const cloudAssets = resourceTable("cloud_assets");
+export const cloudExecutions = cloudResourceTable("cloud_executions");
+export const cloudTools = cloudResourceTable("cloud_tools");
+export const cloudSources = cloudResourceTable("cloud_sources");
+export const cloudAssets = cloudResourceTable("cloud_assets");
 export const cloudRevisions = pgTable(
   "cloud_revisions",
   {
-    ...columns(),
+    ...cloudColumns(),
     roundId: text("round_id")
       .notNull()
       .references(() => cloudTaskRounds.id, { onDelete: "restrict" }),
@@ -170,7 +134,7 @@ export const cloudRevisions = pgTable(
 export const cloudUsageCalls = pgTable(
   "cloud_usage_calls",
   {
-    ...columns(),
+    ...cloudColumns(),
     runId: text("run_id")
       .notNull()
       .references(() => cloudRuns.id, { onDelete: "restrict" }),
@@ -185,8 +149,7 @@ export const cloudUsageCalls = pgTable(
     index("cloud_usage_calls_round_state_idx").on(t.roundId, t.state),
   ],
 );
-export const cloudNotifications = resourceTable("cloud_notifications");
-export const cloudCommands = resourceTable("cloud_commands");
+export const cloudCommands = cloudResourceTable("cloud_commands");
 export const cloudEvents = pgTable(
   "cloud_events",
   {

@@ -6,7 +6,7 @@ const env = getDatabaseEnv();
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./src/schema/cloud-baseline.ts",
+  schema: "./src/schema/migrations.ts",
   out: "./drizzle-cloud",
   dbCredentials: {
     url: env.DATABASE_URL,

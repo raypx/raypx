@@ -7,70 +7,18 @@ import type {
   CloudRunEvent,
   CloudUsageTotals,
 } from "@raypx/core";
-import { sql, eq, and } from "drizzle-orm";
+import { sql, eq, and, type SQL } from "drizzle-orm";
 import { CloudDomainError, sameCloudTaskRound } from "@raypx/core";
-import type { DatabaseConnection } from "../../postgres.js";
+import type { DatabaseConnection } from "../../connection.js";
 import { users, v2Projects, v2ProjectMembers, organizationMembers } from "../../schema.js";
-import { cloudActorId, cloudParentIds } from "./memory.js";
+import { cloudRecords, cloudActorId, cloudParentIds, hydrateCloudRecord } from "./records.js";
 
 type Database = DatabaseConnection["db"];
-const tableNames: Record<CloudEntityKind, string> = {
-  mutations: "cloud_mutations",
-  conversations: "cloud_conversations",
-  turns: "cloud_turns",
-  tasks: "cloud_tasks",
-  rounds: "cloud_task_rounds",
-  spendingGrants: "cloud_spending_grants",
-  messages: "cloud_messages",
-  executionGrants: "cloud_execution_grants",
-  runs: "cloud_runs",
-  executions: "cloud_executions",
-  tools: "cloud_tools",
-  sources: "cloud_sources",
-  assets: "cloud_assets",
-  revisions: "cloud_revisions",
-  usage: "cloud_usage_calls",
-  commands: "cloud_commands",
-};
-const dates = new Set([
-  "createdAt",
-  "updatedAt",
-  "startedAt",
-  "completedAt",
-  "heartbeatAt",
-  "leaseExpiresAt",
-  "revokedAt",
-  "expiresAt",
-  "settledAt",
-  "readAt",
-  "emailDeliveredAt",
-  "verifiedAt",
-  "occurredAt",
-]);
-function hydrate<T>(data: unknown): T {
-  const restore = (value: unknown): unknown => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return value;
-    const record = { ...(value as Record<string, unknown>) };
-    for (const field of dates) {
-      const child = record[field];
-      if (typeof child === "string") record[field] = new Date(child);
-    }
-    return record;
-  };
-  const record = restore(data) as Record<string, unknown>;
-  // Durable mutation replay contains a domain DTO. Arbitrary tool bodies/event payloads stay JSON.
-  if (record && typeof record === "object" && "response" in record) {
-    const response = restore(record["response"]);
-    if (response && typeof response === "object" && !Array.isArray(response)) {
-      const projected = response as Record<string, unknown>;
-      for (const key of ["task", "round", "run", "turn"])
-        if (projected[key]) projected[key] = restore(projected[key]);
-    }
-    record["response"] = response;
-  }
-  return record as T;
-}
 function txFor(db: Database, writing: boolean): CloudTransaction {
+  const records = async <T>(statement: SQL): Promise<T[]> => {
+    const rows = await db.execute<{ data: Record<string, unknown> }>(statement);
+    return rows.map((row) => hydrateCloudRecord<T>(row.data));
+  };
   const held = new Set<string>();
   const lock = async (keys: readonly string[]) => {
     for (const key of [...new Set(keys)].sort())
@@ -120,34 +68,30 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
       };
     },
     activeTaskRun: async (taskId) => {
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
+      const rows = await records<CloudEntities["runs"]>(
         sql`SELECT data FROM cloud_runs WHERE task_id=${taskId} AND status IN ('queued','running') LIMIT 1`,
       );
-      return rows[0] ? hydrate<CloudEntities["runs"]>(rows[0].data) : null;
+      return rows[0] ?? null;
     },
-    readyRuns: async (limit) => {
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
+    readyRuns: (limit) =>
+      records<CloudEntities["runs"]>(
         sql`SELECT data FROM cloud_runs WHERE status='queued' ORDER BY created_at,id LIMIT ${limit}`,
-      );
-      return rows.map((row) => hydrate<CloudEntities["runs"]>(row.data));
-    },
-    expiredRuns: async (now, limit) => {
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
+      ),
+    expiredRuns: (now, limit) =>
+      records<CloudEntities["runs"]>(
         sql`SELECT data FROM cloud_runs WHERE status='running' AND (lease_expires_at IS NULL OR lease_expires_at<=${now.toISOString()}) ORDER BY lease_expires_at NULLS FIRST,id LIMIT ${limit}`,
-      );
-      return rows.map((row) => hydrate<CloudEntities["runs"]>(row.data));
-    },
+      ),
     get: async <K extends CloudEntityKind>(kind: K, id: string) => {
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
-        sql`SELECT data FROM ${sql.identifier(tableNames[kind])} WHERE id=${id} LIMIT 1`,
+      const rows = await records<CloudEntities[K]>(
+        sql`SELECT data FROM ${sql.identifier(cloudRecords[kind].table)} WHERE id=${id} LIMIT 1`,
       );
-      return rows[0] ? hydrate<CloudEntities[K]>(rows[0].data) : null;
+      return rows[0] ?? null;
     },
     list: async <K extends CloudEntityKind>(kind: K, query: CloudQuery = {}) => {
       const conditions = [sql`true`];
       if (query.ownerAccountId)
         conditions.push(
-          sql`${kind === "usage" ? sql.identifier("owner_account_id") : kind === "runs" ? sql.identifier("owner_account_id") : sql`data->>'ownerAccountId'`}=${query.ownerAccountId}`,
+          sql`${kind === "usage" || kind === "runs" ? sql.identifier("owner_account_id") : sql`data->>'ownerAccountId'`}=${query.ownerAccountId}`,
         );
       if (query.roundId)
         conditions.push(
@@ -197,113 +141,87 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
         conditions.push(
           sql`(created_at,id)<(${query.before.createdAt.toISOString()},${query.before.id})`,
         );
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
-        sql`SELECT data FROM ${sql.identifier(tableNames[kind])} WHERE ${sql.join(conditions, sql` AND `)} ORDER BY created_at DESC,id DESC ${query.limit ? sql`LIMIT ${query.limit}` : sql``}`,
+      return records<CloudEntities[K]>(
+        sql`SELECT data FROM ${sql.identifier(cloudRecords[kind].table)} WHERE ${sql.join(conditions, sql` AND `)} ORDER BY created_at DESC,id DESC ${query.limit ? sql`LIMIT ${query.limit}` : sql``}`,
       );
-      return rows.map((r) => hydrate<CloudEntities[K]>(r.data));
     },
     remove: async (kind, id) => {
-      await db.execute(sql`DELETE FROM ${sql.identifier(tableNames[kind])} WHERE id=${id}`);
+      await db.execute(sql`DELETE FROM ${sql.identifier(cloudRecords[kind].table)} WHERE id=${id}`);
     },
     save: async (kind, entity) => {
       if (kind === "rounds") {
-        const prior = await db.execute<{ data: Record<string, unknown> }>(
+        const prior = await records<CloudEntities["rounds"]>(
           sql`SELECT data FROM cloud_task_rounds WHERE id=${entity.id}`,
         );
         if (prior[0]) {
-          const stored = hydrate<CloudEntities["rounds"]>(prior[0].data);
           const round = entity as CloudEntities["rounds"];
-          if (!sameCloudTaskRound(stored, round))
+          if (!sameCloudTaskRound(prior[0], round))
             throw new CloudDomainError("CLOUD_INVALID_INPUT", "Task rounds are immutable.");
         }
       }
       const record = entity as unknown as Record<string, unknown>;
       const parents = cloudParentIds(kind, entity);
-      const names = [
-        "id",
-        "scope_type",
-        "owner_user_id",
-        "project_id",
-        "actor_id",
-        "parent_id",
-        "secondary_parent_id",
-        "idempotency_key",
-        "data",
-        "created_at",
-        "updated_at",
-      ];
-      const values = [
-        sql`${entity.id}`,
-        sql`${entity.scope.type}`,
-        sql`${entity.scope.type === "personal" ? entity.scope.ownerUserId : null}`,
-        sql`${entity.scope.type === "project" ? entity.scope.projectId : null}`,
-        sql`${cloudActorId(kind, entity)}`,
-        sql`${parents[0] ?? null}`,
-        sql`${parents[1] ?? null}`,
-        sql`${(kind === "runs" ? record["turnId"] : record["idempotencyKey"]) ?? null}`,
-        sql`${JSON.stringify(entity)}::jsonb`,
-        sql`${entity.createdAt.toISOString()}`,
-        sql`${entity.updatedAt.toISOString()}`,
-      ];
-      if (kind === "runs") {
-        names.push(
-          "task_id",
-          "conversation_id",
-          "status",
-          "dispatch_ready",
-          "owner_id",
-          "epoch",
-          "round_id",
-          "owner_account_id",
-          "lease_expires_at",
-          "cancel_requested",
-        );
-        values.push(
-          sql`${record["taskId"]}`,
-          sql`${record["conversationId"]}`,
-          sql`${record["status"]}`,
-          sql`true`,
-          sql`${record["ownerId"]}`,
-          sql`${record["epoch"]}`,
-          sql`${record["roundId"]}`,
-          sql`${record["ownerAccountId"]}`,
-          sql`${record["leaseExpiresAt"] instanceof Date ? record["leaseExpiresAt"].toISOString() : null}`,
-          sql`${record["cancelRequested"]}`,
-        );
-      }
-      if (kind === "tasks") {
-        names.push("status", "current_round_id", "goal_version");
-        values.push(
-          sql`${record["status"]}`,
-          sql`${record["currentRoundId"]}`,
-          sql`${record["goalVersion"]}`,
-        );
-      }
-      if (kind === "rounds") {
-        names.push("task_id", "goal_version");
-        values.push(sql`${record["taskId"]}`, sql`${record["goalVersion"]}`);
-      }
-      if (kind === "revisions") {
-        names.push("round_id", "goal_version");
-        values.push(sql`${record["roundId"]}`, sql`${record["goalVersion"]}`);
-      }
-      if (kind === "usage") {
-        names.push("run_id", "state", "owner_account_id", "round_id");
-        values.push(
-          sql`${record["runId"]}`,
-          sql`${record["state"]}`,
-          sql`${record["accountId"]}`,
-          sql`${record["roundId"]}`,
-        );
-      }
+      const columns: Record<string, SQL> = {
+        id: sql`${entity.id}`,
+        scope_type: sql`${entity.scope.type}`,
+        owner_user_id: sql`${entity.scope.type === "personal" ? entity.scope.ownerUserId : null}`,
+        project_id: sql`${entity.scope.type === "project" ? entity.scope.projectId : null}`,
+        actor_id: sql`${cloudActorId(kind, entity)}`,
+        parent_id: sql`${parents[0] ?? null}`,
+        secondary_parent_id: sql`${parents[1] ?? null}`,
+        idempotency_key: sql`${(kind === "runs" ? record["turnId"] : record["idempotencyKey"]) ?? null}`,
+        data: sql`${JSON.stringify(entity)}::jsonb`,
+        created_at: sql`${entity.createdAt.toISOString()}`,
+        updated_at: sql`${entity.updatedAt.toISOString()}`,
+      };
+      if (kind === "runs")
+        Object.assign(columns, {
+          task_id: sql`${record["taskId"]}`,
+          conversation_id: sql`${record["conversationId"]}`,
+          status: sql`${record["status"]}`,
+          dispatch_ready: sql`true`,
+          owner_id: sql`${record["ownerId"]}`,
+          epoch: sql`${record["epoch"]}`,
+          round_id: sql`${record["roundId"]}`,
+          owner_account_id: sql`${record["ownerAccountId"]}`,
+          lease_expires_at: sql`${record["leaseExpiresAt"] instanceof Date ? record["leaseExpiresAt"].toISOString() : null}`,
+          cancel_requested: sql`${record["cancelRequested"]}`,
+        });
+      if (kind === "tasks")
+        Object.assign(columns, {
+          status: sql`${record["status"]}`,
+          current_round_id: sql`${record["currentRoundId"]}`,
+          goal_version: sql`${record["goalVersion"]}`,
+        });
+      if (kind === "rounds")
+        Object.assign(columns, {
+          task_id: sql`${record["taskId"]}`,
+          goal_version: sql`${record["goalVersion"]}`,
+        });
+      if (kind === "revisions")
+        Object.assign(columns, {
+          round_id: sql`${record["roundId"]}`,
+          goal_version: sql`${record["goalVersion"]}`,
+        });
+      if (kind === "usage")
+        Object.assign(columns, {
+          run_id: sql`${record["runId"]}`,
+          state: sql`${record["state"]}`,
+          owner_account_id: sql`${record["accountId"]}`,
+          round_id: sql`${record["roundId"]}`,
+        });
+      const entries = Object.entries(columns);
       await db.execute(
-        sql`INSERT INTO ${sql.identifier(tableNames[kind])} (${sql.join(
-          names.map((n) => sql.identifier(n)),
+        sql`INSERT INTO ${sql.identifier(cloudRecords[kind].table)} (${sql.join(
+          entries.map(([name]) => sql.identifier(name)),
           sql`,`,
-        )}) VALUES (${sql.join(values, sql`,`)}) ON CONFLICT (id) DO UPDATE SET ${sql.join(
-          names
-            .filter((n) => n !== "id")
-            .map((n) => sql`${sql.identifier(n)}=excluded.${sql.identifier(n)}`),
+        )}) VALUES (${sql.join(
+          entries.map(([, value]) => value),
+          sql`,`,
+        )}) ON CONFLICT (id) DO UPDATE SET ${sql.join(
+          entries
+            .filter(([name]) => name !== "id")
+            .map(([name]) => sql`${sql.identifier(name)}=excluded.${sql.identifier(name)}`),
           sql`,`,
         )}`,
       );
@@ -350,23 +268,21 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
         sql`INSERT INTO cloud_events (run_id,sequence,event_id,occurred_at,data) VALUES (${event.runId},${event.sequence},${event.eventId},${event.occurredAt.toISOString()},${JSON.stringify(event)}::jsonb)`,
       );
     },
-    events: async (runId, afterSequence, limit) => {
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
+    events: (runId, afterSequence, limit) =>
+      records<CloudRunEvent>(
         sql`SELECT data FROM cloud_events WHERE run_id=${runId} AND sequence>${afterSequence} ORDER BY sequence LIMIT ${limit}`,
-      );
-      return rows.map((r) => hydrate<CloudRunEvent>(r.data));
-    },
+      ),
     eventById: async (runId, eventId) => {
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
+      const rows = await records<CloudRunEvent>(
         sql`SELECT data FROM cloud_events WHERE run_id=${runId} AND event_id=${eventId} LIMIT 1`,
       );
-      return rows[0] ? hydrate<CloudRunEvent>(rows[0].data) : null;
+      return rows[0] ?? null;
     },
     eventsBefore: async (runId, beforeSequence, limit) => {
-      const rows = await db.execute<{ data: Record<string, unknown> }>(
+      const rows = await records<CloudRunEvent>(
         sql`SELECT data FROM cloud_events WHERE run_id=${runId} AND sequence<${beforeSequence} ORDER BY sequence DESC LIMIT ${limit}`,
       );
-      return rows.reverse().map((row) => hydrate<CloudRunEvent>(row.data));
+      return rows.reverse();
     },
   };
 }

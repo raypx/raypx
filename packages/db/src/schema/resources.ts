@@ -77,22 +77,3 @@ export const v2Activities = pgTable(
   },
   (table) => [index("activities_v2_project_occurred_idx").on(table.projectId, table.occurredAt)],
 );
-
-export const outboxEvents = pgTable(
-  "outbox_events",
-  {
-    id: text("id").primaryKey(),
-    type: text("type").notNull(),
-    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
-    availableAt: dateColumn("available_at").notNull().defaultNow(),
-    leaseOwner: text("lease_owner"),
-    leasedUntil: dateColumn("leased_until"),
-    deliveredAt: dateColumn("delivered_at"),
-    attempts: integer("attempts").notNull().default(0),
-    createdAt: createdAt(),
-  },
-  (table) => [
-    index("outbox_events_available_idx").on(table.availableAt, table.leasedUntil),
-    index("outbox_events_delivered_idx").on(table.deliveredAt),
-  ],
-);

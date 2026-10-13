@@ -1,12 +1,14 @@
 import postgres, { type Sql } from "postgres";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { relations } from "./schema.js";
+import { relations } from "./schema/relations.js";
 
 export interface DatabaseConnection {
   db: PostgresJsDatabase;
   close(): Promise<void>;
 }
+
+export type Database = DatabaseConnection["db"];
 
 export function connectDatabase(databaseUrl: string): DatabaseConnection {
   const client = postgres(databaseUrl, { max: 10 });

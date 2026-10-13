@@ -1,24 +1,46 @@
-import * as cloud from "./cloud.js";
 import * as identity from "./identity.js";
 import * as projects from "./projects.js";
+import * as resources from "./resources.js";
 import {
-  v2Assets,
-  v2AssetVersions,
-  v2Reviews,
-  v2Feedback,
-  v2Activities,
-  outboxEvents,
-} from "./resources.js";
+  cloudMutations,
+  cloudConversations,
+  cloudTurns,
+  cloudSpendingGrants,
+  cloudMessages,
+  cloudExecutionGrants,
+  cloudTasks,
+  cloudTaskRounds,
+  cloudRuns,
+  cloudExecutions,
+  cloudTools,
+  cloudSources,
+  cloudAssets,
+  cloudRevisions,
+  cloudUsageCalls,
+  cloudCommands,
+  cloudEvents,
+} from "./cloud.js";
 
-/** The runtime graph matches the fresh baseline; retired tables stay in historical SQL. */
+/** Active tables only. Migration definitions additionally preserve retired tables. */
 export const schema = {
   ...identity,
   ...projects,
-  ...cloud,
-  v2Assets,
-  v2AssetVersions,
-  v2Reviews,
-  v2Feedback,
-  v2Activities,
-  outboxEvents,
+  ...resources,
+  cloudMutations,
+  cloudConversations,
+  cloudTurns,
+  cloudSpendingGrants,
+  cloudMessages,
+  cloudExecutionGrants,
+  cloudTasks,
+  cloudTaskRounds,
+  cloudRuns,
+  cloudExecutions,
+  cloudTools,
+  cloudSources,
+  cloudAssets,
+  cloudRevisions,
+  cloudUsageCalls,
+  cloudCommands,
+  cloudEvents,
 };

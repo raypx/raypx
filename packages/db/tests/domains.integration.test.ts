@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, afterAll, describe, expect, it } from "vite-plus/test";
-import { sql, eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { createReviewApplication } from "@raypx/application";
 import {
   resolveProjectAccessV2,
@@ -11,19 +11,18 @@ import {
   users,
   organizations,
   organizationMembers,
-  v2Projects,
   v2ProjectMembers,
   v2Assets,
   v2Activities,
   v2AssetVersions,
 } from "../src/schema.js";
+import { PostgresAssetV2Repository, PostgresAssetVersionV2Repository } from "../src/v2/assets.js";
+import { PostgresActivityV2Repository } from "../src/v2/activity.js";
+import { PostgresReviewV2Repository, PostgresFeedbackV2Repository } from "../src/v2/reviews.js";
 import {
-  PostgresAssetV2Repository,
-  PostgresAssetVersionV2Repository,
-  PostgresActivityV2Repository,
-  PostgresReviewV2Repository,
-  PostgresFeedbackV2Repository,
-} from "../src/v2.js";
+  PostgresProjectV2Repository,
+  PostgresProjectMemberV2Repository,
+} from "../src/v2/projects.js";
 
 let connection: Awaited<ReturnType<typeof openTestDatabase>>;
 const now = new Date("2026-01-01T00:00:00Z");
@@ -47,19 +46,16 @@ beforeEach(async () => {
 });
 
 async function project(id: string, scope: "personal" | "organization" = "personal") {
-  return connection.db
-    .insert(v2Projects)
-    .values({
-      id,
-      createdByUserId: "owner",
-      personalOwnerId: scope === "personal" ? "owner" : null,
-      organizationId: scope === "organization" ? "org" : null,
-      title: id,
-      createdAt: now,
-      updatedAt: now,
-    })
-    .returning()
-    .then((rows) => rows[0]!);
+  return new PostgresProjectV2Repository(connection.db).create({
+    id,
+    createdByUserId: "owner",
+    scope:
+      scope === "personal"
+        ? { type: "personal", userId: "owner" }
+        : { type: "organization", organizationId: "org" },
+    title: id,
+    now,
+  });
 }
 
 describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
@@ -67,6 +63,7 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
     await connection.db
       .insert(organizations)
       .values({ id: "org", name: "Organization", createdByUserId: "owner" });
+    const repository = new PostgresProjectV2Repository(connection.db);
     const projects = [await project("personal"), await project("organization", "organization")];
     const grants: Array<ProjectMemberV2 | undefined> = [
       undefined,
@@ -103,33 +100,7 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
             .insert(v2ProjectMembers)
             .values(projects.map((p) => ({ ...grant, id: `member-${p.id}`, projectId: p.id })));
         for (const actorId of ["reader", "owner", "other"]) {
-          const allProjects = await connection.db.select().from(v2Projects);
-          const projectMembers = await connection.db
-            .select()
-            .from(v2ProjectMembers)
-            .where(sql`${v2ProjectMembers.userId} = ${actorId}`);
-          const orgMembers = await connection.db
-            .select()
-            .from(organizationMembers)
-            .where(sql`${organizationMembers.userId} = ${actorId}`);
-
-          const actual = allProjects
-            .filter((p) => {
-              const projectMember = projectMembers.find((m) => m.projectId === p.id);
-              const organizationMember = orgMembers.find(
-                (m) => m.organizationId === p.organizationId,
-              );
-              return (
-                resolveProjectAccessV2({
-                  actorId,
-                  project: p,
-                  ...(projectMember ? { projectMember } : {}),
-                  ...(organizationMember ? { organizationMember } : {}),
-                }) !== "none"
-              );
-            })
-            .map((p) => p.id)
-            .sort();
+          const actual = (await repository.listVisible({ actorId })).items.map((p) => p.id).sort();
           const expected = projects
             .filter(
               (p) =>
@@ -148,75 +119,35 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
   }, 30_000);
   it("pages equal timestamps without duplicates, retains old complete-list calls and rechecks permissions", async () => {
     for (const id of ["a", "b", "c"]) await project(id);
-
-    // Helper to list visible projects with pagination
-    const listVisible = async (actorId: string, limit?: number, cursor?: string) => {
-      const allProjects = await connection.db
-        .select()
-        .from(v2Projects)
-        .orderBy(sql`${v2Projects.updatedAt} DESC, ${v2Projects.id} DESC`);
-
-      const projectMembers = await connection.db
-        .select()
-        .from(v2ProjectMembers)
-        .where(sql`${v2ProjectMembers.userId} = ${actorId}`);
-
-      const visibleProjects = allProjects.filter((p) => {
-        const projectMember = projectMembers.find((m) => m.projectId === p.id);
-        return (
-          resolveProjectAccessV2({
-            actorId,
-            project: p,
-            ...(projectMember ? { projectMember } : {}),
-          }) !== "none"
-        );
-      });
-
-      // Apply cursor if provided
-      let startIndex = 0;
-      if (cursor) {
-        const [cursorTime, cursorId] = cursor.split(":");
-        startIndex =
-          visibleProjects.findIndex(
-            (p) => p.updatedAt.toISOString() === cursorTime && p.id === cursorId,
-          ) + 1;
-      }
-
-      const items = limit
-        ? visibleProjects.slice(startIndex, startIndex + limit)
-        : visibleProjects.slice(startIndex);
-      const nextCursor =
-        limit && items.length === limit && startIndex + limit < visibleProjects.length
-          ? `${items[items.length - 1]!.updatedAt.toISOString()}:${items[items.length - 1]!.id}`
-          : null;
-
-      return { items, nextCursor };
-    };
-
-    const first = await listVisible("owner", 2);
+    const repository = new PostgresProjectV2Repository(connection.db);
+    const members = new PostgresProjectMemberV2Repository(connection.db);
+    const first = await repository.listVisible({ actorId: "owner", limit: 2 });
     expect(first.items.map((p) => p.id)).toEqual(["c", "b"]);
-    const second = await listVisible("owner", 2, first.nextCursor!);
+    expect(first.items[0]?.updatedAt).toEqual(now);
+    const second = await repository.listVisible({
+      actorId: "owner",
+      limit: 2,
+      cursor: first.nextCursor!,
+    });
     expect(second.items.map((p) => p.id)).toEqual(["a"]);
     expect(second.nextCursor).toBeNull();
-    expect((await listVisible("owner")).items).toHaveLength(3);
-    expect((await listVisible("reader", 2)).items).toEqual([]);
-    await expect(async () => {
-      await listVisible("reader", undefined, first.nextCursor!);
-    }).rejects.toThrow();
-    await expect(async () => {
-      await listVisible("owner", undefined, "invalid");
-    }).rejects.toThrow();
-    await connection.db.insert(v2ProjectMembers).values(
-      ["a", "b", "c"].map((projectId) => ({
-        id: `member-${projectId}`,
-        projectId,
-        userId: "reader",
-        role: "viewer" as const,
-      })),
-    );
-    const visible = await listVisible("reader", 1);
-    await connection.db.update(v2ProjectMembers).set({ status: "removed" });
-    expect((await listVisible("reader", 1, visible.nextCursor!)).items).toEqual([]);
+    expect((await repository.listVisible({ actorId: "owner" })).items).toHaveLength(3);
+    expect((await repository.listVisible({ actorId: "reader", limit: 2 })).items).toEqual([]);
+    await expect(
+      repository.listVisible({ actorId: "reader", cursor: first.nextCursor! }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(
+      repository.listVisible({ actorId: "owner", cursor: "invalid" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    for (const projectId of ["a", "b", "c"])
+      await members.upsert({ projectId, userId: "reader", role: "viewer", now });
+    const visible = await repository.listVisible({ actorId: "reader", limit: 1 });
+    for (const projectId of ["a", "b", "c"])
+      await members.remove({ projectId, userId: "reader", now });
+    expect(
+      (await repository.listVisible({ actorId: "reader", limit: 1, cursor: visible.nextCursor! }))
+        .items,
+    ).toEqual([]);
   });
   it("queries cross-project assets and activities with the same visibility and pagination", async () => {
     await project("p");
@@ -276,11 +207,7 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
     const service = createReviewApplication({
       access: {
         requireProject: async () => {
-          const [result] = await connection.db
-            .select()
-            .from(v2Projects)
-            .where(eq(v2Projects.id, "p"))
-            .limit(1);
+          const result = await new PostgresProjectV2Repository(connection.db).getById("p");
           return result!;
         },
         assertCapability: async () => {

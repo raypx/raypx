@@ -13,11 +13,14 @@ interfaces owned by `@raypx/core`.
 | `./env`    | the database environment preset                             |
 | `./schema` | Drizzle tables, enums, and the `schema` aggregate           |
 
-Source layout: small compatibility entrypoints (`schema.ts`, `postgres.ts`,
-`memory.ts`, `v2.ts`); domain implementations under `settings/`,
-`v2/`, and `schema/`. `settings/reader.ts` and `settings/values.ts` share read-only configuration
-resolution across adapters. Historical SQL remains under `drizzle/`; the independent current baseline lives
-under `drizzle-cloud/`.
+Source layout: `index.ts` exports repositories directly, `connection.ts` owns
+connections and migration execution, `repositories/` owns Cloud, blob and
+settings adapters, and `v2/` owns canonical project/resource adapters.
+`repositories/settings/values.ts` shares pure configuration resolution.
+`schema.ts` exposes active tables; `schema/migrations.ts` includes all physical
+tables, with retired definitions in `schema/compatibility.ts`. Historical SQL
+remains under `drizzle/`; the current baseline lives under `drizzle-cloud/`.
+See [database architecture](../../docs/architecture/database.md).
 See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired-code.md).
 
 ## Ownership
@@ -86,8 +89,11 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   aggregates those namespaces, while `schema.ts` exposes the schema subpath.
   Add a new domain to both entrypoints; export from the root only for a backend
   consumer. Retired historical tables stay outside the active aggregate.
+- Generate only from `schema/migrations.ts`, which includes active and retained
+  compatibility tables. Runtime exports and Auth relations exclude retired
+  audit, outbox, notification and preference tables; that must never imply a DROP.
 - Keep runtime relations in `schema/relations.ts`. Better Auth uses relational
-  queries; domain adapters use explicit joins. Persisted foreign keys belong
+  queries over Auth tables only; domain adapters use explicit joins. Persisted foreign keys belong
   to table definitions and are independent of this runtime relation graph.
 - **Never hand-edit generated migrations.** Each lives in its own
   `drizzle-cloud/<timestamp>_<name>/` with `migration.sql` and `snapshot.json`
