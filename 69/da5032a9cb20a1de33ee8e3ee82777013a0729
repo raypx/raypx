@@ -1,0 +1,61 @@
+packages/db/src/query/errors.test.ts
+  s_8cb2ae3aaeefff::t_717e2e8c26dc99 1-39,43-59
+  s_8cb2ae3aaeefff::t_182b4faa3af7bb 40-42
+packages/db/src/repositories/cloud/postgres.ts
+  s_8cb2ae3aaeefff::t_717e2e8c26dc99 13,216-226,228-235,275-280,285-286
+  s_8cb2ae3aaeefff::t_182b4faa3af7bb 281-284
+  s_8cb2ae3aaeefff::t_867c64c1c5f92a 16
+  s_8cb2ae3aaeefff::t_d9b0d15a47723d 227
+packages/db/AGENTS.md
+  s_8cb2ae3aaeefff::t_4dc2e4757e5515 19-20,59-61,73-76
+packages/db/src/query/columns.ts
+  s_8cb2ae3aaeefff::t_9755327c5d4143 1-28,36
+  s_8cb2ae3aaeefff::t_d9b0d15a47723d 29-35
+packages/db/src/query/columns.test.ts
+  s_8cb2ae3aaeefff::t_9755327c5d4143 1-13,15-35
+  s_8cb2ae3aaeefff::t_d9b0d15a47723d 14
+packages/db/src/query/errors.ts
+  s_8cb2ae3aaeefff::t_717e2e8c26dc99 1-3,5-6,8-25
+  s_8cb2ae3aaeefff::t_c933ab31e1245e 4,7
+packages/db/third-party/drizzle-plus.LICENSE
+  s_8cb2ae3aaeefff::t_83ab289bbaeb70 1-21
+docs/architecture/decisions/README.md
+  s_8cb2ae3aaeefff::t_c933ab31e1245e 65
+packages/db/tests/domains.integration.test.ts
+  s_8cb2ae3aaeefff::t_c933ab31e1245e 191-215
+packages/db/third-party/better-drizzle.LICENSE
+  s_8cb2ae3aaeefff::t_83ab289bbaeb70 1-201
+packages/db/third-party/NOTICE.md
+  s_8cb2ae3aaeefff::t_4dc2e4757e5515 1-41
+packages/db/src/v2/projects.ts
+  s_8cb2ae3aaeefff::t_9755327c5d4143 16,18,169
+  s_8cb2ae3aaeefff::t_d9b0d15a47723d 19-24
+docs/architecture/decisions/0028-selective-drizzle-helpers.md
+  s_8cb2ae3aaeefff::t_d9b0d15a47723d 32-36
+  s_8cb2ae3aaeefff::t_4dc2e4757e5515 1-31,37-61
+docs/README.md
+  s_8cb2ae3aaeefff::t_4dc2e4757e5515 25-26
+docs/architecture/database.md
+  s_8cb2ae3aaeefff::t_4dc2e4757e5515 46-53
+packages/db/tests/cloud.integration.test.ts
+  s_8cb2ae3aaeefff::t_61be3e261a368f 2,4,6-7,71-89,94-95,115,123,158-178,185-186
+  s_8cb2ae3aaeefff::t_6314579a602959 90-92
+  s_8cb2ae3aaeefff::t_4da6a594156513 93
+  s_8cb2ae3aaeefff::t_182b4faa3af7bb 96-114,116-122,124-157,179-184
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "69da5032a9cb20a1de33ee8e3ee82777013a0729",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
