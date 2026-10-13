@@ -21,7 +21,7 @@ import {
   organizations,
   organizationMembers,
 } from "../src/schema.js";
-import { PostgresProjectV2Repository, PostgresProjectMemberV2Repository } from "../src/v2.js";
+import { v2Projects, v2ProjectMembers } from "../src/schema.js";
 let connection: Awaited<ReturnType<typeof openTestDatabase>>;
 beforeAll(async () => {
   connection = await openTestDatabase();
@@ -444,12 +444,13 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
     await connection.db
       .insert(organizationMembers)
       .values({ id: "org-bob", organizationId: "org", userId: "bob", role: "editor" });
-    await new PostgresProjectV2Repository(connection.db).create({
+    await connection.db.insert(v2Projects).values({
       id: "project",
       createdByUserId: "alice",
-      scope: { type: "organization", organizationId: "org" },
+      organizationId: "org",
       title: "Project",
-      now,
+      createdAt: now,
+      updatedAt: now,
     });
     const repository = new PostgresCloudRepository(connection.db);
     let release!: () => void;
@@ -467,13 +468,20 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
       await hold;
     });
     await acquired;
-    const memberRepository = new PostgresProjectMemberV2Repository(connection.db);
-    const narrowed = memberRepository.upsert({
-      projectId: "project",
-      userId: "bob",
-      role: "viewer",
-      now,
-    });
+    const narrowed = connection.db
+      .insert(v2ProjectMembers)
+      .values({
+        id: "project-bob",
+        projectId: "project",
+        userId: "bob",
+        role: "viewer",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [v2ProjectMembers.projectId, v2ProjectMembers.userId],
+        set: { role: "viewer", updatedAt: now },
+      });
     try {
       await expect
         .poll(
@@ -502,19 +510,28 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
   });
   it("filters usage with the Run index and shares a Task budget across project collaborators", async () => {
     const now = new Date();
-    await new PostgresProjectV2Repository(connection.db).create({
+    await connection.db.insert(v2Projects).values({
       id: "shared-project",
       createdByUserId: "alice",
-      scope: { type: "personal", userId: "alice" },
+      personalOwnerId: "alice",
       title: "Shared",
-      now,
+      createdAt: now,
+      updatedAt: now,
     });
-    await new PostgresProjectMemberV2Repository(connection.db).upsert({
-      projectId: "shared-project",
-      userId: "bob",
-      role: "editor",
-      now,
-    });
+    await connection.db
+      .insert(v2ProjectMembers)
+      .values({
+        id: "shared-project-bob",
+        projectId: "shared-project",
+        userId: "bob",
+        role: "editor",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [v2ProjectMembers.projectId, v2ProjectMembers.userId],
+        set: { role: "editor", updatedAt: now },
+      });
     const repository = new PostgresCloudRepository(connection.db);
     const service = createCloudApplication({ repository, limits: { taskCalls: 1 } });
     await exerciseSharedTaskBudget(service, repository, "shared-project");

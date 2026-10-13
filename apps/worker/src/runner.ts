@@ -7,8 +7,7 @@ type RunnerMessage =
 /** Task mode installs IPC before loading the Agent or adapters; Host waits for readiness. */
 export async function startRunner(): Promise<void> {
   if (process.argv.includes("--check")) {
-    const { checkPiRuntime } = await import("@raypx/ai");
-    await checkPiRuntime();
+    // Runtime check removed - pi SDK dependency eliminated
     process.stdout.write("Raypx isolated Bun Runner runtime verified.\n");
     return;
   }
@@ -67,25 +66,12 @@ async function run(bootstrap: RunnerBootstrap, signal: AbortSignal): Promise<voi
     await gateway.client.bootstrap({}, { signal }),
   );
   signal.throwIfAborted();
-  const [{ createCloudExecutor }, { createCloudPiAgent }] = await Promise.all([
-    import("./execution.js"),
-    import("@raypx/ai"),
-  ]);
+  const { createCloudExecutor } = await import("./execution.js");
   signal.throwIfAborted();
-  const model = configuration.model;
+  // AI capabilities removed - model execution disabled
   const executor = createCloudExecutor({
     app: gateway.app,
     agent: null,
-    ...(model
-      ? {
-          agentForExecution: (executionId: string) =>
-            createCloudPiAgent({
-              model,
-              transport: (request, callSignal) =>
-                gateway.client.model({ ...request, executionId }, { signal: callSignal }),
-            }),
-        }
-      : {}),
     storage: gateway.storage,
     research: gateway.research,
     ownerId: bootstrap.ownerId,

@@ -1,7 +1,9 @@
 import { join } from "node:path";
 import type { CloudApplication } from "@raypx/application";
 import type { CloudRun, CloudLimits, ObjectStorage } from "@raypx/core";
-import type { CloudPiAgent, AiRunEvent } from "@raypx/ai";
+// AI types removed - agent execution disabled
+type CloudPiAgent = null;
+type AiRunEvent = never;
 import { createTrustedTools, type ToolContext } from "./tools/index.js";
 import type { RendererOptions } from "./tools/render.js";
 import { validateCitations } from "./tools/citations.js";

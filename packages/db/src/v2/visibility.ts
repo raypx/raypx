@@ -1,5 +1,5 @@
 import { sql, type AnyColumn } from "drizzle-orm";
-import { v2Projects, v2ProjectMembers, organizationMembers } from "../../schema.js";
+import { v2Projects, v2ProjectMembers, organizationMembers } from "../schema.js";
 /** Read visibility mirrors resolveProjectAccessV2; parity is tested against Core. */
 export function projectVisibility(actorId: string) {
   const member = sql`select 1 from ${v2ProjectMembers} where ${v2ProjectMembers.projectId} = ${v2Projects.id} and ${v2ProjectMembers.userId} = ${actorId}`;

@@ -9,9 +9,11 @@ import type {
 } from "@raypx/core";
 import { sql, eq, and } from "drizzle-orm";
 import { CloudDomainError, sameCloudTaskRound } from "@raypx/core";
-import type { Database } from "../projects/types.js";
+import type { DatabaseConnection } from "../../postgres.js";
 import { users, v2Projects, v2ProjectMembers, organizationMembers } from "../../schema.js";
 import { cloudActorId, cloudParentIds } from "./memory.js";
+
+type Database = DatabaseConnection["db"];
 const tableNames: Record<CloudEntityKind, string> = {
   mutations: "cloud_mutations",
   conversations: "cloud_conversations",

@@ -1,4 +1,4 @@
-import { cursorPage, timestampKey } from "../../pagination.js";
+import { cursorPage, timestampKey } from "../pagination.js";
 import { projectVisibility } from "./visibility.js";
 import type { VisibleResourceQuery } from "@raypx/core";
 import { first, inserted } from "./results.js";
@@ -11,7 +11,7 @@ import type {
   ProjectV2Repository,
 } from "@raypx/core";
 import { and, asc, desc, eq } from "drizzle-orm";
-import { organizationMembers, v2ProjectMembers, v2Projects } from "../../schema.js";
+import { organizationMembers, v2ProjectMembers, v2Projects } from "../schema.js";
 import type { Database } from "./types.js";
 
 const memberColumns = {
