@@ -2,7 +2,12 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-0025
+
+Only the dual-entry artifact provisions are superseded by
+[ADR-0025](0025-worker-single-entry-execution.md). The Vite+/Nitro build,
+dependency tracing, complete artifact cache and development-watch decisions
+remain in force. The record below preserves the original two-entry decision.
 
 Supersedes only the Worker compilation/runtime-preparation split in
 [ADR-0018](0018-turbo-task-orchestration.md). Turbo remains the sole workspace

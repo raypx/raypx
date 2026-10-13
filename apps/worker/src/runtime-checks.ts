@@ -12,12 +12,12 @@ import configuration from "./runtime-check.config.json" with { type: "json" };
 import { extractFile } from "./tools/files.js";
 import { renderReport, renderTable, renderDeck } from "./tools/render.js";
 
-export async function checkRuntime(runnerEntry: URL): Promise<void> {
+export async function checkRuntime(workerEntry: URL): Promise<void> {
   const sample = configuration.runtime;
   await checkPiRuntime();
   await promisify(execFile)(
     process.execPath,
-    ["--no-env-file", "--no-install", fileURLToPath(runnerEntry), "--check"],
+    ["--no-env-file", "--no-install", fileURLToPath(workerEntry), "--runner", "--check"],
     { env: runnerEnvironment(), timeout: 30_000 },
   );
   const pdf = await renderReport(sample.report, { directory: "." });
@@ -44,7 +44,7 @@ export async function checkRuntime(runnerEntry: URL): Promise<void> {
   )
     throw new Error("Mail runtime check failed.");
   process.stdout.write(
-    "Raypx Worker and isolated Runner Bun artifacts, Pi assets, PDF, XLSX and mail runtime verified.\n",
+    "Raypx single Worker entry and isolated Runner mode, Pi assets, PDF, XLSX and mail runtime verified.\n",
   );
 }
 

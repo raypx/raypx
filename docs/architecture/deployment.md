@@ -64,9 +64,10 @@ not copied into the Worker tools image.
   `/rpc/*`, and `/health` on its own origin. Nitro also forwards the private
   `/internal/execution/*` Gateway and development-only `/api/cloud/storage/*`
   routes to Hono; production storage continues to use private S3.
-- Worker starts `bun .output/server/index.mjs`; Nitro packages the companion
-  `.output/server/runner.mjs`, shared chunks and runtime package assets in the
-  same artifact. Its durable PostgreSQL leases are
+- Worker starts `bun .output/server/index.mjs`; each claimed Run uses the same
+  executable with `--runner` in a separate Bun process. Nitro packages one
+  executable, shared chunks and runtime package assets in the same artifact.
+  Its durable PostgreSQL leases are
   independent from execution ownership. Deploy API and Worker against the same
   new database and object bucket.
 - API requires production values for database, Auth, and allowed external
@@ -99,6 +100,8 @@ PPTX write is insufficient: publish only after its PDF preview converts.
 image-only PDFs report that OCR is unavailable.
 `bun --no-env-file --no-install apps/worker/.output/server/index.mjs --check` validates the packaged runtime without
 database or provider credentials. Real converter tests need LibreOffice.
+The Host probe starts the same executable with `--runner --check` to verify Pi
+without initializing Host in the child.
 The image's `--check-documents` probe generates and verifies Chinese reports,
 tables and an eight-page deck using the actual installed converters.
 
@@ -174,12 +177,21 @@ explicit `bun --bun` commands to override package executable shebangs. Supported
 Node-compatible APIs, `@types/node` and TypeScript resolution presets remain
 available through Bun; they do not add a Node executable requirement.
 Worker uses
-Nitro's Bun preset with a custom durable-host entry; both the host and isolated
-Runner use the same Bun executable. Its complete `.output` directory is the
+Nitro's Bun preset with one executable: default Host mode and isolated `--runner`
+mode use the same Bun runtime. Host's total Run deadline starts at the successful
+claim's `startedAt`, including grant setup, child startup and Pi initialization.
+Search has 60 seconds; Computer uses `limits.taskDurationMs` (20 minutes by
+default). Timeout requests cooperative abort, then SIGKILL after the existing
+two-second grace if needed. Host waits for exit and revokes the grant. It finishes
+an unfinished timed-out Run as `failed/BUDGET_EXCEEDED`; shutdown or owner loss
+uses interruption. Both operations use the owner fence and preserve a terminal
+result or a new owner.
+Its complete `.output` directory is the
 deployment artifact; fixed document converters and fonts remain image-owned.
 See [ADR-0023](decisions/0023-worker-vite-nitro-artifact.md) for the Worker build
 and cache boundary, and [ADR-0024](decisions/0024-bun-runtime.md) for the repository
-runtime decision. Runtime compatibility, authentication, isolated-process and
+runtime decision. [ADR-0025](decisions/0025-worker-single-entry-execution.md)
+defines the shared entry and deadline ownership. Runtime compatibility, authentication, isolated-process and
 relocated-artifact checks remain required gates when the runtime pin changes.
 
 ## Desktop lifecycle

@@ -111,8 +111,9 @@ Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] 
 - Doctor probes only the local Electrobun bootstrap/SDK paths; it never downloads
   the native toolchain. Clean removes Desktop build/artifacts/project SDK caches,
   preserving native profiles and user data.
-- `verify` starts the relocated Worker with `--check`; this probe needs no
-  database or external providers and validates the Runner, imports and exporters.
+- `verify` starts the relocated Worker with `--check`; its same-entry
+  `--runner --check` child validates Pi. This probe needs no database or external
+  providers and validates the single executable, shared chunks and exporters.
 
 ## Verification
 

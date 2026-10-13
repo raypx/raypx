@@ -11,16 +11,17 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 | ------------------------------- | ------------------------------------------------------------- |
 | `src/index.ts`                  | Outbox claim/dispatch loop and lifecycle contract             |
 | `src/runtime.ts`                | Multi-instance composition and expired-owner recovery         |
-| `src/cloud.ts`                  | Cloud execution owner, cancellation, child agents and budgets |
+| `src/cloud.ts`                  | Run dispatcher and execution-owner polling                    |
+| `src/execution.ts`              | Execution-only orchestration, child agents and budgets        |
 | `src/tools/`                    | Fixed trusted search, parsing, computation and document tools |
-| `src/main.ts`                   | Bun command dispatch and execution-host lifecycle             |
+| `src/main.ts`                   | Single Bun entry: default Host and `--runner` mode dispatch   |
 | `src/runtime-checks.ts`         | Compiled runtime and real document verification               |
 | `src/runtime-check.config.json` | Deterministic samples, expected outputs and font defaults     |
 | `vite.config.ts`                | Vite+ build orchestration and workspace resolution            |
-| `nitro.config.ts`               | Nitro executable entries and standalone runtime artifact      |
+| `nitro.config.ts`               | One Nitro executable and standalone runtime artifact          |
 | `scripts/dev.mjs`               | Vite build watch and graceful Bun child restart               |
 | `src/process-executor.ts`       | Atomic claim, lease renewal and child lifecycle               |
-| `src/runner-main.ts`            | Credential-free per-Run Bun entry and private Gateway         |
+| `src/runner.ts`                 | Internal `startRunner` task mode and private Gateway          |
 
 ## Ownership
 
@@ -33,10 +34,24 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   environment and scoped RunGrant. Database, S3, model and search master
   credentials stay in trusted hosts. This is fault isolation; arbitrary code
   requires a future security sandbox.
-- The API Gateway dispatches and meters actual model attempts and compaction.
-- Parent-owned executors require the claimed Run and trusted conversation history.
-  Runner receives only execution operations; Host owns claiming, lease renewal,
-  conversation loading and model usage hooks.
+- API Gateway bootstrap supplies trusted conversation history to Runner; API
+  dispatches and meters actual model attempts and compaction.
+- Runner receives only execution operations. Worker Host owns claiming, lease
+  renewal, grant lifecycle and the overall deadline.
+- Host forks its own executable with `--runner` after claiming. IPC readiness
+  precedes bootstrap; mode selection does not initialize Host in the child.
+- Host owns each Run's temporary directory and passes it in bootstrap. Execution
+  requires that directory; Host removes it after child exit on every outcome,
+  including forced termination that cannot run child cleanup.
+- Linux/macOS use a detached POSIX group; Host force-kills remaining same-group
+  descendants after every Runner exit before scratch cleanup. Windows fallback
+  targets only the direct Runner process.
+- Host owns the total deadline from the claim's `startedAt`, including grant setup
+  and child/Pi initialization: Search 60 seconds, Computer `limits.taskDurationMs`.
+  Abort is cooperative first; after two seconds Host force-kills if needed, waits
+  for exit and revokes the grant. Timeout uses fenced `failed/BUDGET_EXCEEDED`
+  completion; shutdown or owner loss uses interruption. Terminal Runs and newer
+  owners remain protected.
 - Operational logs correlate outbox, Run, execution and tool ids without input
   or output bodies. Sentry captures sanitized errors and fixed Run duration spans.
 - Notification delivery rechecks current recipient access/preferences and global
@@ -59,9 +74,10 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   revision, terminal Run, Task review and notifications commit together.
 - LibreOffice, Poppler and templates use fixed executable paths and argument
   lists, no shell or model code. The Debian image pins their snapshot and fonts.
-- Vite+ and Nitro bundle workspace TypeScript into `.output/server/index.mjs`
-  and `.output/server/runner.mjs`. Worker uses a custom executable entry rather
-  than an HTTP server; do not replace its lifecycle with a request handler.
+- Vite+ and Nitro bundle workspace TypeScript into one `.output/server/index.mjs`.
+  It defaults to Host and selects isolated execution with `--runner`. Worker uses
+  a custom executable entry rather than an HTTP server; do not replace its
+  lifecycle with a request handler.
 - Nitro owns external dependency tracing and complete package assets through
   `traceDeps`. The artifact must run without the source checkout.
 - Bundle React Email's asset-free runtime entry, keeping its preview CLI out of
@@ -83,7 +99,8 @@ bun run --cwd apps/worker smoke
 fonts, LibreOffice and Poppler and verifies Chinese PDF/XLSX plus a real
 eight-page presentation preview. CI runs it in the built Worker container.
 Root `bun run verify` first relocates the complete `.output` outside the checkout,
-then runs `--check` with a bounded Bun child process. The host, sibling Runner
+then runs `--check` with a bounded Bun child process. Host's same-entry
+`--runner --check` child validates Pi; the executable, shared chunks
 and package assets must resolve from that isolated artifact.
 
 `bun run dev` uses Vite's builder watch to rebuild bundled workspace sources.
@@ -91,5 +108,6 @@ After Nitro finishes packaging a successful build, it gracefully restarts the
 compiled execution host using the current Bun executable. Failed builds do not
 restart the host. Changes to installed dependencies or manifests require
 restarting dev. See [tooling](../../docs/architecture/tooling.md) and
-[ADR-0023](../../docs/architecture/decisions/0023-worker-vite-nitro-artifact.md)
+[ADR-0023](../../docs/architecture/decisions/0023-worker-vite-nitro-artifact.md) and
+[ADR-0025](../../docs/architecture/decisions/0025-worker-single-entry-execution.md)
 for the build and cache boundary.

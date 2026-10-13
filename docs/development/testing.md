@@ -145,9 +145,10 @@ commands have no default deadline.
 
 The real Worker artifact check also relocates the entire `.output` outside the
 checkout and runs on Bun 1.4.0 without database or model credentials. It verifies
-the isolated Runner, Pi loading, actual PDF/XLSX output
-and Chinese task-notification mail rendering. Build integration fixtures verify
-Nitro's two executable entries and package assets in a relocated artifact that
+the isolated Runner through the same `index.mjs --runner --check` executable,
+Pi loading, actual PDF/XLSX output and Chinese task-notification mail rendering.
+Build integration fixtures verify Nitro's single executable, shared chunks and
+package assets in a relocated artifact that
 can run without its source workspace. Vite builder-watch coverage verifies that
 successful rebuilds wait for the old host to exit before starting a replacement,
 failed builds retain the running host, and shutdown closes the host and watcher.
@@ -158,6 +159,11 @@ after every root verification, including cache hits. The small Worker entry
 dispatches check flags to `runtime-checks.ts`, whose deterministic document and
 mail samples live in `runtime-check.config.json`; the compiled probes still
 exercise those samples and their expected results.
+Run-process lifecycle tests additionally cover IPC readiness before bootstrap,
+the Host deadline from claim through initialization, cooperative abort followed
+by the two-second force-kill grace, waiting for process exit, grant revocation
+and owner-fenced timeout completion (`failed/BUDGET_EXCEEDED`) or interruption
+for shutdown/owner loss, without overwriting a terminal result.
 Document integration tests additionally exercise LibreOffice when
 `SOFFICE_BINARY` is available, including an eight-page presentation and its real
 PDF preview. Provider-backed Search/Computer acceptance needs the configured

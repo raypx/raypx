@@ -88,7 +88,7 @@ describe("task graph policy", () => {
     const graph = config();
     graph.tasks["worker#build"].outputs = outputs;
     expect(validateTaskGraph(graph).map((finding) => finding.message)).toContain(
-      "worker#build must cache the complete .output/** Nitro artifact, including both executables and runtime dependencies",
+      "worker#build must cache the complete .output/** Nitro artifact, including executable code and runtime dependencies",
     );
   });
   it("accepts qualified local Worker prerequisites", () => {

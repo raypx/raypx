@@ -60,14 +60,13 @@ import { defineConfig } from "vite-plus";
 export default defineConfig({ plugins: nitro({
   preset: "bun", entry: "./src/main.ts", serverDir: false, serverEntry: false, noPublicDir: true,
   rolldownConfig: {
-    input: { index: ${JSON.stringify(join(directory, "src/main.ts"))}, runner: ${JSON.stringify(join(directory, "src/runner-main.ts"))} },
+    input: { index: ${JSON.stringify(join(directory, "src/main.ts"))} },
     output: { entryFileNames: "[name].mjs", chunkFileNames: "[name]-[hash].mjs" },
   },
 }) });
 `,
   );
   await writeFile(join(directory, "src/main.ts"), source("first"));
-  await writeFile(join(directory, "src/runner-main.ts"), 'console.log("runner fixture");\n');
   const events = async (): Promise<HostEvent[]> => {
     const text = await readFile(eventsFile, "utf8").catch((error: NodeJS.ErrnoException) => {
       if (error.code === "ENOENT") return "";
@@ -186,19 +185,23 @@ describe("Vite and Nitro Worker development host", () => {
     45_000,
   );
 
-  it.each(["--check", "--check-documents"])(
-    "runs %s against the compiled host without watching",
-    async (flag) => {
+  it.each([
+    { flags: ["--check"] },
+    { flags: ["--check-documents"] },
+    { flags: ["--runner", "--check"] },
+  ])(
+    "runs $flags against the compiled entry without watching",
+    async ({ flags }) => {
       const setup = await fixture();
       try {
-        await execute(process.execPath, [join(setup.directory, "scripts/dev.mjs"), flag], {
+        await execute(process.execPath, [join(setup.directory, "scripts/dev.mjs"), ...flags], {
           cwd: setup.directory,
           env: { ...process.env, WORKER_DEV_EVENTS: setup.eventsFile },
           timeout: 20_000,
         });
         const events = await setup.events();
         expect(events).toHaveLength(1);
-        expect(events[0]).toMatchObject({ kind: "check", flags: [flag] });
+        expect(events[0]).toMatchObject({ kind: "check", flags });
       } finally {
         await rm(setup.directory, { recursive: true, force: true });
       }

@@ -11,11 +11,11 @@ describe("isolated Bun Runner", () => {
   it("uses an explicit environment without inherited credentials", () => {
     expect(Object.keys(runnerEnvironment()).sort()).toEqual(["LANG", "NODE_ENV", "PATH", "TZ"]);
   });
-  it("starts the compiled sibling Bun Runner once for a duplicate claim and interrupts an unfinished Run", async () => {
+  it("starts the single Worker entry in Runner mode once for a duplicate claim", async () => {
     const directory = await mkdtemp(join(tmpdir(), "raypx-process-test-"));
     const originalArguments = [...process.argv];
     try {
-      const entry = join(directory, "runner.mjs"),
+      const entry = join(directory, "index.mjs"),
         evidence = join(directory, "evidence.json");
       await writeFile(
         entry,
@@ -24,9 +24,10 @@ process.on('message', async message => {
   if(message.type !== 'start') return;
   await writeFile(${JSON.stringify(evidence)}, JSON.stringify({ pid:process.pid, keys:Object.keys(process.env),
     runId:message.bootstrap.run.id, credential:!!message.bootstrap.credential,
-    runtime:process.versions.bun, executable:process.execPath, arguments:process.execArgv }));
+    runtime:process.versions.bun, executable:process.execPath, arguments:process.execArgv, mode:process.argv.slice(2) }));
   process.send({type:'done'}); process.disconnect();
-});`,
+});
+process.send({type:'ready'});`,
       );
       const app = createCloudApplication({
         repository: new InMemoryCloudRepository({
@@ -47,7 +48,7 @@ process.on('message', async message => {
         idempotencyKey: "turn",
       });
       await app.acceptQueued({ runId: run.id });
-      // A bundled helper may live in chunks; the executable entry owns the Runner path.
+      // A bundled helper may live in chunks; the executable entry owns both roles.
       process.argv[1] = join(directory, "index.mjs");
       const execute = createProcessExecutor({
         app,
@@ -67,6 +68,7 @@ process.on('message', async message => {
         runtime: string;
         executable: string;
         arguments: string[];
+        mode: string[];
       };
       expect(result.pid).not.toBe(process.pid);
       expect(result.runId).toBe(run.id);
@@ -75,6 +77,7 @@ process.on('message', async message => {
       expect(result.executable).toBe(process.execPath);
       expect(result.arguments).toContain("--no-env-file");
       expect(result.arguments).toContain("--no-install");
+      expect(result.mode).toEqual(["--runner"]);
       // macOS injects its text-encoding setting into exec'd children.
       expect(result.keys.filter((key) => key !== "__CF_USER_TEXT_ENCODING").sort()).toEqual([
         "LANG",

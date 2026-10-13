@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vite-plus/test";
 import { createCloudApplication } from "@raypx/application";
 import { InMemoryCloudRepository } from "@raypx/db";
 import { createMemoryStorage } from "@raypx/storage";
@@ -10,7 +13,14 @@ import {
   createCloudExecutor,
   runCloudExecutions,
   type CloudExecutionOperations,
+  type CloudExecutorOptions,
 } from "./cloud.js";
+
+async function scratchDirectory() {
+  const directory = await mkdtemp(join(tmpdir(), "raypx-execution-test-"));
+  onTestFinished(() => rm(directory, { recursive: true, force: true }));
+  return directory;
+}
 
 async function fixture(mode: "computer" | "search" = "search", calls = 40) {
   const repository = new InMemoryCloudRepository({
@@ -30,32 +40,103 @@ async function fixture(mode: "computer" | "search" = "search", calls = 40) {
     mode,
     idempotencyKey: crypto.randomUUID(),
   });
+  const storage = createMemoryStorage();
   return {
     repository,
     app,
     limits,
     run: turn.run,
     task: turn.task,
-    storage: createMemoryStorage(),
+    storage,
+    async claim(runId = turn.run.id) {
+      const ownerId = "test-host";
+      const claimed = await app.claim({ runId, ownerId });
+      return claimed
+        ? {
+            app: executionOperations(app),
+            storage,
+            limits,
+            ownerId,
+            claimed,
+            history: "",
+            directory: await scratchDirectory(),
+          }
+        : null;
+    },
   };
 }
-async function modelCall(input: CloudPiRunInput) {
-  expect(input.hooks).toBeDefined();
-  if (!input.hooks) throw new Error("Host model calls require usage hooks.");
+function executionOperations(
+  app: ReturnType<typeof createCloudApplication>,
+): CloudExecutionOperations {
+  return {
+    workerControl: app.workerControl,
+    workerAssets: app.workerAssets,
+    acknowledgeCommand: app.acknowledgeCommand,
+    startExecution: app.startExecution,
+    appendEvent: app.appendEvent,
+    createWorkerAsset: app.createWorkerAsset,
+    completeWorkerAsset: app.completeWorkerAsset,
+    finishExecution: app.finishExecution,
+    finish: app.finish,
+    finishWithRevision: app.finishWithRevision,
+    interrupt: app.interrupt,
+  };
+}
+
+async function modelCall(
+  app: ReturnType<typeof createCloudApplication>,
+  fence: { runId: string; ownerId: string; epoch: number },
+  executionId: string,
+) {
   const callId = crypto.randomUUID();
-  await input.hooks.reserve({
+  await app.reserveUsage({
+    ...fence,
+    executionId,
     callId,
     provider: "test",
     model: "fixture",
-    maxTokens: 100,
+    reservedTokens: 100,
     pricing: { inputPerMillion: 1, outputPerMillion: 2 },
   });
-  await input.hooks.start(callId);
-  await input.hooks.settle({
+  await app.startUsage({ ...fence, callId, dispatchOnce: true });
+  await app.settleUsage({
+    ...fence,
     callId,
+    inputTokens: 20,
+    outputTokens: 10,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
     started: true,
-    usage: { inputTokens: 20, outputTokens: 10, cacheReadTokens: 0, cacheWriteTokens: 0 },
   });
+}
+
+/** Tests keep claiming in the parent fixture and simulate API-owned model metering. */
+function createTestHostExecutor(
+  state: Awaited<ReturnType<typeof fixture>>,
+  options: Pick<CloudExecutorOptions, "agent" | "searchApiKey"> & { metered?: boolean },
+): ReturnType<typeof createCloudExecutor> {
+  return async (runId, signal) => {
+    const prepared = await state.claim(runId);
+    if (!prepared) return;
+    const { metered, agent, ...configuration } = options;
+    const fence = { runId, ownerId: prepared.ownerId, epoch: prepared.claimed.epoch };
+    await createCloudExecutor({
+      ...prepared,
+      ...configuration,
+      agent,
+      ...(metered && agent
+        ? {
+            agentForExecution: (executionId: string): CloudPiAgent => ({
+              async run(input) {
+                expect(input).not.toHaveProperty("hooks");
+                await modelCall(state.app, fence, executionId);
+                return agent.run(input);
+              },
+            }),
+          }
+        : {}),
+    })(runId, signal);
+  };
 }
 const mailer = () => ({
   sendVerification: vi.fn(async () => {}),
@@ -71,6 +152,8 @@ describe("durable cloud execution", () => {
     await state.app.acceptQueued({ runId: state.run.id });
     const claimed = await state.app.claim({ runId: state.run.id, ownerId });
     if (!claimed) throw new Error("The parent must claim the Run.");
+    const directory = await scratchDirectory();
+    await writeFile(join(directory, "parent-owned"), "keep");
     const hostOperations = [
       "claim",
       "heartbeat",
@@ -97,6 +180,7 @@ describe("durable cloud execution", () => {
     const agent: CloudPiAgent = {
       async run(input) {
         expect(input).not.toHaveProperty("hooks");
+        expect(input.cwd).toBe(directory);
         const delegate = input.tools.find((tool) => tool.name === "delegate");
         if (delegate) {
           expect(input.prompt).toContain("Trusted bootstrap history");
@@ -117,8 +201,8 @@ describe("durable cloud execution", () => {
       storage: state.storage,
       limits: state.limits,
       ownerId,
-      parentOwnsLease: true,
       claimed,
+      directory,
       history: "Trusted bootstrap history",
     })(state.run.id);
     expect(children).toBe(1);
@@ -127,6 +211,7 @@ describe("durable cloud execution", () => {
     expect(snapshot.run.status).toBe("needs_input");
     expect(snapshot.executions).toHaveLength(2);
     expect((await state.app.getUsage({ actorId: "owner" })).calls).toBe(0);
+    expect(await readFile(join(directory, "parent-owned"), "utf8")).toBe("keep");
   });
   it("keeps successive assistant messages distinct and streams the next message after completion", async () => {
     const state = await fixture("computer");
@@ -149,7 +234,7 @@ describe("durable cloud execution", () => {
         return { type: "completed", text: "Second" };
       },
     };
-    await createCloudExecutor({ ...state, agent })(state.run.id);
+    await createTestHostExecutor(state, { agent })(state.run.id);
     const snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
     expect(snapshot.run.status).toBe("needs_input");
     expect(new Set(snapshot.messages.map((message) => message.id)).size).toBe(2);
@@ -211,7 +296,6 @@ describe("durable cloud execution", () => {
       ),
     );
     const run = vi.fn(async (input: CloudPiRunInput) => {
-      await modelCall(input);
       await input.tools
         .find((tool) => tool.name === "search")!
         .execute({ query: "Evidence" }, { callId: "search", signal: input.signal });
@@ -219,7 +303,11 @@ describe("durable cloud execution", () => {
       await input.onEvent({ type: "message_completed", text: "Answer", stopReason: "stop" });
       return { type: "completed" as const, text: "Answer [source](https://example.com/research)" };
     });
-    const execute = createCloudExecutor({ ...state, agent: { run }, searchApiKey: "test-fixture" });
+    const execute = createTestHostExecutor(state, {
+      agent: { run },
+      searchApiKey: "test-fixture",
+      metered: true,
+    });
     await Promise.all([execute(state.run.id), execute(state.run.id)]);
     expect(run).toHaveBeenCalledTimes(1);
     expect(fullWorkerHistory).not.toHaveBeenCalled();
@@ -237,8 +325,7 @@ describe("durable cloud execution", () => {
     const state = await fixture();
     await state.app.acceptQueued({ runId: state.run.id });
     const agent: CloudPiAgent = {
-      async run(input) {
-        await modelCall(input);
+      async run() {
         await state.app.createCommand({
           actorId: "owner",
           runId: state.run.id,
@@ -248,7 +335,7 @@ describe("durable cloud execution", () => {
         return { type: "completed", text: "Late result" };
       },
     };
-    await createCloudExecutor({ ...state, agent })(state.run.id);
+    await createTestHostExecutor(state, { agent, metered: true })(state.run.id);
     expect(
       (await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id })).run.status,
     ).toBe("cancelled");
@@ -259,13 +346,12 @@ describe("durable cloud execution", () => {
     await state.app.acceptQueued({ runId: state.run.id });
     const controller = new AbortController();
     const agent: CloudPiAgent = {
-      async run(input) {
-        await modelCall(input);
+      async run() {
         controller.abort();
         return { type: "cancelled" };
       },
     };
-    await createCloudExecutor({ ...state, agent })(state.run.id, controller.signal);
+    await createTestHostExecutor(state, { agent, metered: true })(state.run.id, controller.signal);
     const snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
     expect(snapshot.run).toMatchObject({ status: "failed", error: "interrupted" });
     const retry = await state.app.retryRun({
@@ -276,13 +362,76 @@ describe("durable cloud execution", () => {
     expect(retry.id).not.toBe(state.run.id);
     expect(retry.attempt).toBe(2);
   });
+  it.each([
+    { reason: "budget_exceeded", error: "BUDGET_EXCEEDED" },
+    { reason: "private host error", error: "interrupted" },
+  ])("preserves the allowed host abort reason: $error", async ({ reason, error }) => {
+    const state = await fixture("computer");
+    await state.app.acceptQueued({ runId: state.run.id });
+    const controller = new AbortController();
+    const agent: CloudPiAgent = {
+      async run() {
+        controller.abort(reason);
+        return { type: "cancelled" };
+      },
+    };
+    await createTestHostExecutor(state, { agent })(state.run.id, controller.signal);
+    const snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
+    expect(snapshot.run).toMatchObject({ status: "failed", error });
+    expect(JSON.stringify(snapshot)).not.toContain("private host error");
+  });
+
+  it("rejects a requested Run that differs from the supplied claim before any execution", async () => {
+    const state = await fixture("computer");
+    await state.app.acceptQueued({ runId: state.run.id });
+    const options = await state.claim();
+    if (!options) throw new Error("The parent must claim the Run.");
+    const control = vi.spyOn(options.app, "workerControl");
+    const run = vi.fn(async () => ({ type: "completed" as const, text: "Wrong Run" }));
+    await expect(
+      createCloudExecutor({ ...options, agent: { run } })("another-run"),
+    ).rejects.toThrow("Claimed Run does not match");
+    expect(run).not.toHaveBeenCalled();
+    expect(control).not.toHaveBeenCalled();
+  });
+
+  it("does not execute or overwrite the current Run with a stale epoch", async () => {
+    const state = await fixture("computer");
+    await state.app.acceptQueued({ runId: state.run.id });
+    const options = await state.claim();
+    if (!options) throw new Error("The parent must claim the Run.");
+    const run = vi.fn(async () => ({ type: "completed" as const, text: "Stale output" }));
+    await createCloudExecutor({
+      ...options,
+      claimed: { ...options.claimed, epoch: options.claimed.epoch + 1 },
+      agent: { run },
+    })(state.run.id);
+    expect(run).not.toHaveBeenCalled();
+    const snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
+    expect(snapshot.run.status).toBe("running");
+    expect(snapshot.executions).toEqual([]);
+    expect(snapshot.run.output).toBeNull();
+  });
+
+  it("rechecks current authorization after the parent claim before running the agent", async () => {
+    const state = await fixture("computer");
+    await state.app.acceptQueued({ runId: state.run.id });
+    const options = await state.claim();
+    if (!options) throw new Error("The parent must claim the Run.");
+    state.repository.setUserActive("owner", false);
+    const run = vi.fn(async () => ({ type: "completed" as const, text: "Unauthorized output" }));
+    await createCloudExecutor({ ...options, agent: { run } })(state.run.id);
+    expect(run).not.toHaveBeenCalled();
+    expect(
+      await state.repository.read((tx) => tx.list("executions", { parentId: state.run.id })),
+    ).toEqual([]);
+  });
   it("delegates two children with one shared durable task budget", async () => {
     const state = await fixture("computer", 2);
     await state.app.acceptQueued({ runId: state.run.id });
     let children = 0;
     const agent: CloudPiAgent = {
       async run(input) {
-        await modelCall(input);
         const delegate = input.tools.find((tool) => tool.name === "delegate");
         if (delegate)
           await delegate.execute(
@@ -298,7 +447,7 @@ describe("durable cloud execution", () => {
         return { type: "completed", text: "Done" };
       },
     };
-    await createCloudExecutor({ ...state, agent })(state.run.id);
+    await createTestHostExecutor(state, { agent, metered: true })(state.run.id);
     expect(
       (await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id })).run.status,
     ).toBe("failed");
@@ -347,7 +496,6 @@ describe("durable cloud execution", () => {
     await state.app.acceptQueued({ runId: turn.run.id });
     const agent: CloudPiAgent = {
       async run(input) {
-        await modelCall(input);
         const invoke = async (name: string, args: unknown) =>
           input.tools
             .find((tool) => tool.name === name)!
@@ -368,7 +516,7 @@ describe("durable cloud execution", () => {
         return { type: "completed", text: "Four verified files are ready." };
       },
     };
-    await createCloudExecutor({ ...state, agent })(turn.run.id);
+    await createTestHostExecutor(state, { agent, metered: true })(turn.run.id);
     const task = await state.app.getTask({ actorId: "owner", taskId: turn.task!.id });
     expect(task.task.status).toBe("review");
     expect(task.revisions).toHaveLength(1);
@@ -395,8 +543,7 @@ describe("durable cloud execution", () => {
       idempotencyKey: "prefs",
     });
     await state.app.acceptQueued({ runId: state.run.id });
-    await createCloudExecutor({
-      ...state,
+    await createTestHostExecutor(state, {
       agent: {
         async run() {
           return { type: "completed", text: "Please provide the missing data." };
@@ -450,7 +597,7 @@ describe("durable cloud execution", () => {
         return { type: "completed", text: "Ready" };
       },
     };
-    await createCloudExecutor({ ...state, agent })(state.run.id);
+    await createTestHostExecutor(state, { agent })(state.run.id);
     const snapshot = await state.app.getRunSnapshot({ actorId: "owner", runId: state.run.id });
     expect(snapshot.run.status).toBe("failed");
     expect(snapshot.artifacts).toEqual([]);
@@ -462,8 +609,7 @@ describe("durable cloud execution", () => {
   it("does not mark a Search answer successful without real cited evidence", async () => {
     const state = await fixture();
     await state.app.acceptQueued({ runId: state.run.id });
-    await createCloudExecutor({
-      ...state,
+    await createTestHostExecutor(state, {
       agent: {
         async run() {
           return { type: "completed", text: "A fabricated research answer." };
@@ -483,8 +629,7 @@ describe("durable cloud execution", () => {
       idempotencyKey: "mail-prefs",
     });
     await state.app.acceptQueued({ runId: state.run.id });
-    await createCloudExecutor({
-      ...state,
+    await createTestHostExecutor(state, {
       agent: {
         async run() {
           return { type: "completed", text: "Unsupported answer" };
@@ -518,8 +663,7 @@ describe("durable cloud execution", () => {
   it("stores only a stable public error code when a provider exception contains private data", async () => {
     const state = await fixture();
     await state.app.acceptQueued({ runId: state.run.id });
-    await createCloudExecutor({
-      ...state,
+    await createTestHostExecutor(state, {
       agent: {
         async run() {
           throw new Error("private prompt Authorization=secret-key");

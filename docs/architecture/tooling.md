@@ -442,21 +442,23 @@ runtime artifacts; the Worker also keeps its fixed converters and fonts.
 
 Worker builds through Vite+ and Nitro. `vite.config.ts` owns the Vite plugin and
 workspace resolution; `nitro.config.ts` uses the Bun preset with a custom
-`src/main.ts` entry and a second Rolldown input for `src/runner-main.ts`. The
-resulting `.output/server/index.mjs` is the durable host, and `runner.mjs` is its
-isolated Run process. Shared chunks remain beside the entries so Runner lookup
-works relative to the host module URL. This custom executable entry starts the
-worker directly and does not add an HTTP listener.
+`src/main.ts` entry. The resulting `.output/server/index.mjs` starts the durable
+Host by default; `--runner` selects one isolated Run process from the same
+executable. Lightweight mode dispatch loads Host composition or Runner execution
+dependencies dynamically. Shared chunks remain in the artifact; no companion
+Runner executable is needed. The custom entry does not add an HTTP listener.
 
 Nitro owns dependency tracing and copying. Explicit `traceDeps` entries retain
 complete Pi/PDF/XLSX/PPTX package assets, while workspace TypeScript and React
 Email's asset-free runtime entry are bundled. There is no custom esbuild builder,
 package-closure implementation or separate `runtime:prepare` prerequisite.
 Turbo caches `.output/**` as a complete artifact, so cache restoration includes
-both executable entries, their chunks and runtime dependencies/assets. Root
+the executable, its chunks and runtime dependencies/assets. Root
 build scripts still run checks and dependency builds first. Runtime checks are
 uncached. [ADR-0023](decisions/0023-worker-vite-nitro-artifact.md) supersedes only
 ADR-0018's earlier Worker compilation/runtime-preparation split.
+[ADR-0025](decisions/0025-worker-single-entry-execution.md) supersedes only its
+dual-entry provisions, retaining separate task processes and Host-owned deadlines.
 
 `scripts/dev.mjs` runs Vite's builder in watch mode. After Nitro finishes a
 successful rebuild, it gracefully stops the previous host and starts the new

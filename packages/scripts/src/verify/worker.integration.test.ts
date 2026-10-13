@@ -31,22 +31,28 @@ function stages() {
   };
 }
 
-it("runs a relocated Worker with sibling Runner and package assets, without loading env files", async () => {
+it("runs a relocated Worker with same-entry Runner and package assets, without loading env files", async () => {
   const root = await temporaryRepository({
     [`${output}/nitro.json`]: metadata,
     [`${output}/.env`]: "RAYPX_ARTIFACT_ENV_PROBE=should-not-load\n",
     [`${output}/server/index.mjs`]: `import assert from "node:assert/strict";
 import { asset } from "packaged-runtime";
-import { runner } from "./runner.mjs";
+import { execFileSync } from "node:child_process";
 assert.equal(process.versions.bun, "1.4.0");
 assert.equal(process.env.NODE_ENV, "production");
 assert.equal(process.env.RAYPX_ARTIFACT_ENV_PROBE, undefined);
 assert.ok(process.argv.includes("--check"));
 assert.equal(asset, "package asset");
-assert.equal(runner, "sibling Runner");
-console.log("standalone Worker checked");
+if (process.argv.includes("--runner")) {
+  console.log("same-entry Runner checked:" + asset);
+} else {
+  const runner = execFileSync(process.execPath, [
+    "--no-env-file", "--no-install", process.argv[1], "--runner", "--check",
+  ], { encoding: "utf8" });
+  assert.equal(runner.trim(), "same-entry Runner checked:package asset");
+  console.log("standalone Worker checked");
+}
 `,
-    [`${output}/server/runner.mjs`]: 'export const runner = "sibling Runner";\n',
     [`${output}/server/node_modules/packaged-runtime/package.json`]: JSON.stringify({
       name: "packaged-runtime",
       type: "module",

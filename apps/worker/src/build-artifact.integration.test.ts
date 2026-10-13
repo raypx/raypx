@@ -30,17 +30,48 @@ async function fixture() {
   const output = join(directory, "artifact");
   const files: Record<string, string> = {
     "package.json": JSON.stringify({ name: "fixture", private: true, type: "module" }),
-    "src/main.ts": `import { value, runner } from "./shared.js";
+    "src/main.ts": `import { value } from "./shared.js";
 import { render } from "react-email";
-import { execFileSync } from "node:child_process";
-console.log(value + ":" + render() + ":" + execFileSync(process.execPath, [runner], { encoding: "utf8" }).trim());
+import { fork } from "node:child_process";
+if (process.argv.includes("--runner")) {
+  if (process.argv.includes("--check")) console.log(value);
+  else {
+    const { startRunner } = await import("./runner-main.js");
+    startRunner();
+  }
+} else {
+  const result = await new Promise((resolve, reject) => {
+    const child = fork(process.argv[1], ["--runner"], {
+      execPath: process.execPath, execArgv: ["--no-env-file", "--no-install"],
+      stdio: ["ignore", "ignore", "pipe", "ipc"],
+    });
+    let result;
+    child.once("error", reject);
+    child.on("message", (message) => {
+      if (message.type === "ready") child.send({ type: "start" });
+      else if (message.type === "done") result = message.value;
+    });
+    child.once("close", (code, signal) => {
+      if (code === 0 && signal === null && result) resolve(result);
+      else reject(new Error("Runner IPC failed: " + code + ":" + signal));
+    });
+  });
+  console.log(value + ":" + render() + ":" + result);
+}
 `,
     "src/shared.ts": `import { value } from "asset-package";
-import { fileURLToPath } from "node:url";
 export { value };
-export const runner = fileURLToPath(new URL("./runner.mjs", import.meta.url));
 `,
-    "src/runner-main.ts": 'import { value } from "./shared.js"; console.log(value);\n',
+    "src/runner-main.ts": `import { value } from "./shared.js";
+export function startRunner() {
+  process.once("message", (message) => {
+    if (message.type !== "start") return;
+    process.send({ type: "done", value });
+    process.disconnect();
+  });
+  process.send({ type: "ready" });
+}
+`,
     "node_modules/asset-package/package.json": JSON.stringify({
       name: "asset-package",
       version: "1.0.0",
@@ -108,6 +139,7 @@ async function buildArtifact(workspace: string, output: string) {
 const { createBuilder } = await import(${JSON.stringify(viteUrl)});
 const { nitro } = await import(${JSON.stringify(nitroUrl)});
 const { default: configuration } = await import(${JSON.stringify(configUrl)});
+const { basename } = await import("node:path");
 const workspace = ${JSON.stringify(workspace)};
 const output = ${JSON.stringify(output)};
 const builder = await createBuilder({
@@ -118,7 +150,7 @@ const builder = await createBuilder({
     traceDeps: ["asset-package*"],
     rolldownConfig: {
       ...configuration.rolldownConfig,
-      input: { index: workspace + "/src/main.ts", runner: workspace + "/src/runner-main.ts" },
+      input: Object.fromEntries(Object.entries(configuration.rolldownConfig.input).map(([name, entry]) => [name, workspace + "/src/" + basename(entry)])),
     },
   }),
 });
@@ -130,14 +162,17 @@ await builder.buildApp();
 }
 
 describe("Worker Nitro artifact", () => {
-  it("runs both entries and shared chunks after relocation without source or development tooling", async () => {
+  it("runs Host and IPC Runner modes from one relocated entry without source or development tooling", async () => {
     const { directory, workspace, output } = await fixture();
     const deployment = await mkdtemp(join(tmpdir(), "raypx-worker-deployment-"));
     try {
       await buildArtifact(workspace, output);
       const server = join(output, "server");
-      for (const entry of ["index.mjs", "runner.mjs"])
-        expect(existsSync(join(server, entry))).toBe(true);
+      expect(existsSync(join(server, "index.mjs"))).toBe(true);
+      expect(existsSync(join(server, "runner.mjs"))).toBe(false);
+      expect(
+        (await readdir(server)).some((name) => name.endsWith(".mjs") && name !== "index.mjs"),
+      ).toBe(true);
       expect((await readdir(server)).some((name) => name.endsWith(".mjs.map"))).toBe(true);
       expect(existsSync(join(server, "node_modules/tooling"))).toBe(false);
       expect(existsSync(join(server, "node_modules/react-email"))).toBe(false);
@@ -154,7 +189,7 @@ describe("Worker Nitro artifact", () => {
       );
       const runner = await execute(
         process.execPath,
-        ["--no-env-file", "--no-install", join(relocated, "runner.mjs")],
+        ["--no-env-file", "--no-install", join(relocated, "index.mjs"), "--runner", "--check"],
         { cwd: deployment },
       );
       expect(main.stdout.trim()).toBe("asset:required:self:mail:asset:required:self");

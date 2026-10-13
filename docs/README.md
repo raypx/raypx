@@ -31,7 +31,10 @@ deployment boundaries, and coding-agent guidance.
   reservation.
 - [Toolchain](./architecture/tooling.md) — Bun catalogs, Vite+, TypeScript,
   shadcn/Base UI, and repository automation; Worker executable packaging follows
-  [ADR-0023](./architecture/decisions/0023-worker-vite-nitro-artifact.md).
+  [ADR-0023](./architecture/decisions/0023-worker-vite-nitro-artifact.md) and its
+  [single-entry refinement](./architecture/decisions/0025-worker-single-entry-execution.md).
+- [Worker execution decision](./architecture/decisions/0025-worker-single-entry-execution.md)
+  — one executable, isolated task processes and Host-owned Run deadlines.
 - [Bun runtime decision](./architecture/decisions/0024-bun-runtime.md) — one pinned
   runtime for production, tooling, tests and isolated Runner processes.
 - [Runtime and deployment](./architecture/deployment.md) — production runtimes,

@@ -46,7 +46,7 @@ function checkWorkerArtifactTasks(
   const outputs = Array.isArray(build?.outputs) ? build.outputs : [];
   if (outputs.length !== 1 || outputs[0] !== ".output/**")
     add(
-      "worker#build must cache the complete .output/** Nitro artifact, including both executables and runtime dependencies",
+      "worker#build must cache the complete .output/** Nitro artifact, including executable code and runtime dependencies",
     );
 }
 

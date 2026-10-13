@@ -11,6 +11,9 @@ Agent UI shares controlled business views. Client owns replay, contiguous event
 sequences, reconnects and account/resource isolation. API authenticates every
 command and subscription; Application checks current personal/project scope.
 Worker claims Runs and starts separate Bun Runners with registered trusted tools.
+Host and Runner share one compiled entry: default Host mode and `--runner`
+task mode dynamically load their own composition. Task execution remains in a
+separate process under [ADR-0025](decisions/0025-worker-single-entry-execution.md).
 API's private execution Gateway dispatches model and research requests; only API
 receives model/search credentials. Durable hashed RunGrants bind each Runner to
 its scope, Run, owner epoch and live lease.
@@ -42,10 +45,24 @@ receive a minimal environment without DB, S3 or provider credentials. This is
 fault isolation; arbitrary code still requires a security sandbox.
 
 The private Gateway validates bootstrap, object, research and each execution
-response against its contract. Runner exposes only execution operations; the
-parent host owns claiming, renewal, history loading and usage hooks. Identity and
-fencing come from the durable grant. Dispatch forbids identity fields and replaces
-any supplied fence fields with that trusted context.
+response against its contract. Runner consumes an execution-only port and gets
+trusted conversation history from API Gateway bootstrap. API owns model metering
+hooks; Worker Host owns claiming, renewal, grants and the overall deadline.
+Identity and fencing come from the durable grant. Dispatch forbids identity
+fields and replaces any supplied fence fields with that trusted context.
+Host also owns the total deadline from the claim's `startedAt`, including grant
+setup, child readiness and Pi initialization. Search has 60 seconds; Computer
+uses `limits.taskDurationMs`. Timeout asks the child to abort, then force-kills
+after the existing two-second grace if necessary. Host waits for exit before
+revoking the grant. Timeout finishes an unfinished Run as `failed` with
+`BUDGET_EXCEEDED` under its owner fence; shutdown or owner loss uses interruption.
+Both paths protect terminal results and newer owners.
+Host also owns a temporary directory per Run and passes it in bootstrap.
+Execution requires that supplied directory; Host removes it after child exit on
+success, abort or timeout, including force-killed children.
+Linux/macOS use a detached POSIX group; Host force-kills remaining same-group
+descendants after every Runner exit before scratch cleanup. Windows fallback
+targets only the direct Runner process.
 The API injects Core's canonical tool names into the model Gateway; Worker tests
 verify its trusted registry matches that directory. SDK context and stream
 events remain opaque, while a direct provider run requires usage hooks before

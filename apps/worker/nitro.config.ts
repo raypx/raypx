@@ -20,11 +20,9 @@ export default defineConfig({
   rolldownConfig: {
     input: {
       index: fileURLToPath(new URL("./src/main.ts", import.meta.url)),
-      runner: fileURLToPath(new URL("./src/runner-main.ts", import.meta.url)),
     },
     output: {
       entryFileNames: "[name].mjs",
-      // Both entrypoints and shared modules resolve the isolated runner as a sibling.
       chunkFileNames: "[name]-[hash].mjs",
     },
   },
