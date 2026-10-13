@@ -1,0 +1,131 @@
+packages/scripts/src/database/command.ts
+  s_8cb2ae3aaeefff::t_f1cd143d06ce32 46-48,64-66,71,84-86,93-97,102
+  s_8cb2ae3aaeefff::t_07f21450c99cd4 49-63,67-70,72-83,87-92
+.gitignore
+  s_8cb2ae3aaeefff::t_d51e2f3931a7fd 24
+packages/db/package.json
+  s_8cb2ae3aaeefff::t_7d78bab450dcba 9-10
+  s_8cb2ae3aaeefff::t_fbdbc45617ee09 24
+packages/scripts/src/database/explain-runtime.ts
+  s_8cb2ae3aaeefff::t_7954d3e0679417 1-6
+packages/scripts/package.json
+  s_8cb2ae3aaeefff::t_e51def982ffe94 26
+AGENTS.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 65-66
+apps/api/Dockerfile
+  s_8cb2ae3aaeefff::t_a7dca8f8ce4592 15
+docs/README.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 8-10
+packages/db/tests/drizzle-extensions.integration.test.ts
+  s_8cb2ae3aaeefff::t_f33a78e614eddb 1-62,64-85
+  s_8cb2ae3aaeefff::t_c09166cd531456 63
+docs/architecture/database.md
+  s_8cb2ae3aaeefff::t_ce483a5ab50d1e 46-54
+apps/worker/Dockerfile
+  s_8cb2ae3aaeefff::t_a7dca8f8ce4592 18
+packages/db/src/v2/tasks.ts
+  s_8cb2ae3aaeefff::t_7d78bab450dcba 1
+apps/web/Dockerfile
+  s_8cb2ae3aaeefff::t_a7dca8f8ce4592 15
+packages/db/src/diagnostics/query.ts
+  s_8cb2ae3aaeefff::t_579b8856ffb313 53-59
+  s_8cb2ae3aaeefff::t_1aba80f75c8d5c 2,103
+  s_8cb2ae3aaeefff::t_469626f95cd966 1,3-52,60-102,104-109
+packages/db/src/diagnostics/query.test.ts
+  s_8cb2ae3aaeefff::t_9502abdb28ec48 1-43,49-77
+  s_8cb2ae3aaeefff::t_1aba80f75c8d5c 44-45,47-48
+  s_8cb2ae3aaeefff::t_8d8031178ec6d3 46
+packages/db/src/repositories/cloud/queries.ts
+  s_8cb2ae3aaeefff::t_6bfe4084f2ad40 2,4-5,18-19,24-31,37-39
+  s_8cb2ae3aaeefff::t_469626f95cd966 1,3,6-17,20-23,32-36,40-55
+packages/db/src/v2/assets.ts
+  s_8cb2ae3aaeefff::t_7d78bab450dcba 1
+packages/db/src/v2/projects.ts
+  s_8cb2ae3aaeefff::t_1aba80f75c8d5c 16-17
+  s_8cb2ae3aaeefff::t_7d78bab450dcba 4
+packages/scripts/src/database/explain.test.ts
+  s_8cb2ae3aaeefff::t_3f20f628a797a6 1-27,31-34,56-62,66-68,86-105,126-130,139-143,147-151,154,161-177,186-189,204,208-212,227-238,244-247,250-258,261-267
+  s_8cb2ae3aaeefff::t_07f21450c99cd4 28-30,35-55,63-65,69-85,106-125,131-138,144-146,152-153,155-160,178-185,190-203,205-207,213-226,239-243,248-249,259-260
+packages/db/tests/diagnostics.integration.test.ts
+  s_8cb2ae3aaeefff::t_9502abdb28ec48 1-84
+packages/scripts/src/database/explain.ts
+  s_8cb2ae3aaeefff::t_92d1a218ba78ee 86,90
+  s_8cb2ae3aaeefff::t_d01758430639e5 54-60,70-71
+  s_8cb2ae3aaeefff::t_7954d3e0679417 1-53,72-85,91-130,134-136,143-169
+  s_8cb2ae3aaeefff::t_07f21450c99cd4 61-69,131-133,137-142
+  s_8cb2ae3aaeefff::t_b24be18159e4c0 87-89
+packages/db/src/diagnostics/explain.test.ts
+  s_8cb2ae3aaeefff::t_ac0560b543c319 1-30,32-96
+  s_8cb2ae3aaeefff::t_3efca99edfb786 31
+packages/db/third-party/NOTICE.md
+  s_8cb2ae3aaeefff::t_ce483a5ab50d1e 1-18
+docs/architecture/decisions/0029-toolkit-drizzle-extraction.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 1-59
+docs/architecture/decisions/README.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 66
+docs/architecture/packages.md
+  s_8cb2ae3aaeefff::t_ce483a5ab50d1e 174-183
+packages/db/AGENTS.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 15,20-22,47-50,82
+  s_8cb2ae3aaeefff::t_715e5f54be9e4f 10-14
+docs/architecture/drizzle-extensions.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 1-28,30-76
+  s_8cb2ae3aaeefff::t_454b06765ba3ec 29
+packages/scripts/AGENTS.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 32
+packages/scripts/src/policy/manifests.test.ts
+  s_8cb2ae3aaeefff::t_a7dca8f8ce4592 70-71,73,76-78
+  s_8cb2ae3aaeefff::t_5cfa477577ea86 72,74-75
+packages/scripts/src/database/explain-report.ts
+  s_8cb2ae3aaeefff::t_f1cd143d06ce32 1-3,43-49,54,56-59,61,64-104
+  s_8cb2ae3aaeefff::t_07f21450c99cd4 4-42,50-53
+  s_8cb2ae3aaeefff::t_d01758430639e5 55,60,62-63
+packages/db/src/diagnostics/explain.ts
+  s_8cb2ae3aaeefff::t_579b8856ffb313 1-4,6-40,42,48-52,54-59
+  s_8cb2ae3aaeefff::t_1aba80f75c8d5c 5,41,43-47,53
+packages/db/src/diagnostics/types.ts
+  s_8cb2ae3aaeefff::t_469626f95cd966 3-23,25,28-45
+  s_8cb2ae3aaeefff::t_1aba80f75c8d5c 1-2,24,26-27
+docs/architecture/tooling.md
+  s_8cb2ae3aaeefff::t_ce483a5ab50d1e 34-38,199
+packages/scripts/src/policy/manifests/rules.ts
+  s_8cb2ae3aaeefff::t_a7dca8f8ce4592 119-120
+packages/db/src/repositories/cloud/postgres.ts
+  s_8cb2ae3aaeefff::t_6bfe4084f2ad40 17,36-37,39-40,43-45,55-57,65-66,77,81,84-85,98,105,107
+  s_8cb2ae3aaeefff::t_7d78bab450dcba 13
+  s_8cb2ae3aaeefff::t_1aba80f75c8d5c 16
+  s_8cb2ae3aaeefff::t_9709bede95ca0e 38,106
+packages/db/src/diagnostics.ts
+  s_8cb2ae3aaeefff::t_579b8856ffb313 1-9
+packages/db/tests/cloud.integration.test.ts
+  s_8cb2ae3aaeefff::t_6bfe4084f2ad40 7
+package.json
+  s_8cb2ae3aaeefff::t_44603795412006 40-41
+  s_8cb2ae3aaeefff::t_e51def982ffe94 130
+docs/architecture/decisions/0028-selective-drizzle-helpers.md
+  s_8cb2ae3aaeefff::t_e51def982ffe94 5-7
+packages/db/src/v2/reviews.ts
+  s_8cb2ae3aaeefff::t_7d78bab450dcba 1
+bun.lock
+  s_8cb2ae3aaeefff::t_a276762f71bda4 283,450,1018-1019
+vendor/README.md
+  s_8cb2ae3aaeefff::t_7ae63968b2b13a 1-30
+vendor/drizzle.json
+  s_8cb2ae3aaeefff::t_4bf9eedd62c49c 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f0aa357322d60613b73f648dbebf555952679a04",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
