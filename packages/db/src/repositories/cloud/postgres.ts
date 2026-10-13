@@ -9,18 +9,11 @@ import type {
 } from "@raypx/core";
 import { sql, eq, and } from "drizzle-orm";
 import { CloudDomainError, sameCloudTaskRound } from "@raypx/core";
-import type { Database } from "./v2/types.js";
-import {
-  users,
-  v2Projects,
-  v2ProjectMembers,
-  organizationMembers,
-  outboxEvents,
-} from "./schema.js";
-import { cloudActorId, cloudParentIds } from "./cloud-memory.js";
+import type { Database } from "../projects/types.js";
+import { users, v2Projects, v2ProjectMembers, organizationMembers } from "../../schema.js";
+import { cloudActorId, cloudParentIds } from "./memory.js";
 const tableNames: Record<CloudEntityKind, string> = {
   mutations: "cloud_mutations",
-  preferences: "cloud_preferences",
   conversations: "cloud_conversations",
   turns: "cloud_turns",
   tasks: "cloud_tasks",
@@ -35,7 +28,6 @@ const tableNames: Record<CloudEntityKind, string> = {
   assets: "cloud_assets",
   revisions: "cloud_revisions",
   usage: "cloud_usage_calls",
-  notifications: "cloud_notifications",
   commands: "cloud_commands",
 };
 const dates = new Set([
@@ -133,7 +125,7 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
     },
     readyRuns: async (limit) => {
       const rows = await db.execute<{ data: Record<string, unknown> }>(
-        sql`SELECT data FROM cloud_runs WHERE status='queued' AND dispatch_ready=true ORDER BY created_at,id LIMIT ${limit}`,
+        sql`SELECT data FROM cloud_runs WHERE status='queued' ORDER BY created_at,id LIMIT ${limit}`,
       );
       return rows.map((row) => hydrate<CloudEntities["runs"]>(row.data));
     },
@@ -268,7 +260,7 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
           sql`${record["taskId"]}`,
           sql`${record["conversationId"]}`,
           sql`${record["status"]}`,
-          sql`${record["dispatchReady"]}`,
+          sql`true`,
           sql`${record["ownerId"]}`,
           sql`${record["epoch"]}`,
           sql`${record["roundId"]}`,
@@ -323,14 +315,6 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
       const rows = writing ? await statement.for("share") : await statement;
       return rows[0]?.status === "active";
     },
-    userProfile: async (actorId) => {
-      const rows = await db
-        .select({ email: users.email, displayName: users.displayName })
-        .from(users)
-        .where(eq(users.id, actorId))
-        .limit(1);
-      return rows[0] ?? null;
-    },
     projectAccess: async (projectId, actorId) => {
       const query = db.select().from(v2Projects).where(eq(v2Projects.id, projectId)).limit(1);
       const projects = writing ? await query.for("share") : await query;
@@ -381,12 +365,6 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
         sql`SELECT data FROM cloud_events WHERE run_id=${runId} AND sequence<${beforeSequence} ORDER BY sequence DESC LIMIT ${limit}`,
       );
       return rows.reverse().map((row) => hydrate<CloudRunEvent>(row.data));
-    },
-    enqueue: async (event) => {
-      await db
-        .insert(outboxEvents)
-        .values({ ...event })
-        .onConflictDoNothing();
     },
   };
 }

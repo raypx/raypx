@@ -1,5 +1,4 @@
 export * from "./pagination.js";
-export * from "./agents/outbox.js";
 export * from "./projects/tasks.js";
 export * from "./assets/model.js";
 export * from "./reviews/index.js";

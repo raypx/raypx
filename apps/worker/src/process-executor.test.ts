@@ -47,7 +47,6 @@ process.send({type:'ready'});`,
         attachmentIds: [],
         idempotencyKey: "turn",
       });
-      await app.acceptQueued({ runId: run.id });
       // A bundled helper may live in chunks; the executable entry owns both roles.
       process.argv[1] = join(directory, "index.mjs");
       const execute = createProcessExecutor({
@@ -73,7 +72,7 @@ process.send({type:'ready'});`,
       expect(result.pid).not.toBe(process.pid);
       expect(result.runId).toBe(run.id);
       expect(result.credential).toBe(true);
-      expect(result.runtime).toBe("1.4.0");
+      expect(result.runtime).toBe(process.versions.bun);
       expect(result.executable).toBe(process.execPath);
       expect(result.arguments).toContain("--no-env-file");
       expect(result.arguments).toContain("--no-install");

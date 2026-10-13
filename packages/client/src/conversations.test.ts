@@ -169,7 +169,6 @@ function run(id: string, sequence = 1): CloudConversationSnapshotDto["runs"][num
     cancelRequested: false,
     output: null,
     error: null,
-    dispatchReady: true,
   };
 }
 it("merges older pages without losing live updates when a run leaves the recent window", async () => {

@@ -38,7 +38,7 @@ it("runs a relocated Worker with same-entry Runner and package assets, without l
     [`${output}/server/index.mjs`]: `import assert from "node:assert/strict";
 import { asset } from "packaged-runtime";
 import { execFileSync } from "node:child_process";
-assert.equal(process.versions.bun, "1.4.0");
+assert.equal(process.versions.bun, "1.4.2");
 assert.equal(process.env.NODE_ENV, "production");
 assert.equal(process.env.RAYPX_ARTIFACT_ENV_PROBE, undefined);
 assert.ok(process.argv.includes("--check"));

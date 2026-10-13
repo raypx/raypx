@@ -10,6 +10,10 @@ tracing, complete artifact cache and development-watch decisions remain in force
 The process and credential isolation of [ADR-0017](0017-gateway-and-task-rounds.md)
 and the Bun runtime of [ADR-0024](0024-bun-runtime.md) remain unchanged.
 
+Host dispatch responsibilities are superseded by
+[ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md). The single entry,
+isolated task processes, deadline and cleanup decisions remain in force.
+
 ## Context
 
 Host and Runner use the same pinned Bun runtime and deployment artifact, but two

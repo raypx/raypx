@@ -5,7 +5,6 @@ import {
   ChatCircle,
   ListChecks,
   ChartBar,
-  Bell,
 } from "@phosphor-icons/react";
 import {
   Link,
@@ -46,7 +45,6 @@ export function AppShell() {
   const items = [
     { to: "/chat", label: t("chat"), icon: ChatCircle },
     { to: "/tasks", label: t("tasks"), icon: ListChecks },
-    { to: "/notifications", label: t("notifications"), icon: Bell },
     { to: "/settings/usage", label: t("usage"), icon: ChartBar },
     { to: "/projects", label: t("projects"), icon: FolderSimple },
   ] as const;
@@ -115,11 +113,9 @@ export function AppShell() {
               ? t("chat")
               : pathname.startsWith("/tasks")
                 ? t("tasks")
-                : pathname.startsWith("/notifications")
-                  ? t("notifications")
-                  : pathname.startsWith("/settings")
-                    ? t("usage")
-                    : t("projects")}
+                : pathname.startsWith("/settings")
+                  ? t("usage")
+                  : t("projects")}
           </span>
           {refreshing ? (
             <span role="status" title={t("refreshing")} className="ml-auto text-muted-foreground">

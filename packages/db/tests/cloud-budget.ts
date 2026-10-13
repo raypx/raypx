@@ -9,7 +9,6 @@ export async function exerciseSharedTaskBudget(
   projectId: string,
 ) {
   async function claim(runId: string) {
-    await service.acceptQueued({ runId });
     const claimed = (await service.claim({ runId, ownerId: "worker" }))!;
     const fence = { runId, ownerId: "worker", epoch: claimed.epoch };
     const execution = await service.startExecution({ ...fence, role: "main", prompt: "Research" });

@@ -141,7 +141,6 @@ export default async function setup(config: FullConfig) {
           cancelRequested: false,
           output: `${title} answer [1].`,
           error: null,
-          dispatchReady: true,
         });
         await tx.save("turns", {
           ...base(turnId, actorId),
@@ -207,17 +206,6 @@ export default async function setup(config: FullConfig) {
           text: `${title} answer [1].`,
           completed: true,
           sequence: 3,
-        });
-        await tx.save("notifications", {
-          ...base(`e2e-notification-${suffix}`, actorId),
-          recipientId: actorId,
-          taskId,
-          conversationId,
-          runId,
-          type: suffix === "review" ? "task.review" : "task.waiting_input",
-          readAt: null,
-          emailEnabled: false,
-          emailDeliveredAt: null,
         });
       }
       const scope = base("e2e-review-report", accounts.member.id);
@@ -295,7 +283,6 @@ export default async function setup(config: FullConfig) {
           cancelRequested: false,
           output: null,
           error: null,
-          dispatchReady: true,
         });
       }
       for (let index = 0; index < 55; index++) {

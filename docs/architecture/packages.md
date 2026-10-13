@@ -14,8 +14,9 @@ resource fields, cursor envelopes and validated procedures; `methods.ts` owns
 HTTP method classification for both API and client. The public Auth capability
 DTO contains only three booleans; settings administration RPCs are retired.
 
-`cloud` defines the new conversation, Task/Run, immutable file, review, usage,
-notification and preference protocol. It retains native `Date` DTO fields and
+`cloud` defines the conversation, Task/Run, immutable file, review, usage
+and capability protocol. Task notifications and notification preferences are
+retired. It retains native `Date` DTO fields and
 contains no Pi, Drizzle or S3 SDK types. Streams have independent connections.
 
 ## `@raypx/application`
@@ -28,8 +29,9 @@ remain outside Application. See [domain services](./domain-services.md).
 
 The cloud application coordinates current personal/project authorization,
 idempotent commands, owner-fenced execution, model reservations and atomic
-revision publication. API and Worker both use this same execution model;
-`cloud.run.queued` is distinct from historical delivery events.
+revision publication. API and Worker both use this same execution model.
+Queued Runs commit with their Turn/Round and admission facts and are directly
+claimable, without an outbox event or acceptance command.
 
 ## `@raypx/ai`
 
@@ -121,11 +123,11 @@ public barrel is organized into bounded contexts:
   independently of Workspace and Project Studio.
 - Project Task models live within `projects`; `assets`, `reviews` and `activity`
   own their records and repository ports. `cloud` owns Conversations, TaskRounds,
-  Runs, execution grants, usage, notifications and delivery revisions.
+  Runs, execution grants, usage and delivery revisions.
 - `assets` retains the blob upload/download port and errors used by V2.
-- `agents/outbox.ts` defines durable dispatch ports. Cloud cancellation and
-  execution invariants live in the cloud domain; legacy device execution and
-  Project AgentRun ports/adapters are retired.
+- Cloud cancellation and execution invariants live in the cloud domain. Outbox
+  ports, task notifications, legacy device execution and Project AgentRun
+  ports/adapters are retired.
 
 These contexts remain one package until a second independent server consumer
 creates a stable extraction seam. UI features under `apps/*/src/features` are
@@ -147,9 +149,9 @@ not depend on the provider.
 
 ## `@raypx/mail`
 
-Typed mail delivery for verification, password reset, welcome and opt-in Task
-notifications. Task templates cover review, failure, waiting input and completion
-without including prompts or file content.
+Typed API-owned mail delivery for verification, password reset and welcome.
+Task-notification templates and send methods are retired; Worker has no Mail
+dependency.
 Verification and reset share a link template; typed senders share current
 configuration resolution and delivery. The unused Admin test-mail method is removed.
 Its JSON catalogs are rendered through the server-only `@raypx/i18n`
@@ -183,8 +185,9 @@ The database adapter package.
   Historical migrations remain reference material; retired local execution table
   definitions and adapters are removed while the active cloud baseline stays unchanged.
 - V2 Project, organization membership, Task, Asset, Review, Feedback, Activity,
-  cloud execution and outbox adapters implement Core ports. Turn/Task/Run
-  creation and its outbox event use one PostgreSQL transaction.
+  and cloud execution adapters implement Core ports. Turn/Task/Run creation and
+  admission facts use one PostgreSQL transaction. Queued Runs are listed and
+  atomically claimed directly.
 - Blob storage remains available in memory and on the filesystem.
 - `system_settings` stores typed ordinary configuration keys and
   `system_secrets` stores write-only secret values. Both record the updater and
@@ -200,6 +203,10 @@ The database adapter package.
   presentation metadata and retain server-only secret material.
 - Historical user/audit/configuration compatibility tables remain in the active
   baseline. Retiring Admin does not drop stored data or rewrite migrations.
+- Outbox, notification and preference tables, plus the dispatch-ready column,
+  remain schema-local compatibility data. Active runtime ports and writes are
+  retired without migration or notification replay; see
+  [ADR-0026](./decisions/0026-direct-run-queue-and-retire-task-notifications.md).
 - The new runtime schema and migrations use `schema/cloud-baseline.ts` and
   `drizzle-cloud/`; historical `drizzle/` migrations remain reference material.
 - Database tables and Drizzle details are not exposed to frontend apps.

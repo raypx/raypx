@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Authentication and task email composition and delivery. The package owns typed templates,
+Authentication email composition and delivery. The package owns typed templates,
 plain-text alternatives, and transport selection for API-owned auth flows.
 
 ## Interface
@@ -20,7 +20,6 @@ scripts/         local deterministic email preview
 ## Ownership
 
 - Own verification, password reset, and welcome email content.
-- Own task review, failure, input-needed and completion emails; hosts enforce notification preferences and durable delivery.
 - Resolve injected mail configuration for every delivery. Use Resend when
   configured; use logger transport only in development/test.
 - Production configuration errors occur at send time as `MailUnavailableError`;
@@ -29,14 +28,13 @@ scripts/         local deterministic email preview
 
 ## Constraints
 
-- Task mail carries the durable notification/recipient identity to Resend for
-  retry deduplication. Operational delivery logs retain counts and safe metadata,
+- Task-notification templates and send methods are retired. Operational delivery
+  logs retain counts and safe metadata,
   never recipient addresses or message content.
 
 - Never log API keys, passwords, verification tokens, reset URLs, or rendered HTML.
 - Do not expose Resend or server environment values to browser applications.
-- Do not turn this into an arbitrary marketing-mail API; add a typed method for a
-  new product-owned notification.
+- Do not turn this into an arbitrary marketing-mail or task-notification API.
 - Keep templates deterministic and network-free in tests and preview.
 - Render subject, HTML, text, actions, and `<html lang>` with one locale:
   `input.locale` when the caller knows the recipient's language, otherwise

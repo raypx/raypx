@@ -5,7 +5,6 @@ const mutationProcedureNames = new Set([
   "continueRound",
   "setSpendingGrant",
   "acceptRevision",
-  "markRead",
   "createUpload",
   "completeUpload",
   "update",

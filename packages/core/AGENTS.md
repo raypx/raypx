@@ -17,7 +17,7 @@ transported or stored.
 - Own runtime mail and authentication policy types, inherited configuration
   fallbacks, read-only settings ports, and derived public Auth capabilities.
 - Own canonical cloud scopes, Conversations, Tasks, Runs, executions, artifact
-  revisions, usage intents, notification preferences and transactional repository ports.
+  revisions, usage intents and transactional repository ports.
 - Own the fixed `cloudToolNames` vocabulary shared by API authorization and
   Worker tool registration; mode and child execution select subsets.
 - Account usage totals are a transaction query: monthly calls/tokens/cost use an
@@ -29,11 +29,10 @@ transported or stored.
   Project spending grants are separate from editing capability. Durable message
   projections and ordered events represent the same execution facts.
 - Own canonical V2 personal/Organization project access, resource ports,
-  Cloud Run cancellation rules, outbox contracts, and the blob-storage port.
+  Cloud Run cancellation rules and the blob-storage port.
   Device-bound execution and the former Project AgentRun ports are retired.
-- Outbox claims expose persisted `attempts`; `OutboxLease` carries
-  `id`, `workerId` and `attempts` to fence acknowledgement and release to the
-  current claim. Release additionally carries `retryDelayMs`; enqueue is unchanged.
+- Queued Runs are directly claimable under the current authorization, owner epoch
+  and lease rules. Outbox, dispatch readiness and task-notification ports are retired.
 - Ownership is distinct from authorship. Organization capability is a ceiling;
   a project membership can narrow it but cannot elevate it.
 - Own the **repository interfaces**. The dependency direction is inverted on

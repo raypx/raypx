@@ -5,6 +5,10 @@
 Accepted. Refines execution, budget and review rules in
 [ADR-0016](0016-cloud-agent-platform.md).
 
+Queue admission is refined by
+[ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md). The execution
+fences, grants, immutable rounds and authorization decisions remain in force.
+
 ## Context
 
 An in-process Worker shares credentials with its Agent and a crash can interrupt

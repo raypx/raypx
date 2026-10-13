@@ -46,8 +46,10 @@ or `packages/` without a `package.json`.
 - Admin and its management RPCs are retired. Keep authentication, current account
   status checks and project capability enforcement in their owning layers.
 - Runtime applications never import `@raypx/scripts`.
-- `apps/worker` is the durable delivery and scheduling host. It may depend on
+- `apps/worker` polls and atomically claims durable queued Runs. It may depend on
   `@raypx/application` and adapters, but never on Web/Desktop composition.
+- Task notifications, preferences and outbox dispatch are retired under ADR-0026.
+  Preserve their stored data and schema compatibility; Auth emails remain active.
 - Desktop is a cloud project client; native code owns only its window and tray.
 
 ## Toolchain
@@ -114,7 +116,7 @@ conventions, the two file layouts, and the accessibility requirements.
 - Keep operational logs separate from durable domain facts.
 - Never log credentials, cookies, authorization headers, passwords, secrets,
   tokens, or API keys.
-- Retired management tables and historical SQL are preserved; removing unused
+- Retired management/outbox/notification tables and historical SQL are preserved; removing unused
   source must not silently drop stored data or weaken current account/project access.
 - Destructive database scripts are limited to explicit development/test
   environments.

@@ -9,7 +9,6 @@ import type {
 } from "@raypx/core";
 
 async function claim(service: CloudApplication, runId: string) {
-  await service.acceptQueued({ runId });
   const claimed = (await service.claim({ runId, ownerId: "budget-host" }))!;
   const fence = { runId, ownerId: "budget-host", epoch: claimed.epoch };
   const execution = await service.startExecution({ ...fence, role: "main", prompt: "Budget" });
@@ -137,7 +136,6 @@ export async function exerciseAccountUsageAggregation(repository: CloudRepositor
         id: `aggregate-run-${index}`,
         turnId: `aggregate-turn-${index}`,
         status,
-        dispatchReady: false,
         createdAt: until,
       });
     await tx.save("runs", {

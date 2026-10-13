@@ -9,8 +9,7 @@ import { cloudConversations } from "./conversations.js";
 import type { CloudContext, Actor, Intent } from "./context.js";
 
 export function cloudTasks(context: CloudContext) {
-  const { repo, now, fail, required, text, base, access, scopeFor, mutate, notify, roundIn } =
-    context;
+  const { repo, now, fail, required, text, base, access, scopeFor, mutate, roundIn } = context;
   return {
     createTask: (
       input: Actor &
@@ -226,7 +225,6 @@ export function cloudTasks(context: CloudContext) {
             task.status = "completed";
             task.updatedAt = now();
             await tx.save("tasks", task);
-            await notify(tx, task, "task.completed", null);
             return task;
           },
         );

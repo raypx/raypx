@@ -9,16 +9,16 @@ function dependencies(overrides: Partial<DoctorDependencies> = {}): DoctorDepend
     readFile: vi.fn(async () =>
       JSON.stringify({
         name: "raypx",
-        packageManager: "bun@1.4.0",
+        packageManager: "bun@1.4.2",
         devEngines: {
-          packageManager: { name: "bun", version: "1.4.0" },
-          runtime: { name: "bun", version: "1.4.0" },
+          packageManager: { name: "bun", version: "1.4.2" },
+          runtime: { name: "bun", version: "1.4.2" },
         },
       }),
     ),
     pathExists: vi.fn(async () => true),
     probe: vi.fn(async (command) => {
-      if (command[0] === "bun") return "1.4.0\n";
+      if (command[0] === "bun") return "1.4.2\n";
       return `${command[0]} available`;
     }),
     validateEnvironment: vi.fn(),
@@ -60,7 +60,7 @@ describe("runDoctor", () => {
     const output = renderDoctorReport(report);
 
     expect(report.errors).toBe(2);
-    expect(output).toContain("expected 1.4.0, found 1.3.13");
+    expect(output).toContain("expected 1.4.2, found 1.3.13");
     expect(output).toContain("DATABASE_URL: Invalid URL");
     expect(output).not.toContain("postgres://");
   });
@@ -91,7 +91,7 @@ describe("runDoctor", () => {
           async (path) => path !== "/repo/apps/desktop/node_modules/.bin/electrobun",
         ),
         probe: vi.fn(async (command) => {
-          if (command[0] === "bun") return "1.4.0";
+          if (command[0] === "bun") return "1.4.2";
           throw new Error("missing");
         }),
       }),
@@ -127,13 +127,13 @@ describe("runDoctor", () => {
     expect(deps.pathExists).toHaveBeenCalledWith("/repo/apps/desktop/node_modules/.bin/electrobun");
   });
   it("rejects missing or divergent runtime pins without consulting another executor", async () => {
-    for (const runtime of [undefined, { name: "bun", version: "1.4.2" }]) {
+    for (const runtime of [undefined, { name: "bun", version: "1.4.0" }]) {
       const deps = dependencies({
         readFile: vi.fn(async () =>
           JSON.stringify({
             name: "raypx",
             devEngines: {
-              packageManager: { name: "bun", version: "1.4.0" },
+              packageManager: { name: "bun", version: "1.4.2" },
               ...(runtime ? { runtime } : {}),
             },
           }),

@@ -16,10 +16,14 @@ import {
   v2Activities,
   v2AssetVersions,
 } from "../src/schema.js";
-import { PostgresProjectV2Repository } from "../src/v2/projects.js";
-import { PostgresAssetV2Repository, PostgresAssetVersionV2Repository } from "../src/v2/assets.js";
-import { PostgresActivityV2Repository } from "../src/v2/activity.js";
-import { PostgresReviewV2Repository, PostgresFeedbackV2Repository } from "../src/v2/reviews.js";
+import {
+  PostgresProjectV2Repository,
+  PostgresAssetV2Repository,
+  PostgresAssetVersionV2Repository,
+  PostgresActivityV2Repository,
+  PostgresReviewV2Repository,
+  PostgresFeedbackV2Repository,
+} from "../src/v2.js";
 
 let connection: Awaited<ReturnType<typeof openTestDatabase>>;
 const now = new Date("2026-01-01T00:00:00Z");

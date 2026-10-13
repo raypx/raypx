@@ -1,2 +1,2 @@
 export * from "./connection.js";
-export { PostgresSystemSettingsRepository } from "./settings/postgres.js";
+export { PostgresSystemSettingsRepository } from "./repositories/settings/postgres.js";

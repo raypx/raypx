@@ -20,7 +20,7 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 ## Ownership
 
 - `apiContract.cloud` owns the new Conversations, Tasks, Runs, Assets, Usage,
-  Notifications, preferences, capabilities and tool-detail protocol. Conversation
+  capabilities and tool-detail protocol. Conversation
   streams deliver durable snapshots; Run streams deliver ordered events.
 - Task DTOs expose currentRoundId/goalVersion and immutable Round metadata.
   startRound resets the goal budget; continueRound and retry preserve it.
@@ -30,8 +30,6 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   older facts in ascending order. Asset metadata reads never return signed URLs.
 - Cloud list/history cursors bind to actor/domain/filter scope. Tool replay events
   contain bounded summaries; full input/output is only in authorized tool detail.
-  Notifications target a Task or Conversation and expose a permission-filtered
-  unread count.
 - Own the request and response shape of every procedure, and the DTO types that
   consumers import.
 - The private `./execution-gateway` tree has typed bootstrap, object, research
@@ -44,6 +42,7 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - The canonical Account-first tree is the only transport API. Retired Workspace,
   Project Studio, device/runner, Project AgentRun, scheduled-task, and settings
   and Admin procedures must not return. Cloud Runs use `cloud.runs` exclusively.
+- Task-notification and notification-preference RPCs/DTOs are retired under ADR-0026.
 - Own nothing else: no network calls, no database access, no business rules.
 
 ## Constraints

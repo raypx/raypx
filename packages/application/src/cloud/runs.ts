@@ -140,21 +140,11 @@ export function cloudRuns(context: CloudContext) {
         },
       );
     },
-    acceptQueued: (input: { runId: string }) =>
-      runTransaction(input.runId, async (tx) => {
-        const run = required(await tx.get("runs", input.runId));
-        if (run.status === "queued") {
-          run.dispatchReady = true;
-          run.updatedAt = now();
-          await tx.save("runs", run);
-        }
-        return run;
-      }),
     listReadyRuns: (input: { limit: number }) => repo.read((tx) => tx.readyRuns(input.limit)),
     claim: (input: { runId: string; ownerId: string }) =>
       runTransaction(input.runId, async (tx) => {
         const run = required(await tx.get("runs", input.runId));
-        if (run.status !== "queued" || !run.dispatchReady) return null;
+        if (run.status !== "queued") return null;
         try {
           if ((await spendingAccount(tx, run.requestedByUserId, run.scope)) !== run.ownerAccountId)
             fail("CLOUD_ACCESS_DENIED", "Spending owner changed.");

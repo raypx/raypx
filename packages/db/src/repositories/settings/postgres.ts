@@ -2,7 +2,7 @@ import { SettingsReader } from "./reader.js";
 import type { SystemSettingsRepository } from "@raypx/core";
 import { eq, inArray } from "drizzle-orm";
 import { type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { systemSecrets, systemSettings } from "../schema.js";
+import { systemSecrets, systemSettings } from "../../schema.js";
 
 export class PostgresSystemSettingsRepository
   extends SettingsReader

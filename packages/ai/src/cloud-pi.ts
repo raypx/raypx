@@ -12,20 +12,23 @@ export interface ModelUsage {
   cacheWriteTokens: number | null;
 }
 export interface ModelCallHooks {
-  reserve(input: {
-    callId: string;
-    provider: string;
-    model: string;
-    maxTokens: number;
-    pricing: {
-      inputPerMillion: number;
-      outputPerMillion: number;
-      cacheReadPerMillion?: number;
-      cacheWritePerMillion?: number;
-    } | null;
-  }): Promise<void>;
-  start(callId: string): Promise<void>;
-  settle(input: { callId: string; usage: ModelUsage; started: boolean }): Promise<void>;
+  reserve(
+    this: void,
+    input: {
+      callId: string;
+      provider: string;
+      model: string;
+      maxTokens: number;
+      pricing: {
+        inputPerMillion: number;
+        outputPerMillion: number;
+        cacheReadPerMillion?: number;
+        cacheWritePerMillion?: number;
+      } | null;
+    },
+  ): Promise<void>;
+  start(this: void, callId: string): Promise<void>;
+  settle(this: void, input: { callId: string; usage: ModelUsage; started: boolean }): Promise<void>;
 }
 export interface TrustedAiTool {
   name: string;

@@ -55,7 +55,7 @@ Scripts: `e2e` (full run), `e2e:web`, `e2e:desktop`, `test:ui`, `test:report`, `
   A group with no tests for the selected application fails instead of passing empty.
 - The full run starts API, Web and Desktop. Web-only starts API/Web; Desktop-only
   starts API/Desktop. Web includes Search/Computer, deliveries, acceptance,
-  notifications, usage and real session isolation; there is no separate Cloud project.
+  usage and real session isolation; there is no separate Cloud project.
 - Root commands build the owning applications through Turbo, then run API/Web's
   compiled Bun Nitro servers and the compiled Desktop SPA preview. Playwright
   also executes with Bun via explicit `bun --bun`; driver/server entrypoints

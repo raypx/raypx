@@ -5,6 +5,9 @@ Status: accepted; supersedes the initial delivery order in [ADR-0015](0015-local
 The Node runtime provisions below are superseded by
 [ADR-0024](0024-bun-runtime.md); the remaining decisions stay in force.
 
+The outbox dispatch and task-notification provisions are superseded by
+[ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md).
+
 ## Decision
 
 The first release is a Web-first cloud Search and Computer product. Worker owns

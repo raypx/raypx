@@ -23,16 +23,13 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 ## Ownership
 
 - Own the Drizzle schema, canonical V2 resource, blob and system-settings
-  repositories in PostgreSQL and memory, the PostgreSQL outbox consumer, and
+  repositories in PostgreSQL and memory, and
   migration execution.
-- Outbox claims sort eligible rows by `availableAt`, `createdAt` and `id`.
-  Acknowledgement/release check `id`, `workerId` and persisted `attempts`; release
-  delays only that row's `availableAt` by `retryDelayMs`. Keep enqueue/schema unchanged.
 - Local blob storage may read a legacy root for existing blobs and upload
   intents. New writes use the current root; deletion removes both copies.
 - Own `PostgresCloudRepository` and `InMemoryCloudRepository`, cloud indexes,
   JSON-backed typed records with indexed ownership/parent/intent columns, ordered
-  events and atomic outbox writes. Reads restore native Date fields without
+  events and atomic queued-Run writes. Reads restore native Date fields without
   coercing arbitrary tool bodies; Round usage and owner account queries use indexed columns.
 - Cloud account/run/task advisory locks are acquired in sorted order. Active
   task Runs also have a partial unique index. User/project permission rows are
@@ -60,14 +57,16 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - Never expose tables or Drizzle types to frontend applications. Web and Desktop reach the backend through `@raypx/client` and
   `@raypx/contracts`.
 - PostgreSQL and in-memory implementations must be updated together when a
-  domain repository interface changes and both implement that port. Memory Cloud
-  records transactional outbox writes but has no outbox lease consumer.
+  domain repository interface changes and both implement that port.
 - Project visibility SQL must match Core for personal owners/collaborators and
   organization membership. Resource lists filter in SQL before keyset pagination.
 - No limit/cursor means a complete list. Paged queries sort timestamp + ID;
   cursors bind to actor and query scope and invalid cursors raise BAD_REQUEST.
-- Queued Agent creation inserts the run and outbox event in the same transaction.
-  All statements in that operation use the transaction handle.
+- Queued Agent creation commits the Run, Turn/Round and admission facts in one
+  transaction. Both adapters list and claim queued Runs without a dispatch-ready gate.
+- Outbox, notification and preference tables, the dispatch-ready column and their
+  historical SQL remain schema-local compatibility data. Their runtime ports and
+  writes are retired; do not DROP data or add a migration for this removal.
 - Legacy Workspace/local tables and their exclusive enum definitions have no
   active source consumer and are retired. Preserve their historical SQL and
   existing data; do not apply the old baseline to a new database.

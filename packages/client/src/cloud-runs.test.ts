@@ -31,7 +31,6 @@ function fixture(cursor = 200): CloudRunSnapshotDto {
       cancelRequested: false,
       output: null,
       error: null,
-      dispatchReady: true,
     },
     events: [event(cursor)],
     messages: [

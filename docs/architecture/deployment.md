@@ -67,8 +67,8 @@ not copied into the Worker tools image.
 - Worker starts `bun .output/server/index.mjs`; each claimed Run uses the same
   executable with `--runner` in a separate Bun process. Nitro packages one
   executable, shared chunks and runtime package assets in the same artifact.
-  Its durable PostgreSQL leases are
-  independent from execution ownership. Deploy API and Worker against the same
+  Worker directly polls queued Runs and assigns ownership with atomic PostgreSQL
+  claims and expiring execution leases. Deploy API and Worker against the same
   new database and object bucket.
 - API requires production values for database, Auth, and allowed external
   origins. Mail can come from database settings or environment fallbacks;
@@ -88,8 +88,8 @@ concurrency and storage limits, `CLOUD_MODEL_PROVIDER`, `CLOUD_MODEL_ID`,
 `CLOUD_EXECUTION_GATEWAY_URL` for the API's private network origin. Keep the
 `/internal/execution/*` path off public ingress when the deployment supports
 private routing; durable RunGrants authenticate each request. Runner children
-receive neither provider nor database/object-store credentials. Set `CLOUD_WEB_URL` for
-notification links. Search, Computer, delegation and export flags are fixed
+receive neither provider nor database/object-store credentials. Worker has no
+task-mail configuration or notification-link URL. Search, Computer, delegation and export flags are fixed
 typed server configuration. Changing a flag stops new admissions; cancel a
 running task with its separate command.
 
@@ -193,6 +193,12 @@ and cache boundary, and [ADR-0024](decisions/0024-bun-runtime.md) for the reposi
 runtime decision. [ADR-0025](decisions/0025-worker-single-entry-execution.md)
 defines the shared entry and deadline ownership. Runtime compatibility, authentication, isolated-process and
 relocated-artifact checks remain required gates when the runtime pin changes.
+
+[ADR-0026](decisions/0026-direct-run-queue-and-retire-task-notifications.md) removes
+outbox dispatch and task notifications. Existing queued Runs remain directly
+claimable regardless of their old readiness value. Old outbox/notification data
+and the physical schema remain untouched; deployment needs no migration or replay.
+Verification, password reset and welcome mail remain configured on API.
 
 ## Desktop lifecycle
 

@@ -1,5 +1,5 @@
 import { DomainError } from "@raypx/shared";
-import type { ProjectV2, ProjectMemberV2, OrganizationMemberV2, OutboxEvent } from "../index.js";
+import type { ProjectV2, ProjectMemberV2, OrganizationMemberV2 } from "../index.js";
 
 export type ResourceScope =
   | { type: "personal"; ownerUserId: string }
@@ -136,7 +136,6 @@ export interface CloudRun extends CloudResource {
   cancelRequested: boolean;
   output: string | null;
   error: string | null;
-  dispatchReady: boolean;
 }
 export interface CloudAgentExecution extends CloudResource {
   runId: string;
@@ -209,16 +208,6 @@ export interface CloudUsageCall extends CloudResource {
   estimatedCost: number | null;
   settledAt: Date | null;
 }
-export interface CloudNotification extends CloudResource {
-  recipientId: string;
-  taskId: string | null;
-  conversationId: string | null;
-  runId: string | null;
-  type: "task.review" | "run.failed" | "task.waiting_input" | "task.completed";
-  readAt: Date | null;
-  emailEnabled: boolean;
-  emailDeliveredAt: Date | null;
-}
 export interface CloudCommand extends CloudResource {
   runId: string;
   actorId: string;
@@ -266,14 +255,8 @@ export interface CloudMutation extends CloudResource {
   fingerprint: string;
   response: unknown;
 }
-export interface CloudPreferences extends CloudResource {
-  actorId: string;
-  emailEnabled: boolean;
-  locale: "en" | "zh";
-}
 export interface CloudEntities {
   mutations: CloudMutation;
-  preferences: CloudPreferences;
   conversations: CloudConversation;
   turns: CloudTurn;
   tasks: CloudTask;
@@ -288,7 +271,6 @@ export interface CloudEntities {
   assets: CloudAssetVersion;
   revisions: CloudArtifactRevision;
   usage: CloudUsageCall;
-  notifications: CloudNotification;
   commands: CloudCommand;
 }
 export type CloudEntityKind = keyof CloudEntities;
@@ -323,7 +305,6 @@ export interface CloudTransaction {
   remove<K extends CloudEntityKind>(kind: K, id: string): Promise<void>;
   save<K extends CloudEntityKind>(kind: K, entity: CloudEntities[K]): Promise<void>;
   userActive(actorId: string): Promise<boolean>;
-  userProfile(actorId: string): Promise<{ email: string; displayName: string } | null>;
   projectAccess(
     projectId: string,
     actorId: string,
@@ -336,7 +317,6 @@ export interface CloudTransaction {
   events(runId: string, afterSequence: number, limit: number): Promise<CloudRunEvent[]>;
   eventsBefore(runId: string, beforeSequence: number, limit: number): Promise<CloudRunEvent[]>;
   eventById(runId: string, eventId: string): Promise<CloudRunEvent | null>;
-  enqueue(event: OutboxEvent): Promise<void>;
 }
 /** Lock keys represent actors, tasks, and runs; every statement uses the transaction handle. */
 export interface CloudRepository {

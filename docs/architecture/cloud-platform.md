@@ -2,11 +2,13 @@
 
 The target is [ADR-0016](decisions/0016-cloud-agent-platform.md), refined by
 [ADR-0017](decisions/0017-gateway-and-task-rounds.md). Desktop scope is defined by
-[ADR-0019](decisions/0019-retire-legacy-desktop-execution.md).
+[ADR-0019](decisions/0019-retire-legacy-desktop-execution.md). Direct Run scheduling
+and retirement of task notifications follow
+[ADR-0026](decisions/0026-direct-run-queue-and-retire-task-notifications.md).
 
 ## Boundaries
 
-Web composes Conversation, Task, file review, usage and notification pages.
+Web composes Conversation, Task, file review and usage pages.
 Agent UI shares controlled business views. Client owns replay, contiguous event
 sequences, reconnects and account/resource isolation. API authenticates every
 command and subscription; Application checks current personal/project scope.
@@ -26,8 +28,8 @@ Rich Markdown and diff renderers are loaded by the browser. Compile-time SSR
 guards exclude their worker/WASM dependencies from the Node server bundle;
 the server renders readable content before those views load.
 
-Core/Application/DB hold conversations, tasks, root/child executions, usage,
-notifications and immutable artifact revisions. Object bytes belong to Storage.
+Core/Application/DB hold conversations, tasks, root/child executions, usage
+and immutable artifact revisions. Object bytes belong to Storage.
 API and Worker inject storage credentials; renderer code imports neither DB nor
 Storage. Run events and model intents are durable, owner-fenced and idempotent.
 
@@ -43,6 +45,13 @@ Each Worker host has a distinct identity. Run leases last 30 seconds and renew
 every ten seconds. Recovery interrupts expired owners only. Runner processes
 receive a minimal environment without DB, S3 or provider credentials. This is
 fault isolation; arbitrary code still requires a security sandbox.
+
+The canonical CloudRun is the durable work queue. Application commits queued
+Runs with Turn/Round, idempotency and admission facts. Worker polls them directly;
+the atomic claim rechecks current access, cancellation and the owner fence before
+starting Runner. Polling a candidate does not assign ownership. Committed queued
+Runs survive API/Worker restarts, including existing rows whose compatibility
+dispatch-ready value is false. No outbox delivery or acceptance callback is needed.
 
 The private Gateway validates bootstrap, object, research and each execution
 response against its contract. Runner consumes an execution-only port and gets
@@ -68,7 +77,7 @@ verify its trusted registry matches that directory. SDK context and stream
 events remain opaque, while a direct provider run requires usage hooks before
 creating its session. Gateway transport uses API-owned metering.
 
-Query owns ordinary Task/Round/Revision, usage, notification and file metadata.
+Query owns ordinary Task/Round/Revision, usage and file metadata.
 Client Sessions own active Run/Conversation projections. SSR creates a QueryClient
 per request. Durable message projections bootstrap bounded snapshots; earlier
 events page independently. Confirmed commands and terminal transitions invalidate
@@ -114,21 +123,14 @@ admissions once Redis recovers; already connected clients reconnect automaticall
 
 Sentry and PostHog receive allowlisted metadata only. Product analytics are
 explicit events, with no autocapture or replay. Fixed server flags govern new
-runs; cancellation is a separate action. Task notifications use durable outbox
-delivery, recipient preferences and typed bilingual mail templates.
+runs; cancellation is a separate action. Task notifications, notification
+preferences and outbox delivery are retired. Status, errors and review remain
+visible through authorized Task/Run facts and streams. Auth verification,
+password reset and welcome emails remain API-owned typed Mail flows.
 
-Outbox delivery remains at least once. Worker uses each claim's persisted
-`attempts` for exponential retry delay, starting at one second and capped at
-60 seconds; release updates only that item's `availableAt`. Claims order eligible
-rows by `availableAt`, `createdAt` and `id`, so a failing batch does not sleep the
-whole consumer or starve healthy work. `OutboxLease` binds acknowledgement and
-release to `id`, `workerId` and `attempts`, rejecting stale claim generations even
-when a host identity is reused. Dispatch errors remain reported, and provider
-idempotency keys remain stable. A database release failure propagates as an
-infrastructure failure; lease expiry makes the item reclaimable. There is no
-retry limit, dead-letter path or automatic acknowledgement of failed items.
-Enqueue and schema stay unchanged; PostgreSQL owns consumption while the memory
-Cloud repository continues to record transactional outbox writes only.
+Stored outbox/notification records, preference tables and the dispatch-ready
+column remain schema-local compatibility data. Runtime code does not expose or
+write them. No migration, data cleanup or old-notification replay is introduced.
 
 ## Verification
 
@@ -137,8 +139,8 @@ and browser E2E use an explicit test database. Validate Bun Worker artifact
 startup and real document exports separately from fake-provider tests.
 
 Acceptance: research with citations, analyze CSV, produce a report/table/deck,
-revise the same Task, accept its current revision, inspect notifications and
-usage. Cover event gaps, duplicate delivery, owner fencing, cancellation races,
+revise the same Task, accept its current revision and inspect usage. Cover event
+gaps, direct queued-Run pickup, duplicate claims, owner fencing, cancellation races,
 unknown model usage, permissions, storage failures and account switching.
 
 See [cloud release acceptance](../development/cloud-acceptance.md) for recorded

@@ -1,7 +1,7 @@
 import { first, inserted } from "./results.js";
 import { desc, eq, and } from "drizzle-orm";
 import type { Database } from "./types.js";
-import { cursorPage, timestampKey } from "../pagination.js";
+import { cursorPage, timestampKey } from "../../pagination.js";
 import { resourceVisibility } from "./visibility.js";
 import type {
   AssetV2,
@@ -10,7 +10,7 @@ import type {
   AssetVersionV2Repository,
   VisibleResourceQuery,
 } from "@raypx/core";
-import { v2Assets, v2AssetVersions } from "../schema.js";
+import { v2Assets, v2AssetVersions } from "../../schema.js";
 export class PostgresAssetV2Repository implements AssetV2Repository {
   constructor(private readonly db: Database) {}
   async listVisible(query: VisibleResourceQuery) {

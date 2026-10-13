@@ -18,7 +18,6 @@ import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as appNotificationsRouteImport } from './routes/(app)/notifications'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
@@ -73,11 +72,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
-} as any)
-const appNotificationsRoute = appNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => appRouteRoute,
 } as any)
 const authLoginRoute = authLoginRouteImport.update({
   id: '/login',
@@ -143,7 +137,6 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/notifications': typeof appNotificationsRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
@@ -164,7 +157,6 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/notifications': typeof appNotificationsRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
@@ -188,7 +180,6 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/(app)/notifications': typeof appNotificationsRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signup': typeof authSignupRoute
@@ -211,7 +202,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
-    | '/notifications'
     | '/login'
     | '/reset-password'
     | '/signup'
@@ -232,7 +222,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
-    | '/notifications'
     | '/login'
     | '/reset-password'
     | '/signup'
@@ -255,7 +244,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
-    | '/(app)/notifications'
     | '/(auth)/login'
     | '/(auth)/reset-password'
     | '/(auth)/signup'
@@ -346,13 +334,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(app)/notifications': {
-      id: '/(app)/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof appNotificationsRouteImport
-      parentRoute: typeof appRouteRoute
-    }
     '/(auth)/login': {
       id: '/(auth)/login'
       path: '/login'
@@ -434,7 +415,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface appRouteRouteChildren {
-  appNotificationsRoute: typeof appNotificationsRoute
   appChatConversationIdRoute: typeof appChatConversationIdRoute
   appProjectsProjectIdRoute: typeof appProjectsProjectIdRoute
   appSettingsUsageRoute: typeof appSettingsUsageRoute
@@ -445,7 +425,6 @@ interface appRouteRouteChildren {
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
-  appNotificationsRoute: appNotificationsRoute,
   appChatConversationIdRoute: appChatConversationIdRoute,
   appProjectsProjectIdRoute: appProjectsProjectIdRoute,
   appSettingsUsageRoute: appSettingsUsageRoute,

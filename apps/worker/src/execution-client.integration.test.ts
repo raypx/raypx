@@ -24,7 +24,6 @@ async function fixture() {
     prompt: "Client",
     idempotencyKey: "client-turn",
   });
-  await app.acceptQueued({ runId: run.id });
   const claimed = (await app.claim({ runId: run.id, ownerId: "host" }))!;
   const fence = { runId: run.id, ownerId: "host", epoch: claimed.epoch };
   const storage = createMemoryStorage();

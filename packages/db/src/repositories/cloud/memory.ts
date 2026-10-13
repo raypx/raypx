@@ -5,7 +5,6 @@ import type {
   CloudEntityKind,
   CloudQuery,
   CloudRunEvent,
-  OutboxEvent,
   ProjectV2,
   ProjectMemberV2,
   OrganizationMemberV2,
@@ -20,7 +19,6 @@ import {
 type State = {
   entities: { [K in CloudEntityKind]: Map<string, CloudEntities[K]> };
   events: Map<string, CloudRunEvent>;
-  outbox: Map<string, OutboxEvent>;
   users: Map<string, { active: boolean; email: string; displayName: string }>;
   projects: Map<string, ProjectV2>;
   members: Map<string, ProjectMemberV2>;
@@ -28,7 +26,6 @@ type State = {
 };
 const kinds: CloudEntityKind[] = [
   "mutations",
-  "preferences",
   "conversations",
   "turns",
   "tasks",
@@ -43,7 +40,6 @@ const kinds: CloudEntityKind[] = [
   "assets",
   "revisions",
   "usage",
-  "notifications",
   "commands",
 ];
 const clone = <T>(value: T): T => structuredClone(value);
@@ -54,7 +50,6 @@ export function cloudParentIds(
   const entity = value as unknown as Record<string, unknown>;
   const keys: Record<CloudEntityKind, readonly string[]> = {
     mutations: [],
-    preferences: [],
     conversations: [],
     turns: ["conversationId", "runId"],
     tasks: ["conversationId"],
@@ -69,13 +64,8 @@ export function cloudParentIds(
     assets: ["runId"],
     revisions: ["taskId", "runId"],
     usage: ["runId"],
-    notifications: ["taskId", "conversationId", "runId"],
     commands: ["runId"],
   };
-  if (kind === "notifications")
-    return [entity["taskId"] ?? entity["conversationId"], entity["runId"]].filter(
-      (value): value is string => typeof value === "string",
-    );
   return keys[kind]
     .map((key) => entity[key])
     .filter((value): value is string => typeof value === "string");
@@ -86,13 +76,11 @@ export function cloudActorId(
 ): string | null {
   const entity = value as unknown as Record<string, unknown>;
   const actor =
-    kind === "notifications"
-      ? entity["recipientId"]
-      : kind === "usage"
-        ? typeof entity["accountId"] === "string" && entity["accountId"].startsWith("user:")
-          ? entity["accountId"].slice(5)
-          : null
-        : (entity["actorId"] ?? entity["requestedByUserId"] ?? entity["createdByUserId"]);
+    kind === "usage"
+      ? typeof entity["accountId"] === "string" && entity["accountId"].startsWith("user:")
+        ? entity["accountId"].slice(5)
+        : null
+      : (entity["actorId"] ?? entity["requestedByUserId"] ?? entity["createdByUserId"]);
   return typeof actor === "string" ? actor : null;
 }
 export function cloudMatches<K extends CloudEntityKind>(
@@ -182,7 +170,7 @@ function txFor(state: State): CloudTransaction {
     readyRuns: async (limit) =>
       clone(
         [...state.entities.runs.values()]
-          .filter((run) => run.status === "queued" && run.dispatchReady)
+          .filter((run) => run.status === "queued")
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id))
           .slice(0, limit),
       ),
@@ -231,10 +219,6 @@ function txFor(state: State): CloudTransaction {
       (state.entities[kind] as Map<string, typeof entity>).set(entity.id, clone(entity));
     },
     userActive: async (actorId) => state.users.get(actorId)?.active === true,
-    userProfile: async (actorId) => {
-      const user = state.users.get(actorId);
-      return user ? { email: user.email, displayName: user.displayName } : null;
-    },
     projectAccess: async (projectId, actorId) => {
       const project = state.projects.get(projectId);
       return project
@@ -271,9 +255,6 @@ function txFor(state: State): CloudTransaction {
           .slice(0, limit)
           .reverse(),
       ),
-    enqueue: async (event) => {
-      if (!state.outbox.has(event.id)) state.outbox.set(event.id, clone(event));
-    },
   };
 }
 /** Tests explicitly seed trusted identities; an unknown account is never admitted. */
@@ -296,7 +277,6 @@ export class InMemoryCloudRepository implements CloudRepository {
     this.state = {
       entities: Object.fromEntries(kinds.map((kind) => [kind, new Map()])) as State["entities"],
       events: new Map(),
-      outbox: new Map(),
       users: new Map(
         (input.users ?? []).map((u) => [
           u.id,
@@ -337,9 +317,6 @@ export class InMemoryCloudRepository implements CloudRepository {
     } finally {
       release();
     }
-  }
-  async outboxItems(): Promise<OutboxEvent[]> {
-    return clone([...this.state.outbox.values()]);
   }
   setUserActive(actorId: string, active: boolean): void {
     const user = this.state.users.get(actorId);

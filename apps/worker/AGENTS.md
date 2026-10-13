@@ -2,16 +2,16 @@
 
 ## Purpose
 
-The durable cloud Agent, notification and outbox execution host. It is a composition root for
+The durable cloud Agent execution host. It is a composition root for
 long-running work and is never imported by Web, Desktop, or shared packages.
 
 ## Interface
 
 | Path                            | Purpose                                                       |
 | ------------------------------- | ------------------------------------------------------------- |
-| `src/index.ts`                  | Outbox claim/dispatch loop and lifecycle contract             |
+| `src/index.ts`                  | Execution loop and executor exports                           |
 | `src/runtime.ts`                | Multi-instance composition and expired-owner recovery         |
-| `src/cloud.ts`                  | Run dispatcher and execution-owner polling                    |
+| `src/cloud.ts`                  | Queued Run polling and execution-owner lifecycle              |
 | `src/execution.ts`              | Execution-only orchestration, child agents and budgets        |
 | `src/tools/`                    | Fixed trusted search, parsing, computation and document tools |
 | `src/main.ts`                   | Single Bun entry: default Host and `--runner` mode dispatch   |
@@ -25,12 +25,8 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 
 ## Ownership
 
-- Claim durable work using a lease and invoke an injected dispatcher.
-- Failed outbox items use their persisted `attempts` for per-item exponential
-  backoff: one second initially, capped at 60 seconds. Release carries the current
-  lease identity and `retryDelayMs`; failures never make the whole batch sleep.
-- `cloud.run.queued` persists acceptance before the outbox acknowledgement;
-  an independent execution loop atomically claims the canonical CloudRun.
+- Poll durable queued CloudRuns directly and atomically claim each Run before
+  execution. No outbox delivery, acceptance callback or dispatch-ready gate remains.
 - Every host has a unique UUID. Recovery touches expired execution leases only.
   The host renews 30-second leases every ten seconds; expired owners cannot renew.
 - Each Run executes in a separate Bun process with an explicit minimal
@@ -55,10 +51,8 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   for exit and revokes the grant. Timeout uses fenced `failed/BUDGET_EXCEEDED`
   completion; shutdown or owner loss uses interruption. Terminal Runs and newer
   owners remain protected.
-- Operational logs correlate outbox, Run, execution and tool ids without input
+- Operational logs correlate Run, execution and tool ids without input
   or output bodies. Sentry captures sanitized errors and fixed Run duration spans.
-- Notification delivery rechecks current recipient access/preferences and global
-  database mail configuration. Stable provider idempotency keys protect retries.
 - Search has 60 seconds and six calls. Computer has 20 minutes per Run and 40
   calls per immutable TaskRound, with two concurrent children at depth one.
 
@@ -66,16 +60,16 @@ long-running work and is never imported by Web, Desktop, or shared packages.
 
 - Never read HTTP sessions or browser state.
 - Never import React, route modules, or Desktop code.
-- Acknowledge outbox items only after successful dispatch. Failures remain
-  retryable and reported; a failed database release propagates and relies on
-  lease expiry for recovery. Never auto-acknowledge or discard failed items.
-- Shutdown stops new claims and waits for currently running handlers to finish.
+- Shutdown stops new claims and interrupts owned Runs through their fenced
+  lifecycle before closing host resources.
+- Task notifications, notification preferences and outbox adapters are retired;
+  Worker has no Mail dependency. Keep Auth email delivery in the API.
 - Pi receives only explicit trusted tools; never register built-in file, shell,
   dynamic extension, arbitrary MCP, browser or computer tools in this host.
 - Registered names use Core's `CloudToolName`. Computer with delegation matches
   `cloudToolNames`; Search and child executions receive subsets, with no child delegation.
 - A document batch becomes available only after every object verifies and the
-  revision, terminal Run, Task review and notifications commit together.
+  revision, terminal Run and Task review commit together.
 - LibreOffice, Poppler and templates use fixed executable paths and argument
   lists, no shell or model code. The Debian image pins their snapshot and fonts.
 - Vite+ and Nitro bundle workspace TypeScript into one `.output/server/index.mjs`.
@@ -84,8 +78,7 @@ long-running work and is never imported by Web, Desktop, or shared packages.
   lifecycle with a request handler.
 - Nitro owns external dependency tracing and complete package assets through
   `traceDeps`. The artifact must run without the source checkout.
-- Bundle React Email's asset-free runtime entry, keeping its preview CLI out of
-  the artifact. Preserve full assets for external SDK/document packages.
+- Preserve full assets for external SDK/document packages.
 - Turbo caches the complete `.output/**` artifact, including dependencies/assets.
   Use the root build gate so checks and dependency builds precede the build.
   There is no separate runtime-preparation task or package-copying pipeline.
@@ -114,4 +107,6 @@ restart the host. Changes to installed dependencies or manifests require
 restarting dev. See [tooling](../../docs/architecture/tooling.md) and
 [ADR-0023](../../docs/architecture/decisions/0023-worker-vite-nitro-artifact.md) and
 [ADR-0025](../../docs/architecture/decisions/0025-worker-single-entry-execution.md)
-for the build and cache boundary.
+for the build and cache boundary, and
+[ADR-0026](../../docs/architecture/decisions/0026-direct-run-queue-and-retire-task-notifications.md)
+for direct queued-Run execution.

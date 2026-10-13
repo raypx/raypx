@@ -154,29 +154,25 @@ it("offers the cloud destinations to every account", () => {
   mocks.session.data = { user: { name: "Member", email: "member@example.test" } };
   renderShell();
   expect(screen.getAllByRole("link", { name: "Projects" }).length).toBeGreaterThan(0);
-  for (const label of ["Conversations", "Tasks", "Notifications", "Usage and limits"])
+  for (const label of ["Conversations", "Tasks", "Usage and limits"])
     expect(screen.getAllByRole("link", { name: label }).length).toBeGreaterThan(0);
+  expect(screen.queryByRole("link", { name: "Notifications" })).not.toBeInTheDocument();
   expect(screen.queryByText(/Production online|42 ms/)).not.toBeInTheDocument();
   mocks.session.data = { user: { id: "account", name: "Ada Lovelace", email: "ada@example.test" } };
 });
 
-it.each([
-  "/projects",
-  "/projects/",
-  "/projects/example",
-  "/chat",
-  "/tasks",
-  "/notifications",
-  "/settings/usage",
-])("shares the workbench shell across protected routes: %s", (pathname) => {
-  mocks.pathname = pathname;
-  const { container } = render(
-    <I18nProvider locale="en" messages={messages}>
-      <ThemeProvider disableScript storageKey={false}>
-        <AppShell />
-      </ThemeProvider>
-    </I18nProvider>,
-  );
-  expect(container.querySelector(".workbench-shell")).toBeInTheDocument();
-  expect(screen.getByRole("main")).toHaveTextContent("Page content");
-});
+it.each(["/projects", "/projects/", "/projects/example", "/chat", "/tasks", "/settings/usage"])(
+  "shares the workbench shell across protected routes: %s",
+  (pathname) => {
+    mocks.pathname = pathname;
+    const { container } = render(
+      <I18nProvider locale="en" messages={messages}>
+        <ThemeProvider disableScript storageKey={false}>
+          <AppShell />
+        </ThemeProvider>
+      </I18nProvider>,
+    );
+    expect(container.querySelector(".workbench-shell")).toBeInTheDocument();
+    expect(screen.getByRole("main")).toHaveTextContent("Page content");
+  },
+);

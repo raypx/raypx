@@ -16,7 +16,6 @@ export async function exerciseMessageProjection(repository: CloudRepository) {
     mode: "search",
     idempotencyKey: "history-turn",
   });
-  await service.acceptQueued({ runId: run.id });
   const claimed = (await service.claim({ runId: run.id, ownerId: "worker" }))!;
   const fence = { runId: run.id, ownerId: "worker", epoch: claimed.epoch };
   for (let i = 0; i < 205; i++)
@@ -98,7 +97,6 @@ export async function exerciseActiveRunRace(repository: CloudRepository) {
     reason: { code: "CLOUD_RUN_ACTIVE" },
   });
   const active = (await service.getTask({ actorId: "alice", taskId: task.id })).runs[0]!;
-  await service.acceptQueued({ runId: active.id });
   await Promise.all([
     service.createCommand({
       actorId: "alice",

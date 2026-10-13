@@ -52,30 +52,16 @@ test("current delivery acceptance completes the actual task", async ({ page }) =
   await page.reload();
   await expect(page.getByText("Delivery accepted", { exact: true })).toBeVisible();
 });
-test("usage preserves unknown calls and notification preferences persist", async ({ page }) => {
+test("usage preserves unknown calls after refresh", async ({ page }) => {
   await login(page);
   await page.goto("/settings/usage");
   await expect(
     page.getByText("Some calls have unknown usage. They have not been counted as zero."),
   ).toBeVisible();
-  await page.goto("/notifications");
-  const email = page.getByRole("switch", { name: "Email notifications" });
-  await expect(email).not.toBeChecked();
-  await email.click();
-  await expect(email).toBeChecked();
   await page.reload();
-  await expect(email).toBeChecked();
-  const notification = page
-    .getByRole("listitem")
-    .filter({ has: page.getByRole("link", { name: "A task needs your input", exact: true }) });
-  await notification.getByRole("button", { name: "Mark as read", exact: true }).click();
-  await expect(notification.getByRole("button", { name: "Mark as read", exact: true })).toHaveCount(
-    0,
-  );
-  await page.reload();
-  await expect(notification.getByRole("button", { name: "Mark as read", exact: true })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByText("Some calls have unknown usage. They have not been counted as zero."),
+  ).toBeVisible();
 });
 test("SSR and browser account replacement isolate conversation content", async ({
   browser,

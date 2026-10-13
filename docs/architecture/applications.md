@@ -12,7 +12,7 @@ browser composition root for authentication, Projects and the cloud product.
 
 - Uses `@raypx/ui` and controlled `@raypx/agent-ui` views; owns Web routes,
   metadata, SSR and content. Search/Computer live at `/chat` and Task deliveries
-  at `/tasks`; file review, notifications and account usage use the cloud API.
+  at `/tasks`; file review and account usage use the cloud API.
 - Serves `/manifest.webmanifest` through a TanStack Start server route with the
   Raypx name, launch scope, theme, and shared 512×512 brand mark for
   install-capable browsers.
@@ -41,6 +41,8 @@ browser composition root for authentication, Projects and the cloud product.
   server-side inheritance. Retired settings administration routes stay absent.
 - Admin pages, navigation and management RPCs are retired under
   [ADR-0021](./decisions/0021-retire-admin.md).
+- Task notifications, inbox navigation and notification preferences are retired
+  under [ADR-0026](./decisions/0026-direct-run-queue-and-retire-task-notifications.md).
 - Runs on port `3000` in development.
 - Produces a TanStack Start server bundle and a browser bundle.
 - Resolves locale from the `locale` Cookie, `Accept-Language`, then English; the
@@ -111,23 +113,24 @@ for the main-process and packaging boundary.
 
 ## Worker
 
-`apps/worker` is the durable cloud Pi host for Agent and outbox work.
+`apps/worker` is the durable cloud Pi execution host.
 
-- Durably accepts `cloud.run.queued` intent before acknowledging the outbox.
-  A separate owner-fenced executor performs the run; delivery does not mean
-  model or tool execution has completed.
+- Polls committed queued CloudRuns directly. The owner-fenced executor atomically
+  claims each Run before starting its isolated Bun process; duplicate poll
+  candidates cannot assign duplicate owners.
 - Runs one main Pi Agent and at most two children with a shared Task budget.
   Registers only trusted research, extraction, calculation, document rendering
   and delegation tools. Built-in shell/files, dynamic extensions and arbitrary
   MCP startup remain disabled.
 - Publishes validated Markdown/PDF, XLSX/CSV and PPTX/PDF deliverables through
   the same atomic revision workflow used by the API.
-- Owns opt-in notification mail and expired upload cleanup. Provider effects
-  remain outside SQL transactions, with durable intents and completion checks.
+- Owns expired upload cleanup. Provider effects remain outside SQL transactions,
+  with durable intents and completion checks. Task-notification mail is retired;
+  Auth mail remains API-owned.
 - Shares application commands with the API without importing HTTP sessions or
   UI state.
-- Stops claiming on shutdown; unacknowledged work remains reclaimable after its
-  lease expires.
+- Stops claiming on shutdown and interrupts owned Runs through their fenced
+  lifecycle. Other hosts recover only expired execution leases.
 
 ## Storybook
 
@@ -160,15 +163,16 @@ Current procedure groups:
 health / account.get / auth.capabilities.get
 projects.* / library.assets.list / assets.upload.* / activity.list
 cloud.conversations.* / cloud.tasks.* / cloud.runs.*
-cloud.assets.* / cloud.usage.get / cloud.notifications.*
-cloud.preferences.* / cloud.capabilities.get / cloud.tools.get
+cloud.assets.* / cloud.usage.get / cloud.capabilities.get / cloud.tools.get
 ```
 
 The former `projects.agentRuns`, `devices` and `runner` contracts and their
 adapters are retired. Missing paths receive the ordinary 404 response. The
-execution protocol is `cloud.*` with the private Gateway, its own outbox event
-type and database baseline; [ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md)
-records the retirement and data boundaries.
+execution protocol is `cloud.*` with the private Gateway and database baseline;
+[ADR-0019](./decisions/0019-retire-legacy-desktop-execution.md) records the retirement
+and data boundaries. `cloud.notifications` and `cloud.preferences` are also
+retired; [ADR-0026](./decisions/0026-direct-run-queue-and-retire-task-notifications.md)
+defines direct queued-Run pickup and retained schema compatibility.
 
 `GET /health` is available on the standalone API and Web liveness shell. The
 runtime requires `DATABASE_URL`; the seeded in-memory repository is reserved

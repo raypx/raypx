@@ -5,6 +5,8 @@ to Application, rules and ports to Core, persistence to DB and transport to API.
 [ADR-0021](./decisions/0021-retire-admin.md) retires Identity administration,
 management writes, audit consumption and the Admin page/store. The active
 Account/Project model and physical Cloud baseline remain unchanged.
+[ADR-0026](./decisions/0026-direct-run-queue-and-retire-task-notifications.md)
+retires task notifications and outbox dispatch; queued Runs are directly claimable.
 
 ```mermaid
 flowchart TD
@@ -27,21 +29,21 @@ flowchart TD
 
 ## Ownership
 
-| Module   | Application responsibility                                    | Required ports                                             |
-| -------- | ------------------------------------------------------------- | ---------------------------------------------------------- |
-| Projects | Lifecycle, tasks, members, capability resolution              | Projects, tasks and memberships                            |
-| Assets   | Assets, versions, upload and authorized library query         | ProjectAccess, assets, versions and blob storage           |
-| Reviews  | Reviews/feedback and version association validation           | ProjectAccess, reviews, feedback and version lookup        |
-| Activity | Authorized activity query                                     | ProjectAccess and activity repository                      |
-| Cloud    | Scoped conversations, executions, budgets, immutable delivery | Cloud transaction repository, storage and durable dispatch |
+| Module   | Application responsibility                                    | Required ports                                      |
+| -------- | ------------------------------------------------------------- | --------------------------------------------------- |
+| Projects | Lifecycle, tasks, members, capability resolution              | Projects, tasks and memberships                     |
+| Assets   | Assets, versions, upload and authorized library query         | ProjectAccess, assets, versions and blob storage    |
+| Reviews  | Reviews/feedback and version association validation           | ProjectAccess, reviews, feedback and version lookup |
+| Activity | Authorized activity query                                     | ProjectAccess and activity repository               |
+| Cloud    | Scoped conversations, executions, budgets, immutable delivery | Cloud transaction repository and storage            |
 
 API composes fixed-key DB settings readers for Auth and Mail. Core derives the
 public Auth capability view; Application owns no settings writer or service.
 
 API resolves current sessions and suspended-account status. Application rechecks
 personal/project access and coordinates atomic business writes. Worker uses the
-same Cloud execution boundary. The private Gateway and durable outbox remain
-required. No global management permission grants access to private cloud content.
+same Cloud execution boundary. The private Gateway and atomic queued-Run claim
+remain required. No global management permission grants access to private cloud content.
 
 ## State and transport
 
@@ -74,12 +76,15 @@ CORS protocol headers. Auth fields wait for hydration so early input is retained
 
 Cloud and retained Project paths, error envelopes and native Date fields remain.
 Retired device/Project AgentRun paths and Admin paths return ordinary 404s.
+Task-notification and notification-preference paths also return ordinary 404s.
 Project, library and activity cursors bind actor/query scope and recheck current
 membership on every page. API and Worker share the same capability evaluator.
 
 The unused settings mutation/audit ports, initial administrator tooling,
 profile-only seed and isolated legacy schemas are removed. Auth/Mail reads,
 compatibility database columns/tables, historical SQL and user data are retained.
+Outbox/notification/preference tables and the dispatch-ready column are retained
+only as schema-local compatibility data; no active workflow writes them.
 No new migration or automatic cleanup is introduced.
 
 ## Enforcement and validation

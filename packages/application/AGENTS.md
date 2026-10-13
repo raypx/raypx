@@ -19,7 +19,7 @@ database, AI SDK, or renderer concerns.
   live scope authorization, account/round budget
   admission, owner/epoch/lease fencing, idempotent mutation replay, and atomic delivery
   publication. Terminal cleanup remains possible after permissions are revoked.
-- Model/provider requests, object verification, signing and notification delivery
+- Model/provider requests, object verification and signing
   happen in adapters outside SQL transactions. Hosts must verify objects before
   calling upload completion, and use `finishWithRevision` for Computer success.
   Generated files stay verified/private until atomic Revision publication.
@@ -27,6 +27,8 @@ database, AI SDK, or renderer concerns.
 - Worker control polls only fenced Run/commands. A 30-second Run lease must be
   renewed before expiry; expiry cannot be reversed. Recovery fails only expired
   Runs, including those from another host, and never replays side effects.
+- Creating a Run commits its queued state with its Turn/Round and admission facts.
+  Worker claims it directly; no outbox event or acceptance command is required.
 - New goals create immutable TaskRounds. Continue, retry and steer retain the
   round call budget; each Run receives its own duration allowance. Search uses
   six calls and 60 seconds; Computer uses forty calls per round and twenty
@@ -56,8 +58,8 @@ database, AI SDK, or renderer concerns.
 - Resolve Project capabilities from personal ownership, Organization membership,
   and project-level grants.
 - Keep command/query orchestration independent of Hono, Drizzle, and React.
-- Outbox delivery and provider lifecycle remain with adapters and hosting
-  applications.
+- Provider lifecycle remains with adapters and hosting applications. Task
+  notifications, preferences and outbox commands are retired.
 
 ## Constraints
 

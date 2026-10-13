@@ -105,7 +105,6 @@ export const cloudRunSchema = z.object({
   cancelRequested: z.boolean(),
   output: z.string().nullable(),
   error: z.string().nullable(),
-  dispatchReady: z.boolean(),
 });
 export const cloudAgentExecutionSchema = z.object({
   ...fields,
@@ -218,28 +217,6 @@ export const cloudUsageSummarySchema = z.object({
     singleCallMaxTokens: z.number().int().positive(),
   }),
 });
-export const cloudNotificationSchema = z.object({
-  ...fields,
-  recipientId: identifier,
-  taskId: identifier.nullable(),
-  conversationId: identifier.nullable(),
-  runId: identifier.nullable(),
-  type: z.enum(["task.review", "run.failed", "task.waiting_input", "task.completed"]),
-  readAt: z.date().nullable(),
-  emailEnabled: z.boolean(),
-  emailDeliveredAt: z.date().nullable(),
-});
-export const cloudPreferencesSchema = z.object({
-  ...fields,
-  actorId: identifier,
-  emailEnabled: z.boolean(),
-  locale: z.enum(["en", "zh"]),
-});
-export const getCloudPreferences = procedure({}, cloudPreferencesSchema);
-export const updateCloudPreferences = procedure(
-  { ...intent, emailEnabled: z.boolean(), locale: z.enum(["en", "zh"]) },
-  cloudPreferencesSchema,
-);
 export const cloudCapabilitiesSchema = z.object({
   search: z.boolean(),
   computer: z.boolean(),
@@ -401,17 +378,6 @@ export const createCloudCommand = procedure(
 );
 export const retryCloudRun = procedure({ ...runKey, ...intent }, cloudRunSchema);
 export const getCloudUsage = procedure(project, cloudUsageSummarySchema);
-export const listCloudNotifications = procedure(
-  { limit: z.number().int().min(1).max(100).optional() },
-  z.object({
-    items: z.array(cloudNotificationSchema),
-    unreadCount: z.number().int().nonnegative(),
-  }),
-);
-export const markCloudNotificationRead = procedure(
-  { notificationId: identifier, ...intent },
-  cloudNotificationSchema,
-);
 export const listCloudAssets = procedure(listing, cloudPageSchema(cloudAssetVersionSchema));
 const signedUpload = z.object({
   url: z.string(),
@@ -497,9 +463,7 @@ export const cloudContract = {
     download: downloadCloudAsset,
     preview: downloadCloudAsset,
   },
-  preferences: { get: getCloudPreferences, update: updateCloudPreferences },
   usage: { get: getCloudUsage },
-  notifications: { list: listCloudNotifications, markRead: markCloudNotificationRead },
   capabilities: { get: getCloudCapabilities },
   tools: { get: getCloudToolDetail },
 };
@@ -515,9 +479,6 @@ export type CloudRunSnapshotDto = z.infer<typeof cloudRunSnapshotSchema>;
 export type CloudAssetVersionDto = z.infer<typeof cloudAssetVersionSchema>;
 export type CloudArtifactRevisionDto = z.infer<typeof cloudArtifactRevisionSchema>;
 export type CloudUsageSummaryDto = z.infer<typeof cloudUsageSummarySchema>;
-export type CloudNotificationDto = z.infer<typeof cloudNotificationSchema>;
 export type CloudCapabilitiesDto = z.infer<typeof cloudCapabilitiesSchema>;
 export type CloudToolDetailDto = z.infer<typeof cloudToolExecutionSchema>;
 export type CloudCommandDto = z.infer<typeof cloudCommandSchema>;
-
-export type CloudPreferencesDto = z.infer<typeof cloudPreferencesSchema>;

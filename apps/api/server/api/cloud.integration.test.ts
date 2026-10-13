@@ -103,7 +103,6 @@ describe("cloud API through typed client", () => {
           attachmentIds: [],
           idempotencyKey: "private-turn",
         });
-        await f.cloud.acceptQueued({ runId: run.id });
         await f.cloud.claim({ runId: run.id, ownerId: "private-worker" });
         const streams = createStreamingApiClient({
           baseUrl: "http://raypx.test",
@@ -152,7 +151,6 @@ describe("cloud API through typed client", () => {
         attachmentIds: [],
         idempotencyKey: "stream-turn",
       });
-      await f.cloud.acceptQueued({ runId: created.run.id });
       const claimed = await f.cloud.claim({ runId: created.run.id, ownerId: "stream-worker" });
       const fence = { runId: created.run.id, ownerId: "stream-worker", epoch: claimed!.epoch };
       const snapshot = await client.cloud.runs.snapshot({ runId: created.run.id });
@@ -244,9 +242,6 @@ describe("cloud API through typed client", () => {
       const first = await client.cloud.conversations.sendTurn(input);
       const duplicate = await client.cloud.conversations.sendTurn(input);
       expect(duplicate.run.id).toBe(first.run.id);
-      expect(
-        (await f.repository.outboxItems()).filter((event) => event.type === "cloud.run.queued"),
-      ).toHaveLength(1);
       await expect(
         f.client().cloud.conversations.get({ conversationId: conversation.id }),
       ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
@@ -306,11 +301,6 @@ describe("cloud API through typed client", () => {
     try {
       const actorId = "owner";
       const client = f.client(actorId);
-      await client.cloud.preferences.update({
-        emailEnabled: true,
-        locale: "zh",
-        idempotencyKey: "prefs-1",
-      });
       const conversation = await client.cloud.conversations.create({
         title: "Computer",
         idempotencyKey: "conversation-2",
@@ -322,7 +312,6 @@ describe("cloud API through typed client", () => {
         attachmentIds: [],
         idempotencyKey: "turn-2",
       });
-      await f.cloud.acceptQueued({ runId: created.run.id });
       const claimed = await f.cloud.claim({ runId: created.run.id, ownerId: "worker-test" });
       expect(claimed).not.toBeNull();
       const fence = { runId: created.run.id, ownerId: "worker-test", epoch: claimed!.epoch };
@@ -386,12 +375,6 @@ describe("cloud API through typed client", () => {
       });
       expect(task.status).toBe("completed");
       expect((await client.cloud.usage.get({})).inputTokens).toBe(12);
-      expect((await client.cloud.notifications.list({})).items).toHaveLength(2);
-      expect(
-        (await f.repository.outboxItems()).filter(
-          (event) => event.type === "cloud.notification.created",
-        ),
-      ).toHaveLength(2);
     } finally {
       await f.close();
     }

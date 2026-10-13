@@ -81,3 +81,5 @@ bun run --cwd apps/api test:integration   # real in-process exercise
   has refreshed its durable final facts. Auth/access denial clears private data.
 - Device-bound Run sessions, the former `./runs` subpath, and both Admin RPC
   trees are retired. Client types derive that removal from the shared contract.
+- Task notifications and notification preferences are retired; client types expose
+  only the current contract without compatibility methods.

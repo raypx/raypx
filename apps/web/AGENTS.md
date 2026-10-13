@@ -101,7 +101,7 @@ server/
   It is navigation aid, not authorization enforcement; the API remains the
   final authorization boundary.
 - `(app)/route.tsx` owns AppShell, shared by cloud and project routes. Navigation
-  exposes conversations, tasks, notifications, usage and projects to every
+  exposes conversations, tasks, usage and projects to every
   authenticated account. API authorization remains authoritative.
 - All protected routes use the same Neutral AppShell. Public imagery comes from
   the guarded capture command and matches locale, theme and viewport. Its
@@ -153,8 +153,8 @@ bun run test:e2e                         # Playwright smoke, needs browsers
 
 ## Cloud product
 
-- `/chat`, `/chat/$conversationId`, `/tasks`, `/tasks/$taskId`, `/settings/usage`
-  and `/notifications` compose canonical `cloud` client contracts. Project detail
+- `/chat`, `/chat/$conversationId`, `/tasks`, `/tasks/$taskId` and `/settings/usage`
+  compose canonical `cloud` client contracts. Project detail
   lists use scoped cursor navigation; conversations can load older turns while
   preserving their live session. Project detail creates cloud Tasks; no Web route requires a local device or imports a runner.
 - Successful sign-in defaults to `/chat`; explicit protected destinations retain
@@ -165,7 +165,7 @@ bun run test:e2e                         # Playwright smoke, needs browsers
   workspace keeps drafts, uploads and Session lifetime; submission reads the
   current AbortSignal at call time and ignores responses after account exit.
 - Each Router/SSR request owns a QueryClient. Ordinary Task/Round/Revision,
-  lists, file metadata, usage, notification, preference and capability reads use
+  lists, file metadata, usage and capability reads use
   `lib/cloud-queries.ts` through Client; keys include actor/account and resource
   scope. Router loaders prefetch them; feature consumers subscribe with Query.
 - Conversation and Run live projections belong only to Client Sessions. Route
@@ -184,8 +184,8 @@ bun run test:e2e                         # Playwright smoke, needs browsers
   or dehydrated. Account exit aborts reads, revokes blob URLs and clears caches.
 - Project managers can explicitly authorize/revoke AI spending on project
   detail. Editing rights alone grant no spending permission; API remains final.
-- Notifications own email opt-in and recipient locale; usage displays unknown
-  consumption explicitly and labels model costs as estimates.
+- Task notifications, the inbox route and email-preference controls are retired.
+  Usage displays unknown consumption explicitly and labels model costs as estimates.
 - Optional PostHog/Sentry browser adapters load after hydration and receive only
   allowlisted metadata. Disable autocapture/replay; no user content, credentials,
   resource paths or signed URLs enter their events.

@@ -1,1 +1,1 @@
-export { InMemorySystemSettingsRepository } from "./settings/memory.js";
+export { InMemorySystemSettingsRepository } from "./repositories/settings/memory.js";

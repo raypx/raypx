@@ -1,8 +1,8 @@
 import { beforeAll, beforeEach, afterAll, describe, it, expect } from "vite-plus/test";
 import { sql } from "drizzle-orm";
 import { createCloudApplication } from "@raypx/application";
-import { PostgresCloudRepository } from "../src/cloud-postgres.js";
-import { acquireCloudWorkerLease } from "../src/cloud-worker-lease.js";
+import { PostgresCloudRepository } from "../src/repositories/cloud/postgres.js";
+import { acquireCloudWorkerLease } from "../src/repositories/cloud/worker-lease.js";
 import { exerciseSharedTaskBudget } from "./cloud-budget.js";
 import { exerciseRoundAndLease, exercisePublicationCAS } from "./cloud-rounds.js";
 import { exerciseMessageProjection, exerciseActiveRunRace } from "./cloud-projection.js";
@@ -21,10 +21,7 @@ import {
   organizations,
   organizationMembers,
 } from "../src/schema.js";
-import {
-  PostgresProjectV2Repository,
-  PostgresProjectMemberV2Repository,
-} from "../src/v2/projects.js";
+import { PostgresProjectV2Repository, PostgresProjectMemberV2Repository } from "../src/v2.js";
 let connection: Awaited<ReturnType<typeof openTestDatabase>>;
 beforeAll(async () => {
   connection = await openTestDatabase();
@@ -61,7 +58,6 @@ async function start(
     mode,
     idempotencyKey: `turn-${key}`,
   });
-  await service.acceptQueued({ runId: result.run.id });
   const claim = (await service.claim({ runId: result.run.id, ownerId: "worker" }))!;
   const fence = { runId: result.run.id, ownerId: "worker", epoch: claim.epoch };
   const execution = await service.startExecution({ ...fence, role: "main", prompt: "report" });
@@ -120,9 +116,7 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
         })
       ).items,
     ).toHaveLength(1);
-    expect((await connection.db.select().from(outboxEvents)).map((e) => e.type)).toEqual([
-      "cloud.run.queued",
-    ]);
+    expect(await connection.db.select().from(outboxEvents)).toEqual([]);
     expect(
       (await service.getConversation({ actorId: "alice", conversationId: conversation.id }))
         .conversation.createdAt,
@@ -203,7 +197,7 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
       }),
     ).rejects.toMatchObject({ code: "CLOUD_OWNER_INVALID" });
   });
-  it("rolls back revision publication and status events when the notification outbox fails", async () => {
+  it("rolls back revision publication and status events when Run finalization fails", async () => {
     const service = app();
     const run = await start(service, "atomic");
     const checksum = "a".repeat(64);
@@ -222,10 +216,10 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
       checksum,
     });
     await connection.db.execute(
-      sql`CREATE OR REPLACE FUNCTION reject_cloud_notification() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.type='cloud.notification.created' THEN RAISE EXCEPTION 'notification outbox failed'; END IF; RETURN NEW; END; $$`,
+      sql`CREATE OR REPLACE FUNCTION reject_cloud_finalization() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status='succeeded' THEN RAISE EXCEPTION 'Run finalization failed'; END IF; RETURN NEW; END; $$`,
     );
     await connection.db.execute(
-      sql`CREATE TRIGGER reject_cloud_notification BEFORE INSERT ON outbox_events FOR EACH ROW EXECUTE FUNCTION reject_cloud_notification()`,
+      sql`CREATE TRIGGER reject_cloud_finalization BEFORE UPDATE ON cloud_runs FOR EACH ROW EXECUTE FUNCTION reject_cloud_finalization()`,
     );
     try {
       await expect(
@@ -237,8 +231,8 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
         }),
       ).rejects.toThrow();
     } finally {
-      await connection.db.execute(sql`DROP TRIGGER reject_cloud_notification ON outbox_events`);
-      await connection.db.execute(sql`DROP FUNCTION reject_cloud_notification()`);
+      await connection.db.execute(sql`DROP TRIGGER reject_cloud_finalization ON cloud_runs`);
+      await connection.db.execute(sql`DROP FUNCTION reject_cloud_finalization()`);
     }
     const task = await service.getTask({ actorId: "alice", taskId: run.task!.id });
     expect(task.revisions).toHaveLength(0);
@@ -304,14 +298,6 @@ describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
     expect(tail.items[0]?.occurredAt).toBeInstanceOf(Date);
     expect(await connection.db.select().from(cloudEvents)).toHaveLength(snapshot.events.length + 3);
     await service.finish({ ...run.fence, status: "failed", error: "search unavailable" });
-    const notifications = await service.listNotifications({ actorId: "alice" });
-    expect(notifications.unreadCount).toBe(1);
-    expect(notifications.items[0]).toMatchObject({
-      taskId: null,
-      conversationId: run.run.conversationId,
-      runId: run.run.id,
-      type: "run.failed",
-    });
   });
   it("keeps verified files private until every delivery file is ready and durably claims expired objects", async () => {
     let time = new Date("2026-10-06T00:00:00Z");

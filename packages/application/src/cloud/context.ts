@@ -19,7 +19,6 @@ import {
   type CloudRunEvent,
   type CloudAssetVersion,
   type CloudTask,
-  type CloudNotification,
   type CloudArtifactRevision,
   type CloudTaskRound,
 } from "@raypx/core";
@@ -319,54 +318,6 @@ export function createCloudContext(options: CloudApplicationOptions) {
     await tx.save("runs", run);
     return entry;
   };
-  const notifyFact = async (
-    tx: CloudTransaction,
-    fact: {
-      scope: ResourceScope;
-      recipientId: string;
-      taskId: string | null;
-      conversationId: string | null;
-      runId: string | null;
-      type: CloudNotification["type"];
-      key: string;
-    },
-  ) => {
-    const preferences = await tx.get("preferences", fact.recipientId);
-    const notification: CloudNotification = {
-      ...base(fact.scope),
-      id: fact.key,
-      recipientId: fact.recipientId,
-      taskId: fact.taskId,
-      conversationId: fact.conversationId,
-      runId: fact.runId,
-      type: fact.type,
-      readAt: null,
-      emailEnabled: preferences?.emailEnabled ?? false,
-      emailDeliveredAt: null,
-    };
-    if (await tx.get("notifications", notification.id)) return;
-    await tx.save("notifications", notification);
-    await tx.enqueue({
-      id: `cloud.notification.created:${notification.id}`,
-      type: "cloud.notification.created",
-      payload: { notificationId: notification.id },
-    });
-  };
-  const notify = async (
-    tx: CloudTransaction,
-    task: CloudTask,
-    type: CloudNotification["type"],
-    runId: string | null,
-  ) =>
-    notifyFact(tx, {
-      scope: task.scope,
-      recipientId: task.requestedByUserId,
-      taskId: task.id,
-      conversationId: task.conversationId,
-      runId,
-      type,
-      key: `${type}:${task.id}:${runId ?? task.acceptedRevisionId}`,
-    });
   const usageFor = async (tx: CloudTransaction, accountId: string) => {
     const ownerAccountId = accountId.includes(":") ? accountId : `user:${accountId}`;
     const time = now();
@@ -457,14 +408,8 @@ export function createCloudContext(options: CloudApplicationOptions) {
       cancelRequested: false,
       output: null,
       error: null,
-      dispatchReady: false,
     };
     await tx.save("runs", run);
-    await tx.enqueue({
-      id: `cloud.run.queued:${run.id}`,
-      type: "cloud.run.queued",
-      payload: { runId: run.id },
-    });
     return run;
   };
   const snapshot = async (tx: CloudTransaction, run: CloudRun, publicView = false) => {
@@ -562,22 +507,8 @@ export function createCloudContext(options: CloudApplicationOptions) {
               : "open";
         task.updatedAt = now();
         await tx.save("tasks", task);
-        if (task.status === "review") await notify(tx, task, "task.review", run.id);
-        else if (task.status === "waiting_input")
-          await notify(tx, task, "task.waiting_input", run.id);
-        else if (run.status === "failed") await notify(tx, task, "run.failed", run.id);
       }
     }
-    if (!run.taskId && run.status === "failed")
-      await notifyFact(tx, {
-        scope: run.scope,
-        recipientId: run.requestedByUserId,
-        taskId: null,
-        conversationId: run.conversationId,
-        runId: run.id,
-        type: "run.failed",
-        key: `run.failed:${run.id}`,
-      });
     return run;
   };
   const publishIn = async (
@@ -728,7 +659,6 @@ export function createCloudContext(options: CloudApplicationOptions) {
     runFor,
     fenced,
     event,
-    notify,
     usageFor,
     queue,
     snapshot,

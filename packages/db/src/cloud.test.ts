@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { createCloudApplication } from "@raypx/application";
-import { InMemoryCloudRepository } from "./cloud-memory.js";
+import { InMemoryCloudRepository } from "./repositories/cloud/memory.js";
 import { exerciseSharedTaskBudget } from "../tests/cloud-budget.js";
 import type { CloudApplicationOptions } from "@raypx/application";
 import { exerciseRoundAndLease, exercisePublicationCAS } from "../tests/cloud-rounds.js";
@@ -34,7 +34,6 @@ function fixture(limits: CloudApplicationOptions["limits"] = {}) {
       mode,
       idempotencyKey: `turn-${++sequence}`,
     });
-    await service.acceptQueued({ runId: result.run.id });
     const claim = (await service.claim({ runId: result.run.id, ownerId: "worker" }))!;
     const fence = { runId: result.run.id, ownerId: "worker", epoch: claim.epoch };
     const execution = await service.startExecution({
@@ -64,10 +63,16 @@ describe("cloud application guarantees", () => {
       code: "CLOUD_ACCESS_DENIED",
     });
     await service.interrupt(run.fence);
-    expect((await repository.read((tx) => tx.get("runs", run.run.id)))?.status).toBe("failed");
+    expect(
+      (
+        await repository.read((tx: import("@raypx/core").CloudTransaction) =>
+          tx.get("runs", run.run.id),
+        )
+      )?.status,
+    ).toBe("failed");
   });
-  it("atomically queues one task run and replays an idempotent turn without extra outbox entries", async () => {
-    const { service, repository } = fixture();
+  it("atomically queues one task run and replays an idempotent turn as a directly eligible Run", async () => {
+    const { service } = fixture();
     const conversation = await service.createConversation({
       actorId: "alice",
       title: "Same",
@@ -97,7 +102,7 @@ describe("cloud application guarantees", () => {
         })
       ).items,
     ).toHaveLength(1);
-    expect(await repository.outboxItems()).toHaveLength(1);
+    expect(await service.listReadyRuns({ limit: 10 })).toHaveLength(1);
     const next = {
       ...input,
       taskId: first.task!.id,
@@ -106,13 +111,13 @@ describe("cloud application guarantees", () => {
       idempotencyKey: "next",
     };
     await expect(service.sendTurn(next)).rejects.toMatchObject({ code: "CLOUD_RUN_ACTIVE" });
-    expect(await repository.outboxItems()).toHaveLength(1);
+    expect(await service.listReadyRuns({ limit: 10 })).toHaveLength(1);
     await expect(service.sendTurn({ ...input, prompt: "Changed" })).rejects.toMatchObject({
       code: "CLOUD_IDEMPOTENCY_CONFLICT",
     });
   });
-  it("commits delivery, run result, task review and notification together; acceptance completes task", async () => {
-    const { service, repository, start } = fixture();
+  it("commits delivery, run result and task review together; acceptance completes task", async () => {
+    const { service, start } = fixture();
     const result = await start();
     const asset = await service.createWorkerAsset({
       ...result.fence,
@@ -152,10 +157,6 @@ describe("cloud application guarantees", () => {
     expect((await service.getTask({ actorId: "alice", taskId: result.task!.id })).task.status).toBe(
       "review",
     );
-    expect((await service.listNotifications({ actorId: "alice" })).items).toHaveLength(1);
-    expect(
-      (await repository.outboxItems()).filter((e) => e.type === "cloud.notification.created"),
-    ).toHaveLength(1);
     const task = await service.acceptRevision({
       actorId: "alice",
       taskId: result.task!.id,
@@ -298,33 +299,6 @@ describe("cloud application guarantees", () => {
     ).toEqual(toolEvent.payload);
     expect(snapshot.events.map((e) => e.sequence)).toEqual(snapshot.events.map((_, i) => i + 1));
   });
-  it("replays mutable commands and rechecks opt-in and permissions before sending email", async () => {
-    const { service, repository, start } = fixture();
-    const preferences = {
-      actorId: "alice",
-      emailEnabled: true,
-      locale: "zh" as const,
-      idempotencyKey: "prefs",
-    };
-    const initial = await service.updatePreferences(preferences);
-    await service.updatePreferences({
-      ...preferences,
-      emailEnabled: false,
-      idempotencyKey: "prefs-2",
-    });
-    expect(await service.updatePreferences(preferences)).toEqual(initial);
-    expect((await service.getPreferences({ actorId: "alice" })).emailEnabled).toBe(false);
-    await service.updatePreferences({ ...preferences, idempotencyKey: "prefs-3" });
-    const result = await start();
-    await service.finish({ ...result.fence, status: "failed", error: "error" });
-    const notification = (await service.listNotifications({ actorId: "alice" })).items[0]!;
-    expect(await service.getDeliveryContext({ notificationId: notification.id })).toMatchObject({
-      email: "alice@example.com",
-      locale: "zh",
-    });
-    repository.setUserActive("alice", false);
-    expect(await service.getDeliveryContext({ notificationId: notification.id })).toBeNull();
-  });
 });
 
 it("publishes a complete file collection atomically and reclaims only terminal abandoned output", async () => {
@@ -343,7 +317,6 @@ it("publishes a complete file collection atomically and reclaims only terminal a
     mode: "computer",
     idempotencyKey: "two",
   });
-  await service.acceptQueued({ runId: run.id });
   const claimed = (await service.claim({ runId: run.id, ownerId: "worker" }))!;
   const fence = { runId: run.id, ownerId: "worker", epoch: claimed.epoch };
   const first = await service.createWorkerAsset({
@@ -445,7 +418,6 @@ it("binds list cursors to the account and keeps old turn retries reachable throu
     idempotencyKey: "first",
   };
   const first = await service.sendTurn(firstInput);
-  await service.acceptQueued({ runId: first.run.id });
   const claim = (await service.claim({ runId: first.run.id, ownerId: "worker" }))!;
   await service.finish({
     runId: first.run.id,
@@ -496,75 +468,6 @@ it("binds list cursors to the account and keeps old turn retries reachable throu
   expect(
     (await service.retryRun({ actorId: "alice", runId: first.run.id, idempotencyKey: "retry" })).id,
   ).toBe(retry.id);
-});
-
-it("commits Search failure notifications with the parent Run scope and Conversation target", async () => {
-  const { service, repository, start } = fixture();
-  await service.updatePreferences({
-    actorId: "alice",
-    emailEnabled: true,
-    locale: "zh",
-    idempotencyKey: "search-email",
-  });
-  const result = await start("search");
-  await service.finish({ ...result.fence, status: "failed", error: "search unavailable" });
-  const notification = (await service.listNotifications({ actorId: "alice" })).items[0]!;
-  expect(notification).toMatchObject({
-    scope: result.run.scope,
-    recipientId: "alice",
-    type: "run.failed",
-    taskId: null,
-    conversationId: result.run.conversationId,
-    runId: result.run.id,
-    emailEnabled: true,
-  });
-  expect(await service.getDeliveryContext({ notificationId: notification.id })).toMatchObject({
-    email: "alice@example.com",
-    locale: "zh",
-  });
-  expect((await service.listNotifications({ actorId: "bob" })).items).toHaveLength(0);
-  expect(
-    (await repository.outboxItems()).filter((event) => event.type === "cloud.notification.created"),
-  ).toHaveLength(1);
-});
-
-it("counts unread notifications independently of the visible window", async () => {
-  const repository = new InMemoryCloudRepository({
-    users: [{ id: "alice" }, { id: "bob" }],
-  });
-  const service = createCloudApplication({ repository });
-  const conversation = await service.createConversation({
-    actorId: "alice",
-    title: "Failures",
-    idempotencyKey: "failures",
-  });
-  for (let index = 0; index < 2; index++) {
-    const { run } = await service.sendTurn({
-      actorId: "alice",
-      conversationId: conversation.id,
-      prompt: `PRIVATE ${index}`,
-      mode: "search",
-      idempotencyKey: `fail-${index}`,
-    });
-    await service.acceptQueued({ runId: run.id });
-    const claimed = (await service.claim({ runId: run.id, ownerId: "worker" }))!;
-    await service.finish({
-      runId: run.id,
-      ownerId: "worker",
-      epoch: claimed.epoch,
-      status: "failed",
-      error: "SECRET ERROR",
-    });
-  }
-  const notifications = await service.listNotifications({ actorId: "alice", limit: 1 });
-  expect(notifications.items).toHaveLength(1);
-  expect(notifications.unreadCount).toBe(2);
-  await service.markNotificationRead({
-    actorId: "alice",
-    notificationId: notifications.items[0]!.id,
-    idempotencyKey: "read",
-  });
-  expect((await service.listNotifications({ actorId: "alice", limit: 1 })).unreadCount).toBe(1);
 });
 
 it("enforces public input formats while allowing generated deliverables and accounts for cached model usage", async () => {
@@ -627,7 +530,7 @@ it("enforces public input formats while allowing generated deliverables and acco
   expect((await service.getUsage({ actorId: "alice" })).estimatedCost).toBe(settled.estimatedCost);
 });
 
-it("replays completed uploads and notification reads with their original native timestamps", async () => {
+it("replays completed uploads with their original native timestamps", async () => {
   let time = new Date("2026-10-06T00:00:00Z");
   const repository = new InMemoryCloudRepository({ users: [{ id: "alice" }] });
   const service = createCloudApplication({ repository, now: () => time });
@@ -649,36 +552,6 @@ it("replays completed uploads and notification reads with their original native 
   const completed = await service.completeUpload(args);
   time = new Date(time.getTime() + 1_000);
   expect(await service.completeUpload(args)).toEqual(completed);
-  const conversation = await service.createConversation({
-    actorId: "alice",
-    title: "Notify",
-    idempotencyKey: "notify",
-  });
-  const { run } = await service.sendTurn({
-    actorId: "alice",
-    conversationId: conversation.id,
-    prompt: "Search",
-    mode: "search",
-    idempotencyKey: "search",
-  });
-  await service.acceptQueued({ runId: run.id });
-  const claim = (await service.claim({ runId: run.id, ownerId: "worker" }))!;
-  await service.finish({
-    runId: run.id,
-    ownerId: "worker",
-    epoch: claim.epoch,
-    status: "failed",
-    error: "unavailable",
-  });
-  const notification = (await service.listNotifications({ actorId: "alice" })).items[0]!;
-  const readArgs = {
-    actorId: "alice",
-    notificationId: notification.id,
-    idempotencyKey: "read-once",
-  };
-  const firstRead = await service.markNotificationRead(readArgs);
-  time = new Date(time.getTime() + 1_000);
-  expect(await service.markNotificationRead(readArgs)).toEqual(firstRead);
 });
 
 it("denies other accounts access to private Run snapshots", async () => {

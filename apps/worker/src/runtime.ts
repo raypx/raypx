@@ -1,9 +1,4 @@
-import {
-  connectDatabase,
-  PostgresOutboxRepository,
-  PostgresCloudRepository,
-  PostgresSystemSettingsRepository,
-} from "@raypx/db";
+import { connectDatabase, PostgresCloudRepository } from "@raypx/db";
 import { createCloudApplication } from "@raypx/application";
 import { defaultCloudLimits } from "@raypx/core";
 import { createS3Storage, createFilesystemStorage } from "@raypx/storage";
@@ -11,43 +6,13 @@ import { configureLogger, logger } from "@raypx/shared/logger";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getWorkerEnvironment } from "./env.js";
-import { CLOUD_WORKER_OWNER, createCloudDispatcher, runCloudExecutions } from "./cloud.js";
+import { CLOUD_WORKER_OWNER, runCloudExecutions } from "./cloud.js";
 import { startWorkerTelemetry } from "./telemetry.js";
-import { createWorkerMailer } from "./mail.js";
 import { createProcessExecutor } from "./process-executor.js";
-
-import { runWorker, type WorkerOptions } from "./index.js";
 
 export interface WorkerRuntime {
   run(signal?: AbortSignal): Promise<void>;
   close(): Promise<void>;
-}
-
-/**
- * Compose the long-lived worker from infrastructure at the process boundary.
- * Event handlers stay injected so the worker never owns HTTP sessions or UI
- * state. Cloud execution is composed by createCloudWorkerRuntime below.
- */
-export function createWorkerRuntime(options: {
-  databaseUrl: string;
-  dispatch: WorkerOptions["dispatch"];
-  worker?: Omit<WorkerOptions, "outbox" | "dispatch">;
-}): WorkerRuntime {
-  const connection = connectDatabase(options.databaseUrl);
-  const outbox = new PostgresOutboxRepository(connection.db);
-  return {
-    run(signal) {
-      return runWorker(
-        {
-          ...options.worker,
-          outbox,
-          dispatch: options.dispatch,
-        },
-        signal,
-      );
-    },
-    close: () => connection.close(),
-  };
 }
 
 /** Multi-instance delivery host; each claimed Run owns a fenced lease and Bun child. */
@@ -147,42 +112,9 @@ export async function createCloudWorkerRuntime(
       const stop = () => controller.abort("shutdown");
       signal?.addEventListener("abort", stop, { once: true });
       if (signal?.aborted) stop();
-      const dispatchCloud = createCloudDispatcher({
-        app,
-        mailer: createWorkerMailer({
-          settings: new PostgresSystemSettingsRepository(connection.db),
-          ...(values ? { values } : {}),
-        }),
-        webUrl: env.CLOUD_WEB_URL,
-      });
-      const dispatch: WorkerOptions["dispatch"] = async (item) => {
-        await dispatchCloud(item);
-        logger({
-          service: "raypx-worker",
-          event: "outbox.accepted",
-          outboxId: item.id,
-          ...(typeof item.payload.runId === "string" ? { runId: item.payload.runId } : {}),
-        }).emit();
-      };
       running = (async () => {
         try {
           const outcomes = await Promise.allSettled([
-            runWorker(
-              {
-                outbox: new PostgresOutboxRepository(connection.db),
-                dispatch,
-                workerId: CLOUD_WORKER_OWNER,
-                onError: (error, item) =>
-                  report(
-                    error,
-                    typeof item.payload.runId === "string" ? item.payload.runId : undefined,
-                  ),
-              },
-              controller.signal,
-            ).catch((error: unknown) => {
-              controller.abort("outbox_failed");
-              throw error;
-            }),
             runCloudExecutions(
               { app, execute, concurrency: env.CLOUD_WORKER_CONCURRENCY, onError: report },
               controller.signal,

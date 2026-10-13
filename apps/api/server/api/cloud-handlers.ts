@@ -197,20 +197,6 @@ export function createCloudHandlers(context: RouterContext) {
       ),
     },
     usage: { get: authenticated.cloud.usage.get.handler(command(() => cloud().getUsage)) },
-    notifications: {
-      list: authenticated.cloud.notifications.list.handler(
-        command(() => cloud().listNotifications),
-      ),
-      markRead: authenticated.cloud.notifications.markRead.handler(
-        command(() => cloud().markNotificationRead),
-      ),
-    },
-    preferences: {
-      get: authenticated.cloud.preferences.get.handler(command(() => cloud().getPreferences)),
-      update: authenticated.cloud.preferences.update.handler(
-        command(() => cloud().updatePreferences),
-      ),
-    },
     capabilities: {
       get: authenticated.cloud.capabilities.get.handler(() => context.cloudCapabilities()),
     },

@@ -20,7 +20,6 @@ export async function exerciseRoundAndLease(repository: CloudRepository) {
   });
   const task = initial.task!;
   const claim = async (runId: string) => {
-    await service.acceptQueued({ runId });
     const claimed = (await service.claim({ runId, ownerId: "worker-a" }))!;
     const fence = { runId, ownerId: "worker-a", epoch: claimed.epoch };
     const execution = await service.startExecution({ ...fence, role: "main", prompt: "Work" });
@@ -198,7 +197,6 @@ export async function exercisePublicationCAS(repository: CloudRepository) {
     mode: "computer",
     idempotencyKey: "cas-turn",
   });
-  await service.acceptQueued({ runId: initial.run.id });
   const claimed = (await service.claim({ runId: initial.run.id, ownerId: "publisher" }))!;
   const fence = { runId: initial.run.id, ownerId: "publisher", epoch: claimed.epoch };
   const asset = await service.createWorkerAsset({
@@ -274,7 +272,6 @@ export async function exercisePublicationCAS(repository: CloudRepository) {
     mode: "computer",
     idempotencyKey: "cancel-publish",
   });
-  await service.acceptQueued({ runId: fresh.run.id });
   const freshClaim = (await service.claim({ runId: fresh.run.id, ownerId: "publisher" }))!;
   const freshFence = { runId: fresh.run.id, ownerId: "publisher", epoch: freshClaim.epoch };
   const lateAsset = await service.createWorkerAsset({

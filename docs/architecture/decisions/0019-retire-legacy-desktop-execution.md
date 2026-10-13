@@ -9,6 +9,9 @@ and [ADR-0015](0015-local-agent-workbench.md), and replaces the Desktop delivery
 scope in [ADR-0016](0016-cloud-agent-platform.md). The cloud Pi runtime and
 controlled business UI boundaries remain in force.
 
+The notification/outbox retention provisions are superseded by
+[ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md).
+
 ## Context
 
 The cloud API and fresh database baseline do not compose the former device

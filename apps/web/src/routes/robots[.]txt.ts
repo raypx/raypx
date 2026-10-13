@@ -5,7 +5,7 @@ export const Route = createFileRoute("/robots.txt")({
     handlers: {
       GET: () =>
         new Response(
-          `User-agent: *\nAllow: /\nDisallow: /chat\nDisallow: /tasks\nDisallow: /projects\nDisallow: /settings\nDisallow: /notifications\n${env.VITE_SITE_URL ? `Sitemap: ${new URL("/sitemap.xml", env.VITE_SITE_URL).href}\n` : ""}`,
+          `User-agent: *\nAllow: /\nDisallow: /chat\nDisallow: /tasks\nDisallow: /projects\nDisallow: /settings\n${env.VITE_SITE_URL ? `Sitemap: ${new URL("/sitemap.xml", env.VITE_SITE_URL).href}\n` : ""}`,
           { headers: { "Content-Type": "text/plain; charset=utf-8" } },
         ),
     },

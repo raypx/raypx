@@ -48,12 +48,14 @@ server/
 - Configure the process logger once with service `api`; request logging is
   configured by the shared runtime.
 - Keep all Nitro host wiring under `server/`; `src/` is not a runtime source tree.
-- `cloud.*` procedures own conversations, tasks, runs, files, usage, preferences
-  and notifications. Resolve the actor from the session on every operation.
+- `cloud.*` procedures own conversations, tasks, runs, files, usage and capabilities.
+  Resolve the actor from the session on every operation.
 - The former `devices`, `runner`, and `projects.agentRuns` RPC trees are retired
   and return the ordinary not-found response. The `admin` and `cloud.admin`
   trees also return ordinary not-found responses for every session role. Project
   CRUD/resources and account/auth admission remain.
+- `cloud.notifications` and `cloud.preferences` are retired and return ordinary
+  not-found responses. Auth verification, password reset and welcome mail remain.
 - `/internal/execution/*` is a separate private contract authenticated by a
   durable hashed RunGrant, current owner epoch, live lease and current permission.
   It owns model/search credentials, dispatch and trusted late usage reconciliation.

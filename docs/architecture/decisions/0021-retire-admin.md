@@ -8,6 +8,9 @@ of [ADR-0014](0014-domain-services-and-client-state.md) and
 [ADR-0016](0016-cloud-agent-platform.md). The cloud product and lightweight
 Electrobun Desktop boundaries remain in force.
 
+The task-notification retention provision is superseded by
+[ADR-0026](0026-direct-run-queue-and-retire-task-notifications.md).
+
 ## Context
 
 The user authorized removal of the entire Admin product and other code without

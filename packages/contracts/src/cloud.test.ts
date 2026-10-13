@@ -54,7 +54,6 @@ describe("cloud public protocol", () => {
       "continueRound",
       "setSpendingGrant",
       "acceptRevision",
-      "markRead",
       "createUpload",
       "completeUpload",
       "create",
@@ -67,5 +66,7 @@ describe("cloud public protocol", () => {
     expect(cloudContract.conversations.stream).toBeDefined();
     expect(cloudContract.runs.stream).toBeDefined();
     expect(cloudContract.tools.get).toBeDefined();
+    expect(cloudContract).not.toHaveProperty("notifications");
+    expect(cloudContract).not.toHaveProperty("preferences");
   });
 });

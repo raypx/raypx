@@ -39,7 +39,6 @@ async function fixture(
     attachmentIds: [],
     idempotencyKey: "turn",
   });
-  await app.acceptQueued({ runId: run.id });
   const claimed = (await app.claim({ runId: run.id, ownerId: "worker" }))!;
   const fence = { runId: run.id, ownerId: "worker", epoch: claimed.epoch };
   const grantId = crypto.randomUUID(),

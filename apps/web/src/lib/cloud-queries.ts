@@ -85,16 +85,6 @@ export function cloudQueries(identity: QueryIdentity, api: ApiClient) {
         queryKey: cloudKey(identity, { type: "project", projectId }, "spending-grants"),
         queryFn: ({ signal }) => api.cloud.tasks.listSpendingGrants({ projectId }, { signal }),
       }),
-    notifications: () =>
-      queryOptions({
-        queryKey: key("notifications"),
-        queryFn: ({ signal }) => api.cloud.notifications.list({ limit: 100 }, { signal }),
-      }),
-    preferences: () =>
-      queryOptions({
-        queryKey: key("preferences"),
-        queryFn: ({ signal }) => api.cloud.preferences.get({}, { signal }),
-      }),
     asset: (assetVersionId: string) =>
       queryOptions({
         queryKey: key("file", assetVersionId),
@@ -104,7 +94,7 @@ export function cloudQueries(identity: QueryIdentity, api: ApiClient) {
   };
 }
 
-/** Terminal facts refresh just the owning task, lists, allowance and notifications once. */
+/** Terminal facts refresh just the owning task, lists and allowance once. */
 export async function invalidateRunFacts(
   client: QueryClient,
   identity: QueryIdentity,
@@ -115,9 +105,7 @@ export async function invalidateRunFacts(
       queryKey[0] === "cloud" &&
       queryKey[1] === identity.actorId &&
       queryKey[2] === identity.accountId &&
-      (["tasks", "conversations", "usage", "capabilities", "notifications"].includes(
-        String(queryKey[4]),
-      ) ||
+      (["tasks", "conversations", "usage", "capabilities"].includes(String(queryKey[4])) ||
         (queryKey[4] === "task" && queryKey[5] === taskId)),
   });
 }

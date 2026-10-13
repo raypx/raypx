@@ -35,6 +35,8 @@ deployment boundaries, and coding-agent guidance.
   [single-entry refinement](./architecture/decisions/0025-worker-single-entry-execution.md).
 - [Worker execution decision](./architecture/decisions/0025-worker-single-entry-execution.md)
   — one executable, isolated task processes and Host-owned Run deadlines.
+- [Direct Run queue decision](./architecture/decisions/0026-direct-run-queue-and-retire-task-notifications.md)
+  — Worker claims queued Runs directly; task notifications and outbox dispatch are retired.
 - [Bun runtime decision](./architecture/decisions/0024-bun-runtime.md) — one pinned
   runtime for production, tooling, tests and isolated Runner processes.
 - [Runtime and deployment](./architecture/deployment.md) — production runtimes,
