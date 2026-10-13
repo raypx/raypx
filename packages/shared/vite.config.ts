@@ -18,6 +18,7 @@ export default defineConfig({
     sourcemap: true,
     deps: {
       neverBundle: [
+        /^@raypx\/env(?:\/|$)/,
         "@orpc/server",
         "evlog",
         "evlog/client",
@@ -26,7 +27,6 @@ export default defineConfig({
         "evlog/vite",
         "hono",
         "vite",
-        "zod",
       ],
     },
   },

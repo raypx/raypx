@@ -7,6 +7,9 @@ deployment boundaries, and coding-agent guidance.
 
 - [Internationalization ownership](./architecture/intl.md) — independent `@raypx/intl`, product locale configuration and compatibility.
 
+- [Independent environment library](./architecture/decisions/0032-independent-env-library.md) —
+  public `@raypx/env`, Shared compatibility exports and application-owned presets.
+
 - [Drizzle extensions and Toolkit](./architecture/drizzle-extensions.md) —
   independent libraries, full upstream inventory, merge design and postgres.js diagnostics.
 
@@ -63,8 +66,8 @@ deployment boundaries, and coding-agent guidance.
 
 - [Getting started](./development/getting-started.md) — requirements, setup,
   local services, and common commands.
-- [Environment](./development/environment.md) — API, Better Auth, and mail
-  environment boundaries.
+- [Environment](./development/environment.md) — independent validation library,
+  product presets, and API, Better Auth and mail environment boundaries.
 - [Testing and verification](./development/testing.md) — workspace checks, CI
   expectations, and the Vite+/Vitest plugin boundary.
 - [Cloud release acceptance](./development/cloud-acceptance.md) — verified local

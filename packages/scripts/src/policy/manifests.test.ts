@@ -67,12 +67,15 @@ describe("validateWorkspaceManifest", () => {
     expect(validate(manifest())).toEqual([]);
   });
 
-  it.each(["@raypx/drizzle", "@raypx/intl"])("uses catalogs for the Toolkit package %s", (name) => {
-    expect(validate(manifest({ dependencies: { [name]: "catalog:backend" } }))).toEqual([]);
-    expect(validate(manifest({ dependencies: { [name]: "workspace:*" } }))).toEqual([
-      expect.objectContaining({ check: "manifest.dependencies" }),
-    ]);
-  });
+  it.each(["@raypx/drizzle", "@raypx/intl", "@raypx/env"])(
+    "uses catalogs for the Toolkit package %s",
+    (name) => {
+      expect(validate(manifest({ dependencies: { [name]: "catalog:backend" } }))).toEqual([]);
+      expect(validate(manifest({ dependencies: { [name]: "workspace:*" } }))).toEqual([
+        expect.objectContaining({ check: "manifest.dependencies" }),
+      ]);
+    },
+  );
 
   it.each(["web", "api", "desktop", "worker", "storybook"])(
     "accepts the unscoped %s application name",

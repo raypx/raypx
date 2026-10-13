@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Accepted. [ADR-0032](./0032-independent-env-library.md) supersedes environment
+implementation ownership. Shared retains the environment compatibility subpaths;
+its primitive and logging ownership remains in force.
 
 ## Context
 

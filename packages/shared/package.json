@@ -52,8 +52,8 @@
     "dev": "bun --bun vp pack --watch"
   },
   "dependencies": {
-    "evlog": "catalog:",
-    "zod": "catalog:"
+    "@raypx/env": "catalog:",
+    "evlog": "catalog:"
   },
   "devDependencies": {
     "@orpc/server": "catalog:",

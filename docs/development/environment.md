@@ -1,5 +1,39 @@
 # Environment
 
+## Validation ownership
+
+Reusable environment validation lives in the independently released
+[`@raypx/env`](https://github.com/raypx/packages/tree/main/packages/env) library.
+Raypx consumes npm `0.0.6` through the default Bun catalog, with Zod supplied as
+a peer. This continues the existing package's version history.
+
+Keep product imports on `@raypx/shared/env` and `@raypx/shared/env/runtime`.
+These compatibility subpaths directly re-export the library and its `NODE_ENV`
+preset; they contain no duplicate validation or type implementation. The same
+functions, Zod runtime and `EnvError` class are used through either boundary.
+Applications, adapters and Logger keep ownership of their own presets.
+[ADR-0032](../architecture/decisions/0032-independent-env-library.md) records the
+ownership and packaging boundary.
+
+`createEnv` composes typed presets and reads caller-supplied values or the
+runtime's process/Vite environment. `defineEnv` also supports an explicit public
+prefix. Empty strings normalize to `undefined`, defaults are validated, and
+browser access rejects undeclared and server-only variables. The shared runtime
+preset supports `development`, `production` and `test`.
+
+Library builds preserve `import.meta.env`; the consuming Vite build supplies
+public values, mode and SSR state. Web and Desktop continue calling
+`createEnv` with their existing presets, without manually copying Vite values.
+Shared keeps the library external to preserve this behavior and export identity.
+Packaged consumer checks cover both explicit runtime values and browser defaults
+in an actual Vite build.
+
+The library never loads `.env` files. The private `rpx env -- <command>` runner
+still uses Dotenvx to load repository files into a copied child environment and
+forward termination signals. It is not part of the public Env package.
+
+## Product configuration
+
 API and Worker require `DATABASE_URL`. API uses Better Auth with
 `AUTH_SECRET` and `AUTH_URL`. External browser origins are listed in
 `ALLOWED_ORIGINS`.

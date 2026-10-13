@@ -8,6 +8,7 @@
       "e2e"
     ],
     "catalog": {
+      "@raypx/env": "0.0.6",
       "@better-auth/drizzle-adapter": "^1.7.7",
       "@orpc/client": "2.0.0-beta.43",
       "@orpc/contract": "2.0.0-beta.43",
@@ -19,7 +20,7 @@
       "react": "^19.3.0",
       "react-dom": "^19.3.0",
       "uuid": "^14.0.3",
-      "zod": "^4.6.6"
+      "zod": "^4.6.7"
     },
     "catalogs": {
       "backend": {

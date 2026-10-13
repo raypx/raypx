@@ -93,17 +93,21 @@ consumes them directly so the dependency seam remains explicit.
 The package also owns two framework-oriented subpath families while keeping
 those dependencies isolated from the root and from each other:
 
-- `@raypx/shared/env` and `@raypx/shared/env/runtime` compose and validate
-  caller-supplied environment values. Applications still own their variables;
-  this package never reads `.env` files. Blank strings normalize to `undefined`,
-  defaults apply before validation, and browser access rejects server values.
+- `@raypx/shared/env` and `@raypx/shared/env/runtime` re-export the independently
+  released `@raypx/env` library and its base runtime preset. Applications still
+  own their variables; validation never reads `.env` files. Blank strings
+  normalize to `undefined`, defaults apply before validation, and browser access
+  rejects undeclared and server values. Shared retains no copied implementation.
 - `@raypx/shared/logger` and its `client`, `env`, `hono`, `orpc`, and `vite`
   subpaths configure Evlog, provide the central redaction policy, and expose
   optional surface adapters. Operational logs remain separate from durable
   audit records.
 
-Public subpaths resolve to ESM and declaration files built in `dist/`. Zod and
-Evlog are runtime dependencies; Hono, oRPC, and Vite are optional adapter peers.
+Public subpaths resolve to ESM and declaration files built in `dist/`. Env, its
+Zod peer and Evlog are runtime dependencies; Hono, oRPC, and Vite are optional
+adapter peers. Shared keeps Env external so the library's exports retain one
+identity and Vite processes its browser environment expressions at application
+build time.
 The source remains the target for tests and type checks. Installation builds the
 initial output, while the root development and verification commands refresh it.
 
@@ -168,6 +172,14 @@ library. Applications and Mail own their catalogs; domain and contracts stay
 independent. See [internationalization ownership](./intl.md).
 
 ## External Toolkit libraries
+
+`@raypx/env` supplies typed preset composition, schema validation, guarded
+browser access and runtime environment detection. The public root and
+`./runtime` entrypoints are independently released at `0.0.6`, continuing the
+existing npm package's version history. Raypx consumes that registry version
+through the default catalog, with Zod supplied as a peer. Shared preserves the
+product's existing environment imports. See [environment ownership](../development/environment.md)
+and [ADR-0032](./decisions/0032-independent-env-library.md).
 
 `@raypx/intl` supplies configurable locale negotiation, ICU translation, Intl
 formatting, React providers and isolated catalog testing. Raypx consumes it

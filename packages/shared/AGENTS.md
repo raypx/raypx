@@ -10,8 +10,8 @@ This is the deepest common workspace in the repository.
 | Path              | Purpose                                                              |
 | ----------------- | -------------------------------------------------------------------- |
 | `.`               | Domain errors, setting value types, and injectable clock/ID defaults |
-| `./env`           | Environment preset composition and validation                        |
-| `./env/runtime`   | Base `NODE_ENV` preset                                               |
+| `./env`           | Compatibility exports from the independent `@raypx/env` library      |
+| `./env/runtime`   | Re-exported base `NODE_ENV` preset                                   |
 | `./logger`        | Evlog configuration, lifecycle functions, and event types            |
 | `./logger/client` | Browser logger initialization and client logging                     |
 | `./logger/env`    | Logger environment preset                                            |
@@ -27,8 +27,12 @@ This is the deepest common workspace in the repository.
   `IdGenerator` defaults used by deterministic domain and adapter code.
 - Keep domain errors and primitive types independent from authentication,
   persistence, transport, and UI dependencies.
-- Environment composition validates supplied values; it never reads `.env`
-  files. Applications compose and validate their own environments.
+- Keep environment imports compatible by re-exporting `@raypx/env` without
+  copying its implementation or wrapping its functions. The library owns preset
+  composition and validation; applications own their variables and presets.
+  See [environment ownership](../../docs/development/environment.md).
+- Environment validation never reads `.env` files. The private repository runner
+  remains responsible for loading development environment files.
 - Browser environment access must reject undeclared and server-only fields.
 - Operational logging owns one central sensitive-field redaction policy. Keep
   operational logs separate from durable audit records.
@@ -42,8 +46,10 @@ This is the deepest common workspace in the repository.
 
 ## Constraints
 
-- Runtime dependencies are limited to Zod for environment validation and Evlog
-  for operational logging. Adapter dependencies remain optional peers.
+- Runtime dependencies are limited to `@raypx/env`, its Zod peer, and Evlog.
+  Adapter dependencies remain optional peers. Keep the environment library
+  external in built Shared output so its functions and error class retain one
+  identity and consumers can process its `import.meta.env` expressions.
 - Keep this package below domain, adapter, and application workspaces in the
   dependency graph. It does not import React, Drizzle, or application behavior.
 - Consumers inject `now` and `id` functions in tests and use the defaults only
