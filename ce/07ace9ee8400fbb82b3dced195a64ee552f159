@@ -1,0 +1,163 @@
+apps/web/src/features/navigation/app-shell.component.test.tsx
+  s_29d2da1ea73272::t_1eb26168ba0708 157,159
+  s_1c8b5debbac8f1::t_9836e16724947a 164-178
+packages/application/src/cloud/tasks.ts
+  s_29d2da1ea73272::t_03cf1326e4c4af 12
+packages/core/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 20,32,34-35
+docs/architecture/decisions/0026-direct-run-queue-and-retire-task-notifications.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 1-71
+apps/web/messages/en.json
+  s_29d2da1ea73272::t_9ac8c0c3748388 206
+apps/api/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 51-52,57-58
+packages/application/src/cloud/runs.ts
+  s_29d2da1ea73272::t_03cf1326e4c4af 147
+docs/architecture/decisions/0021-retire-admin.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 11-13
+packages/client/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 84-85
+e2e/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 58
+docs/architecture/domain-services.md
+  s_29d2da1ea73272::t_219e815728dbaa 8-9,32-38,45-46,79,86-87
+docs/architecture/decisions/README.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 63
+packages/mail/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 5,31-32,37
+docs/architecture/decisions/0019-retire-legacy-desktop-execution.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 12-14
+apps/web/src/routes/robots[.]txt.ts
+  s_29d2da1ea73272::t_1eb26168ba0708 8
+docs/README.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 38-39
+apps/web/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 104,156-157,168,187-188
+apps/web/messages/zh.json
+  s_29d2da1ea73272::t_9ac8c0c3748388 206
+packages/db/src/cloud.test.ts
+  s_29d2da1ea73272::t_cd7a998b334a03 68
+  s_29d2da1ea73272::t_8789e73cecddd3 66-67
+  s_29d2da1ea73272::t_00c860e995a974 69-71
+  s_1c8b5debbac8f1::t_a6709d481db42f 3,72-75,105,114,119-120,533
+packages/core/src/cloud/index.ts
+  s_29d2da1ea73272::t_03cf1326e4c4af 2
+docs/architecture/decisions/0016-cloud-agent-platform.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 8-10
+packages/application/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 22,30-31,61-62
+packages/db/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 26,32,60,65-69
+docs/architecture/applications.md
+  s_29d2da1ea73272::t_219e815728dbaa 15,44-45,116,118-120,127-129,132-133,166,171-175
+AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 49,51-52,119
+docs/architecture/decisions/0025-worker-single-entry-execution.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 13-16
+apps/web/src/features/navigation/app-shell.tsx
+  s_29d2da1ea73272::t_1eb26168ba0708 116-118
+docs/architecture/decisions/0017-gateway-and-task-rounds.md
+  s_29d2da1ea73272::t_46afbaf89e9d82 8-11
+apps/api/server/api/app.integration.test.ts
+  s_29d2da1ea73272::t_aff30fbfdacb0d 160-163
+apps/web/src/lib/cloud-queries.ts
+  s_29d2da1ea73272::t_1eb26168ba0708 97,108
+docs/architecture/deployment.md
+  s_29d2da1ea73272::t_219e815728dbaa 70-71,91-92,197-201
+  s_29d2da1ea73272::t_7c0298fa1f3cff 202
+e2e/tests/cloud.spec.ts
+  s_29d2da1ea73272::t_1eb26168ba0708 55,62-64
+docs/architecture/packages.md
+  s_29d2da1ea73272::t_219e815728dbaa 17-19,32-34,126,128-130,152-154,188-190,206-209
+packages/contracts/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 23,45
+docs/architecture/cloud-platform.md
+  s_29d2da1ea73272::t_219e815728dbaa 5-7,11,31-32,49-55,80,126-133,142-143
+apps/worker/AGENTS.md
+  s_29d2da1ea73272::t_8a6d8a6166ff17 5,12,14,28-29,54,63-66,72,81,110-112
+packages/contracts/src/cloud.test.ts
+  s_29d2da1ea73272::t_1eb26168ba0708 69-70
+packages/db/tests/cloud.integration.test.ts
+  s_29d2da1ea73272::t_cd7a998b334a03 119,200,219,222,234-235
+  s_1c8b5debbac8f1::t_c83a77137a2e2d 4-5,24
+apps/worker/src/index.ts
+  s_1c8b5debbac8f1::t_a4c6df80d000ae 1
+apps/worker/src/process-executor.integration.test.ts
+  s_1c8b5debbac8f1::t_93b93bc292d0ed 116
+apps/worker/src/process-executor.test.ts
+  s_1c8b5debbac8f1::t_52bc110cb71b5d 75
+apps/worker/src/runtime.ts
+  s_1c8b5debbac8f1::t_8946d55f45aedd 1,9
+package.json
+  s_1c8b5debbac8f1::t_8d1f609c95fcc6 176
+packages/ai/src/cloud-pi.ts
+  s_1c8b5debbac8f1::t_352669c46c23f2 15-31
+packages/auth/package.json
+  s_1c8b5debbac8f1::t_d62179fb0eadd5 10,13
+packages/db/src/index.ts
+  s_1c8b5debbac8f1::t_b7d0f802f0ee7f 1-5,16-22,30-33
+packages/db/src/memory.ts
+  s_1c8b5debbac8f1::t_29e0455253cac3 1
+packages/db/src/postgres.ts
+  s_1c8b5debbac8f1::t_33d265a8d0a5ca 2
+packages/db/src/repositories/cloud/memory.ts
+  s_1c8b5debbac8f1::t_c2c29257188164 79-83,173
+packages/db/src/repositories/cloud/postgres.ts
+  s_1c8b5debbac8f1::t_9313273411bbda 12-14,128,263
+packages/db/src/repositories/projects/activity.ts
+  s_1c8b5debbac8f1::t_32c62f3034fc77 3,6
+packages/db/src/repositories/projects/assets.ts
+  s_1c8b5debbac8f1::t_d0765cd818ac5e 4,13
+packages/db/src/repositories/projects/index.ts
+  s_1c8b5debbac8f1::t_703417aa9d6cd4 1-2,4-9
+packages/db/src/repositories/projects/projects.ts
+  s_1c8b5debbac8f1::t_566effd26d9628 1,14
+packages/db/src/repositories/projects/reviews.ts
+  s_1c8b5debbac8f1::t_491b3c6599582d 5
+packages/db/src/repositories/projects/tasks.ts
+  s_1c8b5debbac8f1::t_79f69a953ee209 5
+packages/db/src/repositories/projects/types.ts
+  s_1c8b5debbac8f1::t_0a8da7ec45f2f1 1
+packages/db/src/repositories/projects/visibility.ts
+  s_1c8b5debbac8f1::t_f7d1fbe5fd8fa3 2
+packages/db/src/repositories/settings/postgres.ts
+  s_1c8b5debbac8f1::t_b6036b76d09f8f 5
+packages/db/src/schema.ts
+  s_1c8b5debbac8f1::t_dc0acc261779a3 1,15-66,68
+packages/db/src/v2.ts
+  s_1c8b5debbac8f1::t_95dd2d7af2fead 1
+packages/db/tests/domains.integration.test.ts
+  s_1c8b5debbac8f1::t_ba7e122f91373d 19-26
+packages/scripts/src/doctor/checks.test.ts
+  s_1c8b5debbac8f1::t_93fceb9e22a3a0 12,14-15,21,63,94,130,136
+packages/scripts/src/lint/boundaries.integration.test.ts
+  s_1c8b5debbac8f1::t_c179c39e624fd1 201
+packages/scripts/src/testing/jsdom-preload.integration.test.ts
+  s_1c8b5debbac8f1::t_0b80751bc25a3a 12
+packages/scripts/src/verify/worker.integration.test.ts
+  s_1c8b5debbac8f1::t_4982386cca8cfe 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ce07ace9ee8400fbb82b3dced195a64ee552f159",
+  "prompts": {},
+  "sessions": {
+    "s_1c8b5debbac8f1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "44f79ddb-317e-4b77-bf66-721a2a7cb743",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_29d2da1ea73272": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12f68-d872-7963-b308-ef1a17895496",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
