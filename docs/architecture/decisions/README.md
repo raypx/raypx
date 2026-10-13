@@ -62,3 +62,4 @@ source-boundary checks run with `bun run i18n:check` and are the first gate of
 - [ADR-0025: Single Worker entry with Host-owned Run deadlines](./0025-worker-single-entry-execution.md)
 - [ADR-0026: Direct Run queue and retirement of task notifications](./0026-direct-run-queue-and-retire-task-notifications.md)
 - [ADR-0027: Remove the AI package and provider execution](./0027-remove-pi-sdk.md)
+- [ADR-0028: Selective Drizzle helper forks](./0028-selective-drizzle-helpers.md)

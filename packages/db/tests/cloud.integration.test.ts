@@ -1,7 +1,10 @@
 import { beforeAll, beforeEach, afterAll, describe, it, expect } from "vite-plus/test";
-import { sql } from "drizzle-orm";
+import { DrizzleQueryError, sql } from "drizzle-orm";
 import { createCloudApplication } from "@raypx/application";
+import type { CloudRepository, CloudRunEvent } from "@raypx/core";
 import { PostgresCloudRepository } from "../src/repositories/cloud/postgres.js";
+import { InMemoryCloudRepository } from "../src/repositories/cloud/memory.js";
+import { isUniqueViolation } from "../src/query/errors.js";
 import { acquireCloudWorkerLease } from "../src/repositories/cloud/worker-lease.js";
 import { exerciseSharedTaskBudget } from "./cloud-budget.js";
 import { exerciseRoundAndLease, exercisePublicationCAS } from "./cloud-rounds.js";
@@ -65,6 +68,122 @@ async function start(
   return { ...result, fence, execution };
 }
 describe("cloud PostgreSQL guarantees", { concurrent: false }, () => {
+  const adapters = [
+    ["memory", () => new InMemoryCloudRepository({ users: [{ id: "alice" }] })],
+    ["PostgreSQL", () => new PostgresCloudRepository(connection.db)],
+  ] as const;
+
+  async function constraintFixture(repository: CloudRepository) {
+    const service = createCloudApplication({ repository });
+    const conversation = await service.createConversation({
+      actorId: "alice",
+      title: "Constraint rollback",
+      idempotencyKey: "constraint-conversation",
+    });
+    const initial = await service.sendTurn({
+      actorId: "alice",
+      conversationId: conversation.id,
+      prompt: "Constraint rollback",
+      mode: "computer",
+      idempotencyKey: "constraint-turn",
+    });
+    const savedConversation = await repository.read((tx) =>
+      tx.get("conversations", conversation.id),
+    );
+    return { conversation: savedConversation!, initial };
+  }
+
+  it.each(adapters)(
+    "maps active Task run conflicts and rolls back earlier %s writes",
+    async (_name, create) => {
+      const repository = create();
+      const { conversation, initial } = await constraintFixture(repository);
+      const competing = { ...initial.run, id: "competing-run", turnId: "competing-turn" };
+      await expect(
+        repository.transaction([`task:${initial.task!.id}`], async (tx) => {
+          await tx.save("conversations", { ...conversation, title: "Must roll back" });
+          await tx.save("runs", competing);
+        }),
+      ).rejects.toMatchObject({ code: "CLOUD_RUN_ACTIVE", message: "Task has an active run." });
+      expect(await repository.read((tx) => tx.get("conversations", conversation.id))).toEqual(
+        conversation,
+      );
+      expect(await repository.read((tx) => tx.get("runs", competing.id))).toBeNull();
+      expect(await repository.read((tx) => tx.activeTaskRun(initial.task!.id))).toEqual(
+        initial.run,
+      );
+
+      await repository.transaction([`task:${initial.task!.id}`], async (tx) => {
+        await tx.save("runs", { ...initial.run, status: "succeeded" });
+        await tx.save("runs", competing);
+      });
+      expect(await repository.read((tx) => tx.activeTaskRun(initial.task!.id))).toEqual(competing);
+    },
+  );
+
+  it.each(adapters)(
+    "maps event sequence conflicts and rolls back earlier %s writes",
+    async (_name, create) => {
+      const repository = create();
+      const { conversation, initial } = await constraintFixture(repository);
+      const event: CloudRunEvent = {
+        runId: initial.run.id,
+        sequence: initial.run.lastSequence + 1,
+        eventId: "accepted-event",
+        occurredAt: new Date("2026-10-13T00:00:00Z"),
+        type: "message.delta",
+        executionId: null,
+        payload: { text: "Accepted" },
+      };
+      await repository.transaction([], (tx) => tx.appendEvent(event));
+      const before = await repository.read((tx) => tx.events(initial.run.id, 0, 100));
+      await expect(
+        repository.transaction([], async (tx) => {
+          await tx.save("conversations", { ...conversation, title: "Must roll back" });
+          await tx.appendEvent({ ...event, eventId: "rejected-event" });
+        }),
+      ).rejects.toMatchObject({
+        code: "CLOUD_IDEMPOTENCY_CONFLICT",
+        message: "Event sequence already exists.",
+      });
+      expect(await repository.read((tx) => tx.get("conversations", conversation.id))).toEqual(
+        conversation,
+      );
+      expect(await repository.read((tx) => tx.events(initial.run.id, 0, 100))).toEqual(before);
+      expect(
+        await repository.read((tx) => tx.eventById(initial.run.id, "rejected-event")),
+      ).toBeNull();
+    },
+  );
+
+  it("preserves unrecognized PostgreSQL failures and rolls back their transaction", async () => {
+    const repository = new PostgresCloudRepository(connection.db);
+    const { conversation, initial } = await constraintFixture(repository);
+    const event: CloudRunEvent = {
+      runId: initial.run.id,
+      sequence: initial.run.lastSequence + 1,
+      eventId: "reused-event-id",
+      occurredAt: new Date("2026-10-13T00:00:00Z"),
+      type: "message.delta",
+      executionId: null,
+      payload: { text: "Accepted" },
+    };
+    await repository.transaction([], (tx) => tx.appendEvent(event));
+    const rejected = repository.transaction([], async (tx) => {
+      await tx.save("conversations", { ...conversation, title: "Must roll back" });
+      await tx.appendEvent({ ...event, sequence: event.sequence + 1 });
+    });
+    await expect(rejected).rejects.toBeInstanceOf(DrizzleQueryError);
+    const error = await rejected.catch((failure: unknown) => failure);
+    expect(isUniqueViolation(error, "cloud_events_run_event_idx")).toBe(true);
+    expect(await repository.read((tx) => tx.get("conversations", conversation.id))).toEqual(
+      conversation,
+    );
+    expect(await repository.read((tx) => tx.events(initial.run.id, event.sequence, 100))).toEqual(
+      [],
+    );
+  });
+
   it("aggregates monthly calls and lifetime storage/runs inside the current transaction", async () => {
     await exerciseAccountUsageAggregation(new PostgresCloudRepository(connection.db));
   });

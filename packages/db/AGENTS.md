@@ -16,6 +16,8 @@ interfaces owned by `@raypx/core`.
 Source layout: `index.ts` exports repositories directly, `connection.ts` owns
 connections and migration execution, `repositories/` owns Cloud, blob and
 settings adapters, and `v2/` owns canonical project/resource adapters.
+Private `query/` modules contain selected source-adapted column and error helpers;
+`third-party/NOTICE.md` records their origins and licenses.
 `repositories/settings/values.ts` shares pure configuration resolution.
 `schema.ts` exposes active tables; `schema/migrations.ts` includes all physical
 tables, with retired definitions in `schema/compatibility.ts`. Historical SQL
@@ -54,6 +56,9 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   CommonJS output cannot shadow them or enter the Vite+ runner.
 - Own no business rule and no interface definition — both belong to
   `@raypx/core`.
+- Normalize only known PostgreSQL constraints to existing Core errors, matching
+  the memory adapter. Failed writes must escape their transaction and roll back;
+  unknown errors remain unchanged.
 
 ## Constraints
 
@@ -65,6 +70,10 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
   organization membership. Resource lists filter in SQL before keyset pagination.
 - No limit/cursor means a complete list. Paged queries sort timestamp + ID;
   cursors bind to actor and query scope and invalid cursors raise BAD_REQUEST.
+- Source-adapted helpers use public Drizzle APIs and explicit column/conflict
+  allowlists. Do not patch global prototypes or expose another ORM facade.
+  Retain source notices and licenses; see
+  [ADR-0028](../../docs/architecture/decisions/0028-selective-drizzle-helpers.md).
 - Queued Agent creation commits the Run, Turn/Round and admission facts in one
   transaction. Both adapters list and claim queued Runs without a dispatch-ready gate.
 - Outbox, notification and preference tables, the dispatch-ready column and their

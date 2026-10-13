@@ -13,19 +13,15 @@ import type {
 import { and, asc, desc, eq } from "drizzle-orm";
 import { organizationMembers, v2ProjectMembers, v2Projects } from "../schema.js";
 import type { Database } from "../connection.js";
+import { excludedColumns, withoutColumns } from "../query/columns.js";
 
-const memberColumns = {
-  projectId: v2ProjectMembers.projectId,
-  userId: v2ProjectMembers.userId,
-  role: v2ProjectMembers.role,
-  status: v2ProjectMembers.status,
-};
-const organizationMemberColumns = {
-  organizationId: organizationMembers.organizationId,
-  userId: organizationMembers.userId,
-  role: organizationMembers.role,
-  status: organizationMembers.status,
-};
+const memberColumns = withoutColumns(v2ProjectMembers, "id", "createdAt", "updatedAt");
+const organizationMemberColumns = withoutColumns(
+  organizationMembers,
+  "id",
+  "createdAt",
+  "updatedAt",
+);
 
 export class PostgresProjectV2Repository implements ProjectV2Repository {
   constructor(private readonly db: Database) {}
@@ -170,7 +166,7 @@ export class PostgresProjectMemberV2Repository implements ProjectMemberV2Reposit
           })
           .onConflictDoUpdate({
             target: [v2ProjectMembers.projectId, v2ProjectMembers.userId],
-            set: { role: input.role, status: "active", updatedAt: input.now },
+            set: excludedColumns(v2ProjectMembers, "role", "status", "updatedAt"),
           })
           .returning(memberColumns),
         "Project member upsert",

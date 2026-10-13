@@ -43,6 +43,14 @@ JSON decoding restores domain Date fields and the bounded mutation replay DTO.
 Arbitrary tool input, output, event payloads and nested source content remain JSON;
 their date-shaped strings are evidence, not domain timestamps.
 
+Private `query/` helpers adapt selected upstream capabilities under
+[ADR-0028](./decisions/0028-selective-drizzle-helpers.md): typed membership column
+projections, explicit excluded-column UPSERT mappings and PostgreSQL uniqueness
+classification. Constraint conflicts match the memory adapter's domain errors
+and still roll back the transaction. Unknown errors propagate unchanged.
+Source commits, modifications and full licenses are retained in
+[third-party provenance](../../packages/db/third-party/NOTICE.md).
+
 ## Verification
 
 Run the DB workspace checks before the whole repository gate:

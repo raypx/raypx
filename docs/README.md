@@ -22,6 +22,8 @@ deployment boundaries, and coding-agent guidance.
   auth, i18n, mail, shared foundation, DB, UI, scripts, and TypeScript presets.
 - [Database](./architecture/database.md) — active repositories, Auth relations,
   physical migration compatibility and PostgreSQL verification.
+- [Selective Drizzle helpers](./architecture/decisions/0028-selective-drizzle-helpers.md)
+  — small source adaptations for typed columns, explicit UPSERTs and constraint errors.
 - [Product design](./architecture/design.md) — brand posture, cross-surface
   intensity, visual vocabulary, and accessibility rules.
 - [Raypx delivery goal](./architecture/raypx-delivery-goal.md) — current cloud

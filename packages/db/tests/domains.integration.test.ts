@@ -188,6 +188,31 @@ describe("PostgreSQL domain guarantees", { concurrent: false }, () => {
       ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     }
   });
+  it("updates only the member UPSERT fields while preserving identity and creation time", async () => {
+    await project("p");
+    const members = new PostgresProjectMemberV2Repository(connection.db);
+    await members.upsert({ projectId: "p", userId: "reader", role: "viewer", now });
+    const [initial] = await connection.db.select().from(v2ProjectMembers);
+    const updatedAt = new Date(now.getTime() + 10_000);
+    await members.remove({ projectId: "p", userId: "reader", now: updatedAt });
+    const member = await members.upsert({
+      projectId: "p",
+      userId: "reader",
+      role: "editor",
+      now: updatedAt,
+    });
+    expect(member).toEqual({ projectId: "p", userId: "reader", role: "editor", status: "active" });
+    const [updated] = await connection.db.select().from(v2ProjectMembers);
+    expect(updated).toMatchObject({
+      id: initial!.id,
+      projectId: "p",
+      userId: "reader",
+      createdAt: now,
+      updatedAt,
+      role: "editor",
+      status: "active",
+    });
+  });
   it("rejects missing or foreign-project asset versions before creating reviews", async () => {
     await project("p");
     await project("q");

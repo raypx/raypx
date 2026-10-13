@@ -10,8 +10,10 @@ import type {
 import { sql, eq, and, type SQL } from "drizzle-orm";
 import { CloudDomainError, sameCloudTaskRound } from "@raypx/core";
 import type { DatabaseConnection } from "../../connection.js";
+import { isUniqueViolation } from "../../query/errors.js";
 import { users, v2Projects, v2ProjectMembers, organizationMembers } from "../../schema.js";
 import { cloudRecords, cloudActorId, cloudParentIds, hydrateCloudRecord } from "./records.js";
+import { excludedColumn } from "../../query/columns.js";
 
 type Database = DatabaseConnection["db"];
 function txFor(db: Database, writing: boolean): CloudTransaction {
@@ -211,20 +213,26 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
           round_id: sql`${record["roundId"]}`,
         });
       const entries = Object.entries(columns);
-      await db.execute(
-        sql`INSERT INTO ${sql.identifier(cloudRecords[kind].table)} (${sql.join(
-          entries.map(([name]) => sql.identifier(name)),
-          sql`,`,
-        )}) VALUES (${sql.join(
-          entries.map(([, value]) => value),
-          sql`,`,
-        )}) ON CONFLICT (id) DO UPDATE SET ${sql.join(
-          entries
-            .filter(([name]) => name !== "id")
-            .map(([name]) => sql`${sql.identifier(name)}=excluded.${sql.identifier(name)}`),
-          sql`,`,
-        )}`,
-      );
+      try {
+        await db.execute(
+          sql`INSERT INTO ${sql.identifier(cloudRecords[kind].table)} (${sql.join(
+            entries.map(([name]) => sql.identifier(name)),
+            sql`,`,
+          )}) VALUES (${sql.join(
+            entries.map(([, value]) => value),
+            sql`,`,
+          )}) ON CONFLICT (id) DO UPDATE SET ${sql.join(
+            entries
+              .filter(([name]) => name !== "id")
+              .map(([name]) => sql`${sql.identifier(name)}=${excludedColumn(name)}`),
+            sql`,`,
+          )}`,
+        );
+      } catch (error) {
+        if (kind === "runs" && isUniqueViolation(error, "cloud_runs_active_task_idx"))
+          throw new CloudDomainError("CLOUD_RUN_ACTIVE", "Task has an active run.");
+        throw error;
+      }
     },
     userActive: async (actorId) => {
       const statement = db
@@ -264,9 +272,18 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
       return { project, projectMember: members[0] ?? null, organizationMember };
     },
     appendEvent: async (event) => {
-      await db.execute(
-        sql`INSERT INTO cloud_events (run_id,sequence,event_id,occurred_at,data) VALUES (${event.runId},${event.sequence},${event.eventId},${event.occurredAt.toISOString()},${JSON.stringify(event)}::jsonb)`,
-      );
+      try {
+        await db.execute(
+          sql`INSERT INTO cloud_events (run_id,sequence,event_id,occurred_at,data) VALUES (${event.runId},${event.sequence},${event.eventId},${event.occurredAt.toISOString()},${JSON.stringify(event)}::jsonb)`,
+        );
+      } catch (error) {
+        if (isUniqueViolation(error, "cloud_events_pkey"))
+          throw new CloudDomainError(
+            "CLOUD_IDEMPOTENCY_CONFLICT",
+            "Event sequence already exists.",
+          );
+        throw error;
+      }
     },
     events: (runId, afterSequence, limit) =>
       records<CloudRunEvent>(
