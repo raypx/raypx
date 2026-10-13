@@ -64,3 +64,5 @@ source-boundary checks run with `bun run i18n:check` and are the first gate of
 - [ADR-0027: Remove the AI package and provider execution](./0027-remove-pi-sdk.md)
 - [ADR-0028: Selective Drizzle helper forks](./0028-selective-drizzle-helpers.md)
 - [ADR-0029: Independently released Toolkit libraries](./0029-toolkit-drizzle-extraction.md)
+
+- [ADR-0030: Independent internationalization](0030-independent-intl-library.md) — public Intl runtime and private product configuration.

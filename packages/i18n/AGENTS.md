@@ -2,50 +2,46 @@
 
 ## Purpose
 
-Shared locale negotiation, React runtime helpers, Intl formatting, and the
-`use-intl` facade used by application-owned catalogs.
+The Raypx product locale configuration and compatibility facade. Reusable
+internationalization lives in the independently released `@raypx/intl` package.
 
 ## Interface
 
 ```text
-@raypx/i18n         locale constants, parsing, formatting, translation
-@raypx/i18n/client  React provider/hooks and browser/Desktop storage
-@raypx/i18n/server  request locale resolution and sync translator factory
-@raypx/i18n/types   runtime-only public types
-@raypx/i18n/testing recursive catalog parity and ICU argument test helpers
+@raypx/i18n         product locale constants, configured locale/format/translation helpers
+@raypx/i18n/client  configured React providers/hooks and product storage adapters
+@raypx/i18n/server  configured request locale resolution and translator factory
+@raypx/i18n/types   Raypx locale and catalog types
+@raypx/i18n/testing re-exported catalog parity and ICU test helpers
 ```
 
 ## Ownership
 
-- Own locale normalization, supported-locale metadata, Cookie/localStorage adapters, runtime providers,
-  formatters, and the `use-intl` integration.
-- Locale changes update in-memory state and persistence before the optional
-  document synchronization callback; callback failures do not roll back locale.
-- Formatter helpers default to UTC and cache by locale, timezone, and effective
-  format definitions. Provider-level timezone and format overrides flow through
-  both `use-intl` and the standalone formatter.
-- Applications and Mail own their `messages/` JSON catalogs.
-- `I18nProvider` remains the synchronous compatibility provider for Desktop,
-  Mail, and tests. `AsyncI18nProvider` supports an application-owned catalog
-  loader for Web-style locale splitting; it caches in-flight loads, commits the
-  locale and catalog atomically, and clears failed loads so callers can retry.
-- Applications and Mail own their catalog files. The i18n package owns the
-  loader contract but never imports application catalog files.
-- Catalog parity tests compare recursive keys, node types, and ICU argument
-  names through `@formatjs/icu-messageformat-parser` in the testing subpath.
-  It is a direct catalog dependency, isolated from client/runtime entrypoints.
-- Error helpers read the stable `data.error` envelope (with an optional
-  primitive `values` record) and discard untrusted object values before calling
-  a translator. They never expose server diagnostic prose.
+- Own Raypx's `en`/`zh` locale choices, native language names, fallback locale,
+  locale Cookie settings and `raypx_locale` storage key.
+- Keep the `voidmix_locale` preference migration in this product adapter.
+- Own translation of the stable `data.error` envelope and safe primitive values;
+  never expose server diagnostic prose as translated UI text.
+- Configure an immutable `@raypx/intl` locale runtime and React client factory.
+  Translation, formatting, sync/async providers, request negotiation and ICU
+  catalog validation are maintained in the standalone library.
+- Applications and Mail own their message catalogs and catalog loaders.
+- Preserve locale transitions, async catalog race guards, default UTC formatting,
+  provider format/timezone overrides and callback failure behavior.
+- Existing tests verify product configuration and compatibility through the
+  actual package artifact; reusable library tests live with `@raypx/intl`.
 
 ## Constraints
 
-- Business code imports translation hooks and translator types only from this
-  package; it must not import `use-intl` directly.
-- Keep `use-intl` implementation details behind the package facade, including
-  its `AppConfig` and translator types.
-- `client` and runtime exports must not import compiler or build modules.
-- Domain and contract packages must not depend on this package.
+- Business code imports translation hooks and translator types from this facade.
+  Applications do not import `use-intl` directly.
+- Never duplicate standalone internationalization implementations here.
+- Product runtime exports must not import catalog testing or build modules.
+- Domain and contract packages do not depend on internationalization.
+- Toolkit packages use the root catalog even with the `@raypx/` scope. The
+  unpublished archive bridge and provenance are documented in `vendor/`.
+
+See [internationalization ownership](../../docs/architecture/intl.md).
 
 ## Verification
 

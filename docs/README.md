@@ -5,6 +5,8 @@ deployment boundaries, and coding-agent guidance.
 
 ## Architecture
 
+- [Internationalization ownership](./architecture/intl.md) — independent `@raypx/intl`, product locale configuration and compatibility.
+
 - [Drizzle extensions and Toolkit](./architecture/drizzle-extensions.md) —
   independent libraries, full upstream inventory, merge design and diagnostics.
 

@@ -2,6 +2,9 @@
 
 ## Status
 
+Shared runtime ownership is superseded by [ADR-0030](0030-independent-intl-library.md).
+The product facade and locale behavior remain.
+
 Web catalog loading is superseded by ADR-0007; the recipient-locale clause is
 superseded by ADR-0005. The remaining static-provider and facade decisions stay
 accepted.

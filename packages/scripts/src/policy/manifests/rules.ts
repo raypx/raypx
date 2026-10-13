@@ -117,7 +117,7 @@ export function validateDependencies(
   const { findings, report } = collectFindings(dependencyFinding);
   for (const [name, version] of Object.entries(dependencies)) {
     // Toolkit keeps the Raypx scope, but its packages are released outside this workspace.
-    if (name.startsWith("@raypx/") && name !== "@raypx/drizzle") {
+    if (name.startsWith("@raypx/") && !["@raypx/drizzle", "@raypx/intl"].includes(name)) {
       if (version === "workspace:*") continue;
       report(
         location,

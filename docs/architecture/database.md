@@ -51,7 +51,7 @@ malformed JSON numbers before returning totals. Fixed-query diagnostics share
 production Cloud builders and execute through dedicated read-only transactions.
 The full upstream inventories, merge design and command examples are indexed in
 [Drizzle extensions](./drizzle-extensions.md). Source provenance is linked from
-[DB third-party notices](../../packages/db/third-party/NOTICE.md).
+[DB source notices](../../packages/db/NOTICE.md).
 
 ## Verification
 

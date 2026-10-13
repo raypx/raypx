@@ -14,7 +14,7 @@ versioned packages, following TanStack Config's multi-package release structure.
 
 ## Decision
 
-Maintain reusable libraries in [Raypx Toolkit](https://github.com/raypx/toolkit).
+Maintain reusable libraries in [Raypx Packages](https://github.com/raypx/packages).
 Its first package is `@raypx/drizzle`, with compiled ESM, declarations, explicit
 subpaths and Drizzle as a peer. It has no product workspace runtime dependencies.
 Inventory and merge design are maintained with the implementation in Toolkit.

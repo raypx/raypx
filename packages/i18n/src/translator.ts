@@ -1,32 +1,10 @@
-import { createTranslator as createIntlTranslator } from "use-intl/core";
+import { createTranslator as createIntlTranslator } from "@raypx/intl";
+import type { CreateTranslatorOptions as IntlTranslatorOptions, Translator } from "@raypx/intl";
+import type { Locale } from "./types.js";
 
-import { formats as defaultFormats } from "./formats.js";
-import type { IntlRuntimeOptions, Locale, MessageCatalog, TranslationValues } from "./types.js";
+export type { Translator } from "@raypx/intl";
+export type CreateTranslatorOptions = Omit<IntlTranslatorOptions, "locale"> & { locale: Locale };
 
-export type Translator = (key: string, values?: TranslationValues) => string;
-
-export type CreateTranslatorOptions = {
-  locale: Locale;
-  messages: MessageCatalog;
-  namespace?: string;
-  timeZone?: string;
-  formats?: IntlRuntimeOptions["formats"];
-};
-
-export function createTranslator({
-  locale,
-  messages,
-  namespace,
-  timeZone = "UTC",
-  formats = defaultFormats,
-}: CreateTranslatorOptions): Translator {
-  const translator = createIntlTranslator({
-    locale,
-    messages,
-    ...(namespace ? { namespace } : {}),
-    timeZone,
-    formats: formats as never,
-  });
-
-  return (key, values) => (translator as unknown as Translator)(key, values);
+export function createTranslator(options: CreateTranslatorOptions): Translator {
+  return createIntlTranslator(options);
 }

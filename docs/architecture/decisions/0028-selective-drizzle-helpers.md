@@ -44,7 +44,7 @@ earlier changes. Recognized domain errors do not expose underlying query text or
 parameters. Other unique constraints and database failures remain original errors.
 
 Retain fixed source commits, full license texts, copyright and modification
-notices in [DB third-party provenance](../../../packages/db/third-party/NOTICE.md).
+notices in [DB source provenance](../../../packages/db/NOTICE.md).
 These modules belong to DB implementation, with no public package subpath or
 frontend import path.
 

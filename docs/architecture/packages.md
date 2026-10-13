@@ -160,21 +160,21 @@ using the logger transport. The package exposes only server-side mail interfaces
 
 ## `@raypx/i18n`
 
-The locale and translation facade shared by renderer and server packages. It
-owns the supported locale list and native language metadata, `en`/`zh` normalization, Accept-Language and Cookie parsing, browser and
-Desktop storage adapters, Intl formatters, the synchronous and asynchronous
-React providers, and the internal `use-intl` integration. Applications and
-Mail own their catalog files.
-
-The package exposes a small catalog-loader type but no application-specific
-loader or generated runtime output. Web uses the async provider with its own
-explicit locale-to-import map; Desktop and Mail remain synchronous. Domain and
-contracts remain independent of i18n.
+The private product configuration and compatibility facade for `@raypx/intl`.
+It configures `en`/`zh`, language names, fallback and Cookie/storage settings,
+retains the old brand preference migration and translates the `data.error`
+envelope. Generic runtime implementation lives in the independently released
+library. Applications and Mail own their catalogs; domain and contracts stay
+independent. See [internationalization ownership](./intl.md).
 
 ## External Toolkit libraries
 
+`@raypx/intl` supplies configurable locale negotiation, ICU translation, Intl
+formatting, React providers and isolated catalog testing. Raypx consumes it
+through its private i18n facade; see [ADR-0030](./decisions/0030-independent-intl-library.md).
+
 `@raypx/drizzle` is owned by the independent
-[Raypx Toolkit](https://github.com/raypx/toolkit) repository, not a workspace in
+[Raypx Packages](https://github.com/raypx/packages) repository, not a workspace in
 this product repository. It supplies public-API SQL expressions, JSONB helpers,
 result unwrapping, PostgreSQL error recognition and plan summaries. Product DB
 adapters retain schema, migration and permission ownership. See

@@ -1,30 +1,32 @@
-# Toolkit release snapshot
+# Toolkit package snapshots
 
-Raypx consumes `@raypx/drizzle@0.1.0` from this versioned tarball until its first
-npm publication. Reusable source and the complete capability/merge documents
-are maintained only in [raypx/toolkit](https://github.com/raypx/toolkit).
+Raypx consumes `@raypx/drizzle@0.1.0` and `@raypx/intl@0.1.0` from versioned
+compiled archives until npm publication. Reusable implementations are maintained
+only in [raypx/packages](https://github.com/raypx/packages).
 
-[drizzle.json](drizzle.json) records the source commit, exact peer and SHA256.
-The tarball contains compiled ESM, declarations, sourcemaps, API documentation,
-CHANGELOG and complete upstream license/provenance files. It has no product
-workspace runtime dependency. The root Bun catalog points to the archive;
-Docker install stages copy `vendor/` before frozen dependency installation.
+[drizzle.json](drizzle.json) and [intl.json](intl.json) record package versions,
+source commits and SHA256 checksums. Tarballs contain ESM, declarations,
+sourcemaps, API documentation and licenses. Drizzle's complete source notices
+and licenses are package-root files. No archive imports a product workspace.
+Root Bun catalogs point to these archives; Docker install stages copy `vendor/`
+before frozen dependency installation.
 
-This checked release snapshot is intentionally tracked. It is not a second
-editable source fork, a claim of npm publication or a cross-checkout link.
+These snapshots are intentionally tracked and are not editable source forks,
+npm publication claims or cross-checkout links.
 
 ## Updating
 
 1. Check out the intended Toolkit commit and run its complete verify gate,
-   including actual isolated tarball consumers and independent release checks.
-2. Build through Toolkit's root Turbo command. Pack its Drizzle package with
+   including actual isolated Bun/Node consumers and independent release checks.
+2. Build through Toolkit's root Turbo command. Pack each changed package with
    Bun 1.4.0 into this directory using `bun pm pack --ignore-scripts`.
-3. Update source commit/version/checksum metadata and the root catalog filename.
-   Regenerate `bun.lock`, ensuring the archived dependency's integrity changes.
-4. Run Raypx DB unit/PostgreSQL tests, generation without schema drift and
-   `bun run verify`. Keep authentication, permissions, migrations and data in DB.
+3. Update version/source/checksum metadata and the root catalog filename.
+   Regenerate `bun.lock`, checking each changed archive's integrity.
+4. Run the owning product facade's narrow tests, then `bun run verify`.
+   Runtime changes to Drizzle also require the dedicated PostgreSQL gate.
 
-After an authorized maintainer publishes this verified version to npm, replace
-its root catalog archive specification with the explicit registry version,
-regenerate the lockfile and retire the bootstrap archive in the same consumer
-change. See [ADR-0029](../docs/architecture/decisions/0029-toolkit-drizzle-extraction.md).
+After an authorized maintainer publishes a verified version to npm, replace its
+archive catalog entry with that explicit registry version and retire its
+bootstrap archive in the same consumer change.
+See [ADR-0029](../docs/architecture/decisions/0029-toolkit-drizzle-extraction.md)
+and [ADR-0030](../docs/architecture/decisions/0030-independent-intl-library.md).

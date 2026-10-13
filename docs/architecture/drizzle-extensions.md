@@ -1,7 +1,7 @@
 # Drizzle extensions and Toolkit ownership
 
 The extension library is maintained in the independent
-[raypx/toolkit repository](https://github.com/raypx/toolkit), as `@raypx/drizzle`.
+[raypx/toolkit repository](https://github.com/raypx/packages), as `@raypx/drizzle`.
 [ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md) records extraction,
 independent releases and the pre-publication archive bridge.
 
@@ -9,13 +9,13 @@ independent releases and the pre-publication archive bridge.
 
 Toolkit owns the complete inventories and the combined implementation roadmap:
 
-- [drizzle-plus inventory](https://github.com/raypx/toolkit/blob/main/packages/drizzle/docs/drizzle-plus-capabilities.md)
+- [drizzle-plus inventory](https://github.com/raypx/packages/blob/main/packages/drizzle/docs/drizzle-plus-capabilities.md)
   covers query/select extensions, all shared and dialect SQL functions, generated
   entrypoints, low-level helpers and public types.
-- [better-drizzle inventory](https://github.com/raypx/toolkit/blob/main/packages/drizzle/docs/better-drizzle-capabilities.md)
+- [better-drizzle inventory](https://github.com/raypx/packages/blob/main/packages/drizzle/docs/better-drizzle-capabilities.md)
   covers CRUD/batches, filters, relations, transactions, prepared reads, diagnostics,
   every plugin, runtime rules, ESLint rules, error codes and type declarations.
-- [Merge and extension design](https://github.com/raypx/toolkit/blob/main/packages/drizzle/docs/merge-plan.md)
+- [Merge and extension design](https://github.com/raypx/packages/blob/main/packages/drizzle/docs/merge-plan.md)
   defines canonical semantics, dialect/public-API boundaries, compatibility
   adapters, plugin lifecycle and staged acceptance.
 

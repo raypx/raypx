@@ -18,7 +18,7 @@ Source layout: `index.ts` exports repositories directly, `connection.ts` owns
 connections and migration execution, `repositories/` owns Cloud, blob and
 settings adapters, and `v2/` owns canonical project/resource adapters.
 Reusable column, JSONB, error, result and plan helpers come from the independent
-`@raypx/drizzle` Toolkit package; `third-party/NOTICE.md` links its provenance.
+`@raypx/drizzle` Toolkit package; `NOTICE.md` links its provenance.
 `diagnostics/` owns the fixed read catalog and dedicated read-only execution.
 `repositories/settings/values.ts` shares pure configuration resolution.
 `schema.ts` exposes active tables; `schema/migrations.ts` includes all physical
