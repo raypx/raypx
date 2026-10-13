@@ -1,0 +1,50 @@
+packages/db/tests/cloud.integration.test.ts
+  s_8cb2ae3aaeefff::t_e39858d3fe4318 179-183
+docs/README.md
+  s_8cb2ae3aaeefff::t_37236e33b71b2a 11
+packages/db/src/repositories/cloud/queries.ts
+  s_8cb2ae3aaeefff::t_e39858d3fe4318 2
+docs/architecture/decisions/0031-postgres-js-only-drizzle.md
+  s_8cb2ae3aaeefff::t_37236e33b71b2a 1-41
+packages/db/tests/drizzle-extensions.integration.test.ts
+  s_8cb2ae3aaeefff::t_e39858d3fe4318 3
+docs/architecture/database.md
+  s_8cb2ae3aaeefff::t_8acc73adc1c61f 80-84
+packages/db/src/repositories/cloud/postgres.ts
+  s_8cb2ae3aaeefff::t_e39858d3fe4318 16
+packages/db/AGENTS.md
+  s_8cb2ae3aaeefff::t_8acc73adc1c61f 73-75
+docs/architecture/drizzle-extensions.md
+  s_8cb2ae3aaeefff::t_37236e33b71b2a 26-28
+  s_8cb2ae3aaeefff::t_82ee158fbd5949 4
+  s_8cb2ae3aaeefff::t_8acc73adc1c61f 29-39,46
+  s_8cb2ae3aaeefff::t_e39858d3fe4318 45
+docs/architecture/decisions/README.md
+  s_8cb2ae3aaeefff::t_37236e33b71b2a 69-70
+packages/db/src/v2/projects.ts
+  s_8cb2ae3aaeefff::t_e39858d3fe4318 17
+package.json
+  s_8cb2ae3aaeefff::t_11b3fb1732246f 40
+bun.lock
+  s_8cb2ae3aaeefff::t_ae7053a1dee781 448,1016
+vendor/README.md
+  s_8cb2ae3aaeefff::t_88ba482eb14bb3 23-25,35-37
+vendor/drizzle.json
+  s_8cb2ae3aaeefff::t_f556a1b03866a0 4,6-7,9-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c5d76e1645f8091ffae405c62e72111e40356dc1",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
