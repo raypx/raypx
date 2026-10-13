@@ -4,7 +4,7 @@ import { createCloudApplication } from "@raypx/application";
 import type { CloudRepository, CloudRunEvent } from "@raypx/core";
 import { PostgresCloudRepository } from "../src/repositories/cloud/postgres.js";
 import { InMemoryCloudRepository } from "../src/repositories/cloud/memory.js";
-import { isUniqueViolation } from "../src/query/errors.js";
+import { isUniqueViolation } from "@raypx/drizzle/errors";
 import { acquireCloudWorkerLease } from "../src/repositories/cloud/worker-lease.js";
 import { exerciseSharedTaskBudget } from "./cloud-budget.js";
 import { exerciseRoundAndLease, exercisePublicationCAS } from "./cloud-rounds.js";

@@ -12,6 +12,7 @@ COPY --from=prune /app/out/json/ ./
 # Turbo 2.11.7 omits some optional-peer devDependency resolutions from Bun
 # pruned locks. Keep the canonical lock; Bun skips excluded workspaces.
 COPY bun.lock ./
+COPY vendor/ ./vendor/
 # Root postinstall needs shared sources, which arrive in the next layer.
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY --from=prune /app/out/full/ ./

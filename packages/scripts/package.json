@@ -23,6 +23,7 @@
     "db:push": "rpx db push",
     "db:clean": "rpx db clean",
     "db:studio": "rpx db studio",
+    "db:explain": "rpx db explain",
     "generate": "rpx generate",
     "desktop:build": "rpx desktop build",
     "verify": "rpx verify",

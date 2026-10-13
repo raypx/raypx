@@ -10,10 +10,11 @@ import type {
 import { sql, eq, and, type SQL } from "drizzle-orm";
 import { CloudDomainError, sameCloudTaskRound } from "@raypx/core";
 import type { DatabaseConnection } from "../../connection.js";
-import { isUniqueViolation } from "../../query/errors.js";
+import { isUniqueViolation } from "@raypx/drizzle/errors";
 import { users, v2Projects, v2ProjectMembers, organizationMembers } from "../../schema.js";
 import { cloudRecords, cloudActorId, cloudParentIds, hydrateCloudRecord } from "./records.js";
-import { excludedColumn } from "../../query/columns.js";
+import { excludedColumn, jsonText, jsonBoolean } from "@raypx/drizzle/pg";
+import { accountUsageQuery, readyRunsQuery, expiredRunsQuery } from "./queries.js";
 
 type Database = DatabaseConnection["db"];
 function txFor(db: Database, writing: boolean): CloudTransaction {
@@ -32,33 +33,16 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
   return {
     lock,
     accountUsage: async ({ ownerAccountId, from, until }) => {
-      const rows = await db.execute<{ [K in keyof CloudUsageTotals]: number | string }>(sql`
-        SELECT calls, "reservedCalls", "unknownCalls", "inputTokens", "outputTokens",
-          "estimatedCost", "storageBytes", "activeRuns"
-        FROM (
-          SELECT count(*) FILTER (WHERE state <> 'released') AS calls,
-            count(*) FILTER (WHERE state = 'reserved') AS "reservedCalls",
-            count(*) FILTER (WHERE state = 'unknown') AS "unknownCalls",
-            coalesce(sum((data->>'inputTokens')::double precision), 0) AS "inputTokens",
-            coalesce(sum((data->>'outputTokens')::double precision), 0) AS "outputTokens",
-            coalesce(sum((data->>'estimatedCost')::double precision), 0) AS "estimatedCost"
-          FROM cloud_usage_calls
-          WHERE owner_account_id = ${ownerAccountId}
-            AND created_at >= ${from.toISOString()} AND created_at < ${until.toISOString()}
-        ) usage
-        CROSS JOIN (
-          SELECT coalesce(sum((data->>'byteSize')::double precision), 0) AS "storageBytes"
-          FROM cloud_assets WHERE data->>'ownerAccountId' = ${ownerAccountId}
-        ) assets
-        CROSS JOIN (
-          SELECT count(*) AS "activeRuns" FROM cloud_runs
-          WHERE owner_account_id = ${ownerAccountId}
-            AND status NOT IN ('needs_input', 'succeeded', 'failed', 'cancelled')
-        ) runs
-      `);
+      const rows = await db.execute<
+        { [K in keyof CloudUsageTotals]: number | string } & {
+          invalidAccountingValues: number | string;
+        }
+      >(accountUsageQuery({ ownerAccountId, from, until }));
       const row = rows[0];
       if (!row) throw new Error("Missing account usage aggregate.");
-      return {
+      if (Number(row.invalidAccountingValues) !== 0)
+        throw new Error("Invalid persisted account usage values.");
+      const totals = {
         calls: Number(row.calls),
         reservedCalls: Number(row.reservedCalls),
         unknownCalls: Number(row.unknownCalls),
@@ -68,6 +52,9 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
         storageBytes: Number(row.storageBytes),
         activeRuns: Number(row.activeRuns),
       };
+      if (Object.values(totals).some((value) => !Number.isFinite(value)))
+        throw new Error("Invalid persisted account usage totals.");
+      return totals;
     },
     activeTaskRun: async (taskId) => {
       const rows = await records<CloudEntities["runs"]>(
@@ -75,14 +62,8 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
       );
       return rows[0] ?? null;
     },
-    readyRuns: (limit) =>
-      records<CloudEntities["runs"]>(
-        sql`SELECT data FROM cloud_runs WHERE status='queued' ORDER BY created_at,id LIMIT ${limit}`,
-      ),
-    expiredRuns: (now, limit) =>
-      records<CloudEntities["runs"]>(
-        sql`SELECT data FROM cloud_runs WHERE status='running' AND (lease_expires_at IS NULL OR lease_expires_at<=${now.toISOString()}) ORDER BY lease_expires_at NULLS FIRST,id LIMIT ${limit}`,
-      ),
+    readyRuns: (limit) => records<CloudEntities["runs"]>(readyRunsQuery(limit)),
+    expiredRuns: (now, limit) => records<CloudEntities["runs"]>(expiredRunsQuery(now, limit)),
     get: async <K extends CloudEntityKind>(kind: K, id: string) => {
       const rows = await records<CloudEntities[K]>(
         sql`SELECT data FROM ${sql.identifier(cloudRecords[kind].table)} WHERE id=${id} LIMIT 1`,
@@ -93,14 +74,15 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
       const conditions = [sql`true`];
       if (query.ownerAccountId)
         conditions.push(
-          sql`${kind === "usage" || kind === "runs" ? sql.identifier("owner_account_id") : sql`data->>'ownerAccountId'`}=${query.ownerAccountId}`,
+          sql`${kind === "usage" || kind === "runs" ? sql.identifier("owner_account_id") : jsonText(sql.identifier("data"), ["ownerAccountId"])}=${query.ownerAccountId}`,
         );
       if (query.roundId)
         conditions.push(
-          sql`${kind === "runs" || kind === "usage" ? sql.identifier("round_id") : sql`data->>'roundId'`}=${query.roundId}`,
+          sql`${kind === "runs" || kind === "usage" ? sql.identifier("round_id") : jsonText(sql.identifier("data"), ["roundId"])}=${query.roundId}`,
         );
       if (query.runIds) {
-        const runId = kind === "usage" ? sql.identifier("run_id") : sql`data->>'runId'`;
+        const runId =
+          kind === "usage" ? sql.identifier("run_id") : jsonText(sql.identifier("data"), ["runId"]);
         conditions.push(
           query.runIds.length
             ? sql`${runId} IN (${sql.join(
@@ -113,14 +95,16 @@ function txFor(db: Database, writing: boolean): CloudTransaction {
       if (query.turnIds)
         conditions.push(
           query.turnIds.length
-            ? sql`coalesce(data->>'sourceTurnId',data->>'turnId') IN (${sql.join(
+            ? sql`coalesce(${jsonText(sql.identifier("data"), ["sourceTurnId"])},${jsonText(sql.identifier("data"), ["turnId"])}) IN (${sql.join(
                 query.turnIds.map((id) => sql`${id}`),
                 sql`,`,
               )})`
             : sql`false`,
         );
       if (query.published !== undefined)
-        conditions.push(sql`(data->>'published')::boolean=${query.published}`);
+        conditions.push(
+          sql`${jsonBoolean(sql.identifier("data"), ["published"])}=${query.published}`,
+        );
       if (query.status) conditions.push(sql`status=${query.status}`);
       if (query.scope)
         conditions.push(

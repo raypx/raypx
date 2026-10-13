@@ -43,13 +43,15 @@ JSON decoding restores domain Date fields and the bounded mutation replay DTO.
 Arbitrary tool input, output, event payloads and nested source content remain JSON;
 their date-shaped strings are evidence, not domain timestamps.
 
-Private `query/` helpers adapt selected upstream capabilities under
-[ADR-0028](./decisions/0028-selective-drizzle-helpers.md): typed membership column
-projections, explicit excluded-column UPSERT mappings and PostgreSQL uniqueness
-classification. Constraint conflicts match the memory adapter's domain errors
-and still roll back the transaction. Unknown errors propagate unchanged.
-Source commits, modifications and full licenses are retained in
-[third-party provenance](../../packages/db/third-party/NOTICE.md).
+Reusable expression, result, uniqueness and plan helpers are maintained in the
+independently released `@raypx/drizzle` Toolkit library under
+[ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md). DB retains business
+queries, schema, permissions and transaction ownership. Accounting validates
+malformed JSON numbers before returning totals. Fixed-query diagnostics share
+production Cloud builders and execute through dedicated read-only transactions.
+The full upstream inventories, merge design and command examples are indexed in
+[Drizzle extensions](./drizzle-extensions.md). Source provenance is linked from
+[DB third-party notices](../../packages/db/third-party/NOTICE.md).
 
 ## Verification
 

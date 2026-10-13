@@ -1,4 +1,4 @@
-import { first, inserted } from "./results.js";
+import { first, inserted } from "@raypx/drizzle/results";
 import { asc, desc, eq } from "drizzle-orm";
 import type { Database } from "../connection.js";
 import type { FeedbackV2, FeedbackV2Repository, ReviewV2, ReviewV2Repository } from "@raypx/core";

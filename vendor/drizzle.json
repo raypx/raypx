@@ -1,0 +1,10 @@
+{
+  "package": "@raypx/drizzle",
+  "version": "0.1.0",
+  "artifact": "raypx-drizzle-0.1.0.tgz",
+  "sourceRepository": "https://github.com/raypx/toolkit",
+  "sourceCommit": "49efa4cc0f24d21c1dd4967f5cb9757ada0337af",
+  "sha256": "8eae9e93f7c27c24254551a084e70149e6ab404963e97c79173567e2fde93977",
+  "drizzlePeer": "1.0.0-rc.5-5935859",
+  "registryPublication": "pending"
+}

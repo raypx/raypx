@@ -7,17 +7,19 @@ interfaces owned by `@raypx/core`.
 
 ## Interface
 
-| Path       | Purpose                                                     |
-| ---------- | ----------------------------------------------------------- |
-| `.`        | repositories, connection helpers, migrate/reset, re-exports |
-| `./env`    | the database environment preset                             |
-| `./schema` | Drizzle tables, enums, and the `schema` aggregate           |
+| Path            | Purpose                                                     |
+| --------------- | ----------------------------------------------------------- |
+| `.`             | repositories, connection helpers, migrate/reset, re-exports |
+| `./env`         | the database environment preset                             |
+| `./schema`      | Drizzle tables, enums, and the `schema` aggregate           |
+| `./diagnostics` | Fixed-query read diagnostics and sanitized plan DTOs        |
 
 Source layout: `index.ts` exports repositories directly, `connection.ts` owns
 connections and migration execution, `repositories/` owns Cloud, blob and
 settings adapters, and `v2/` owns canonical project/resource adapters.
-Private `query/` modules contain selected source-adapted column and error helpers;
-`third-party/NOTICE.md` records their origins and licenses.
+Reusable column, JSONB, error, result and plan helpers come from the independent
+`@raypx/drizzle` Toolkit package; `third-party/NOTICE.md` links its provenance.
+`diagnostics/` owns the fixed read catalog and dedicated read-only execution.
 `repositories/settings/values.ts` shares pure configuration resolution.
 `schema.ts` exposes active tables; `schema/migrations.ts` includes all physical
 tables, with retired definitions in `schema/compatibility.ts`. Historical SQL
@@ -42,6 +44,10 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - Account usage aggregates on that transaction handle without loading complete
   histories. Monthly call totals and lifetime storage/active Runs match memory;
   aggregate numeric values are converted to JavaScript numbers explicitly.
+- JSONB helpers are nullable, but accounting rejects malformed persisted numeric
+  values and non-finite totals rather than treating corruption as zero.
+- Diagnostics share the production Cloud SQL builders. Dedicated read-only
+  transactions use local PostgreSQL timeouts and never return SQL/parameters.
 - Run lease expiry, epoch, cancellation and account/round identities are indexed
   columns alongside their typed data. Critical active-Task and expired-Run queries
   have semantic Core ports; message projections and grant hashes commit durably.
@@ -73,7 +79,7 @@ See [ADR-0013](../../docs/architecture/decisions/0013-domain-modules-and-retired
 - Source-adapted helpers use public Drizzle APIs and explicit column/conflict
   allowlists. Do not patch global prototypes or expose another ORM facade.
   Retain source notices and licenses; see
-  [ADR-0028](../../docs/architecture/decisions/0028-selective-drizzle-helpers.md).
+  [ADR-0029](../../docs/architecture/decisions/0029-toolkit-drizzle-extraction.md).
 - Queued Agent creation commits the Run, Turn/Round and admission facts in one
   transaction. Both adapters list and claim queued Runs without a dispatch-ready gate.
 - Outbox, notification and preference tables, the dispatch-ready column and their

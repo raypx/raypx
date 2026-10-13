@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded in helper location and inventory scope by [ADR-0029](./0029-toolkit-drizzle-extraction.md).
+Public Drizzle APIs, explicit update keys, exact constraints and transaction/data
+safeguards remain in force.
 
 ## Context
 

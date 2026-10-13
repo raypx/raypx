@@ -280,6 +280,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@raypx/core": "workspace:*",
+        "@raypx/drizzle": "catalog:backend",
         "@raypx/shared": "workspace:*",
         "drizzle-orm": "catalog:backend",
         "postgres": "catalog:backend",
@@ -446,6 +447,7 @@
       "@aws-sdk/client-s3": "^3.1149.0",
       "@aws-sdk/s3-presigned-post": "^3.1149.0",
       "@aws-sdk/s3-request-presigner": "^3.1149.0",
+      "@raypx/drizzle": "file:vendor/raypx-drizzle-0.1.0.tgz",
       "@sentry/node": "^11.6.0",
       "drizzle-kit": "1.0.0-rc.5-5935859",
       "drizzle-orm": "1.0.0-rc.5-5935859",
@@ -1012,6 +1014,8 @@
     "@raypx/core": ["@raypx/core@workspace:packages/core"],
 
     "@raypx/db": ["@raypx/db@workspace:packages/db"],
+
+    "@raypx/drizzle": ["@raypx/drizzle@vendor/raypx-drizzle-0.1.0.tgz", { "peerDependencies": { "drizzle-orm": "1.0.0-rc.5-5935859" } }, "sha512-SCv6ho55+nlxTSP0m31rFTaqGALwbsW1oMjW88JgDRc4hywuntm1QUsrBLVRA5qIxwSmE+nGUiOu7DBtKbYZvA=="],
 
     "@raypx/e2e": ["@raypx/e2e@workspace:e2e"],
 

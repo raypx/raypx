@@ -171,6 +171,16 @@ loader or generated runtime output. Web uses the async provider with its own
 explicit locale-to-import map; Desktop and Mail remain synchronous. Domain and
 contracts remain independent of i18n.
 
+## External Toolkit libraries
+
+`@raypx/drizzle` is owned by the independent
+[Raypx Toolkit](https://github.com/raypx/toolkit) repository, not a workspace in
+this product repository. It supplies public-API SQL expressions, JSONB helpers,
+result unwrapping, PostgreSQL error recognition and plan summaries. Product DB
+adapters retain schema, migration and permission ownership. See
+[Drizzle extensions](./drizzle-extensions.md) and
+[ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md).
+
 ## `@raypx/db`
 
 The database adapter package.

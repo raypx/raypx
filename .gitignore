@@ -21,6 +21,7 @@ packages/*/coverage/
 node_modules/
 *.tsbuildinfo
 *.tgz
+!/vendor/*.tgz
 .cache/
 .vite/
 dist/

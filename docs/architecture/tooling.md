@@ -31,8 +31,11 @@ Vitest itself is absent from the catalogs because Vite+ bundles the runner;
 `@vitest/coverage-v8` remains explicit so its version can track that bundled
 runner.
 
-Internal packages use `workspace:*`. Change third-party versions in the root
-catalog rather than individual workspace manifests.
+Internal workspaces use `workspace:*`. Independently published Toolkit packages
+use catalogs even though their names share `@raypx/`. Before the first registry
+publication, the Drizzle catalog entry uses a versioned `vendor/` tarball copied
+into Docker install layers. See [Drizzle extensions](./drizzle-extensions.md).
+Change external versions in the root catalog rather than workspace manifests.
 
 Most stable third-party dependencies use caret semver ranges (`^`), including
 `0.x` releases without a pre-release suffix. Vitest coverage is pinned exactly
@@ -193,6 +196,7 @@ db migrate             apply Drizzle migrations
 db push                push the schema without a migration in development/test
 db clean               drop every table and migration record in development/test
 db studio              open Drizzle Studio in development/test
+db explain             inspect a fixed read-query catalog in development/test
 policy [--fix]         check repository conventions; --fix rewrites the
                        findings that have exactly one possible remedy
 generate               regenerate Drizzle artifacts

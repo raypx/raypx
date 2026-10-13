@@ -1,7 +1,7 @@
 import { cursorPage, timestampKey } from "../pagination.js";
 import { projectVisibility } from "./visibility.js";
 import type { VisibleResourceQuery } from "@raypx/core";
-import { first, inserted } from "./results.js";
+import { first, inserted } from "@raypx/drizzle/results";
 import type {
   OrganizationMemberV2,
   OrganizationMemberV2Repository,
@@ -13,7 +13,8 @@ import type {
 import { and, asc, desc, eq } from "drizzle-orm";
 import { organizationMembers, v2ProjectMembers, v2Projects } from "../schema.js";
 import type { Database } from "../connection.js";
-import { excludedColumns, withoutColumns } from "../query/columns.js";
+import { withoutColumns } from "@raypx/drizzle";
+import { excludedColumns } from "@raypx/drizzle/pg";
 
 const memberColumns = withoutColumns(v2ProjectMembers, "id", "createdAt", "updatedAt");
 const organizationMemberColumns = withoutColumns(

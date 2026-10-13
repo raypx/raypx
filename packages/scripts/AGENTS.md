@@ -29,7 +29,7 @@ src/verify/         shared artifact staging, isolated HTTP and Worker verificati
 ```
 
 Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] [Playwright flags/files]`, `env -- <command>`, `doctor`, `deps check|update|dedupe|audit`, `skills update`, `clean [--dependencies] [--bun-cache]`, `db migrate|clean|push|studio`,
-`generate`, `desktop build`, `policy`, `verify [--verbose]`,
+`db explain` (fixed development/test read catalog), `generate`, `desktop build`, `policy`, `verify [--verbose]`,
 `shadcn update`.
 
 ## Ownership

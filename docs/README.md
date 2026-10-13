@@ -5,6 +5,9 @@ deployment boundaries, and coding-agent guidance.
 
 ## Architecture
 
+- [Drizzle extensions and Toolkit](./architecture/drizzle-extensions.md) —
+  independent libraries, full upstream inventory, merge design and diagnostics.
+
 - [Cloud platform](./architecture/cloud-platform.md) — Web-first Search/Computer,
   durable execution, shared business UI and SaaS foundations.
 
