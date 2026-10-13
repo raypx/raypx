@@ -1,0 +1,39 @@
+apps/worker/AGENTS.md
+  s_29d2da1ea73272::t_90a523daf0fccf 29-31,69-71
+packages/core/src/agents/outbox.ts
+  s_29d2da1ea73272::t_b02dc2e10c0c1a 7-16,18-20
+docs/architecture/cloud-platform.md
+  s_29d2da1ea73272::t_90a523daf0fccf 120-132
+packages/db/AGENTS.md
+  s_29d2da1ea73272::t_90a523daf0fccf 25-30,63-64
+packages/db/tests/outbox.integration.test.ts
+  s_29d2da1ea73272::t_f3b65c70e09cc2 1-22,24-57,59-146
+  s_29d2da1ea73272::t_a2a53dccf9625f 23,58
+packages/db/src/outbox.ts
+  s_29d2da1ea73272::t_06faddc7c72df5 1,11,17,25,35,37-42,45,50,54,57-58,60
+docs/development/testing.md
+  s_29d2da1ea73272::t_90a523daf0fccf 374-378
+apps/worker/src/index.test.ts
+  s_29d2da1ea73272::t_8dbe96beecfc05 1,17,19-20,34,36,38-39,55-57,60,62-106,108-119,126-129,135-141,146-149,151-154,162-163,167-172,176,180,190-200,204-205,215
+  s_29d2da1ea73272::t_08e458883bd990 120-125,130-134,159-161,164-166,173-175,177-179,181-189,201-203,206-214
+apps/worker/src/index.ts
+  s_29d2da1ea73272::t_40560d13770194 20-27,31,49,52,54
+packages/core/AGENTS.md
+  s_29d2da1ea73272::t_90a523daf0fccf 34-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3254f0a637a8fb93d1a58ab7983f6fff8a278a33",
+  "prompts": {},
+  "sessions": {
+    "s_29d2da1ea73272": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a12f68-d872-7963-b308-ef1a17895496",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
