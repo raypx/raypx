@@ -3,7 +3,7 @@
 The extension library is maintained in the independent
 [raypx/packages repository](https://github.com/raypx/packages), as `@raypx/drizzle`.
 [ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md) records extraction,
-independent releases and the pre-publication archive bridge.
+independent releases and the transition to published npm packages.
 
 ## Complete capability inventory
 
@@ -85,6 +85,7 @@ runs DB unit tests, guarded PostgreSQL tests, generation with no schema drift an
 `bun run verify`. See [testing](../development/testing.md).
 
 The exact Drizzle RC remains the package peer version; a broad upstream peer
-range alone cannot justify an upgrade. Replace the vendored snapshot only with
-a verified Toolkit build and update its source/checksum metadata and Bun lock.
-For the initial archive and registry transition, see [vendor provenance](../../vendor/README.md).
+range alone cannot justify an upgrade. The root backend catalog pins the
+published `@raypx/drizzle@0.0.0`; Bun records registry integrity in `bun.lock`.
+Upgrade only to a verified registry release, then regenerate the lockfile and
+run the product compatibility gate. The pre-publication archive bridge is retired.

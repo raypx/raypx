@@ -32,9 +32,10 @@ Vitest itself is absent from the catalogs because Vite+ bundles the runner;
 runner.
 
 Internal workspaces use `workspace:*`. Independently published Toolkit packages
-use catalogs even though their names share `@raypx/`. Before the first registry
-publication, the Drizzle catalog entry uses a versioned `vendor/` tarball copied
-into Docker install layers. See [Drizzle extensions](./drizzle-extensions.md).
+use catalogs even though their names share `@raypx/`. The Drizzle and Intl
+catalog entries pin their published npm versions to `0.0.0`, with registry
+integrity recorded in `bun.lock`. See [Drizzle extensions](./drizzle-extensions.md)
+and [internationalization ownership](./intl.md).
 Change external versions in the root catalog rather than workspace manifests.
 
 Most stable third-party dependencies use caret semver ranges (`^`), including

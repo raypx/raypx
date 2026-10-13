@@ -35,7 +35,7 @@ implementation scope.
 ## Consequences
 
 There is one database/driver validation target and one error metadata contract.
-The unpublished archive bridge uses a unique source-commit filename so Bun locks
-the updated artifact rather than reusing an earlier same-name archive.
+The root backend catalog pins the published `@raypx/drizzle@0.0.0`, and the
+lockfile records the registry artifact's integrity.
 PostgreSQL tests verify native driver constraint metadata and DB behavior after
 the public entrypoint migration. Stored schemas and migrations are unchanged.

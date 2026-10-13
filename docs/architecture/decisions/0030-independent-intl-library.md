@@ -40,11 +40,12 @@ migration and the `data.error` envelope. Catalogs and their application types
 remain with the owning applications and Mail. Existing consumers keep their
 facade imports while reusable implementations are removed from the product.
 
-Use the catalog archive bootstrap defined by ADR-0029 until npm publication.
+Consume the published npm `0.0.0` versions through the root catalogs, following
+ADR-0029. The pre-publication archive bootstrap is retired.
 Compiled artifacts are verified outside the workspace on Bun and Node; React
 provider and async race behavior are checked independently and through the
-product facade. Removing `third-party` directories moves full adapted-source
-licenses and attribution to package-root `NOTICE.md` and `THIRD_PARTY_LICENSES`.
+product facade. Full adapted-source licenses and attribution are maintained by
+the standalone package alongside its source notices.
 
 ## Consequences
 
@@ -54,10 +55,8 @@ without imposing its language configuration or protocol on the public library.
 The product facade is an adapter, not a second generic i18n implementation.
 
 React installation is part of the package contract even for server-only consumers.
-Both initial public packages remain prepared at `0.0.0` and unpublished; first
-publication uses their manifest versions directly, with later Changesets releases
-upgrading each package independently.
+Both initial public packages are published at `0.0.0`. Later Changesets releases
+upgrade each package independently.
 
-The npm publish job remains disabled until maintainers configure publication
-identity and scope access. Neither this extraction nor artifact verification
-publishes a package to npm.
+The initial versions were published by an authorized maintainer. Automatic npm
+publication remains separately gated by repository settings and identity setup.

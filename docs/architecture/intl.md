@@ -51,10 +51,10 @@ locale choices, preference migration, errors, format options and provider behavi
 
 ## Packaging and releases
 
-Before npm publication, Raypx consumes the actual compiled package archive from
-`vendor/` through the root catalog. Its checksum and tested source commit are
-recorded alongside it. API/Web/Worker Docker install stages already copy this
-bridge before their frozen Bun installs. See [archive provenance](../../vendor/README.md).
+Raypx consumes the published `@raypx/intl@0.0.0` through the root frontend
+catalog. `bun.lock` records registry integrity, and API/Web/Worker Docker install
+stages resolve that public package during frozen Bun installation. The
+pre-publication archive bridge is retired.
 
 Raypx Packages checks source/types, React regressions, actual tarball contents, isolated
 Bun/Node consumers and independent versioning. Raypx then runs the owning i18n

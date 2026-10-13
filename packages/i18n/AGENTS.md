@@ -41,8 +41,8 @@ internationalization lives in the independently released `@raypx/intl` package.
 - Never duplicate standalone internationalization implementations here.
 - Product runtime exports must not import catalog testing or build modules.
 - Domain and contract packages do not depend on internationalization.
-- Toolkit packages use the root catalog even with the `@raypx/` scope. The
-  unpublished archive bridge and provenance are documented in `vendor/`.
+- Toolkit packages use the root catalog even with the `@raypx/` scope.
+  `@raypx/intl` is pinned to the published npm version `0.0.0`.
 
 See [internationalization ownership](../../docs/architecture/intl.md).
 

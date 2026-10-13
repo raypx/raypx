@@ -23,13 +23,12 @@ Changesets has empty fixed and linked groups. Every package owns its version,
 CHANGELOG and release tags; creating the repository does not publish to npm.
 Version PRs and authenticated npm publication are separate workflow stages.
 
-Raypx DB consumes this package through the root Bun catalog. Until the first
-registry publication, a versioned tarball under `vendor/` supplies a reproducible
-consumer, with its checksum and source metadata recorded there. Docker build
-stages copy it before frozen dependency installation. This is a compiled release
-snapshot; there is no second maintained helper implementation in this repository.
-After the first npm publication, replace the catalog archive with that explicit
-registry version and regenerate the lockfile.
+Raypx DB consumes this package through the root Bun catalog, pinned to the
+published npm version `0.0.0`. Before publication, versioned compiled tarballs
+provided reproducible consumers with checksums and source metadata. That
+bootstrap is now retired; frozen Bun installs resolve the public registry
+release with integrity recorded in the lockfile. There is no second maintained
+helper implementation in this repository.
 
 Only reusable column, JSONB, result, constraint and plan helpers move out.
 Raypx retains schemas/migrations, Core ports, permissions, account usage policy,
@@ -53,7 +52,7 @@ required, and existing stored data and SQL history remain unchanged.
 
 ## Follow-up
 
-Revisit the archive bootstrap after npm scope access and the first publication
-are available. Expand peer/dialect support only after the corresponding real
+Upgrade registry releases through the catalog and product verification gate.
+Expand peer/dialect support only after the corresponding real
 database and type matrix passes. Additional Toolkit packages need stable APIs,
 ownership and their own release history.

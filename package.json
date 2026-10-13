@@ -37,7 +37,7 @@
         "nanoid": "^6.0.2",
         "nitro": "3.0.260903-beta",
         "postgres": "^3.4.9",
-        "@raypx/drizzle": "file:vendor/raypx-drizzle-0.1.0.29357e7.tgz"
+        "@raypx/drizzle": "0.0.0"
       },
       "frontend": {
         "@sentry/react": "^11.6.0",
@@ -57,7 +57,7 @@
         "zustand": "^5.0.15",
         "@tanstack/react-query": "5.104.2",
         "@tanstack/react-router-ssr-query": "1.167.3",
-        "@raypx/intl": "file:vendor/raypx-intl-0.0.0.64e419e.tgz"
+        "@raypx/intl": "0.0.0"
       },
       "tooling": {
         "@dotenvx/dotenvx": "^2.34.2",

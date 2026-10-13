@@ -445,7 +445,7 @@
       "@aws-sdk/client-s3": "^3.1149.0",
       "@aws-sdk/s3-presigned-post": "^3.1149.0",
       "@aws-sdk/s3-request-presigner": "^3.1149.0",
-      "@raypx/drizzle": "file:vendor/raypx-drizzle-0.1.0.29357e7.tgz",
+      "@raypx/drizzle": "0.0.0",
       "@sentry/node": "^11.6.0",
       "drizzle-kit": "1.0.0-rc.5-5935859",
       "drizzle-orm": "1.0.0-rc.5-5935859",
@@ -462,7 +462,7 @@
       "@base-ui/react": "^1.9.0",
       "@phosphor-icons/react": "^2.1.10",
       "@pierre/diffs": "1.5.2",
-      "@raypx/intl": "file:vendor/raypx-intl-0.0.0.64e419e.tgz",
+      "@raypx/intl": "0.0.0",
       "@sentry/react": "^11.6.0",
       "@tailwindcss/vite": "^4.3.3",
       "@tanstack/react-query": "5.104.2",
@@ -1013,13 +1013,13 @@
 
     "@raypx/db": ["@raypx/db@workspace:packages/db"],
 
-    "@raypx/drizzle": ["@raypx/drizzle@vendor/raypx-drizzle-0.1.0.29357e7.tgz", { "peerDependencies": { "drizzle-orm": "1.0.0-rc.5-5935859", "postgres": "3.4.9" }, "optionalPeers": ["postgres"] }, "sha512-yRm/SX+bYVEjaSmay8CHn+1r0Gp6HY7pWUt3YepELMrTRKQ6gYi5kSGT8FTWTi6We5XZbok7CWv+3G4qPyNwRA=="],
+    "@raypx/drizzle": ["@raypx/drizzle@0.0.0", "", { "peerDependencies": { "drizzle-orm": "1.0.0-rc.5-5935859", "postgres": "3.4.9" }, "optionalPeers": ["postgres"] }, "sha512-O3UgsLY4pXhODRtvBVXe257QwY4wDCZs1BJaSZDvFw1GtcWtbk4JR7Ck/oX8R1XqLayEs/98+X2SIMAm+bHdKw=="],
 
     "@raypx/e2e": ["@raypx/e2e@workspace:e2e"],
 
     "@raypx/i18n": ["@raypx/i18n@workspace:packages/i18n"],
 
-    "@raypx/intl": ["@raypx/intl@vendor/raypx-intl-0.0.0.64e419e.tgz", { "dependencies": { "@formatjs/icu-messageformat-parser": "3.5.21", "use-intl": "4.14.9" }, "peerDependencies": { "react": "^19.0.0" } }, "sha512-0xZvuhWkMLRa/PXi92FwF7IAkYDUtc6Nq7nNgQN0zBfEfgqaMzL4G1c2mrxDubw7WXxZFxErIB+/yanzJDYjoQ=="],
+    "@raypx/intl": ["@raypx/intl@0.0.0", "", { "dependencies": { "@formatjs/icu-messageformat-parser": "3.5.21", "use-intl": "4.14.9" }, "peerDependencies": { "react": "^19.0.0" } }, "sha512-TvYMoMIbiCx+t3WEOxNCPjmmWECvY9A3gPicbDEYOpGPrNfcOb1qywQTy4ztRgw75/f9dyq3KQV8p6eElwmnrw=="],
 
     "@raypx/mail": ["@raypx/mail@workspace:packages/mail"],
 
