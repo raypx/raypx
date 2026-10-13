@@ -1,0 +1,53 @@
+docs/README.md
+  s_8cb2ae3aaeefff::t_d5a82f4ae4d4aa 10-12,69-70
+packages/shared/src/env/index.test.ts
+  s_8cb2ae3aaeefff::t_1067be2a90964a 1-7,10,14-20,23-28,30-31,34,37,40,42,44-52,55-65
+docs/development/environment.md
+  s_8cb2ae3aaeefff::t_4a4acbe5cb4f10 3-36
+packages/shared/package.json
+  s_8cb2ae3aaeefff::t_29e3bc7342255e 55-56
+packages/scripts/src/policy/manifests.test.ts
+  s_8cb2ae3aaeefff::t_165d577358c834 70-78
+packages/shared/src/env/index.ts
+  s_8cb2ae3aaeefff::t_1067be2a90964a 1
+packages/shared/vite.config.ts
+  s_8cb2ae3aaeefff::t_29e3bc7342255e 21
+packages/scripts/src/policy/manifests/rules.ts
+  s_8cb2ae3aaeefff::t_d5a82f4ae4d4aa 120-123
+docs/architecture/decisions/0012-shared-environment-and-logging.md
+  s_8cb2ae3aaeefff::t_d5a82f4ae4d4aa 5-7
+docs/architecture/decisions/0032-independent-env-library.md
+  s_8cb2ae3aaeefff::t_4a4acbe5cb4f10 1-76
+packages/shared/src/env/runtime.ts
+  s_8cb2ae3aaeefff::t_1067be2a90964a 1
+package.json
+  s_8cb2ae3aaeefff::t_29e3bc7342255e 11,23
+docs/architecture/tooling.md
+  s_8cb2ae3aaeefff::t_d5a82f4ae4d4aa 35-40
+packages/shared/AGENTS.md
+  s_8cb2ae3aaeefff::t_d5a82f4ae4d4aa 14,30-35,49-52
+  s_8cb2ae3aaeefff::t_165d577358c834 13
+docs/architecture/decisions/README.md
+  s_8cb2ae3aaeefff::t_d5a82f4ae4d4aa 71-72
+docs/architecture/packages.md
+  s_8cb2ae3aaeefff::t_d5a82f4ae4d4aa 96-100,106-110,176-182
+  s_8cb2ae3aaeefff::t_0639ef995ee87c 183
+bun.lock
+  s_8cb2ae3aaeefff::t_e91b59e50deff1 358,434,442,1021-1022,2701
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "23ccf557530baa49c6fafa8103015b70d6032419",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
