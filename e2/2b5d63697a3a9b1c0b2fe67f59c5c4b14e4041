@@ -1,0 +1,19 @@
+docs/architecture/drizzle-extensions.md
+  s_8cb2ae3aaeefff::t_b463b36b5c8224 12,15,18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e22b5d63697a3a9b1c0b2fe67f59c5c4b14e4041",
+  "prompts": {},
+  "sessions": {
+    "s_8cb2ae3aaeefff": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a133df-8bb9-71c1-aea2-a27b54c4744e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
