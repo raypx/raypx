@@ -1,0 +1,19 @@
+docs/architecture/optimization-proposal.md
+  s_de2d79b0b75518::t_4cf7b32e9d1705 1-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "90e20297c8daf71022ab341210e839cf8e2c7361",
+  "prompts": {},
+  "sessions": {
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
