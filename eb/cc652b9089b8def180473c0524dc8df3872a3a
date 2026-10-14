@@ -1,0 +1,73 @@
+packages/scripts/AGENTS.md
+  s_927a787f99ed8d::t_2ba3946c253d6a 105-106
+apps/api/AGENTS.md
+  s_927a787f99ed8d::t_2ba3946c253d6a 40
+AGENTS.md
+  s_927a787f99ed8d::t_2ba3946c253d6a 69-70,83-85
+packages/scripts/src/policy/manifests/rules.ts
+  s_927a787f99ed8d::t_89b01776336aab 81,85-90,92,96
+apps/web/AGENTS.md
+  s_927a787f99ed8d::t_2ba3946c253d6a 92
+docs/architecture/tooling.md
+  s_927a787f99ed8d::t_ead6a386f50d43 155-156
+  s_927a787f99ed8d::t_037bb86e4b5156 113-115
+  s_927a787f99ed8d::t_2ba3946c253d6a 101-112,116,154,286
+packages/scripts/src/policy/manifests.test.ts
+  s_927a787f99ed8d::t_89b01776336aab 15,70-88,171,189-192,229,232,242-243
+  s_927a787f99ed8d::t_d22576f030ced6 234-235,244
+docs/development/testing.md
+  s_927a787f99ed8d::t_2ba3946c253d6a 126-129,223-224
+  s_927a787f99ed8d::t_ead6a386f50d43 130-131
+apps/api/package.json
+  s_927a787f99ed8d::t_99359c2f8894bf 9
+apps/desktop/package.json
+  s_927a787f99ed8d::t_056c6535790ee7 11-12,21
+apps/storybook/package.json
+  s_927a787f99ed8d::t_d458e40f071a4f 9
+apps/web/package.json
+  s_927a787f99ed8d::t_dffd0446ef71ee 12
+apps/worker/package.json
+  s_927a787f99ed8d::t_ca8954c9cae97e 8
+e2e/package.json
+  s_927a787f99ed8d::t_0098f66671c568 8
+packages/agent-ui/package.json
+  s_927a787f99ed8d::t_c1ee100c731801 18
+packages/application/package.json
+  s_927a787f99ed8d::t_6e1c0fc88abaef 10
+packages/client/package.json
+  s_927a787f99ed8d::t_d7f6a423e9f07a 12
+packages/contracts/package.json
+  s_927a787f99ed8d::t_5ee5b2499075a7 11
+packages/core/package.json
+  s_927a787f99ed8d::t_29c44dda92b1a2 10
+packages/db/package.json
+  s_927a787f99ed8d::t_19b956223b3e94 13
+packages/i18n/package.json
+  s_927a787f99ed8d::t_16db7b76ea4c7a 15
+packages/mail/package.json
+  s_927a787f99ed8d::t_62f4ee132a2d3e 12
+packages/scripts/package.json
+  s_927a787f99ed8d::t_6a5a40229f26ce 31
+packages/shared/package.json
+  s_927a787f99ed8d::t_3cc62143299501 49
+packages/storage/package.json
+  s_927a787f99ed8d::t_b4798656606775 10
+packages/ui/package.json
+  s_927a787f99ed8d::t_11ded045e94acd 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ebcc652b9089b8def180473c0524dc8df3872a3a",
+  "prompts": {},
+  "sessions": {
+    "s_927a787f99ed8d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13aa1-6438-7621-8030-6bbbadb02497",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
