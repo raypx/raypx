@@ -3,7 +3,7 @@
 ## Purpose
 
 The Raypx product locale configuration and compatibility facade. Reusable
-internationalization lives in the independently released `@raypx/intl` package.
+internationalization lives in the independently released `@voidmix/intl` package.
 
 ## Interface
 
@@ -23,7 +23,7 @@ internationalization lives in the independently released `@raypx/intl` package.
 - Own translation of the stable `data.error` envelope and safe primitive values;
   never expose server diagnostic prose as translated UI text.
   Error helpers accept a plain translation function without requiring rich-text methods.
-- Configure an immutable `@raypx/intl` locale runtime and React client factory.
+- Configure an immutable `@voidmix/intl` locale runtime and React client factory.
   Translation, formatting, sync/async providers, request negotiation and ICU
   catalog validation are maintained in the standalone library. Its translation,
   formatting and IntlProvider use `use-intl` 4.14.9; React is a required peer,
@@ -32,7 +32,7 @@ internationalization lives in the independently released `@raypx/intl` package.
 - Preserve locale transitions, async catalog race guards, default UTC formatting,
   provider format/timezone overrides and callback failure behavior.
 - Existing tests verify product configuration and compatibility through the
-  actual package artifact; reusable library tests live with `@raypx/intl`.
+  actual package artifact; reusable library tests live with `@voidmix/intl`.
 
 ## Constraints
 
@@ -41,8 +41,8 @@ internationalization lives in the independently released `@raypx/intl` package.
 - Never duplicate standalone internationalization implementations here.
 - Product runtime exports must not import catalog testing or build modules.
 - Domain and contract packages do not depend on internationalization.
-- Toolkit packages use the root catalog even with the `@raypx/` scope.
-  `@raypx/intl` is pinned to the published npm version `0.0.0`.
+- Voidmix packages are external: use the root catalog, never `workspace:*`.
+  `@voidmix/intl` is pinned to an exact npm prerelease in the `frontend` catalog.
 
 See [internationalization ownership](../../docs/architecture/intl.md).
 

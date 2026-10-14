@@ -44,8 +44,9 @@ Arbitrary tool input, output, event payloads and nested source content remain JS
 their date-shaped strings are evidence, not domain timestamps.
 
 Reusable expression, result, uniqueness and plan helpers are maintained in the
-independently released `@raypx/drizzle` Toolkit library under
-[ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md). DB retains business
+independently released `@voidmix/drizzle` library under
+[ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md) and
+[ADR-0033](./decisions/0033-voidmix-library-scope.md). DB retains business
 queries, schema, permissions and transaction ownership. Accounting validates
 malformed JSON numbers before returning totals. Fixed-query diagnostics share
 production Cloud builders and execute through dedicated read-only transactions.

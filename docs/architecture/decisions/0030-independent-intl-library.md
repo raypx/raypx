@@ -4,6 +4,8 @@
 
 Accepted. Supersedes the shared runtime ownership in ADR-0004; its product locale,
 message ownership, timezone and error-safety contracts remain.
+Repository name, npm scope and pinned version are superseded by
+[ADR-0033](./0033-voidmix-library-scope.md).
 
 ## Context
 

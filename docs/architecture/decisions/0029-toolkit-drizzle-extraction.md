@@ -4,6 +4,8 @@
 
 Accepted. Supersedes the private DB helper location and current-consumer-only
 inventory limit in ADR-0028; its public-API, transaction and data safeguards remain.
+Repository name, npm scope and pinned version are superseded by
+[ADR-0033](./0033-voidmix-library-scope.md).
 
 ## Context
 

@@ -151,14 +151,19 @@ using the logger transport. The package exposes only server-side mail interfaces
 
 ## `@raypx/i18n`
 
-The private product configuration and compatibility facade for `@raypx/intl`.
+The private product configuration and compatibility facade for `@voidmix/intl`.
 It configures `en`/`zh`, language names, fallback and Cookie/storage settings,
 retains the old brand preference migration and translates the `data.error`
 envelope. Generic runtime implementation lives in the independently released
 library. Applications and Mail own their catalogs; domain and contracts stay
 independent. See [internationalization ownership](./intl.md).
 
-## External Toolkit libraries
+## External Voidmix libraries
+
+The `@voidmix/*` packages are maintained in the independent
+[Voidmix](https://github.com/raypx/voidmix) repository, not as workspaces here,
+and resolve from npm through the root catalogs. See
+[ADR-0033](./decisions/0033-voidmix-library-scope.md).
 
 `@voidmix/env` supplies typed preset composition, schema validation, guarded
 browser access and runtime environment detection through its root and
@@ -171,13 +176,14 @@ and [ADR-0032](./decisions/0032-independent-env-library.md).
 formatting, React providers and isolated catalog testing. Raypx consumes it
 through its private i18n facade; see [ADR-0030](./decisions/0030-independent-intl-library.md).
 
-`@voidmix/drizzle` is owned by the independent
-[Voidmix](https://github.com/raypx/voidmix) repository, not a workspace in
-this product repository. It supplies public-API SQL expressions, JSONB helpers,
+`@voidmix/drizzle` supplies public-API SQL expressions, JSONB helpers,
 result unwrapping, PostgreSQL error recognition and plan summaries. Product DB
 adapters retain schema, migration and permission ownership. See
 [Drizzle extensions](./drizzle-extensions.md) and
 [ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md).
+
+`@voidmix/tsconfig` supplies the strict TypeScript presets every workspace
+extends; see [tooling](./tooling.md).
 
 ## `@raypx/db`
 

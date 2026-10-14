@@ -4,6 +4,8 @@
 
 Accepted. Narrows the implementation scope recorded in ADR-0029; complete
 upstream capability inventories and source provenance remain.
+Package name and pinned version are superseded by
+[ADR-0033](./0033-voidmix-library-scope.md).
 
 ## Context
 

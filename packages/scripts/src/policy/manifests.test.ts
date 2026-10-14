@@ -68,7 +68,7 @@ describe("validateWorkspaceManifest", () => {
   });
 
   it.each(["@voidmix/drizzle", "@voidmix/intl", "@voidmix/env"])(
-    "uses catalogs for the Toolkit package %s",
+    "uses catalogs for the Voidmix package %s",
     (name) => {
       expect(validate(manifest({ dependencies: { [name]: "catalog:backend" } }))).toEqual([]);
       expect(validate(manifest({ dependencies: { [name]: "workspace:*" } }))).toEqual([

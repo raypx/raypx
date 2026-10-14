@@ -64,8 +64,8 @@ or `packages/` without a `package.json`.
   shared `packages/` and E2E keep `@raypx/`. See ADR-0022.
 - Use the root Bun catalogs for third-party dependency versions and
   `workspace:*` for internal packages.
-- Independently released Toolkit packages also use catalogs, even with the
-  `@raypx/` scope; see [ADR-0029](docs/architecture/decisions/0029-toolkit-drizzle-extraction.md).
+- Independently released Voidmix packages (`@voidmix/*`) are external: use the
+  root catalogs, never `workspace:*`; see [ADR-0033](docs/architecture/decisions/0033-voidmix-library-scope.md).
 - Turbo is the only workspace task runner and task cache; Vite+ owns leaf tools.
   Use root build scripts so Turbo runs checks first; do not use the Vite+ task runner.
   See [ADR-0018](docs/architecture/decisions/0018-turbo-task-orchestration.md).

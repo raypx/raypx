@@ -70,3 +70,5 @@ source-boundary checks run with `bun run i18n:check` and are the first gate of
 - [ADR-0031: PostgreSQL and postgres.js extension scope](0031-postgres-js-only-drizzle.md) — one driver and explicit Postgres helper entrypoint.
 
 - [ADR-0032: Independent environment library](0032-independent-env-library.md) — public validation library and compatible Shared environment exports.
+
+- [ADR-0033: Voidmix library repository and npm scope](0033-voidmix-library-scope.md) — external `@voidmix/` libraries; `@raypx/` names only product workspaces.

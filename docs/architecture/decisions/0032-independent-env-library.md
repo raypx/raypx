@@ -4,7 +4,8 @@
 
 Accepted. Supersedes environment implementation ownership in ADR-0012 while
 retaining its Shared compatibility subpaths, primitive ownership and logging
-boundary.
+boundary. Repository name, npm scope, pinned version and the Shared
+compatibility subpaths are superseded by [ADR-0033](./0033-voidmix-library-scope.md).
 
 ## Context
 

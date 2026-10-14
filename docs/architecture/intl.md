@@ -1,7 +1,7 @@
 # Internationalization library and product configuration
 
-Reusable internationalization is maintained as `@raypx/intl` in
-[Raypx Packages](https://github.com/raypx/packages/tree/main/packages/intl).
+Reusable internationalization is maintained as `@voidmix/intl` in
+[Voidmix](https://github.com/raypx/voidmix/tree/main/packages/intl).
 Its root/client/server/types/testing entrypoints separate locale negotiation,
 formatting and ICU translation, React runtime and browser storage, request
 resolution, public types and catalog validation. It has an independent version,
@@ -42,23 +42,24 @@ contracts, not generic library protocols. Web, Desktop, API and Mail keep their
 existing imports and behavior; their JSON catalogs and namespace types remain
 application-owned.
 
-Translation and formatting delegate to `use-intl` through `@raypx/intl`.
+Translation and formatting delegate to `use-intl` through `@voidmix/intl`.
 Locale parsing, Cookie construction, synchronous and asynchronous locale/catalog
 state, catalog loading race protection and ICU parity are maintained once in
-`@raypx/intl`. The facade configures or re-exports them rather
+`@voidmix/intl`. The facade configures or re-exports them rather
 than maintaining copied runtime implementations. Existing product tests cover
 locale choices, preference migration, errors, format options and provider behavior.
 
 ## Packaging and releases
 
-Raypx consumes the published `@raypx/intl@0.0.0` through the root frontend
-catalog. `bun.lock` records registry integrity, and API/Web/Worker Docker install
+Raypx consumes an exact published `@voidmix/intl` alpha prerelease through the
+root frontend catalog. `bun.lock` records registry integrity, and API/Web/Worker Docker install
 stages resolve that public package during frozen Bun installation. The
 pre-publication archive bridge is retired.
 
-Raypx Packages checks source/types, React regressions, actual tarball contents, isolated
+Voidmix checks source/types, React regressions, actual tarball contents, isolated
 Bun/Node consumers and independent versioning. Raypx then runs the owning i18n
 suite and `bun run verify`, including catalogs, boundary policy, application
 checks, tests, builds and runtime probes. No database schema change is involved.
 
-[ADR-0030](./decisions/0030-independent-intl-library.md) records this ownership.
+[ADR-0030](./decisions/0030-independent-intl-library.md) records this ownership;
+[ADR-0033](./decisions/0033-voidmix-library-scope.md) records the Voidmix name and scope.

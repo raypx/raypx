@@ -22,7 +22,7 @@ beforeEach(async () => {
   ]);
 });
 
-describe("Toolkit extensions in PostgreSQL", { concurrent: false }, () => {
+describe("Voidmix extensions in PostgreSQL", { concurrent: false }, () => {
   const data = sql`sample.data`;
   it("decodes typed scalars, literal dotted keys and missing/JSON null values", async () => {
     const document = {

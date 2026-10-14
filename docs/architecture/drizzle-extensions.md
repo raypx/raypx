@@ -1,21 +1,22 @@
-# Drizzle extensions and Toolkit ownership
+# Drizzle extensions and Voidmix ownership
 
 The extension library is maintained in the independent
-[raypx/packages repository](https://github.com/raypx/packages), as `@raypx/drizzle`.
+[Voidmix repository](https://github.com/raypx/voidmix), as `@voidmix/drizzle`.
 [ADR-0029](./decisions/0029-toolkit-drizzle-extraction.md) records extraction,
-independent releases and the transition to published npm packages.
+independent releases and the transition to published npm packages;
+[ADR-0033](./decisions/0033-voidmix-library-scope.md) records the Voidmix name and scope.
 
 ## Complete capability inventory
 
-Toolkit owns the complete inventories and the combined implementation roadmap:
+Voidmix owns the complete inventories and the combined implementation roadmap:
 
-- [drizzle-plus inventory](https://github.com/raypx/packages/blob/main/docs/drizzle/drizzle-plus-capabilities.md)
+- [drizzle-plus inventory](https://github.com/raypx/voidmix/blob/main/docs/drizzle/drizzle-plus-capabilities.md)
   covers query/select extensions, all shared and dialect SQL functions, generated
   entrypoints, low-level helpers and public types.
-- [better-drizzle inventory](https://github.com/raypx/packages/blob/main/docs/drizzle/better-drizzle-capabilities.md)
+- [better-drizzle inventory](https://github.com/raypx/voidmix/blob/main/docs/drizzle/better-drizzle-capabilities.md)
   covers CRUD/batches, filters, relations, transactions, prepared reads, diagnostics,
   every plugin, runtime rules, ESLint rules, error codes and type declarations.
-- [Merge and extension design](https://github.com/raypx/packages/blob/main/docs/drizzle/merge-plan.md)
+- [Merge and extension design](https://github.com/raypx/voidmix/blob/main/docs/drizzle/merge-plan.md)
   defines canonical semantics, dialect/public-API boundaries, compatibility
   adapters, plugin lifecycle and staged acceptance.
 
@@ -29,7 +30,7 @@ and entrypoint migration.
 ## Supported database and driver
 
 The implementation targets PostgreSQL through `postgres` (postgres.js) and
-`drizzle-orm/postgres-js` only. Public SQL helpers use `@raypx/drizzle/postgres`;
+`drizzle-orm/postgres-js` only. Public SQL helpers use `@voidmix/drizzle/postgres`;
 the earlier `/pg` export is removed. Drizzle's `pg-core`, `PgTable` and `PgDialect`
 remain its canonical PostgreSQL schema and SQL APIs.
 
@@ -39,13 +40,13 @@ with other drivers/dialects explicitly outside the implementation plan.
 
 ## Current consumer surface
 
-| Package import               | Raypx use                                                                    |
-| ---------------------------- | ---------------------------------------------------------------------------- |
-| `@raypx/drizzle`             | Typed member-column omission                                                 |
-| `@raypx/drizzle/postgres`    | Explicit UPSERT fields; bound JSONB paths and CASE-guarded scalar conversion |
-| `@raypx/drizzle/errors`      | postgres.js `constraint_name` recognition before Core error translation      |
-| `@raypx/drizzle/results`     | Nullable select and required returning-row unwrapping                        |
-| `@raypx/drizzle/diagnostics` | EXPLAIN construction and sanitized node metrics                              |
+| Package import                 | Raypx use                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------- |
+| `@voidmix/drizzle`             | Typed member-column omission                                                 |
+| `@voidmix/drizzle/postgres`    | Explicit UPSERT fields; bound JSONB paths and CASE-guarded scalar conversion |
+| `@voidmix/drizzle/errors`      | postgres.js `constraint_name` recognition before Core error translation      |
+| `@voidmix/drizzle/results`     | Nullable select and required returning-row unwrapping                        |
+| `@voidmix/drizzle/diagnostics` | EXPLAIN construction and sanitized node metrics                              |
 
 DB owns query/catalog composition and runtime connections. The production Cloud
 queue and expiry queries share SQL builders with diagnostics. Account usage
@@ -79,13 +80,13 @@ query text, parameter values, predicates and credentials do not enter the report
 
 ## Verification and upgrades
 
-Toolkit's own verify gate checks code, the actual published archive shape,
+Voidmix's own verify gate checks code, the actual published archive shape,
 isolated Bun/Node consumers and independent Changesets versioning. Raypx then
 runs DB unit tests, guarded PostgreSQL tests, generation with no schema drift and
 `bun run verify`. See [testing](../development/testing.md).
 
 The exact Drizzle RC remains the package peer version; a broad upstream peer
-range alone cannot justify an upgrade. The root backend catalog pins the
-published `@raypx/drizzle@0.0.0`; Bun records registry integrity in `bun.lock`.
+range alone cannot justify an upgrade. The root backend catalog pins an exact
+`@voidmix/drizzle` alpha prerelease; Bun records registry integrity in `bun.lock`.
 Upgrade only to a verified registry release, then regenerate the lockfile and
 run the product compatibility gate. The pre-publication archive bridge is retired.

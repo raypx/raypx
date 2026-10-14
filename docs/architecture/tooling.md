@@ -31,10 +31,11 @@ Vitest itself is absent from the catalogs because Vite+ bundles the runner;
 `@vitest/coverage-v8` remains explicit so its version can track that bundled
 runner.
 
-Internal workspaces use `workspace:*`. Independently published Toolkit packages
-use catalogs even though their names share `@raypx/`. Drizzle and Intl pin
-`0.0.0`; Env pins `0.0.6` in the default runtime catalog, continuing its existing
-npm version history. Registry integrity is recorded in `bun.lock`. See
+Internal workspaces use `workspace:*`. Independently published Voidmix packages
+(`@voidmix/*`) always use catalogs: Env in the default runtime catalog, Drizzle
+in `backend`, Intl in `frontend` and TypeScript presets in `tooling`. Each pins
+an exact alpha prerelease, and registry integrity is recorded in `bun.lock`. See
+[ADR-0033](./decisions/0033-voidmix-library-scope.md),
 [Drizzle extensions](./drizzle-extensions.md),
 [internationalization ownership](./intl.md) and
 [environment ownership](../development/environment.md).
@@ -68,7 +69,7 @@ regenerate `bun.lock`, and run the full verification suite.
 
 ## TypeScript presets
 
-`@voidmix/tsconfig`, published from the Voidmix toolkit, exports:
+`@voidmix/tsconfig`, published from the Voidmix library repository, exports:
 
 ```text
 base.json           strict shared rules, including an empty ambient `types`
