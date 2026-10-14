@@ -1,0 +1,25 @@
+apps/desktop/tsconfig.native.json
+  s_de2d79b0b75518::t_3a1d82905d8c80 2,6-9,12-35,38-40
+apps/desktop/tsconfig.node.json
+  s_de2d79b0b75518::t_48662ae42cba64 2,5-8,10-12,17-22
+e2e/tsconfig.json
+  s_de2d79b0b75518::t_1025071242e3e0 2-5
+packages/scripts/src/policy/checks/typescript.ts
+  s_de2d79b0b75518::t_527458ecbf6043 2,6,13,15-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "af10bed7979f1b853bca9ecc6bc1641f143699f2",
+  "prompts": {},
+  "sessions": {
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
