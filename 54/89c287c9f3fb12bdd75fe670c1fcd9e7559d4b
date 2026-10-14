@@ -1,0 +1,63 @@
+AGENTS.md
+  s_de2d79b0b75518::t_32e84322bd89ed 67-68
+docs/README.md
+  s_de2d79b0b75518::t_5176df8e248bcc 8,16
+docs/architecture/database.md
+  s_de2d79b0b75518::t_1e8e9f3d5f892d 47-49
+docs/architecture/decisions/0004-use-intl-static-catalogs.md
+  s_de2d79b0b75518::t_4ac5abdca38451 7-8
+docs/architecture/decisions/0029-toolkit-drizzle-extraction.md
+  s_de2d79b0b75518::t_2a670cf4e9912a 7-8
+docs/architecture/decisions/0030-independent-intl-library.md
+  s_de2d79b0b75518::t_6b4c9676ef7248 7-8
+docs/architecture/decisions/0031-postgres-js-only-drizzle.md
+  s_de2d79b0b75518::t_20dc31ddc90646 7-8
+docs/architecture/decisions/0032-independent-env-library.md
+  s_de2d79b0b75518::t_d30c03ba99fdb5 7-8
+docs/architecture/decisions/0033-voidmix-library-scope.md
+  s_5c01c416baeabb::t_94b7d2b74cfba1 1-58
+docs/architecture/decisions/README.md
+  s_de2d79b0b75518::t_a788a41a9885dc 73-74
+docs/architecture/drizzle-extensions.md
+  s_de2d79b0b75518::t_1617f674f323eb 1,4,6-7,11,13,16,19,33,43-49,83,89-90
+docs/architecture/intl.md
+  s_de2d79b0b75518::t_ef337f2ac2ff35 3-4,45,48,54-55,59,64-65
+docs/architecture/packages.md
+  s_de2d79b0b75518::t_35356b37a9ff98 154,161-166,179,185-187
+docs/architecture/tooling.md
+  s_de2d79b0b75518::t_7a52892d482c98 34-38,72
+packages/db/AGENTS.md
+  s_de2d79b0b75518::t_168be508aab39d 21
+packages/db/NOTICE.md
+  s_de2d79b0b75518::t_27fc3fc4198b91 4-6,15
+packages/db/tests/drizzle-extensions.integration.test.ts
+  s_de2d79b0b75518::t_4ea4c1c9326931 25
+packages/i18n/AGENTS.md
+  s_de2d79b0b75518::t_a1f54b2c3c411a 6,26,35,44-45
+packages/scripts/src/policy/manifests.test.ts
+  s_de2d79b0b75518::t_e3ad75f6a49ee6 71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5489c287c9f3fb12bdd75fe670c1fcd9e7559d4b",
+  "prompts": {},
+  "sessions": {
+    "s_5c01c416baeabb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13983-4685-7462-b312-daf5e15507b3",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
