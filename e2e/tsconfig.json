@@ -1,4 +1,6 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
-  "include": ["**/*.ts"]
+  "extends": "@voidmix/tsconfig/node.json",
+  "include": [
+    "**/*.ts"
+  ]
 }

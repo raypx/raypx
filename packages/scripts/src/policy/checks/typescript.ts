@@ -1,17 +1,30 @@
 import { join } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
 
 import type { PolicyDependencies, PolicyFinding } from "../checks.js";
 import { deriveWorkspaceShape } from "../manifests.js";
-import { isPresetFile, validateWorkspaceTypeScriptConfig } from "../tsconfig.js";
+import { presetRoot, validateWorkspaceTypeScriptConfig } from "../tsconfig.js";
 
 export async function checkTypeScriptConfigs(
   dependencies: PolicyDependencies,
   members: readonly string[],
   workspaceFiles: readonly string[],
 ): Promise<PolicyFinding[]> {
+  // Load presets from @voidmix/tsconfig npm package
   const presets = new Map<string, string>();
-  for (const file of workspaceFiles.filter(isPresetFile)) {
-    presets.set(file, await dependencies.readFile(join(dependencies.repositoryRoot, file)));
+  const presetDir = join(dependencies.repositoryRoot, presetRoot);
+  try {
+    const files = readdirSync(presetDir);
+    for (const file of files) {
+      if (file.endsWith('.json') && file !== 'package.json') {
+        const fullPath = join(presetDir, file);
+        const relativePath = join(presetRoot, file);
+        presets.set(relativePath, readFileSync(fullPath, 'utf-8'));
+      }
+    }
+  } catch (error) {
+    // If @voidmix/tsconfig is not installed, skip preset validation
+    console.warn(`Could not load presets from ${presetRoot}:`, error);
   }
 
   const findings: PolicyFinding[] = [];

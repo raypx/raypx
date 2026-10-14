@@ -2,16 +2,14 @@ import { parseJson, isObject, serializeJson } from "./json.js";
 import { findingFor } from "./findings.js";
 import type { PolicyFinding } from "./checks.js";
 
-/** Where the shared presets live, relative to the repository root. */
-export const presetRoot = "packages/tsconfig";
+/** Where the shared presets live - now from npm @voidmix/tsconfig. */
+export const presetRoot = "node_modules/.bun/node_modules/@voidmix/tsconfig";
 
 /** Discover presets without enumerating their filenames. */
 export function isPresetFile(file: string): boolean {
-  return (
-    file.startsWith(`${presetRoot}/`) &&
-    file.endsWith(".json") &&
-    file !== `${presetRoot}/package.json`
-  );
+  // Presets are now published from @voidmix/tsconfig npm package
+  // This function is kept for compatibility but won't match npm presets
+  return false;
 }
 
 /** The specifier prefix a workspace uses to reach them. */

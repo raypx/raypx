@@ -1,13 +1,23 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
+  "extends": "@voidmix/tsconfig/node.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "vite/client"],
+    "types": [
+      "node",
+      "vite/client"
+    ],
     "paths": {
-      "electrobun": ["./.hutch/devkit/api/config/ElectrobunConfig.ts"]
+      "electrobun": [
+        "./.hutch/devkit/api/config/ElectrobunConfig.ts"
+      ]
     },
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "electrobun.config.ts", "hutch.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "electrobun.config.ts",
+    "hutch.config.ts"
+  ]
 }

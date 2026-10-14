@@ -25,7 +25,7 @@ document is stale, then update the document in the same change.
 apps        web, desktop, api, worker, storybook    composition roots; never imported
 adapters    application, cache, client, contracts, i18n, ui, agent-ui, storage    surfaces apps are allowed to use
 core        core, db, auth, mail        db implements interfaces owned by core
-foundation  shared, tsconfig                no dependency on anything above
+foundation  shared                          no dependency on anything above
 tooling     scripts, e2e                never imported by runtime code
 ```
 

@@ -48,7 +48,6 @@ packages/mail       Typed auth email templates and transports
 packages/db         Drizzle schema and repository adapters
 packages/shared     Foundation errors, environment presets, and logger adapters
 packages/scripts    Repository automation CLI
-packages/tsconfig   Shared TypeScript presets
 ```
 
 `bun run policy` keeps this listing and the one in `AGENTS.md` in step with the
