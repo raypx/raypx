@@ -12,7 +12,7 @@ import { validateTestWiring } from "./manifests/wiring.js";
 
 const location = "packages/example/package.json";
 
-const checkCommand = "tsc --noEmit -p tsconfig.json";
+const checkCommand = "bun --check --tsconfig-override tsconfig.json";
 
 function shape(overrides: Partial<WorkspaceShape> = {}): WorkspaceShape {
   return {
@@ -65,6 +65,25 @@ describe("deriveWorkspaceShape", () => {
 describe("validateWorkspaceManifest", () => {
   it("accepts a manifest that matches the contract", () => {
     expect(validate(manifest())).toEqual([]);
+  });
+
+  it("accepts an existing tsc project check", () => {
+    expect(
+      validate(
+        manifest({
+          scripts: { ...canonicalScripts, check: "bun --bun tsc --noEmit -p tsconfig.json" },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it.each([
+    "bun --check --tsconfig-override tsconfig.json.bak",
+    "bun --bun tsc --noEmit -p tsconfig.json.bak",
+  ])("does not count a similarly named project as checked: %s", (check) => {
+    expectOnlyFinding(validate(manifest({ scripts: { ...canonicalScripts, check } })), {
+      message: "check does not type-check tsconfig.json, so nothing ever does",
+    });
   });
 
   it.each(["@voidmix/drizzle", "@voidmix/intl", "@voidmix/env"])(
@@ -149,6 +168,7 @@ describe("validateWorkspaceManifest", () => {
       shape: shape({ typeScriptConfigs: ["tsconfig.json", "tsconfig.node.json"] }),
       expected: {
         message: expect.stringContaining("check does not type-check tsconfig.node.json"),
+        fix: expect.stringContaining("bun --check --tsconfig-override tsconfig.node.json"),
       },
     },
     {
@@ -166,7 +186,10 @@ describe("validateWorkspaceManifest", () => {
       name: "reports a workspace that owns a project but declares no check",
       content: manifest({ scripts: { ...canonicalScripts } }),
       shape: shape(),
-      expected: { message: expect.stringContaining("declares no check script") },
+      expected: {
+        message: expect.stringContaining("declares no check script"),
+        fix: expect.stringContaining(checkCommand),
+      },
     },
     {
       name: "reports a third-party dependency pinned outside the catalog",
@@ -203,19 +226,22 @@ describe("validateWorkspaceManifest", () => {
     expectOnlyFinding(validate(content, shape), expected);
   });
 
-  it("follows bun run references, so a composed check counts as covering both", () => {
+  it("follows bun run references to all three native Bun project checks", () => {
     const scripts = {
       ...canonicalScripts,
-      check: "bun run typecheck && bun run typecheck:node",
+      check: "bun run typecheck && bun run typecheck:node && bun run typecheck:native",
       typecheck: checkCommand,
-      "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+      "typecheck:node": "bun --check --tsconfig-override tsconfig.node.json",
+      "typecheck:native": "bun --check --tsconfig-override tsconfig.native.json",
       build: "rpx env -- vp build",
     };
 
     expect(
       validate(
         manifest({ scripts }),
-        shape({ typeScriptConfigs: ["tsconfig.json", "tsconfig.node.json"] }),
+        shape({
+          typeScriptConfigs: ["tsconfig.json", "tsconfig.node.json", "tsconfig.native.json"],
+        }),
       ),
     ).toEqual([]);
   });

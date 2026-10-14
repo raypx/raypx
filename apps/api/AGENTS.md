@@ -37,7 +37,7 @@ server/
 - Initialize exactly one runtime per process and close it idempotently through
   Nitro's `close` hook.
 - Build with Nitro's `bun` preset and run the output with Bun 1.4.3. Execute
-  Vite+, TypeScript and test CLIs with explicit `bun --bun` to keep their runtime consistent.
+  Vite+ and test CLIs with explicit `bun --bun`; use Bun's native no-emit checker.
 - Keep the standalone `AUTH_URL` default at `http://localhost:3002`; production
   must provide its public URL explicitly.
 - Preserve `/api/auth/*`, `/rpc/*`, and `/health` as stable public endpoints.

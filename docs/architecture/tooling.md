@@ -98,6 +98,22 @@ Shared presets do not define `include`, `exclude`, `rootDir`, `outDir`, `paths`,
 or workspace references. Full TypeScript Project References are deferred until
 editor or full-repository type checking becomes measurably slow.
 
+Workspace no-emit checks use Bun 1.4.3's native TypeScript checker, based on
+TypeScript 7.0.2. From the workspace directory, run:
+
+```bash
+bun --check --tsconfig-override tsconfig.json
+```
+
+With no entrypoint, the checker reads the selected project and emits no files.
+The explicit `--check` flag avoids resolving a package script named `check`.
+Desktop's configuration and native checks select `tsconfig.node.json` and
+`tsconfig.native.json` respectively. The TypeScript dependency remains for editor
+tooling and declaration output; Desktop's `native:types` still uses `tsc` to
+generate SDK declarations. Keep that TypeScript version aligned with the checker
+bundled in the pinned Bun release when updating either tool. Turbo continues to
+own the task graph and cache.
+
 ### Package-local imports
 
 `@raypx/ui` defines `#lib/*`, `#hooks/*`, and `#components/*` in its own
@@ -135,8 +151,9 @@ environment-validating Drizzle config. Once that baseline is clean, dependency
 and duplicate-export findings can be promoted to the verification gate
 independently.
 
-`check` is `rpx tasks check` — per-workspace typecheck scripts. Desktop
-and Mail typecheck their statically imported JSON catalogs directly, while Web
+Root `check` remains `rpx tasks check`, which runs the per-workspace native Bun
+typecheck scripts through Turbo. Desktop and Mail typecheck their statically
+imported JSON catalogs directly, while Web
 typechecks its explicit locale-to-dynamic-import map. A clean checkout does not
 depend on generated translation files. It is deliberately not repointed at
 `vp check`, which resolves a different graph (root-level typecheck plus fmt
@@ -266,7 +283,7 @@ development and test environments.
 `declare module '@tanstack/react-start'` Register footer to
 `routeTree.gen.ts`. `@tanstack/router-cli` knows nothing about Start, so
 invoking `tsr generate` standalone writes a tree without that footer: a
-strictly worse file that still passes `tsc` and that the next `dev` or `build`
+strictly worse file that still passes type checking and that the next `dev` or `build`
 silently repairs into a spurious diff. Neither application defines a
 `generate-routes` script for that reason. The two tools are versioned on
 independent lines — `router-cli` 1.167.x against `react-router` 1.170.x and

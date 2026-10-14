@@ -123,8 +123,12 @@ bun run --cwd apps/desktop check  # renderer, config and native TypeScript
 bun run desktop:build            # root frontend gate, then native packaging
 ```
 
-Each workspace must complete its local TypeScript check independently. The root
-Turbo task graph runs checks, tests, and builds across all applications and
+Each workspace must complete its local TypeScript check independently with
+`bun --check --tsconfig-override tsconfig.json`. This invokes Bun's native
+no-emit checker without resolving the workspace's `check` script. Desktop's
+configuration and native passes select their own tsconfig files; its SDK
+declaration generation retains `tsc`. The root Turbo task graph runs checks,
+tests, and builds across all applications and
 packages. Web and API explicitly select Nitro's `bun` preset. After the
 build, verification reads each `.output/nitro.json`, requires the `bun` preset,
 relocates the complete output and starts each generated server with Bun 1.4.3 on
@@ -216,8 +220,8 @@ the repository's pinned release, its global install directory is a different
 physical dependency tree from the workspace's `vite-plus/test` import. That splits the
 runner from the test API and can fail before the first test with
 `Cannot read properties of undefined (reading 'config')`. Workspace scripts are
-safe because they resolve `vp` from the root `node_modules/.bin`, the same way
-they already resolve `tsc` without declaring TypeScript.
+safe because they resolve `vp` from the root `node_modules/.bin`, alongside the
+workspace's `vite-plus/test` dependency.
 
 `vp test` is Vite+'s built-in command and runs under Bun through explicit
 `bun --bun vp` workspace scripts. Turbo runs workspace scripts; `bun run test` is the repository-wide uncached

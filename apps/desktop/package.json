@@ -8,8 +8,8 @@
     "build": "bun run native:prepare && rpx env -- bun --bun vp build",
     "preview": "rpx env -- bun --bun vp preview",
     "check": "bun run native:prepare && bun run typecheck && bun run typecheck:node && bun run typecheck:native",
-    "typecheck": "bun --bun tsc --noEmit -p tsconfig.json",
-    "typecheck:node": "bun --bun tsc --noEmit -p tsconfig.node.json",
+    "typecheck": "bun --check --tsconfig-override tsconfig.json",
+    "typecheck:node": "bun --check --tsconfig-override tsconfig.node.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
@@ -18,7 +18,7 @@
     "native:dev": "bun --bun electrobun dev",
     "native:build": "bun --bun electrobun build --env=stable",
     "native:prepare": "bun --bun electrobun prepare && bun run native:types",
-    "typecheck:native": "bun --bun tsc --noEmit -p tsconfig.native.json",
+    "typecheck:native": "bun --check --tsconfig-override tsconfig.native.json",
     "native:types": "bun --bun tsc --ignoreConfig --noCheck --declaration --emitDeclarationOnly --module ESNext --moduleResolution Bundler --target ES2022 --rootDir .hutch/devkit/api --outDir .hutch/types .hutch/devkit/api/sdks/main/entries/browser-view.ts .hutch/devkit/api/sdks/main/entries/browser-window.ts .hutch/devkit/api/sdks/main/entries/tray.ts .hutch/devkit/api/sdks/main/entries/updater.ts .hutch/devkit/api/sdks/main/entries/utils.ts .hutch/devkit/api/sdks/main/entries/rpc.ts .hutch/devkit/api/sdks/main/entries/build-config.ts .hutch/devkit/api/sdks/main/entries/events.ts"
   },
   "dependencies": {

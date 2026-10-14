@@ -78,16 +78,22 @@ export function validateScripts(
     report(
       location,
       "owns a TypeScript project but declares no check script",
-      `add to ${location}: "check": "tsc --noEmit -p ${shape.typeScriptConfigs[0]}"`,
+      `add to ${location}: "check": "bun --check --tsconfig-override ${shape.typeScriptConfigs[0]}"`,
     );
   }
   if (check !== undefined) {
+    const checkedConfigs = new Set(
+      Array.from(
+        check.matchAll(/(?:^|\s)(?:-p|--tsconfig-override)\s+([^\s;&|]+)/g),
+        (match) => match[1],
+      ),
+    );
     for (const config of shape.typeScriptConfigs) {
-      if (check.includes(`-p ${config}`)) continue;
+      if (checkedConfigs.has(config)) continue;
       report(
         location,
         `check does not type-check ${config}, so nothing ever does`,
-        `extend the check script in ${location} with: tsc --noEmit -p ${config}`,
+        `extend the check script in ${location} with: bun --check --tsconfig-override ${config}`,
       );
     }
   }

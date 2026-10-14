@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "e2e": "bun --no-env-file --no-install --bun playwright test",
-    "check": "bun --bun tsc --noEmit -p tsconfig.json",
+    "check": "bun --check --tsconfig-override tsconfig.json",
     "test:ui": "bun --no-env-file --no-install --bun playwright test --ui",
     "test:report": "bun --no-env-file --no-install --bun playwright show-report",
     "capture:product": "bun --no-env-file --no-install capture-product.ts",

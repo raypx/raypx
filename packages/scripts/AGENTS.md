@@ -102,6 +102,8 @@ Commands: `tasks <task> [Turbo flags]`, `e2e [all|web|desktop] [--group <name>] 
   CLI binaries through `bun --bun` rather than their Node shebangs. Cache keys
   identify Bun's actual version/revision, platform, architecture and libc; prior
   Node runtime artifacts never share those keys.
+- Workspace no-emit checks use Bun's native checker with an explicit tsconfig;
+  `rpx tasks check` continues to delegate graph execution and caching to Turbo.
 - Nitro runtime verification requires the `bun` preset. HTTP and Worker probes
   share complete artifact staging outside the checkout, preserving internal
   relative links and rejecting links that could resolve outside the artifact.

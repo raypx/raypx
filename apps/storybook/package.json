@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun --bun storybook dev -p 6006",
     "build": "bun --bun storybook build",
-    "check": "bun --bun tsc --noEmit -p tsconfig.json"
+    "check": "bun --check --tsconfig-override tsconfig.json"
   },
   "dependencies": {
     "@raypx/agent-ui": "workspace:*",

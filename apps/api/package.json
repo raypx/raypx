@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "rpx env -- bun --bun vp dev",
     "start": "bun --no-env-file --no-install scripts/start.mjs",
-    "check": "bun --bun tsc --noEmit -p tsconfig.json",
+    "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",

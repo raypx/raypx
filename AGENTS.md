@@ -66,7 +66,8 @@ or `packages/` without a `package.json`.
   `workspace:*` for internal packages.
 - Independently released Voidmix packages (`@voidmix/*`) are external: use the
   root catalogs, never `workspace:*`; see [ADR-0033](docs/architecture/decisions/0033-voidmix-library-scope.md).
-- Turbo is the only workspace task runner and task cache; Vite+ owns leaf tools.
+- Turbo is the only workspace task runner and task cache; Vite+ owns leaf
+  dev/build/test/lint/fmt/pack tools.
   Use root build scripts so Turbo runs checks first; do not use the Vite+ task runner.
   See [ADR-0018](docs/architecture/decisions/0018-turbo-task-orchestration.md).
 - Oxlint and Oxfmt ship inside Vite+ and are configured in `vite.config.ts`. Use
@@ -79,6 +80,9 @@ or `packages/` without a `package.json`.
   the repository. See ADR-0024.
 - Keep Bun-specific types or APIs local to Bun workspaces rather than shared
   TypeScript presets.
+- Use `bun --check --tsconfig-override tsconfig.json` for workspace no-emit type
+  checks, selecting Desktop's specific config where needed. Keep `tsc` for
+  declaration output; see [Toolchain](docs/architecture/tooling.md).
 - Prefer root scripts to global tools so the repository-local versions run.
 
 ## Code and generated files
