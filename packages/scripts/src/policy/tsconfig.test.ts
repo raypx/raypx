@@ -106,7 +106,10 @@ describe("validateWorkspaceTypeScriptConfig", () => {
     ["malformed JSON", "broken", { broken: "{ not json" }],
   ])("reports an invalid preset chain: %s", (_name, entry, files) => {
     const brokenPresets = presetFiles(files);
-    const findings = validate(config({ extends: `@voidmix/tsconfig/${entry}.json` }), brokenPresets);
+    const findings = validate(
+      config({ extends: `@voidmix/tsconfig/${entry}.json` }),
+      brokenPresets,
+    );
     expect(findings).toHaveLength(1);
     expect(findings[0]?.message).toContain("preset chain is invalid");
   });

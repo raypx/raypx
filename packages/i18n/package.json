@@ -26,11 +26,11 @@
     "@testing-library/react": "catalog:tooling",
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "jsdom": "catalog:tooling",
     "react": "catalog:",
     "typescript": "catalog:tooling",
-    "vite-plus": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "vite-plus": "catalog:tooling"
   },
   "peerDependencies": {
     "react": "catalog:"

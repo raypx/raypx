@@ -43,12 +43,12 @@
     "@types/react-dom": "catalog:tooling",
     "@vitejs/plugin-react": "catalog:tooling",
     "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "jsdom": "catalog:tooling",
     "nitro": "catalog:backend",
     "oxc-transform-react": "catalog:tooling",
     "typescript": "catalog:tooling",
     "vite": "catalog:tooling",
-    "vite-plus": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "vite-plus": "catalog:tooling"
   }
 }

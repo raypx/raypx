@@ -33,9 +33,9 @@
   "devDependencies": {
     "@types/pdfkit": "catalog:tooling",
     "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "nitro": "catalog:backend",
     "vite": "catalog:tooling",
-    "vite-plus": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "vite-plus": "catalog:tooling"
   }
 }

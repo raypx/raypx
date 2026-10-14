@@ -21,15 +21,15 @@
   },
   "dependencies": {
     "@raypx/core": "workspace:*",
-    "@voidmix/drizzle": "catalog:backend",
     "@raypx/shared": "workspace:*",
+    "@voidmix/drizzle": "catalog:backend",
     "drizzle-orm": "catalog:backend",
     "postgres": "catalog:backend"
   },
   "devDependencies": {
     "@raypx/application": "workspace:*",
     "@vitest/coverage-v8": "catalog:tooling",
-    "drizzle-kit": "catalog:backend",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "@voidmix/tsconfig": "catalog:tooling",
+    "drizzle-kit": "catalog:backend"
   }
 }

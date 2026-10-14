@@ -17,9 +17,9 @@
     "@raypx/client": "workspace:*",
     "@raypx/db": "workspace:*",
     "@types/node": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:backend",
-    "typescript": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "typescript": "catalog:tooling"
   }
 }

@@ -27,8 +27,8 @@
   "devDependencies": {
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "typescript": "catalog:tooling",
-    "vite-plus": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "vite-plus": "catalog:tooling"
   }
 }

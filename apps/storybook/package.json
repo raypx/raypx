@@ -22,9 +22,9 @@
     "@tailwindcss/vite": "catalog:frontend",
     "@types/react": "catalog:tooling",
     "@types/react-dom": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "storybook": "catalog:tooling",
     "typescript": "catalog:tooling",
-    "vite": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "vite": "catalog:tooling"
   }
 }

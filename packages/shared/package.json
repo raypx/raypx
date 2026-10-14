@@ -58,9 +58,9 @@
   "devDependencies": {
     "@orpc/server": "catalog:",
     "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "hono": "catalog:backend",
-    "vite": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "vite": "catalog:tooling"
   },
   "peerDependencies": {
     "@orpc/server": "*",

@@ -16,10 +16,10 @@ export async function checkTypeScriptConfigs(
   try {
     const files = readdirSync(presetDir);
     for (const file of files) {
-      if (file.endsWith('.json') && file !== 'package.json') {
+      if (file.endsWith(".json") && file !== "package.json") {
         const fullPath = join(presetDir, file);
         const relativePath = join(presetRoot, file);
-        presets.set(relativePath, readFileSync(fullPath, 'utf-8'));
+        presets.set(relativePath, readFileSync(fullPath, "utf-8"));
       }
     }
   } catch (error) {
