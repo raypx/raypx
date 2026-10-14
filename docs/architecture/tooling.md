@@ -3,14 +3,14 @@
 ## Runtime responsibilities
 
 ```text
-Bun       dependency installation, lockfile, all JavaScript tools and production runtimes (1.4.0)
+Bun       dependency installation, lockfile, all JavaScript tools and production runtimes (1.4.3)
 Turbo     workspace task graph, local/remote caching, pruned deployment
 Vite+     leaf dev/build/test/lint/fmt/pack commands
 Nitro     Web/API server and Worker executable build/deployment shell
 Electrobun Desktop native host/packaging, pinned Bun 1.4.0 main process
 ```
 
-Turbo replaces the Vite+ task runner; never run both task caches. Bun 1.4.0 runs
+Turbo replaces the Vite+ task runner; never run both task caches. Bun 1.4.3 runs
 Web/API, Worker and its isolated Runner, and repository JavaScript tools.
 Leaf commands explicitly use `bun --bun` so package executable shebangs resolve
 to the pinned runtime. [ADR-0024](decisions/0024-bun-runtime.md) records the

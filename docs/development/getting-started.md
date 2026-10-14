@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Bun `1.4.0`
+- Bun `1.4.3`
 - Electrobun native SDK (Desktop scripts prepare its pinned version)
 - PostgreSQL when persistent data is required
 

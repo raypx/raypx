@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1.4.0-alpine AS tools
+FROM oven/bun:1.4.3-alpine AS tools
 WORKDIR /app
 
 FROM tools AS prune
@@ -26,7 +26,7 @@ ARG VITE_POSTHOG_HOST
 RUN : "${VITE_API_URL:?Set VITE_API_URL to the standalone API origin before building Web}" \
     && bun run build:web
 
-FROM oven/bun:1.4.0-alpine AS runtime
+FROM oven/bun:1.4.3-alpine AS runtime
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 

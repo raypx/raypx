@@ -60,7 +60,7 @@ to `canary`, and can also be started with **Run workflow**. It needs no reposito
 Secrets, Variables, `.env` file, or external database. Optional Turbo secrets
 enable signed remote cache only on trusted canary pushes/manual runs; PRs use
 local-only caches. Missing remote credentials never prevent verification. The
-Bun 1.4.0 pin comes from the root `package.json`; dependencies use the frozen
+Bun 1.4.3 pin comes from the root `package.json`; dependencies use the frozen
 lockfile. CI installs Bun and executes JavaScript tools with explicit `bun --bun`.
 
 There are three job definitions (six runners):
@@ -127,7 +127,7 @@ Each workspace must complete its local TypeScript check independently. The root
 Turbo task graph runs checks, tests, and builds across all applications and
 packages. Web and API explicitly select Nitro's `bun` preset. After the
 build, verification reads each `.output/nitro.json`, requires the `bun` preset,
-relocates the complete output and starts each generated server with Bun 1.4.0 on
+relocates the complete output and starts each generated server with Bun 1.4.3 on
 a temporary loopback port. One Web process must serve both `/` and `/health`;
 the standalone API output must serve `/health` and reject an unauthenticated
 `POST /internal/execution/bootstrap` with HTTP 401. A 404 fails the probe, so a
@@ -144,7 +144,7 @@ It waits for child close before deleting staged files. Build and development
 commands have no default deadline.
 
 The real Worker artifact check also relocates the entire `.output` outside the
-checkout and runs on Bun 1.4.0 without database or model credentials. It verifies
+checkout and runs on Bun 1.4.3 without database or model credentials. It verifies
 the isolated Runner through the same `index.mjs --runner --check` executable,
 Runner dependency loading and actual PDF/XLSX output. Pi and retired task-mail
 checks are removed under
@@ -261,8 +261,10 @@ Bun. DOM workspaces and individual component/integration files opt into jsdom
 with local setup, keeping globals out of server and library checks. E2E has Web and Desktop projects. Web covers
 public, authenticated and cloud flows; Desktop targets its own browser preview.
 
-Bun 1.4.0 cannot preserve jsdom 30's private Window brands through a contextified
-VM WindowProxy. Root [`test.config.ts`](../../test.config.ts) preloads
+DOM tests retain the compatibility adapter introduced for Bun 1.4.0's inability
+to preserve jsdom 30's private Window brands through a contextified VM
+WindowProxy. The Bun 1.4.3 upgrade keeps this adapter. Root
+[`test.config.ts`](../../test.config.ts) preloads
 [`jsdom-preload.ts`](../../packages/scripts/src/testing/jsdom-preload.ts) before
 Vitest creates its DOM. The helper disables that VM contextification while
 retaining real JSDOM, React, user-event interactions, Vitest's error handling

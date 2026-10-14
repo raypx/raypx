@@ -198,7 +198,7 @@ const base = createBoundariesRule(() => index, "/");
 export default definePlugin({ meta: { name: "raypx" }, rules: { boundaries: {
   ...base,
   create(context) {
-    if (process.versions.bun !== "1.4.0") throw new Error("Boundary plugin must execute with Bun 1.4.0.");
+    if (process.versions.bun !== "1.4.3") throw new Error("Boundary plugin must execute with Bun 1.4.3.");
     const segments = context.filename.split(String.fromCharCode(92)).join("/").split("/");
     const position = segments.findIndex(segment => segment.startsWith("case-"));
     if (position < 0) throw new Error("Missing boundary test case directory.");

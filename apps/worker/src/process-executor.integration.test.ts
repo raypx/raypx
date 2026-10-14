@@ -111,7 +111,7 @@ setInterval(() => {}, 1000);
       await state.execute(state.run.id);
       evidence = JSON.parse(await readFile(state.evidence, "utf8"));
       if (!evidence) throw new Error("Missing converter process evidence.");
-      expect(evidence.runtime).toBe("1.4.0");
+      expect(evidence.runtime).toBe("1.4.3");
       await expect.poll(() => processStopped(evidence!.pid), { timeout: 2000 }).toBe(true);
       await expect.poll(() => processStopped(evidence!.converterPid), { timeout: 2000 }).toBe(true);
       expect(evidence.ownGroup).toBe(true);

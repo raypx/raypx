@@ -36,7 +36,7 @@ server/
   a per-project loop or missing-module fallback in an HTTP handler.
 - Initialize exactly one runtime per process and close it idempotently through
   Nitro's `close` hook.
-- Build with Nitro's `bun` preset and run the output with Bun 1.4.0. Execute
+- Build with Nitro's `bun` preset and run the output with Bun 1.4.3. Execute
   Vite+, TypeScript and test CLIs with explicit `bun --bun` to keep their runtime consistent.
 - Keep the standalone `AUTH_URL` default at `http://localhost:3002`; production
   must provide its public URL explicitly.

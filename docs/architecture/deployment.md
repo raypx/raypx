@@ -3,9 +3,9 @@
 ## Deployment units
 
 ```text
-web       Bun 1.4.0 container
-api       Bun 1.4.0 standalone API container
-worker    Bun 1.4.0 Debian container; Run queue and document converters
+web       Bun 1.4.3 container
+api       Bun 1.4.3 standalone API container
+worker    Bun 1.4.3 Debian container; Run queue and document converters
 postgres  independent service
 redis     production AI admission limiter
 objects   private S3-compatible bucket
@@ -53,7 +53,7 @@ pruned workspace manifest, copies source before
 shared postinstall, and invokes the root build gate. Only built production
 artifacts enter the runtime image.
 
-Web and API use pinned Bun 1.4.0 Alpine builder/runtime images. Worker keeps
+Web and API use pinned Bun 1.4.3 Alpine builder/runtime images. Worker keeps
 Debian Bookworm and copies the pinned Bun executable into that converter image.
 Invoke package binaries with `bun x --bun`; the separate `bunx` executable is
 not copied into the Worker tools image.
@@ -171,7 +171,7 @@ explicit runtime environment values or the optional `/app/.env` file.
 
 ## Runtime policy
 
-Bun 1.4.0 is the package manager, repository JavaScript runtime and production
+Bun 1.4.3 is the package manager, repository JavaScript runtime and production
 runtime for Web, API, Worker and isolated Runner processes. JavaScript tools use
 explicit `bun --bun` commands to override package executable shebangs. Supported
 Node-compatible APIs, `@types/node` and TypeScript resolution presets remain

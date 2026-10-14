@@ -1,7 +1,7 @@
 # Raypx
 
 [![CI](https://github.com/raypx/raypx/actions/workflows/ci.yml/badge.svg)](https://github.com/raypx/raypx/actions/workflows/ci.yml)
-[![Bun 1.4.0](https://img.shields.io/badge/Bun-1.4.0-fbf0df?logo=bun&logoColor=000)](https://bun.sh/)
+[![Bun 1.4.3](https://img.shields.io/badge/Bun-1.4.3-fbf0df?logo=bun&logoColor=000)](https://bun.sh/)
 [![TypeScript 7.0.2](https://img.shields.io/badge/TypeScript-7.0.2-3178c6?logo=typescript&logoColor=fff)](https://www.typescriptlang.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-d22128?logo=apache&logoColor=fff)](./LICENSE)
 
@@ -60,7 +60,7 @@ projects and tasks; its former local runtime is retired under
 
 ## Requirements
 
-- Bun 1.4.0
+- Bun 1.4.3
 - Electrobun's pinned native SDK (prepared by the Desktop scripts)
 - PostgreSQL for persistent API data
 

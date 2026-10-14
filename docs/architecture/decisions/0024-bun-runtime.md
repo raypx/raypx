@@ -13,11 +13,16 @@ services and the isolated Runner, including builds and verification.
 
 ## Decision
 
-Use Bun 1.4.0 for server execution, Worker/Runner execution, repository JavaScript
+Use Bun 1.4.3 for server execution, Worker/Runner execution, repository JavaScript
 tools and the existing Vite+/Vitest and Playwright runners. Keep Turbo as the
 only task orchestrator and cache. Explicit `bun --bun` tool commands override
 Node shebangs; neither a Node installation nor an automatic Node fallback is part
 of the repository contract.
+
+The runtime pin was upgraded from 1.4.0 to 1.4.3 on October 14, 2026 without
+changing these boundaries. Desktop's native main process remains on Bun 1.4.0
+supplied by the pinned Electrobun SDK; its host runtime follows SDK upgrades
+independently of the repository and server pin.
 
 Web and API explicitly select Nitro's `bun` preset and run its compiled server
 entry with Bun. Worker uses Vite+ and Nitro's custom executable entry and second
@@ -41,7 +46,8 @@ in force.
 
 ## Consequences
 
-There is one pinned JavaScript runtime across development, tests and production.
+Development tools, tests and production services share one pinned Bun version.
+Desktop's native host uses the Bun version supplied by its pinned Electrobun SDK.
 Cache fingerprints include the exact Bun runtime and operating-system ABI.
 Doctor and CI enforce Bun instead of installing or validating Node.
 

@@ -59,7 +59,7 @@ or `packages/` without a `package.json`.
 
 ## Toolchain
 
-- Use Bun `1.4.0` for installation, the lockfile, and repository scripts.
+- Use Bun `1.4.3` for installation, the lockfile, and repository scripts.
 - Application package names match their `apps/` directory without a scope;
   shared `packages/` and E2E keep `@raypx/`. See ADR-0022.
 - Use the root Bun catalogs for third-party dependency versions and
@@ -73,7 +73,7 @@ or `packages/` without a `package.json`.
   `bun run lint` and `bun run format`. Do not add a separate linter, formatter,
   or git-hook manager. The committed `.vite-hooks/pre-commit` runs the staged-file
   pass after `vp hooks enable`; generated `.vite-hooks/_` files stay local.
-- Bun `1.4.0` is the server, Worker/Runner, tooling and test runtime; Desktop uses
+- Bun `1.4.3` is the server, Worker/Runner, tooling and test runtime; Desktop uses
   Electrobun's pinned Bun host. Run JavaScript tool CLIs with `bun --bun` so their
   shebang cannot select Node. Hutch prepares/packages Desktop only; Bun/Turbo own
   the repository. See ADR-0024.

@@ -77,7 +77,7 @@
         "jiti": "^2.7.0",
         "lightningcss": "^1.33.0",
         "@types/node": "^24.19.2",
-        "@types/bun": "1.4.0",
+        "@types/bun": "1.4.3",
         "@types/pdfkit": "^0.17.6",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
@@ -166,14 +166,14 @@
   "devEngines": {
     "packageManager": {
       "name": "bun",
-      "version": "1.4.0",
+      "version": "1.4.3",
       "onFail": "error"
     },
     "runtime": {
       "name": "bun",
-      "version": "1.4.0",
+      "version": "1.4.3",
       "onFail": "error"
     }
   },
-  "packageManager": "bun@1.4.0"
+  "packageManager": "bun@1.4.3"
 }

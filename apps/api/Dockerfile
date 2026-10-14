@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1.4.0-alpine AS tools
+FROM oven/bun:1.4.3-alpine AS tools
 WORKDIR /app
 
 FROM tools AS prune
@@ -19,7 +19,7 @@ COPY tsconfig.json test.config.ts vite.config.ts turbo.json .gitignore .prettier
 RUN bun run postinstall
 RUN bun run build:api
 
-FROM oven/bun:1.4.0-alpine AS runtime
+FROM oven/bun:1.4.3-alpine AS runtime
 ENV NODE_ENV=production
 
 WORKDIR /app/apps/api

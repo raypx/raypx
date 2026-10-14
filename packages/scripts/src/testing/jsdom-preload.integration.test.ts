@@ -9,7 +9,7 @@ it("keeps real DOM focus, events and uncaught-error reporting under Bun", async 
   const source = `
 import assert from "node:assert/strict";
 import { builtinEnvironments } from ${JSON.stringify(import.meta.resolve("vite-plus/test/runtime"))};
-assert.equal(process.versions.bun, "1.4.0");
+assert.equal(process.versions.bun, "1.4.3");
 console.error("runtime imported");
 await assert.rejects(async () => builtinEnvironments.jsdom.setup(globalThis, { jsdom: { runScripts: "dangerously" } }), /cannot execute scripts inside jsdom/);
 const environment = await builtinEnvironments.jsdom.setup(globalThis, {});

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM debian:bookworm-slim AS tools
-COPY --from=oven/bun:1.4.0 /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=oven/bun:1.4.3 /usr/local/bin/bun /usr/local/bin/bun
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && \
     rm -r /var/lib/apt/lists/*
 WORKDIR /app
