@@ -1,4 +1,4 @@
 {
-  "extends": "@raypx/tsconfig/react-library.json",
+  "extends": "@voidmix/tsconfig/react-library.json",
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

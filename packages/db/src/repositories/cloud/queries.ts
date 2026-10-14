@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { jsonNumber, jsonText, jsonType } from "@raypx/drizzle/postgres";
+import { jsonNumber, jsonText, jsonType } from "@voidmix/drizzle/postgres";
 
 const data = sql.identifier("data");
 

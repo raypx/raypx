@@ -52,7 +52,6 @@
     "cn": "catalog:frontend"
   },
   "devDependencies": {
-    "@raypx/tsconfig": "workspace:*",
     "@testing-library/jest-dom": "catalog:tooling",
     "@testing-library/react": "catalog:tooling",
     "@testing-library/user-event": "catalog:tooling",
@@ -61,7 +60,8 @@
     "jsdom": "catalog:tooling",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "catalog:tooling"
+    "vite": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   },
   "peerDependencies": {
     "react": "^19.3.0"

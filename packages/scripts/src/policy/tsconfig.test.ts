@@ -45,7 +45,7 @@ describe("validateWorkspaceTypeScriptConfig", () => {
     },
     {
       name: "reports a list of bases rather than a single preset",
-      content: config({ extends: ["@raypx/tsconfig/node.json", "./local.json"] }),
+      content: config({ extends: ["@voidmix/tsconfig/node.json", "./local.json"] }),
       expected: { message: "extends a list rather than a single preset" },
     },
     {
@@ -55,7 +55,7 @@ describe("validateWorkspaceTypeScriptConfig", () => {
     },
     {
       name: "reports a preset name that does not exist",
-      content: config({ extends: "@raypx/tsconfig/nodejs.json" }),
+      content: config({ extends: "@voidmix/tsconfig/nodejs.json" }),
       expected: {
         message: expect.stringContaining("which is not a preset packages/tsconfig exports"),
       },
@@ -63,7 +63,7 @@ describe("validateWorkspaceTypeScriptConfig", () => {
     {
       name: "reports a value the immediate preset already sets",
       content: config({
-        extends: "@raypx/tsconfig/browser.json",
+        extends: "@voidmix/tsconfig/browser.json",
         compilerOptions: { allowImportingTsExtensions: true },
       }),
       expected: {
@@ -77,7 +77,7 @@ describe("validateWorkspaceTypeScriptConfig", () => {
     {
       name: "reports a value inherited two levels up, naming the file that sets it",
       content: config({
-        extends: "@raypx/tsconfig/node.json",
+        extends: "@voidmix/tsconfig/node.json",
         compilerOptions: { noEmit: true },
       }),
       expected: { message: expect.stringContaining("packages/tsconfig/base.json already sets") },
@@ -106,7 +106,7 @@ describe("validateWorkspaceTypeScriptConfig", () => {
     ["malformed JSON", "broken", { broken: "{ not json" }],
   ])("reports an invalid preset chain: %s", (_name, entry, files) => {
     const brokenPresets = presetFiles(files);
-    const findings = validate(config({ extends: `@raypx/tsconfig/${entry}.json` }), brokenPresets);
+    const findings = validate(config({ extends: `@voidmix/tsconfig/${entry}.json` }), brokenPresets);
     expect(findings).toHaveLength(1);
     expect(findings[0]?.message).toContain("preset chain is invalid");
   });
@@ -115,7 +115,7 @@ describe("validateWorkspaceTypeScriptConfig", () => {
     ["new include", { include: ["src/**/*.ts"] }],
     ["changed option", { compilerOptions: { types: ["node", "vite/client"] } }],
   ])("accepts a consumer with a %s", (_name, overrides) => {
-    expect(validate(config({ extends: "@raypx/tsconfig/node.json", ...overrides }))).toEqual([]);
+    expect(validate(config({ extends: "@voidmix/tsconfig/node.json", ...overrides }))).toEqual([]);
   });
 });
 
@@ -130,7 +130,7 @@ describe("isPresetFile", () => {
 describe("fixWorkspaceTypeScriptConfig", () => {
   it("deletes the restated options and the emptied compilerOptions with them", () => {
     const content = config({
-      extends: "@raypx/tsconfig/node.json",
+      extends: "@voidmix/tsconfig/node.json",
       compilerOptions: { noEmit: true, types: ["node"] },
       include: ["src/**/*.ts"],
     });
@@ -138,7 +138,7 @@ describe("fixWorkspaceTypeScriptConfig", () => {
     const fixed = fix(content);
 
     expect(JSON.parse(fixed)).toEqual({
-      extends: "@raypx/tsconfig/node.json",
+      extends: "@voidmix/tsconfig/node.json",
       include: ["src/**/*.ts"],
     });
     expect(validate(fixed)).toEqual([]);
@@ -146,7 +146,7 @@ describe("fixWorkspaceTypeScriptConfig", () => {
 
   it("keeps an override that changes a value, deleting only the copy beside it", () => {
     const content = config({
-      extends: "@raypx/tsconfig/node.json",
+      extends: "@voidmix/tsconfig/node.json",
       compilerOptions: { noEmit: true, types: ["node", "vite/client"] },
     });
 
@@ -156,7 +156,7 @@ describe("fixWorkspaceTypeScriptConfig", () => {
   });
 
   it.each([
-    ["conforming", { extends: "@raypx/tsconfig/node.json", include: ["src/**/*.ts"] }, presets],
+    ["conforming", { extends: "@voidmix/tsconfig/node.json", include: ["src/**/*.ts"] }, presets],
     [
       "unknown preset",
       { extends: "../../tsconfig.base.json", compilerOptions: { noEmit: true } },
@@ -164,7 +164,7 @@ describe("fixWorkspaceTypeScriptConfig", () => {
     ],
     [
       "damaged chain",
-      { extends: "@raypx/tsconfig/broken.json", compilerOptions: { strict: true } },
+      { extends: "@voidmix/tsconfig/broken.json", compilerOptions: { strict: true } },
       presetFiles({ broken: { extends: "./missing.json" } }),
     ],
   ])("leaves a %s config byte-identical", (_name, body, source) => {
@@ -174,7 +174,7 @@ describe("fixWorkspaceTypeScriptConfig", () => {
 
   it("is idempotent", () => {
     const once = fix(
-      config({ extends: "@raypx/tsconfig/node.json", compilerOptions: { noEmit: true } }),
+      config({ extends: "@voidmix/tsconfig/node.json", compilerOptions: { noEmit: true } }),
     );
 
     expect(fix(once)).toBe(once);

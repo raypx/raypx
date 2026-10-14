@@ -1,4 +1,4 @@
-import { first, inserted } from "@raypx/drizzle/results";
+import { first, inserted } from "@voidmix/drizzle/results";
 import { desc, eq, and } from "drizzle-orm";
 import type { Database } from "../connection.js";
 import { cursorPage, timestampKey } from "../pagination.js";

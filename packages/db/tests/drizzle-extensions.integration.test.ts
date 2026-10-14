@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vite-plus/test";
 import { sql } from "drizzle-orm";
-import { jsonBoolean, jsonNumber, jsonText, jsonType, jsonValue } from "@raypx/drizzle/postgres";
+import { jsonBoolean, jsonNumber, jsonText, jsonType, jsonValue } from "@voidmix/drizzle/postgres";
 import { PostgresCloudRepository } from "../src/repositories/cloud/postgres.js";
 import { users } from "../src/schema.js";
 import { openTestDatabase } from "./database.js";

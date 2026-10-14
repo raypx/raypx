@@ -1,7 +1,7 @@
 import {
   createBrowserLocaleStorage as createIntlBrowserLocaleStorage,
   createLocalStorageLocaleStorage as createIntlLocalStorageLocaleStorage,
-} from "@raypx/intl/client";
+} from "@voidmix/intl/client";
 import { LOCALE_STORAGE_KEY } from "../constants.js";
 import { normalizeLocale } from "../normalize.js";
 import { localeRuntime } from "../runtime.js";

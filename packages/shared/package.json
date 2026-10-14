@@ -52,15 +52,15 @@
     "dev": "bun --bun vp pack --watch"
   },
   "dependencies": {
-    "@raypx/env": "catalog:",
+    "@voidmix/env": "catalog:",
     "evlog": "catalog:"
   },
   "devDependencies": {
     "@orpc/server": "catalog:",
-    "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:tooling",
     "hono": "catalog:backend",
-    "vite": "catalog:tooling"
+    "vite": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   },
   "peerDependencies": {
     "@orpc/server": "*",

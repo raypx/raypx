@@ -3,7 +3,7 @@ import type {
   LocaleCatalogLoader as IntlLocaleCatalogLoader,
   MessagesByLocale as IntlMessagesByLocale,
   LocaleSource as IntlLocaleSource,
-} from "@raypx/intl/types";
+} from "@voidmix/intl/types";
 import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants.js";
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -19,4 +19,4 @@ export type {
   TranslationValues,
   IntlRuntimeOptions,
   AcceptLanguagePreference,
-} from "@raypx/intl/types";
+} from "@voidmix/intl/types";

@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { createIntlClient } from "@raypx/intl/client";
+import { createIntlClient } from "@voidmix/intl/client";
 import { localeRuntime } from "./runtime.js";
 
 export const {

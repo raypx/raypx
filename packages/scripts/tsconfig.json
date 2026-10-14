@@ -1,5 +1,5 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
+  "extends": "@voidmix/tsconfig/node.json",
   "compilerOptions": { "allowImportingTsExtensions": true },
   "include": ["src/**/*.ts"]
 }

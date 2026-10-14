@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@phosphor-icons/react": "catalog:frontend",
-    "@raypx/tsconfig": "workspace:*",
     "@storybook/addon-a11y": "catalog:tooling",
     "@storybook/addon-docs": "catalog:tooling",
     "@storybook/react-vite": "catalog:tooling",
@@ -25,6 +24,7 @@
     "@types/react-dom": "catalog:tooling",
     "storybook": "catalog:tooling",
     "typescript": "catalog:tooling",
-    "vite": "catalog:tooling"
+    "vite": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   }
 }

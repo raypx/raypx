@@ -3,8 +3,8 @@ import {
   defineEnv as libraryDefineEnv,
   EnvError as LibraryEnvError,
   z as libraryZ,
-} from "@raypx/env";
-import { runtimeEnv as libraryRuntimeEnv } from "@raypx/env/runtime";
+} from "@voidmix/env";
+import { runtimeEnv as libraryRuntimeEnv } from "@voidmix/env/runtime";
 import { describe, expect, expectTypeOf, it } from "vite-plus/test";
 
 import { loggerEnv } from "../logger/env.js";

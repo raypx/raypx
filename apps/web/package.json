@@ -35,7 +35,6 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@raypx/tsconfig": "workspace:*",
     "@testing-library/jest-dom": "catalog:tooling",
     "@testing-library/react": "catalog:tooling",
     "@testing-library/user-event": "catalog:tooling",
@@ -49,6 +48,7 @@
     "oxc-transform-react": "catalog:tooling",
     "typescript": "catalog:tooling",
     "vite": "catalog:tooling",
-    "vite-plus": "catalog:tooling"
+    "vite-plus": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   }
 }

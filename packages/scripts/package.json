@@ -46,7 +46,7 @@
   "devDependencies": {
     "@raypx/contracts": "workspace:*",
     "@raypx/core": "workspace:*",
-    "@raypx/tsconfig": "workspace:*",
-    "@vitest/coverage-v8": "catalog:tooling"
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   }
 }

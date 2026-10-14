@@ -20,17 +20,17 @@
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "@raypx/intl": "catalog:frontend"
+    "@voidmix/intl": "catalog:frontend"
   },
   "devDependencies": {
-    "@raypx/tsconfig": "workspace:*",
     "@testing-library/react": "catalog:tooling",
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:tooling",
     "jsdom": "catalog:tooling",
     "react": "catalog:",
     "typescript": "catalog:tooling",
-    "vite-plus": "catalog:tooling"
+    "vite-plus": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   },
   "peerDependencies": {
     "react": "catalog:"

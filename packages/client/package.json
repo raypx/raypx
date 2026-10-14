@@ -22,7 +22,7 @@
     "@raypx/contracts": "workspace:*"
   },
   "devDependencies": {
-    "@raypx/tsconfig": "workspace:*",
-    "@vitest/coverage-v8": "catalog:tooling"
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   }
 }

@@ -119,7 +119,7 @@ export function validateDependencies(
     // Toolkit keeps the Raypx scope, but its packages are released outside this workspace.
     if (
       name.startsWith("@raypx/") &&
-      !["@raypx/drizzle", "@raypx/intl", "@raypx/env"].includes(name)
+      !["@voidmix/drizzle", "@voidmix/intl", "@voidmix/env"].includes(name)
     ) {
       if (version === "workspace:*") continue;
       report(

@@ -37,10 +37,10 @@
     "@orpc/client": "catalog:",
     "@orpc/contract": "catalog:",
     "@raypx/client": "workspace:*",
-    "@raypx/tsconfig": "workspace:*",
     "@vitest/coverage-v8": "catalog:tooling",
     "nitro": "catalog:backend",
     "vite": "catalog:tooling",
-    "vite-plus": "catalog:tooling"
+    "vite-plus": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   }
 }

@@ -2,7 +2,7 @@ import postgres, { type Sql } from "postgres";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { diagnosticStatement } from "./query.js";
-import { summarizePlan, DrizzleDiagnosticError } from "@raypx/drizzle/diagnostics";
+import { summarizePlan, DrizzleDiagnosticError } from "@voidmix/drizzle/diagnostics";
 import {
   DatabaseDiagnosticError,
   type ExplainDatabaseRequest,

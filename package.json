@@ -8,7 +8,7 @@
       "e2e"
     ],
     "catalog": {
-      "@raypx/env": "0.0.6",
+      "@voidmix/env": "0.0.0-alpha.0",
       "@better-auth/drizzle-adapter": "^1.7.7",
       "@orpc/client": "2.0.0-beta.43",
       "@orpc/contract": "2.0.0-beta.43",
@@ -38,7 +38,7 @@
         "nanoid": "^6.0.2",
         "nitro": "3.0.260903-beta",
         "postgres": "^3.4.9",
-        "@raypx/drizzle": "0.0.0"
+        "@voidmix/drizzle": "0.0.0-alpha.0"
       },
       "frontend": {
         "@sentry/react": "^11.6.0",
@@ -58,7 +58,7 @@
         "zustand": "^5.0.15",
         "@tanstack/react-query": "5.104.2",
         "@tanstack/react-router-ssr-query": "1.167.3",
-        "@raypx/intl": "0.0.0"
+        "@voidmix/intl": "0.0.0-alpha.0"
       },
       "tooling": {
         "@dotenvx/dotenvx": "^2.34.2",
@@ -70,6 +70,7 @@
         "@testing-library/react": "^16.3.3",
         "@testing-library/user-event": "^14.6.7",
         "@vitest/coverage-v8": "5.0.3",
+        "@voidmix/tsconfig": "0.0.0-alpha.0",
         "knip": "^6.41.0",
         "esbuild": "^0.28.2",
         "jsdom": "^30.1.2",

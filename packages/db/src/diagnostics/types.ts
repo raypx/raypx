@@ -1,4 +1,4 @@
-import type { PlanNode, PlanSummary } from "@raypx/drizzle/diagnostics";
+import type { PlanNode, PlanSummary } from "@voidmix/drizzle/diagnostics";
 
 export type DatabaseDiagnosticQuery =
   | "queued-runs"

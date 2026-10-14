@@ -1,4 +1,4 @@
-import { createLocaleRuntime } from "@raypx/intl";
+import { createLocaleRuntime } from "@voidmix/intl";
 
 import {
   DEFAULT_LOCALE,

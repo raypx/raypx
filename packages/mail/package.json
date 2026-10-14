@@ -25,10 +25,10 @@
     "resend": "catalog:frontend"
   },
   "devDependencies": {
-    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:tooling",
     "@types/react": "catalog:tooling",
     "typescript": "catalog:tooling",
-    "vite-plus": "catalog:tooling"
+    "vite-plus": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   }
 }

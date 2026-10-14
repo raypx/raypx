@@ -1,4 +1,4 @@
-import { createIntlServer } from "@raypx/intl/server";
+import { createIntlServer } from "@voidmix/intl/server";
 import { localeRuntime } from "./runtime.js";
 
 export const { resolveRequestLocale, resolveRequestLocaleHint, resolveConfiguredLocale } =

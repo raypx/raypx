@@ -1,4 +1,4 @@
 {
-  "extends": "@raypx/tsconfig/node.json",
+  "extends": "@voidmix/tsconfig/node.json",
   "include": ["src/**/*.ts", "drizzle.config.ts", "tests/**/*.ts", "vitest.postgres.config.ts"]
 }

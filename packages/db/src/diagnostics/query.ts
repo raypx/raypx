@@ -1,5 +1,5 @@
 import { sql, type SQL } from "drizzle-orm";
-import { buildExplain } from "@raypx/drizzle/diagnostics";
+import { buildExplain } from "@voidmix/drizzle/diagnostics";
 import { timestampKey } from "../pagination.js";
 import { v2Projects } from "../schema.js";
 import { projectVisibility } from "../v2/visibility.js";

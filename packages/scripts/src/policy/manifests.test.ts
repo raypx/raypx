@@ -67,7 +67,7 @@ describe("validateWorkspaceManifest", () => {
     expect(validate(manifest())).toEqual([]);
   });
 
-  it.each(["@raypx/drizzle", "@raypx/intl", "@raypx/env"])(
+  it.each(["@voidmix/drizzle", "@voidmix/intl", "@voidmix/env"])(
     "uses catalogs for the Toolkit package %s",
     (name) => {
       expect(validate(manifest({ dependencies: { [name]: "catalog:backend" } }))).toEqual([]);
@@ -180,10 +180,10 @@ describe("validateWorkspaceManifest", () => {
     },
     {
       name: "reports an internal dependency that bypasses the workspace protocol",
-      content: manifest({ devDependencies: { "@raypx/tsconfig": "^0.0.0" } }),
+      content: manifest({ devDependencies: { "@voidmix/tsconfig": "^0.0.0" } }),
       shape: shape(),
       expected: {
-        message: expect.stringContaining("devDependencies pins @raypx/tsconfig"),
+        message: expect.stringContaining("devDependencies pins @voidmix/tsconfig"),
         fix: expect.stringContaining("workspace:*"),
       },
     },

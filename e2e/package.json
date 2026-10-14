@@ -16,10 +16,10 @@
     "@playwright/test": "catalog:tooling",
     "@raypx/client": "workspace:*",
     "@raypx/db": "workspace:*",
-    "@raypx/tsconfig": "workspace:*",
     "@types/node": "catalog:tooling",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:backend",
-    "typescript": "catalog:tooling"
+    "typescript": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
   }
 }
