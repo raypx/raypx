@@ -1,0 +1,107 @@
+AGENTS.md
+  s_5c01c416baeabb::t_3ad4f5bee27c4a 26-27,46-47,87,122-123,188-189
+apps/api/package.json
+  s_5c01c416baeabb::t_a18ef502b533dc 29
+apps/api/server/api/admission-cache.test.ts
+  s_5c01c416baeabb::t_76b13127a4714f 1
+apps/api/server/api/admission-cache.ts
+  s_5c01c416baeabb::t_6a7602a85a32be 1
+apps/api/server/api/cloud-handlers.ts
+  s_5c01c416baeabb::t_7847c966b15a98 5
+apps/api/server/api/context.ts
+  s_5c01c416baeabb::t_b5acae0cfac672 1
+apps/api/server/api/env.ts
+  s_5c01c416baeabb::t_b2943387c1aad3 2-4
+apps/api/server/api/runtime.ts
+  s_5c01c416baeabb::t_1b5c259bcc77a2 26
+apps/api/server/api/session.ts
+  s_5c01c416baeabb::t_1f66015f162e1f 1
+apps/api/server/env.ts
+  s_5c01c416baeabb::t_7ea7bde9acdbcf 2
+apps/desktop/package.json
+  s_5c01c416baeabb::t_0eee05252441e6 32
+apps/desktop/src/env.ts
+  s_5c01c416baeabb::t_8ab1ca039df259 1-2
+apps/web/package.json
+  s_5c01c416baeabb::t_bab6f7aa0a620e 32
+apps/web/src/env.test.ts
+  s_5c01c416baeabb::t_15daefb08cd18f 1
+apps/web/src/env.ts
+  s_5c01c416baeabb::t_c516d244a4783f 1-2
+apps/worker/package.json
+  s_5c01c416baeabb::t_71f0b60b9f191c 29
+apps/worker/src/env.ts
+  s_5c01c416baeabb::t_172bd7b614748c 1-2
+bun.lock
+  s_5c01c416baeabb::t_060691f823edd8 11,36,64,124,162,269,306,330,347-348,421,1363
+docs/README.md
+  s_5c01c416baeabb::t_959fff7236e7b2 10-12,14
+docs/architecture/README.md
+  s_5c01c416baeabb::t_9ca4f2ef5530c6 73-75,86-89,95-96
+docs/architecture/optimization-proposal.md
+  s_5c01c416baeabb::t_402f02eb7a9cc7 6,17,25,31,39,45,50,54,60,68,73,78,88,94,103,109,118,125,131,139,148,155,163
+docs/architecture/packages.md
+  s_5c01c416baeabb::t_e55afdf4a67411 84,87-96,102-104,106-109,163-167,170,174-175,289,291-294
+docs/architecture/tooling.md
+  s_5c01c416baeabb::t_84f28631c66f3b 71,89-90
+docs/development/environment.md
+  s_5c01c416baeabb::t_92bb0d6760c621 6-13
+docs/development/file-structure.md
+  s_5c01c416baeabb::t_8cdcd4005b96d9 14
+docs/development/getting-started.md
+  s_5c01c416baeabb::t_124d6490ecef19 65
+package.json
+  s_5c01c416baeabb::t_de10d81740ce93 11,151
+packages/db/package.json
+  s_de2d79b0b75518::t_9b6f7d929ba242 26
+packages/db/src/env.ts
+  s_de2d79b0b75518::t_f45a830d3e100d 1-2
+packages/mail/package.json
+  s_de2d79b0b75518::t_54b39e0f045ff9 23
+packages/mail/src/env.ts
+  s_de2d79b0b75518::t_9b6789e99d1843 1-2
+packages/scripts/package.json
+  s_de2d79b0b75518::t_490b1bf68f38b3 43
+packages/scripts/src/env.ts
+  s_de2d79b0b75518::t_6439a603a71517 2-3
+packages/shared/AGENTS.md
+  s_de2d79b0b75518::t_a8dc2537605c9b 13-15,31-37,53-54
+packages/shared/package.json
+  s_de2d79b0b75518::t_7f50585a4c0759 11-13,15-21,60-62
+packages/shared/src/cache/env.ts
+  s_de2d79b0b75518::t_1569a97b1e5ea8 1-2
+packages/shared/src/env/types.ts
+  s_de2d79b0b75518::t_a29d9dc50854cb 1-86
+packages/shared/src/index.test.ts
+  s_de2d79b0b75518::t_e3a389396eedf4 29-31
+packages/shared/src/logger/env.ts
+  s_5c01c416baeabb::t_a52b9a063d6fae 1-2
+packages/shared/vite.config.ts
+  s_5c01c416baeabb::t_298a2fca0bfb85 7-9,22,30
+tsconfig.json
+  s_5c01c416baeabb::t_fe466d290a9444 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "745bd561fec31949495bed69bdabbb6bc7d8751a",
+  "prompts": {},
+  "sessions": {
+    "s_5c01c416baeabb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13983-4685-7462-b312-daf5e15507b3",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
