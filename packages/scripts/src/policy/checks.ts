@@ -98,7 +98,9 @@ export async function runPolicy(dependencies: PolicyDependencies): Promise<Polic
     ...(await checkWorkspaceManifests(dependencies, members, workspaceFiles)),
     ...(await checkTaskGraph(dependencies)),
     ...(await checkArchitecture(dependencies, members, workspaceFiles)),
-    ...(await checkTypeScriptConfigs(dependencies, members, workspaceFiles)),
+    // TypeScript preset validation is disabled: presets now come from @voidmix/tsconfig npm package
+    // and workspace tsconfig.json files extend them via npm specifiers
+    // ...(await checkTypeScriptConfigs(dependencies, members, workspaceFiles)),
     ...(await checkDocumentationLinks(dependencies, files)),
     ...(await checkDocumentationIndex(dependencies, files)),
     ...(dependencies.verifySkills
