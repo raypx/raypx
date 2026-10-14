@@ -1,0 +1,14 @@
+packages/scripts/src/policy/checks.ts
+  h_f0766e80fd3864 101-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cd4ebed57fa9a63ec6eec4354b7958c582ac7f4b",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
