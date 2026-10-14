@@ -1,0 +1,150 @@
+apps/api/package.json
+  h_f0766e80fd3864 43-44
+apps/api/tsconfig.json
+  h_f0766e80fd3864 2
+apps/desktop/package.json
+  h_f0766e80fd3864 48-49
+apps/desktop/tsconfig.json
+  h_f0766e80fd3864 2
+apps/storybook/package.json
+  h_f0766e80fd3864 27-28
+apps/storybook/tsconfig.json
+  h_f0766e80fd3864 2
+apps/web/package.json
+  h_f0766e80fd3864 51-52
+apps/web/tsconfig.json
+  h_f0766e80fd3864 2
+apps/worker/package.json
+  h_f0766e80fd3864 38-39
+apps/worker/tsconfig.json
+  h_f0766e80fd3864 2
+bun.lock
+  h_f0766e80fd3864 47,76,101,137,167,181,201,220,227,239,252,264,275,284,291,299,305,328,351,358,364,390,408,432,446,466,494,520,522,524,526,528,530,532,534,536,538,540,542,544,546,548,552,634,992,994,1068,1070,1072,1074,1076,1078,1080,1082,1084,1086,1088,1090,1092,1112,1130,1132,1134,1136,1138,1140,1142,1144,1146,1148,1154,1156,1158,1198,1202,1204,1206,1208,1212,1214,1216,1222,1226,1228,1230,1242,1376-1383,1548,1680,1698,1746,2072,2286,2290,2568,2650,2722-2723,2868
+e2e/package.json
+  h_f0766e80fd3864 22-23
+package.json
+  h_f0766e80fd3864 11,41,61,73
+packages/agent-ui/package.json
+  h_f0766e80fd3864 39-40
+packages/agent-ui/tsconfig.json
+  h_f0766e80fd3864 2
+packages/application/package.json
+  h_f0766e80fd3864 21-22
+packages/application/tsconfig.json
+  h_f0766e80fd3864 2
+packages/auth/package.json
+  h_f0766e80fd3864 13
+packages/auth/tsconfig.json
+  h_f0766e80fd3864 2
+packages/cache/package.json
+  h_f0766e80fd3864 23-24
+packages/cache/tsconfig.json
+  h_f0766e80fd3864 2
+packages/client/package.json
+  h_f0766e80fd3864 25-26
+packages/client/tsconfig.json
+  h_f0766e80fd3864 2
+packages/contracts/package.json
+  h_f0766e80fd3864 23-24
+packages/contracts/tsconfig.json
+  h_f0766e80fd3864 2
+packages/core/package.json
+  h_f0766e80fd3864 21-22
+packages/core/tsconfig.json
+  h_f0766e80fd3864 2
+packages/db/package.json
+  h_f0766e80fd3864 24,32-33
+packages/db/src/diagnostics/explain.ts
+  h_f0766e80fd3864 5
+packages/db/src/diagnostics/query.ts
+  h_f0766e80fd3864 2
+packages/db/src/diagnostics/types.ts
+  h_f0766e80fd3864 1
+packages/db/src/repositories/cloud/postgres.ts
+  h_f0766e80fd3864 13,16
+packages/db/src/repositories/cloud/queries.ts
+  h_f0766e80fd3864 2
+packages/db/src/v2/assets.ts
+  h_f0766e80fd3864 1
+packages/db/src/v2/projects.ts
+  h_f0766e80fd3864 4,16-17
+packages/db/src/v2/reviews.ts
+  h_f0766e80fd3864 1
+packages/db/src/v2/tasks.ts
+  h_f0766e80fd3864 1
+packages/db/tests/cloud.integration.test.ts
+  h_f0766e80fd3864 7
+packages/db/tests/drizzle-extensions.integration.test.ts
+  h_f0766e80fd3864 3
+packages/db/tsconfig.json
+  h_f0766e80fd3864 2
+packages/i18n/package.json
+  h_f0766e80fd3864 23,32-33
+packages/i18n/src/accept-language.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/client.ts
+  h_f0766e80fd3864 2
+packages/i18n/src/client/storage.ts
+  h_f0766e80fd3864 4
+packages/i18n/src/formats.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/formatter.ts
+  h_f0766e80fd3864 1-2,5
+packages/i18n/src/runtime.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/server.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/testing.ts
+  h_f0766e80fd3864 6
+packages/i18n/src/translator.ts
+  h_f0766e80fd3864 1-2,5
+packages/i18n/src/types.ts
+  h_f0766e80fd3864 6,22
+packages/i18n/tsconfig.json
+  h_f0766e80fd3864 2
+packages/mail/package.json
+  h_f0766e80fd3864 31-32
+packages/mail/tsconfig.json
+  h_f0766e80fd3864 2
+packages/scripts/package.json
+  h_f0766e80fd3864 49-50
+packages/scripts/src/policy/manifests.test.ts
+  h_f0766e80fd3864 70,183,186
+packages/scripts/src/policy/manifests/rules.ts
+  h_f0766e80fd3864 122
+packages/scripts/src/policy/tsconfig.test.ts
+  h_f0766e80fd3864 48,58,66,80,109,118,133,141,149,159,167,177
+packages/scripts/src/policy/tsconfig.ts
+  h_f0766e80fd3864 18,39
+packages/scripts/tsconfig.json
+  h_f0766e80fd3864 2
+packages/shared/package.json
+  h_f0766e80fd3864 55,62-63
+packages/shared/src/env/index.test.ts
+  h_f0766e80fd3864 6-7
+packages/shared/src/env/index.ts
+  h_f0766e80fd3864 1
+packages/shared/src/env/runtime.ts
+  h_f0766e80fd3864 1
+packages/shared/tsconfig.json
+  h_f0766e80fd3864 2
+packages/storage/package.json
+  h_f0766e80fd3864 24-25
+packages/storage/tsconfig.json
+  h_f0766e80fd3864 2
+packages/ui/package.json
+  h_f0766e80fd3864 63-64
+packages/ui/tsconfig.json
+  h_f0766e80fd3864 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "31b6c6cb50d0b0e18c00d60378d50a4d6b3392b5",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
