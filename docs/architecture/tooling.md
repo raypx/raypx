@@ -68,7 +68,7 @@ regenerate `bun.lock`, and run the full verification suite.
 
 ## TypeScript presets
 
-`@raypx/tsconfig` exports:
+`@voidmix/tsconfig`, published from the Voidmix toolkit, exports:
 
 ```text
 base.json           strict shared rules, including an empty ambient `types`
@@ -86,9 +86,8 @@ A preset owns every option every consumer wants, including the ambient `types`
 default and the unused-symbol checks. A workspace file therefore holds only
 `include` plus the options that genuinely differ: `apps/web` widens `types`
 because its `include` covers `vite.config.ts`, and
-`packages/client` widens `lib` for DOM APIs. Restating an inherited value is a
-`bun run policy` error, because the copy stops tracking the preset the moment the
-preset changes.
+`packages/client` widens `lib` for DOM APIs. Do not restate an inherited value:
+the copy stops tracking the preset the moment the preset changes.
 
 The `node.json` name, `NodeNext` resolution and `node:*` APIs describe the
 compatibility interface supported by Bun. Keep Bun-specific ambient types local

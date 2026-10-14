@@ -11,7 +11,7 @@ organise inside one.
 ## The rule that decides everything
 
 **Structure follows the size and number of ownership boundaries, not a template.**
-`packages/auth` is 36 lines and one `src/index.ts`. `packages/scripts` is 2,200
+`packages/shared/src/auth` is one `index.ts`. `packages/scripts` is 2,200
 lines and splits into `runtime/`, `database/`, `doctor/`, `policy/`, `commands/`.
 Both are correct. Add structure when a directory has enough content to need it,
 not in anticipation.

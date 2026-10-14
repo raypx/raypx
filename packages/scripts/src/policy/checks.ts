@@ -5,7 +5,6 @@ import { checkDocumentationIndex, checkDocumentationLinks } from "./checks/docs.
 import { checkWorkspaceManifests } from "./checks/manifests.js";
 import { checkTaskGraph } from "./checks/tasks.js";
 import { checkProjectSkill, checkVendoredSkills } from "./checks/skills.js";
-import { checkTypeScriptConfigs } from "./checks/typescript.js";
 import { checkWorkspaceAgents, checkWorkspaceIgnores } from "./checks/workspace.js";
 import {
   findEmptyDirectories,
@@ -98,9 +97,6 @@ export async function runPolicy(dependencies: PolicyDependencies): Promise<Polic
     ...(await checkWorkspaceManifests(dependencies, members, workspaceFiles)),
     ...(await checkTaskGraph(dependencies)),
     ...(await checkArchitecture(dependencies, members, workspaceFiles)),
-    // TypeScript preset validation is disabled: presets now come from @voidmix/tsconfig npm package
-    // and workspace tsconfig.json files extend them via npm specifiers
-    // ...(await checkTypeScriptConfigs(dependencies, members, workspaceFiles)),
     ...(await checkDocumentationLinks(dependencies, files)),
     ...(await checkDocumentationIndex(dependencies, files)),
     ...(dependencies.verifySkills

@@ -1,5 +1,5 @@
-import { createEnv, z } from "@raypx/shared/env";
-import { runtimeEnv } from "@raypx/shared/env/runtime";
+import { createEnv, z } from "@voidmix/env";
+import { runtimeEnv } from "@voidmix/env/runtime";
 const enabled = (initial: "true" | "false") =>
   z
     .enum(["true", "false"])

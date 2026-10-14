@@ -3,7 +3,6 @@ import { join } from "node:path";
 import type { PolicyDependencies } from "./checks.js";
 import { fixWorkspaceIgnore, parseIgnorePatterns } from "./ignores.js";
 import { deriveWorkspaceShape, fixWorkspaceManifest } from "./manifests.js";
-import { fixWorkspaceTypeScriptConfig, isPresetFile } from "./tsconfig.js";
 
 /**
  * Applies the findings that have exactly one possible remedy and returns the
@@ -34,11 +33,6 @@ export async function applyPolicyFixes(dependencies: PolicyDependencies): Promis
     await dependencies.readFile(join(dependencies.repositoryRoot, ".gitignore")),
   );
 
-  const presets = new Map<string, string>();
-  for (const file of workspaceFiles.filter(isPresetFile)) {
-    presets.set(file, await dependencies.readFile(join(dependencies.repositoryRoot, file)));
-  }
-
   for (const member of members) {
     const shape = deriveWorkspaceShape(member, workspaceFiles);
 
@@ -47,12 +41,6 @@ export async function applyPolicyFixes(dependencies: PolicyDependencies): Promis
     const ignore = `${member}/.gitignore`;
     if (await dependencies.pathExists(join(dependencies.repositoryRoot, ignore))) {
       await rewrite(ignore, (content) => fixWorkspaceIgnore(content, rootPatterns));
-    }
-
-    for (const config of shape.typeScriptConfigs) {
-      await rewrite(`${member}/${config}`, (content) =>
-        fixWorkspaceTypeScriptConfig(content, presets),
-      );
     }
   }
 

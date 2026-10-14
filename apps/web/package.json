@@ -29,6 +29,7 @@
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-router-ssr-query": "catalog:frontend",
     "@tanstack/react-start": "catalog:",
+    "@voidmix/env": "catalog:",
     "better-auth": "catalog:",
     "posthog-js": "catalog:frontend",
     "react": "catalog:",

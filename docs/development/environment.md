@@ -3,14 +3,14 @@
 ## Validation ownership
 
 Reusable environment validation lives in the independently released
-[`@raypx/env`](https://github.com/raypx/packages/tree/main/packages/env) library.
-Raypx consumes npm `0.0.6` through the default Bun catalog, with Zod supplied as
-a peer. This continues the existing package's version history.
+[`@voidmix/env`](https://github.com/raypx/voidmix/tree/main/packages/env) library.
+Raypx consumes an exact alpha version through the default Bun catalog, with Zod
+supplied as a peer.
 
-Keep product imports on `@raypx/shared/env` and `@raypx/shared/env/runtime`.
-These compatibility subpaths directly re-export the library and its `NODE_ENV`
-preset; they contain no duplicate validation or type implementation. The same
-functions, Zod runtime and `EnvError` class are used through either boundary.
+Import `createEnv`, `z` and preset types from `@voidmix/env`, and the `NODE_ENV`
+preset from `@voidmix/env/runtime`. Each importing workspace declares
+`@voidmix/env` itself with `catalog:`; Shared no longer re-exports it, so one
+copy of the functions, Zod runtime and `EnvError` class is used everywhere.
 Applications, adapters and Logger keep ownership of their own presets.
 [ADR-0032](../architecture/decisions/0032-independent-env-library.md) records the
 ownership and packaging boundary.
@@ -25,8 +25,6 @@ Library builds preserve `import.meta.env`; the consuming Vite build supplies
 public values, mode and SSR state. Web and Desktop continue calling
 `createEnv` with their existing presets, without manually copying Vite values.
 Shared keeps the library external to preserve this behavior and export identity.
-Packaged consumer checks cover both explicit runtime values and browser defaults
-in an actual Vite build.
 
 The library never loads `.env` files. The private `rpx env -- <command>` runner
 still uses Dotenvx to load repository files into a copied child environment and

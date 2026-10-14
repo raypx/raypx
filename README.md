@@ -38,11 +38,9 @@ packages/ui         Shared visual primitives
 packages/agent-ui   Shared controlled Agent business components
 packages/storage    Private S3-compatible object storage adapter
 packages/application Shared cloud and Project use cases for API and Worker
-packages/cache      Redis cache facade and Better Auth secondary storage
 packages/client     Typed oRPC client
 packages/contracts  Runtime API contracts
 packages/core       Framework-independent business rules
-packages/auth       Sessions and compatible role values
 packages/i18n       use-intl facade, locale adapters, and formatting
 packages/mail       Typed auth email templates and transports
 packages/db         Drizzle schema and repository adapters

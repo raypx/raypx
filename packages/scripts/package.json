@@ -40,6 +40,7 @@
     "@raypx/db": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/shared": "workspace:*",
+    "@voidmix/env": "catalog:",
     "citty": "catalog:tooling",
     "oxc-parser": "catalog:tooling"
   },

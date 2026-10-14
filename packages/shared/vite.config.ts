@@ -4,8 +4,9 @@ export default defineConfig({
   pack: {
     entry: {
       index: "src/index.ts",
-      "env/index": "src/env/index.ts",
-      "env/runtime": "src/env/runtime.ts",
+      "auth/index": "src/auth/index.ts",
+      "cache/index": "src/cache/index.ts",
+      "cache/env": "src/cache/env.ts",
       "logger/index": "src/logger/index.ts",
       "logger/client": "src/logger/client.ts",
       "logger/env": "src/logger/env.ts",
@@ -18,7 +19,7 @@ export default defineConfig({
     sourcemap: true,
     deps: {
       neverBundle: [
-        /^@raypx\/env(?:\/|$)/,
+        /^@voidmix\/env(?:\/|$)/,
         "@orpc/server",
         "evlog",
         "evlog/client",
@@ -26,6 +27,7 @@ export default defineConfig({
         "evlog/orpc",
         "evlog/vite",
         "hono",
+        "ioredis",
         "vite",
       ],
     },

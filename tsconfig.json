@@ -1,4 +1,4 @@
 {
-  "extends": "./packages/tsconfig/node.json",
+  "extends": "@voidmix/tsconfig/node.json",
   "include": ["vite.config.ts", "vitest.config.ts"]
 }

@@ -1,5 +1,5 @@
-import { createEnv, type Preset, z } from "../env/index.js";
-import { runtimeEnv } from "../env/runtime.js";
+import { createEnv, type Preset, z } from "@voidmix/env";
+import { runtimeEnv } from "@voidmix/env/runtime";
 
 const logLevelSchema = z.enum(["debug", "info", "warn", "error"]);
 

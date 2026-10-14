@@ -10,8 +10,9 @@ This is the deepest common workspace in the repository.
 | Path              | Purpose                                                              |
 | ----------------- | -------------------------------------------------------------------- |
 | `.`               | Domain errors, setting value types, and injectable clock/ID defaults |
-| `./env`           | Compatibility exports from the independent `@raypx/env` library      |
-| `./env/runtime`   | Re-exported base `NODE_ENV` preset                                   |
+| `./auth`          | Session vocabulary and compatible stored roles                       |
+| `./cache`         | Redis cache facade and Better Auth secondary storage                 |
+| `./cache/env`     | Cache environment preset                                             |
 | `./logger`        | Evlog configuration, lifecycle functions, and event types            |
 | `./logger/client` | Browser logger initialization and client logging                     |
 | `./logger/env`    | Logger environment preset                                            |
@@ -27,10 +28,13 @@ This is the deepest common workspace in the repository.
   `IdGenerator` defaults used by deterministic domain and adapter code.
 - Keep domain errors and primitive types independent from authentication,
   persistence, transport, and UI dependencies.
-- Keep environment imports compatible by re-exporting `@raypx/env` without
-  copying its implementation or wrapping its functions. The library owns preset
-  composition and validation; applications own their variables and presets.
-  See [environment ownership](../../docs/development/environment.md).
+- Do not re-export or copy `@voidmix/env`. Workspaces import it directly; the
+  library owns preset composition and validation, and applications own their
+  variables and presets. See
+  [environment ownership](../../docs/development/environment.md).
+- The cache adapter has no fallback store; Redis Lua scripts keep token
+  consumption and rate increments atomic. Session roles grant no access to
+  another account's Cloud content.
 - Environment validation never reads `.env` files. The private repository runner
   remains responsible for loading development environment files.
 - Browser environment access must reject undeclared and server-only fields.
@@ -46,8 +50,8 @@ This is the deepest common workspace in the repository.
 
 ## Constraints
 
-- Runtime dependencies are limited to `@raypx/env`, its Zod peer, and Evlog.
-  Adapter dependencies remain optional peers. Keep the environment library
+- Runtime dependencies are limited to `@voidmix/env`, its Zod peer, Evlog and
+  ioredis. Adapter dependencies remain optional peers. Keep the environment library
   external in built Shared output so its functions and error class retain one
   identity and consumers can process its `import.meta.env` expressions.
 - Keep this package below domain, adapter, and application workspaces in the

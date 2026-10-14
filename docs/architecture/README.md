@@ -70,9 +70,9 @@ application commands while remaining independently deployable. `features`,
 and a generic `config` package are intentionally not standalone
 workspaces either.
 
-Environment validation belongs to `@raypx/shared/env`; each application
-assembles and validates its own configuration. Environment and logger APIs are
-subpaths of the shared foundation package.
+Environment validation belongs to the published `@voidmix/env` library; each
+application assembles and validates its own configuration. Logger, cache and
+session-type APIs are subpaths of the shared foundation package.
 
 ## Dependency direction
 
@@ -83,17 +83,17 @@ apps/desktop  ─┴──> client ───> contracts
 apps/storybook ───> ui
 
 apps/web ───> client ───> contracts ───> apps/api
-apps/api ───> Hono + auth + application + core + db + contracts
-apps/api ───> shared/env + shared/logger + Hono/oRPC adapters
-apps/web/desktop ───> shared/env + shared/logger (Vite client integration)
-apps/worker ───> shared/env + shared/logger
-apps/api ───> cache
+apps/api ───> Hono + application + core + db + contracts
+apps/api ───> shared/auth + shared/cache + shared/logger + Hono/oRPC adapters
+apps/web/desktop ───> shared/logger (Vite client integration)
+apps/worker ───> shared/logger
 apps/worker ───> application + db
 apps/api/worker ───> storage
 apps/web/storybook ───> agent-ui + ui
 apps/desktop       ───> ui
 packages/storage ───> core + shared
-packages/db/mail/cache/scripts ───> shared/env + shared/logger
+packages/db/mail/scripts ───> shared/logger
+apps + packages/db/mail/scripts/shared ───> @voidmix/env
 packages/db ───> core
 packages/core/db ───> shared
 packages/scripts ───> db + core + shared

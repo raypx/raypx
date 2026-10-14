@@ -1,7 +1,7 @@
 import { databaseEnv } from "@raypx/db/env";
-import { cacheEnv } from "@raypx/cache/env";
-import { type Preset, z } from "@raypx/shared/env";
-import { runtimeEnv } from "@raypx/shared/env/runtime";
+import { cacheEnv } from "@raypx/shared/cache/env";
+import { type Preset, z } from "@voidmix/env";
+import { runtimeEnv } from "@voidmix/env/runtime";
 import type { LogLevel } from "@raypx/shared/logger";
 import { loggerEnv } from "@raypx/shared/logger/env";
 import { mailEnv } from "@raypx/mail/env";

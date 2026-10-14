@@ -26,6 +26,7 @@
     "@raypx/shared": "workspace:*",
     "@raypx/storage": "workspace:*",
     "@sentry/node": "catalog:backend",
+    "@voidmix/env": "catalog:",
     "exceljs": "catalog:backend",
     "pdfkit": "catalog:backend",
     "pptxgenjs": "catalog:backend"

@@ -1,4 +1,4 @@
-import type { Role, Session } from "@raypx/auth";
+import type { Role, Session } from "@raypx/shared/auth";
 
 import type { ApiAuth } from "./auth/config.js";
 

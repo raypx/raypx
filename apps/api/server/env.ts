@@ -1,5 +1,5 @@
 import { apiRuntimeEnv } from "./api/env.js";
-import { createEnv, type Preset, z } from "@raypx/shared/env";
+import { createEnv, type Preset, z } from "@voidmix/env";
 
 export const apiServerEnv = {
   id: "api-server",

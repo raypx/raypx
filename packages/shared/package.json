@@ -8,13 +8,17 @@
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
     },
-    "./env": {
-      "types": "./dist/env/index.d.mts",
-      "import": "./dist/env/index.mjs"
+    "./auth": {
+      "types": "./dist/auth/index.d.mts",
+      "import": "./dist/auth/index.mjs"
     },
-    "./env/runtime": {
-      "types": "./dist/env/runtime.d.mts",
-      "import": "./dist/env/runtime.mjs"
+    "./cache": {
+      "types": "./dist/cache/index.d.mts",
+      "import": "./dist/cache/index.mjs"
+    },
+    "./cache/env": {
+      "types": "./dist/cache/env.d.mts",
+      "import": "./dist/cache/env.mjs"
     },
     "./logger": {
       "types": "./dist/logger/index.d.mts",
@@ -53,7 +57,9 @@
   },
   "dependencies": {
     "@voidmix/env": "catalog:",
-    "evlog": "catalog:"
+    "evlog": "catalog:",
+    "ioredis": "catalog:backend",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@orpc/server": "catalog:",

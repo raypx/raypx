@@ -1,4 +1,4 @@
-import { createRedisCache, type RedisCacheOptions } from "@raypx/cache";
+import { createRedisCache, type RedisCacheOptions } from "@raypx/shared/cache";
 import { logger } from "@raypx/shared/logger";
 
 export async function connectAdmissionCache(

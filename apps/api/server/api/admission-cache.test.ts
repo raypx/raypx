@@ -1,4 +1,4 @@
-import type { RedisCacheConnection } from "@raypx/cache";
+import type { RedisCacheConnection } from "@raypx/shared/cache";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { connectAdmissionCache } from "./admission-cache.js";

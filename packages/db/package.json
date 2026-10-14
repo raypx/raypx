@@ -23,6 +23,7 @@
     "@raypx/core": "workspace:*",
     "@raypx/shared": "workspace:*",
     "@voidmix/drizzle": "catalog:backend",
+    "@voidmix/env": "catalog:",
     "drizzle-orm": "catalog:backend",
     "postgres": "catalog:backend"
   },

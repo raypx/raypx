@@ -2,7 +2,7 @@ import type { RouterContext } from "./router-context.js";
 import { actorInput } from "./router-context.js";
 import { createApiError, mapDomainError } from "./canonical-errors.js";
 import { isCloudTerminal } from "@raypx/core";
-import type { Session } from "@raypx/auth";
+import type { Session } from "@raypx/shared/auth";
 
 async function requireStreamSession(context: {
   auth: { revalidateSession?: () => Promise<Session | null> };

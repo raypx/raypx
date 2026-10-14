@@ -1,4 +1,4 @@
-import type { Session } from "@raypx/auth";
+import type { Session } from "@raypx/shared/auth";
 import type { Locale } from "@raypx/i18n/types";
 
 export interface ApiRequestAuthContext {

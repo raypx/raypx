@@ -8,6 +8,7 @@
         "@raypx/scripts": "workspace:*",
         "@tailwindcss/vite": "catalog:frontend",
         "@types/node": "catalog:tooling",
+        "@voidmix/tsconfig": "catalog:tooling",
         "knip": "catalog:tooling",
         "tailwindcss": "catalog:frontend",
         "taze": "catalog:tooling",
@@ -24,8 +25,6 @@
         "@better-auth/drizzle-adapter": "catalog:",
         "@orpc/server": "catalog:",
         "@raypx/application": "workspace:*",
-        "@raypx/auth": "workspace:*",
-        "@raypx/cache": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/db": "workspace:*",
@@ -34,6 +33,7 @@
         "@raypx/shared": "workspace:*",
         "@raypx/storage": "workspace:*",
         "@sentry/node": "catalog:backend",
+        "@voidmix/env": "catalog:",
         "better-auth": "catalog:",
         "hono": "catalog:backend",
         "nanoid": "catalog:backend",
@@ -61,6 +61,7 @@
         "@raypx/ui": "workspace:*",
         "@tanstack/react-router": "catalog:",
         "@tanstack/react-start": "catalog:",
+        "@voidmix/env": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
         "zustand": "catalog:frontend",
@@ -120,6 +121,7 @@
         "@tanstack/react-router": "catalog:",
         "@tanstack/react-router-ssr-query": "catalog:frontend",
         "@tanstack/react-start": "catalog:",
+        "@voidmix/env": "catalog:",
         "better-auth": "catalog:",
         "posthog-js": "catalog:frontend",
         "react": "catalog:",
@@ -157,6 +159,7 @@
         "@raypx/shared": "workspace:*",
         "@raypx/storage": "workspace:*",
         "@sentry/node": "catalog:backend",
+        "@voidmix/env": "catalog:",
         "exceljs": "catalog:backend",
         "pdfkit": "catalog:backend",
         "pptxgenjs": "catalog:backend",
@@ -220,25 +223,6 @@
         "@voidmix/tsconfig": "catalog:tooling",
       },
     },
-    "packages/auth": {
-      "name": "@raypx/auth",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@voidmix/tsconfig": "catalog:tooling",
-      },
-    },
-    "packages/cache": {
-      "name": "@raypx/cache",
-      "version": "0.0.0",
-      "dependencies": {
-        "@raypx/shared": "workspace:*",
-        "ioredis": "catalog:backend",
-      },
-      "devDependencies": {
-        "@vitest/coverage-v8": "catalog:tooling",
-        "@voidmix/tsconfig": "catalog:tooling",
-      },
-    },
     "packages/client": {
       "name": "@raypx/client",
       "version": "0.0.0",
@@ -282,6 +266,7 @@
         "@raypx/core": "workspace:*",
         "@raypx/shared": "workspace:*",
         "@voidmix/drizzle": "catalog:backend",
+        "@voidmix/env": "catalog:",
         "drizzle-orm": "catalog:backend",
         "postgres": "catalog:backend",
       },
@@ -318,6 +303,7 @@
       "dependencies": {
         "@raypx/i18n": "workspace:*",
         "@raypx/shared": "workspace:*",
+        "@voidmix/env": "catalog:",
         "react": "catalog:",
         "react-email": "catalog:frontend",
         "resend": "catalog:frontend",
@@ -341,6 +327,7 @@
         "@raypx/db": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/shared": "workspace:*",
+        "@voidmix/env": "catalog:",
         "citty": "catalog:tooling",
         "oxc-parser": "catalog:tooling",
       },
@@ -357,6 +344,8 @@
       "dependencies": {
         "@voidmix/env": "catalog:",
         "evlog": "catalog:",
+        "ioredis": "catalog:backend",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@orpc/server": "catalog:",
@@ -429,7 +418,7 @@
     "@orpc/server": "2.0.0-beta.43",
     "@tanstack/react-router": "^1.170.42",
     "@tanstack/react-start": "^1.168.61",
-    "@voidmix/env": "0.0.0-alpha.0",
+    "@voidmix/env": "0.0.0-alpha.1",
     "better-auth": "^1.7.7",
     "evlog": "^2.31.0",
     "react": "^19.3.0",
@@ -999,10 +988,6 @@
 
     "@raypx/application": ["@raypx/application@workspace:packages/application"],
 
-    "@raypx/auth": ["@raypx/auth@workspace:packages/auth"],
-
-    "@raypx/cache": ["@raypx/cache@workspace:packages/cache"],
-
     "@raypx/client": ["@raypx/client@workspace:packages/client"],
 
     "@raypx/contracts": ["@raypx/contracts@workspace:packages/contracts"],
@@ -1375,7 +1360,7 @@
 
     "@voidmix/drizzle": ["@voidmix/drizzle@0.0.0-alpha.0", "", { "peerDependencies": { "drizzle-orm": "1.0.0-rc.5-5935859", "postgres": "3.4.9" }, "optionalPeers": ["postgres"] }, "sha512-q+U5AMLlyeIDPYoDc1/N+TGtQIkYpsgSL0cKIawccQqCmgPkIN3MUyeP1tbYVg/V4yJPQOJFm35Bt1s6a8msSw=="],
 
-    "@voidmix/env": ["@voidmix/env@0.0.0-alpha.0", "", { "peerDependencies": { "zod": "4.6.7" } }, "sha512-WymBI0ud/UZT33mpiXUpXBXTWFzTnTkdG5ryfOqA0/0B6M0lXL+/eCRUcMlVoP2Vs/tAyNqnhdIruG15aNXCaw=="],
+    "@voidmix/env": ["@voidmix/env@0.0.0-alpha.1", "", { "peerDependencies": { "zod": "4.6.7" } }, "sha512-tUeO+cRsr6Lqxa2bz4zKheeUzDn7QTScz9rWIev0LbeIliSUAXIGcj6YponlmZuvwU3lAdme8b2Kq40W79ueDg=="],
 
     "@voidmix/intl": ["@voidmix/intl@0.0.0-alpha.0", "", { "dependencies": { "@formatjs/icu-messageformat-parser": "3.5.21", "use-intl": "4.14.9" }, "peerDependencies": { "react": "^19.0.0" } }, "sha512-3Lyhs4PLBrg1M4lSIMvXuDFdmmyX7FEq4XPE9FpniSbmogeBV5oJ74qv1LB0Nou9jon+QHZHwh73fVnAnTD/iw=="],
 

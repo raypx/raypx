@@ -73,15 +73,6 @@ injects a non-null principal into protected handlers. Better Auth database IDs a
 generated as UUID v7 values so
 new records retain time-ordered locality while remaining globally unique.
 
-## `@raypx/cache`
-
-The optional server-side Redis adapter provides JSON `remember` with TTLs and
-raw-string Better Auth secondary storage. Atomic token consumption and rate
-increments stay in Redis Lua scripts. API uses its atomic counter for cloud AI
-admission; Better Auth sessions, verification and policy use PostgreSQL directly.
-The adapter has no fallback store and no unused generic add/pull/flush facade.
-Mail configuration remains database-backed.
-
 ## `@raypx/shared`
 
 The foundation shared by domain and adapter packages. It owns
@@ -90,24 +81,32 @@ value types, and injectable clock/ID interfaces with their default
 implementations. Core re-exports these primitives for compatibility, while DB
 consumes them directly so the dependency seam remains explicit.
 
-The package also owns two framework-oriented subpath families while keeping
+The package also owns server and framework-oriented subpaths while keeping
 those dependencies isolated from the root and from each other:
 
-- `@raypx/shared/env` and `@raypx/shared/env/runtime` re-export the independently
-  released `@raypx/env` library and its base runtime preset. Applications still
-  own their variables; validation never reads `.env` files. Blank strings
-  normalize to `undefined`, defaults apply before validation, and browser access
-  rejects undeclared and server values. Shared retains no copied implementation.
+- `@raypx/shared/auth` holds the session vocabulary and compatible stored roles
+  (`user`, `admin`, `owner`). Admin permission grants and `hasPermission` are
+  retired, and global roles do not grant access to another account's Cloud
+  content. `apps/api/server/api` owns the Better Auth adapter and the production
+  cookie session resolver.
+- `@raypx/shared/cache` is the optional server-side Redis adapter: JSON
+  `remember` with TTLs and raw-string Better Auth secondary storage, with atomic
+  token consumption and rate increments in Redis Lua scripts. API uses its
+  atomic counter for cloud AI admission; it has no fallback store.
+  `@raypx/shared/cache/env` is its environment preset.
 - `@raypx/shared/logger` and its `client`, `env`, `hono`, `orpc`, and `vite`
   subpaths configure Evlog, provide the central redaction policy, and expose
   optional surface adapters. Operational logs remain separate from durable
   audit records.
 
+Environment validation comes from the published `@voidmix/env` library, which
+workspaces import directly; Shared no longer re-exports it.
+
 Public subpaths resolve to ESM and declaration files built in `dist/`. Env, its
-Zod peer and Evlog are runtime dependencies; Hono, oRPC, and Vite are optional
-adapter peers. Shared keeps Env external so the library's exports retain one
-identity and Vite processes its browser environment expressions at application
-build time.
+Zod peer, Evlog and ioredis are runtime dependencies; Hono, oRPC, and Vite are
+optional adapter peers. Shared keeps Env external so the library's exports retain
+one identity and Vite processes its browser environment expressions at
+application build time.
 The source remains the target for tests and type checks. Installation builds the
 initial output, while the root development and verification commands refresh it.
 
@@ -135,18 +134,6 @@ composition and presentation modules, not domain modules.
 
 It does not import React, Hono, Nitro, or Drizzle.
 
-## `@raypx/auth`
-
-The session vocabulary and compatible stored roles (`user`, `admin`, `owner`).
-Admin permission grants and `hasPermission` are retired. Global roles do not
-grant access to another account's Cloud content. Authentication policy still
-controls registration and mail through API runtime guards.
-
-`apps/api/server/api` owns the Better Auth adapter and production cookie
-session resolver. The development header resolver remains available for
-injected tests and local preview only; the oRPC router and core services do
-not depend on the provider.
-
 ## `@raypx/mail`
 
 Typed API-owned mail delivery for verification, password reset and welcome.
@@ -173,20 +160,19 @@ independent. See [internationalization ownership](./intl.md).
 
 ## External Toolkit libraries
 
-`@raypx/env` supplies typed preset composition, schema validation, guarded
-browser access and runtime environment detection. The public root and
-`./runtime` entrypoints are independently released at `0.0.6`, continuing the
-existing npm package's version history. Raypx consumes that registry version
-through the default catalog, with Zod supplied as a peer. Shared preserves the
-product's existing environment imports. See [environment ownership](../development/environment.md)
+`@voidmix/env` supplies typed preset composition, schema validation, guarded
+browser access and runtime environment detection through its root and
+`./runtime` entrypoints. Raypx consumes an exact alpha version through the
+default catalog, with Zod supplied as a peer, and each workspace imports it
+directly. See [environment ownership](../development/environment.md)
 and [ADR-0032](./decisions/0032-independent-env-library.md).
 
-`@raypx/intl` supplies configurable locale negotiation, ICU translation, Intl
+`@voidmix/intl` supplies configurable locale negotiation, ICU translation, Intl
 formatting, React providers and isolated catalog testing. Raypx consumes it
 through its private i18n facade; see [ADR-0030](./decisions/0030-independent-intl-library.md).
 
-`@raypx/drizzle` is owned by the independent
-[Raypx Packages](https://github.com/raypx/packages) repository, not a workspace in
+`@voidmix/drizzle` is owned by the independent
+[Voidmix](https://github.com/raypx/voidmix) repository, not a workspace in
 this product repository. It supplies public-API SQL expressions, JSONB helpers,
 result unwrapping, PostgreSQL error recognition and plan summaries. Product DB
 adapters retain schema, migration and permission ownership. See
@@ -300,8 +286,9 @@ The i18n checker separates catalog comparison, source inspection and reporting.
 `oxc-parser` owns JSX/TypeScript syntax; FormatJS through the i18n testing subpath
 owns ICU syntax, including plural/select branches and apostrophe quoting.
 
-## `@raypx/tsconfig`
+## `@voidmix/tsconfig`
 
-Shared strict TypeScript presets. They define compiler behavior but never own
-consumer `include`, `exclude`, `paths`, output directories, or project
-references. See [Toolchain](./tooling.md) for the preset matrix.
+Strict TypeScript presets, consumed from npm through the `tooling` catalog. They
+define compiler behavior but never own consumer `include`, `exclude`, `paths`,
+output directories, or project references. See [Toolchain](./tooling.md) for the
+preset matrix.

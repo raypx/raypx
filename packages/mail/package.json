@@ -20,6 +20,7 @@
   "dependencies": {
     "@raypx/i18n": "workspace:*",
     "@raypx/shared": "workspace:*",
+    "@voidmix/env": "catalog:",
     "react": "catalog:",
     "react-email": "catalog:frontend",
     "resend": "catalog:frontend"

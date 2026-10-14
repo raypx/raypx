@@ -1,5 +1,5 @@
-import { createEnv, type Preset, z } from "@raypx/shared/env";
-import { runtimeEnv } from "@raypx/shared/env/runtime";
+import { createEnv, type Preset, z } from "@voidmix/env";
+import { runtimeEnv } from "@voidmix/env/runtime";
 import { loggerEnv } from "@raypx/shared/logger/env";
 
 export const desktopEnv = {

@@ -8,7 +8,7 @@
       "e2e"
     ],
     "catalog": {
-      "@voidmix/env": "0.0.0-alpha.0",
+      "@voidmix/env": "0.0.0-alpha.1",
       "@better-auth/drizzle-adapter": "^1.7.7",
       "@orpc/client": "2.0.0-beta.43",
       "@orpc/contract": "2.0.0-beta.43",
@@ -148,6 +148,7 @@
     "@raypx/scripts": "workspace:*",
     "@tailwindcss/vite": "catalog:frontend",
     "@types/node": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
     "knip": "catalog:tooling",
     "tailwindcss": "catalog:frontend",
     "taze": "catalog:tooling",

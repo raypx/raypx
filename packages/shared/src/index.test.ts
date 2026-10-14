@@ -26,8 +26,9 @@ describe("shared primitives", () => {
 describe("public exports", () => {
   const publicEntries = [
     "@raypx/shared",
-    "@raypx/shared/env",
-    "@raypx/shared/env/runtime",
+    "@raypx/shared/auth",
+    "@raypx/shared/cache",
+    "@raypx/shared/cache/env",
     "@raypx/shared/logger",
     "@raypx/shared/logger/client",
     "@raypx/shared/logger/env",

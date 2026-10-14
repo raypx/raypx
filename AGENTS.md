@@ -23,8 +23,8 @@ document is stale, then update the document in the same change.
 
 ```text
 apps        web, desktop, api, worker, storybook    composition roots; never imported
-adapters    application, cache, client, contracts, i18n, ui, agent-ui, storage    surfaces apps are allowed to use
-core        core, db, auth, mail        db implements interfaces owned by core
+adapters    application, client, contracts, i18n, ui, agent-ui, storage    surfaces apps are allowed to use
+core        core, db, mail        db implements interfaces owned by core
 foundation  shared                          no dependency on anything above
 tooling     scripts, e2e                never imported by runtime code
 ```
@@ -43,6 +43,8 @@ or `packages/` without a `package.json`.
   interfaces owned by `@raypx/core`.
 - `apps/api` performs final authentication and authorization checks; Web,
   Desktop, and Worker consume its contracts or shared application layer.
+  Authentication types live in `@raypx/shared/auth`; cache utilities are in
+  `@raypx/shared/cache`.
 - Admin and its management RPCs are retired. Keep authentication, current account
   status checks and project capability enforcement in their owning layers.
 - Runtime applications never import `@raypx/scripts`.
@@ -82,7 +84,7 @@ or `packages/` without a `package.json`.
 ## Code and generated files
 
 - The repository is ESM-first and TypeScript-strict. Preserve the compiler
-  options provided by `@raypx/tsconfig`.
+  options provided by `@voidmix/tsconfig`.
 - `exactOptionalPropertyTypes` is on, so `{ key: undefined }` is illegal. Use
   conditional spread: `{ limit, ...(query ? { query } : {}) }`.
 - `verbatimModuleSyntax` is on, so type-only imports need `import type`.
@@ -117,7 +119,8 @@ conventions, the two file layouts, and the accessibility requirements.
 ## Logging, security, and data
 
 - Use `@raypx/shared/logger` instead of application-local logger configuration.
-- Import environment APIs from `@raypx/shared/env` and its explicit subpaths.
+- Import environment APIs from `@voidmix/env` and `@voidmix/env/runtime`; declare
+  `@voidmix/env` in each importing workspace.
 - Keep operational logs separate from durable domain facts.
 - Never log credentials, cookies, authorization headers, passwords, secrets,
   tokens, or API keys.
@@ -182,5 +185,5 @@ Desktop's native checks.
 - `bun run policy` enforces these rules mechanically: workspace `AGENTS.md`
   structure and line cap, the workspace listing above, every relative
   documentation link, the project-skill wiring, workspace `.gitignore` anchoring,
-  the `package.json` script and dependency contracts, and TypeScript preset
-  inheritance. It fails on errors and prints warnings without failing.
+  and the `package.json` script and dependency contracts. It fails on errors and
+  prints warnings without failing.

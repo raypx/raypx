@@ -180,10 +180,10 @@ describe("validateWorkspaceManifest", () => {
     },
     {
       name: "reports an internal dependency that bypasses the workspace protocol",
-      content: manifest({ devDependencies: { "@voidmix/tsconfig": "^0.0.0" } }),
+      content: manifest({ devDependencies: { "@raypx/shared": "^0.0.0" } }),
       shape: shape(),
       expected: {
-        message: expect.stringContaining("devDependencies pins @voidmix/tsconfig"),
+        message: expect.stringContaining("devDependencies pins @raypx/shared"),
         fix: expect.stringContaining("workspace:*"),
       },
     },

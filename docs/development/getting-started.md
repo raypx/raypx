@@ -62,7 +62,7 @@ and deployment-oriented repository commands use it as needed. Unit tests stay
 outside the runner and must provide `runtimeEnv` or test stubs explicitly
 rather than depend on values from a developer's files.
 
-Dotenvx only loads files. `@raypx/shared/env` still owns schema composition,
+Dotenvx only loads files. `@voidmix/env` still owns schema composition,
 defaults, normalization, and validation. Unknown variables are ignored.
 
 ## Common commands

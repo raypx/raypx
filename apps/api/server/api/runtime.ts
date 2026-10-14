@@ -23,7 +23,7 @@ import {
   createReviewApplication,
   createActivityApplication,
 } from "@raypx/application";
-import type { RedisCacheConnection } from "@raypx/cache";
+import type { RedisCacheConnection } from "@raypx/shared/cache";
 import type { AuthSettings, MailSettingsFallback, ObjectStorage } from "@raypx/core";
 import { createLoggerConfig, type EvlogConfig } from "@raypx/shared/logger";
 import { getMailEnv } from "@raypx/mail/env";

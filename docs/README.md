@@ -7,8 +7,11 @@ deployment boundaries, and coding-agent guidance.
 
 - [Internationalization ownership](./architecture/intl.md) — independent `@raypx/intl`, product locale configuration and compatibility.
 
+- [Architecture optimization proposal](./architecture/optimization-proposal.md) —
+  Phase 1 complete: `@raypx/auth` and `@raypx/cache` are now Shared subpaths.
+
 - [Independent environment library](./architecture/decisions/0032-independent-env-library.md) —
-  public `@raypx/env`, Shared compatibility exports and application-owned presets.
+  the original extraction decision; workspaces now import `@voidmix/env` directly.
 
 - [Drizzle extensions and Toolkit](./architecture/drizzle-extensions.md) —
   independent libraries, full upstream inventory, merge design and postgres.js diagnostics.

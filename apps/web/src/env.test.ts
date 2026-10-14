@@ -1,4 +1,4 @@
-import { createEnv } from "@raypx/shared/env";
+import { createEnv } from "@voidmix/env";
 import { describe, expect, it } from "vite-plus/test";
 
 import { webEnv } from "./env";
