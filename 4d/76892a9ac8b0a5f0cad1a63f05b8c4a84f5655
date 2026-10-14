@@ -1,0 +1,55 @@
+package.json
+  s_927a787f99ed8d::t_c9172c0b7170c0 80,169,174,178
+apps/api/AGENTS.md
+  s_927a787f99ed8d::t_e3d90a35191de5 39
+apps/worker/src/process-executor.integration.test.ts
+  s_927a787f99ed8d::t_c9172c0b7170c0 114
+apps/web/AGENTS.md
+  s_927a787f99ed8d::t_e3d90a35191de5 91
+apps/api/Dockerfile
+  s_927a787f99ed8d::t_c9172c0b7170c0 2,22
+docs/architecture/deployment.md
+  s_927a787f99ed8d::t_e3d90a35191de5 6-8,56,174
+packages/scripts/src/lint/boundaries.integration.test.ts
+  s_927a787f99ed8d::t_c9172c0b7170c0 201
+docs/development/getting-started.md
+  s_927a787f99ed8d::t_e3d90a35191de5 5
+packages/scripts/src/verify/worker.integration.test.ts
+  s_927a787f99ed8d::t_c9172c0b7170c0 41
+docs/architecture/tooling.md
+  s_927a787f99ed8d::t_e3d90a35191de5 6,13
+README.md
+  s_927a787f99ed8d::t_e3d90a35191de5 4,63
+docs/development/testing.md
+  s_927a787f99ed8d::t_e3d90a35191de5 63,130,147,264-267
+docs/architecture/decisions/0024-bun-runtime.md
+  s_927a787f99ed8d::t_e3d90a35191de5 16,22-26,49-50
+apps/worker/Dockerfile
+  s_927a787f99ed8d::t_c9172c0b7170c0 3
+packages/scripts/src/testing/jsdom-preload.integration.test.ts
+  s_927a787f99ed8d::t_c9172c0b7170c0 12
+docs/architecture/README.md
+  s_927a787f99ed8d::t_e3d90a35191de5 20
+AGENTS.md
+  s_927a787f99ed8d::t_e3d90a35191de5 62,76
+apps/web/Dockerfile
+  s_927a787f99ed8d::t_c9172c0b7170c0 2,29
+bun.lock
+  s_927a787f99ed8d::t_cc9e96060b8ad5 476,1253,1521,2795-2796
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4d76892a9ac8b0a5f0cad1a63f05b8c4a84f5655",
+  "prompts": {},
+  "sessions": {
+    "s_927a787f99ed8d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13aa1-6438-7621-8030-6bbbadb02497",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
