@@ -1,0 +1,46 @@
+apps/api/package.json
+  h_f0766e80fd3864 41,44
+apps/desktop/package.json
+  h_f0766e80fd3864 44,49
+apps/desktop/tsconfig.native.json
+  h_f0766e80fd3864 6,9-16,19
+apps/desktop/tsconfig.node.json
+  h_f0766e80fd3864 5,7,12
+apps/storybook/package.json
+  h_f0766e80fd3864 25,28
+apps/web/package.json
+  h_f0766e80fd3864 46,52
+apps/worker/package.json
+  h_f0766e80fd3864 36,39
+e2e/package.json
+  h_f0766e80fd3864 20,23
+e2e/tsconfig.json
+  h_f0766e80fd3864 3
+packages/agent-ui/package.json
+  h_f0766e80fd3864 36,40
+packages/db/package.json
+  h_f0766e80fd3864 25,32-33
+packages/i18n/package.json
+  h_f0766e80fd3864 29,33
+packages/mail/package.json
+  h_f0766e80fd3864 30,32
+packages/scripts/src/policy/checks/typescript.ts
+  h_f0766e80fd3864 19,22
+packages/scripts/src/policy/tsconfig.test.ts
+  h_f0766e80fd3864 109-112
+packages/shared/package.json
+  h_f0766e80fd3864 61,63
+packages/ui/package.json
+  h_f0766e80fd3864 60,64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3b36c0a992981518bcfa95794b5a114dfc120b6c",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
