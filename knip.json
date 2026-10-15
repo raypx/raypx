@@ -1,76 +1,24 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "project": [
-    "apps/**/*.{js,mjs,ts,tsx}",
-    "e2e/**/*.{js,mjs,ts,tsx}",
-    "packages/**/*.{js,mjs,ts,tsx}"
-  ],
+  "project": ["apps/**/*.{js,mjs,ts,tsx}", "packages/**/*.{js,mjs,ts,tsx}", "e2e/**/*.ts"],
   "ignoreFiles": [
     "**/*.d.ts",
     "**/*.gen.ts",
     "**/.output/**",
     "**/dist/**",
-    "**/storybook-static/**",
     "**/.hutch/**",
-    "apps/desktop/build/**",
-    "apps/desktop/artifacts/**",
-    "packages/db/drizzle.config.ts",
-    ".claude/worktrees/**"
+    "**/build/**",
+    "**/artifacts/**"
   ],
-  "drizzle": false,
   "workspaces": {
-    "apps/api": {
-      "entry": [
-        "scripts/start.mjs",
-        "server/app.ts",
-        "server/runtime.plugin.ts",
-        "server/runtime.ts"
-      ]
-    },
+    "apps/api": { "entry": ["server/app.ts", "server/runtime.plugin.ts"] },
     "apps/desktop": {
-      "entry": [
-        "src/router.tsx",
-        "native/main.ts",
-        "native/smoke.ts",
-        "electrobun.config.ts",
-        "hutch.config.ts"
-      ]
+      "entry": ["src/main.tsx", "native/main.ts", "native/smoke.ts", "electrobun.config.ts"]
     },
-    "apps/web": {
-      "entry": ["scripts/analyze-bundle.ts", "server/health.ts", "src/router.tsx"]
-    },
-    "apps/worker": {
-      "entry": ["vite.config.ts", "src/main.ts", "src/runner-main.ts"]
-    },
-    "apps/storybook": {
-      "entry": [".storybook/main.ts", ".storybook/preview.tsx"]
-    },
-    "e2e": {
-      "entry": ["tests/**/*.ts"]
-    },
-    "packages/mail": {
-      "entry": ["scripts/preview.ts"]
-    },
-    "packages/scripts": {
-      "entry": ["src/cli.ts"]
-    },
-    "packages/db": {
-      "ignoreFiles": ["drizzle.config.ts"],
-      "entry": [
-        "src/index.ts",
-        "src/env.ts",
-        "src/schema.ts",
-        "vitest.postgres.config.ts",
-        "tests/**/*.integration.test.ts"
-      ]
-    },
-    "packages/shared": {
-      "entry": [
-        "src/index.ts",
-        "src/env/index.ts",
-        "src/env/runtime.ts",
-        "src/logger/{index,client,env,hono,orpc,vite}.ts"
-      ]
-    }
+    "apps/mobile": { "entry": ["app/**/*.{ts,tsx}", "metro.config.cjs"] },
+    "apps/cli": { "entry": ["src/main.ts", "src/build.ts", "src/smoke.ts"] },
+    "packages/tooling": { "entry": ["src/cli.ts"] },
+    "packages/db": { "entry": ["src/index.ts", "src/commands.ts", "drizzle.config.ts"] },
+    "e2e": { "entry": ["tests/**/*.ts", "playwright.config.ts"] }
   }
 }

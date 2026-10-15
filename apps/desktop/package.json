@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run native:prepare && rpx env -- bun --bun vp dev",
-    "build": "bun run native:prepare && rpx env -- bun --bun vp build",
-    "preview": "rpx env -- bun --bun vp preview",
+    "dev": "bun run native:prepare && bun run native:cli && raypx-dev env -- bun run native/dev.ts",
+    "build": "bun run native:prepare && raypx-dev env -- bun --bun vp build",
+    "preview": "raypx-dev env -- bun --bun vp preview",
     "check": "bun run native:prepare && bun run typecheck && bun run typecheck:node && bun run typecheck:native",
     "typecheck": "bun --check --tsconfig-override tsconfig.json",
     "typecheck:node": "bun --check --tsconfig-override tsconfig.node.json",
@@ -15,26 +15,31 @@
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
     "test:component": "bun --bun vp test --run --passWithNoTests component.test",
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "native:dev": "bun --bun electrobun dev",
-    "native:build": "bun --bun electrobun build --env=stable",
+    "native:dev": "bun run native:cli && bun --bun electrobun dev",
+    "native:build": "bun run native/prepare-cli.ts --release && bun --bun electrobun build --env=stable",
     "native:prepare": "bun --bun electrobun prepare && bun run native:types",
     "typecheck:native": "bun --check --tsconfig-override tsconfig.native.json",
-    "native:types": "bun --bun tsc --ignoreConfig --noCheck --declaration --emitDeclarationOnly --module ESNext --moduleResolution Bundler --target ES2022 --rootDir .hutch/devkit/api --outDir .hutch/types .hutch/devkit/api/sdks/main/entries/browser-view.ts .hutch/devkit/api/sdks/main/entries/browser-window.ts .hutch/devkit/api/sdks/main/entries/tray.ts .hutch/devkit/api/sdks/main/entries/updater.ts .hutch/devkit/api/sdks/main/entries/utils.ts .hutch/devkit/api/sdks/main/entries/rpc.ts .hutch/devkit/api/sdks/main/entries/build-config.ts .hutch/devkit/api/sdks/main/entries/events.ts"
+    "native:types": "bun --bun tsc --ignoreConfig --noCheck --declaration --emitDeclarationOnly --module ESNext --moduleResolution Bundler --target ES2022 --rootDir .hutch/devkit/api --outDir .hutch/types .hutch/devkit/api/sdks/main/entries/browser-view.ts .hutch/devkit/api/sdks/main/entries/browser-window.ts .hutch/devkit/api/sdks/main/entries/tray.ts .hutch/devkit/api/sdks/main/entries/updater.ts .hutch/devkit/api/sdks/main/entries/utils.ts .hutch/devkit/api/sdks/main/entries/rpc.ts .hutch/devkit/api/sdks/main/entries/build-config.ts .hutch/devkit/api/sdks/main/entries/events.ts",
+    "native:cli": "bun run native/prepare-cli.ts",
+    "native:smoke": "bun run native:cli && bun run native/run-smoke.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "catalog:frontend",
+    "@raypx/auth": "workspace:*",
     "@raypx/client": "workspace:*",
+    "@raypx/contracts": "workspace:*",
     "@raypx/i18n": "workspace:*",
-    "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
-    "@tanstack/react-start": "catalog:",
     "@voidmix/env": "catalog:",
+    "@xterm/addon-fit": "catalog:",
+    "@xterm/xterm": "catalog:",
+    "electrobun": "catalog:frontend",
     "react": "catalog:",
-    "react-dom": "catalog:",
-    "zustand": "catalog:frontend"
+    "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "catalog:frontend",
     "@testing-library/react": "catalog:tooling",
     "@types/bun": "catalog:tooling",
     "@types/node": "catalog:tooling",
@@ -43,10 +48,16 @@
     "@vitejs/plugin-react": "catalog:tooling",
     "@vitest/coverage-v8": "catalog:tooling",
     "@voidmix/tsconfig": "catalog:tooling",
-    "electrobun": "catalog:frontend",
     "jsdom": "catalog:tooling",
     "typescript": "catalog:tooling",
     "vite": "catalog:tooling",
     "vite-plus": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "browser",
+    "sourceTargets": {
+      "native/**": "bun"
+    }
   }
 }

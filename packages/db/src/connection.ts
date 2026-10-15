@@ -1,45 +1,26 @@
-import postgres, { type Sql } from "postgres";
-import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { relations } from "./schema/relations.js";
-
-export interface DatabaseConnection {
-  db: PostgresJsDatabase;
-  close(): Promise<void>;
-}
-
-export type Database = DatabaseConnection["db"];
-
-export function connectDatabase(databaseUrl: string): DatabaseConnection {
+import { fileURLToPath } from "node:url";
+import { relations } from "./schema.js";
+export function connectDatabase(databaseUrl: string) {
   const client = postgres(databaseUrl, { max: 10 });
-  return {
-    db: drizzle({ client, relations }),
-    close: () => client.end(),
-  };
+  let closed: Promise<void> | undefined;
+  return { db: drizzle({ client, relations }), close: () => (closed ??= client.end()) };
 }
-
+export type DatabaseConnection = ReturnType<typeof connectDatabase>;
+export type Database = DatabaseConnection["db"];
 export async function migrateDatabase(
   databaseUrl: string,
-  migrationsFolder = new URL("../drizzle-cloud", import.meta.url).pathname,
+  migrationsFolder = fileURLToPath(new URL("../drizzle-foundation", import.meta.url)),
 ): Promise<void> {
-  const client: Sql = postgres(databaseUrl, { max: 1 });
+  const connection = connectDatabase(databaseUrl);
   try {
-    await migrate(drizzle({ client, relations }), { migrationsFolder });
+    await migrate(connection.db, {
+      migrationsFolder,
+      migrationsSchema: "raypx_foundation_migrations",
+    });
   } finally {
-    await client.end();
-  }
-}
-
-// Drops every table and the drizzle migration bookkeeping, leaving an empty
-// `public` schema for `db push` or a fresh `db migrate`. Callers own the
-// development/test restriction.
-export async function resetDatabase(databaseUrl: string): Promise<void> {
-  const client: Sql = postgres(databaseUrl, { max: 1 });
-  try {
-    await client`drop schema if exists drizzle cascade`;
-    await client`drop schema if exists public cascade`;
-    await client`create schema public`;
-  } finally {
-    await client.end();
+    await connection.close();
   }
 }

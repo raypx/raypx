@@ -1,3 +1,6 @@
-import { localeRuntime } from "./runtime.js";
+import { localeRuntime } from "./runtime";
+import type { LocaleSource } from "./types";
 
-export const { resolveLocale } = localeRuntime;
+export function resolveLocale(source?: LocaleSource) {
+  return localeRuntime.resolveLocale(source);
+}

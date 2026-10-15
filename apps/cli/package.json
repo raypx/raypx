@@ -1,0 +1,30 @@
+{
+  "name": "cli",
+  "version": "0.1.0",
+  "private": true,
+  "bin": {
+    "raypx": "./src/main.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/main.ts",
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "build": "bun run src/build.ts",
+    "smoke": "bun run src/smoke.ts"
+  },
+  "dependencies": {
+    "@raypx/contracts": "workspace:*",
+    "croner": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:tooling",
+    "@types/node": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling",
+    "vite-plus": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "bun"
+  }
+}

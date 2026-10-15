@@ -59,3 +59,11 @@ CLAUDE.local.md
 # Cloud test helpers are TypeScript sources; incidental emitted siblings stay local.
 /packages/db/tests/cloud-*.js*
 /packages/db/tests/cloud-*.d.ts*
+
+# Generated application artifacts
+apps/*/.output/
+apps/*/.expo/
+apps/*/.tanstack/
+apps/mobile/uniwind-types.d.ts
+e2e/test-results/
+e2e/playwright-report/

@@ -1,14 +1,9 @@
 import { defineConfig } from "drizzle-kit";
-
 import { getDatabaseEnv } from "./src/env.js";
-
-const env = getDatabaseEnv();
-
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./src/schema/migrations.ts",
-  out: "./drizzle-cloud",
-  dbCredentials: {
-    url: env.DATABASE_URL,
-  },
+  schema: "./src/schema.ts",
+  schemaFilter: ["raypx_foundation"],
+  out: "./drizzle-foundation",
+  dbCredentials: { url: getDatabaseEnv().DATABASE_URL },
 });

@@ -1,0 +1,4 @@
+[install]
+# Native modules and React use one physical instance across Expo workspaces.
+# Architecture policy still rejects undeclared imports despite hoisted resolution.
+linker = "hoisted"

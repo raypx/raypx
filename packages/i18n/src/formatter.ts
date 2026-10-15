@@ -1,6 +1,6 @@
 import { createFormatter as createIntlFormatter } from "@voidmix/intl";
 import type { Formatter, FormatterOptions } from "@voidmix/intl";
-import type { Locale } from "./types.js";
+import type { Locale } from "./types";
 
 export type { Formatter, FormatterOptions } from "@voidmix/intl";
 

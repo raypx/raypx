@@ -9,66 +9,43 @@
   "globalDependencies": [
     "tsconfig.json",
     "vite.config.ts",
-    ".prettierignore",
-    ".gitignore",
-    ".env",
-    ".env.local",
     "test.config.ts",
-    "packages/scripts/src/testing/**"
+    "packages/tooling/src/testing/**",
+    ".node-version",
+    "bunfig.toml"
   ],
-  "globalEnv": ["RPX_CACHE_PLATFORM", "BUN_OPTIONS", "CI", "LANG", "TZ"],
+  "globalEnv": ["RAYPX_CACHE_PLATFORM", "CI", "LANG", "TZ"],
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"],
       "outputs": []
     },
     "check": {
-      "dependsOn": ["^transit", "@raypx/shared#build"],
-      "outputs": []
-    },
-    "@raypx/shared#check": {
-      "dependsOn": ["^transit"],
+      "dependsOn": ["transit"],
       "outputs": []
     },
     "build": {
-      "dependsOn": ["check", "^build", "^transit"],
-      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"],
-      "outputs": ["dist/**", ".output/**", "storybook-static/**"]
+      "dependsOn": ["check", "^build", "transit"],
+      "outputs": ["dist/**", ".output/**"],
+      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"]
     },
-    "test": {
-      "dependsOn": ["^transit", "@raypx/shared#build"],
-      "cache": false,
+    "api#build": {
+      "dependsOn": ["check", "^build", "transit", "web#build"],
+      "outputs": [".output/**"],
+      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"]
+    },
+    "desktop#build": {
+      "dependsOn": ["check", "^build", "transit", "cli#build"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_*", "NODE_ENV"]
+    },
+    "desktop#check": {
+      "dependsOn": ["transit", "native:prepare"],
       "outputs": []
     },
-    "test:unit": {
-      "dependsOn": ["^transit", "@raypx/shared#build"],
-      "env": ["NODE_ENV"],
-      "outputs": []
-    },
-    "test:component": {
-      "dependsOn": ["^transit", "@raypx/shared#build"],
-      "env": ["NODE_ENV"],
-      "outputs": []
-    },
-    "test:integration": {
-      "dependsOn": ["^transit", "@raypx/shared#build"],
+    "native:prepare": {
       "cache": false,
-      "outputs": [],
-      "passThroughEnv": [
-        "TEST_DATABASE_URL",
-        "TEST_REDIS_URL",
-        "NODE_ENV",
-        "SOFFICE_BINARY",
-        "CLOUD_PDF_FONT_PATH",
-        "CLOUD_PDF_FONT_FAMILY",
-        "PDFTOTEXT_BINARY",
-        "PDFINFO_BINARY"
-      ]
-    },
-    "test:coverage": {
-      "dependsOn": ["^transit", "@raypx/shared#build"],
-      "cache": false,
-      "outputs": ["coverage/**"]
+      "outputs": []
     },
     "dev": {
       "dependsOn": ["^build"],
@@ -77,84 +54,78 @@
       "passThroughEnv": [
         "VITE_*",
         "DATABASE_URL",
-        "REDIS_URL",
         "AUTH_*",
-        "MAIL_*",
+        "WEB_URL",
         "RESEND_API_KEY",
+        "MAIL_*",
         "ALLOWED_ORIGINS",
-        "CLOUD_*",
-        "S3_*",
-        "SENTRY_*",
-        "NODE_ENV",
-        "BLOB_STORAGE_DIR",
-        "SOFFICE_BINARY",
-        "PDFTOTEXT_BINARY",
-        "PDFINFO_BINARY"
+        "NODE_ENV"
       ]
     },
-    "//#lint:leaf": {
-      "dependsOn": ["desktop#native:prepare"],
-      "outputs": []
-    },
-    "desktop#native:prepare": {
+    "desktop#dev": {
+      "dependsOn": ["^build", "cli#build"],
       "cache": false,
-      "outputs": []
-    },
-    "worker#build": {
-      "dependsOn": ["check", "^build", "^transit"],
-      "outputs": [".output/**"],
-      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"]
-    },
-    "//#format:leaf": {
-      "outputs": []
-    },
-    "e2e": {
-      "dependsOn": ["web#build", "api#build", "desktop#build"],
-      "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "RAYPX_E2E_*"]
-    },
-    "e2e:web": {
-      "dependsOn": ["web#build", "api#build"],
-      "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "RAYPX_E2E_*"]
-    },
-    "e2e:desktop": {
-      "dependsOn": ["api#build", "desktop#build"],
-      "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI", "RAYPX_E2E_*"]
-    },
-    "test:postgres": {
-      "dependsOn": ["@raypx/shared#build"],
-      "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["TEST_DATABASE_URL", "NODE_ENV"]
-    },
-    "smoke": {
-      "dependsOn": ["build"],
-      "cache": false,
-      "outputs": []
-    },
-    "deploy": {
-      "cache": false,
-      "outputs": []
+      "persistent": true,
+      "passThroughEnv": ["VITE_*", "NODE_ENV"]
     },
     "generate": {
       "cache": false,
       "outputs": [],
       "passThroughEnv": ["DATABASE_URL", "NODE_ENV"]
     },
-    "db:migrate": {
+    "e2e": {
+      "dependsOn": ["api#build", "desktop#build"],
       "cache": false,
       "outputs": [],
-      "passThroughEnv": ["DATABASE_URL", "NODE_ENV"]
+      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI"]
     },
-    "@raypx/shared#build": {
-      "dependsOn": ["check", "^transit"],
+    "bundle": {
+      "dependsOn": ["check", "^build", "transit"],
       "outputs": ["dist/**"],
-      "env": ["NODE_ENV"]
+      "env": ["EXPO_PUBLIC_*", "NODE_ENV"]
+    },
+    "smoke": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["transit"],
+      "outputs": [],
+      "env": ["NODE_ENV"],
+      "passThroughEnv": ["TEST_DATABASE_URL"]
+    },
+    "test:unit": {
+      "dependsOn": ["transit"],
+      "outputs": [],
+      "env": ["NODE_ENV"],
+      "passThroughEnv": ["TEST_DATABASE_URL"]
+    },
+    "test:component": {
+      "dependsOn": ["transit"],
+      "outputs": [],
+      "env": ["NODE_ENV"],
+      "passThroughEnv": ["TEST_DATABASE_URL"]
+    },
+    "test:integration": {
+      "dependsOn": ["transit"],
+      "outputs": [],
+      "env": ["NODE_ENV"],
+      "cache": false,
+      "passThroughEnv": ["TEST_DATABASE_URL"]
+    },
+    "test:coverage": {
+      "dependsOn": ["transit"],
+      "outputs": ["coverage/**"],
+      "env": ["NODE_ENV"],
+      "cache": false,
+      "passThroughEnv": ["TEST_DATABASE_URL"]
+    },
+    "test:postgres": {
+      "dependsOn": ["transit"],
+      "cache": false,
+      "outputs": [],
+      "passThroughEnv": ["TEST_DATABASE_URL", "NODE_ENV"]
     }
   }
 }

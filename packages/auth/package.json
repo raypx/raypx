@@ -1,0 +1,43 @@
+{
+  "name": "@raypx/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts",
+    "./native": "./src/native.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
+    "test:component": "bun --bun vp test --run --passWithNoTests component.test",
+    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+  },
+  "dependencies": {
+    "@better-auth/expo": "catalog:",
+    "better-auth": "catalog:",
+    "expo-secure-store": "catalog:mobile"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal",
+    "entryTargets": {
+      "./server": "node",
+      "./client": "browser",
+      "./native": "native"
+    },
+    "sourceTargets": {
+      "src/server.ts": "node",
+      "src/client.ts": "browser",
+      "src/native.ts": "native"
+    }
+  }
+}

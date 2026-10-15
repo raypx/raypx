@@ -1,4 +1,0 @@
-# Nitro production output, build cache, and legacy output.
-/.output
-/.nitro
-/dist

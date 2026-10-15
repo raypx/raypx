@@ -1,70 +1,20 @@
-import { describe, expect, it } from "vite-plus/test";
-
-import { createApiClient, parseApiProblemDetails } from "./index.js";
-
-describe("createApiClient", () => {
-  it("creates a typed lazy client without making a request", () => {
-    const client = createApiClient({ baseUrl: "https://api.example.com/" });
-    expect(client.account.get).toBeTypeOf("function");
+import { expect, it } from "vite-plus/test";
+import { createApiClient } from "./index.js";
+it("reads headers again after a credential change and always uses POST", async () => {
+  let cookie = "session=first";
+  const seen: Request[] = [];
+  const client = createApiClient({
+    baseUrl: "https://api.example.com/",
+    headers: () => ({ cookie }),
+    fetch: async (input, init) => {
+      seen.push(new Request(input, init));
+      return Response.json({ json: { id: "u1", email: "a@example.com", name: "A" } });
+    },
   });
-
-  it("supports a relative same-origin transport", () => {
-    const client = createApiClient();
-    expect(client.health).toBeTypeOf("function");
-  });
-
-  it.each<[string, (client: ReturnType<typeof createApiClient>) => Promise<unknown>]>([
-    ["archive", (client) => client.projects.archive({ projectId: "project-1" })],
-    ["restore", (client) => client.projects.restore({ projectId: "project-1" })],
-    [
-      "review update",
-      (client) => client.projects.reviews.update({ reviewId: "review-1", status: "approved" }),
-    ],
-    [
-      "Cloud cancellation",
-      (client) =>
-        client.cloud.runs.commands.create({
-          runId: "run-1",
-          type: "cancel",
-          idempotencyKey: "cancel-1",
-        }),
-    ],
-    [
-      "Cloud retry",
-      (client) => client.cloud.runs.retry({ runId: "run-1", idempotencyKey: "retry-1" }),
-    ],
-  ])("uses POST for %s so mutations cannot enter GET batching", async (_name, invoke) => {
-    const methods: string[] = [];
-    const client = createApiClient({
-      baseUrl: "https://api.example.com",
-      fetch: async (input, init) => {
-        methods.push(new Request(input, init).method);
-        return new Response("{}", {
-          status: 500,
-          headers: { "content-type": "application/json" },
-        });
-      },
-    });
-
-    await expect(invoke(client)).rejects.toBeDefined();
-    expect(methods).toEqual(["POST"]);
-  });
-
-  it("parses RFC 9457 details from an oRPC error", () => {
-    expect(
-      parseApiProblemDetails({
-        data: {
-          problem: {
-            type: "https://api.raypx.dev/problems/PROJECT_ACCESS_DENIED",
-            title: "Project access denied",
-            status: 403,
-            code: "PROJECT_ACCESS_DENIED",
-            values: { projectId: "p1" },
-            fieldErrors: [],
-            requestId: "req-1",
-          },
-        },
-      }),
-    ).toMatchObject({ code: "PROJECT_ACCESS_DENIED", status: 403, requestId: "req-1" });
-  });
+  await client.account.get({});
+  cookie = "session=second";
+  await client.account.get({});
+  expect(seen.map((r) => r.headers.get("cookie"))).toEqual(["session=first", "session=second"]);
+  expect(seen.map((r) => r.method)).toEqual(["POST", "POST"]);
+  expect(seen[0]?.url).toBe("https://api.example.com/rpc/account/get");
 });

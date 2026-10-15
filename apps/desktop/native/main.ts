@@ -1,5 +1,8 @@
 import { statSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import type { LocalEvent, RootGrant } from "@raypx/contracts/local";
+import { LocalEngine } from "./engine";
+import { createPreferenceStore } from "./preferences";
 import { BuildConfig } from "electrobun/main/build-config";
 import { BrowserView } from "electrobun/main/browser-view";
 import { BrowserWindow } from "electrobun/main/browser-window";
@@ -28,10 +31,7 @@ if (process.platform === "win32") {
 
 const channel = await Updater.localInfo.channel();
 let url = "views://main/index.html";
-if (
-  channel === "dev" &&
-  !(process.env.RAYPX_NATIVE_SMOKE === "1" && process.env.RAYPX_NATIVE_SMOKE_PHASE === "shell")
-) {
+if (channel === "dev" && process.env.RAYPX_NATIVE_SMOKE !== "1") {
   try {
     await fetch("http://localhost:1420", { method: "HEAD", signal: AbortSignal.timeout(1000) });
     url = "http://localhost:1420";
@@ -69,6 +69,30 @@ export const tray = new Tray({
   height: 20,
 });
 
+const executable = process.platform === "win32" ? "raypx.exe" : "raypx";
+// Electrobun runs from its executable directory; copy destinations are in Resources.
+const cliBinary = resolve(dirname(process.execPath), "../Resources/app/bin", executable);
+const engineArgs =
+  process.env.RAYPX_NATIVE_SMOKE === "1"
+    ? [
+        "--profile",
+        "native-smoke",
+        "--data-dir",
+        resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data"),
+      ]
+    : [];
+const preferences = createPreferenceStore(
+  process.env.RAYPX_NATIVE_SMOKE === "1"
+    ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
+    : Utils.paths.userData,
+);
+let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
+export const engine = new LocalEngine(
+  cliBinary,
+  manifest.version,
+  (event) => emitLocalEvent(event),
+  engineArgs,
+);
 const rpc = BrowserView.defineRPC<DesktopRpc>({
   maxRequestTime: 5000,
   handlers: {
@@ -77,7 +101,24 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
         appVersion: manifest.version,
         platform: process.platform,
         trayEnabled: tray.visible,
+        engine: engine.status,
       }),
+      localRequest: ({ method, params }) => {
+        if (method === "roots.register")
+          throw new Error("Use the native directory picker to authorize a directory");
+        return engine.request(method, params);
+      },
+      pickDirectory: async () => {
+        const paths = await Utils.openFileDialog({
+          canChooseFiles: false,
+          canChooseDirectory: true,
+          allowsMultipleSelection: false,
+        });
+        const path = paths[0];
+        return path ? ((await engine.request("roots.register", { path })) as RootGrant) : null;
+      },
+      restartEngine: () => engine.start(),
+      savePreferences: (input) => preferences.save(input),
       hideWindow: () => {
         if (!tray.visible) return false;
         mainWindow.hide();
@@ -90,6 +131,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
 export const view = new BrowserView({
   windowId: mainWindow.id,
   url,
+  preload: preferences.preload(),
   partition:
     process.env.RAYPX_NATIVE_SMOKE === "1" ? "persist:raypx-native-smoke" : "persist:raypx",
   frame: { x: 0, y: 0, width: 1120, height: 720 },
@@ -102,10 +144,16 @@ export const view = new BrowserView({
   rpc,
 });
 mainWindow.webviewId = view.id;
+// The SDK message proxy discards its transport promise. Use the public queued
+// transport to apply backpressure instead of accumulating unbounded PTY packets.
+emitLocalEvent = (event) =>
+  view.queueHostMessageToWebview({ type: "message", id: "localEvent", payload: event });
+void engine.start();
 export async function quitDesktop(code = 0) {
   const approval = Utils.requestQuitApproval();
   if (!approval) return;
   try {
+    await engine.stop();
     // Let WebKit complete a normal page unload before graceful native shutdown.
     // A missing/failed view must never leave a reserved quit approval hanging.
     await new Promise<void>((resolve) => {
@@ -139,6 +187,12 @@ export async function quitDesktop(code = 0) {
     Utils.quitAfterApproval(approval, code);
   }
 }
+process.once("SIGTERM", () => {
+  void quitDesktop();
+});
+process.once("SIGINT", () => {
+  void quitDesktop();
+});
 export const windowActions = wireWindow(
   mainWindow,
   () => tray.visible,

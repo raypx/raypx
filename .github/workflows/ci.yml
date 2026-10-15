@@ -1,140 +1,70 @@
 name: CI
-
 on:
   pull_request:
   push:
-    branches: [canary]
+    branches: [main, canary]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
 jobs:
-  typescript:
+  foundation:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     services:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: raypx_test
-          POSTGRES_PASSWORD: raypx_test
-          POSTGRES_DB: raypx_ci_test
+          POSTGRES_USER: raypx
+          POSTGRES_PASSWORD: raypx
+          POSTGRES_DB: raypx_foundation_ci_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U raypx_test -d raypx_ci_test"
+          --health-cmd "pg_isready -U raypx -d raypx_foundation_ci_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
-    env:
-      RPX_REMOTE_CACHE_TRUSTED: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && 'true' || 'false' }}
-      TURBO_TOKEN: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && secrets.TURBO_TEAM || '' }}
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY || '' }}
-      TEST_DATABASE_URL: postgres://raypx_test:raypx_test@127.0.0.1:5432/raypx_ci_test
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
-      - uses: actions/cache@v5
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/canary'
-        with:
-          path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
-          restore-keys: turbo-${{ runner.os }}-${{ runner.arch }}-
       - run: bun run verify
-      - name: Validate Worker container and real document exports
-        run: |
-          docker build -f apps/worker/Dockerfile -t raypx-worker-ci .
-          docker run --rm --network none --entrypoint bun raypx-worker-ci --no-env-file --no-install .output/server/index.mjs --check-documents
-      - run: bun run generate
-        env:
-          # Generation validates the URL but never connects to a database.
-          DATABASE_URL: postgres://raypx:ci@example.invalid:5432/raypx
-      - name: Test PostgreSQL
-        run: bun run test:postgres
+      - run: bun run test:postgres
         env:
           NODE_ENV: test
-      - name: Check generated files
-        run: |
-          git diff --exit-code
-          test -z "$(git ls-files --others --exclude-standard)"
-  e2e:
-    name: E2E (${{ matrix.suite }} ${{ matrix.shard }}/${{ matrix.shards }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - suite: web
-            shard: 1
-            shards: 2
-            database: raypx_ci_e2e_web_1_test
-            port: 31000
-          - suite: web
-            shard: 2
-            shards: 2
-            database: raypx_ci_e2e_web_2_test
-            port: 32000
-          - suite: desktop
-            shard: 1
-            shards: 1
-            database: raypx_ci_e2e_desktop_test
-            port: 33000
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: raypx_test
-          POSTGRES_PASSWORD: raypx_test
-          POSTGRES_DB: ${{ matrix.database }}
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U raypx_test -d ${{ matrix.database }}"
-          --health-interval 5s --health-timeout 5s --health-retries 10
-    env:
-      RPX_REMOTE_CACHE_TRUSTED: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && 'true' || 'false' }}
-      TURBO_TOKEN: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && secrets.TURBO_TEAM || '' }}
-      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/canary' && secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY || '' }}
-      TEST_DATABASE_URL: postgres://raypx_test:raypx_test@127.0.0.1:5432/${{ matrix.database }}
-      RAYPX_E2E_PORT: ${{ matrix.port }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - run: bun install --frozen-lockfile
-      - uses: actions/cache@v5
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/canary'
-        with:
-          path: .turbo/cache
-          key: turbo-e2e-${{ matrix.suite }}-${{ matrix.shard }}-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
-          restore-keys: turbo-e2e-${{ matrix.suite }}-${{ matrix.shard }}-${{ runner.os }}-${{ runner.arch }}-
-      - run: bun --bun run --cwd e2e playwright install --with-deps chromium
-      - name: Test ${{ matrix.suite }} browsers
-        run: bun run test:e2e:${{ matrix.suite }} --shard=${{ matrix.shard }}/${{ matrix.shards }}
-        env:
-          NODE_ENV: test
-      - name: Check generated files
-        run: |
-          git diff --exit-code
-          test -z "$(git ls-files --others --exclude-standard)"
+          TEST_DATABASE_URL: postgres://raypx:raypx@127.0.0.1:5432/raypx_foundation_ci_test
+      - run: bun --bun playwright install --with-deps chromium
+        working-directory: e2e
+      - run: bun run test:e2e
+      - name: Generated sources remain reproducible
+        run: git diff --exit-code
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-${{ matrix.suite }}-${{ matrix.shard }}-failure
-          path: |
-            e2e/playwright-report/${{ matrix.suite }}
-            e2e/test-results/${{ matrix.suite }}
+          name: browser-failures
+          path: e2e/test-results
           if-no-files-found: ignore
-          retention-days: 7
-
+  mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run mobile:check
+      - run: bun run mobile:bundle
   desktop:
     strategy:
       fail-fast: false
@@ -144,9 +74,28 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
-      # Turbo checks/builds the renderer before Electrobun packages the native host.
       - run: bun run desktop:build
+      - name: Native release checks
+        run: bun run --cwd apps/desktop native:smoke
+  nix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix flake check
+      - run: nix develop --command bun --version
+      - run: nix develop --command node --version
+      - run: nix develop --command psql --version

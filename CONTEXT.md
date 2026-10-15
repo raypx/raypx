@@ -1,93 +1,12 @@
-# Raypx domain language
+# Raypx context
 
-This glossary defines the current cloud platform described in
-[ADR-0016](docs/architecture/decisions/0016-cloud-agent-platform.md). Earlier
-Workspace/device execution designs remain historical reference material.
+- Application: a composition root under apps, never imported by another workspace.
+- Library: a private ESM package with explicit public exports and platform metadata.
+- Tooling: development/test automation excluded from production import graphs.
+- API: Node-hosted Hono/oRPC application composed by Nitro.
+- Local engine: the bundled CLI process owned by Desktop, with device-local SQLite state.
+- Root grant: an opaque identifier for an explicitly authorized local directory.
+- Automation: a five-field Cron schedule with an IANA timezone and a local action.
+- Terminal: an interactive process/PTY, stopped with its owning local engine.
 
-Live model and public research execution are unavailable under
-[ADR-0027](docs/architecture/decisions/0027-remove-pi-sdk.md). The terms below
-continue to describe stored Cloud records and their authorization boundaries.
-
-Desktop is a cloud project and task management client. Its former device runner
-and local execution protocol are retired by
-[ADR-0019](docs/architecture/decisions/0019-retire-legacy-desktop-execution.md).
-
-## Identity and scope
-
-- **Actor** — the authenticated user or trusted host performing an operation.
-  A model cannot choose an actor, ownership or permission scope.
-- **Account** — a user's personal ownership and quota boundary.
-- **Scope** — explicitly personal (`ownerUserId`) or project (`projectId`).
-  Personal ownership comes from authentication; children inherit the root scope.
-- **Project** — account-owned work with explicit project members and capabilities.
-  An organization membership can restrict the member's effective permissions.
-- **Capability** — permission for a particular operation, checked against current
-  account, project and organization facts. Membership is not an unrestricted grant.
-
-## Conversations and work
-
-- **Conversation** — a scoped history of user inputs and their execution attempts.
-- **Turn** — one user input with its prompt, mode, authorized file references and
-  idempotency key. Repeating a request returns its original Turn and Run.
-- **Search** — research using actual sources, excerpts and attributed answers.
-  Search can have a Conversation and Run without creating a Task.
-- **Computer** — background work with trusted tools and reviewable deliverables.
-  Browser, GUI and arbitrary code execution require later designs.
-- **Task** — a goal the user can review and accept. It can be personal or belong
-  to a Project; creating a Project is not a prerequisite.
-- **Task status** — `open`, `in_progress`, `waiting_input`, `review`, `completed`
-  or `cancelled`. Accepting the current delivery completes the Task.
-
-## Execution
-
-- **Run** — one bounded attempt, optionally linked to a Task. Retry creates a
-  new Run with its attempt and origin; it does not overwrite the prior attempt.
-- **Run status** — `queued`, `running`, `needs_input`, `succeeded`, `failed` or
-  `cancelled`. Run success alone does not complete a Task.
-- **Agent execution** — the main Agent or a child with its own context. Children
-  inherit scope and share the Task budget; they cannot delegate further.
-- **Tool execution** — a trusted named operation with durable input/result and
-  execution identity. Unknown external effects are not automatically replayed.
-- **Run event** — a root-Run event with ordered sequence, occurrence time and
-  payload; child events include their execution identity. A subscription cursor
-  joins snapshot, history and live delivery without dropping events.
-- **Run command** — a durable, idempotent cancellation or steering request with
-  an execution result. Disconnecting the client is not cancellation.
-- **Execution lease** — a time-limited Worker claim on a durable queued Run.
-  Renewing it preserves ownership; it does not complete the Run.
-- **Execution owner / epoch** — the host ownership fence rejecting old writers.
-  A lost heartbeat alone does not authorize replaying unknown tool effects.
-- **Source evidence** — an actual source URL, title and excerpt associated with
-  a Run and used to support citations.
-
-## Files and review
-
-- **Asset version** — an immutable scoped file version with size and checksum.
-  Upload intent, verified bytes and publication are distinct states.
-- **Object** — private file bytes in object storage, separate from DB metadata.
-  A successful object transfer does not publish a delivery.
-- **Artifact set revision** — the complete file collection for one delivery.
-  Its publication, Run result and Task review state commit atomically. The user
-  accepts the current Revision, not an obsolete version.
-
-## Usage and records
-
-- **Usage ledger** — durable model/tool/storage usage facts. Model attempts,
-  retries and compaction consume real quotas; logs and Redis are not the ledger.
-- **Reservation** — quota held before a physical model call. Confirmed unstarted
-  calls release it; unknown started calls remain explicitly unknown and estimated.
-- **Historical notification / outbox event** — retained records from retired
-  task-notification and outbox dispatch workflows. Active execution polls Runs
-  directly; Auth email delivery remains separate.
-- **Historical audit event** — a retained database record from retired management
-  interfaces; the current product exposes no Admin audit API.
-- **Idempotency key** — caller-provided command identity. Reuse with a different
-  payload conflicts; an HTTP retry does not create another effect.
-
-## Boundaries
-
-Core owns rules and ports. Application coordinates use cases and transactions.
-Adapters implement database, storage and Auth mail access. Contracts define
-public protocol; Client owns transport and replay. Applications own routes,
-account/resource lifetimes, drafts and platform access. Agent UI receives
-controlled facts and actions and owns only local presentation state.
+Current [architecture](docs/architecture/README.md) supersedes [historical records](docs/history/architecture/README.md).

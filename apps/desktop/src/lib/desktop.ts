@@ -1,48 +1,65 @@
+import type { LocalEvent, LocalMethod, LocalParams, RootGrant } from "@raypx/contracts/local";
 import type { DesktopRpc, DesktopRuntime } from "../../native/rpc";
 
 export type { DesktopRuntime } from "../../native/rpc";
-
-const browserRuntime: DesktopRuntime = {
-  appVersion: "0.1.0",
-  platform: "browser",
-  trayEnabled: false,
-};
-
-function isNativeRuntime(): boolean {
-  return typeof window !== "undefined" && "__electrobunWebviewId" in window;
+const listeners = new Set<(event: LocalEvent) => void>();
+export function onLocalEvent(listener: (event: LocalEvent) => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
-
-let nativeBridge: ReturnType<typeof createNativeBridge> | undefined;
-
-async function createNativeBridge() {
+export function isDesktop() {
+  return "__electrobunWebviewId" in window;
+}
+let bridge: ReturnType<typeof createBridge> | undefined;
+async function createBridge() {
   const { Electroview } = await import("electrobun/view");
   const rpc = Electroview.defineRPC<DesktopRpc>({
-    maxRequestTime: 5000,
-    handlers: { requests: {}, messages: {} },
+    maxRequestTime: 600000,
+    handlers: {
+      requests: {},
+      messages: {
+        localEvent: (event) => {
+          for (const listener of listeners) listener(event);
+        },
+      },
+    },
   });
   new Electroview({ rpc });
   return rpc;
 }
-
-function getNativeBridge() {
-  nativeBridge ??= createNativeBridge();
-  return nativeBridge;
+function getBridge() {
+  if (!isDesktop()) throw new Error("DESKTOP_REQUIRED");
+  return (bridge ??= createBridge());
 }
-
 export async function getDesktopRuntime(): Promise<DesktopRuntime> {
-  if (!isNativeRuntime()) return browserRuntime;
-  try {
-    return await (await getNativeBridge()).request.getRuntime({});
-  } catch {
-    return { ...browserRuntime, platform: "unknown" };
-  }
+  if (!isDesktop())
+    return {
+      appVersion: "0.1.0",
+      platform: "browser",
+      trayEnabled: false,
+      engine: { status: "error" },
+    };
+  return (await getBridge()).request.getRuntime({});
+}
+export async function pickDirectory(): Promise<RootGrant | null> {
+  return (await getBridge()).request.pickDirectory({});
+}
+export async function restartEngine() {
+  return (await getBridge()).request.restartEngine({});
+}
+export async function localRequest<T, M extends LocalMethod = LocalMethod>(
+  method: M,
+  params: LocalParams<M>,
+): Promise<T> {
+  return (await (await getBridge()).request.localRequest({ method, params })) as T;
 }
 
-export async function hideMainWindow(): Promise<boolean> {
-  if (!isNativeRuntime()) return false;
-  try {
-    return await (await getNativeBridge()).request.hideWindow({});
-  } catch {
-    return false;
-  }
+export async function saveDesktopPreferences(preferences: {
+  theme: "system" | "light" | "dark";
+  locale: "system" | "en" | "zh";
+}) {
+  if (!isDesktop()) return false;
+  return (await getBridge()).request.savePreferences(preferences);
 }

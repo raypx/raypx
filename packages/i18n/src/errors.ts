@@ -1,4 +1,4 @@
-import type { TranslationValues } from "./types.js";
+import type { TranslationValues } from "./types";
 
 type ErrorTranslator = (key: string, values?: TranslationValues) => string;
 

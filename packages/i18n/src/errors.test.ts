@@ -5,7 +5,7 @@ import {
   readErrorDetails,
   translateErrorCode,
   translateKnownErrorCode,
-} from "./errors.js";
+} from "./errors";
 
 const messages = {
   missing: "Missing",

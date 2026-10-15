@@ -35,15 +35,18 @@
     "./components/ui/tooltip": "./src/components/ui/tooltip.tsx",
     "./components/ui/popover": "./src/components/ui/popover.tsx",
     "./icon-button": "./src/icon-button.tsx",
-    "./help-hint": "./src/help-hint.tsx"
+    "./help-hint": "./src/help-hint.tsx",
+    "./theme/client": "./src/theme/client.ts",
+    "./styles/native.css": "./src/styles/native.css"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
+    "check": "bun run scripts/generate-theme.ts --check && bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run --passWithNoTests",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
     "test:component": "bun --bun vp test --run --passWithNoTests component.test",
-    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "generate:theme": "bun run scripts/generate-theme.ts"
   },
   "dependencies": {
     "@base-ui/react": "catalog:frontend",
@@ -64,6 +67,21 @@
     "vite": "catalog:tooling"
   },
   "peerDependencies": {
-    "react": "^19.3.0"
+    "react": "^19.2.3"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "browser",
+    "entryTargets": {
+      "./theme": "universal",
+      "./styles/native.css": "native"
+    },
+    "sourceTargets": {
+      "src/theme/config.ts": "universal",
+      "src/theme/tokens.ts": "universal",
+      "src/theme/index.ts": "universal",
+      "src/styles/native.css": "native",
+      "scripts/**": "node"
+    }
   }
 }

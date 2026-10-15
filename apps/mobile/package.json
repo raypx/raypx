@@ -1,0 +1,47 @@
+{
+  "name": "mobile",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "bun --bun expo start",
+    "check": "bun --bun uniwind generate-artifacts --css global.css --dts uniwind-types.d.ts && bun --check --tsconfig-override tsconfig.json",
+    "doctor": "bun run scripts/doctor.ts",
+    "bundle": "bun --bun expo export --platform ios --platform android --output-dir dist"
+  },
+  "dependencies": {
+    "@raypx/auth": "workspace:*",
+    "@raypx/client": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "@react-native-async-storage/async-storage": "catalog:mobile",
+    "expo": "catalog:mobile",
+    "expo-constants": "catalog:mobile",
+    "expo-linking": "catalog:mobile",
+    "expo-localization": "catalog:mobile",
+    "expo-router": "catalog:mobile",
+    "expo-secure-store": "catalog:mobile",
+    "expo-splash-screen": "catalog:mobile",
+    "expo-status-bar": "catalog:mobile",
+    "react": "catalog:",
+    "react-native": "catalog:mobile",
+    "react-native-safe-area-context": "catalog:mobile",
+    "react-native-screens": "catalog:mobile",
+    "tailwindcss": "catalog:frontend",
+    "uniwind": "catalog:mobile"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:tooling",
+    "@types/react": "catalog:tooling",
+    "expo-doctor": "catalog:mobile",
+    "typescript": "catalog:mobile"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "native",
+    "sourceTargets": {
+      "scripts/**": "node"
+    }
+  }
+}

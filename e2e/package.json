@@ -4,22 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "e2e": "bun --no-env-file --no-install --bun playwright test",
     "check": "bun --check --tsconfig-override tsconfig.json",
-    "test:ui": "bun --no-env-file --no-install --bun playwright test --ui",
-    "test:report": "bun --no-env-file --no-install --bun playwright show-report",
-    "capture:product": "bun --no-env-file --no-install capture-product.ts",
-    "e2e:web": "bun --no-env-file --no-install --bun playwright test --config=playwright.web.config.ts",
-    "e2e:desktop": "bun --no-env-file --no-install --bun playwright test --config=playwright.desktop.config.ts"
+    "e2e": "bun --bun playwright test"
   },
   "devDependencies": {
     "@playwright/test": "catalog:tooling",
-    "@raypx/client": "workspace:*",
-    "@raypx/db": "workspace:*",
-    "@types/node": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling",
-    "better-auth": "catalog:",
-    "drizzle-orm": "catalog:backend",
-    "typescript": "catalog:tooling"
+    "@types/bun": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "tooling",
+    "target": "bun"
   }
 }

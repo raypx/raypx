@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import { LOCALE_STORAGE_KEY } from "../constants.js";
-import { createLocalStorageLocaleStorage } from "./storage.js";
+import { LOCALE_STORAGE_KEY } from "../constants";
+import { createLocalStorageLocaleStorage } from "./storage";
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());

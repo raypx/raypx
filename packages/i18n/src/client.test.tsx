@@ -11,8 +11,8 @@ import {
   useFormatter,
   useSetLocale,
   useTranslations,
-} from "./client.js";
-import type { MessagesByLocale } from "./types.js";
+} from "./client";
+import type { MessagesByLocale } from "./types";
 
 const messages = {
   en: { home: { greeting: "Hello {name}" } },

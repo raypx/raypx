@@ -1,0 +1,27 @@
+{
+  "name": "@raypx/tooling",
+  "version": "0.0.0",
+  "private": true,
+  "bin": {
+    "raypx-dev": "./src/cli.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/*.integration.test.ts'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration.test"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "catalog:tooling",
+    "oxc-parser": "catalog:tooling"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:tooling",
+    "@voidmix/tsconfig": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "tooling",
+    "target": "bun"
+  }
+}

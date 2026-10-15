@@ -47,7 +47,7 @@ function getStoredTheme(storageKey: string | false, fallback: UserTheme): UserTh
 
 function getSystemTheme(): AppTheme {
   if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function resolveTheme(theme: UserTheme): AppTheme {
@@ -82,6 +82,7 @@ function applyTheme(theme: AppTheme): void {
 }
 
 function setupMediaListener(onChange: () => void): () => void {
+  if (typeof window.matchMedia !== "function") return () => {};
   const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const handler = () => onChange();
   mediaQuery.addEventListener("change", handler);
@@ -131,9 +132,11 @@ export function ThemeProvider({
   storageKey = THEME_STORAGE_KEY,
 }: ThemeProviderProps) {
   const initialTheme = parseTheme(initialThemeProp, defaultTheme);
-  const [theme, setThemeState] = useState<UserTheme>(initialTheme);
+  const [theme, setThemeState] = useState<UserTheme>(() =>
+    getStoredTheme(storageKey, initialTheme),
+  );
   const [resolvedTheme, setResolvedTheme] = useState<AppTheme>(() =>
-    getHydrationResolvedTheme(theme),
+    typeof window === "undefined" ? getHydrationResolvedTheme(theme) : resolveTheme(theme),
   );
 
   useEffect(() => {

@@ -9,7 +9,11 @@
     "./client": "./src/client.ts",
     "./server": "./src/server.ts",
     "./types": "./src/types-entry.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./messages": "./src/messages/index.ts",
+    "./preferences": "./src/preferences.ts",
+    "./browser": "./src/browser.tsx",
+    "./native": "./src/native.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -33,6 +37,23 @@
     "vite-plus": "catalog:tooling"
   },
   "peerDependencies": {
-    "react": "catalog:"
+    "react": "^19.2.3"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal",
+    "entryTargets": {
+      "./client": "browser",
+      "./browser": "browser",
+      "./native": "native",
+      "./testing": "universal"
+    },
+    "sourceTargets": {
+      "src/client.ts": "browser",
+      "src/client/**": "browser",
+      "src/browser.tsx": "browser",
+      "src/native.ts": "native",
+      "src/testing.ts": "universal"
+    }
   }
 }

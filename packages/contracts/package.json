@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./execution-gateway": "./src/execution-gateway.ts"
+    "./api": "./src/api.ts",
+    "./local": "./src/local.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -22,5 +23,9 @@
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:tooling",
     "@voidmix/tsconfig": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal"
   }
 }

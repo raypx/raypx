@@ -4,9 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./cloud-runs": "./src/cloud-runs.ts",
-    "./conversations": "./src/conversations.ts"
+    ".": "./src/index.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -24,5 +22,9 @@
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:tooling",
     "@voidmix/tsconfig": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal"
   }
 }

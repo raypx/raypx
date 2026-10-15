@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { createTranslator } from "./translator.js";
+import { createTranslator } from "./translator";
 
 const messages = {
   home: {

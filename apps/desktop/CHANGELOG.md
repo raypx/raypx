@@ -2,43 +2,25 @@
 
 ## Unreleased
 
-### Removed
+### Added
 
-- Remove the unavailable overview, Activity, Devices and local folder settings.
-- Remove local Agent execution, device selection and the bundled Node/Pi runner.
-- Remove inactive sync and notification preferences; existing saved themes remain
-  available.
+- Authorize local directories with the native picker, browse files, edit UTF-8 text, create folders, move entries and confirm permanent deletion.
+- Create device-local Cron tasks for directory scans and noninteractive external commands, with time zones, upcoming executions and retained run history.
+- Run interactive terminal sessions using the bundled standalone Raypx CLI.
+- Recover a failed local engine through the retry control while account and settings remain available.
+- Restore light, dark or system themes and English, Simplified Chinese or system language preferences from native device storage.
 
 ### Changed
 
-- Rename product text, window and tray labels to Raypx, with the native identity
-  `com.raypx.desktop` and a Raypx WebView profile. Existing native installations
-  require signing in again; browser theme and language preferences migrate.
-- Rename the application workspace to `desktop`.
+- Rebuild the renderer as a React/Vite SPA with Files, Automations, Terminal, Account and Settings navigation.
+- Bundle the exact matching CLI binary; users do not need a Node or Bun installation for local execution.
+- Keep the window/tray shell and native WebView. Closing hides the window while local scheduling continues; Quit cancels managed execution and stops scheduling.
+- Use a fresh account foundation for registration, verification, login and password recovery.
 
-- Replace the Tauri/Rust shell with Electrobun 2 and its pinned Bun native host.
-- Preserve application icons, the 800px window minimum and close-to-tray controls.
-- Persist theme, language and cloud session cookies in the new native WebView.
+### Removed
 
-- Open directly in Projects; keep Projects and Settings in primary navigation.
-- Settings now contains only the theme control. The titlebar still switches
-  theme and language, collapses navigation and hides the window to the tray.
-- Preserve cloud project creation, pagination, task management and account access.
-- Keep shadcn Neutral themes, accessible controls and the Logo when collapsed.
-- Keep explicit connection and account states, loading feedback and retry actions.
-
-### Added
-
-- English and Simplified Chinese translations with a language preference that
-  survives application restarts.
-- Native window and tray controls on macOS and Windows.
+- Remove the previous cloud project, task, AI and research product screens and their client dependencies.
 
 ## Conventions
 
-This changelog belongs to Desktop, the only surface with an installed version.
-Entries describe changes users can observe. Group release entries under `Added`,
-`Changed`, `Fixed`, `Removed` or `Security`, and rename `Unreleased` to
-`<version> — <YYYY-MM-DD>` when a release is cut.
-
-Keep the version in `package.json`, `electrobun.config.ts` synchronized. `0.1.0` is currently an unreleased placeholder;
-there are no release tags or CI release jobs.
+Desktop owns the installed version. Keep `package.json` and `electrobun.config.ts` synchronized. Version `0.1.0` remains an unreleased placeholder. Rename `Unreleased` to the release version and date when a release is cut.

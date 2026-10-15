@@ -4,7 +4,7 @@ import type {
   MessagesByLocale as IntlMessagesByLocale,
   LocaleSource as IntlLocaleSource,
 } from "@voidmix/intl/types";
-import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants.js";
+import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants";
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 export type LocaleOption = (typeof LOCALE_OPTIONS)[number];

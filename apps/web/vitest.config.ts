@@ -1,9 +1,2 @@
 import { workspaceTests } from "../../test.config.js";
-
-export default workspaceTests({
-  include: ["{src,server,i18n,tests}/**/*.{test,spec}.{ts,tsx}"],
-  env: {
-    AUTH_URL: "http://localhost:3000",
-    DATABASE_URL: "postgres://raypx:test@example.invalid:5432/raypx",
-  },
-});
+export default workspaceTests({ environment: "jsdom", setupFiles: ["./src/test/setup.ts"] });

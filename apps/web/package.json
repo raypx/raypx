@@ -4,11 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "rpx env -- bun --bun vp dev --port 3000",
-    "build": "rpx env -- bun --bun vp build",
-    "start": "bun --no-env-file --no-install .output/server/index.mjs",
-    "preview": "rpx env -- bun --bun vp preview",
-    "bundle:analyze": "bun run scripts/analyze-bundle.ts",
+    "dev": "raypx-dev env -- bun --bun vp dev",
+    "build": "bun --bun vp build",
+    "preview": "bun --bun vp preview",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run --passWithNoTests",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
@@ -18,24 +16,17 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "catalog:frontend",
-    "@raypx/agent-ui": "workspace:*",
+    "@raypx/auth": "workspace:*",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/i18n": "workspace:*",
-    "@raypx/shared": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "@sentry/react": "catalog:frontend",
-    "@tanstack/react-query": "catalog:frontend",
     "@tanstack/react-router": "catalog:",
-    "@tanstack/react-router-ssr-query": "catalog:frontend",
-    "@tanstack/react-start": "catalog:",
-    "@voidmix/env": "catalog:",
-    "better-auth": "catalog:",
-    "posthog-js": "catalog:frontend",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "catalog:frontend",
     "@testing-library/jest-dom": "catalog:tooling",
     "@testing-library/react": "catalog:tooling",
     "@testing-library/user-event": "catalog:tooling",
@@ -46,10 +37,12 @@
     "@vitest/coverage-v8": "catalog:tooling",
     "@voidmix/tsconfig": "catalog:tooling",
     "jsdom": "catalog:tooling",
-    "nitro": "catalog:backend",
-    "oxc-transform-react": "catalog:tooling",
     "typescript": "catalog:tooling",
     "vite": "catalog:tooling",
     "vite-plus": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "browser"
   }
 }

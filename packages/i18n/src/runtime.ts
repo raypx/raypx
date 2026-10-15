@@ -5,7 +5,7 @@ import {
   LOCALE_COOKIE_MAX_AGE_SECONDS,
   LOCALE_COOKIE_NAME,
   SUPPORTED_LOCALES,
-} from "./constants.js";
+} from "./constants";
 
 /** Product locale choices are configured once; request state stays in providers. */
 export const localeRuntime = createLocaleRuntime({

@@ -1,22 +1,55 @@
-import { createApiRuntime, type ApiRuntime } from "./api/index.js";
-import { configureLogger } from "@raypx/shared/logger";
-
-import { env } from "./env.js";
-
-const loggerConfig = configureLogger({
-  service: "api",
-  environment: env.NODE_ENV,
-  ...(env.LOG_PRETTY !== undefined ? { pretty: env.LOG_PRETTY } : {}),
-  ...(env.LOG_LEVEL !== undefined ? { minLevel: env.LOG_LEVEL } : {}),
-});
-let runtimePromise: Promise<ApiRuntime> | undefined;
-
-export function getApiRuntime(): Promise<ApiRuntime> {
-  runtimePromise ??= createApiRuntime({ environment: env, loggerConfig });
-  return runtimePromise;
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { createAuth, readAuthSession } from "@raypx/auth/server";
+import { connectDatabase } from "@raypx/db";
+import { schema } from "@raypx/db/schema";
+import { createMailer } from "@raypx/mail/server";
+import { createApiApp } from "./api.js";
+import { getApiEnvironment, type ApiEnvironment } from "./env.js";
+export function createApiRuntime(
+  environment: ApiEnvironment,
+  readWebIndex?: () => Promise<string | null>,
+) {
+  const connection = connectDatabase(environment.DATABASE_URL);
+  try {
+    const mailer = createMailer({
+      defaultLocale: environment.MAIL_DEFAULT_LOCALE,
+      ...(environment.RESEND_API_KEY ? { apiKey: environment.RESEND_API_KEY } : {}),
+      ...(environment.MAIL_FROM ? { from: environment.MAIL_FROM } : {}),
+    });
+    const auth = createAuth({
+      database: drizzleAdapter(connection.db, { provider: "pg", schema }),
+      mailer,
+      config: {
+        baseURL: environment.AUTH_URL,
+        secret: environment.AUTH_SECRET,
+        trustedOrigins: environment.allowedOrigins,
+        production: environment.NODE_ENV === "production",
+      },
+    });
+    return {
+      app: createApiApp({
+        authHandler: (request) => auth.handler(request),
+        readSession: (headers) => readAuthSession(auth, headers),
+        allowedOrigins: environment.allowedOrigins,
+        mailAvailable: mailer.available,
+        ...(readWebIndex ? { readWebIndex } : {}),
+      }),
+      close: () => connection.close(),
+    };
+  } catch (error) {
+    void connection.close().catch(() => {
+      /* Preserve the original startup failure. */
+    });
+    throw error;
+  }
 }
-
+export type ApiRuntime = ReturnType<typeof createApiRuntime>;
+let runtimePromise: Promise<ApiRuntime> | undefined;
+export function getApiRuntime(readWebIndex?: () => Promise<string | null>): Promise<ApiRuntime> {
+  return (runtimePromise ??= Promise.resolve().then(() =>
+    createApiRuntime(getApiEnvironment(), readWebIndex),
+  ));
+}
 export async function closeApiRuntime(): Promise<void> {
-  const runtime = await runtimePromise;
-  await runtime?.close();
+  await (await runtimePromise)?.close();
 }

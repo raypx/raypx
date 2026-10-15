@@ -21,7 +21,7 @@ export function workspaceTests(
         "--no-env-file",
         "--no-install",
         "--preload",
-        fileURLToPath(new URL("./packages/scripts/src/testing/jsdom-preload.ts", import.meta.url)),
+        fileURLToPath(new URL("./packages/tooling/src/testing/jsdom-preload.ts", import.meta.url)),
       ],
       include: ["src/**/*.{test,spec}.{ts,tsx}"],
       coverage: { reporter: ["text", "json", "lcov"] },

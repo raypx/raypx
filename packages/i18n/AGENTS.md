@@ -2,53 +2,39 @@
 
 ## Purpose
 
-The Raypx product locale configuration and compatibility facade. Reusable
-internationalization lives in the independently released `@voidmix/intl` package.
+Raypx's English/Chinese catalogs, locale preferences and platform entry points.
+Translation and formatting use the independently released `@voidmix/intl` facade.
 
 ## Interface
 
-```text
-@raypx/i18n         product locale constants, configured locale/format/translation helpers
-@raypx/i18n/client  configured React providers/hooks and product storage adapters
-@raypx/i18n/server  configured request locale resolution and translator factory
-@raypx/i18n/types   Raypx locale and catalog types
-@raypx/i18n/testing re-exported catalog parity and ICU test helpers
-```
+- Root/server/types: pure locale negotiation, formatting and translation helpers.
+- `messages`: static English and Chinese foundation catalogs.
+- `preferences`: pure system/en/zh preference parsing and resolution.
+- `browser`: browser language provider, hooks and device persistence.
+- `native`: platform-neutral React provider/hooks for native composition.
+- `client`: compatibility React facade with browser storage adapters.
+- `testing`: test-only catalog checks.
 
 ## Ownership
 
-- Own Raypx's `en`/`zh` locale choices, native language names, fallback locale,
-  locale Cookie settings and `raypx_locale` storage key.
-- Keep the `voidmix_locale` preference migration in this product adapter.
-- Own translation of the stable `data.error` envelope and safe primitive values;
-  never expose server diagnostic prose as translated UI text.
-  Error helpers accept a plain translation function without requiring rich-text methods.
-- Configure an immutable `@voidmix/intl` locale runtime and React client factory.
-  Translation, formatting, sync/async providers, request negotiation and ICU
-  catalog validation are maintained in the standalone library. Its translation,
-  formatting and IntlProvider use `use-intl` 4.14.9; React is a required peer,
-  including for server consumers.
-- Applications and Mail own their message catalogs and catalog loaders.
-- Preserve locale transitions, async catalog race guards, default UTC formatting,
-  provider format/timezone overrides and callback failure behavior.
-- Existing tests verify product configuration and compatibility through the
-  actual package artifact; reusable library tests live with `@voidmix/intl`.
+Own product language choices, translations, namespace parity and the persisted
+`raypx_locale` preference. Applications provide native storage and system locale.
 
 ## Constraints
 
-- Business code imports translation hooks and translator types from this facade.
-  Applications do not import `use-intl` directly.
-- Never duplicate standalone internationalization implementations here.
-- Product runtime exports must not import catalog testing or build modules.
-- Domain and contract packages do not depend on internationalization.
-- Voidmix packages are external: use the root catalog, never `workspace:*`.
-  `@voidmix/intl` is pinned to an exact npm prerelease in the `frontend` catalog.
+- Root and native entries must never transitively import browser APIs, filesystems
+  or catalog tooling. Use static imports, with no Vite-specific catalog discovery.
+- Device preference supports system/en/zh; absent or invalid values follow system.
+- Browser follows `languagechange` and cross-window storage events.
+- Native callers hydrate async storage before mounting the language provider.
+- Preserve safe error-code translation; diagnostic prose is never product copy.
+- Voidmix is an external dependency, not a workspace.
 
-See [internationalization ownership](../../docs/architecture/intl.md).
+See [foundation architecture](../../docs/architecture/0034-extensible-foundation.md).
 
 ## Verification
 
-```bash
+```sh
 bun run --cwd packages/i18n check
 bun run --cwd packages/i18n test
 bun run i18n:check

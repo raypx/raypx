@@ -8,7 +8,7 @@ import {
   resolveLocale,
   serializeLocaleCookie,
   LOCALE_OPTIONS,
-} from "./index.js";
+} from "./index";
 
 describe("locale runtime", () => {
   it("exposes native names for every supported locale", () => {

@@ -2,10 +2,10 @@ import {
   createBrowserLocaleStorage as createIntlBrowserLocaleStorage,
   createLocalStorageLocaleStorage as createIntlLocalStorageLocaleStorage,
 } from "@voidmix/intl/client";
-import { LOCALE_STORAGE_KEY } from "../constants.js";
-import { normalizeLocale } from "../normalize.js";
-import { localeRuntime } from "../runtime.js";
-import type { LocaleStorage } from "../types.js";
+import { LOCALE_STORAGE_KEY } from "../constants";
+import { normalizeLocale } from "../normalize";
+import { localeRuntime } from "../runtime";
+import type { LocaleStorage } from "../types";
 
 export function createBrowserLocaleStorage(): LocaleStorage {
   return createIntlBrowserLocaleStorage(localeRuntime);
@@ -32,6 +32,8 @@ export function createLocalStorageLocaleStorage(): LocaleStorage {
         return undefined;
       }
     },
-    write: storage.write,
+    write(locale) {
+      storage.write(locale);
+    },
   };
 }

@@ -4,42 +4,39 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "rpx env -- bun --bun vp dev",
-    "start": "bun --no-env-file --no-install scripts/start.mjs",
+    "dev": "bun --bun vp dev",
+    "start": "node .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
     "test:component": "bun --bun vp test --run --passWithNoTests component.test",
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "build": "rpx env -- bun --bun vp build"
+    "build": "bun --bun vp build",
+    "test:postgres": "bun --bun vp test --run --config vitest.postgres.config.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",
     "@orpc/server": "catalog:",
-    "@raypx/application": "workspace:*",
+    "@raypx/auth": "workspace:*",
     "@raypx/contracts": "workspace:*",
-    "@raypx/core": "workspace:*",
     "@raypx/db": "workspace:*",
-    "@raypx/i18n": "workspace:*",
     "@raypx/mail": "workspace:*",
-    "@raypx/shared": "workspace:*",
-    "@raypx/storage": "workspace:*",
-    "@sentry/node": "catalog:backend",
     "@voidmix/env": "catalog:",
-    "better-auth": "catalog:",
     "hono": "catalog:backend",
-    "nanoid": "catalog:backend",
-    "uuid": "catalog:"
+    "nitro": "catalog:backend"
   },
   "devDependencies": {
-    "@orpc/client": "catalog:",
-    "@orpc/contract": "catalog:",
     "@raypx/client": "workspace:*",
+    "@types/node": "catalog:tooling",
     "@vitest/coverage-v8": "catalog:tooling",
     "@voidmix/tsconfig": "catalog:tooling",
-    "nitro": "catalog:backend",
+    "drizzle-orm": "catalog:backend",
     "vite": "catalog:tooling",
     "vite-plus": "catalog:tooling"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "node"
   }
 }

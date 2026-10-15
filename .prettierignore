@@ -16,3 +16,11 @@ packages/db/drizzle-cloud/
 # `skills update` can replace them and the lockfile hash stays meaningful.
 # Never hand-edit or reformat them; corrections belong in skills/raypx-infra/.
 .agents/
+
+docs/history/
+apps/mobile/.expo/
+apps/mobile/uniwind-types.d.ts
+packages/ui/src/styles/theme.css
+packages/ui/src/styles/native.css
+
+packages/db/drizzle-foundation/
