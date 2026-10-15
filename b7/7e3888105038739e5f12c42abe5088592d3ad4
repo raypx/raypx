@@ -1,0 +1,236 @@
+apps/desktop/src/routes/reset-password.tsx
+  s_5722ecc24d1fe3::t_6d55723de03e7f 2,5
+packages/ui/src/components/ui/sheet.tsx
+  s_5722ecc24d1fe3::t_276e797d1eb4f7 6,65
+apps/desktop/src/routes/_local/automations.tsx
+  s_5722ecc24d1fe3::t_e2dfdee74be066 176-180
+  s_5722ecc24d1fe3::t_635cb95dd00a73 1,39
+  s_5722ecc24d1fe3::t_d487b8d71485ec 2-4,9,11-38,40-41,45-49,55-57,101,113,127,148,167,172-173,175,306,359,368
+packages/ui/src/modal.tsx
+  s_5722ecc24d1fe3::t_276e797d1eb4f7 1
+packages/ui/package.json
+  s_5722ecc24d1fe3::t_eccc9fcbb37ba6 54-57
+  s_5722ecc24d1fe3::t_57ffa64f304b12 52-53,60-66,69
+apps/desktop/src/routes/login.tsx
+  s_5722ecc24d1fe3::t_6d55723de03e7f 2,4
+apps/web/AGENTS.md
+  s_5722ecc24d1fe3::t_154ddbd4c13712 22-23,36
+  s_5722ecc24d1fe3::t_7f59e2b7ba6212 14,17,20-21
+  s_5722ecc24d1fe3::t_45153922303b00 25
+  s_5722ecc24d1fe3::t_6caa4611b64760 10
+  s_5722ecc24d1fe3::t_d17cbc600258ab 12-13,29-30
+  s_5722ecc24d1fe3::t_2140f42fe05181 15
+  s_5722ecc24d1fe3::t_39700421a46a56 16
+  s_5722ecc24d1fe3::t_403f4f1f689f78 11
+  s_5722ecc24d1fe3::t_f23176dab3e5d4 24,26-28,35,37-38
+packages/auth/AGENTS.md
+  s_5722ecc24d1fe3::t_fef7201d9db394 5,9-15,19-21,25-38
+e2e/tests/foundation.spec.ts
+  s_5722ecc24d1fe3::t_b9ec1b9b0ae528 163-164,168-171
+  s_5722ecc24d1fe3::t_633031440b01da 23-37,165-167
+packages/ui/AGENTS.md
+  s_5722ecc24d1fe3::t_45be5477b8e34d 29
+  s_5722ecc24d1fe3::t_94d94dcfde2aac 5-6
+apps/web/src/test/routes/auth.component.test.tsx
+  s_5722ecc24d1fe3::t_cac5385e06b91f 3-8,47-49,52,55-56
+  s_5722ecc24d1fe3::t_b0afc89744431e 132
+  s_5722ecc24d1fe3::t_1381a7de5e6a27 58-61,64
+  s_5722ecc24d1fe3::t_1a41dd8e86bb5b 157
+  s_5722ecc24d1fe3::t_7f59e2b7ba6212 10-19,31
+  s_5722ecc24d1fe3::t_051da1a1da73c6 21,27-29,33,38-40,43-46,50-51,53-54,57,63,65,68-76,78,81,83-84,87,105,110,122-131,133-156,158-198
+apps/web/src/routes/(auth)/login.tsx
+  s_5722ecc24d1fe3::t_45153922303b00 4-6
+  s_5722ecc24d1fe3::t_d17cbc600258ab 2
+apps/web/src/test/request.test.ts
+  s_5722ecc24d1fe3::t_7f59e2b7ba6212 1-32
+packages/ui/src/help-hint.tsx
+  s_5722ecc24d1fe3::t_276e797d1eb4f7 1
+packages/ui/src/components/ui/toast.tsx
+  s_5722ecc24d1fe3::t_276e797d1eb4f7 93,99-103
+  s_5722ecc24d1fe3::t_598d53eb57a02f 3
+apps/web/components.json
+  s_5722ecc24d1fe3::t_45be5477b8e34d 12
+DESIGN.md
+  s_5722ecc24d1fe3::t_45be5477b8e34d 4
+apps/desktop/components.json
+  s_5722ecc24d1fe3::t_45be5477b8e34d 12
+packages/tooling/src/toolchain.test.ts
+  s_5722ecc24d1fe3::t_7ec86f718c4eb2 1
+  s_5722ecc24d1fe3::t_23bb9c7b164221 21,49-57
+  s_5722ecc24d1fe3::t_8029afdf017024 58
+docs/architecture/README.md
+  s_5722ecc24d1fe3::t_fef7201d9db394 26-29,31-34,58-59
+  s_5722ecc24d1fe3::t_f3828ee98b3e73 30
+packages/auth/src/hooks.ts
+  s_5722ecc24d1fe3::t_74f00e7f884f18 130-134,163-171
+  s_5722ecc24d1fe3::t_f3aca126b42cc8 1-129,135-162,172-184
+docs/development/workspaces.md
+  s_5722ecc24d1fe3::t_fef7201d9db394 34-39
+  s_5722ecc24d1fe3::t_f3828ee98b3e73 40,42-43
+apps/desktop/src/routes/verify-email.tsx
+  s_5722ecc24d1fe3::t_6d55723de03e7f 2,5
+apps/desktop/src/routes/terminal.tsx
+  s_5722ecc24d1fe3::t_77f0a1c64a7fac 2-12,15-262
+packages/auth/package.json
+  s_5722ecc24d1fe3::t_154ddbd4c13712 26-27,39-41,55
+  s_5722ecc24d1fe3::t_f3aca126b42cc8 10,30-38,49-50,56-57
+  s_5722ecc24d1fe3::t_6bc3de96a8f294 23-24
+apps/desktop/src/routes/_local/index.tsx
+  s_5722ecc24d1fe3::t_d487b8d71485ec 1-3,11,13-14,19-20,22-25,57-83,227,333,360,369
+  s_5722ecc24d1fe3::t_4ee59a09b811b0 209,214
+apps/web/src/routes/(auth)/forgot-password.tsx
+  s_5722ecc24d1fe3::t_45153922303b00 1,3-6
+  s_5722ecc24d1fe3::t_d17cbc600258ab 2
+packages/ui/src/status-badge.tsx
+  s_5722ecc24d1fe3::t_276e797d1eb4f7 1,16,20-22,31
+apps/web/src/features/auth/components/auth-form.tsx
+  s_5722ecc24d1fe3::t_154ddbd4c13712 2-6,9-14,20,22-27,32-33
+  s_5722ecc24d1fe3::t_d17cbc600258ab 8,16-17,19,21,34-35
+  s_5722ecc24d1fe3::t_7f59e2b7ba6212 7,15
+  s_5722ecc24d1fe3::t_c31d8f8ab5d87b 1,18,28-31
+apps/web/src/routes/(auth)/reset-password.tsx
+  s_5722ecc24d1fe3::t_d17cbc600258ab 2
+  s_5722ecc24d1fe3::t_45153922303b00 1,3-6
+packages/ui/src/components/ui/dropdown-menu.tsx
+  s_5722ecc24d1fe3::t_276e797d1eb4f7 5,120
+packages/tooling/src/framework.test.ts
+  s_5722ecc24d1fe3::t_bff1a739aa0e07 65-68
+apps/desktop/src/features/auth/components/auth-form.tsx
+  s_5722ecc24d1fe3::t_c31d8f8ab5d87b 1,28-31
+  s_5722ecc24d1fe3::t_6d55723de03e7f 2-5,7,9-17,19-20,22-27,32-33
+  s_5722ecc24d1fe3::t_35c6b7cb548622 6
+apps/web/src/routes/(auth)/verify-email.tsx
+  s_5722ecc24d1fe3::t_45153922303b00 1,3-6
+  s_5722ecc24d1fe3::t_d17cbc600258ab 2
+apps/desktop/src/test/routes/auth.component.test.tsx
+  s_5722ecc24d1fe3::t_73b952559264fb 37,49,79,125-129
+  s_5722ecc24d1fe3::t_01ca78b368f144 36,41,78,124
+  s_5722ecc24d1fe3::t_35c6b7cb548622 87-88,208,211
+  s_5722ecc24d1fe3::t_ec855e33b99106 1-35,38-40,42-48,50-51,54-77,80-86,89-123,130-207,209-210,212-226
+  s_5722ecc24d1fe3::t_0f793149c5c9a5 52-53
+apps/web/src/routes/index.tsx
+  s_5722ecc24d1fe3::t_7f59e2b7ba6212 1-7,11,13-102
+apps/desktop/src/test/routes/account.component.test.tsx
+  s_5722ecc24d1fe3::t_36366fcb80321b 220-265,336-342,344-348,359-368
+  s_5722ecc24d1fe3::t_9257e221fc2549 298-313
+  s_5722ecc24d1fe3::t_2a1cc0752d22b6 1-71,74-219,266-297,314-335,343,349-358,369-391
+  s_5722ecc24d1fe3::t_d4016e5d9cc37c 72-73
+apps/desktop/AGENTS.md
+  s_5722ecc24d1fe3::t_633031440b01da 37-39
+  s_5722ecc24d1fe3::t_5c246da18fa92f 11-14
+  s_5722ecc24d1fe3::t_35c6b7cb548622 32
+  s_5722ecc24d1fe3::t_312d77019ab510 27
+  s_5722ecc24d1fe3::t_4ee59a09b811b0 15-26
+  s_5722ecc24d1fe3::t_5430187715d779 30
+  s_5722ecc24d1fe3::t_6d55723de03e7f 33-36
+  s_5722ecc24d1fe3::t_f1eb126df3f7d0 31
+apps/desktop/src/routes/forgot-password.tsx
+  s_5722ecc24d1fe3::t_6d55723de03e7f 2,5
+apps/mobile/package.json
+  s_5722ecc24d1fe3::t_9fb21e0e465098 18-26,28-32,35-37
+apps/web/src/routes/(auth)/signup.tsx
+  s_5722ecc24d1fe3::t_d17cbc600258ab 2
+  s_5722ecc24d1fe3::t_45153922303b00 4-6
+apps/mobile/AGENTS.md
+  s_5722ecc24d1fe3::t_7723cf3f7d2f8d 14-15
+apps/desktop/src/shell.tsx
+  s_5722ecc24d1fe3::t_e7cff07016a873 3,93,98,102
+docs/architecture/0034-extensible-foundation.md
+  s_5722ecc24d1fe3::t_96e408631619c0 28-29
+  s_5722ecc24d1fe3::t_154ddbd4c13712 30-32
+packages/auth/src/client.ts
+  s_5722ecc24d1fe3::t_154ddbd4c13712 2-7
+apps/desktop/src/routes/signup.tsx
+  s_5722ecc24d1fe3::t_6d55723de03e7f 2,4
+apps/desktop/package.json
+  s_5722ecc24d1fe3::t_6d55723de03e7f 36-37,42-55
+apps/desktop/src/test/routes/local.component.test.tsx
+  s_5722ecc24d1fe3::t_656f7e37d9cdbe 1-90,92-130,135-142,144-167,179-205,236-237,240,245-254,280-291,294-314,376-403,412-414,422-425,429-430,446
+  s_5722ecc24d1fe3::t_776c28d2621e71 131-134,143,168-178,206-235,292-293,315-350,404-411,415-421,426-428,431-445
+  s_5722ecc24d1fe3::t_b9ec1b9b0ae528 91,365-367
+  s_5722ecc24d1fe3::t_83b59fcf5d6037 238-239,241-244,255-279,351-364,368-375
+apps/desktop/src/routes/_local/route.tsx
+  s_5722ecc24d1fe3::t_d487b8d71485ec 1-27
+apps/desktop/src/lib/desktop.ts
+  s_5722ecc24d1fe3::t_d487b8d71485ec 13
+packages/auth/src/client/auth-form.tsx
+  s_5722ecc24d1fe3::t_154ddbd4c13712 1-2,6,9-37,41-49,51,65,68-78,80-92,98,104,107,120,174,176,199,201,207,209,212,214
+apps/desktop/src/test/hooks/use-local-request.component.test.tsx
+  s_5722ecc24d1fe3::t_5f38f54100190d 1-282
+  s_5722ecc24d1fe3::t_3fa64311a248d2 283
+packages/ui/components.json
+  s_5722ecc24d1fe3::t_45be5477b8e34d 12
+packages/ui/src/components/ui/dialog.tsx
+  s_5722ecc24d1fe3::t_276e797d1eb4f7 8,64
+apps/web/package.json
+  s_5722ecc24d1fe3::t_f23176dab3e5d4 25-26,31-43
+apps/desktop/src/hooks/use-local-request.ts
+  s_5722ecc24d1fe3::t_312d77019ab510 1-31,34-35,37-43,47
+apps/desktop/src/routes/account.tsx
+  s_5722ecc24d1fe3::t_c31d8f8ab5d87b 1-8,10-67,70-72,74-75,77-123,125-151,153-164
+  s_5722ecc24d1fe3::t_9257e221fc2549 68-69,73,76,124,152
+apps/web/src/routes/__root.tsx
+  s_5722ecc24d1fe3::t_7f59e2b7ba6212 7
+AGENTS.md
+  s_5722ecc24d1fe3::t_43539d22243c7a 34-35
+apps/api/package.json
+  s_5722ecc24d1fe3::t_a5511539466498 26-27,31-35
+apps/cli/package.json
+  s_5722ecc24d1fe3::t_4259188ee6ad8a 21-24
+apps/desktop/src/routeTree.gen.ts
+  s_5722ecc24d1fe3::t_c9cf531e0244d1 12,21-22,24-25,68-77,80,89,100-101,105,114-115,129,140-141,144,153-154,158,171-173,175,234-247,251-264,266
+apps/desktop/src/routes/settings.tsx
+  s_5722ecc24d1fe3::t_c574c9ec0f7609 2-6,9-77
+apps/mobile/app/index.tsx
+  s_5722ecc24d1fe3::t_a3307a6ffeb599 5,18-20,22-30,43,51-52,58,65-67,70,72-87,90-95,234
+apps/web/src/components/web-shell.tsx
+  s_5722ecc24d1fe3::t_83c75ddfdf83a7 2,24,28
+apps/web/src/routeTree.gen.ts
+  s_5722ecc24d1fe3::t_28772a6d945856 14-19,31-33,36-38,41-43,46-52,56-57,64,66-70,74,76-80,85,87-91,97,99,107,109,118-123,128,130-134,153-168,171,174-175,178,181-182,185,188-189,192,200,202-206
+apps/web/src/routes/settings/route.tsx
+  s_5722ecc24d1fe3::t_b9faf36e88cfd8 1-2,8-10,32,62
+apps/web/src/test/hooks/auth-actions.component.test.tsx
+  s_5722ecc24d1fe3::t_afa9eca92a881e 1-223
+apps/web/src/test/routes/settings.component.test.tsx
+  s_5722ecc24d1fe3::t_a8779ab6ce8dd1 6-8
+bun.lock
+  s_5722ecc24d1fe3::t_d4cd7a0991c63d 9-15,29-30,34-38,52-55,71-72,77-90,101-109,111-115,118-120,133-134,139-151,158-160,168-169,171-172,175-178,180-185,196-197,208-209,217-218,221-223,230,233-237,239,249,252-255,265-266,269-270,277-282,285-291,294,302-306,309-311,315-316,319,322-324,326-339,342-348,352-354,358,361,364,366,368,370,373-374,376-377,385,537,539,541,543,545,547,549,551,553,573,769,771,773,775,777,779,781,783,785,787,789,791,793,795,797,799,801,803,805,807,809,849,851,853,855,857,859,861,863,865,867,869,871,873,875,877,879,881,883,885,887,889,891,893,895,897,899,901,903,905,907,909,911,913,915,917,919,921,923,925,927,929,931,933,935,937,939,1163,1165,1167,1169,1171,1173,1195,1249,1251,1253,1259,1261,1263,1265,1267,1269,1277,1279,1281,1283,1285,1287,1289,1291,1299,1301,1303,1305,1307,1309,1311,1313,1315,1317,1319,1321,1323,1385,1387,1743,1795-1796,1799,1899,1905,1909,1911,1913,1935,1937,2027,2037,2181,2193,2237,2239,2243,2307,2309,2355-2356,2369-2370,2421,2455-2458,2503-2539,2541
+docs/development/getting-started.md
+  s_5722ecc24d1fe3::t_114c5582d00658 28-31
+e2e/package.json
+  s_5722ecc24d1fe3::t_1ad85761cc95eb 11-13
+package.json
+  s_5722ecc24d1fe3::t_eb5c1826b1083e 11-13,17-18,20-41,44-51,54-56,60,62-63,66-68,71-79,122-128,131-135
+packages/client/package.json
+  s_5722ecc24d1fe3::t_df227ec9a2e26a 23-24
+packages/contracts/package.json
+  s_5722ecc24d1fe3::t_4eef5a16200c45 24-25
+packages/db/package.json
+  s_5722ecc24d1fe3::t_8618a09a2c5a4b 23-24,27-29
+packages/i18n/package.json
+  s_5722ecc24d1fe3::t_3d95ca68b675ba 27,30-34,36
+packages/mail/package.json
+  s_5722ecc24d1fe3::t_974459010caf7e 19,22-25
+packages/tooling/package.json
+  s_5722ecc24d1fe3::t_aee5fec1ffae59 16-17,20-21
+packages/tooling/src/scaffold.ts
+  s_5722ecc24d1fe3::t_2ab2e76d97bbb2 43-44
+packages/tooling/src/toolchain.ts
+  s_5722ecc24d1fe3::t_3340117869aee1 72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b77e3888105038739e5f12c42abe5088592d3ad4",
+  "prompts": {},
+  "sessions": {
+    "s_5722ecc24d1fe3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13eed-0d56-73d1-bfa0-ddde7cacea50",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
