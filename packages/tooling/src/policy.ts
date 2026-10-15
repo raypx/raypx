@@ -2,6 +2,7 @@ import { existsSync, globSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseSync } from "oxc-parser";
 import { checkArchitecture } from "./architecture.js";
+import { checkToolchain } from "./toolchain.js";
 import { discover } from "./workspaces.js";
 
 export function policy(root: string): string[] {
@@ -37,6 +38,13 @@ export function policy(root: string): string[] {
         findings.push(`${file}: broken documentation link ${url}`);
     }
   }
+  // Acceptance records describe the release they ran on and are not rewritten on upgrade.
+  findings.push(
+    ...checkToolchain(
+      root,
+      documents.filter((file) => file !== "docs/development/foundation-acceptance.md"),
+    ),
+  );
   return [...new Set(findings)];
 }
 

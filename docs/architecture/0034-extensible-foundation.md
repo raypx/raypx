@@ -19,3 +19,9 @@ or volumes are changed as part of the rebuild.
 Consequences: entrypoint/platform checks and generator templates require maintenance,
 but ordinary packages no longer require edits to a central architecture whitelist,
 root task catalog or CI package-name matrix.
+
+Amendment (2026-10-15), approved by the user: the Nix development shell was removed.
+Windows needed native installs anyway and every runtime upgrade required per-platform
+hashes; `.nvmrc` and the root `packageManager` now pin Node and Bun for version managers
+and CI, and `raypx-dev policy` keeps the remaining literal pins in sync. Web became a
+separate TanStack Start SSR service on Node/Nitro beside API; Desktop uses Start SPA mode.

@@ -12,7 +12,7 @@
 
 ### Changed
 
-- Rebuild the renderer as a React/Vite SPA with Files, Automations, Terminal, Account and Settings navigation.
+- Rebuild the renderer as a TanStack Start SPA with Files, Automations, Terminal, Account and Settings navigation. The window layout appears in the user's theme before the renderer finishes loading.
 - Bundle the exact matching CLI binary; users do not need a Node or Bun installation for local execution.
 - Keep the window/tray shell and native WebView. Closing hides the window while local scheduling continues; Quit cancels managed execution and stops scheduling.
 - Use a fresh account foundation for registration, verification, login and password recovery.

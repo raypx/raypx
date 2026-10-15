@@ -1,0 +1,4 @@
+# mise reads the existing pins: Node from .nvmrc, Bun from package.json.
+# Do not add [tools] versions here; `raypx-dev policy` rejects a second source.
+[settings]
+idiomatic_version_file_enable_tools = ["node", "bun"]

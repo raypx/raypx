@@ -2,7 +2,7 @@
 
 Run narrow meaningful workspace tests, then bun run verify. The default gate checks
 catalog parity, workspace/platform rules, format, lint, types, unit/component tests,
-builds, relocated Node API output and the compiled CLI. It requires no database,
+builds, relocated Node API and Web SSR outputs and the compiled CLI. It requires no database,
 GUI, mobile emulator or mail provider. Node 24.15.0 must be selected (or use
 RAYPX_NODE_BINARY). Test runners share test.config.ts and remain plugin-independent.
 

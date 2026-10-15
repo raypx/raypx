@@ -6,6 +6,7 @@ import { checkLocales, policy } from "./policy.js";
 import { developmentEnvironment, run, turbo } from "./process.js";
 import { scaffold } from "./scaffold.js";
 import { smoke } from "./smoke.js";
+import { pinnedNode, readToolchain } from "./toolchain.js";
 import { discover, type Kind, type Target } from "./workspaces.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -111,12 +112,10 @@ async function main() {
       break;
     }
     case "doctor": {
-      if (Bun.version !== "1.4.3") throw new Error(`Expected Bun 1.4.3, got ${Bun.version}`);
-      const node = process.env.RAYPX_NODE_BINARY ?? "node";
-      const output = Bun.spawnSync([node, "--version"]);
-      if (new TextDecoder().decode(output.stdout).trim() !== "v24.15.0")
-        throw new Error("Select Node 24.15.0 (or set RAYPX_NODE_BINARY)");
-      console.log(`Bun ${Bun.version}; Node 24.15.0; ${process.platform}/${process.arch}`);
+      const pins = readToolchain(root);
+      if (Bun.version !== pins.bun) throw new Error(`Expected Bun ${pins.bun}, got ${Bun.version}`);
+      pinnedNode(root);
+      console.log(`Bun ${Bun.version}; Node ${pins.node}; ${process.platform}/${process.arch}`);
       console.log(
         `Native SDK prepared: ${existsSync(join(root, "apps/desktop/.hutch"))}; optional mobile/native toolchains require separate checks`,
       );

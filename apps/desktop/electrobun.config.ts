@@ -23,7 +23,7 @@ export default {
     },
     linux: { icon: "native/icons/icon.png" },
     copy: {
-      dist: "views/main",
+      "dist/client": "views/main",
       [`.hutch/bin/${process.platform === "win32" ? "raypx.exe" : "raypx"}`]: `bin/${process.platform === "win32" ? "raypx.exe" : "raypx"}`,
       "native/close.html": "views/close/index.html",
       "native/icons/icon.png": "views/assets/tray-icon.png",

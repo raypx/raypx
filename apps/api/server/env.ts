@@ -12,6 +12,7 @@ export const apiServerEnv = {
     RESEND_API_KEY: z.string().optional(),
     MAIL_FROM: z.string().optional(),
     MAIL_DEFAULT_LOCALE: z.enum(["en", "zh"]).default("en"),
+    AUTH_DOMAIN: z.string().min(1).optional(),
   },
 } as const satisfies Preset;
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {

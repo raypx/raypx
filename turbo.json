@@ -11,7 +11,7 @@
     "vite.config.ts",
     "test.config.ts",
     "packages/tooling/src/testing/**",
-    ".node-version",
+    ".nvmrc",
     "bunfig.toml"
   ],
   "globalEnv": ["RAYPX_CACHE_PLATFORM", "CI", "LANG", "TZ"],
@@ -27,11 +27,6 @@
     "build": {
       "dependsOn": ["check", "^build", "transit"],
       "outputs": ["dist/**", ".output/**"],
-      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"]
-    },
-    "api#build": {
-      "dependsOn": ["check", "^build", "transit", "web#build"],
-      "outputs": [".output/**"],
       "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"]
     },
     "desktop#build": {
@@ -74,7 +69,7 @@
       "passThroughEnv": ["DATABASE_URL", "NODE_ENV"]
     },
     "e2e": {
-      "dependsOn": ["api#build", "desktop#build"],
+      "dependsOn": ["web#build", "desktop#build"],
       "cache": false,
       "outputs": [],
       "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI"]

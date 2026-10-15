@@ -50,7 +50,8 @@ try {
   assert.equal(tray.visible, true, "Native tray was not created");
   await waitFor(
     async () =>
-      Boolean(await evaluate('return Boolean(document.querySelector("#root")?.textContent)')),
+      // The prerendered skeleton has no #main; it appears once the shell hydrates.
+      Boolean(await evaluate('return Boolean(document.querySelector("#main"))')),
     "Packaged renderer did not load",
   );
   stage = "local engine handshake";
@@ -65,7 +66,7 @@ try {
   };
   assert.equal(info.protocolVersion, 1);
   assert.equal(info.scheduler, true);
-  assert.equal(info.runtime, "1.4.3");
+  assert.equal(`bun@${info.runtime}`, process.env.RAYPX_NATIVE_SMOKE_BUN);
   stage = "close and restore";
   mainWindow.requestClose();
   await waitFor(() => !mainWindow.isVisible(), "Native close did not hide the window");
@@ -294,7 +295,7 @@ try {
       "Native renderer diagnostic:",
       String(
         await evaluate(
-          `return JSON.stringify({url:location.href,text:document.body.innerText.slice(0,1500),root:document.querySelector("#root")?.innerHTML.slice(0,1500)})`,
+          `return JSON.stringify({url:location.href,text:document.body.innerText.slice(0,1500),body:document.body.innerHTML.slice(0,1500)})`,
         ),
       ),
     );

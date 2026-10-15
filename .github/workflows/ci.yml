@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version-file: .node-version
+          node-version-file: .nvmrc
           package-manager-cache: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -57,7 +57,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version-file: .node-version
+          node-version-file: .nvmrc
           package-manager-cache: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version-file: .node-version
+          node-version-file: .nvmrc
           package-manager-cache: false
       - uses: oven-sh/setup-bun@v2
         with:
@@ -85,17 +85,3 @@ jobs:
       - run: bun run desktop:build
       - name: Native release checks
         run: bun run --cwd apps/desktop native:smoke
-  nix:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, macos-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-      - uses: cachix/install-nix-action@v31
-      - run: nix flake check
-      - run: nix develop --command bun --version
-      - run: nix develop --command node --version
-      - run: nix develop --command psql --version

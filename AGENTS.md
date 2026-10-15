@@ -25,8 +25,12 @@ The accepted foundation design supersedes documents in docs/history.
 ## Toolchain
 
 - Bun 1.4.3 owns install, lockfile, scripts, tests and standalone CLI compilation.
-- Node 24.15.0 runs the production Nitro API. Desktop uses Electrobun's pinned host.
-- Nix only provides the development shell. Turbo owns the sole task graph/cache.
+- `.nvmrc` pins Node and root `packageManager` pins Bun. Tooling reads them; `raypx-dev policy`
+  rejects drift in engines, Dockerfiles, CI and documented versions.
+- Node runs the Nitro Web and API services: scripts call `bun vp` (never `bun --bun vp`)
+  for dev/build/preview, and production uses Node 24.15.0. Desktop uses Electrobun's pinned host.
+- Turbo owns the sole task graph/cache. mise is the recommended runtime manager; mise.toml
+  only enables reading .nvmrc/package.json and never pins `[tools]`. There is no Nix shell.
 - Use root Bun catalogs for external versions and workspace:* for internal dependencies.
 - @voidmix packages remain independently released external dependencies.
 - Internal libraries are private ESM source packages unless an actual artifact is required.

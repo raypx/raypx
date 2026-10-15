@@ -58,6 +58,24 @@ describe("theme provider", () => {
     expect(document.documentElement).not.toHaveClass("dark");
   });
 
+  it("hydrates with a server theme before reconciling device storage", async () => {
+    window.localStorage.setItem("theme", "dark");
+    const rendered: string[] = [];
+    function FirstRender() {
+      rendered.push(useTheme().theme);
+      return null;
+    }
+    render(
+      <ThemeProvider disableScript initialTheme="light">
+        <FirstRender />
+        <ThemeProbe />
+      </ThemeProvider>,
+    );
+
+    expect(rendered[0]).toBe("light");
+    await waitFor(() => expect(screen.getByTestId("theme")).toHaveTextContent("dark"));
+  });
+
   it("resolves system theme from the media query", async () => {
     const matchMedia = vi.spyOn(window, "matchMedia").mockImplementation(
       () =>

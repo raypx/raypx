@@ -4,6 +4,10 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import manifest from "../package.json";
 
+const { packageManager } = await Bun.file(
+  resolve(import.meta.dirname, "../../../package.json"),
+).json();
+
 const dataDir = await mkdtemp(join(tmpdir(), "raypx-executable-smoke-"));
 const binary = resolve(
   import.meta.dirname,
@@ -53,7 +57,7 @@ try {
       .filter(Boolean)
       .map((line) => JSON.parse(line))
       .find((value) => value.id === "smoke");
-    assert.equal(response.result.runtime, "1.4.3");
+    assert.equal(`bun@${response.result.runtime}`, packageManager);
     assert.equal(response.result.scheduler, true);
     await child.stdin.write(
       JSON.stringify({ version: 1, id: "persisted", method: "roots.list", params: {} }) + "\n",

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, EnvelopeSimple, CheckCircle } from "@phosphor-icons/react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
@@ -16,7 +16,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(useLocation({ select: (location) => location.searchStr }));
   const verified = params.get("verified") === "1";
   const title =
     mode === "signup"

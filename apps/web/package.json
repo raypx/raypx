@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "raypx-dev env -- bun --bun vp dev",
-    "build": "bun --bun vp build",
-    "preview": "bun --bun vp preview",
+    "dev": "raypx-dev env -- bun vp dev",
+    "build": "raypx-dev env -- bun vp build",
+    "preview": "raypx-dev env -- bun vp preview",
+    "start": "node .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run --passWithNoTests",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
@@ -22,6 +23,8 @@
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "nitro": "catalog:backend",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

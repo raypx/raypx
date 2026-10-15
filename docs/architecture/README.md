@@ -6,14 +6,20 @@ of runtime dependency graphs. Manifests are the only workspace inventory.
 
 ## Applications
 
-Web is a React/Vite/TanStack Router SPA. Desktop uses the same DOM components in
+Web is a TanStack Start SSR application on Nitro node-server. Desktop uses the same DOM components in
 an Electrobun WebView, with a native bridge to its version-matched bundled CLI.
+Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
+shell prerendered to index.html. It has no server, so no server functions.
 Mobile uses Expo Router and Uniwind. API uses Vite + Nitro + Hono + oRPC, deployed
 on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.3.
 
-Nitro owns listening, public assets and shutdown. One Hono Fetch app mounts
-/api/auth/_, /rpc/_ and /health. GET/HEAD HTML navigation can receive the SPA;
-unknown APIs and missing assets retain 404. The complete output runs outside the repo.
+Web and API are separate Node services; each output runs outside the repo.
+API Nitro owns one listener and shutdown. One Hono Fetch app mounts /api/auth/_,
+/rpc/_ and /health; everything else is a JSON 404. Web renders on the server with
+device preferences from cookies/Accept-Language and the account from account.get,
+forwarding only Better Auth cookies. It never imports API, auth server or DB code.
+Its server must receive the session cookie: share one origin, or set AUTH_DOMAIN
+to the parent domain of sibling Web/API hosts.
 
 ## Libraries
 

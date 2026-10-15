@@ -16,7 +16,7 @@ if (
   throw new Error("Built CLI artifact version does not match Desktop");
 if (
   process.argv.includes("--release") &&
-  !(await Bun.file(resolve(import.meta.dirname, "../dist/index.html")).exists())
+  !(await Bun.file(resolve(import.meta.dirname, "../dist/client/index.html")).exists())
 )
   throw new Error("Build the Desktop renderer before native packaging");
 await mkdir(resolve(import.meta.dirname, "../.hutch/bin"), { recursive: true });

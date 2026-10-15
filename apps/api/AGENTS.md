@@ -2,14 +2,13 @@
 
 ## Purpose
 
-The Node HTTP composition root for authentication, account RPC and the Web SPA.
+The Node HTTP composition root for authentication and account RPC.
 
 ## Interface
 
 `/api/auth/*` delegates to Better Auth. `/rpc/*` serves the explicit oRPC account
 contract. `/health` reports process liveness without querying PostgreSQL.
-HTML GET/HEAD navigation falls back to the bundled Web index; API misses and
-missing assets remain 404.
+Every other path is a JSON 404; Web is a separate service.
 
 ## Ownership
 
@@ -18,8 +17,10 @@ API composes the database adapter, mailer and auth factory, once per process.
 
 ## Constraints
 
-- Build with Vite + Nitro node-server and start `.output/server/index.mjs` on Node 24.
-- Build Web first; Nitro copies its public assets and bundles its index.
+- Dev and build run vp under Node (`bun vp`, never `bun --bun vp`); start
+  `.output/server/index.mjs` on Node 24.15.0 with the Nitro node-server preset.
+- Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
+  with a Web host on a sibling subdomain so its server rendering sees the session.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production requires explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
 - Use HTTPS and secure cookies in production, exact trusted origins only.

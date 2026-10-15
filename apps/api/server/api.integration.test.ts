@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client";
-import { createApiApp, isSpaNavigation } from "./api.js";
+import { createApiApp } from "./api.js";
 import type { AuthSession } from "@raypx/auth/types";
 const session: AuthSession = {
   user: { id: "u1", email: "a@example.com", name: "A", emailVerified: true },
@@ -10,7 +10,6 @@ const app = createApiApp({
   authHandler: async () => Response.json({ auth: true }),
   readSession: async (headers) => (headers.get("cookie") === "signed-in" ? session : null),
   allowedOrigins: ["https://web.example.com"],
-  readWebIndex: async () => "<!doctype html><title>Raypx</title>",
 });
 const client = (cookie?: string) =>
   createApiClient({
@@ -76,25 +75,10 @@ describe("HTTP foundation", () => {
       "/assets/missing.js",
       "/assets/missing",
       "/missing%2Epng",
+      // Web pages are served by the Web application, never by the API.
+      "/settings/account",
     ])
       expect((await app.request(path, { headers: { accept: "text/html" } })).status).toBe(404);
-  });
-  it("serves only HTML GET/HEAD navigation as SPA", async () => {
-    expect(
-      (await app.request("/settings/account", { headers: { accept: "text/html" } })).headers.get(
-        "content-type",
-      ),
-    ).toContain("text/html");
-    const head = await app.request("/settings/account", {
-      method: "HEAD",
-      headers: { accept: "text/html" },
-    });
-    expect(await head.text()).toBe("");
-    expect(
-      isSpaNavigation(
-        new Request("https://example.com/a", { method: "POST", headers: { accept: "text/html" } }),
-      ),
-    ).toBe(false);
   });
   it("allows only explicit credentialed origins and adds request IDs", async () => {
     const ok = await app.request("/health", { headers: { origin: "https://web.example.com" } });

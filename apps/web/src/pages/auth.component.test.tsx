@@ -17,6 +17,8 @@ vi.mock("@tanstack/react-router", () => ({
       {children}
     </a>
   ),
+  useLocation: ({ select }: { select: (location: { searchStr: string }) => string }) =>
+    select({ searchStr: window.location.search }),
   useNavigate: () => mocks.navigate,
 }));
 vi.mock("../account", () => ({

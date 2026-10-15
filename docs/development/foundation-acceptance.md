@@ -24,8 +24,6 @@ removed; no operator database or retired volume was used.
 ## Environment-dependent release gates
 
 - PostgreSQL 17 is configured in CI; local authentication verification used 15.18.
-- Nix is not installed locally. Flake evaluation and fixed-hash binary builds are
-  configured for CI and have not been claimed as locally passed.
 - Windows native execution and macOS x64 packaging need their respective runners.
 - Packaged macOS WebKit/Windows CEF account cookies still require the HTTPS
   sign-in → full restart → sign-out acceptance phases with synthetic credentials.

@@ -2,6 +2,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
+const { packageManager } = await Bun.file(
+  resolve(import.meta.dirname, "../../../package.json"),
+).json();
+
 async function run(phase: string, directory: string) {
   const child = Bun.spawn([process.execPath, "--bun", "electrobun", "dev"], {
     cwd: resolve(import.meta.dirname, ".."),
@@ -10,6 +14,8 @@ async function run(phase: string, directory: string) {
       RAYPX_NATIVE_SMOKE: "1",
       RAYPX_NATIVE_SMOKE_PHASE: phase,
       RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
+      // The packaged smoke cannot read the repository; it checks the CLI runtime against this pin.
+      RAYPX_NATIVE_SMOKE_BUN: packageManager,
     },
     stdout: "pipe",
     stderr: "pipe",

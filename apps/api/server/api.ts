@@ -9,21 +9,6 @@ export interface ApiAppOptions {
   readSession(headers: Headers): Promise<AuthSession | null>;
   allowedOrigins: string[];
   mailAvailable?: boolean;
-  readWebIndex?: () => Promise<string | null>;
-}
-export function isSpaNavigation(request: Request): boolean {
-  let pathname: string;
-  try {
-    pathname = decodeURIComponent(new URL(request.url).pathname);
-  } catch {
-    return false;
-  }
-  return (
-    ["GET", "HEAD"].includes(request.method) &&
-    (request.headers.get("accept") ?? "").includes("text/html") &&
-    !/^\/(api|rpc|health|assets)(?:\/|$)/.test(pathname) &&
-    !pathname.split("/").at(-1)?.includes(".")
-  );
 }
 export function createApiApp(options: ApiAppOptions) {
   const app = new Hono<{ Variables: { requestId: string } }>();
@@ -91,16 +76,7 @@ export function createApiApp(options: ApiAppOptions) {
     });
     return result.matched ? result.response : c.notFound();
   });
-  app.notFound(async (c) => {
-    if (options.readWebIndex && isSpaNavigation(c.req.raw)) {
-      const html = await options.readWebIndex();
-      if (html !== null)
-        return new Response(c.req.method === "HEAD" ? null : html, {
-          headers: { "content-type": "text/html; charset=utf-8" },
-        });
-    }
-    return c.json({ error: { code: "NOT_FOUND" }, requestId: c.get("requestId") }, 404);
-  });
+  app.notFound((c) => c.json({ error: { code: "NOT_FOUND" }, requestId: c.get("requestId") }, 404));
   app.onError((_error, c) =>
     c.json({ error: { code: "INTERNAL_SERVER_ERROR" }, requestId: c.get("requestId") }, 500),
   );

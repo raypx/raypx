@@ -7,7 +7,9 @@ The previous cloud product is retired; historical decisions remain in docs/histo
 ## Requirements
 
 Bun 1.4.3, Node 24.15.0 and an isolated PostgreSQL database for account flows.
-Use `nix develop` on macOS/Linux, or install those runtime versions directly.
+`.nvmrc` pins Node and `packageManager` pins Bun. With [mise](https://mise.jdx.dev),
+run `mise trust && mise install` once; nvm or direct installs also work.
+`bun run doctor` confirms both.
 Desktop includes its own native host and compiled CLI; users do not install Node/Bun.
 
 ```sh
@@ -19,8 +21,11 @@ bun run db:migrate
 bun run dev
 ```
 
-Web runs on 3000 and API on 3002. Production API starts with
-`node apps/api/.output/server/index.mjs`; its complete artifact includes Web assets.
+Web (TanStack Start SSR) runs on 3000 and API on 3002. They deploy as separate
+Node services: `node apps/web/.output/server/index.mjs` and
+`node apps/api/.output/server/index.mjs`. Web bakes `VITE_API_URL` at build time.
+Its server rendering needs the session cookie: serve both from one origin, or set
+`AUTH_DOMAIN` to the parent domain of sibling hosts such as app/api.example.com.
 Local desktop files, automations and terminals do not require login. Close-to-tray
 keeps scheduling; Quit stops execution. External tools run with the user's OS permissions.
 
@@ -41,8 +46,7 @@ bun run mobile:bundle
 
 Turbo discovers tasks from workspace manifests. Engineering commands are exposed
 as `raypx-dev`; the product executable is `raypx`. Workspaces under apps and packages
-are discovered automatically, without editing a central name list. Nix supplies
-runtimes and tools only; it does not duplicate the task graph or manage databases.
+are discovered automatically, without editing a central name list.
 
 See [documentation](docs/README.md), [architecture](docs/architecture/README.md),
 [workspace extension](docs/development/workspaces.md) and [verification](docs/development/testing.md).

@@ -16,6 +16,8 @@ export interface AuthConfiguration {
   secret: string;
   trustedOrigins: string[];
   production: boolean;
+  /** Parent domain shared by separately hosted Web and API, e.g. "example.com". */
+  cookieDomain?: string;
 }
 export interface CreateAuthOptions {
   database: NonNullable<BetterAuthOptions["database"]>;
@@ -84,6 +86,10 @@ export function createAuth({ database, mailer, config }: CreateAuthOptions) {
         sameSite: config.production ? "none" : "lax",
         secure: config.production,
       },
+      // Web server rendering forwards the session, so it must see the cookie.
+      ...(config.cookieDomain
+        ? { crossSubDomainCookies: { enabled: true, domain: config.cookieDomain } }
+        : {}),
     },
   });
 }

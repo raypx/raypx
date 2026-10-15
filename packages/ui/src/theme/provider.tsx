@@ -132,11 +132,16 @@ export function ThemeProvider({
   storageKey = THEME_STORAGE_KEY,
 }: ThemeProviderProps) {
   const initialTheme = parseTheme(initialThemeProp, defaultTheme);
+  // A server-rendered theme owns the first render so hydration matches; the
+  // mount effect below then reconciles it with device storage.
+  const serverRendered = initialThemeProp !== undefined;
   const [theme, setThemeState] = useState<UserTheme>(() =>
-    getStoredTheme(storageKey, initialTheme),
+    serverRendered ? initialTheme : getStoredTheme(storageKey, initialTheme),
   );
   const [resolvedTheme, setResolvedTheme] = useState<AppTheme>(() =>
-    typeof window === "undefined" ? getHydrationResolvedTheme(theme) : resolveTheme(theme),
+    typeof window === "undefined" || serverRendered
+      ? getHydrationResolvedTheme(theme)
+      : resolveTheme(theme),
   );
 
   useEffect(() => {

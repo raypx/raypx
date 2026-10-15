@@ -5,10 +5,7 @@ import { schema } from "@raypx/db/schema";
 import { createMailer } from "@raypx/mail/server";
 import { createApiApp } from "./api.js";
 import { getApiEnvironment, type ApiEnvironment } from "./env.js";
-export function createApiRuntime(
-  environment: ApiEnvironment,
-  readWebIndex?: () => Promise<string | null>,
-) {
+export function createApiRuntime(environment: ApiEnvironment) {
   const connection = connectDatabase(environment.DATABASE_URL);
   try {
     const mailer = createMailer({
@@ -24,6 +21,7 @@ export function createApiRuntime(
         secret: environment.AUTH_SECRET,
         trustedOrigins: environment.allowedOrigins,
         production: environment.NODE_ENV === "production",
+        ...(environment.AUTH_DOMAIN ? { cookieDomain: environment.AUTH_DOMAIN } : {}),
       },
     });
     return {
@@ -32,7 +30,6 @@ export function createApiRuntime(
         readSession: (headers) => readAuthSession(auth, headers),
         allowedOrigins: environment.allowedOrigins,
         mailAvailable: mailer.available,
-        ...(readWebIndex ? { readWebIndex } : {}),
       }),
       close: () => connection.close(),
     };
@@ -45,10 +42,8 @@ export function createApiRuntime(
 }
 export type ApiRuntime = ReturnType<typeof createApiRuntime>;
 let runtimePromise: Promise<ApiRuntime> | undefined;
-export function getApiRuntime(readWebIndex?: () => Promise<string | null>): Promise<ApiRuntime> {
-  return (runtimePromise ??= Promise.resolve().then(() =>
-    createApiRuntime(getApiEnvironment(), readWebIndex),
-  ));
+export function getApiRuntime(): Promise<ApiRuntime> {
+  return (runtimePromise ??= Promise.resolve().then(() => createApiRuntime(getApiEnvironment())));
 }
 export async function closeApiRuntime(): Promise<void> {
   await (await runtimePromise)?.close();

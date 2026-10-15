@@ -39,6 +39,25 @@ describe("browser language preferences", () => {
     await waitFor(() => expect(screen.getByText("设置")).toBeTruthy());
     expect(document.documentElement.lang).toBe("zh");
   });
+  it("hydrates with server values, then mirrors device choices into the cookie", async () => {
+    localStorage.setItem("raypx_locale", "zh");
+    const rendered: string[] = [];
+    function FirstRender() {
+      rendered.push(useLanguagePreference().preference);
+      return null;
+    }
+    render(
+      <BrowserLanguageProvider initialPreference="en" initialSystemLocale="en">
+        <FirstRender />
+        <Probe />
+      </BrowserLanguageProvider>,
+    );
+    expect(rendered[0]).toBe("en");
+    await waitFor(() => expect(screen.getByText("设置")).toBeTruthy());
+    expect(document.cookie).toContain("locale=zh");
+    fireEvent.click(screen.getByRole("button", { name: "System" }));
+    expect(document.cookie).not.toContain("locale=");
+  });
   it("follows system language changes only when system is selected", async () => {
     vi.spyOn(navigator, "language", "get").mockReturnValue("zh-CN");
     render(

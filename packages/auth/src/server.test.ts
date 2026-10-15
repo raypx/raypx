@@ -61,3 +61,22 @@ it("injects persistence and mail callbacks without domain package imports", asyn
     locale: "zh",
   });
 });
+it("shares session cookies with the Web host only when a parent domain is configured", () => {
+  const options = (cookieDomain?: string) =>
+    createAuth({
+      database: memoryAdapter({}),
+      mailer: { sendVerification: async () => {}, sendPasswordReset: async () => {} },
+      config: {
+        baseURL: "https://api.example.com",
+        secret: "test-foundation-secret-at-least-32-characters",
+        trustedOrigins: [],
+        production: true,
+        ...(cookieDomain ? { cookieDomain } : {}),
+      },
+    }).options.advanced;
+  expect(options("example.com")?.crossSubDomainCookies).toEqual({
+    enabled: true,
+    domain: "example.com",
+  });
+  expect(options()?.crossSubDomainCookies).toBeUndefined();
+});

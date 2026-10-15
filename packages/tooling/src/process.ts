@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { config } from "@dotenvx/dotenvx";
+import { readToolchain } from "./toolchain.js";
 
 export function developmentEnvironment(root: string): NodeJS.ProcessEnv {
   const env: Record<string, string> = Object.fromEntries(
@@ -50,7 +51,7 @@ export function run(
 export function turbo(root: string, task: string, args: string[] = []): Promise<void> {
   const env =
     task === "dev" || task === "build" ? developmentEnvironment(root) : { ...process.env };
-  env.RAYPX_CACHE_PLATFORM = `${process.platform}-${process.arch}-bun${Bun.version}-node24.15.0`;
+  env.RAYPX_CACHE_PLATFORM = `${process.platform}-${process.arch}-bun${Bun.version}-node${readToolchain(root).node}`;
   // Remote credentials are usable only in the protected workflow; forks cannot read them.
   if (env.RAYPX_REMOTE_CACHE_TRUSTED !== "true") {
     for (const key of ["TURBO_TOKEN", "TURBO_TEAM", "TURBO_REMOTE_CACHE_SIGNATURE_KEY"])
