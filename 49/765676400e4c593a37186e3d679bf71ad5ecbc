@@ -1,0 +1,492 @@
+packages/tooling/src/scaffold.ts
+  s_927a787f99ed8d::t_d831e0b190abfe 3,5-10,12-17,21-33,35-38,42-45,47-52,58-63,75-78
+  s_927a787f99ed8d::t_4e7c20f422661d 1-2,4,11,18-20,34,39-41,46,53-57,64-74,79-80
+packages/tooling/src/smoke.ts
+  s_927a787f99ed8d::t_232909d8c705c0 2,9,24,85-89,91,93-95
+  s_927a787f99ed8d::t_64bb866e7f9563 1,3-7,10-15,21-23,25-26,29,45-46,53,57-61,67-71,74,77-78,81,99-100,107-113,120
+  s_927a787f99ed8d::t_fcdc67e327c15a 8,119
+  s_927a787f99ed8d::t_56f4077e20b56d 16-20,27-28,30-44,47-52,54-56,62-66,72-73,75-76,79-80,82-84,90,92,96-98,101-106,114-118
+packages/tooling/src/architecture.ts
+  s_927a787f99ed8d::t_e03d5eda53f857 199,220-222
+  s_927a787f99ed8d::t_acca60eaeee828 5-15,17-20,26-41,44-49,63-64,66,70-71,80-88,97-100,106-110,114-115,117-118,121-122,124-125,128-132,137-141,145-146,150-159,167-172,176-177,181-187,189-196,200-219,225-243,245-247,252-264,269-273,276-279,288-299,303-305
+  s_927a787f99ed8d::t_4e7c20f422661d 1-4,16,21-25,42-43,50-62,65,67-69,72-79,89-96,101-105,111-113,116,119-120,123,126-127,133-136,142-144,147-149,160-166,173-175,178-180,188,197-198,223-224,244,248-251,265-268,274-275,280-287,300,308-311
+  s_927a787f99ed8d::t_d0f632d54fcefe 301-302,306-307
+packages/tooling/src/process.ts
+  s_927a787f99ed8d::t_f6a65be41f9072 7,38
+  s_927a787f99ed8d::t_64bb866e7f9563 1-6,8-23,29-37,39-42
+  s_927a787f99ed8d::t_fcdc67e327c15a 24-28
+  s_927a787f99ed8d::t_43bd929a0a90f7 43-47,50-61
+packages/tooling/src/framework.test.ts
+  s_927a787f99ed8d::t_d0f632d54fcefe 1-4,9-11,20,32-33,46-47,53-61,72,79,81-86,92-97,107,113,118-119,122,131,158-159
+  s_927a787f99ed8d::t_d831e0b190abfe 12-19,22-31,34-45,49-50,62-63,65-71,75-78,88-91,98-105,109-112,115-117,121,123-130,137-140,146-150,152-153
+  s_927a787f99ed8d::t_fcdc67e327c15a 5-8,87,132-136,141,143-145,151,154-157
+  s_927a787f99ed8d::t_9bdc40dd172590 51,74,80,106,108,114,142
+flake.nix
+  s_927a787f99ed8d::t_56f4077e20b56d 1-95
+packages/tooling/src/artifact.ts
+  s_927a787f99ed8d::t_232909d8c705c0 1-22
+  s_927a787f99ed8d::t_ae278ffadfb19d 23
+packages/tooling/src/policy.ts
+  s_927a787f99ed8d::t_d0f632d54fcefe 3,44,46-74,79,81-82
+  s_927a787f99ed8d::t_64bb866e7f9563 1-2,6-43,45,75-76,83-85
+  s_927a787f99ed8d::t_fcdc67e327c15a 4-5,77-78,80
+  s_927a787f99ed8d::t_0f8e5038209d4d 86-103,105-107,109-123,126
+packages/tooling/src/workspaces.ts
+  s_927a787f99ed8d::t_4e7c20f422661d 1-130
+  s_927a787f99ed8d::t_4a403ba0771c6c 131-134,136-145,147-149,152-154,156-167
+packages/tooling/src/artifact.test.ts
+  s_927a787f99ed8d::t_232909d8c705c0 1-20
+  s_927a787f99ed8d::t_9945946ab0aa98 21-26
+packages/tooling/src/cli.ts
+  s_927a787f99ed8d::t_64bb866e7f9563 1-4,10-13,16-17,22-26,29-31,38,54-55,62,65-66,75-76,81-84,94-97,105,109,112-116,119,124,129-130
+  s_927a787f99ed8d::t_e03d5eda53f857 5-9
+  s_927a787f99ed8d::t_acca60eaeee828 14-15,18-21,27-28,32-37,39-53,56-61,63-64,67-74,77-80,85-93,98-104,106-108,110-111,117-118,120-123,125-128,131-134
+.env.example
+  s_927a787f99ed8d::t_e5c0ad4c982e1d 2-6,8,10
+.github/workflows/ci.yml
+  s_927a787f99ed8d::t_b635d969014902 5,13,20-22,25,29-32,38,41-53,58-61,66-67,77-80,86-101
+.gitignore
+  s_927a787f99ed8d::t_31d38e89ddf8be 62-69
+.node-version
+  s_927a787f99ed8d::t_90c3a2dfda7a01 1
+.prettierignore
+  s_927a787f99ed8d::t_83224762ddea50 19-26
+AGENTS.md
+  s_927a787f99ed8d::t_d0659df2a45567 1-23,27-56,60-62
+CONTEXT.md
+  s_927a787f99ed8d::t_13a0113439fb84 1-12
+CONTRIBUTING.md
+  s_927a787f99ed8d::t_9b096477344b66 1,3-5,7-9
+DESIGN.md
+  s_927a787f99ed8d::t_4346daa903377d 3-5,7-9,11-14
+PRODUCT.md
+  s_927a787f99ed8d::t_0f3edca287e596 5-6,8,10-12,14,16-20,22,24-26
+README.md
+  s_927a787f99ed8d::t_8fde4239645124 3-5,9-11,13,15-17,22-25,27,29-32,37-39,42-45,47-48
+apps/api/AGENTS.md
+  s_927a787f99ed8d::t_aa30954200cb03 5,9-12,16-17,21-30,34,38
+apps/api/Dockerfile
+  s_927a787f99ed8d::t_b5f8eccc86ad9d 2,5,8-12,14
+apps/api/nitro.config.ts
+  s_927a787f99ed8d::t_3b1380103d6281 3-4,7-8,13
+apps/api/package.json
+  s_927a787f99ed8d::t_20db10ffbe02be 7-8,15-16,21,27,31,34,37-40
+apps/api/server/api.integration.test.ts
+  s_927a787f99ed8d::t_9c3b7246650037 2-48,50-63,65-67,70-80,82,84-90,92,94-97,99-107
+apps/api/server/api.ts
+  s_927a787f99ed8d::t_58951a7108d4d2 3-12,14-19,21-25,27-32,34,37,39-41,46-48,50,53-70,72-84,86-88,90,92,94-100,102,104-106
+apps/api/server/app.ts
+  s_927a787f99ed8d::t_af4440d6b9ff96 1,3-6,9
+apps/api/server/env.test.ts
+  s_927a787f99ed8d::t_bf824026148cce 2-5
+apps/api/server/env.ts
+  s_927a787f99ed8d::t_9c93545dd5ba37 3,5-6,8-14,17-41
+apps/api/server/runtime.plugin.ts
+  s_927a787f99ed8d::t_a00195c21cac20 2,5-6
+apps/api/server/runtime.ts
+  s_927a787f99ed8d::t_3c99ecb68d0b99 1-46,48-51,54
+apps/api/tests/auth.integration.test.ts
+  s_927a787f99ed8d::t_8d613d9139b3ea 1-10,12-51,53,55-57,59-66,68-89,91-111,113-131
+apps/api/tsconfig.json
+  s_927a787f99ed8d::t_7f03d282d0b2c5 3-9
+apps/api/vite.config.ts
+  s_927a787f99ed8d::t_ad42e33e4d1331 5
+apps/api/vitest.config.ts
+  s_927a787f99ed8d::t_23da628cb72b92 2
+apps/api/vitest.postgres.config.ts
+  s_927a787f99ed8d::t_f6e84a4b2a5c68 2-3
+apps/cli/AGENTS.md
+  s_927a787f99ed8d::t_c10de848c34bdd 1-27
+apps/cli/README.md
+  s_927a787f99ed8d::t_db4309dd8d2918 1,3,5-19
+apps/cli/package.json
+  s_927a787f99ed8d::t_f51867ddbae6a3 2-3,5-6,8,10,13-14,17-18,21-28
+apps/cli/src/build.ts
+  s_927a787f99ed8d::t_75950a1581e1b2 1,3-12
+apps/cli/src/commands/index.ts
+  s_927a787f99ed8d::t_935a5043028f5a 1-4,6-48,52-53,56-57
+apps/cli/src/main.ts
+  s_927a787f99ed8d::t_ff6343bd9552c8 1-19,21-27
+apps/cli/src/runtime/errors.ts
+  s_927a787f99ed8d::t_b64d08bbaa950e 1,3,9-14
+apps/cli/src/runtime/files/index.ts
+  s_927a787f99ed8d::t_1770f54dea2995 1-6,8-9,11-26,28-43,45-46,48-54,56-120,122-127,129-138,140-155,157-193,195-199,201-257
+apps/cli/src/runtime/index.ts
+  s_927a787f99ed8d::t_61d7d3c9fb074f 1-24,26,28,32-120,122-140,144
+apps/cli/src/runtime/jobs/index.ts
+  s_927a787f99ed8d::t_c24c9582a02d73 1-6,8-16,18-21,23-36,40-41,43-52,54-63,65-67,69-98,100-118,120-127,129-165,168-176
+apps/cli/src/runtime/process/index.ts
+  s_927a787f99ed8d::t_4559a50c578291 1-4,6-20,22-45,47-60,62-99,101-108,110-112,114-117,119,121-190
+apps/cli/src/runtime/runtime.test.ts
+  s_927a787f99ed8d::t_e960ac4708aff3 1-2,4-35,37-50,52-70,72-77,79-84,86-88,90-95,97-99,101-111,113,116-126,128-135,137-143,145-160,162-182
+apps/cli/src/runtime/state/index.ts
+  s_927a787f99ed8d::t_fbeec8b37424b2 1-6,8-23,25-32,34-40,42-64,66-67,70-157
+apps/cli/src/smoke.ts
+  s_927a787f99ed8d::t_dcf268b21d48be 1-5,7-18,20-36,38-59,61-93,95-112,115-127,129-151
+apps/cli/src/transport/stdio.ts
+  s_927a787f99ed8d::t_f3d55cb96e3784 1-3,5-48,50-56,58-61,63-87
+apps/cli/tsconfig.json
+  s_927a787f99ed8d::t_680c917809af0b 3-9
+apps/desktop/AGENTS.md
+  s_927a787f99ed8d::t_ab096fe1c1b280 5,9,13,17-27,31,33
+apps/desktop/CHANGELOG.md
+  s_927a787f99ed8d::t_7897a686349036 5,7-11,15-18,20,22,26
+apps/desktop/electrobun.config.ts
+  s_927a787f99ed8d::t_6e54556b0c7d10 26-27
+apps/desktop/index.html
+  s_927a787f99ed8d::t_0bc5a168d5c697 1-31
+apps/desktop/native/dev.ts
+  s_927a787f99ed8d::t_829189a120dff7 1,3-9,11-22,24,26-41,43-47,49,51-72
+apps/desktop/native/engine.ts
+  s_927a787f99ed8d::t_7bf2bfa05821fd 1-17,19-30,32-39,41-44,46-55,57-61,63-69,71-74,77-83,85-120,122-149,151-176
+apps/desktop/native/main.ts
+  s_927a787f99ed8d::t_b3c8f8d2a2d7c4 2-5,34,72-95,104,106-121,134,147-151,156,190-195
+apps/desktop/native/preferences.test.ts
+  s_927a787f99ed8d::t_a709c255d99ca8 2-5,7-19
+apps/desktop/native/preferences.ts
+  s_927a787f99ed8d::t_8500c0c2f04bb1 1-23,26-29,31-37,39-43,46-48
+apps/desktop/native/prepare-cli.ts
+  s_927a787f99ed8d::t_5d4a4612438f4b 1,3-24
+apps/desktop/native/rpc.ts
+  s_927a787f99ed8d::t_93196f815668fd 1,3-6,8-11,16,23-26,32
+apps/desktop/native/run-smoke.ts
+  s_927a787f99ed8d::t_177204a6d7ccd6 3,5-27,29-54,56-59,61,64-71
+apps/desktop/native/smoke.ts
+  s_927a787f99ed8d::t_72c5c96857b050 2-13,16-21,23-35,42,52-53,56,58-59,61-68,73,80-86,88-188,190-214,216-217,219-224,226-235,237-238,240-241,243-249,251,254-255,258,260-261,264,266,269-273,275-276,278-283,285-299,301-302,305
+apps/desktop/package.json
+  s_927a787f99ed8d::t_df1f193b72427a 7-9,18-19,22-24,28,30,35-37,39,42,55-61
+apps/desktop/src/account.ts
+  s_927a787f99ed8d::t_c3b88a599f1187 1-19
+apps/desktop/src/form-data.ts
+  s_927a787f99ed8d::t_e7f018e9d72957 1-3
+apps/desktop/src/lib/desktop.ts
+  s_927a787f99ed8d::t_4115dc5edbe5bc 1,5-10,12-16,19-27,32-34,37-56,59-64
+apps/desktop/src/main.tsx
+  s_927a787f99ed8d::t_72529bcdef9e45 1-7,9-17
+apps/desktop/src/pages/account.tsx
+  s_927a787f99ed8d::t_db0ef13ad9854a 1-3,5-6,8-12,14-16,18-29,31,33-35,38-39,41,43,47-89,91-123
+apps/desktop/src/pages/auth.tsx
+  s_927a787f99ed8d::t_3e8790b15e2209 1-3,6-8,10-37,39-83,85,87,91-156,158-163,165,167-177,179-196,198-214
+apps/desktop/src/pages/files.tsx
+  s_927a787f99ed8d::t_d1f86b938d0c26 1-14,16-43,45-51,54-70,72-100,102-108,111,113,116-119,121-153,155-156,158-168,170-202,206-232,234-245,247-304,306-412,415-447,449
+apps/desktop/src/pages/jobs.tsx
+  s_927a787f99ed8d::t_8b096be8056ac7 1-3,5-8,10-63,65-98,100,103-105,107-108,110,112,115-154,156-170,172-319,321-325,327-334,336-340,342,345-349,351-360,363-402
+apps/desktop/src/pages/settings.tsx
+  s_927a787f99ed8d::t_f41c20f5f68515 1-5,7-11,13-16,18-71
+apps/desktop/src/pages/terminal.tsx
+  s_927a787f99ed8d::t_460e4ca4036238 1-6,8-11,13-103,105,107-127,129-132,134,137-176,178-181,183-186,188,192-200,202-220,222-257
+apps/desktop/src/router.tsx
+  s_927a787f99ed8d::t_3986ae64178180 1-27,29-130,132-191,194
+apps/desktop/src/styles.css
+  s_927a787f99ed8d::t_60eb8500fe463b 2-1018
+apps/desktop/vite.config.ts
+  s_927a787f99ed8d::t_086b8b6eef4d76 4-5,7-10,17-18
+apps/mobile/.gitignore
+  s_927a787f99ed8d::t_d2e13217442e2f 1-5
+apps/mobile/AGENTS.md
+  s_927a787f99ed8d::t_97cb7f801e1d62 1,5-6,10-14,18-19,23-34,38-41
+apps/mobile/app.json
+  s_927a787f99ed8d::t_d5ff5cbdf569d5 1-12,14-15,17-22
+apps/mobile/app/_layout.tsx
+  s_927a787f99ed8d::t_7f86dd4029b7ee 1,3-16,18-48,51-55,58-61,66-83
+apps/mobile/app/index.tsx
+  s_927a787f99ed8d::t_cb502671d37c4e 1-5,7-20,22-24,28-63,66-106,109-123,125,127-197,200-204,206-207,210-216,218-262,264-269
+apps/mobile/app/settings.tsx
+  s_927a787f99ed8d::t_d8fcb29dd481f9 1-18,20-34,36-61,64-72,74-84
+apps/mobile/expo-env.d.ts
+  s_927a787f99ed8d::t_618a0eaf82774d 1
+apps/mobile/global.css
+  s_927a787f99ed8d::t_46b392a6fc8a3c 1-5
+apps/mobile/metro.config.cjs
+  s_927a787f99ed8d::t_bbf5d19445fdd8 1-5
+apps/mobile/package.json
+  s_927a787f99ed8d::t_b81f2531d5b07c 2,6,8-11,14-16,18-26,28-32,35,37-45
+apps/mobile/scripts/doctor.ts
+  s_927a787f99ed8d::t_f9d3a2e097d240 1-2,4-13,15-17
+apps/mobile/src/account.ts
+  s_927a787f99ed8d::t_5cc90ad8056d63 1,3-9
+apps/mobile/src/components.tsx
+  s_927a787f99ed8d::t_7ceb73314c293f 1,3-5,7-11,13-23,25-38,40-50,52-92
+apps/mobile/tsconfig.json
+  s_927a787f99ed8d::t_aba18732723dfc 2,4-17
+apps/web/.gitignore
+  s_927a787f99ed8d::t_f2693f71498797 1-2
+apps/web/AGENTS.md
+  s_927a787f99ed8d::t_ee00cfc41e564a 5-6,10-14,18-20,24-30,32-33,37,40
+apps/web/index.html
+  s_927a787f99ed8d::t_6f9beb76965508 1-32
+apps/web/package.json
+  s_927a787f99ed8d::t_d0c3d724ff9dba 7-9,19,29,43-46
+apps/web/src/account.ts
+  s_927a787f99ed8d::t_88984eab2f3799 1-19
+apps/web/src/form-data.ts
+  s_927a787f99ed8d::t_94233b06ac1344 1-3
+apps/web/src/main.tsx
+  s_927a787f99ed8d::t_0545ebb3f68cc2 1-7,9-14,16-17
+apps/web/src/pages/account.tsx
+  s_927a787f99ed8d::t_edba7f973ee5d0 1-3,5-6,8-12,14-35,38-39,43,47-89,91-123
+apps/web/src/pages/auth.component.test.tsx
+  s_927a787f99ed8d::t_bab965cc578e24 3,5-6,9-11,22-30,32,35,37-41,44-63,65-79
+apps/web/src/pages/auth.tsx
+  s_927a787f99ed8d::t_86147f4aad0842 2-8,10-11,13-28,31-43,45-88,91-206,208-210,212-214
+apps/web/src/pages/settings.component.test.tsx
+  s_927a787f99ed8d::t_6bf8d5d39f10f6 2-6,9-14,16-27,29-32
+apps/web/src/pages/settings.tsx
+  s_927a787f99ed8d::t_e02f38f17ac1d2 1-5,7-11,13-21,23-51,53-56,58-69,71-72
+apps/web/src/router.tsx
+  s_927a787f99ed8d::t_f4bf53ca001077 1-14,16-58,60-96,99
+apps/web/src/styles.css
+  s_927a787f99ed8d::t_684411f0902882 6,8-9,12,14,16-17,20-25,27-231,233-234,236-412,414-593,597-599,602-607
+apps/web/src/test/setup.ts
+  s_927a787f99ed8d::t_926cbd72eed28d 1-2,4,6-8
+apps/web/tsconfig.json
+  s_927a787f99ed8d::t_c5a14ac2a29243 3
+apps/web/vite.config.ts
+  s_927a787f99ed8d::t_e3549d7b8f20b4 2-3,5-12
+apps/web/vitest.config.ts
+  s_927a787f99ed8d::t_316cb50e0e614d 2
+bun.lock
+  s_927a787f99ed8d::t_338d8fe5a8d465 8,10,28,34,38,41,46-62,68,70,75-77,82,97-98,101-103,105-113,115-119,122,124-125,133,143,164,168-169,172-174,237,254-255,258,265,291,303,309-310,312-314,336-352,362-363,389-391,393,395,397,399,401,403,405,407,409,411,413,415,417,419,421,423,425,427,429,431,433,435,437,439,441,443,445,447,449,451,453-469,471-523,529,543-544,645-655,657-711,729-731,733,741-742,941,943,945,947,949,951,953,955,957,959,961,963,965,967,969,971,973,975,977,979,981,983,985,987,989,991,993,995,997,999,1001,1003,1005,1007,1009,1011,1013,1015,1017,1019,1021,1023,1025,1027,1029,1031,1033,1035,1037,1039,1041,1043,1045,1047,1049,1051,1053,1055,1057,1059,1061,1063,1065,1067,1069,1161,1163,1165,1169,1171,1173,1175,1177,1267-1271,1323-1324,1329,1331-1335,1343,1347,1349,1351,1357-1359,1361,1363,1365,1367,1369,1371,1375,1387,1389,1393,1397,1399,1403,1407,1413-1415,1417,1419,1421,1423,1425,1427,1429,1431,1433,1439,1441,1443,1445,1447-1453,1457-1458,1465,1467,1469,1479,1481,1489,1493,1497,1505,1507,1509,1511,1515,1517,1519,1521,1523,1525,1527,1529,1531,1533,1535,1537,1539,1541,1543,1545,1547,1549,1551,1553,1555,1557,1559,1561,1563,1565,1567,1569,1571,1573,1575,1577,1579,1581,1583,1585,1587,1589,1591,1593,1595,1597,1603-1605,1611,1613,1615,1617,1619,1621,1623,1625,1627,1629,1631,1633,1635,1637,1639,1643,1645,1649,1651,1661,1663,1665,1671,1673,1675,1677,1683,1693,1695,1699,1701,1703,1705,1709,1711,1713,1715,1717,1719,1721,1723,1735-1736,1749,1751,1753,1779,1781,1783,1785,1791,1795,1797,1801,1803,1805,1807,1809,1811,1813,1815,1817,1819,1821,1823,1825,1827,1829,1831,1833,1835,1837,1843-1844,1853-1855,1861-1863,1875,1877,1879,1881,1883,1885,1893,1895,1897,1899,1901,1915,1919,1921,1937,1949,1951,1953,1955,1963,1967,1969,1971,1973,1975,1977,1979,1981,1983,1985,1987,1989,1991,1993,1995,1997,1999,2001,2003,2005,2007,2009,2011,2013,2015-2019,2029,2031,2033,2035,2041,2043,2045,2047,2051,2055-2057,2063,2065,2067,2069,2071,2073,2075,2077,2079,2083,2085,2087,2089,2091,2093,2095,2099,2101,2103,2105,2107,2109,2111,2113,2115,2117,2119,2121,2123,2129,2133-2134,2145-2147,2149,2165,2167,2169,2171,2173,2175,2177,2203,2205,2207,2209,2211,2213,2219-2220,2223,2225,2227,2229,2231-2233,2235,2237,2239,2247-2248,2253,2255,2257,2259,2263,2269,2271,2275,2279,2281,2285-2287,2291-2292,2297-2300,2321,2323,2325,2333-2339,2341,2343,2345,2347,2349,2351,2353-2355,2373,2375,2377,2381,2383,2387,2389,2391,2393,2395,2401,2403,2405,2407,2409,2411,2413,2415,2417,2419,2421,2423,2425,2427,2429,2431,2433,2435,2437,2439,2441,2443,2445,2447,2449,2451,2453,2455,2457,2459,2461,2463,2465,2467,2469,2471,2473,2475,2477,2479,2481,2483,2485,2487,2489,2491,2493,2495,2497,2499,2501,2503,2505,2509,2511,2513,2515,2517,2519,2521,2523,2525,2527,2529,2531,2533,2535,2537,2539,2541,2543,2545,2547,2549,2551,2553,2555,2557,2559,2561,2563,2565,2567,2569,2571,2573,2575,2577,2579,2581,2583,2585,2587,2589
+bunfig.toml
+  s_927a787f99ed8d::t_597bc7fb340db5 1-4
+compose.yaml
+  s_927a787f99ed8d::t_7ec045cd9e0d5e 1,7-9,11,13,15,20-21
+docs/README.md
+  s_927a787f99ed8d::t_3cb8f1f31417b3 1-12
+docs/architecture/0034-extensible-foundation.md
+  s_927a787f99ed8d::t_07d67085287bc5 1,3-4,6-9,11-13,15-17,19-21
+docs/architecture/README.md
+  s_927a787f99ed8d::t_767f28785ec3b9 1,3-5,7,9-12,14-16,18,20-22,24-28,30,32-36,38-42,44,46-47,49-52
+docs/development/foundation-acceptance.md
+  s_927a787f99ed8d::t_a8af761333e56c 1,3-4,6-18,20-33
+docs/development/getting-started.md
+  s_927a787f99ed8d::t_f87a817b83249d 1,3-5,7-10,12-14,16-18,20-22,24-27
+docs/development/testing.md
+  s_927a787f99ed8d::t_e28a6f23945edf 1-32
+docs/development/workspaces.md
+  s_927a787f99ed8d::t_3a1e5fee7ed5ed 1-37
+docs/history/README.md
+  s_927a787f99ed8d::t_f0b6e2828e417b 1-5
+docs/history/architecture/README.md
+  s_927a787f99ed8d::t_6074d632878026 1-126
+docs/history/development/getting-started.md
+  s_927a787f99ed8d::t_e03980318d970b 1-141
+e2e/.gitignore
+  s_927a787f99ed8d::t_92ea3f88fb848c 1-2
+e2e/AGENTS.md
+  s_927a787f99ed8d::t_578534d319ef70 5-6,10,14-19,23
+e2e/package.json
+  s_927a787f99ed8d::t_2bb361fe41cbe3 8,12-17
+e2e/playwright.config.ts
+  s_927a787f99ed8d::t_50114a51125ccf 1,3-27
+e2e/tests/foundation.spec.ts
+  s_927a787f99ed8d::t_193f6815360e7d 1-16,20-32,35-46,48-51,53-60,62-83,86-87,89-98,100-153
+e2e/tsconfig.json
+  s_927a787f99ed8d::t_e49d15c213745b 3-6
+flake.lock
+  s_927a787f99ed8d::t_877cf39ce7b2d0 1-10,12-17,19-23,25-27
+knip.json
+  s_927a787f99ed8d::t_a400c9d4c25fcc 3,10-11,14,16,18-22
+package.json
+  s_927a787f99ed8d::t_2ce863a15a904b 18-24,32,58-59,66-86,92-125,128,130,159-161
+packages/auth/AGENTS.md
+  s_927a787f99ed8d::t_8c23a8c28242ba 1,5,9,13,17,21-23
+packages/auth/package.json
+  s_927a787f99ed8d::t_42240f40ed7306 2,7-10,21-23,28-41
+packages/auth/src/client.ts
+  s_927a787f99ed8d::t_8b088047d9774f 1
+packages/auth/src/native.ts
+  s_927a787f99ed8d::t_e8cab4aa7e1ce4 2-25
+packages/auth/src/server.test.ts
+  s_927a787f99ed8d::t_56ef39160fabc0 1-16,18-24,26-40,42-48,51-61
+packages/auth/src/server.ts
+  s_927a787f99ed8d::t_ae9082b588a9f2 1-8,10-12,14-51,53-55,59-60,70,78-79,81,84-85,90-125
+packages/auth/src/types.ts
+  s_927a787f99ed8d::t_81587e8593e73a 1-2,5-7,9-11
+packages/auth/tsconfig.json
+  s_927a787f99ed8d::t_aa7173585133fc 3-4
+packages/client/AGENTS.md
+  s_927a787f99ed8d::t_d969ea19b96f61 5,9,13,17,21
+packages/client/package.json
+  s_927a787f99ed8d::t_d16e033e57766f 7,25-28
+packages/client/src/index.test.ts
+  s_927a787f99ed8d::t_51e051bf3af4c4 1-12,14-19
+packages/client/src/index.ts
+  s_927a787f99ed8d::t_67541ec3b166e8 4,15,19-31
+packages/contracts/AGENTS.md
+  s_927a787f99ed8d::t_433ce8f6728a90 5,9,13,17,21
+packages/contracts/package.json
+  s_927a787f99ed8d::t_d9b4649c8df06a 8-9,26-29
+packages/contracts/src/api.test.ts
+  s_927a787f99ed8d::t_ccaf090e5a6a36 2-6,8-11
+packages/contracts/src/api.ts
+  s_927a787f99ed8d::t_672ca91411e5e3 4-7,9-18,21,23-27
+packages/contracts/src/index.ts
+  s_927a787f99ed8d::t_caa9d37ea2aa31 1
+packages/contracts/src/local.ts
+  s_927a787f99ed8d::t_c8b240220165e1 3-10,12-19,21-87,89-90,92-116,118-120,122-138
+packages/db/AGENTS.md
+  s_927a787f99ed8d::t_75df4fc8a6ef9d 5,9,13,17,21,24
+packages/db/NOTICE.md
+  s_927a787f99ed8d::t_4bd92ef79f7c67 1,3-5,7-10
+packages/db/drizzle-foundation/20261015045045_goofy_meltdown/migration.sql
+  s_927a787f99ed8d::t_e2d64cc7105a28 1-54
+packages/db/drizzle-foundation/20261015045045_goofy_meltdown/snapshot.json
+  s_927a787f99ed8d::t_e68f2ba832c2f2 1-6,8,10-11,14-17,20-23,26-29,32-35,38-48,51-61,64-74,77-87,90-100,103-113,116-126,129-139,142-152,155-165,168-178,181-191,194-204,207-217,219-557,559-668
+packages/db/drizzle.config.ts
+  s_927a787f99ed8d::t_1935a925b2051f 5-8
+packages/db/package.json
+  s_927a787f99ed8d::t_eb8b5dc9157f61 9,18-19,30-33
+packages/db/src/commands.ts
+  s_927a787f99ed8d::t_b0790f46341693 1-4
+packages/db/src/connection.ts
+  s_927a787f99ed8d::t_671fea5c7b5572 1-2,4-6,8-9,11-12,15,17,19-22,24
+packages/db/src/env.ts
+  s_927a787f99ed8d::t_c78430a99b5f8e 4,7
+packages/db/src/index.ts
+  s_927a787f99ed8d::t_e62a5c447ae9e5 5
+packages/db/src/schema.test.ts
+  s_927a787f99ed8d::t_ab6983e9197e6b 1-9
+packages/db/src/schema.ts
+  s_927a787f99ed8d::t_ec033d577bf035 1-74
+packages/db/tsconfig.json
+  s_927a787f99ed8d::t_7cf54b668cf147 3
+packages/db/vitest.config.ts
+  s_927a787f99ed8d::t_02f40e872106b8 2
+packages/i18n/AGENTS.md
+  s_927a787f99ed8d::t_444a627d63f435 5-6,10-16,20-21,25-31,33,37
+packages/i18n/package.json
+  s_927a787f99ed8d::t_640aa1346f3e14 12-16,40-57
+packages/i18n/src/browser.component.test.tsx
+  s_927a787f99ed8d::t_378943c56865a1 2,4,6-10,12,14-23,26-40,42-56
+packages/i18n/src/browser.tsx
+  s_927a787f99ed8d::t_554418fc272be1 1-4,6-14,16-26,28-29,31-32,34-52,54-55
+packages/i18n/src/client.test.tsx
+  s_927a787f99ed8d::t_3c37d5fd53c23c 14-15
+packages/i18n/src/client.ts
+  s_927a787f99ed8d::t_1b3302ee450718 1-4,12
+packages/i18n/src/client/storage.test.ts
+  s_927a787f99ed8d::t_a71678cd1413b7 2-3
+packages/i18n/src/client/storage.ts
+  s_927a787f99ed8d::t_6622cdff53dcaa 5-8,35-37
+packages/i18n/src/cookie.ts
+  s_927a787f99ed8d::t_1f7e3729a8ffb1 1-2,4-12
+packages/i18n/src/errors.test.ts
+  s_927a787f99ed8d::t_aeecde264f62bb 8
+packages/i18n/src/errors.ts
+  s_927a787f99ed8d::t_491bddb0c575f4 1
+packages/i18n/src/formatter.ts
+  s_927a787f99ed8d::t_065303ad444397 3
+packages/i18n/src/index.test.ts
+  s_927a787f99ed8d::t_ee9fa79c16eaf7 11
+packages/i18n/src/index.ts
+  s_927a787f99ed8d::t_5abfbf94e901d3 8-15,23,32
+packages/i18n/src/language-provider.tsx
+  s_927a787f99ed8d::t_c7d25b8fbdc1de 1-4,6-14,17-19,22-27,30-34
+packages/i18n/src/messages/en.ts
+  s_927a787f99ed8d::t_4ec3c7d7b182e7 1-35,37,40-41,43-82,84-171
+packages/i18n/src/messages/index.ts
+  s_927a787f99ed8d::t_fa4adb4bdecc93 1-3
+packages/i18n/src/messages/zh.ts
+  s_927a787f99ed8d::t_de1afe479ac633 1-167
+packages/i18n/src/native.ts
+  s_927a787f99ed8d::t_e67dbb6c9c338a 1-2,4-8
+packages/i18n/src/normalize.ts
+  s_927a787f99ed8d::t_7a009d1e36a2c7 1-2,4-9
+packages/i18n/src/preferences.test.ts
+  s_927a787f99ed8d::t_ef7c7dc9b417fd 2-4,6-13,15-21
+packages/i18n/src/preferences.ts
+  s_927a787f99ed8d::t_31b991ab715e63 1-14
+packages/i18n/src/react.ts
+  s_927a787f99ed8d::t_3b69265eef2912 1-8,12-16
+packages/i18n/src/resolve.ts
+  s_927a787f99ed8d::t_ee85010241c6ef 1-2,4-6
+packages/i18n/src/runtime.ts
+  s_927a787f99ed8d::t_16bf84edb76025 8
+packages/i18n/src/server.test.ts
+  s_927a787f99ed8d::t_f51efa45e94f0a 3
+packages/i18n/src/server.ts
+  s_927a787f99ed8d::t_1f66cfbd880620 2,6-9
+packages/i18n/src/testing.test.ts
+  s_927a787f99ed8d::t_080afc1f733ca1 3
+packages/i18n/src/translator.test.ts
+  s_927a787f99ed8d::t_09872ca503c1e4 3
+packages/i18n/src/translator.ts
+  s_927a787f99ed8d::t_a8eb306376b0d5 3
+packages/i18n/src/types-entry.ts
+  s_927a787f99ed8d::t_ca9d3edd0f3700 1-3
+packages/i18n/src/types.ts
+  s_927a787f99ed8d::t_4a0b03494b6245 7
+packages/mail/AGENTS.md
+  s_927a787f99ed8d::t_3b78e4956c8d57 5,9,13,17,21
+packages/mail/package.json
+  s_927a787f99ed8d::t_5b0ad87a08b2fa 8,16,27-36
+packages/mail/src/server.ts
+  s_927a787f99ed8d::t_4a48175bb1c609 1-54
+packages/mail/src/templates.test.ts
+  s_927a787f99ed8d::t_8cdd8f6432e907 1-9,11-23,25-51
+packages/mail/src/templates.ts
+  s_927a787f99ed8d::t_9e13c8e4284c35 1-39,41-43
+packages/mail/src/types.ts
+  s_927a787f99ed8d::t_86807aa02e42fb 1-2,6-7,11-20
+packages/mail/tsconfig.json
+  s_927a787f99ed8d::t_5fdec2da088bec 7
+packages/tooling/AGENTS.md
+  s_927a787f99ed8d::t_b789298d491e32 1-25
+packages/tooling/package.json
+  s_927a787f99ed8d::t_2b687662287d47 2,5-6,8,12-13,16-17,20,22-25
+packages/tooling/src/cache.integration.test.ts
+  s_927a787f99ed8d::t_c4c8668ba40646 1-9,11,13,16-23,25-48,50-112,115-124,126-158,160-167
+packages/tooling/tsconfig.json
+  s_927a787f99ed8d::t_7651cad088217d 3-6
+packages/tooling/vitest.config.ts
+  s_927a787f99ed8d::t_4a472300a55360 1
+packages/ui/AGENTS.md
+  s_927a787f99ed8d::t_aec7b8d5f7042f 5-6,10-15,19-20,24-33,37-38,40
+packages/ui/package.json
+  s_927a787f99ed8d::t_bfe1eb1b2886de 38-40,43,48-49,70-85
+packages/ui/scripts/generate-theme.ts
+  s_927a787f99ed8d::t_acb203e903375b 1-2,4-30
+packages/ui/src/styles/globals.css
+  s_927a787f99ed8d::t_c1e38333baa2e7 3
+packages/ui/src/styles/native.css
+  s_927a787f99ed8d::t_7768c1de896bc4 1-44,46-86
+packages/ui/src/styles/theme.css
+  s_927a787f99ed8d::t_b286fd862dcfdf 1-45,47-91
+packages/ui/src/test/setup.ts
+  s_927a787f99ed8d::t_29db213e0b020f 1-2,4,6-7
+packages/ui/src/theme/client.ts
+  s_927a787f99ed8d::t_21a58261db44f4 1-2
+packages/ui/src/theme/index.ts
+  s_927a787f99ed8d::t_0b6a02a05701fc 2
+packages/ui/src/theme/provider.tsx
+  s_927a787f99ed8d::t_9760b0870b964e 50,85,135-137,139
+packages/ui/src/theme/provider/component.test.tsx
+  s_927a787f99ed8d::t_63d0f6e0077979 7
+packages/ui/src/theme/tokens.ts
+  s_927a787f99ed8d::t_e8956da1d9790f 1-46,48-95
+skills/raypx-infra/SKILL.md
+  s_927a787f99ed8d::t_5d768fbf6205f1 3,6,8-11,13
+test.config.ts
+  s_927a787f99ed8d::t_9317b9cfba2469 24
+turbo.json
+  s_927a787f99ed8d::t_944f0157b67d06 13-15,17,24,28-30,32-35,37-40,42-43,46,48,58,60,62,65-66,68-69,71,74,76,80,82-85,92-113,115,117-120,122,124-125,128
+vite.config.ts
+  s_927a787f99ed8d::t_6f07f56b29a9a6 9-18,20-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "49765676400e4c593a37186e3d679bf71ad5ecbc",
+  "prompts": {},
+  "sessions": {
+    "s_927a787f99ed8d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13aa1-6438-7621-8030-6bbbadb02497",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
