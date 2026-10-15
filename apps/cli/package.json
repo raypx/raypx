@@ -18,10 +18,10 @@
     "croner": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "catalog:tooling",
-    "@types/node": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling",
-    "vite-plus": "catalog:tooling"
+    "@types/bun": "catalog:dev",
+    "@types/node": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev",
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "app",

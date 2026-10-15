@@ -1,7 +1,7 @@
 # Raypx visual system
 
 Keep original logos and icons. Use neutral light/dark semantic tokens, Base UI
-for DOM primitives, Tailwind v4, Phosphor icons and the existing system font stack.
+for DOM primitives, Tailwind v4, Lucide icons and the existing system font stack.
 Primary actions are dark on light backgrounds and light on dark backgrounds.
 
 Web has a quiet account/settings shell. Desktop adds Files, Automations and

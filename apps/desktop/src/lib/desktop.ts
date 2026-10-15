@@ -10,7 +10,7 @@ export function onLocalEvent(listener: (event: LocalEvent) => void) {
   };
 }
 export function isDesktop() {
-  return "__electrobunWebviewId" in window;
+  return typeof window !== "undefined" && "__electrobunWebviewId" in window;
 }
 let bridge: ReturnType<typeof createBridge> | undefined;
 async function createBridge() {

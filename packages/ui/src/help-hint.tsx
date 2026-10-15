@@ -1,4 +1,4 @@
-import { Info } from "@phosphor-icons/react";
+import { Info } from "lucide-react";
 import { Button } from "./components/ui/button";
 import {
   Popover,

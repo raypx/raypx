@@ -11,6 +11,8 @@ preferences. Expo Web is not a replacement for the separate DOM Web application.
 - `app/index.tsx` owns account and authentication forms.
 - `app/settings.tsx` owns language and appearance preferences.
 - `src/account.ts` creates the SecureStore-backed native auth client and RPC SDK.
+- `@raypx/auth/hooks` owns authentication actions and their request state; this
+  app owns validation, translations, mode changes and clearing local form fields.
 - `global.css` imports Uniwind and the native semantic theme entry from UI.
 
 ## Ownership

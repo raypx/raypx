@@ -2,20 +2,10 @@ import { useEffect, useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { useLocale, useTranslations } from "@raypx/i18n/native";
 import { Action, Field, Heading, Notice, Screen } from "../src/components";
+import { useAuthActions } from "@raypx/auth/hooks";
 import { apiClient, authClient, webUrl } from "../src/account";
 
 type Mode = "login" | "signup" | "forgot" | "verify";
-function errorKey(code?: string) {
-  if (code === "MAIL_NOT_CONFIGURED") return "mailUnavailable";
-  if (code === "INVALID_EMAIL_OR_PASSWORD" || code === "INVALID_PASSWORD")
-    return "invalidCredentials";
-  if (code === "EMAIL_NOT_VERIFIED") return "emailNotVerified";
-  if (code === "USER_ALREADY_EXISTS" || code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL")
-    return "emailTaken";
-  if (code === "PASSWORD_TOO_SHORT") return "passwordShort";
-  if (code === "TOO_MANY_REQUESTS") return "rateLimited";
-  return "generic";
-}
 export default function Account() {
   const c = useTranslations("common");
   const t = useTranslations("auth");
@@ -25,9 +15,19 @@ export default function Account() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const auth = useAuthActions({ client: authClient, locale, webUrl });
+  const { busy } = auth;
+  const [localError, setLocalError] = useState("");
   const [message, setMessage] = useState("");
+  const error =
+    localError ||
+    (!auth.error
+      ? ""
+      : auth.error.kind !== "auth"
+        ? c("networkError")
+        : auth.error.key === "generic"
+          ? c("error")
+          : t(auth.error.key));
   const [account, setAccount] = useState<{ id: string; name: string; email: string } | null>(null);
   const userId = session.data?.user.id;
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function Account() {
           if (active) setAccount(value);
         })
         .catch(() => {
-          if (active) setError(c("networkError"));
+          if (active) setLocalError(c("networkError"));
         });
     return () => {
       active = false;
@@ -48,79 +48,51 @@ export default function Account() {
   }, [userId, c]);
   function change(value: Mode) {
     setMode(value);
-    setError("");
+    auth.clearError();
+    setLocalError("");
     setMessage("");
     setPassword("");
   }
   async function submit() {
     if (busy) return;
+    auth.clearError();
     if (
       (mode === "signup" && password.length < 8) ||
       (mode === "login" && !password) ||
       !email.trim() ||
       (mode === "signup" && !name.trim())
     ) {
-      setError(mode === "signup" && password.length < 8 ? t("passwordShort") : c("requiredFields"));
+      setLocalError(
+        mode === "signup" && password.length < 8 ? t("passwordShort") : c("requiredFields"),
+      );
       return;
     }
-    setBusy(true);
-    setError("");
+    setLocalError("");
     setMessage("");
-    try {
-      const fetchOptions = { headers: { "Accept-Language": locale } };
-      const result =
-        mode === "login"
-          ? await authClient.signIn.email({ email: email.trim(), password, fetchOptions })
-          : mode === "signup"
-            ? await authClient.signUp.email({
-                email: email.trim(),
-                name: name.trim(),
-                password,
-                callbackURL: `${webUrl}/verify-email?verified=1`,
-                fetchOptions,
-              })
-            : mode === "forgot"
-              ? await authClient.requestPasswordReset({
-                  email: email.trim(),
-                  redirectTo: `${webUrl}/reset-password`,
-                  fetchOptions,
-                })
-              : await authClient.sendVerificationEmail({
-                  email: email.trim(),
-                  callbackURL: `${webUrl}/verify-email?verified=1`,
-                  fetchOptions,
-                });
-      if (result.error) {
-        const key = errorKey(result.error.code);
-        setError(key === "generic" ? c("error") : t(key));
-      } else if (mode === "signup") {
-        setMode("verify");
-        setMessage(t("verifyIntro"));
-        setPassword("");
-      } else if (mode === "forgot") setMessage(t("resetSent"));
-      else if (mode === "verify") setMessage(t("verifySent"));
-      else setPassword("");
-    } catch {
-      setError(c("networkError"));
-    } finally {
-      setBusy(false);
-    }
+    const result =
+      mode === "login"
+        ? await auth.signIn({ email, password })
+        : mode === "signup"
+          ? await auth.signUp({ name, email, password })
+          : mode === "forgot"
+            ? await auth.requestPasswordReset({ email })
+            : await auth.sendVerificationEmail({ email });
+    if (result.status !== "success") return;
+    if (mode === "signup") {
+      setMode("verify");
+      setMessage(t("verifyIntro"));
+      setPassword("");
+    } else if (mode === "forgot") setMessage(t("resetSent"));
+    else if (mode === "verify") setMessage(t("verifySent"));
+    else setPassword("");
   }
   async function signOut() {
-    setBusy(true);
-    setError("");
-    try {
-      const result = await authClient.signOut();
-      if (result.error) setError(c("error"));
-      else {
-        setAccount(null);
-        setPassword("");
-      }
-    } catch {
-      setError(c("networkError"));
-    } finally {
-      setBusy(false);
-    }
+    if (busy) return;
+    setLocalError("");
+    await auth.signOut(() => {
+      setAccount(null);
+      setPassword("");
+    });
   }
   const user = account ?? session.data?.user;
   return (
@@ -259,7 +231,7 @@ export default function Account() {
           <Action
             secondary
             onPress={() =>
-              void Linking.openURL(`${webUrl}/login`).catch(() => setError(c("error")))
+              void Linking.openURL(`${webUrl}/login`).catch(() => setLocalError(c("error")))
             }
           >
             {t("openWeb")}

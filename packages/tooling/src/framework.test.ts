@@ -62,6 +62,10 @@ describe("extensible workspace foundation", () => {
     expect(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8")).not.toContain(
       '"build"',
     );
+    expect(
+      JSON.parse(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"))
+        .devDependencies,
+    ).toEqual({ "@voidmix/tsconfig": "catalog:dev" });
     expect(() =>
       scaffold(root, "feature-kit", { kind: "library", target: "universal", write: true }),
     ).toThrow("already exists");

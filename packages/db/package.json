@@ -20,13 +20,13 @@
   },
   "dependencies": {
     "@voidmix/env": "catalog:",
-    "drizzle-orm": "catalog:backend",
-    "postgres": "catalog:backend"
+    "drizzle-orm": "catalog:",
+    "postgres": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling",
-    "drizzle-kit": "catalog:backend"
+    "@vitest/coverage-v8": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev",
+    "drizzle-kit": "catalog:dev"
   },
   "raypx": {
     "kind": "library",

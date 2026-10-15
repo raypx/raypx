@@ -1,4 +1,4 @@
-import { X } from "@phosphor-icons/react";
+import { X } from "lucide-react";
 import type { ReactElement, ReactNode } from "react";
 import { Button } from "./components/ui/button";
 import {

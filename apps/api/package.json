@@ -23,17 +23,16 @@
     "@raypx/db": "workspace:*",
     "@raypx/mail": "workspace:*",
     "@voidmix/env": "catalog:",
-    "hono": "catalog:backend",
-    "nitro": "catalog:backend"
+    "hono": "catalog:",
+    "nitro": "catalog:"
   },
   "devDependencies": {
     "@raypx/client": "workspace:*",
-    "@types/node": "catalog:tooling",
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling",
-    "drizzle-orm": "catalog:backend",
-    "vite": "catalog:tooling",
-    "vite-plus": "catalog:tooling"
+    "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev",
+    "drizzle-orm": "catalog:",
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "app",

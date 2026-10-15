@@ -31,7 +31,13 @@ Turbo discovers scripts. transit propagates source changes; ^build tracks actual
 artifacts. Source-only libraries need no build. API explicitly depends on Web assets;
 Desktop explicitly depends on the compiled CLI. Shared runner defaults stay at root.
 
+Auth's `@raypx/auth/client` entry exports both `createAuthClient` and the shared DOM
+`AuthForm` used by Web and Desktop. Applications keep their file routes and inject
+authentication clients, callback origins, query data and navigation adapters. The
+form is covered by both applications' route integration tests. DOM form dependencies
+stay behind the browser entry; `/hooks` remains platform-neutral, while `/server`
+and `/native` do not import DOM code.
+
 Extract @raypx/testing when generic fixtures repeat across consumers; it must not
-import packages under test. Extract DOM app-kit for stable Web/Desktop composition,
-and runtime only when another execution host directly consumes CLI internals.
-Do not create these packages before those consumers exist.
+import packages under test. Extract runtime only when another execution host
+directly consumes CLI internals. Do not create packages before those consumers exist.

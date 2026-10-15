@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet } from "@tanstack/react-router";
-import { Clock, FolderOpen, GearSix, TerminalWindow, UserCircle } from "@phosphor-icons/react";
+import { Clock, FolderOpen, Settings, SquareTerminal, CircleUserRound } from "lucide-react";
 import { Logo } from "@raypx/ui/logo";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
@@ -90,16 +90,16 @@ export function DesktopShell() {
             {c("jobs")}
           </Link>
           <Link to="/terminal" activeProps={{ className: "active", "aria-current": "page" }}>
-            <TerminalWindow size={19} />
+            <SquareTerminal size={19} />
             {c("terminal")}
           </Link>
           <span className="nav-separator" />
           <Link to="/account" activeProps={{ className: "active", "aria-current": "page" }}>
-            <UserCircle size={19} />
+            <CircleUserRound size={19} />
             {c("account")}
           </Link>
           <Link to="/settings" activeProps={{ className: "active", "aria-current": "page" }}>
-            <GearSix size={19} />
+            <Settings size={19} />
             {c("settings")}
           </Link>
         </nav>

@@ -25,7 +25,10 @@ bun run dev starts Web (Start SSR on 3000) and API (3002). bun run dev:desktop s
 bun run desktop:build packages it with its version-matched CLI. bun run dev:mobile
 starts Expo. Mobile first phase validates JS bundles without installing Xcode/Android.
 
-Bun catalogs hold third-party versions. All React versions follow Expo's compatible
+Bun catalogs hold third-party versions: the default `catalog:` contains runtime
+libraries, and `catalog:dev` contains build, test and development tools. Shared
+libraries keep the same catalog even when a test workspace lists them under
+`devDependencies`. All React versions follow Expo's compatible
 19.2.3 baseline. Voidmix stays external. Do not add another task runner. Web and API run under Node in dev, build, preview
 and production: scripts call `bun vp`, not `bun --bun vp`, and each output starts
 with Node .output/server/index.mjs. Their node-server output traces Node export

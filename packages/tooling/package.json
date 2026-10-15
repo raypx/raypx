@@ -13,12 +13,12 @@
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test"
   },
   "dependencies": {
-    "@dotenvx/dotenvx": "catalog:tooling",
-    "oxc-parser": "catalog:tooling"
+    "@dotenvx/dotenvx": "catalog:dev",
+    "oxc-parser": "catalog:dev"
   },
   "devDependencies": {
-    "@types/bun": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "@types/bun": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev"
   },
   "raypx": {
     "kind": "tooling",

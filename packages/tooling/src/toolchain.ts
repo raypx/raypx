@@ -69,7 +69,7 @@ export function checkToolchain(root: string, documents: string[]): string[] {
       `bun@${pins.bun}`,
     );
   }
-  const types = manifest.workspaces?.catalogs?.tooling?.["@types/bun"];
+  const types = manifest.workspaces?.catalogs?.dev?.["@types/bun"];
   if (types) expect("package.json", "catalog @types/bun", types, pins.bun);
 
   const dockerfiles = globSync("**/Dockerfile", { cwd: root, exclude: ["**/node_modules/**"] });

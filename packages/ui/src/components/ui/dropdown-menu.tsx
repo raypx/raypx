@@ -2,7 +2,7 @@ import { styledSlot } from "#lib/styled-slot";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 
 import { cn } from "#lib/utils";
-import { CheckIcon } from "@phosphor-icons/react";
+import { Check } from "lucide-react";
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
@@ -117,7 +117,7 @@ function DropdownMenuRadioItem({
         data-slot="dropdown-menu-radio-item-indicator"
       >
         <MenuPrimitive.RadioItemIndicator>
-          <CheckIcon />
+          <Check />
         </MenuPrimitive.RadioItemIndicator>
       </span>
       {children}

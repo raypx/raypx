@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
@@ -18,7 +18,7 @@ function repository(files: Record<string, string>) {
       packageManager: { name: "bun", version: "1.4.3" },
       runtime: { name: "bun", version: "1.4.3" },
     },
-    workspaces: { catalogs: { tooling: { "@types/bun": "1.4.3" } } },
+    workspaces: { catalogs: { dev: { "@types/bun": "1.4.3" } } },
   };
   const defaults: Record<string, string> = {
     ".nvmrc": "24.15.0\n",
@@ -45,6 +45,16 @@ describe("toolchain pins", () => {
   });
   it("accepts a repository whose literal pins follow the sources", () => {
     expect(checkToolchain(repository({}), ["README.md"])).toEqual([]);
+  });
+  it("checks the Bun types version in the development catalog", () => {
+    const root = repository({});
+    const path = join(root, "package.json");
+    const manifest = JSON.parse(readFileSync(path, "utf8"));
+    manifest.workspaces.catalogs.dev["@types/bun"] = "1.4.2";
+    writeFileSync(path, JSON.stringify(manifest));
+    expect(checkToolchain(root, [])).toEqual([
+      "package.json: catalog @types/bun is 1.4.2, expected 1.4.3",
+    ]);
   });
   it("reports every pin that drifts from the sources", () => {
     const root = repository({

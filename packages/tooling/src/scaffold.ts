@@ -40,8 +40,8 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     ...(options.kind !== "app" ? { exports: { ".": "./src/index.ts" } } : {}),
     scripts,
     devDependencies: {
-      "@voidmix/tsconfig": "catalog:tooling",
-      ...(options.target === "bun" ? { "@types/bun": "catalog:tooling" } : {}),
+      "@voidmix/tsconfig": "catalog:dev",
+      ...(options.target === "bun" ? { "@types/bun": "catalog:dev" } : {}),
     },
   };
   const config =

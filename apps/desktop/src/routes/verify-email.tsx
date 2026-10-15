@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AuthPage } from "../pages/auth";
+import { AuthForm } from "../features/auth/components/auth-form";
 
 export const Route = createFileRoute("/verify-email")({
-  component: () => <AuthPage mode="verify-email" />,
+  component: () => <AuthForm mode="verify-email" />,
 });

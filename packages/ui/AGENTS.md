@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Shared visual primitives and Neutral design tokens. Applications own page layout,
-forms, navigation and product behavior.
+Shared visual primitives and Neutral design tokens. Applications and feature
+packages own page layout, forms, navigation and product behavior.
 
 ## Interface
 
@@ -26,7 +26,7 @@ Preserve the original brand artwork and Neutral light/dark values.
 - Edit `src/theme/tokens.ts`, then run `generate:theme`; generated DOM and native
   CSS must stay identical to that source.
 - Mobile uses native semantic CSS and Uniwind, without the DOM ThemeProvider.
-- Use Base UI and Phosphor icons; do not introduce Radix or Lucide.
+- Use Base UI and Lucide icons; do not introduce Radix or another icon library.
 - Generated shadcn primitives live under `src/components/ui`; handwritten patterns
   stay flat under `src`. Consumers use explicit package exports.
 - Preserve labelled controls, keyboard/focus behavior and reduced-motion support.

@@ -20,6 +20,21 @@ async function authResponse(route: Route, body: unknown, status = 200) {
 // Browser acceptance isolates HTTP responses only. It never creates native IPC.
 // Real registration, verification, reset and revocation run in API's PostgreSQL gate.
 test.beforeEach(async ({ page }) => {
+  await page.route("**/rpc/account/get", async (route) => {
+    if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
+    return authResponse(
+      route,
+      {
+        json: {
+          defined: false,
+          code: "UNAUTHORIZED",
+          message: "Authentication required",
+          data: { error: { code: "AUTH_REQUIRED" } },
+        },
+      },
+      401,
+    );
+  });
   await page.route(/\/api\/auth\//, async (route) => {
     if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
     if (new URL(route.request().url()).pathname.endsWith("/get-session"))
@@ -145,6 +160,15 @@ test("Desktop preview states local unavailability without a login wall", async (
     page.getByRole("heading", { name: "Start with a folder", exact: true }),
   ).toBeVisible();
   expect(await page.evaluate(() => "__electrobunWebviewId" in window)).toBe(false);
+  await page.getByRole("link", { name: "Automations", exact: true }).click();
+  await expect(page).toHaveURL(`${desktop}/automations`);
+  await expect(
+    page.getByRole("heading", { name: "Keep things moving", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Open the desktop app to use local tools.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "New automation", exact: true })).toBeDisabled();
   await page.getByRole("link", { name: "Account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your account", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "You’re not signed in" })).toBeVisible();

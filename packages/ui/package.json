@@ -49,22 +49,24 @@
     "generate:theme": "bun run scripts/generate-theme.ts"
   },
   "dependencies": {
-    "@base-ui/react": "catalog:frontend",
-    "@phosphor-icons/react": "catalog:frontend",
-    "class-variance-authority": "catalog:frontend",
-    "cn": "catalog:frontend"
+    "@base-ui/react": "catalog:",
+    "class-variance-authority": "catalog:",
+    "cn": "catalog:",
+    "lucide-react": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "catalog:tooling",
-    "@testing-library/react": "catalog:tooling",
-    "@testing-library/user-event": "catalog:tooling",
-    "@types/react": "catalog:tooling",
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling",
-    "jsdom": "catalog:tooling",
+    "@testing-library/jest-dom": "catalog:dev",
+    "@testing-library/react": "catalog:dev",
+    "@testing-library/user-event": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev",
+    "jsdom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "vite": "catalog:tooling"
+    "vite": "catalog:dev"
   },
   "peerDependencies": {
     "react": "^19.2.3"

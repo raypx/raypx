@@ -16,14 +16,13 @@
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "resend": "catalog:frontend"
+    "resend": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:tooling",
-    "@types/react": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling",
-    "typescript": "catalog:tooling",
-    "vite-plus": "catalog:tooling"
+    "@types/node": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev",
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "library",

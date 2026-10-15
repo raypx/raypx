@@ -25,3 +25,8 @@ Windows needed native installs anyway and every runtime upgrade required per-pla
 hashes; `.nvmrc` and the root `packageManager` now pin Node and Bun for version managers
 and CI, and `raypx-dev policy` keeps the remaining literal pins in sync. Web became a
 separate TanStack Start SSR service on Node/Nitro beside API; Desktop uses Start SPA mode.
+
+Amendment (2026-10-15): Web and Desktop now share their DOM authentication form
+through auth's browser client entry. Each application keeps its own file routes,
+clients, query access and navigation adapters; universal auth hooks and UI
+primitives keep their existing boundaries.

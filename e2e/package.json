@@ -8,9 +8,9 @@
     "e2e": "bun --bun playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "catalog:tooling",
-    "@types/bun": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "@playwright/test": "catalog:dev",
+    "@types/bun": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev"
   },
   "raypx": {
     "kind": "tooling",

@@ -31,7 +31,8 @@ The accepted foundation design supersedes documents in docs/history.
   for dev/build/preview, and production uses Node 24.15.0. Desktop uses Electrobun's pinned host.
 - Turbo owns the sole task graph/cache. mise is the recommended runtime manager; mise.toml
   only enables reading .nvmrc/package.json and never pins `[tools]`. There is no Nix shell.
-- Use root Bun catalogs for external versions and workspace:* for internal dependencies.
+- Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
+  Keep external versions there and use workspace:* for internal dependencies.
 - @voidmix packages remain independently released external dependencies.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.

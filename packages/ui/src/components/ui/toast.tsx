@@ -1,13 +1,6 @@
 import { styledSlot } from "#lib/styled-slot";
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
-import {
-  CheckCircleIcon,
-  InfoIcon,
-  SpinnerIcon,
-  WarningIcon,
-  XCircleIcon,
-  XIcon,
-} from "@phosphor-icons/react";
+import { CircleCheck, CircleX, Info, LoaderCircle, TriangleAlert, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "#lib/utils";
@@ -97,17 +90,17 @@ function ToastClose({
       )}
       {...props}
     >
-      {children ?? <XIcon aria-hidden="true" />}
+      {children ?? <X aria-hidden="true" />}
     </ToastPrimitive.Close>
   );
 }
 
 const toastIcons: Readonly<Record<string, ReactNode>> = {
-  success: <CheckCircleIcon aria-hidden="true" />,
-  info: <InfoIcon aria-hidden="true" />,
-  warning: <WarningIcon aria-hidden="true" />,
-  error: <XCircleIcon aria-hidden="true" className="text-destructive" />,
-  loading: <SpinnerIcon aria-hidden="true" className="animate-spin" />,
+  success: <CircleCheck aria-hidden="true" />,
+  info: <Info aria-hidden="true" />,
+  warning: <TriangleAlert aria-hidden="true" />,
+  error: <CircleX aria-hidden="true" className="text-destructive" />,
+  loading: <LoaderCircle aria-hidden="true" className="animate-spin" />,
 };
 
 function ToastIcon({ type }: { type: string | undefined }) {

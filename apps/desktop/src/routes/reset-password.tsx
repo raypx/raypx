@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AuthPage } from "../pages/auth";
+import { AuthForm } from "../features/auth/components/auth-form";
 
 export const Route = createFileRoute("/reset-password")({
-  component: () => <AuthPage mode="reset-password" />,
+  component: () => <AuthForm mode="reset-password" />,
 });

@@ -7,6 +7,7 @@
     "./server": "./src/server.ts",
     "./client": "./src/client.ts",
     "./native": "./src/native.ts",
+    "./hooks": "./src/hooks.ts",
     "./types": "./src/types.ts"
   },
   "scripts": {
@@ -19,12 +20,25 @@
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*",
     "better-auth": "catalog:",
-    "expo-secure-store": "catalog:mobile"
+    "expo-secure-store": "catalog:",
+    "lucide-react": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "catalog:tooling",
-    "@voidmix/tsconfig": "catalog:tooling"
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "@voidmix/tsconfig": "catalog:dev",
+    "react": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.3"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "raypx": {
     "kind": "library",
@@ -32,12 +46,15 @@
     "entryTargets": {
       "./server": "node",
       "./client": "browser",
-      "./native": "native"
+      "./native": "native",
+      "./hooks": "universal"
     },
     "sourceTargets": {
       "src/server.ts": "node",
       "src/client.ts": "browser",
-      "src/native.ts": "native"
+      "src/client/**": "browser",
+      "src/native.ts": "native",
+      "src/hooks.ts": "universal"
     }
   }
 }
