@@ -1,0 +1,28 @@
+apps/desktop/vite.config.ts
+  h_f0766e80fd3864 19
+apps/web/vite.config.ts
+  h_f0766e80fd3864 31
+docs/architecture/README.md
+  h_f0766e80fd3864 47
+docs/architecture/internationalization.md
+  h_f0766e80fd3864 4-6
+docs/development/intl-release.md
+  h_f0766e80fd3864 21-22,43-45
+packages/i18n/README.md
+  h_f0766e80fd3864 3
+packages/i18n/package.json
+  h_f0766e80fd3864 27
+test.config.ts
+  h_f0766e80fd3864 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "258c295c6283904a2dc261ae7ddb22fc9d8aa78c",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
