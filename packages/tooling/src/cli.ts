@@ -65,6 +65,8 @@ async function main() {
       findings(checkLocales(root), "Locale catalogs");
       findings(policy(root), "Repository policy");
       await run(process.execPath, ["--bun", "vp", "fmt", "--check"], root);
+      // Type-aware lint resolves ignored SDK declarations that native:prepare generates.
+      await turbo(root, "native:prepare");
       await run(process.execPath, ["--bun", "vp", "lint"], root);
       await turbo(root, "check");
       await turbo(root, "test");
