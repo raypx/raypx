@@ -13,9 +13,8 @@
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test"
   },
   "dependencies": {
-    "@dotenvx/dotenvx": "catalog:dev",
-    "@voidmix/intl": "catalog:",
-    "oxc-parser": "catalog:dev"
+    "@voidmix/devkit": "catalog:dev",
+    "@voidmix/intl": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:dev",

@@ -1,83 +1,28 @@
-import { spawn } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
-import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { once } from "node:events";
-import { setTimeout as delay } from "node:timers/promises";
-import { run } from "./process.js";
-import { stageArtifact } from "./artifact.js";
-import { pinnedNode } from "./toolchain.js";
+import { probeArtifact } from "@voidmix/devkit/artifact";
+import { run } from "@voidmix/devkit/process";
+import { pinnedNode } from "./repository.js";
 
 /** Starts a relocated Node output on a free port and probes it while it runs. */
-async function probeArtifact(
+function probeApp(
   root: string,
   app: "api" | "web",
   environment: (base: string) => Record<string, string>,
   check: (base: string) => Promise<void>,
 ): Promise<void> {
-  const stage = await mkdtemp(join(tmpdir(), `raypx-${app}-`));
-  const port = await new Promise<number>((resolve, reject) => {
-    const server = createServer();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      const port = typeof address === "object" && address ? address.port : 0;
-      server.close(() => resolve(port));
-    });
+  return probeArtifact({
+    name: app,
+    output: join(root, "apps", app, ".output"),
+    node: pinnedNode(root),
+    environment,
+    check,
+    failOnOutput: ["Error in renderToReadableStream"],
   });
-  const base = `http://127.0.0.1:${port}`;
-  let child: ReturnType<typeof spawn> | undefined;
-  try {
-    await stageArtifact(join(root, "apps", app, ".output"), join(stage, ".output"));
-    const node = pinnedNode(root);
-    child = spawn(node, [".output/server/index.mjs"], {
-      cwd: stage,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, HOST: "127.0.0.1", PORT: String(port), ...environment(base) },
-    });
-    let output = "";
-    child.stdout?.on("data", (chunk) => {
-      output = `${output}${chunk}`.slice(-8000);
-    });
-    child.stderr?.on("data", (chunk) => {
-      output = `${output}${chunk}`.slice(-8000);
-    });
-    let startupError: Error | undefined;
-    child.once("error", (error) => {
-      startupError = error;
-    });
-    let ready = false;
-    for (let attempt = 0; attempt < 100; attempt++) {
-      if (startupError) throw startupError;
-      if (child.exitCode !== null) throw new Error(`${app} exited during startup: ${output}`);
-      try {
-        ready = (await fetch(`${base}/health`, { signal: AbortSignal.timeout(300) })).ok;
-      } catch {
-        /* Wait for listener. */
-      }
-      if (ready) break;
-      await delay(100);
-    }
-    if (!ready) throw new Error(`${app} startup deadline exceeded: ${output}`);
-    await check(base);
-    if (output.includes("Error in renderToReadableStream"))
-      throw new Error(`${app} reported a server error: ${output}`);
-  } finally {
-    if (child && child.exitCode === null && child.pid) {
-      const closed = once(child, "close");
-      child.kill("SIGTERM");
-      const timer = setTimeout(() => child?.kill("SIGKILL"), 3000);
-      timer.unref();
-      await closed;
-      clearTimeout(timer);
-    }
-    await rm(stage, { recursive: true, force: true });
-  }
 }
 
 export async function probeApi(root: string): Promise<void> {
-  await probeArtifact(
+  await probeApp(
     root,
     "api",
     (base) => ({
@@ -121,7 +66,7 @@ export async function probeApi(root: string): Promise<void> {
 }
 
 async function probeWeb(root: string): Promise<void> {
-  await probeArtifact(
+  await probeApp(
     root,
     "web",
     () => ({ NODE_ENV: "production" }),

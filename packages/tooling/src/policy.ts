@@ -1,11 +1,11 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { parseSync } from "oxc-parser";
+import { join } from "node:path";
+import { checkArchitecture } from "@voidmix/devkit/architecture";
+import { readStaticCatalog, type CatalogTree } from "@voidmix/devkit/catalogs";
+import { checkDocumentLinks } from "@voidmix/devkit/docs";
+import { checkToolchain } from "@voidmix/devkit/toolchain";
 import { compareMessageCatalogs } from "@voidmix/intl/testing";
-import type { MessageTree } from "@voidmix/intl/types";
-import { checkArchitecture } from "./architecture.js";
-import { checkToolchain } from "./toolchain.js";
-import { discover } from "./workspaces.js";
+import { discover } from "./repository.js";
 
 export function policy(root: string): string[] {
   const index = discover(root);
@@ -30,22 +30,13 @@ export function policy(root: string): string[] {
     ],
     { cwd: root, exclude: ["docs/history/**"] },
   );
-  for (const file of documents) {
-    const source = readFileSync(join(root, file), "utf8");
-    for (const match of source.matchAll(/\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g)) {
-      const url = match[1]!;
-      if (/^(?:[a-z]+:|#|\/)/i.test(url)) continue;
-      const path = url.split("#")[0]!.split("?")[0]!;
-      if (path && !existsSync(resolve(root, file, "..", decodeURIComponent(path))))
-        findings.push(`${file}: broken documentation link ${url}`);
-    }
-  }
+  findings.push(...checkDocumentLinks(root, documents));
   // Acceptance records describe the release they ran on and are not rewritten on upgrade.
   findings.push(
-    ...checkToolchain(
-      root,
-      documents.filter((file) => file !== "docs/development/foundation-acceptance.md"),
-    ),
+    ...checkToolchain(root, {
+      documents: documents.filter((file) => file !== "docs/development/foundation-acceptance.md"),
+      turboGlobalDependencies: [".nvmrc"],
+    }),
   );
   return [...new Set(findings)];
 }
@@ -66,64 +57,18 @@ export function checkLocales(root: string): string[] {
     pairs.set(key, pair);
   }
   const findings: string[] = [];
-  // Catalogs are static objects. Oxc reads their keys and string values without executing modules.
   for (const [folder, pair] of pairs) {
     if (!pair.en || !pair.zh) {
       findings.push(`${folder}: both en and zh catalogs are required`);
       continue;
     }
-    const extract = (path: string): MessageTree => {
-      const source = readFileSync(join(root, path), "utf8");
-      const object = (): Record<string, string | MessageTree> => Object.create(null);
-      function readNode(value: unknown): string | MessageTree {
-        if (!value || typeof value !== "object")
-          throw new Error(`${path}: catalogs must contain static string objects`);
-        const node = value as Record<string, unknown>;
-        if (node.type === "TSAsExpression" || node.type === "TSSatisfiesExpression")
-          return readNode(node.expression);
-        if (node.type === "Literal" && typeof node.value === "string") return node.value;
-        if (node.type !== "ObjectExpression")
-          throw new Error(`${path}: catalogs must contain static string objects`);
-        const result = object();
-        for (const property of node.properties as Record<string, unknown>[]) {
-          if (property.type !== "Property" || property.computed)
-            throw new Error(`${path}: dynamic catalog keys are unsupported`);
-          const key = property.key as { value?: unknown; name?: string };
-          const name = typeof key.value === "string" ? key.value : key.name;
-          if (!name) throw new Error(`${path}: invalid catalog key`);
-          result[name] = readNode(property.value);
-        }
-        return result;
-      }
-      function readJson(value: unknown): string | MessageTree {
-        if (typeof value === "string") return value;
-        if (!value || typeof value !== "object" || Array.isArray(value))
-          throw new Error(`${path}: expected static string objects`);
-        const result = object();
-        for (const [key, child] of Object.entries(value)) result[key] = readJson(child);
-        return result;
-      }
-      let result: string | MessageTree;
-      if (path.endsWith(".json")) result = readJson(JSON.parse(source));
-      else {
-        const parsed = parseSync(path, source);
-        if (parsed.errors.length) throw new Error(`${path}: ${parsed.errors[0]!.message}`);
-        const declaration = parsed.program.body.find(
-          (node) => node.type === "ExportDefaultDeclaration",
-        );
-        if (!declaration || declaration.type !== "ExportDefaultDeclaration")
-          throw new Error(`${path}: expected a default static catalog`);
-        result = readNode(declaration.declaration);
-      }
-      if (typeof result === "string") throw new Error(`${path}: expected a catalog object`);
-      return result;
-    };
-    const catalogs: { en?: MessageTree; zh?: MessageTree } = {};
+    const catalogs: { en?: CatalogTree; zh?: CatalogTree } = {};
     for (const locale of ["en", "zh"] as const) {
+      const path = pair[locale]!;
       try {
-        catalogs[locale] = extract(pair[locale]!);
+        catalogs[locale] = readStaticCatalog(path, readFileSync(join(root, path), "utf8"));
       } catch (error) {
-        findings.push(error instanceof Error ? error.message : `${pair[locale]}: invalid catalog`);
+        findings.push(error instanceof Error ? error.message : `${path}: invalid catalog`);
       }
     }
     if (!catalogs.en || !catalogs.zh) continue;

@@ -21,6 +21,9 @@ Translation and formatting use the independently released `@voidmix/intl` facade
 
 Own product language choices, translations, namespace parity and the persisted
 `raypx_locale` preference. Applications provide native storage and system locale.
+The controlled LanguageProvider, browser storage/cookie adapters and error-code
+translation come from `@voidmix/intl`; this package only wires product keys and
+catalogs into them. Change that behavior in Voidmix, not here.
 
 ## Constraints
 

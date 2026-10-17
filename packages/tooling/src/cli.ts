@@ -2,12 +2,13 @@
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { developmentEnvironment, run } from "@voidmix/devkit/process";
+import { readToolchain } from "@voidmix/devkit/toolchain";
+import type { Kind, Target } from "@voidmix/devkit/workspaces";
 import { checkLocales, policy } from "./policy.js";
-import { developmentEnvironment, run, turbo } from "./process.js";
+import { discover, pinnedNode, turbo } from "./repository.js";
 import { scaffold } from "./scaffold.js";
 import { smoke } from "./smoke.js";
-import { pinnedNode, readToolchain } from "./toolchain.js";
-import { discover, type Kind, type Target } from "./workspaces.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -34,7 +35,7 @@ async function main() {
         findings(index.findings, "Workspace discovery");
         for (const w of index.workspaces)
           console.log(
-            `${w.path.padEnd(25)} ${w.manifest.name.padEnd(22)} ${w.manifest.raypx?.kind}/${w.manifest.raypx?.target}`,
+            `${w.path.padEnd(25)} ${w.manifest.name.padEnd(22)} ${w.metadata?.kind}/${w.metadata?.target}`,
           );
       } else if (args[0] === "new" && args[1]) {
         const paths = scaffold(root, args[1], {

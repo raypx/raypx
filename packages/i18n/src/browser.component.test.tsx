@@ -48,7 +48,7 @@ function storage(key: string | null, newValue: string | null, storageArea: Stora
   fireEvent(window, new StorageEvent("storage", { key, newValue, storageArea }));
 }
 
-describe("browser language preferences", () => {
+describe("Raypx browser language wiring", () => {
   it("hydrates exactly with the server snapshot before reconciling device preferences", () => {
     const onRecoverableError = vi.fn();
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -76,85 +76,6 @@ describe("browser language preferences", () => {
     expect(onRecoverableError).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
   });
-  it("persists an explicit choice even when the effective language already matches", () => {
-    render(
-      <BrowserLanguageProvider>
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
-    fireEvent.click(screen.getByRole("button", { name: "English" }));
-    expect(screen.getByTestId("state").textContent).toBe("en:en:true");
-    expect(localStorage.getItem("raypx_locale")).toBe("en");
-    expect(document.cookie).toContain("locale=en");
-  });
-  it("falls back to navigator.language when the language list is empty", () => {
-    system([]);
-    vi.spyOn(navigator, "language", "get").mockReturnValue("zh-SG");
-    render(
-      <BrowserLanguageProvider>
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    expect(screen.getByTestId("state").textContent).toBe("system:zh:true");
-  });
-  it("matches all system preferences consistently with the server and follows changes", () => {
-    system(["fr-FR", "zh-CN"]);
-    render(
-      <BrowserLanguageProvider initialSystemLocales={["fr-FR", "zh-CN"]}>
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    expect(screen.getByTestId("state").textContent).toBe("system:zh:true");
-    system(["en-US"]);
-    fireEvent(window, new Event("languagechange"));
-    expect(screen.getByText("Settings")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Chinese" }));
-    fireEvent(window, new Event("languagechange"));
-    expect(screen.getByText("设置")).toBeTruthy();
-    expect(localStorage.getItem("raypx_locale")).toBe("zh");
-  });
-  it("preserves a cookie-only user's preference in device storage", () => {
-    document.cookie = "locale=zh; Path=/";
-    render(
-      <BrowserLanguageProvider initialPreference="zh">
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    expect(screen.getByText("设置")).toBeTruthy();
-    expect(localStorage.getItem("raypx_locale")).toBe("zh");
-  });
-  it("preserves the initial snapshot when reads are unavailable and switches without writable storage", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-    render(
-      <BrowserLanguageProvider initialPreference="en">
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    expect(screen.getByTestId("state").textContent).toBe("en:en:true");
-    fireEvent.click(screen.getByRole("button", { name: "Chinese" }));
-    expect(screen.getByTestId("state").textContent).toBe("zh:zh:true");
-  });
-  it.each(["system", "invalid"])(
-    "lets an explicit new preference win over legacy storage and cookies: %s",
-    (value) => {
-      localStorage.setItem("raypx_locale", value);
-      localStorage.setItem("voidmix_locale", "zh");
-      document.cookie = "locale=zh; Path=/";
-      render(
-        <BrowserLanguageProvider>
-          <Probe />
-        </BrowserLanguageProvider>,
-      );
-      expect(screen.getByTestId("state").textContent).toBe("system:en:true");
-      expect(document.cookie).not.toContain("locale=");
-    },
-  );
   it("migrates the legacy value only after the replacement write succeeds", () => {
     localStorage.setItem("voidmix_locale", "zh-CN");
     expect(readBrowserPreference()).toBe("zh");
@@ -167,31 +88,6 @@ describe("browser language preferences", () => {
     });
     expect(readBrowserPreference()).toBe("zh");
     expect(localStorage.getItem("voidmix_locale")).toBe("zh");
-  });
-  it("syncs only localStorage changes and handles removal and clear without re-running migration", () => {
-    render(
-      <BrowserLanguageProvider>
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    storage("raypx_locale", "zh", sessionStorage);
-    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
-    storage("other", "zh");
-    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
-    storage("raypx_locale", "zh");
-    expect(screen.getByText("设置")).toBeTruthy();
-    expect(document.cookie).toContain("locale=zh");
-    storage("raypx_locale", "invalid");
-    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
-    expect(document.cookie).not.toContain("locale=");
-    storage("raypx_locale", "zh");
-    localStorage.setItem("voidmix_locale", "zh");
-    storage("raypx_locale", null);
-    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
-    expect(document.cookie).not.toContain("locale=");
-    storage("raypx_locale", "zh");
-    storage(null, null);
-    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
   });
   it("keeps native snapshots authoritative and reports hydration before persistence", () => {
     localStorage.setItem("raypx_locale", "zh");
@@ -206,29 +102,5 @@ describe("browser language preferences", () => {
     fireEvent.click(screen.getByRole("button", { name: "System" }));
     expect(localStorage.getItem("raypx_locale")).toBe("system");
     expect(document.cookie).not.toContain("locale=");
-  });
-  it("keeps a cross-window reset after remount even when a legacy key survives", () => {
-    localStorage.setItem("raypx_locale", "zh");
-    localStorage.setItem("voidmix_locale", "zh");
-    const first = render(
-      <BrowserLanguageProvider>
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    expect(screen.getByTestId("state").textContent).toBe("zh:zh:true");
-    localStorage.removeItem("raypx_locale");
-    storage("raypx_locale", null);
-    expect(localStorage.getItem("raypx_locale")).toBe("system");
-    expect(localStorage.getItem("voidmix_locale")).toBe("zh");
-    first.unmount();
-    render(
-      <BrowserLanguageProvider>
-        <Probe />
-      </BrowserLanguageProvider>,
-    );
-    expect(screen.getByTestId("state").textContent).toBe("system:en:true");
-    localStorage.clear();
-    storage(null, null);
-    expect(localStorage.getItem("raypx_locale")).toBe("system");
   });
 });

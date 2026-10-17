@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { discover, type Kind, type Target, targets } from "./workspaces.js";
+import { targets, type Kind, type Target } from "@voidmix/devkit/workspaces";
+import { discover } from "./repository.js";
 
 export interface ScaffoldOptions {
   kind: Kind;
