@@ -1,0 +1,21 @@
+packages/i18n/AGENTS.md
+  s_0860ced2611c93::t_17041582f9cddd 24-26
+packages/i18n/README.md
+  s_0860ced2611c93::t_4d5e7da236452e 4-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "666e0cd98684245964531359fb7bff80e88707ab",
+  "prompts": {},
+  "sessions": {
+    "s_0860ced2611c93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4876f436-2858-4509-a3e9-f0bd1c571d2a",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
