@@ -1,0 +1,16 @@
+bun.lock
+  h_f0766e80fd3864 347,1296
+package.json
+  h_f0766e80fd3864 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "886ba907b0648d29ef0dd93e54750d9096edcbdc",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
