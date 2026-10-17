@@ -16,7 +16,7 @@ export default defineConfig({
   resolve: {
     alias: electrobunViteAliases(resolve(import.meta.dirname, ".hutch/devkit")),
     // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
-    dedupe: ["react", "react-dom", "use-intl"],
+    dedupe: ["react", "react-dom"],
   },
   server: {
     port: 1420,

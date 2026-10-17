@@ -1,8 +1,9 @@
 # Internationalization
 
 `@raypx/i18n` owns static English/Chinese catalogs, device language preferences and
-platform adapters. `@voidmix/intl` is an independently published SDK that delegates
-translation, formatting, React context and caches to `use-intl`. Application
+platform adapters. `@voidmix/intl` is an independently published SDK that bundles
+`use-intl` for translation, formatting, React context and caches; Raypx does not
+declare `use-intl` itself. Application
 loaders own any future asynchronous message retrieval. Current catalogs stay
 statically imported; there is no remote loading or localized routing in this design.
 

@@ -24,8 +24,7 @@
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "@voidmix/intl": "catalog:",
-    "use-intl": "catalog:"
+    "@voidmix/intl": "catalog:"
   },
   "devDependencies": {
     "@testing-library/react": "catalog:dev",

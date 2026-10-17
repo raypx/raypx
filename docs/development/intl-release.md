@@ -18,8 +18,8 @@ bun link @voidmix/intl
 ```
 
 The link points at the Voidmix checkout, which has its own React. Every Vite and
-Vitest config dedupes `react`, `react-dom` and `use-intl` so that links never
-create a second React or IntlProvider context. Metro does not follow links
+Vitest config dedupes `react` and `react-dom` so that links never create a
+second React. Metro does not follow links
 outside the repository; verify mobile against a snapshot instead. Run
 `bun install` to return to the registry version.
 
@@ -40,5 +40,6 @@ a `link:` or a tarball path.
 Breaking Voidmix changes are acceptable during this stage; Raypx adopts them in
 the same branch rather than through compatibility layers.
 
-`use-intl` is a peer of `@voidmix/intl`, so `@raypx/i18n` declares it from the
-catalog. Keep its version inside the peer range Voidmix publishes.
+`@voidmix/intl` bundles `use-intl`, so Raypx never declares or imports it
+directly. A separate `use-intl` or `next-intl` install would create a second,
+unconnected IntlProvider context.

@@ -28,6 +28,6 @@ export default defineConfig({
     },
   },
   // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
-  resolve: { dedupe: ["react", "react-dom", "use-intl"] },
+  resolve: { dedupe: ["react", "react-dom"] },
   server: { port: 3000, strictPort: true },
 });

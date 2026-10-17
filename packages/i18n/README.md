@@ -1,6 +1,6 @@
 # @raypx/i18n
 
-Raypx's product configuration around `@voidmix/intl` and `use-intl`. The package owns
+Raypx's product configuration around `@voidmix/intl`, which bundles `use-intl`. The package owns
 English/Chinese catalogs, native language names, safe error-code translation and
 device preference adapters. Translation and formatting use the upstream runtime.
 
