@@ -1,0 +1,19 @@
+packages/tooling/src/cli.ts
+  s_0860ced2611c93::t_51a7828f77536f 68-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ae3b2ebc6a7324ad04c3c379c117e5fddc9cd348",
+  "prompts": {},
+  "sessions": {
+    "s_0860ced2611c93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4876f436-2858-4509-a3e9-f0bd1c571d2a",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
