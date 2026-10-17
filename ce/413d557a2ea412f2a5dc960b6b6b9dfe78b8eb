@@ -1,0 +1,378 @@
+docs/architecture/internationalization.md
+  s_7a36ff2e16c14c::t_876df0ffa10edd 1-89
+apps/mobile/src/preference-store.test.ts
+  s_7a36ff2e16c14c::t_79057db359056c 1-60
+  s_7a36ff2e16c14c::t_335e5ce85c006a 61-71
+packages/i18n/src/language-provider.tsx
+  s_7a36ff2e16c14c::t_16f21ed4bc9143 2-4,9,14,17,20,23,25,27-28,30
+packages/i18n/src/errors.test.ts
+  s_7a36ff2e16c14c::t_d6255cd8078145 9,15,19-32,42-45,57
+  s_7a36ff2e16c14c::t_0aac768b19ba96 8,58-62,108-117
+apps/desktop/src/features/files/search.ts
+  s_5722ecc24d1fe3::t_fe65d2f22dd401 1-5,7
+  s_5722ecc24d1fe3::t_2a8913237a945a 9-24
+  s_5722ecc24d1fe3::t_f27373aff9cbc2 6,8,25-26
+apps/mobile/package.json
+  s_7a36ff2e16c14c::t_79057db359056c 10,38-39
+docs/development/workspaces.md
+  s_3e641cc9e413f1::t_eee34b604fe0d4 45-48
+  s_5722ecc24d1fe3::t_ea1c4a01766036 41-44,49
+apps/desktop/src/preferences.tsx
+  s_7a36ff2e16c14c::t_42a78329815d8b 55,57
+  s_7a36ff2e16c14c::t_bcab1fea7cea1c 4,71,82
+  s_7a36ff2e16c14c::t_8d0cc5f14a00eb 8,54,56,58-62
+  s_7a36ff2e16c14c::t_b715a3ee655d32 1-3,5-7,9-53,63-70,72-81,83-110
+  s_7a36ff2e16c14c::t_973570f348f3e7 111-113
+docs/development/intl-release.md
+  s_7a36ff2e16c14c::t_876df0ffa10edd 1-35
+  s_7a36ff2e16c14c::t_242165dfdf8b84 36-38
+apps/desktop/src/features/files/components/editor.tsx
+  s_3e641cc9e413f1::t_bf6572432c06ae 1-15,17-39
+  s_3e641cc9e413f1::t_f91ed4b97fc64e 16
+apps/desktop/src/features/files/components/table.tsx
+  s_3e641cc9e413f1::t_bf6572432c06ae 1-162
+packages/i18n/src/browser/language-select.tsx
+  s_7a36ff2e16c14c::t_16f21ed4bc9143 5,24-26
+  s_3e641cc9e413f1::t_ce0b044b595467 11-23,27-29
+  s_5722ecc24d1fe3::t_cfa2289124d1fc 1-4,6-10,30
+  s_7a36ff2e16c14c::t_6d211fa8f46e22 31-32
+packages/account/src/server.ts
+  s_5722ecc24d1fe3::t_ae44815fad9c63 1-17
+apps/desktop/package.json
+  s_3e641cc9e413f1::t_16a964880fcdba 14,16,27,40-41
+  s_7a36ff2e16c14c::t_cd6f17d4bd1d5a 63-64
+apps/desktop/native/preferences.test.ts
+  s_7a36ff2e16c14c::t_b6db6b2e7db18c 2,6-7,15,18,21-26,46-80,82-87
+  s_7a36ff2e16c14c::t_bcab1fea7cea1c 27-32
+  s_7a36ff2e16c14c::t_622911c6319e09 33-45,81
+apps/mobile/src/preference-store.ts
+  s_7a36ff2e16c14c::t_79057db359056c 1-33
+  s_7a36ff2e16c14c::t_363d799078c710 36-37
+packages/i18n/src/types.ts
+  s_7a36ff2e16c14c::t_fc3a36dfd552d4 1-3,7-8,13,18-20
+apps/mobile/scripts/metro-resolver.test.ts
+  s_7a36ff2e16c14c::t_6b7635da799e45 1-65
+packages/i18n/src/ssr.test.tsx
+  s_7a36ff2e16c14c::t_83c1845f92492e 1-8,10-54
+  s_7a36ff2e16c14c::t_7ab30405e6b356 9
+apps/desktop/src/features/files/use-actions.ts
+  s_7a36ff2e16c14c::t_fd52a7970613fc 4,28,40-42,60,96-112,114-115
+  s_3e641cc9e413f1::t_bf6572432c06ae 1-3,6-18,20-21,23,25-27,29-39,43-59,61-95,116-125
+  s_7a36ff2e16c14c::t_5699cf676e0b17 113
+  s_7a36ff2e16c14c::t_89ace867aabe3b 5,19,22,24,126
+apps/web/src/preferences.ts
+  s_7a36ff2e16c14c::t_9269348838043f 3,10,28-30,34,41
+  s_7a36ff2e16c14c::t_3013bf431419db 42-44
+packages/i18n/src/browser.tsx
+  s_5722ecc24d1fe3::t_cfa2289124d1fc 100
+  s_7a36ff2e16c14c::t_13f952793d808c 1-13,15-16,18,26,29,31-33,35,38-40,42-45,47-50,52-54,56-69,72,75,77-82,87,89,96-99,101
+  s_7a36ff2e16c14c::t_5a8abc93f1fe90 102-106
+apps/mobile/src/preferences.ts
+  s_7a36ff2e16c14c::t_79057db359056c 1-4
+apps/desktop/src/routes/_local/route.tsx
+  s_5722ecc24d1fe3::t_8c9fc928dda0de 12
+  s_5722ecc24d1fe3::t_f27373aff9cbc2 4-5,10-11,14-21,37,39,45
+  s_5722ecc24d1fe3::t_ac730b4d0d549a 6,23,26-30,41-44
+apps/desktop/src/routes/login.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 2
+apps/desktop/src/routes/signup.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 2
+apps/desktop/src/routes/verify-email.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 2
+apps/desktop/src/test/routes/local.test.tsx
+  s_3e641cc9e413f1::t_7a5983babfd547 464-466,477-479
+  s_3e641cc9e413f1::t_16a964880fcdba 48,163-165,240-288
+apps/web/src/routes/index.tsx
+  s_3e641cc9e413f1::t_74eab929adc71e 1,7-8,32-33,35,38,45,47-51,53-56,60,65-70
+  s_de2d79b0b75518::t_69b2fb0e5b76d6 71-72
+apps/mobile/app/settings.tsx
+  s_7a36ff2e16c14c::t_79057db359056c 3-4,6,16,43-48,51,53
+packages/i18n/package.json
+  s_7a36ff2e16c14c::t_9a0430ecdb576f 34,38,57-58
+apps/desktop/src/routes/__root.tsx
+  s_3e641cc9e413f1::t_f91ed4b97fc64e 29
+  s_7a36ff2e16c14c::t_b715a3ee655d32 4,27,42-44
+apps/desktop/src/routes/settings.tsx
+  s_3e641cc9e413f1::t_f91ed4b97fc64e 2-4,13-14,16,18,20-21,23-28,30,32-33,35,37
+apps/web/src/routes/__root.tsx
+  s_7a36ff2e16c14c::t_9269348838043f 35,47
+apps/mobile/AGENTS.md
+  s_7a36ff2e16c14c::t_81a2238a55a7b7 11-12,34-37,51
+  s_7a36ff2e16c14c::t_42695526a5bbdf 19-21
+packages/i18n/src/client.test.tsx
+  s_7a36ff2e16c14c::t_633ea1c372f07e 1-7,13,16-22,26-31,33-37,39-40,42-46,48-79,81-82
+packages/account/src/client.ts
+  s_5722ecc24d1fe3::t_ae44815fad9c63 1-7
+apps/desktop/src/features/auth/routes.test.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 39
+apps/mobile/scripts/metro-resolver.cjs
+  s_7a36ff2e16c14c::t_42695526a5bbdf 1-53
+apps/mobile/metro.config.cjs
+  s_7a36ff2e16c14c::t_42695526a5bbdf 3-11
+apps/mobile/app/_layout.tsx
+  s_7a36ff2e16c14c::t_79057db359056c 45-49
+  s_7a36ff2e16c14c::t_7113d0959fe70b 8-9,44,59,65
+packages/auth/AGENTS.md
+  s_3e641cc9e413f1::t_eee34b604fe0d4 12
+packages/account/src/index.ts
+  s_5722ecc24d1fe3::t_ae44815fad9c63 1-34
+apps/desktop/src/features/files/store.tsx
+  s_5722ecc24d1fe3::t_f27373aff9cbc2 1-6,19-24,28,31-32,43-46,48-55,57-58
+  s_7a36ff2e16c14c::t_fd52a7970613fc 7-18,25-27,29-30,33-42,47,56
+packages/ui/src/theme/client.ts
+  s_5722ecc24d1fe3::t_cfa2289124d1fc 3
+apps/desktop/src/routes/forgot-password.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 2
+apps/desktop/src/features/files/components/operation-form.tsx
+  s_3e641cc9e413f1::t_bf6572432c06ae 1-43
+apps/desktop/src/test/routes/account.test.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 43
+packages/i18n/src/errors.ts
+  s_7a36ff2e16c14c::t_9269348838043f 3-4,6,74-83,85-87,95,98,100-101,107
+  s_7a36ff2e16c14c::t_f44df1afb4c8e3 1
+packages/account/src/client/account.tsx
+  s_5722ecc24d1fe3::t_ae44815fad9c63 1-12,18-20,33-40,42-48,56,75-76,80-85,93
+  s_3e641cc9e413f1::t_da631a9173018b 13-17,21-32,41,49-55,57-74,77-79,86-92
+  s_3e641cc9e413f1::t_7a1df715559866 94-101
+apps/desktop/preferences.ts
+  s_7a36ff2e16c14c::t_ed4bad5caed111 1-33
+packages/account/src/server.test.ts
+  s_5722ecc24d1fe3::t_834826038650b6 1-22
+  s_5722ecc24d1fe3::t_1bca72798cd9b0 23-38
+apps/api/server/api.ts
+  s_5722ecc24d1fe3::t_ae44815fad9c63 7,65-66,70
+  s_5722ecc24d1fe3::t_651ad23d2b8497 15-17
+apps/desktop/src/routes/terminal.tsx
+  s_3e641cc9e413f1::t_c7fc32598c9fbd 195-196,198,200-204,206-209,237,256
+apps/api/AGENTS.md
+  s_5722ecc24d1fe3::t_8bf08e2b12cb9b 17-18
+apps/desktop/src/routes/reset-password.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 2
+packages/i18n/vitest.config.ts
+  s_7a36ff2e16c14c::t_83c1845f92492e 2,4-29
+apps/web/src/routes/settings/route.tsx
+  s_3e641cc9e413f1::t_74eab929adc71e 2-4,13-14,16,18,20-21,23-28,30,32-33,35,37
+apps/web/src/components/web-shell.tsx
+  s_3e641cc9e413f1::t_74eab929adc71e 6-8,13-17,20-25,28,31,38-42,47-48,52-53,55-58,60
+apps/desktop/src/features/auth/components/form.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 7
+apps/desktop/src/shell.tsx
+  s_3e641cc9e413f1::t_be7f7b82cd0ad7 21
+  s_7a36ff2e16c14c::t_b715a3ee655d32 6
+  s_3e641cc9e413f1::t_592fcb08443826 14-16,22-23,27-28,68-72,75-76,79,83-84,89-93,97-101,105-110,114-118,123-124,128-129
+  s_7a36ff2e16c14c::t_7a814b98430cdc 7-13,131,135,137-138,145
+packages/i18n/src/constants.ts
+  s_7a36ff2e16c14c::t_16f21ed4bc9143 8-9
+apps/desktop/src/lib/desktop.test.ts
+  s_7a36ff2e16c14c::t_eb4f3df3485bd0 1-46
+apps/desktop/native/rpc.ts
+  s_7a36ff2e16c14c::t_ed4bad5caed111 3-4
+packages/auth/src/server.ts
+  s_7a36ff2e16c14c::t_a75049cae08fed 3-4,10,29-33
+apps/desktop/src/features/files/routes.test.tsx
+  s_3e641cc9e413f1::t_16a964880fcdba 2-35,39-53,55-68,70-85,96-116,119,121-135,138-153,155,157-165,167-171,173-174,176-193,196-230,232-236,238-278,280-285,287-292,294-320,322-327,329-333,341-343,345-396,399-406,408-432
+  s_7a36ff2e16c14c::t_d3b822fe97224d 334-340
+apps/desktop/src/features/files/components/toolbar.tsx
+  s_3e641cc9e413f1::t_bf6572432c06ae 1-70
+  s_3e641cc9e413f1::t_cc51d5512045cd 71-73
+apps/desktop/AGENTS.md
+  s_3e641cc9e413f1::t_16a964880fcdba 40,46-49
+  s_3e641cc9e413f1::t_8abeb38aa1cff9 42-45
+  s_7a36ff2e16c14c::t_81a2238a55a7b7 69-77
+  s_7a36ff2e16c14c::t_cd6f17d4bd1d5a 11-13
+  s_5722ecc24d1fe3::t_8c9fc928dda0de 19-21
+  s_5722ecc24d1fe3::t_ea1c4a01766036 14-15,22,27-34,38
+packages/account/AGENTS.md
+  s_3e641cc9e413f1::t_eee34b604fe0d4 14
+  s_5722ecc24d1fe3::t_ea1c4a01766036 1-13,15-31
+packages/i18n/src/react.ts
+  s_7a36ff2e16c14c::t_16f21ed4bc9143 4,7,11-15
+  s_7a36ff2e16c14c::t_b2000ab74fd6af 3
+apps/desktop/native/preferences.ts
+  s_7a36ff2e16c14c::t_ed4bad5caed111 4-10,12,15-17,21-30,34,36-38,42,45-46,59-60
+docs/README.md
+  s_7a36ff2e16c14c::t_876df0ffa10edd 4,8
+packages/i18n/src/index.ts
+  s_7a36ff2e16c14c::t_fc3a36dfd552d4 8-15,23,28,31-34,37
+apps/web/AGENTS.md
+  s_5722ecc24d1fe3::t_ea1c4a01766036 20-22
+  s_7a36ff2e16c14c::t_db97d4f931daed 19,23-26
+packages/auth/src/client/auth-form.tsx
+  s_3e641cc9e413f1::t_da631a9173018b 95-97,100-101,103-107,111-114,116-118,121-124,129-132,138-141,146,148,152,162-165,169,180-183,187,199-201
+  s_3e641cc9e413f1::t_5465f9e65bd315 202,227-230,234,238-241,246-249
+apps/desktop/src/routes/_local/index.tsx
+  s_7a36ff2e16c14c::t_fd52a7970613fc 10,124
+  s_5722ecc24d1fe3::t_cba8b4dbd3d699 6,95-100
+  s_5722ecc24d1fe3::t_fe65d2f22dd401 1-2,4-5,7-9,11-14,21-50,52-58,62-64,67-74,77-83,86-89,91-92,94,119,125-129,137,140,148-175,178
+  s_3e641cc9e413f1::t_c7fc32598c9fbd 103-104,107,114-118,120-123,133-136,141-144
+  s_3e641cc9e413f1::t_bf6572432c06ae 15-19
+  s_7a36ff2e16c14c::t_0244c54eabf997 20
+packages/ui/src/styles/app.css
+  s_3e641cc9e413f1::t_a39c4c4a10d2ea 1-62
+packages/account/src/index.test.ts
+  s_5722ecc24d1fe3::t_834826038650b6 1-35
+  s_5722ecc24d1fe3::t_7d505d79ad4fdd 36-52
+packages/auth/src/server.test.ts
+  s_7a36ff2e16c14c::t_a75049cae08fed 25-34
+packages/ui/src/theme-picker.tsx
+  s_3e641cc9e413f1::t_ce0b044b595467 2,5-11,14,20-53,55-61
+  s_3e641cc9e413f1::t_5a6c7a2915b302 54
+  s_5722ecc24d1fe3::t_cfa2289124d1fc 1,3-4,12-13,15-19,62
+packages/ui/AGENTS.md
+  s_5722ecc24d1fe3::t_ea1c4a01766036 12
+  s_3e641cc9e413f1::t_eee34b604fe0d4 14-15,35-36
+packages/i18n/src/preferences.ts
+  s_7a36ff2e16c14c::t_16f21ed4bc9143 1-3,6,8,12,14
+apps/desktop/src/lib/desktop.ts
+  s_7a36ff2e16c14c::t_b715a3ee655d32 3,60-61,64-65,67-68
+  s_7a36ff2e16c14c::t_9be11517496f92 63,66
+apps/desktop/src/styles.css
+  s_3e641cc9e413f1::t_1ed82112539caa 1-3
+  s_3e641cc9e413f1::t_6ff8173604cace 5
+packages/i18n/AGENTS.md
+  s_3e641cc9e413f1::t_eee34b604fe0d4 15
+  s_7a36ff2e16c14c::t_d6255cd8078145 13,16-17,31-39
+  s_5722ecc24d1fe3::t_ea1c4a01766036 14
+  s_7a36ff2e16c14c::t_7ab30405e6b356 48-50
+docs/architecture/README.md
+  s_5722ecc24d1fe3::t_ea1c4a01766036 36-42,66-68
+  s_7a36ff2e16c14c::t_876df0ffa10edd 46-50
+apps/web/src/styles.css
+  s_3e641cc9e413f1::t_74eab929adc71e 1-3,5
+apps/desktop/native/smoke.ts
+  s_7a36ff2e16c14c::t_81b4210ecae05a 89-90
+  s_3e641cc9e413f1::t_0cdda539cbe8cf 114,119,207
+  s_7a36ff2e16c14c::t_81a2238a55a7b7 5,218,256-261,266,268
+  s_3e641cc9e413f1::t_6ff8173604cace 180,254
+apps/desktop/src/preferences.test.tsx
+  s_7a36ff2e16c14c::t_b6db6b2e7db18c 1-5,7-32,34-35,37-62,64-76,78-83,95-104,120-127,129
+  s_7a36ff2e16c14c::t_8d0cc5f14a00eb 6,33,36,63,77,84-94,105-119,128,130
+apps/desktop/src/routes/_local/automations.tsx
+  s_3e641cc9e413f1::t_c7fc32598c9fbd 15-19,28,53-56,161-162,165,172-176,178-181,193-197,301,316-319,397
+  s_5722ecc24d1fe3::t_f27373aff9cbc2 1,14,37,43,46
+apps/desktop/src/routes/account.tsx
+  s_3e641cc9e413f1::t_f91ed4b97fc64e 1-7,13,18,26-27,29,69-70,72,77,84,86,88-91,98,103-108
+  s_3e641cc9e413f1::t_64e024eac4efe0 109-110
+packages/i18n/README.md
+  s_7a36ff2e16c14c::t_13f952793d808c 36-38
+  s_7a36ff2e16c14c::t_4b2e3222783dfd 60
+  s_7a36ff2e16c14c::t_d6255cd8078145 1-35,39-50,52-57
+  s_7a36ff2e16c14c::t_fc3a36dfd552d4 51,58-59,61-63
+packages/i18n/src/browser.component.test.tsx
+  s_7a36ff2e16c14c::t_e01124f281318e 2-3,5-11,13-26,31,34-36,39-40,42,47-50,52-79,85-93,99-110,112-130,134-139,141,143-171,173,177-182,184-205,207
+  s_7a36ff2e16c14c::t_13f952793d808c 94-98,210-223
+  s_7a36ff2e16c14c::t_793736738255dd 229-232
+apps/mobile/vitest.config.ts
+  s_7a36ff2e16c14c::t_79057db359056c 1-3
+  s_7a36ff2e16c14c::t_6b7635da799e45 4
+  s_7a36ff2e16c14c::t_5b2883a0f7ad23 5-6
+packages/i18n/src/translator.test.ts
+  s_7a36ff2e16c14c::t_4b2e3222783dfd 3-4,20-24
+  s_7a36ff2e16c14c::t_17f797c0c3db7f 25
+apps/api/package.json
+  s_5722ecc24d1fe3::t_a2c1430608243e 21
+apps/web/package.json
+  s_5722ecc24d1fe3::t_4a7c1318fcba15 19
+apps/web/src/features/auth/account.ts
+  s_5722ecc24d1fe3::t_5d3eb39c5f9bc7 2,5
+apps/web/src/features/auth/client.ts
+  s_5722ecc24d1fe3::t_bce41ea3b35d75 1-2,4-7
+apps/web/src/features/auth/components/auth-form.tsx
+  s_5722ecc24d1fe3::t_a020dfd7f64cf9 7
+apps/web/src/test/request.test.ts
+  s_7a36ff2e16c14c::t_2e18bb77cbd080 20,25,29
+apps/web/src/test/routes/auth.component.test.tsx
+  s_7a36ff2e16c14c::t_6ad66133a86812 31,43-45,47
+packages/account/package.json
+  s_5722ecc24d1fe3::t_1ecf7350db46d2 1-49
+packages/account/src/client/styles.css
+  s_3e641cc9e413f1::t_0763ed588e0e9d 1
+packages/account/tsconfig.json
+  s_5722ecc24d1fe3::t_b025ae191e85aa 1-7
+packages/account/vitest.config.ts
+  s_5722ecc24d1fe3::t_9454692943d1d5 1-3
+packages/auth/package.json
+  s_5722ecc24d1fe3::t_46760599814820 11-12,51-52
+packages/auth/src/client/styles.css
+  s_3e641cc9e413f1::t_8838bb7a2d3252 1
+packages/i18n/src/browser/storage.ts
+  s_7a36ff2e16c14c::t_657366b73d1161 1-75
+packages/i18n/src/client.ts
+  s_7a36ff2e16c14c::t_3c29f334368eb7 1-4
+packages/i18n/src/cookie.ts
+  s_7a36ff2e16c14c::t_b6ad6020051ffd 1-2
+packages/i18n/src/formatter.ts
+  s_7a36ff2e16c14c::t_e82f95ca67189b 2-3,5-6,8-9
+packages/i18n/src/index.test.ts
+  s_7a36ff2e16c14c::t_750b01d03788da 11,51-52,63-64,69
+packages/i18n/src/messages/index.ts
+  s_7a36ff2e16c14c::t_a0e8ac3644800d 1-4
+packages/i18n/src/native.ts
+  s_7a36ff2e16c14c::t_8d033de83ae962 1-2,8-9
+packages/i18n/src/normalize.ts
+  s_7a36ff2e16c14c::t_ed1603cf2f9ef0 1-2,10-12
+packages/i18n/src/preferences.test.ts
+  s_7a36ff2e16c14c::t_d5a5b0fb7ef874 2-4,11-13
+packages/i18n/src/resolve.ts
+  s_7a36ff2e16c14c::t_f088b8b6482bdf 1-2
+packages/i18n/src/runtime.ts
+  s_7a36ff2e16c14c::t_1a12b81440d442 8
+packages/i18n/src/server.test.ts
+  s_7a36ff2e16c14c::t_9ae8a11d050eea 3
+packages/i18n/src/server.ts
+  s_7a36ff2e16c14c::t_dc9b74432efa20 2,6-9
+packages/i18n/src/testing.test.ts
+  s_7a36ff2e16c14c::t_6d2cf37b748296 3
+packages/i18n/src/translator.ts
+  s_7a36ff2e16c14c::t_413a2055879d7d 1
+packages/i18n/src/types-entry.ts
+  s_7a36ff2e16c14c::t_3137773fb6a382 1-3
+packages/tooling/package.json
+  s_7a36ff2e16c14c::t_251a1b583388b9 17
+packages/tooling/src/framework.test.ts
+  s_7a36ff2e16c14c::t_559909c6dc783d 137-201
+packages/tooling/src/policy.ts
+  s_7a36ff2e16c14c::t_f21f109d2aee03 4-5,75,77-80,83-84,87,94,96,98-108,110,116,118,121-132
+packages/ui/package.json
+  s_5722ecc24d1fe3::t_6166c9b6b4cc09 40-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ce413d557a2ea412f2a5dc960b6b6b9dfe78b8eb",
+  "prompts": {},
+  "sessions": {
+    "s_3e641cc9e413f1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13fd4-0d2b-7ab3-b592-1d5ff67887e9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_5722ecc24d1fe3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13eed-0d56-73d1-bfa0-ddde7cacea50",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_7a36ff2e16c14c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14349-e934-7a81-914e-1111a7218798",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
