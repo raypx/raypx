@@ -1,29 +1,21 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { LOCALE_COOKIE_NAME } from "./constants";
-import { serializeLocaleCookie } from "./cookie";
-import { LanguageProvider } from "./language-provider";
-import { useLocale } from "./react";
-import { LOCALE_PREFERENCE_KEY, parseLocalePreference, type LocalePreference } from "./preferences";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { LanguageProvider } from "./language-provider.js";
+import { useLocale } from "./react.js";
+import {
+  LOCALE_PREFERENCE_KEY,
+  parseLocalePreference,
+  type LocalePreference,
+} from "./preferences.js";
+import {
+  restoreBrowserPreference,
+  storePreferenceCookie,
+  writeBrowserPreference,
+} from "./browser/storage.js";
 
-function readStoredPreference(): LocalePreference | undefined {
-  try {
-    const value = localStorage.getItem(LOCALE_PREFERENCE_KEY);
-    return value === null ? undefined : parseLocalePreference(value);
-  } catch {
-    return undefined;
-  }
+export function getBrowserSystemLocales(): readonly string[] {
+  return navigator.languages.length > 0 ? [...navigator.languages] : [navigator.language];
 }
-/** The cookie lets server rendering use the same choice; "system" clears it. */
-function storeCookie(value: LocalePreference) {
-  try {
-    document.cookie =
-      value === "system"
-        ? `${LOCALE_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`
-        : serializeLocaleCookie(value, { secure: location.protocol === "https:" });
-  } catch {
-    /* Cookies only seed server rendering; device storage remains authoritative. */
-  }
-}
+
 function DocumentLanguage() {
   const locale = useLocale();
   useEffect(() => {
@@ -31,59 +23,84 @@ function DocumentLanguage() {
   }, [locale]);
   return null;
 }
+
 export interface BrowserLanguageProviderProps {
   children: ReactNode;
-  /** Server-rendered values own the first render so hydration matches. */
+  /** The first render uses only this snapshot, including during SSR hydration. */
   initialPreference?: LocalePreference;
-  initialSystemLocale?: string;
+  initialSystemLocales?: readonly string[];
+  /** Native bootstrap owns restoration and disables browser storage events. */
+  restorePreference?: boolean;
 }
+
 export function BrowserLanguageProvider({
   children,
-  initialPreference,
-  initialSystemLocale,
+  initialPreference = "system",
+  initialSystemLocales = [],
+  restorePreference = true,
 }: BrowserLanguageProviderProps) {
-  const [preference, setPreference] = useState(
-    () => initialPreference ?? readStoredPreference() ?? "system",
-  );
-  const [systemLocale, setSystemLocale] = useState(() => initialSystemLocale ?? navigator.language);
+  const initial = useRef(initialPreference);
+  const [preference, setPreference] = useState(initialPreference);
+  const [systemLocales, setSystemLocales] = useState(initialSystemLocales);
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    // Reconcile server-rendered values with this device after hydration.
-    const stored = readStoredPreference();
-    if (stored !== undefined) {
-      setPreference(stored);
-      storeCookie(stored);
+    if (restorePreference) {
+      const restored = restoreBrowserPreference(initial.current);
+      setPreference(restored);
+      storePreferenceCookie(restored);
     }
-    setSystemLocale(navigator.language);
-    const language = () => setSystemLocale(navigator.language);
+    setSystemLocales(getBrowserSystemLocales());
+    setHydrated(true);
+    const language = () => setSystemLocales(getBrowserSystemLocales());
     const storage = (event: StorageEvent) => {
-      if (event.key === LOCALE_PREFERENCE_KEY) setPreference(parseLocalePreference(event.newValue));
+      if (!restorePreference || (event.key !== null && event.key !== LOCALE_PREFERENCE_KEY)) return;
+      try {
+        if (event.storageArea !== localStorage) return;
+      } catch {
+        return;
+      }
+      // Deletion/clear resets the current selection, without resurrecting a legacy key.
+      const next = parseLocalePreference(event.newValue);
+      if (next === "system" && event.newValue !== "system") {
+        // A reset marker also prevents a surviving legacy key from winning after remount.
+        writeBrowserPreference("system");
+      }
+      setPreference(next);
+      storePreferenceCookie(next);
     };
     window.addEventListener("languagechange", language);
-    window.addEventListener("storage", storage);
+    if (restorePreference) window.addEventListener("storage", storage);
     return () => {
       window.removeEventListener("languagechange", language);
-      window.removeEventListener("storage", storage);
+      if (restorePreference) window.removeEventListener("storage", storage);
     };
+  }, [restorePreference]);
+  const change = useCallback((value: LocalePreference) => {
+    const next = parseLocalePreference(value);
+    setPreference(next);
+    writeBrowserPreference(next);
+    storePreferenceCookie(next);
   }, []);
-  function change(value: LocalePreference) {
-    setPreference(value);
-    try {
-      localStorage.setItem(LOCALE_PREFERENCE_KEY, value);
-    } catch {
-      /* In-memory preferences remain available. */
-    }
-    storeCookie(value);
-  }
   return (
     <LanguageProvider
       preference={preference}
-      systemLocale={systemLocale}
+      systemLocales={systemLocales}
       onPreferenceChange={change}
+      hydrated={hydrated}
     >
       <DocumentLanguage />
       {children}
     </LanguageProvider>
   );
 }
-export { useLanguagePreference } from "./language-provider";
-export { useTranslations, useLocale, useFormatter } from "./react";
+export { useLanguagePreference } from "./language-provider.js";
+export {
+  useTranslations,
+  useLocale,
+  useFormatter,
+  useNow,
+  useTimeZone,
+  useMessages,
+} from "./react.js";
+export { LanguageSelect } from "./browser/language-select.js";
+export { readBrowserPreference } from "./browser/storage.js";

@@ -1,8 +1,9 @@
-import type { TranslationValues } from "./types";
+import type { TranslationValues } from "./types.js";
 
-type ErrorTranslator = (key: string, values?: TranslationValues) => string;
+type ErrorTranslator = (...args: never[]) => string;
+type TranslationKey<T extends ErrorTranslator> = Parameters<T>[0] & string;
 
-export type ErrorCodeMap = Readonly<Record<string, string>>;
+export type ErrorCodeMap<K extends string = string> = Readonly<Record<string, K>>;
 
 export type LocalizedErrorDetails = {
   code: string;
@@ -70,11 +71,20 @@ export function readErrorDetails(error: unknown): LocalizedErrorDetails | undefi
   }
 }
 
-export function translateErrorCode(
+/** One bridge connects sanitized transport values to a translator's per-key ICU types. */
+function translate<T extends ErrorTranslator>(
+  translator: T,
+  key: TranslationKey<T>,
+  values: TranslationValues | undefined,
+): string {
+  return Reflect.apply(translator, undefined, values === undefined ? [key] : [key, values]);
+}
+
+export function translateErrorCode<T extends ErrorTranslator>(
   error: unknown,
-  translator: ErrorTranslator,
-  errorKeys: ErrorCodeMap,
-  fallbackKey = "unknown",
+  translator: T,
+  errorKeys: ErrorCodeMap<NoInfer<TranslationKey<T>>>,
+  fallbackKey: NoInfer<TranslationKey<T>>,
 ): string {
   const details = readErrorDetails(error);
   const code = details?.code;
@@ -82,17 +92,17 @@ export function translateErrorCode(
     code && Object.prototype.hasOwnProperty.call(errorKeys, code)
       ? (errorKeys[code] ?? fallbackKey)
       : fallbackKey;
-  return translator(key, details?.values);
+  return translate(translator, key, details?.values);
 }
 
-export function translateKnownErrorCode(
+export function translateKnownErrorCode<T extends ErrorTranslator>(
   error: unknown,
-  translator: ErrorTranslator,
-  errorKeys: ErrorCodeMap,
+  translator: T,
+  errorKeys: ErrorCodeMap<NoInfer<TranslationKey<T>>>,
 ): string | null {
   const details = readErrorDetails(error);
   const code = details?.code;
   if (!code || !Object.prototype.hasOwnProperty.call(errorKeys, code)) return null;
   const key = errorKeys[code];
-  return key ? translator(key, details?.values) : null;
+  return key ? translate(translator, key, details?.values) : null;
 }

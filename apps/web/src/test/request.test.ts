@@ -17,16 +17,16 @@ describe("server request handling", () => {
       readRequestPreferences(
         new Headers({ cookie: "theme=dark; locale=zh", "accept-language": "en-US,en;q=0.9" }),
       ),
-    ).toEqual({ theme: "dark", locale: "zh", systemLocale: "en" });
+    ).toEqual({ theme: "dark", locale: "zh", systemLocales: ["en-US", "en"] });
     expect(
       readRequestPreferences(
         new Headers({ cookie: "theme=sepia", "accept-language": "fr, zh-CN;q=0.8" }),
       ),
-    ).toEqual({ theme: "system", locale: "system", systemLocale: "zh" });
+    ).toEqual({ theme: "system", locale: "system", systemLocales: ["fr", "zh-CN"] });
     expect(readRequestPreferences(new Headers())).toEqual({
       theme: "system",
       locale: "system",
-      systemLocale: "en",
+      systemLocales: [],
     });
   });
 });

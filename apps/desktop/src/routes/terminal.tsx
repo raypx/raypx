@@ -192,14 +192,21 @@ function TerminalPage() {
     }
   }
   return (
-    <section className="page local-page terminal-page">
-      <header className="page-heading">
+    <section className="mx-auto max-w-[1320px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+      <header className="mb-10">
         <h1>{t("title")}</h1>
-        <p>{t("intro")}</p>
+        <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("intro")}</p>
       </header>
-      {!isDesktop() && <p className="notice">{c("desktopOnly")}</p>}
+      {!isDesktop() && (
+        <p className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]">
+          {c("desktopOnly")}
+        </p>
+      )}
       {error && (
-        <p role="alert" className="notice error">
+        <p
+          role="alert"
+          className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
+        >
           {error}
         </p>
       )}
@@ -227,7 +234,7 @@ function TerminalPage() {
             {t("arguments")}
             <Input id="terminal-args" name="args" defaultValue="[]" disabled={running || opening} />
           </label>
-          <div className="inline-actions">
+          <div className="flex min-h-[34px] flex-wrap items-center gap-5 self-end">
             {running ? (
               <Button variant="outline" onClick={() => void close()}>
                 <Square size={15} />
@@ -246,7 +253,7 @@ function TerminalPage() {
       <div className="terminal-status" role="status">
         {running ? (
           <>
-            <span className="brand-dot" />
+            <span className="size-1.5 rounded-full bg-foreground" />
             {t("running")}
           </>
         ) : exitCode !== null ? (

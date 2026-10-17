@@ -9,8 +9,10 @@ packages own page layout, forms, navigation and product behavior.
 
 - `components/ui/*`: Base UI and shadcn primitives.
 - `theme`: pure token definitions, types and theme preference parsing.
-- `theme/client`: DOM provider, startup script and theme hook.
+- `theme/client`: DOM provider, startup script, theme hook and controlled ThemePicker.
 - `styles.css`: DOM Tailwind entry and generated theme values.
+- `styles/app.css`: imports the Tailwind entry once and supplies layered app base
+  defaults. Layout and control utilities live in their owning components.
 - `styles/native.css`: generated semantic variables for Uniwind only.
 - Other explicit subpaths expose reusable visual patterns and the original logo.
 
@@ -30,6 +32,8 @@ Preserve the original brand artwork and Neutral light/dark values.
 - Generated shadcn primitives live under `src/components/ui`; handwritten patterns
   stay flat under `src`. Consumers use explicit package exports.
 - Preserve labelled controls, keyboard/focus behavior and reduced-motion support.
+- Prefer Tailwind utilities and semantic tokens; keep global app rules in the
+  base layer so component utilities can override defaults.
 - Keep an independent Vitest config so Vite application plugins never enter tests.
 
 ## Verification

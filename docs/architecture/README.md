@@ -33,10 +33,21 @@ API creates the DB adapter and mailer and injects them; auth never imports their
 concrete packages. Only account.get is exposed through remote RPC. Its safe
 projection is { id, email, name }.
 
+Account provides platform-neutral remote read state, browser account views and an
+injected server projection service. API supplies fresh session resolution and
+maps unauthorized responses; Web/Desktop supply navigation and auth actions.
+Auth and client do not depend on account. Shared feature styles live with their
+packages; generic shell/settings styles live in UI. ThemePicker belongs to UI's
+browser entry, and LanguageSelect to i18n's browser entry.
+
 Contracts/api contains oRPC definitions; contracts/local contains Zod device
 messages. Client is the remote SDK. Local interfaces are never registered on
 public RPC. UI contains DOM components and pure theme/native CSS entries.
-I18n contains static English/Chinese catalogs and platform adapters.
+I18n contains static English/Chinese catalogs and platform adapters. Its controlled
+Voidmix provider delegates translation, formatting and React context to use-intl.
+Only `useLanguagePreference().setPreference()` changes the product language
+preference; the active locale is derived from that preference and the full ordered
+system locale list. See [internationalization](internationalization.md).
 DB owns fresh auth-only schema/migrations; mail owns auth delivery/templates.
 
 ## Device runtime
@@ -52,6 +63,9 @@ one scheduling owner and per-job execution locks. Cron uses five fields and an
 IANA zone, skips missed triggers, and never retries interrupted commands on restart.
 Tray runtime owns scheduling; explicit Quit/EOF cancels managed work. Local state
 and theme/locale preferences survive account logout.
+Files uses route search for directory/pagination, a scoped Zustand store for
+unsaved UI state, and route loaders for native reads. Root grants are shared at
+the local route boundary. Only the file table suspends while its listing reloads.
 
 ## Extension
 

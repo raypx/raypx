@@ -37,7 +37,8 @@
     "./icon-button": "./src/icon-button.tsx",
     "./help-hint": "./src/help-hint.tsx",
     "./theme/client": "./src/theme/client.ts",
-    "./styles/native.css": "./src/styles/native.css"
+    "./styles/native.css": "./src/styles/native.css",
+    "./styles/app.css": "./src/styles/app.css"
   },
   "scripts": {
     "check": "bun run scripts/generate-theme.ts --check && bun --check --tsconfig-override tsconfig.json",

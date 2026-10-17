@@ -1,10 +1,11 @@
+import { AccountDetails, SignedOutAccount, type AccountLinkProps } from "@raypx/account/client";
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowRight, CircleCheck, CircleUserRound } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { authClient, loadAccount, webUrl } from "../features/auth/account";
+import { authClient, webUrl } from "../features/auth/client";
+import { loadAccount } from "../features/auth/account";
 
 export const Route = createFileRoute("/")({
   loader: () => loadAccount(),
@@ -28,75 +29,44 @@ function AccountPage() {
     }
   }
   return (
-    <section className="page account-page">
-      <header className="page-heading">
+    <section className="mx-auto max-w-[900px] px-14 pt-13 pb-20 max-[760px]:px-6 max-[760px]:pt-8.5 max-[760px]:pb-14 max-[420px]:px-5">
+      <header className="mb-10">
         <h1>{t("accountTitle")}</h1>
-        <p>{t("accountIntro")}</p>
+        <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>
       </header>
       {state.status === "unavailable" ? (
-        <div className="empty-panel">
+        <div className="flex flex-wrap items-center gap-4 py-9">
           <p role="alert">{c("networkError")}</p>
           <Button variant="outline" disabled={busy} onClick={() => void reload()}>
             {c("retry")}
           </Button>
         </div>
       ) : state.status === "signed-out" ? (
-        <div className="account-empty">
-          <CircleUserRound size={48} strokeWidth={1} />
-          <h2>{t("signedOut")}</h2>
-          <p>{t("signedOutIntro")}</p>
-          <div className="inline-actions">
-            <Link to="/login" className="button-link">
-              {c("signIn")}
-              <ArrowRight size={16} />
-            </Link>
-            <Link to="/signup" className="text-link">
-              {t("create")}
-            </Link>
-          </div>
-        </div>
+        <SignedOutAccount LinkComponent={AccountLink} />
       ) : (
-        <div className="account-details">
-          <div className="account-identity">
-            <span className="account-avatar">{state.account.name.slice(0, 1).toUpperCase()}</span>
-            <div>
-              <h2>{state.account.name}</h2>
-              <p>{state.account.email}</p>
-            </div>
-          </div>
-          <dl>
-            <div>
-              <dt>{t("name")}</dt>
-              <dd>{state.account.name}</dd>
-            </div>
-            <div>
-              <dt>{t("email")}</dt>
-              <dd>{state.account.email}</dd>
-            </div>
-            <div>
-              <dt>{c("status")}</dt>
-              <dd>
-                <span className="status-label">
-                  <CircleCheck size={16} />
-                  {t("verifiedLabel")}
-                </span>
-              </dd>
-            </div>
-          </dl>
+        <AccountDetails
+          account={state.account}
+          busy={busy}
+          onSignOut={() => auth.signOut(() => router.invalidate())}
+        >
           {auth.error && (
-            <p role="alert" className="notice error">
+            <p
+              role="alert"
+              className="mb-5 flex items-center gap-2 rounded-lg bg-destructive/8 px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
+            >
               {c("networkError")}
             </p>
           )}
-          <Button
-            variant="outline"
-            disabled={busy}
-            onClick={() => void auth.signOut(() => router.invalidate())}
-          >
-            {busy ? c("working") : c("signOut")}
-          </Button>
-        </div>
+        </AccountDetails>
       )}
     </section>
+  );
+}
+
+function AccountLink({ to, className, children }: AccountLinkProps) {
+  return (
+    <Link to={`/${to}`} className={className}>
+      {children}
+    </Link>
   );
 }

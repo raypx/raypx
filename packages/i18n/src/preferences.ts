@@ -1,14 +1,15 @@
-import { normalizeLocale } from "./normalize";
-import type { Locale } from "./types";
+import { LOCALE_STORAGE_KEY } from "./constants.js";
+import { localeRuntime } from "./runtime.js";
+import type { Locale } from "./types.js";
 
 export type LocalePreference = Locale | "system";
-export const LOCALE_PREFERENCE_KEY = "raypx_locale";
+export const LOCALE_PREFERENCE_KEY = LOCALE_STORAGE_KEY;
 export function parseLocalePreference(value: unknown): LocalePreference {
-  return value === "en" || value === "zh" ? value : "system";
+  return localeRuntime.parsePreference(value);
 }
 export function resolveLocalePreference(
   preference: LocalePreference,
-  systemLocale?: string,
+  systemLocales: readonly string[] = [],
 ): Locale {
-  return preference === "system" ? (normalizeLocale(systemLocale) ?? "en") : preference;
+  return localeRuntime.resolvePreference(preference, systemLocales);
 }

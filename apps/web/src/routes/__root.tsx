@@ -32,7 +32,7 @@ function RootDocument({ children }: { children: ReactNode }) {
   const preferences = Route.useLoaderData();
   return (
     <html
-      lang={resolveLocalePreference(preferences.locale, preferences.systemLocale)}
+      lang={resolveLocalePreference(preferences.locale, preferences.systemLocales)}
       suppressHydrationWarning
     >
       <head>
@@ -44,7 +44,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <ThemeProvider disableScript initialTheme={preferences.theme}>
           <BrowserLanguageProvider
             initialPreference={preferences.locale}
-            initialSystemLocale={preferences.systemLocale}
+            initialSystemLocales={preferences.systemLocales}
           >
             {children}
           </BrowserLanguageProvider>

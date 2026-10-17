@@ -24,15 +24,18 @@
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "@voidmix/intl": "catalog:"
+    "@voidmix/intl": "catalog:",
+    "use-intl": "catalog:"
   },
   "devDependencies": {
     "@testing-library/react": "catalog:dev",
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
+    "@types/react-dom": "catalog:dev",
     "@voidmix/tsconfig": "catalog:dev",
     "jsdom": "catalog:dev",
     "react": "catalog:",
+    "react-dom": "catalog:",
     "vite-plus": "catalog:dev"
   },
   "peerDependencies": {
@@ -49,10 +52,10 @@
     },
     "sourceTargets": {
       "src/client.ts": "browser",
-      "src/client/**": "browser",
       "src/browser.tsx": "browser",
       "src/native.ts": "native",
-      "src/testing.ts": "universal"
+      "src/testing.ts": "universal",
+      "src/browser/**": "browser"
     }
   }
 }

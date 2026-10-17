@@ -5,14 +5,14 @@ export {
   LOCALE_OPTIONS,
   LOCALE_STORAGE_KEY,
   SUPPORTED_LOCALES,
-} from "./constants";
-export { parseAcceptLanguage } from "./accept-language";
-export { getLocaleCookie, serializeLocaleCookie } from "./cookie";
-export { createFormatter, type Formatter, type FormatterOptions } from "./formatter";
-export { formats } from "./formats";
-export { isLocale, normalizeLocale } from "./normalize";
-export { resolveLocale } from "./resolve";
-export { createTranslator, type CreateTranslatorOptions, type Translator } from "./translator";
+} from "./constants.js";
+export { parseAcceptLanguage } from "./accept-language.js";
+export { getLocaleCookie, serializeLocaleCookie } from "./cookie.js";
+export { createFormatter, type Formatter, type FormatterOptions } from "./formatter.js";
+export { formats } from "./formats.js";
+export { isLocale, normalizeLocale, matchLocale } from "./normalize.js";
+export { resolveLocale } from "./resolve.js";
+export { createTranslator, type CreateTranslatorOptions, type Translator } from "./translator.js";
 export {
   readErrorCode,
   readErrorDetails,
@@ -20,13 +20,18 @@ export {
   translateKnownErrorCode,
   type ErrorCodeMap,
   type LocalizedErrorDetails,
-} from "./errors";
+} from "./errors.js";
 export type {
   IntlRuntimeOptions,
   LocaleOption,
   MessageCatalog,
+  DynamicMessages,
   MessageTree,
   MessagesByLocale,
+  Messages,
+  CatalogShape,
+  MessageKey,
+  NamespaceOf,
   TranslationValue,
   TranslationValues,
-} from "./types";
+} from "./types.js";

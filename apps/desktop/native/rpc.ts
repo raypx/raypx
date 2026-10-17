@@ -1,9 +1,7 @@
 import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
 import type { RPCSchema } from "electrobun/rpc";
-export interface DevicePreferences {
-  theme: "system" | "light" | "dark";
-  locale: "system" | "en" | "zh";
-}
+import type { DevicePreferences } from "../preferences";
+export type { DevicePreferences } from "../preferences";
 
 export interface EngineStatus {
   status: "starting" | "ready" | "error";

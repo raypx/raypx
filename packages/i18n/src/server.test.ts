@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { resolveRequestLocale, resolveRequestLocaleHint } from "./server";
+import { resolveRequestLocale, resolveRequestLocaleHint } from "./server.js";
 
 describe("server locale resolution", () => {
   it("returns only an explicit request hint when requested", () => {

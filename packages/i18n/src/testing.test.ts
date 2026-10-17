@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { assertMessageCatalogParity, extractIcuArguments } from "./testing";
+import { assertMessageCatalogParity, extractIcuArguments } from "./testing.js";
 
 describe("message catalog testing helpers", () => {
   it.each([

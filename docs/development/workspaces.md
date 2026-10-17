@@ -38,6 +38,15 @@ form is covered by both applications' route integration tests. DOM form dependen
 stay behind the browser entry; `/hooks` remains platform-neutral, while `/server`
 and `/native` do not import DOM code.
 
+Account has three public code entries: the universal root for safe remote read
+state, `/client` for shared DOM views and `/server` for the injected session
+projection service. Web/Desktop own client instances and navigation; API owns HTTP
+and error mapping. Feature CSS is exported through `/client/styles.css` from auth
+and account; these entries register their components as Tailwind sources.
+UI's `/styles/app.css` imports the shared theme and layered app base defaults.
+Layout and control utilities live in their owning components. Applications also
+register i18n's browser controls as a Tailwind source.
+
 Extract @raypx/testing when generic fixtures repeat across consumers; it must not
 import packages under test. Extract runtime only when another execution host
 directly consumes CLI internals. Do not create packages before those consumers exist.

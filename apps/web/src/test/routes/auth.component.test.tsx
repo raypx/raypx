@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => ({
   resetPassword: vi.fn(),
   signOut: vi.fn(),
 }));
-vi.mock("../../features/auth/account", () => ({
+vi.mock("../../features/auth/client", () => ({
   webUrl: "https://raypx.example",
   loadAccount: async () => ({ status: "signed-out" }),
   authClient: {
@@ -40,8 +40,11 @@ vi.mock("../../features/auth/account", () => ({
     signOut: mocks.signOut,
   },
 }));
+vi.mock("../../features/auth/account", () => ({
+  loadAccount: async () => ({ status: "signed-out" }),
+}));
 vi.mock("../../preferences", () => ({
-  loadPreferences: () => ({ theme: "light", locale: "en", systemLocale: "en" }),
+  loadPreferences: () => ({ theme: "light", locale: "en", systemLocales: ["en"] }),
 }));
 
 const rootOptions = routeTree.options as typeof routeTree.options &

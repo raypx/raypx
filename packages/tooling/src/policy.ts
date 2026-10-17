@@ -1,6 +1,8 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseSync } from "oxc-parser";
+import { compareMessageCatalogs } from "@voidmix/intl/testing";
+import type { MessageTree } from "@voidmix/intl/types";
 import { checkArchitecture } from "./architecture.js";
 import { checkToolchain } from "./toolchain.js";
 import { discover } from "./workspaces.js";
@@ -70,65 +72,64 @@ export function checkLocales(root: string): string[] {
       findings.push(`${folder}: both en and zh catalogs are required`);
       continue;
     }
-    const extract = (path: string): Record<string, string> => {
+    const extract = (path: string): MessageTree => {
       const source = readFileSync(join(root, path), "utf8");
-      const result: Record<string, string> = {};
-      function flatten(value: unknown, prefix = "") {
-        if (!value || typeof value !== "object") return;
+      const object = (): Record<string, string | MessageTree> => Object.create(null);
+      function readNode(value: unknown): string | MessageTree {
+        if (!value || typeof value !== "object")
+          throw new Error(`${path}: catalogs must contain static string objects`);
         const node = value as Record<string, unknown>;
         if (node.type === "TSAsExpression" || node.type === "TSSatisfiesExpression")
-          return flatten(node.expression, prefix);
-        if (node.type === "Literal" && typeof node.value === "string") {
-          result[prefix] = node.value;
-          return;
-        }
+          return readNode(node.expression);
+        if (node.type === "Literal" && typeof node.value === "string") return node.value;
         if (node.type !== "ObjectExpression")
           throw new Error(`${path}: catalogs must contain static string objects`);
+        const result = object();
         for (const property of node.properties as Record<string, unknown>[]) {
           if (property.type !== "Property" || property.computed)
             throw new Error(`${path}: dynamic catalog keys are unsupported`);
           const key = property.key as { value?: unknown; name?: string };
           const name = typeof key.value === "string" ? key.value : key.name;
           if (!name) throw new Error(`${path}: invalid catalog key`);
-          flatten(property.value, prefix ? `${prefix}.${name}` : name);
+          result[name] = readNode(property.value);
         }
+        return result;
       }
-      if (path.endsWith(".json")) {
-        const walk = (value: unknown, prefix: string) => {
-          if (typeof value === "string") {
-            result[prefix] = value;
-            return;
-          }
-          if (!value || typeof value !== "object")
-            throw new Error(`${path}: expected string messages`);
-          for (const [key, child] of Object.entries(value))
-            walk(child, prefix ? `${prefix}.${key}` : key);
-        };
-        walk(JSON.parse(source), "");
-      } else {
+      function readJson(value: unknown): string | MessageTree {
+        if (typeof value === "string") return value;
+        if (!value || typeof value !== "object" || Array.isArray(value))
+          throw new Error(`${path}: expected static string objects`);
+        const result = object();
+        for (const [key, child] of Object.entries(value)) result[key] = readJson(child);
+        return result;
+      }
+      let result: string | MessageTree;
+      if (path.endsWith(".json")) result = readJson(JSON.parse(source));
+      else {
         const parsed = parseSync(path, source);
+        if (parsed.errors.length) throw new Error(`${path}: ${parsed.errors[0]!.message}`);
         const declaration = parsed.program.body.find(
           (node) => node.type === "ExportDefaultDeclaration",
         );
         if (!declaration || declaration.type !== "ExportDefaultDeclaration")
           throw new Error(`${path}: expected a default static catalog`);
-        flatten(declaration.declaration);
+        result = readNode(declaration.declaration);
       }
+      if (typeof result === "string") throw new Error(`${path}: expected a catalog object`);
       return result;
     };
-    const en = extract(pair.en);
-    const zh = extract(pair.zh);
-    const compare = (a: string, b: string) => a.localeCompare(b);
-    if (
-      JSON.stringify(Object.keys(en).sort(compare)) !==
-      JSON.stringify(Object.keys(zh).sort(compare))
-    )
-      findings.push(`${folder}: en/zh catalog keys differ`);
-    for (const [key, value] of Object.entries(en)) {
-      const variables = (message: string) =>
-        [...message.matchAll(/\{([A-Za-z_]\w*)(?:[,}])/g)].map((match) => match[1]!).sort(compare);
-      if (zh[key] && JSON.stringify(variables(value)) !== JSON.stringify(variables(zh[key])))
-        findings.push(`${folder}: interpolation variables differ for ${key}`);
+    const catalogs: { en?: MessageTree; zh?: MessageTree } = {};
+    for (const locale of ["en", "zh"] as const) {
+      try {
+        catalogs[locale] = extract(pair[locale]!);
+      } catch (error) {
+        findings.push(error instanceof Error ? error.message : `${pair[locale]}: invalid catalog`);
+      }
+    }
+    if (!catalogs.en || !catalogs.zh) continue;
+    for (const issue of compareMessageCatalogs(catalogs.en, catalogs.zh, "en", "zh")) {
+      const source = issue.side ? pair[issue.side === "left" ? "en" : "zh"]! : folder;
+      findings.push(`${source}: ${issue.message}; ${issue.fix}`);
     }
   }
   return findings;

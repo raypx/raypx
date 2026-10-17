@@ -9,6 +9,7 @@ Account authentication, platform-specific session adapters and shared DOM forms.
 - `/server`: injected Better Auth factory and safe projection.
 - `/client`: browser `createAuthClient` and shared DOM `AuthForm` with injected
   authentication, query and navigation adapters.
+- `/client/styles.css`: registers Tailwind sources for the shared DOM form.
 - `/native`: Expo SecureStore client and live cookie headers.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale
   and Web callback origin.

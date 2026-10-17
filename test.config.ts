@@ -12,6 +12,8 @@ export function workspaceTests(
   } = {},
 ) {
   return defineConfig({
+    // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
+    resolve: { dedupe: ["react", "react-dom", "use-intl"] },
     test: {
       environment: "node",
       // Turbo already runs workspaces in parallel; bound each runner's process pool.

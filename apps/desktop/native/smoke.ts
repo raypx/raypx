@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { JobDefinition, JobRun, RootGrant } from "@raypx/contracts/local";
+import { DEVICE_PREFERENCES_KEY } from "../preferences";
 import {
   engine,
   handleTrayAction,
@@ -85,11 +86,11 @@ try {
   }, "Renderer bridge did not recover after native resize");
   console.info(`Native smoke WebView origin: ${String(origin)}`);
   const phase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
+  const dataDir = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
+  if (!dataDir) throw new Error("Smoke requires an isolated data directory");
   if (phase === "shell") {
     assert.equal(await evaluate("return location.protocol"), "views:");
     stage = "local renderer file bridge";
-    const dataDir = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
-    if (!dataDir) throw new Error("Smoke requires an isolated data directory");
     const directory = join(dataDir, "authorized");
     await mkdir(directory, { recursive: true });
     const grant = (await engine.request("roots.register", { path: directory })) as RootGrant;
@@ -110,12 +111,12 @@ try {
       async () =>
         Boolean(
           await evaluate(
-            'return [...document.querySelectorAll(".file-name")].some(node=>node.textContent.includes("native-smoke.txt"))',
+            'return [...document.querySelectorAll("[data-slot=file-entry]")].some(node=>node.textContent.includes("native-smoke.txt"))',
           ),
         ),
       "Renderer did not list the engine's authorized file",
     );
-    await evaluate('document.querySelector(".file-name")?.click(); return true');
+    await evaluate('document.querySelector("[data-slot=file-entry]")?.click(); return true');
     await waitFor(
       async () =>
         (await evaluate('return document.querySelector("#file-editor")?.value')) ===
@@ -176,7 +177,7 @@ try {
       "Settings route did not mount",
     );
     await evaluate(
-      'document.querySelector("input[name=theme][value=dark]").click();const select=document.querySelector(".language-select select");select.value="zh";select.dispatchEvent(new Event("change",{bubbles:true}));return true',
+      'document.querySelector("input[name=theme][value=dark]").click();const select=document.querySelector("[data-slot=language-select] select");select.value="zh";select.dispatchEvent(new Event("change",{bubbles:true}));return true',
     );
     await waitFor(
       async () =>
@@ -186,12 +187,6 @@ try {
           ),
         ),
       "Theme and language controls did not update",
-    );
-    assert.equal(
-      await evaluate(
-        'return localStorage.getItem("theme")+":"+localStorage.getItem("raypx_locale")',
-      ),
-      "dark:zh",
     );
     await waitFor(async () => {
       const file = Bun.file(join(dataDir, "preferences.json"));
@@ -209,7 +204,7 @@ try {
       async () =>
         Boolean(
           await evaluate(
-            'return [...document.querySelectorAll(".file-name")].some(node=>node.textContent.includes("native-smoke.txt"))',
+            'return [...document.querySelectorAll("[data-slot=file-entry]")].some(node=>node.textContent.includes("native-smoke.txt"))',
           ),
         ),
       "Authorized file did not survive process restart",
@@ -220,7 +215,7 @@ try {
       "Restart preference values:",
       String(
         await evaluate(
-          'return localStorage.getItem("theme")+":"+localStorage.getItem("raypx_locale")+":"+document.documentElement.dataset.theme+":"+document.documentElement.lang+":"+location.hash',
+          `return JSON.stringify(window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}])+":"+document.documentElement.dataset.theme+":"+document.documentElement.lang+":"+location.hash`,
         ),
       ),
     );
@@ -256,15 +251,21 @@ try {
         "Settings route did not mount",
       );
       await evaluate(
-        'document.querySelector("input[name=theme][value=dark]").click();const select=document.querySelector(".language-select select");select.value="zh";select.dispatchEvent(new Event("change",{bubbles:true}));return true',
+        'document.querySelector("input[name=theme][value=dark]").click();const select=document.querySelector("[data-slot=language-select] select");select.value="zh";select.dispatchEvent(new Event("change",{bubbles:true}));return true',
       );
+      await waitFor(async () => {
+        const file = Bun.file(join(dataDir, "preferences.json"));
+        if (!(await file.exists())) return false;
+        const value = await file.json();
+        return value.theme === "dark" && value.locale === "zh";
+      }, "Renderer did not persist preferences before restart");
     } else {
       stage = "restart persistence";
       assert.equal(
         await evaluate(
-          'return localStorage.getItem("theme")+":"+localStorage.getItem("raypx_locale")',
+          `const snapshot=window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}];return snapshot.status+":"+snapshot.preferences.theme+":"+snapshot.preferences.locale`,
         ),
-        "dark:zh",
+        "valid:dark:zh",
       );
       assert.equal(
         await evaluate(

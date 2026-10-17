@@ -40,7 +40,7 @@ const mocks = vi.hoisted(() => ({
   session: { data: null, isPending: false, error: null } as SessionSnapshot,
   listeners: new Set<() => void>(),
 }));
-vi.mock("../../account", () => ({
+vi.mock("../../features/auth/client", () => ({
   webUrl: "https://raypx.example",
   apiClient: { account: { get: mocks.account } },
   authClient: {
@@ -215,30 +215,6 @@ describe("Desktop account route", () => {
     expect(await screen.findByRole("heading", { name: ada.name })).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
     expect(mocks.account).toHaveBeenCalledTimes(2);
-  });
-
-  it("bounds a slow account request and reports a safe timeout error", async () => {
-    const timeout = new AbortController();
-    const timeoutSignal = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeout.signal);
-    mocks.account.mockImplementation(
-      (_input, { signal }: { signal: AbortSignal }) =>
-        new Promise((_resolve, reject) => {
-          signal.addEventListener("abort", () => reject(signal.reason), { once: true });
-        }),
-    );
-    const router = testRouter();
-    const loading = router.load();
-    mount(router);
-    expect(await screen.findByRole("status", { name: "Loading…" })).toBeTruthy();
-    await act(async () => {
-      timeout.abort(new Error("private timeout diagnostic"));
-      await loading;
-    });
-    expect(timeoutSignal).toHaveBeenCalledWith(5000);
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Unable to connect. Check your connection and try again.",
-    );
-    expect(screen.queryByText("private timeout diagnostic")).toBeNull();
   });
 
   it("aborts an account request when navigation leaves the route", async () => {

@@ -22,6 +22,16 @@ it("derives mail locale from the current request", () => {
     ),
   ).toEqual({ locale: "zh" });
   expect(recipientLocale()).toEqual({});
+  expect(
+    recipientLocale(
+      new Request("https://example.com", {
+        headers: { "accept-language": "en;q=0,fr;q=1,zh-Hant-TW;q=0.8" },
+      }),
+    ),
+  ).toEqual({ locale: "zh" });
+  expect(
+    recipientLocale(new Request("https://example.com", { headers: { "accept-language": "fr" } })),
+  ).toEqual({});
 });
 it("injects persistence and mail callbacks without domain package imports", async () => {
   const mailer = {

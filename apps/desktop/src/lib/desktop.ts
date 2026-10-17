@@ -1,5 +1,6 @@
 import type { LocalEvent, LocalMethod, LocalParams, RootGrant } from "@raypx/contracts/local";
 import type { DesktopRpc, DesktopRuntime } from "../../native/rpc";
+import type { DevicePreferences } from "../../preferences";
 
 export type { DesktopRuntime } from "../../native/rpc";
 const listeners = new Set<(event: LocalEvent) => void>();
@@ -56,10 +57,13 @@ export async function localRequest<T, M extends LocalMethod = LocalMethod>(
   return (await (await getBridge()).request.localRequest({ method, params })) as T;
 }
 
-export async function saveDesktopPreferences(preferences: {
-  theme: "system" | "light" | "dark";
-  locale: "system" | "en" | "zh";
-}) {
+let preferenceWrite: Promise<boolean> = Promise.resolve(false);
+export async function saveDesktopPreferences(preferences: DevicePreferences) {
   if (!isDesktop()) return false;
-  return (await getBridge()).request.savePreferences(preferences);
+  const snapshot = { ...preferences };
+  const next = preferenceWrite
+    .catch(() => false)
+    .then(async () => (await getBridge()).request.savePreferences(snapshot));
+  preferenceWrite = next;
+  return next;
 }

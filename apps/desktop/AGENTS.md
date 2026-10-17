@@ -8,31 +8,45 @@ Electrobun desktop composition root with a React/Vite renderer, persistent WebVi
 
 `native/main.ts` owns window, tray, trusted renderer RPC and local engine lifecycle. `native/rpc.ts` declares the renderer bridge. `native/engine.ts` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter`, `src/shell.tsx` owns the window layout, and the build writes `dist/client` for `views://main`.
 
-Single-route pages and their private helpers live directly in their file-route
-modules. Keep shared feature components under `src/features/`, without a separate
-`src/pages/` forwarding layer.
+`preferences.ts` shares pure device preference types/validation between the
+native store and renderer; `src/preferences.tsx` owns renderer initialization.
+
+Simple pages live directly in file-route modules. Keep complex page components,
+actions and state under `src/features/`, without a separate `src/pages/` forwarding layer.
 
 `src/routes/_local/route.tsx` is the pathless native-tools boundary. It disables
 SSR for native route lifecycles, provides the desktop capability in `beforeLoad`
-and invalidates the Jobs loader on engine-ready/job-finished events. These tools
+and shares root grants between Files and Jobs. Refresh grants when entering this
+branch (`shouldReload` with cause enter), and reuse them between its child pages.
+Explicit invalidation still refreshes the cache. Engine-ready events invalidate
+the local branch; job-finished events refresh only the active Jobs route. These tools
 need no account session; browser preview keeps its unavailable notice.
 
 Jobs reads belong to its route loader; mutations invalidate that route. Keep
 auxiliary root errors silent and retain successful lists during failed reloads.
-Files keeps its directory, pagination and unsaved editor state in the component.
-Its reads use `src/hooks/use-local-request.ts`: stable memoized parameters, an
-explicit refresh key and stale-response protection. Callers own data, reset and
-error handling. Callback changes do not restart requests, and ignoring stale
-results does not cancel the underlying IPC call.
+Files keeps rootId/path/offset in validated route search. Directory navigation
+pushes history; pagination replaces it. The loader defers its listing promise to
+the table so the editor and toolbar stay mounted during reloads. Features/files
+owns components, mutation actions and a scoped Zustand vanilla store for drafts,
+operations and feedback. URL/server data stay outside that store. Confirm dirty
+directory/route exits once, preserve drafts during pagination, and discard state
+after leaving. Ignore late mutation responses on directory changes or unmount;
+the underlying IPC is not cancelled. Native loaders never run during preloading or SSR.
 
 ## Ownership
 
-Own native directory authorization and local UX. Runtime implementations live exclusively in CLI and shared schemas in `@raypx/contracts/local`; never import CLI source. Account calls use remote client/auth packages. Logout actions use `@raypx/auth/hooks`; the renderer owns navigation and session display.
+Own native directory authorization and local UX. Runtime implementations live exclusively in CLI and shared schemas in `@raypx/contracts/local`; never import CLI source. Account loading and views use `@raypx/account` and `/client`. Client instances live in `src/features/auth/client.ts`. Logout actions use `@raypx/auth/hooks`; the renderer owns navigation and session display.
 
-`src/features/auth/components/auth-form.tsx` adapts the shared `@raypx/auth/client` form
+`src/features/auth/components/form.tsx` adapts the shared `@raypx/auth/client` form
 for Desktop account URLs, auth client and router search. Shared forms own fields,
-translated feedback and submission state; the renderer owns navigation. Renderer
-route tests live under `src/test/` and stay outside file-route discovery.
+translated feedback and submission state; the renderer owns navigation. Keep
+feature tests beside their feature under `src/features/`; component-only tests
+can sit beside the component. Keep shared setup and cross-feature route tests
+under `src/test/`. All tests stay outside `src/routes/` file-route discovery.
+Use short feature-local filenames such as `form.tsx` and `routes.test.tsx`;
+exported symbols retain feature context. Renderer component/route tests use
+`*.test.tsx`, non-DOM unit tests use `*.test.ts`, and integration tests retain
+`*.integration.test.*` so the test scripts select each group independently.
 
 The account route reads its remote projection in a client-only loader; auth
 mutations invalidate route data on success. Keep Better Auth session updates as
@@ -52,7 +66,15 @@ invalidation signals rather than a second account-query state machine.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.
 - Bun/Turbo own tasks. Hutch only prepares the pinned Electrobun SDK and packages native binaries.
 - SDK code and generated declarations remain ignored. Native strict checking uses generated declarations without weakening source checks.
-- Theme/language are device preferences, survive logout and use shared UI/i18n entrypoints. The host writes validated preferences atomically and restores them through the preload before React starts; packaged WebKit custom-scheme localStorage alone does not survive restart.
+- Theme/language are device preferences and survive logout. The host injects a
+  validated snapshot directly through preload, distinguishing valid, missing and
+  failed native reads. A valid native file is authoritative; only a missing file
+  can migrate renderer storage, once at startup. Failed reads use safe defaults
+  without automatically rewriting the file. Do not depend on localStorage for
+  native restoration. Renderer initialization must finish before native writes;
+  serialize complete theme/locale updates and preserve other persisted fields
+  when writing atomically. The renderer's shared language provider resolves all
+  system language candidates and owns no second locale state.
 - Keep the independent Vitest configuration. Native GUI acceptance is a separate explicit platform gate.
 
 ## Verification

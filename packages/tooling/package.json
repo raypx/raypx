@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "catalog:dev",
+    "@voidmix/intl": "catalog:",
     "oxc-parser": "catalog:dev"
   },
   "devDependencies": {

@@ -1,29 +1,33 @@
 import { createContext, use, type ReactNode } from "react";
-import { I18nProvider } from "./react";
-import { messages } from "./messages";
-import { resolveLocalePreference, type LocalePreference } from "./preferences";
+import { IntlProvider } from "./react.js";
+import { messages } from "./messages/index.js";
+import { resolveLocalePreference, type LocalePreference } from "./preferences.js";
 
 interface LanguageContextValue {
   preference: LocalePreference;
   setPreference: (value: LocalePreference) => void;
+  hydrated: boolean;
 }
 const Context = createContext<LanguageContextValue | null>(null);
 export function LanguageProvider({
   preference,
-  systemLocale,
+  systemLocales,
   onPreferenceChange,
   children,
+  hydrated = true,
 }: {
   preference: LocalePreference;
-  systemLocale: string;
+  systemLocales: readonly string[];
   onPreferenceChange: (value: LocalePreference) => void;
   children: ReactNode;
+  hydrated?: boolean;
 }) {
+  const locale = resolveLocalePreference(preference, systemLocales);
   return (
-    <Context value={{ preference, setPreference: onPreferenceChange }}>
-      <I18nProvider locale={resolveLocalePreference(preference, systemLocale)} messages={messages}>
+    <Context value={{ preference, setPreference: onPreferenceChange, hydrated }}>
+      <IntlProvider locale={locale} messages={messages[locale]}>
         {children}
-      </I18nProvider>
+      </IntlProvider>
     </Context>
   );
 }

@@ -4,16 +4,9 @@ import { Tabs } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useLocales } from "expo-localization";
 import { StatusBar } from "expo-status-bar";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Uniwind, useCSSVariable } from "uniwind";
-import {
-  LanguageProvider,
-  LOCALE_PREFERENCE_KEY,
-  parseLocalePreference,
-  useTranslations,
-  type LocalePreference,
-} from "@raypx/i18n/native";
-import { parseTheme, THEME_STORAGE_KEY } from "@raypx/ui/theme";
+import { LanguageProvider, useTranslations, type LocalePreference } from "@raypx/i18n/native";
+import { devicePreferences } from "../src/preferences";
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 function Navigation() {
@@ -48,18 +41,12 @@ export default function RootLayout() {
   const locales = useLocales();
   useEffect(() => {
     let active = true;
-    void AsyncStorage.multiGet([THEME_STORAGE_KEY, LOCALE_PREFERENCE_KEY])
-      .then((values) => {
-        if (!active) return;
-        Uniwind.setTheme(parseTheme(values[0]?.[1], "system"));
-        setPreference(parseLocalePreference(values[1]?.[1]));
-      })
-      .catch(() => {
-        Uniwind.setTheme("system");
-      })
-      .finally(() => {
-        if (active) setReady(true);
-      });
+    void devicePreferences.read().then((value) => {
+      if (!active) return;
+      Uniwind.setTheme(value.theme);
+      setPreference(value.locale);
+      setReady(true);
+    });
     return () => {
       active = false;
     };
@@ -69,13 +56,13 @@ export default function RootLayout() {
   }, [ready]);
   function change(value: LocalePreference) {
     setPreference(value);
-    void AsyncStorage.setItem(LOCALE_PREFERENCE_KEY, value).catch(() => {});
+    void devicePreferences.writeLocale(value).catch(() => {});
   }
   if (!ready) return null;
   return (
     <LanguageProvider
       preference={preference}
-      systemLocale={locales[0]?.languageTag ?? "en"}
+      systemLocales={locales.map((locale) => locale.languageTag)}
       onPreferenceChange={change}
     >
       <Navigation />

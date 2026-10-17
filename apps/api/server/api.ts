@@ -4,6 +4,7 @@ import { implement, ORPCError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
+import { createAccountService } from "@raypx/account/server";
 export interface ApiAppOptions {
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;
@@ -11,6 +12,9 @@ export interface ApiAppOptions {
   mailAvailable?: boolean;
 }
 export function createApiApp(options: ApiAppOptions) {
+  const accountService = createAccountService({
+    readSession: (headers) => options.readSession(headers),
+  });
   const app = new Hono<{ Variables: { requestId: string } }>();
   app.use("*", async (c, next) => {
     const requestId = crypto.randomUUID();
@@ -58,13 +62,12 @@ export function createApiApp(options: ApiAppOptions) {
   const router = os.router({
     account: {
       get: os.account.get.handler(async ({ context }) => {
-        const session = await options.readSession(context.headers);
-        if (!session)
+        const account = await accountService.get(context.headers);
+        if (!account)
           throw new ORPCError("UNAUTHORIZED", {
             data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
           });
-        const { id, email, name } = session.user;
-        return { id, email, name };
+        return account;
       }),
     },
   });

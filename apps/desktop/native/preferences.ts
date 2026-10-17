@@ -1,37 +1,49 @@
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-import type { DevicePreferences } from "./rpc";
+import {
+  DEFAULT_DEVICE_PREFERENCES,
+  DEVICE_PREFERENCES_KEY,
+  isDevicePreferences,
+  type DevicePreferences,
+  type PreferenceSnapshot,
+} from "../preferences";
 
-const defaults: DevicePreferences = { theme: "system", locale: "system" };
-export function parsePreferences(value: unknown): DevicePreferences {
-  if (!value || typeof value !== "object") return { ...defaults };
-  const input = value as Record<string, unknown>;
-  return {
-    theme: input.theme === "light" || input.theme === "dark" ? input.theme : "system",
-    locale: input.locale === "en" || input.locale === "zh" ? input.locale : "system",
-  };
-}
+export { parsePreferences } from "../preferences";
 export function createPreferenceStore(directory: string) {
   const file = join(directory, "preferences.json");
-  let current: DevicePreferences;
+  let current: DevicePreferences = { ...DEFAULT_DEVICE_PREFERENCES };
+  let fields: Record<string, unknown> = {};
+  let status: PreferenceSnapshot["status"];
   try {
     const source = readFileSync(file, "utf8");
     if (source.length > 4096) throw new Error("Invalid preference data");
-    current = parsePreferences(JSON.parse(source));
-  } catch {
-    current = { ...defaults };
+    const value: unknown = JSON.parse(source);
+    if (!isDevicePreferences(value)) throw new Error("Invalid preference data");
+    fields = value as unknown as Record<string, unknown>;
+    current = { theme: value.theme, locale: value.locale };
+    status = "valid";
+  } catch (error) {
+    status =
+      error && typeof error === "object" && "code" in error && error.code === "ENOENT"
+        ? "missing"
+        : "error";
   }
   return {
     read: () => ({ ...current }),
+    snapshot: (): PreferenceSnapshot => ({ status, preferences: { ...current } }),
     save(value: DevicePreferences) {
-      const parsed = parsePreferences(value);
+      if (!isDevicePreferences(value)) return false;
+      const parsed: DevicePreferences = { theme: value.theme, locale: value.locale };
+      const nextFields = { ...fields, ...parsed };
       const temporary = `${file}.${crypto.randomUUID()}.tmp`;
       try {
         mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
-        writeFileSync(temporary, JSON.stringify(parsed), { mode: 0o600, flag: "wx" });
+        writeFileSync(temporary, JSON.stringify(nextFields), { mode: 0o600, flag: "wx" });
         renameSync(temporary, file);
         current = parsed;
+        fields = nextFields;
+        status = "valid";
         return true;
       } catch {
         return false;
@@ -44,7 +56,8 @@ export function createPreferenceStore(directory: string) {
       }
     },
     preload() {
-      return `(()=>{try{const preferences=${JSON.stringify(current)};localStorage.setItem("theme",preferences.theme);localStorage.setItem("raypx_locale",preferences.locale);}catch{}})();`;
+      const snapshot: PreferenceSnapshot = { status, preferences: { ...current } };
+      return `(()=>{const snapshot=${JSON.stringify(snapshot)};Object.freeze(snapshot.preferences);Object.freeze(snapshot);Object.defineProperty(window,${JSON.stringify(DEVICE_PREFERENCES_KEY)},{value:snapshot});})();`;
     },
   };
 }

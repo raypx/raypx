@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vite-plus/test";
-import { parseLocalePreference, resolveLocalePreference } from "./preferences";
-import en from "./messages/en";
-import zh from "./messages/zh";
+import { parseLocalePreference, resolveLocalePreference } from "./preferences.js";
+import en from "./messages/en.js";
+import zh from "./messages/zh.js";
 
 describe("device locale preferences", () => {
   it("resolves system languages and validates stored preferences", () => {
     expect(parseLocalePreference("zh")).toBe("zh");
     expect(parseLocalePreference("invalid")).toBe("system");
     expect(parseLocalePreference(null)).toBe("system");
-    expect(resolveLocalePreference("system", "zh-SG")).toBe("zh");
-    expect(resolveLocalePreference("system", "fr-FR")).toBe("en");
-    expect(resolveLocalePreference("en", "zh-CN")).toBe("en");
+    expect(resolveLocalePreference("system", ["fr-FR", "zh-SG"])).toBe("zh");
+    expect(resolveLocalePreference("system", ["fr-FR"])).toBe("en");
+    expect(resolveLocalePreference("en", ["zh-CN"])).toBe("en");
   });
   it("keeps every foundation namespace and message present in both locales", () => {
     expect(Object.keys(en)).toEqual(Object.keys(zh));

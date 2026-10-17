@@ -1,10 +1,9 @@
 import { Text, View, Pressable } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Uniwind, useUniwind } from "uniwind";
-import { useTranslations, useLanguagePreference } from "@raypx/i18n/native";
-import type { LocalePreference } from "@raypx/i18n/preferences";
-import { THEME_STORAGE_KEY, type UserTheme } from "@raypx/ui/theme";
+import { LOCALE_OPTIONS, useTranslations, useLanguagePreference } from "@raypx/i18n/native";
+import type { UserTheme } from "@raypx/ui/theme";
 import { Heading, Screen } from "../src/components";
+import { devicePreferences } from "../src/preferences";
 
 export default function Settings() {
   const t = useTranslations("settings");
@@ -14,7 +13,7 @@ export default function Settings() {
   const selected = hasAdaptiveThemes ? "system" : theme;
   function chooseTheme(value: UserTheme) {
     Uniwind.setTheme(value);
-    void AsyncStorage.setItem(THEME_STORAGE_KEY, value).catch(() => {});
+    void devicePreferences.writeTheme(value).catch(() => {});
   }
   return (
     <Screen>
@@ -41,18 +40,17 @@ export default function Settings() {
         </Text>
         <Text className="text-sm text-muted-foreground">{t("languageHint")}</Text>
         <View className="gap-2">
-          {(
-            [
-              ["system", c("system")],
-              ["en", "English"],
-              ["zh", "简体中文"],
-            ] as const
-          ).map(([value, label]) => (
+          <Choice
+            label={c("system")}
+            selected={preference === "system"}
+            onPress={() => setPreference("system")}
+          />
+          {LOCALE_OPTIONS.map(({ value, nativeName }) => (
             <Choice
               key={value}
-              label={label}
+              label={nativeName}
               selected={preference === value}
-              onPress={() => setPreference(value as LocalePreference)}
+              onPress={() => setPreference(value)}
             />
           ))}
         </View>

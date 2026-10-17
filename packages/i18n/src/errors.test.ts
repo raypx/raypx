@@ -5,16 +5,31 @@ import {
   readErrorDetails,
   translateErrorCode,
   translateKnownErrorCode,
-} from "./errors";
+} from "./errors.js";
+import { createTranslator } from "./translator.js";
 
 const messages = {
   missing: "Missing",
   unknown: "Unknown",
 } as const;
-const translate = (key: string) => messages[key as keyof typeof messages] ?? key;
+const translate = createTranslator({ locale: "en", messages });
 const errorKeys = { NOT_FOUND: "missing" } as const;
 
 describe("error-code translation helpers", () => {
+  it("connects typed ICU keys to sanitized runtime values", () => {
+    const t = createTranslator({
+      locale: "en",
+      messages: { limit: "Limit {count, number}", fallback: "Unknown" } as const,
+    });
+    expect(
+      translateErrorCode(
+        { code: "LIMIT", values: { count: 2, unsafe: {} } },
+        t,
+        { LIMIT: "limit" },
+        "fallback",
+      ),
+    ).toBe("Limit 2");
+  });
   it("reads string error codes without trusting other shapes", () => {
     expect(readErrorCode({ code: "NOT_FOUND" })).toBe("NOT_FOUND");
     expect(readErrorCode({ code: 404 })).toBeUndefined();
@@ -24,8 +39,10 @@ describe("error-code translation helpers", () => {
   });
 
   it("translates known codes and falls back for unknown errors", () => {
-    expect(translateErrorCode({ code: "NOT_FOUND" }, translate, errorKeys)).toBe("Missing");
-    expect(translateErrorCode({ code: "OTHER" }, translate, errorKeys)).toBe("Unknown");
+    expect(translateErrorCode({ code: "NOT_FOUND" }, translate, errorKeys, "unknown")).toBe(
+      "Missing",
+    );
+    expect(translateErrorCode({ code: "OTHER" }, translate, errorKeys, "unknown")).toBe("Unknown");
     expect(translateKnownErrorCode({ code: "NOT_FOUND" }, translate, errorKeys)).toBe("Missing");
     expect(translateKnownErrorCode({ code: "OTHER" }, translate, errorKeys)).toBeNull();
   });
@@ -37,7 +54,12 @@ describe("error-code translation helpers", () => {
       }),
     ).toEqual({ code: "LIMIT", values: { count: 2, label: "items" } });
     expect(
-      translateErrorCode({ data: { error: { code: "NOT_FOUND" } } }, translate, errorKeys),
+      translateErrorCode(
+        { data: { error: { code: "NOT_FOUND" } } },
+        translate,
+        errorKeys,
+        "unknown",
+      ),
     ).toBe("Missing");
   });
 
@@ -83,3 +105,13 @@ describe("error-code translation helpers", () => {
     expect(readErrorDetails(error)).toBeUndefined();
   });
 });
+
+function checkErrorKeys() {
+  // @ts-expect-error A mapped error key must belong to the translator's catalog.
+  translateErrorCode({}, translate, { BAD: "typo" }, "unknown");
+  // @ts-expect-error Fallbacks must belong to the same catalog.
+  translateErrorCode({}, translate, errorKeys, "typo");
+  // @ts-expect-error Every caller chooses its own explicit fallback.
+  translateErrorCode({}, translate, errorKeys);
+}
+void checkErrorKeys;

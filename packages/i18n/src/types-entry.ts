@@ -1,3 +1,3 @@
-export type * from "./types";
-export type { Formatter, FormatterOptions } from "./formatter";
-export type { Translator } from "./translator";
+export type * from "./types.js";
+export type { Formatter, FormatterOptions } from "./formatter.js";
+export type { Translator } from "./translator.js";

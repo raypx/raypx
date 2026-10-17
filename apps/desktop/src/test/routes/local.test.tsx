@@ -45,7 +45,7 @@ vi.mock("../../lib/desktop", () => ({
   restartEngine: vi.fn(),
   saveDesktopPreferences: vi.fn(),
 }));
-vi.mock("../../account", () => ({
+vi.mock("../../features/auth/client", () => ({
   webUrl: "https://raypx.example",
   apiClient: { account: { get: vi.fn() } },
   authClient: {
@@ -160,7 +160,9 @@ function mount(router: ReturnType<typeof testRouter>) {
 async function page(url: string) {
   const router = testRouter(url);
   await router.load();
-  mount(router);
+  await act(async () => {
+    mount(router);
+  });
   return router;
 }
 
@@ -234,6 +236,55 @@ describe("Desktop local file routes", () => {
     expect(router.state.location.pathname).toBe("/settings");
     expect(mocks.localRequest).not.toHaveBeenCalled();
   });
+
+  it.each(["/", "/automations"] as const)(
+    "refreshes shared roots when re-entering %s and reuses them between local pages",
+    async (destination) => {
+      const updatedRoots = deferred<RootGrant[]>();
+      let authorized = false;
+      mocks.localRequest.mockImplementation(async (method) => {
+        if (method === "roots.list") return authorized ? updatedRoots.promise : [];
+        if (method === "jobs.list") return [];
+        if (method === "files.list") return { entries: [], total: 0, offset: 0 };
+        throw new Error(`Unexpected local request: ${method}`);
+      });
+      const router = testRouter("/", { hash: true });
+      await router.load();
+      await act(async () => {
+        mount(router);
+      });
+      expect(await screen.findByRole("heading", { name: "Start with a folder" })).toBeTruthy();
+      const rootReads = () =>
+        mocks.localRequest.mock.calls.filter(([method]) => method === "roots.list").length;
+      expect(rootReads()).toBe(1);
+
+      await act(async () => router.navigate({ to: "/settings" }));
+      authorized = true;
+      await act(async () => {
+        void router.navigate({ to: destination });
+      });
+      await waitFor(() => expect(rootReads()).toBe(2));
+      expect(mocks.localRequest.mock.calls.some(([method]) => method === "files.list")).toBe(false);
+      await act(async () => updatedRoots.resolve(grants));
+
+      if (destination === "/") {
+        expect(await screen.findByText("This folder is empty.")).toBeTruthy();
+        expect(mocks.localRequest).toHaveBeenCalledWith("files.list", {
+          rootId: "work",
+          path: "",
+          offset: 0,
+          limit: 100,
+        });
+      } else {
+        fireEvent.click(await screen.findByRole("button", { name: "New automation" }));
+        await waitFor(() => expect(screen.getByLabelText("Folder")).toHaveValue("work"));
+      }
+
+      await act(async () => router.navigate({ to: destination === "/" ? "/automations" : "/" }));
+      await act(async () => router.navigate({ to: destination }));
+      expect(rootReads()).toBe(2);
+    },
+  );
 
   it("shows a safe jobs error and recovers through the refresh button without an event", async () => {
     let failed = true;
@@ -410,6 +461,9 @@ describe("Desktop local file routes", () => {
       }),
     );
 
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Pause: Nightly scan" })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Pause: Nightly scan" }));
     expect(await screen.findByRole("button", { name: "Enable: Nightly scan" })).toBeTruthy();
     expect(mocks.localRequest).toHaveBeenCalledWith(
@@ -420,6 +474,9 @@ describe("Desktop local file routes", () => {
       }),
     );
 
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Delete: Nightly scan" })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Delete: Nightly scan" }));
     expect(await screen.findByRole("heading", { name: "Nothing scheduled yet" })).toBeTruthy();
     expect(mocks.localRequest).toHaveBeenCalledWith("jobs.delete", { id: "job-1" });

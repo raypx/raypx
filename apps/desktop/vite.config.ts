@@ -13,7 +13,11 @@ export default defineConfig({
     tanstackStart({ spa: { enabled: true, prerender: { outputPath: "/index" } } }),
     react(),
   ],
-  resolve: { alias: electrobunViteAliases(resolve(import.meta.dirname, ".hutch/devkit")) },
+  resolve: {
+    alias: electrobunViteAliases(resolve(import.meta.dirname, ".hutch/devkit")),
+    // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
+    dedupe: ["react", "react-dom", "use-intl"],
+  },
   server: {
     port: 1420,
     strictPort: true,

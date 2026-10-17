@@ -1,11 +1,13 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
+import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
+import type { Locale } from "@raypx/i18n/types";
 import type { AuthSession, AuthUser } from "./types.js";
 export interface AuthMailInput {
   email: string;
   name?: string | null;
   url: string;
-  locale?: "en" | "zh";
+  locale?: Locale;
 }
 export interface AuthMailer {
   sendVerification(input: AuthMailInput): Promise<void>;
@@ -24,24 +26,11 @@ export interface CreateAuthOptions {
   mailer: AuthMailer;
   config: AuthConfiguration;
 }
-export function recipientLocale(request?: Request): { locale?: "en" | "zh" } {
-  const languages = (request?.headers.get("accept-language") ?? "")
-    .split(",")
-    .map((part, index) => {
-      const [language = "", weight] = part.trim().split(";");
-      const q = weight?.startsWith("q=") ? Number(weight.slice(2)) : 1;
-      return {
-        language: language.toLowerCase().split("-")[0],
-        q: Number.isFinite(q) ? q : 0,
-        index,
-      };
-    })
-    .filter((item) => item.q > 0)
-    .sort((a, b) => b.q - a.q || a.index - b.index);
-  const locale = languages.find(
-    (item) => item.language === "en" || item.language === "zh",
-  )?.language;
-  return locale === "en" || locale === "zh" ? { locale } : {};
+export function recipientLocale(request?: Request): { locale?: Locale } {
+  const locale = matchLocale(
+    parseAcceptLanguage(request?.headers.get("accept-language")).map((item) => item.locale),
+  );
+  return locale === undefined ? {} : { locale };
 }
 export function createAuth({ database, mailer, config }: CreateAuthOptions) {
   if (config.secret.length < 32) throw new Error("AUTH_SECRET must contain at least 32 characters");

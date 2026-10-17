@@ -1,27 +1,8 @@
 import type { ReactNode } from "react";
 import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { ThemeProvider } from "@raypx/ui/theme/client";
-import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { DesktopShell, ShellSkeleton } from "../shell";
+import { DesktopPreferencesProvider, desktopThemeScript } from "../preferences";
 import appCss from "../styles.css?url";
-
-// Runs before paint. The native preload has already restored device preferences
-// into localStorage, so the prerendered shell never flashes the wrong theme.
-const preferenceScript = `(function () {
-  try {
-    var t = localStorage.getItem("theme");
-    if (t !== "light" && t !== "dark")
-      t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    document.documentElement.classList.add(t);
-    document.documentElement.dataset.theme = t;
-    document.documentElement.style.colorScheme = t;
-    var l = localStorage.getItem("raypx_locale");
-    document.documentElement.lang =
-      l === "zh" || (l !== "en" && navigator.language.toLowerCase().indexOf("zh") === 0)
-        ? "zh"
-        : "en";
-  } catch (e) {}
-})();`;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -43,9 +24,9 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
-        <script dangerouslySetInnerHTML={{ __html: preferenceScript }} />
+        <script dangerouslySetInnerHTML={{ __html: desktopThemeScript }} />
       </head>
-      <body>
+      <body className="h-dvh min-w-[800px] overflow-hidden">
         {children}
         <Scripts />
       </body>
@@ -58,11 +39,9 @@ function RootDocument({ children }: { children: ReactNode }) {
 function RootComponent() {
   return (
     <ClientOnly fallback={<ShellSkeleton />}>
-      <ThemeProvider disableScript>
-        <BrowserLanguageProvider>
-          <DesktopShell />
-        </BrowserLanguageProvider>
-      </ThemeProvider>
+      <DesktopPreferencesProvider>
+        <DesktopShell />
+      </DesktopPreferencesProvider>
     </ClientOnly>
   );
 }

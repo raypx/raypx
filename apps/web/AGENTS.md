@@ -16,9 +16,14 @@ application is an independent composition root and is never imported by another 
   outside `src/routes/` so route discovery needs no test-specific exclusions.
 - `src/router.tsx` exports `getRouter`; `src/components/web-shell.tsx` owns the page layout.
 - `src/routes/__root.tsx` renders the document, theme script and preference providers.
-- `src/preferences.ts` reads theme/locale cookies and Accept-Language on the server.
-- `src/features/auth/account.ts` creates Better Auth and oRPC clients and the
-  isomorphic account loader.
+- `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
+  The root passes this request snapshot to the language provider so SSR and the first
+  client render use the same locale and catalog; browser storage is restored only
+  after hydration. Language switches use `useLanguagePreference`, never a second
+  locale state or route navigation.
+- `src/features/auth/client.ts` creates Better Auth and oRPC clients.
+  `src/features/auth/account.ts` adapts `@raypx/account` reads to SSR cookies and
+  browser credentials. Shared account views come from `@raypx/account/client`.
 - Authentication forms use `AuthForm` from `@raypx/auth/client`, backed by
   `@raypx/auth/hooks`.
   Sign-out uses the hook directly; routes own navigation and loader invalidation.

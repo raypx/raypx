@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "bun --bun expo start",
     "check": "bun --bun uniwind generate-artifacts --css global.css --dts uniwind-types.d.ts && bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
     "doctor": "bun run scripts/doctor.ts",
     "bundle": "bun --bun expo export --platform ios --platform android --output-dir dist"
   },
@@ -34,7 +35,8 @@
   "devDependencies": {
     "@types/bun": "catalog:dev",
     "@types/react": "catalog:dev",
-    "expo-doctor": "catalog:dev"
+    "expo-doctor": "catalog:dev",
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "app",

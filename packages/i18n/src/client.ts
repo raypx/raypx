@@ -1,12 +1,4 @@
-export * from "./react";
-export { DEFAULT_LOCALE } from "./constants";
-export { createBrowserLocaleStorage, createLocalStorageLocaleStorage } from "./client/storage";
-export { LanguageProvider, useLanguagePreference } from "./language-provider";
-export type {
-  Locale,
-  LocaleStorage,
-  MessageCatalog,
-  MessageTree,
-  MessagesByLocale,
-  LocaleCatalogLoader,
-} from "./types";
+export * from "./react.js";
+export { BrowserLanguageProvider, useLanguagePreference } from "./browser.js";
+export { DEFAULT_LOCALE } from "./constants.js";
+export type { Locale, MessagesByLocale } from "./types.js";

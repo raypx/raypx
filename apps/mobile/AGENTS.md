@@ -8,12 +8,17 @@ preferences. Expo Web is not a replacement for the separate DOM Web application.
 ## Interface
 
 - `app/_layout.tsx` hydrates preferences before exposing screens.
+- `src/preference-store.ts` owns the pure AsyncStorage adapter; `src/preferences.ts`
+  creates the shared device store used by the root and Settings.
 - `app/index.tsx` owns account and authentication forms.
 - `app/settings.tsx` owns language and appearance preferences.
 - `src/account.ts` creates the SecureStore-backed native auth client and RPC SDK.
 - `@raypx/auth/hooks` owns authentication actions and their request state; this
   app owns validation, translations, mode changes and clearing local form fields.
 - `global.css` imports Uniwind and the native semantic theme entry from UI.
+- The Metro resolver preserves Expo/Uniwind resolution first, then resolves
+  relative emitted `.js` specifiers to adjacent TypeScript sources inside this
+  repository. It never remaps dependencies in node_modules or public exports.
 
 ## Ownership
 
@@ -26,6 +31,10 @@ SecureStore; language and appearance preferences live in AsyncStorage.
 - Uniwind is the sole native theme state. Do not add a DOM theme provider.
 - Import UI through `@raypx/ui/theme` and `@raypx/ui/styles/native.css` only.
 - Import locale hooks through `@raypx/i18n/native`, never browser storage adapters.
+- Keep the startup storage gate before mounting translated screens, and pass
+  every system language candidate to the controlled language provider. Preference
+  writes are serialized so the latest selection is persisted last; storage
+  failures never roll back the visible selection.
 - Read current auth cookies for each RPC call; never capture initial credentials.
 - Verification and reset links finish in Web, then users return to sign in.
 - Use `EXPO_PUBLIC_API_URL` and `EXPO_PUBLIC_WEB_URL` for physical devices.
@@ -39,6 +48,7 @@ See [foundation architecture](../../docs/architecture/0034-extensible-foundation
 
 ```sh
 bun run --cwd apps/mobile check
+bun run --cwd apps/mobile test
 bun run --cwd apps/mobile doctor
 bun run --cwd apps/mobile bundle
 ```

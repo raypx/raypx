@@ -8,7 +8,7 @@ import {
   resolveLocale,
   serializeLocaleCookie,
   LOCALE_OPTIONS,
-} from "./index";
+} from "./index.js";
 
 describe("locale runtime", () => {
   it("exposes native names for every supported locale", () => {
@@ -48,8 +48,8 @@ describe("locale runtime", () => {
   });
 
   it("formats numbers and dates with the active locale", () => {
-    const english = createFormatter("en");
-    const chinese = createFormatter("zh");
+    const english = createFormatter({ locale: "en" });
+    const chinese = createFormatter({ locale: "zh" });
     const date = new Date("2026-08-24T00:00:00.000Z");
 
     const currency = { style: "currency", currency: "CNY" } as const;
@@ -60,12 +60,12 @@ describe("locale runtime", () => {
 
   it("preserves timezone-specific results and named presets", () => {
     const date = new Date("2026-08-24T00:30:00.000Z");
-    const utc = createFormatter("en", { timeZone: "UTC" });
-    const losAngeles = createFormatter("en", { timeZone: "America/Los_Angeles" });
+    const utc = createFormatter({ locale: "en", timeZone: "UTC" });
+    const losAngeles = createFormatter({ locale: "en", timeZone: "America/Los_Angeles" });
 
     expect(utc.dateTime(date, { day: "numeric" })).toBe("24");
     expect(losAngeles.dateTime(date, { day: "numeric" })).toBe("23");
     expect(utc.number(1_200, "compact")).toMatch(/1.2K/i);
-    expect(utc.relativeTime(-1, "day", "numeric")).toBe("yesterday");
+    expect(utc.relativeTime(new Date("2026-08-23T00:30:00Z"), date)).toBe("1 day ago");
   });
 });

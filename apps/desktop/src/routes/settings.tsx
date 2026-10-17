@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Monitor, Moon, Sun, Languages } from "lucide-react";
-import { useTheme } from "@raypx/ui/theme/client";
-import type { UserTheme } from "@raypx/ui/theme";
-import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
-import type { LocalePreference } from "@raypx/i18n/preferences";
+import { Languages } from "lucide-react";
+import { ThemePicker, useTheme } from "@raypx/ui/theme/client";
+import { LanguageSelect, useTranslations } from "@raypx/i18n/browser";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
@@ -11,67 +9,32 @@ function SettingsPage() {
   const t = useTranslations("settings");
   const c = useTranslations("common");
   const { theme, setTheme } = useTheme();
-  const { preference, setPreference } = useLanguagePreference();
   return (
-    <section className="page settings-page">
-      <header className="page-heading">
+    <section className="mx-auto max-w-[960px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+      <header className="mb-10">
         <h1>{t("title")}</h1>
-        <p>{t("intro")}</p>
+        <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("intro")}</p>
       </header>
-      <section className="settings-section">
+      <section className="flex items-start justify-between gap-8 border-b border-border pt-0 pb-8 max-[1100px]:flex-col max-[1100px]:gap-[22px]">
         <div>
-          <h2>{t("appearance")}</h2>
-          <p>{t("appearanceHint")}</p>
+          <h2 className="mb-1.5 text-[15px]">{t("appearance")}</h2>
+          <p className="text-[13px] text-muted-foreground">{t("appearanceHint")}</p>
         </div>
-        <fieldset className="theme-options">
-          <legend className="sr-only">{t("appearance")}</legend>
-          {(
-            [
-              ["light", Sun],
-              ["dark", Moon],
-              ["system", Monitor],
-            ] as const
-          ).map(([value, Icon]) => (
-            <label className={`theme-option ${theme === value ? "selected" : ""}`} key={value}>
-              <input
-                type="radio"
-                name="theme"
-                value={value}
-                checked={theme === value}
-                onChange={() => setTheme(value as UserTheme)}
-              />
-              <span className={`theme-preview preview-${value}`} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-              <span className="theme-label">
-                <Icon size={16} />
-                {c(value)}
-              </span>
-            </label>
-          ))}
-        </fieldset>
+        <ThemePicker
+          value={theme}
+          onValueChange={setTheme}
+          label={t("appearance")}
+          labels={{ light: c("light"), dark: c("dark"), system: c("system") }}
+        />
       </section>
-      <section className="settings-section">
+      <section className="flex items-start justify-between gap-8 border-b border-border pt-7 pb-8 max-[1100px]:flex-col max-[1100px]:gap-[22px]">
         <div>
-          <h2>{t("language")}</h2>
-          <p>{t("languageHint")}</p>
+          <h2 className="mb-1.5 text-[15px]">{t("language")}</h2>
+          <p className="text-[13px] text-muted-foreground">{t("languageHint")}</p>
         </div>
-        <label className="language-select">
-          <Languages size={18} />
-          <span className="sr-only">{t("language")}</span>
-          <select
-            value={preference}
-            onChange={(event) => setPreference(event.target.value as LocalePreference)}
-          >
-            <option value="system">{c("system")}</option>
-            <option value="en">English</option>
-            <option value="zh">简体中文</option>
-          </select>
-        </label>
+        <LanguageSelect icon={<Languages size={18} />} />
       </section>
-      <p className="settings-note">{t("localHint")}</p>
+      <p className="mt-6 text-xs text-muted-foreground">{t("localHint")}</p>
     </section>
   );
 }

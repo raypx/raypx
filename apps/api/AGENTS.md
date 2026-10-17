@@ -14,6 +14,8 @@ Every other path is a JSON 404; Web is a separate service.
 
 Nitro owns one listener and the close lifecycle. Hono owns the Fetch application.
 API composes the database adapter, mailer and auth factory, once per process.
+Account RPC uses `@raypx/account/server` with an injected session reader. The
+service projects public fields; API owns HTTP and unauthorized/error mapping.
 
 ## Constraints
 

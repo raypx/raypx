@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, useRouter } from "@tanstack/react-router";
 import { formText } from "../../form-data";
 import { useState, type FormEvent } from "react";
 import { Clock, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
@@ -11,16 +11,12 @@ import { localRequest } from "../../lib/desktop";
 export const Route = createFileRoute("/_local/automations")({
   preload: false,
   loader: async ({ context }) => {
-    if (!context.desktopAvailable) return { jobs: null, roots: null, failed: false };
-    const [jobs, roots] = await Promise.allSettled([
-      localRequest<JobDefinition[]>("jobs.list", {}),
-      localRequest<RootGrant[]>("roots.list", {}),
-    ]);
-    return {
-      jobs: jobs.status === "fulfilled" ? jobs.value : null,
-      roots: roots.status === "fulfilled" ? roots.value : null,
-      failed: jobs.status === "rejected",
-    };
+    if (!context.desktopAvailable) return { jobs: null, failed: false };
+    try {
+      return { jobs: await localRequest<JobDefinition[]>("jobs.list", {}), failed: false };
+    } catch {
+      return { jobs: null, failed: true };
+    }
   },
   pendingComponent: JobsPending,
   component: JobsPage,
@@ -29,7 +25,7 @@ export const Route = createFileRoute("/_local/automations")({
 function JobsPending() {
   const c = useTranslations("common");
   return (
-    <section className="page local-page">
+    <section className="mx-auto max-w-[1320px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
       <p role="status">{c("loading")}</p>
     </section>
   );
@@ -38,22 +34,26 @@ function JobsPending() {
 function JobsPage() {
   const router = useRouter();
   const data = Route.useLoaderData();
+  const local = getRouteApi("/_local").useLoaderData();
   const { desktopAvailable } = Route.useRouteContext();
   const t = useTranslations("jobs");
   const c = useTranslations("common");
   const locale = useLocale();
   const [jobs, setJobs] = useState(data.jobs);
-  const [roots, setRoots] = useState(data.roots ?? []);
+  const [roots, setRoots] = useState<RootGrant[]>(local.roots ?? []);
   // Keep the last successful lists during a failed background reload.
   if (data.jobs !== null && data.jobs !== jobs) setJobs(data.jobs);
-  if (data.roots !== null && data.roots !== roots) setRoots(data.roots);
+  if (local.roots !== null && local.roots !== roots) setRoots(local.roots);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<JobDefinition | null | false>(false);
   const [action, setAction] = useState("directory.scan");
   const [history, setHistory] = useState<{ job: JobDefinition; runs: JobRun[] } | null>(null);
   function refresh() {
-    return router.invalidate({ filter: (match) => match.routeId === Route.id });
+    return router.invalidate({
+      filter: (match) =>
+        match.routeId === Route.id || (local.roots === null && match.routeId === "/_local"),
+    });
   }
   function edit(job: JobDefinition | null) {
     setEditing(job);
@@ -158,20 +158,27 @@ function JobsPage() {
     );
   const command = editing && editing.action.type === "command.run" ? editing.action.command : null;
   return (
-    <section className="page local-page">
-      <header className="page-heading heading-actions">
+    <section className="mx-auto max-w-[1320px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+      <header className="mb-10 flex items-start justify-between gap-6 max-[1100px]:flex-col max-[1100px]:gap-5">
         <div>
           <h1>{t("title")}</h1>
-          <p>{t("intro")}</p>
+          <p className="mt-[9px] max-w-[64ch] text-muted-foreground">{t("intro")}</p>
         </div>
         <Button disabled={!desktopAvailable} onClick={() => edit(null)}>
           <Plus size={16} />
           {t("create")}
         </Button>
       </header>
-      {!desktopAvailable && <p className="notice">{c("desktopOnly")}</p>}
+      {!desktopAvailable && (
+        <p className="mb-5 flex items-center gap-2 rounded-lg bg-muted px-3.5 py-3 text-[13px] [overflow-wrap:anywhere]">
+          {c("desktopOnly")}
+        </p>
+      )}
       {(error || data.failed) && (
-        <p role="alert" className="notice error">
+        <p
+          role="alert"
+          className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
+        >
           {error || c("error")}
           {data.failed && (
             <Button variant="ghost" disabled={busy} onClick={() => void refresh()}>
@@ -183,7 +190,11 @@ function JobsPage() {
       {editing !== false && (
         <section className="job-form-panel">
           <h2>{t("create")}</h2>
-          <form key={editing?.id ?? "new"} onSubmit={save} className="form-stack job-form">
+          <form
+            key={editing?.id ?? "new"}
+            onSubmit={save}
+            className="job-form flex flex-col gap-[19px] [&_label]:flex [&_label]:flex-col [&_label]:gap-[7px] [&_label]:text-[13px] [&_label]:font-medium [&_input]:min-h-[39px] [&>button]:mt-1"
+          >
             <label htmlFor="job-name">
               {c("name")}
               <Input
@@ -287,7 +298,7 @@ function JobsPage() {
                 <p className="field-hint">{t("commandHint")}</p>
               </>
             )}
-            <div className="inline-actions">
+            <div className="flex flex-wrap items-center gap-5">
               <Button
                 type="submit"
                 disabled={busy || (action === "directory.scan" && !roots.length)}
@@ -302,10 +313,10 @@ function JobsPage() {
         </section>
       )}
       {jobs?.length === 0 && editing === false ? (
-        <div className="local-empty">
-          <Clock size={44} strokeWidth={1} />
-          <h2>{t("empty")}</h2>
-          <p>{t("emptyHint")}</p>
+        <div className="flex flex-col items-center px-6 py-20 text-center">
+          <Clock size={44} strokeWidth={1} className="mb-5 text-muted-foreground" />
+          <h2 className="text-xl">{t("empty")}</h2>
+          <p className="mt-[9px] max-w-[50ch] text-muted-foreground">{t("emptyHint")}</p>
         </div>
       ) : (
         <div className="job-list">
@@ -383,7 +394,7 @@ function JobsPage() {
             </Button>
           </header>
           {history.runs.length === 0 ? (
-            <p className="muted">{t("noHistory")}</p>
+            <p className="text-muted-foreground">{t("noHistory")}</p>
           ) : (
             history.runs.map((run) => (
               <details className="run-row" key={run.id}>

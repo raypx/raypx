@@ -1,0 +1,62 @@
+import { Monitor, Moon, Sun } from "lucide-react";
+import { cn } from "./lib/utils";
+import type { UserTheme } from "./theme/config";
+
+const previewClasses: Record<UserTheme, string> = {
+  light: "bg-white before:border-[#e5e5e5] before:bg-[#f5f5f5] [&>span]:bg-[#e5e5e5]",
+  dark: "bg-[#171717] before:border-[#404040] before:bg-[#262626] [&>span]:bg-[#404040]",
+  system:
+    "bg-[linear-gradient(90deg,#fff_50%,#171717_50%)] before:border-[#e5e5e5] before:bg-[#f5f5f5] [&>span]:bg-[#a3a3a3]",
+};
+
+export interface ThemePickerProps {
+  value: UserTheme;
+  onValueChange: (value: UserTheme) => void;
+  label: string;
+  labels: Record<UserTheme, string>;
+}
+
+export function ThemePicker({ value, onValueChange, label, labels }: ThemePickerProps) {
+  return (
+    <fieldset className="m-0 flex gap-3 border-0 p-0 [@media(width<=420px)]:gap-[9px]">
+      <legend className="sr-only">{label}</legend>
+      {(
+        [
+          ["light", Sun],
+          ["dark", Moon],
+          ["system", Monitor],
+        ] as const
+      ).map(([theme, Icon]) => (
+        <label
+          className="relative w-[100px] cursor-pointer has-[:focus-visible]:rounded-[8px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-4 [@media(width<=420px)]:w-[76px]"
+          key={theme}
+        >
+          <input
+            className="absolute size-px opacity-0"
+            type="radio"
+            name="theme"
+            value={theme}
+            checked={value === theme}
+            onChange={() => onValueChange(theme)}
+          />
+          <span
+            className={cn(
+              "relative flex h-[72px] flex-col gap-1.5 overflow-hidden rounded-[8px] border border-border py-3 pr-3 pl-[25px] before:absolute before:inset-y-0 before:left-0 before:w-[15px] before:border-r before:content-[''] [&>span]:h-[5px] [&>span]:w-full [&>span]:rounded-[2px] [&>span:first-child]:w-3/5 [&>span:first-child]:bg-[#a3a3a3]",
+              previewClasses[theme],
+              value === theme && "outline-2 outline-foreground outline-offset-2",
+            )}
+            aria-hidden="true"
+          >
+            <span />
+            <span />
+            <span />
+          </span>
+          <span className="mt-2.5 flex items-center justify-center gap-1.5 text-[12px] [@media(width<=420px)]:text-[11px]">
+            <Icon size={16} />
+            {labels[theme]}
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}

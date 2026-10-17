@@ -36,7 +36,7 @@ const mocks = vi.hoisted(() => ({
   account: vi.fn(),
   session: vi.fn(),
 }));
-vi.mock("../../account", () => ({
+vi.mock("./client", () => ({
   webUrl: "https://raypx.example",
   apiClient: { account: { get: mocks.account } },
   authClient: {

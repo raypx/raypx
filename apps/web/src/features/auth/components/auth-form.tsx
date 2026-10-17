@@ -4,7 +4,7 @@ import {
   type AuthFormLinkProps,
   type AuthMode,
 } from "@raypx/auth/client";
-import { authClient, webUrl } from "../account";
+import { authClient, webUrl } from "../client";
 
 function AuthLink({ to, className, children }: AuthFormLinkProps) {
   return (

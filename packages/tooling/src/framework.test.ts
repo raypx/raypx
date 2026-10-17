@@ -134,7 +134,71 @@ describe("extensible workspace foundation", () => {
       join(root, "packages/messages/src/messages/zh.ts"),
       'export default { auth: { hello: "你好 {email}" } } as const;',
     );
-    expect(checkLocales(root).join("\n")).toContain("interpolation variables differ");
+    expect(checkLocales(root).join("\n")).toContain("auth.hello changes ICU arguments");
+  });
+  it("reports only the invalid ICU catalog side and the nested message path", () => {
+    const root = fixture();
+    member(root, "messages");
+    const directory = join(root, "packages/messages/src/messages");
+    mkdirSync(directory);
+    writeFileSync(
+      join(directory, "en.ts"),
+      'throw new Error("must not execute"); export default { auth: { hello: "Hi {name}" } } as const;',
+    );
+    writeFileSync(
+      join(directory, "zh.ts"),
+      'export default { auth: { hello: "你好 {" } } as const;',
+    );
+    expect(checkLocales(root)).toEqual([
+      expect.stringMatching(
+        /^packages\/messages\/src\/messages\/zh\.ts: zh contains invalid ICU syntax at auth\.hello;/,
+      ),
+    ]);
+  });
+  it("delegates rich-text callback parity to the shared ICU parser", () => {
+    const root = fixture();
+    member(root, "messages");
+    const directory = join(root, "packages/messages/src/messages");
+    mkdirSync(directory);
+    writeFileSync(
+      join(directory, "en.ts"),
+      'export default { hello: "<strong>{name}</strong>" } as const;',
+    );
+    writeFileSync(join(directory, "zh.json"), JSON.stringify({ hello: "<em>{name}</em>" }));
+    expect(checkLocales(root)).toEqual([
+      expect.stringContaining("hello changes rich-text tags between en and zh"),
+    ]);
+  });
+  it("accepts translated plural categories, reordered arguments and tag nesting", () => {
+    const root = fixture();
+    member(root, "messages");
+    const directory = join(root, "packages/messages/src/messages");
+    mkdirSync(directory);
+    writeFileSync(
+      join(directory, "en.ts"),
+      'export default { hello: "<strong>{name}<em>{count, plural, one {# item} other {# items}}</em></strong>" } as const;',
+    );
+    writeFileSync(
+      join(directory, "zh.ts"),
+      'export default { hello: "<em>{count, plural, other {#项}}</em><strong>{name}</strong>" } as const;',
+    );
+    expect(checkLocales(root)).toEqual([]);
+  });
+  it("keeps catalog shape and safe static-reading checks", () => {
+    const root = fixture();
+    member(root, "messages");
+    const directory = join(root, "packages/messages/src/messages");
+    mkdirSync(directory);
+    writeFileSync(join(directory, "en.ts"), "export default { nested: {} } as const;");
+    writeFileSync(join(directory, "zh.ts"), 'export default { nested: "文本" } as const;');
+    expect(checkLocales(root).join("\n")).toContain("nested changes node type");
+    writeFileSync(
+      join(directory, "zh.ts"),
+      'export default { nested: (() => { throw new Error("must not execute"); })() } as const;',
+    );
+    expect(checkLocales(root).join("\n")).toContain(
+      "zh.ts: catalogs must contain static string objects",
+    );
   });
   it("rejects importing applications and tooling from production libraries", () => {
     const root = fixture();

@@ -1,55 +1,32 @@
+import { readAccount } from "@raypx/account";
+import {
+  AccountDetails,
+  AccountSkeleton,
+  SignedOutAccount,
+  type AccountLinkProps,
+} from "@raypx/account/client";
 import { useEffect, useRef } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { ArrowRight, CircleCheck, CircleUserRound } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
-import type { AccountProfile } from "@raypx/contracts/api";
-import { apiClient, authClient, webUrl } from "../account";
-
-type AccountState =
-  | { status: "signed-in"; account: AccountProfile }
-  | { status: "signed-out" }
-  | { status: "unavailable" };
+import { apiClient, authClient, webUrl } from "../features/auth/client";
 
 export const Route = createFileRoute("/account")({
   ssr: false,
   preload: false,
-  loader: async ({ abortController }): Promise<AccountState> => {
-    try {
-      const account = await apiClient.account.get(
-        {},
-        { signal: AbortSignal.any([abortController.signal, AbortSignal.timeout(5000)]) },
-      );
-      return { status: "signed-in", account };
-    } catch (error) {
-      return error && typeof error === "object" && "code" in error && error.code === "UNAUTHORIZED"
-        ? { status: "signed-out" }
-        : { status: "unavailable" };
-    }
-  },
+  loader: ({ abortController }) => readAccount(apiClient, { signal: abortController.signal }),
   pendingComponent: AccountPending,
   component: AccountPage,
 });
 
-function AccountSkeleton() {
-  const c = useTranslations("common");
-  return (
-    <div className="account-loading" role="status" aria-label={c("loading")}>
-      <span className="skeleton avatar-skeleton" />
-      <span className="skeleton line-skeleton" />
-      <span className="skeleton line-skeleton short" />
-    </div>
-  );
-}
-
 function AccountPending() {
   const t = useTranslations("auth");
   return (
-    <section className="page account-page">
-      <header className="page-heading">
+    <section className="mx-auto max-w-[900px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+      <header className="mb-10">
         <h1>{t("accountTitle")}</h1>
-        <p>{t("accountIntro")}</p>
+        <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>
       </header>
       <AccountSkeleton />
     </section>
@@ -89,76 +66,45 @@ function AccountPage() {
     return router.invalidate({ filter: (match) => match.routeId === Route.id });
   }
   return (
-    <section className="page account-page">
-      <header className="page-heading">
+    <section className="mx-auto max-w-[900px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+      <header className="mb-10">
         <h1>{t("accountTitle")}</h1>
-        <p>{t("accountIntro")}</p>
+        <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>
       </header>
       {identityChanged ? (
         <AccountSkeleton />
       ) : state.status === "unavailable" ? (
-        <div className="empty-panel">
+        <div className="flex flex-wrap items-center gap-4 py-9">
           <p role="alert">{c("networkError")}</p>
           <Button variant="outline" disabled={busy} onClick={() => void refresh()}>
             {c("retry")}
           </Button>
         </div>
       ) : state.status === "signed-out" ? (
-        <div className="account-empty">
-          <CircleUserRound size={48} strokeWidth={1} />
-          <h2>{t("signedOut")}</h2>
-          <p>{t("signedOutIntro")}</p>
-          <div className="inline-actions">
-            <Link to="/login" className="button-link">
-              {c("signIn")}
-              <ArrowRight size={16} />
-            </Link>
-            <Link to="/signup" className="text-link">
-              {t("create")}
-            </Link>
-          </div>
-        </div>
+        <SignedOutAccount LinkComponent={AccountLink} />
       ) : (
-        <div className="account-details">
-          <div className="account-identity">
-            <span className="account-avatar">{state.account.name.slice(0, 1).toUpperCase()}</span>
-            <div>
-              <h2>{state.account.name}</h2>
-              <p>{state.account.email}</p>
-            </div>
-          </div>
-          <dl>
-            <div>
-              <dt>{t("name")}</dt>
-              <dd>{state.account.name}</dd>
-            </div>
-            <div>
-              <dt>{t("email")}</dt>
-              <dd>{state.account.email}</dd>
-            </div>
-            <div>
-              <dt>{c("status")}</dt>
-              <dd>
-                <span className="status-label">
-                  <CircleCheck size={16} />
-                  {t("verifiedLabel")}
-                </span>
-              </dd>
-            </div>
-          </dl>
+        <AccountDetails account={state.account} busy={busy} onSignOut={() => auth.signOut(refresh)}>
           {auth.error && (
-            <div role="alert" className="notice error">
+            <div
+              role="alert"
+              className="mb-5 flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--destructive)_8%,var(--background))] px-3.5 py-3 text-[13px] text-destructive [overflow-wrap:anywhere]"
+            >
               {c("networkError")}{" "}
               <Button variant="ghost" disabled={busy} onClick={() => void refresh()}>
                 {c("retry")}
               </Button>
             </div>
           )}
-          <Button variant="outline" disabled={busy} onClick={() => void auth.signOut(refresh)}>
-            {busy ? c("working") : c("signOut")}
-          </Button>
-        </div>
+        </AccountDetails>
       )}
     </section>
+  );
+}
+
+function AccountLink({ to, className, children }: AccountLinkProps) {
+  return (
+    <Link to={`/${to}`} className={className}>
+      {children}
+    </Link>
   );
 }
