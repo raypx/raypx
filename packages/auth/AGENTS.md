@@ -10,7 +10,8 @@ Account authentication, platform-specific session adapters and shared DOM forms.
 - `/client`: browser `createAuthClient` and shared DOM `AuthForm` with injected
   authentication, query and navigation adapters.
 - `/client/styles.css`: registers Tailwind sources for the shared DOM form.
-- `/native`: Expo SecureStore client and live cookie headers.
+- `/native`: Expo client with application-injected secure storage and live
+  cookie headers.
 - `/hooks`: platform-neutral React auth actions with an injected client, locale
   and Web callback origin.
 - `/types`: pure public account/session types.
@@ -23,7 +24,9 @@ instances, callback origins, query sources, navigation adapters and session data
 
 ## Constraints
 
-Do not import db, mail, remote client or application implementations. Require
+Do not import db, mail, remote client or application implementations. Do not
+depend on Expo native modules: their `expo` peer would install the whole native
+toolchain for API, Web and Desktop, so Mobile injects SecureStore. Require
 verified email for password sign-in. Resolve sessions on the server for each RPC.
 Keep account types free from credentials and retired role/status requirements.
 

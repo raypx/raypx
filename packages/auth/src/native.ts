@@ -1,9 +1,11 @@
 import { createAuthClient } from "better-auth/react";
 import { expoClient } from "@better-auth/expo/client";
-import * as SecureStore from "expo-secure-store";
+import type { ExpoClientStorage } from "@better-auth/expo/client";
+// The application injects SecureStore so non-native consumers never install Expo.
 export function createNativeAuthClient(options: {
   baseURL: string;
   scheme: string;
+  storage: ExpoClientStorage;
   storagePrefix?: string;
 }) {
   return createAuthClient({
@@ -12,7 +14,7 @@ export function createNativeAuthClient(options: {
       expoClient({
         scheme: options.scheme,
         storagePrefix: options.storagePrefix ?? "raypx",
-        storage: SecureStore,
+        storage: options.storage,
       }),
     ],
   });

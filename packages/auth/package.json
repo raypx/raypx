@@ -24,7 +24,6 @@
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
     "better-auth": "catalog:",
-    "expo-secure-store": "catalog:",
     "lucide-react": "catalog:"
   },
   "devDependencies": {
