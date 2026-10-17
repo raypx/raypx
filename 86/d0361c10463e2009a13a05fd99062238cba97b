@@ -1,0 +1,25 @@
+apps/mobile/AGENTS.md
+  s_0860ced2611c93::t_154f993ef17fc0 15-16
+apps/mobile/src/account.ts
+  s_0860ced2611c93::t_7021a571f0c849 3,7-11
+packages/auth/AGENTS.md
+  s_0860ced2611c93::t_1b0c9a2e889275 13-14,27-29
+packages/auth/src/native.ts
+  s_0860ced2611c93::t_998209543688a0 3-4,8,17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "86d0361c10463e2009a13a05fd99062238cba97b",
+  "prompts": {},
+  "sessions": {
+    "s_0860ced2611c93": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4876f436-2858-4509-a3e9-f0bd1c571d2a",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
