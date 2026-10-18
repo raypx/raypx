@@ -1,0 +1,28 @@
+apps/desktop/AGENTS.md
+  h_f0766e80fd3864 70-74
+apps/desktop/native/csp.ts
+  h_f0766e80fd3864 6-8,10-14,44-48
+apps/desktop/package.json
+  h_f0766e80fd3864 7,19
+apps/desktop/src-tauri/.gitignore
+  h_f0766e80fd3864 5
+apps/desktop/src-tauri/tauri.conf.json
+  h_f0766e80fd3864 7,9
+apps/desktop/src-tauri/tauri.macos.conf.json
+  h_f0766e80fd3864 1-6
+apps/desktop/src-tauri/tauri.windows.conf.json
+  h_f0766e80fd3864 1-6
+knip.json
+  h_f0766e80fd3864 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fbd5e83644479c79165d0e0dd6c3f08aedcf13af",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
