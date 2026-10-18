@@ -12,6 +12,7 @@ describe("server request handling", () => {
     expect(sessionCookie("theme=dark; locale=zh")).toBe("");
     expect(sessionCookie(null)).toBe("");
   });
+
   it("reads device preferences from cookies and the browser language", () => {
     expect(
       readRequestPreferences(

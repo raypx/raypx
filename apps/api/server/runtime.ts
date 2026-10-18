@@ -5,6 +5,7 @@ import { schema } from "@raypx/db/schema";
 import { createMailer } from "@raypx/mail/server";
 import { createApiApp } from "./api.js";
 import { getApiEnvironment, type ApiEnvironment } from "./env.js";
+
 export function createApiRuntime(environment: ApiEnvironment) {
   const connection = connectDatabase(environment.DATABASE_URL);
   try {

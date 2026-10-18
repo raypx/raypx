@@ -9,6 +9,7 @@ describe("account reads", () => {
     const client = createApiClient({ fetch: async () => Response.json({ json: profile }) });
     expect(await readAccount(client)).toEqual({ status: "signed-in", account: profile });
   });
+
   it("distinguishes unauthorized responses from connection failures", async () => {
     const client = createApiClient({
       fetch: async () =>
@@ -25,6 +26,7 @@ describe("account reads", () => {
     });
     expect(await readAccount(offline)).toEqual({ status: "unavailable" });
   });
+
   it("propagates caller cancellation and avoids a request if already aborted", async () => {
     const fetch = vi.fn(async () => Response.json({ json: profile }));
     const controller = new AbortController();
@@ -34,6 +36,7 @@ describe("account reads", () => {
     ).rejects.toThrow("cancelled");
     expect(fetch).not.toHaveBeenCalled();
   });
+
   it("bounds a slow request without exposing a transport error", async () => {
     vi.useFakeTimers();
     const client = createApiClient({

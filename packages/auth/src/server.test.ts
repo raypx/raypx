@@ -1,6 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { createAuth, projectAuthUser, recipientLocale } from "./server.js";
+
 it("projects a fresh account without roles and strips credentials", () => {
   expect(
     projectAuthUser({
@@ -13,6 +14,7 @@ it("projects a fresh account without roles and strips credentials", () => {
     }),
   ).toEqual({ id: "u", email: "u@example.com", name: "User", emailVerified: true });
 });
+
 it("derives mail locale from the current request", () => {
   expect(
     recipientLocale(
@@ -33,6 +35,7 @@ it("derives mail locale from the current request", () => {
     recipientLocale(new Request("https://example.com", { headers: { "accept-language": "fr" } })),
   ).toEqual({});
 });
+
 it("injects persistence and mail callbacks without domain package imports", async () => {
   const mailer = {
     sendVerification: vi.fn(async () => {}),
@@ -71,6 +74,7 @@ it("injects persistence and mail callbacks without domain package imports", asyn
     locale: "zh",
   });
 });
+
 it("shares session cookies with the Web host only when a parent domain is configured", () => {
   const options = (cookieDomain?: string) =>
     createAuth({

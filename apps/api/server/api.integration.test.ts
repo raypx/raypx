@@ -2,6 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "./api.js";
 import type { AuthSession } from "@raypx/auth/types";
+
 const session: AuthSession = {
   user: { id: "u1", email: "a@example.com", name: "A", emailVerified: true },
   session: { id: "s1", userId: "u1", expiresAt: new Date(Date.now() + 60000) },
@@ -66,6 +67,7 @@ describe("HTTP foundation", () => {
       data: { error: { code: "AUTH_REQUIRED" } },
     });
   });
+
   it("keeps public health, native auth and unknown API routes distinct", async () => {
     expect(await (await app.request("/health")).json()).toEqual({ status: "ok" });
     expect(await (await app.request("/api/auth/get-session")).json()).toEqual({ auth: true });
@@ -80,6 +82,7 @@ describe("HTTP foundation", () => {
     ])
       expect((await app.request(path, { headers: { accept: "text/html" } })).status).toBe(404);
   });
+
   it("allows only explicit credentialed origins and adds request IDs", async () => {
     const ok = await app.request("/health", { headers: { origin: "https://web.example.com" } });
     expect(ok.headers.get("access-control-allow-origin")).toBe("https://web.example.com");

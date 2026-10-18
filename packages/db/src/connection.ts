@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { fileURLToPath } from "node:url";
 import { relations } from "./schema.js";
+
 export function connectDatabase(databaseUrl: string) {
   const client = postgres(databaseUrl, { max: 10 });
   let closed: Promise<void> | undefined;

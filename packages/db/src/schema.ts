@@ -1,5 +1,6 @@
 import { boolean, index, pgSchema, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { defineRelations } from "drizzle-orm";
+
 export const foundation = pgSchema("raypx_foundation");
 const date = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 const timestamps = () => ({

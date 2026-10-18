@@ -17,6 +17,7 @@ describe("shared UI patterns", () => {
     expect(onCheckedChange).toHaveBeenCalledWith(true, expect.anything());
     expect(control).not.toBeDisabled();
   });
+
   it("communicates state with text and provides an actionable empty state", () => {
     render(
       <>
@@ -36,6 +37,7 @@ describe("shared UI patterns", () => {
       "inline-start",
     );
   });
+
   it("renders a labelled section with optional description and action", () => {
     render(
       <SectionHeading

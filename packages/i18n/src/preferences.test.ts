@@ -12,6 +12,7 @@ describe("device locale preferences", () => {
     expect(resolveLocalePreference("system", ["fr-FR"])).toBe("en");
     expect(resolveLocalePreference("en", ["zh-CN"])).toBe("en");
   });
+
   it("keeps every foundation namespace and message present in both locales", () => {
     expect(Object.keys(en)).toEqual(Object.keys(zh));
     for (const namespace of Object.keys(en) as (keyof typeof en)[]) {

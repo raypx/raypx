@@ -5,7 +5,9 @@ import { useState } from "react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { Modal } from "./modal";
 import { Button } from "./components/ui/button";
+
 afterEach(cleanup);
+
 it.each([false, true])(
   "names the overlay, closes on Escape and restores its trigger (drawer=%s)",
   async (drawer) => {

@@ -39,6 +39,7 @@ describe("controlled internationalization", () => {
     expect(screen.getByTestId("locale").textContent).toBe("zh");
     expect(screen.getByTestId("message").textContent).toBe("设置");
   });
+
   it("uses product UTC defaults while accepting an explicit time zone", () => {
     const { rerender } = render(
       <IntlProvider locale="en" messages={messages.en}>
@@ -53,6 +54,7 @@ describe("controlled internationalization", () => {
     );
     expect(screen.getByTestId("date").textContent).toBe("31");
   });
+
   it("records an explicit choice even when system currently resolves to that locale", () => {
     function Choice() {
       const { preference, setPreference } = useLanguagePreference();

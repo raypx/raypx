@@ -7,6 +7,7 @@ import type {
   MailTransport,
   SendLinkEmailInput,
 } from "./types.js";
+
 export type {
   Mailer,
   MailLocale,

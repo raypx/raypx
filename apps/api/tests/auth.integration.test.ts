@@ -1,12 +1,11 @@
 import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { createAuth } from "@raypx/auth/server";
+import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { connectDatabase, migrateDatabase } from "@raypx/db";
 import { schema, user } from "@raypx/db/schema";
 import { eq } from "drizzle-orm";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../server/api.js";
-import { readAuthSession } from "@raypx/auth/server";
 import type { AuthMailInput } from "@raypx/auth/server";
 
 const databaseURL = process.env.TEST_DATABASE_URL;
@@ -56,6 +55,7 @@ afterAll(async () => {
   await connection.db.delete(user).where(eq(user.email, email));
   await connection.close();
 });
+
 it("registers, verifies, signs in, resets password and revokes the session", async () => {
   expect(
     (

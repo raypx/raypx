@@ -5,6 +5,7 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { createAccountService } from "@raypx/account/server";
+
 export interface ApiAppOptions {
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;

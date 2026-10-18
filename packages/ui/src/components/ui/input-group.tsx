@@ -33,6 +33,8 @@ function InputGroupAddon({
   }
 
   return (
+    // Clicking the addon only focuses the adjacent input, which already supports keyboard focus.
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <div
       role="group"
       data-slot="input-group-addon"

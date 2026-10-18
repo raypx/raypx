@@ -1,4 +1,5 @@
 import type { MailLocale, SendLinkEmailInput } from "./types.js";
+
 const copy = {
   en: {
     verification: [

@@ -1,5 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import { createApiClient } from "./index.js";
+
 it("reads headers again after a credential change and always uses POST", async () => {
   let cookie = "session=first";
   const seen: Request[] = [];

@@ -76,6 +76,7 @@ describe("Raypx browser language wiring", () => {
     expect(onRecoverableError).not.toHaveBeenCalled();
     expect(consoleError).not.toHaveBeenCalled();
   });
+
   it("migrates the legacy value only after the replacement write succeeds", () => {
     localStorage.setItem("voidmix_locale", "zh-CN");
     expect(readBrowserPreference()).toBe("zh");
@@ -89,6 +90,7 @@ describe("Raypx browser language wiring", () => {
     expect(readBrowserPreference()).toBe("zh");
     expect(localStorage.getItem("voidmix_locale")).toBe("zh");
   });
+
   it("keeps native snapshots authoritative and reports hydration before persistence", () => {
     localStorage.setItem("raypx_locale", "zh");
     render(

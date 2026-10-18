@@ -8,6 +8,7 @@ import { StatusBadge } from "./status-badge";
 import { Modal } from "./modal";
 
 afterEach(cleanup);
+
 it("keeps native button defaults, disabled behavior and React 19 refs", async () => {
   const submit = vi.fn((event) => event.preventDefault());
   const ref = createRef<HTMLButtonElement>();

@@ -27,6 +27,7 @@ describe("account service", () => {
     expect(await service.get(headers)).toBeNull();
     expect(seen).toEqual([headers, headers]);
   });
+
   it("leaves authentication failures to the composition root's error mapping", async () => {
     const service = createAccountService({
       readSession: async () => {

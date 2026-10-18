@@ -17,6 +17,7 @@ describe("locale runtime", () => {
       { value: "zh", nativeName: "简体中文" },
     ]);
   });
+
   it("normalizes regional locale tags", () => {
     expect(normalizeLocale("en-US")).toBe("en");
     expect(normalizeLocale("zh-Hans-CN")).toBe("zh");
