@@ -1,0 +1,22 @@
+apps/mobile/app/index.tsx
+  s_0805faf648473c::t_e71c7192413749 102-103
+  s_0805faf648473c::t_308327707126df 31-35,37,40,43-44,52,101,104
+apps/mobile/src/account.component.test.tsx
+  s_0805faf648473c::t_a255143bc95a99 1-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "65fca5f24f1e6a552f6018e67ba9ed88fac49442",
+  "prompts": {},
+  "sessions": {
+    "s_0805faf648473c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a72-a226-78c2-a9a1-fba96b842489",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
