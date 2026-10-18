@@ -16,11 +16,13 @@ export function useFileActions({
 }) {
   const store = useFilesStoreApi();
   const generation = useRef(0);
+  // Directory changes invalidate pending requests and reset drafts.
   useEffect(() => {
-    generation.current++;
+    const version = generation.current + 1;
+    generation.current = version;
     store.getState().resetDirectory();
     return () => {
-      generation.current++;
+      generation.current = version + 1;
     };
   }, [rootId, path, store]);
   async function run(

@@ -13,6 +13,7 @@
     "test:integration": "bun --bun vp test --run --passWithNoTests integration.test"
   },
   "dependencies": {
+    "@raypx/i18n": "workspace:*",
     "@voidmix/devkit": "catalog:dev",
     "@voidmix/intl": "catalog:"
   },

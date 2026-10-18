@@ -5,6 +5,7 @@ import { saveDesktopPreferences } from "./desktop";
 
 const mocks = vi.hoisted(() => ({ save: vi.fn() }));
 vi.mock("electrobun/view", () => ({
+  // oxlint-disable-next-line typescript/no-extraneous-class -- Mirrors Electrobun's static Electroview API.
   Electroview: class {
     static defineRPC() {
       return { request: { savePreferences: mocks.save } };
@@ -30,9 +31,8 @@ describe("Desktop preference bridge", () => {
     const first = saveDesktopPreferences({ theme: "dark", locale: "zh" });
     const last = saveDesktopPreferences({ theme: "light", locale: "en" });
     await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
-    const failed = expect(first).rejects.toThrow("unavailable");
     reject(new Error("unavailable"));
-    await failed;
+    await expect(first).rejects.toThrow("unavailable");
     await expect(last).resolves.toBe(true);
     expect(mocks.save.mock.calls).toEqual([
       [{ theme: "dark", locale: "zh" }],

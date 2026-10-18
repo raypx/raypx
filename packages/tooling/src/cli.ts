@@ -124,6 +124,7 @@ async function main() {
       );
       break;
     }
+    case undefined:
     default:
       console.log(
         "raypx-dev: tasks | workspace | policy | i18n | verify | smoke | env | db | desktop | clean | doctor",

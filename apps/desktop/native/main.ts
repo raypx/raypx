@@ -156,13 +156,13 @@ export async function quitDesktop(code = 0) {
     await engine.stop();
     // Let WebKit complete a normal page unload before graceful native shutdown.
     // A missing/failed view must never leave a reserved quit approval hanging.
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((done) => {
       let completed = false;
       const finish = () => {
         if (completed) return;
         completed = true;
         clearTimeout(timeout);
-        resolve();
+        done();
       };
       const timeout = setTimeout(finish, 2000);
       try {

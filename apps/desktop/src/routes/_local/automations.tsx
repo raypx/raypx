@@ -8,6 +8,8 @@ import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import type { JobDefinition, JobInput, JobRun, RootGrant } from "@raypx/contracts/local";
 import { localRequest } from "../../lib/desktop";
 
+const localRoute = getRouteApi("/_local");
+
 export const Route = createFileRoute("/_local/automations")({
   preload: false,
   loader: async ({ context }) => {
@@ -34,7 +36,7 @@ function JobsPending() {
 function JobsPage() {
   const router = useRouter();
   const data = Route.useLoaderData();
-  const local = getRouteApi("/_local").useLoaderData();
+  const local = localRoute.useLoaderData();
   const { desktopAvailable } = Route.useRouteContext();
   const t = useTranslations("jobs");
   const c = useTranslations("common");
@@ -63,8 +65,8 @@ function JobsPage() {
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    const data = new FormData(event.currentTarget);
-    const value = (key: string) => formText(data, key).trim();
+    const formData = new FormData(event.currentTarget);
+    const value = (key: string) => formText(formData, key).trim();
     let input: JobInput;
     try {
       const args: unknown = JSON.parse(value("args") || "[]");
@@ -222,7 +224,7 @@ function JobsPage() {
                   id="job-timezone"
                   name="timezone"
                   defaultValue={
-                    editing?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
+                    editing?.timezone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone
                   }
                   required
                 />
@@ -396,14 +398,14 @@ function JobsPage() {
           {history.runs.length === 0 ? (
             <p className="text-muted-foreground">{t("noHistory")}</p>
           ) : (
-            history.runs.map((run) => (
-              <details className="run-row" key={run.id}>
+            history.runs.map((jobRun) => (
+              <details className="run-row" key={jobRun.id}>
                 <summary>
-                  <span>{date(run.startedAt)}</span>
-                  <span className="small-badge">{c(run.status)}</span>
-                  <span>{run.exitCode === null ? "" : `${t("exit")}: ${run.exitCode}`}</span>
+                  <span>{date(jobRun.startedAt)}</span>
+                  <span className="small-badge">{c(jobRun.status)}</span>
+                  <span>{jobRun.exitCode === null ? "" : `${t("exit")}: ${jobRun.exitCode}`}</span>
                 </summary>
-                {run.output && <pre>{run.output}</pre>}
+                {jobRun.output && <pre>{jobRun.output}</pre>}
               </details>
             ))
           )}

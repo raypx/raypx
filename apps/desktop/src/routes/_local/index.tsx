@@ -18,6 +18,8 @@ import { FileTable, type FileListingResult } from "../../features/files/componen
 import { FileOperationForm } from "../../features/files/components/operation-form";
 import { FileEditor } from "../../features/files/components/editor";
 
+const localRoute = getRouteApi("/_local");
+
 export const Route = createFileRoute("/_local/")({
   preload: false,
   validateSearch: filesSearch,
@@ -60,7 +62,7 @@ function FilesRoute() {
 function FilesPage() {
   const { desktopAvailable } = Route.useRouteContext();
   const data = Route.useLoaderData();
-  const { roots } = getRouteApi("/_local").useLoaderData();
+  const { roots } = localRoute.useLoaderData();
   const router = useRouter();
   const t = useTranslations("files");
   const c = useTranslations("common");

@@ -257,6 +257,7 @@
         "raypx-dev": "./src/cli.ts",
       },
       "dependencies": {
+        "@raypx/i18n": "workspace:*",
         "@voidmix/devkit": "catalog:dev",
         "@voidmix/intl": "catalog:",
       },
@@ -281,6 +282,7 @@
         "@testing-library/react": "catalog:dev",
         "@testing-library/user-event": "catalog:dev",
         "@types/react": "catalog:dev",
+        "@types/react-dom": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
         "@voidmix/tsconfig": "catalog:dev",
         "jsdom": "catalog:dev",

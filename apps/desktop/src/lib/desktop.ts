@@ -27,7 +27,8 @@ async function createBridge() {
       },
     },
   });
-  new Electroview({ rpc });
+  // Constructing the view registers the RPC transport with Electrobun.
+  void new Electroview({ rpc });
   return rpc;
 }
 function getBridge() {

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
-import { isDesktop, onLocalEvent } from "../../lib/desktop";
-import { localRequest } from "../../lib/desktop";
+import { isDesktop, localRequest, onLocalEvent } from "../../lib/desktop";
 import type { RootGrant } from "@raypx/contracts/local";
 import { useTranslations } from "@raypx/i18n/browser";
 

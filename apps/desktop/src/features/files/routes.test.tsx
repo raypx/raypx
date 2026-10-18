@@ -10,6 +10,8 @@ import {
 } from "@tanstack/react-router";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
+// Load matcher types without registering against jest-dom's separate Vitest runtime.
+// oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
 import {
   afterAll,
@@ -178,6 +180,7 @@ describe("Files route and workspace", () => {
     fireEvent.click(await screen.findByRole("button", { name: /^readme\.txt$/ }));
     fireEvent.change(await screen.findByLabelText("Text editor"), { target: { value: "draft" } });
   }
+
   it("reads encoded hash search and normalizes invalid pagination", async () => {
     const router = await page("/?rootId=work&path=design%20%26%20notes&offset=100", true);
     expect(mocks.localRequest).toHaveBeenCalledWith("files.list", {
@@ -193,6 +196,7 @@ describe("Files route and workspace", () => {
       expect.objectContaining({ offset: 0 }),
     );
   });
+
   it("pushes directories, replaces pages and shares grants with Jobs", async () => {
     const router = await page("/");
     await screen.findByRole("button", { name: /^docs$/ });
@@ -211,6 +215,7 @@ describe("Files route and workspace", () => {
     expect(await screen.findByRole("heading", { name: "Keep things moving" })).toBeTruthy();
     expect(mocks.localRequest.mock.calls.filter(([m]) => m === "roots.list")).toHaveLength(1);
   });
+
   it("retains a dirty editor while the next page is pending without a confirmation", async () => {
     const second = deferred<FileListing>();
     mocks.localRequest.mockImplementation(async (m, p) => {
@@ -235,6 +240,7 @@ describe("Files route and workspace", () => {
     expect(await screen.findByText("101–200 / 201")).toBeTruthy();
     expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
   });
+
   it("confirms once and leaves a cancelled directory navigation unchanged", async () => {
     const router = await page("/");
     await draft();
@@ -254,6 +260,7 @@ describe("Files route and workspace", () => {
     await screen.findByRole("button", { name: /^readme\.txt$/ });
     expect(screen.queryByLabelText("Text editor")).toBeNull();
   });
+
   it("keeps the draft on a save conflict and refreshes after a successful write", async () => {
     let conflict = true;
     mocks.localRequest.mockImplementation(async (m, p) => {
@@ -284,6 +291,7 @@ describe("Files route and workspace", () => {
       version: "v1",
     });
   });
+
   it("ignores a file read and native picker that finish after leaving the workspace", async () => {
     const late = deferred<{ text: string; version: string }>();
     mocks.localRequest.mockImplementation(async (m, p) => {
@@ -305,6 +313,7 @@ describe("Files route and workspace", () => {
     await act(async () => picked.resolve(grants[0]!));
     expect(router.state.location.pathname).toBe("/settings");
   });
+
   it("creates a clean store on return and prevents stale list results from replacing a new location", async () => {
     const router = await page("/");
     await draft();
@@ -326,6 +335,7 @@ describe("Files route and workspace", () => {
     expect(screen.queryByRole("button", { name: "old.txt" })).toBeNull();
     expect(screen.getByTitle("fresh")).toBeTruthy();
   });
+
   it("updates translations without re-reading native data", async () => {
     await page("/");
     await screen.findByRole("button", { name: /^readme\.txt$/ });
@@ -342,6 +352,7 @@ describe("Files route and workspace", () => {
     expect(mocks.localRequest).toHaveBeenCalledTimes(reads);
     expect(screen.queryByRole("button", { name: "Next" })).toBeNull();
   });
+
   it("preserves version and confirmation checks for create, move and delete", async () => {
     mocks.localRequest.mockImplementation(async (method, params) => {
       if (method === "roots.list") return grants;
@@ -396,6 +407,7 @@ describe("Files route and workspace", () => {
       }),
     );
   });
+
   it("keeps a cancelled root selection and retries a list failure without dropping a draft", async () => {
     const other = { ...grants[0]!, id: "other", name: "Other" };
     let failed = false;
@@ -423,6 +435,7 @@ describe("Files route and workspace", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
   });
+
   it("does not read native files during preloading or the build shell", async () => {
     const preload = testRouter("/settings");
     await preload.load();

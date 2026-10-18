@@ -24,6 +24,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* oxlint-disable-next-line react/no-danger -- Static first-paint theme script interpolates only application-owned storage keys. */}
         <script dangerouslySetInnerHTML={{ __html: desktopThemeScript }} />
       </head>
       <body className="h-dvh min-w-[800px] overflow-hidden">

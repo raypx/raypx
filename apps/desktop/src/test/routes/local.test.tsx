@@ -10,6 +10,8 @@ import {
 } from "@tanstack/react-router";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
+// Load matcher types without registering against jest-dom's separate Vitest runtime.
+// oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
 import {
   afterAll,
@@ -237,9 +239,31 @@ describe("Desktop local file routes", () => {
     expect(mocks.localRequest).not.toHaveBeenCalled();
   });
 
-  it.each(["/", "/automations"] as const)(
-    "refreshes shared roots when re-entering %s and reuses them between local pages",
-    async (destination) => {
+  it.each([
+    {
+      destination: "/" as const,
+      otherDestination: "/automations" as const,
+      assertAuthorizedPage: async () => {
+        expect(await screen.findByText("This folder is empty.")).toBeTruthy();
+        expect(mocks.localRequest).toHaveBeenCalledWith("files.list", {
+          rootId: "work",
+          path: "",
+          offset: 0,
+          limit: 100,
+        });
+      },
+    },
+    {
+      destination: "/automations" as const,
+      otherDestination: "/" as const,
+      assertAuthorizedPage: async () => {
+        fireEvent.click(await screen.findByRole("button", { name: "New automation" }));
+        await waitFor(() => expect(screen.getByLabelText("Folder")).toHaveValue("work"));
+      },
+    },
+  ])(
+    "refreshes shared roots when re-entering $destination and reuses them between local pages",
+    async ({ destination, otherDestination, assertAuthorizedPage }) => {
       const updatedRoots = deferred<RootGrant[]>();
       let authorized = false;
       mocks.localRequest.mockImplementation(async (method) => {
@@ -267,20 +291,9 @@ describe("Desktop local file routes", () => {
       expect(mocks.localRequest.mock.calls.some(([method]) => method === "files.list")).toBe(false);
       await act(async () => updatedRoots.resolve(grants));
 
-      if (destination === "/") {
-        expect(await screen.findByText("This folder is empty.")).toBeTruthy();
-        expect(mocks.localRequest).toHaveBeenCalledWith("files.list", {
-          rootId: "work",
-          path: "",
-          offset: 0,
-          limit: 100,
-        });
-      } else {
-        fireEvent.click(await screen.findByRole("button", { name: "New automation" }));
-        await waitFor(() => expect(screen.getByLabelText("Folder")).toHaveValue("work"));
-      }
+      await assertAuthorizedPage();
 
-      await act(async () => router.navigate({ to: destination === "/" ? "/automations" : "/" }));
+      await act(async () => router.navigate({ to: otherDestination }));
       await act(async () => router.navigate({ to: destination }));
       expect(rootReads()).toBe(2);
     },
