@@ -1,0 +1,44 @@
+apps/desktop/native/main.ts
+  h_f0766e80fd3864 159,165
+apps/desktop/src/features/auth/routes.test.tsx
+  h_f0766e80fd3864 13-14
+apps/desktop/src/features/files/routes.test.tsx
+  h_f0766e80fd3864 13-14,183,199,218,243,263,294,316,338,355,410,438
+apps/desktop/src/features/files/use-actions.ts
+  h_f0766e80fd3864 19,21-22,25
+apps/desktop/src/lib/desktop.test.ts
+  h_f0766e80fd3864 8,35
+apps/desktop/src/lib/desktop.ts
+  h_f0766e80fd3864 30-31
+apps/desktop/src/routes/__root.tsx
+  h_f0766e80fd3864 27
+apps/desktop/src/routes/_local/automations.tsx
+  h_f0766e80fd3864 11-12,39,68-69,227,401-402,404-406,408
+apps/desktop/src/routes/_local/index.tsx
+  h_f0766e80fd3864 21-22,65
+apps/desktop/src/routes/_local/route.tsx
+  h_f0766e80fd3864 3
+apps/desktop/src/test/routes/account.test.tsx
+  h_f0766e80fd3864 13-14
+apps/desktop/src/test/routes/local.test.tsx
+  h_f0766e80fd3864 13-14,242-266,294,296
+bun.lock
+  h_f0766e80fd3864 260,285
+packages/tooling/package.json
+  h_f0766e80fd3864 16
+packages/tooling/src/cli.ts
+  h_f0766e80fd3864 127
+packages/ui/package.json
+  h_f0766e80fd3864 64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "18079f4b3a314ff6d5072d04b0f717ce69dc48be",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
