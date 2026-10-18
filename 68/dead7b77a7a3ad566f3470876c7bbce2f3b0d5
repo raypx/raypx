@@ -1,0 +1,27 @@
+packages/tooling/src/repository.ts
+  s_8c4a9510f501aa::t_124a491a0c8c09 1
+  s_8c4a9510f501aa::t_9d6060da1c53c4 13-22,26
+e2e/AGENTS.md
+  s_8c4a9510f501aa::t_9d6060da1c53c4 11-13
+e2e/serve-web.ts
+  s_8c4a9510f501aa::t_9d6060da1c53c4 1-21
+  s_8c4a9510f501aa::t_41f7a6a20d6c99 22-24
+e2e/playwright.config.ts
+  s_8c4a9510f501aa::t_9d6060da1c53c4 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "68dead7b77a7a3ad566f3470876c7bbce2f3b0d5",
+  "prompts": {},
+  "sessions": {
+    "s_8c4a9510f501aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a6e-9742-7031-b705-8bf1a5503cdf",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
