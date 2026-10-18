@@ -1,0 +1,16 @@
+packages/tooling/src/framework.test.ts
+  h_f0766e80fd3864 80,95,115,130,146,163-192
+packages/tooling/src/policy.ts
+  h_f0766e80fd3864 7,45-56,58,60,63,65-70,73-76,79-84,86,91-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "eea89889d0e727515def0489dfce00b35a78cc17",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
