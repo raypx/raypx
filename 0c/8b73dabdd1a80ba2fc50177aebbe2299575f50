@@ -1,0 +1,56 @@
+AGENTS.md
+  h_f0766e80fd3864 59-60
+CONTRIBUTING.md
+  h_f0766e80fd3864 8
+DESIGN.md
+  h_f0766e80fd3864 8-9
+PRODUCT.md
+  h_f0766e80fd3864 5-6,10-11
+README.md
+  h_f0766e80fd3864 3
+apps/api/server/api.ts
+  h_f0766e80fd3864 31
+bun.lock
+  h_f0766e80fd3864 1128,1130,1132,1134,1136,1138,1140,1142,1144,1146,1148,1150,1152,1154,1156,1158,1160,1162,1164,1166,1168,1170,1172,1174,1176,1178,1180,1182,1184,1186,1280,1290,1312,1420
+bunfig.toml
+  h_f0766e80fd3864 2
+docs/architecture/0034-extensible-foundation.md
+  h_f0766e80fd3864 6-7
+docs/architecture/README.md
+  h_f0766e80fd3864 13-14,27-28,32,46
+docs/architecture/internationalization.md
+  h_f0766e80fd3864 73,76
+docs/development/getting-started.md
+  h_f0766e80fd3864 25-26,31-32,41-42
+docs/development/intl-release.md
+  h_f0766e80fd3864 22
+docs/development/testing.md
+  h_f0766e80fd3864 6
+docs/development/workspaces.md
+  h_f0766e80fd3864 39
+packages/auth/AGENTS.md
+  h_f0766e80fd3864 25,35
+packages/i18n/AGENTS.md
+  h_f0766e80fd3864 22,29
+packages/i18n/package.json
+  h_f0766e80fd3864 15
+packages/tooling/src/cli.ts
+  h_f0766e80fd3864 123
+packages/ui/AGENTS.md
+  h_f0766e80fd3864 26-28
+packages/ui/package.json
+  h_f0766e80fd3864 78
+packages/ui/scripts/generate-theme.ts
+  h_f0766e80fd3864 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0c8b73dabdd1a80ba2fc50177aebbe2299575f50",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
