@@ -28,7 +28,7 @@ SecureStore; language and appearance preferences live in AsyncStorage.
 
 ## Constraints
 
-- Expo SDK 57, React 19.2.3, React Native 0.86.3 and Uniwind.
+- Expo SDK 58, React 19.3.0, React Native 0.88.0 and Uniwind.
 - Uniwind is the sole native theme state. Do not add a DOM theme provider.
 - Import UI through `@raypx/ui/theme` and `@raypx/ui/styles/native.css` only.
 - Import locale hooks through `@raypx/i18n/native`, never browser storage adapters.
