@@ -33,6 +33,7 @@
     "@vitest/coverage-v8": "catalog:dev",
     "@voidmix/tsconfig": "catalog:dev",
     "drizzle-orm": "catalog:",
+    "vite": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {

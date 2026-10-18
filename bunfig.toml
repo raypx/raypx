@@ -1,4 +1,3 @@
 [install]
-# React and other singletons keep one physical instance across workspaces.
-# Architecture policy still rejects undeclared imports despite hoisted resolution.
-linker = "hoisted"
+# Each workspace resolves only what it declares; undeclared packages fail early.
+linker = "isolated"

@@ -38,5 +38,7 @@ Actual verification/reset emails require RESEND_API_KEY and MAIL_FROM. Without a
 configured mail transport those actions return MAIL_NOT_CONFIGURED instead of
 claiming delivery. Tests inject an explicit in-memory mail transport.
 
-Bun uses a hoisted install layout so React and other singletons have one
+Bun uses the isolated install layout: each workspace resolves only the packages it
+declares, so a missing dependency fails at install or build time instead of
+resolving through another workspace. One exact React version keeps a single
 physical instance. Policy still checks every declared production import.
