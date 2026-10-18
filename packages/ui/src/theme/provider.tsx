@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, use, useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, use, useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 
 import { THEME_STORAGE_KEY, parseTheme, type AppTheme, type UserTheme } from "./config";
 
@@ -82,11 +82,61 @@ function applyTheme(theme: AppTheme): void {
 }
 
 function setupMediaListener(onChange: () => void): () => void {
-  if (typeof window.matchMedia !== "function") return () => {};
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return () => {};
   const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const handler = () => onChange();
   mediaQuery.addEventListener("change", handler);
   return () => mediaQuery.removeEventListener("change", handler);
+}
+
+function createThemeStore(initialTheme: UserTheme, storageKey: string | false) {
+  // The server and hydration share this snapshot before React reads device preferences.
+  const serverSnapshot = {
+    theme: initialTheme,
+    resolvedTheme: getHydrationResolvedTheme(initialTheme),
+  };
+  let snapshot = serverSnapshot;
+  // Retain explicit choices even when persistence is disabled or unavailable.
+  let selectedTheme: UserTheme | undefined;
+  const listeners = new Set<() => void>();
+
+  function getSnapshot() {
+    const theme = selectedTheme ?? getStoredTheme(storageKey, initialTheme);
+    const resolvedTheme = resolveTheme(theme);
+    if (snapshot.theme !== theme || snapshot.resolvedTheme !== resolvedTheme) {
+      snapshot = { theme, resolvedTheme };
+    }
+    return snapshot;
+  }
+
+  function notify() {
+    for (const listener of listeners) listener();
+  }
+
+  return {
+    getSnapshot,
+    getServerSnapshot: () => serverSnapshot,
+    setTheme(nextTheme: UserTheme) {
+      selectedTheme = nextTheme;
+      storeTheme(storageKey, nextTheme);
+      notify();
+    },
+    subscribe(onChange: () => void, defaultTheme: UserTheme) {
+      listeners.add(onChange);
+      const removeMediaListener = setupMediaListener(onChange);
+      const handleStorage = (event: StorageEvent) => {
+        if (storageKey === false || event.key !== storageKey) return;
+        selectedTheme = parseTheme(event.newValue, defaultTheme);
+        notify();
+      };
+      if (storageKey !== false) window.addEventListener("storage", handleStorage);
+      return () => {
+        listeners.delete(onChange);
+        removeMediaListener();
+        if (storageKey !== false) window.removeEventListener("storage", handleStorage);
+      };
+    },
+  };
 }
 
 function createThemeScript(storageKey: string): string {
@@ -116,7 +166,7 @@ function createThemeScript(storageKey: string): string {
 
 export function ThemeScript({ storageKey = THEME_STORAGE_KEY }: { storageKey?: string | false }) {
   if (storageKey === false) return null;
-  // oxlint-disable-next-line react/no-danger
+  // oxlint-disable-next-line react/no-danger -- Generated first-paint theme script uses application-configured storage keys.
   return <script dangerouslySetInnerHTML={{ __html: createThemeScript(storageKey) }} />;
 }
 
@@ -132,29 +182,21 @@ export function ThemeProvider({
   storageKey = THEME_STORAGE_KEY,
 }: ThemeProviderProps) {
   const initialTheme = parseTheme(initialThemeProp, defaultTheme);
-  // A server-rendered theme owns the first render so hydration matches; the
-  // mount effect below then reconciles it with device storage.
-  const serverRendered = initialThemeProp !== undefined;
-  const [theme, setThemeState] = useState<UserTheme>(() =>
-    serverRendered ? initialTheme : getStoredTheme(storageKey, initialTheme),
+  const store = useMemo(
+    () => createThemeStore(initialTheme, storageKey),
+    [initialTheme, storageKey],
   );
-  const [resolvedTheme, setResolvedTheme] = useState<AppTheme>(() =>
-    typeof window === "undefined" || serverRendered
-      ? getHydrationResolvedTheme(theme)
-      : resolveTheme(theme),
+  const subscribe = useCallback(
+    (onChange: () => void) => store.subscribe(onChange, defaultTheme),
+    [defaultTheme, store],
+  );
+  const { theme, resolvedTheme } = useSyncExternalStore(
+    subscribe,
+    store.getSnapshot,
+    store.getServerSnapshot,
   );
 
   useEffect(() => {
-    const storedTheme = getStoredTheme(storageKey, initialTheme);
-    const nextResolvedTheme = resolveTheme(storedTheme);
-    setThemeState(storedTheme);
-    setResolvedTheme(nextResolvedTheme);
-    applyTheme(nextResolvedTheme);
-  }, [initialTheme, storageKey]);
-
-  useEffect(() => {
-    const nextResolvedTheme = resolveTheme(theme);
-    setResolvedTheme(nextResolvedTheme);
     if (disableTransitionOnChange && typeof document !== "undefined") {
       const style = document.createElement("style");
       style.append(
@@ -166,41 +208,15 @@ export function ThemeProvider({
       void window.getComputedStyle(document.body);
       window.setTimeout(() => style.remove(), 1);
     }
-    applyTheme(nextResolvedTheme);
-  }, [disableTransitionOnChange, theme]);
-
-  useEffect(() => {
-    if (theme !== "system" || typeof window === "undefined") return;
-    return setupMediaListener(() => {
-      const nextResolvedTheme = getSystemTheme();
-      setResolvedTheme(nextResolvedTheme);
-      applyTheme(nextResolvedTheme);
-    });
-  }, [theme]);
-
-  useEffect(() => {
-    if (storageKey === false || typeof window === "undefined") return;
-    const handler = (event: StorageEvent) => {
-      if (event.key !== storageKey) return;
-      const nextTheme = parseTheme(event.newValue, defaultTheme);
-      setThemeState(nextTheme);
-      setResolvedTheme(resolveTheme(nextTheme));
-      applyTheme(resolveTheme(nextTheme));
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, [defaultTheme, storageKey]);
+    applyTheme(resolvedTheme);
+  }, [disableTransitionOnChange, resolvedTheme]);
 
   const setTheme = useCallback(
     (nextTheme: UserTheme) => {
-      setThemeState(nextTheme);
-      storeTheme(storageKey, nextTheme);
-      const resolved = resolveTheme(nextTheme);
-      setResolvedTheme(resolved);
-      applyTheme(resolved);
+      store.setTheme(nextTheme);
       onThemeChange?.(nextTheme);
     },
-    [onThemeChange, storageKey],
+    [onThemeChange, store],
   );
 
   const contextValue = useMemo(
