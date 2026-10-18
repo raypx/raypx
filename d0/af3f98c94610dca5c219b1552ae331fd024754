@@ -1,0 +1,20 @@
+apps/api/package.json
+  h_f0766e80fd3864 36
+bun.lock
+  h_f0766e80fd3864 39
+bunfig.toml
+  h_f0766e80fd3864 2-3
+docs/development/getting-started.md
+  h_f0766e80fd3864 41-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d0af3f98c94610dca5c219b1552ae331fd024754",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
