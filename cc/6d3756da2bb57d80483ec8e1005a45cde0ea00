@@ -1,0 +1,173 @@
+turbo.json
+  s_8c4a9510f501aa::t_9d6060da1c53c4 67
+apps/desktop/src-tauri/tauri.smoke.conf.json
+  s_8c4a9510f501aa::t_49bb7baa054562 1-8
+apps/desktop/src/features/files/use-actions.ts
+  s_0805faf648473c::t_f2da2db0a785b7 19
+  s_0805faf648473c::t_b87fe04831db71 21-22,25
+apps/desktop/src/routes/_local/index.tsx
+  s_0805faf648473c::t_b87fe04831db71 21-22,65
+apps/desktop/CHANGELOG.md
+  s_8c4a9510f501aa::t_225f9efd31740a 15,27
+apps/desktop/src/router.tsx
+  s_8c4a9510f501aa::t_f4431737333fe7 3,9
+docs/development/getting-started.md
+  s_8c4a9510f501aa::t_dcaa9c25641775 33-34
+  s_8c4a9510f501aa::t_225f9efd31740a 28-32,35-36
+apps/desktop/src-tauri/src/preferences.rs
+  s_8c4a9510f501aa::t_a2dfdb0a0ac46a 1-39,44,51-59,64,69-75,80-131,136-165,170-179,188-189,194-201,208-213,218-228,233-242,257-258
+  s_8c4a9510f501aa::t_5a9530e9636c80 40-43,45-50,60-63,65-68,76-79,132-135,166-169,180-187,190-193,202-207,214-217,229-232,243-256
+  s_8c4a9510f501aa::t_83dddff5131196 259-261
+README.md
+  s_8c4a9510f501aa::t_225f9efd31740a 3,14-15
+apps/desktop/src-tauri/src/lib.rs
+  s_8c4a9510f501aa::t_237cf8847af512 261
+  s_8c4a9510f501aa::t_306562df93fa2c 259-260,266
+  s_8c4a9510f501aa::t_5175db27c297d9 1-74,79-108,112-138,143-152,156-176,180-184,188-199,203-204,209-210,214-258,265,267-282,289-291,303,306-326,331-332,351-354
+  s_8c4a9510f501aa::t_15e5e261cb6e74 75-78,109-111,139-142,153-155,177-179,185-187,200-202,205-208,211-213,262-264,283-288,292-302,304-305,327-330,333-350
+  s_8c4a9510f501aa::t_5b15c3e73f8b1c 355-357
+docs/development/tauri-desktop-acceptance.md
+  s_8c4a9510f501aa::t_fb082c98f17d6e 1-14,23-26,44-58
+  s_8c4a9510f501aa::t_92a076bec774c4 15-19,27-34
+  s_8c4a9510f501aa::t_ea034154c3d627 20-22,35-43
+  s_8c4a9510f501aa::t_1fa549a6923184 59
+apps/desktop/native/smoke.ts
+  s_8c4a9510f501aa::t_063b865f44e7bf 1-2,4-5,7-24,26,32,34,40,42-43,47-60,63-64,66-68,70-85,87-96,100,104-105,107-132,134-135,137-151,153-167,169-196,198-199,201-212,214-216,218-220,224-239,241-242,244-247,249-266,268-269,271-273,275-299,301-304,306-316,318-324,326-355,357-361,363-369,372-376
+  s_0805faf648473c::t_c7bf3642142c3a 38-39,41,61-62,97-99,102
+  s_8c4a9510f501aa::t_0b35e45ab592a9 221
+  s_8c4a9510f501aa::t_6b55fd23a490e8 222
+  s_0805faf648473c::t_aa307b87494c62 44-46
+apps/desktop/src-tauri/src/smoke.rs
+  s_8c4a9510f501aa::t_237cf8847af512 18,40-42,53,168-169,171-173,175-176
+  s_8c4a9510f501aa::t_7db8c701de954b 33-34,78-85,102-106,120-122,125-128,132-135,140-143,167,170,174,177,190-196
+  s_8c4a9510f501aa::t_0b318522a18247 1-17,19-32,35-39,43-52,54-77,86-101,107-119,123-124,129-131,136-139,144-166,178-189,197-230
+  s_8c4a9510f501aa::t_00283cc3f6637f 231-237
+apps/desktop/src-tauri/tauri.conf.json
+  s_8c4a9510f501aa::t_49bb7baa054562 1-29
+  s_8c4a9510f501aa::t_bff7bc3a62cc96 30-32
+apps/desktop/src/test/routes/local.test.tsx
+  s_0805faf648473c::t_5d8b238b982bcf 13-14,242-266,294,296
+apps/desktop/native/build.ts
+  s_8c4a9510f501aa::t_286b152b3b195f 1-2,5,8-22
+  s_8c4a9510f501aa::t_dcaa9c25641775 3-4,6-7
+  s_8c4a9510f501aa::t_109c3d2f6b8426 23-25
+apps/desktop/.gitignore
+  s_8c4a9510f501aa::t_ce6e232b49fc4d 1,3,8-9
+e2e/tests/foundation.spec.ts
+  s_8c4a9510f501aa::t_f4431737333fe7 162
+knip.json
+  s_0805faf648473c::t_faf471136c9eb6 34
+  s_8c4a9510f501aa::t_9d6060da1c53c4 9-11,18-25,43
+apps/desktop/src/lib/desktop.ts
+  s_8c4a9510f501aa::t_55120e9afe33c7 3,8-9,13-19,36-46,65-67,88-94
+  s_0805faf648473c::t_b87fe04831db71 77
+  s_8c4a9510f501aa::t_f3945f98466b56 47-48
+  s_8c4a9510f501aa::t_f4431737333fe7 2,6,12,25,29-35,50,54-64,68-76,78,97,109,118
+  s_8c4a9510f501aa::t_a1f465b7936cd2 100-103
+apps/desktop/src/lib/desktop.test.ts
+  s_0805faf648473c::t_6b9add7a2f2f04 242
+  s_8c4a9510f501aa::t_a1f465b7936cd2 157-178
+  s_8c4a9510f501aa::t_c21e8de389f8bf 3,5-9,11,13-20,23-73,179-183,187-197,201-213,217-228,237-240,244-246,250-258
+  s_8c4a9510f501aa::t_a7a7b4e368eb38 74-156,184-186,198-200,214-216
+apps/desktop/src-tauri/Cargo.toml
+  s_8c4a9510f501aa::t_49bb7baa054562 1-9,11-37
+  s_8c4a9510f501aa::t_15e5e261cb6e74 10
+AGENTS.md
+  s_8c4a9510f501aa::t_225f9efd31740a 31,58-60
+apps/desktop/src/routes/_local/route.tsx
+  s_0805faf648473c::t_aa307b87494c62 3
+apps/desktop/src/routes/_local/automations.tsx
+  s_0805faf648473c::t_b87fe04831db71 11-12,39,68-69,227,401-402,404-406,408
+apps/desktop/src-tauri/src/engine.rs
+  s_8c4a9510f501aa::t_83f9b04be2bb2f 1-40,42-84,91-109,113,117-149,153,160-164,168-175,180-184,188,190,192-197,201-208,210-213,218-219,223-227,229-230,234,237-239,247-256,260,264,268-269,274,283-284,289,293-295,297,304-308,319-325,329,334,338-340,347,353,366-383,387-445,452-461,475-488,493-511,518-538,540,544-560,616
+  s_8c4a9510f501aa::t_160f18bd295d8d 176-179,357-363,539,541-543
+  s_8c4a9510f501aa::t_868287cef543aa 244-246,590-601,607-610,612-614
+  s_8c4a9510f501aa::t_306562df93fa2c 561-589,602-606,611,615
+  s_8c4a9510f501aa::t_cfa6a2ad715dd7 41,85-90,110-112,114-116,150-152,154-159,165-167,185-187,189,191,198-200,209,214-217,220-222,228,231-233,235-236,240-243,257-259,261-263,265-267,270-273,275-282,285-288,290-292,296,298-303,309-318,326-328,330-333,335-337,341-346,348-352,354-356,364-365,384-386,446-451,462-474,489-492,512-517
+apps/desktop/src/routes/__root.tsx
+  s_0805faf648473c::t_aa307b87494c62 27
+docs/development/testing.md
+  s_0805faf648473c::t_e1ff1faedd5332 9-23
+  s_8c4a9510f501aa::t_dcaa9c25641775 40-44
+  s_8c4a9510f501aa::t_fb082c98f17d6e 55
+  s_8c4a9510f501aa::t_225f9efd31740a 5-6,33-39,45-49,54
+  s_8c4a9510f501aa::t_ad417d6fd363f7 56
+docs/architecture/README.md
+  s_8c4a9510f501aa::t_225f9efd31740a 10,66-68
+apps/api/server/env.ts
+  s_8c4a9510f501aa::t_f4431737333fe7 12-14
+  s_0805faf648473c::t_de39392627a6c7 2
+packages/tooling/src/cli.ts
+  s_0805faf648473c::t_fb06fb40679d6d 124
+  s_8c4a9510f501aa::t_ce6e232b49fc4d 2,121
+  s_8c4a9510f501aa::t_dcaa9c25641775 98-99
+apps/desktop/desktop.ts
+  s_8c4a9510f501aa::t_f4431737333fe7 1-11
+apps/desktop/vite.config.ts
+  s_8c4a9510f501aa::t_ce6e232b49fc4d 10,22
+apps/desktop/AGENTS.md
+  s_8c4a9510f501aa::t_225f9efd31740a 5,9,11-15,66-67,69-71,85
+  s_8c4a9510f501aa::t_dcaa9c25641775 87
+  s_8c4a9510f501aa::t_f1c63f17ca665e 88-89
+apps/desktop/native/dev.ts
+  s_8c4a9510f501aa::t_dcaa9c25641775 3
+  s_8c4a9510f501aa::t_ce6e232b49fc4d 65
+  s_8c4a9510f501aa::t_ffe64050515264 4-10
+apps/api/server/env.test.ts
+  s_8c4a9510f501aa::t_c21e8de389f8bf 9-20
+  s_0805faf648473c::t_56be011c9fec55 3,8
+docs/architecture/0034-extensible-foundation.md
+  s_8c4a9510f501aa::t_225f9efd31740a 13-14,34-40
+  s_8c4a9510f501aa::t_907bfecd18fdb1 41
+apps/desktop/native/prepare-cli.ts
+  s_8c4a9510f501aa::t_286b152b3b195f 3,8-12,15-22,27,31-35
+  s_8c4a9510f501aa::t_dcaa9c25641775 4-7,23-26,28-30
+  s_8c4a9510f501aa::t_a7c36207910152 36-39,56
+apps/mobile/package.json
+  s_0805faf648473c::t_308327707126df 36,40-41
+.github/workflows/ci.yml
+  s_8c4a9510f501aa::t_286b152b3b195f 74,84-86,88-92
+  s_8c4a9510f501aa::t_8b358c0704c575 93-94
+.env.example
+  s_8c4a9510f501aa::t_f4431737333fe7 6
+apps/desktop/src-tauri/Cargo.lock
+  s_8c4a9510f501aa::t_8987209c9d96c5 1-4939
+apps/desktop/src/features/auth/routes.test.tsx
+  s_0805faf648473c::t_5f8da24bc83627 13-14
+apps/desktop/src/features/files/routes.test.tsx
+  s_0805faf648473c::t_7b45562eb53bb3 13-14,183,199,218,243,263,294,316,338,355,410,438
+apps/desktop/src/test/routes/account.test.tsx
+  s_0805faf648473c::t_737b5477c2df77 13-14
+apps/desktop/tsconfig.json
+  s_8c4a9510f501aa::t_f6545d1e162546 4
+apps/desktop/tsconfig.native.json
+  s_8c4a9510f501aa::t_f2173481a7cac6 7,9-10
+apps/desktop/tsconfig.node.json
+  s_8c4a9510f501aa::t_c85137ec04e401 9
+apps/desktop/tsconfig.smoke.json
+  s_8c4a9510f501aa::t_9338b749db8356 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cc6d3756da2bb57d80483ec8e1005a45cde0ea00",
+  "prompts": {},
+  "sessions": {
+    "s_0805faf648473c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a72-a226-78c2-a9a1-fba96b842489",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_8c4a9510f501aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a6e-9742-7031-b705-8bf1a5503cdf",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
