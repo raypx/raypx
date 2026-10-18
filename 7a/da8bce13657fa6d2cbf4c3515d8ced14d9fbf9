@@ -1,0 +1,112 @@
+apps/api/tests/auth.integration.test.ts
+  s_0805faf648473c::t_850102fd1c5909 3,58
+vite.config.ts
+  s_0805faf648473c::t_f2da2db0a785b7 20-21,44,50-59,63-65,69,71
+  s_0805faf648473c::t_3ff4b2d4c260d1 70
+  s_0805faf648473c::t_72651a868f8aaf 82
+  s_0805faf648473c::t_bb2b30d3fd06b5 9-19,32-43,45-49,60-62,66-68,72-81,83-84
+packages/ui/src/components/ui/input-group.tsx
+  s_0805faf648473c::t_fb06fb40679d6d 36-37
+packages/ui/src/components/component.test.tsx
+  s_0805faf648473c::t_850102fd1c5909 3
+packages/ui/src/index.ts
+  s_0805faf648473c::t_fb06fb40679d6d 2-3
+apps/api/server/api.integration.test.ts
+  s_0805faf648473c::t_760aeb3e0d8f3e 5,70,85
+apps/api/server/api.ts
+  s_0805faf648473c::t_e0e0197ce932a7 8
+apps/api/server/app.ts
+  s_0805faf648473c::t_45d14198800b63 2
+apps/api/server/runtime.plugin.ts
+  s_0805faf648473c::t_301d42b2feb581 3
+apps/api/server/runtime.ts
+  s_0805faf648473c::t_ec2331bd1e5fe0 8
+apps/api/vitest.config.ts
+  s_0805faf648473c::t_504a25510ef442 2
+apps/api/vitest.postgres.config.ts
+  s_0805faf648473c::t_61bb78f109aeb9 2
+apps/web/src/test/request.test.ts
+  s_0805faf648473c::t_e81f8ae0716c88 15
+apps/web/src/test/setup.ts
+  s_0805faf648473c::t_f0fd745c195599 1-2
+apps/web/vitest.config.ts
+  s_0805faf648473c::t_71dbc2729ae603 2
+packages/account/src/index.test.ts
+  s_0805faf648473c::t_7f28c8c610bf5d 12,29,39
+packages/account/src/server.test.ts
+  s_0805faf648473c::t_8b16d9133a1610 30
+packages/auth/src/server.test.ts
+  s_0805faf648473c::t_7c1d304d59d22e 4,17,38,77
+packages/auth/src/server.ts
+  s_0805faf648473c::t_02db790d548426 5
+packages/auth/vitest.config.ts
+  s_0805faf648473c::t_0de481e4cc6fa8 2
+packages/client/src/index.test.ts
+  s_0805faf648473c::t_413ae378a5c13c 3
+packages/contracts/src/api.test.ts
+  s_0805faf648473c::t_126289056529c7 3,9
+packages/db/drizzle.config.ts
+  s_0805faf648473c::t_7fee9aa64d3bd8 3
+packages/db/src/commands.ts
+  s_0805faf648473c::t_594b99c4315ab1 3
+packages/db/src/connection.ts
+  s_0805faf648473c::t_647ad5bf2ee2c4 6
+packages/db/src/env.ts
+  s_0805faf648473c::t_60f6295b319413 2
+packages/db/src/schema.test.ts
+  s_0805faf648473c::t_0139fe22fe984f 4
+packages/db/src/schema.ts
+  s_0805faf648473c::t_a0080829f2f7b2 3
+packages/db/vitest.config.ts
+  s_0805faf648473c::t_0b6cf49da94d09 2
+packages/i18n/src/browser.component.test.tsx
+  s_0805faf648473c::t_00284545af69f0 79,93
+packages/i18n/src/client.test.tsx
+  s_0805faf648473c::t_2062594cd074b1 42,57
+packages/i18n/src/index.test.ts
+  s_0805faf648473c::t_5531d92b2e4414 20
+packages/i18n/src/messages/index.ts
+  s_0805faf648473c::t_4ad3dd245f6adc 4
+packages/i18n/src/preferences.test.ts
+  s_0805faf648473c::t_715d4da81e52a8 15
+packages/i18n/src/translator.test.ts
+  s_0805faf648473c::t_6d40e0cafec549 20
+packages/mail/src/server.ts
+  s_0805faf648473c::t_946572ab40b04e 10
+packages/mail/src/templates.test.ts
+  s_0805faf648473c::t_79d242bce4b9dc 4,17,30
+packages/mail/src/templates.ts
+  s_0805faf648473c::t_df6b80f040cd04 2
+packages/ui/src/composition.component.test.tsx
+  s_0805faf648473c::t_b48ea4e52d24d6 11
+packages/ui/src/modal.component.test.tsx
+  s_0805faf648473c::t_2614b9ded06bb6 8,10
+packages/ui/src/patterns.component.test.tsx
+  s_0805faf648473c::t_25b91790882f4c 20,40
+packages/ui/src/test/setup.ts
+  s_0805faf648473c::t_6713df923c56ae 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7ada8bce13657fa6d2cbf4c3515d8ced14d9fbf9",
+  "prompts": {},
+  "sessions": {
+    "s_0805faf648473c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a72-a226-78c2-a9a1-fba96b842489",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_8c4a9510f501aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a6e-9742-7031-b705-8bf1a5503cdf",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
