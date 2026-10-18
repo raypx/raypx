@@ -1,0 +1,30 @@
+packages/ui/src/theme/provider.tsx
+  s_0805faf648473c::t_562d56108778bb 3,85,92-141,189-196,216,219
+  s_0805faf648473c::t_9901713f2a5cba 211-212
+  s_0805faf648473c::t_60b336dd1cdd0b 169,185-187
+packages/ui/src/theme/provider/component.test.tsx
+  s_0805faf648473c::t_d11bcd652f11f2 92-94,126-127,276-277
+  s_0805faf648473c::t_cc6e5fdf4ef30e 35-42,95-125,172,204,208,266
+  s_0805faf648473c::t_95b8f73f81451f 5-6,11-14,51-53,63,65-71,80,89,128-133,137-148,150-166,171,173-183,185-203,256-260,280,293,300-305
+  s_0805faf648473c::t_e3b247c94f2e17 268,278,281-286,294-299,306-329
+  s_0805faf648473c::t_d96da369f299ff 3,28-30,85,167-168,206-207,209,219-241,245-255,261-265
+  s_0805faf648473c::t_9ca5a5506efafa 43-44
+  s_0805faf648473c::t_57fed7de3e9c42 205
+  s_0805faf648473c::t_b0379e50f24327 267
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f521936047df797e716a4bcd05bddb02ca98f815",
+  "prompts": {},
+  "sessions": {
+    "s_0805faf648473c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a72-a226-78c2-a9a1-fba96b842489",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
