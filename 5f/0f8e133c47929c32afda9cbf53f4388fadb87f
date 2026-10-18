@@ -1,0 +1,43 @@
+apps/cli/src/runtime/state/index.ts
+  s_0805faf648473c::t_fb06fb40679d6d 39-40
+apps/cli/package.json
+  s_0805faf648473c::t_3c31bdebe1c922 13
+  s_0805faf648473c::t_faf471136c9eb6 14
+apps/cli/tests/smoke.ts
+  s_0805faf648473c::t_faf471136c9eb6 1-155
+apps/cli/vite.config.ts
+  s_0805faf648473c::t_12df6b29bc76c5 1,21-41
+  s_0805faf648473c::t_3c31bdebe1c922 2-20,42-44
+apps/cli/src/runtime/jobs/index.ts
+  s_0805faf648473c::t_fb06fb40679d6d 27
+apps/cli/README.md
+  s_0805faf648473c::t_3c31bdebe1c922 19-21
+apps/cli/AGENTS.md
+  s_0805faf648473c::t_faf471136c9eb6 30
+  s_0805faf648473c::t_3c31bdebe1c922 24-26
+  s_0805faf648473c::t_9ac3cd121efd17 31
+apps/cli/src/runtime/process/index.ts
+  s_0805faf648473c::t_72651a868f8aaf 157
+apps/cli/src/runtime/runtime.test.ts
+  s_0805faf648473c::t_6b9add7a2f2f04 37,53,65,82,101,111,133,151,169,178
+apps/cli/tsconfig.json
+  s_0805faf648473c::t_faf471136c9eb6 9
+apps/cli/vitest.config.ts
+  s_0805faf648473c::t_7a37345b0827c1 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5f0f8e133c47929c32afda9cbf53f4388fadb87f",
+  "prompts": {},
+  "sessions": {
+    "s_0805faf648473c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14a72-a226-78c2-a9a1-fba96b842489",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
