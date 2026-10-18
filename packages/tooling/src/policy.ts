@@ -4,6 +4,7 @@ import { checkArchitecture } from "@voidmix/devkit/architecture";
 import { readStaticCatalog, type CatalogTree } from "@voidmix/devkit/catalogs";
 import { checkDocumentLinks } from "@voidmix/devkit/docs";
 import { checkToolchain } from "@voidmix/devkit/toolchain";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@raypx/i18n";
 import { compareMessageCatalogs } from "@voidmix/intl/testing";
 import { discover } from "./repository.js";
 
@@ -41,40 +42,61 @@ export function policy(root: string): string[] {
   return [...new Set(findings)];
 }
 
-export function checkLocales(root: string): string[] {
+export interface LocaleCatalogOptions {
+  /** Supported locales; every catalog folder needs one file per locale. */
+  locales?: readonly string[];
+  /** The catalog every other locale is compared against. */
+  base?: string;
+}
+
+/** Product locales come from @raypx/i18n, so adding a language extends this check. */
+export function checkLocales(
+  root: string,
+  { locales = SUPPORTED_LOCALES, base = DEFAULT_LOCALE }: LocaleCatalogOptions = {},
+): string[] {
   const index = discover(root);
+  const supported = new Set(locales);
   const dictionaries = globSync(
-    index.workspaces.map((w) => `${w.path}/src/messages/{en,zh}.{ts,json}`),
+    index.workspaces.map((w) => `${w.path}/src/messages/*.{ts,json}`),
     { cwd: root },
   );
-  const pairs = new Map<string, Record<string, string>>();
+  const folders = new Map<string, Map<string, string>>();
   for (const path of dictionaries) {
-    const locale = /\/(en|zh)\./.exec(path)?.[1];
-    if (!locale) continue;
-    const key = path.replace(/\/(en|zh)\.(ts|json)$/, "");
-    const pair = pairs.get(key) ?? {};
-    pair[locale] = path;
-    pairs.set(key, pair);
+    const match = /^(.*)\/([^/]+)\.(?:ts|json)$/.exec(path);
+    if (!match || match[2] === "index") continue;
+    const [, folder, locale] = match as unknown as [string, string, string];
+    const files = folders.get(folder) ?? new Map<string, string>();
+    files.set(locale, path);
+    folders.set(folder, files);
   }
   const findings: string[] = [];
-  for (const [folder, pair] of pairs) {
-    if (!pair.en || !pair.zh) {
-      findings.push(`${folder}: both en and zh catalogs are required`);
+  for (const [folder, files] of folders) {
+    const missing = locales.filter((locale) => !files.has(locale));
+    if (missing.length) {
+      findings.push(`${folder}: missing ${missing.join(", ")} catalog for supported locales`);
       continue;
     }
-    const catalogs: { en?: CatalogTree; zh?: CatalogTree } = {};
-    for (const locale of ["en", "zh"] as const) {
-      const path = pair[locale]!;
+    for (const locale of files.keys())
+      if (!supported.has(locale))
+        findings.push(`${files.get(locale)}: ${locale} is not a supported locale`);
+    const catalogs = new Map<string, CatalogTree>();
+    for (const locale of locales) {
+      const path = files.get(locale)!;
       try {
-        catalogs[locale] = readStaticCatalog(path, readFileSync(join(root, path), "utf8"));
+        catalogs.set(locale, readStaticCatalog(path, readFileSync(join(root, path), "utf8")));
       } catch (error) {
         findings.push(error instanceof Error ? error.message : `${path}: invalid catalog`);
       }
     }
-    if (!catalogs.en || !catalogs.zh) continue;
-    for (const issue of compareMessageCatalogs(catalogs.en, catalogs.zh, "en", "zh")) {
-      const source = issue.side ? pair[issue.side === "left" ? "en" : "zh"]! : folder;
-      findings.push(`${source}: ${issue.message}; ${issue.fix}`);
+    const reference = catalogs.get(base);
+    if (!reference) continue;
+    for (const locale of locales) {
+      const catalog = catalogs.get(locale);
+      if (locale === base || !catalog) continue;
+      for (const issue of compareMessageCatalogs(reference, catalog, base, locale)) {
+        const source = issue.side ? files.get(issue.side === "left" ? base : locale)! : folder;
+        findings.push(`${source}: ${issue.message}; ${issue.fix}`);
+      }
     }
   }
   return findings;

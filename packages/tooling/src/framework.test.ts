@@ -77,6 +77,7 @@ describe("Raypx workspace conventions", () => {
       "reserved on Windows",
     );
   });
+
   it("detects nested locale mismatches and interpolation drift without executing catalogs", () => {
     const root = fixture();
     member(root, "messages");
@@ -91,6 +92,7 @@ describe("Raypx workspace conventions", () => {
     );
     expect(checkLocales(root).join("\n")).toContain("auth.hello changes ICU arguments");
   });
+
   it("reports only the invalid ICU catalog side and the nested message path", () => {
     const root = fixture();
     member(root, "messages");
@@ -110,6 +112,7 @@ describe("Raypx workspace conventions", () => {
       ),
     ]);
   });
+
   it("delegates rich-text callback parity to the shared ICU parser", () => {
     const root = fixture();
     member(root, "messages");
@@ -124,6 +127,7 @@ describe("Raypx workspace conventions", () => {
       expect.stringContaining("hello changes rich-text tags between en and zh"),
     ]);
   });
+
   it("accepts translated plural categories, reordered arguments and tag nesting", () => {
     const root = fixture();
     member(root, "messages");
@@ -139,6 +143,7 @@ describe("Raypx workspace conventions", () => {
     );
     expect(checkLocales(root)).toEqual([]);
   });
+
   it("keeps catalog shape and safe static-reading checks", () => {
     const root = fixture();
     member(root, "messages");
@@ -154,5 +159,35 @@ describe("Raypx workspace conventions", () => {
     expect(checkLocales(root).join("\n")).toContain(
       "zh.ts: catalogs must contain static string objects",
     );
+  });
+  it("requires a catalog for every supported locale and rejects unsupported ones", () => {
+    const root = fixture();
+    member(root, "messages");
+    const directory = join(root, "packages/messages/src/messages");
+    mkdirSync(directory);
+    writeFileSync(join(directory, "en.ts"), 'export default { hello: "Hi" } as const;');
+    expect(checkLocales(root)).toEqual([
+      "packages/messages/src/messages: missing zh catalog for supported locales",
+    ]);
+    writeFileSync(join(directory, "zh.ts"), 'export default { hello: "你好" } as const;');
+    writeFileSync(join(directory, "fr.json"), JSON.stringify({ hello: "Salut" }));
+    writeFileSync(join(directory, "index.ts"), "export {};");
+    expect(checkLocales(root)).toEqual([
+      "packages/messages/src/messages/fr.json: fr is not a supported locale",
+    ]);
+  });
+  it("extends parity checks to newly supported locales", () => {
+    const root = fixture();
+    member(root, "messages");
+    const directory = join(root, "packages/messages/src/messages");
+    mkdirSync(directory);
+    writeFileSync(join(directory, "en.ts"), 'export default { hello: "Hi {name}" } as const;');
+    writeFileSync(join(directory, "zh.ts"), 'export default { hello: "你好 {name}" } as const;');
+    writeFileSync(join(directory, "ja.ts"), 'export default { hello: "こんにちは" } as const;');
+    expect(checkLocales(root, { locales: ["en", "zh", "ja"], base: "en" })).toEqual([
+      expect.stringMatching(
+        /^packages\/messages\/src\/messages: hello changes ICU arguments between en and ja/,
+      ),
+    ]);
   });
 });
