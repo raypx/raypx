@@ -66,7 +66,7 @@
         "@vitest/coverage-v8": "5.0.4",
         "@voidmix/devkit": "0.0.0-alpha.0",
         "@voidmix/tsconfig": "0.0.0-alpha.0",
-        "drizzle-kit": "1.0.0-rc.5-5935859",
+        "drizzle-kit": "npm:@voidmix/drizzle-kit@0.0.0-alpha.0",
         "esbuild": "^0.28.2",
         "expo-doctor": "1.20.4",
         "jiti": "^2.7.0",
