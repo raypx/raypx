@@ -36,9 +36,8 @@ export class StateStore {
         this.lease.exec(
           "CREATE TABLE IF NOT EXISTS lease (id INTEGER PRIMARY KEY); INSERT OR IGNORE INTO lease VALUES (1);",
         );
-      const version = Number(
-        (this.db.query("PRAGMA user_version").get() as { user_version: number }).user_version,
-      );
+      const version = (this.db.query("PRAGMA user_version").get() as { user_version: number })
+        .user_version;
       if (version > STATE_SCHEMA_VERSION) {
         throw new LocalError("NEWER_SCHEMA", "This profile requires a newer Raypx CLI");
       }

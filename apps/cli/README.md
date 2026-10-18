@@ -16,4 +16,6 @@ Use the current file `version` when editing, moving or deleting. Deletion prompt
 
 `--data-dir` and `--profile` select isolated state. Defaults use the platform application-data directory. Definitions and grants are persistent; run logs retain at most 1 MiB per run, 100 runs per job and 30 days. History listings return at most 8 KiB per run. Cron uses five fields and an IANA time zone. Busy tasks are recorded as skipped; missed triggers and interrupted commands are never replayed automatically.
 
-Build with `bun run --cwd apps/cli build`. `bun run --cwd apps/cli smoke` runs the actual binary outside the repository with an empty PATH, exercises NDJSON, persistent grants, a PTY and EOF process cancellation. Desktop GUI tests remain separate.
+Build with `bun run --cwd apps/cli build`. Vite+ `vp pack` bundles and minifies the ESM entry and dependencies into `dist/main.mjs`, then its build hook uses the pinned Bun runtime to create `dist/raypx` (`raypx.exe` on Windows) with bytecode enabled. The executable remains self-contained; the intermediate JavaScript is not needed at runtime. Vite+'s Node SEA `exe` option is not used because the CLI depends on Bun APIs.
+
+`bun run --cwd apps/cli smoke` runs the actual binary outside the repository with an empty PATH, exercises NDJSON, persistent grants, a PTY and EOF process cancellation. Desktop GUI tests remain separate.

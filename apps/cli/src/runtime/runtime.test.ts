@@ -34,6 +34,7 @@ describe("authorized local files", () => {
     expect(await readFile(join(authorized, "moved.txt"), "utf8")).toBe("updated");
     expect(runtime.state.roots()).toHaveLength(1);
   });
+
   it("allows only one concurrent managed edit of the same version across runtimes", async () => {
     const { runtime, grant, dir } = await fixture();
     const file = await runtime.files.write(grant.id, "concurrent.txt", "initial", null);
@@ -49,6 +50,7 @@ describe("authorized local files", () => {
       failure?.status === "rejected" && ["BUSY", "CONFLICT"].includes(failure.reason.code),
     ).toBe(true);
   });
+
   it.runIf(process.platform !== "win32")(
     "preserves executable permissions when atomically editing an existing file",
     async () => {
@@ -60,6 +62,7 @@ describe("authorized local files", () => {
       expect((await stat(join(authorized, "script.sh"))).mode & 0o777).toBe(0o700);
     },
   );
+
   it("finishes an accepted atomic save before closing state and rejects later work", async () => {
     const { runtime, grant, authorized } = await fixture();
     const text = "pending-save".repeat(80_000);
@@ -76,6 +79,7 @@ describe("authorized local files", () => {
     await closing;
     expect(await readFile(join(authorized, "save-on-quit.txt"), "utf8")).toBe(text);
   });
+
   it("rejects traversal, symlinks, root removal and oversized UTF-8 text", async () => {
     const { runtime, grant, dir, authorized } = await fixture();
     await writeFile(join(dir, "secret"), "private");
@@ -94,6 +98,7 @@ describe("authorized local files", () => {
       runtime.files.write(grant.id, "large", "中".repeat(400000), null),
     ).rejects.toMatchObject({ code: "TOO_LARGE" });
   });
+
   it("requires confirmed delete on the public runtime interface", async () => {
     const { runtime, grant } = await fixture();
     const file = await runtime.files.write(grant.id, "delete.txt", "bye", null);
@@ -103,7 +108,7 @@ describe("authorized local files", () => {
         path: "delete.txt",
         version: file.version,
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(/confirmed/);
     await runtime.request("files.delete", {
       rootId: grant.id,
       path: "delete.txt",
@@ -125,6 +130,7 @@ describe("device jobs and leases", () => {
     runtimes.push(second);
     expect(second.jobs.list()).toEqual([]);
   });
+
   it("persists task definitions and skips manual execution while another owner holds its lease", async () => {
     const { runtime, grant } = await fixture();
     const task = runtime.jobs.create({
@@ -142,6 +148,7 @@ describe("device jobs and leases", () => {
     expect(runtime.state.history(task.id)).toHaveLength(2);
     expect(() => runtime.jobs.create({ ...task, cron: "* * * * * *" })).toThrow(/five-field/);
   });
+
   it("cancels a running external command by caller-supplied ID", async () => {
     const { runtime, dir } = await fixture();
     const id = crypto.randomUUID();
@@ -159,6 +166,7 @@ describe("device jobs and leases", () => {
     expect(runtime.processes.cancel(id)).toEqual({ cancelled: true });
     expect((await result).cancelled).toBe(true);
   });
+
   it("refuses a newer schema and never migrates while another runtime holds a lease", async () => {
     const { runtime, dir } = await fixture();
     runtime.state.db.exec("PRAGMA user_version=0");
@@ -167,6 +175,7 @@ describe("device jobs and leases", () => {
     expect(() => createRuntime({ dataDir: dir })).toThrow(/newer Raypx/);
     runtime.state.db.exec("PRAGMA user_version=1");
   });
+
   it("runs an absolute executable and retains bounded output", async () => {
     const { runtime, dir } = await fixture();
     const result = await runtime.processes.run({

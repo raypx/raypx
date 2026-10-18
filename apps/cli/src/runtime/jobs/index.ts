@@ -24,7 +24,7 @@ export class JobRuntime {
     if (input.cron.trim().split(/\s+/).length !== 5)
       throw new LocalError("INVALID_CRON", "Use a five-field Cron expression");
     try {
-      new Intl.DateTimeFormat("en", { timeZone: input.timezone });
+      new Intl.DateTimeFormat("en", { timeZone: input.timezone }).resolvedOptions();
       const cron = new Cron(input.cron, { timezone: input.timezone, paused: true });
       const dates = cron.nextRuns(5);
       cron.stop();

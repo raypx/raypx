@@ -21,7 +21,12 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
 - Deletion requires explicit confirmation. File writes require the current version or null for creation.
 - EOF/quit stops scheduling and cancels managed descendants. Missed Cron triggers are skipped.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
+- Vite+ `vp pack` bundles the ESM entry and dependencies; its build hook compiles the
+  bundle with the pinned Bun runtime and bytecode into `dist/raypx` (`raypx.exe` on Windows).
+  Keep Bun compilation: `pack.exe` uses Node SEA and cannot run the Bun-specific runtime APIs.
 
 ## Verification
+
+`tests/smoke.ts` validates the built executable separately from the unit tests.
 
 `bun run --cwd apps/cli check`, `bun run --cwd apps/cli test`, `bun run --cwd apps/cli build`, then `bun run --cwd apps/cli smoke`.

@@ -154,6 +154,7 @@ export class ProcessRuntime {
       detached: process.platform !== "win32",
     });
     this.children.set(id, { child, terminal, cancel: () => this.kill(child) });
+    // Track cleanup completion as Promise<void>; exit data is emitted through the event channel.
     const completion = child.exited.then((exitCode) => {
       this.children.delete(id);
       terminal.close();

@@ -10,8 +10,8 @@
     "dev": "bun run src/main.ts",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
-    "build": "bun run src/build.ts",
-    "smoke": "bun run src/smoke.ts"
+    "build": "bun --bun vp pack",
+    "smoke": "bun run tests/smoke.ts"
   },
   "dependencies": {
     "@raypx/contracts": "workspace:*",
