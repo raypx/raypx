@@ -10,7 +10,8 @@ Web is a TanStack Start SSR application on Nitro node-server. Desktop uses the s
 an Electrobun WebView, with a native bridge to its version-matched bundled CLI.
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
-Mobile uses Expo Router and Uniwind. API uses Vite + Nitro + Hono + oRPC, deployed
+Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
+capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
 on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.3.
 
 Web and API are separate Node services; each output runs outside the repo.
@@ -23,12 +24,12 @@ to the parent domain of sibling Web/API hosts.
 
 ## Libraries
 
-Auth exports server/client/native/hooks/types. Its platform-neutral React hooks
-share authentication actions and request state across Web, Desktop and Mobile.
+Auth exports server/client/hooks/types. Its platform-neutral React hooks
+share authentication actions and request state across Web and Desktop.
 The browser `/client` entry exports both `createAuthClient` and the shared DOM
 `AuthForm`, composed from those hooks, UI primitives and i18n. Web and Desktop
 inject clients, callback origins, query data and navigation adapters. Applications
-own routing and session refresh; `/server` and `/native` never import the DOM form.
+own routing and session refresh; `/server` never imports the DOM form.
 API creates the DB adapter and mailer and injects them; auth never imports their
 concrete packages. Only account.get is exposed through remote RPC. Its safe
 projection is { id, email, name }.
@@ -42,7 +43,7 @@ browser entry, and LanguageSelect to i18n's browser entry.
 
 Contracts/api contains oRPC definitions; contracts/local contains Zod device
 messages. Client is the remote SDK. Local interfaces are never registered on
-public RPC. UI contains DOM components and pure theme/native CSS entries.
+public RPC. UI contains DOM components and a pure theme entry.
 I18n contains static English/Chinese catalogs and platform adapters. Its controlled
 Voidmix provider delegates translation, formatting and React context to its bundled use-intl.
 Only `useLanguagePreference().setPreference()` changes the product language

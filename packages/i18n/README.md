@@ -17,9 +17,6 @@ provider. The product default time zone is UTC. Applications may override it.
 language list. Selecting a fixed language records that choice even if it is already
 the currently resolved language. Catalogs are static and switches require no loading.
 
-`LanguageProvider` from `/native` is controlled by `preference`, `systemLocales` and
-`onPreferenceChange`. Native applications hydrate storage before mounting it.
-
 ## Browser and desktop
 
 `BrowserLanguageProvider` from `/browser` accepts `initialPreference` and

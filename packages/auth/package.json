@@ -6,7 +6,6 @@
   "exports": {
     "./server": "./src/server.ts",
     "./client": "./src/client.ts",
-    "./native": "./src/native.ts",
     "./hooks": "./src/hooks.ts",
     "./types": "./src/types.ts",
     "./client/styles.css": "./src/client/styles.css"
@@ -20,7 +19,6 @@
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "@better-auth/expo": "catalog:",
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
     "better-auth": "catalog:",
@@ -46,7 +44,6 @@
     "entryTargets": {
       "./server": "node",
       "./client": "browser",
-      "./native": "native",
       "./hooks": "universal",
       "./client/styles.css": "browser"
     },
@@ -54,7 +51,6 @@
       "src/server.ts": "node",
       "src/client.ts": "browser",
       "src/client/**": "browser",
-      "src/native.ts": "native",
       "src/hooks.ts": "universal"
     }
   }

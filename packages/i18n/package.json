@@ -12,8 +12,7 @@
     "./testing": "./src/testing.ts",
     "./messages": "./src/messages/index.ts",
     "./preferences": "./src/preferences.ts",
-    "./browser": "./src/browser.tsx",
-    "./native": "./src/native.ts"
+    "./browser": "./src/browser.tsx"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -46,13 +45,11 @@
     "entryTargets": {
       "./client": "browser",
       "./browser": "browser",
-      "./native": "native",
       "./testing": "universal"
     },
     "sourceTargets": {
       "src/client.ts": "browser",
       "src/browser.tsx": "browser",
-      "src/native.ts": "native",
       "src/testing.ts": "universal",
       "src/browser/**": "browser"
     }

@@ -1,5 +1,4 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { expo } from "@better-auth/expo";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
 import type { AuthSession, AuthUser } from "./types.js";
@@ -43,7 +42,6 @@ export function createAuth({ database, mailer, config }: CreateAuthOptions) {
     basePath: "/api/auth",
     secret: config.secret,
     trustedOrigins: [...new Set([config.baseURL, ...config.trustedOrigins])],
-    plugins: [expo()],
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,

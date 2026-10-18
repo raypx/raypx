@@ -56,8 +56,8 @@ The accepted foundation design supersedes documents in docs/history.
 ## Verification
 
 Run narrow meaningful tests, then bun run verify. The default gate needs no GUI,
-mobile emulator, database or mail provider. PostgreSQL auth tests, browser tests,
-mobile bundles and packaged native checks are separate explicit gates.
+database or mail provider. PostgreSQL auth tests, browser tests and packaged
+native checks are separate explicit gates.
 Report unavailable checks as unavailable; never describe an unrun platform as passed.
 
 ## Documentation

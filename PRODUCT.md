@@ -2,13 +2,13 @@
 
 ## Users
 
-People who need a consistent account and preferences across Web, Desktop and
-mobile, with local files, recurring tasks and external tools on their own desktop.
+People who need a consistent account and preferences across Web (including
+phone browsers) and Desktop, with local files, recurring tasks and external tools on their own desktop.
 
 ## Product purpose
 
-Raypx is an extensible application foundation. Web and mobile provide account
-and preferences. Desktop also manages authorized local directories, scheduled
+Raypx is an extensible application foundation. Web provides account and
+preferences on desktop and phone browsers. Desktop also manages authorized local directories, scheduled
 actions and interactive terminals through the bundled Raypx CLI.
 
 ## Principles

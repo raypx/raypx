@@ -13,21 +13,20 @@ Translation and formatting use the independently released `@voidmix/intl` facade
 - `browser`: browser language provider, read-only Intl hooks, device persistence and LanguageSelect.
   The select accepts an optional icon; it does not depend on UI or an icon library.
   DOM consumers register `src/browser` as a Tailwind source for its control styles.
-- `native`: controlled language provider and read-only Intl hooks for native composition.
 - `client`: controlled IntlProvider and browser language composition.
 - `testing`: test-only catalog checks.
 
 ## Ownership
 
 Own product language choices, translations, namespace parity and the persisted
-`raypx_locale` preference. Applications provide native storage and system locale.
+`raypx_locale` preference. Applications provide device storage and system locale.
 The controlled LanguageProvider, browser storage/cookie adapters and error-code
 translation come from `@voidmix/intl`; this package only wires product keys and
 catalogs into them. Change that behavior in Voidmix, not here.
 
 ## Constraints
 
-- Root and native entries must never transitively import browser APIs, filesystems
+- The root entry must never transitively import browser APIs, filesystems
   or catalog tooling. Use static imports, with no Vite-specific catalog discovery.
 - Device preference supports system/en/zh; absent or invalid values follow system.
 - Browser follows `languagechange` and cross-window storage events.
@@ -40,7 +39,6 @@ catalogs into them. Change that behavior in Voidmix, not here.
   Denied reads preserve the initial snapshot; denied writes never roll back the UI.
 - Native bootstrap passes `restorePreference={false}` to BrowserLanguageProvider.
   It must wait for `hydrated` before writing device preferences back to the host.
-- Native callers hydrate async storage before mounting the language provider.
 - Preserve safe error-code translation; diagnostic prose is never product copy.
 - Voidmix is an external dependency, not a workspace.
 

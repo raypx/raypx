@@ -28,14 +28,7 @@ export function createApiApp(options: ApiAppOptions) {
       origin: (origin) => (options.allowedOrigins.includes(origin) ? origin : undefined),
       credentials: true,
       allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
-      allowHeaders: [
-        "Content-Type",
-        "Authorization",
-        "Accept-Language",
-        "X-Request-Id",
-        "expo-origin",
-        "expo-platform",
-      ],
+      allowHeaders: ["Content-Type", "Authorization", "Accept-Language", "X-Request-Id"],
       exposeHeaders: ["X-Request-Id"],
     }),
   );

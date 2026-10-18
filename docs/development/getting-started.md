@@ -22,14 +22,14 @@ Start the separate compose database on 5433, then bun run db:migrate and bun run
 Never point these migration commands at the retired database or volume.
 
 bun run dev starts Web (Start SSR on 3000) and API (3002). bun run dev:desktop starts Desktop development;
-bun run desktop:build packages it with its version-matched CLI. bun run dev:mobile
-starts Expo. Mobile first phase validates JS bundles without installing Xcode/Android.
+bun run desktop:build packages it with its version-matched CLI. Phones use the Web
+application; a native mobile app is deferred until it needs native capabilities.
 
 Bun catalogs hold third-party versions: the default `catalog:` contains runtime
 libraries, and `catalog:dev` contains build, test and development tools. Shared
 libraries keep the same catalog even when a test workspace lists them under
-`devDependencies`. All React versions follow Expo's compatible
-19.3.0 baseline. Voidmix stays external. Do not add another task runner. Web and API run under Node in dev, build, preview
+`devDependencies`. All workspaces share one exact React
+version. Voidmix stays external. Do not add another task runner. Web and API run under Node in dev, build, preview
 and production: scripts call `bun vp`, not `bun --bun vp`, and each output starts
 with Node .output/server/index.mjs. Their node-server output traces Node export
 conditions, which the Bun runtime does not resolve. Tests still run through Bun.
@@ -38,7 +38,5 @@ Actual verification/reset emails require RESEND_API_KEY and MAIL_FROM. Without a
 configured mail transport those actions return MAIL_NOT_CONFIGURED instead of
 claiming delivery. Tests inject an explicit in-memory mail transport.
 
-Bun uses a hoisted install layout so Expo native modules and React have one
-physical instance. Policy still checks every declared production import. Expo
-Doctor invokes read-only npm explain; its wrapper scopes npm_config_force to that
-diagnostic process so the Bun-only install guard remains active for normal commands.
+Bun uses a hoisted install layout so React and other singletons have one
+physical instance. Policy still checks every declared production import.

@@ -120,7 +120,7 @@ async function main() {
       pinnedNode(root);
       console.log(`Bun ${Bun.version}; Node ${pins.node}; ${process.platform}/${process.arch}`);
       console.log(
-        `Native SDK prepared: ${existsSync(join(root, "apps/desktop/.hutch"))}; optional mobile/native toolchains require separate checks`,
+        `Native SDK prepared: ${existsSync(join(root, "apps/desktop/.hutch"))}; optional native toolchains require separate checks`,
       );
       break;
     }

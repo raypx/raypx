@@ -3,7 +3,7 @@
 Run narrow meaningful workspace tests, then bun run verify. The default gate checks
 catalog parity, workspace/platform rules, format, lint, types, unit/component tests,
 builds, relocated Node API and Web SSR outputs and the compiled CLI. It requires no database,
-GUI, mobile emulator or mail provider. Node 24.15.0 must be selected (or use
+GUI or mail provider. Node 24.15.0 must be selected (or use
 RAYPX_NODE_BINARY). Test runners share test.config.ts and remain plugin-independent.
 
 ## Explicit gates
@@ -13,8 +13,6 @@ RAYPX_NODE_BINARY). Test runners share test.config.ts and remain plugin-independ
   CI uses PostgreSQL 17; an older local server is reported separately.
 - bun run test:e2e runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
-- bun run mobile:check and bun run mobile:bundle validate Expo dependencies and both
-  iOS/Android JS bundles. Signing, store submission and native mobile binaries are excluded.
 - bun run desktop:build on macOS and Windows checks the actual native package.
   Release acceptance additionally verifies views://main session persistence on macOS
   WebKit/Windows CEF against HTTPS auth, bundled CLI resolution/version, picker grants,

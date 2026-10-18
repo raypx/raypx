@@ -17,9 +17,6 @@
     "apps/desktop": {
       "entry": ["src/routes/**/*.tsx", "native/main.ts", "native/smoke.ts", "electrobun.config.ts"]
     },
-    "apps/mobile": {
-      "entry": ["app/**/*.{ts,tsx}", "metro.config.cjs"]
-    },
     "apps/web": {
       "entry": ["src/routes/**/*.{ts,tsx}"]
     },

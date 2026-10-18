@@ -1,6 +1,6 @@
 # Raypx
 
-A TypeScript foundation for Web, Electrobun Desktop and Expo mobile, with shared
+A TypeScript foundation for Web and Electrobun Desktop, with shared
 accounts, device-local appearance/language settings, and a standalone local CLI.
 The previous cloud product is retired; historical decisions remain in docs/history.
 
@@ -40,8 +40,6 @@ bun run test
 bun run build
 bun run verify
 bun run desktop:build
-bun run dev:mobile
-bun run mobile:bundle
 ```
 
 Turbo discovers tasks from workspace manifests. Engineering commands are exposed

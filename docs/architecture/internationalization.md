@@ -67,21 +67,13 @@ the temporary default `system` over preferences that have not yet been restored.
 The native file, CLI profiles and account sessions remain independent; logout
 does not clear device preferences.
 
-### Mobile
-
-AsyncStorage restoration finishes before mounting the provider and releasing the
-startup gate. Expo's complete `useLocales()` list supplies system candidates.
-Preference writes run in order so the final selection wins even during rapid
-changes. Read/write failures leave a usable UI; write failure does not roll back
-the selected language.
-
 ## Verification and release
 
 Use type rejection tests, controlled provider tests, browser hydration and storage
-tests, native bootstrap tests and mobile persistence tests. Test both locale
+tests and native bootstrap tests. Test both locale
 requests concurrently and keep SSR hydration configuration identical. Package
 archive checks verify Bun/Node imports and public declarations without DOM types.
-Mobile bundles and packaged Desktop checks remain explicit gates; unit tests do
+Packaged Desktop checks remain explicit gates; unit tests do
 not claim physical-device or GUI acceptance.
 
 SDK changes are developed through an uncommitted `bun link`, pinned to a verified

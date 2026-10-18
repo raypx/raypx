@@ -62,8 +62,6 @@ CLAUDE.local.md
 
 # Generated application artifacts
 apps/*/.output/
-apps/*/.expo/
 apps/*/.tanstack/
-apps/mobile/uniwind-types.d.ts
 e2e/test-results/
 e2e/playwright-report/

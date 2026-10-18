@@ -13,7 +13,6 @@ packages own page layout, forms, navigation and product behavior.
 - `styles.css`: DOM Tailwind entry and generated theme values.
 - `styles/app.css`: imports the Tailwind entry once and supplies layered app base
   defaults. Layout and control utilities live in their owning components.
-- `styles/native.css`: generated semantic variables for Uniwind only.
 - Other explicit subpaths expose reusable visual patterns and the original logo.
 
 ## Ownership
@@ -24,10 +23,9 @@ Preserve the original brand artwork and Neutral light/dark values.
 ## Constraints
 
 - No account, file, task or API behavior in this package.
-- No DOM imports in the pure theme or native CSS entry.
-- Edit `src/theme/tokens.ts`, then run `generate:theme`; generated DOM and native
-  CSS must stay identical to that source.
-- Mobile uses native semantic CSS and Uniwind, without the DOM ThemeProvider.
+- No DOM imports in the pure theme entry.
+- Edit `src/theme/tokens.ts`, then run `generate:theme`; the generated DOM CSS
+  must stay identical to that source.
 - Use Base UI and Lucide icons; do not introduce Radix or another icon library.
 - Generated shadcn primitives live under `src/components/ui`; handwritten patterns
   stay flat under `src`. Consumers use explicit package exports.

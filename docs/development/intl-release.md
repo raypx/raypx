@@ -19,8 +19,7 @@ bun link @voidmix/intl
 
 The link points at the Voidmix checkout, which has its own React. Every Vite and
 Vitest config dedupes `react` and `react-dom` so that links never create a
-second React. Metro does not follow links
-outside the repository; verify mobile against a snapshot instead. Run
+second React. Run
 `bun install` to return to the registry version.
 
 ## 2. Pin a snapshot on the branch

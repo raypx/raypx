@@ -5,8 +5,8 @@ for DOM primitives, Tailwind v4, Lucide icons and the existing system font stack
 Primary actions are dark on light backgrounds and light on dark backgrounds.
 
 Web has a quiet account/settings shell. Desktop adds Files, Automations and
-Terminal navigation without a login wall. Mobile uses Expo native controls and
-Uniwind semantic theme tokens. It never imports DOM components or providers.
+Terminal navigation without a login wall. Web layouts also serve phone browsers;
+a native mobile app is deferred.
 
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.

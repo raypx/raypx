@@ -37,7 +37,6 @@
     "./icon-button": "./src/icon-button.tsx",
     "./help-hint": "./src/help-hint.tsx",
     "./theme/client": "./src/theme/client.ts",
-    "./styles/native.css": "./src/styles/native.css",
     "./styles/app.css": "./src/styles/app.css"
   },
   "scripts": {
@@ -76,14 +75,12 @@
     "kind": "library",
     "target": "browser",
     "entryTargets": {
-      "./theme": "universal",
-      "./styles/native.css": "native"
+      "./theme": "universal"
     },
     "sourceTargets": {
       "src/theme/config.ts": "universal",
       "src/theme/tokens.ts": "universal",
       "src/theme/index.ts": "universal",
-      "src/styles/native.css": "native",
       "scripts/**": "node"
     }
   }

@@ -18,9 +18,6 @@ packages/db/drizzle-cloud/
 .agents/
 
 docs/history/
-apps/mobile/.expo/
-apps/mobile/uniwind-types.d.ts
 packages/ui/src/styles/theme.css
-packages/ui/src/styles/native.css
 
 packages/db/drizzle-foundation/

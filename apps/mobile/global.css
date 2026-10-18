@@ -1,5 +1,0 @@
-@import "tailwindcss";
-@import "uniwind";
-@import "@raypx/ui/styles/native.css";
-@source "./app/**/*.{ts,tsx}";
-@source "./src/**/*.{ts,tsx}";

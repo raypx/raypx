@@ -36,7 +36,7 @@ Auth's `@raypx/auth/client` entry exports both `createAuthClient` and the shared
 authentication clients, callback origins, query data and navigation adapters. The
 form is covered by both applications' route integration tests. DOM form dependencies
 stay behind the browser entry; `/hooks` remains platform-neutral, while `/server`
-and `/native` do not import DOM code.
+does not import DOM code.
 
 Account has three public code entries: the universal root for safe remote read
 state, `/client` for shared DOM views and `/server` for the injected session
