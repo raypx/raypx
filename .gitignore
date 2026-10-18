@@ -51,7 +51,7 @@ CLAUDE.local.md
 !.claude/skills/*
 
 # Build outputs and test artifacts belong to the workspace that produces them.
-# Each app, `e2e`, and `src-tauri` anchors its own in a local .gitignore.
+# Each app and `e2e` anchors its own in a local .gitignore.
 
 # OS files
 .DS_Store

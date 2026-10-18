@@ -5,5 +5,3 @@
 /.cottontail-tmp
 /build
 /artifacts
-# Retain ignored native artifacts from the retired Tauri build without shipping them.
-/src-tauri
