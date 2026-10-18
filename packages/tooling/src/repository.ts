@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { turbo as runTurbo } from "@voidmix/devkit/process";
 import { pinnedNode as findPinnedNode, readToolchain } from "@voidmix/devkit/toolchain";
 import { discover as discoverWorkspaces } from "@voidmix/devkit/workspaces";
@@ -9,9 +10,20 @@ export const pinnedNode = (root: string) =>
   findPinnedNode(root, { nodeBinaryEnv: "RAYPX_NODE_BINARY" });
 
 export function turbo(root: string, task: string, args: string[] = []): Promise<void> {
+  // Resolve Node before Bun's --bun Turbo runner adds its node shim to PATH.
+  const browserEnvironment =
+    task === "e2e"
+      ? {
+          RAYPX_NODE_BINARY: execFileSync(pinnedNode(root), ["-p", "process.execPath"], {
+            encoding: "utf8",
+            stdio: "pipe",
+          }).trim(),
+        }
+      : {};
   // Remote credentials are usable only in the protected workflow; forks cannot read them.
   return runTurbo(root, task, args, {
     env: {
+      ...browserEnvironment,
       RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}-node${readToolchain(root).node}`,
     },
     trustedCacheEnv: "RAYPX_REMOTE_CACHE_TRUSTED",
