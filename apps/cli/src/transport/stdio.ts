@@ -1,8 +1,13 @@
 import { localRequestSchema } from "@raypx/contracts/local";
 import { createRuntime } from "../runtime";
 import { errorPayload, LocalError } from "../runtime/errors";
+import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics";
 
-export async function serveStdio(options: { dataDir?: string; profile?: string }) {
+export async function serveStdio(options: {
+  dataDir?: string;
+  profile?: string;
+  recordDiagnostic?: RecordDiagnostic;
+}) {
   const writes: string[] = [];
   let buffered = 0,
     writing = false,
@@ -14,7 +19,11 @@ export async function serveStdio(options: { dataDir?: string; profile?: string }
     buffered += Buffer.byteLength(line);
     if (buffered > 16 * 1024 * 1024) {
       failed = true;
-      console.error("Local protocol consumer is too slow; stopping the engine");
+      recordDiagnostic(options.recordDiagnostic, {
+        operation: "stdio.backpressure",
+        outcome: "failed",
+        bufferedBytes: buffered,
+      });
       void closeRuntime();
       process.stdin.destroy();
       return;

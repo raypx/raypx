@@ -26,6 +26,7 @@ export function turbo(root: string, task: string, args: string[] = []): Promise<
       ...browserEnvironment,
       RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}-node${readToolchain(root).node}`,
     },
+    developmentTasks: ["dev", "build", "desktop#dev", "desktop#build"],
     trustedCacheEnv: "RAYPX_REMOTE_CACHE_TRUSTED",
   });
 }

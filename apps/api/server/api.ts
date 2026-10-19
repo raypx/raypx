@@ -5,23 +5,45 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { createAccountService } from "@raypx/account/server";
+import type { LoggerRuntime, ScopedLogger } from "@voidmix/logger";
+import { createRpcLoggingPlugin, diagnosticRoute } from "./logging.js";
 
 export interface ApiAppOptions {
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;
   allowedOrigins: string[];
   mailAvailable?: boolean;
+  logger?: LoggerRuntime;
 }
 export function createApiApp(options: ApiAppOptions) {
   const accountService = createAccountService({
     readSession: (headers) => options.readSession(headers),
   });
-  const app = new Hono<{ Variables: { requestId: string } }>();
+  const app = new Hono<{
+    Variables: { requestId: string; requestLog?: ScopedLogger; rpcLogged: boolean };
+  }>();
   app.use("*", async (c, next) => {
     const requestId = crypto.randomUUID();
     c.set("requestId", requestId);
-    await next();
-    c.header("x-request-id", requestId);
+    c.set("rpcLogged", false);
+    const log = options.logger?.createLogger({
+      operation: "http.request",
+      requestId,
+      method: c.req.method,
+      route: diagnosticRoute(c.req.path),
+    });
+    if (log) c.set("requestLog", log);
+    try {
+      await next();
+    } finally {
+      c.header("x-request-id", requestId);
+      // CORS preflights and non-RPC requests finish here. The RPC plugin owns
+      // matched and unmatched RPC requests, including their errors.
+      if (!c.get("rpcLogged")) {
+        if (c.res.status >= 500 && !c.error) log?.error(new Error("HTTP request failed"));
+        log?.emit({ status: c.res.status });
+      }
+    }
   });
   app.use(
     "*",
@@ -65,17 +87,34 @@ export function createApiApp(options: ApiAppOptions) {
       }),
     },
   });
-  const rpc = new RPCHandler(router);
+  const rpc = new RPCHandler(router, {
+    plugins: options.logger ? [createRpcLoggingPlugin(options.logger)] : [],
+  });
   app.all("/rpc/*", async (c) => {
-    const result = await rpc.handle(c.req.raw, {
+    const headers = new Headers(c.req.raw.headers);
+    // Use the same server-owned ID in the plugin, response and error contract.
+    headers.set("x-request-id", c.get("requestId"));
+    // Nitro can supply a Request-compatible wrapper without Undici's private
+    // state. Build from public fields so Node can accept it, preserving the
+    // request stream and cancellation signal without reading the body.
+    const request = new Request(c.req.url, {
+      method: c.req.method,
+      headers,
+      body: c.req.raw.body,
+      signal: c.req.raw.signal,
+      duplex: "half",
+    });
+    c.set("rpcLogged", Boolean(options.logger));
+    const result = await rpc.handle(request, {
       prefix: "/rpc",
       context: { headers: c.req.raw.headers, requestId: c.get("requestId") },
     });
     return result.matched ? result.response : c.notFound();
   });
   app.notFound((c) => c.json({ error: { code: "NOT_FOUND" }, requestId: c.get("requestId") }, 404));
-  app.onError((_error, c) =>
-    c.json({ error: { code: "INTERNAL_SERVER_ERROR" }, requestId: c.get("requestId") }, 500),
-  );
+  app.onError((error, c) => {
+    if (!c.get("rpcLogged")) c.get("requestLog")?.error(error);
+    return c.json({ error: { code: "INTERNAL_SERVER_ERROR" }, requestId: c.get("requestId") }, 500);
+  });
   return app;
 }

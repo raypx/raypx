@@ -65,6 +65,18 @@ invalidation signals rather than a second account-query state machine.
 - Local file authorization does not sandbox external commands. Commands run with normal OS user permissions.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.
 - Bun/Turbo own tasks. Hutch only prepares the pinned Electrobun SDK and packages native binaries.
+- `check`, `build` and `dev` enter Turbo through `native/task.ts` when called
+  directly. Inside a Turbo task they run only the leaf commands; never add inline
+  `native:prepare` calls there. The task graph shares one preparation across the
+  root verification's lint, checks and builds. Root `lint` alone remains a leaf.
+  Direct script arguments use per-task `RAYPX_DESKTOP_*_ARGS` fields; cached tasks
+  include these fields in their hashes, keeping renderer flags out of dependency builds. No arguments
+  leaves the field unset so direct and root commands share cache entries.
+- Keep `native:prepare` uncached: Electrobun's bootstrap and SDK projection also
+  depend on external Hutch state and configurable release sources. After it
+  completes, `desktop#check` hashes the projected SDK and declarations with JIT
+  inputs; downstream builds inherit that hash. Do not cache the whole `.hutch`
+  directory, which also holds platform binaries and native packaging state.
 - SDK code and generated declarations remain ignored. Native strict checking uses generated declarations without weakening source checks.
 - Theme/language are device preferences and survive logout. The host injects a
   validated snapshot directly through preload, distinguishing valid, missing and

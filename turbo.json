@@ -16,6 +16,11 @@
   ],
   "globalEnv": ["RAYPX_CACHE_PLATFORM", "CI", "LANG", "TZ"],
   "tasks": {
+    "//#lint": {
+      "dependsOn": ["desktop#native:prepare"],
+      "cache": false,
+      "outputs": []
+    },
     "transit": {
       "dependsOn": ["^transit"],
       "outputs": []
@@ -32,15 +37,21 @@
     "desktop#build": {
       "dependsOn": ["check", "^build", "transit", "cli#build"],
       "outputs": ["dist/**"],
-      "env": ["VITE_*", "NODE_ENV"]
+      "env": ["VITE_*", "NODE_ENV", "RAYPX_DESKTOP_BUILD_ARGS"]
     },
     "desktop#check": {
       "dependsOn": ["transit", "native:prepare"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        { "mode": "jit", "globs": [".hutch/devkit/**", ".hutch/types/**"] }
+      ],
+      "env": ["RAYPX_DESKTOP_CHECK_ARGS"],
       "outputs": []
     },
     "native:prepare": {
       "cache": false,
-      "outputs": []
+      "outputs": [],
+      "passThroughEnv": ["ELECTROBUN_*", "HUTCH_*", "DASH_HOME"]
     },
     "dev": {
       "dependsOn": ["^build"],
@@ -58,10 +69,17 @@
       ]
     },
     "desktop#dev": {
-      "dependsOn": ["^build", "cli#build"],
+      "dependsOn": ["^build", "cli#build", "native:prepare"],
       "cache": false,
       "persistent": true,
-      "passThroughEnv": ["VITE_*", "NODE_ENV"]
+      "passThroughEnv": [
+        "VITE_*",
+        "NODE_ENV",
+        "ELECTROBUN_*",
+        "HUTCH_*",
+        "DASH_HOME",
+        "RAYPX_DESKTOP_DEV_ARGS"
+      ]
     },
     "generate": {
       "cache": false,

@@ -14,6 +14,20 @@ const binary = resolve(
   "../dist",
   process.platform === "win32" ? "raypx.exe" : "raypx",
 );
+function diagnostics(text: string) {
+  return text
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as Record<string, unknown>);
+}
+function completed(text: string, mode: "command" | "stdio" | "version", outcome: string) {
+  const events = diagnostics(text).filter((event) => event.operation === "cli.completed");
+  assert.equal(events.length, 1, "CLI completion must be flushed once to stderr");
+  assert.equal(events[0]?.mode, mode);
+  assert.equal(events[0]?.outcome, outcome);
+  assert.equal(typeof events[0]?.elapsedMs, "number");
+  assert.equal(events[0]?.level, outcome === "failed" ? "error" : "info");
+}
 try {
   const version = Bun.spawn([binary, "--version"], {
     cwd: dataDir,
@@ -23,6 +37,18 @@ try {
   });
   assert.equal((await new Response(version.stdout).text()).trim(), manifest.version);
   assert.equal(await version.exited, 0);
+  completed(await new Response(version.stderr).text(), "version", "success");
+  const invalid = Bun.spawn([binary, "--json", "--profile"], {
+    cwd: dataDir,
+    env: { ...process.env, PATH: "" },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  assert.equal(await new Response(invalid.stdout).text(), "");
+  assert.equal(await invalid.exited, 1);
+  const invalidDiagnostics = await new Response(invalid.stderr).text();
+  assert.ok(diagnostics(invalidDiagnostics).some((event) => event.code === "LOCAL_ERROR"));
+  completed(invalidDiagnostics, "command", "failed");
   const directory = join(dataDir, "authorized");
   await mkdir(directory);
   const authorize = Bun.spawn(
@@ -32,6 +58,61 @@ try {
   const grant = JSON.parse(await new Response(authorize.stdout).text());
   assert.equal(await authorize.exited, 0);
   assert.equal(grant.path, await realpath(directory));
+  const authorizeDiagnostics = await new Response(authorize.stderr).text();
+  completed(authorizeDiagnostics, "command", "success");
+  assert.ok(!authorizeDiagnostics.includes(directory), "Diagnostics must omit private paths");
+  const shell =
+    process.platform === "win32"
+      ? (process.env.ComSpec ?? "C:\\Windows\\System32\\cmd.exe")
+      : "/bin/sh";
+  const commandArgs =
+    process.platform === "win32"
+      ? ["/d", "/c", "echo private-command-output"]
+      : ["-c", "printf private-command-output"];
+  const createJob = Bun.spawn(
+    [
+      binary,
+      "jobs",
+      "create",
+      JSON.stringify({
+        name: "private-job-name",
+        cron: "0 * * * *",
+        timezone: "UTC",
+        enabled: false,
+        action: {
+          type: "command.run",
+          command: { executable: shell, args: commandArgs, cwd: dataDir, timeoutMs: 1000 },
+        },
+      }),
+      "--json",
+      "--data-dir",
+      dataDir,
+    ],
+    { cwd: dataDir, env: { ...process.env, PATH: "" }, stdout: "pipe", stderr: "pipe" },
+  );
+  const job = JSON.parse(await new Response(createJob.stdout).text());
+  assert.equal(await createJob.exited, 0);
+  completed(await new Response(createJob.stderr).text(), "command", "success");
+  const runJob = Bun.spawn(
+    [binary, "jobs", "run", JSON.stringify({ id: job.id }), "--json", "--data-dir", dataDir],
+    { cwd: dataDir, env: { ...process.env, PATH: "" }, stdout: "pipe", stderr: "pipe" },
+  );
+  const jobResult = JSON.parse(await new Response(runJob.stdout).text());
+  assert.equal(await runJob.exited, 0);
+  assert.equal(jobResult.status, "success");
+  assert.ok(jobResult.output.includes("private-command-output"));
+  const jobDiagnostics = await new Response(runJob.stderr).text();
+  completed(jobDiagnostics, "command", "success");
+  const summaries = diagnostics(jobDiagnostics).filter(
+    (event) => event.operation === "job.completed",
+  );
+  assert.equal(summaries.length, 1);
+  assert.equal(summaries[0]?.id, jobResult.id);
+  assert.equal(summaries[0]?.jobId, job.id);
+  assert.equal(summaries[0]?.status, "success");
+  assert.ok(Number(summaries[0]?.elapsedMs) > 0, "Job summary must retain the operation duration");
+  for (const privateValue of ["private-job-name", "private-command-output", dataDir, shell])
+    assert.ok(!jobDiagnostics.includes(privateValue), "Diagnostics must omit private command data");
   const child = Bun.spawn([binary, "stdio", "--data-dir", dataDir], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
@@ -73,10 +154,6 @@ try {
       .map((line) => JSON.parse(line))
       .find((value) => value.id === "persisted");
     assert.equal(roots.result[0].id, grant.id);
-    const shell =
-      process.platform === "win32"
-        ? (process.env.ComSpec ?? "C:\\Windows\\System32\\cmd.exe")
-        : "/bin/sh";
     const shellArgs =
       process.platform === "win32"
         ? ["/d", "/c", "echo raypx-pty"]
@@ -144,6 +221,7 @@ try {
       .find((value) => value.id === "cleanup");
     assert.equal(cleanup.result.cancelled, true, "EOF did not cancel the managed command");
     assert.equal(await child.exited, 0);
+    completed(await new Response(child.stderr).text(), "stdio", "success");
   } finally {
     clearTimeout(deadline);
     reader.releaseLock();

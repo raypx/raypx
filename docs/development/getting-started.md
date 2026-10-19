@@ -42,3 +42,25 @@ Bun uses the isolated install layout: each workspace resolves only the packages 
 declares, so a missing dependency fails at install or build time instead of
 resolving through another workspace. One exact React version keeps a single
 physical instance. Policy still checks every declared production import.
+
+## Build caches
+
+Turbo owns the task graph and caches declared build outputs; Vite+ runs the leaf
+commands. Use the root build/check/test commands to preserve dependency ordering.
+Language policy lives in i18n's public static `./config` export. Repository checks
+read that declaration without importing the i18n runtime, so translation edits do
+not invalidate unrelated tasks through root tooling.
+
+GitHub CI restores Bun downloads before every frozen install. It restores
+`.turbo/cache` after installation, then saves successful task results at the end
+of the job, including when a later test fails. Bun caches use the lockfile hash
+with a compatible fallback; Turbo uses a fresh key per workflow attempt and lets
+its own input hashes select reusable tasks. OS, architecture and tool versions
+separate incompatible caches; Turbo archives are also separated by job.
+
+The workflow caches downloads and Turbo results, not `node_modules`. A cache miss
+still runs the normal install and tasks. Required release artifacts must be passed
+between jobs with artifacts rather than relying on an optional cache. This setup
+needs no remote-cache service; the existing trusted remote-cache opt-in remains a
+separate mechanism. To check local reuse, repeat a root build and inspect Turbo's
+hit counts. Include cache transfer time when measuring CI improvements.

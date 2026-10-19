@@ -5,6 +5,7 @@ import { ProcessRuntime } from "./process";
 import { StateStore, profilePath } from "./state";
 import { LocalError } from "./errors";
 import manifest from "../../package.json";
+import type { RecordDiagnostic } from "../diagnostics";
 
 export function createRuntime(
   options: {
@@ -12,13 +13,14 @@ export function createRuntime(
     profile?: string;
     emit?: (event: LocalEvent) => void;
     scheduler?: boolean;
+    recordDiagnostic?: RecordDiagnostic;
   } = {},
 ) {
   const emit = options.emit ?? (() => {});
   const state = new StateStore(profilePath(options));
   const files = new FileRuntime(state);
   const processes = new ProcessRuntime(emit);
-  const jobs = new JobRuntime(state, files, processes, emit);
+  const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
   let closing = false;
   let closingPromise: Promise<void> | undefined;
   const pending = new Set<Promise<unknown>>();

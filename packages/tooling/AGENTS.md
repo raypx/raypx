@@ -21,6 +21,8 @@ client implementations; delegate database commands to db's scripts. Derive all
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Generic checks belong in @voidmix/devkit; keep only Raypx-specific rules here.
+Read i18n's public static `./config` through workspace discovery for locale policy;
+do not add the i18n runtime to root tooling's dependency closure.
 Preserve the Bun/jsdom preload and independent workspace test runners.
 
 ## Verification

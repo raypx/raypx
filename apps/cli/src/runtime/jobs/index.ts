@@ -4,6 +4,7 @@ import { LocalError } from "../errors";
 import type { FileRuntime } from "../files";
 import type { ProcessRuntime } from "../process";
 import { acquireLock, type StateStore } from "../state";
+import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "../../diagnostics";
 
 export class JobRuntime {
   private schedules: Cron[] = [];
@@ -19,6 +20,7 @@ export class JobRuntime {
     private readonly files: FileRuntime,
     private readonly processes: ProcessRuntime,
     private readonly emit: (event: LocalEvent) => void,
+    private readonly record?: RecordDiagnostic,
   ) {}
   validate(input: JobInput) {
     if (input.cron.trim().split(/\s+/).length !== 5)
@@ -67,6 +69,7 @@ export class JobRuntime {
     return { deleted: true };
   }
   async run(id: string): Promise<JobRun> {
+    const startedAt = performance.now();
     const job = this.state.job(id);
     const release = acquireLock(this.state.directory, `job-${id}`);
     const run: JobRun = {
@@ -83,6 +86,7 @@ export class JobRuntime {
       run.finishedAt = new Date().toISOString();
       run.output = "Task is already running";
       this.state.putRun(run);
+      this.recordRun(run, startedAt);
       return run;
     }
     // Acquiring the kernel-backed job lease proves prior running records are stale.
@@ -95,6 +99,7 @@ export class JobRuntime {
         });
     this.state.putRun(run);
     const controller = new AbortController();
+    let code: string | undefined;
     const done = (async () => {
       try {
         if (job.action.type === "directory.scan") {
@@ -117,6 +122,7 @@ export class JobRuntime {
               : "failed";
         }
       } catch (error) {
+        code = diagnosticCode(error);
         run.status = controller.signal.aborted ? "cancelled" : "failed";
         run.output = error instanceof Error ? error.message : "Task failed";
       } finally {
@@ -125,11 +131,23 @@ export class JobRuntime {
         release();
         this.active.delete(id);
         this.emit({ version: 1, event: "job.finished", data: { ...run } });
+        this.recordRun(run, startedAt, code);
       }
       return run;
     })();
     this.active.set(id, { controller, done });
     return done;
+  }
+  private recordRun(run: JobRun, startedAt: number, code?: string) {
+    recordDiagnostic(this.record, {
+      operation: "job.completed",
+      id: run.id,
+      jobId: run.jobId,
+      status: run.status,
+      exitCode: run.exitCode,
+      elapsedMs: Math.max(0, Math.round(performance.now() - startedAt)),
+      ...(code ? { code } : {}),
+    });
   }
   startScheduler() {
     const release = acquireLock(this.state.directory, "scheduler");
@@ -155,10 +173,11 @@ export class JobRuntime {
         // Croner can wake after OS sleep. Never turn missed triggers into catch-up runs.
         if (expected && now - expected.getTime() > 2000) return;
         void this.run(job.id).catch((error) =>
-          console.error(
-            "Scheduled task failed:",
-            error instanceof Error ? error.message : "Unknown failure",
-          ),
+          recordDiagnostic(this.record, {
+            operation: "scheduler.failed",
+            jobId: job.id,
+            code: diagnosticCode(error),
+          }),
         );
       });
       due = cron.nextRun();

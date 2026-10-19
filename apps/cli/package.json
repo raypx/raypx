@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@raypx/contracts": "workspace:*",
+    "@voidmix/logger": "catalog:",
     "croner": "catalog:"
   },
   "devDependencies": {

@@ -8,6 +8,7 @@ Translation and formatting use the independently released `@voidmix/intl` facade
 ## Interface
 
 - Root/server/types: pure locale negotiation, formatting and translation helpers.
+- `config`: static default locale and language names, shared with repository checks.
 - `messages`: static English and Chinese foundation catalogs.
 - `preferences`: pure system/en/zh preference parsing and resolution.
 - `browser`: browser language provider, read-only Intl hooks, device persistence and LanguageSelect.

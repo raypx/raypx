@@ -5,6 +5,10 @@ catalog parity, workspace/platform rules, format, lint, types, unit/component te
 builds, relocated Node API and Web SSR outputs and the compiled CLI. It requires no database,
 GUI or mail provider. Node 24.15.0 must be selected (or use
 RAYPX_NODE_BINARY). Test runners share test.config.ts and remain plugin-independent.
+Verification schedules lint, checks, tests and builds in one Turbo graph. Desktop's
+SDK preparation runs once in that graph; generated SDK contents enter the desktop
+check hash after preparation. SDK preparation remains an uncached Turbo task. Root
+development dotenv files are not loaded into the verification task environment.
 
 ## Explicit gates
 

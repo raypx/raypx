@@ -51,6 +51,43 @@ preference; the active locale is derived from that preference and the full order
 system locale list. See [internationalization](internationalization.md).
 DB owns fresh auth-only schema/migrations; mail owns auth delivery/templates.
 
+## Logging
+
+API and CLI consume the independently maintained `@voidmix/logger`. It keeps
+evlog 2.33.1 as an exact, unbundled runtime dependency. Composition roots await
+`initLogger` once per process and create event loggers from its returned runtime;
+event data is added through `set` and `error`, then completed with `emit`.
+Applications own environment parsing, permitted fields, output and shutdown.
+The generic library reads no environment variables and does not change remote
+or local error contracts.
+
+Only explicitly allowed fields and safe error summaries reach the drain.
+Credentials, cookies, tokens, request bodies, command arguments, filesystem paths
+and file or task output are not diagnostic fields. Arbitrary error messages,
+stacks and causes must not pass through as event data.
+
+API logs non-RPC HTTP requests through Hono and RPC calls through the official
+`@orpc/evlog` adapter. Their scopes are mutually exclusive so one RPC invocation
+does not also produce a Hono completion event. Request and operation identifiers
+support correlation without exposing request payloads or changing safe API
+error responses. The runtime drain enqueues events without waiting for the sink,
+so a slow diagnostic destination does not delay an RPC response. Explicit
+`flush` and `close` wait for queued delivery; Nitro owns draining pending log
+writes during shutdown.
+
+CLI diagnostics use the logger's `/node` stderr drain; stdout remains reserved
+for human command results or the Desktop NDJSON protocol. CLI shutdown flushes
+pending diagnostics without adding records to protocol output. Runtime and
+packaged-platform acceptance remain separate verification gates.
+
+An unpublished logger archive may be tracked under `vendor/` for a reproducible
+review branch, with source provenance, an archive checksum and the lockfile.
+Provenance records either a clean source commit or the base commit, explicit
+uncommitted state and per-file source checksums. The archive must be replaced by
+an exact published alpha before merging. See
+[Voidmix library changes](../development/intl-release.md) for archive checks and
+the publication gate.
+
 ## Device runtime
 
 The same CLI runtime handles human commands and Desktop NDJSON requests. Desktop

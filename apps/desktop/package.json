@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run native:prepare && bun run native:cli && raypx-dev env -- bun run native/dev.ts",
-    "build": "bun run native:prepare && raypx-dev env -- bun --bun vp build",
+    "dev": "bun run native/task.ts dev",
+    "build": "bun run native/task.ts build",
     "preview": "raypx-dev env -- bun --bun vp preview",
-    "check": "bun run native:prepare && bun run typecheck && bun run typecheck:node && bun run typecheck:native",
+    "check": "bun run native/task.ts check",
     "typecheck": "bun --check --tsconfig-override tsconfig.json",
     "typecheck:node": "bun --check --tsconfig-override tsconfig.node.json",
     "test": "bun --bun vp test --run",

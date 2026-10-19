@@ -17,6 +17,13 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
 - Never import another application or authentication code.
 - Only the Desktop-owned stdio engine starts scheduling. Foreground CLI commands never install a daemon.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
+- The executable initializes `@voidmix/logger` once and closes it after runtime shutdown.
+  Runtime diagnostics are injected; imports and unit tests never initialize a global logger.
+  NDJSON diagnostics use stderr in every mode, including `--json`. Keep command results and
+  protocol errors separate. Log only bounded IDs, status, duration and safe error codes;
+  never command arguments, working directories, output or raw errors.
+  Completion summaries use `elapsedMs` for the operation lifetime; evlog's `durationMs`
+  measures only its short-lived logging scope.
 - Built-in file operations reject traversal and symlinks. External commands run with ordinary user permissions.
 - Deletion requires explicit confirmation. File writes require the current version or null for creation.
 - EOF/quit stops scheduling and cancels managed descendants. Missed Cron triggers are skipped.

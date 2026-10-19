@@ -20,6 +20,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@better-auth/drizzle-adapter": "catalog:",
+        "@orpc/evlog": "catalog:",
         "@orpc/server": "catalog:",
         "@raypx/account": "workspace:*",
         "@raypx/auth": "workspace:*",
@@ -27,6 +28,8 @@
         "@raypx/db": "workspace:*",
         "@raypx/mail": "workspace:*",
         "@voidmix/env": "catalog:",
+        "@voidmix/logger": "catalog:",
+        "evlog": "catalog:",
         "hono": "catalog:",
         "nitro": "catalog:",
       },
@@ -48,6 +51,7 @@
       },
       "dependencies": {
         "@raypx/contracts": "workspace:*",
+        "@voidmix/logger": "catalog:",
         "croner": "catalog:",
       },
       "devDependencies": {
@@ -257,7 +261,6 @@
         "raypx-dev": "./src/cli.ts",
       },
       "dependencies": {
-        "@raypx/i18n": "workspace:*",
         "@voidmix/devkit": "catalog:dev",
         "@voidmix/intl": "catalog:",
       },
@@ -307,11 +310,13 @@
     "@better-auth/drizzle-adapter": "^1.7.10",
     "@orpc/client": "2.0.0-beta.43",
     "@orpc/contract": "2.0.0-beta.43",
+    "@orpc/evlog": "2.0.0-beta.43",
     "@orpc/server": "2.0.0-beta.43",
     "@tanstack/react-router": "^1.170.45",
     "@tanstack/react-start": "1.169.3",
     "@voidmix/env": "0.0.0-alpha.3",
     "@voidmix/intl": "0.0.0-alpha.3",
+    "@voidmix/logger": "file:vendor/voidmix-logger-0.0.0-alpha.0-cdba8dcdaa52.tgz",
     "@xterm/addon-fit": "0.11.0",
     "@xterm/xterm": "6.0.0",
     "better-auth": "^1.7.10",
@@ -320,6 +325,7 @@
     "croner": "10.0.1",
     "drizzle-orm": "1.0.0-rc.5-5935859",
     "electrobun": "2.0.2",
+    "evlog": "2.33.1",
     "hono": "^4.13.13",
     "lucide-react": "^1.59.0",
     "nitro": "3.0.260903-beta",
@@ -549,6 +555,8 @@
     "@orpc/client": ["@orpc/client@2.0.0-beta.43", "", { "dependencies": { "@orpc/shared": "2.0.0-beta.43", "@standard-server/core": "~0.10.2", "@standard-server/fetch": "~0.10.2", "@standard-server/peer": "~0.10.2" } }, "sha512-176u4pmmoXGyjHRTuJFSQVN4Ucuau5mfn3LkxBs+kyTcNHOZD9XmDW8DAr0NJwhfUBDT/E62q1y9aEgiKUcJsA=="],
 
     "@orpc/contract": ["@orpc/contract@2.0.0-beta.43", "", { "dependencies": { "@orpc/client": "2.0.0-beta.43", "@orpc/shared": "2.0.0-beta.43", "@standard-schema/spec": "^1.1.0" } }, "sha512-8IyzPrpdvGhi51G6QHEkoPOvs4AyV0YjhV6OP57W9rUAS9YnPyc/ScKwpsTZsm6dOjPcNBk8R2n+iN2s7m4t4w=="],
+
+    "@orpc/evlog": ["@orpc/evlog@2.0.0-beta.43", "", { "dependencies": { "@orpc/client": "2.0.0-beta.43", "@orpc/server": "2.0.0-beta.43", "@orpc/shared": "2.0.0-beta.43", "@standard-server/core": "~0.10.2" }, "peerDependencies": { "evlog": ">=2.18.1" } }, "sha512-uHiaKUqJrn9hHSmPrfDblIs/ij+m4su9HOeytFEs9ZPHOlCXpVh9k6u3VW0chBfQHJ+GeKeBaQMvhjCHzxwN2w=="],
 
     "@orpc/server": ["@orpc/server@2.0.0-beta.43", "", { "dependencies": { "@orpc/client": "2.0.0-beta.43", "@orpc/contract": "2.0.0-beta.43", "@orpc/shared": "2.0.0-beta.43", "@standard-server/aws-lambda": "~0.10.2", "@standard-server/core": "~0.10.2", "@standard-server/fastify": "~0.10.2", "@standard-server/fetch": "~0.10.2", "@standard-server/node": "~0.10.2", "@standard-server/peer": "~0.10.2", "cookie": "^2.0.1" }, "peerDependencies": { "crossws": ">=0.3.4", "fastify": ">=5.6.1" }, "optionalPeers": ["crossws", "fastify"] }, "sha512-4G6xYiPQtu5iefsnEZzxa9rcl+P0IJCPkzQu+Mv45QJd/S3Qp6MQwDJAV90WBAjQay6dd0662awGrh4JXfIXhQ=="],
 
@@ -972,6 +980,8 @@
 
     "@voidmix/intl": ["@voidmix/intl@0.0.0-alpha.3", "", { "peerDependencies": { "react": "^19.0.0" } }, "sha512-PgfS+bt+C2N8vMfSWBfjahpHzLIVUvZncC7E0lOVydvw2XzGb0VvPzFzNfkvcL0yF/B8J87inlr7F9oYod/wrA=="],
 
+    "@voidmix/logger": ["@voidmix/logger@vendor/voidmix-logger-0.0.0-alpha.0-cdba8dcdaa52.tgz", { "dependencies": { "evlog": "2.33.1" } }, "sha512-oTuEtlF6HbDQgSW0ubzAkqotYpHHjTXM1gqtBsUSIhpxpF9QxfF/ul/OiV8WTyusD3g1IEJYm/TPxGI1bjSa3g=="],
+
     "@voidmix/tsconfig": ["@voidmix/tsconfig@0.0.0-alpha.0", "", {}, "sha512-leoFfmw7hc9GU8ucprJpNZXR193gFS3sutMLnE9TUKGLsBW/Q8FDbrKGMh67oMLB2J64ixBcmyRKRfpBJPp26g=="],
 
     "@voidzero-dev/vite-plus-darwin-arm64": ["@voidzero-dev/vite-plus-darwin-arm64@1.3.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-BF4W+UwGxUkHPrH2pZLhafJfkJT20WZIbMzZgZLGQ44LPpZPX8Sb+qtblUnXUkkCzTqad4XtSPgiLKglvZkNQQ=="],
@@ -1125,6 +1135,8 @@
     "escalade": ["escalade@3.2.0", "", {}, "sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA=="],
 
     "estree-walker": ["estree-walker@3.0.3", "", { "dependencies": { "@types/estree": "^1.0.0" } }, "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g=="],
+
+    "evlog": ["evlog@2.33.1", "", { "peerDependencies": { "@nestjs/common": ">=11.2.7", "@nestjs/core": ">=11.2.7", "@nuxt/kit": "^4.4.2", "@orpc/server": ">=1.15.4", "@tanstack/start-client-core": "^1.170.34", "ai": ">=6.0.168 <8.0.0", "effect": "^4.0.0", "elysia": ">=1.4.30", "eve": ">=0.30.0", "express": ">=5.2.1", "fastify": ">=5.12.5", "h3": "^1.15.11", "hono": ">=4.13.12", "next": ">=16.3.8", "nitro": "^3.0.260311-beta", "nitropack": "^2.13.4", "ofetch": "^1.5.1", "react": ">=19.3.0", "react-router": ">=7.18.4", "vite": "^7.0.0 || ^8.0.0" }, "optionalPeers": ["@nestjs/common", "@nestjs/core", "@nuxt/kit", "@orpc/server", "@tanstack/start-client-core", "ai", "effect", "elysia", "eve", "express", "fastify", "h3", "hono", "next", "nitro", "nitropack", "ofetch", "react", "react-router", "vite"], "bin": { "evlog": "./bin/evlog.mjs" } }, "sha512-raahjdFBFXWBYRD/SMuBs/pBAcarTlV/YzuIk/iWH/Snieo5mqh1a9epfo7DOKXq1OWpHqH4xXhVxWv1JIIg+w=="],
 
     "expect-type": ["expect-type@1.4.0", "", {}, "sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA=="],
 

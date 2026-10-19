@@ -1,18 +1,23 @@
-import { afterEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { chmod, mkdtemp, mkdir, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createRuntime, type LocalRuntime } from "./index";
 import { acquireLock } from "./state";
+import type { Diagnostic, RecordDiagnostic } from "../diagnostics";
+import { LocalError } from "./errors";
 
 const roots: string[] = [];
 const runtimes: LocalRuntime[] = [];
-async function fixture() {
+async function fixture(recordDiagnostic?: RecordDiagnostic) {
   const dir = await mkdtemp(join(tmpdir(), "raypx-local-test-"));
   roots.push(dir);
   const authorized = join(dir, "files");
   await mkdir(authorized);
-  const runtime = createRuntime({ dataDir: dir });
+  const runtime = createRuntime({
+    dataDir: dir,
+    ...(recordDiagnostic ? { recordDiagnostic } : {}),
+  });
   runtimes.push(runtime);
   const grant = await runtime.files.register(authorized);
   return { dir, authorized, runtime, grant };
@@ -119,6 +124,108 @@ describe("authorized local files", () => {
   });
 });
 describe("device jobs and leases", () => {
+  it("records one bounded summary for completed and skipped runs without private job data", async () => {
+    const diagnostics: Diagnostic[] = [];
+    const { runtime, grant } = await fixture((event) => diagnostics.push(event));
+    const task = runtime.jobs.create({
+      name: "private-task-name",
+      cron: "0 * * * *",
+      timezone: "Asia/Singapore",
+      enabled: true,
+      action: { type: "directory.scan", rootId: grant.id, path: "" },
+    });
+    const release = acquireLock(runtime.state.directory, `job-${task.id}`)!;
+    const skipped = await runtime.jobs.run(task.id);
+    release();
+    const success = await runtime.jobs.run(task.id);
+    runtime.jobs.update(task.id, {
+      ...task,
+      action: { type: "directory.scan", rootId: grant.id, path: "private-missing-path" },
+    });
+    const failed = await runtime.jobs.run(task.id);
+    expect(diagnostics).toEqual(
+      [skipped, success, failed].map((run) => ({
+        operation: "job.completed",
+        id: run.id,
+        jobId: task.id,
+        status: run.status,
+        exitCode: run.exitCode,
+        elapsedMs: expect.any(Number),
+        ...(run.status === "failed" ? { code: "LOCAL_ERROR" } : {}),
+      })),
+    );
+    expect(JSON.stringify(diagnostics)).not.toContain("private-");
+    expect(JSON.stringify(diagnostics)).not.toContain(runtime.state.directory);
+    expect(diagnostics.every((event) => "elapsedMs" in event && event.elapsedMs >= 0)).toBe(true);
+  });
+
+  it("measures the operation lifetime before creating its completion diagnostic", async () => {
+    const diagnostics: Diagnostic[] = [];
+    const { runtime, grant } = await fixture((event) => diagnostics.push(event));
+    const task = runtime.jobs.create({
+      name: "Scan",
+      cron: "0 * * * *",
+      timezone: "UTC",
+      enabled: false,
+      action: { type: "directory.scan", rootId: grant.id, path: "" },
+    });
+    const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
+    try {
+      vi.spyOn(runtime.files, "scan").mockImplementation(async () => {
+        clock.mockReturnValue(1250);
+        return { files: 0, directories: 1, bytes: 0, skipped: 0 };
+      });
+      await runtime.jobs.run(task.id);
+      expect(diagnostics).toEqual([
+        expect.objectContaining({ operation: "job.completed", elapsedMs: 250 }),
+      ]);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it("keeps a diagnostic sink failure separate from a job result", async () => {
+    const { runtime, grant } = await fixture(() => {
+      throw new Error("Unavailable diagnostic sink");
+    });
+    const task = runtime.jobs.create({
+      name: "Scan",
+      cron: "0 * * * *",
+      timezone: "Asia/Singapore",
+      enabled: true,
+      action: { type: "directory.scan", rootId: grant.id, path: "" },
+    });
+    await expect(runtime.jobs.run(task.id)).resolves.toMatchObject({ status: "success" });
+    expect(runtime.state.history(task.id)[0]?.status).toBe("success");
+  });
+
+  it("records scheduler failures using a safe code instead of exception text", async () => {
+    const diagnostics: Diagnostic[] = [];
+    const { runtime, grant } = await fixture((event) => diagnostics.push(event));
+    const task = runtime.jobs.create({
+      name: "Scan",
+      cron: "* * * * *",
+      timezone: "UTC",
+      enabled: true,
+      action: { type: "directory.scan", rootId: grant.id, path: "" },
+    });
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+      vi.spyOn(runtime.jobs, "run").mockRejectedValue(
+        new LocalError("JOB_NOT_FOUND", "private-path secret-token"),
+      );
+      runtime.jobs.startScheduler();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(diagnostics).toEqual([
+        { operation: "scheduler.failed", jobId: task.id, code: "JOB_NOT_FOUND" },
+      ]);
+    } finally {
+      await runtime.close();
+      vi.useRealTimers();
+    }
+  });
+
   it("excludes a second scheduler and releases the lease after shutdown", async () => {
     const { dir } = await fixture();
     const first = createRuntime({ dataDir: dir, scheduler: true });

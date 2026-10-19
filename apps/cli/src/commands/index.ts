@@ -2,8 +2,12 @@ import { createInterface } from "node:readline/promises";
 import { localParams, type LocalMethod } from "@raypx/contracts/local";
 import { createRuntime } from "../runtime";
 import { LocalError } from "../runtime/errors";
+import type { RecordDiagnostic } from "../diagnostics";
 
-export async function runCommand(args: string[], options: { dataDir?: string; profile?: string }) {
+export async function runCommand(
+  args: string[],
+  options: { dataDir?: string; profile?: string; recordDiagnostic?: RecordDiagnostic },
+) {
   const [group, action, ...rest] = args.filter((value) => value !== "--json" && value !== "--yes");
   const json = args.includes("--json");
   if (!group || group === "help" || group === "--help") {

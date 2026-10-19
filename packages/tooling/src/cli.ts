@@ -65,12 +65,9 @@ async function main() {
       findings(checkLocales(root), "Locale catalogs");
       findings(policy(root), "Repository policy");
       await run(process.execPath, ["--bun", "vp", "fmt", "--check"], root);
-      // Type-aware lint resolves ignored SDK declarations that native:prepare generates.
-      await turbo(root, "native:prepare");
-      await run(process.execPath, ["--bun", "vp", "lint"], root);
-      await turbo(root, "check");
-      await turbo(root, "test");
-      await turbo(root, "build");
+      // One graph shares native preparation across lint, checks and builds.
+      // Start with check so verification never loads development dotenv into tests.
+      await turbo(root, "check", ["test", "build", "//#lint"]);
       await smoke(root);
       break;
     case "smoke":
