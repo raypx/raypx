@@ -1,0 +1,19 @@
+package.json
+  s_49f01f37f619d1::t_4d19180ff8a23f 21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "80e6c7cbe3e58fd01af643fe99f0aa8fbc702a17",
+  "prompts": {},
+  "sessions": {
+    "s_49f01f37f619d1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1538b-0c9d-7351-bd78-3f13ed331ac0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
