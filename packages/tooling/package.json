@@ -18,13 +18,13 @@
     "test:integration": "bun --bun vp test --run --passWithNoTests integration/"
   },
   "dependencies": {
-    "@voidmix/devkit": "catalog:dev",
-    "@voidmix/intl": "catalog:",
+    "@raypx-kit/devkit": "catalog:dev",
+    "@raypx-kit/intl": "catalog:",
     "wrangler": "catalog:dev"
   },
   "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
     "@types/bun": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev",
     "nitro": "catalog:"
   },
   "raypx": {

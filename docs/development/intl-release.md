@@ -1,31 +1,31 @@
-# Voidmix library changes
+# Raypx Kit library changes
 
-Merged Raypx changes consume `@voidmix/*` from npm at exact versions. Voidmix is
-maintained in its own repository, so a change that needs a new Voidmix API follows
+Merged Raypx changes consume `@raypx-kit/*` from npm at exact versions. Raypx Kit is
+maintained in its own repository, so a change that needs a new Raypx Kit API follows
 the same three steps. Review branches may use a published snapshot or a tracked
 local archive while publication is pending; neither is a merge-ready dependency.
 
 ## 1. Develop against a local link
 
-Link the Voidmix package being changed. This replaces only `node_modules`; the
+Link the Raypx Kit package being changed. This replaces only `node_modules`; the
 manifest and lockfile stay untouched.
 
 ```sh
-cd ../voidmix/packages/intl
+cd ../raypx-kit/packages/intl
 bun run build        # or keep `bun run dev` running
 bun link
 cd ../../../raypx
-bun link @voidmix/intl
+bun link @raypx-kit/intl
 ```
 
-The link points at the Voidmix checkout, which has its own React. Every Vite and
+The link points at the Raypx Kit checkout, which has its own React. Every Vite and
 Vitest config dedupes `react` and `react-dom` so that links never create a
 second React. Run
 `bun install` to return to the registry version.
 
 ## 2. Pin a snapshot on the branch
 
-From a clean Voidmix branch, `bun run release:snapshot` packs and verifies
+From a clean Raypx Kit branch, `bun run release:snapshot` packs and verifies
 `0.0.0-next-<timestamp>-<commit>` previews. Publishing them with `--publish`
 (under the `next` dist-tag) is a maintainer action. Once the snapshot is published,
 set the root catalog entry to that exact version and run `bun install`, so the
@@ -37,7 +37,7 @@ printed version resolvable from npm.
 For a new package such as `@voidmix/logger`, track its verified compiled archive
 inside Raypx rather than depending on another checkout or a temporary directory:
 
-1. Verify the Voidmix source and record its provenance. For a clean source commit,
+1. Verify the Raypx Kit source and record its provenance. For a clean source commit,
    record `sourceCommit` and run `bun run release:snapshot logger` without
    `--publish`, or pack the verified package with `bun pm pack --ignore-scripts`.
    For an uncommitted implementation, use the direct pack command and record
@@ -56,30 +56,33 @@ inside Raypx rather than depending on another checkout or a temporary directory:
    archive, metadata, catalog change and regenerated `bun.lock` together. Use a
    new filename whenever archive contents change, even if the manifest version
    is unchanged, to avoid stale package-manager caches.
-4. In an isolated Raypx checkout without a sibling Voidmix checkout, run
+4. In an isolated Raypx checkout without a sibling Raypx Kit checkout, run
    `bun install --frozen-lockfile`, the affected workspace tests and
    `bun run verify`. Inspect the lockfile for repository-relative archive paths
    and integrity hashes; it must not refer to temporary or absolute paths.
 
 These tracked archives make a review branch reproducible. They are not editable
 source forks, publication claims or an exception to the merge gate below. Keep
-reusable implementation in Voidmix. A `bun link` installation alone is not a
+reusable implementation in Raypx Kit. A `bun link` installation alone is not a
 reproducible branch dependency.
 
 ## 3. Replace the snapshot before merging
 
-After Voidmix releases its alpha, set the catalog to that exact version, run
+After Raypx Kit releases its alpha, set the catalog to that exact version, run
 `bun install` and `bun run verify`, and remove the corresponding preview archive
 and metadata in the same change. Confirm the alpha resolves from the registry.
 Never merge with a snapshot version, a range, a `link:` or a tarball path.
 
-Breaking Voidmix changes are acceptable during this stage; Raypx adopts them in
+Breaking Raypx Kit changes are acceptable during this stage; Raypx adopts them in
 the same branch rather than through compatibility layers.
 
-`@voidmix/intl` bundles `use-intl`, so Raypx never declares or imports it
+`@raypx-kit/intl` bundles `use-intl`, so Raypx never declares or imports it
 directly. A separate `use-intl` or `next-intl` install would create a second,
 unconnected IntlProvider context.
 
+`@voidmix/logger` is the last package still consumed from the retired Voidmix
+repository, as a tracked archive. `@raypx-kit/logger` exposes evlog's native API
+instead of this runtime wrapper, so API and CLI adopt it in a separate change.
 `@voidmix/logger` depends on evlog 2.33.1 without bundling it. API and CLI own their
 configuration, allowed event fields and drain lifecycle; applications await
 initialization once per process. The generic package reads no environment

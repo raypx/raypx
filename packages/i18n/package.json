@@ -24,14 +24,14 @@
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
-    "@voidmix/intl": "catalog:"
+    "@raypx-kit/intl": "catalog:"
   },
   "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
     "@testing-library/react": "catalog:dev",
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev",
     "jsdom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:",

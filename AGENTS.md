@@ -38,7 +38,8 @@ The accepted foundation design supersedes documents in docs/history.
   only enables reading .nvmrc/package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
   Keep external versions there and use workspace:* for internal dependencies.
-- @voidmix packages remain independently released external dependencies.
+- @raypx-kit packages (and the `@voidmix/logger` preview archive) remain independently
+  released external dependencies.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.

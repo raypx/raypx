@@ -1,4 +1,4 @@
-import { createBrowserLanguage } from "@voidmix/intl/browser";
+import { createBrowserLanguage } from "@raypx-kit/intl/browser";
 import { LOCALE_PREFERENCE_KEY } from "./preferences.js";
 import { messages } from "./messages/index.js";
 import { intlClient } from "./react.js";
@@ -12,7 +12,7 @@ const browser = createBrowserLanguage(intlClient, localeRuntime, {
 });
 
 export const { BrowserLanguageProvider, getBrowserSystemLocales } = browser;
-export type { BrowserLanguageProviderProps } from "@voidmix/intl/browser";
+export type { BrowserLanguageProviderProps } from "@raypx-kit/intl/browser";
 /** Restore device storage only; native composition must not inherit browser cookies. */
 export const readBrowserPreference = browser.preferences.read;
 export { useLanguagePreference } from "./react.js";

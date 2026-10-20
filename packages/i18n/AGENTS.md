@@ -3,7 +3,7 @@
 ## Purpose
 
 Raypx's English/Chinese catalogs, locale preferences and platform entry points.
-Translation and formatting use the independently released `@voidmix/intl` facade.
+Translation and formatting use the independently released `@raypx-kit/intl` facade.
 
 ## Interface
 
@@ -22,8 +22,8 @@ Translation and formatting use the independently released `@voidmix/intl` facade
 Own product language choices, translations, namespace parity and the persisted
 `raypx_locale` preference. Applications provide device storage and system locale.
 The controlled LanguageProvider, browser storage/cookie adapters and error-code
-translation come from `@voidmix/intl`; this package only wires product keys and
-catalogs into them. Change that behavior in Voidmix, not here.
+translation come from `@raypx-kit/intl`; this package only wires product keys and
+catalogs into them. Change that behavior in Raypx Kit, not here.
 
 ## Constraints
 
@@ -41,7 +41,7 @@ catalogs into them. Change that behavior in Voidmix, not here.
 - Native bootstrap passes `restorePreference={false}` to BrowserLanguageProvider.
   It must wait for `hydrated` before writing device preferences back to the host.
 - Preserve safe error-code translation; diagnostic prose is never product copy.
-- Voidmix is an external dependency, not a workspace.
+- Raypx Kit is an external dependency, not a workspace.
 
 See [foundation architecture](../../docs/architecture/0034-extensible-foundation.md).
 

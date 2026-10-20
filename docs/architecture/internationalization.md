@@ -1,7 +1,7 @@
 # Internationalization
 
 `@raypx/i18n` owns static English/Chinese catalogs, device language preferences and
-platform adapters. `@voidmix/intl` is an independently published SDK that bundles
+platform adapters. `@raypx-kit/intl` is an independently published SDK that bundles
 `use-intl` for translation, formatting, React context and caches; Raypx does not
 declare `use-intl` itself. Application
 loaders own any future asynchronous message retrieval. Current catalogs stay
@@ -79,4 +79,4 @@ not claim physical-device or GUI acceptance.
 SDK changes are developed through an uncommitted `bun link`, pinned to a verified
 `next` snapshot on the branch and replaced by the released exact alpha before
 merge. Do not commit a `file:`/`link:` dependency or import another repository's
-source. See [Voidmix library changes](../development/intl-release.md).
+source. See [Raypx Kit library changes](../development/intl-release.md).

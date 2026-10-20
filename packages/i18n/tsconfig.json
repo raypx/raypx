@@ -1,5 +1,5 @@
 {
-  "extends": "@voidmix/tsconfig/react-library.json",
+  "extends": "@raypx-kit/tsconfig/react-library.json",
   "compilerOptions": {
     "resolveJsonModule": true,
     "types": ["node"]

@@ -19,9 +19,9 @@
     "resend": "catalog:"
   },
   "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {

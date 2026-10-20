@@ -9,8 +9,8 @@
   },
   "devDependencies": {
     "@playwright/test": "catalog:dev",
-    "@types/bun": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev"
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@types/bun": "catalog:dev"
   },
   "raypx": {
     "kind": "tooling",

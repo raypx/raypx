@@ -1,11 +1,11 @@
 import { existsSync, globSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkArchitecture } from "@voidmix/devkit/architecture";
-import { readStaticCatalog, type CatalogTree } from "@voidmix/devkit/catalogs";
-import { checkDocumentLinks } from "@voidmix/devkit/docs";
-import { checkToolchain } from "@voidmix/devkit/toolchain";
-import type { WorkspaceIndex } from "@voidmix/devkit/workspaces";
-import { compareMessageCatalogs } from "@voidmix/intl/testing";
+import { checkArchitecture } from "@raypx-kit/devkit/architecture";
+import { readStaticCatalog, type CatalogTree } from "@raypx-kit/devkit/catalogs";
+import { checkDocumentLinks } from "@raypx-kit/devkit/docs";
+import { checkToolchain } from "@raypx-kit/devkit/toolchain";
+import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
+import { compareMessageCatalogs } from "@raypx-kit/intl/testing";
 import { discover } from "./repository.js";
 
 export function policy(root: string): string[] {

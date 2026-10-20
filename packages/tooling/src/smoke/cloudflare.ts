@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createTestHarness, experimental_readRawConfig } from "wrangler";
-import { stageArtifact } from "@voidmix/devkit/artifact";
+import { stageArtifact } from "@raypx-kit/devkit/artifact";
 
 const root = resolve(process.argv[2] ?? ".");
 const serveApi = process.argv.includes("--serve-api");

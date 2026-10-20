@@ -1,4 +1,4 @@
-import type { CatalogShape, LocaleSource as IntlLocaleSource } from "@voidmix/intl/types";
+import type { CatalogShape, LocaleSource as IntlLocaleSource } from "@raypx-kit/intl/types";
 import type { LOCALE_OPTIONS, SUPPORTED_LOCALES } from "./constants.js";
 import type en from "./messages/en.js";
 
@@ -18,4 +18,4 @@ export type {
   CatalogShape,
   MessageKey,
   NamespaceOf,
-} from "@voidmix/intl/types";
+} from "@raypx-kit/intl/types";

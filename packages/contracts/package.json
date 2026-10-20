@@ -21,8 +21,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev"
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev"
   },
   "raypx": {
     "kind": "library",

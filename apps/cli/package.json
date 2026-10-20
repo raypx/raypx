@@ -21,9 +21,9 @@
     "croner": "catalog:"
   },
   "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {

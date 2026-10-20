@@ -1,5 +1,5 @@
 {
-  "extends": "@voidmix/tsconfig/library.json",
+  "extends": "@raypx-kit/tsconfig/library.json",
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },

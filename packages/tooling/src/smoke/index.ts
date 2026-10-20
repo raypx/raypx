@@ -1,7 +1,7 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { run } from "@voidmix/devkit/process";
+import { run } from "@raypx-kit/devkit/process";
 import { pinnedNode } from "../repository.js";
 import { probeApi, probeWeb } from "./node.js";
 

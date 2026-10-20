@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { targets, type Kind, type Target } from "@voidmix/devkit/workspaces";
+import { targets, type Kind, type Target } from "@raypx-kit/devkit/workspaces";
 import { discover } from "./repository.js";
 
 export interface ScaffoldOptions {
@@ -41,7 +41,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     ...(options.kind !== "app" ? { exports: { ".": "./src/index.ts" } } : {}),
     scripts,
     devDependencies: {
-      "@voidmix/tsconfig": "catalog:dev",
+      "@raypx-kit/tsconfig": "catalog:dev",
       ...(options.target === "bun" ? { "@types/bun": "catalog:dev" } : {}),
     },
   };
@@ -53,7 +53,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
         : "node";
   const files: Record<string, string> = {
     "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
-    "tsconfig.json": `${JSON.stringify({ extends: `@voidmix/tsconfig/${config}.json`, compilerOptions: { ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}), ...(options.target === "bun" ? { types: ["bun"] } : {}) }, include: ["src/**/*.ts", "src/**/*.tsx", ...(options.tests ? ["tests/**/*.ts", "tests/**/*.tsx"] : [])] }, null, 2)}\n`,
+    "tsconfig.json": `${JSON.stringify({ extends: `@raypx-kit/tsconfig/${config}.json`, compilerOptions: { ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}), ...(options.target === "bun" ? { types: ["bun"] } : {}) }, include: ["src/**/*.ts", "src/**/*.tsx", ...(options.tests ? ["tests/**/*.ts", "tests/**/*.tsx"] : [])] }, null, 2)}\n`,
     "src/index.ts": "export {};\n",
     "AGENTS.md": `# ${packageName}\n\n## Purpose\n\n${options.target} ${options.kind}; describe its responsibility before adding behavior.\n\n## Interface\n\nPublic exports are declared in package.json.\n\n## Constraints\n\nUse public workspace entries and keep dependencies acyclic.\n\n## Verification\n\nRun bun run --cwd ${directory} check${options.tests ? " and test" : ""}.\n`,
     ...(options.tests

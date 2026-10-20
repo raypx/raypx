@@ -24,9 +24,9 @@
     "lucide-react": "catalog:"
   },
   "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
     "@types/react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev",
     "react": "catalog:"
   },
   "peerDependencies": {

@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { probeArtifact } from "@voidmix/devkit/artifact";
+import { probeArtifact } from "@raypx-kit/devkit/artifact";
 import { pinnedNode } from "../repository.js";
 
 /** Starts a relocated Node output on a free port and probes it while it runs. */

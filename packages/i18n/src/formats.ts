@@ -1,1 +1,1 @@
-export { formats } from "@voidmix/intl";
+export { formats } from "@raypx-kit/intl";

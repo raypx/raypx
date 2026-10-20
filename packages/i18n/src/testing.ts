@@ -3,4 +3,4 @@ export {
   compareMessageCatalogs,
   assertMessageCatalogParity,
   type CatalogIssue,
-} from "@voidmix/intl/testing";
+} from "@raypx-kit/intl/testing";

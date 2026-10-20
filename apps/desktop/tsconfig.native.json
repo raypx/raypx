@@ -1,5 +1,5 @@
 {
-  "extends": "@voidmix/tsconfig/node.json",
+  "extends": "@raypx-kit/tsconfig/node.json",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",

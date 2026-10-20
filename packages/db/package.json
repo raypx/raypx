@@ -20,13 +20,13 @@
     "migrate": "bun src/commands.ts migrate"
   },
   "dependencies": {
-    "@voidmix/env": "catalog:",
+    "@raypx-kit/env": "catalog:",
     "drizzle-orm": "catalog:",
     "postgres": "catalog:"
   },
   "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev",
     "drizzle-kit": "catalog:dev"
   },
   "raypx": {

@@ -2,9 +2,9 @@
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { developmentEnvironment, run } from "@voidmix/devkit/process";
-import { readToolchain } from "@voidmix/devkit/toolchain";
-import type { Kind, Target } from "@voidmix/devkit/workspaces";
+import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
+import { readToolchain } from "@raypx-kit/devkit/toolchain";
+import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
 import { checkLocales, policy } from "./policy.js";
 import { discover, pinnedNode, turbo } from "./repository.js";
 import { scaffold } from "./scaffold.js";

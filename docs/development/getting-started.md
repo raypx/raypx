@@ -29,7 +29,7 @@ Bun catalogs hold third-party versions: the default `catalog:` contains runtime
 libraries, and `catalog:dev` contains build, test and development tools. Shared
 libraries keep the same catalog even when a test workspace lists them under
 `devDependencies`. All workspaces share one exact React
-version. Voidmix stays external. Do not add another task runner. Web and API run under Node in dev, build, preview
+version. Raypx Kit stays external. Do not add another task runner. Web and API run under Node in dev, build, preview
 and production: scripts call `bun vp`, not `bun --bun vp`, and each output starts
 with Node .output/server/index.mjs. Their node-server output traces Node export
 conditions, which the Bun runtime does not resolve. Tests still run through Bun.

@@ -1,9 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { turbo as runTurbo } from "@voidmix/devkit/process";
-import { pinnedNode as findPinnedNode, readToolchain } from "@voidmix/devkit/toolchain";
-import { discover as discoverWorkspaces } from "@voidmix/devkit/workspaces";
+import { turbo as runTurbo } from "@raypx-kit/devkit/process";
+import { pinnedNode as findPinnedNode, readToolchain } from "@raypx-kit/devkit/toolchain";
+import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
 
-/** Raypx conventions for the shared @voidmix/devkit checks. */
+/** Raypx conventions for the shared @raypx-kit/devkit checks. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });
 
 export const pinnedNode = (root: string) => findPinnedNode(root, { nodeBinaryEnv: "NODE_BINARY" });

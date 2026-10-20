@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
-import { checkArchitecture } from "@voidmix/devkit/architecture";
+import { checkArchitecture } from "@raypx-kit/devkit/architecture";
 import { discover } from "../../src/repository.js";
 import { scaffold } from "../../src/scaffold.js";
 import { workspaceFixtures } from "../helpers/workspace.js";
@@ -23,7 +23,7 @@ describe("workspace scaffolding", () => {
     expect(
       JSON.parse(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"))
         .devDependencies,
-    ).toEqual({ "@voidmix/tsconfig": "catalog:dev" });
+    ).toEqual({ "@raypx-kit/tsconfig": "catalog:dev" });
     expect(() =>
       scaffold(root, "feature-kit", { kind: "library", target: "universal", write: true }),
     ).toThrow("already exists");

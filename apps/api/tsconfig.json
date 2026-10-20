@@ -1,5 +1,5 @@
 {
-  "extends": "@voidmix/tsconfig/node.json",
+  "extends": "@raypx-kit/tsconfig/node.json",
   "include": [
     "server/**/*.ts",
     "tests/**/*.ts",

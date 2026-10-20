@@ -46,7 +46,7 @@ Contracts/api contains oRPC definitions; contracts/local contains Zod device
 messages. Client is the remote SDK. Local interfaces are never registered on
 public RPC. UI contains DOM components and a pure theme entry.
 I18n contains static English/Chinese catalogs and platform adapters. Its controlled
-Voidmix provider delegates translation, formatting and React context to its bundled use-intl.
+Raypx Kit provider delegates translation, formatting and React context to its bundled use-intl.
 Only `useLanguagePreference().setPreference()` changes the product language
 preference; the active locale is derived from that preference and the full ordered
 system locale list. See [internationalization](internationalization.md).
@@ -86,7 +86,7 @@ review branch, with source provenance, an archive checksum and the lockfile.
 Provenance records either a clean source commit or the base commit, explicit
 uncommitted state and per-file source checksums. The archive must be replaced by
 an exact published alpha before merging. See
-[Voidmix library changes](../development/intl-release.md) for archive checks and
+[Raypx Kit library changes](../development/intl-release.md) for archive checks and
 the publication gate.
 
 ## Device runtime

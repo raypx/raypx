@@ -1,1 +1,1 @@
-export { createTranslator, type CreateTranslatorOptions, type Translator } from "@voidmix/intl";
+export { createTranslator, type CreateTranslatorOptions, type Translator } from "@raypx-kit/intl";

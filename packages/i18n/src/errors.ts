@@ -5,4 +5,4 @@ export {
   translateKnownErrorCode,
   type ErrorCodeMap,
   type LocalizedErrorDetails,
-} from "@voidmix/intl";
+} from "@raypx-kit/intl";

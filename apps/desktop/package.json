@@ -41,6 +41,7 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
     "@tailwindcss/vite": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
@@ -50,7 +51,6 @@
     "@types/react-dom": "catalog:dev",
     "@vitejs/plugin-react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev",
     "jsdom": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:dev",

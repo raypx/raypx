@@ -1,9 +1,9 @@
 # @raypx/i18n
 
-Raypx's product configuration around `@voidmix/intl`, which bundles `use-intl`. The package owns
+Raypx's product configuration around `@raypx-kit/intl`, which bundles `use-intl`. The package owns
 English/Chinese catalogs, native language names and the product storage key. The
 controlled language provider, browser preference adapters and safe error-code
-translation are `@voidmix/intl` features configured here.
+translation are `@raypx-kit/intl` features configured here.
 
 ## Controlled rendering
 

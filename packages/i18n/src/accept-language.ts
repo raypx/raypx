@@ -1,1 +1,1 @@
-export { parseAcceptLanguage } from "@voidmix/intl";
+export { parseAcceptLanguage } from "@raypx-kit/intl";

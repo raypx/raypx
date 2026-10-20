@@ -1,8 +1,8 @@
-import { createFormatter as createIntlFormatter } from "@voidmix/intl";
-import type { Formatter, FormatterOptions as IntlFormatterOptions } from "@voidmix/intl";
+import { createFormatter as createIntlFormatter } from "@raypx-kit/intl";
+import type { Formatter, FormatterOptions as IntlFormatterOptions } from "@raypx-kit/intl";
 import type { Locale } from "./types.js";
 
-export type { Formatter } from "@voidmix/intl";
+export type { Formatter } from "@raypx-kit/intl";
 export type FormatterOptions = Omit<IntlFormatterOptions, "locale"> & { locale: Locale };
 
 export function createFormatter(options: FormatterOptions): Formatter {
