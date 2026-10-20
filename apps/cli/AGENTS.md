@@ -29,7 +29,8 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
 - Never import another application or authentication code.
 - Only the Desktop-owned stdio engine starts scheduling. Foreground CLI commands never install a daemon.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
-- The executable initializes `@voidmix/logger` once and closes it after runtime shutdown.
+- The executable configures `@raypx-kit/logger` (evlog) once with an explicit field policy and a
+  stderr stream drain, and closes it after runtime shutdown.
   Runtime diagnostics are injected; imports and unit tests never initialize a global logger.
   NDJSON diagnostics use stderr in every mode, including `--json`. Keep command results and
   protocol errors separate. Log only bounded IDs, status, duration and safe error codes;

@@ -18,7 +18,7 @@
       "@tanstack/react-start": "1.169.3",
       "@raypx-kit/env": "0.0.0-alpha.0",
       "@raypx-kit/intl": "0.0.0-alpha.0",
-      "@voidmix/logger": "file:vendor/voidmix-logger-0.0.0-alpha.0-cdba8dcdaa52.tgz",
+      "@raypx-kit/logger": "0.0.0-alpha.1",
       "@xterm/addon-fit": "0.11.0",
       "@xterm/xterm": "6.0.0",
       "better-auth": "^1.7.10",

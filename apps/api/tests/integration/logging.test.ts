@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client";
 import type { AuthSession } from "@raypx/auth/types";
-import { initLogger, type LogFields, type LoggerRuntime } from "@voidmix/logger";
+import type { SafeEvent } from "@raypx-kit/logger/safe";
 import { createApiApp, type ApiAppOptions } from "../../server/api.js";
+import { createApiLogging, type ApiLogging } from "../../server/logging.js";
 
 const secret = {
   cookie: "private-cookie-value-71",
@@ -29,17 +30,17 @@ const session: AuthSession = {
   },
 };
 
-const events: LogFields[] = [];
-let logger: LoggerRuntime | undefined;
+const events: SafeEvent[] = [];
+let logger: ApiLogging | undefined;
 let deliveryGate: Promise<void> | undefined;
 
 beforeEach(async () => {
   events.length = 0;
   deliveryGate = undefined;
-  logger = await initLogger({
+  logger = createApiLogging({
     service: "raypx-api-test",
     environment: "test",
-    drain: async ({ event }) => {
+    sink: async ({ event }) => {
       await deliveryGate;
       events.push(event);
     },
@@ -54,7 +55,7 @@ afterEach(async () => {
   }
 });
 
-function runtime(): LoggerRuntime {
+function runtime(): ApiLogging {
   if (!logger) throw new Error("Test logger was not initialized");
   return logger;
 }

@@ -11,8 +11,8 @@ raypx-kit 是一个**自用**的独立仓库（`raypx/raypx-kit`，默认分支 
 
 当前状态（2026-10-20）：codemods、devkit、drizzle、drizzle-kit、env、intl、logger、storage、
 tsconfig 九个包已发布 `0.0.0-alpha.0`，并配置 trusted publisher，之后由 CI 自动发版。
-raypx 已改用 `@raypx-kit/*`，只有 logger 仍是 `@voidmix/logger` 的 vendor 归档（见下方
-logger 一节）。旧的 `@voidmix/*` 包保留在 npm 上、不做 deprecate；voidmix 仓库待归档。
+raypx 已全部改用 `@raypx-kit/*`，logger 也已迁移到 `@raypx-kit/logger@0.0.0-alpha.1`（见下方
+logger 一节，已完成）。旧的 `@voidmix/*` 包保留在 npm 上、不做 deprecate；voidmix 仓库待归档。
 
 ## 和 next-forge 的关键区别（所有包都必须遵守）
 
@@ -157,7 +157,7 @@ next-forge 的 apps 对应关系：`app`、`web`、`api` 对应 raypx 的 web �
 
 1. **定位与规则**：更新 README、`AGENTS.md`、docs 首页，写入定位、准入规则和本对照表；
    更新各 package.json 的 `repository`、`homepage` 字段为新仓库地址（待维护者在 GitHub 改名后生效）。
-2. **logger 迁移（raypx 侧）**：`@raypx-kit/logger` 直接暴露 evlog 的 API，而 raypx 用的
+2. **logger 迁移（raypx 侧，已完成）**：`@raypx-kit/logger` 直接暴露 evlog 的 API，而 raypx 用的
    `@voidmix/logger` 是带安全策略的运行时封装（字段白名单、敏感字段过滤、16 KiB 事件上限、
    有界队列、`/node` 的 stderr drain）。迁移时把这些策略用 evlog 的 `redact`、drain pipeline
    和 raypx 内的小适配层实现，改 api（Node 与 Workers 运行时、oRPC 日志插件）和 cli 的日志初始化，

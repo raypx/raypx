@@ -47,7 +47,8 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
 - Unconfigured mail actions return MAIL_NOT_CONFIGURED before Better Auth dispatch;
   startup, liveness and existing sign-in remain available.
 - Never import another app. Local CLI execution stays outside the HTTP API.
-- Runtime initializes `@voidmix/logger` once and flushes it on Nitro shutdown.
+- Runtime configures `@raypx-kit/logger` (evlog) once through `server/logging.ts`: events pass the
+  explicit `API_LOG_FIELDS` policy and a bounded pipeline, and are flushed on Nitro shutdown.
   Hono owns non-RPC events; the matching `@orpc/evlog` plugin owns RPC events.
   Preserve the server-generated request ID in responses, errors and diagnostics.
   Log route templates and safe error summaries, never request/response bodies,

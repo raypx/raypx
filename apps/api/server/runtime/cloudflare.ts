@@ -1,6 +1,7 @@
 import { connectDatabase } from "@raypx/db/connection";
-import { initLogger, type LoggerRuntime } from "@voidmix/logger";
+
 import { getApiEnvironment } from "../env.js";
+import { createApiLogging, type ApiLogging } from "../logging.js";
 import { createRuntime } from "./shared.js";
 
 export interface CloudflareBindings {
@@ -19,20 +20,16 @@ export function getCloudflareEnvironment(bindings: CloudflareBindings) {
   return getApiEnvironment(values);
 }
 
-// Logger initialization owns a process-wide slot. Reuse only the console logger,
-// while every request owns its database client and auth context.
-let loggerPromise: Promise<LoggerRuntime> | undefined;
+// evlog configuration is global to the isolate. Reuse the console logger, while
+// every request owns its database client and auth context.
+let logging: ApiLogging | undefined;
 export async function createCloudflareRuntime(bindings: CloudflareBindings) {
   const environment = getCloudflareEnvironment(bindings);
-  const logger = await (loggerPromise ??= initLogger({
-    service: "raypx-api",
+  const logger = (logging ??= createApiLogging({
     environment: environment.NODE_ENV,
-    drain: ({ event }) => {
+    sink: ({ event }) => {
       console.log(JSON.stringify(event));
     },
-  }).catch((error: unknown) => {
-    loggerPromise = undefined;
-    throw error;
   }));
   return createRuntime(environment, {
     logger,

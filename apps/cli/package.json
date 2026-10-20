@@ -15,8 +15,8 @@
     "smoke:tui": "bun run tests/smoke/tui.ts"
   },
   "dependencies": {
+    "@raypx-kit/logger": "catalog:",
     "@raypx/contracts": "workspace:*",
-    "@voidmix/logger": "catalog:",
     "citty": "catalog:",
     "croner": "catalog:"
   },

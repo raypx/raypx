@@ -24,12 +24,12 @@
     "@orpc/evlog": "catalog:",
     "@orpc/server": "catalog:",
     "@raypx-kit/env": "catalog:",
+    "@raypx-kit/logger": "catalog:",
     "@raypx/account": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/db": "workspace:*",
     "@raypx/mail": "workspace:*",
-    "@voidmix/logger": "catalog:",
     "evlog": "catalog:",
     "hono": "catalog:",
     "nitro": "catalog:"

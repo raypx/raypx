@@ -34,7 +34,7 @@ printed version resolvable from npm.
 
 ### Branch preview without npm publication
 
-For a new package such as `@voidmix/logger`, track its verified compiled archive
+For a new, unpublished package, track its verified compiled archive
 inside Raypx rather than depending on another checkout or a temporary directory:
 
 1. Verify the Raypx Kit source and record its provenance. For a clean source commit,
@@ -49,10 +49,10 @@ inside Raypx rather than depending on another checkout or a temporary directory:
 2. Copy the archive into `vendor/` with a filename containing the package version
    and archive content hash. Record the provenance above, repository URL, archive
    name, full SHA256 checksum, packing command, tool versions and pending
-   publication status in `vendor/logger.json`. Keep a short update procedure in
+   publication status in `vendor/<package>.json`. Keep a short update procedure in
    `vendor/README.md`.
 3. Point the root runtime catalog at `file:vendor/<archive>.tgz`. Each consuming
-   workspace still declares `@voidmix/logger` through `catalog:`. Commit the
+   workspace still declares the package through `catalog:`. Commit the
    archive, metadata, catalog change and regenerated `bun.lock` together. Use a
    new filename whenever archive contents change, even if the manifest version
    is unchanged, to avoid stale package-manager caches.
@@ -80,13 +80,9 @@ the same branch rather than through compatibility layers.
 directly. A separate `use-intl` or `next-intl` install would create a second,
 unconnected IntlProvider context.
 
-`@voidmix/logger` is the last package still consumed from the retired Voidmix
-repository, as a tracked archive. `@raypx-kit/logger` exposes evlog's native API
-instead of this runtime wrapper, so API and CLI adopt it in a separate change.
-`@voidmix/logger` depends on evlog 2.33.1 without bundling it. API and CLI own their
-configuration, allowed event fields and drain lifecycle; applications await
-initialization once per process. The generic package reads no environment
-variables and does not replace Raypx's HTTP or local-protocol error contracts.
-Its runtime and `/node` drain are checked through the archive consumer and Raypx
-artifact gates. Report any unavailable runtime or packaged-platform checks
-separately; archive installation alone does not establish platform acceptance.
+`@raypx-kit/logger` keeps evlog unbundled. API and CLI own their configuration,
+allowed event fields and drain lifecycle, and the package reads no environment
+variables. Its `/safe` and `/stream` entries are checked through the archive
+consumer and Raypx's artifact gates. Report any unavailable runtime or
+packaged-platform checks separately; archive installation alone does not establish
+platform acceptance.

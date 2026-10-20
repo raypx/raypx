@@ -54,13 +54,16 @@ DB owns fresh auth-only schema/migrations; mail owns auth delivery/templates.
 
 ## Logging
 
-API and CLI consume the independently maintained `@voidmix/logger`. It keeps
-evlog 2.33.1 as an exact, unbundled runtime dependency. Composition roots await
-`initLogger` once per process and create event loggers from its returned runtime;
-event data is added through `set` and `error`, then completed with `emit`.
-Applications own environment parsing, permitted fields, output and shutdown.
-The generic library reads no environment variables and does not change remote
-or local error contracts.
+API and CLI use `@raypx-kit/logger`, which exposes evlog directly. Each
+composition root calls `initLogger` once per process (once per isolate on Workers)
+and creates event loggers with `createLogger`; event data is added through `set`
+and `error`, then completed with `emit`. Every drained event first passes
+`withEventPolicy` from `@raypx-kit/logger/safe`: only the app's listed fields
+(`API_LOG_FIELDS`, the CLI field list) and the fixed envelope leave the process,
+sensitive values are replaced and errors keep only a name and code. API buffers
+events in a bounded drain pipeline; the CLI and Node API write JSON lines to
+stderr, and Workers write them to the console. Applications own environment
+parsing, permitted fields, output and shutdown.
 
 Only explicitly allowed fields and safe error summaries reach the drain.
 Credentials, cookies, tokens, request bodies, command arguments, filesystem paths
@@ -81,7 +84,7 @@ for human command results or the Desktop NDJSON protocol. CLI shutdown flushes
 pending diagnostics without adding records to protocol output. Runtime and
 packaged-platform acceptance remain separate verification gates.
 
-An unpublished logger archive may be tracked under `vendor/` for a reproducible
+An unpublished library archive may be tracked under `vendor/` for a reproducible
 review branch, with source provenance, an archive checksum and the lockfile.
 Provenance records either a clean source commit or the base commit, explicit
 uncommitted state and per-file source checksums. The archive must be replaced by

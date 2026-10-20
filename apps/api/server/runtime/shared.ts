@@ -3,12 +3,12 @@ import { createAuth, readAuthSession } from "@raypx/auth/server";
 import type { DatabaseConnection } from "@raypx/db/connection";
 import { schema } from "@raypx/db/schema";
 import { createMailer } from "@raypx/mail/server";
-import type { LoggerRuntime } from "@voidmix/logger";
+import type { ApiLogging } from "../logging.js";
 import { createApiApp } from "../api.js";
 import type { ApiEnvironment } from "../env.js";
 
 export interface RuntimeResources {
-  logger: LoggerRuntime;
+  logger: ApiLogging;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
 }

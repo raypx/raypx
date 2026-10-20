@@ -1,16 +1,15 @@
 import { connectDatabase } from "@raypx/db/connection";
-import { initLogger } from "@voidmix/logger";
-import { createStderrDrain } from "@voidmix/logger/node";
+import { createStreamDrain } from "@raypx-kit/logger/stream";
 import { getApiEnvironment, type ApiEnvironment } from "../env.js";
+import { createApiLogging } from "../logging.js";
 import { createRuntime, type ApiRuntime } from "./shared.js";
 
 export type { ApiRuntime } from "./shared.js";
 
 export async function createApiRuntime(environment: ApiEnvironment): Promise<ApiRuntime> {
-  const logger = await initLogger({
-    service: "raypx-api",
+  const logger = createApiLogging({
     environment: environment.NODE_ENV,
-    drain: createStderrDrain(),
+    sink: createStreamDrain(),
   });
   return createRuntime(environment, {
     logger,

@@ -5,22 +5,22 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { createAccountService } from "@raypx/account/server";
-import type { LoggerRuntime, ScopedLogger } from "@voidmix/logger";
-import { createRpcLoggingPlugin, diagnosticRoute } from "./logging.js";
+import type { RequestLogger } from "@raypx-kit/logger";
+import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logging.js";
 
 export interface ApiAppOptions {
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;
   allowedOrigins: string[];
   mailAvailable?: boolean;
-  logger?: LoggerRuntime;
+  logger?: ApiLogging;
 }
 export function createApiApp(options: ApiAppOptions) {
   const accountService = createAccountService({
     readSession: (headers) => options.readSession(headers),
   });
   const app = new Hono<{
-    Variables: { requestId: string; requestLog?: ScopedLogger; rpcLogged: boolean };
+    Variables: { requestId: string; requestLog?: RequestLogger; rpcLogged: boolean };
   }>();
   app.use("*", async (c, next) => {
     const requestId = crypto.randomUUID();
