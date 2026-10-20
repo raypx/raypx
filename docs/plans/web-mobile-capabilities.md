@@ -39,7 +39,7 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 
 - Bun isolated linker：每个 workspace 声明直接依赖；Raypx 外部版本放根 catalog，运行时用 `catalog:`、工具用 `catalog:dev`，内部包用 `workspace:*`。Voidmix 按其自身仓库规范发布，不能套用 Raypx 的 catalog 规则。
 - 远程契约放 `@raypx/contracts/api`，本地设备协议放 `local`；不把 local 方法注册到公开 RPC，也不从 Desktop 导入 CLI 源码。
-- API 是组合根：依赖在 `apps/api/server/runtime.ts` 创建并注入，配置经 `@voidmix/env` 在 `env.ts` 声明。库包不直接读取应用环境变量。
+- API 是组合根：依赖在 `apps/api/server/runtime/shared.ts` 创建并注入，配置经 `@voidmix/env` 在 `env.ts` 声明。库包不直接读取应用环境变量。
 - 每个 RPC 都重新解析 Better Auth session；调用方不传 actor userId。设备、上传和引导状态都按当前 session 的用户隔离。
 - 不记录凭据、token、cookie、签名 URL、用户文件内容或任务 output。同步字段采用显式白名单，不序列化整个本地 job/run 对象。
 - 新 PostgreSQL 迁移只用于隔离的新库，绝不连接旧库或生产库。测试数据库的建立、迁移和清理遵守下文门禁。
@@ -106,6 +106,8 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 
 目标：登录且开启同步时，尽力上报本地任务定义摘要和近期状态；未登录、离线、同步失败都不影响本地任务。改动涉及 DB、contracts/api 与 local、client、API、Desktop、CLI、i18n 和测试基座。
 
+本地 job/run、执行归属和变更序列与 [CLI 与桌面执行设计](cli-desktop-runtime.md) 的 M1 数据约定协调；不等待其 IPC、TUI 或独立前台调度全部完成。第一版同步 Desktop 当前选定的 profile，其他 CLI profiles 不自动合并。阶段 0、1、4a 不因此增加依赖。
+
 ### 身份、撤销与数据库
 
 在 `raypx_foundation` 下新增：
@@ -114,6 +116,8 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 - `device_job`：`device_id`（级联删除）、`job_id`、`name`、`schedule`、IANA `timezone`、`enabled`、`next_run_at`、`updated_at`；主键 `(device_id, job_id)`。
 - `device_job_run`：`device_id`、`job_id`、`run_id`、`status`、`started_at`、`finished_at`、`exit_code`、`source_sequence`；主键 `(device_id, run_id)`，`(device_id, job_id)` 外键指向 job 并级联删除。status 与本地枚举保持一致，但 API 不暴露整个 local job/run schema。
 - 同步周期及分块暂存表：保存账户绑定代次、序列、snapshotId、预计分块/记录数、已接收块及摘要、状态和过期时间；在数据库中原子判定限频、版本和提交，不依赖单实例内存锁。
+
+运行使用固定的脱敏同步投影；本地新增 `queued` 或取消/超时原因时，显式联动该投影、远程 schema 和展示，不靠复用整个本地 schema 自动扩展。临时工具运行的 jobId 可为空，不能进入上述有 job 外键的远端记录；owner、IPC 端点及命令输出也不进入投影。
 
 原生持久化 `installationId`，不随登出清除；按账户保存设备绑定、同步开关、序列号和待撤销操作。不得存 session cookie。服务端 `register` 按当前用户与 installationId 幂等创建/查询绑定，不迁移其他用户的所有权。
 
@@ -216,7 +220,9 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 
 ## 阶段 4b：Desktop 取回文件（必做）
 
-依赖 4a。现有 `files.write` 仅支持最多 1 MiB UTF-8 文本，NDJSON 单消息上限 8 MiB，native bridge 请求超时 5 秒；不能把文件编码进一次 text 写入，也不能让 bridge 等待整个下载。
+依赖 4a。现有 `files.write` 仅支持最多 1 MiB UTF-8 文本，NDJSON 单消息上限 8 MiB；不能把文件编码进一次 text 写入。下载采用快速确认和状态查询，新控制请求端到端目标在 5 秒内结束，不能让 bridge 等待整个下载。
+
+长操作确认、状态和取消语义与 [CLI 与桌面执行设计](cli-desktop-runtime.md) 的 M1/M2 保持一致；可以先通过现有私有 stdio 实现，不强依赖所有平台的 IPC 或 TUI。新增 transfer 仍为独立类型，签名 URL 不持久化到通用运行/幂等记录。
 
 1. Desktop 文件 feature 增加“从手机上传的文件”，通过账户 API 列 ready 文件。用户主动选择下载、现有 root grant 和目标相对路径；授权新目录仍使用 native picker。
 2. `contracts/local` 和 CLI 设计新的 `files.download.start/status/cancel`（拟定名称），不注册到远程 RPC。start 快速返回 transferId，status 提供字节进度/完成/错误；大文件字节不经过单条 NDJSON 消息。

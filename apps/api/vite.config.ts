@@ -1,23 +1,25 @@
+import { nitroTarget } from "@raypx/tooling/build/nitro";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite-plus";
 
-export default defineConfig({
-  resolve: { tsconfigPaths: true },
-  plugins: [
-    nitro({
-      preset: "node-server",
-      compatibilityDate: "2026-10-15",
-      devServer: { hostname: "localhost" },
-      plugins: ["./server/runtime.plugin.ts"],
-      routes: {
-        "/api/auth/**": { handler: "./server/app.ts", format: "web" },
-        "/rpc/**": { handler: "./server/app.ts", format: "web" },
-        "/health": { handler: "./server/app.ts", format: "web" },
-        "/**": { handler: "./server/app.ts", format: "web" },
-      },
-      serverDir: false,
-      serverEntry: false,
-    }),
-  ],
-  server: { port: 3002, strictPort: true },
+export default defineConfig(({ mode }) => {
+  const cloudflare = mode === "cloudflare";
+  const handler = cloudflare ? "./server/app/cloudflare.ts" : "./server/app/node.ts";
+  return {
+    resolve: { tsconfigPaths: true },
+    ...(cloudflare ? { ssr: { noExternal: true as const } } : {}),
+    plugins: [
+      nitro({
+        ...nitroTarget(mode, import.meta.url),
+        ...(!cloudflare ? { plugins: ["./server/runtime/plugin.ts"] } : {}),
+        routes: {
+          "/api/auth/**": { handler, format: "web" },
+          "/rpc/**": { handler, format: "web" },
+          "/health": { handler, format: "web" },
+          "/**": { handler, format: "web" },
+        },
+      }),
+    ],
+    server: { port: 3002, strictPort: true },
+  };
 });

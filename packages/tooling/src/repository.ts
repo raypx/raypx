@@ -6,15 +6,14 @@ import { discover as discoverWorkspaces } from "@voidmix/devkit/workspaces";
 /** Raypx conventions for the shared @voidmix/devkit checks. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });
 
-export const pinnedNode = (root: string) =>
-  findPinnedNode(root, { nodeBinaryEnv: "RAYPX_NODE_BINARY" });
+export const pinnedNode = (root: string) => findPinnedNode(root, { nodeBinaryEnv: "NODE_BINARY" });
 
 export function turbo(root: string, task: string, args: string[] = []): Promise<void> {
   // Resolve Node before Bun's --bun Turbo runner adds its node shim to PATH.
-  const browserEnvironment =
-    task === "e2e"
+  const nodeEnvironment =
+    task === "e2e" || task === "test:cloudflare:postgres"
       ? {
-          RAYPX_NODE_BINARY: execFileSync(pinnedNode(root), ["-p", "process.execPath"], {
+          NODE_BINARY: execFileSync(pinnedNode(root), ["-p", "process.execPath"], {
             encoding: "utf8",
             stdio: "pipe",
           }).trim(),
@@ -23,10 +22,10 @@ export function turbo(root: string, task: string, args: string[] = []): Promise<
   // Remote credentials are usable only in the protected workflow; forks cannot read them.
   return runTurbo(root, task, args, {
     env: {
-      ...browserEnvironment,
+      ...nodeEnvironment,
       RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}-node${readToolchain(root).node}`,
     },
-    developmentTasks: ["dev", "build", "desktop#dev", "desktop#build"],
+    developmentTasks: ["dev", "build", "build:cloudflare", "desktop#dev", "desktop#build"],
     trustedCacheEnv: "RAYPX_REMOTE_CACHE_TRUSTED",
   });
 }

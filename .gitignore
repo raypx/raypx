@@ -65,3 +65,11 @@ apps/*/.output/
 apps/*/.tanstack/
 e2e/test-results/
 e2e/playwright-report/
+
+# Local Workers artifacts and secrets.
+apps/*/.output-cloudflare/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.artifacts/

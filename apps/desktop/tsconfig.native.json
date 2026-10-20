@@ -16,5 +16,5 @@
       "electrobun/main/events": ["./.hutch/types/sdks/main/entries/events.d.ts"]
     }
   },
-  "include": ["native/**/*.ts"]
+  "include": ["native/**/*.ts", "tests/native/**/*.ts", "scripts/**/*.ts", "tests/scripts/**/*.ts"]
 }

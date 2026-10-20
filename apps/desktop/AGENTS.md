@@ -40,13 +40,18 @@ Own native directory authorization and local UX. Runtime implementations live ex
 `src/features/auth/components/form.tsx` adapts the shared `@raypx/auth/client` form
 for Desktop account URLs, auth client and router search. Shared forms own fields,
 translated feedback and submission state; the renderer owns navigation. Keep
-feature tests beside their feature under `src/features/`; component-only tests
-can sit beside the component. Keep shared setup and cross-feature route tests
-under `src/test/`. All tests stay outside `src/routes/` file-route discovery.
+renderer tests under `tests/renderer/unit/` and `tests/renderer/component/`,
+then mirror feature and route directories.
+Keep native tests under `tests/native/` with their Bun type configuration.
+The packaged smoke runner and scenario live under `tests/native/smoke/`; Electrobun
+selects the scenario only with `RAYPX_NATIVE_SMOKE=1`.
+Development and packaging scripts live in `scripts/native/`; their tests live
+in `tests/scripts/native/`. Both use the Bun type configuration, independently of the renderer.
+All tests stay outside `src/routes/` file-route discovery.
 Use short feature-local filenames such as `form.tsx` and `routes.test.tsx`;
-exported symbols retain feature context. Renderer component/route tests use
-`*.test.tsx`, non-DOM unit tests use `*.test.ts`, and integration tests retain
-`*.integration.test.*` so the test scripts select each group independently.
+exported symbols retain feature context. Test scripts select `component/` and
+`integration/` directories; `test:unit` excludes those directories. File extensions
+describe source syntax, and each suite declares its required test environment.
 
 The account route reads its remote projection in a client-only loader; auth
 mutations invalidate route data on success. Keep Better Auth session updates as
@@ -65,7 +70,7 @@ invalidation signals rather than a second account-query state machine.
 - Local file authorization does not sandbox external commands. Commands run with normal OS user permissions.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.
 - Bun/Turbo own tasks. Hutch only prepares the pinned Electrobun SDK and packages native binaries.
-- `check`, `build` and `dev` enter Turbo through `native/task.ts` when called
+- `check`, `build` and `dev` enter Turbo through `scripts/native/task.ts` when called
   directly. Inside a Turbo task they run only the leaf commands; never add inline
   `native:prepare` calls there. The task graph shares one preparation across the
   root verification's lint, checks and builds. Root `lint` alone remains a leaf.

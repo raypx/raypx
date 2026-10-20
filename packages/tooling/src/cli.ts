@@ -8,7 +8,7 @@ import type { Kind, Target } from "@voidmix/devkit/workspaces";
 import { checkLocales, policy } from "./policy.js";
 import { discover, pinnedNode, turbo } from "./repository.js";
 import { scaffold } from "./scaffold.js";
-import { smoke } from "./smoke.js";
+import { smoke, smokeCloudflare } from "./smoke/index.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -67,11 +67,14 @@ async function main() {
       await run(process.execPath, ["--bun", "vp", "fmt", "--check"], root);
       // One graph shares native preparation across lint, checks and builds.
       // Start with check so verification never loads development dotenv into tests.
-      await turbo(root, "check", ["test", "build", "//#lint"]);
+      await turbo(root, "check", ["test", "build", "build:cloudflare", "//#lint"]);
       await smoke(root);
       break;
     case "smoke":
       await smoke(root);
+      break;
+    case "smoke:cloudflare":
+      await smokeCloudflare(root);
       break;
     case "env": {
       const values = args[0] === "--" ? args.slice(1) : args;
@@ -105,7 +108,7 @@ async function main() {
       break;
     case "clean": {
       for (const w of discover(root).workspaces)
-        for (const output of ["dist", ".output", "coverage", ".turbo"])
+        for (const output of ["dist", ".output", ".output-cloudflare", "coverage", ".turbo"])
           rmSync(join(root, w.path, output), { recursive: true, force: true });
       rmSync(join(root, ".turbo"), { recursive: true, force: true });
       console.log("Build outputs removed; user profiles and database volumes preserved");

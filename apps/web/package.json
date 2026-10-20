@@ -10,10 +10,13 @@
     "start": "node .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run --passWithNoTests",
-    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component.test.{ts,tsx}' --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
-    "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
-    "test:component": "bun --bun vp test --run --passWithNoTests component.test",
-    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
+    "test:component": "bun --bun vp test --run --passWithNoTests component/",
+    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "build:cloudflare": "raypx-dev env -- bun vp build --mode cloudflare",
+    "preview:cloudflare": "wrangler dev --config wrangler.jsonc --local",
+    "deploy:cloudflare": "wrangler deploy --config wrangler.jsonc"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -29,6 +32,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@raypx/tooling": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
@@ -41,7 +45,8 @@
     "jsdom": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:dev",
-    "vite-plus": "catalog:dev"
+    "vite-plus": "catalog:dev",
+    "wrangler": "catalog:dev"
   },
   "raypx": {
     "kind": "app",

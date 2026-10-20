@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "envMode": "loose",
   "agentGuidance": false,
   "cacheDir": ".turbo/cache",
   "concurrency": "4",
@@ -10,7 +11,7 @@
     "tsconfig.json",
     "vite.config.ts",
     "test.config.ts",
-    "packages/tooling/src/testing/**",
+    "packages/tooling/tests/setup/**",
     ".nvmrc",
     "bunfig.toml"
   ],
@@ -43,54 +44,36 @@
       "dependsOn": ["transit", "native:prepare"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        { "mode": "jit", "globs": [".hutch/devkit/**", ".hutch/types/**"] }
+        {
+          "mode": "jit",
+          "globs": [".hutch/devkit/**", ".hutch/types/**"]
+        }
       ],
       "env": ["RAYPX_DESKTOP_CHECK_ARGS"],
       "outputs": []
     },
     "native:prepare": {
       "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["ELECTROBUN_*", "HUTCH_*", "DASH_HOME"]
+      "outputs": []
     },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
-      "persistent": true,
-      "passThroughEnv": [
-        "VITE_*",
-        "DATABASE_URL",
-        "AUTH_*",
-        "WEB_URL",
-        "RESEND_API_KEY",
-        "MAIL_*",
-        "ALLOWED_ORIGINS",
-        "NODE_ENV"
-      ]
+      "persistent": true
     },
     "desktop#dev": {
       "dependsOn": ["^build", "cli#build", "native:prepare"],
       "cache": false,
-      "persistent": true,
-      "passThroughEnv": [
-        "VITE_*",
-        "NODE_ENV",
-        "ELECTROBUN_*",
-        "HUTCH_*",
-        "DASH_HOME",
-        "RAYPX_DESKTOP_DEV_ARGS"
-      ]
+      "persistent": true
     },
     "generate": {
       "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["DATABASE_URL", "NODE_ENV"]
+      "outputs": []
     },
     "e2e": {
       "dependsOn": ["web#build", "desktop#build"],
       "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["TEST_*", "NODE_ENV", "PLAYWRIGHT_*", "CI"]
+      "outputs": []
     },
     "bundle": {
       "dependsOn": ["check", "^build", "transit"],
@@ -105,40 +88,44 @@
     "test": {
       "dependsOn": ["transit"],
       "outputs": [],
-      "env": ["NODE_ENV"],
-      "passThroughEnv": ["TEST_DATABASE_URL"]
+      "env": ["NODE_ENV"]
     },
     "test:unit": {
       "dependsOn": ["transit"],
       "outputs": [],
-      "env": ["NODE_ENV"],
-      "passThroughEnv": ["TEST_DATABASE_URL"]
+      "env": ["NODE_ENV"]
     },
     "test:component": {
       "dependsOn": ["transit"],
       "outputs": [],
-      "env": ["NODE_ENV"],
-      "passThroughEnv": ["TEST_DATABASE_URL"]
+      "env": ["NODE_ENV"]
     },
     "test:integration": {
       "dependsOn": ["transit"],
       "outputs": [],
       "env": ["NODE_ENV"],
-      "cache": false,
-      "passThroughEnv": ["TEST_DATABASE_URL"]
+      "cache": false
     },
     "test:coverage": {
       "dependsOn": ["transit"],
       "outputs": ["coverage/**"],
       "env": ["NODE_ENV"],
-      "cache": false,
-      "passThroughEnv": ["TEST_DATABASE_URL"]
+      "cache": false
     },
     "test:postgres": {
       "dependsOn": ["transit"],
       "cache": false,
-      "outputs": [],
-      "passThroughEnv": ["TEST_DATABASE_URL", "NODE_ENV"]
+      "outputs": []
+    },
+    "build:cloudflare": {
+      "dependsOn": ["check", "^build", "transit"],
+      "outputs": [".output-cloudflare/**"],
+      "env": ["VITE_*", "NODE_ENV"]
+    },
+    "test:cloudflare:postgres": {
+      "dependsOn": ["transit", "build:cloudflare"],
+      "cache": false,
+      "outputs": []
     }
   }
 }

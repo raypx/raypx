@@ -4,7 +4,7 @@ import { LocalError } from "./runtime/errors";
 export type Diagnostic =
   | {
       operation: "cli.completed";
-      mode: "command" | "stdio" | "version";
+      mode: "command" | "stdio" | "version" | "tui";
       outcome: "success" | "failed";
       elapsedMs: number;
       code?: string;

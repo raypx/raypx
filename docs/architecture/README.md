@@ -14,7 +14,8 @@ Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
 capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
 on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.3.
 
-Web and API are separate Node services; each output runs outside the repo.
+Web and API are separate services. Their default Node outputs and optional
+Cloudflare Worker outputs run outside the repository. See [dual deployment targets](../development/cloudflare.md).
 API Nitro owns one listener and shutdown. One Hono Fetch app mounts /api/auth/_,
 /rpc/_ and /health; everything else is a JSON 404. Web renders on the server with
 device preferences from cookies/Accept-Language and the account from account.get,
@@ -91,7 +92,17 @@ the publication gate.
 ## Device runtime
 
 The same CLI runtime handles human commands and Desktop NDJSON requests. Desktop
-never imports CLI source. Files use canonical root grants, relative paths,
+never imports CLI source. An explicit citty command tree handles the existing
+JSON-parameter commands and scoped help. Global options are validated before
+dispatch; operands after `--` stay positional. Raypx owns errors, output and
+shutdown instead of citty's `runMain`. Help/version do not open a profile;
+they retain the executable's diagnostic completion lifecycle.
+`raypx tui` adds a lazy line-oriented task browser with a session-owned in-process
+runtime and scheduling disabled. It shares the local request boundary, confirms
+manual execution, and closes its own runtime on quit/EOF/signals. Both input and
+output must be terminals; scripts keep using explicit commands and JSON. This
+lightweight entry precedes the proposed host/owner protocol and full-screen TUI.
+Files use canonical root grants, relative paths,
 symlink/traversal checks, bounded UTF-8 and atomic writes. Delete requires confirmation.
 External commands use executable + argv + cwd, with shell use explicit; they retain
 normal OS permissions. PTY output is bytes encoded as base64; dates are ISO strings.

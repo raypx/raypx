@@ -14,7 +14,7 @@ export default defineConfig({
           ...shared.test,
           name: "server",
           environment: "node",
-          include: ["src/ssr.test.tsx", "src/**/*.test.ts"],
+          include: ["tests/node/**/*.{test,spec}.{ts,tsx}"],
         },
       },
       {
@@ -22,7 +22,7 @@ export default defineConfig({
           ...shared.test,
           name: "browser",
           environment: "jsdom",
-          include: ["src/client.test.tsx", "src/browser.component.test.tsx"],
+          include: ["tests/browser/**/*.{test,spec}.{ts,tsx}"],
         },
       },
     ],

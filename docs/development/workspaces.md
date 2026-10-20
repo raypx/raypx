@@ -8,7 +8,8 @@ bun run workspace:new feature-kit --kind library --target universal --tests --wr
 
 Preview is the default. Creation refuses existing paths and names. The generated
 private ESM package has an explicit source export, strict tsconfig and AGENTS.md;
---tests adds an independent runner config without placeholder tests. Install with
+--tests adds an independent runner config and includes `tests/` in strict checking,
+without placeholder tests. Install with
 Bun, then import the public entry from a consumer using workspace:*.
 
 ## Manifest metadata

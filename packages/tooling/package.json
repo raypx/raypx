@@ -6,22 +6,37 @@
     "raypx-dev": "./src/cli.ts"
   },
   "type": "module",
+  "exports": {
+    "./cloudflare": "./src/smoke/cloudflare.ts",
+    "./repository": "./src/repository.ts",
+    "./build/nitro": "./src/build/nitro.ts"
+  },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
-    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/*.integration.test.ts'",
-    "test:integration": "bun --bun vp test --run --passWithNoTests integration.test"
+    "test:unit": "bun --bun vp test --run --passWithNoTests tests/unit",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration/"
   },
   "dependencies": {
     "@voidmix/devkit": "catalog:dev",
-    "@voidmix/intl": "catalog:"
+    "@voidmix/intl": "catalog:",
+    "wrangler": "catalog:dev"
   },
   "devDependencies": {
     "@types/bun": "catalog:dev",
-    "@voidmix/tsconfig": "catalog:dev"
+    "@voidmix/tsconfig": "catalog:dev",
+    "nitro": "catalog:"
   },
   "raypx": {
     "kind": "tooling",
-    "target": "bun"
+    "target": "bun",
+    "entryTargets": {
+      "./build/nitro": "node",
+      "./cloudflare": "node"
+    },
+    "sourceTargets": {
+      "src/build/**": "node",
+      "src/smoke/cloudflare.ts": "node"
+    }
   }
 }

@@ -10,7 +10,7 @@ export default {
   },
   build: {
     mainProcess: "bun",
-    bun: { entrypoint: nativeSmoke ? "native/smoke.ts" : "native/main.ts" },
+    bun: { entrypoint: nativeSmoke ? "tests/native/smoke/scenario.ts" : "native/main.ts" },
     mac: { icons: "native/icons/icon.iconset" },
     win: {
       icon: "native/icons/icon.ico",

@@ -12,8 +12,9 @@ application is an independent composition root and is never imported by another 
 - Shared feature components live under `src/features/<feature>/components/`;
   keep reusable non-route modules outside `src/routes/`.
 - Application-wide layout components live under `src/components/`.
-- Tests live under `src/test/`, alongside shared test setup; keep test files
+- Tests live under `tests/`, alongside shared test setup; keep test files
   outside `src/routes/` so route discovery needs no test-specific exclusions.
+  Use `tests/unit/` and `tests/component/` for test kind, then feature directories.
 - `src/router.tsx` exports `getRouter`; `src/components/web-shell.tsx` owns the page layout.
 - `src/routes/__root.tsx` renders the document, theme script and preference providers.
 - `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
@@ -56,7 +57,12 @@ behavior by client/contracts.
   of account sessions, so the first server render already matches them.
 - Translate safe error codes. Never display arbitrary server diagnostic messages.
 - Dev, build, preview and production run under Node (`bun vp`, never `bun --bun vp`);
-  production uses Node 24.15.0. The node-server output traces Node export conditions.
+  the default production target uses Node 24.15.0. The node-server output traces Node export conditions.
+  `build:cloudflare` uses Vite's cloudflare mode and Nitro cloudflare_module, bundles
+  server dependencies and writes `.output-cloudflare`. Keep the default Node output separate.
+  Common target options come from `@raypx/tooling/build/nitro`; Web owns its Start plugins and React tracing.
+  Wrangler serves all routes through the Worker so account pages remain request-rendered.
+  Its public-fetch flag lets SSR call the public API even when it is another Worker in the same zone.
 - Do not edit `src/routeTree.gen.ts` or regenerate it with `tsr`.
 - Keep independent test configuration so application plugins stay outside tests.
 
@@ -69,4 +75,5 @@ and [verification](../../docs/development/testing.md).
 bun run --cwd apps/web check
 bun run --cwd apps/web test
 bun run build:web
+bun run build:web:cloudflare
 ```

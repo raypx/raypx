@@ -12,16 +12,22 @@
   ],
   "workspaces": {
     "apps/api": {
-      "entry": ["server/app.ts", "server/runtime.plugin.ts"]
+      "entry": ["server/app/*.ts", "server/runtime/plugin.ts"]
     },
     "apps/desktop": {
-      "entry": ["src/routes/**/*.tsx", "native/main.ts", "native/smoke.ts", "electrobun.config.ts"]
+      "entry": [
+        "src/routes/**/*.tsx",
+        "native/main.ts",
+        "tests/native/smoke/scenario.ts",
+        "electrobun.config.ts",
+        "scripts/native/*.ts"
+      ]
     },
     "apps/web": {
       "entry": ["src/routes/**/*.{ts,tsx}"]
     },
     "apps/cli": {
-      "entry": ["src/main.ts", "src/build.ts", "src/smoke.ts"]
+      "entry": ["src/main.ts", "tests/smoke/*.ts"]
     },
     "packages/tooling": {
       "entry": ["src/cli.ts"]

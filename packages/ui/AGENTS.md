@@ -34,6 +34,9 @@ Preserve the original brand artwork and Neutral light/dark values.
   base layer so component utilities can override defaults.
 - Keep an independent Vitest config so Vite application plugins never enter tests.
 
+Component suites live under `tests/component/`, grouped by feature when needed.
+Keep shared test setup in `tests/setup.ts`.
+
 ## Verification
 
 ```sh

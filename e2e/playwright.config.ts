@@ -12,7 +12,7 @@ export default defineConfig({
   projects: [{ name: "chromium" }],
   webServer: [
     {
-      command: "bun run serve-web.ts",
+      command: "bun run tests/helpers/serve-web.ts",
       url: "http://127.0.0.1:4173",
       reuseExistingServer: !process.env.CI,
       timeout: 30000,

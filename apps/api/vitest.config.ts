@@ -1,3 +1,24 @@
 import { workspaceTests } from "../../test.config.js";
+import { defineConfig } from "vite-plus/test/config";
 
-export default workspaceTests({ include: ["server/**/*.{test,spec}.{ts,tsx}"] });
+export default defineConfig(({ mode }) => {
+  switch (mode) {
+    case "postgres":
+      return workspaceTests({
+        include: ["tests/postgres/node/**/*.{test,spec}.{ts,tsx}"],
+        fileParallelism: false,
+      });
+    case "cloudflare-postgres":
+      return workspaceTests({
+        include: ["tests/postgres/cloudflare/**/*.{test,spec}.{ts,tsx}"],
+        fileParallelism: false,
+      });
+    default:
+      return workspaceTests({
+        include: [
+          "tests/unit/**/*.{test,spec}.{ts,tsx}",
+          "tests/integration/**/*.{test,spec}.{ts,tsx}",
+        ],
+      });
+  }
+});

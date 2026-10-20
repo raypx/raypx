@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
-import manifest from "../package.json";
 import { runCommand } from "./commands";
+import { parseCliArgs } from "./commands/args";
 import { errorPayload } from "./runtime/errors";
-import { serveStdio } from "./transport/stdio";
 import { diagnosticCode, recordDiagnostic, type RecordDiagnostic } from "./diagnostics";
 import { createCliLogging } from "./logging";
 
@@ -12,36 +11,32 @@ const startedAt = performance.now();
 const options: { dataDir?: string; profile?: string; recordDiagnostic: RecordDiagnostic } = {
   recordDiagnostic: logging.record,
 };
-let mode: "command" | "stdio" | "version" = "command";
+let mode: "command" | "stdio" | "version" | "tui" = "command";
 let code: string | undefined;
 try {
-  for (const [flag, key] of [
-    ["--data-dir", "dataDir"],
-    ["--profile", "profile"],
-  ] as const) {
-    const index = args.indexOf(flag);
-    if (index >= 0) {
-      const value = args[index + 1];
-      if (!value || value.startsWith("--")) throw new Error(`${flag} requires a value`);
-      options[key] = value;
-      args.splice(index, 2);
-    }
-  }
-  mode = args[0] === "stdio" ? "stdio" : args[0] === "--version" ? "version" : "command";
-  if (args[0] === "--version") console.log(manifest.version);
-  else if (args[0] === "stdio") await serveStdio(options);
-  else await runCommand(args, options);
+  const invocation = parseCliArgs(args);
+  mode = invocation.version
+    ? "version"
+    : invocation.positionals[0] === "stdio" && !invocation.help
+      ? "stdio"
+      : invocation.positionals[0] === "tui" && !invocation.help
+        ? "tui"
+        : "command";
+  await runCommand(invocation, options);
 } catch (error) {
   code = diagnosticCode(error);
   console.error(JSON.stringify(errorPayload(error)));
   process.exitCode = 1;
 } finally {
+  const exitCode = Number(process.exitCode ?? 0);
+  const completionCode =
+    code ?? (exitCode === 130 ? "INTERRUPTED" : exitCode === 143 ? "TERMINATED" : undefined);
   recordDiagnostic(logging.record, {
     operation: "cli.completed",
     mode,
-    outcome: code ? "failed" : "success",
+    outcome: code || exitCode !== 0 ? "failed" : "success",
     elapsedMs: Math.max(0, Math.round(performance.now() - startedAt)),
-    ...(code ? { code } : {}),
+    ...(completionCode ? { code: completionCode } : {}),
   });
   try {
     await logging.close();

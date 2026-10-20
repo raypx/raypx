@@ -8,6 +8,18 @@ The standalone Raypx local execution host. It runs without login, Node or a glob
 
 `raypx files`, `raypx jobs`, `raypx tools`, and private `raypx stdio` share the runtime. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
 
+Public commands use an explicit citty tree; `roots` and the existing JSON params remain supported.
+Validate global options strictly before dispatch, preserving operands after `--`. Generate scoped
+help with `renderUsage`; never use `runMain` or let citty print errors or exit the process.
+Raypx owns confirmation, result output, diagnostics and shutdown. Internal RPC additions do not
+automatically become public commands.
+
+`raypx tui` is a lazy-loaded, line-oriented task browser with no additional dependencies.
+Require both stdin/stdout TTYs and reject `--json`/`--yes`; help stays non-interactive.
+It owns a single in-process runtime with `scheduler:false`, uses its request interface,
+and closes only its own work on quit/EOF/signals. Restore input state and sanitize display
+text; never rewrite persisted output. Cross-owner control and default no-arg TUI remain planned.
+
 ## Ownership
 
 Own authorized directory operations, device-local SQLite state, Cron scheduling, external commands and interactive terminals. Shared wire schemas live in `@raypx/contracts/local`.
@@ -34,6 +46,13 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
 
 ## Verification
 
-`tests/smoke.ts` validates the built executable separately from the unit tests.
+Tests live under `tests/`, with subdirectories mirroring the runtime, commands and TUI.
+Runtime suites are split by files, jobs, process and state under `tests/runtime/`,
+with temporary profile creation and cleanup in `tests/helpers/runtime.ts`.
+`tests/smoke/artifact.ts` validates the built executable separately from the unit tests.
+`tests/smoke/tui.ts` owns the explicit PTY smoke gate.
+`smoke:tui` is an explicit POSIX PTY gate using system Python 3 for terminal flags,
+signals, descendant cleanup and coexistence with a Desktop scheduler. It is not a
+runtime dependency or part of the cross-platform default verify gate.
 
 `bun run --cwd apps/cli check`, `bun run --cwd apps/cli test`, `bun run --cwd apps/cli build`, then `bun run --cwd apps/cli smoke`.

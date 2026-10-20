@@ -47,8 +47,10 @@ See [foundation architecture](../../docs/architecture/0034-extensible-foundation
 
 ## Verification
 
-Pure helpers and streamed SSR use the Node test project; browser/provider hydration
-tests use the separate jsdom project so React renderers do not share module context.
+Pure helpers and streamed SSR live in `tests/node/` and use the Node test project;
+`tests/browser/` uses the separate jsdom project for browser/provider hydration
+so React renderers do not share module context. Provider component tests live
+under `tests/browser/component/` for directory-based task selection.
 
 ```sh
 bun run --cwd packages/i18n check

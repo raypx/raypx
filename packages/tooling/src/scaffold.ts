@@ -28,9 +28,9 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     Object.assign(scripts, {
       test: "bun --bun vp test --run --passWithNoTests",
       "test:unit":
-        "bun --bun vp test --run --passWithNoTests --exclude '**/*.component.test.{ts,tsx}' --exclude '**/*.integration.test.{ts,tsx}'",
-      "test:integration": "bun --bun vp test --run --passWithNoTests integration.test",
-      "test:component": "bun --bun vp test --run --passWithNoTests component.test",
+        "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
+      "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
+      "test:component": "bun --bun vp test --run --passWithNoTests component/",
     });
   const manifest = {
     name: packageName,
@@ -53,7 +53,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
         : "node";
   const files: Record<string, string> = {
     "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
-    "tsconfig.json": `${JSON.stringify({ extends: `@voidmix/tsconfig/${config}.json`, compilerOptions: { ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}), ...(options.target === "bun" ? { types: ["bun"] } : {}) }, include: ["src/**/*.ts", "src/**/*.tsx"] }, null, 2)}\n`,
+    "tsconfig.json": `${JSON.stringify({ extends: `@voidmix/tsconfig/${config}.json`, compilerOptions: { ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}), ...(options.target === "bun" ? { types: ["bun"] } : {}) }, include: ["src/**/*.ts", "src/**/*.tsx", ...(options.tests ? ["tests/**/*.ts", "tests/**/*.tsx"] : [])] }, null, 2)}\n`,
     "src/index.ts": "export {};\n",
     "AGENTS.md": `# ${packageName}\n\n## Purpose\n\n${options.target} ${options.kind}; describe its responsibility before adding behavior.\n\n## Interface\n\nPublic exports are declared in package.json.\n\n## Constraints\n\nUse public workspace entries and keep dependencies acyclic.\n\n## Verification\n\nRun bun run --cwd ${directory} check${options.tests ? " and test" : ""}.\n`,
     ...(options.tests

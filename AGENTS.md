@@ -28,8 +28,13 @@ The accepted foundation design supersedes documents in docs/history.
 - `.nvmrc` pins Node and root `packageManager` pins Bun. Tooling reads them; `raypx-dev policy`
   rejects drift in engines, Dockerfiles, CI and documented versions.
 - Node runs the Nitro Web and API services: scripts call `bun vp` (never `bun --bun vp`)
-  for dev/build/preview, and production uses Node 24.15.0. Desktop uses Electrobun's pinned host.
-- Turbo owns the sole task graph/cache. mise is the recommended runtime manager; mise.toml
+  for dev/build/preview, and the default production target uses Node 24.15.0.
+  Explicit `build:cloudflare` tasks use Nitro's cloudflare_module preset and a separate
+  `.output-cloudflare` directory. Runtime adapters share the same API and auth logic.
+  Desktop uses Electrobun's pinned host.
+- Turbo owns the sole task graph/cache and uses loose environment mode. Keep variables
+  affecting cached outputs in `env`/`globalEnv`; other parent variables pass through automatically.
+  mise is the recommended runtime manager; mise.toml
   only enables reading .nvmrc/package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
   Keep external versions there and use workspace:* for internal dependencies.
@@ -37,7 +42,8 @@ The accepted foundation design supersedes documents in docs/history.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
-- Root tests share test.config.ts; application Vite plugins must not enter the test runner.
+- Put test suites and test-only setup/fixtures in each workspace's `tests/` directory.
+  Shared runner defaults live in root test.config.ts; application Vite plugins must not enter the test runner.
 
 ## Code and data
 

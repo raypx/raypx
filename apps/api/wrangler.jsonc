@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "raypx-api",
+  "main": "./.output-cloudflare/server/index.mjs",
+  "compatibility_date": "2026-10-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "no_bundle": true,
+  "rules": [
+    {
+      "type": "ESModule",
+      "globs": ["**/*.mjs", "**/*.js"],
+    },
+  ],
+  "vars": {
+    "NODE_ENV": "production",
+  },
+}

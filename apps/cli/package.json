@@ -11,11 +11,13 @@
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "build": "bun --bun vp pack",
-    "smoke": "bun run tests/smoke.ts"
+    "smoke": "bun run tests/smoke/artifact.ts",
+    "smoke:tui": "bun run tests/smoke/tui.ts"
   },
   "dependencies": {
     "@raypx/contracts": "workspace:*",
     "@voidmix/logger": "catalog:",
+    "citty": "catalog:",
     "croner": "catalog:"
   },
   "devDependencies": {
