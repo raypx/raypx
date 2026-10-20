@@ -1,0 +1,51 @@
+.gitignore
+  s_8dc12600293846::t_1053525eb259f1 60-61
+.prettierignore
+  s_8dc12600293846::t_7923d2298f0eee 12-13,23
+apps/api/package.json
+  s_8dc12600293846::t_f78a0fa260dfe1 31
+apps/api/server/runtime/cloudflare.ts
+  s_8dc12600293846::t_911179f6c7dbca 1
+apps/api/server/runtime/node.ts
+  s_8dc12600293846::t_b6e8c1de139943 1
+apps/api/server/runtime/shared.ts
+  s_8dc12600293846::t_b01d43723f6a85 3-4
+apps/api/tests/postgres/cloudflare/auth.test.ts
+  s_8dc12600293846::t_0981785a50a985 7-8
+apps/api/tests/postgres/node/auth.test.ts
+  s_8dc12600293846::t_6c5af2d22ab4ef 4-5
+bun.lock
+  s_8dc12600293846::t_3dcd2f10ed557e 30,214-215,842
+docs/architecture/0034-extensible-foundation.md
+  s_8dc12600293846::t_4e0be1a51adb25 8
+docs/development/cloudflare.md
+  s_8dc12600293846::t_49628b9e5f33d2 78
+knip.json
+  s_8dc12600293846::t_39db424b5b9936 35
+packages/auth/AGENTS.md
+  s_8dc12600293846::t_a5fe26d58cc0a4 25
+packages/database/AGENTS.md
+  s_8dc12600293846::t_76c83b45aa3509 1,26-28
+packages/database/package.json
+  s_8dc12600293846::t_e05d0caee95371 2
+packages/tooling/AGENTS.md
+  s_8dc12600293846::t_e557d8000548d2 21-22
+packages/tooling/src/cli.ts
+  s_8dc12600293846::t_a1453b5d498dca 88-90,96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "775714b4576fe1dc224d009f3b751b8c08c6dc64",
+  "prompts": {},
+  "sessions": {
+    "s_8dc12600293846": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15a0b-3409-7190-9985-c657812904ed",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
