@@ -9,8 +9,8 @@
 packages/*/dist/
 
 # Generated Drizzle migrations and metadata.
-packages/db/drizzle/
-packages/db/drizzle-cloud/
+packages/database/drizzle/
+packages/database/drizzle-cloud/
 
 # Vendored agent skills. These are upstream bytes reproduced verbatim so
 # `skills update` can replace them and the lockfile hash stays meaningful.
@@ -20,4 +20,4 @@ packages/db/drizzle-cloud/
 docs/history/
 packages/ui/src/styles/theme.css
 
-packages/db/drizzle-foundation/
+packages/database/drizzle-foundation/

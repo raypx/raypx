@@ -5,7 +5,7 @@ requirements in historical ADRs. Approved by the user for this rebuild.
 
 Remove retired business apps/libraries. Keep Web, Desktop, Mobile, API and CLI
 (Mobile was later removed on 2026-10-18; phones use Web until native needs return),
-with eight libraries: auth, client, contracts, db, i18n, mail, ui and tooling.
+with eight libraries: auth, client, contracts, database, i18n, mail, ui and tooling.
 Theme is part of UI; local implementation remains inside CLI runtime. Source
 exports and explicit per-entry platform metadata allow future package extraction.
 

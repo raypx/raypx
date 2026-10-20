@@ -18,8 +18,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 
 ## Constraints
 
-No product workspace imports this package at runtime. Do not import db, auth or
-client implementations; delegate database commands to db's scripts. Derive all
+No product workspace imports this package at runtime. Do not import database, auth or
+client implementations; delegate database commands to database's scripts. Derive all
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.

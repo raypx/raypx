@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
-import { connectDatabase, migrateDatabase } from "@raypx/db";
-import { schema, user } from "@raypx/db/schema";
+import { connectDatabase, migrateDatabase } from "@raypx/database";
+import { schema, user } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../../server/api.js";

@@ -1,7 +1,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
-import type { DatabaseConnection } from "@raypx/db/connection";
-import { schema } from "@raypx/db/schema";
+import type { DatabaseConnection } from "@raypx/database/connection";
+import { schema } from "@raypx/database/schema";
 import { createMailer } from "@raypx/mail/server";
 import type { ApiLogging } from "../logging.js";
 import { createApiApp } from "../api.js";

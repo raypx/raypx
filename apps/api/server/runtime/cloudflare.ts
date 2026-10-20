@@ -1,4 +1,4 @@
-import { connectDatabase } from "@raypx/db/connection";
+import { connectDatabase } from "@raypx/database/connection";
 
 import { getApiEnvironment } from "../env.js";
 import { createApiLogging, type ApiLogging } from "../logging.js";

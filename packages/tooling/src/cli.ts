@@ -85,13 +85,15 @@ async function main() {
     }
     case "db": {
       const operation = args[0] ?? "migrate";
-      const manifest = JSON.parse(readFileSync(join(root, "packages/db/package.json"), "utf8"));
+      const manifest = JSON.parse(
+        readFileSync(join(root, "packages/database/package.json"), "utf8"),
+      );
       if (!["migrate", "generate", "studio"].includes(operation) || !manifest.scripts[operation])
         throw new Error(`Unsupported database operation: ${operation}`);
       await run(
         process.execPath,
         ["run", operation, ...args.slice(1)],
-        join(root, "packages/db"),
+        join(root, "packages/database"),
         developmentEnvironment(root),
       );
       break;

@@ -75,7 +75,7 @@ Local Node development continues to use the existing development environment.
 
 The same PostgreSQL schema and migrations serve both targets. Run migration
 commands with the existing Node/Bun tooling against the intended new foundation
-database. Worker requests import `@raypx/db/connection`, which excludes migration
+database. Worker requests import `@raypx/database/connection`, which excludes migration
 code and filesystem access.
 
 The API accepts an optional `HYPERDRIVE` binding. Create a Hyperdrive configuration

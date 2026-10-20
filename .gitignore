@@ -57,8 +57,8 @@ CLAUDE.local.md
 .DS_Store
 
 # Cloud test helpers are TypeScript sources; incidental emitted siblings stay local.
-/packages/db/tests/cloud-*.js*
-/packages/db/tests/cloud-*.d.ts*
+/packages/database/tests/cloud-*.js*
+/packages/database/tests/cloud-*.d.ts*
 
 # Generated application artifacts
 apps/*/.output/

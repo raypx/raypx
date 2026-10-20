@@ -1,4 +1,4 @@
-# @raypx/db
+# @raypx/database
 
 ## Purpose
 
@@ -23,7 +23,7 @@ Keep filesystem-based migrations in `migrate.ts` and outside Worker runtime impo
 ## Verification
 
 ```sh
-bun run --cwd packages/db check
-bun run --cwd packages/db test
-DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/db generate
+bun run --cwd packages/database check
+bun run --cwd packages/database test
+DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/database generate
 ```

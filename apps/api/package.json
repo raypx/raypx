@@ -28,7 +28,7 @@
     "@raypx/account": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/contracts": "workspace:*",
-    "@raypx/db": "workspace:*",
+    "@raypx/database": "workspace:*",
     "@raypx/mail": "workspace:*",
     "evlog": "catalog:",
     "hono": "catalog:",

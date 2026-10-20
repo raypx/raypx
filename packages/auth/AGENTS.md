@@ -22,7 +22,7 @@ instances, callback origins, query sources, navigation adapters and session data
 
 ## Constraints
 
-Do not import db, mail, remote client or application implementations. Require
+Do not import database, mail, remote client or application implementations. Require
 verified email for password sign-in. Resolve sessions on the server for each RPC.
 Keep account types free from credentials and retired role/status requirements.
 

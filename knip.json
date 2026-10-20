@@ -32,7 +32,7 @@
     "packages/tooling": {
       "entry": ["src/cli.ts"]
     },
-    "packages/db": {
+    "packages/database": {
       "entry": ["src/index.ts", "src/commands.ts", "drizzle.config.ts"]
     },
     "e2e": {

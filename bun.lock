@@ -27,7 +27,7 @@
         "@raypx/account": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/contracts": "workspace:*",
-        "@raypx/db": "workspace:*",
+        "@raypx/database": "workspace:*",
         "@raypx/mail": "workspace:*",
         "evlog": "catalog:",
         "hono": "catalog:",
@@ -211,8 +211,8 @@
         "@vitest/coverage-v8": "catalog:dev",
       },
     },
-    "packages/db": {
-      "name": "@raypx/db",
+    "packages/database": {
+      "name": "@raypx/database",
       "version": "0.0.0",
       "dependencies": {
         "@raypx-kit/env": "catalog:",
@@ -839,7 +839,7 @@
 
     "@raypx/contracts": ["@raypx/contracts@workspace:packages/contracts"],
 
-    "@raypx/db": ["@raypx/db@workspace:packages/db"],
+    "@raypx/database": ["@raypx/database@workspace:packages/database"],
 
     "@raypx/e2e": ["@raypx/e2e@workspace:e2e"],
 
