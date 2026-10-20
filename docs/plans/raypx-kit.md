@@ -12,7 +12,7 @@ raypx-kit 是一个**自用**的独立仓库（`raypx/raypx-kit`，默认分支 
 当前状态（2026-10-20）：codemods、devkit、drizzle、drizzle-kit、env、intl、logger、storage、
 tsconfig 九个包已发布 `0.0.0-alpha.0`，并配置 trusted publisher，之后由 CI 自动发版。
 raypx 已改用 `@raypx-kit/*`，只有 logger 仍是 `@voidmix/logger` 的 vendor 归档（见下方
-logger 一节）。旧的 `@voidmix/*` 包在 npm 上 deprecate，voidmix 仓库待归档。
+logger 一节）。旧的 `@voidmix/*` 包保留在 npm 上、不做 deprecate；voidmix 仓库待归档。
 
 ## 和 next-forge 的关键区别（所有包都必须遵守）
 
