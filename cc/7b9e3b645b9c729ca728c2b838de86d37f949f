@@ -1,0 +1,140 @@
+AGENTS.md
+  h_f0766e80fd3864 41-42
+apps/api/package.json
+  h_f0766e80fd3864 26,38
+apps/api/server/env.ts
+  h_f0766e80fd3864 1
+apps/api/tsconfig.json
+  h_f0766e80fd3864 2
+apps/cli/package.json
+  h_f0766e80fd3864 24
+apps/cli/tsconfig.json
+  h_f0766e80fd3864 2
+apps/desktop/package.json
+  h_f0766e80fd3864 44
+apps/desktop/tsconfig.json
+  h_f0766e80fd3864 2
+apps/desktop/tsconfig.native.json
+  h_f0766e80fd3864 2
+apps/desktop/tsconfig.node.json
+  h_f0766e80fd3864 2
+apps/web/package.json
+  h_f0766e80fd3864 35
+apps/web/tsconfig.json
+  h_f0766e80fd3864 2
+bun.lock
+  h_f0766e80fd3864 8,25,37,61,88,121,143,158,177,198,210,218,223,232,235,256,269-270,274,291,322-323,352-353,364,474,476,478,824-831,1210,1590-1591,1626-1628,1630,1632,1634,1636,1638,1640,1642,1644,1646,1648,1650,1652,1654,1656,1658,1660,1662,1664
+docs/README.md
+  h_f0766e80fd3864 9
+docs/architecture/README.md
+  h_f0766e80fd3864 49,89
+docs/architecture/internationalization.md
+  h_f0766e80fd3864 4,82
+docs/development/getting-started.md
+  h_f0766e80fd3864 32
+docs/development/intl-release.md
+  h_f0766e80fd3864 1,3-4,10,14,18,21,28,40,59,66,71,76,79,83-85
+e2e/package.json
+  h_f0766e80fd3864 12-13
+e2e/tsconfig.json
+  h_f0766e80fd3864 2
+package.json
+  h_f0766e80fd3864 19-20,57-59,116
+packages/account/package.json
+  h_f0766e80fd3864 27
+packages/account/tsconfig.json
+  h_f0766e80fd3864 2
+packages/auth/package.json
+  h_f0766e80fd3864 28
+packages/auth/tsconfig.json
+  h_f0766e80fd3864 2
+packages/client/package.json
+  h_f0766e80fd3864 23-24
+packages/client/tsconfig.json
+  h_f0766e80fd3864 2
+packages/contracts/package.json
+  h_f0766e80fd3864 24-25
+packages/contracts/tsconfig.json
+  h_f0766e80fd3864 2
+packages/db/package.json
+  h_f0766e80fd3864 23,28
+packages/db/src/env.ts
+  h_f0766e80fd3864 1
+packages/db/tsconfig.json
+  h_f0766e80fd3864 2
+packages/i18n/AGENTS.md
+  h_f0766e80fd3864 6,25-26,44
+packages/i18n/README.md
+  h_f0766e80fd3864 3,6
+packages/i18n/package.json
+  h_f0766e80fd3864 27,30
+packages/i18n/src/accept-language.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/browser.tsx
+  h_f0766e80fd3864 1,15
+packages/i18n/src/errors.ts
+  h_f0766e80fd3864 8
+packages/i18n/src/formats.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/formatter.ts
+  h_f0766e80fd3864 1-2,5
+packages/i18n/src/react.ts
+  h_f0766e80fd3864 2
+packages/i18n/src/runtime.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/server.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/testing.ts
+  h_f0766e80fd3864 6
+packages/i18n/src/translator.ts
+  h_f0766e80fd3864 1
+packages/i18n/src/types.ts
+  h_f0766e80fd3864 1,21
+packages/i18n/tsconfig.json
+  h_f0766e80fd3864 2
+packages/mail/package.json
+  h_f0766e80fd3864 22
+packages/mail/tsconfig.json
+  h_f0766e80fd3864 2
+packages/tooling/AGENTS.md
+  h_f0766e80fd3864 6,25
+packages/tooling/package.json
+  h_f0766e80fd3864 21-22,26
+packages/tooling/src/cli.ts
+  h_f0766e80fd3864 5-7
+packages/tooling/src/policy.ts
+  h_f0766e80fd3864 3-8
+packages/tooling/src/repository.ts
+  h_f0766e80fd3864 2-4,6
+packages/tooling/src/scaffold.ts
+  h_f0766e80fd3864 3,44,56
+packages/tooling/src/smoke/cloudflare.ts
+  h_f0766e80fd3864 5
+packages/tooling/src/smoke/index.ts
+  h_f0766e80fd3864 4
+packages/tooling/src/smoke/node.ts
+  h_f0766e80fd3864 2
+packages/tooling/tests/helpers/workspace.ts
+  h_f0766e80fd3864 5
+packages/tooling/tests/unit/scaffold.test.ts
+  h_f0766e80fd3864 4,26
+packages/tooling/tsconfig.json
+  h_f0766e80fd3864 2
+packages/ui/package.json
+  h_f0766e80fd3864 60
+packages/ui/tsconfig.json
+  h_f0766e80fd3864 2
+tsconfig.json
+  h_f0766e80fd3864 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cc7b9e3b645b9c729ca728c2b838de86d37f949f",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
