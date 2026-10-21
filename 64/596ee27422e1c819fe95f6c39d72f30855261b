@@ -1,0 +1,61 @@
+apps/web/AGENTS.md
+  s_de2d79b0b75518::t_5bf60ee1302b8f 18-29,35-36,42,62,95-96
+apps/web/src/components/web-shell.tsx
+  s_de2d79b0b75518::t_a8bdfdfeafce9b 2,5-7,95
+apps/web/src/features/auth/account.ts
+  s_de2d79b0b75518::t_515f34a026ed30 5-7,25-53
+apps/web/src/routes/(app)/route.tsx
+  s_de2d79b0b75518::t_528bb50dfb119d 1-14
+apps/web/tests/component/routes/auth.test.tsx
+  s_de2d79b0b75518::t_4c6ce376b54d96 30,45,47-48,74,131-143,145-151
+packages/tasks/src/client/pending-count.tsx
+  s_de2d79b0b75518::t_f9d25debaede30 1-19
+packages/tasks/src/client/remote-query.ts
+  s_de2d79b0b75518::t_f0509209258e2e 1-65
+packages/tooling/src/smoke/cloudflare.ts
+  s_de2d79b0b75518::t_4f44e7eab7070f 134-138,140-141,143,146,150-152,190-195
+packages/tooling/src/smoke/node.ts
+  s_de2d79b0b75518::t_ecebe4f0ff33c3 92-102,105,119-124
+apps/web/src/features/tasks/client.ts
+  s_900a66df702cc8::t_e18deb9c1fb50a 1-7
+apps/web/src/routeTree.gen.ts
+  s_900a66df702cc8::t_1e56e2bb51d1ab 12-13,15-18,25-26,29-30,38-48,51,53,56,59,61,64,66,69,71,74,76,79,81,86-88,94,98-100,106,110-111,113-115,121,127-128,135,139-140,147,150-151,153-155,161,165-166,172-176,179-183,193-208,211-212,214-215,218-219,226,233,240,247,254,259-285,292-301
+apps/web/tests/component/routes/settings.test.tsx
+  s_900a66df702cc8::t_4d43730efd1c99 6
+packages/client/package.json
+  s_900a66df702cc8::t_ca7fa2574c017e 6
+packages/contracts/package.json
+  s_900a66df702cc8::t_ffa155dedbb7c4 6
+packages/tasks/AGENTS.md
+  s_900a66df702cc8::t_1612971ca57a45 5-6
+packages/tasks/package.json
+  s_900a66df702cc8::t_75ee1f6be557cd 9,40
+packages/tasks/src/client.ts
+  s_900a66df702cc8::t_f148b630a542ba 1-3
+packages/tasks/src/client/workspace.tsx
+  s_900a66df702cc8::t_5a7e0dda05822f 1,3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "64596ee27422e1c819fe95f6c39d72f30855261b",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
