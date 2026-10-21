@@ -30,8 +30,10 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
+  apiClient: {},
   loadAccount: async () => ({ status: "signed-out" }),
   authClient: {
+    useSession: () => ({ data: null, isPending: false }),
     signIn: { email: mocks.signIn },
     signUp: { email: mocks.signUp },
     sendVerificationEmail: mocks.resend,

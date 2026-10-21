@@ -1,3 +1,6 @@
+import { RemoteSettings } from "../features/tasks/settings";
+import { DeviceSettings } from "@raypx/tasks/client";
+import { apiClient, authClient } from "../features/auth/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { Languages } from "lucide-react";
 import { ThemePicker, useTheme } from "@raypx/ui/theme/client";
@@ -9,6 +12,7 @@ function SettingsPage() {
   const t = useTranslations("settings");
   const c = useTranslations("common");
   const { theme, setTheme } = useTheme();
+  const session = authClient.useSession();
   return (
     <section className="mx-auto max-w-[960px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
       <header className="mb-10">
@@ -34,6 +38,12 @@ function SettingsPage() {
         </div>
         <LanguageSelect icon={<Languages size={18} />} />
       </section>
+      <RemoteSettings key={session.data?.user.id ?? "signed-out"} />
+      <DeviceSettings
+        client={apiClient}
+        accountId={session.data?.user.id ?? null}
+        pending={session.isPending}
+      />
       <p className="mt-6 text-xs text-muted-foreground">{t("localHint")}</p>
     </section>
   );

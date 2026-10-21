@@ -16,7 +16,7 @@ it("reads request bindings without inheriting process configuration and prefers 
   expect(environment.DATABASE_URL).toBe("postgres://pooled:fixture@localhost/pooled_test");
 });
 
-function runtime(close = vi.fn(async () => {})): ApiRuntime {
+function runtime(close = vi.fn(async () => {})): Pick<ApiRuntime, "app" | "close"> {
   return {
     app: createApiApp({
       authHandler: async (request) => Response.json({ account: request.headers.get("x-test") }),

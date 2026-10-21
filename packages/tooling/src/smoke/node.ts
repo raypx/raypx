@@ -58,9 +58,29 @@ export async function probeApi(root: string): Promise<void> {
         throw new Error(
           "Unconfigured mail must reject signup before any database or delivery attempt",
         );
+      await new Promise<void>((resolve, reject) => {
+        const url = new URL("/relay", base);
+        url.protocol = "ws:";
+        const socket = new WebSocket(url);
+        const timer = setTimeout(() => {
+          socket.close();
+          reject(new Error("Node Relay WebSocket handshake timed out"));
+        }, 5000);
+        // An unauthenticated frame exercises the real Nitro upgrade without a database.
+        socket.addEventListener("open", () => socket.send(JSON.stringify({ type: "ping" })));
+        socket.addEventListener("error", () => {
+          clearTimeout(timer);
+          reject(new Error("Node Relay WebSocket upgrade failed"));
+        });
+        socket.addEventListener("close", (event) => {
+          clearTimeout(timer);
+          if (event.code === 4001) resolve();
+          else reject(new Error(`Node Relay rejected authentication with ${event.code}`));
+        });
+      });
     },
   );
-  console.log("Node API artifact probe passed (relocated output, health, 404s, mail guard)");
+  console.log("Node API artifact probe passed (relocated output, health, 404s, mail guard, Relay)");
 }
 
 export async function probeWeb(root: string): Promise<void> {

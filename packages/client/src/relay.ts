@@ -1,0 +1,131 @@
+import {
+  relayServerSchema,
+  MAX_RELAY_BYTES,
+  type RelayClientFrame,
+  type RelayServerFrame,
+} from "@raypx/contracts/api";
+
+export type RelaySocketFactory = (url: string) => WebSocket;
+export function relayUrl(baseUrl: string, accountId?: string) {
+  const url = new URL("/relay", baseUrl);
+  if (
+    url.protocol !== "https:" &&
+    !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname))
+  )
+    throw new Error("RELAY_REQUIRES_HTTPS");
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  if (accountId) url.searchParams.set("account", accountId);
+  return url.href;
+}
+export class RelayConnection {
+  private socket: WebSocket | undefined;
+  private retry: ReturnType<typeof setTimeout> | undefined;
+  private heartbeat: ReturnType<typeof setInterval> | undefined;
+  private enabled = false;
+  private generation = 0;
+  private failures = 0;
+  private lastMessage = 0;
+  constructor(
+    private readonly options: {
+      url: string;
+      authenticate: () => Promise<Extract<RelayClientFrame, { type: "auth" }>>;
+      message: (frame: RelayServerFrame) => void;
+      status: (connected: boolean, code?: string) => void;
+      socket?: RelaySocketFactory;
+    },
+  ) {}
+  start() {
+    if (this.enabled) return;
+    this.enabled = true;
+    this.connect();
+  }
+  restart() {
+    this.stop();
+    this.start();
+  }
+  private connect() {
+    if (!this.enabled) return;
+    const generation = ++this.generation;
+    try {
+      const socket = (this.options.socket ?? ((url) => new WebSocket(url)))(this.options.url);
+      this.socket = socket;
+      socket.addEventListener("open", () => {
+        void this.options.authenticate().then(
+          (frame) => {
+            if (this.enabled && generation === this.generation) this.send(frame);
+          },
+          () => {
+            if (generation === this.generation) socket.close(4001, "Authentication unavailable");
+          },
+        );
+      });
+      socket.addEventListener("message", (event) => {
+        if (generation !== this.generation) return;
+        try {
+          if (
+            typeof event.data !== "string" ||
+            new TextEncoder().encode(event.data).byteLength > MAX_RELAY_BYTES
+          )
+            throw new Error("Invalid relay frame");
+          const frame = relayServerSchema.parse(JSON.parse(event.data));
+          this.lastMessage = Date.now();
+          if (frame.type === "ready") {
+            this.failures = 0;
+            this.options.status(true);
+            this.heartbeat = setInterval(() => {
+              if (Date.now() - this.lastMessage > 45_000) socket.close(4000, "Heartbeat timeout");
+              else this.send({ type: "ping" });
+            }, 15_000);
+          }
+          this.options.message(frame);
+        } catch {
+          socket.close(4000, "Invalid relay frame");
+        }
+      });
+      socket.addEventListener("error", () => socket.close());
+      socket.addEventListener("close", (event) => {
+        if (generation !== this.generation) return;
+        if (this.heartbeat) clearInterval(this.heartbeat);
+        this.heartbeat = undefined;
+        this.socket = undefined;
+        this.options.status(
+          false,
+          event.code === 4003
+            ? "DEVICE_REVOKED"
+            : event.code === 4001
+              ? "AUTH_REQUIRED"
+              : "NETWORK_UNAVAILABLE",
+        );
+        if (this.enabled && generation === this.generation)
+          this.retry = setTimeout(
+            () => this.connect(),
+            Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)),
+          );
+      });
+    } catch {
+      this.options.status(false, "NETWORK_UNAVAILABLE");
+      if (this.enabled) this.retry = setTimeout(() => this.connect(), 2000);
+    }
+  }
+  send(frame: RelayClientFrame) {
+    const value = JSON.stringify(frame);
+    if (new TextEncoder().encode(value).byteLength > MAX_RELAY_BYTES)
+      throw new Error("RELAY_FRAME_LIMIT");
+    if (this.socket?.readyState !== 1) throw new Error("NETWORK_UNAVAILABLE");
+    if (this.socket.bufferedAmount > 2 * MAX_RELAY_BYTES) {
+      this.socket.close(4000, "Backpressure");
+      throw new Error("NETWORK_UNAVAILABLE");
+    }
+    this.socket.send(value);
+  }
+  stop() {
+    this.enabled = false;
+    this.generation++;
+    if (this.retry) clearTimeout(this.retry);
+    if (this.heartbeat) clearInterval(this.heartbeat);
+    this.retry = undefined;
+    this.heartbeat = undefined;
+    this.socket?.close(1000, "Disconnected");
+    this.socket = undefined;
+  }
+}

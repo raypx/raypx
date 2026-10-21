@@ -1,3 +1,4 @@
+import { ControlError, type ControlService } from "./control/service.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { implement, ORPCError } from "@orpc/server";
@@ -9,6 +10,8 @@ import type { RequestLogger } from "@raypx-kit/logger";
 import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logging.js";
 
 export interface ApiAppOptions {
+  control?: ControlService;
+  onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;
   allowedOrigins: string[];
@@ -75,7 +78,74 @@ export function createApiApp(options: ApiAppOptions) {
     return options.authHandler(c.req.raw);
   });
   const os = implement(apiContract).$context<{ headers: Headers; requestId: string }>();
+  type Context = { headers: Headers; requestId: string };
+  async function controlCall<T>(
+    context: Context,
+    run: (control: ControlService, auth: AuthSession) => Promise<T>,
+  ) {
+    const auth = await options.readSession(context.headers);
+    if (!auth)
+      throw new ORPCError("UNAUTHORIZED", {
+        data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
+      });
+    if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
+    try {
+      return await run(options.control, auth);
+    } catch (error) {
+      return controlFailure(error, context);
+    }
+  }
+  function controlFailure(error: unknown, context: Context): never {
+    if (!(error instanceof ControlError)) throw error;
+    const code =
+      error.code === "AUTH_REQUIRED" || error.code === "DEVICE_REVOKED"
+        ? "UNAUTHORIZED"
+        : error.code === "NOT_FOUND"
+          ? "NOT_FOUND"
+          : "CONFLICT";
+    throw new ORPCError(code, {
+      data: { error: { code: error.code }, requestId: context.requestId },
+    });
+  }
   const router = os.router({
+    devices: {
+      register: os.devices.register.handler(({ input, context }) =>
+        controlCall(context, (control, auth) => control.register(auth, input)),
+      ),
+      refreshGrant: os.devices.refreshGrant.handler(({ input, context }) =>
+        controlCall(context, (control, auth) => control.refreshGrant(auth, input)),
+      ),
+      list: os.devices.list.handler(({ context }) =>
+        controlCall(context, (control, auth) => control.listDevices(auth.user.id)),
+      ),
+      revoke: os.devices.revoke.handler(({ input, context }) =>
+        controlCall(context, async (control, auth) => {
+          const result = await control.revoke(auth.user.id, input);
+          await options.onRevoke?.(auth.user.id, input.deviceId);
+          return result;
+        }),
+      ),
+    },
+    tasks: {
+      list: os.tasks.list.handler(({ input, context }) =>
+        controlCall(context, (control, auth) => control.listTasks(auth.user.id, input)),
+      ),
+      get: os.tasks.get.handler(({ input, context }) =>
+        controlCall(context, (control, auth) =>
+          control.getTask(auth.user.id, input.id, input.after),
+        ),
+      ),
+    },
+    approvals: {
+      list: os.approvals.list.handler(({ context }) =>
+        controlCall(context, (control, auth) => control.listApprovals(auth.user.id)),
+      ),
+    },
+    relay: {
+      ticket: os.relay.ticket.handler(({ context }) =>
+        controlCall(context, (control, auth) => control.ticket(auth)),
+      ),
+    },
     account: {
       get: os.account.get.handler(async ({ context }) => {
         const account = await accountService.get(context.headers);

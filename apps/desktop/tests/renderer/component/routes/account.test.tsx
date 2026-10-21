@@ -44,7 +44,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
-  apiClient: { account: { get: mocks.account } },
+  apiClient: { account: { get: mocks.account }, devices: { list: async () => [] } },
   authClient: {
     signIn: { email: mocks.signIn },
     signUp: { email: vi.fn() },
@@ -52,14 +52,16 @@ vi.mock("../../../../src/features/auth/client", () => ({
     requestPasswordReset: vi.fn(),
     resetPassword: vi.fn(),
     signOut: mocks.signOut,
-    useSession: () =>
-      useSyncExternalStore(
+    useSession: () => ({
+      ...useSyncExternalStore(
         (listener) => {
           mocks.listeners.add(listener);
           return () => mocks.listeners.delete(listener);
         },
         () => mocks.session,
       ),
+      refetch: async () => {},
+    }),
   },
 }));
 // The generated tree imports terminal code, but account tests never mount xterm.
@@ -309,8 +311,9 @@ describe("Desktop account route", () => {
     expect(await screen.findByRole("heading", { name: "You’re not signed in" })).toBeTruthy();
     expect(screen.queryByText(ada.email)).toBeNull();
     expect(mocks.account).toHaveBeenCalledTimes(2);
+    const accountListeners = new Set(mocks.listeners);
     await act(async () => router.navigate({ to: "/settings" }));
-    expect(mocks.listeners.size).toBe(0);
+    for (const listener of accountListeners) expect(mocks.listeners.has(listener)).toBe(false);
     await act(async () => setSession(grace));
     expect(mocks.account).toHaveBeenCalledTimes(2);
   });

@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  taskSchema,
+  deviceCommandSchema,
+  agentProviderSchema,
+  relayCommandSchema,
+} from "./tasks.js";
 
 export const LOCAL_PROTOCOL_VERSION = 1 as const;
 export const MAX_TEXT_BYTES = 1024 * 1024;
@@ -56,6 +62,39 @@ export const jobRunSchema = z.object({
 });
 export type JobRun = z.infer<typeof jobRunSchema>;
 export const localParams = {
+  "agents.remote": z.object({ binding: z.string().min(1).max(300), command: relayCommandSchema }),
+  "agents.checkpoint": z.object({
+    binding: z.string().min(1).max(300),
+    sequence: z.number().int().min(0),
+  }),
+  "agents.replay": z.object({
+    binding: z.string().min(1).max(300),
+    after: z.number().int().min(0),
+  }),
+  "agents.snapshot": z.object({
+    binding: z.string().min(1).max(300),
+    id: z.string().uuid().optional(),
+    offset: z.number().int().min(0).default(0),
+  }),
+  "agents.capabilities": z.object({}),
+  "agents.projects": z.object({}),
+  "agents.configure": z.object({
+    rootId: z.string().uuid(),
+    providers: z.array(agentProviderSchema).max(2),
+  }),
+  "agents.start": z.object({
+    binding: z.string().min(1).max(300),
+    commandId: z.string().uuid(),
+    task: taskSchema,
+    deadline: z.string(),
+  }),
+  "agents.command": z.object({ binding: z.string().min(1).max(300), command: deviceCommandSchema }),
+  "agents.events": z.object({ binding: z.string().min(1).max(300) }),
+  "agents.ack": z.object({
+    binding: z.string().min(1).max(300),
+    ids: z.array(z.string().uuid()).max(50),
+  }),
+  "agents.detach": z.object({ binding: z.string().min(1).max(300) }),
   "runtime.info": z.object({}),
   "roots.list": z.object({}),
   "roots.register": z.object({ path: z.string().min(1) }),
@@ -108,6 +147,8 @@ export const localEventSchema = z.object({
     "tool.finished",
     "job.finished",
     "engine.status",
+    "agent.changed",
+    "sync.grantRequired",
   ]),
   data: z.record(z.string(), z.unknown()),
 });

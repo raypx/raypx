@@ -78,7 +78,12 @@ afterEach(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.account.mockRejectedValue({ code: "UNAUTHORIZED" });
-  mocks.session.mockReturnValue({ data: null, error: null, isPending: false });
+  mocks.session.mockReturnValue({
+    data: null,
+    error: null,
+    isPending: false,
+    refetch: async () => {},
+  });
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
@@ -128,6 +133,7 @@ describe("Desktop authentication routes", () => {
       data: { user: { id: "u1", name: "Ada", email: "ada@example.test" } },
       error: null,
       isPending: false,
+      refetch: async () => {},
     });
     const router = await page("/login");
     fireEvent.change(screen.getByLabelText("Email address"), {
@@ -172,11 +178,11 @@ describe("Desktop authentication routes", () => {
     expect(await screen.findByRole("status")).toBeTruthy();
   });
 
-  it("shows verification success with Desktop account and sign-in links", async () => {
+  it("shows verification success with a sign-in link and no unsigned account destination", async () => {
     await page("/verify-email?verified=1");
     expect(screen.getByText("Your email is verified. You can sign in now.")).toBeTruthy();
     expect(screen.queryByLabelText("Email address")).toBeNull();
-    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/account");
+    expect(screen.queryByRole("link", { name: "Account" })).toBeNull();
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
   });
 

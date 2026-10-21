@@ -30,6 +30,7 @@
     "@raypx/contracts": "workspace:*",
     "@raypx/database": "workspace:*",
     "@raypx/mail": "workspace:*",
+    "drizzle-orm": "catalog:",
     "evlog": "catalog:",
     "hono": "catalog:",
     "nitro": "catalog:"
@@ -38,9 +39,9 @@
     "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/client": "workspace:*",
     "@raypx/tooling": "workspace:*",
+    "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "drizzle-orm": "catalog:",
     "vite": "catalog:dev",
     "vite-plus": "catalog:dev",
     "wrangler": "catalog:dev"

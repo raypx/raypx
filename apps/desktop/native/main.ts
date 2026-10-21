@@ -1,6 +1,8 @@
 import { statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import type { LocalEvent, RootGrant } from "@raypx/contracts/local";
+import { messages } from "@raypx/i18n/messages";
+import { RemoteControl } from "./control";
 import { LocalEngine } from "./engine";
 import { createPreferenceStore } from "./preferences";
 import { BuildConfig } from "electrobun/main/build-config";
@@ -90,13 +92,44 @@ let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
 export const engine = new LocalEngine(
   cliBinary,
   manifest.version,
-  (event) => emitLocalEvent(event),
+  (event) => {
+    if (event.event === "agent.changed") void control.wake();
+    return emitLocalEvent(event);
+  },
   engineArgs,
+);
+const control = new RemoteControl(
+  process.env.RAYPX_NATIVE_SMOKE === "1"
+    ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
+    : Utils.paths.userData,
+  engine,
+  () =>
+    Utils.showNotification({
+      title: "Raypx",
+      body: messages[
+        preferences.read().locale === "zh" ||
+        (preferences.read().locale === "system" &&
+          Intl.DateTimeFormat().resolvedOptions().locale.startsWith("zh"))
+          ? "zh"
+          : "en"
+      ].tasks.notification,
+    }),
+  () => {
+    void emitLocalEvent({ version: 1, event: "sync.grantRequired", data: {} });
+  },
 );
 const rpc = BrowserView.defineRPC<DesktopRpc>({
   maxRequestTime: 5000,
   handlers: {
     requests: {
+      controlInfo: ({ accountId }) => control.info(accountId),
+      controlEnable: ({ accountId, enabled }) => control.enable(accountId, enabled),
+      controlRevoked: ({ accountId }) => control.revoked(accountId),
+      controlAttach: ({ accountId, apiUrl, grant }) => control.attach(accountId, apiUrl, grant),
+      controlDetach: async () => {
+        await control.detach();
+        return true;
+      },
       getRuntime: () => ({
         appVersion: manifest.version,
         platform: process.platform,
@@ -153,6 +186,7 @@ export async function quitDesktop(code = 0) {
   const approval = Utils.requestQuitApproval();
   if (!approval) return;
   try {
+    await control.detach();
     await engine.stop();
     // Let WebKit complete a normal page unload before graceful native shutdown.
     // A missing/failed view must never leave a reserved quit approval hanging.

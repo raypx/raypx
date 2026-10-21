@@ -6,6 +6,7 @@ import { createRuntime } from "./shared.js";
 
 export interface CloudflareBindings {
   [key: string]: unknown;
+  RAYPX_RELAY?: { getByName(name: string): { fetch(request: Request): Promise<Response> } };
   HYPERDRIVE?: { connectionString: string };
 }
 
@@ -33,6 +34,19 @@ export async function createCloudflareRuntime(bindings: CloudflareBindings) {
   }));
   return createRuntime(environment, {
     logger,
+    ...(bindings.RAYPX_RELAY
+      ? {
+          onRevoke: async (userId: string, deviceId: string) => {
+            await bindings.RAYPX_RELAY!.getByName(userId).fetch(
+              new Request("https://relay/revoke", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ userId, deviceId }),
+              }),
+            );
+          },
+        }
+      : {}),
     connect: () => connectDatabase(environment.DATABASE_URL, { max: 5, fetchTypes: false }),
     // Workers have no process shutdown hook; flush without closing the shared logger.
     closeLogger: () => logger.flush(),

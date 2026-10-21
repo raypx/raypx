@@ -1,0 +1,45 @@
+{
+  "name": "@raypx/tasks",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./client/styles.css": "./src/client/styles.css"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run --passWithNoTests",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
+    "test:component": "bun --bun vp test --run --passWithNoTests component/"
+  },
+  "dependencies": {
+    "@raypx/client": "workspace:*",
+    "@raypx/contracts": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "react": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal",
+    "entryTargets": {
+      "./client": "browser",
+      "./client/styles.css": "browser"
+    },
+    "sourceTargets": {
+      "src/client.ts": "browser",
+      "src/client/**": "browser"
+    }
+  }
+}

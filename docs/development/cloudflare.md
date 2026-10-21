@@ -124,3 +124,18 @@ References: [Nitro Workers](https://nitro.build/deploy/providers/cloudflare),
 [Hyperdrive caching](https://developers.cloudflare.com/hyperdrive/concepts/query-caching/),
 [public fetch routing](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public),
 and [Workers limits](https://developers.cloudflare.com/workers/platform/limits/#cpu-time).
+
+## Remote Agent relay
+
+API's `/relay?account=<account-id>` upgrades to WebSocket. The account ID only
+routes to a room; the first frame must authenticate with a scoped device grant
+or a single-use viewer ticket. Tokens never enter URLs. `RAYPX_RELAY` binds the
+exported `RelayRoom` class; `relay-v1` creates its SQLite-backed Durable Objects.
+Deploy the binding and migration together with the API artifact. Node uses Nitro's
+WebSocket adapter and currently requires a single API relay process.
+
+Cloudflare rooms coordinate connections across Worker instances. This release
+uses the standard Durable Object WebSocket API, so connected rooms incur duration
+charges; hibernation is a future optimization. WebSocket handlers create and close
+a request-owned database runtime for each operation. Authentication remains in
+PostgreSQL; Durable Object storage does not replace the account database.

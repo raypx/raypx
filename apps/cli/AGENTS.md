@@ -57,3 +57,15 @@ signals, descendant cleanup and coexistence with a Desktop scheduler. It is not 
 runtime dependency or part of the cross-platform default verify gate.
 
 `bun run --cwd apps/cli check`, `bun run --cwd apps/cli test`, `bun run --cwd apps/cli build`, then `bun run --cwd apps/cli smoke`.
+
+## Agent host
+
+Private `agents.*` methods own external CLI subprocesses, project authorization,
+canonical-directory locks, host-owned approvals and a durable SQLite replay journal. The Agent host is lazy so
+ordinary local commands never repair or cancel another host's task records. Never
+import cloud authentication or expose executable paths through remote contracts.
+Commit task status and its outbox event atomically. Release canonical project locks
+only after process-tree termination and stream draining complete, including detach.
+
+Relay command receipts retain their original payload and result. Keep acknowledged
+events for cursor replay; a frozen paged snapshot covers journal compaction gaps.

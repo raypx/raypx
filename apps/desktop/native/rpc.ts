@@ -1,5 +1,7 @@
 import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
 import type { RPCSchema } from "electrobun/rpc";
+import type { DeviceGrant } from "@raypx/contracts/tasks";
+import type { ControlInfo } from "./control";
 import type { DevicePreferences } from "../preferences";
 export type { DevicePreferences } from "../preferences";
 
@@ -16,6 +18,14 @@ export interface DesktopRuntime {
 export type DesktopRpc = {
   bun: RPCSchema<{
     requests: {
+      controlInfo: { params: { accountId: string }; response: ControlInfo };
+      controlEnable: { params: { accountId: string; enabled: boolean }; response: ControlInfo };
+      controlRevoked: { params: { accountId: string }; response: ControlInfo };
+      controlAttach: {
+        params: { accountId: string; apiUrl: string; grant: DeviceGrant };
+        response: ControlInfo;
+      };
+      controlDetach: { params: Record<string, never>; response: boolean };
       getRuntime: { params: Record<string, never>; response: DesktopRuntime };
       hideWindow: { params: Record<string, never>; response: boolean };
       pickDirectory: { params: Record<string, never>; response: RootGrant | null };

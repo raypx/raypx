@@ -18,7 +18,7 @@ The accepted foundation design supersedes documents in docs/history.
 - Auth receives its database adapter, configuration and mail interface from API.
 - Remote contracts and local device contracts have separate public entries.
 - Desktop launches the bundled CLI by absolute path. Do not import CLI source.
-- Local files, jobs and terminal remain available without account login.
+- Desktop's renderer requires account login; the local CLI runtime remains independent of authentication.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 - Add packages when their responsibility and actual consumers are established.
 
@@ -71,3 +71,10 @@ Report unavailable checks as unavailable; never describe an unrun platform as pa
 Keep each workspace AGENTS.md concise and update it when its interface changes.
 Current architecture and commands live under docs/architecture and docs/development.
 docs/history is historical context and does not constrain the new foundation.
+
+## Remote control
+
+Opted-in remote Agent tasks use explicit API projections and device-scoped grants.
+CLI owns execution, approval arbitration and the durable replay journal. Native
+owns the outbound WebSocket; API relays messages and stores read projections. WebView
+owns account-session grant renewal. Never publish the local method router or provider credentials.

@@ -10,6 +10,7 @@
   "devDependencies": {
     "@playwright/test": "catalog:dev",
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/client": "workspace:*",
     "@types/bun": "catalog:dev"
   },
   "raypx": {

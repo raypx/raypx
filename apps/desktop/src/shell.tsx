@@ -1,6 +1,18 @@
+import { PendingCount } from "@raypx/tasks/client";
+import { AccountMenu } from "@raypx/account/client";
+import { useAuthActions } from "@raypx/auth/hooks";
+import { apiClient, authClient, webUrl } from "./features/auth/client";
 import { useEffect, useState } from "react";
-import { Link, Outlet } from "@tanstack/react-router";
-import { Clock, FolderOpen, Settings, SquareTerminal, CircleUserRound } from "lucide-react";
+import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import {
+  Clock,
+  FolderOpen,
+  ListTodo,
+  Inbox,
+  Settings,
+  SquareTerminal,
+  CircleUserRound,
+} from "lucide-react";
 import { Logo } from "@raypx/ui/logo";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -17,21 +29,14 @@ const navigationLinkClassName =
 
 /** Prerendered before device preferences are known, so it carries no translated text. */
 export function ShellSkeleton() {
-  return (
-    <div className="flex h-dvh min-h-dvh" aria-busy="true">
-      <aside className={sidebarClassName}>
-        <span className={brandClassName}>
-          <Logo />
-        </span>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className={topbarClassName} />
-      </div>
-    </div>
-  );
+  return <div className="h-dvh min-h-dvh" aria-busy="true" />;
 }
 
 export function DesktopShell() {
+  const session = authClient.useSession();
+  const router = useRouter();
+  const auth = useAuthActions({ client: authClient, webUrl });
+  const path = useRouterState({ select: (state) => state.location.pathname });
   const c = useTranslations("common");
   const e = useTranslations("engine");
   const [engine, setEngine] = useState("starting");
@@ -119,17 +124,59 @@ export function DesktopShell() {
             <Settings size={19} />
             {c("settings")}
           </Link>
+          <Link
+            to="/tasks"
+            className={navigationLinkClassName}
+            activeProps={{ "aria-current": "page" }}
+          >
+            <ListTodo size={19} />
+            {c("tasks")}
+          </Link>
+          <Link
+            to="/approvals"
+            className={navigationLinkClassName}
+            activeProps={{ "aria-current": "page" }}
+          >
+            <Inbox size={19} />
+            {c("approvals")}
+            <PendingCount
+              key={session.data?.user.id ?? "signed-out"}
+              client={apiClient}
+              accountId={session.data?.user.id ?? null}
+            />
+          </Link>
         </nav>
-        <div className="mt-auto flex items-center gap-2 px-3 pt-7 text-xs text-muted-foreground max-[760px]:hidden">
-          <span className="size-1.5 rounded-full bg-foreground" />
-          Raypx · 0.1.0
+        <div className="mt-auto pt-7">
+          <AccountMenu
+            key={session.data?.user.id ?? "signed-out"}
+            user={session.data?.user ?? null}
+            pending={session.isPending}
+            busy={auth.busy}
+            error={Boolean(auth.error)}
+            onNavigate={(destination) => void router.navigate({ to: `/${destination}` })}
+            onSignOut={async () => {
+              const result = await auth.signOut(async () => {
+                await router.invalidate();
+                await router.navigate({ to: "/login", replace: true });
+              });
+              return result.status === "success";
+            }}
+          />
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className={topbarClassName}>
           <span>Raypx</span>
           <span className="opacity-45">/</span>
-          <span>{c("device")}</span>
+          <span>
+            {c(
+              path.startsWith("/tasks")
+                ? "tasks"
+                : path.startsWith("/approvals")
+                  ? "approvals"
+                  : "device",
+            )}
+          </span>
         </header>
         {engine === "error" && isDesktop() && (
           <div className="flex items-center justify-between gap-5 bg-muted px-8 py-4" role="alert">

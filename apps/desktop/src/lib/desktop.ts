@@ -31,7 +31,7 @@ async function createBridge() {
   void new Electroview({ rpc });
   return rpc;
 }
-function getBridge() {
+export function getBridge() {
   if (!isDesktop()) throw new Error("DESKTOP_REQUIRED");
   return (bridge ??= createBridge());
 }

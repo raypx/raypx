@@ -29,6 +29,7 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/mail": "workspace:*",
+        "drizzle-orm": "catalog:",
         "evlog": "catalog:",
         "hono": "catalog:",
         "nitro": "catalog:",
@@ -37,9 +38,9 @@
         "@raypx-kit/tsconfig": "catalog:dev",
         "@raypx/client": "workspace:*",
         "@raypx/tooling": "workspace:*",
+        "@types/bun": "catalog:dev",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
-        "drizzle-orm": "catalog:",
         "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
         "wrangler": "catalog:dev",
@@ -73,6 +74,7 @@
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-router": "catalog:",
         "@tanstack/react-start": "catalog:",
@@ -109,6 +111,7 @@
         "@raypx/auth": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-router": "catalog:",
         "@tanstack/react-start": "catalog:",
@@ -141,6 +144,7 @@
       "devDependencies": {
         "@playwright/test": "catalog:dev",
         "@raypx-kit/tsconfig": "catalog:dev",
+        "@raypx/client": "workspace:*",
         "@types/bun": "catalog:dev",
       },
     },
@@ -257,6 +261,25 @@
         "@types/node": "catalog:dev",
         "@types/react": "catalog:dev",
         "vite-plus": "catalog:dev",
+      },
+    },
+    "packages/tasks": {
+      "name": "@raypx/tasks",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/client": "workspace:*",
+        "@raypx/contracts": "workspace:*",
+        "@raypx/i18n": "workspace:*",
+        "@raypx/ui": "workspace:*",
+      },
+      "devDependencies": {
+        "@raypx-kit/tsconfig": "catalog:dev",
+        "@types/react": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "react": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19.3.0",
       },
     },
     "packages/tooling": {
@@ -846,6 +869,8 @@
     "@raypx/i18n": ["@raypx/i18n@workspace:packages/i18n"],
 
     "@raypx/mail": ["@raypx/mail@workspace:packages/mail"],
+
+    "@raypx/tasks": ["@raypx/tasks@workspace:packages/tasks"],
 
     "@raypx/tooling": ["@raypx/tooling@workspace:packages/tooling"],
 

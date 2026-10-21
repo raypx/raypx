@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { DesktopShell, ShellSkeleton } from "../shell";
 import { DesktopPreferencesProvider, desktopThemeScript } from "../preferences";
+import { SessionGate } from "../features/auth/components/session-gate";
+import { RemoteCoordinator } from "../features/tasks/coordinator";
+import { getBridge, isDesktop } from "../lib/desktop";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -38,10 +41,16 @@ function RootDocument({ children }: { children: ReactNode }) {
 // Theme, language and the native bridge exist only in the WebView, never in the
 // build-time prerender, so everything localized starts after hydration.
 function RootComponent() {
+  useEffect(() => {
+    if (isDesktop()) void getBridge().catch(() => {});
+  }, []);
   return (
     <ClientOnly fallback={<ShellSkeleton />}>
       <DesktopPreferencesProvider>
-        <DesktopShell />
+        <RemoteCoordinator />
+        <SessionGate>
+          <DesktopShell />
+        </SessionGate>
       </DesktopPreferencesProvider>
     </ClientOnly>
   );

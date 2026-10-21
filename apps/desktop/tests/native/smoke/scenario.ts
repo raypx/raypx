@@ -47,6 +47,73 @@ async function waitFor(check: () => Promise<boolean> | boolean, message: string)
   throw new Error(message);
 }
 let stage = "renderer startup";
+
+async function localSessionFixture() {
+  // The shell smoke isolates native local tools from account infrastructure.
+  // Real packaged-origin authentication remains in the explicit write/read phases.
+  await evaluate(
+    'const originalFetch=window.fetch.bind(window);window.fetch=(input,init)=>{const url=new URL(input instanceof Request?input.url:String(input),location.href);if(url.pathname==="/api/auth/get-session")return Promise.resolve(new Response("null",{headers:{"content-type":"application/json"}}));return originalFetch(input,init);};document.dispatchEvent(new Event("visibilitychange"));return true;',
+  );
+  await waitFor(
+    async () =>
+      Boolean(
+        await evaluate(
+          'document.dispatchEvent(new Event("visibilitychange"));return Boolean(document.querySelector("#auth-email"))',
+        ),
+      ),
+    "Signed-out Desktop did not show the login page",
+  );
+  const createdAt = new Date().toISOString();
+  const user = {
+    id: "native-shell-fixture",
+    name: "Native Smoke",
+    email: "native-smoke@example.test",
+    emailVerified: true,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  const fixture = {
+    user,
+    session: {
+      id: "native-shell-session",
+      userId: user.id,
+      token: "synthetic-smoke-only",
+      createdAt,
+      updatedAt: createdAt,
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    },
+  };
+  await evaluate(
+    `const originalFetch=window.fetch.bind(window);window.fetch=(input,init)=>{const url=new URL(input instanceof Request?input.url:String(input),location.href);if(url.pathname==="/api/auth/get-session")return Promise.resolve(new Response(${JSON.stringify(JSON.stringify(fixture))},{headers:{"content-type":"application/json"}}));return originalFetch(input,init);};window.dispatchEvent(new Event("focus"));document.dispatchEvent(new Event("visibilitychange"));return true;`,
+  );
+  await waitFor(
+    async () =>
+      Boolean(
+        await evaluate(
+          'document.dispatchEvent(new Event("visibilitychange"));return Boolean(document.querySelector("[data-slot=dropdown-menu-trigger]"))',
+        ),
+      ),
+    "Synthetic shell session did not mount the desktop workspace",
+  );
+  await evaluate('location.hash="/";return true');
+}
+
+async function reloadRenderer() {
+  const href = await evaluate("return location.href");
+  const previousOrigin = await evaluate("return performance.timeOrigin");
+  if (typeof href !== "string") throw new Error("Renderer location unavailable");
+  view.loadURL(href);
+  await waitFor(
+    async () =>
+      Boolean(
+        await evaluate(
+          `return performance.timeOrigin!==${JSON.stringify(previousOrigin)}&&Boolean(document.querySelector("#main"))`,
+        ),
+      ),
+    "Renderer did not reload",
+  );
+}
+
 try {
   assert.equal(tray.visible, true, "Native tray was not created");
   await waitFor(
@@ -88,6 +155,10 @@ try {
   const phase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
   const dataDir = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
   if (!dataDir) throw new Error("Smoke requires an isolated data directory");
+  if (phase === "shell" || phase === "restore") {
+    stage = "standalone login and local session fixture";
+    await localSessionFixture();
+  }
   if (phase === "shell") {
     assert.equal(await evaluate("return location.protocol"), "views:");
     stage = "local renderer file bridge";
@@ -244,6 +315,7 @@ try {
         ),
         true,
       );
+      await reloadRenderer();
       await evaluate('location.hash="/settings";return true');
       await waitFor(
         async () =>
@@ -283,6 +355,12 @@ try {
         ),
         false,
         "Logout left an active native session",
+      );
+      await reloadRenderer();
+      await waitFor(
+        async () =>
+          Boolean(await evaluate('return Boolean(document.querySelector("#auth-email"))')),
+        "Logout did not return to the login page",
       );
     }
   } else throw new Error("Unknown native smoke phase");

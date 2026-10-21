@@ -27,3 +27,7 @@ bun run --cwd packages/database check
 bun run --cwd packages/database test
 DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/database generate
 ```
+
+Remote control records share the foundation schema and cascade with the account.
+`control_owner` provides a transactional cross-instance account lock; payloads are
+explicit domain projections. Changes require generated foundation migrations.

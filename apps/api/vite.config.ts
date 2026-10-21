@@ -11,8 +11,12 @@ export default defineConfig(({ mode }) => {
     plugins: [
       nitro({
         ...nitroTarget(mode, import.meta.url),
+        features: { websocket: !cloudflare },
         ...(!cloudflare ? { plugins: ["./server/runtime/plugin.ts"] } : {}),
         routes: {
+          ...(!cloudflare
+            ? { "/relay": { handler: "./server/relay/node.ts", format: "web" as const } }
+            : {}),
           "/api/auth/**": { handler, format: "web" },
           "/rpc/**": { handler, format: "web" },
           "/health": { handler, format: "web" },

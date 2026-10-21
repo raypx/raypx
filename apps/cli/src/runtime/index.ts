@@ -1,4 +1,5 @@
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
+import { AgentRuntime } from "./agents";
 import { FileRuntime } from "./files";
 import { JobRuntime } from "./jobs";
 import { ProcessRuntime } from "./process";
@@ -18,6 +19,11 @@ export function createRuntime(
 ) {
   const emit = options.emit ?? (() => {});
   const state = new StateStore(profilePath(options));
+  let agentHost: AgentRuntime | undefined;
+  const getAgents = () =>
+    (agentHost ??= new AgentRuntime(state, () =>
+      emit({ version: 1, event: "agent.changed", data: {} }),
+    ));
   const files = new FileRuntime(state);
   const processes = new ProcessRuntime(emit);
   const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
@@ -35,12 +41,55 @@ export function createRuntime(
     files,
     jobs,
     processes,
+    get agents() {
+      return getAgents();
+    },
     request(method: LocalMethod, raw: unknown): Promise<unknown> {
       if (closing)
         return Promise.reject(new LocalError("CLOSING", "Local engine is shutting down"));
       const operation = (async () => {
         // Narrow each schema independently to preserve method-specific types.
         switch (method) {
+          case "agents.checkpoint": {
+            const p = localParams[method].parse(raw);
+            return getAgents().checkpoint(p.binding, p.sequence);
+          }
+          case "agents.remote": {
+            const p = localParams[method].parse(raw);
+            return getAgents().remote(p.binding, p.command);
+          }
+          case "agents.replay": {
+            const p = localParams[method].parse(raw);
+            return getAgents().replay(p.binding, p.after);
+          }
+          case "agents.snapshot": {
+            const p = localParams[method].parse(raw);
+            return getAgents().snapshot(p.binding, p.id, p.offset);
+          }
+          case "agents.capabilities":
+            return getAgents().capabilities();
+          case "agents.projects":
+            return getAgents().projects();
+          case "agents.configure": {
+            const p = localParams[method].parse(raw);
+            return getAgents().configure(p.rootId, p.providers);
+          }
+          case "agents.start": {
+            const p = localParams[method].parse(raw);
+            return getAgents().start(p.binding, p.commandId, p.task, p.deadline);
+          }
+          case "agents.command": {
+            const p = localParams[method].parse(raw);
+            return getAgents().command(p.binding, p.command);
+          }
+          case "agents.events":
+            return getAgents().events(localParams[method].parse(raw).binding);
+          case "agents.ack": {
+            const p = localParams[method].parse(raw);
+            return getAgents().ack(p.binding, p.ids);
+          }
+          case "agents.detach":
+            return getAgents().detach(localParams[method].parse(raw).binding);
           case "runtime.info":
             return {
               version: manifest.version,
@@ -135,7 +184,11 @@ export function createRuntime(
       closingPromise = (async () => {
         // Stop producers and cancel execution first. File requests already
         // accepted must finish their state lookups before SQLite is closed.
-        await Promise.allSettled([jobs.close(), processes.close()]);
+        await Promise.allSettled([
+          jobs.close(),
+          processes.close(),
+          ...(agentHost ? [agentHost.close()] : []),
+        ]);
         await Promise.allSettled(pending);
         state.close();
       })();

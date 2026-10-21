@@ -25,3 +25,7 @@ written under ignored test-results for visual inspection.
 ## Verification
 
 Run bun run --cwd e2e check; bun run test:e2e is an explicit browser gate.
+
+The control browser test is an explicit real-backend gate. Set CONTROL_E2E_API_URL
+and build both surfaces against its isolated fixture API. The default browser
+suite skips this gate when the fixture is absent; it must not be reported as passed.

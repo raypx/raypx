@@ -20,7 +20,7 @@ and shares root grants between Files and Jobs. Refresh grants when entering this
 branch (`shouldReload` with cause enter), and reuse them between its child pages.
 Explicit invalidation still refreshes the cache. Engine-ready events invalidate
 the local branch; job-finished events refresh only the active Jobs route. These tools
-need no account session; browser preview keeps its unavailable notice.
+run behind the renderer session gate; the CLI engine remains independent of account sessions.
 
 Jobs reads belong to its route loader; mutations invalidate that route. Keep
 auxiliary root errors silent and retain successful lists during failed reloads.
@@ -56,6 +56,9 @@ describe source syntax, and each suite declares its required test environment.
 The account route reads its remote projection in a client-only loader; auth
 mutations invalidate route data on success. Keep Better Auth session updates as
 invalidation signals rather than a second account-query state machine.
+The root session gate shows a standalone auth layout before login. Registration,
+verification and password recovery remain public; confirmed logout redirects to
+`/login`. Keep the native remote coordinator mounted outside this gate for cleanup.
 
 ## Constraints
 
@@ -99,3 +102,13 @@ invalidation signals rather than a second account-query state machine.
 `bun run --cwd apps/desktop check`, `bun run --cwd apps/desktop test`, `bun run build:desktop`, then `bun run desktop:build`.
 
 `bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile.
+Shell/restore first assert the standalone login page, then supply a synthetic
+session only inside the smoke scenario to exercise local UI. They do not validate authentication.
+
+## Remote tasks
+
+`native/control.ts` owns the outbound relay WebSocket and memory-only device grants. Root WebView code
+renews grants through the account session; hidden-window work must not rely on a
+renderer interval. Engine changes wake replay delivery; sequence ACKs checkpoint the
+local outbox, and a retained journal or a consistent snapshot repairs reconnect gaps. Connection intent is persisted per account, without cookies or
+tokens. Logout, detach and Quit cancel the old binding while preserving local tools.

@@ -5,3 +5,4 @@ export {
   type AccountDetailsProps,
   type AccountLinkProps,
 } from "./client/account";
+export { AccountMenu, type AccountMenuProps } from "./client/menu";

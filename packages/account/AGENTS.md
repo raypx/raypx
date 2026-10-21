@@ -9,8 +9,9 @@ Desktop and API. Auth continues to own authentication and credentials.
 
 - Root: `AccountProfile`, `AccountState` and `readAccount(client, { signal })`.
   Reads use an injected remote client, a five-second timeout and caller cancellation.
-- `/client`: `AccountDetails`, `SignedOutAccount`, `AccountSkeleton` and their types.
+- `/client`: `AccountDetails`, `SignedOutAccount`, `AccountSkeleton`, `AccountMenu` and their types.
   Applications inject links, sign-out actions and feedback through props/children.
+  The sidebar menu receives session identity and delegates navigation and logout to applications.
 - `/client/styles.css`: registers Tailwind sources for shared DOM account views.
 - `/server`: `createAccountService({ readSession }).get(headers)` returns a fresh
   `{ id, email, name }` projection or null for each request.

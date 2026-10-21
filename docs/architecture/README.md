@@ -10,6 +10,10 @@ Web is a TanStack Start SSR application on Nitro node-server. Desktop uses the s
 an Electrobun WebView, with a native bridge to its version-matched bundled CLI.
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
+Desktop resolves the account session before mounting its workspace. Signed-out
+sessions open a standalone login page; signup, verification and password recovery
+remain accessible. Web keeps its existing public navigation. The CLI engine and
+persisted local state remain independent of this renderer gate.
 Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
 capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
 on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.3.
@@ -32,7 +36,8 @@ The browser `/client` entry exports both `createAuthClient` and the shared DOM
 inject clients, callback origins, query data and navigation adapters. Applications
 own routing and session refresh; `/server` never imports the DOM form.
 API creates the DB adapter and mailer and injects them; auth never imports their
-concrete packages. Only account.get is exposed through remote RPC. Its safe
+concrete packages. Account and remote task/device/approval contracts are exposed
+through RPC; local execution methods are never registered directly. The account safe
 projection is { id, email, name }.
 
 Account provides platform-neutral remote read state, browser account views and an
@@ -128,3 +133,11 @@ Desktop also persists validated theme/language preferences in an atomic native
 file and restores them before renderer scripts. WebKit custom-scheme localStorage
 alone is insufficient across full process restarts. This storage is independent
 of the CLI so preferences remain usable if the local engine is unavailable.
+
+## Remote Agent tasks
+
+[Remote tasks and approvals](remote-tasks.md) describes opted-in Desktop execution,
+account-scoped device grants and Relay + Replay synchronization over outbound
+WebSockets. The shared tasks feature owns browser views; API routes commands and
+stores read projections. Desktop/CLI owns execution, approvals and terminal state,
+with a durable sequenced journal for reconnect replay and snapshot recovery.

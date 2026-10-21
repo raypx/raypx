@@ -1,4 +1,5 @@
 @import "@raypx/ui/styles/app.css";
+@import "@raypx/tasks/client/styles.css";
 @import "@raypx/auth/client/styles.css";
 @import "@raypx/account/client/styles.css";
 

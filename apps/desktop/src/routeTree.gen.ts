@@ -11,11 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LocalRouteRouteImport } from './routes/_local/route'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as LocalIndexRouteImport } from './routes/_local/index'
@@ -28,6 +30,11 @@ const LocalRouteRoute = LocalRouteRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApprovalsRoute = ApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -55,6 +62,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TerminalRoute = TerminalRouteImport.update({
   id: '/terminal',
   path: '/terminal',
@@ -79,22 +91,26 @@ const LocalAutomationsRoute = LocalAutomationsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof LocalIndexRoute
   '/account': typeof AccountRoute
+  '/approvals': typeof ApprovalsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/verify-email': typeof VerifyEmailRoute
   '/automations': typeof LocalAutomationsRoute
 }
 export interface FileRoutesByTo {
   '/account': typeof AccountRoute
+  '/approvals': typeof ApprovalsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/verify-email': typeof VerifyEmailRoute
   '/automations': typeof LocalAutomationsRoute
@@ -104,11 +120,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_local': typeof LocalRouteRouteWithChildren
   '/account': typeof AccountRoute
+  '/approvals': typeof ApprovalsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_local/automations': typeof LocalAutomationsRoute
@@ -119,22 +137,26 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/approvals'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/tasks'
     | '/terminal'
     | '/verify-email'
     | '/automations'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/account'
+    | '/approvals'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/tasks'
     | '/terminal'
     | '/verify-email'
     | '/automations'
@@ -143,11 +165,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_local'
     | '/account'
+    | '/approvals'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/settings'
     | '/signup'
+    | '/tasks'
     | '/terminal'
     | '/verify-email'
     | '/_local/automations'
@@ -157,11 +181,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   LocalRouteRoute: typeof LocalRouteRouteWithChildren
   AccountRoute: typeof AccountRoute
+  ApprovalsRoute: typeof ApprovalsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  TasksRoute: typeof TasksRoute
   TerminalRoute: typeof TerminalRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
 }
@@ -180,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/approvals': {
+      id: '/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof ApprovalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -215,6 +248,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terminal': {
@@ -265,11 +305,13 @@ const LocalRouteRouteWithChildren = LocalRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   LocalRouteRoute: LocalRouteRouteWithChildren,
   AccountRoute: AccountRoute,
+  ApprovalsRoute: ApprovalsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  TasksRoute: TasksRoute,
   TerminalRoute: TerminalRoute,
   VerifyEmailRoute: VerifyEmailRoute,
 }

@@ -11,12 +11,28 @@ export interface CloudflareRequest extends Request {
 }
 
 export function createCloudflareApp(
-  createRuntime: (bindings: CloudflareBindings) => Promise<ApiRuntime> = createCloudflareRuntime,
+  createRuntime: (
+    bindings: CloudflareBindings,
+  ) => Promise<Pick<ApiRuntime, "app" | "close">> = createCloudflareRuntime,
 ) {
   return {
     async fetch(request: CloudflareRequest): Promise<Response> {
       const cloudflare = request.runtime?.cloudflare;
-      let runtime: ApiRuntime | undefined;
+      if (new URL(request.url).pathname === "/relay") {
+        if (!cloudflare?.env.RAYPX_RELAY) return new Response(null, { status: 503 });
+        const origin = request.headers.get("origin"),
+          origins = cloudflare.env.ALLOWED_ORIGINS,
+          allowed = (typeof origins === "string" ? origins : "")
+            .split(",")
+            .map((value) => value.trim());
+        if (origin && !allowed.includes(origin)) return new Response(null, { status: 403 });
+        if (request.headers.get("upgrade")?.toLowerCase() !== "websocket")
+          return new Response(null, { status: 426 });
+        const account = new URL(request.url).searchParams.get("account");
+        if (!account || account.length > 200) return new Response(null, { status: 400 });
+        return cloudflare.env.RAYPX_RELAY.getByName(account).fetch(request);
+      }
+      let runtime: Pick<ApiRuntime, "app" | "close"> | undefined;
       let requestId: string | undefined;
       try {
         if (!cloudflare) throw new Error("Cloudflare request context is unavailable");

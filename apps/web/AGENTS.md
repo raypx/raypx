@@ -77,3 +77,9 @@ bun run --cwd apps/web test
 bun run build:web
 bun run build:web:cloudflare
 ```
+
+## Remote tasks
+
+Task and approval routes use `@raypx/tasks/client`, with account-keyed state and
+visibility-aware relay subscriptions. Settings lists device connections. Never render agent
+content as HTML or send a raw local method, path or executable to the API.

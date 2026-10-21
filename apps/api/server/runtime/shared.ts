@@ -1,3 +1,5 @@
+import { createControlRepository } from "../control/repository.js";
+import { ControlService } from "../control/service.js";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import type { DatabaseConnection } from "@raypx/database/connection";
@@ -9,6 +11,7 @@ import type { ApiEnvironment } from "../env.js";
 
 export interface RuntimeResources {
   logger: ApiLogging;
+  onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
 }
@@ -34,8 +37,12 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         ...(environment.AUTH_DOMAIN ? { cookieDomain: environment.AUTH_DOMAIN } : {}),
       },
     });
+    const control = new ControlService(createControlRepository(connection.db));
     return {
+      control,
       app: createApiApp({
+        control,
+        ...(resources.onRevoke ? { onRevoke: resources.onRevoke } : {}),
         authHandler: (request) => auth.handler(request),
         readSession: (headers) => readAuthSession(auth, headers),
         allowedOrigins: environment.allowedOrigins,

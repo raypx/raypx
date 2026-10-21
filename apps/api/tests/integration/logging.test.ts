@@ -79,7 +79,7 @@ function clientFor(api: ReturnType<typeof createApiApp>, headers: Record<string,
     fetch: async (input, init) => {
       const url = new URL(input);
       url.searchParams.set("token", secret.query);
-      const response = await api.fetch(new Request(url, init));
+      const response = await api.fetch(new Request(url.href, init));
       responses.push(response);
       return response;
     },

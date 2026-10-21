@@ -1,6 +1,7 @@
 # Raypx documentation
 
 - [Architecture and runtime boundaries](architecture/README.md)
+- [Remote Agent tasks and approvals](architecture/remote-tasks.md)
 - [Internationalization and device preferences](architecture/internationalization.md)
 - [Adding and extracting packages](development/workspaces.md)
 - [Development environment and commands](development/getting-started.md)

@@ -1,3 +1,5 @@
+import { DeviceSettings } from "@raypx/tasks/client";
+import { apiClient, authClient } from "../../features/auth/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { Languages } from "lucide-react";
 import { ThemePicker, useTheme } from "@raypx/ui/theme/client";
@@ -9,6 +11,7 @@ function SettingsPage() {
   const t = useTranslations("settings");
   const c = useTranslations("common");
   const { theme, setTheme } = useTheme();
+  const session = authClient.useSession();
   return (
     <section className="mx-auto max-w-240 px-14 pt-13 pb-20 max-[760px]:px-6 max-[760px]:pt-8.5 max-[760px]:pb-14 max-[420px]:px-5">
       <header className="mb-10">
@@ -34,6 +37,11 @@ function SettingsPage() {
         </div>
         <LanguageSelect icon={<Languages size={18} />} />
       </section>
+      <DeviceSettings
+        client={apiClient}
+        accountId={session.data?.user.id ?? null}
+        pending={session.isPending}
+      />
       <p className="mt-6 text-xs text-muted-foreground">{t("localHint")}</p>
     </section>
   );

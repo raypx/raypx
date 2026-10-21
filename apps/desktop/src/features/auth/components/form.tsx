@@ -7,8 +7,9 @@ import {
 import { authClient, webUrl } from "../client";
 
 function AuthLink({ to, children, className }: AuthFormLinkProps) {
+  if (to === "account") return null;
   return (
-    <Link to={to === "account" ? "/account" : `/${to}`} className={className}>
+    <Link to={`/${to}`} className={className}>
       {children}
     </Link>
   );
@@ -16,6 +17,7 @@ function AuthLink({ to, children, className }: AuthFormLinkProps) {
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const router = useRouter();
+  const session = authClient.useSession();
   const navigate = useNavigate();
   const search = useLocation({ select: (location) => location.searchStr });
   return (
@@ -26,6 +28,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       webUrl={webUrl}
       search={search}
       onSignedIn={async () => {
+        await session.refetch();
         await router.invalidate();
         await navigate({ to: "/account" });
       }}

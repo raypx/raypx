@@ -1,0 +1,279 @@
+import { describe, expect, it } from "vite-plus/test";
+import { ControlService } from "../../server/control/service.js";
+import {
+  connected,
+  controlAuth,
+  humanRequest,
+  memoryControlRepository,
+  running,
+} from "../helpers/control.js";
+
+describe("Desktop-owned task projections", () => {
+  it("routes an owned command without inventing task or approval state in the cloud", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service);
+    const command = await service.route(f.auth.user.id, f.input.id, {
+      method: "tasks.create",
+      input: f.input,
+    });
+    expect(command.deviceId).toBe(f.grant.deviceId);
+    expect(await service.listTasks(f.auth.user.id, { limit: 100 })).toEqual([]);
+    await expect(
+      service.route("other", f.input.id, { method: "tasks.create", input: f.input }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+  it("retains completion events uploaded after a disconnect and intervening reads", async () => {
+    let now = Date.now();
+    const service = new ControlService(memoryControlRepository(), () => now),
+      f = await connected(service),
+      task = await running(service, f);
+    now += 61_000;
+    await service.listTasks(f.auth.user.id, { limit: 100 });
+    expect((await service.getTask(f.auth.user.id, task.id, 0)).task.status).toBe("running");
+    const event = {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "status" as const,
+      status: "succeeded" as const,
+      summary: "Recovered result",
+      task: { ...task, status: "succeeded" as const, summary: "Recovered result" },
+    };
+    await service.events(f.actor, f.announce.streamId, [{ sequence: 2, event }]);
+    expect((await service.getTask(f.auth.user.id, task.id, 0)).task).toMatchObject({
+      status: "succeeded",
+      summary: "Recovered result",
+    });
+  });
+  it("does not interrupt a task merely because the host instance changed", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f);
+    const next = await service.authenticate("device", f.grant.token, crypto.randomUUID());
+    const resume = await service.announce(next, { ...f.announce, instanceId: crypto.randomUUID() });
+    expect(resume.sequence).toBe(1);
+    expect((await service.getTask(f.auth.user.id, task.id, 0)).task.status).toBe("running");
+    await service.events(next, f.announce.streamId, [
+      {
+        sequence: 2,
+        event: {
+          id: crypto.randomUUID(),
+          taskId: task.id,
+          kind: "status",
+          status: "succeeded",
+          summary: "Done",
+        },
+      },
+    ]);
+    expect((await service.getTask(f.auth.user.id, task.id, 0)).task.status).toBe("succeeded");
+  });
+  it("deduplicates events and fences late messages and disconnects from an old connection", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f);
+    const event = {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "status" as const,
+      status: "succeeded" as const,
+      summary: "Done",
+    };
+    for (let i = 0; i < 2; i++)
+      await service.events(f.actor, f.announce.streamId, [{ sequence: 2, event }]);
+    expect((await service.getTask(f.auth.user.id, task.id, 0)).events).toHaveLength(2);
+    await expect(
+      service.events(f.actor, f.announce.streamId, [
+        { sequence: 2, event: { ...event, summary: "Changed" } },
+      ]),
+    ).rejects.toMatchObject({ code: "EVENT_CONFLICT" });
+    const next = await service.authenticate("device", f.grant.token, crypto.randomUUID());
+    await service.announce(next, f.announce);
+    await service.touch(next);
+    await service.disconnect(f.actor);
+    expect((await service.listDevices(f.auth.user.id))[0]?.online).toBe(true);
+    await expect(
+      service.events(f.actor, f.announce.streamId, [{ sequence: 3, event }]),
+    ).rejects.toMatchObject({ code: "DEVICE_REPLACED" });
+  });
+  it("uses a full host snapshot after a replay gap and ignores older journal records", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f);
+    await service.snapshot(f.actor, f.announce.streamId, 5000, [
+      { kind: "task", task: { ...task, status: "succeeded", summary: "Compacted result" } },
+    ]);
+    await service.events(f.actor, f.announce.streamId, [
+      {
+        sequence: 2,
+        event: {
+          id: crypto.randomUUID(),
+          taskId: task.id,
+          kind: "status",
+          status: "running",
+          summary: "Stale",
+        },
+      },
+    ]);
+    expect((await service.getTask(f.auth.user.id, task.id, 0)).task.summary).toBe(
+      "Compacted result",
+    );
+  });
+  it("requests another full snapshot after an interrupted initial transfer", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      announce = { ...f.announce, streamId: crypto.randomUUID() };
+    expect((await service.announce(f.actor, announce)).snapshot).toBe(true);
+    await service.disconnect(f.actor);
+    const next = await service.authenticate("device", f.grant.token, crypto.randomUUID());
+    expect((await service.announce(next, announce)).snapshot).toBe(true);
+    await service.snapshot(next, announce.streamId, 0, []);
+    expect((await service.announce(next, announce)).snapshot).toBe(false);
+  });
+  it("removes stale approvals when the host snapshot has lost their active task", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f),
+      request = humanRequest(task);
+    await service.events(f.actor, f.announce.streamId, [
+      {
+        sequence: 2,
+        event: { id: crypto.randomUUID(), taskId: task.id, kind: "request", request },
+      },
+    ]);
+    await service.snapshot(f.actor, f.announce.streamId, 2, []);
+    const detail = await service.getTask(f.auth.user.id, task.id, 0);
+    expect(detail.task.status).toBe("interrupted");
+    expect(detail.requests[0]?.status).toBe("cancelled");
+    expect(await service.listApprovals(f.auth.user.id)).toEqual([]);
+  });
+  it("keeps approvals as device projections and resolves their command route within the account", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f),
+      request = humanRequest(task);
+    await service.events(f.actor, f.announce.streamId, [
+      {
+        sequence: 2,
+        event: { id: crypto.randomUUID(), taskId: task.id, kind: "request", request },
+      },
+    ]);
+    expect((await service.listApprovals(f.auth.user.id))[0]?.status).toBe("pending");
+    const command = await service.route(f.auth.user.id, crypto.randomUUID(), {
+      method: "approvals.decide",
+      input: { id: request.id, decision: { type: "allow" } },
+    });
+    expect(command.deviceId).toBe(task.deviceId);
+    expect((await service.listApprovals(f.auth.user.id))[0]?.status).toBe("pending");
+    await expect(
+      service.route("other", crypto.randomUUID(), command.request),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+  it("rejects a device publishing another device's task or request", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f),
+      other = await connected(service);
+    await expect(
+      service.events(other.actor, other.announce.streamId, [
+        {
+          sequence: 1,
+          event: {
+            id: crypto.randomUUID(),
+            taskId: task.id,
+            kind: "status",
+            status: "failed",
+            summary: "",
+          },
+        },
+      ]),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      service.snapshot(other.actor, other.announce.streamId, 1, [{ kind: "task", task }]),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+  it("uses one-time viewer tickets and validates parent sessions after authentication", async () => {
+    const repository = memoryControlRepository(),
+      service = new ControlService(repository),
+      auth = controlAuth();
+    const ticket = await service.ticket(auth),
+      actor = await service.authenticate("viewer", ticket.token, crypto.randomUUID());
+    await expect(
+      service.authenticate("viewer", ticket.token, crypto.randomUUID()),
+    ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
+    repository.validSession = false;
+    await expect(service.validate(actor)).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
+  });
+  it("binds device grants to their role and epoch and requires explicit reconnect after revocation", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service);
+    await expect(
+      service.authenticate("viewer", f.grant.token, crypto.randomUUID()),
+    ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
+    await service.revoke(f.auth.user.id, { deviceId: f.grant.deviceId, epoch: f.grant.epoch });
+    await expect(service.validate(f.actor)).rejects.toMatchObject({ code: "DEVICE_REVOKED" });
+    await expect(
+      service.register(f.auth, {
+        installationId: f.installationId,
+        name: "Computer",
+        platform: "darwin",
+        appVersion: "0.1.0",
+        reconnect: false,
+      }),
+    ).rejects.toMatchObject({ code: "DEVICE_REVOKED" });
+    const fresh = await service.register(f.auth, {
+      installationId: f.installationId,
+      name: "Computer",
+      platform: "darwin",
+      appVersion: "0.1.0",
+      reconnect: true,
+    });
+    expect(fresh.epoch).toBe(f.grant.epoch + 1);
+  });
+  it("replays only events after the viewer's acknowledged cursor", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f);
+    await service.events(f.actor, f.announce.streamId, [
+      {
+        sequence: 2,
+        event: {
+          id: crypto.randomUUID(),
+          taskId: task.id,
+          kind: "status",
+          status: "succeeded",
+          summary: "Done",
+        },
+      },
+    ]);
+    const frames = await service.replay(f.auth.user.id, [
+      { deviceId: task.deviceId, streamId: f.announce.streamId, sequence: 1 },
+    ]);
+    expect(frames[0]?.events?.map((item) => item.sequence)).toEqual([2]);
+    expect(await service.replay("other", [])).toEqual([]);
+  });
+  it("refreshes the projection when replayed events would exceed one relay frame", async () => {
+    const service = new ControlService(memoryControlRepository()),
+      f = await connected(service),
+      task = await running(service, f),
+      summary = "x".repeat(32_000);
+    await service.events(
+      f.actor,
+      f.announce.streamId,
+      Array.from({ length: 20 }, (_, index) => ({
+        sequence: index + 2,
+        event: {
+          id: crypto.randomUUID(),
+          taskId: task.id,
+          kind: "status" as const,
+          status: task.status,
+          summary,
+          task: { ...task, summary },
+        },
+      })),
+    );
+    const frames = await service.replay(f.auth.user.id, [
+      { deviceId: task.deviceId, streamId: f.announce.streamId, sequence: 1 },
+    ]);
+    expect(frames[0]).toMatchObject({ reset: true, sequence: 21 });
+    expect(frames[0]?.events).toBeUndefined();
+  });
+});

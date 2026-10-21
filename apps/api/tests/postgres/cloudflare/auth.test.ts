@@ -1,3 +1,4 @@
+import { relaySocket } from "../../helpers/relay.js";
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import { fileURLToPath } from "node:url";
@@ -163,6 +164,74 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
     const client = createApiClient({ baseUrl: base, headers: { cookie } });
     const accounts = await Promise.all(Array.from({ length: 3 }, () => client.account.get({})));
     expect(accounts.every((account) => account.email === email)).toBe(true);
+    const grant = await client.devices.register({
+      installationId: crypto.randomUUID(),
+      name: "Worker fixture",
+      platform: "test",
+      appVersion: "0.1.0",
+      reconnect: false,
+    });
+    const native = await relaySocket(base, (await client.account.get({})).id, {
+      type: "auth",
+      role: "device",
+      token: grant.token,
+    });
+    await native.take("ready");
+    const projectId = crypto.randomUUID(),
+      streamId = crypto.randomUUID(),
+      task = {
+        id: crypto.randomUUID(),
+        deviceId: grant.deviceId,
+        projectId,
+        provider: "codex" as const,
+        mode: "run" as const,
+        prompt: "Worker relay task",
+        status: "succeeded" as const,
+        summary: "Worker relay result",
+        parentTaskId: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    native.send({
+      type: "announce",
+      streamId,
+      instanceId: crypto.randomUUID(),
+      projects: [{ id: projectId, name: "Fixture", providers: ["codex"], dirty: false }],
+      capabilities: [{ provider: "codex", available: true, version: "0.163.0", reason: "ready" }],
+    });
+    await native.take("resume");
+    native.send({
+      type: "snapshot",
+      id: crypto.randomUUID(),
+      streamId,
+      sequence: 0,
+      records: [],
+      done: true,
+    });
+    await native.take("ack");
+    native.send({ type: "available" });
+    native.send({
+      type: "events",
+      streamId,
+      events: [
+        {
+          sequence: 1,
+          event: {
+            id: crypto.randomUUID(),
+            taskId: task.id,
+            kind: "status",
+            status: task.status,
+            summary: task.summary,
+            task,
+          },
+        },
+      ],
+    });
+    await native.take("ack");
+    expect((await client.tasks.get({ id: task.id, after: 0 })).task.summary).toBe(
+      "Worker relay result",
+    );
+
     expect(
       (
         await auth.handler(
@@ -179,6 +248,9 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
       (await post("reset-password", { token, newPassword: "worker-replaced-password-456" })).status,
     ).toBe(200);
     await expect(client.account.get({})).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    native.send({ type: "ping" });
+    expect((await native.take("error")).code).toBe("AUTH_REQUIRED");
+    native.socket.close();
     expect(
       (await post("sign-in/email", { email, password: "worker-original-password-123" })).status,
     ).toBe(401);

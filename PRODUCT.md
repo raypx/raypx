@@ -13,7 +13,8 @@ actions and interactive terminals through the bundled Raypx CLI.
 
 ## Principles
 
-- Local capabilities work without login; account logout preserves device preferences.
+- Desktop opens its login page before showing the workspace; Web remains accessible without login.
+- Local runtime state and device preferences survive account logout.
 - Show real execution, permission failures and retry state. Never fabricate data.
 - Closing the window keeps tray scheduling; explicit Quit stops managed processes.
 - Use stable package interfaces and add shared packages when real consumers need them.
@@ -23,4 +24,6 @@ actions and interactive terminals through the bundled Raypx CLI.
 
 Email/password accounts, verification/reset, theme, English/Chinese, local files,
 Cron automations and terminals. No old projects, tasks, research, AI providers,
-cloud file delivery, roles, admin, synchronization or worker queue.
+cloud file delivery, roles or admin. Remote Agent tasks and approvals synchronize
+between Web and opted-in Desktop devices; existing terminal sessions and full
+terminal streams are outside this release.

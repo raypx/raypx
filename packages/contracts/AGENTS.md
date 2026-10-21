@@ -22,3 +22,9 @@ No network, environment, filesystem, database or framework implementations. The 
 bun run --cwd packages/contracts check
 bun run --cwd packages/contracts test
 ```
+
+`/tasks` exports pure normalized task, device, decision and event schemas. `/api`
+adds scoped remote coordination; `/local` exposes private Agent-host methods.
+Provider protocol envelopes never enter these public projections.
+Relay schemas normalize commands, sequenced events, snapshots and cursor recovery.
+HTTP exposes projections and tickets; provider wire messages remain private to CLI.

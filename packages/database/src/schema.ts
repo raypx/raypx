@@ -1,4 +1,13 @@
-import { boolean, index, pgSchema, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  pgSchema,
+  text,
+  timestamp,
+  uniqueIndex,
+  jsonb,
+  primaryKey,
+} from "drizzle-orm/pg-core";
 import { defineRelations } from "drizzle-orm";
 
 export const foundation = pgSchema("raypx_foundation");
@@ -64,7 +73,51 @@ export const verification = foundation.table(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
-export const schema = { user, session, account, verification };
+
+// Control records are separate from authentication and never contain CLI credentials.
+export const controlOwner = foundation.table("control_owner", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+const controlRecord = (name: string) =>
+  foundation.table(
+    name,
+    {
+      id: text("id").notNull(),
+      userId: text("user_id")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
+      deviceId: text("device_id").notNull(),
+      body: jsonb("body").notNull(),
+    },
+    (table) => [
+      primaryKey({ columns: [table.userId, table.id] }),
+      index(`${name}_device_idx`).on(table.userId, table.deviceId),
+    ],
+  );
+export const controlDevice = controlRecord("control_device");
+export const controlProject = controlRecord("control_project");
+export const controlTask = controlRecord("control_task");
+export const controlRequest = controlRecord("control_request");
+export const controlEvent = controlRecord("control_event");
+export const controlCommand = controlRecord("control_command");
+export const controlGrant = controlRecord("control_grant");
+
+export const schema = {
+  user,
+  session,
+  account,
+  verification,
+  controlOwner,
+  controlDevice,
+  controlProject,
+  controlTask,
+  controlRequest,
+  controlEvent,
+  controlCommand,
+  controlGrant,
+};
 export const relations = defineRelations(schema, (r) => ({
   user: {
     sessions: r.many.session({ from: r.user.id, to: r.session.userId }),

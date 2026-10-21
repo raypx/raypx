@@ -64,3 +64,12 @@ bun run build:api:cloudflare
 TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/api test:postgres
 TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test:cloudflare:postgres
 ```
+
+## Remote tasks
+
+`server/control` owns device credentials and account-scoped read projections.
+`server/relay` authenticates and routes typed WebSocket messages; execution and
+first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
+and one-time viewer tickets. No HTTP task mutation or polling exchange remains.
+Node uses one relay process; Cloudflare uses an account-named Durable Object with
+connections fenced by identity. Keep credentials out of URLs and diagnostics.

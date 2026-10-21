@@ -11,6 +11,8 @@
       "globs": ["**/*.mjs", "**/*.js"],
     },
   ],
+  "durable_objects": { "bindings": [{ "name": "RAYPX_RELAY", "class_name": "RelayRoom" }] },
+  "migrations": [{ "tag": "relay-v1", "new_sqlite_classes": ["RelayRoom"] }],
   "vars": {
     "NODE_ENV": "production",
   },

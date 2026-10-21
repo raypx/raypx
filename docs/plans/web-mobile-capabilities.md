@@ -104,6 +104,9 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 
 ## 阶段 2：Desktop 设备注册和任务状态同步
 
+设备身份、撤销和连接现已由 [远程 Agent 任务](../architecture/remote-tasks.md) 的实现负责。
+本节下文仍是尚未实施的 Cron job/run 摘要方案，不代表 Agent 任务能力，也不得另建一套设备绑定。
+
 目标：登录且开启同步时，尽力上报本地任务定义摘要和近期状态；未登录、离线、同步失败都不影响本地任务。改动涉及 DB、contracts/api 与 local、client、API、Desktop、CLI、i18n 和测试基座。
 
 本地 job/run、执行归属和变更序列与 [CLI 与桌面执行设计](cli-desktop-runtime.md) 的 M1 数据约定协调；不等待其 IPC、TUI 或独立前台调度全部完成。第一版同步 Desktop 当前选定的 profile，其他 CLI profiles 不自动合并。阶段 0、1、4a 不因此增加依赖。
