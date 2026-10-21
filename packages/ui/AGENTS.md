@@ -29,6 +29,9 @@ Preserve the original brand artwork and Neutral light/dark values.
 - Use Base UI and Lucide icons; do not introduce Radix or another icon library.
 - Generated shadcn primitives live under `src/components/ui`; handwritten patterns
   stay flat under `src`. Consumers use explicit package exports.
+- App `components.json` files alias `ui` to `@raypx/ui/components/ui`, so
+  `shadcn add` from an app writes here. Adapt new primitives to `#lib/utils` and
+  record them in `shadcn-components.json`.
 - Preserve labelled controls, keyboard/focus behavior and reduced-motion support.
 - Prefer Tailwind utilities and semantic tokens; keep global app rules in the
   base layer so component utilities can override defaults.

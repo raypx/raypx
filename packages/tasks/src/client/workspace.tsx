@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { TaskClient } from "@raypx/client";
 import type {
   AgentTask,
@@ -10,6 +10,12 @@ import type {
 } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Checkbox } from "@raypx/ui/components/ui/checkbox";
+import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
+import { Input } from "@raypx/ui/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@raypx/ui/components/ui/native-select";
+import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
+import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { isTaskActive } from "../index.js";
 import { TaskList } from "./task-list.js";
 
@@ -302,6 +308,7 @@ function CreateTask({
   local: boolean;
 }) {
   const t = useTranslations("tasks");
+  const id = useId();
   const localDevice = local ? devices[0] : undefined;
   const [deviceId, setDeviceId] = useState(localDevice?.id ?? "");
   const [projectId, setProjectId] = useState(
@@ -351,9 +358,11 @@ function CreateTask({
       className="mb-8 space-y-4 rounded-lg border border-border bg-sidebar p-5"
     >
       <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
-        <label className="task-field">
-          {t("device")}
-          <select
+        <Field>
+          <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
+          <NativeSelect
+            id={`${id}-device`}
+            className="w-full"
             required
             value={deviceId}
             onChange={(event) => {
@@ -361,57 +370,72 @@ function CreateTask({
               setProjectId("");
             }}
           >
-            <option value="">{t("chooseDevice")}</option>
+            <NativeSelectOption value="">{t("chooseDevice")}</NativeSelectOption>
             {devices
               .filter((d) => !d.revoked)
               .map((d) => (
-                <option key={d.id} value={d.id} disabled={!d.online}>
+                <NativeSelectOption key={d.id} value={d.id} disabled={!d.online}>
                   {d.name} · {t(d.online ? "online" : "offline")}
-                </option>
+                </NativeSelectOption>
               ))}
-          </select>
-        </label>
-        <label className="task-field">
-          {t("project")}
-          <select required value={projectId} onChange={(event) => setProjectId(event.target.value)}>
-            <option value="">{t("chooseProject")}</option>
+          </NativeSelect>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
+          <NativeSelect
+            id={`${id}-project`}
+            className="w-full"
+            required
+            value={projectId}
+            onChange={(event) => setProjectId(event.target.value)}
+          >
+            <NativeSelectOption value="">{t("chooseProject")}</NativeSelectOption>
             {device?.projects.map((p) => (
-              <option key={p.id} value={p.id}>
+              <NativeSelectOption key={p.id} value={p.id}>
                 {p.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
-        </label>
+          </NativeSelect>
+        </Field>
       </div>
       {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
       <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
-        <label className="task-field">
-          {t("agent")}
-          <select
+        <Field>
+          <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
+          <NativeSelect
+            id={`${id}-agent`}
+            className="w-full"
             value={provider}
             onChange={(event) => setProvider(event.target.value as AgentProvider)}
           >
-            <option value="claude">Claude Code</option>
-            <option value="codex">Codex</option>
-          </select>
-        </label>
-        <label className="task-field">
-          {t("mode")}
-          <select value={mode} onChange={(event) => setMode(event.target.value as "run" | "plan")}>
-            <option value="run">{t("runMode")}</option>
-            <option value="plan">{t("planMode")}</option>
-          </select>
-        </label>
+            <NativeSelectOption value="claude">Claude Code</NativeSelectOption>
+            <NativeSelectOption value="codex">Codex</NativeSelectOption>
+          </NativeSelect>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-mode`}>{t("mode")}</FieldLabel>
+          <NativeSelect
+            id={`${id}-mode`}
+            className="w-full"
+            value={mode}
+            onChange={(event) => setMode(event.target.value as "run" | "plan")}
+          >
+            <NativeSelectOption value="run">{t("runMode")}</NativeSelectOption>
+            <NativeSelectOption value="plan">{t("planMode")}</NativeSelectOption>
+          </NativeSelect>
+        </Field>
       </div>
-      <label className="task-field">
-        {t("prompt")}
-        <textarea
+      <Field>
+        <FieldLabel htmlFor={`${id}-prompt`}>{t("prompt")}</FieldLabel>
+        <Textarea
+          id={`${id}-prompt`}
+          className="min-h-24"
           required
           maxLength={32000}
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
         />
-      </label>
+      </Field>
       <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
       {occupied && (
         <p role="status" className="text-sm">
@@ -443,6 +467,7 @@ function TaskDetail({
 }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
+  const followField = useId();
   const cursor = useRef(0);
   const history = useRef(new Map<number, AgentEvent>());
   const load = useCallback(
@@ -556,15 +581,17 @@ function TaskDetail({
       </details>
       {!isTaskActive(data.task) && (
         <form onSubmit={(event) => void follow(event)} className="space-y-3">
-          <label className="task-field">
-            {t("followUp")}
-            <textarea
+          <Field>
+            <FieldLabel htmlFor={followField}>{t("followUp")}</FieldLabel>
+            <Textarea
+              id={followField}
+              className="min-h-24"
               required
               maxLength={32000}
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
             />
-          </label>
+          </Field>
           <Button type="submit" disabled={busy || !prompt.trim()}>
             {t("send")}
           </Button>
@@ -590,6 +617,7 @@ function Approval({
   onChanged: () => void;
 }) {
   const t = useTranslations("tasks");
+  const id = useId();
   const [note, setNote] = useState("");
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState(false);
@@ -623,33 +651,43 @@ function Approval({
           {request.questions.map((question) => (
             <fieldset key={question.id} className="space-y-2">
               <legend className="mb-2 text-sm font-medium">{question.text}</legend>
-              {question.options.map((option) => (
-                <label key={option.label} className="flex items-start gap-2 text-sm">
-                  <input
-                    className="mt-1"
-                    type={question.multiSelect ? "checkbox" : "radio"}
-                    name={`${request.id}:${question.id}`}
-                    checked={answers[question.id]?.includes(option.label) ?? false}
-                    onChange={(event) =>
-                      setAnswers((previous) => ({
-                        ...previous,
-                        [question.id]: question.multiSelect
-                          ? event.target.checked
+              {question.multiSelect ? (
+                question.options.map((option, index) => (
+                  <Field key={option.label} orientation="horizontal">
+                    <Checkbox
+                      id={`${id}-${question.id}-${index}`}
+                      checked={answers[question.id]?.includes(option.label) ?? false}
+                      onCheckedChange={(checked) =>
+                        setAnswers((previous) => ({
+                          ...previous,
+                          [question.id]: checked
                             ? [...(previous[question.id] ?? []), option.label]
-                            : (previous[question.id] ?? []).filter((item) => item !== option.label)
-                          : [option.label],
-                      }))
-                    }
-                  />
-                  <span>
-                    {option.label}
-                    <small className="block text-muted-foreground">{option.description}</small>
-                  </span>
-                </label>
-              ))}
-              <label className="task-field">
-                {t("customAnswer")}
-                <input
+                            : (previous[question.id] ?? []).filter((item) => item !== option.label),
+                        }))
+                      }
+                    />
+                    <OptionLabel htmlFor={`${id}-${question.id}-${index}`} option={option} />
+                  </Field>
+                ))
+              ) : (
+                <RadioGroup
+                  value={answers[question.id]?.[0] ?? ""}
+                  onValueChange={(value) =>
+                    setAnswers((previous) => ({ ...previous, [question.id]: [String(value)] }))
+                  }
+                >
+                  {question.options.map((option, index) => (
+                    <Field key={option.label} orientation="horizontal">
+                      <RadioGroupItem id={`${id}-${question.id}-${index}`} value={option.label} />
+                      <OptionLabel htmlFor={`${id}-${question.id}-${index}`} option={option} />
+                    </Field>
+                  ))}
+                </RadioGroup>
+              )}
+              <Field>
+                <FieldLabel htmlFor={`${id}-${question.id}-custom`}>{t("customAnswer")}</FieldLabel>
+                <Input
+                  id={`${id}-${question.id}-custom`}
                   value={
                     answers[question.id]?.every((value) =>
                       question.options.every((option) => option.label !== value),
@@ -664,17 +702,18 @@ function Approval({
                     }))
                   }
                 />
-              </label>
+              </Field>
             </fieldset>
           ))}
-          <label className="task-field">
-            {t("note")}
-            <textarea
+          <Field>
+            <FieldLabel htmlFor={`${id}-note`}>{t("note")}</FieldLabel>
+            <Textarea
+              id={`${id}-note`}
               value={note}
               maxLength={8000}
               onChange={(event) => setNote(event.target.value)}
             />
-          </label>
+          </Field>
           <div className="flex flex-wrap gap-2">
             <Button
               disabled={
@@ -715,6 +754,20 @@ function Approval({
         </p>
       )}
     </section>
+  );
+}
+function OptionLabel({
+  htmlFor,
+  option,
+}: {
+  htmlFor: string;
+  option: { label: string; description: string };
+}) {
+  return (
+    <FieldLabel htmlFor={htmlFor} className="block font-normal leading-normal">
+      {option.label}
+      <small className="block text-muted-foreground">{option.description}</small>
+    </FieldLabel>
   );
 }
 export function DeviceSettings({

@@ -9,7 +9,6 @@
     "#hooks/*": "./src/hooks/*.ts"
   },
   "exports": {
-    "./textarea": "./src/textarea.tsx",
     "./page-header": "./src/page-header.tsx",
     "./section-heading": "./src/section-heading.tsx",
     "./empty-state": "./src/empty-state.tsx",

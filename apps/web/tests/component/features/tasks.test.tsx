@@ -82,3 +82,61 @@ it("keeps the follow-up ID for an ambiguous retry and clears it after confirmed 
   await waitFor(() => expect(followUp).toHaveBeenCalledTimes(3));
   expect(followUp.mock.calls[2]![0].id).not.toBe(firstId);
 });
+
+it("answers single and multiple choice questions with labelled shadcn controls", async () => {
+  const taskId = crypto.randomUUID();
+  const request = {
+    id: crypto.randomUUID(),
+    taskId,
+    kind: "question" as const,
+    title: "Choose",
+    body: "",
+    questions: [
+      {
+        id: "one",
+        text: "Pick one",
+        multiSelect: false,
+        options: [
+          { label: "Alpha", description: "" },
+          { label: "Beta", description: "" },
+        ],
+      },
+      {
+        id: "many",
+        text: "Pick many",
+        multiSelect: true,
+        options: [
+          { label: "Gamma", description: "" },
+          { label: "Delta", description: "" },
+        ],
+      },
+    ],
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    status: "pending" as const,
+    decision: null,
+  };
+  const decide = vi.fn(async () => ({ ...request, status: "decided" }));
+  const client = {
+    tasks: { list: async () => [] },
+    devices: { list: async () => [] },
+    approvals: { list: async () => [request], decide },
+  } as unknown as TaskClient;
+  render(
+    <BrowserLanguageProvider>
+      <TaskWorkspace client={client} accountId="account" view="approvals" />
+    </BrowserLanguageProvider>,
+  );
+  fireEvent.click(await screen.findByRole("radio", { name: "Beta" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Gamma" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Delta" }));
+  fireEvent.click(screen.getByRole("button", { name: "Send answer" }));
+  await waitFor(() =>
+    expect(decide).toHaveBeenCalledWith(
+      {
+        id: request.id,
+        decision: { type: "answer", answers: { one: ["Beta"], many: ["Gamma", "Delta"] } },
+      },
+      expect.anything(),
+    ),
+  );
+});

@@ -4,6 +4,7 @@
     "avatar",
     "badge",
     "button",
+    "checkbox",
     "dialog",
     "dropdown-menu",
     "empty",
@@ -11,11 +12,14 @@
     "input",
     "input-group",
     "label",
+    "native-select",
     "popover",
+    "radio-group",
     "sheet",
     "skeleton",
     "switch",
     "tabs",
+    "textarea",
     "toast",
     "tooltip"
   ]
