@@ -89,11 +89,27 @@ const preferences = createPreferenceStore(
     : Utils.paths.userData,
 );
 let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
+function notifyPending() {
+  Utils.showNotification({
+    title: "Raypx",
+    body: messages[
+      preferences.read().locale === "zh" ||
+      (preferences.read().locale === "system" &&
+        Intl.DateTimeFormat().resolvedOptions().locale.startsWith("zh"))
+        ? "zh"
+        : "en"
+    ].tasks.notification,
+  });
+}
 export const engine = new LocalEngine(
   cliBinary,
   manifest.version,
   (event) => {
-    if (event.event === "agent.changed") void control.wake();
+    if (event.event === "agent.changed") {
+      void control.wake();
+      // Local approvals never reach the relay, so the engine flags them directly.
+      if (typeof event.data.pendingRequest === "string") notifyPending();
+    }
     return emitLocalEvent(event);
   },
   engineArgs,
@@ -103,17 +119,7 @@ const control = new RemoteControl(
     ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
     : Utils.paths.userData,
   engine,
-  () =>
-    Utils.showNotification({
-      title: "Raypx",
-      body: messages[
-        preferences.read().locale === "zh" ||
-        (preferences.read().locale === "system" &&
-          Intl.DateTimeFormat().resolvedOptions().locale.startsWith("zh"))
-          ? "zh"
-          : "en"
-      ].tasks.notification,
-    }),
+  notifyPending,
   () => {
     void emitLocalEvent({ version: 1, event: "sync.grantRequired", data: {} });
   },

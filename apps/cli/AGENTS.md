@@ -69,3 +69,13 @@ only after process-tree termination and stream draining complete, including deta
 
 Relay command receipts retain their original payload and result. Keep acknowledged
 events for cursor replay; a frozen paged snapshot covers journal compaction gaps.
+
+`agents.local.*` exposes account-scoped task reads, direct commands, device metadata
+and detach through private stdio only. Local tasks use a persistent device identity
+and a `desktop:` binding, share the same execution locks and approval arbitration,
+and write journal history without a cloud outbox. Never include these bindings in
+remote snapshots or replay. Local activity is durable and exempt from relay journal
+compaction; indexed task cursors paginate it. History survives logout until
+`agents.local.clear` removes finished tasks; active local work is cancelled
+on account change or engine shutdown. A new local approval adds `pendingRequest`
+to `agent.changed` so Desktop can notify; relay approvals notify after delivery.

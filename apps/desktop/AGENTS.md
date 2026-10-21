@@ -107,6 +107,17 @@ session only inside the smoke scenario to exercise local UI. They do not validat
 
 ## Remote tasks
 
+Tasks and approvals default to This computer. `features/tasks/local-client.ts`
+adapts private `agents.local.*` IPC to the shared task view interface and subscribes
+to native change events. These account-scoped tasks and approvals stay in SQLite,
+never enter the relay outbox and remain separate from Connected computers. The
+remote tab alone uses the API task client. Local creation needs project authorization
+and an installed provider, with no remote grant or Web deployment. Logout cancels the
+old account's local Agent work; login remains required by the renderer gate.
+Native shows the pending-task notification for `agent.changed` events carrying
+`pendingRequest`; Agent settings can clear finished local history. The sidebar
+approval count combines local and remote approvals.
+
 `native/control.ts` owns the outbound relay WebSocket and memory-only device grants. Root WebView code
 renews grants through the account session; hidden-window work must not rely on a
 renderer interval. Engine changes wake replay delivery; sequence ACKs checkpoint the

@@ -61,7 +61,8 @@ behavior by client/contracts.
   `build:cloudflare` uses Vite's cloudflare mode and Nitro cloudflare_module, bundles
   server dependencies and writes `.output-cloudflare`. Keep the default Node output separate.
   Common target options come from `@raypx/tooling/build/nitro`; Web owns its Start plugins and React tracing.
-  Wrangler serves all routes through the Worker so account pages remain request-rendered.
+  Wrangler keeps page routes Worker-first so account pages remain request-rendered.
+  `/assets/*` and `/favicon.png` use asset-first routing to avoid Worker invocations for static files.
   Its public-fetch flag lets SSR call the public API even when it is another Worker in the same zone.
 - Do not edit `src/routeTree.gen.ts` or regenerate it with `tsr`.
 - Keep independent test configuration so application plugins stay outside tests.

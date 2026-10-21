@@ -2,6 +2,25 @@ export default {
   tasks: {
     notification: "A task needs your answer",
     title: "Agent tasks",
+    taskScope: "Task location",
+    taskPages: "Task pages",
+    taskNavigation:
+      "Use Up and Down to move between tasks, Home and End to jump, and Enter to open.",
+    newerTasks: "Newer tasks",
+    olderTasks: "Older tasks",
+    thisComputer: "This computer",
+    connectedComputers: "Connected computers",
+    agentSettings: "Agent settings",
+    localHint:
+      "Run agents on this computer. Task history and answers stay here and are not synced to Raypx.",
+    localEmptyHint: "Authorize a project in Agent settings, then create your first task.",
+    localSetupHint: "Authorize projects for local execution. Remote access is optional.",
+    localHistory: "Local task history",
+    clearHistoryHint:
+      "Delete finished tasks and approvals stored on this computer. Running tasks are kept.",
+    clearHistory: "Clear finished tasks",
+    confirmClearHistory: "Confirm clear",
+    LOCAL_UNAVAILABLE: "Unable to reach the local engine. Restart it and try again.",
     intro: "Run tasks on your connected computers and answer when an agent needs you.",
     inbox: "Waiting for you",
     inboxHint: "Answer requests from either Web or Desktop. The first answer takes effect.",
@@ -66,7 +85,7 @@ export default {
     disconnect: "Disable remote tasks",
     remoteTitle: "Remote tasks on this computer",
     remoteHint:
-      "Share task and approval content with your account. Full sessions and terminal logs stay on this computer.",
+      "Allow connected devices to send remote tasks and answers. Tasks created under This computer stay local.",
     projects: "Authorized projects",
     authorize: "Choose a project",
     enableProject: "Enable project",

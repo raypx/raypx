@@ -28,3 +28,5 @@ adds scoped remote coordination; `/local` exposes private Agent-host methods.
 Provider protocol envelopes never enter these public projections.
 Relay schemas normalize commands, sequenced events, snapshots and cursor recovery.
 HTTP exposes projections and tickets; provider wire messages remain private to CLI.
+Private `agents.local.*` methods scope Desktop task reads and commands by account.
+They reuse normalized task/decision DTOs without publishing a local HTTP endpoint.

@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createTestHarness, experimental_readRawConfig } from "wrangler";
@@ -6,6 +6,7 @@ import { stageArtifact } from "@raypx-kit/devkit/artifact";
 
 const root = resolve(process.argv[2] ?? ".");
 const serveApi = process.argv.includes("--serve-api");
+const workerProbeHeader = "x-raypx-worker-probe";
 
 async function start(app: "api" | "web") {
   const stage = await mkdtemp(join(tmpdir(), `raypx-${app}-worker-`));
@@ -13,6 +14,24 @@ async function start(app: "api" | "web") {
   let server: ReturnType<typeof createTestHarness> | undefined;
   try {
     await stageArtifact(join(root, "apps", app, ".output-cloudflare"), output);
+    const main = join(output, "server", app === "web" ? "probe.mjs" : "index.mjs");
+    if (app === "web") {
+      // Mark Worker responses only in this disposable copy to observe asset routing.
+      await writeFile(
+        main,
+        `import worker from "./index.mjs";
+export default {
+  ...worker,
+  async fetch(request, env, ctx) {
+    const response = await worker.fetch(request, env, ctx);
+    const marked = new Response(response.body, response);
+    marked.headers.set(${JSON.stringify(workerProbeHeader)}, "1");
+    return marked;
+  }
+};
+`,
+      );
+    }
     const { rawConfig } = experimental_readRawConfig({
       config: join(root, "apps", app, "wrangler.jsonc"),
     });
@@ -27,7 +46,7 @@ async function start(app: "api" | "web") {
         {
           config: {
             ...config,
-            main: join(output, "server/index.mjs"),
+            main,
             ...(config.assets
               ? { assets: { ...config.assets, directory: join(output, "public") } }
               : {}),
@@ -114,19 +133,55 @@ async function probeApi(base: string) {
 async function probeWeb(base: string) {
   const home = await probeFetch(base, { headers: { "accept-language": "zh" } });
   const html = await home.text();
-  if (!home.ok || !html.includes('<html lang="zh"') || !html.includes("<h1>你的账号</h1>"))
+  if (
+    !home.ok ||
+    home.headers.get(workerProbeHeader) !== "1" ||
+    !html.includes('<html lang="zh"') ||
+    !html.includes("<h1>你的账号</h1>")
+  )
     throw new Error("Worker Web SSR locale failed");
   const settings = await probeFetch(`${base}/settings`, {
     headers: { cookie: "locale=en; theme=dark" },
   });
-  if (!settings.ok || !(await settings.text()).includes("<h1>Make it yours</h1>"))
+  if (
+    !settings.ok ||
+    settings.headers.get(workerProbeHeader) !== "1" ||
+    !(await settings.text()).includes("<h1>Make it yours</h1>")
+  )
     throw new Error("Worker Web preferences failed");
-  const asset = /\/assets\/[^" ]+\.js/.exec(html)?.[0];
-  if (!asset || !(await probeFetch(`${base}${asset}`)).ok)
-    throw new Error("Worker Web assets failed");
-  for (const path of ["/assets/__missing.js", "/__missing"])
-    if ((await probeFetch(`${base}${path}`)).status !== 404)
-      throw new Error(`Worker Web ${path} must be 404`);
+  const health = await probeFetch(`${base}/health`);
+  if (
+    !health.ok ||
+    health.headers.get(workerProbeHeader) !== "1" ||
+    ((await health.json()) as { status?: string }).status !== "ok"
+  )
+    throw new Error("Worker Web health route failed");
+  for (const [asset, contentType] of [
+    [/\/assets\/[^" ]+\.js/.exec(html)?.[0], "javascript"],
+    [/\/assets\/[^" ]+\.css/.exec(html)?.[0], "text/css"],
+    ["/favicon.png", "image/png"],
+  ] as const) {
+    if (!asset) throw new Error(`Worker Web HTML must reference ${contentType} assets`);
+    const response = await probeFetch(`${base}${asset}`);
+    if (
+      !response.ok ||
+      response.headers.has(workerProbeHeader) ||
+      !response.headers.get("content-type")?.includes(contentType)
+    )
+      throw new Error(`Worker Web ${asset} must be served directly by Assets`);
+    if (
+      asset.startsWith("/assets/") &&
+      !response.headers.get("cache-control")?.includes("immutable")
+    )
+      throw new Error(`Worker Web ${asset} must retain immutable caching`);
+  }
+  for (const path of ["/assets/__missing.js", "/__missing"]) {
+    const response = await probeFetch(`${base}${path}`);
+    if (response.status !== 404)
+      throw new Error(`Worker Web ${path} must be 404, received ${response.status}`);
+    if (path === "/__missing" && response.headers.get(workerProbeHeader) !== "1")
+      throw new Error("Worker Web unknown page routes must reach the Worker");
+  }
 }
 
 function probeFetch(url: string, init?: RequestInit): Promise<Response> {

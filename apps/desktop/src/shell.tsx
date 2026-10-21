@@ -2,6 +2,7 @@ import { PendingCount } from "@raypx/tasks/client";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { apiClient, authClient, webUrl } from "./features/auth/client";
+import { createPendingClient, localTaskClient } from "./features/tasks/local-client";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import {
@@ -18,6 +19,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "./lib/desktop";
 
+const pendingClient = createPendingClient(localTaskClient, apiClient);
 const sidebarClassName =
   "flex w-56 shrink-0 flex-col border-r border-border bg-sidebar px-4 pt-11 pb-5 max-[1100px]:w-[190px] max-[760px]:px-2.5 max-[420px]:px-1.5";
 const brandClassName =
@@ -141,7 +143,7 @@ export function DesktopShell() {
             {c("approvals")}
             <PendingCount
               key={session.data?.user.id ?? "signed-out"}
-              client={apiClient}
+              client={pendingClient}
               accountId={session.data?.user.id ?? null}
             />
           </Link>

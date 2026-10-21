@@ -4,11 +4,13 @@ import {
   deviceCommandSchema,
   agentProviderSchema,
   relayCommandSchema,
+  relayRequestSchema,
 } from "./tasks.js";
 
 export const LOCAL_PROTOCOL_VERSION = 1 as const;
 export const MAX_TEXT_BYTES = 1024 * 1024;
 const pathRef = { rootId: z.string().min(1), path: z.string().default("") };
+const agentAccount = { accountId: z.string().min(1).max(200) };
 export const rootGrantSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -62,6 +64,25 @@ export const jobRunSchema = z.object({
 });
 export type JobRun = z.infer<typeof jobRunSchema>;
 export const localParams = {
+  "agents.local.device": z.object(agentAccount),
+  "agents.local.list": z.object({
+    ...agentAccount,
+    limit: z.number().int().min(1).max(100).default(100),
+    before: z.string().optional(),
+  }),
+  "agents.local.get": z.object({
+    ...agentAccount,
+    id: z.string().uuid(),
+    after: z.number().int().min(0).default(0),
+  }),
+  "agents.local.approvals": z.object(agentAccount),
+  "agents.local.execute": z.object({
+    ...agentAccount,
+    id: z.string().uuid(),
+    request: relayRequestSchema,
+  }),
+  "agents.local.clear": z.object(agentAccount),
+  "agents.local.detach": z.object(agentAccount),
   "agents.remote": z.object({ binding: z.string().min(1).max(300), command: relayCommandSchema }),
   "agents.checkpoint": z.object({
     binding: z.string().min(1).max(300),

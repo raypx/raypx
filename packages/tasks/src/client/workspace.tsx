@@ -11,8 +11,10 @@ import type {
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { isTaskActive } from "../index.js";
+import { TaskList } from "./task-list.js";
 
 const failureCodes = [
+  "LOCAL_UNAVAILABLE",
   "DEVICE_OFFLINE",
   "PROJECT_BUSY",
   "AGENT_UNAVAILABLE",
@@ -22,6 +24,9 @@ const failureCodes = [
   "DEVICE_REVOKED",
   "SESSION_UNAVAILABLE",
 ] as const;
+export type TaskWorkspaceClient = Pick<TaskClient, "tasks" | "approvals" | "subscribe"> & {
+  devices: Pick<TaskClient["devices"], "list">;
+};
 function failureCode(error: unknown) {
   if (error && typeof error === "object" && "data" in error) {
     const code = (error as { data?: { error?: { code?: string } } }).data?.error?.code;
@@ -33,7 +38,7 @@ function failureCode(error: unknown) {
 function useRemoteQuery<T>(
   load: (signal: AbortSignal) => Promise<T>,
   enabled: boolean,
-  client: TaskClient,
+  client: TaskWorkspaceClient,
 ) {
   const [data, setData] = useState<T>();
   const [error, setError] = useState(false);
@@ -90,9 +95,10 @@ function useRemoteQuery<T>(
   };
 }
 interface Props {
-  client: TaskClient;
+  client: TaskWorkspaceClient;
   accountId: string | null;
   pending?: boolean;
+  local?: boolean;
 }
 function Gate({ pending }: { pending?: boolean }) {
   const t = useTranslations("tasks");
@@ -128,19 +134,32 @@ export function TaskWorkspace(props: Props & { view?: "tasks" | "approvals" }) {
     );
   return <Workspace key={props.accountId} {...props} accountId={props.accountId} />;
 }
-function Workspace({ client, view = "tasks" }: Props & { view?: "tasks" | "approvals" }) {
+function Workspace({
+  client,
+  view = "tasks",
+  local = false,
+}: Props & { view?: "tasks" | "approvals" }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
+  const [pages, setPages] = useState<string[]>([]);
+  const before = pages.at(-1);
   const load = useCallback(
     async (signal: AbortSignal) => {
       const [tasks, devices, requests] = await Promise.all([
-        client.tasks.list({ limit: 100 }, { signal }),
+        client.tasks.list({ limit: 100, ...(before ? { before } : {}) }, { signal }),
         client.devices.list({}, { signal }),
         client.approvals.list({}, { signal }),
       ]);
-      return { tasks, devices, requests };
+      const last = tasks.at(-1);
+      const cursor = last ? `${last.createdAt}:${last.id}` : undefined;
+      // A short page may hit the local byte budget before the record limit.
+      const more =
+        view === "tasks" && cursor
+          ? await client.tasks.list({ limit: 1, before: cursor }, { signal })
+          : [];
+      return { tasks, devices, requests, before, next: more.length ? cursor : undefined };
     },
-    [client],
+    [client, before, view],
   );
   const { data, error, refresh } = useRemoteQuery(load, true, client);
   const [selected, setSelected] = useState<string | null>(null);
@@ -154,7 +173,7 @@ function Workspace({ client, view = "tasks" }: Props & { view?: "tasks" | "appro
         <div>
           <h1>{t(view === "approvals" ? "inbox" : "title")}</h1>
           <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">
-            {t(view === "approvals" ? "inboxHint" : "intro")}
+            {t(local ? "localHint" : view === "approvals" ? "inboxHint" : "intro")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -168,7 +187,7 @@ function Workspace({ client, view = "tasks" }: Props & { view?: "tasks" | "appro
       </header>
       {error && (
         <p role="alert" className="mb-4 text-sm text-destructive">
-          {c("networkError")}
+          {t(local ? "LOCAL_UNAVAILABLE" : "NETWORK_UNAVAILABLE")}
         </p>
       )}
       {!data ? (
@@ -180,8 +199,10 @@ function Workspace({ client, view = "tasks" }: Props & { view?: "tasks" | "appro
               client={client}
               devices={data.devices}
               tasks={data.tasks}
+              local={local}
               onCreated={(task) => {
                 setSelected(task.id);
+                setPages([]);
                 setCreating(false);
                 refresh();
               }}
@@ -209,32 +230,53 @@ function Workspace({ client, view = "tasks" }: Props & { view?: "tasks" | "appro
                 {data.tasks.length === 0 ? (
                   <div className="py-10">
                     <h2>{t("empty")}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">{t("emptyHint")}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {t(local ? "localEmptyHint" : "emptyHint")}
+                    </p>
                   </div>
                 ) : (
-                  data.tasks.map((task) => (
-                    <button
-                      type="button"
-                      key={task.id}
-                      onClick={() => setSelected(task.id)}
-                      aria-pressed={selected === task.id}
-                      className="flex w-full flex-col gap-2 border-b border-border p-4 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring aria-pressed:bg-muted"
+                  <TaskList
+                    key={data.before ?? "latest"}
+                    tasks={data.tasks}
+                    devices={data.devices}
+                    selected={selected}
+                    onSelect={setSelected}
+                  />
+                )}
+                {(pages.length > 0 || data.next) && (
+                  <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={!pages.length}
+                      onClick={() => {
+                        setPages((previous) => previous.slice(0, -1));
+                        setSelected(null);
+                      }}
                     >
-                      <span className="line-clamp-2 text-sm font-medium">{task.prompt}</span>
-                      <span className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                        <span>{task.provider === "claude" ? "Claude Code" : "Codex"}</span>
-                        <span>
-                          {data.devices.find((device) => device.id === task.deviceId)?.name}
-                        </span>
-                        <span>{t(task.status)}</span>
-                      </span>
-                    </button>
-                  ))
+                      {t("newerTasks")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={!data.next || data.before !== before}
+                      onClick={() => {
+                        if (data.next) setPages((previous) => [...previous, data.next!]);
+                        setSelected(null);
+                      }}
+                    >
+                      {t("olderTasks")}
+                    </Button>
+                  </nav>
                 )}
               </div>
               <div>
                 {selected ? (
-                  <TaskDetail key={selected} client={client} id={selected} onChanged={refresh} />
+                  <TaskDetail
+                    key={selected}
+                    client={client}
+                    id={selected}
+                    local={local}
+                    onChanged={refresh}
+                  />
                 ) : (
                   <p className="py-10 text-sm text-muted-foreground">{t("selectTask")}</p>
                 )}
@@ -251,16 +293,23 @@ function CreateTask({
   devices,
   tasks,
   onCreated,
+  local,
 }: {
-  client: TaskClient;
+  client: TaskWorkspaceClient;
   devices: SyncDevice[];
   tasks: AgentTask[];
   onCreated: (task: AgentTask) => void;
+  local: boolean;
 }) {
   const t = useTranslations("tasks");
-  const [deviceId, setDeviceId] = useState("");
-  const [projectId, setProjectId] = useState("");
-  const [provider, setProvider] = useState<AgentProvider>("claude");
+  const localDevice = local ? devices[0] : undefined;
+  const [deviceId, setDeviceId] = useState(localDevice?.id ?? "");
+  const [projectId, setProjectId] = useState(
+    localDevice?.projects.length === 1 ? localDevice.projects[0]!.id : "",
+  );
+  const [provider, setProvider] = useState<AgentProvider>(
+    localDevice?.capabilities.find((capability) => capability.available)?.provider ?? "claude",
+  );
   const [prompt, setPrompt] = useState("");
   const [mode, setMode] = useState<"run" | "plan">("run");
   const [busy, setBusy] = useState(false);
@@ -385,10 +434,12 @@ function TaskDetail({
   client,
   id,
   onChanged,
+  local,
 }: {
-  client: TaskClient;
+  client: TaskWorkspaceClient;
   id: string;
   onChanged: () => void;
+  local: boolean;
 }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
@@ -447,7 +498,11 @@ function TaskDetail({
     }
   }
   if (!data)
-    return <p role={error ? "alert" : "status"}>{c(error ? "networkError" : "loading")}</p>;
+    return (
+      <p role={error ? "alert" : "status"}>
+        {error ? t(local ? "LOCAL_UNAVAILABLE" : "NETWORK_UNAVAILABLE") : c("loading")}
+      </p>
+    );
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
@@ -529,7 +584,7 @@ function Approval({
   task,
   onChanged,
 }: {
-  client: TaskClient;
+  client: TaskWorkspaceClient;
   request: HumanRequest;
   task?: AgentTask | undefined;
   onChanged: () => void;
@@ -662,7 +717,11 @@ function Approval({
     </section>
   );
 }
-export function DeviceSettings({ client, accountId, pending }: Props) {
+export function DeviceSettings({
+  client,
+  accountId,
+  pending,
+}: Omit<Props, "client"> & { client: TaskClient }) {
   if (!accountId || pending) return <Gate {...(pending === undefined ? {} : { pending })} />;
   return <Devices key={accountId} client={client} />;
 }

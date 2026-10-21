@@ -150,6 +150,7 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     const desktop = await context.newPage();
     await desktop.setViewportSize({ width: 1280, height: 900 });
     await desktop.goto("http://127.0.0.1:4174/approvals");
+    await desktop.getByRole("tab", { name: "Connected computers", exact: true }).click();
     await expect(
       desktop.getByRole("heading", { name: "Run project tests", exact: true }),
     ).toBeVisible();
@@ -209,6 +210,7 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     ).toBe(true);
     await page.screenshot({ path: test.info().outputPath("relay-mobile-en.png"), fullPage: true });
     await desktop.goto("http://127.0.0.1:4174/tasks");
+    await desktop.getByRole("tab", { name: "Connected computers", exact: true }).click();
     await desktop.getByRole("button", { name: new RegExp(taskPrompt) }).click();
     await expect(desktop.getByText(completed.summary, { exact: true })).toBeVisible();
     await page.goto("http://127.0.0.1:4173/settings");

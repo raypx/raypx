@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, hostname } from "node:os";
 import { join } from "node:path";
 import {
   activeTaskStatuses,
@@ -14,12 +14,15 @@ import {
   type HumanRequest,
   type RelayCommand,
   type SnapshotRecord,
+  type RelayRequest,
+  type SyncDevice,
   validDecision,
 } from "@raypx/contracts/tasks";
 import { type StateStore, acquireLock } from "../state";
 import { LocalError } from "../errors";
-import { AgentStore, type LocalAgentTask } from "./store";
+import { AgentStore, desktopBinding, isDesktopBinding, type LocalAgentTask } from "./store";
 import { JsonProcess } from "./transport";
+import manifest from "../../../package.json";
 
 type Pending = {
   request: HumanRequest;
@@ -44,6 +47,22 @@ const object = (value: unknown): Record<string, unknown> =>
     : {};
 const text = (value: unknown, max = 128_000) =>
   typeof value === "string" ? value.slice(0, max) : "";
+// The first record always passes so cursors advance past oversized events.
+// Unordered sets skip a record that does not fit instead of hiding the rest.
+export function bounded<T>(records: T[], skip = false, budget = 256 * 1024): T[] {
+  let bytes = 0;
+  const result: T[] = [];
+  for (const record of records) {
+    const size = Buffer.byteLength(JSON.stringify(record));
+    if (result.length && bytes + size > budget) {
+      if (skip) continue;
+      break;
+    }
+    result.push(record);
+    bytes += size;
+  }
+  return result;
+}
 export class AgentRuntime {
   readonly instanceId = crypto.randomUUID();
   private readonly store: AgentStore;
@@ -66,12 +85,107 @@ export class AgentRuntime {
   >();
   constructor(
     private readonly state: StateStore,
-    private readonly changed: () => void,
+    // A pending request id is passed only for local work; relay delivery notifies separately.
+    private readonly changed: (pendingRequest?: string) => void,
     private readonly options: { executables?: Partial<Record<AgentProvider, string>> } = {},
   ) {
     this.store = new AgentStore(state.directory);
     for (const local of this.store.tasks())
       if (activeTaskStatuses.includes(local.task.status)) this.status(local, "interrupted");
+  }
+  async localDevice(accountId: string): Promise<SyncDevice> {
+    return {
+      id: this.store.deviceId(desktopBinding(accountId)),
+      name: hostname(),
+      platform: process.platform,
+      appVersion: manifest.version,
+      epoch: 1,
+      revoked: false,
+      lastSeenAt: new Date().toISOString(),
+      online: true,
+      projects: await this.projects(),
+      capabilities: await this.capabilities(),
+    };
+  }
+  localTasks(accountId: string, limit: number, before?: string) {
+    return bounded(
+      this.store
+        .tasks()
+        .filter((local) => local.binding === desktopBinding(accountId))
+        .map((local) => local.task)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+        .filter((task) => !before || `${task.createdAt}:${task.id}` < before)
+        .slice(0, limit),
+    );
+  }
+  localTask(accountId: string, id: string, after: number) {
+    const binding = desktopBinding(accountId),
+      local = this.store.get(id);
+    if (!local || local.binding !== binding) throw new LocalError("NOT_FOUND", "Task unavailable");
+    return {
+      task: local.task,
+      events: bounded(this.store.taskEvents(binding, id, after)),
+      requests: bounded(
+        this.store
+          .requests(binding)
+          .filter((request) => request.taskId === id)
+          .reverse(),
+        true,
+      ),
+    };
+  }
+  localApprovals(accountId: string) {
+    const binding = desktopBinding(accountId);
+    return bounded(
+      this.store
+        .requests(binding)
+        .filter((request) => {
+          const local = this.store.get(request.taskId);
+          return (
+            ["pending", "decided"].includes(request.status) &&
+            local &&
+            activeTaskStatuses.includes(local.task.status)
+          );
+        })
+        .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt)),
+      true,
+    );
+  }
+  async localExecute(accountId: string, id: string, request: RelayRequest) {
+    const binding = desktopBinding(accountId),
+      deviceId = this.store.deviceId(binding);
+    if (
+      (request.method === "tasks.create" && request.input.deviceId !== deviceId) ||
+      ((request.method === "tasks.create" || request.method === "tasks.followUp") &&
+        request.input.id !== id)
+    )
+      return { ok: false as const, code: "IDEMPOTENCY_CONFLICT" };
+    return this.remote(binding, {
+      id,
+      deviceId,
+      request,
+      expiresAt: new Date(Date.now() + 15_000).toISOString(),
+    });
+  }
+  // Local history has no cloud copy, so finished tasks are removed only on request.
+  localClear(accountId: string) {
+    const binding = desktopBinding(accountId),
+      tasks = this.store
+        .tasks()
+        .filter((local) => local.binding === binding)
+        .map((local) => local.task),
+      kept = new Set(
+        tasks
+          .filter((task) => activeTaskStatuses.includes(task.status) || this.active.has(task.id))
+          .flatMap((task) => [task.id, ...(task.parentTaskId ? [task.parentTaskId] : [])]),
+      ),
+      removed = tasks.filter((task) => !kept.has(task.id)).map((task) => task.id);
+    this.store.forget(binding, removed);
+    this.changed();
+    return { removed: removed.length };
+  }
+  localDetach(accountId: string) {
+    return this.detach(desktopBinding(accountId));
   }
   private emit(local: LocalAgentTask, event: AgentEvent) {
     this.store.event(local.binding, event);
@@ -497,7 +611,7 @@ export class AgentRuntime {
       );
       execution.pending.set(request.id, { request, resolve, timer });
     });
-    this.changed();
+    this.changed(isDesktopBinding(execution.local.binding) ? request.id : undefined);
     const result = await answer;
     if (!execution.cancelled && !execution.finished) this.status(execution.local, "running");
     return result;

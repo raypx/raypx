@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { StateStore } from "../../../src/runtime/state";
-import { AgentRuntime } from "../../../src/runtime/agents";
+import { AgentRuntime, bounded } from "../../../src/runtime/agents";
 import { AgentStore } from "../../../src/runtime/agents/store";
 import type { AgentTask, AgentProvider } from "@raypx/contracts/tasks";
 const cleanups: (() => Promise<void>)[] = [];
@@ -27,7 +27,14 @@ async function host(provider: AgentProvider, code: string) {
     path: directory,
     createdAt: new Date().toISOString(),
   });
-  const runtime = new AgentRuntime(state, () => {}, { executables: { [provider]: file } });
+  const pending: string[] = [];
+  const runtime = new AgentRuntime(
+    state,
+    (request) => {
+      if (request) pending.push(request);
+    },
+    { executables: { [provider]: file } },
+  );
   runtime.configure(rootId, [provider]);
   await runtime.capabilities();
   cleanups.push(async () => {
@@ -48,7 +55,7 @@ async function host(provider: AgentProvider, code: string) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  return { runtime, task, directory, state };
+  return { runtime, task, directory, state, pending };
 }
 const codexFixture = `
 import { appendFileSync } from 'node:fs';
@@ -57,13 +64,13 @@ const send=value=>process.stdout.write(JSON.stringify(value)+'\\n');
 let buffer='';
 process.stdin.on('data',chunk=>{ buffer+=chunk.toString(); let n; while((n=buffer.indexOf('\\n'))>=0){ const line=buffer.slice(0,n);buffer=buffer.slice(n+1);if(!line)continue;const m=JSON.parse(line);
 if(m.method==='initialize')send({id:m.id,result:{}});
-if(m.method==='thread/start')send({id:m.id,result:{thread:{id:'thread-test'}}});
+if(m.method==='thread/start'||m.method==='thread/resume')send({id:m.id,result:{thread:{id:'thread-test'}}});
 if(m.method==='turn/start'){send({id:m.id,result:{}});send({id:'approval',method:'item/commandExecution/requestApproval',params:{command:'bun test',reason:'Run tests'}});}
 if(m.id==='approval'){if(m.result.decision==='accept'){send({method:'item/agentMessage/delta',params:{delta:'Tests passed'}});send({method:'turn/completed',params:{turn:{status:'completed'}}});}else send({method:'turn/completed',params:{turn:{status:'failed'}}});}
 }});
 `;
 it("routes Codex permission requests and deduplicates command replay", async () => {
-  const { runtime, task, directory } = await host("codex", codexFixture);
+  const { runtime, task, directory, pending } = await host("codex", codexFixture);
   const commandId = crypto.randomUUID();
   const start = () =>
     runtime.start("binding", commandId, task, new Date(Date.now() + 60_000).toISOString());
@@ -74,6 +81,7 @@ it("routes Codex permission requests and deduplicates command replay", async () 
     .toBe(true);
   const request = runtime.events("binding").events.find((event) => event.kind === "request");
   if (request?.kind !== "request") throw new Error("Missing request");
+  expect(pending).toEqual([]);
   await runtime.command("binding", {
     id: crypto.randomUUID(),
     type: "decision",
@@ -89,6 +97,80 @@ it("routes Codex permission requests and deduplicates command replay", async () 
     )
     .toBe(true);
   expect(readFileSync(join(directory, "starts"), "utf8").trim().split("\n")).toHaveLength(1);
+});
+it("runs local tasks and approvals without a grant, isolates accounts, and keeps them out of relay replay", async () => {
+  const { runtime, task: template, directory, pending } = await host("codex", codexFixture);
+  const accountId = "desktop-user",
+    device = await runtime.localDevice(accountId);
+  const input = {
+    id: crypto.randomUUID(),
+    deviceId: device.id,
+    projectId: template.projectId,
+    provider: "codex" as const,
+    mode: "run" as const,
+    prompt: "Local work",
+  };
+  const create = () => runtime.localExecute(accountId, input.id, { method: "tasks.create", input });
+  expect((await create()).ok).toBe(true);
+  expect((await create()).ok).toBe(true);
+  expect(
+    await runtime.localExecute(accountId, crypto.randomUUID(), { method: "tasks.create", input }),
+  ).toEqual({ ok: false, code: "IDEMPOTENCY_CONFLICT" });
+  await expect.poll(() => runtime.localApprovals(accountId).length).toBe(1);
+  const request = runtime.localApprovals(accountId)[0]!;
+  expect(pending).toEqual([request.id]);
+  expect(runtime.localTasks("another-user", 100)).toEqual([]);
+  expect(() => runtime.localTask("another-user", input.id, 0)).toThrow("Task unavailable");
+  expect(
+    await runtime.localExecute("another-user", crypto.randomUUID(), {
+      method: "tasks.cancel",
+      input: { id: input.id },
+    }),
+  ).toMatchObject({ ok: false, code: "NOT_FOUND" });
+  expect(
+    await runtime.remote("cloud-binding", {
+      id: crypto.randomUUID(),
+      deviceId: device.id,
+      expiresAt: new Date(Date.now() + 15_000).toISOString(),
+      request: {
+        method: "approvals.decide",
+        input: { id: request.id, decision: { type: "allow" } },
+      },
+    }),
+  ).toMatchObject({ ok: false, code: "NOT_FOUND" });
+  expect(
+    await runtime.localExecute(accountId, crypto.randomUUID(), {
+      method: "approvals.decide",
+      input: { id: request.id, decision: { type: "allow" } },
+    }),
+  ).toMatchObject({ ok: true });
+  await expect.poll(() => runtime.localTask(accountId, input.id, 0).task.status).toBe("succeeded");
+  expect(runtime.localTask(accountId, input.id, 0).task.summary).toBe("Tests passed");
+  expect(runtime.localTask(accountId, input.id, 0).events.length).toBeGreaterThan(0);
+  expect(runtime.events(`desktop:${accountId}`).events).toEqual([]);
+  expect(runtime.replay("cloud-binding", 0).events).toEqual([]);
+  const followId = crypto.randomUUID();
+  expect(
+    await runtime.localExecute(accountId, followId, {
+      method: "tasks.followUp",
+      input: { id: followId, parentTaskId: input.id, prompt: "Continue locally" },
+    }),
+  ).toMatchObject({ ok: true });
+  await expect.poll(() => runtime.localApprovals(accountId).length).toBe(1);
+  expect(
+    await runtime.localExecute(accountId, crypto.randomUUID(), {
+      method: "tasks.cancel",
+      input: { id: followId },
+    }),
+  ).toMatchObject({ ok: true });
+  expect(runtime.localTask(accountId, followId, 0).task.status).toBe("cancelled");
+  expect(runtime.localApprovals(accountId)).toEqual([]);
+  expect(readFileSync(join(directory, "starts"), "utf8").trim().split("\n")).toHaveLength(2);
+  expect(runtime.localClear("another-user")).toEqual({ removed: 0 });
+  expect(runtime.localClear(accountId)).toEqual({ removed: 2 });
+  expect(runtime.localTasks(accountId, 100)).toEqual([]);
+  expect(() => runtime.localTask(accountId, input.id, 0)).toThrow("Task unavailable");
+  expect(runtime.localApprovals(accountId)).toEqual([]);
 });
 it("keeps current project directories mutually exclusive and cancels waiting children", async () => {
   const { runtime, task } = await host("codex", codexFixture);
@@ -390,4 +472,10 @@ it("does not execute an expired relayed command", async () => {
   });
   expect(result).toMatchObject({ ok: false, code: "DELIVERY_EXPIRED" });
   expect(existsSync(join(directory, "starts"))).toBe(false);
+});
+it("keeps oversized local records from stalling replay or hiding approvals", () => {
+  const large = "界".repeat(100_000);
+  expect(bounded([large, "next"])).toEqual([large]);
+  expect(bounded(["small", large, "after"])).toEqual(["small"]);
+  expect(bounded(["small", large, "after"], true)).toEqual(["small", "after"]);
 });

@@ -14,11 +14,35 @@ stdio app-server; Claude uses print-mode JSON and authenticated session hooks on
 loopback. Provider wire messages and credentials remain on the computer.
 
 HTTP RPC serves account/device management, task/request projections and one-time
-viewer tickets. Task creation, follow-up, cancellation and approval decisions travel
+viewer tickets. Remote task creation, follow-up, cancellation and approval decisions travel
 through the relay. Visible pages subscribe to change events and refresh projections;
 hidden pages suspend those subscriptions. There is no two-second task polling loop.
 Native wakes on local engine events, retains the connection when the window hides,
 and sends heartbeats to detect broken connections. Reconnect uses bounded backoff.
+
+## Desktop local tasks
+
+Desktop opens This computer by default. Its renderer calls Native and the bundled
+CLI through private `agents.local.*` stdio methods for creation, reads, approvals,
+follow-ups and cancellation. Local execution requires an authorized project and
+an installed provider; it does not require remote access, a relay grant or a Web
+deployment. The account login gate is retained, so this is not an anonymous or
+fully offline sign-in mode. Email verification and password reset still use their
+existing Web callbacks.
+
+Local tasks have an account-scoped `desktop:` binding and a stable local device ID.
+Their tasks, answers and event journal stay in SQLite. They never enter the cloud
+outbox, including after remote access is enabled, and remote snapshots/replay cannot
+read them. The same CLI execution host owns process locks, session continuation,
+idempotency and first-answer approval arbitration for both transports. Native change
+events refresh local views without network polling. Logout/account changes cancel
+local work while preserving its history, and a restart marks uncertain runs interrupted.
+Local activity is durable and exempt from relay journal compaction. Task lists use
+creation-time/ID cursors with newer/older navigation, including when a response's
+byte budget produces a short page.
+
+Connected computers retains the remote task flow and account-scoped projections.
+Agent settings authorizes local projects independently of the remote access toggle.
 
 ## Authentication and routing
 
@@ -65,7 +89,7 @@ merge or push.
 CLI atomically commits task status and its event into SQLite. A persistent stream
 ID and increasing sequence numbers survive process restart. The outbox is
 checkpointed only after API acknowledges durable projection updates. A retained
-journal keeps the latest 4,096 events per binding, including acknowledged events,
+journal keeps the latest 4,096 events per remote binding, including acknowledged events,
 so reconnect can continue after the server's cursor without re-executing commands.
 
 When a cursor falls behind journal retention, native sends a frozen, paged snapshot
@@ -82,7 +106,7 @@ Stale connections cannot overwrite a newer host connection's projections.
 
 ## Data and limits
 
-Cloud receives task prompts, status, requests, plans and result summaries. Project
+For remote tasks, cloud receives prompts, status, requests, plans and result summaries. Project
 files, full provider transcripts, terminal streams and Agent credentials remain
 local. Agent text renders as text. Diagnostics exclude tokens, prompts, bodies,
 paths and results. Relay frames are bounded to 1 MiB, batches to 50 events and

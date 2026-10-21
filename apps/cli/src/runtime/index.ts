@@ -21,8 +21,8 @@ export function createRuntime(
   const state = new StateStore(profilePath(options));
   let agentHost: AgentRuntime | undefined;
   const getAgents = () =>
-    (agentHost ??= new AgentRuntime(state, () =>
-      emit({ version: 1, event: "agent.changed", data: {} }),
+    (agentHost ??= new AgentRuntime(state, (pendingRequest) =>
+      emit({ version: 1, event: "agent.changed", data: pendingRequest ? { pendingRequest } : {} }),
     ));
   const files = new FileRuntime(state);
   const processes = new ProcessRuntime(emit);
@@ -50,6 +50,26 @@ export function createRuntime(
       const operation = (async () => {
         // Narrow each schema independently to preserve method-specific types.
         switch (method) {
+          case "agents.local.device":
+            return getAgents().localDevice(localParams[method].parse(raw).accountId);
+          case "agents.local.list": {
+            const p = localParams[method].parse(raw);
+            return getAgents().localTasks(p.accountId, p.limit, p.before);
+          }
+          case "agents.local.get": {
+            const p = localParams[method].parse(raw);
+            return getAgents().localTask(p.accountId, p.id, p.after);
+          }
+          case "agents.local.approvals":
+            return getAgents().localApprovals(localParams[method].parse(raw).accountId);
+          case "agents.local.execute": {
+            const p = localParams[method].parse(raw);
+            return getAgents().localExecute(p.accountId, p.id, p.request);
+          }
+          case "agents.local.clear":
+            return getAgents().localClear(localParams[method].parse(raw).accountId);
+          case "agents.local.detach":
+            return getAgents().localDetach(localParams[method].parse(raw).accountId);
           case "agents.checkpoint": {
             const p = localParams[method].parse(raw);
             return getAgents().checkpoint(p.binding, p.sequence);

@@ -1,13 +1,20 @@
 import { useEffect } from "react";
 import { apiClient, apiUrl, authClient } from "../auth/client";
-import { getBridge, isDesktop, onLocalEvent } from "../../lib/desktop";
+import { getBridge, isDesktop, onLocalEvent, localRequest } from "../../lib/desktop";
+import { localTaskClient } from "./local-client";
 
 export function RemoteCoordinator() {
   const session = authClient.useSession();
   const accountId = session.data?.user.id;
   useEffect(() => {
     apiClient.setAccount?.(accountId ?? null);
-    return () => apiClient.setAccount?.(null);
+    localTaskClient.setAccount(accountId ?? null);
+    return () => {
+      apiClient.setAccount?.(null);
+      localTaskClient.setAccount(null);
+      if (accountId && isDesktop())
+        void localRequest("agents.local.detach", { accountId }).catch(() => {});
+    };
   }, [accountId]);
   useEffect(() => {
     if (!isDesktop() || session.isPending) return;

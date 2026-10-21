@@ -1,13 +1,20 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import type { TaskClient } from "@raypx/client";
 
 beforeEach(() => {
+  // jsdom has no layout; provide dimensions for the real virtualizer.
+  vi.spyOn(Element.prototype, "clientHeight", "get").mockImplementation(function (this: Element) {
+    return this.hasAttribute("data-task-list") ? 480 : 0;
+  });
+  vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(480);
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(96);
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
 });
+afterEach(() => vi.restoreAllMocks());
 
 async function workspace() {
   const task = {

@@ -7,7 +7,7 @@ import type { ControlInfo } from "../../../native/control";
 import { getBridge, isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
 import { authClient } from "../auth/client";
 
-export function RemoteSettings() {
+export function AgentSettings() {
   const t = useTranslations("tasks");
   const session = authClient.useSession();
   const accountId = session.data?.user.id;
@@ -16,7 +16,9 @@ export function RemoteSettings() {
   const [projects, setProjects] = useState<DeviceProject[]>([]);
   const [capabilities, setCapabilities] = useState<AgentCapability[]>([]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  // "unavailable" comes from polling and clears on the next successful read.
+  const [error, setError] = useState<"unavailable" | "local" | "remote" | false>(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const refresh = useCallback(async () => {
     if (!accountId || !isDesktop()) return;
     const bridge = await getBridge();
@@ -35,9 +37,14 @@ export function RemoteSettings() {
     let active = true;
     const read = () => {
       if (active)
-        void refresh().catch(() => {
-          if (active) setError(true);
-        });
+        void refresh().then(
+          () => {
+            if (active) setError((value) => (value === "unavailable" ? false : value));
+          },
+          () => {
+            if (active) setError("unavailable");
+          },
+        );
     };
     read();
     const timer = setInterval(read, 2000);
@@ -46,7 +53,7 @@ export function RemoteSettings() {
       clearInterval(timer);
     };
   }, [refresh]);
-  async function change(action: () => Promise<unknown>) {
+  async function change(action: () => Promise<unknown>, scope: "local" | "remote" = "local") {
     setBusy(true);
     setError(false);
     try {
@@ -54,7 +61,7 @@ export function RemoteSettings() {
       window.dispatchEvent(new Event("raypx:remote-change"));
       await refresh();
     } catch {
-      setError(true);
+      setError(scope);
     } finally {
       setBusy(false);
     }
@@ -62,25 +69,9 @@ export function RemoteSettings() {
   if (!accountId || !isDesktop()) return null;
   return (
     <section data-tasks className="mt-8 border-t border-border pt-7">
-      <h2 className="text-base">{t("remoteTitle")}</h2>
-      <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("remoteHint")}</p>
-      <div className="my-5 flex flex-wrap items-center gap-4">
-        <Button
-          disabled={busy || !info}
-          variant={info?.enabled ? "outline" : "default"}
-          onClick={() =>
-            void change(async () =>
-              (await getBridge()).request.controlEnable({ accountId, enabled: !info?.enabled }),
-            )
-          }
-        >
-          {t(info?.enabled ? "disconnect" : "connect")}
-        </Button>
-        <span className="text-xs text-muted-foreground">
-          {t(info?.connected ? "online" : "offline")}
-        </span>
-      </div>
-      <p className="text-xs text-muted-foreground">{t("cliHint")}</p>
+      <h2 className="text-base">{t("agentSettings")}</h2>
+      <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("localSetupHint")}</p>
+      <p className="mt-3 text-xs text-muted-foreground">{t("cliHint")}</p>
       <ul className="mt-3 space-y-2">
         {capabilities.map((capability) => (
           <li key={capability.provider} className="flex flex-wrap gap-3 text-sm">
@@ -139,11 +130,56 @@ export function RemoteSettings() {
           </Button>
         </div>
       ))}
-      {(error || info?.error) && (
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-medium">{t("localHistory")}</h3>
+          <p className="mt-1 max-w-[65ch] text-xs text-muted-foreground">{t("clearHistoryHint")}</p>
+        </div>
+        <Button
+          variant={confirmClear ? "destructive" : "outline"}
+          disabled={busy}
+          onBlur={() => setConfirmClear(false)}
+          onClick={() => {
+            if (!confirmClear) return setConfirmClear(true);
+            setConfirmClear(false);
+            void change(() => localRequest("agents.local.clear", { accountId }));
+          }}
+        >
+          {t(confirmClear ? "confirmClearHistory" : "clearHistory")}
+        </Button>
+      </div>
+      {(error === "unavailable" || error === "local") && (
         <p role="alert" className="mt-3 text-sm text-destructive">
-          {t("NETWORK_UNAVAILABLE")}
+          {t("LOCAL_UNAVAILABLE")}
         </p>
       )}
+      <div className="mt-8 border-t border-border pt-7">
+        <h3 className="text-base">{t("remoteTitle")}</h3>
+        <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("remoteHint")}</p>
+        <div className="my-5 flex flex-wrap items-center gap-4">
+          <Button
+            disabled={busy || !info}
+            variant={info?.enabled ? "outline" : "default"}
+            onClick={() =>
+              void change(
+                async () =>
+                  (await getBridge()).request.controlEnable({ accountId, enabled: !info?.enabled }),
+                "remote",
+              )
+            }
+          >
+            {t(info?.enabled ? "disconnect" : "connect")}
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            {t(info?.connected ? "online" : "offline")}
+          </span>
+        </div>
+        {(error === "remote" || info?.error) && (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {t("NETWORK_UNAVAILABLE")}
+          </p>
+        )}
+      </div>
     </section>
   );
 }

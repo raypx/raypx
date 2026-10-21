@@ -16,6 +16,7 @@
       "@orpc/server": "2.0.0-beta.43",
       "@tanstack/react-router": "^1.170.45",
       "@tanstack/react-start": "1.169.3",
+      "@tanstack/react-virtual": "^3.14.21",
       "@raypx-kit/env": "0.0.0-alpha.0",
       "@raypx-kit/intl": "0.0.0-alpha.0",
       "@raypx-kit/logger": "0.0.0-alpha.1",

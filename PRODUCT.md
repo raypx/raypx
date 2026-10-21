@@ -26,4 +26,6 @@ Email/password accounts, verification/reset, theme, English/Chinese, local files
 Cron automations and terminals. No old projects, tasks, research, AI providers,
 cloud file delivery, roles or admin. Remote Agent tasks and approvals synchronize
 between Web and opted-in Desktop devices; existing terminal sessions and full
-terminal streams are outside this release.
+terminal streams are outside this release. Desktop also runs private local Agent
+tasks directly through its bundled CLI. These tasks never upload to the account,
+even when remote access is enabled; the Desktop login requirement remains.

@@ -1,4 +1,4 @@
-import { RemoteSettings } from "../features/tasks/settings";
+import { AgentSettings } from "../features/tasks/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
 import { apiClient, authClient } from "../features/auth/client";
 import { createFileRoute } from "@tanstack/react-router";
@@ -38,7 +38,7 @@ function SettingsPage() {
         </div>
         <LanguageSelect icon={<Languages size={18} />} />
       </section>
-      <RemoteSettings key={session.data?.user.id ?? "signed-out"} />
+      <AgentSettings key={session.data?.user.id ?? "signed-out"} />
       <DeviceSettings
         client={apiClient}
         accountId={session.data?.user.id ?? null}

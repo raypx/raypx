@@ -30,6 +30,14 @@ Worker dependencies are bundled, and its build directory and output are separate
 from Node. Turbo gives `build` and `build:cloudflare` independent cache entries.
 The default verification graph builds both and probes their relocated artifacts.
 
+Web keeps page routes Worker-first, with `/assets/*` and `/favicon.png` excluded
+from `run_worker_first`. Existing JS, CSS and favicon files are served directly
+by Cloudflare Assets without invoking the Worker. Other routes continue through
+SSR and server handlers, including personalized account pages. Missing assets and
+unknown page routes retain 404 responses; no SPA or static HTML fallback is
+enabled. Nitro's generated `_headers` preserves immutable caching for built assets.
+The Worker artifact probe checks both routing paths under workerd.
+
 Web SSR always uses the API origin baked into `VITE_API_URL`; set it before
 building either Web target. Without a session cookie, signed-out SSR makes no
 API call. Logged-in SSR forwards only Better Auth cookies. The Web Worker's

@@ -16,16 +16,25 @@ export interface LocalAgentTask {
   binding: string;
   sessionId: string | null;
 }
+export const desktopBinding = (accountId: string) => `desktop:${accountId}`;
+export const isDesktopBinding = (binding: string) => binding.startsWith("desktop:");
 export class AgentStore {
   private readonly database: Database;
   readonly streamId: string;
-  constructor(directory: string) {
+  // Relay replay keeps a rolling window per binding; tests pass a small window.
+  constructor(
+    directory: string,
+    private readonly retained = 4096,
+  ) {
     this.database = new Database(join(directory, "agents.sqlite"), { create: true, strict: true });
     this.database.exec(
       "PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, providers TEXT NOT NULL); CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS receipts (id TEXT PRIMARY KEY); CREATE TABLE IF NOT EXISTS outbox (sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, binding TEXT NOT NULL, value TEXT NOT NULL);",
     );
     this.database.exec(
       "CREATE TABLE IF NOT EXISTS journal (sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, binding TEXT NOT NULL, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY,binding TEXT NOT NULL,value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS commands (id TEXT PRIMARY KEY,payload TEXT NOT NULL,result TEXT); CREATE TABLE IF NOT EXISTS agent_meta (id TEXT PRIMARY KEY,value TEXT NOT NULL);",
+    );
+    this.database.exec(
+      "CREATE INDEX IF NOT EXISTS journal_binding ON journal (binding,sequence); CREATE INDEX IF NOT EXISTS journal_task ON journal (binding,json_extract(value,'$.taskId'),sequence);",
     );
     this.database
       .query("INSERT OR IGNORE INTO agent_meta VALUES ('stream',?)")
@@ -43,6 +52,26 @@ export class AgentStore {
         providers: string;
       }[]
     ).map((row) => ({ id: row.id, providers: JSON.parse(row.providers) }));
+  }
+  deviceId(binding: string) {
+    const key = `device:${binding}`;
+    this.database
+      .query("INSERT OR IGNORE INTO agent_meta VALUES (?,?)")
+      .run(key, crypto.randomUUID());
+    return (
+      this.database.query("SELECT value FROM agent_meta WHERE id=?").get(key) as { value: string }
+    ).value;
+  }
+  taskEvents(binding: string, id: string, after: number) {
+    const rows = this.database
+      .query(
+        "SELECT sequence,value FROM journal WHERE binding=? AND sequence>? AND json_extract(value,'$.taskId')=? ORDER BY sequence LIMIT 100",
+      )
+      .all(binding, after, id) as { sequence: number; value: string }[];
+    return rows.map((row) => ({
+      cursor: row.sequence,
+      event: JSON.parse(row.value) as AgentEvent,
+    }));
   }
   configure(id: string, providers: AgentProvider[]) {
     this.database
@@ -89,18 +118,22 @@ export class AgentStore {
   }
   event(binding: string, event: AgentEvent) {
     this.database.transaction(() => {
-      const value = JSON.stringify(event);
-      this.database
-        .query("INSERT INTO outbox (id,binding,value) VALUES (?,?,?)")
-        .run(event.id, binding, value);
+      const value = JSON.stringify(event),
+        local = isDesktopBinding(binding);
+      if (!local)
+        this.database
+          .query("INSERT INTO outbox (id,binding,value) VALUES (?,?,?)")
+          .run(event.id, binding, value);
       this.database
         .query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)")
         .run(event.id, binding, value);
-      this.database
-        .query(
-          "DELETE FROM journal WHERE binding=? AND sequence < (SELECT sequence FROM journal WHERE binding=? ORDER BY sequence DESC LIMIT 1 OFFSET 4095)",
-        )
-        .run(binding, binding);
+      // Local history has no cloud copy; only relay replay is a rolling cache.
+      if (!local)
+        this.database
+          .query(
+            "DELETE FROM journal WHERE binding=? AND sequence < (SELECT sequence FROM journal WHERE binding=? ORDER BY sequence DESC LIMIT 1 OFFSET ?)",
+          )
+          .run(binding, binding, this.retained - 1);
     })();
   }
   sequence(binding: string) {
@@ -143,6 +176,19 @@ export class AgentStore {
         .query("SELECT value FROM requests WHERE binding=? ORDER BY rowid")
         .all(binding) as { value: string }[]
     ).map((row) => JSON.parse(row.value));
+  }
+  forget(binding: string, ids: string[]) {
+    this.database.transaction(() => {
+      for (const id of ids) {
+        this.database.query("DELETE FROM tasks WHERE id=?").run(id);
+        this.database
+          .query("DELETE FROM requests WHERE binding=? AND json_extract(value,'$.taskId')=?")
+          .run(binding, id);
+        this.database
+          .query("DELETE FROM journal WHERE binding=? AND json_extract(value,'$.taskId')=?")
+          .run(binding, id);
+      }
+    })();
   }
   request(binding: string, value: HumanRequest) {
     this.database.transaction(() => {
