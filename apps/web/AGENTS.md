@@ -22,11 +22,13 @@ application is an independent composition root and is never imported by another 
   `src/components/web-shell.tsx` (sidebar, account menu, pending count) for the account,
   settings, task and approval pages; `src/routes/(auth)/` is a logo-only layout for sign-in pages.
   Import heavy client modules only from the layout or route that needs them.
-- `(app)/route.tsx` guards the signed-in surface in `beforeLoad` with `ensureAccount`:
-  signed-out visitors are redirected to `/login`, an unavailable API still renders the
-  page so it can show the network error. The result is passed as route context; the
-  account page reads it instead of fetching again. The browser caches only a signed-in
-  result, so sign-out handlers call `forgetAccount()` before `router.invalidate()`.
+- `src/router.tsx` creates one TanStack QueryClient per router (per request on the
+  server), passes it as route context and connects SSR dehydration through `@tanstack/react-router-ssr-query`.
+- `(app)/route.tsx` guards the signed-in surface in `beforeLoad` with
+  `queryClient.fetchQuery(accountQuery())`: signed-out visitors are redirected to `/login`,
+  an unavailable API still renders the page so it can show the network error. Only a
+  signed-in result stays fresh; sign-out handlers call `queryClient.clear()` before
+  `router.invalidate()`. The account page reads the result from route context.
 - `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
   The root passes this request snapshot to the language provider so SSR and the first
   client render use the same locale and catalog; browser storage is restored only

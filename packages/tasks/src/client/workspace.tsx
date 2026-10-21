@@ -71,6 +71,7 @@ export function TaskWorkspace(props: Props & { view?: "tasks" | "approvals" }) {
 }
 function Workspace({
   client,
+  accountId,
   view = "tasks",
   local = false,
 }: Props & { view?: "tasks" | "approvals" }) {
@@ -96,7 +97,12 @@ function Workspace({
     },
     [client, before, view],
   );
-  const { data, error, refresh } = useRemoteQuery(load, true, client);
+  const { data, error, refresh } = useRemoteQuery(
+    ["workspace", accountId, view, before ?? null],
+    load,
+    true,
+    client,
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   return (
@@ -416,7 +422,7 @@ function TaskDetail({
     },
     [client, id],
   );
-  const { data, error, refresh } = useRemoteQuery(load, true, client);
+  const { data, error, refresh } = useRemoteQuery(["task", id], load, true, client);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ReturnType<typeof failureCode>>();
   const [prompt, setPrompt] = useState("");
@@ -705,12 +711,12 @@ export function DeviceSettings({
   pending,
 }: Omit<Props, "client"> & { client: TaskClient }) {
   if (!accountId || pending) return <Gate {...(pending === undefined ? {} : { pending })} />;
-  return <Devices key={accountId} client={client} />;
+  return <Devices key={accountId} accountId={accountId} client={client} />;
 }
-function Devices({ client }: { client: TaskClient }) {
+function Devices({ client, accountId }: { client: TaskClient; accountId: string }) {
   const t = useTranslations("tasks");
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
-  const { data, error, refresh } = useRemoteQuery(load, true, client);
+  const { data, error, refresh } = useRemoteQuery(["devices", accountId], load, true, client);
   const [busy, setBusy] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState(false);
   async function revoke(device: SyncDevice) {

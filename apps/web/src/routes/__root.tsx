@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider, ThemeScript } from "@raypx/ui/theme/client";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { resolveLocalePreference } from "@raypx/i18n/preferences";
 import { loadPreferences } from "../preferences";
 import appCss from "../styles.css?url";
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: () => loadPreferences(),
   // After hydration the providers own preferences; navigation never reloads them.
   staleTime: Infinity,

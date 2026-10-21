@@ -12,7 +12,7 @@ export function PendingCount({
     (signal: AbortSignal) => client.approvals.list({}, { signal }),
     [client],
   );
-  const { data } = useRemoteQuery(load, Boolean(accountId), client);
+  const { data } = useRemoteQuery(["approvals", accountId], load, Boolean(accountId), client);
   return data?.length ? (
     <span className="ml-auto rounded bg-muted px-1.5 text-xs tabular-nums">{data.length}</span>
   ) : null;

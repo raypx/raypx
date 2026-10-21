@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import type { TaskClient } from "@raypx/client";
 
@@ -45,9 +46,13 @@ async function workspace() {
     approvals: { list: async () => [] },
   } as unknown as TaskClient;
   render(
-    <BrowserLanguageProvider>
-      <TaskWorkspace client={client} accountId="account" />
-    </BrowserLanguageProvider>,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <BrowserLanguageProvider>
+        <TaskWorkspace client={client} accountId="account" />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
   );
   fireEvent.click(await screen.findByRole("button", { name: /Original task/ }));
   const input = await screen.findByRole("textbox", { name: "Follow up in the same session" });
@@ -122,9 +127,13 @@ it("answers single and multiple choice questions with labelled shadcn controls",
     approvals: { list: async () => [request], decide },
   } as unknown as TaskClient;
   render(
-    <BrowserLanguageProvider>
-      <TaskWorkspace client={client} accountId="account" view="approvals" />
-    </BrowserLanguageProvider>,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <BrowserLanguageProvider>
+        <TaskWorkspace client={client} accountId="account" view="approvals" />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
   );
   fireEvent.click(await screen.findByRole("radio", { name: "Beta" }));
   fireEvent.click(screen.getByRole("checkbox", { name: "Gamma" }));

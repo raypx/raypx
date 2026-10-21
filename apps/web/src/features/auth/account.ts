@@ -23,31 +23,3 @@ export const loadAccount = createIsomorphicFn()
     return readAccount(createApiClient({ baseUrl: apiUrl, headers: { cookie } }));
   })
   .client(() => readAccount(browserClient));
-
-let signedIn: Promise<AccountState> | undefined;
-
-/**
- * Account read for the `(app)` guard. The browser reuses a signed-in result across
- * navigations; signed-out and unavailable results are always re-read.
- */
-export const ensureAccount = createIsomorphicFn()
-  .server(() => loadAccount())
-  .client(() => {
-    if (signedIn) return signedIn;
-    const pending = loadAccount();
-    signedIn = pending;
-    void pending.then(
-      (state) => {
-        if (state.status !== "signed-in" && signedIn === pending) signedIn = undefined;
-      },
-      () => {
-        if (signedIn === pending) signedIn = undefined;
-      },
-    );
-    return pending;
-  });
-
-/** Drop the cached account before invalidating the router after sign-out. */
-export function forgetAccount() {
-  signedIn = undefined;
-}

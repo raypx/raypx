@@ -25,11 +25,13 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@tanstack/react-query": "catalog:",
     "@types/react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "react": "catalog:"
   },
   "peerDependencies": {
+    "@tanstack/react-query": "^5.104.5",
     "react": "^19.3.0"
   },
   "raypx": {

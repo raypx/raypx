@@ -18,6 +18,7 @@ import {
   vi,
 } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "../../../src/routeTree.gen";
 
 const mocks = vi.hoisted(() => ({
@@ -27,7 +28,7 @@ const mocks = vi.hoisted(() => ({
   requestPasswordReset: vi.fn(),
   resetPassword: vi.fn(),
   signOut: vi.fn(),
-  ensureAccount: vi.fn(),
+  loadAccount: vi.fn(),
 }));
 vi.mock("../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
@@ -44,8 +45,7 @@ vi.mock("../../../src/features/auth/client", () => ({
 }));
 vi.mock("../../../src/features/tasks/client", () => ({ apiClient: {} }));
 vi.mock("../../../src/features/auth/account", () => ({
-  ensureAccount: mocks.ensureAccount,
-  forgetAccount: () => {},
+  loadAccount: mocks.loadAccount,
 }));
 vi.mock("../../../src/preferences", () => ({
   loadPreferences: () => ({ theme: "light", locale: "en", systemLocales: ["en"] }),
@@ -71,20 +71,24 @@ beforeEach(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
-  mocks.ensureAccount.mockResolvedValue({ status: "signed-out" });
+  mocks.loadAccount.mockResolvedValue({ status: "signed-out" });
 });
 
 async function page(url: string) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createRouter({
     routeTree,
+    context: { queryClient },
     history: createMemoryHistory({ initialEntries: [url] }),
     defaultPendingMinMs: 0,
   });
   await router.load();
   render(
-    <BrowserLanguageProvider>
-      <RouterProvider router={router} />
-    </BrowserLanguageProvider>,
+    <QueryClientProvider client={queryClient}>
+      <BrowserLanguageProvider>
+        <RouterProvider router={router} />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
   );
   return router;
 }
@@ -135,7 +139,7 @@ describe("authentication routes", () => {
   });
 
   it("keeps application routes when the API is unavailable", async () => {
-    mocks.ensureAccount.mockResolvedValue({ status: "unavailable" });
+    mocks.loadAccount.mockResolvedValue({ status: "unavailable" });
     const router = await page("/");
     expect(router.state.location.pathname).toBe("/");
     expect(await screen.findByRole("button", { name: "Try again" })).toBeTruthy();
@@ -143,7 +147,7 @@ describe("authentication routes", () => {
 
   it("returns to the account route after successful sign-in", async () => {
     mocks.signIn.mockImplementation(async () => {
-      mocks.ensureAccount.mockResolvedValue({
+      mocks.loadAccount.mockResolvedValue({
         status: "signed-in",
         account: { id: "user-1", email: "ada@example.test", name: "Ada" },
       });

@@ -1,65 +1,54 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { type QueryKey, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TaskClient } from "@raypx/client";
 
 export type TaskWorkspaceClient = Pick<TaskClient, "tasks" | "approvals" | "subscribe"> & {
   devices: Pick<TaskClient["devices"], "list">;
 };
+const scopes = new WeakMap<object, number>();
+let nextScope = 0;
+// Web, the Desktop IPC adapter and the composite pending client share one QueryClient.
+function clientScope(client: object) {
+  let scope = scopes.get(client);
+  if (scope === undefined) scopes.set(client, (scope = ++nextScope));
+  return scope;
+}
+/** Read remote task state, refreshed by relay notifications while the page is visible. */
 export function useRemoteQuery<T>(
+  key: QueryKey,
   load: (signal: AbortSignal) => Promise<T>,
   enabled: boolean,
   client: TaskWorkspaceClient,
 ) {
-  const [data, setData] = useState<T>();
-  const [error, setError] = useState(false);
-  const [revision, setRevision] = useState(0);
+  const queryClient = useQueryClient();
+  const queryKey = ["tasks", clientScope(client), ...key];
+  const query = useQuery({
+    queryKey,
+    queryFn: ({ signal }) => load(AbortSignal.any([signal, AbortSignal.timeout(10_000)])),
+    enabled,
+    staleTime: 0,
+    refetchOnWindowFocus: "always",
+  });
+  const serializedKey = JSON.stringify(queryKey);
   useEffect(() => {
     if (!enabled) return;
-    let active = true,
-      loading = false,
-      queued = false;
-    const controller = new AbortController();
-    const poll = async () => {
-      if (!active || document.hidden) return;
-      if (loading) {
-        queued = true;
-        return;
-      }
-      loading = true;
-      queued = false;
-      try {
-        const value = await load(AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]));
-        if (active) {
-          setData(value);
-          setError(false);
-        }
-      } catch {
-        if (active) setError(true);
-      } finally {
-        loading = false;
-        if (queued && active) void poll();
-      }
-    };
+    const refresh = () =>
+      void queryClient.invalidateQueries({ queryKey: JSON.parse(serializedKey) });
     let unsubscribe: (() => void) | undefined;
     const visible = () => {
       unsubscribe?.();
-      unsubscribe = undefined;
-      if (!document.hidden) {
-        unsubscribe = client.subscribe?.(() => void poll());
-        void poll();
-      }
+      unsubscribe = document.hidden ? undefined : client.subscribe?.(refresh);
     };
     document.addEventListener("visibilitychange", visible);
     visible();
     return () => {
-      active = false;
-      controller.abort();
       unsubscribe?.();
       document.removeEventListener("visibilitychange", visible);
     };
-  }, [load, enabled, revision, client]);
+  }, [queryClient, serializedKey, enabled, client]);
   return {
-    data: enabled ? data : undefined,
-    error,
-    refresh: () => setRevision((value) => value + 1),
+    data: enabled ? query.data : undefined,
+    error: query.isError,
+    refresh: () => void query.refetch(),
   };
 }

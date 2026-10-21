@@ -8,6 +8,7 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AgentTask, HumanRequest, SyncDevice } from "@raypx/contracts/tasks";
 import { DesktopTaskWorkspace } from "../../../../../src/features/tasks/workspace";
 import { localTaskClient } from "../../../../../src/features/tasks/local-client";
@@ -122,9 +123,13 @@ async function page() {
   const router = createRouter({ routeTree, history });
   await router.load();
   render(
-    <BrowserLanguageProvider>
-      <RouterProvider router={router} />
-    </BrowserLanguageProvider>,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <BrowserLanguageProvider>
+        <RouterProvider router={router} />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
   );
 }
 it("defaults to local tasks and completes an approval while the cloud API is unavailable", async () => {

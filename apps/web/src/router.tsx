@@ -1,8 +1,22 @@
 import { createRouter } from "@tanstack/react-router";
+import { QueryClient } from "@tanstack/react-query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
-  return createRouter({ routeTree, defaultPreload: "intent", scrollRestoration: true });
+  // One QueryClient per router: per request on the server, once in the browser.
+  // Remote calls are POST and never retried (see @raypx/client).
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: 30_000 }, mutations: { retry: false } },
+  });
+  const router = createRouter({
+    routeTree,
+    context: { queryClient },
+    defaultPreload: "intent",
+    scrollRestoration: true,
+  });
+  setupRouterSsrQueryIntegration({ router, queryClient });
+  return router;
 }
 declare module "@tanstack/react-router" {
   interface Register {

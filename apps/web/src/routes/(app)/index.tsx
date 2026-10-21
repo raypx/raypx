@@ -5,7 +5,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { authClient, webUrl } from "../../features/auth/client";
-import { forgetAccount } from "../../features/auth/account";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/(app)/")({
   loader: ({ context }) => context.account,
@@ -17,6 +17,7 @@ function AccountPage() {
   const t = useTranslations("auth");
   const c = useTranslations("common");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const auth = useAuthActions({ client: authClient, webUrl });
   const [refreshing, setRefreshing] = useState(false);
   const busy = auth.busy || refreshing;
@@ -47,7 +48,8 @@ function AccountPage() {
           busy={busy}
           onSignOut={() =>
             auth.signOut(() => {
-              forgetAccount();
+              // Drop every account-scoped query before the guard re-reads the session.
+              queryClient.clear();
               return router.invalidate();
             })
           }

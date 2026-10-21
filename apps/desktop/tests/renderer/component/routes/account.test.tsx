@@ -25,6 +25,7 @@ import {
 } from "vite-plus/test";
 import type { AccountProfile } from "@raypx/contracts/api";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@raypx/ui/theme/client";
 import { routeTree } from "../../../../src/routeTree.gen";
 
@@ -142,11 +143,15 @@ function testRouter(
 
 function mount(router: ReturnType<typeof testRouter>) {
   return render(
-    <ThemeProvider disableScript>
-      <BrowserLanguageProvider>
-        <RouterProvider router={router} />
-      </BrowserLanguageProvider>
-    </ThemeProvider>,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <ThemeProvider disableScript>
+        <BrowserLanguageProvider>
+          <RouterProvider router={router} />
+        </BrowserLanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>,
   );
 }
 

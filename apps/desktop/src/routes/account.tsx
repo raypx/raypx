@@ -1,4 +1,5 @@
 import { readAccount } from "@raypx/account";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AccountDetails,
   AccountSkeleton,
@@ -39,6 +40,7 @@ function AccountPage() {
   const state = Route.useLoaderData();
   const refreshing = Route.useMatch({ select: (match) => !!match.isFetching });
   const router = useRouter();
+  const queryClient = useQueryClient();
   const session = authClient.useSession();
   const auth = useAuthActions({ client: authClient, webUrl });
   const busy = auth.busy || refreshing;
@@ -83,7 +85,16 @@ function AccountPage() {
       ) : state.status === "signed-out" ? (
         <SignedOutAccount LinkComponent={AccountLink} />
       ) : (
-        <AccountDetails account={state.account} busy={busy} onSignOut={() => auth.signOut(refresh)}>
+        <AccountDetails
+          account={state.account}
+          busy={busy}
+          onSignOut={() =>
+            auth.signOut(() => {
+              queryClient.clear();
+              return refresh();
+            })
+          }
+        >
           {auth.error && (
             <div
               role="alert"

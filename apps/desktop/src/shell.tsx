@@ -1,4 +1,5 @@
-import { PendingCount } from "@raypx/tasks/client";
+import { PendingCount } from "@raypx/tasks/client/pending-count";
+import { useQueryClient } from "@tanstack/react-query";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { apiClient, authClient, webUrl } from "./features/auth/client";
@@ -37,6 +38,7 @@ export function ShellSkeleton() {
 export function DesktopShell() {
   const session = authClient.useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const auth = useAuthActions({ client: authClient, webUrl });
   const path = useRouterState({ select: (state) => state.location.pathname });
   const c = useTranslations("common");
@@ -158,6 +160,8 @@ export function DesktopShell() {
             onNavigate={(destination) => void router.navigate({ to: `/${destination}` })}
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
+                // Drop every account-scoped query before the next session reads.
+                queryClient.clear();
                 await router.invalidate();
                 await router.navigate({ to: "/login", replace: true });
               });

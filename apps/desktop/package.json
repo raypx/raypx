@@ -31,6 +31,7 @@
     "@raypx/i18n": "workspace:*",
     "@raypx/tasks": "workspace:*",
     "@raypx/ui": "workspace:*",
+    "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "@xterm/addon-fit": "catalog:",

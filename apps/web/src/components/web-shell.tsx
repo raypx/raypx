@@ -4,7 +4,7 @@ import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { authClient, webUrl } from "../features/auth/client";
 import { apiClient } from "../features/tasks/client";
-import { forgetAccount } from "../features/auth/account";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { ListTodo, Inbox, Settings, CircleUserRound } from "lucide-react";
 import { Logo } from "@raypx/ui/logo";
@@ -16,6 +16,7 @@ const navigationClassName =
 export function WebShell() {
   const session = authClient.useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const accountId = session.data?.user.id ?? null;
   useEffect(() => {
     apiClient.setAccount?.(accountId);
@@ -92,7 +93,7 @@ export function WebShell() {
             }
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
-                forgetAccount();
+                queryClient.clear();
                 await router.invalidate();
                 await router.navigate({ to: "/" });
               });
