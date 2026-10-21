@@ -27,10 +27,10 @@ const mocks = vi.hoisted(() => ({
   requestPasswordReset: vi.fn(),
   resetPassword: vi.fn(),
   signOut: vi.fn(),
+  ensureAccount: vi.fn(),
 }));
 vi.mock("../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
-  apiClient: {},
   loadAccount: async () => ({ status: "signed-out" }),
   authClient: {
     useSession: () => ({ data: null, isPending: false }),
@@ -42,8 +42,10 @@ vi.mock("../../../src/features/auth/client", () => ({
     signOut: mocks.signOut,
   },
 }));
+vi.mock("../../../src/features/tasks/client", () => ({ apiClient: {} }));
 vi.mock("../../../src/features/auth/account", () => ({
-  loadAccount: async () => ({ status: "signed-out" }),
+  ensureAccount: mocks.ensureAccount,
+  forgetAccount: () => {},
 }));
 vi.mock("../../../src/preferences", () => ({
   loadPreferences: () => ({ theme: "light", locale: "en", systemLocales: ["en"] }),
@@ -69,6 +71,7 @@ beforeEach(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
+  mocks.ensureAccount.mockResolvedValue({ status: "signed-out" });
 });
 
 async function page(url: string) {
@@ -125,8 +128,27 @@ describe("authentication routes", () => {
     expect(screen.getByRole("link", { name: "Resend verification email" })).toBeTruthy();
   });
 
+  it("redirects signed-out visitors from application routes to sign-in", async () => {
+    const router = await page("/tasks");
+    expect(router.state.location.pathname).toBe("/login");
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeTruthy();
+  });
+
+  it("keeps application routes when the API is unavailable", async () => {
+    mocks.ensureAccount.mockResolvedValue({ status: "unavailable" });
+    const router = await page("/");
+    expect(router.state.location.pathname).toBe("/");
+    expect(await screen.findByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+
   it("returns to the account route after successful sign-in", async () => {
-    mocks.signIn.mockResolvedValue({ data: {}, error: null });
+    mocks.signIn.mockImplementation(async () => {
+      mocks.ensureAccount.mockResolvedValue({
+        status: "signed-in",
+        account: { id: "user-1", email: "ada@example.test", name: "Ada" },
+      });
+      return { data: {}, error: null };
+    });
     const router = await page("/login");
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "ada@example.test" },

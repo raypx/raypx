@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/theme/client";
-import { Route } from "../../../src/routes/settings/route";
+import { Route } from "../../../src/routes/(app)/settings";
 
 const SettingsPage = Route.options.component!;
 

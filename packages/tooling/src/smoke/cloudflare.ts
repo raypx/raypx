@@ -131,22 +131,25 @@ async function probeApi(base: string) {
 }
 
 async function probeWeb(base: string) {
-  const home = await probeFetch(base, { headers: { "accept-language": "zh" } });
-  const html = await home.text();
+  const home = await probeFetch(base, { redirect: "manual" });
+  if (home.headers.get(workerProbeHeader) !== "1" || !isSignInRedirect(home))
+    throw new Error("Worker Web sign-in redirect failed");
+  const login = await probeFetch(`${base}/login`, { headers: { "accept-language": "zh" } });
+  const html = await login.text();
   if (
-    !home.ok ||
-    home.headers.get(workerProbeHeader) !== "1" ||
+    !login.ok ||
+    login.headers.get(workerProbeHeader) !== "1" ||
     !html.includes('<html lang="zh"') ||
-    !html.includes("<h1>你的账号</h1>")
+    !html.includes("欢迎回来</h2>")
   )
     throw new Error("Worker Web SSR locale failed");
-  const settings = await probeFetch(`${base}/settings`, {
+  const reset = await probeFetch(`${base}/forgot-password`, {
     headers: { cookie: "locale=en; theme=dark" },
   });
   if (
-    !settings.ok ||
-    settings.headers.get(workerProbeHeader) !== "1" ||
-    !(await settings.text()).includes("<h1>Make it yours</h1>")
+    !reset.ok ||
+    reset.headers.get(workerProbeHeader) !== "1" ||
+    !(await reset.text()).includes("Reset password</h2>")
   )
     throw new Error("Worker Web preferences failed");
   const health = await probeFetch(`${base}/health`);
@@ -182,6 +185,12 @@ async function probeWeb(base: string) {
     if (path === "/__missing" && response.headers.get(workerProbeHeader) !== "1")
       throw new Error("Worker Web unknown page routes must reach the Worker");
   }
+}
+
+/** The signed-in surface answers signed-out visitors with a redirect to /login. */
+function isSignInRedirect(response: Response): boolean {
+  const location = response.headers.get("location") ?? "";
+  return response.status >= 300 && response.status < 400 && /\/login(?:$|\?)/.test(location);
 }
 
 function probeFetch(url: string, init?: RequestInit): Promise<Response> {

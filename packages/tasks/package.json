@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
+    "./client/pending-count": "./src/client/pending-count.tsx",
     "./client/styles.css": "./src/client/styles.css"
   },
   "scripts": {
@@ -36,6 +37,7 @@
     "target": "universal",
     "entryTargets": {
       "./client": "browser",
+      "./client/pending-count": "browser",
       "./client/styles.css": "browser"
     },
     "sourceTargets": {

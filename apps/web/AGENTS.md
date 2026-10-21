@@ -15,20 +15,31 @@ application is an independent composition root and is never imported by another 
 - Tests live under `tests/`, alongside shared test setup; keep test files
   outside `src/routes/` so route discovery needs no test-specific exclusions.
   Use `tests/unit/` and `tests/component/` for test kind, then feature directories.
-- `src/router.tsx` exports `getRouter`; `src/components/web-shell.tsx` owns the page layout.
-- `src/routes/__root.tsx` renders the document, theme script and preference providers.
+- `src/router.tsx` exports `getRouter`. `src/routes/__root.tsx` renders only the document,
+  theme script and preference providers; keep layout and feature dependencies out of it.
+- Route-group layouts (`route.tsx` inside a `(group)` directory, no URL segment) isolate
+  first-load JavaScript: `src/routes/(app)/` renders
+  `src/components/web-shell.tsx` (sidebar, account menu, pending count) for the account,
+  settings, task and approval pages; `src/routes/(auth)/` is a logo-only layout for sign-in pages.
+  Import heavy client modules only from the layout or route that needs them.
+- `(app)/route.tsx` guards the signed-in surface in `beforeLoad` with `ensureAccount`:
+  signed-out visitors are redirected to `/login`, an unavailable API still renders the
+  page so it can show the network error. The result is passed as route context; the
+  account page reads it instead of fetching again. The browser caches only a signed-in
+  result, so sign-out handlers call `forgetAccount()` before `router.invalidate()`.
 - `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
   The root passes this request snapshot to the language provider so SSR and the first
   client render use the same locale and catalog; browser storage is restored only
   after hydration. Language switches use `useLanguagePreference`, never a second
   locale state or route navigation.
-- `src/features/auth/client.ts` creates Better Auth and oRPC clients.
+- `src/features/auth/client.ts` creates the Better Auth client; `src/features/tasks/client.ts`
+  creates the oRPC relay task client so sign-in pages never load relay schemas.
   `src/features/auth/account.ts` adapts `@raypx/account` reads to SSR cookies and
   browser credentials. Shared account views come from `@raypx/account/client`.
 - Authentication forms use `AuthForm` from `@raypx/auth/client`, backed by
   `@raypx/auth/hooks`.
   Sign-out uses the hook directly; routes own navigation and loader invalidation.
-- `src/routes/(auth)/` groups the authentication routes without a parent layout.
+- `src/routes/(auth)/` holds the authentication routes under the logo-only layout.
   Each route renders the thin `src/features/auth/components/auth-form.tsx` adapter
   with its mode. The adapter injects the client, router query and navigation into
   the shared form, including the `/` account destination.
@@ -48,7 +59,7 @@ behavior by client/contracts.
 - Remote behavior goes through the API over HTTP. Never import API, auth server,
   DB or mail code, and do not duplicate API behavior in server functions.
 - Server rendering forwards only Better Auth cookies to the API, never other inbound
-  headers. Without a session cookie it renders signed-out without calling the API.
+  headers. Without a session cookie it redirects to sign-in without calling the API.
 - Render-time code must not touch `window`/`document`; read the URL through the router.
 - `VITE_API_URL` is baked at build time for browser and server. The server must
   receive the session cookie: one shared origin, or API AUTH_DOMAIN on sibling hosts.
@@ -81,6 +92,7 @@ bun run build:web:cloudflare
 
 ## Remote tasks
 
-Task and approval routes use `@raypx/tasks/client`, with account-keyed state and
+Task and approval routes use `@raypx/tasks/client`; the shell imports only
+`@raypx/tasks/client/pending-count`. Both use account-keyed state and
 visibility-aware relay subscriptions. Settings lists device connections. Never render agent
 content as HTML or send a raw local method, path or executable to the API.

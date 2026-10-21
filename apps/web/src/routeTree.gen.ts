@@ -9,25 +9,25 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as appRouteRouteImport } from './routes/(app)/route'
+import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as HealthRouteImport } from './routes/health'
-import { Route as SettingsRouteRouteImport } from './routes/settings/route'
-import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as appIndexRouteImport } from './routes/(app)/index'
+import { Route as appApprovalsRouteImport } from './routes/(app)/approvals'
+import { Route as appSettingsRouteImport } from './routes/(app)/settings'
+import { Route as appTasksRouteImport } from './routes/(app)/tasks'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const appRouteRoute = appRouteRouteImport.update({
+  id: '/(app)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApprovalsRoute = ApprovalsRouteImport.update({
-  id: '/approvals',
-  path: '/approvals',
+const authRouteRoute = authRouteRouteImport.update({
+  id: '/(auth)',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HealthRoute = HealthRouteImport.update({
@@ -35,145 +35,152 @@ const HealthRoute = HealthRouteImport.update({
   path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRouteRoute = SettingsRouteRouteImport.update({
+const appIndexRoute = appIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appApprovalsRoute = appApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appSettingsRoute = appSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => appRouteRoute,
 } as any)
-const TasksRoute = TasksRouteImport.update({
+const appTasksRoute = appTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => appRouteRoute,
 } as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
-  id: '/(auth)/forgot-password',
+  id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
 const authLoginRoute = authLoginRouteImport.update({
-  id: '/(auth)/login',
+  id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
 const authResetPasswordRoute = authResetPasswordRouteImport.update({
-  id: '/(auth)/reset-password',
+  id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
 const authSignupRoute = authSignupRouteImport.update({
-  id: '/(auth)/signup',
+  id: '/signup',
   path: '/signup',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
 const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
-  id: '/(auth)/verify-email',
+  id: '/verify-email',
   path: '/verify-email',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteRoute
-  '/approvals': typeof ApprovalsRoute
   '/health': typeof HealthRoute
-  '/tasks': typeof TasksRoute
+  '/approvals': typeof appApprovalsRoute
+  '/settings': typeof appSettingsRoute
+  '/tasks': typeof appTasksRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/': typeof appIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteRoute
-  '/approvals': typeof ApprovalsRoute
   '/health': typeof HealthRoute
-  '/tasks': typeof TasksRoute
+  '/approvals': typeof appApprovalsRoute
+  '/settings': typeof appSettingsRoute
+  '/tasks': typeof appTasksRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/login': typeof authLoginRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
+  '/': typeof appIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteRoute
-  '/approvals': typeof ApprovalsRoute
+  '/(app)': typeof appRouteRouteWithChildren
+  '/(auth)': typeof authRouteRouteWithChildren
   '/health': typeof HealthRoute
-  '/tasks': typeof TasksRoute
+  '/(app)/approvals': typeof appApprovalsRoute
+  '/(app)/settings': typeof appSettingsRoute
+  '/(app)/tasks': typeof appTasksRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
+  '/(app)/': typeof appIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/settings'
-    | '/approvals'
     | '/health'
+    | '/approvals'
+    | '/settings'
     | '/tasks'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/signup'
     | '/verify-email'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/settings'
-    | '/approvals'
     | '/health'
+    | '/approvals'
+    | '/settings'
     | '/tasks'
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/signup'
     | '/verify-email'
+    | '/'
   id:
     | '__root__'
-    | '/'
-    | '/settings'
-    | '/approvals'
+    | '/(app)'
+    | '/(auth)'
     | '/health'
-    | '/tasks'
+    | '/(app)/approvals'
+    | '/(app)/settings'
+    | '/(app)/tasks'
     | '/(auth)/forgot-password'
     | '/(auth)/login'
     | '/(auth)/reset-password'
     | '/(auth)/signup'
     | '/(auth)/verify-email'
+    | '/(app)/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SettingsRouteRoute: typeof SettingsRouteRoute
-  ApprovalsRoute: typeof ApprovalsRoute
+  appRouteRoute: typeof appRouteRouteWithChildren
+  authRouteRoute: typeof authRouteRouteWithChildren
   HealthRoute: typeof HealthRoute
-  TasksRoute: typeof TasksRoute
-  authForgotPasswordRoute: typeof authForgotPasswordRoute
-  authLoginRoute: typeof authLoginRoute
-  authResetPasswordRoute: typeof authResetPasswordRoute
-  authSignupRoute: typeof authSignupRoute
-  authVerifyEmailRoute: typeof authVerifyEmailRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/(app)': {
+      id: '/(app)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof appRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/approvals': {
-      id: '/approvals'
-      path: '/approvals'
-      fullPath: '/approvals'
-      preLoaderRoute: typeof ApprovalsRouteImport
+    '/(auth)': {
+      id: '/(auth)'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/health': {
@@ -183,69 +190,114 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings': {
-      id: '/settings'
+    '/(app)/': {
+      id: '/(app)/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof appIndexRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/approvals': {
+      id: '/(app)/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof appApprovalsRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/settings': {
+      id: '/(app)/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof appSettingsRouteImport
+      parentRoute: typeof appRouteRoute
     }
-    '/tasks': {
-      id: '/tasks'
+    '/(app)/tasks': {
+      id: '/(app)/tasks'
       path: '/tasks'
       fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof appTasksRouteImport
+      parentRoute: typeof appRouteRoute
     }
     '/(auth)/forgot-password': {
       id: '/(auth)/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof authForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(auth)/login': {
       id: '/(auth)/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof authLoginRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(auth)/reset-password': {
       id: '/(auth)/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof authResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(auth)/signup': {
       id: '/(auth)/signup'
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof authSignupRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(auth)/verify-email': {
       id: '/(auth)/verify-email'
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof authVerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof authRouteRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  SettingsRouteRoute: SettingsRouteRoute,
-  ApprovalsRoute: ApprovalsRoute,
-  HealthRoute: HealthRoute,
-  TasksRoute: TasksRoute,
+interface appRouteRouteChildren {
+  appApprovalsRoute: typeof appApprovalsRoute
+  appSettingsRoute: typeof appSettingsRoute
+  appTasksRoute: typeof appTasksRoute
+  appIndexRoute: typeof appIndexRoute
+}
+
+const appRouteRouteChildren: appRouteRouteChildren = {
+  appApprovalsRoute: appApprovalsRoute,
+  appSettingsRoute: appSettingsRoute,
+  appTasksRoute: appTasksRoute,
+  appIndexRoute: appIndexRoute,
+}
+
+const appRouteRouteWithChildren = appRouteRoute._addFileChildren(
+  appRouteRouteChildren,
+)
+
+interface authRouteRouteChildren {
+  authForgotPasswordRoute: typeof authForgotPasswordRoute
+  authLoginRoute: typeof authLoginRoute
+  authResetPasswordRoute: typeof authResetPasswordRoute
+  authSignupRoute: typeof authSignupRoute
+  authVerifyEmailRoute: typeof authVerifyEmailRoute
+}
+
+const authRouteRouteChildren: authRouteRouteChildren = {
   authForgotPasswordRoute: authForgotPasswordRoute,
   authLoginRoute: authLoginRoute,
   authResetPasswordRoute: authResetPasswordRoute,
   authSignupRoute: authSignupRoute,
   authVerifyEmailRoute: authVerifyEmailRoute,
+}
+
+const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
+  authRouteRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  appRouteRoute: appRouteRouteWithChildren,
+  authRouteRoute: authRouteRouteWithChildren,
+  HealthRoute: HealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,11 +1,12 @@
 import { DeviceSettings } from "@raypx/tasks/client";
-import { apiClient, authClient } from "../../features/auth/client";
+import { authClient } from "../../features/auth/client";
+import { apiClient } from "../../features/tasks/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { Languages } from "lucide-react";
 import { ThemePicker, useTheme } from "@raypx/ui/theme/client";
 import { LanguageSelect, useTranslations } from "@raypx/i18n/browser";
 
-export const Route = createFileRoute("/settings")({ component: SettingsPage });
+export const Route = createFileRoute("/(app)/settings")({ component: SettingsPage });
 
 function SettingsPage() {
   const t = useTranslations("settings");

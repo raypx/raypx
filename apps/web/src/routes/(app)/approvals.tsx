@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import { apiClient, authClient } from "../features/auth/client";
-export const Route = createFileRoute("/approvals")({ component: Page });
+import { authClient } from "../../features/auth/client";
+import { apiClient } from "../../features/tasks/client";
+export const Route = createFileRoute("/(app)/approvals")({ component: Page });
 function Page() {
   const session = authClient.useSession();
   return (

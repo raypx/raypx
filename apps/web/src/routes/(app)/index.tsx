@@ -1,14 +1,14 @@
-import { AccountDetails, SignedOutAccount, type AccountLinkProps } from "@raypx/account/client";
+import { AccountDetails } from "@raypx/account/client";
 import { useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { authClient, webUrl } from "../features/auth/client";
-import { loadAccount } from "../features/auth/account";
+import { authClient, webUrl } from "../../features/auth/client";
+import { forgetAccount } from "../../features/auth/account";
 
-export const Route = createFileRoute("/")({
-  loader: () => loadAccount(),
+export const Route = createFileRoute("/(app)/")({
+  loader: ({ context }) => context.account,
   component: AccountPage,
 });
 
@@ -41,13 +41,16 @@ function AccountPage() {
             {c("retry")}
           </Button>
         </div>
-      ) : state.status === "signed-out" ? (
-        <SignedOutAccount LinkComponent={AccountLink} />
       ) : (
         <AccountDetails
           account={state.account}
           busy={busy}
-          onSignOut={() => auth.signOut(() => router.invalidate())}
+          onSignOut={() =>
+            auth.signOut(() => {
+              forgetAccount();
+              return router.invalidate();
+            })
+          }
         >
           {auth.error && (
             <p
@@ -60,13 +63,5 @@ function AccountPage() {
         </AccountDetails>
       )}
     </section>
-  );
-}
-
-function AccountLink({ to, className, children }: AccountLinkProps) {
-  return (
-    <Link to={`/${to}`} className={className}>
-      {children}
-    </Link>
   );
 }

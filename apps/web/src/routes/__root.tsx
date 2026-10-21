@@ -4,7 +4,6 @@ import { ThemeProvider, ThemeScript } from "@raypx/ui/theme/client";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { resolveLocalePreference } from "@raypx/i18n/preferences";
 import { loadPreferences } from "../preferences";
-import { WebShell } from "../components/web-shell";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -25,7 +24,6 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
-  component: WebShell,
 });
 
 function RootDocument({ children }: { children: ReactNode }) {

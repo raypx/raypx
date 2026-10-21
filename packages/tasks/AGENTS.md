@@ -2,7 +2,8 @@
 
 Shared Agent task and approval views for Web and Desktop.
 The root exports pure state helpers; /client exports DOM components, the minimal
-TaskWorkspaceClient interface and visibility-aware subscriptions. Web injects its
+TaskWorkspaceClient interface and visibility-aware subscriptions. /client/pending-count
+exports only the approval badge for always-mounted shells, without the workspace or virtualizer. Web injects its
 relay client; Desktop can inject an IPC adapter and local copy. DeviceSettings
 continues to require the remote device management client. No native, database,
 authentication or CLI implementation imports. Never display raw exception messages or render

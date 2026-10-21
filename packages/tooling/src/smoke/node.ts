@@ -89,15 +89,20 @@ export async function probeWeb(root: string): Promise<void> {
     "web",
     () => ({ NODE_ENV: "production" }),
     async (base) => {
-      // Signed-out requests carry no session cookie, so rendering never calls the API.
-      const home = await fetch(base, { headers: { accept: "text/html", "accept-language": "zh" } });
-      const html = await home.text();
-      if (!home.ok || !html.includes('<html lang="zh"') || !html.includes("<h1>你的账号</h1>"))
-        throw new Error("Web did not server-render the account page in the request language");
-      const settings = await fetch(`${base}/settings`, {
+      // Signed-out requests carry no session cookie, so the guard redirects without calling the API.
+      const home = await fetch(base, { headers: { accept: "text/html" }, redirect: "manual" });
+      if (!isSignInRedirect(home))
+        throw new Error("Web did not redirect a signed-out visitor to sign-in");
+      const login = await fetch(`${base}/login`, {
+        headers: { accept: "text/html", "accept-language": "zh" },
+      });
+      const html = await login.text();
+      if (!login.ok || !html.includes('<html lang="zh"') || !html.includes("欢迎回来</h2>"))
+        throw new Error("Web did not server-render sign-in in the request language");
+      const reset = await fetch(`${base}/forgot-password`, {
         headers: { accept: "text/html", cookie: "locale=en; theme=dark" },
       });
-      if (!settings.ok || !(await settings.text()).includes("<h1>Make it yours</h1>"))
+      if (!reset.ok || !(await reset.text()).includes("Reset password</h2>"))
         throw new Error("Web did not render deep navigation with device preferences");
       const asset = /\/assets\/[^"]+\.js/.exec(html)?.[0];
       if (!asset || !(await fetch(`${base}${asset}`)).ok)
@@ -110,4 +115,10 @@ export async function probeWeb(root: string): Promise<void> {
     },
   );
   console.log("Node Web artifact probe passed (relocated output, SSR locale, assets, 404s)");
+}
+
+/** The signed-in surface answers signed-out visitors with a redirect to /login. */
+function isSignInRedirect(response: Response): boolean {
+  const location = response.headers.get("location") ?? "";
+  return response.status >= 300 && response.status < 400 && /\/login(?:$|\?)/.test(location);
 }

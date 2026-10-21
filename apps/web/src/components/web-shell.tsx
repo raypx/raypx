@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { PendingCount } from "@raypx/tasks/client";
+import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { apiClient, authClient, webUrl } from "../features/auth/client";
+import { authClient, webUrl } from "../features/auth/client";
+import { apiClient } from "../features/tasks/client";
+import { forgetAccount } from "../features/auth/account";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { ListTodo, Inbox, Settings, CircleUserRound } from "lucide-react";
 import { Logo } from "@raypx/ui/logo";
@@ -90,6 +92,7 @@ export function WebShell() {
             }
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
+                forgetAccount();
                 await router.invalidate();
                 await router.navigate({ to: "/" });
               });
