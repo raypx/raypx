@@ -1,0 +1,87 @@
+apps/desktop/package.json
+  s_de2d79b0b75518::t_5cf3a0c5b46146 32
+apps/desktop/src/router.tsx
+  s_de2d79b0b75518::t_0088a17b3879e0 2-3,7,16-18
+apps/desktop/tests/renderer/component/routes/account.test.tsx
+  s_de2d79b0b75518::t_0b220b64f1c816 28,146-152
+apps/web/package.json
+  s_de2d79b0b75518::t_dfa753abb1f588 26
+apps/web/src/components/web-shell.tsx
+  s_de2d79b0b75518::t_ccf91c2ce6893c 7,19,96
+apps/web/src/features/auth/account-query.ts
+  s_de2d79b0b75518::t_715bc4eb1cdde1 1-12
+apps/web/src/router.tsx
+  s_de2d79b0b75518::t_c5ba2fd2e91808 2-3,7-16
+apps/web/src/routes/(app)/index.tsx
+  s_de2d79b0b75518::t_29f682816f74c7 8,20,51-52
+apps/web/src/routes/(app)/route.tsx
+  s_de2d79b0b75518::t_06fc3f8c2505b1 3,7-8
+apps/web/src/routes/__root.tsx
+  s_de2d79b0b75518::t_fd3afe98234316 2-3,10
+apps/web/tests/component/features/tasks.test.tsx
+  s_de2d79b0b75518::t_0631d76caa75bf 4,49-53,128-132
+apps/web/tests/component/routes/auth.test.tsx
+  s_de2d79b0b75518::t_4f25e9b3691c59 21,31,48,74,78,81,87-91,142,150
+apps/desktop/AGENTS.md
+  s_900a66df702cc8::t_2073aac8973c97 9
+apps/desktop/src/routes/account.tsx
+  s_900a66df702cc8::t_47bac7c7cb6a3d 2,43,88-97
+apps/desktop/src/shell.tsx
+  s_900a66df702cc8::t_907a4dca9669da 1-2,41,163-164
+apps/desktop/tests/renderer/component/features/tasks/workspace.test.tsx
+  s_900a66df702cc8::t_3b4ed06be1151a 11,126-130
+apps/web/AGENTS.md
+  s_900a66df702cc8::t_2d2405111f871c 25-31
+bun.lock
+  s_900a66df702cc8::t_2c0193d99eed41 77,115,268-288,296,370,374,376,684-687,696-699,704-705,912-913,1006-1009,1012-1013,1032-1033,1668-1669
+package.json
+  s_900a66df702cc8::t_439f9e13e2d794 17-18,20
+packages/query/AGENTS.md
+  s_900a66df702cc8::t_6ba9f2c4fb3dfa 1-27
+packages/query/package.json
+  s_900a66df702cc8::t_b0bacca81824c4 1-39
+packages/query/src/index.ts
+  s_900a66df702cc8::t_c8f2bdea40dd21 1-29
+packages/query/src/router.ts
+  s_900a66df702cc8::t_099a274c457541 1
+packages/query/tests/index.test.ts
+  s_900a66df702cc8::t_0efb9a6e003ace 1-19
+packages/query/tsconfig.json
+  s_900a66df702cc8::t_4e6b18d2251648 1-7
+packages/query/vitest.config.ts
+  s_900a66df702cc8::t_2039ff8f9ec216 1-2
+packages/tasks/AGENTS.md
+  s_900a66df702cc8::t_9c1a0103d1eb7e 6-8
+packages/tasks/package.json
+  s_900a66df702cc8::t_19c8969e55b3c5 23
+packages/tasks/src/client/pending-count.tsx
+  s_900a66df702cc8::t_3116237c65d527 15
+packages/tasks/src/client/remote-query.ts
+  s_900a66df702cc8::t_08a5889ccb7126 1-2,8-16,18,23-32,35-36,40,48,50-52
+packages/tasks/src/client/workspace.tsx
+  s_900a66df702cc8::t_cab427f749c4c3 74,100-105,425,714,716,719
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8eb8b397e17611406f38a1f607cd14d38dc44513",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
