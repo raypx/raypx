@@ -1,0 +1,43 @@
+apps/desktop/components.json
+  s_de2d79b0b75518::t_03fd9839dc86cd 16
+apps/web/components.json
+  s_de2d79b0b75518::t_6843983ecc95d2 16
+packages/tasks/src/client/workspace.tsx
+  s_de2d79b0b75518::t_6cb230e446e5b1 1,13-18,311,361-365,373,377,379,381-392,394,396,398-399,403-407,411-426,428-432,438,470,584-588,594,620,654-663,665-690,705,708-711,716,759-772
+apps/web/tests/component/features/tasks.test.tsx
+  s_5163e093662fde::t_f655936cb8005d 85-142
+packages/ui/AGENTS.md
+  s_900a66df702cc8::t_f3e604e9e5f1b7 32-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "066511ed425436e09dd37415ca03052c318baed4",
+  "prompts": {},
+  "sessions": {
+    "s_5163e093662fde": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "57ef73ea-a208-4091-be3c-03513b991ebf",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
