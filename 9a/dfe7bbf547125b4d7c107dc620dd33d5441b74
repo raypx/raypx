@@ -1,0 +1,35 @@
+bun.lock
+  s_900a66df702cc8::t_2c0193d99eed41 367,380-383,393-396,399,401-402,405,408-409,414,419,428-429,436,438,442,448,450,492,494,496,498,500,502,504,542,548,552,554,556,702,704
+  s_900a66df702cc8::t_b7fe8ac89a1c41 364-366
+  s_900a66df702cc8::t_e7dac2c88da3a3 379
+package.json
+  s_adafa49206c7d6::t_4e65cb6c40e189 13-16,33,40-41,70
+  s_adafa49206c7d6::t_c3fe3676954d36 12,27,37,46,58-59,68,74-75
+  s_adafa49206c7d6::t_657a6d92cb7712 25-26,29,31,34,135-139,141,145-147
+apps/desktop/hutch.config.ts
+  s_adafa49206c7d6::t_baeda5df6b0988 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9adfe7bbf547125b4d7c107dc620dd33d5441b74",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_adafa49206c7d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15727-0890-77e0-a9f5-ce91cd071dd2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
