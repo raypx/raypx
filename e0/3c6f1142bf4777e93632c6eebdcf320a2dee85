@@ -1,0 +1,39 @@
+AGENTS.md
+  s_3479c97f207758::t_6b9a8389070d09 27
+README.md
+  s_3479c97f207758::t_bef230de9f95fa 9
+apps/api/Dockerfile
+  s_3479c97f207758::t_0dc07718682b7e 2
+apps/web/Dockerfile
+  s_3479c97f207758::t_005bfd735bc524 2
+bun.lock
+  s_3479c97f207758::t_240c585d8dc3cb 426,1092
+docs/architecture/README.md
+  s_3479c97f207758::t_a122cd800f3565 19
+docs/development/getting-started.md
+  s_3479c97f207758::t_156a44b3bafbfe 3
+package.json
+  s_3479c97f207758::t_7f2ba06437edeb 56,152,157,164
+packages/tooling/tests/integration/cache.test.ts
+  s_3479c97f207758::t_b94990638ac157 76
+skills/raypx/SKILL.md
+  s_3479c97f207758::t_6e8ec98944655c 17
+skills/raypx/references/setup.md
+  s_3479c97f207758::t_c4a19f600b9da9 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e03c6f1142bf4777e93632c6eebdcf320a2dee85",
+  "prompts": {},
+  "sessions": {
+    "s_3479c97f207758": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16463-0d07-7e82-ad3d-bf48e311d55b",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
