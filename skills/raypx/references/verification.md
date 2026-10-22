@@ -11,6 +11,7 @@ Canonical source: [testing](../../../docs/development/testing.md).
    run as unavailable, never as passed:
    - `bun run test:postgres` / `test:cloudflare:postgres` with `TEST_DATABASE_URL`
      pointing at an isolated `*_test` database and `NODE_ENV=test`.
+   - `bun run test:redis` with `TEST_REDIS_URL` (compose `valkey` on 6380).
    - `bun run test:e2e` for Chromium acceptance of Web and the Desktop renderer.
    - `bun run desktop:build` on macOS/Windows for the native package.
 

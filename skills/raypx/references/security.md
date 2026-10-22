@@ -8,6 +8,8 @@
 - Client IP comes from `AUTH_IP_HEADERS` (default `x-forwarded-for` with a single
   address; Workers default to `cf-connecting-ip`). Set it to the header your trusted
   proxy writes, or every client shares one bucket.
+- With `REDIS_URL` (Node only) Better Auth and RPC limits use Redis/Valkey counters
+  instead of the table, and sessions are cached there too.
 - `apps/api/server/rate-limit.ts` limits RPC procedures per account in the same table:
   `devices.register` 10/min, `devices.refreshGrant` 30/min, `relay.ticket` 60/min.
   Rejections are `TOO_MANY_REQUESTS` with code `RATE_LIMITED`, translated in UI.

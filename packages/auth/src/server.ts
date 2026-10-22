@@ -23,10 +23,13 @@ export interface AuthConfiguration {
   /** Headers set by the trusted edge that carry the client IP, in priority order. */
   ipAddressHeaders?: string[];
 }
+export type AuthSecondaryStorage = NonNullable<BetterAuthOptions["secondaryStorage"]>;
 export interface CreateAuthOptions {
   database: NonNullable<BetterAuthOptions["database"]>;
   mailer: AuthMailer;
   config: AuthConfiguration;
+  /** Optional shared cache for sessions and rate limits; the database remains the record. */
+  secondaryStorage?: AuthSecondaryStorage;
 }
 export function recipientLocale(request?: Request): { locale?: Locale } {
   const locale = matchLocale(
@@ -34,7 +37,7 @@ export function recipientLocale(request?: Request): { locale?: Locale } {
   );
   return locale === undefined ? {} : { locale };
 }
-export function createAuth({ database, mailer, config }: CreateAuthOptions) {
+export function createAuth({ database, mailer, config, secondaryStorage }: CreateAuthOptions) {
   if (config.secret.length < 32) throw new Error("AUTH_SECRET must contain at least 32 characters");
   if (config.production && new URL(config.baseURL).protocol !== "https:")
     throw new Error("Production AUTH_URL must use HTTPS");
@@ -68,9 +71,17 @@ export function createAuth({ database, mailer, config }: CreateAuthOptions) {
         }),
     },
     session: { storeSessionInDatabase: true },
-    // Database storage keeps limits shared across Node processes and Worker isolates.
+    // Shared storage keeps limits consistent across Node processes and Worker isolates.
     // Better Auth applies stricter built-in rules to sign-in, sign-up and mail requests.
-    rateLimit: { enabled: config.production, storage: "database", window: 60, max: 100 },
+    rateLimit: {
+      enabled: config.production,
+      storage: secondaryStorage ? "secondary-storage" : "database",
+      window: 60,
+      max: 100,
+    },
+    // Sessions and verifications are also written to the database, so a flushed or
+    // restarted cache loses nothing; control projections keep reading the database.
+    ...(secondaryStorage ? { secondaryStorage } : {}),
     verification: { storeInDatabase: true },
     advanced: {
       database: { generateId: () => crypto.randomUUID(), joins: false },

@@ -17,7 +17,8 @@
     "build:cloudflare": "bun vp build --mode cloudflare",
     "preview:cloudflare": "wrangler dev --config wrangler.jsonc --local",
     "deploy:cloudflare": "wrangler deploy --config wrangler.jsonc",
-    "test:cloudflare:postgres": "bun --bun vp test --run --mode cloudflare-postgres"
+    "test:cloudflare:postgres": "bun --bun vp test --run --mode cloudflare-postgres",
+    "test:redis": "bun --bun vp test --run --mode redis"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",
@@ -33,6 +34,7 @@
     "drizzle-orm": "catalog:",
     "evlog": "catalog:",
     "hono": "catalog:",
+    "ioredis": "catalog:",
     "nitro": "catalog:"
   },
   "devDependencies": {

@@ -8,6 +8,7 @@ import { createMailer } from "@raypx/mail/server";
 import type { ApiLogging } from "../logging.js";
 import { createApiApp } from "../api.js";
 import { createRateLimiter } from "../rate-limit.js";
+import type { RedisResources } from "./redis.js";
 import type { ApiEnvironment } from "../env.js";
 
 export interface RuntimeResources {
@@ -15,6 +16,8 @@ export interface RuntimeResources {
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
+  /** Shared cache for sessions and rate limits; PostgreSQL is used without it. */
+  redis?: RedisResources;
 }
 
 export async function createRuntime(environment: ApiEnvironment, resources: RuntimeResources) {
@@ -30,6 +33,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const auth = createAuth({
       database: drizzleAdapter(connection.db, { provider: "pg", schema }),
       mailer,
+      ...(resources.redis ? { secondaryStorage: resources.redis.secondaryStorage } : {}),
       config: {
         baseURL: environment.AUTH_URL,
         secret: environment.AUTH_SECRET,
@@ -53,12 +57,12 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         mailAvailable: mailer.available,
         logger,
         ...(environment.NODE_ENV === "production"
-          ? { rateLimit: createRateLimiter(connection.db) }
+          ? { rateLimit: resources.redis?.rateLimit ?? createRateLimiter(connection.db) }
           : {}),
       }),
       close: async () => {
         try {
-          await connection?.close();
+          await Promise.all([connection?.close(), resources.redis?.close()]);
         } finally {
           await resources.closeLogger();
         }
@@ -66,6 +70,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     };
   } catch (error) {
     await connection?.close().catch(() => {
+      /* Preserve the original startup failure. */
+    });
+    await resources.redis?.close().catch(() => {
       /* Preserve the original startup failure. */
     });
     await resources.closeLogger().catch(() => {

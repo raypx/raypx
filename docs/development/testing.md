@@ -50,6 +50,9 @@ The existing script names select the mode; the default test command never connec
   built Worker against direct PostgreSQL and local Hyperdrive bindings, including
   password hashing, concurrent account reads and session revocation. See
   [deployment verification](cloudflare.md#verification-and-limits) for fixture scope.
+- `TEST_REDIS_URL` pointing to a disposable Redis or Valkey (`docker compose up -d valkey`
+  serves `redis://localhost:6380`): `bun run test:redis` checks the session cache,
+  fixed-window counters and concurrent RPC limits. Keys use a unique, expiring prefix.
 - bun run test:e2e runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
 - bun run desktop:build on macOS and Windows checks the actual native package.

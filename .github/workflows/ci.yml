@@ -26,6 +26,12 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U raypx -d raypx_foundation_ci_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
+      valkey:
+        image: valkey/valkey:8-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -66,6 +72,10 @@ jobs:
         env:
           NODE_ENV: test
           TEST_DATABASE_URL: postgres://raypx:raypx@127.0.0.1:5432/raypx_foundation_ci_test
+      - run: bun run test:redis
+        env:
+          NODE_ENV: test
+          TEST_REDIS_URL: redis://127.0.0.1:6379
       - run: bun run test:cloudflare:postgres
         env:
           NODE_ENV: test

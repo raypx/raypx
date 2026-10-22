@@ -16,6 +16,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 volumes:
   foundation-postgres:
     name: raypx-foundation-postgres

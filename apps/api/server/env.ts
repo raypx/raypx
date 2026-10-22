@@ -14,6 +14,7 @@ export const apiServerEnv = {
     MAIL_DEFAULT_LOCALE: z.enum(["en", "zh"]).default("en"),
     AUTH_DOMAIN: z.string().min(1).optional(),
     AUTH_IP_HEADERS: z.string().optional(),
+    REDIS_URL: z.url().optional(),
   },
 } as const satisfies Preset;
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {

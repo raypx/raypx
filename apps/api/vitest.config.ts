@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
         include: ["tests/postgres/node/**/*.{test,spec}.{ts,tsx}"],
         fileParallelism: false,
       });
+    case "redis":
+      return workspaceTests({
+        include: ["tests/redis/**/*.{test,spec}.{ts,tsx}"],
+        fileParallelism: false,
+      });
     case "cloudflare-postgres":
       return workspaceTests({
         include: ["tests/postgres/cloudflare/**/*.{test,spec}.{ts,tsx}"],

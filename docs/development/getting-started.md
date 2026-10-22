@@ -21,6 +21,10 @@ dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp 
 oxfmt and oxlint fixes on staged files only. Check it with `bun --bun vp hooks status`;
 `VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun run verify`.
 
+Redis is optional. `docker compose up -d valkey` starts Valkey on 6380; set
+`REDIS_URL=redis://localhost:6380` to cache sessions and keep rate limits in Redis
+instead of PostgreSQL. Node API only; Workers keep using PostgreSQL.
+
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
 Start the separate compose database on 5433, then bun run db:migrate and bun run dev.
