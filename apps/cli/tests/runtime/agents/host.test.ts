@@ -1,5 +1,5 @@
 import { afterEach, expect, it } from "vite-plus/test";
-import { existsSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { StateStore } from "../../../src/runtime/state";
@@ -10,15 +10,15 @@ const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
 });
-async function host(provider: AgentProvider, code: string) {
+async function host(
+  provider: AgentProvider,
+  fixture: "codex" | "codex-descendant" | "claude-question" | "claude-plan",
+) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-agent-"));
   const file = join(directory, provider);
-  writeFileSync(
-    file,
-    `#!${process.execPath}\nif(process.argv.includes('--version')) { console.log('${provider === "codex" ? "codex-cli 0.163.0" : "2.1.302 (Claude Code)"}'); process.exit(0); }\n` +
-      code,
-    { mode: 0o700 },
-  );
+  cpSync(join(import.meta.dirname, "../../fixtures/agents"), directory, { recursive: true });
+  const source = readFileSync(join(directory, fixture + ".mjs"), "utf8");
+  writeFileSync(file, `#!${process.execPath}\n${source}`, { mode: 0o700 });
   const state = new StateStore(directory);
   const rootId = crypto.randomUUID();
   state.putRoot({
@@ -57,20 +57,8 @@ async function host(provider: AgentProvider, code: string) {
   };
   return { runtime, task, directory, state, pending };
 }
-const codexFixture = `
-import { appendFileSync } from 'node:fs';
-appendFileSync('starts','start\\n');
-const send=value=>process.stdout.write(JSON.stringify(value)+'\\n');
-let buffer='';
-process.stdin.on('data',chunk=>{ buffer+=chunk.toString(); let n; while((n=buffer.indexOf('\\n'))>=0){ const line=buffer.slice(0,n);buffer=buffer.slice(n+1);if(!line)continue;const m=JSON.parse(line);
-if(m.method==='initialize')send({id:m.id,result:{}});
-if(m.method==='thread/start'||m.method==='thread/resume')send({id:m.id,result:{thread:{id:'thread-test'}}});
-if(m.method==='turn/start'){send({id:m.id,result:{}});send({id:'approval',method:'item/commandExecution/requestApproval',params:{command:'bun test',reason:'Run tests'}});}
-if(m.id==='approval'){if(m.result.decision==='accept'){send({method:'item/agentMessage/delta',params:{delta:'Tests passed'}});send({method:'turn/completed',params:{turn:{status:'completed'}}});}else send({method:'turn/completed',params:{turn:{status:'failed'}}});}
-}});
-`;
 it("routes Codex permission requests and deduplicates command replay", async () => {
-  const { runtime, task, directory, pending } = await host("codex", codexFixture);
+  const { runtime, task, directory, pending } = await host("codex", "codex");
   const commandId = crypto.randomUUID();
   const start = () =>
     runtime.start("binding", commandId, task, new Date(Date.now() + 60_000).toISOString());
@@ -99,7 +87,7 @@ it("routes Codex permission requests and deduplicates command replay", async () 
   expect(readFileSync(join(directory, "starts"), "utf8").trim().split("\n")).toHaveLength(1);
 });
 it("runs local tasks and approvals without a grant, isolates accounts, and keeps them out of relay replay", async () => {
-  const { runtime, task: template, directory, pending } = await host("codex", codexFixture);
+  const { runtime, task: template, directory, pending } = await host("codex", "codex");
   const accountId = "desktop-user",
     device = await runtime.localDevice(accountId);
   const input = {
@@ -173,7 +161,7 @@ it("runs local tasks and approvals without a grant, isolates accounts, and keeps
   expect(runtime.localApprovals(accountId)).toEqual([]);
 });
 it("keeps current project directories mutually exclusive and cancels waiting children", async () => {
-  const { runtime, task } = await host("codex", codexFixture);
+  const { runtime, task } = await host("codex", "codex");
   await runtime.start(
     "binding",
     crypto.randomUUID(),
@@ -207,12 +195,7 @@ it("keeps current project directories mutually exclusive and cancels waiting chi
 it.skipIf(process.platform === "win32")(
   "holds the project lock and detach until a stubborn descendant stops",
   async () => {
-    const tool = `import {writeFileSync} from 'node:fs';process.on('SIGTERM',()=>{});writeFileSync('descendant-ready','ready');setInterval(()=>writeFileSync('heartbeat',String(Date.now())),5);`;
-    const { runtime, task, directory } = await host(
-      "codex",
-      `import {writeFileSync} from 'node:fs';writeFileSync('parent-pid',String(process.pid));Bun.spawn([process.execPath,'-e',${JSON.stringify(tool)}],{stdout:'ignore',stderr:'ignore'});\n` +
-        codexFixture,
-    );
+    const { runtime, task, directory } = await host("codex", "codex-descendant");
     const deadline = new Date(Date.now() + 60_000).toISOString();
     await runtime.start("binding", crypto.randomUUID(), task, deadline);
     await expect.poll(() => existsSync(join(directory, "heartbeat"))).toBe(true);
@@ -259,7 +242,7 @@ it.skipIf(process.platform === "win32")(
   },
 );
 it("cancels a start still discovering the provider when the binding detaches", async () => {
-  const { runtime, task, directory } = await host("codex", codexFixture);
+  const { runtime, task, directory } = await host("codex", "codex");
   const starting = runtime.start(
     "binding",
     crypto.randomUUID(),
@@ -274,10 +257,7 @@ it("cancels a start still discovering the provider when the binding detaches", a
   expect(() => readFileSync(join(directory, "starts"))).toThrow("ENOENT");
 });
 it("answers Claude questions through session-scoped hooks without touching settings files", async () => {
-  const code = `const settings=JSON.parse(process.argv[process.argv.indexOf('--settings')+1]);const hook=settings.hooks.PreToolUse[0].hooks[0];
-const response=await fetch(hook.url,{method:'POST',headers:{Authorization:'Bearer '+process.env.RAYPX_AGENT_HOOK_TOKEN,'content-type':'application/json'},body:JSON.stringify({hook_event_name:'PreToolUse',tool_name:'AskUserQuestion',tool_input:{questions:[{question:'Which option?',options:[{label:'A',description:'First'}],multiSelect:false}]}})});
-const decision=await response.json();console.log(JSON.stringify({type:'result',is_error:false,result:decision.hookSpecificOutput.updatedInput.answers['Which option?']}));`;
-  const { runtime, task, directory } = await host("claude", code);
+  const { runtime, task, directory } = await host("claude", "claude-question");
   await runtime.start(
     "binding",
     crypto.randomUUID(),
@@ -309,10 +289,7 @@ const decision=await response.json();console.log(JSON.stringify({type:'result',i
   expect(() => readFileSync(join(directory, ".claude/settings.json"))).toThrow("ENOENT");
 });
 it("denies an oversized Claude plan without offering approval for a truncated preview", async () => {
-  const code = `const settings=JSON.parse(process.argv[process.argv.indexOf('--settings')+1]);const hook=settings.hooks.PreToolUse[0].hooks[0];
-const response=await fetch(hook.url,{method:'POST',headers:{Authorization:'Bearer '+process.env.RAYPX_AGENT_HOOK_TOKEN,'content-type':'application/json'},body:JSON.stringify({hook_event_name:'PreToolUse',tool_name:'ExitPlanMode',tool_input:{plan:'x'.repeat(129000)}})});
-const decision=await response.json();console.log(JSON.stringify({type:'result',is_error:false,result:decision.hookSpecificOutput.permissionDecision}));`;
-  const { runtime, task } = await host("claude", code);
+  const { runtime, task } = await host("claude", "claude-plan");
   await runtime.start(
     "binding",
     crypto.randomUUID(),
@@ -362,7 +339,7 @@ it("recovers an ambiguous persisted execution as interrupted instead of starting
 });
 
 it("deduplicates relayed starts and accepts only the first valid approval on the host", async () => {
-  const { runtime, task, directory } = await host("codex", codexFixture);
+  const { runtime, task, directory } = await host("codex", "codex");
   const command = {
     id: task.id,
     deviceId: task.deviceId,
@@ -422,7 +399,7 @@ it("deduplicates relayed starts and accepts only the first valid approval on the
   ).toMatchObject({ ok: false, code: "IDEMPOTENCY_CONFLICT" });
 });
 it("replays acknowledged events and captures a consistent snapshot while live state advances", async () => {
-  const { runtime, task } = await host("codex", codexFixture);
+  const { runtime, task } = await host("codex", "codex");
   await runtime.start(
     "binding",
     crypto.randomUUID(),
@@ -453,7 +430,7 @@ it("replays acknowledged events and captures a consistent snapshot while live st
   ).toBe(true);
 });
 it("does not execute an expired relayed command", async () => {
-  const { runtime, task, directory } = await host("codex", codexFixture);
+  const { runtime, task, directory } = await host("codex", "codex");
   const result = await runtime.remote("binding", {
     id: task.id,
     deviceId: task.deviceId,

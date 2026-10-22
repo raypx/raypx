@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createTestHarness, experimental_readRawConfig } from "wrangler";
@@ -17,20 +17,7 @@ async function start(app: "api" | "web") {
     const main = join(output, "server", app === "web" ? "probe.mjs" : "index.mjs");
     if (app === "web") {
       // Mark Worker responses only in this disposable copy to observe asset routing.
-      await writeFile(
-        main,
-        `import worker from "./index.mjs";
-export default {
-  ...worker,
-  async fetch(request, env, ctx) {
-    const response = await worker.fetch(request, env, ctx);
-    const marked = new Response(response.body, response);
-    marked.headers.set(${JSON.stringify(workerProbeHeader)}, "1");
-    return marked;
-  }
-};
-`,
-      );
+      await copyFile(new URL("../../tests/fixtures/cloudflare/probe.mjs", import.meta.url), main);
     }
     const { rawConfig } = experimental_readRawConfig({
       config: join(root, "apps", app, "wrangler.jsonc"),
@@ -63,7 +50,7 @@ export default {
                     MAIL_FROM: "",
                   },
                 }
-              : { vars: { NODE_ENV: "production" } }),
+              : { vars: { NODE_ENV: "production", WORKER_PROBE_HEADER: workerProbeHeader } }),
             ...(serveApi && process.env.TEST_DATABASE_MODE === "hyperdrive"
               ? {
                   hyperdrive: [

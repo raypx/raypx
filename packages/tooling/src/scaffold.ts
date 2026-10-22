@@ -1,7 +1,8 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { constants, copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { targets, type Kind, type Target } from "@raypx-kit/devkit/workspaces";
 import { discover } from "./repository.js";
+import { workspaceInstructions } from "./templates/workspace/agents.js";
 
 export interface ScaffoldOptions {
   kind: Kind;
@@ -9,6 +10,7 @@ export interface ScaffoldOptions {
   write?: boolean;
   tests?: boolean;
 }
+
 export function scaffold(root: string, name: string, options: ScaffoldOptions): string[] {
   if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(name))
     throw new Error("Use a lowercase hyphenated workspace name");
@@ -51,15 +53,32 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
       : options.target === "universal"
         ? "library"
         : "node";
-  const files: Record<string, string> = {
+  const tsconfig = {
+    extends: `@raypx-kit/tsconfig/${config}.json`,
+    compilerOptions: {
+      ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}),
+      ...(options.target === "bun" ? { types: ["bun"] } : {}),
+    },
+    include: [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      ...(options.tests ? ["tests/**/*.ts", "tests/**/*.tsx"] : []),
+    ],
+  };
+  const files: Record<string, string | URL> = {
     "package.json": `${JSON.stringify(manifest, null, 2)}\n`,
-    "tsconfig.json": `${JSON.stringify({ extends: `@raypx-kit/tsconfig/${config}.json`, compilerOptions: { ...(options.target === "universal" ? { lib: ["ES2022"], types: [] } : {}), ...(options.target === "bun" ? { types: ["bun"] } : {}) }, include: ["src/**/*.ts", "src/**/*.tsx", ...(options.tests ? ["tests/**/*.ts", "tests/**/*.tsx"] : [])] }, null, 2)}\n`,
+    "tsconfig.json": `${JSON.stringify(tsconfig, null, 2)}\n`,
     "src/index.ts": "export {};\n",
-    "AGENTS.md": `# ${packageName}\n\n## Purpose\n\n${options.target} ${options.kind}; describe its responsibility before adding behavior.\n\n## Interface\n\nPublic exports are declared in package.json.\n\n## Constraints\n\nUse public workspace entries and keep dependencies acyclic.\n\n## Verification\n\nRun bun run --cwd ${directory} check${options.tests ? " and test" : ""}.\n`,
+    "AGENTS.md": workspaceInstructions({
+      packageName,
+      directory,
+      kind: options.kind,
+      target: options.target,
+      tests: Boolean(options.tests),
+    }),
     ...(options.tests
       ? {
-          "vitest.config.ts":
-            'import { workspaceTests } from "../../test.config";\n\nexport default workspaceTests();\n',
+          "vitest.config.ts": new URL("./templates/workspace/vitest.mjs", import.meta.url),
         }
       : {}),
   };
@@ -71,7 +90,8 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     for (const [file, content] of Object.entries(files)) {
       const absolute = join(root, directory, file);
       mkdirSync(join(absolute, ".."), { recursive: true });
-      writeFileSync(absolute, content, { flag: "wx" });
+      if (typeof content === "string") writeFileSync(absolute, content, { flag: "wx" });
+      else copyFileSync(content, absolute, constants.COPYFILE_EXCL);
     }
   } catch (error) {
     rmSync(join(root, directory), { recursive: true, force: true });

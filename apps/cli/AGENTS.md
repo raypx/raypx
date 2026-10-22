@@ -52,6 +52,8 @@ Runtime suites are split by files, jobs, process and state under `tests/runtime/
 with temporary profile creation and cleanup in `tests/helpers/runtime.ts`.
 `tests/smoke/artifact.ts` validates the built executable separately from the unit tests.
 `tests/smoke/tui.ts` owns the explicit PTY smoke gate.
+Its Python driver lives in `tests/fixtures/tui/`; simulated Agent executables and
+their child processes live in `tests/fixtures/agents/` and run from temporary profiles.
 `smoke:tui` is an explicit POSIX PTY gate using system Python 3 for terminal flags,
 signals, descendant cleanup and coexistence with a Desktop scheduler. It is not a
 runtime dependency or part of the cross-platform default verify gate.

@@ -39,6 +39,9 @@ Smoke orchestration, Node probes and the Node-executed Worker harness live in
 `src/smoke/`. Unit and integration tests live in `tests/unit/` and `tests/integration/`.
 Keep scaffold and locale policy suites separate; shared temporary workspace fixtures
 live in `tests/helpers/workspace.ts` and register cleanup for each suite.
+Workspace scaffolding copies static configuration from `src/templates/workspace/`
+into generated TypeScript paths. Its `agents.ts` renders workspace instructions;
+manifest and TypeScript configuration data use JSON serialization.
 
 ## Verification
 
