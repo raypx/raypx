@@ -13,6 +13,8 @@ App: `apps/api` ([AGENTS](../../../apps/api/AGENTS.md)). Nitro + one Hono Fetch 
 
 - Local device messages belong in `contracts/local`, never on public RPC.
 - Client calls are POST and never retried automatically.
+- RPC responses time out after 15 s (`REQUEST_TIMEOUT`); inputs with `__proto__` keys
+  are rejected before handlers run.
 - Web must not reimplement API behavior in TanStack Start server functions.
 - Runtime composition: `server/runtime/shared.ts` (database, logger, mailer, auth);
   `node.ts` for the process runtime, `app/cloudflare.ts` per Worker request.

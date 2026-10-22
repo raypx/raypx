@@ -92,7 +92,7 @@ export function createApiLogging({
 
 /** Only route templates enter diagnostics; URLs and query strings stay private. */
 export function diagnosticRoute(path: string): string {
-  if (path === "/health") return "/health";
+  if (path === "/health" || path === "/ready") return path;
   if (path.startsWith("/api/auth/")) return "/api/auth/*";
   if (path.startsWith("/rpc/")) return "/rpc/*";
   return "unmatched";

@@ -4,6 +4,10 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { implement, ORPCError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
+import {
+  PrototypePollutionProtectionHandlerPlugin,
+  TimeoutHandlerPlugin,
+} from "@orpc/server/plugins";
 import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { createAccountService } from "@raypx/account/server";
@@ -20,6 +24,10 @@ export interface ApiAppOptions {
   mailAvailable?: boolean;
   logger?: ApiLogging;
   rateLimit?: RateLimiter;
+  /** Upper bound for producing one RPC response (default 15 s). */
+  rpcTimeoutMs?: number;
+  /** Named dependency probes for `/ready`; each resolves when the dependency answers. */
+  readiness?: Record<string, () => Promise<unknown>>;
 }
 // Per-account limits for procedures that create grants, devices or relay tickets.
 const rpcLimits = {
@@ -27,6 +35,14 @@ const rpcLimits = {
   "devices.refreshGrant": { window: 60, max: 30 },
   "relay.ticket": { window: 60, max: 60 },
 } satisfies Record<string, RateRule>;
+/**
+ * Letters only, so log redaction never mistakes an ID for a card or phone number and
+ * masks it: the same ID must appear in responses, logs and error reports.
+ */
+export function newRequestId(): string {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz";
+  return `req_${Array.from(crypto.getRandomValues(new Uint8Array(24)), (byte) => alphabet[byte % 26]).join("")}`;
+}
 export function createApiApp(options: ApiAppOptions) {
   const accountService = createAccountService({
     readSession: (headers) => options.readSession(headers),
@@ -35,7 +51,7 @@ export function createApiApp(options: ApiAppOptions) {
     Variables: { requestId: string; requestLog?: RequestLogger; rpcLogged: boolean };
   }>();
   app.use("*", async (c, next) => {
-    const requestId = crypto.randomUUID();
+    const requestId = newRequestId();
     c.set("requestId", requestId);
     c.set("rpcLogged", false);
     const log = options.logger?.createLogger({
@@ -80,6 +96,29 @@ export function createApiApp(options: ApiAppOptions) {
     }),
   );
   app.get("/health", (c) => c.json({ status: "ok" }));
+  // Readiness, unlike liveness, checks dependencies so platforms can drain an instance
+  // that cannot reach PostgreSQL or Redis. Results name dependencies, never errors.
+  app.get("/ready", async (c) => {
+    const checks = Object.fromEntries(
+      await Promise.all(
+        Object.entries(options.readiness ?? {}).map(async ([name, probe]) => {
+          const timeout = AbortSignal.timeout(3000);
+          const ok = await Promise.race([
+            probe().then(
+              () => true,
+              () => false,
+            ),
+            new Promise<boolean>((resolve) =>
+              timeout.addEventListener("abort", () => resolve(false), { once: true }),
+            ),
+          ]);
+          return [name, ok ? "ok" : "unavailable"] as const;
+        }),
+      ),
+    );
+    const ready = Object.values(checks).every((value) => value === "ok");
+    return c.json({ status: ready ? "ok" : "unavailable", checks }, ready ? 200 : 503);
+  });
   app.on(["GET", "POST"], "/api/auth/*", async (c) => {
     const path = decodeURIComponent(c.req.path).replace(/\/+$/, "");
     if (
@@ -98,7 +137,26 @@ export function createApiApp(options: ApiAppOptions) {
     }
     return options.authHandler(c.req.raw);
   });
-  const os = implement(apiContract).$context<{ headers: Headers; requestId: string }>();
+  const os = implement(apiContract)
+    .$context<{ headers: Headers; requestId: string }>()
+    // TimeoutHandlerPlugin only aborts the signal; database calls do not observe it,
+    // so answer as soon as it fires instead of waiting for them.
+    .use(({ next, signal, context }) => {
+      if (!signal) return next();
+      return Promise.race([
+        next(),
+        new Promise<never>((_, reject) => {
+          const fail = () =>
+            reject(
+              new ORPCError("GATEWAY_TIMEOUT", {
+                data: { error: { code: "REQUEST_TIMEOUT" }, requestId: context.requestId },
+              }),
+            );
+          if (signal.aborted) fail();
+          else signal.addEventListener("abort", fail, { once: true });
+        }),
+      ]);
+    });
   type Context = { headers: Headers; requestId: string };
   async function controlCall<T>(
     context: Context,
@@ -192,7 +250,11 @@ export function createApiApp(options: ApiAppOptions) {
     },
   });
   const rpc = new RPCHandler(router, {
-    plugins: options.logger ? [createRpcLoggingPlugin(options.logger)] : [],
+    plugins: [
+      new PrototypePollutionProtectionHandlerPlugin(),
+      new TimeoutHandlerPlugin({ timeout: options.rpcTimeoutMs ?? 15_000 }),
+      ...(options.logger ? [createRpcLoggingPlugin(options.logger)] : []),
+    ],
   });
   app.all("/rpc/*", async (c) => {
     const headers = new Headers(c.req.raw.headers);

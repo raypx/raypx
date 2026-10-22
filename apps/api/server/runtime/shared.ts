@@ -6,6 +6,7 @@ import type { DatabaseConnection } from "@raypx/database/connection";
 import { schema } from "@raypx/database/schema";
 import { createMailer } from "@raypx/mail/server";
 import type { ApiLogging } from "../logging.js";
+import { sql } from "drizzle-orm";
 import { createApiApp } from "../api.js";
 import { createRateLimiter } from "../rate-limit.js";
 import type { RedisResources } from "./redis.js";
@@ -25,6 +26,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
   let connection: DatabaseConnection | undefined;
   try {
     connection = resources.connect();
+    const { db } = connection;
     const mailer = createMailer({
       defaultLocale: environment.MAIL_DEFAULT_LOCALE,
       ...(environment.RESEND_API_KEY ? { apiKey: environment.RESEND_API_KEY } : {}),
@@ -48,7 +50,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
           : {}),
       },
     });
-    const control = new ControlService(createControlRepository(connection.db));
+    const control = new ControlService(createControlRepository(db));
     return {
       control,
       app: createApiApp({
@@ -59,6 +61,10 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         allowedOrigins: environment.allowedOrigins,
         mailAvailable: mailer.available,
         logger,
+        readiness: {
+          database: () => db.execute(sql`select 1`),
+          ...(resources.redis ? { redis: () => resources.redis!.ping() } : {}),
+        },
         ...(environment.NODE_ENV === "production"
           ? { rateLimit: resources.redis?.rateLimit ?? createRateLimiter(connection.db) }
           : {}),

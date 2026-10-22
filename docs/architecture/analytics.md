@@ -27,7 +27,9 @@ writes do not enable a new category and leave an explicit retry message.
 ## Events and errors
 
 Explicit events are `app_opened`, `page_viewed`, `sign_in_succeeded`,
-`task_create_result`, `approval_submit_result` and `task_scope_changed`.
+`task_create_result`, `approval_submit_result`, `task_scope_changed` and `query_failed`. `query_failed`
+reports a failed remote read (query family, safe code, API request ID) at most once per
+minute per family, so failures can be matched to the API logs.
 A create result means accepted/failed operation attempts, not completed execution.
 Reads, retries by Query and relay invalidations do not emit mutation results.
 Page identifiers and enum properties are projected through an allowlist, both

@@ -16,6 +16,8 @@ export const apiServerEnv = {
     AUTH_IP_HEADERS: z.string().optional(),
     AUTH_TRUSTED_PROXIES: z.string().optional(),
     REDIS_URL: z.url().optional(),
+    POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
+    POSTHOG_HOST: z.url().optional(),
   },
 } as const satisfies Preset;
 const list = (value: string | undefined) =>

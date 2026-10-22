@@ -1,12 +1,17 @@
 import { analytics } from "./features/analytics/client";
+import { createQueryFailureReporter } from "@raypx/analytics/browser";
 import { createHashHistory, createRouter } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
   // Remote calls are POST and never retried (see @raypx/client).
+  const reportQueryFailure = createQueryFailureReporter(analytics);
   const queryClient = new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error, query) => reportQueryFailure(error, query.queryKey),
+    }),
     defaultOptions: { queries: { retry: false, staleTime: 30_000 }, mutations: { retry: false } },
   });
   return createRouter({

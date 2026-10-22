@@ -1,8 +1,13 @@
-import { expect, it, vi } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import type { TaskClient } from "@raypx/client";
 import { createNoopAnalytics } from "@raypx-kit/analytics";
 import { eventPolicy, parseAnalyticsConsent, analyticsPage } from "../src/index";
-import { instrumentTaskClient, browserPreferenceStore, createRaypxAnalytics } from "../src/browser";
+import {
+  instrumentTaskClient,
+  browserPreferenceStore,
+  createRaypxAnalytics,
+  createQueryFailureReporter,
+} from "../src/browser";
 it("projects explicit enums and never forwards task content or raw URLs", () => {
   expect(
     eventPolicy("task_create_result", {
@@ -107,4 +112,45 @@ it("drops late mutation diagnostics after an account change without changing the
   expect(await pending).toBe(result);
   expect(capture).not.toHaveBeenCalled();
   analytics.dispose();
+});
+
+describe("query failures", () => {
+  it("keeps only the query family, safe code and a well-formed request ID", () => {
+    expect(
+      eventPolicy("query_failed", {
+        query: "tasks",
+        code: "DEVICE_OFFLINE",
+        requestId: "req_abcdefghijklmnopqrstuvwx",
+        path: "/secret",
+      }),
+    ).toEqual({
+      query: "tasks",
+      code: "DEVICE_OFFLINE",
+      requestId: "req_abcdefghijklmnopqrstuvwx",
+    });
+    expect(
+      eventPolicy("query_failed", { query: "private-notes", code: "boom", requestId: "a@b.c" }),
+    ).toEqual({ query: "other", code: "UNEXPECTED_ERROR" });
+  });
+
+  it("reports each failing query family at most once per interval", () => {
+    const captured: unknown[] = [];
+    const report = createQueryFailureReporter(
+      {
+        capture: (event: string, properties: unknown) => captured.push([event, properties]),
+      } as never,
+      60_000,
+    );
+    const error = {
+      data: { error: { code: "NETWORK_UNAVAILABLE" }, requestId: "req_abcdefghijklmnopqrstuvwx" },
+    };
+    report(error, ["tasks", 1, "workspace"]);
+    report(error, ["tasks", 1, "devices"]);
+    expect(captured).toEqual([
+      [
+        "query_failed",
+        { query: "tasks", code: "NETWORK_UNAVAILABLE", requestId: "req_abcdefghijklmnopqrstuvwx" },
+      ],
+    ]);
+  });
 });

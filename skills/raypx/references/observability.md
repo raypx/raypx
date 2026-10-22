@@ -11,5 +11,11 @@ Logging uses `@raypx-kit/logger` (evlog wide events) with an explicit field poli
 - **Browser errors**: opt-in through analytics (see [analytics](analytics.md)).
 - `/health` reports process liveness only and never queries PostgreSQL.
 
-Not present yet: server-side error alerting, tracing, metrics dashboards or uptime
-monitoring. Add them through Kit drains rather than ad-hoc logging.
+- **API error reports**: with `POSTHOG_PROJECT_TOKEN`/`POSTHOG_HOST`, error-level and 5xx
+  events go to PostHog error tracking after the field policy (`server/error-reports.ts`).
+  Alert rules live in PostHog.
+- **Correlation**: request IDs (`req_` + 24 letters) appear in API responses, logs, server
+  error reports and browser `query_failed` events.
+- **Readiness**: `/ready` checks PostgreSQL and Redis; `/health` is liveness only.
+
+Not present yet: tracing, metrics dashboards, SSR/CLI error reports and uptime monitoring.

@@ -3,6 +3,7 @@ import { connectDatabase } from "@raypx/database/connection";
 import { createStreamDrain } from "@raypx-kit/logger/stream";
 import { getApiEnvironment, type ApiEnvironment } from "../env.js";
 import { createApiLogging } from "../logging.js";
+import { errorReports } from "../error-reports.js";
 import { createRuntime, type ApiRuntime } from "./shared.js";
 import { connectRedis } from "./redis.js";
 
@@ -14,7 +15,7 @@ export const CLIENT_IP_HEADER = "x-raypx-client-ip";
 export async function createApiRuntime(environment: ApiEnvironment): Promise<ApiRuntime> {
   const logger = createApiLogging({
     environment: environment.NODE_ENV,
-    sink: createStreamDrain(),
+    sink: errorReports(environment, createStreamDrain()),
   });
   // Without AUTH_IP_HEADERS a direct Node deployment limits by socket address.
   const ipAddressHeaders = environment.ipAddressHeaders.length

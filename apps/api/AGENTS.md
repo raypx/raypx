@@ -49,6 +49,14 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
   Sessions are still written to PostgreSQL; Workers never import Redis. Requires
   Redis 7+ or Valkey (`EXPIRE NX`, `GETDEL`).
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
+- `/ready` probes PostgreSQL (and Redis when configured) within three seconds and
+  returns per-dependency `ok`/`unavailable` without error details; `/health` stays
+  liveness-only. RPC runs `PrototypePollutionProtectionHandlerPlugin` and a 15 s
+  `TimeoutHandlerPlugin`; a middleware answers `GATEWAY_TIMEOUT`/`REQUEST_TIMEOUT`
+  because database calls do not observe the abort signal.
+- Request IDs are `req_` plus 24 letters so log redaction never masks them. With
+  `POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST`, error-level and 5xx events also go to
+  PostHog error tracking after the field policy, best effort (`server/error-reports.ts`).
 - `secureHeaders` sends a deny-all CSP, `X-Frame-Options: DENY` and HSTS. Keep
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
 - Production requires explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.

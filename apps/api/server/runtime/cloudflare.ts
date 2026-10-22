@@ -2,6 +2,7 @@ import { connectDatabase } from "@raypx/database/connection";
 
 import { getApiEnvironment } from "../env.js";
 import { createApiLogging, type ApiLogging } from "../logging.js";
+import { errorReports } from "../error-reports.js";
 import { createRuntime } from "./shared.js";
 
 export interface CloudflareBindings {
@@ -30,9 +31,9 @@ export async function createCloudflareRuntime(bindings: CloudflareBindings) {
   const environment = getCloudflareEnvironment(bindings);
   const logger = (logging ??= createApiLogging({
     environment: environment.NODE_ENV,
-    sink: ({ event }) => {
+    sink: errorReports(environment, ({ event }) => {
       console.log(JSON.stringify(event));
-    },
+    }),
   }));
   return createRuntime(environment, {
     logger,

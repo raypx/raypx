@@ -5,6 +5,7 @@ import type { RateLimiter } from "../rate-limit.js";
 export interface RedisResources {
   secondaryStorage: AuthSecondaryStorage;
   rateLimit: RateLimiter;
+  ping(): Promise<unknown>;
   close(): Promise<void>;
 }
 
@@ -44,6 +45,7 @@ export function connectRedis(url: string, prefix = "raypx:"): RedisResources {
     },
     // Fixed windows: the first request of a window sets the expiry.
     rateLimit: async (key, rule) => (await increment(`rate:${key}`, rule.window)) <= rule.max,
+    ping: () => client.ping(),
     close: async () => {
       await client.quit().catch(() => client.disconnect());
     },

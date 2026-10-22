@@ -62,6 +62,19 @@ export function analyticsCode(error: unknown): string {
     return "UNEXPECTED_ERROR";
   }
 }
+/** First query-key segments that may be reported; other reads become "other". */
+const queries = new Set(["account", "tasks"]);
+/** API request IDs; they identify a log line, never a person or a resource. */
+const requestIdPattern = /^req_[a-z]{24}$/;
+/** Reads the API request ID carried by an RPC error, if it has the expected shape. */
+export function analyticsRequestId(error: unknown): string | undefined {
+  try {
+    const id = (error as { data?: { requestId?: unknown } })?.data?.requestId;
+    return typeof id === "string" && requestIdPattern.test(id) ? id : undefined;
+  } catch {
+    return undefined;
+  }
+}
 /** Explicit enum projection, also applied after PostHog adds default properties. */
 export function eventPolicy(
   event: string,
@@ -78,6 +91,20 @@ export function eventPolicy(
           (pages.has(properties.page) || properties.page === "other")
             ? properties.page
             : "other",
+      };
+    case "query_failed":
+      return {
+        query:
+          typeof properties.query === "string" && queries.has(properties.query)
+            ? properties.query
+            : "other",
+        code:
+          typeof properties.code === "string" && errorCodes.has(properties.code)
+            ? properties.code
+            : "UNEXPECTED_ERROR",
+        ...(typeof properties.requestId === "string" && requestIdPattern.test(properties.requestId)
+          ? { requestId: properties.requestId }
+          : {}),
       };
     case "task_scope_changed":
       return { scope: properties.scope === "local" ? "local" : "remote" };

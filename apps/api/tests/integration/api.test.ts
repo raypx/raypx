@@ -125,6 +125,62 @@ describe("HTTP foundation", () => {
     expect(response.headers.get("cross-origin-resource-policy")).toBeNull();
   });
 
+  it("reports readiness per dependency without exposing errors", async () => {
+    const probe = (readiness: Record<string, () => Promise<unknown>>) =>
+      createApiApp({
+        authHandler: async () => Response.json({}),
+        readSession: async () => null,
+        allowedOrigins: [],
+        readiness,
+      }).request("/ready");
+    const ready = await probe({ database: async () => 1, redis: async () => "PONG" });
+    expect(ready.status).toBe(200);
+    expect(await ready.json()).toEqual({
+      status: "ok",
+      checks: { database: "ok", redis: "ok" },
+    });
+    const failing = await probe({
+      database: async () => 1,
+      redis: async () => {
+        throw new Error("connect ECONNREFUSED 10.0.0.5:6379");
+      },
+    });
+    expect(failing.status).toBe(503);
+    const body = await failing.text();
+    expect(JSON.parse(body)).toEqual({
+      status: "unavailable",
+      checks: { database: "ok", redis: "unavailable" },
+    });
+    expect(body).not.toContain("ECONNREFUSED");
+  });
+
+  it("answers slow procedures with a timeout and rejects prototype-polluting input", async () => {
+    const slow = createApiApp({
+      authHandler: async () => Response.json({}),
+      readSession: async () => session,
+      allowedOrigins: [],
+      rpcTimeoutMs: 50,
+      control: {
+        listDevices: () => new Promise(() => {}),
+        register: async () => ({}),
+      } as unknown as ControlService,
+    });
+    const api = createApiClient({
+      baseUrl: "https://api.example.com",
+      fetch: async (input, init) => slow.fetch(new Request(input, init)),
+    });
+    expect(await api.devices.list({}).catch((value: unknown) => value)).toMatchObject({
+      code: "GATEWAY_TIMEOUT",
+      data: { error: { code: "REQUEST_TIMEOUT" } },
+    });
+    const polluted = JSON.parse(
+      '{"installationId":"00000000-0000-4000-8000-000000000000","name":"a","platform":"b","appVersion":"c","__proto__":{"admin":true}}',
+    );
+    expect(await api.devices.register(polluted).catch((value: unknown) => value)).toMatchObject({
+      code: "BAD_REQUEST",
+    });
+  });
+
   it("rejects rate-limited grant procedures per account before running them", async () => {
     const keys: string[] = [];
     const limited = createApiApp({

@@ -1,5 +1,6 @@
 import { createCloudflareRuntime, type CloudflareBindings } from "../runtime/cloudflare.js";
 import type { ApiRuntime } from "../runtime/shared.js";
+import { newRequestId } from "../api.js";
 
 export interface CloudflareRequest extends Request {
   runtime?: {
@@ -41,7 +42,7 @@ export function createCloudflareApp(
         requestId = response.headers.get("x-request-id") ?? undefined;
         return response;
       } catch {
-        requestId ??= crypto.randomUUID();
+        requestId ??= newRequestId();
         // Initialization errors can contain configuration values; never print them.
         console.error(JSON.stringify({ operation: "api.initialize", requestId, status: 500 }));
         return Response.json(
