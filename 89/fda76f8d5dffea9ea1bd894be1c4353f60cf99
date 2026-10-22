@@ -1,0 +1,55 @@
+.env.example
+  s_de2d79b0b75518::t_a1f8b046aa6df1 21-24
+apps/api/AGENTS.md
+  s_de2d79b0b75518::t_144161120b619e 52-59
+apps/api/server/app/cloudflare.ts
+  s_de2d79b0b75518::t_80e788afe3e83d 3,45
+apps/api/server/env.ts
+  s_de2d79b0b75518::t_ca0cf2978209b4 19-20
+apps/api/server/error-reports.ts
+  s_de2d79b0b75518::t_39f4b877139a4e 1-101
+apps/api/server/runtime/cloudflare.ts
+  s_de2d79b0b75518::t_8bce2cf6b0c012 5,34,36
+apps/api/server/runtime/node.ts
+  s_de2d79b0b75518::t_332a3e3e56d9be 6,18
+apps/api/server/runtime/shared.ts
+  s_de2d79b0b75518::t_0e6a12b3e52fca 9,29,53,64-67
+apps/api/tests/integration/api.test.ts
+  s_de2d79b0b75518::t_2e705fbf69115a 128-183
+docs/architecture/analytics.md
+  s_de2d79b0b75518::t_ecd307673a2e3d 30-32
+docs/development/cloudflare.md
+  s_de2d79b0b75518::t_1084f4836f326b 62-73
+skills/raypx/references/api.md
+  s_de2d79b0b75518::t_8229499058a5a7 16-17
+skills/raypx/references/observability.md
+  s_de2d79b0b75518::t_8639ada823d743 14-21
+packages/analytics/src/browser.ts
+  s_900a66df702cc8::t_89bf9c19a37983 9,160-181
+packages/analytics/tests/policy.test.ts
+  s_900a66df702cc8::t_5a9ba06364949d 1,5-10,116-156
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "89fda76f8d5dffea9ea1bd894be1c4353f60cf99",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
