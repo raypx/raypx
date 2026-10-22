@@ -46,7 +46,7 @@ The existing script names select the mode; the default test command never connec
 - TEST_DATABASE_URL pointing to an isolated *_test database, NODE_ENV=test:
   bun run test:postgres validates full verification/login/reset/session revocation.
   CI uses PostgreSQL 17; an older local server is reported separately.
-- The same isolated database with `bun run test:cloudflare:postgres` validates the
+- The same isolated database with `bun run test:postgres:cloudflare` validates the
   built Worker against direct PostgreSQL and local Hyperdrive bindings, including
   password hashing, concurrent account reads and session revocation. See
   [deployment verification](cloudflare.md#verification-and-limits) for fixture scope.
@@ -55,7 +55,7 @@ The existing script names select the mode; the default test command never connec
   fixed-window counters and concurrent RPC limits. Keys use a unique, expiring prefix.
 - bun run test:e2e runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
-- bun run desktop:build on macOS and Windows checks the actual native package.
+- bun run package:desktop on macOS and Windows checks the actual native package.
   Release acceptance additionally verifies views://main session persistence on macOS
   WebKit/Windows CEF against HTTPS auth, bundled CLI resolution/version, picker grants,
   tray scheduling, restart, EOF/quit cleanup and PTY resize/cancellation.

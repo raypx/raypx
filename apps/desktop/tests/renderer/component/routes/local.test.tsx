@@ -49,7 +49,6 @@ vi.mock("../../../../src/lib/desktop", () => ({
 }));
 vi.mock("../../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
-  apiClient: { account: { get: vi.fn() } },
   authClient: {
     signIn: { email: vi.fn() },
     signUp: { email: vi.fn() },
@@ -59,6 +58,9 @@ vi.mock("../../../../src/features/auth/client", () => ({
     signOut: vi.fn(),
     useSession: () => ({ data: null, error: null, isPending: false }),
   },
+}));
+vi.mock("../../../../src/features/tasks/client", () => ({
+  taskClient: { account: { get: vi.fn() } },
 }));
 vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));
 
@@ -506,7 +508,7 @@ describe("Desktop local file routes", () => {
       });
       const router = testRouter("/automations", { isServer: true, isShell });
       await router.load();
-      expect(router.state.matches.some((match) => match.routeId === "/_local/automations")).toBe(
+      expect(router.state.matches.some((match) => match.routeId === "/(local)/automations")).toBe(
         true,
       );
       expect(mocks.isDesktop).not.toHaveBeenCalled();

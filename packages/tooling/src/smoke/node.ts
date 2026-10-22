@@ -31,7 +31,6 @@ export async function probeApi(root: string): Promise<void> {
       RESEND_API_KEY: "",
       MAIL_FROM: "",
       ALLOWED_ORIGINS: base,
-      WEB_URL: base,
     }),
     async (base) => {
       for (const path of [

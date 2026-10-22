@@ -6,7 +6,7 @@ Electrobun desktop composition root with a React/Vite renderer, persistent WebVi
 
 ## Interface
 
-`native/main.ts` owns window, tray, trusted renderer RPC and local engine lifecycle. `native/rpc.ts` declares the renderer bridge. `native/engine.ts` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter` and provides a TanStack Query client (cleared on sign-out), `src/shell.tsx` owns the window layout, and the build writes `dist/client` for `views://main`.
+`native/main.ts` owns window, tray, trusted renderer RPC and local engine lifecycle. `native/rpc.ts` declares the renderer bridge. `native/engine.ts` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter` and provides a TanStack Query client (cleared on sign-out), `src/components/shell.tsx` owns the window layout, and the build writes `dist/client` for `views://main`.
 
 `preferences.ts` shares pure device preference types/validation between the
 native store and renderer; `src/preferences.tsx` owns renderer initialization.
@@ -14,7 +14,8 @@ native store and renderer; `src/preferences.tsx` owns renderer initialization.
 Simple pages live directly in file-route modules. Keep complex page components,
 actions and state under `src/features/`, without a separate `src/pages/` forwarding layer.
 
-`src/routes/_local/route.tsx` is the pathless native-tools boundary. It disables
+`src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group,
+like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
 SSR for native route lifecycles, provides the desktop capability in `beforeLoad`
 and shares root grants between Files and Jobs. Refresh grants when entering this
 branch (`shouldReload` with cause enter), and reuse them between its child pages.
@@ -99,7 +100,7 @@ verification and password recovery remain public; confirmed logout redirects to
 
 ## Verification
 
-`bun run --cwd apps/desktop check`, `bun run --cwd apps/desktop test`, `bun run build:desktop`, then `bun run desktop:build`.
+`bun run --cwd apps/desktop check`, `bun run --cwd apps/desktop test`, `bun run build:desktop`, then `bun run package:desktop`.
 
 `bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile.
 Shell/restore first assert the standalone login page, then supply a synthetic

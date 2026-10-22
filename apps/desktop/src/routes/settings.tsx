@@ -1,7 +1,8 @@
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AgentSettings } from "../features/tasks/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
-import { apiClient, authClient } from "../features/auth/client";
+import { authClient } from "../features/auth/client";
+import { taskClient } from "../features/tasks/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { Languages } from "lucide-react";
 import { ThemePicker, useTheme } from "@raypx/ui/theme/client";
@@ -42,7 +43,7 @@ function SettingsPage() {
       <AgentSettings key={session.data?.user.id ?? "signed-out"} />
       <AnalyticsSettings />
       <DeviceSettings
-        client={apiClient}
+        client={taskClient}
         accountId={session.data?.user.id ?? null}
         pending={session.isPending}
       />

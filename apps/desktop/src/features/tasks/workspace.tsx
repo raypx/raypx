@@ -4,12 +4,13 @@ import { Link } from "@tanstack/react-router";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { useTranslations } from "@raypx/i18n/browser";
-import { apiClient, authClient } from "../auth/client";
+import { authClient } from "../auth/client";
+import { taskClient } from "./client";
 import { isDesktop } from "../../lib/desktop";
 import { localTaskClient } from "./local-client";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
-const remote = instrumentTaskClient(apiClient, analytics, "remote");
+const remote = instrumentTaskClient(taskClient, analytics, "remote");
 export function DesktopTaskWorkspace({ view }: { view: "tasks" | "approvals" }) {
   const session = authClient.useSession(),
     t = useTranslations("tasks"),

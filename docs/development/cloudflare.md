@@ -110,7 +110,7 @@ Hyperdrive configuration so revocation and reads after writes remain fresh.
 bun run verify
 bun run smoke:cloudflare
 NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test:postgres
-NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test:cloudflare:postgres
+NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test:postgres:cloudflare
 ```
 
 The default gate requires no database or mail provider. It runs both Node

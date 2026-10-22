@@ -39,7 +39,7 @@ bun run check
 bun run test
 bun run build
 bun run verify
-bun run desktop:build
+bun run package:desktop
 ```
 
 Turbo discovers tasks from workspace manifests. Engineering commands are exposed

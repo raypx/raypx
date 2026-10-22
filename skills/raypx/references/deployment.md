@@ -11,4 +11,4 @@ Web and API are separate services with two targets each. See
 - Production API requires `DATABASE_URL`, `AUTH_URL`, `AUTH_SECRET` and
   `ALLOWED_ORIGINS`; use HTTPS and exact origins. `VITE_API_URL` is baked into Web.
 - Web's server must receive the session cookie: same origin or `AUTH_DOMAIN`.
-- Desktop: `bun run desktop:build` packages it with its CLI on macOS/Windows.
+- Desktop: `bun run package:desktop` packages it with its CLI on macOS/Windows.

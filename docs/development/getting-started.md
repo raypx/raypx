@@ -31,7 +31,7 @@ Start the separate compose database on 5433, then bun run db:migrate and bun run
 Never point these migration commands at the retired database or volume.
 
 bun run dev starts Web (Start SSR on 3000) and API (3002). bun run dev:desktop starts Desktop development;
-bun run desktop:build packages it with its version-matched CLI. Phones use the Web
+bun run package:desktop packages it with its version-matched CLI. Phones use the Web
 application; a native mobile app is deferred until it needs native capabilities.
 
 Bun catalogs hold third-party versions: the default `catalog:` contains runtime

@@ -21,7 +21,9 @@ vi.mock("../../../../../src/lib/desktop", () => ({
 }));
 vi.mock("../../../../../src/features/auth/client", () => ({
   authClient: { useSession: () => ({ data: { user: { id: "account-a" } }, isPending: false }) },
-  apiClient: {
+}));
+vi.mock("../../../../../src/features/tasks/client", () => ({
+  taskClient: {
     tasks: { list: mocks.remote },
     devices: { list: async () => [] },
     approvals: { list: async () => [] },

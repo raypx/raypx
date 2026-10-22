@@ -170,7 +170,7 @@ describe("HTTP foundation", () => {
       fetch: async (input, init) => slow.fetch(new Request(input, init)),
     });
     expect(await api.devices.list({}).catch((value: unknown) => value)).toMatchObject({
-      code: "GATEWAY_TIMEOUT",
+      code: "SERVICE_UNAVAILABLE",
       data: { error: { code: "REQUEST_TIMEOUT" } },
     });
     const polluted = JSON.parse(
@@ -178,6 +178,7 @@ describe("HTTP foundation", () => {
     );
     expect(await api.devices.register(polluted).catch((value: unknown) => value)).toMatchObject({
       code: "BAD_REQUEST",
+      data: { error: { code: "INVALID_INPUT" } },
     });
   });
 

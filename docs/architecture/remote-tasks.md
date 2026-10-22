@@ -125,7 +125,7 @@ host approvals and protocol subprocess fixtures. `bun run verify` also builds
 Node/Worker artifacts and checks relocated outputs.
 
 `bun run test:postgres` checks real migrations and projection persistence across
-API instances. `bun run test:cloudflare:postgres` checks workerd WebSockets with
+API instances. `bun run test:postgres:cloudflare` checks workerd WebSockets with
 Durable Objects against both direct PostgreSQL and Hyperdrive. These commands
 require an explicit isolated `*_test` database; never use an operator database.
 

@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { DesktopShell, ShellSkeleton } from "../shell";
+import { DesktopShell, ShellSkeleton } from "../components/shell";
 import { DesktopPreferencesProvider, desktopThemeScript } from "../preferences";
 import { SessionGate } from "../features/auth/components/session-gate";
 import { RemoteCoordinator } from "../features/tasks/coordinator";

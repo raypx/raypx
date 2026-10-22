@@ -17,27 +17,28 @@ hook (`vp staged`: oxfmt and oxlint fixes on staged files). `VP_GIT_HOOKS=0` ski
 Copy `.env.example` to `.env`; `.env.local` has priority and inherited shell values
 win. Only development/build/env commands load these files; tests pass explicit values.
 
-| Variable                                                | Used by         | Notes                                                     |
-| ------------------------------------------------------- | --------------- | --------------------------------------------------------- |
-| `DATABASE_URL`                                          | API, migrations | Compose database on port 5433                             |
-| `AUTH_URL`, `AUTH_SECRET`, `WEB_URL`, `ALLOWED_ORIGINS` | API             | Better Auth origin and trust list                         |
-| `AUTH_DOMAIN`                                           | API             | Parent domain when Web and API are sibling hosts          |
-| `REDIS_URL`                                             | API (Node)      | Optional Redis/Valkey for session cache and rate limits   |
-| `VITE_API_URL`                                          | Web, Desktop    | Baked at build time for browser and server                |
-| `RESEND_API_KEY`, `MAIL_FROM`                           | API             | Optional; without them mail returns `MAIL_NOT_CONFIGURED` |
-| `VITE_POSTHOG_PROJECT_TOKEN`, `VITE_POSTHOG_HOST`       | Web, Desktop    | Optional; analytics controls stay disabled without them   |
+| Variable                                          | Used by         | Notes                                                     |
+| ------------------------------------------------- | --------------- | --------------------------------------------------------- |
+| `DATABASE_URL`                                    | API, migrations | Compose database on port 5433                             |
+| `AUTH_URL`, `AUTH_SECRET`, `ALLOWED_ORIGINS`      | API             | Better Auth origin and trust list                         |
+| `AUTH_DOMAIN`                                     | API             | Parent domain when Web and API are sibling hosts          |
+| `REDIS_URL`                                       | API (Node)      | Optional Redis/Valkey for session cache and rate limits   |
+| `VITE_API_URL`                                    | Web, Desktop    | Baked at build time for browser and server                |
+| `VITE_WEB_URL`                                    | Desktop         | Web origin for verification and reset links               |
+| `RESEND_API_KEY`, `MAIL_FROM`                     | API             | Optional; without them mail returns `MAIL_NOT_CONFIGURED` |
+| `VITE_POSTHOG_PROJECT_TOKEN`, `VITE_POSTHOG_HOST` | Web, Desktop    | Optional; analytics controls stay disabled without them   |
 
 ## Database
 
 `docker compose up -d postgres` starts the isolated database on 5433, then
-`bun run db:migrate`. After schema changes run `bun run generate`. PostgreSQL tools:
+`bun run db:migrate`. After schema changes run `bun run db:generate`. PostgreSQL tools:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
 ## Local CLI and Desktop
 
 `bun run build:cli` produces `apps/cli/dist/raypx`; `bun run --cwd apps/cli dev --help`
 runs from source. `bun run dev:desktop` starts the renderer (1420) and native shell;
-`bun run desktop:build` packages Desktop with its version-matched CLI.
+`bun run package:desktop` packages Desktop with its version-matched CLI.
 
 ## Cloudflare
 

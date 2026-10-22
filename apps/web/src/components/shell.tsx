@@ -5,7 +5,7 @@ import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { authClient, webUrl } from "../features/auth/client";
-import { apiClient } from "../features/tasks/client";
+import { taskClient } from "../features/tasks/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { ListTodo, Inbox, Settings, CircleUserRound } from "lucide-react";
@@ -21,8 +21,8 @@ export function WebShell() {
   const queryClient = useQueryClient();
   const accountId = session.data?.user.id ?? null;
   useEffect(() => {
-    apiClient.setAccount?.(accountId);
-    return () => apiClient.setAccount?.(null);
+    taskClient.setAccount?.(accountId);
+    return () => taskClient.setAccount?.(null);
   }, [accountId]);
   const auth = useAuthActions({ client: authClient, webUrl });
   const c = useTranslations("common");
@@ -79,7 +79,7 @@ export function WebShell() {
             {c("approvals")}
             <PendingCount
               key={session.data?.user.id ?? "signed-out"}
-              client={apiClient}
+              client={taskClient}
               accountId={session.data?.user.id ?? null}
             />
           </Link>

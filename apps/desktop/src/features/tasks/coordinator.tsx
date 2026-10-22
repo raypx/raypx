@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { apiClient, apiUrl, authClient } from "../auth/client";
+import { apiUrl, authClient } from "../auth/client";
+import { taskClient } from "./client";
 import { getBridge, isDesktop, onLocalEvent, localRequest } from "../../lib/desktop";
 import { localTaskClient } from "./local-client";
 
@@ -7,10 +8,10 @@ export function RemoteCoordinator() {
   const session = authClient.useSession();
   const accountId = session.data?.user.id;
   useEffect(() => {
-    apiClient.setAccount?.(accountId ?? null);
+    taskClient.setAccount?.(accountId ?? null);
     localTaskClient.setAccount(accountId ?? null);
     return () => {
-      apiClient.setAccount?.(null);
+      taskClient.setAccount?.(null);
       localTaskClient.setAccount(null);
       if (accountId && isDesktop())
         void localRequest("agents.local.detach", { accountId }).catch(() => {});
@@ -27,7 +28,7 @@ export function RemoteCoordinator() {
         const bridge = await getBridge();
         let info = await bridge.request.controlInfo({ accountId });
         if (info.pendingRevoke) {
-          await apiClient.devices.revoke(info.pendingRevoke, {
+          await taskClient.devices.revoke(info.pendingRevoke, {
             signal: AbortSignal.timeout(10_000),
           });
           info = await bridge.request.controlRevoked({ accountId });
@@ -35,10 +36,10 @@ export function RemoteCoordinator() {
         if (!info.enabled || !active) return;
         await bridge.request.controlEnable({ accountId, enabled: true });
         const grant = info.binding
-          ? await apiClient.devices.refreshGrant(info.binding, {
+          ? await taskClient.devices.refreshGrant(info.binding, {
               signal: AbortSignal.timeout(10_000),
             })
-          : await apiClient.devices.register(
+          : await taskClient.devices.register(
               {
                 installationId: info.installationId,
                 name: info.name,

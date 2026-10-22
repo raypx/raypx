@@ -1,11 +1,12 @@
-import { analytics } from "./features/analytics/client";
+import { analytics } from "../features/analytics/client";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { useQueryClient } from "@tanstack/react-query";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { apiClient, authClient, webUrl } from "./features/auth/client";
-import { createPendingClient, localTaskClient } from "./features/tasks/local-client";
+import { authClient, webUrl } from "../features/auth/client";
+import { taskClient } from "../features/tasks/client";
+import { createPendingClient, localTaskClient } from "../features/tasks/local-client";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import {
@@ -20,9 +21,9 @@ import {
 import { Logo } from "@raypx/ui/logo";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
-import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "./lib/desktop";
+import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "../lib/desktop";
 
-const pendingClient = createPendingClient(localTaskClient, apiClient);
+const pendingClient = createPendingClient(localTaskClient, taskClient);
 const sidebarClassName =
   "flex w-56 shrink-0 flex-col border-r border-border bg-sidebar px-4 pt-11 pb-5 max-[1100px]:w-[190px] max-[760px]:px-2.5 max-[420px]:px-1.5";
 const brandClassName =

@@ -97,7 +97,7 @@ them; add a package only when its responsibility and consumers exist.
 bun run workspace:new <name> --kind library --target universal --tests --write
 bun run --cwd <workspace> test        # narrow tests first
 bun run verify                        # default gate: no GUI, database or mail needed
-bun run generate && bun run db:migrate   # after changing packages/database schema
+bun run db:generate && bun run db:migrate   # after changing packages/database schema
 bun run i18n:check                    # catalog parity for en/zh
 bunx shadcn@latest add <component>    # run inside apps/web; writes into packages/ui
 bun run build:web:cloudflare          # optional Worker output in .output-cloudflare

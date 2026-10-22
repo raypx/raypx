@@ -40,7 +40,6 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
-  apiClient: { account: { get: mocks.account } },
   authClient: {
     signIn: { email: mocks.signIn },
     signUp: { email: mocks.signUp },
@@ -50,6 +49,9 @@ vi.mock("../../../../../src/features/auth/client", () => ({
     signOut: mocks.signOut,
     useSession: mocks.session,
   },
+}));
+vi.mock("../../../../../src/features/tasks/client", () => ({
+  taskClient: { account: { get: mocks.account } },
 }));
 // The complete route tree imports the terminal; auth tests do not mount xterm.
 vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));

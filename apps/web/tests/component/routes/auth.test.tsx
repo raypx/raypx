@@ -43,7 +43,7 @@ vi.mock("../../../src/features/auth/client", () => ({
     signOut: mocks.signOut,
   },
 }));
-vi.mock("../../../src/features/tasks/client", () => ({ apiClient: {} }));
+vi.mock("../../../src/features/tasks/client", () => ({ taskClient: {} }));
 vi.mock("../../../src/features/auth/account", () => ({
   loadAccount: mocks.loadAccount,
 }));

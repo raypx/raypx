@@ -8,9 +8,9 @@ import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import type { JobDefinition, JobInput, JobRun, RootGrant } from "@raypx/contracts/local";
 import { localRequest } from "../../lib/desktop";
 
-const localRoute = getRouteApi("/_local");
+const localRoute = getRouteApi("/(local)");
 
-export const Route = createFileRoute("/_local/automations")({
+export const Route = createFileRoute("/(local)/automations")({
   preload: false,
   loader: async ({ context }) => {
     if (!context.desktopAvailable) return { jobs: null, failed: false };
@@ -54,7 +54,7 @@ function JobsPage() {
   function refresh() {
     return router.invalidate({
       filter: (match) =>
-        match.routeId === Route.id || (local.roots === null && match.routeId === "/_local"),
+        match.routeId === Route.id || (local.roots === null && match.routeId === "/(local)"),
     });
   }
   function edit(job: JobDefinition | null) {

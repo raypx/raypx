@@ -7,7 +7,7 @@ postgres.js and Drizzle; migrations with `@raypx-kit/drizzle-kit`.
   Worker-safe), `/schema` (Better Auth tables), `/env` (validated configuration).
 - Active tables live in schema `raypx_foundation`; history in `raypx_foundation_migrations`.
 - `rate_limit` is the shared store for Better Auth and RPC limits ([security](security.md)).
-- Change `/schema`, run `bun run generate`, review the SQL, then `bun run db:migrate`.
+- Change `/schema`, run `bun run db:generate`, review the SQL, then `bun run db:migrate`.
   Never edit generated SQL/snapshots and never apply `drizzle`/`drizzle-cloud` archives.
 - There is no reset/drop command. Never point migrations at the retired database.
 - Node uses a pool of ten; Workers create request-owned clients (Hyperdrive optional,

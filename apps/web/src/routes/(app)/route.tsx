@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { WebShell } from "../../components/web-shell";
+import { WebShell } from "../../components/shell";
 import { accountQuery } from "../../features/auth/account-query";
 
 // Signed-in surface: the sidebar shell and its account/task dependencies stay out of (auth).

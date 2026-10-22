@@ -51,8 +51,9 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
 - `/ready` probes PostgreSQL (and Redis when configured) within three seconds and
   returns per-dependency `ok`/`unavailable` without error details; `/health` stays
-  liveness-only. RPC runs `PrototypePollutionProtectionHandlerPlugin` and a 15 s
-  `TimeoutHandlerPlugin`; a middleware answers `GATEWAY_TIMEOUT`/`REQUEST_TIMEOUT`
+  liveness-only. RPC rejects `__proto__`/`constructor.prototype` input keys (`INVALID_INPUT`,
+  oRPC beta.44 dropped its plugin) and runs a 15 s
+  `TimeoutHandlerPlugin`; a middleware answers `SERVICE_UNAVAILABLE`/`REQUEST_TIMEOUT`
   because database calls do not observe the abort signal.
 - Request IDs are `req_` plus 24 letters so log redaction never masks them. With
   `POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST`, error-level and 5xx events also go to
@@ -82,7 +83,7 @@ bun run --cwd apps/api test
 bun run build:api
 bun run build:api:cloudflare
 TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/api test:postgres
-TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test:cloudflare:postgres
+TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test:postgres:cloudflare
 ```
 
 ## Remote tasks

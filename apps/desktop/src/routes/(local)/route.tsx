@@ -4,7 +4,7 @@ import { isDesktop, localRequest, onLocalEvent } from "../../lib/desktop";
 import type { RootGrant } from "@raypx/contracts/local";
 import { useTranslations } from "@raypx/i18n/browser";
 
-export const Route = createFileRoute("/_local")({
+export const Route = createFileRoute("/(local)")({
   ssr: false,
   preload: false,
   staleTime: Infinity,
@@ -35,13 +35,13 @@ function LocalLayout() {
     return onLocalEvent((event) => {
       if (event.event === "engine.status" && event.data.status === "ready")
         void router.invalidate({
-          filter: (match) => match.routeId.startsWith("/_local"),
+          filter: (match) => match.routeId.startsWith("/(local)"),
         });
       else if (
         event.event === "job.finished" &&
-        router.state.matches.some((match) => match.routeId === "/_local/automations")
+        router.state.matches.some((match) => match.routeId === "/(local)/automations")
       )
-        void router.invalidate({ filter: (match) => match.routeId === "/_local/automations" });
+        void router.invalidate({ filter: (match) => match.routeId === "/(local)/automations" });
     });
   }, [desktopAvailable, router]);
   return <Outlet />;

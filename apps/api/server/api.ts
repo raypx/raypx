@@ -4,10 +4,7 @@ import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { implement, ORPCError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
-import {
-  PrototypePollutionProtectionHandlerPlugin,
-  TimeoutHandlerPlugin,
-} from "@orpc/server/plugins";
+import { TimeoutHandlerPlugin } from "@orpc/server/plugins";
 import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { createAccountService } from "@raypx/account/server";
@@ -35,6 +32,24 @@ const rpcLimits = {
   "devices.refreshGrant": { window: 60, max: 30 },
   "relay.ticket": { window: 60, max: 60 },
 } satisfies Record<string, RateRule>;
+/** True when decoded input carries keys that merge or path-set helpers could abuse. */
+export function hasPollutingKey(value: unknown): boolean {
+  const pending: unknown[] = [value];
+  const seen = new Set<object>();
+  while (pending.length > 0) {
+    const item = pending.pop();
+    if (!item || typeof item !== "object" || seen.has(item)) continue;
+    seen.add(item);
+    if (Object.hasOwn(item, "__proto__")) return true;
+    const constructor = Object.hasOwn(item, "constructor")
+      ? (item as { constructor?: unknown }).constructor
+      : undefined;
+    if (constructor && typeof constructor === "object" && Object.hasOwn(constructor, "prototype"))
+      return true;
+    pending.push(...Object.values(item));
+  }
+  return false;
+}
 /**
  * Letters only, so log redaction never mistakes an ID for a card or phone number and
  * masks it: the same ID must appear in responses, logs and error reports.
@@ -141,6 +156,15 @@ export function createApiApp(options: ApiAppOptions) {
     .$context<{ headers: Headers; requestId: string }>()
     // TimeoutHandlerPlugin only aborts the signal; database calls do not observe it,
     // so answer as soon as it fires instead of waiting for them.
+    // oRPC's own decoding never assigns through prototypes; this keeps such keys away
+    // from application code that might merge or clone input with a vulnerable helper.
+    .use(({ next, context }, input) => {
+      if (hasPollutingKey(input))
+        throw new ORPCError("BAD_REQUEST", {
+          data: { error: { code: "INVALID_INPUT" }, requestId: context.requestId },
+        });
+      return next();
+    })
     .use(({ next, signal, context }) => {
       if (!signal) return next();
       return Promise.race([
@@ -148,7 +172,7 @@ export function createApiApp(options: ApiAppOptions) {
         new Promise<never>((_, reject) => {
           const fail = () =>
             reject(
-              new ORPCError("GATEWAY_TIMEOUT", {
+              new ORPCError("SERVICE_UNAVAILABLE", {
                 data: { error: { code: "REQUEST_TIMEOUT" }, requestId: context.requestId },
               }),
             );
@@ -251,7 +275,6 @@ export function createApiApp(options: ApiAppOptions) {
   });
   const rpc = new RPCHandler(router, {
     plugins: [
-      new PrototypePollutionProtectionHandlerPlugin(),
       new TimeoutHandlerPlugin({ timeout: options.rpcTimeoutMs ?? 15_000 }),
       ...(options.logger ? [createRpcLoggingPlugin(options.logger)] : []),
     ],

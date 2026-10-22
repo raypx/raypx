@@ -106,9 +106,9 @@
     "test:e2e": "raypx-dev tasks e2e",
     "test:postgres": "raypx-dev tasks test:postgres --filter api",
     "test:redis": "raypx-dev tasks test:redis --filter api",
-    "desktop:build": "raypx-dev desktop build",
+    "package:desktop": "raypx-dev desktop build",
     "db:migrate": "raypx-dev db migrate",
-    "generate": "raypx-dev db generate",
+    "db:generate": "raypx-dev db generate",
     "clean": "raypx-dev clean",
     "deps:audit": "bun audit",
     "build:web:cloudflare": "raypx-dev tasks build:cloudflare --filter web",
@@ -118,7 +118,7 @@
     "deploy:web:cloudflare": "bun run --cwd apps/web deploy:cloudflare",
     "deploy:api:cloudflare": "bun run --cwd apps/api deploy:cloudflare",
     "smoke:cloudflare": "raypx-dev smoke:cloudflare",
-    "test:cloudflare:postgres": "raypx-dev tasks test:cloudflare:postgres --filter api",
+    "test:postgres:cloudflare": "raypx-dev tasks test:postgres:cloudflare --filter api",
     "analytics:sourcemaps": "raypx-dev analytics sourcemaps"
   },
   "devDependencies": {

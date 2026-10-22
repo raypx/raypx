@@ -68,7 +68,7 @@ credentials/maps are missing; ordinary builds and verification require neither.
 
 Publish those same injected outputs. Web's deploy command deploys the existing
 Worker build. For Desktop, run the workspace `native:build` after injection; do
-not run root `desktop:build`, which rebuilds the renderer. Do not publish outputs
+not run root `package:desktop`, which rebuilds the renderer. Do not publish outputs
 from a failed upload or serve hidden maps accidentally.
 
 `@raypx-kit/analytics` is pinned to an exact published alpha; update it through the

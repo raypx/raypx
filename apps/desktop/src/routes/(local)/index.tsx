@@ -18,9 +18,9 @@ import { FileTable, type FileListingResult } from "../../features/files/componen
 import { FileOperationForm } from "../../features/files/components/operation-form";
 import { FileEditor } from "../../features/files/components/editor";
 
-const localRoute = getRouteApi("/_local");
+const localRoute = getRouteApi("/(local)");
 
-export const Route = createFileRoute("/_local/")({
+export const Route = createFileRoute("/(local)/")({
   preload: false,
   validateSearch: filesSearch,
   loaderDeps: ({ search }) => ({
@@ -87,7 +87,7 @@ function FilesPage() {
   });
   function refresh() {
     return router.invalidate({
-      filter: (match) => match.routeId === Route.id || match.routeId === "/_local",
+      filter: (match) => match.routeId === Route.id || match.routeId === "/(local)",
     });
   }
   function navigateDirectory(rootId: string, path: string) {

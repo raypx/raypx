@@ -45,7 +45,6 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
-  apiClient: { account: { get: mocks.account }, devices: { list: async () => [] } },
   authClient: {
     signIn: { email: mocks.signIn },
     signUp: { email: vi.fn() },
@@ -64,6 +63,9 @@ vi.mock("../../../../src/features/auth/client", () => ({
       refetch: async () => {},
     }),
   },
+}));
+vi.mock("../../../../src/features/tasks/client", () => ({
+  taskClient: { account: { get: mocks.account }, devices: { list: async () => [] } },
 }));
 // The generated tree imports terminal code, but account tests never mount xterm.
 vi.mock("@xterm/xterm", () => ({ Terminal: vi.fn() }));

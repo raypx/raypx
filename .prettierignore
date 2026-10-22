@@ -1,7 +1,7 @@
 # Ignore rules for Oxfmt, which `vp fmt` reads from .gitignore and .prettierignore.
 
-# Generated route trees. Formatting them would be reverted by the next
-# `bun run generate`, producing permanent churn and breaking generated-output
+# Generated route trees. Formatting them would be reverted by the next router
+# plugin generation, producing permanent churn and breaking generated-output
 # drift checks.
 **/routeTree.gen.ts
 

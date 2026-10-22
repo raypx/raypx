@@ -11,7 +11,7 @@ export const pinnedNode = (root: string) => findPinnedNode(root, { nodeBinaryEnv
 export function turbo(root: string, task: string, args: string[] = []): Promise<void> {
   // Resolve Node before Bun's --bun Turbo runner adds its node shim to PATH.
   const nodeEnvironment =
-    task === "e2e" || task === "test:cloudflare:postgres"
+    task === "e2e" || task === "test:postgres:cloudflare"
       ? {
           NODE_BINARY: execFileSync(pinnedNode(root), ["-p", "process.execPath"], {
             encoding: "utf8",

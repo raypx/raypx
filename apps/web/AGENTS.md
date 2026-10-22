@@ -19,7 +19,7 @@ application is an independent composition root and is never imported by another 
   theme script and preference providers; keep layout and feature dependencies out of it.
 - Route-group layouts (`route.tsx` inside a `(group)` directory, no URL segment) isolate
   first-load JavaScript: `src/routes/(app)/` renders
-  `src/components/web-shell.tsx` (sidebar, account menu, pending count) for the account,
+  `src/components/shell.tsx` (sidebar, account menu, pending count) for the account,
   settings, task and approval pages; `src/routes/(auth)/` is a logo-only layout for sign-in pages.
   Import heavy client modules only from the layout or route that needs them.
 - `src/router.tsx` creates one TanStack QueryClient per router (per request on the

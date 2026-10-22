@@ -11,12 +11,13 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { apiClient, authClient, webUrl } from "../features/auth/client";
+import { authClient, webUrl } from "../features/auth/client";
+import { taskClient } from "../features/tasks/client";
 
 export const Route = createFileRoute("/account")({
   ssr: false,
   preload: false,
-  loader: ({ abortController }) => readAccount(apiClient, { signal: abortController.signal }),
+  loader: ({ abortController }) => readAccount(taskClient, { signal: abortController.signal }),
   pendingComponent: AccountPending,
   component: AccountPage,
 });
