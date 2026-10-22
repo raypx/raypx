@@ -17,7 +17,8 @@
     "./avatar": "./src/avatar.tsx",
     "./logo": "./src/logo.tsx",
     "./toast": "./src/toast/index.tsx",
-    "./theme": "./src/theme/index.ts",
+    "./themes": "./src/themes/index.ts",
+    "./themes/config": "./src/themes/config.ts",
     "./components/ui/toast": "./src/components/ui/toast.tsx",
     "./styles.css": "./src/styles.css",
     "./styles/globals.css": "./src/styles/globals.css",
@@ -35,7 +36,6 @@
     "./components/ui/popover": "./src/components/ui/popover.tsx",
     "./icon-button": "./src/icon-button.tsx",
     "./help-hint": "./src/help-hint.tsx",
-    "./theme/client": "./src/theme/client.ts",
     "./styles/app.css": "./src/styles/app.css"
   },
   "scripts": {
@@ -75,12 +75,12 @@
     "kind": "library",
     "target": "browser",
     "entryTargets": {
-      "./theme": "universal"
+      "./themes/config": "universal"
     },
     "sourceTargets": {
-      "src/theme/config.ts": "universal",
-      "src/theme/tokens.ts": "universal",
-      "src/theme/index.ts": "universal",
+      "src/themes/config.ts": "universal",
+      "src/themes/tokens.ts": "universal",
+      "src/themes/script.ts": "universal",
       "scripts/**": "node"
     }
   }

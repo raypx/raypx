@@ -44,12 +44,14 @@ Account provides platform-neutral remote read state, browser account views and a
 injected server projection service. API supplies fresh session resolution and
 maps unauthorized responses; Web/Desktop supply navigation and auth actions.
 Auth and client do not depend on account. Shared feature styles live with their
-packages; generic shell/settings styles live in UI. ThemePicker belongs to UI's
-browser entry, and LanguageSelect to i18n's browser entry.
+packages. Blocks composes UI and i18n into router-agnostic application chrome (the
+sidebar shell and settings page sections) that Web and Desktop fill with their own
+links and feature views; it never imports account, auth, tasks or analytics.
+ThemePicker belongs to UI's `themes` entry, and LanguageSelect to i18n's browser entry.
 
 Contracts/api contains oRPC definitions; contracts/local contains Zod device
 messages. Client is the remote SDK. Local interfaces are never registered on
-public RPC. UI contains DOM components and a pure theme entry.
+public RPC. UI contains DOM components, a `themes` entry and a pure `themes/config` entry.
 I18n contains static English/Chinese catalogs and platform adapters. Its controlled
 Raypx Kit provider delegates translation, formatting and React context to its bundled use-intl.
 Only `useLanguagePreference().setPreference()` changes the product language

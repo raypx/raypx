@@ -1,7 +1,8 @@
 import { useEffect, type ReactNode } from "react";
 import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { DesktopShell, ShellSkeleton } from "../components/shell";
-import { DesktopPreferencesProvider, desktopThemeScript } from "../preferences";
+import { ThemeScript, themeMeta } from "@raypx/ui/themes";
+import { DesktopPreferencesProvider, desktopInitialThemeSource } from "../preferences";
 import { SessionGate } from "../features/auth/components/session-gate";
 import { RemoteCoordinator } from "../features/tasks/coordinator";
 import { getBridge, isDesktop } from "../lib/desktop";
@@ -13,8 +14,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "UTF-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
-      { name: "color-scheme", content: "light dark" },
-      { name: "theme-color", content: "#ffffff" },
+      ...themeMeta,
       { title: "Raypx" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
@@ -28,8 +28,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
-        {/* oxlint-disable-next-line react/no-danger -- Static first-paint theme script interpolates only application-owned storage keys. */}
-        <script dangerouslySetInnerHTML={{ __html: desktopThemeScript }} />
+        <ThemeScript initialThemeSource={desktopInitialThemeSource} />
       </head>
       <body className="h-dvh min-w-[800px] overflow-hidden">
         {children}

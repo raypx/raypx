@@ -1,6 +1,8 @@
 import { Monitor, Moon, Sun } from "lucide-react";
-import { cn } from "./lib/utils";
-import type { UserTheme } from "./theme/config";
+import { use } from "react";
+import { cn } from "../lib/utils";
+import type { UserTheme } from "./config";
+import { ThemeContext } from "./provider";
 
 const previewClasses: Record<UserTheme, string> = {
   light: "bg-white before:border-[#e5e5e5] before:bg-[#f5f5f5] [&>span]:bg-[#e5e5e5]",
@@ -10,13 +12,17 @@ const previewClasses: Record<UserTheme, string> = {
 };
 
 export interface ThemePickerProps {
-  value: UserTheme;
-  onValueChange: (value: UserTheme) => void;
   label: string;
   labels: Record<UserTheme, string>;
+  /** Controlled value; defaults to the surrounding ThemeProvider. */
+  value?: UserTheme;
+  onValueChange?: (value: UserTheme) => void;
 }
 
-export function ThemePicker({ value, onValueChange, label, labels }: ThemePickerProps) {
+export function ThemePicker({ label, labels, value, onValueChange }: ThemePickerProps) {
+  const context = use(ThemeContext);
+  const current = value ?? context?.theme ?? "system";
+  const change = onValueChange ?? context?.setTheme;
   return (
     <fieldset className="m-0 flex gap-3 border-0 p-0 [@media(width<=420px)]:gap-[9px]">
       <legend className="sr-only">{label}</legend>
@@ -36,14 +42,14 @@ export function ThemePicker({ value, onValueChange, label, labels }: ThemePicker
             type="radio"
             name="theme"
             value={theme}
-            checked={value === theme}
-            onChange={() => onValueChange(theme)}
+            checked={current === theme}
+            onChange={() => change?.(theme)}
           />
           <span
             className={cn(
               "relative flex h-[72px] flex-col gap-1.5 overflow-hidden rounded-[8px] border border-border py-3 pr-3 pl-[25px] before:absolute before:inset-y-0 before:left-0 before:w-[15px] before:border-r before:content-[''] [&>span]:h-[5px] [&>span]:w-full [&>span]:rounded-[2px] [&>span:first-child]:w-3/5 [&>span:first-child]:bg-[#a3a3a3]",
               previewClasses[theme],
-              value === theme && "outline-2 outline-foreground outline-offset-2",
+              current === theme && "outline-2 outline-foreground outline-offset-2",
             )}
             aria-hidden="true"
           >

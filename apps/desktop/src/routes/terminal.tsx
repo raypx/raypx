@@ -8,7 +8,7 @@ import "@xterm/xterm/css/xterm.css";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useTheme } from "@raypx/ui/theme/client";
+import { themeTokens, useTheme } from "@raypx/ui/themes";
 import { isDesktop, localRequest, onLocalEvent } from "../lib/desktop";
 
 export const Route = createFileRoute("/terminal")({ component: TerminalPage });
@@ -107,21 +107,15 @@ function TerminalPage() {
     };
   }, []);
   useEffect(() => {
-    if (terminal.current)
-      terminal.current.options.theme =
-        resolvedTheme === "dark"
-          ? {
-              background: "#171717",
-              foreground: "#fafafa",
-              cursor: "#fafafa",
-              selectionBackground: "#525252",
-            }
-          : {
-              background: "#ffffff",
-              foreground: "#171717",
-              cursor: "#171717",
-              selectionBackground: "#d4d4d4",
-            };
+    if (!terminal.current) return;
+    // xterm parses colors through canvas, so only opaque tokens are usable here.
+    const tokens = themeTokens[resolvedTheme];
+    terminal.current.options.theme = {
+      background: tokens.background,
+      foreground: tokens.foreground,
+      cursor: tokens.foreground,
+      selectionBackground: tokens.ring,
+    };
   }, [resolvedTheme]);
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

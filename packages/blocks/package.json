@@ -1,0 +1,41 @@
+{
+  "name": "@raypx/blocks",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./settings": "./src/components/settings.tsx",
+    "./shell": "./src/components/shell.tsx",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run --passWithNoTests",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
+    "test:component": "bun --bun vp test --run --passWithNoTests component/"
+  },
+  "dependencies": {
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*",
+    "lucide-react": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@testing-library/react": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@types/react-dom": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "jsdom": "catalog:dev",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:dev"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "browser"
+  }
+}

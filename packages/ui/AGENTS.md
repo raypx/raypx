@@ -8,8 +8,16 @@ packages own page layout, forms, navigation and product behavior.
 ## Interface
 
 - `components/ui/*`: Base UI and shadcn primitives.
-- `theme`: pure token definitions, types and theme preference parsing.
-- `theme/client`: DOM provider, startup script, theme hook and controlled ThemePicker.
+- `themes`: all dark/light behavior in `src/themes`. Render `ThemeScript` in the
+  document head (optional `initialThemeSource` expression for native snapshots),
+  wrap the app in `ThemeProvider` (`initialTheme`, `storageKey`), read `useTheme`,
+  and render `ThemePicker` with labels; it follows the provider unless controlled.
+  `readStoredTheme`/`storeTheme` read and write the browser mirror outside React.
+  Also re-exports the pure helpers below.
+- `themes/config`: universal tokens, types, `THEME_STORAGE_KEY`, `parseTheme`,
+  `readThemeCookie`, `themeColors` and `themeMeta` (spread into root head meta).
+  Never render `theme-color` through React: the script inserts it and the provider
+  updates it, because React 19 hydrates head meta by content and would duplicate it.
 - `styles.css`: DOM Tailwind entry and generated theme values.
 - `styles/app.css`: imports the Tailwind entry once and supplies layered app base
   defaults. Layout and control utilities live in their owning components.
@@ -23,8 +31,8 @@ Preserve the original brand artwork and Neutral light/dark values.
 ## Constraints
 
 - No account, file, task or API behavior in this package.
-- No DOM imports in the pure theme entry.
-- Edit `src/theme/tokens.ts`, then run `generate:theme`; the generated DOM CSS
+- No DOM imports in `themes/config`, `tokens.ts` or `script.ts`.
+- Edit `src/themes/tokens.ts`, then run `generate:theme`; the generated DOM CSS
   must stay identical to that source.
 - Use Base UI and Lucide icons; do not introduce Radix or another icon library.
 - Generated shadcn primitives live under `src/components/ui`; handwritten patterns

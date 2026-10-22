@@ -6,7 +6,7 @@ Electrobun desktop composition root with a React/Vite renderer, persistent WebVi
 
 ## Interface
 
-`native/main.ts` owns window, tray, trusted renderer RPC and local engine lifecycle. `native/rpc.ts` declares the renderer bridge. `native/engine.ts` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter` and provides a TanStack Query client (cleared on sign-out), `src/components/shell.tsx` owns the window layout, and the build writes `dist/client` for `views://main`.
+`native/main.ts` owns window, tray, trusted renderer RPC and local engine lifecycle. `native/rpc.ts` declares the renderer bridge. `native/engine.ts` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter` and provides a TanStack Query client (cleared on sign-out), `src/components/shell.tsx` fills the `@raypx/blocks/shell` window frame, and the build writes `dist/client` for `views://main`.
 
 `preferences.ts` shares pure device preference types/validation between the
 native store and renderer; `src/preferences.tsx` owns renderer initialization.

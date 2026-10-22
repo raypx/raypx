@@ -43,6 +43,7 @@ Details: [setup](references/setup.md).
 | `packages/analytics` | universal     | Opt-in PostHog policies, consent UI, mutation decorators              |
 | `packages/i18n`      | universal     | English/Chinese catalogs and locale preferences                       |
 | `packages/ui`        | browser       | shadcn/Base UI primitives and neutral theme tokens                    |
+| `packages/blocks`    | browser       | Shared app chrome: sidebar shell and settings page sections           |
 | `packages/database`  | node          | Drizzle schema and migrations for the new database                    |
 | `packages/mail`      | node          | Auth email templates and Resend delivery                              |
 | `packages/storage`   | universal     | Object storage on unstorage: S3/R2/MinIO, pre-signed URLs             |

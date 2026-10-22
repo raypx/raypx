@@ -26,7 +26,7 @@ import {
 import type { AccountProfile } from "@raypx/contracts/api";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "@raypx/ui/theme/client";
+import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../../../src/routeTree.gen";
 
 expect.extend(matchers);
@@ -148,7 +148,7 @@ function mount(router: ReturnType<typeof testRouter>) {
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
-      <ThemeProvider disableScript>
+      <ThemeProvider>
         <BrowserLanguageProvider>
           <RouterProvider router={router} />
         </BrowserLanguageProvider>

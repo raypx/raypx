@@ -31,7 +31,7 @@ import type {
   RootGrant,
 } from "@raypx/contracts/local";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import { ThemeProvider } from "@raypx/ui/theme/client";
+import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../../../../src/routeTree.gen";
 
 expect.extend(matchers);
@@ -160,7 +160,7 @@ function testRouter(
 
 function mount(router: ReturnType<typeof testRouter>) {
   return render(
-    <ThemeProvider disableScript>
+    <ThemeProvider>
       <BrowserLanguageProvider>
         <RouterProvider router={router} />
       </BrowserLanguageProvider>

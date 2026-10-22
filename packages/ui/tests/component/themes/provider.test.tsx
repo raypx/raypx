@@ -6,7 +6,16 @@ import { StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { ThemeProvider, parseTheme, useTheme } from "../../../src/theme/client";
+import {
+  ThemePicker,
+  ThemeProvider,
+  parseTheme,
+  readStoredTheme,
+  readThemeCookie,
+  storeTheme,
+  themeColors,
+  useTheme,
+} from "../../../src/themes";
 
 afterEach(() => {
   cleanup();
@@ -47,6 +56,7 @@ describe("theme provider", () => {
     document.documentElement.className = "";
     document.documentElement.removeAttribute("data-theme");
     document.documentElement.style.colorScheme = "";
+    for (const meta of document.head.querySelectorAll('meta[name="theme-color"]')) meta.remove();
     window.localStorage.clear();
     for (const cookie of document.cookie.split(";")) {
       document.cookie = `${cookie.split("=")[0]?.trim()}=; Path=/; Max-Age=0`;
@@ -60,15 +70,11 @@ describe("theme provider", () => {
 
   it("applies an explicit theme and supports switching without persistence", async () => {
     const user = userEvent.setup();
-    const onThemeChange = vi.fn();
+    const meta = document.createElement("meta");
+    meta.name = "theme-color";
+    document.head.append(meta);
     render(
-      <ThemeProvider
-        disableScript
-        disableTransitionOnChange
-        initialTheme="dark"
-        onThemeChange={onThemeChange}
-        storageKey={false}
-      >
+      <ThemeProvider initialTheme="dark" storageKey={false}>
         <ThemeProbe />
       </ThemeProvider>,
     );
@@ -77,7 +83,7 @@ describe("theme provider", () => {
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(document.documentElement).toHaveClass("dark");
     expect(document.querySelector("script")).toBeNull();
-    expect(onThemeChange).not.toHaveBeenCalled();
+    expect(meta).toHaveAttribute("content", themeColors.dark);
 
     await user.click(screen.getByRole("button", { name: "Light" }));
 
@@ -86,7 +92,7 @@ describe("theme provider", () => {
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
     expect(document.documentElement).toHaveClass("light");
     expect(document.documentElement).not.toHaveClass("dark");
-    expect(onThemeChange).toHaveBeenCalledExactlyOnceWith("light");
+    expect(meta).toHaveAttribute("content", themeColors.light);
   });
 
   it.each(["light", "system"] as const)(
@@ -95,7 +101,6 @@ describe("theme provider", () => {
       window.localStorage.setItem("theme", "dark");
       vi.spyOn(window, "matchMedia").mockReturnValue(createMediaQuery(true));
       const onRecoverableError = vi.fn();
-      const onThemeChange = vi.fn();
       const consoleError = vi.spyOn(console, "error");
       const rendered: string[] = [];
       function FirstRender() {
@@ -103,7 +108,7 @@ describe("theme provider", () => {
         return <ThemeProbe />;
       }
       const element = (
-        <ThemeProvider disableScript initialTheme={initialTheme} onThemeChange={onThemeChange}>
+        <ThemeProvider initialTheme={initialTheme}>
           <FirstRender />
         </ThemeProvider>
       );
@@ -120,7 +125,6 @@ describe("theme provider", () => {
       await waitFor(() => expect(screen.getByTestId("theme")).toHaveTextContent("dark"));
       expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
       expect(document.documentElement).toHaveAttribute("data-theme", "dark");
-      expect(onThemeChange).not.toHaveBeenCalled();
       expect(onRecoverableError).not.toHaveBeenCalled();
       expect(consoleError).not.toHaveBeenCalled();
     },
@@ -130,14 +134,14 @@ describe("theme provider", () => {
     localStorage.setItem("first-theme", "dark");
     localStorage.setItem("second-theme", "light");
     const { rerender } = render(
-      <ThemeProvider disableScript storageKey="first-theme">
+      <ThemeProvider storageKey="first-theme">
         <ThemeProbe />
       </ThemeProvider>,
     );
     expect(screen.getByTestId("theme")).toHaveTextContent("dark");
 
     rerender(
-      <ThemeProvider disableScript storageKey="second-theme">
+      <ThemeProvider storageKey="second-theme">
         <ThemeProbe />
       </ThemeProvider>,
     );
@@ -148,24 +152,18 @@ describe("theme provider", () => {
     expect(screen.getByTestId("theme")).toHaveTextContent("light");
 
     rerender(
-      <ThemeProvider disableScript initialTheme="dark" storageKey={false}>
+      <ThemeProvider initialTheme="dark" storageKey={false}>
         <ThemeProbe />
       </ThemeProvider>,
     );
     expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
     rerender(
-      <ThemeProvider disableScript initialTheme="light" storageKey={false}>
+      <ThemeProvider initialTheme="light" storageKey={false}>
         <ThemeProbe />
       </ThemeProvider>,
     );
     expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
-    rerender(
-      <ThemeProvider disableScript defaultTheme="dark" storageKey={false}>
-        <ThemeProbe />
-      </ThemeProvider>,
-    );
-    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
-    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
   });
 
   it("cleans up storage and system subscriptions across StrictMode remounts", () => {
@@ -177,7 +175,7 @@ describe("theme provider", () => {
     const removeMediaListener = vi.spyOn(media, "removeEventListener");
     const { unmount } = render(
       <StrictMode>
-        <ThemeProvider disableScript initialTheme="system">
+        <ThemeProvider initialTheme="system">
           <ThemeProbe />
         </ThemeProvider>
       </StrictMode>,
@@ -209,7 +207,7 @@ describe("theme provider", () => {
     const matchMedia = vi.spyOn(window, "matchMedia").mockReturnValue(media);
 
     render(
-      <ThemeProvider disableScript initialTheme="system" storageKey={false}>
+      <ThemeProvider initialTheme="system" storageKey={false}>
         <ThemeProbe />
       </ThemeProvider>,
     );
@@ -245,7 +243,7 @@ describe("theme provider", () => {
   it("keeps the resolved theme and document in sync with another tab", () => {
     const storageKey = "raypx-test-theme";
     render(
-      <ThemeProvider disableScript initialTheme="light" storageKey={storageKey}>
+      <ThemeProvider initialTheme="light" storageKey={storageKey}>
         <ThemeProbe />
       </ThemeProvider>,
     );
@@ -265,7 +263,7 @@ describe("theme provider", () => {
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
   });
 
-  it("retains choices when persistence fails and uses updated defaults for storage events", async () => {
+  it("retains choices when persistence fails and falls back to the initial theme for invalid events", async () => {
     const user = userEvent.setup();
     const getItem = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("storage unavailable");
@@ -276,45 +274,19 @@ describe("theme provider", () => {
     vi.spyOn(document, "cookie", "set").mockImplementation(() => {
       throw new Error("cookies unavailable");
     });
-
-    const { rerender } = render(
-      <ThemeProvider
-        defaultTheme="light"
-        disableScript
-        initialTheme="light"
-        storageKey="raypx-test-theme"
-      >
+    const element = (
+      <ThemeProvider initialTheme="light" storageKey="raypx-test-theme">
         <ThemeProbe />
-      </ThemeProvider>,
+      </ThemeProvider>
     );
 
+    const { rerender } = render(element);
     await user.click(screen.getByRole("button", { name: "Dark" }));
     expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
-    rerender(
-      <ThemeProvider
-        defaultTheme="light"
-        disableScript
-        initialTheme="light"
-        storageKey="raypx-test-theme"
-      >
-        <ThemeProbe />
-      </ThemeProvider>,
-    );
+    rerender(element);
     expect(screen.getByTestId("theme")).toHaveTextContent("dark");
-    expect(screen.getByTestId("resolved-theme")).toHaveTextContent("dark");
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
 
-    rerender(
-      <ThemeProvider
-        defaultTheme="system"
-        disableScript
-        initialTheme="light"
-        storageKey="raypx-test-theme"
-      >
-        <ThemeProbe />
-      </ThemeProvider>,
-    );
-    expect(screen.getByTestId("theme")).toHaveTextContent("dark");
     act(() => {
       window.dispatchEvent(
         new StorageEvent("storage", {
@@ -324,11 +296,45 @@ describe("theme provider", () => {
         }),
       );
     });
-    expect(screen.getByTestId("theme")).toHaveTextContent("system");
+    expect(screen.getByTestId("theme")).toHaveTextContent("light");
     expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
 
     getItem.mockRestore();
     setItem.mockRestore();
+  });
+
+  it("reads only valid theme cookies", () => {
+    expect(readThemeCookie("locale=zh; theme=dark")).toBe("dark");
+    expect(readThemeCookie("theme=sepia")).toBeNull();
+    expect(readThemeCookie("custom=light", "custom")).toBe("light");
+    expect(readThemeCookie(null)).toBeNull();
+  });
+
+  it("lets ThemePicker drive the provider without controlled props", async () => {
+    const user = userEvent.setup();
+    render(
+      <ThemeProvider initialTheme="light" storageKey={false}>
+        <ThemePicker label="Theme" labels={{ light: "Light", dark: "Dark", system: "System" }} />
+        <ThemeProbe />
+      </ThemeProvider>,
+    );
+    expect(screen.getByRole("radio", { name: "Light" })).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: "Dark" }));
+    expect(screen.getByTestId("theme")).toHaveTextContent("dark");
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+  });
+
+  it("stores and reads preferences outside the provider", () => {
+    storeTheme("dark");
+    expect(localStorage.getItem("theme")).toBe("dark");
+    expect(readThemeCookie(document.cookie)).toBe("dark");
+    expect(readStoredTheme()).toBe("dark");
+
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("storage unavailable");
+    });
+    expect(readStoredTheme("light")).toBe("dark");
+    expect(readStoredTheme("light", "missing-theme")).toBe("light");
   });
 });

@@ -6,8 +6,7 @@ import {
   useLanguagePreference,
 } from "@raypx/i18n/browser";
 import { LOCALE_PREFERENCE_KEY } from "@raypx/i18n/preferences";
-import { parseTheme, THEME_STORAGE_KEY } from "@raypx/ui/theme";
-import { ThemeProvider, useTheme } from "@raypx/ui/theme/client";
+import { readStoredTheme, storeTheme, ThemeProvider, useTheme } from "@raypx/ui/themes";
 import {
   DEFAULT_DEVICE_PREFERENCES,
   DEVICE_PREFERENCES_KEY,
@@ -26,12 +25,8 @@ export function restoreDevicePreferences(snapshot: unknown): PreferenceSnapshot 
     )
       return { status: "valid", preferences: { ...snapshot.preferences } };
     if (snapshot.status === "missing") {
-      let theme = DEFAULT_DEVICE_PREFERENCES.theme;
-      try {
-        theme = parseTheme(localStorage.getItem(THEME_STORAGE_KEY), theme);
-      } catch {
-        // A first native launch can migrate without working WebView storage.
-      }
+      // A first native launch migrates WebView values; unreadable storage falls back.
+      const theme = readStoredTheme(DEFAULT_DEVICE_PREFERENCES.theme);
       return { status: "missing", preferences: { theme, locale: readBrowserPreference() } };
     }
   }
@@ -52,15 +47,12 @@ function PersistPreferences({ initial }: { initial: PreferenceSnapshot }) {
   useEffect(() => {
     const next = { theme, locale: preference };
     if (!hydrated) return;
-    for (const [key, value] of [
-      [THEME_STORAGE_KEY, theme],
-      [LOCALE_PREFERENCE_KEY, preference],
-    ] as const) {
-      try {
-        localStorage.setItem(key, value);
-      } catch {
-        // The native snapshot remains authoritative when WebView persistence fails.
-      }
+    // WebView mirrors are best effort; the native snapshot remains authoritative.
+    storeTheme(theme);
+    try {
+      localStorage.setItem(LOCALE_PREFERENCE_KEY, preference);
+    } catch {
+      // Ignored for the same reason.
     }
     if (samePreferences(lastRequested.current, next)) return;
     lastRequested.current = next;
@@ -78,7 +70,6 @@ export function DesktopPreferencesProvider({ children }: { children: ReactNode }
   });
   return (
     <ThemeProvider
-      disableScript
       {...(initial ? { initialTheme: initial.preferences.theme, storageKey: false as const } : {})}
     >
       <BrowserLanguageProvider
@@ -96,18 +87,9 @@ export function DesktopPreferencesProvider({ children }: { children: ReactNode }
 
 // The prerendered shell has no text. Apply only appearance before its first paint;
 // the controlled language provider resolves the complete system language list.
-export const desktopThemeScript = `(function () {
-  var theme = "system";
+// A native snapshot wins; without one the shared script falls back to WebView storage.
+export const desktopInitialThemeSource = `(function () {
   var snapshot = window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}];
-  if (snapshot && snapshot.status !== "missing") {
-    if (snapshot.status === "valid") theme = snapshot.preferences.theme;
-  } else {
-    try { theme = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)}) || theme; } catch (e) {}
-  }
-  if (theme !== "light" && theme !== "dark")
-    theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  document.documentElement.classList.remove("light", "dark");
-  document.documentElement.classList.add(theme);
-  document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme = theme;
-})();`;
+  if (!snapshot || snapshot.status === "missing") return undefined;
+  return snapshot.status === "valid" ? snapshot.preferences.theme : "system";
+})()`;

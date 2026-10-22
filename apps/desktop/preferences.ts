@@ -1,6 +1,6 @@
 import { isAnalyticsConsent, parseAnalyticsConsent, type AnalyticsConsent } from "@raypx/analytics";
 import { parseLocalePreference, type LocalePreference } from "@raypx/i18n/preferences";
-import { parseTheme, type UserTheme } from "@raypx/ui/theme";
+import { parseTheme, type UserTheme } from "@raypx/ui/themes/config";
 
 export interface DevicePreferences {
   theme: UserTheme;

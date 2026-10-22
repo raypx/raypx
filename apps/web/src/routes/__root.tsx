@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
-import { ThemeProvider, ThemeScript } from "@raypx/ui/theme/client";
+import { ThemeProvider, ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { resolveLocalePreference } from "@raypx/i18n/preferences";
 import { loadPreferences } from "../preferences";
@@ -16,8 +16,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "UTF-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1.0" },
-      { name: "color-scheme", content: "light dark" },
-      { name: "theme-color", content: "#ffffff" },
+      ...themeMeta,
       { title: "Raypx" },
     ],
     links: [
@@ -41,7 +40,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <ThemeScript />
       </head>
       <body>
-        <ThemeProvider disableScript initialTheme={preferences.theme}>
+        <ThemeProvider initialTheme={preferences.theme}>
           <BrowserLanguageProvider
             initialPreference={preferences.locale}
             initialSystemLocales={preferences.systemLocales}

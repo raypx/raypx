@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { useLocale, useLanguagePreference } from "@raypx/i18n/browser";
-import { useTheme } from "@raypx/ui/theme/client";
+import { useTheme } from "@raypx/ui/themes";
 import { useEffect, type ReactNode } from "react";
 import { DEVICE_PREFERENCES_KEY, type PreferenceSnapshot } from "../../../preferences";
 import { DesktopPreferencesProvider } from "../../../src/preferences";
