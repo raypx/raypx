@@ -39,6 +39,12 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
+- Production rate limits share the `rate_limit` table: Better Auth limits auth routes
+  by client IP (`AUTH_IP_HEADERS`, `cf-connecting-ip` on Workers), and
+  `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
+  Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon.
+- `secureHeaders` sends a deny-all CSP, `X-Frame-Options: DENY` and HSTS. Keep
+  Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
 - Production requires explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
 - Close Node's PostgreSQL pool idempotently through Nitro's close hook. Worker requests

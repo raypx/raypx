@@ -59,16 +59,17 @@ Set the repository's pinned `BUN_VERSION` and `NODE_VERSION` in Builds. Web need
 `VITE_API_URL` as a build variable. API credentials belong in Worker runtime
 variables and Secrets, available when handling a request:
 
-| Setting                       | Purpose                                                        |
-| ----------------------------- | -------------------------------------------------------------- |
-| `NODE_ENV=production`         | Declared in API Wrangler config; enables production validation |
-| `AUTH_URL`                    | Public HTTPS API origin                                        |
-| `AUTH_SECRET`                 | Explicit secret of at least 32 characters                      |
-| `ALLOWED_ORIGINS`             | Exact trusted Web and Desktop origins                          |
-| `DATABASE_URL`                | PostgreSQL URL when no Hyperdrive binding is configured        |
-| `AUTH_DOMAIN`                 | Optional shared parent cookie domain for sibling Web/API hosts |
-| `RESEND_API_KEY`, `MAIL_FROM` | Verification and reset mail delivery                           |
-| `MAIL_DEFAULT_LOCALE`         | Optional `en` or `zh` default                                  |
+| Setting                       | Purpose                                                            |
+| ----------------------------- | ------------------------------------------------------------------ |
+| `NODE_ENV=production`         | Declared in API Wrangler config; enables production validation     |
+| `AUTH_URL`                    | Public HTTPS API origin                                            |
+| `AUTH_SECRET`                 | Explicit secret of at least 32 characters                          |
+| `ALLOWED_ORIGINS`             | Exact trusted Web and Desktop origins                              |
+| `DATABASE_URL`                | PostgreSQL URL when no Hyperdrive binding is configured            |
+| `AUTH_DOMAIN`                 | Optional shared parent cookie domain for sibling Web/API hosts     |
+| `AUTH_IP_HEADERS`             | Client IP headers for auth rate limits; `cf-connecting-ip` default |
+| `RESEND_API_KEY`, `MAIL_FROM` | Verification and reset mail delivery                               |
+| `MAIL_DEFAULT_LOCALE`         | Optional `en` or `zh` default                                      |
 
 Keep cookies HTTPS/secure and retain the existing trusted-origin checks. With
 separate Web and API hosts, SSR must receive the session cookie through a shared

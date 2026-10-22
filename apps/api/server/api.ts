@@ -1,6 +1,7 @@
 import { ControlError, type ControlService } from "./control/service.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { secureHeaders } from "hono/secure-headers";
 import { implement, ORPCError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { apiContract } from "@raypx/contracts/api";
@@ -8,6 +9,7 @@ import type { AuthSession } from "@raypx/auth/types";
 import { createAccountService } from "@raypx/account/server";
 import type { RequestLogger } from "@raypx-kit/logger";
 import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logging.js";
+import type { RateLimiter, RateRule } from "./rate-limit.js";
 
 export interface ApiAppOptions {
   control?: ControlService;
@@ -17,7 +19,14 @@ export interface ApiAppOptions {
   allowedOrigins: string[];
   mailAvailable?: boolean;
   logger?: ApiLogging;
+  rateLimit?: RateLimiter;
 }
+// Per-account limits for procedures that create grants, devices or relay tickets.
+const rpcLimits = {
+  "devices.register": { window: 60, max: 10 },
+  "devices.refreshGrant": { window: 60, max: 30 },
+  "relay.ticket": { window: 60, max: 60 },
+} satisfies Record<string, RateRule>;
 export function createApiApp(options: ApiAppOptions) {
   const accountService = createAccountService({
     readSession: (headers) => options.readSession(headers),
@@ -48,6 +57,16 @@ export function createApiApp(options: ApiAppOptions) {
       }
     }
   });
+  app.use(
+    "*",
+    secureHeaders({
+      // The API serves JSON only: nothing may load, frame or embed its responses.
+      contentSecurityPolicy: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
+      xFrameOptions: "DENY",
+      // Web and Desktop read responses cross-origin; CORS remains the access control.
+      crossOriginResourcePolicy: false,
+    }),
+  );
   app.use(
     "*",
     cors({
@@ -82,6 +101,7 @@ export function createApiApp(options: ApiAppOptions) {
   async function controlCall<T>(
     context: Context,
     run: (control: ControlService, auth: AuthSession) => Promise<T>,
+    limit?: keyof typeof rpcLimits,
   ) {
     const auth = await options.readSession(context.headers);
     if (!auth)
@@ -89,6 +109,14 @@ export function createApiApp(options: ApiAppOptions) {
         data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
       });
     if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
+    if (
+      limit &&
+      options.rateLimit &&
+      !(await options.rateLimit(`rpc:${auth.user.id}:${limit}`, rpcLimits[limit]))
+    )
+      throw new ORPCError("TOO_MANY_REQUESTS", {
+        data: { error: { code: "RATE_LIMITED" }, requestId: context.requestId },
+      });
     try {
       return await run(options.control, auth);
     } catch (error) {
@@ -110,10 +138,14 @@ export function createApiApp(options: ApiAppOptions) {
   const router = os.router({
     devices: {
       register: os.devices.register.handler(({ input, context }) =>
-        controlCall(context, (control, auth) => control.register(auth, input)),
+        controlCall(context, (control, auth) => control.register(auth, input), "devices.register"),
       ),
       refreshGrant: os.devices.refreshGrant.handler(({ input, context }) =>
-        controlCall(context, (control, auth) => control.refreshGrant(auth, input)),
+        controlCall(
+          context,
+          (control, auth) => control.refreshGrant(auth, input),
+          "devices.refreshGrant",
+        ),
       ),
       list: os.devices.list.handler(({ context }) =>
         controlCall(context, (control, auth) => control.listDevices(auth.user.id)),
@@ -143,7 +175,7 @@ export function createApiApp(options: ApiAppOptions) {
     },
     relay: {
       ticket: os.relay.ticket.handler(({ context }) =>
-        controlCall(context, (control, auth) => control.ticket(auth)),
+        controlCall(context, (control, auth) => control.ticket(auth), "relay.ticket"),
       ),
     },
     account: {

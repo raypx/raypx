@@ -119,6 +119,7 @@ export default {
     REQUEST_CLOSED: "This task no longer accepts answers.",
     DEVICE_REVOKED: "This computer has been disconnected. Reconnect it from Desktop.",
     SESSION_UNAVAILABLE: "The original local session is unavailable.",
+    RATE_LIMITED: "Too many requests. Wait a moment and try again.",
     NETWORK_UNAVAILABLE: "Unable to connect. Check your connection and try again.",
   },
   common: {

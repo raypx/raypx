@@ -20,6 +20,8 @@ export interface AuthConfiguration {
   production: boolean;
   /** Parent domain shared by separately hosted Web and API, e.g. "example.com". */
   cookieDomain?: string;
+  /** Headers set by the trusted edge that carry the client IP, in priority order. */
+  ipAddressHeaders?: string[];
 }
 export interface CreateAuthOptions {
   database: NonNullable<BetterAuthOptions["database"]>;
@@ -66,9 +68,15 @@ export function createAuth({ database, mailer, config }: CreateAuthOptions) {
         }),
     },
     session: { storeSessionInDatabase: true },
+    // Database storage keeps limits shared across Node processes and Worker isolates.
+    // Better Auth applies stricter built-in rules to sign-in, sign-up and mail requests.
+    rateLimit: { enabled: config.production, storage: "database", window: 60, max: 100 },
     verification: { storeInDatabase: true },
     advanced: {
       database: { generateId: () => crypto.randomUUID(), joins: false },
+      ...(config.ipAddressHeaders?.length
+        ? { ipAddress: { ipAddressHeaders: config.ipAddressHeaders } }
+        : {}),
       defaultCookieAttributes: {
         httpOnly: true,
         sameSite: config.production ? "none" : "lax",

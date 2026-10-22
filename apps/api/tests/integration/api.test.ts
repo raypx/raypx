@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../server/api.js";
+import type { ControlService } from "../../server/control/service.js";
 import type { AuthSession } from "@raypx/auth/types";
 
 const session: AuthSession = {
@@ -92,5 +93,41 @@ describe("HTTP foundation", () => {
         "access-control-allow-origin",
       ),
     ).toBeNull();
+  });
+
+  it("sends security headers without blocking cross-origin API reads", async () => {
+    const response = await app.request("/health", {
+      headers: { origin: "https://web.example.com" },
+    });
+    expect(response.headers.get("content-security-policy")).toContain("default-src 'none'");
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("strict-transport-security")).toContain("max-age=");
+    expect(response.headers.get("cross-origin-resource-policy")).toBeNull();
+  });
+
+  it("rejects rate-limited grant procedures per account before running them", async () => {
+    const keys: string[] = [];
+    const limited = createApiApp({
+      authHandler: async () => Response.json({}),
+      readSession: async () => session,
+      allowedOrigins: [],
+      // A rejecting limiter must stop the call before the control service runs.
+      control: {} as ControlService,
+      rateLimit: async (key) => {
+        keys.push(key);
+        return false;
+      },
+    });
+    const api = createApiClient({
+      baseUrl: "https://api.example.com",
+      fetch: async (input, init) => limited.fetch(new Request(input, init)),
+    });
+    const error = await api.relay.ticket({}).catch((value: unknown) => value);
+    expect(error).toMatchObject({
+      code: "TOO_MANY_REQUESTS",
+      data: { error: { code: "RATE_LIMITED" } },
+    });
+    expect(keys).toEqual(["rpc:u1:relay.ticket"]);
   });
 });

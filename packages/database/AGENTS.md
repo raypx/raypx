@@ -7,7 +7,7 @@ PostgreSQL persistence for the new account foundation.
 ## Interface
 
 `.`: connectDatabase and migrateDatabase. `/connection`: runtime connection/types without migration imports.
-`/schema`: the four Better Auth tables and relations. `/env`: validated database configuration.
+`/schema`: the Better Auth tables (including the shared `rate_limit` store), control records and relations. `/env`: validated database configuration.
 
 ## Ownership
 

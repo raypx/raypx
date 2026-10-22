@@ -111,6 +111,7 @@ export default {
     REQUEST_CLOSED: "此任务已不再接受回答。",
     DEVICE_REVOKED: "此电脑已断开，请从 Desktop 重新连接。",
     SESSION_UNAVAILABLE: "原本机会话暂不可用。",
+    RATE_LIMITED: "请求过于频繁，请稍后再试。",
     NETWORK_UNAVAILABLE: "无法连接，请检查网络后重试。",
   },
   common: {

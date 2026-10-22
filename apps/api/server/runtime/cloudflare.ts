@@ -17,6 +17,8 @@ export function getCloudflareEnvironment(bindings: CloudflareBindings) {
     ),
   );
   values.NODE_ENV ??= "production";
+  // Cloudflare sets this header itself; clients cannot forge it through the edge.
+  values.AUTH_IP_HEADERS ??= "cf-connecting-ip";
   if (bindings.HYPERDRIVE) values.DATABASE_URL = bindings.HYPERDRIVE.connectionString;
   return getApiEnvironment(values);
 }

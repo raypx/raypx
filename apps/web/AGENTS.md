@@ -48,6 +48,10 @@ application is an independent composition root and is never imported by another 
   Public URLs stay flat, and changing routes remounts the form so inputs and
   request feedback reset.
 - `/health` is a server route for process liveness; it never calls the API.
+- `vite.config.ts` adds security headers to every Nitro response (Node and Workers):
+  framing, plugin, base and form-target CSP directives, HSTS, nosniff, Referrer and
+  Permissions policies. Inline hydration and theme scripts mean script-src needs nonces
+  before it can be restricted.
 
 ## Ownership
 

@@ -13,6 +13,7 @@ export const apiServerEnv = {
     MAIL_FROM: z.string().optional(),
     MAIL_DEFAULT_LOCALE: z.enum(["en", "zh"]).default("en"),
     AUTH_DOMAIN: z.string().min(1).optional(),
+    AUTH_IP_HEADERS: z.string().optional(),
   },
 } as const satisfies Preset;
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
@@ -36,6 +37,10 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
     ...env,
     allowedOrigins: env.ALLOWED_ORIGINS.split(",")
       .map((v) => v.trim())
+      .filter(Boolean),
+    ipAddressHeaders: (env.AUTH_IP_HEADERS ?? "")
+      .split(",")
+      .map((v) => v.trim().toLowerCase())
       .filter(Boolean),
   };
 }

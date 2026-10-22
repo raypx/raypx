@@ -30,6 +30,7 @@ const failureCodes = [
   "REQUEST_CLOSED",
   "DEVICE_REVOKED",
   "SESSION_UNAVAILABLE",
+  "RATE_LIMITED",
 ] as const;
 function failureCode(error: unknown) {
   if (error && typeof error === "object" && "data" in error) {

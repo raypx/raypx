@@ -1,10 +1,12 @@
 import {
+  bigint,
   boolean,
   index,
   pgSchema,
   text,
   timestamp,
   uniqueIndex,
+  integer,
   jsonb,
   primaryKey,
 } from "drizzle-orm/pg-core";
@@ -74,6 +76,18 @@ export const verification = foundation.table(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+// Better Auth and API RPC limits share this table; keys are IP/path or rpc:<user>:<procedure>.
+export const rateLimit = foundation.table(
+  "rate_limit",
+  {
+    id: text("id").primaryKey(),
+    key: text("key").notNull().unique(),
+    count: integer("count").notNull(),
+    lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+  },
+  (table) => [index("rate_limit_last_request_idx").on(table.lastRequest)],
+);
+
 // Control records are separate from authentication and never contain CLI credentials.
 export const controlOwner = foundation.table("control_owner", {
   userId: text("user_id")
@@ -109,6 +123,7 @@ export const schema = {
   session,
   account,
   verification,
+  rateLimit,
   controlOwner,
   controlDevice,
   controlProject,

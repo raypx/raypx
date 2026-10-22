@@ -7,6 +7,7 @@ import { schema } from "@raypx/database/schema";
 import { createMailer } from "@raypx/mail/server";
 import type { ApiLogging } from "../logging.js";
 import { createApiApp } from "../api.js";
+import { createRateLimiter } from "../rate-limit.js";
 import type { ApiEnvironment } from "../env.js";
 
 export interface RuntimeResources {
@@ -35,6 +36,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         trustedOrigins: environment.allowedOrigins,
         production: environment.NODE_ENV === "production",
         ...(environment.AUTH_DOMAIN ? { cookieDomain: environment.AUTH_DOMAIN } : {}),
+        ...(environment.ipAddressHeaders.length
+          ? { ipAddressHeaders: environment.ipAddressHeaders }
+          : {}),
       },
     });
     const control = new ControlService(createControlRepository(connection.db));
@@ -48,6 +52,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         allowedOrigins: environment.allowedOrigins,
         mailAvailable: mailer.available,
         logger,
+        ...(environment.NODE_ENV === "production"
+          ? { rateLimit: createRateLimiter(connection.db) }
+          : {}),
       }),
       close: async () => {
         try {

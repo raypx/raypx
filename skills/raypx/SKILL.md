@@ -54,24 +54,25 @@ How the pieces talk: [architecture](references/architecture.md).
 
 ## Capabilities
 
-| Capability                     | Where                                            | Reference                                                  |
-| ------------------------------ | ------------------------------------------------ | ---------------------------------------------------------- |
-| Authentication                 | `@raypx/auth`, Better Auth on API                | [auth](references/auth.md)                                 |
-| Database                       | `@raypx/database`, PostgreSQL + Drizzle          | [database](references/database.md)                         |
-| API and RPC                    | `apps/api`, oRPC contracts in `@raypx/contracts` | [api](references/api.md)                                   |
-| Email                          | `@raypx/mail`, Resend                            | [email](references/email.md)                               |
-| Agent tasks and remote control | `@raypx/tasks`, relay, Desktop + CLI             | [remote-tasks](references/remote-tasks.md)                 |
-| Local runtime                  | `apps/cli`: files, Cron jobs, tools, terminals   | [local-runtime](references/local-runtime.md)               |
-| Internationalization           | `@raypx/i18n` on `@raypx-kit/intl`               | [internationalization](references/internationalization.md) |
-| Design system                  | `@raypx/ui`: shadcn/Base UI, tokens              | [design-system](references/design-system.md)               |
-| Analytics and browser errors   | `@raypx/analytics` on PostHog, opt-in            | [analytics](references/analytics.md)                       |
-| Observability                  | `@raypx-kit/logger` (evlog) in API and CLI       | [observability](references/observability.md)               |
-| Deployment                     | Node or Cloudflare Workers; Desktop packages     | [deployment](references/deployment.md)                     |
-| Environment and setup          | `@raypx-kit/env`, `.env`, toolchain              | [setup](references/setup.md)                               |
+| Capability                         | Where                                            | Reference                                                  |
+| ---------------------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| Authentication                     | `@raypx/auth`, Better Auth on API                | [auth](references/auth.md)                                 |
+| Database                           | `@raypx/database`, PostgreSQL + Drizzle          | [database](references/database.md)                         |
+| API and RPC                        | `apps/api`, oRPC contracts in `@raypx/contracts` | [api](references/api.md)                                   |
+| Email                              | `@raypx/mail`, Resend                            | [email](references/email.md)                               |
+| Agent tasks and remote control     | `@raypx/tasks`, relay, Desktop + CLI             | [remote-tasks](references/remote-tasks.md)                 |
+| Local runtime                      | `apps/cli`: files, Cron jobs, tools, terminals   | [local-runtime](references/local-runtime.md)               |
+| Internationalization               | `@raypx/i18n` on `@raypx-kit/intl`               | [internationalization](references/internationalization.md) |
+| Design system                      | `@raypx/ui`: shadcn/Base UI, tokens              | [design-system](references/design-system.md)               |
+| Analytics and browser errors       | `@raypx/analytics` on PostHog, opt-in            | [analytics](references/analytics.md)                       |
+| Observability                      | `@raypx-kit/logger` (evlog) in API and CLI       | [observability](references/observability.md)               |
+| Rate limiting and security headers | API and Web                                      | [security](references/security.md)                         |
+| Deployment                         | Node or Cloudflare Workers; Desktop packages     | [deployment](references/deployment.md)                     |
+| Environment and setup              | `@raypx-kit/env`, `.env`, toolchain              | [setup](references/setup.md)                               |
 
 Not present: payments, CMS, SEO tooling, feature flags, webhooks, push or in-app
-notifications, collaboration, AI SDK features, object storage, rate limiting beyond
-Better Auth defaults and server-side error alerting. Say so instead of inventing
+notifications (Desktop only shows a native pending-approval notice), collaboration,
+AI SDK features, object storage and server-side error alerting. Say so instead of inventing
 them; add a package only when its responsibility and consumers exist.
 
 ## Rules that bite
