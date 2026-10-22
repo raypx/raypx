@@ -11,7 +11,8 @@ primitives, Lucide icons, Tailwind 4 and Neutral light/dark tokens.
   head, `ThemeProvider`, `useTheme` and a provider-aware `ThemePicker`. The script and
   provider own the `theme-color` meta; never render it through React.
 - Destructive text on a `destructive/*` tint uses `text-destructive-text` (AA in light mode).
-- Shared app chrome (sidebar shell, settings page sections) lives in `@raypx/blocks`.
+- Shared app chrome (sidebar shell, settings page sections) lives in `@raypx/blocks`;
+  preview UI primitives with `bun run dev:storybook`.
 - Apps import `@raypx/ui/styles/app.css`; feature packages export their own
   `/client/styles.css` to register Tailwind sources.
 - Keep the original logo, labelled controls, keyboard focus and reduced motion.

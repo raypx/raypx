@@ -1,0 +1,36 @@
+{
+  "name": "ui-storybook",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev --port 6006 --no-open",
+    "build": "storybook build --output-dir dist --quiet",
+    "check": "bun --check --tsconfig-override tsconfig.json"
+  },
+  "dependencies": {
+    "@raypx/ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@storybook/addon-a11y": "catalog:dev",
+    "@storybook/addon-docs": "catalog:dev",
+    "@storybook/react-vite": "catalog:dev",
+    "@tailwindcss/vite": "catalog:dev",
+    "@types/node": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@types/react-dom": "catalog:dev",
+    "storybook": "catalog:dev",
+    "vite": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "app",
+    "target": "browser",
+    "sourceTargets": {
+      ".storybook/main.ts": "node"
+    }
+  }
+}

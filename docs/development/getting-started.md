@@ -33,6 +33,8 @@ Never point these migration commands at the retired database or volume.
 bun run dev starts Web (Start SSR on 3000) and API (3002). bun run dev:desktop starts Desktop development;
 bun run package:desktop packages it with its version-matched CLI. Phones use the Web
 application; a native mobile app is deferred until it needs native capabilities.
+bun run dev:storybook previews `@raypx/ui` components on 6006; bun run build:storybook
+writes the static site to `apps/storybook/dist`.
 
 Bun catalogs hold third-party versions: the default `catalog:` contains runtime
 libraries, and `catalog:dev` contains build, test and development tools. Shared

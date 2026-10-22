@@ -35,6 +35,7 @@ Details: [setup](references/setup.md).
 | `apps/api`           | app / node    | Nitro + Hono: `/api/auth/*` (Better Auth), `/rpc/*` (oRPC), `/health` |
 | `apps/desktop`       | app / browser | Electrobun WebView, Start SPA renderer, bundled CLI, tray             |
 | `apps/cli`           | app / bun     | Standalone local execution host; works without login                  |
+| `apps/storybook`     | app / browser | Storybook (`ui-storybook`) for `@raypx/ui` with a11y checks           |
 | `packages/contracts` | universal     | oRPC (`/api`) and local device (`/local`) schemas                     |
 | `packages/client`    | universal     | Remote API SDK and relay task client                                  |
 | `packages/auth`      | universal     | Better Auth server/client/hooks and shared `AuthForm`                 |

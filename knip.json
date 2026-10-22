@@ -29,6 +29,9 @@
     "apps/cli": {
       "entry": ["src/main.ts", "tests/smoke/*.ts"]
     },
+    "apps/storybook": {
+      "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
+    },
     "packages/tooling": {
       "entry": ["src/cli.ts"]
     },
