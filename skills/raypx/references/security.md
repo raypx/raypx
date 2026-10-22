@@ -26,3 +26,10 @@
   `strict-origin-when-cross-origin` referrers and a Permissions-Policy.
 - Restricting `script-src` needs per-request nonces for the inline hydration and theme
   scripts; it is not done yet.
+
+## CORS
+
+Hono `cors` in `apps/api/server/api.ts` covers `/rpc/*`, `/api/auth/*` and `/health`:
+exact `ALLOWED_ORIGINS` (Web, `views://main`, `raypx://`), credentials, GET/HEAD/POST,
+and a ten-minute preflight cache. oRPC's `CORSHandlerPlugin` would duplicate it; keep
+one CORS layer.

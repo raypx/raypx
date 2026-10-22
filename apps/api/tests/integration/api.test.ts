@@ -95,6 +95,25 @@ describe("HTTP foundation", () => {
     ).toBeNull();
   });
 
+  it("answers preflights only for allowed origins and lets browsers cache them", async () => {
+    const preflight = (origin: string) =>
+      app.request("/rpc/account/get", {
+        method: "OPTIONS",
+        headers: {
+          origin,
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "content-type",
+        },
+      });
+    const allowed = await preflight("https://web.example.com");
+    expect(allowed.headers.get("access-control-allow-origin")).toBe("https://web.example.com");
+    expect(allowed.headers.get("access-control-allow-credentials")).toBe("true");
+    expect(allowed.headers.get("access-control-max-age")).toBe("600");
+    expect(
+      (await preflight("https://evil.example.com")).headers.get("access-control-allow-origin"),
+    ).toBeNull();
+  });
+
   it("sends security headers without blocking cross-origin API reads", async () => {
     const response = await app.request("/health", {
       headers: { origin: "https://web.example.com" },

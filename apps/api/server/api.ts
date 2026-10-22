@@ -75,6 +75,8 @@ export function createApiApp(options: ApiAppOptions) {
       allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization", "Accept-Language", "X-Request-Id"],
       exposeHeaders: ["X-Request-Id"],
+      // Every JSON RPC call is preflighted; let browsers reuse the answer for ten minutes.
+      maxAge: 600,
     }),
   );
   app.get("/health", (c) => c.json({ status: "ok" }));
