@@ -1,0 +1,41 @@
+.prettierignore
+  s_de2d79b0b75518::t_8ba42eda5115d8 17
+packages/tooling/src/policy.ts
+  s_de2d79b0b75518::t_ef86f9437b7273 29
+skills/raypx/SKILL.md
+  s_de2d79b0b75518::t_d47cf60268ed6e 1-85
+skills/raypx/references/architecture.md
+  s_de2d79b0b75518::t_672c45b97b9d90 1-40
+skills/raypx/references/setup.md
+  s_de2d79b0b75518::t_abc22f16e24830 1-45
+skills/raypx/references/verification.md
+  s_de2d79b0b75518::t_f74fddc7acff86 1-19
+skills/raypx/references/workflows.md
+  s_de2d79b0b75518::t_16368de22215a4 1-49
+.claude/skills/raypx
+  s_900a66df702cc8::t_cfd2c309a6acd1 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8c02df76267c21b3f3ef2c5762a7a181d350edde",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
