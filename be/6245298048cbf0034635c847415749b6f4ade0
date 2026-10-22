@@ -1,0 +1,77 @@
+apps/api/server/env.ts
+  s_adafa49206c7d6::t_e0c8133134f228 6
+  s_adafa49206c7d6::t_4e71242978a01b 7-9
+apps/api/.dev.vars.example
+  s_adafa49206c7d6::t_e0c8133134f228 9
+apps/api/server/jobs/runtime/node.ts
+  s_adafa49206c7d6::t_e0c8133134f228 1-13
+apps/api/server/jobs/runtime/cloudflare.ts
+  s_adafa49206c7d6::t_e0c8133134f228 1-21
+apps/api/tests/postgres/cloudflare/cleanup.test.ts
+  s_adafa49206c7d6::t_371b52bdb74c5a 1-9,12-16,22-27,40,50,57,62-64,66-67,72-74
+  s_adafa49206c7d6::t_4a466df4aa4464 10-11,17-21,28-39,41-49,51-56,58-61,65,68-71
+packages/tooling/src/smoke/cloudflare.ts
+  s_adafa49206c7d6::t_371b52bdb74c5a 9,28-29,52,56,94-100,195-200,222
+  s_adafa49206c7d6::t_84cd1d32e2b239 201-208,220-221,223-225
+apps/api/server/logging.ts
+  s_adafa49206c7d6::t_e0c8133134f228 17,58-61
+docs/development/cloudflare.md
+  s_adafa49206c7d6::t_2823ca56e52788 65,81-83
+  s_adafa49206c7d6::t_731c588aedce8d 84
+apps/api/wrangler.jsonc
+  s_adafa49206c7d6::t_e0c8133134f228 19
+apps/api/server/runtime/shared.ts
+  s_adafa49206c7d6::t_e0c8133134f228 12,57
+apps/api/tests/unit/jobs/runtime.test.ts
+  s_adafa49206c7d6::t_284f5a313ecc4e 1-48
+  s_adafa49206c7d6::t_2b6814d90eac2b 49-65
+apps/api/AGENTS.md
+  s_adafa49206c7d6::t_2823ca56e52788 30-39
+apps/api/tests/unit/jobs/cleanup.test.ts
+  s_adafa49206c7d6::t_284f5a313ecc4e 1-8,12-15,17-21,28,33-42,52-55
+  s_adafa49206c7d6::t_720200297557c0 9-11,16,22-27,29-32,43-51
+  s_adafa49206c7d6::t_2b9bd6b3d7cdc1 56-57
+docs/README.md
+  s_adafa49206c7d6::t_2823ca56e52788 11
+packages/database/AGENTS.md
+  s_adafa49206c7d6::t_2823ca56e52788 22-23
+apps/api/tests/postgres/node/cleanup.test.ts
+  s_adafa49206c7d6::t_720200297557c0 8-9,19-21,28-30,34-44,54-57,60-71,73-78,94,102-109
+  s_adafa49206c7d6::t_284f5a313ecc4e 1-7,10-18,22-27,31-33,45-53,58-59,72,79-93,95-101,110-112
+docs/development/server-jobs.md
+  s_adafa49206c7d6::t_2823ca56e52788 1-27,33-67,69,71-91
+  s_adafa49206c7d6::t_4a466df4aa4464 68,70
+  s_adafa49206c7d6::t_e176ebe1436ee4 28-32
+apps/api/server/jobs/cleanup.ts
+  s_adafa49206c7d6::t_e0c8133134f228 1-90
+apps/api/vite.config.ts
+  s_adafa49206c7d6::t_e0c8133134f228 16-24
+  s_adafa49206c7d6::t_1fa2f7042ebc27 1
+  s_adafa49206c7d6::t_9bf3383f8a3fbc 25-27
+.env.example
+  s_adafa49206c7d6::t_1fa2f7042ebc27 2-3
+knip.json
+  s_adafa49206c7d6::t_e0c8133134f228 15
+packages/database/src/schema.ts
+  s_adafa49206c7d6::t_e0c8133134f228 42-45,79-82
+packages/database/drizzle-foundation/20261022105525_productive_husk/migration.sql
+  s_adafa49206c7d6::t_785aafd4c58b43 1-2
+packages/database/drizzle-foundation/20261022105525_productive_husk/snapshot.json
+  s_adafa49206c7d6::t_7abc2306352ec4 1-1654
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "be6245298048cbf0034635c847415749b6f4ade0",
+  "prompts": {},
+  "sessions": {
+    "s_adafa49206c7d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15727-0890-77e0-a9f5-ce91cd071dd2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
