@@ -1,0 +1,87 @@
+bun.lock
+  s_3479c97f207758::t_78fc96c836d415 111-132,484-486,503,742-743,756-757,1042-1043,1066-1081,1184-1191,1198-1199,1202-1203,1210-1211,1262-1263,1296-1297,1328-1329,1344-1345,1350-1351,1354-1355,1366-1367,1370-1371,1376-1377,1422-1429,1440-1441,1454-1455,1464-1465,1472-1473,1476-1477,1500-1501,1506-1507,1512-1513,1528-1533,1536-1537,1556-1557,1588-1589,1606-1611,1630-1631,1646-1649,1654-1655,1688-1691,1698-1699,1710-1711,1718-1719,1752-1755,1762-1763,1770-1771,1782-1783,1794-1797,1810-1811,1816,1820,1864-1865,1906-1907,1924-1925,1928-1937,1944-1953,1955-1994
+docs/development/getting-started.md
+  s_3479c97f207758::t_26324768b3f63c 36-37
+package.json
+  s_3479c97f207758::t_1ceea3fb82d3dd 77-81,96,102
+skills/raypx/SKILL.md
+  s_3479c97f207758::t_024bf2bd473f79 38
+apps/storybook/.storybook/main.ts
+  s_558336e4c39a01::t_2b60ed68ada269 1-28
+apps/storybook/.storybook/preview.tsx
+  s_d59ea9ccab24f3::t_da65d75f052b09 1-43
+apps/storybook/AGENTS.md
+  s_558336e4c39a01::t_a397614d076e77 1-31
+apps/storybook/package.json
+  s_558336e4c39a01::t_002f94f794da8f 1-36
+apps/storybook/src/stories/badge.stories.tsx
+  s_558336e4c39a01::t_6201e3d1fc6fc4 1-45
+apps/storybook/src/stories/button.stories.tsx
+  s_558336e4c39a01::t_aa20845407a13d 1-100
+apps/storybook/src/stories/feedback.stories.tsx
+  s_558336e4c39a01::t_835c3005e0e4ef 1-93
+apps/storybook/src/stories/form-controls.stories.tsx
+  s_558336e4c39a01::t_f056819cd5f703 1-104
+apps/storybook/src/stories/layout.stories.tsx
+  s_558336e4c39a01::t_2d1f0581f27826 1-80
+apps/storybook/src/stories/overlays.stories.tsx
+  s_558336e4c39a01::t_8f56dc8a8de852 1-162
+apps/storybook/src/stories/theme.stories.tsx
+  s_73c042be5a1505::t_856a53c86bcf7b 1-24
+apps/storybook/src/styles.css
+  s_558336e4c39a01::t_9421dd6697bac4 1-3
+apps/storybook/tsconfig.json
+  s_558336e4c39a01::t_2e2b58b2a41b2d 1-7
+knip.json
+  s_558336e4c39a01::t_bf63f734a20243 32-34
+skills/raypx/references/design-system.md
+  s_0502a2b559ebf3::t_44e3c6a378bc1f 14-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a1c5ebcc83a8cde0e2aab8559aa14c804851f155",
+  "prompts": {},
+  "sessions": {
+    "s_0502a2b559ebf3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5a28101b-88cb-4e07-806f-3717190c81be",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_3479c97f207758": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16463-0d07-7e82-ad3d-bf48e311d55b",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_558336e4c39a01": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2baccbf4-aa02-4336-b7e8-43cd66624844",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_73c042be5a1505": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f214bb20-d735-4bfb-b2a8-45131c3fa3a5",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_d59ea9ccab24f3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0eae11a4-5390-4e68-a757-eb3c7a719fba",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
