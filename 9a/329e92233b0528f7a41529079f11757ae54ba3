@@ -1,0 +1,29 @@
+.env.example
+  s_de2d79b0b75518::t_7dd8586c9024af 10-11,13-14
+apps/api/server/app/node.ts
+  s_de2d79b0b75518::t_6c0b24b2aa6dac 1,4-17
+apps/api/server/env.ts
+  s_de2d79b0b75518::t_d67284527dd1e3 17,21-26,49-50
+apps/api/server/runtime/node.ts
+  s_de2d79b0b75518::t_61e232c612015f 11-13,19-32
+apps/api/server/runtime/shared.ts
+  s_de2d79b0b75518::t_e3c3b720901b22 46-48
+packages/auth/src/server.ts
+  s_de2d79b0b75518::t_8bcc2f58f1669a 25-26,90-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9a329e92233b0528f7a41529079f11757ae54ba3",
+  "prompts": {},
+  "sessions": {
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
