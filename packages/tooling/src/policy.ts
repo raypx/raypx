@@ -26,7 +26,7 @@ export function policy(root: string): string[] {
     [
       "*.md",
       "docs/**/*.md",
-      "skills/raypx-infra/**/*.md",
+      "skills/raypx/**/*.md",
       ...index.workspaces.map((w) => `${w.path}/AGENTS.md`),
     ],
     { cwd: root, exclude: ["docs/history/**"] },
