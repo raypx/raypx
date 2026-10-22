@@ -1,0 +1,33 @@
+docs/development/getting-started.md
+  s_3479c97f207758::t_83eb84ee8156fc 32
+package.json
+  s_3479c97f207758::t_ae3a62dda470b6 120
+packages/database/AGENTS.md
+  s_375d731af604d7::t_6657eddc3abc64 19
+packages/database/package.json
+  s_375d731af604d7::t_f5bc9a63b672a0 20-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b6f4ca1e72b7a8f7ccd5962f75ce32f2d5dd7738",
+  "prompts": {},
+  "sessions": {
+    "s_3479c97f207758": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16463-0d07-7e82-ad3d-bf48e311d55b",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_375d731af604d7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5a59379c-5c77-4f6c-b152-3c47b1b5a208",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
