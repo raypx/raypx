@@ -16,6 +16,11 @@ nvm (`nvm use`), fnm or direct installs also work. `bun run doctor` confirms the
 runtimes. PostgreSQL client tools come from the compose container:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
+`bun install` runs the root `prepare` script, which installs the Vite+ Git hook
+dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp staged`:
+oxfmt and oxlint fixes on staged files only. Check it with `bun --bun vp hooks status`;
+`VP_GIT_HOOKS=0` skips installation and hooks. Type checks and tests stay in `bun run verify`.
+
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
 Start the separate compose database on 5433, then bun run db:migrate and bun run dev.

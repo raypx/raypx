@@ -3,7 +3,9 @@ import { defineConfig } from "vite-plus";
 export default defineConfig({
   fmt: {},
   staged: {
-    "*.{ts,tsx,json,md,css,toml}": ["bun --bun vp fmt --write", "bun --bun vp lint --fix"],
+    "*.{ts,tsx,json,md,css,toml}": "bun --bun vp fmt --write",
+    // oxlint only reads scripts and fails when a commit stages none.
+    "*.{ts,tsx}": "bun --bun vp lint --fix",
   },
   lint: {
     plugins: [
