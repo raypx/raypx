@@ -47,7 +47,7 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
 - Optional `REDIS_URL` (Node only, `server/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits and backs RPC limits.
   Sessions are still written to PostgreSQL; Workers never import Redis. Requires
-  Redis 6.2+ or Valkey (`GETDEL`).
+  Redis 7+ or Valkey (`EXPIRE NX`, `GETDEL`).
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
 - `secureHeaders` sends a deny-all CSP, `X-Frame-Options: DENY` and HSTS. Keep
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
