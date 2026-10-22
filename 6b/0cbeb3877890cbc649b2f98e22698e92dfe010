@@ -1,0 +1,31 @@
+skills/raypx/references/security.md
+  s_de2d79b0b75518::t_a2ec1f61530315 29-35
+apps/api/server/api.ts
+  s_900a66df702cc8::t_a9030bcf3209b8 78-79
+apps/api/tests/integration/api.test.ts
+  s_900a66df702cc8::t_c8508916c25f83 98-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6b0cbeb3877890cbc649b2f98e22698e92dfe010",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_de2d79b0b75518": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a124a7-0652-7013-8865-d328de672376",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
