@@ -16,4 +16,5 @@
   "vars": {
     "NODE_ENV": "production",
   },
+  "triggers": { "crons": ["*/15 * * * *"] },
 }

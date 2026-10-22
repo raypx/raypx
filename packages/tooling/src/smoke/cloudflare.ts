@@ -6,6 +6,7 @@ import { stageArtifact } from "@raypx-kit/devkit/artifact";
 
 const root = resolve(process.argv[2] ?? ".");
 const serveApi = process.argv.includes("--serve-api");
+const runCleanup = process.argv.includes("--run-api-cleanup");
 const workerProbeHeader = "x-raypx-worker-probe";
 
 async function start(app: "api" | "web") {
@@ -24,8 +25,8 @@ async function start(app: "api" | "web") {
     });
     // No development dotenv files or live service bindings enter an artifact probe.
     const { env: _env, build: _build, hyperdrive: _hyperdrive, ...config } = rawConfig;
-    const database = serveApi ? process.env.TEST_DATABASE_URL : undefined;
-    if (serveApi && (!database || !new URL(database).pathname.endsWith("_test")))
+    const database = serveApi || runCleanup ? process.env.TEST_DATABASE_URL : undefined;
+    if ((serveApi || runCleanup) && (!database || !new URL(database).pathname.endsWith("_test")))
       throw new Error("TEST_DATABASE_URL must name an isolated *_test database");
     server = createTestHarness({
       root: stage,
@@ -48,10 +49,11 @@ async function start(app: "api" | "web") {
                     ALLOWED_ORIGINS: "http://localhost:3000",
                     RESEND_API_KEY: "",
                     MAIL_FROM: "",
+                    JOBS_ENABLED: runCleanup ? "true" : "false",
                   },
                 }
               : { vars: { NODE_ENV: "production", WORKER_PROBE_HEADER: workerProbeHeader } }),
-            ...(serveApi && process.env.TEST_DATABASE_MODE === "hyperdrive"
+            ...((serveApi || runCleanup) && process.env.TEST_DATABASE_MODE === "hyperdrive"
               ? {
                   hyperdrive: [
                     {
@@ -89,7 +91,13 @@ async function probeApi(base: string) {
   const health = await probeFetch(`${base}/health`);
   if (!health.ok || ((await health.json()) as { status?: string }).status !== "ok")
     throw new Error("Worker API health failed");
-  for (const path of ["/rpc/__missing", "/api/__missing", "/settings", "/assets/__missing.js"]) {
+  for (const path of [
+    "/rpc/__missing",
+    "/api/__missing",
+    "/settings",
+    "/assets/__missing.js",
+    "/_nitro/tasks/maintenance:cleanup",
+  ]) {
     if ((await probeFetch(`${base}${path}`)).status !== 404)
       throw new Error(`Worker API ${path} must be 404`);
   }
@@ -184,7 +192,20 @@ function probeFetch(url: string, init?: RequestInit): Promise<Response> {
   return fetch(url, { ...init, signal: AbortSignal.timeout(10000) });
 }
 
-if (serveApi) {
+if (runCleanup) {
+  const worker = await start("api");
+  try {
+    const result = await worker.server
+      .getWorker()
+      .scheduled({ cron: "*/15 * * * *", scheduledTime: new Date() });
+    if (result.outcome !== "ok") throw new Error("Worker cleanup scheduled event failed");
+    if (worker.server.getLogs().some((log) => log.level === "error"))
+      throw new Error("Worker cleanup reported a runtime error");
+    console.log("Cloudflare cleanup scheduled event passed");
+  } finally {
+    await worker.close();
+  }
+} else if (serveApi) {
   const worker = await start("api");
   process.stdout.write(`${JSON.stringify({ type: "raypx-worker-ready", url: worker.base })}\n`);
   await new Promise<void>((done) => {
@@ -196,6 +217,12 @@ if (serveApi) {
     const worker = await start(app);
     try {
       await (app === "api" ? probeApi(worker.base) : probeWeb(worker.base));
+      if (app === "api") {
+        const scheduled = await worker.server
+          .getWorker()
+          .scheduled({ cron: "*/15 * * * *", scheduledTime: new Date() });
+        if (scheduled.outcome !== "ok") throw new Error("Worker disabled cleanup task failed");
+      }
       if (worker.server.getLogs().some((log) => log.level === "error"))
         throw new Error(`Worker ${app} reported a runtime error`);
       console.log(`Cloudflare ${app} artifact probe passed (relocated output, workerd runtime)`);

@@ -19,6 +19,8 @@ Use postgres.js and Drizzle. Active tables are in raypx_foundation; migration hi
 Node defaults to a process pool of ten connections. Workers use `/connection` with
 request-owned clients, bounded connection counts and no type-fetch round trip.
 Keep filesystem-based migrations in `migrate.ts` and outside Worker runtime imports.
+Session and verification expiry indexes support API maintenance batches; retention
+and scheduling policy belongs to the API, not this persistence package.
 
 ## Verification
 

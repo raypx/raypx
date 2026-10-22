@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite-plus";
@@ -12,6 +13,18 @@ export default defineConfig(({ mode }) => {
       nitro({
         ...nitroTarget(mode, import.meta.url),
         features: { websocket: !cloudflare },
+        experimental: { tasks: true },
+        tasks: {
+          "maintenance:cleanup": {
+            handler: fileURLToPath(
+              new URL(
+                `./server/jobs/runtime/${cloudflare ? "cloudflare" : "node"}.ts`,
+                import.meta.url,
+              ),
+            ),
+          },
+        },
+        scheduledTasks: { "*/15 * * * *": ["maintenance:cleanup"] },
         ...(!cloudflare ? { plugins: ["./server/runtime/plugin.ts"] } : {}),
         routes: {
           ...(!cloudflare

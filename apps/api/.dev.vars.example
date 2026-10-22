@@ -6,3 +6,4 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8787
 RESEND_API_KEY=
 MAIL_FROM=
 MAIL_DEFAULT_LOCALE=en
+JOBS_ENABLED=false

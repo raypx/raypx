@@ -9,6 +9,7 @@ import type { ApiLogging } from "../logging.js";
 import { sql } from "drizzle-orm";
 import { createApiApp } from "../api.js";
 import { createRateLimiter } from "../rate-limit.js";
+import { runCleanupJob } from "../jobs/cleanup.js";
 import type { RedisResources } from "./redis.js";
 import type { ApiEnvironment } from "../env.js";
 
@@ -53,6 +54,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const control = new ControlService(createControlRepository(db));
     return {
       control,
+      jobs: { cleanup: () => runCleanupJob(db, logger, environment.JOBS_ENABLED) },
       app: createApiApp({
         control,
         ...(resources.onRevoke ? { onRevoke: resources.onRevoke } : {}),

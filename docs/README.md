@@ -8,6 +8,7 @@
 - [Development environment and commands](development/getting-started.md)
 - [Testing and release gates](development/testing.md)
 - [Node and Cloudflare deployments](development/cloudflare.md)
+- [Server jobs and expired-record cleanup](development/server-jobs.md)
 - [Raypx Kit library changes](development/intl-release.md)
 - [Foundation acceptance results](development/foundation-acceptance.md)
 - [Foundation decision](architecture/0034-extensible-foundation.md)

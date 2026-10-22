@@ -12,7 +12,7 @@
   ],
   "workspaces": {
     "apps/api": {
-      "entry": ["server/app/*.ts", "server/runtime/plugin.ts"]
+      "entry": ["server/app/*.ts", "server/runtime/plugin.ts", "server/jobs/runtime/*.ts"]
     },
     "apps/desktop": {
       "entry": [

@@ -62,6 +62,7 @@ variables and Secrets, available when handling a request:
 | Setting                                 | Purpose                                                            |
 | --------------------------------------- | ------------------------------------------------------------------ |
 | `NODE_ENV=production`                   | Declared in API Wrangler config; enables production validation     |
+| `JOBS_ENABLED=true`                     | Opt in to bounded expired-record cleanup every 15 minutes          |
 | `AUTH_URL`                              | Public HTTPS API origin                                            |
 | `AUTH_SECRET`                           | Explicit secret of at least 32 characters                          |
 | `ALLOWED_ORIGINS`                       | Exact trusted Web and Desktop origins                              |
@@ -76,6 +77,10 @@ Keep cookies HTTPS/secure and retain the existing trusted-origin checks. With
 separate Web and API hosts, SSR must receive the session cookie through a shared
 cookie domain. Missing mail configuration returns `MAIL_NOT_CONFIGURED` before
 sign-up or reset-mail requests reach the database.
+
+API includes a Cron Trigger for `maintenance:cleanup`. Apply foundation migrations
+before enabling `JOBS_ENABLED`; see [server jobs](server-jobs.md) for retention,
+batch limits, locking and scheduled-event verification.
 
 For local Worker preview, copy `apps/api/.dev.vars.example` to `.dev.vars` in
 that app and fill in the development configuration. The file is Git-ignored.

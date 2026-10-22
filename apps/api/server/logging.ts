@@ -14,6 +14,7 @@ export const API_LOG_FIELDS = [
   "durationMs",
   "error",
   "rpc",
+  "job",
 ] as const;
 
 export interface ApiLogging {
@@ -54,7 +55,10 @@ export function createApiLogging({
   });
   const drain = withEventPolicy(pipeline, {
     fields: API_LOG_FIELDS,
-    shapes: { rpc: ["system", "method"] },
+    shapes: {
+      rpc: ["system", "method"],
+      job: ["name", "status", "sessions", "verifications", "rateLimits"],
+    },
   });
   initLogger({
     env: { service, environment },

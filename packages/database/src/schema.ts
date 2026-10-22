@@ -39,7 +39,10 @@ export const session = foundation.table(
       .references(() => user.id, { onDelete: "cascade" }),
     ...timestamps(),
   },
-  (table) => [index("session_user_id_idx").on(table.userId)],
+  (table) => [
+    index("session_user_id_idx").on(table.userId),
+    index("session_expires_at_idx").on(table.expiresAt),
+  ],
 );
 export const account = foundation.table(
   "account",
@@ -73,7 +76,10 @@ export const verification = foundation.table(
     expiresAt: date("expires_at").notNull(),
     ...timestamps(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
+  (table) => [
+    index("verification_identifier_idx").on(table.identifier),
+    index("verification_expires_at_idx").on(table.expiresAt),
+  ],
 );
 
 // Better Auth and API RPC limits share this table; keys are IP/path or rpc:<user>:<procedure>.

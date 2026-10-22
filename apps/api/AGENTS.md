@@ -27,6 +27,16 @@ with `waitUntil`. Workers reuse the console logger, never a database client or a
 Account RPC uses `@raypx/account/server` with an injected session reader. The
 service projects public fields; API owns HTTP and unauthorized/error mapping.
 
+`jobs/` owns server maintenance; `jobs/runtime/` contains the Nitro Task entries.
+`maintenance:cleanup` runs every 15 minutes on Node and Cloudflare, gated by
+`JOBS_ENABLED` (false by default). Keep Nitro's schedule and Wrangler triggers aligned.
+Cleanup uses PostgreSQL transaction time, an advisory transaction lock and bounded
+row-locked batches. Only sessions/verification records expired over 24 hours ago
+and rate limits older than one hour are eligible. Failure rolls back and retries
+on the next schedule. Never add a production HTTP task runner or log driver errors.
+Node tasks reuse the API runtime; Worker tasks create and close an event-owned one.
+See `docs/development/server-jobs.md` for policy and verification.
+
 ## Constraints
 
 - Dev and build run vp under Node (`bun vp`, never `bun --bun vp`); start

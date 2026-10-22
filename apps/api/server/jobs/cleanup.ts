@@ -1,0 +1,90 @@
+import type { Database } from "@raypx/database/connection";
+import { rateLimit, session, verification } from "@raypx/database/schema";
+import { sql } from "drizzle-orm";
+import type { ApiLogging } from "../logging.js";
+
+// Transaction-scoped namespace shared by all Node processes and Worker isolates.
+export const cleanupLock = [0x72797078, 1] as const;
+export interface CleanupResult {
+  status: "completed" | "skipped" | "disabled";
+  sessions: number;
+  verifications: number;
+  rateLimits: number;
+}
+
+/** Repeated runs are safe; every transaction removes at most 1,000 rows per table. */
+export async function cleanupExpired(db: Database): Promise<CleanupResult> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`set local statement_timeout = '5s'`);
+    await tx.execute(sql`set local lock_timeout = '1s'`);
+    const [lock] = await tx.execute<{ acquired: boolean }>(
+      sql`select pg_try_advisory_xact_lock(${cleanupLock[0]}, ${cleanupLock[1]}) as acquired`,
+    );
+    const result: CleanupResult = {
+      status: lock?.acquired ? "completed" : "skipped",
+      sessions: 0,
+      verifications: 0,
+      rateLimits: 0,
+    };
+    if (!lock?.acquired) return result;
+
+    // Database time is authoritative. Keep a full day after token/session expiry;
+    // stale rate limits retain an hour, well beyond the shared 60-second window.
+    const policies = [
+      {
+        key: "sessions",
+        table: session,
+        order: session.expiresAt,
+        expired: sql`${session.expiresAt} < transaction_timestamp() - interval '1 day'`,
+      },
+      {
+        key: "verifications",
+        table: verification,
+        order: verification.expiresAt,
+        expired: sql`${verification.expiresAt} < transaction_timestamp() - interval '1 day'`,
+      },
+      {
+        key: "rateLimits",
+        table: rateLimit,
+        order: rateLimit.lastRequest,
+        expired: sql`${rateLimit.lastRequest} < extract(epoch from transaction_timestamp()) * 1000 - 3600000`,
+      },
+    ] as const;
+    for (const { key, table, order, expired } of policies) {
+      const [row] = await tx.execute<{ count: number }>(sql`
+        with candidates as (
+          select ${table.id} from ${table}
+          where ${expired} order by ${order}
+          limit 1000 for update skip locked
+        ), removed as (
+          delete from ${table}
+          where ${table.id} in (select id from candidates) and ${expired}
+          returning 1
+        ) select count(*)::integer as count from removed
+      `);
+      result[key] = row!.count;
+    }
+    return result;
+  });
+}
+
+export async function runCleanupJob(
+  db: Database,
+  logger: ApiLogging,
+  enabled: boolean,
+): Promise<CleanupResult> {
+  const event = logger.createLogger({ operation: "job.cleanup" });
+  try {
+    const result: CleanupResult = enabled
+      ? await cleanupExpired(db)
+      : { status: "disabled", sessions: 0, verifications: 0, rateLimits: 0 };
+    event.emit({ status: 200, job: { name: "maintenance:cleanup", ...result } });
+    return result;
+  } catch {
+    // Nitro also logs task failures. Never propagate driver errors or SQL parameters.
+    const error = new Error("Cleanup job failed");
+    event.error(error);
+    event.emit({ status: 500, code: "JOB_FAILED" });
+    throw error;
+  }
+}
