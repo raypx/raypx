@@ -1,0 +1,65 @@
+.github/workflows/ci.yml
+  s_2ad95f435f0313::t_78e829e42156d0 29-34,75-78
+apps/api/AGENTS.md
+  s_2ad95f435f0313::t_8aa63353872d5a 46-49
+apps/api/server/runtime/node.ts
+  s_2ad95f435f0313::t_dbd15e34cde41f 7,21
+apps/api/server/runtime/redis.ts
+  s_2ad95f435f0313::t_623de541eb0ada 1-45
+apps/api/server/runtime/shared.ts
+  s_2ad95f435f0313::t_f8af9cdb935cc8 11,19-20,36,60,65,75-77
+apps/api/tests/redis/redis.test.ts
+  s_2ad95f435f0313::t_3ef81b459d6881 1-39
+apps/api/vitest.config.ts
+  s_2ad95f435f0313::t_66ae591338eba3 11-15
+bun.lock
+  s_2ad95f435f0313::t_72c6353fb62b5a 35,396,666-667,1258-1259,1294-1295,1374-1375,1518-1519,1558-1559
+packages/auth/src/server.ts
+  s_2ad95f435f0313::t_dbbd875c844963 26,31-32,40,74,76-84
+.env.example
+  s_900a66df702cc8::t_18c7e33d973e02 13-14
+apps/api/package.json
+  s_900a66df702cc8::t_6696484ff3d3f2 20-21,37
+apps/api/server/env.ts
+  s_900a66df702cc8::t_eb43a34a803bfd 17
+compose.yaml
+  s_900a66df702cc8::t_0ddb4bf1067885 19-28
+docs/development/getting-started.md
+  s_900a66df702cc8::t_3c2d3049180952 24-27
+docs/development/testing.md
+  s_900a66df702cc8::t_e97a6ce5c0a9f1 53-55
+package.json
+  s_900a66df702cc8::t_10b65099626d73 36,108
+skills/raypx/references/security.md
+  s_900a66df702cc8::t_c1b0bf6ddd5547 11-12
+skills/raypx/references/setup.md
+  s_900a66df702cc8::t_403fd5f711e50f 25
+skills/raypx/references/verification.md
+  s_900a66df702cc8::t_73ddcb5a3338cb 14
+turbo.json
+  s_900a66df702cc8::t_cbf439d6744133 120-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3d53b284e367837b22475e760c8c8dd93d8837f9",
+  "prompts": {},
+  "sessions": {
+    "s_2ad95f435f0313": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a14424-b136-7743-acdb-3b9f6e0a77f5",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
