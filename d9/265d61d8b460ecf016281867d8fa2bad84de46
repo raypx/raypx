@@ -1,0 +1,53 @@
+packages/ui/src/components/ui/alert.tsx
+  s_49f01f37f619d1::t_54d358f7b56ff5 12
+packages/ui/src/components/ui/avatar.tsx
+  s_49f01f37f619d1::t_15cf54dc959026 35
+packages/ui/src/components/ui/badge.tsx
+  s_49f01f37f619d1::t_39f8ac8d0cda40 15
+packages/ui/src/components/ui/dropdown-menu.tsx
+  s_49f01f37f619d1::t_ff7668bdcb032e 85
+packages/ui/src/styles/globals.css
+  s_49f01f37f619d1::t_65059c8a69344e 30
+packages/ui/src/styles/theme.css
+  s_49f01f37f619d1::t_fe20531e2e9dd6 30,77
+packages/ui/src/themes/tokens.ts
+  s_49f01f37f619d1::t_e8249a8d47e92e 31-32,78
+packages/ui/AGENTS.md
+  s_0502a2b559ebf3::t_73b5786d4f0768 30-31
+packages/ui/src/components/ui/button.tsx
+  s_73c042be5a1505::t_d11fcc3879197c 20
+skills/raypx/references/design-system.md
+  s_0502a2b559ebf3::t_7e3108b11d6f6f 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d9265d61d8b460ecf016281867d8fa2bad84de46",
+  "prompts": {},
+  "sessions": {
+    "s_0502a2b559ebf3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5a28101b-88cb-4e07-806f-3717190c81be",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_49f01f37f619d1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1538b-0c9d-7351-bd78-3f13ed331ac0",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_73c042be5a1505": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f214bb20-d735-4bfb-b2a8-45131c3fa3a5",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
