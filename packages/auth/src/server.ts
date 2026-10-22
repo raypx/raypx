@@ -1,4 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { APIError } from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
 import type { AuthSession, AuthUser } from "./types.js";
@@ -8,6 +9,7 @@ export interface AuthMailInput {
   name?: string | null;
   url: string;
   locale?: Locale;
+  siteName?: string;
 }
 export interface AuthMailer {
   sendVerification(input: AuthMailInput): Promise<void>;
@@ -32,6 +34,10 @@ export interface CreateAuthOptions {
   config: AuthConfiguration;
   /** Optional shared cache for sessions and rate limits; the database remains the record. */
   secondaryStorage?: AuthSecondaryStorage;
+  /** Checked when any sign-in method is about to create a user. Rejects while it fails. */
+  registrationAllowed?: () => Promise<boolean>;
+  /** Display name for authentication mail; resolve to a fallback rather than throwing. */
+  siteName?: () => Promise<string>;
 }
 export function recipientLocale(request?: Request): { locale?: Locale } {
   const locale = matchLocale(
@@ -39,7 +45,15 @@ export function recipientLocale(request?: Request): { locale?: Locale } {
   );
   return locale === undefined ? {} : { locale };
 }
-export function createAuth({ database, mailer, config, secondaryStorage }: CreateAuthOptions) {
+export function createAuth({
+  database,
+  mailer,
+  config,
+  secondaryStorage,
+  registrationAllowed,
+  siteName,
+}: CreateAuthOptions) {
+  const mailSite = async () => (siteName ? { siteName: await siteName() } : {});
   if (config.secret.length < 32) throw new Error("AUTH_SECRET must contain at least 32 characters");
   if (config.production && new URL(config.baseURL).protocol !== "https:")
     throw new Error("Production AUTH_URL must use HTTPS");
@@ -54,24 +68,44 @@ export function createAuth({ database, mailer, config, secondaryStorage }: Creat
       enabled: true,
       requireEmailVerification: true,
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: ({ user, url }, request) =>
+      sendResetPassword: async ({ user, url }, request) =>
         mailer.sendPasswordReset({
           email: user.email,
           name: user.name,
           url,
           ...recipientLocale(request),
+          ...(await mailSite()),
         }),
     },
     emailVerification: {
       sendOnSignUp: true,
-      sendVerificationEmail: ({ user, url }, request) =>
+      sendVerificationEmail: async ({ user, url }, request) =>
         mailer.sendVerification({
           email: user.email,
           name: user.name,
           url,
           ...recipientLocale(request),
+          ...(await mailSite()),
         }),
     },
+    ...(registrationAllowed
+      ? {
+          databaseHooks: {
+            user: {
+              create: {
+                // Sign-up turns a 403 into its generic duplicate-email success, so use 400.
+                before: async () => {
+                  if (!(await registrationAllowed()))
+                    throw new APIError("BAD_REQUEST", {
+                      code: "REGISTRATION_DISABLED",
+                      message: "Registration is closed",
+                    });
+                },
+              },
+            },
+          },
+        }
+      : {}),
     session: { storeSessionInDatabase: true },
     // Shared storage keeps limits consistent across Node processes and Worker isolates.
     // Better Auth applies stricter built-in rules to sign-in, sign-up and mail requests.

@@ -94,3 +94,44 @@ it("shares session cookies with the Web host only when a parent domain is config
   });
   expect(options()?.crossSubDomainCookies).toBeUndefined();
 });
+
+it("rejects user creation while registration is closed and names the site in mail", async () => {
+  let open = false;
+  const sent: unknown[] = [];
+  const auth = createAuth({
+    database: memoryAdapter({ user: [], account: [], session: [], verification: [] }),
+    mailer: {
+      sendVerification: async (input) => {
+        sent.push(input);
+      },
+      sendPasswordReset: async () => {},
+    },
+    registrationAllowed: async () => open,
+    siteName: async () => "Team",
+    config: {
+      baseURL: "http://localhost:3002",
+      secret: "test-foundation-secret-at-least-32-characters",
+      trustedOrigins: [],
+      production: false,
+    },
+  });
+  const signUp = () =>
+    auth.handler(
+      new Request("http://localhost:3002/api/auth/sign-up/email", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: "new@example.com",
+          password: "password-123456",
+          name: "New",
+        }),
+      }),
+    );
+  const closed = await signUp();
+  expect(closed.status).toBe(400);
+  expect(await closed.json()).toMatchObject({ code: "REGISTRATION_DISABLED" });
+  expect(sent).toHaveLength(0);
+  open = true;
+  expect((await signUp()).status).toBe(200);
+  expect(sent).toMatchObject([{ email: "new@example.com", siteName: "Team" }]);
+});

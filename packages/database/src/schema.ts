@@ -94,6 +94,17 @@ export const rateLimit = foundation.table(
   (table) => [index("rate_limit_last_request_idx").on(table.lastRequest)],
 );
 
+// One versioned row stores non-secret site settings. Policy belongs to API.
+export const systemConfiguration = foundation.table("system_configuration", {
+  id: text("id").primaryKey(),
+  siteName: text("site_name").notNull(),
+  registrationEnabled: boolean("registration_enabled").notNull(),
+  cleanupEnabled: boolean("cleanup_enabled").notNull(),
+  revision: integer("revision").notNull(),
+  updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }),
+  updatedAt: date("updated_at").notNull().defaultNow(),
+});
+
 // Control records are separate from authentication and never contain CLI credentials.
 export const controlOwner = foundation.table("control_owner", {
   userId: text("user_id")
@@ -125,6 +136,7 @@ export const controlCommand = controlRecord("control_command");
 export const controlGrant = controlRecord("control_grant");
 
 export const schema = {
+  systemConfiguration,
   user,
   session,
   account,

@@ -4,7 +4,7 @@ import { createStreamDrain } from "@raypx-kit/logger/stream";
 import { getApiEnvironment, type ApiEnvironment } from "../env.js";
 import { createApiLogging } from "../logging.js";
 import { errorReports } from "../error-reports.js";
-import { createRuntime, type ApiRuntime } from "./shared.js";
+import { createRuntime, type ApiRuntime, type RuntimeProviders } from "./shared.js";
 import { connectRedis } from "./redis.js";
 
 export type { ApiRuntime } from "./shared.js";
@@ -12,7 +12,10 @@ export type { ApiRuntime } from "./shared.js";
 /** Socket address written by the Node entry; the default auth rate-limit key. */
 export const CLIENT_IP_HEADER = "x-raypx-client-ip";
 
-export async function createApiRuntime(environment: ApiEnvironment): Promise<ApiRuntime> {
+export async function createApiRuntime(
+  environment: ApiEnvironment,
+  providers: RuntimeProviders = {},
+): Promise<ApiRuntime> {
   const logger = createApiLogging({
     environment: environment.NODE_ENV,
     sink: errorReports(environment, createStreamDrain()),
@@ -24,6 +27,7 @@ export async function createApiRuntime(environment: ApiEnvironment): Promise<Api
   return createRuntime(
     { ...environment, ipAddressHeaders },
     {
+      ...providers,
       logger,
       onRevoke: (userId, deviceId) => nodeRelay.revoke(userId, deviceId),
       connect: () => connectDatabase(environment.DATABASE_URL),

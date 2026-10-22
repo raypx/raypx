@@ -111,3 +111,12 @@ the document root. Route catches and React/global errors pass only sanitized app
 frames. Statistics and errors default off independently; identify internal IDs only
 with statistics consent, reset on logout and never capture raw task parameters.
 Source-map upload is an explicit release step; ship those same injected assets.
+
+## Administrator configuration
+
+`/admin/settings` and `features/configuration/` provide the Web-only administrator
+page through the public API SDK. The sidebar link depends on the server access
+check; API permissions remain authoritative on direct navigation and every save.
+Keep editable drafts through network failures and revision conflicts, with explicit
+reload/discard actions. No configuration secrets or deployment credentials enter
+the browser. Public settings supply the shell label and signup availability.

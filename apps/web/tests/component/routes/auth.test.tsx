@@ -22,6 +22,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "../../../src/routeTree.gen";
 
 const mocks = vi.hoisted(() => ({
+  registrationEnabled: true,
   signIn: vi.fn(),
   signUp: vi.fn(),
   resend: vi.fn(),
@@ -42,6 +43,19 @@ vi.mock("../../../src/features/auth/client", () => ({
     resetPassword: mocks.resetPassword,
     signOut: mocks.signOut,
   },
+}));
+vi.mock("../../../src/features/configuration/client", () => ({
+  publicConfigurationQuery: () => ({
+    queryKey: ["configuration", "public"],
+    queryFn: async () => ({ siteName: "Raypx", registrationEnabled: mocks.registrationEnabled }),
+    initialData: { siteName: "Raypx", registrationEnabled: mocks.registrationEnabled },
+    staleTime: Infinity,
+  }),
+  configurationAccessQuery: () => ({
+    queryKey: ["configuration", "access"],
+    queryFn: async () => ({ allowed: false }),
+    enabled: false,
+  }),
 }));
 vi.mock("../../../src/features/tasks/client", () => ({ taskClient: {} }));
 vi.mock("../../../src/features/auth/account", () => ({
@@ -68,6 +82,7 @@ afterEach(() => {
 });
 beforeEach(() => {
   vi.resetAllMocks();
+  mocks.registrationEnabled = true;
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
@@ -94,6 +109,13 @@ async function page(url: string) {
 }
 
 describe("authentication routes", () => {
+  it("replaces closed registration with a sign-in link", async () => {
+    mocks.registrationEnabled = false;
+    await page("/signup");
+    expect(screen.getByRole("heading", { name: "Registration is closed" })).toBeTruthy();
+    expect(screen.queryByLabelText("Password")).toBeNull();
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+  });
   it("submits the canonical name and sends verification back to Web", async () => {
     mocks.signUp.mockResolvedValue({ data: {}, error: null });
     await page("/signup");

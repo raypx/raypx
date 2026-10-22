@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 
 export type AuthErrorKey =
+  | "registrationDisabled"
   | "mailUnavailable"
   | "invalidCredentials"
   | "emailNotVerified"
@@ -52,6 +53,7 @@ export interface AuthActionClient {
 }
 
 function authErrorKey(code?: string): AuthErrorKey {
+  if (code === "REGISTRATION_DISABLED") return "registrationDisabled";
   if (code === "MAIL_NOT_CONFIGURED") return "mailUnavailable";
   if (code === "INVALID_EMAIL_OR_PASSWORD" || code === "INVALID_PASSWORD")
     return "invalidCredentials";

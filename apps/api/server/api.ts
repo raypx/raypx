@@ -1,3 +1,5 @@
+import { ConfigurationError } from "./configuration/service.js";
+import type { ConfigurationService } from "./configuration/types.js";
 import { ControlError, type ControlService } from "./control/service.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -13,6 +15,8 @@ import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logg
 import type { RateLimiter, RateRule } from "./rate-limit.js";
 
 export interface ApiAppOptions {
+  configuration?: ConfigurationService;
+  jobsEnabled?: boolean;
   control?: ControlService;
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   authHandler(request: Request): Promise<Response>;
@@ -31,6 +35,7 @@ const rpcLimits = {
   "devices.register": { window: 60, max: 10 },
   "devices.refreshGrant": { window: 60, max: 30 },
   "relay.ticket": { window: 60, max: 60 },
+  "configuration.update": { window: 60, max: 10 },
 } satisfies Record<string, RateRule>;
 /** True when decoded input carries keys that merge or path-set helpers could abuse. */
 export function hasPollutingKey(value: unknown): boolean {
@@ -150,6 +155,18 @@ export function createApiApp(options: ApiAppOptions) {
         503,
       );
     }
+    if (c.req.method === "POST" && path === "/api/auth/sign-up/email" && options.configuration) {
+      try {
+        // Cheap early answer; the auth user-create hook re-checks with a fresh read.
+        if (!(await options.configuration.readCached()).values.registrationEnabled)
+          return c.json({ code: "REGISTRATION_DISABLED", message: "Registration is closed" }, 403);
+      } catch {
+        return c.json(
+          { code: "CONFIGURATION_UNAVAILABLE", message: "Configuration is unavailable" },
+          503,
+        );
+      }
+    }
     return options.authHandler(c.req.raw);
   });
   const os = implement(apiContract)
@@ -219,7 +236,82 @@ export function createApiApp(options: ApiAppOptions) {
       data: { error: { code: error.code }, requestId: context.requestId },
     });
   }
+  async function configurationCall<T>(
+    context: Context,
+    run: (service: ConfigurationService) => Promise<T>,
+  ) {
+    if (!options.configuration) throw new ORPCError("SERVICE_UNAVAILABLE");
+    try {
+      return await run(options.configuration);
+    } catch (error) {
+      if (!(error instanceof ConfigurationError)) throw error;
+      throw new ORPCError(
+        error.code === "CONFIGURATION_CONFLICT"
+          ? "CONFLICT"
+          : error.code === "INVALID_INPUT"
+            ? "BAD_REQUEST"
+            : error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN"
+              ? error.code
+              : "SERVICE_UNAVAILABLE",
+        {
+          data: { error: { code: error.code }, requestId: context.requestId },
+        },
+      );
+    }
+  }
+  async function requireAdmin(context: Context, limit?: keyof typeof rpcLimits) {
+    const auth = await options.readSession(context.headers);
+    if (!auth)
+      throw new ORPCError("UNAUTHORIZED", {
+        data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
+      });
+    if (!options.configuration?.isAdmin(auth))
+      throw new ORPCError("FORBIDDEN", {
+        data: { error: { code: "FORBIDDEN" }, requestId: context.requestId },
+      });
+    if (
+      limit &&
+      options.rateLimit &&
+      !(await options.rateLimit(`rpc:${auth.user.id}:${limit}`, rpcLimits[limit]))
+    )
+      throw new ORPCError("TOO_MANY_REQUESTS", {
+        data: { error: { code: "RATE_LIMITED" }, requestId: context.requestId },
+      });
+    return auth;
+  }
   const router = os.router({
+    configuration: {
+      public: os.configuration.public.handler(({ context }) =>
+        configurationCall(context, async (service) => {
+          const { values } = await service.readCached();
+          return { siteName: values.siteName, registrationEnabled: values.registrationEnabled };
+        }),
+      ),
+      access: os.configuration.access.handler(async ({ context }) => ({
+        allowed:
+          options.configuration?.isAdmin(await options.readSession(context.headers)) ?? false,
+      })),
+      get: os.configuration.get.handler(async ({ context }) => {
+        await requireAdmin(context);
+        return configurationCall(context, async (service) => ({
+          ...(await service.read()),
+          deployment: {
+            jobsEnabled: options.jobsEnabled ?? false,
+            mailConfigured: options.mailAvailable ?? false,
+          },
+        }));
+      }),
+      update: os.configuration.update.handler(async ({ context, input }) => {
+        const auth = await requireAdmin(context, "configuration.update");
+        // Cookie-authenticated writes require an explicit trusted browser origin.
+        const origin = context.headers.get("origin");
+        if (!origin || !options.allowedOrigins.includes(origin))
+          throw new ORPCError("FORBIDDEN", {
+            data: { error: { code: "ORIGIN_REJECTED" }, requestId: context.requestId },
+          });
+        return configurationCall(context, (service) => service.update(input, auth));
+      }),
+    },
     devices: {
       register: os.devices.register.handler(({ input, context }) =>
         controlCall(context, (control, auth) => control.register(auth, input), "devices.register"),

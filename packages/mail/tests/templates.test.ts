@@ -15,6 +15,20 @@ it("renders one locale, safe HTML and a plain-text link", () => {
   expect(result.text).toContain("token=x&next=y");
 });
 
+it("names the configured site and escapes it in HTML", () => {
+  const result = renderLinkEmail("reset", {
+    email: "u@example.com",
+    url: "https://example.com/reset",
+    siteName: "Team <b>",
+  });
+  expect(result.html).toContain("<h1>Team &lt;b&gt;</h1>");
+  expect(result.html).toContain("new Team &lt;b&gt; password");
+  expect(result.text).toContain("new Team <b> password");
+  expect(
+    renderLinkEmail("reset", { email: "u@example.com", url: "https://x.test" }).text,
+  ).toContain("new Raypx password");
+});
+
 it("injects an in-memory transport", async () => {
   const seen: unknown[] = [];
   const mailer = createMailer({

@@ -30,3 +30,6 @@ Relay schemas normalize commands, sequenced events, snapshots and cursor recover
 HTTP exposes projections and tickets; provider wire messages remain private to CLI.
 Private `agents.local.*` methods scope Desktop task reads and commands by account.
 They reuse normalized task/decision DTOs without publishing a local HTTP endpoint.
+
+`/api` also exports configuration DTOs and administrator RPC contracts. Public
+settings are an explicit projection; write values reject unknown keys. No secrets.

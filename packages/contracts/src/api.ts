@@ -8,6 +8,8 @@ import {
   agentEventSchema,
 } from "./tasks.js";
 export * from "./tasks.js";
+export * from "./configuration.js";
+import { configurationContract } from "./configuration.js";
 
 export const accountProfileSchema = z.object({
   id: z.string().min(1),
@@ -30,6 +32,7 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  configuration: configurationContract,
   devices: {
     register: oc
       .input(

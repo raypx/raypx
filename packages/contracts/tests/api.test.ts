@@ -3,7 +3,14 @@ import { accountProfileSchema, apiContract } from "../src/api.js";
 
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
-    expect(Object.keys(apiContract)).toEqual(["devices", "tasks", "approvals", "relay", "account"]);
+    expect(Object.keys(apiContract)).toEqual([
+      "configuration",
+      "devices",
+      "tasks",
+      "approvals",
+      "relay",
+      "account",
+    ]);
     expect(apiContract).not.toHaveProperty("terminal");
     expect(apiContract).not.toHaveProperty("files");
     expect(apiContract).not.toHaveProperty("agents");

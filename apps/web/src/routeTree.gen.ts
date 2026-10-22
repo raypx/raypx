@@ -21,6 +21,7 @@ import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
+import { Route as appAdminSettingsRouteImport } from './routes/(app)/admin/settings'
 
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
@@ -80,6 +81,11 @@ const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => authRouteRoute,
 } as any)
+const appAdminSettingsRoute = appAdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => appRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/': typeof appIndexRoute
+  '/admin/settings': typeof appAdminSettingsRoute
 }
 export interface FileRoutesByTo {
   '/health': typeof HealthRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/verify-email': typeof authVerifyEmailRoute
   '/': typeof appIndexRoute
+  '/admin/settings': typeof appAdminSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(auth)/verify-email': typeof authVerifyEmailRoute
   '/(app)/': typeof appIndexRoute
+  '/(app)/admin/settings': typeof appAdminSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/'
+    | '/admin/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/health'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/'
+    | '/admin/settings'
   id:
     | '__root__'
     | '/(app)'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(auth)/verify-email'
     | '/(app)/'
+    | '/(app)/admin/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -253,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authVerifyEmailRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/(app)/admin/settings': {
+      id: '/(app)/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof appAdminSettingsRouteImport
+      parentRoute: typeof appRouteRoute
+    }
   }
 }
 
@@ -261,6 +280,7 @@ interface appRouteRouteChildren {
   appSettingsRoute: typeof appSettingsRoute
   appTasksRoute: typeof appTasksRoute
   appIndexRoute: typeof appIndexRoute
+  appAdminSettingsRoute: typeof appAdminSettingsRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
@@ -268,6 +288,7 @@ const appRouteRouteChildren: appRouteRouteChildren = {
   appSettingsRoute: appSettingsRoute,
   appTasksRoute: appTasksRoute,
   appIndexRoute: appIndexRoute,
+  appAdminSettingsRoute: appAdminSettingsRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(

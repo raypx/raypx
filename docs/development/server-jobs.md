@@ -12,7 +12,9 @@ Agent execution.
    The new migration adds expiry indexes to sessions and verification records.
 2. Set `JOBS_ENABLED=true` in the API's runtime environment. It defaults to `false`,
    including development and artifact probes; disabled runs make no cleanup queries.
-3. Build and deploy the API for the selected platform.
+3. Keep **Background cleanup** enabled in [administrator settings](configuration.md).
+   This persisted switch defaults to on and is read again before each enabled run.
+4. Build and deploy the API for the selected platform.
 
 Node's Nitro server runs the schedule while the API process is alive. Cloudflare
 invokes its `scheduled` handler through the Cron Trigger in `apps/api/wrangler.jsonc`.

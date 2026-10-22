@@ -4,6 +4,8 @@ export interface SendLinkEmailInput {
   name?: string | null;
   url: string;
   locale?: MailLocale;
+  /** Defaults to Raypx. */
+  siteName?: string;
 }
 export interface Mailer {
   sendVerification(input: SendLinkEmailInput): Promise<void>;

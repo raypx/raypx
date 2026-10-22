@@ -2,6 +2,21 @@ import type { Database } from "@raypx/database/connection";
 import { rateLimit, session, verification } from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
+import type { ConfigurationReader } from "../configuration/types.js";
+
+export function createCleanupJob({
+  db,
+  logger,
+  configuration,
+  enabled,
+}: {
+  db: Database;
+  logger: ApiLogging;
+  configuration: ConfigurationReader;
+  enabled: boolean;
+}): () => Promise<CleanupResult> {
+  return () => runCleanupJob(db, logger, enabled, configuration);
+}
 
 // Transaction-scoped namespace shared by all Node processes and Worker isolates.
 export const cleanupLock = [0x72797078, 1] as const;
@@ -72,10 +87,13 @@ export async function runCleanupJob(
   db: Database,
   logger: ApiLogging,
   enabled: boolean,
+  configuration?: ConfigurationReader,
 ): Promise<CleanupResult> {
   const event = logger.createLogger({ operation: "job.cleanup" });
   try {
-    const result: CleanupResult = enabled
+    const shouldRun =
+      enabled && (!configuration || (await configuration.read()).values.cleanupEnabled);
+    const result: CleanupResult = shouldRun
       ? await cleanupExpired(db)
       : { status: "disabled", sessions: 0, verifications: 0, rateLimits: 0 };
     event.emit({ status: 200, job: { name: "maintenance:cleanup", ...result } });

@@ -8,7 +8,10 @@ import {
 } from "@raypx/contracts/api";
 
 type Input<M extends RelayRequest["method"]> = Extract<RelayRequest, { method: M }>["input"];
-export interface TaskClient extends ApiClient {
+export interface TaskClient extends Pick<
+  ApiClient,
+  "account" | "devices" | "relay" | "tasks" | "approvals"
+> {
   tasks: ApiClient["tasks"] & {
     create(
       input: Input<"tasks.create">,

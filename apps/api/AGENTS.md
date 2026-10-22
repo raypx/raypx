@@ -104,3 +104,25 @@ first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
 and one-time viewer tickets. No HTTP task mutation or polling exchange remains.
 Node uses one relay process; Cloudflare uses an account-named Durable Object with
 connections fenced by identity. Keep credentials out of URLs and diagnostics.
+
+## Administrator configuration
+
+`server/configuration/` owns the typed non-secret site settings and PostgreSQL repository.
+`types.ts` defines the reader, service and repository ports. Inject `ConfigurationReader`
+into read-only consumers; `createRuntime` exposes `configuration` and accepts a
+`createConfigurationRepository(db)` factory scoped to its owned connection.
+Node/Worker constructors accept these typed providers as a second argument.
+`runtime.readSession(headers)` resolves through the same auth adapter as HTTP on
+each call; consumers must not retain that session between requests. Direct
+service writes require a freshly resolved administrator session and expected revision,
+just like HTTP writes. Never put the service in a global Worker container.
+`configuration.get/update` require a fresh verified session in `ADMIN_EMAILS`; writes
+also require a trusted Origin. Public projection exposes only site name and signup
+availability. Save with an expected revision; never overwrite concurrent edits.
+Registration is enforced by the Better Auth user-create hook with a fresh read, so
+it covers every sign-in method; the email signup route only pre-checks the 5-second
+`readCached()` snapshot. Use `readCached()` only where that delay is acceptable.
+Run the migration before deploying: signup fails closed without the table. Jobs combine the
+stored cleanup switch with deployment `JOBS_ENABLED`; disabled deployments do not
+query configuration on schedule. No secrets or arbitrary env keys enter the API.
+See `docs/development/configuration.md`.

@@ -1,19 +1,30 @@
+import { createConfigurationRepository } from "../configuration/repository.js";
+import { createConfigurationService } from "../configuration/service.js";
+import type { ConfigurationCache, ConfigurationRepository } from "../configuration/types.js";
 import { createControlRepository } from "../control/repository.js";
 import { ControlService } from "../control/service.js";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
-import type { DatabaseConnection } from "@raypx/database/connection";
+import type { Database, DatabaseConnection } from "@raypx/database/connection";
 import { schema } from "@raypx/database/schema";
+import { configurationDefaults } from "@raypx/contracts/api";
 import { createMailer } from "@raypx/mail/server";
 import type { ApiLogging } from "../logging.js";
 import { sql } from "drizzle-orm";
 import { createApiApp } from "../api.js";
 import { createRateLimiter } from "../rate-limit.js";
-import { runCleanupJob } from "../jobs/cleanup.js";
+import { createCleanupJob } from "../jobs/cleanup.js";
 import type { RedisResources } from "./redis.js";
 import type { ApiEnvironment } from "../env.js";
 
-export interface RuntimeResources {
+export interface RuntimeProviders {
+  /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
+  createConfigurationRepository?: (db: Database) => ConfigurationRepository;
+  /** Outlives per-request runtimes so public reads stay cached; defaults to per runtime. */
+  configurationCache?: ConfigurationCache;
+}
+
+export interface RuntimeResources extends RuntimeProviders {
   logger: ApiLogging;
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   connect(): DatabaseConnection;
@@ -33,7 +44,18 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       ...(environment.RESEND_API_KEY ? { apiKey: environment.RESEND_API_KEY } : {}),
       ...(environment.MAIL_FROM ? { from: environment.MAIL_FROM } : {}),
     });
+    const configuration = createConfigurationService({
+      repository: (resources.createConfigurationRepository ?? createConfigurationRepository)(db),
+      adminEmails: environment.ADMIN_EMAILS,
+      ...(resources.configurationCache ? { cache: resources.configurationCache } : {}),
+    });
     const auth = createAuth({
+      registrationAllowed: async () => (await configuration.read()).values.registrationEnabled,
+      siteName: () =>
+        configuration.readCached().then(
+          (snapshot) => snapshot.values.siteName,
+          () => configurationDefaults.siteName,
+        ),
       database: drizzleAdapter(connection.db, { provider: "pg", schema }),
       mailer,
       ...(resources.redis ? { secondaryStorage: resources.redis.secondaryStorage } : {}),
@@ -52,14 +74,23 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       },
     });
     const control = new ControlService(createControlRepository(db));
+    // Resolve from the same auth adapter for HTTP and direct server callers.
+    // Keep sessions request-owned even when Node reuses the runtime.
+    const readSession = (headers: Headers) => readAuthSession(auth, headers);
     return {
       control,
-      jobs: { cleanup: () => runCleanupJob(db, logger, environment.JOBS_ENABLED) },
+      configuration,
+      readSession,
+      jobs: {
+        cleanup: createCleanupJob({ db, logger, configuration, enabled: environment.JOBS_ENABLED }),
+      },
       app: createApiApp({
+        configuration,
+        jobsEnabled: environment.JOBS_ENABLED,
         control,
         ...(resources.onRevoke ? { onRevoke: resources.onRevoke } : {}),
         authHandler: (request) => auth.handler(request),
-        readSession: (headers) => readAuthSession(auth, headers),
+        readSession,
         allowedOrigins: environment.allowedOrigins,
         mailAvailable: mailer.available,
         logger,

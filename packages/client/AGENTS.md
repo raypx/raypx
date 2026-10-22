@@ -25,3 +25,6 @@ automatically retry a sent execution command. Fetch credentials and headers for 
 bun run --cwd packages/client check
 bun run --cwd packages/client test
 ```
+
+`createApiClient().configuration` exposes the typed site-settings RPCs. TaskClient
+selects only the account/coordination contracts, excluding administrator settings.

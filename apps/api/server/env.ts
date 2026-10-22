@@ -3,6 +3,16 @@ export const apiServerEnv = {
   id: "api",
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    ADMIN_EMAILS: z
+      .string()
+      .default("")
+      .transform((value) =>
+        value
+          .split(",")
+          .map((email) => email.trim().toLowerCase())
+          .filter(Boolean),
+      )
+      .pipe(z.array(z.email())),
     JOBS_ENABLED: z
       .enum(["true", "false"])
       .default("false")
