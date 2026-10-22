@@ -29,6 +29,7 @@ Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
 Start the separate compose database on 5433, then bun run db:migrate and bun run dev.
 Never point these migration commands at the retired database or volume.
+bun run db:studio opens Drizzle Studio (read/write) on the raypx_foundation schema of DATABASE_URL.
 
 bun run dev starts Web (Start SSR on 3000) and API (3002). bun run dev:desktop starts Desktop development;
 bun run package:desktop packages it with its version-matched CLI. Phones use the Web

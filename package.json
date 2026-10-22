@@ -117,6 +117,7 @@
     "package:desktop": "raypx-dev desktop build",
     "db:migrate": "raypx-dev db migrate",
     "db:generate": "raypx-dev db generate",
+    "db:studio": "raypx-dev db studio",
     "clean": "raypx-dev clean",
     "deps:audit": "bun audit",
     "build:web:cloudflare": "raypx-dev tasks build:cloudflare --filter web",

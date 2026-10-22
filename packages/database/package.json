@@ -17,7 +17,8 @@
     "test:component": "bun --bun vp test --run --passWithNoTests component/",
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
     "generate": "bun --bun drizzle-kit generate --config drizzle.config.ts",
-    "migrate": "bun src/commands.ts migrate"
+    "migrate": "bun src/commands.ts migrate",
+    "studio": "bun --bun drizzle-kit studio --config drizzle.config.ts"
   },
   "dependencies": {
     "@raypx-kit/env": "catalog:",

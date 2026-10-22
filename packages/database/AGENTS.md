@@ -16,6 +16,7 @@ PostgreSQL persistence for the new account foundation.
 ## Constraints
 
 Use postgres.js and Drizzle. Active tables are in raypx_foundation; migration history uses raypx_foundation_migrations. drizzle and drizzle-cloud are historical archives and must never be applied to the new database. No reset/drop command. Generate new migrations with drizzle-kit; never edit generated SQL or snapshots. No runtime dependency on auth, tooling or apps.
+`studio` (root `db:studio`) opens Drizzle Studio with write access; only point it at the local foundation database.
 Node defaults to a process pool of ten connections. Workers use `/connection` with
 request-owned clients, bounded connection counts and no type-fetch round trip.
 Keep filesystem-based migrations in `migrate.ts` and outside Worker runtime imports.
