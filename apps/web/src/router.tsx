@@ -1,3 +1,4 @@
+import { analytics } from "./features/analytics/client";
 import { createRouter } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
@@ -11,6 +12,7 @@ export function getRouter() {
   });
   const router = createRouter({
     routeTree,
+    defaultOnCatch: (error) => analytics.captureException(error),
     context: { queryClient },
     defaultPreload: "intent",
     scrollRestoration: true,

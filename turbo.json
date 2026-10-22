@@ -33,12 +33,12 @@
     "build": {
       "dependsOn": ["check", "^build", "transit"],
       "outputs": ["dist/**", ".output/**"],
-      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET"]
+      "env": ["VITE_*", "NODE_ENV", "NITRO_PRESET", "RAYPX_SOURCEMAPS"]
     },
     "desktop#build": {
       "dependsOn": ["check", "^build", "transit", "cli#build"],
       "outputs": ["dist/**"],
-      "env": ["VITE_*", "NODE_ENV", "RAYPX_DESKTOP_BUILD_ARGS"]
+      "env": ["VITE_*", "NODE_ENV", "RAYPX_DESKTOP_BUILD_ARGS", "RAYPX_SOURCEMAPS"]
     },
     "desktop#check": {
       "dependsOn": ["transit", "native:prepare"],
@@ -120,7 +120,7 @@
     "build:cloudflare": {
       "dependsOn": ["check", "^build", "transit"],
       "outputs": [".output-cloudflare/**"],
-      "env": ["VITE_*", "NODE_ENV"]
+      "env": ["VITE_*", "NODE_ENV", "RAYPX_SOURCEMAPS"]
     },
     "test:cloudflare:postgres": {
       "dependsOn": ["transit", "build:cloudflare"],

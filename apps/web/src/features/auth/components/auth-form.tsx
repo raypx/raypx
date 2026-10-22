@@ -1,3 +1,4 @@
+import { analytics } from "../../analytics/client";
 import { Link, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   AuthForm as SharedAuthForm,
@@ -26,6 +27,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       webUrl={webUrl}
       search={search}
       onSignedIn={async () => {
+        analytics.capture("sign_in_succeeded");
         await router.invalidate();
         await navigate({ to: "/" });
       }}

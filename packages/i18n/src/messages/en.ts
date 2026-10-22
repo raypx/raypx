@@ -1,4 +1,18 @@
 export default {
+  analytics: {
+    retrySave: "Retry saving",
+    title: "Diagnostics",
+    hint: "Optional on this device. Task content, files, terminal output and credentials are never included. Session recording is off.",
+    usage: "Usage statistics",
+    usageHint:
+      "Share feature usage and operation results, linked across Web and Desktop by your internal account ID.",
+    errors: "Error reports",
+    errorsHint:
+      "Share error codes, app version and application code locations. Reports are anonymous when usage statistics are off. Error messages and local paths are removed.",
+    unavailable: "Diagnostics are not configured in this build. No data is collected.",
+    saveError: "Unable to save this choice. Newly enabled collection remains off. Try again.",
+    viewError: "Unable to open this view. Reload the app and try again.",
+  },
   tasks: {
     notification: "A task needs your answer",
     title: "Agent tasks",

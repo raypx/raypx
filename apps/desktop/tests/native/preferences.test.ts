@@ -90,3 +90,30 @@ describe("native device preferences", () => {
     }
   });
 });
+
+it("persists diagnostics independently of legacy theme/language writes across restarts", () => {
+  const dir = mkdtempSync(join(tmpdir(), "raypx-native-analytics-"));
+  try {
+    const store = createPreferenceStore(dir);
+    store.save({ theme: "dark", locale: "zh" });
+    expect(store.read().analytics).toBeUndefined();
+    expect(store.saveAnalytics({ usage: true, errors: false })).toBe(true);
+    store.save({ theme: "light", locale: "en" });
+    expect(createPreferenceStore(dir).read()).toEqual({
+      theme: "light",
+      locale: "en",
+      analytics: { usage: true, errors: false },
+    });
+    expect(store.saveAnalytics({ usage: false, errors: true })).toBe(true);
+    expect(store.read()).toEqual({
+      theme: "light",
+      locale: "en",
+      analytics: { usage: false, errors: true },
+    });
+    const copy = store.read();
+    copy.analytics!.errors = false;
+    expect(store.read().analytics?.errors).toBe(true);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

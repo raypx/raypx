@@ -1,3 +1,4 @@
+import { analyticsBuild } from "@raypx/tooling/build/analytics";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -7,7 +8,9 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig(({ mode }) => {
   const cloudflare = mode === "cloudflare";
+  const analytics = analyticsBuild();
   return {
+    define: analytics.define,
     ...(cloudflare ? { ssr: { noExternal: true as const } } : {}),
     plugins: [
       nitro({
@@ -20,6 +23,7 @@ export default defineConfig(({ mode }) => {
       react(),
     ],
     build: {
+      ...analytics.build,
       rolldownOptions: {
         // Base UI marks modules "use client" for RSC; this SSR app has no server components.
         onLog(level, log, handler) {

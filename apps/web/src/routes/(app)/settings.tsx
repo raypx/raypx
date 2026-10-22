@@ -1,3 +1,4 @@
+import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
 import { authClient } from "../../features/auth/client";
 import { apiClient } from "../../features/tasks/client";
@@ -38,6 +39,7 @@ function SettingsPage() {
         </div>
         <LanguageSelect icon={<Languages size={18} />} />
       </section>
+      <AnalyticsSettings />
       <DeviceSettings
         client={apiClient}
         accountId={session.data?.user.id ?? null}

@@ -98,3 +98,12 @@ Task and approval routes use `@raypx/tasks/client`; the shell imports only
 `@raypx/tasks/client/pending-count`. Both use account-keyed state and
 visibility-aware relay subscriptions. Settings lists device connections. Never render agent
 content as HTML or send a raw local method, path or executable to the API.
+
+## Browser analytics
+
+`features/analytics` injects public build config and a device-local preference store
+into `@raypx/analytics`. Keep the SDK deferred and auth/account dependencies outside
+the document root. Route catches and React/global errors pass only sanitized app
+frames. Statistics and errors default off independently; identify internal IDs only
+with statistics consent, reset on logout and never capture raw task parameters.
+Source-map upload is an explicit release step; ship those same injected assets.

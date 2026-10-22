@@ -123,3 +123,14 @@ renews grants through the account session; hidden-window work must not rely on a
 renderer interval. Engine changes wake replay delivery; sequence ACKs checkpoint the
 local outbox, and a retained journal or a consistent snapshot repairs reconnect gaps. Connection intent is persisted per account, without cookies or
 tokens. Logout, detach and Quit cancel the old binding while preserving local tools.
+
+## Browser analytics
+
+`features/analytics` injects public build config and a device-local preference store
+into `@raypx/analytics`. Keep the SDK deferred and auth/account dependencies outside
+the document root. Route catches and React/global errors pass only sanitized app
+frames. Statistics and errors default off independently; identify internal IDs only
+with statistics consent, reset on logout and never capture raw task parameters.
+Restore analytics through getAnalyticsPreferences with a five-second RPC timeout;
+keep capture disabled until the latest Native value arrives, never authorize from preload.
+Source-map upload is an explicit release step; ship those same injected assets.

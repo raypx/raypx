@@ -43,3 +43,8 @@ live in `tests/helpers/workspace.ts` and register cleanup for each suite.
 ## Verification
 
 Run bun run --cwd packages/tooling test and check, then bun run policy.
+
+`analytics sourcemaps <web|web-cloudflare|desktop>` prepares existing client
+artifacts with the external PostHog CLI. Require release credentials and hidden
+maps, upload before deleting maps, and never rebuild before deployment. The build
+helper exposes only public release metadata and the hidden-map flag.

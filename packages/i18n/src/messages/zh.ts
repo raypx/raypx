@@ -1,4 +1,17 @@
 export default {
+  analytics: {
+    retrySave: "重试保存",
+    title: "诊断与使用情况",
+    hint: "仅在此设备上自愿开启。不会包含任务内容、文件、终端输出或凭据。会话录制保持关闭。",
+    usage: "使用统计",
+    usageHint: "分享功能使用情况和操作结果，通过内部账号 ID 关联 Web 与 Desktop 的使用情况。",
+    errors: "错误上报",
+    errorsHint:
+      "分享错误码、应用版本和应用代码位置。关闭使用统计时匿名上报，错误原文和本机路径会被移除。",
+    unavailable: "当前版本尚未配置诊断服务，不会采集数据。",
+    saveError: "无法保存此选项。新开启的采集仍保持关闭，请重试。",
+    viewError: "无法打开此页面，请重新加载应用后重试。",
+  },
   tasks: {
     notification: "有任务等待你的回复",
     title: "Agent 任务",

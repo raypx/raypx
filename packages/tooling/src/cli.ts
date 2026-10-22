@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { uploadAnalyticsMaps } from "./analytics.js";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -98,6 +99,11 @@ async function main() {
       );
       break;
     }
+    case "analytics":
+      if (args[0] !== "sourcemaps")
+        throw new Error("Usage: raypx-dev analytics sourcemaps <web|web-cloudflare|desktop>");
+      await uploadAnalyticsMaps(root, args[1]);
+      break;
     case "desktop":
       if (args[0] !== "build") throw new Error("Usage: raypx-dev desktop build");
       await turbo(root, "build", ["--filter", "desktop"]);

@@ -1,3 +1,4 @@
+import type { AnalyticsConsent } from "@raypx/analytics";
 import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
 import type { RPCSchema } from "electrobun/rpc";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
@@ -31,6 +32,8 @@ export type DesktopRpc = {
       pickDirectory: { params: Record<string, never>; response: RootGrant | null };
       localRequest: { params: { method: LocalMethod; params: unknown }; response: unknown };
       restartEngine: { params: Record<string, never>; response: boolean };
+      getAnalyticsPreferences: { params: Record<string, never>; response: AnalyticsConsent };
+      saveAnalyticsPreferences: { params: AnalyticsConsent; response: boolean };
       savePreferences: { params: DevicePreferences; response: boolean };
     };
     messages: Record<string, never>;

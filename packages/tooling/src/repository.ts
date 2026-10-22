@@ -23,6 +23,16 @@ export function turbo(root: string, task: string, args: string[] = []): Promise<
   return runTurbo(root, task, args, {
     env: {
       ...nodeEnvironment,
+      // Browser acceptance always uses a synthetic ingestion host, never a developer project.
+      ...(task === "e2e"
+        ? {
+            VITE_POSTHOG_PROJECT_TOKEN: "phc_e2e_synthetic",
+            VITE_POSTHOG_HOST: "https://analytics.example.test",
+          }
+        : {}),
+      VITE_APP_RELEASE:
+        process.env.VITE_APP_RELEASE ||
+        execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
       RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}-node${readToolchain(root).node}`,
     },
     developmentTasks: ["dev", "build", "build:cloudflare", "desktop#dev", "desktop#build"],

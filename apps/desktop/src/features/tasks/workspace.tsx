@@ -1,3 +1,5 @@
+import { instrumentTaskClient } from "@raypx/analytics/browser";
+import { analytics } from "../analytics/client";
 import { Link } from "@tanstack/react-router";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
@@ -6,13 +8,22 @@ import { apiClient, authClient } from "../auth/client";
 import { isDesktop } from "../../lib/desktop";
 import { localTaskClient } from "./local-client";
 
+const local = instrumentTaskClient(localTaskClient, analytics, "local");
+const remote = instrumentTaskClient(apiClient, analytics, "remote");
 export function DesktopTaskWorkspace({ view }: { view: "tasks" | "approvals" }) {
   const session = authClient.useSession(),
     t = useTranslations("tasks"),
     c = useTranslations("common");
   const accountId = session.data?.user.id ?? null;
   return (
-    <Tabs key={accountId ?? "signed-out"} defaultValue="local" className="gap-0">
+    <Tabs
+      key={accountId ?? "signed-out"}
+      defaultValue="local"
+      className="gap-0"
+      onValueChange={(scope) =>
+        analytics.capture("task_scope_changed", { scope: scope === "local" ? "local" : "remote" })
+      }
+    >
       <div className="mx-auto flex w-full max-w-[1400px] flex-wrap items-center justify-between gap-4 px-10 pt-8">
         <TabsList aria-label={t("taskScope")}>
           <TabsTrigger value="local">{t("thisComputer")}</TabsTrigger>
@@ -29,7 +40,7 @@ export function DesktopTaskWorkspace({ view }: { view: "tasks" | "approvals" }) 
         {isDesktop() ? (
           <TaskWorkspace
             local
-            client={localTaskClient}
+            client={local}
             accountId={accountId}
             pending={session.isPending}
             view={view}
@@ -43,7 +54,7 @@ export function DesktopTaskWorkspace({ view }: { view: "tasks" | "approvals" }) 
       </TabsContent>
       <TabsContent value="remote">
         <TaskWorkspace
-          client={apiClient}
+          client={remote}
           accountId={accountId}
           pending={session.isPending}
           view={view}

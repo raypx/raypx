@@ -5,6 +5,7 @@ import { ThemeProvider, ThemeScript } from "@raypx/ui/theme/client";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { resolveLocalePreference } from "@raypx/i18n/preferences";
 import { loadPreferences } from "../preferences";
+import { AppAnalytics } from "../features/analytics/provider";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -45,7 +46,7 @@ function RootDocument({ children }: { children: ReactNode }) {
             initialPreference={preferences.locale}
             initialSystemLocales={preferences.systemLocales}
           >
-            {children}
+            <AppAnalytics>{children}</AppAnalytics>
           </BrowserLanguageProvider>
         </ThemeProvider>
         <Scripts />

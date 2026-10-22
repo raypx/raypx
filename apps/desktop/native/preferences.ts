@@ -1,3 +1,4 @@
+import { isAnalyticsConsent, type AnalyticsConsent } from "@raypx/analytics";
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -5,6 +6,7 @@ import {
   DEFAULT_DEVICE_PREFERENCES,
   DEVICE_PREFERENCES_KEY,
   isDevicePreferences,
+  parsePreferences,
   type DevicePreferences,
   type PreferenceSnapshot,
 } from "../preferences";
@@ -21,7 +23,7 @@ export function createPreferenceStore(directory: string) {
     const value: unknown = JSON.parse(source);
     if (!isDevicePreferences(value)) throw new Error("Invalid preference data");
     fields = value as unknown as Record<string, unknown>;
-    current = { theme: value.theme, locale: value.locale };
+    current = parsePreferences(value);
     status = "valid";
   } catch (error) {
     status =
@@ -29,12 +31,12 @@ export function createPreferenceStore(directory: string) {
         ? "missing"
         : "error";
   }
-  return {
-    read: () => ({ ...current }),
-    snapshot: (): PreferenceSnapshot => ({ status, preferences: { ...current } }),
+  const store = {
+    read: () => parsePreferences(current),
+    snapshot: (): PreferenceSnapshot => ({ status, preferences: parsePreferences(current) }),
     save(value: DevicePreferences) {
       if (!isDevicePreferences(value)) return false;
-      const parsed: DevicePreferences = { theme: value.theme, locale: value.locale };
+      const parsed: DevicePreferences = { ...current, ...parsePreferences(value) };
       const nextFields = { ...fields, ...parsed };
       const temporary = `${file}.${crypto.randomUUID()}.tmp`;
       try {
@@ -55,9 +57,13 @@ export function createPreferenceStore(directory: string) {
         }
       }
     },
+    saveAnalytics(analytics: AnalyticsConsent) {
+      return isAnalyticsConsent(analytics) && store.save({ ...current, analytics });
+    },
     preload() {
-      const snapshot: PreferenceSnapshot = { status, preferences: { ...current } };
-      return `(()=>{const snapshot=${JSON.stringify(snapshot)};Object.freeze(snapshot.preferences);Object.freeze(snapshot);Object.defineProperty(window,${JSON.stringify(DEVICE_PREFERENCES_KEY)},{value:snapshot});})();`;
+      const snapshot: PreferenceSnapshot = { status, preferences: parsePreferences(current) };
+      return `(()=>{const snapshot=${JSON.stringify(snapshot)};if(snapshot.preferences.analytics)Object.freeze(snapshot.preferences.analytics);Object.freeze(snapshot.preferences);Object.freeze(snapshot);Object.defineProperty(window,${JSON.stringify(DEVICE_PREFERENCES_KEY)},{value:snapshot});})();`;
     },
   };
+  return store;
 }

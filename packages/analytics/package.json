@@ -1,0 +1,49 @@
+{
+  "name": "@raypx/analytics",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./browser": "./src/browser.ts",
+    "./client": "./src/client/provider.tsx",
+    "./client/settings": "./src/client/settings.tsx",
+    "./client/styles.css": "./src/client/styles.css"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run"
+  },
+  "dependencies": {
+    "@raypx-kit/analytics": "catalog:",
+    "@raypx/client": "workspace:*",
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@testing-library/react": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "jsdom": "catalog:dev",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal",
+    "entryTargets": {
+      "./browser": "browser",
+      "./client": "browser",
+      "./client/settings": "browser",
+      "./client/styles.css": "browser"
+    },
+    "sourceTargets": {
+      "src/browser.ts": "browser",
+      "src/client/**": "browser"
+    }
+  }
+}

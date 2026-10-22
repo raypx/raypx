@@ -5,6 +5,7 @@ import { DesktopPreferencesProvider, desktopThemeScript } from "../preferences";
 import { SessionGate } from "../features/auth/components/session-gate";
 import { RemoteCoordinator } from "../features/tasks/coordinator";
 import { getBridge, isDesktop } from "../lib/desktop";
+import { AppAnalytics } from "../features/analytics/provider";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -47,10 +48,12 @@ function RootComponent() {
   return (
     <ClientOnly fallback={<ShellSkeleton />}>
       <DesktopPreferencesProvider>
-        <RemoteCoordinator />
-        <SessionGate>
-          <DesktopShell />
-        </SessionGate>
+        <AppAnalytics>
+          <RemoteCoordinator />
+          <SessionGate>
+            <DesktopShell />
+          </SessionGate>
+        </AppAnalytics>
       </DesktopPreferencesProvider>
     </ClientOnly>
   );

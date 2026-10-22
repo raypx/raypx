@@ -1,3 +1,5 @@
+import { analytics } from "./features/analytics/client";
+import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { useQueryClient } from "@tanstack/react-query";
 import { AccountMenu } from "@raypx/account/client";
@@ -75,6 +77,7 @@ export function DesktopShell() {
   }
   return (
     <div className="flex h-dvh min-h-dvh">
+      <AnalyticsIdentity client={analytics} accountId={session.data?.user.id ?? null} />
       <a
         href="#main"
         className="fixed top-2 left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0"
@@ -161,6 +164,7 @@ export function DesktopShell() {
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
                 // Drop every account-scoped query before the next session reads.
+                analytics.reset();
                 queryClient.clear();
                 await router.invalidate();
                 await router.navigate({ to: "/login", replace: true });

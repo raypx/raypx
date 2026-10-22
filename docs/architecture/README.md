@@ -57,6 +57,13 @@ preference; the active locale is derived from that preference and the full order
 system locale list. See [internationalization](internationalization.md).
 DB owns fresh auth-only schema/migrations; mail owns auth delivery/templates.
 
+## Browser analytics
+
+Web and Desktop use the consent-controlled Kit analytics client through Raypx's
+private product adapter. Statistics and sanitized error reports are independently
+opt-in. See [analytics](analytics.md) for data boundaries, build configuration and
+source-map publication. This does not replace API/CLI structured logging.
+
 ## Logging
 
 API and CLI use `@raypx-kit/logger`, which exposes evlog directly. Each

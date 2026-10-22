@@ -1,3 +1,4 @@
+import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { AgentSettings } from "../features/tasks/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
 import { apiClient, authClient } from "../features/auth/client";
@@ -39,6 +40,7 @@ function SettingsPage() {
         <LanguageSelect icon={<Languages size={18} />} />
       </section>
       <AgentSettings key={session.data?.user.id ?? "signed-out"} />
+      <AnalyticsSettings />
       <DeviceSettings
         client={apiClient}
         accountId={session.data?.user.id ?? null}

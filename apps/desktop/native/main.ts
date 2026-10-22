@@ -1,4 +1,5 @@
 import { statSync } from "node:fs";
+import { parseAnalyticsConsent } from "@raypx/analytics";
 import { dirname, join, resolve } from "node:path";
 import type { LocalEvent, RootGrant } from "@raypx/contracts/local";
 import { messages } from "@raypx/i18n/messages";
@@ -157,6 +158,8 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
         return path ? ((await engine.request("roots.register", { path })) as RootGrant) : null;
       },
       restartEngine: () => engine.start(),
+      saveAnalyticsPreferences: (input) => preferences.saveAnalytics(input),
+      getAnalyticsPreferences: () => parseAnalyticsConsent(preferences.read().analytics),
       savePreferences: (input) => preferences.save(input),
       hideWindow: () => {
         if (!tray.visible) return false;

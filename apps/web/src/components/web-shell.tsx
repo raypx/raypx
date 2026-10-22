@@ -1,3 +1,5 @@
+import { analytics } from "../features/analytics/client";
+import { AnalyticsIdentity } from "@raypx/analytics/client";
 import { useEffect } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
@@ -27,6 +29,7 @@ export function WebShell() {
   const path = useRouterState({ select: (state) => state.location.pathname });
   return (
     <div className="flex min-h-dvh">
+      <AnalyticsIdentity client={analytics} accountId={accountId} />
       <a
         href="#main"
         className="fixed top-2 left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0"
@@ -93,6 +96,7 @@ export function WebShell() {
             }
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
+                analytics.reset();
                 queryClient.clear();
                 await router.invalidate();
                 await router.navigate({ to: "/" });

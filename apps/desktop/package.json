@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
+    "@raypx/analytics": "workspace:*",
     "@raypx/auth": "workspace:*",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",

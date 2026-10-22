@@ -1,3 +1,4 @@
+import { analytics } from "./features/analytics/client";
 import { createHashHistory, createRouter } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
@@ -10,6 +11,7 @@ export function getRouter() {
   });
   return createRouter({
     routeTree,
+    defaultOnCatch: (error) => analytics.captureException(error),
     // Packaged views have no server rewrites, so deep links live in the hash.
     ...(typeof window !== "undefined" && window.location.protocol === "views:"
       ? { history: createHashHistory() }
