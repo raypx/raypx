@@ -1,0 +1,39 @@
+skills/raypx/references/analytics.md
+  s_900a66df702cc8::t_0e45ef7985fb9f 1-16
+skills/raypx/references/api.md
+  s_900a66df702cc8::t_04a7b98f0c292b 1-18
+skills/raypx/references/database.md
+  s_900a66df702cc8::t_c3e9be0639323d 1-14
+skills/raypx/references/deployment.md
+  s_900a66df702cc8::t_f52d84f3010784 1-14
+skills/raypx/references/design-system.md
+  s_900a66df702cc8::t_0757ad40f54354 1-14
+skills/raypx/references/email.md
+  s_900a66df702cc8::t_6e14a8936167cf 1-11
+skills/raypx/references/internationalization.md
+  s_900a66df702cc8::t_623752077e59d4 1-11
+skills/raypx/references/local-runtime.md
+  s_900a66df702cc8::t_398545e3f9cfd7 1-13
+skills/raypx/references/observability.md
+  s_900a66df702cc8::t_30e35492ff5162 1-15
+skills/raypx/references/remote-tasks.md
+  s_900a66df702cc8::t_0b3e68aa5cebfc 1-17
+skills/raypx/references/workflows.md
+  s_900a66df702cc8::t_92566b04975aaa 23-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e500cdc68e8ac36f4b0e24e3272a73169881173c",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
