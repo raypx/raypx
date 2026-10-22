@@ -6,7 +6,7 @@ The previous cloud product is retired; historical decisions remain in docs/histo
 
 ## Requirements
 
-Bun 1.4.3, Node 24.15.0 and an isolated PostgreSQL database for account flows.
+Bun 1.4.4, Node 24.15.0 and an isolated PostgreSQL database for account flows.
 `.nvmrc` pins Node and `packageManager` pins Bun. With [mise](https://mise.jdx.dev),
 run `mise trust && mise install` once; nvm or direct installs also work.
 `bun run doctor` confirms both.

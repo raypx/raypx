@@ -73,7 +73,7 @@ it("invalidates downstream source checks through transit while retaining unrelat
       JSON.stringify({
         name: "raypx-cache-regression",
         private: true,
-        packageManager: "bun@1.4.3",
+        packageManager: "bun@1.4.4",
         workspaces: ["packages/*"],
       }),
     );

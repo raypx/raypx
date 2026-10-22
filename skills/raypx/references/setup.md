@@ -4,7 +4,7 @@ Canonical source: [getting started](../../../docs/development/getting-started.md
 
 ## Toolchain
 
-Bun 1.4.3 (root `packageManager`) and Node 24.15.0 (`.nvmrc`). mise reads both pins;
+Bun 1.4.4 (root `packageManager`) and Node 24.15.0 (`.nvmrc`). mise reads both pins;
 `mise.toml` never lists `[tools]`. Without shell activation use `mise exec -- <cmd>`.
 `bun run doctor` confirms the runtimes. Node runs Web and API (`bun vp`, never
 `bun --bun vp`, for their dev/build/preview); tests run through Bun.

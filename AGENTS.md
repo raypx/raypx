@@ -24,7 +24,7 @@ The accepted foundation design supersedes documents in docs/history.
 
 ## Toolchain
 
-- Bun 1.4.3 owns install, lockfile, scripts, tests and standalone CLI compilation.
+- Bun 1.4.4 owns install, lockfile, scripts, tests and standalone CLI compilation.
 - `.nvmrc` pins Node and root `packageManager` pins Bun. Tooling reads them; `raypx-dev policy`
   rejects drift in engines, Dockerfiles, CI and documented versions.
 - Node runs the Nitro Web and API services: scripts call `bun vp` (never `bun --bun vp`)

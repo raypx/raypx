@@ -1,6 +1,6 @@
 # Development
 
-Use Bun 1.4.3 and Node 24.15.0. `.nvmrc` pins Node and package.json `packageManager`
+Use Bun 1.4.4 and Node 24.15.0. `.nvmrc` pins Node and package.json `packageManager`
 pins Bun; to upgrade, change those, then fix what `bun run policy` reports.
 
 mise is the recommended version manager on macOS, Linux and Windows. The committed

@@ -16,7 +16,7 @@ remain accessible. Web keeps its existing public navigation. The CLI engine and
 persisted local state remain independent of this renderer gate.
 Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
 capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
-on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.3.
+on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.4.
 
 Web and API are separate services. Their default Node outputs and optional
 Cloudflare Worker outputs run outside the repository. See [dual deployment targets](../development/cloudflare.md).

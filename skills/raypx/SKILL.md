@@ -14,7 +14,7 @@ computer through the CLI, and Web/Desktop can relay to it. Root and workspace
 ## Quick start
 
 ```sh
-mise trust && mise install            # Bun 1.4.3 (packageManager) + Node 24.15.0 (.nvmrc)
+mise trust && mise install            # Bun 1.4.4 (packageManager) + Node 24.15.0 (.nvmrc)
 bun install                           # also installs the Vite+ pre-commit hook
 cp .env.example .env                  # .env.local wins; shell values win over both
 docker compose up -d postgres         # isolated database on port 5433
