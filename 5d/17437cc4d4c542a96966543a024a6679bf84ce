@@ -1,0 +1,139 @@
+apps/api/tests/integration/configuration-runtime.test.ts
+  s_adafa49206c7d6::t_f6f6b0225197cc 21,40
+  s_adafa49206c7d6::t_4e70fd8fa20a03 1-20,22-39,41-55
+  s_adafa49206c7d6::t_de7494cd507624 56-72
+apps/web/src/features/configuration/components/settings.tsx
+  s_adafa49206c7d6::t_f9b7b7c20f0bbe 10-11,31-43,45-53,55-67,72-78,87-91,99-102,104-106,112-116,121-123,126-131,134-150,153-168,171-189,193-207,209-213,215-230
+  s_adafa49206c7d6::t_40c8356da9794a 1-9,12-30,44,54,68-71,79-86,92-98,103,107-111,117-120,124-125,132-133,151-152,169-170,190-192,208,214,231-237
+  s_adafa49206c7d6::t_2c05c7338710b5 238-240
+apps/api/AGENTS.md
+  s_adafa49206c7d6::t_c1aad55c6b6293 114-116
+  s_adafa49206c7d6::t_f6f6b0225197cc 107-112,117-125
+  s_adafa49206c7d6::t_843c0ce3774248 113
+  s_adafa49206c7d6::t_4c351e0491d50d 126-128
+apps/api/server/configuration/service.ts
+  s_adafa49206c7d6::t_610766465fb689 1,4-5,14-17,27,35,37,43,47-49,56-60
+  s_adafa49206c7d6::t_2b2f851acd25c4 2-3,6-13,18-26,28-34,36,38-42,44-46,50-55
+  s_adafa49206c7d6::t_7e5244b68b42bb 61-63
+apps/api/server/runtime/node.ts
+  s_adafa49206c7d6::t_7c48fbb41191a4 7,15-18,30
+apps/api/tests/integration/configuration.test.ts
+  s_adafa49206c7d6::t_2b2f851acd25c4 7,11-15,28,30-55,62-69,73-75,85-87,89-97,103-116,118-121,126-128,138-144,153-156
+  s_adafa49206c7d6::t_d78b20418a7bd3 1-6,8-10,16-27,29,56-61,70-72,76-84,88,98-102,117,122-125,129-137,145-152,157-159
+  s_adafa49206c7d6::t_46935147dc29ea 160-164
+apps/api/server/runtime/cloudflare.ts
+  s_adafa49206c7d6::t_7c48fbb41191a4 6-7,31-36,45-46
+packages/client/src/tasks.ts
+  s_adafa49206c7d6::t_f2f957963ddaad 11
+  s_adafa49206c7d6::t_050c51cd706481 12-14
+apps/api/tests/integration/runtime-providers.test.ts
+  s_adafa49206c7d6::t_c1aad55c6b6293 1-92
+  s_adafa49206c7d6::t_bf4bd01da09edc 93-100
+apps/api/server/api.ts
+  s_adafa49206c7d6::t_2b2f851acd25c4 1-2,18-19,38,158-169,239-281,283-296,299,306,309
+  s_adafa49206c7d6::t_6696876d2756f7 297-298
+  s_adafa49206c7d6::t_50e59c51e587fc 300-305
+  s_adafa49206c7d6::t_c4cce59ec92394 307-308
+  s_adafa49206c7d6::t_60cef316244bd5 310-312
+apps/web/tests/component/features/configuration.test.tsx
+  s_adafa49206c7d6::t_30c8d2168b6007 1-61
+  s_adafa49206c7d6::t_02bf3fc5725e18 62-64
+apps/api/server/configuration/types.ts
+  s_adafa49206c7d6::t_2b2f851acd25c4 1-34
+apps/web/src/features/configuration/client.ts
+  s_adafa49206c7d6::t_5adc3b747a359f 4-10,33-37
+  s_adafa49206c7d6::t_40c8356da9794a 1-3,11-32,38
+  s_adafa49206c7d6::t_82ea3cdf0eff4d 39-42
+apps/api/server/configuration/repository.ts
+  s_adafa49206c7d6::t_610766465fb689 1-8,10-13,19-23,31-33,48-51
+  s_adafa49206c7d6::t_b4be6a309d6c90 14-18,24-30,34-47
+  s_adafa49206c7d6::t_2b2f851acd25c4 9
+apps/api/tests/postgres/node/configuration.test.ts
+  s_adafa49206c7d6::t_d78b20418a7bd3 1-43
+  s_adafa49206c7d6::t_172c882d700f94 44-55
+apps/api/server/jobs/cleanup.ts
+  s_adafa49206c7d6::t_7c48fbb41191a4 18,90,94-95
+  s_adafa49206c7d6::t_2b2f851acd25c4 5-17,19
+  s_adafa49206c7d6::t_5026bcc142487a 96
+apps/api/server/runtime/shared.ts
+  s_adafa49206c7d6::t_2b2f851acd25c4 1-3,8,10,16,82-86
+  s_adafa49206c7d6::t_7c48fbb41191a4 20-27,47-51,53-58,77
+  s_adafa49206c7d6::t_b62f688e699f90 78-79
+apps/web/src/routes/(app)/admin/settings.tsx
+  s_adafa49206c7d6::t_40c8356da9794a 1-4
+apps/api/tests/unit/jobs/cleanup.test.ts
+  s_adafa49206c7d6::t_4e70fd8fa20a03 4-5,59-60,63-65,69-71,75-77,81-82
+  s_adafa49206c7d6::t_7c48fbb41191a4 61-62,66-68,72-74,78-80,83-85
+  s_adafa49206c7d6::t_1ed22e80a66bbe 86-95
+apps/web/src/routes/(auth)/signup.tsx
+  s_adafa49206c7d6::t_f3862207564151 1-4,6,9,11-22
+  s_adafa49206c7d6::t_c0062cffc95429 23-38
+apps/api/tests/unit/configuration/service.test.ts
+  s_adafa49206c7d6::t_4e70fd8fa20a03 1-78
+  s_adafa49206c7d6::t_cd38e794437ce0 79-81
+docs/development/configuration.md
+  s_adafa49206c7d6::t_c1aad55c6b6293 92,104-105,116-123,125,127-134,148
+  s_adafa49206c7d6::t_5adc3b747a359f 1-25,31-56,144-147,149-156
+  s_adafa49206c7d6::t_843c0ce3774248 124,126
+  s_adafa49206c7d6::t_f6f6b0225197cc 26-30,57-91,93-103,106-115,135-143
+  s_adafa49206c7d6::t_8621bbe7c8b145 157-159
+packages/contracts/src/configuration.ts
+  s_adafa49206c7d6::t_610766465fb689 1-37
+  s_adafa49206c7d6::t_fb4822428780b3 38-39
+.env.example
+  s_adafa49206c7d6::t_212be575b2d607 34-36
+PRODUCT.md
+  s_adafa49206c7d6::t_c8c2ed8d5443c8 27-28
+apps/api/.dev.vars.example
+  s_adafa49206c7d6::t_c4aca34223ac61 10-12
+apps/api/server/env.ts
+  s_adafa49206c7d6::t_390d1924d36875 6-15
+apps/web/AGENTS.md
+  s_adafa49206c7d6::t_9f4ac718c8905c 114-122
+apps/web/src/components/shell.tsx
+  s_adafa49206c7d6::t_85e9580a08c375 1-4,13,15,27-29,49-50,52,54,93-103,129,133-141
+apps/web/src/routeTree.gen.ts
+  s_adafa49206c7d6::t_818ba32d1d3798 24,84-88,101,114,130,145,158,173,268-274,283,291
+apps/web/tests/component/routes/auth.test.tsx
+  s_adafa49206c7d6::t_45f8f318164dff 25,47-59,85,112-118
+docs/README.md
+  s_adafa49206c7d6::t_ec6379c4e806ef 11
+docs/development/cloudflare.md
+  s_adafa49206c7d6::t_95233752bc4779 62-75
+docs/development/server-jobs.md
+  s_adafa49206c7d6::t_457a78c43c9583 15-17
+packages/auth/src/hooks.ts
+  s_adafa49206c7d6::t_43c634dbb68ab6 4,56
+packages/client/AGENTS.md
+  s_adafa49206c7d6::t_5ab57fa314924f 28-30
+packages/contracts/AGENTS.md
+  s_adafa49206c7d6::t_4a27ecd30efb57 33-35
+packages/contracts/src/api.ts
+  s_adafa49206c7d6::t_8dd56fb122af1a 11-12,35
+packages/contracts/tests/api.test.ts
+  s_adafa49206c7d6::t_0404f202722de4 6-13
+packages/database/AGENTS.md
+  s_adafa49206c7d6::t_874a5ef5b3625d 36-38
+packages/database/drizzle-foundation/20261022123457_wandering_alex_wilder/migration.sql
+  s_adafa49206c7d6::t_d335ca895702e0 1-11
+packages/database/drizzle-foundation/20261022123457_wandering_alex_wilder/snapshot.json
+  s_adafa49206c7d6::t_e3e58b78049724 1-1778
+packages/database/src/schema.ts
+  s_adafa49206c7d6::t_89bbf68a14baeb 97-107,139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5d17437cc4d4c542a96966543a024a6679bf84ce",
+  "prompts": {},
+  "sessions": {
+    "s_adafa49206c7d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15727-0890-77e0-a9f5-ce91cd071dd2",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
