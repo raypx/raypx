@@ -1,0 +1,31 @@
+{
+  "name": "@raypx/storage",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./s3": "./src/s3.ts"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
+    "test:component": "bun --bun vp test --run --passWithNoTests component/",
+    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+  },
+  "dependencies": {
+    "aws4fetch": "catalog:",
+    "unstorage": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "universal"
+  }
+}

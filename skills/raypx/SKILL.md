@@ -45,6 +45,7 @@ Details: [setup](references/setup.md).
 | `packages/ui`        | browser       | shadcn/Base UI primitives and neutral theme tokens                    |
 | `packages/database`  | node          | Drizzle schema and migrations for the new database                    |
 | `packages/mail`      | node          | Auth email templates and Resend delivery                              |
+| `packages/storage`   | universal     | Object storage on unstorage: S3/R2/MinIO, pre-signed URLs             |
 | `packages/tooling`   | tooling / bun | `raypx-dev` CLI: policy, tasks, verify, smoke, db                     |
 | `e2e`                | tooling / bun | Chromium acceptance of Web and Desktop renderer                       |
 
