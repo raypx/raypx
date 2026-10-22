@@ -28,6 +28,8 @@ export const themeTokens = {
     "sidebar-ring": "oklch(0.708 0 0)",
     destructive: "oklch(0.577 0.245 27.325)",
     "destructive-foreground": "oklch(0.985 0 0)",
+    // Darker red keeps destructive text on its own tint at WCAG AA in light mode.
+    "destructive-text": "oklch(0.505 0.213 27.518)",
     radius: "0.625rem",
     success: "var(--foreground)",
     warning: "var(--foreground)",
@@ -73,6 +75,7 @@ export const themeTokens = {
     "sidebar-ring": "oklch(0.556 0 0)",
     destructive: "oklch(0.704 0.191 22.216)",
     "destructive-foreground": "oklch(0.985 0 0)",
+    "destructive-text": "var(--destructive)",
     radius: "0.625rem",
     success: "var(--foreground)",
     warning: "var(--foreground)",

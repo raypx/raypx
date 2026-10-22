@@ -10,6 +10,7 @@ primitives, Lucide icons, Tailwind 4 and Neutral light/dark tokens.
   pure (parsing, cookie reading, `themeMeta`); `/themes` has `ThemeScript` for the
   head, `ThemeProvider`, `useTheme` and a provider-aware `ThemePicker`. The script and
   provider own the `theme-color` meta; never render it through React.
+- Destructive text on a `destructive/*` tint uses `text-destructive-text` (AA in light mode).
 - Shared app chrome (sidebar shell, settings page sections) lives in `@raypx/blocks`.
 - Apps import `@raypx/ui/styles/app.css`; feature packages export their own
   `/client/styles.css` to register Tailwind sources.

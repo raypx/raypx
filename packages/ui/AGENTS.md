@@ -27,6 +27,8 @@ packages own page layout, forms, navigation and product behavior.
 
 Own accessibility, semantic color roles, focus, radius and reduced motion.
 Preserve the original brand artwork and Neutral light/dark values.
+Destructive text on a `destructive/*` tint uses `text-destructive-text`, a darker light-mode
+red that keeps WCAG AA; `destructive` stays the fill and border color.
 
 ## Constraints
 
