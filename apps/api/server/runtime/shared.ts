@@ -43,6 +43,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         ...(environment.ipAddressHeaders.length
           ? { ipAddressHeaders: environment.ipAddressHeaders }
           : {}),
+        ...(environment.trustedProxies.length
+          ? { trustedProxies: environment.trustedProxies }
+          : {}),
       },
     });
     const control = new ControlService(createControlRepository(connection.db));

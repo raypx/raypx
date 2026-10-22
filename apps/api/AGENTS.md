@@ -40,12 +40,14 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
   with a Web host on a sibling subdomain so its server rendering sees the session.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
-  by client IP (`AUTH_IP_HEADERS`, `cf-connecting-ip` on Workers), and
-  `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
+  by client IP. The Node entry overwrites `x-raypx-client-ip` with the socket address
+  and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy;
+  Workers use `cf-connecting-ip`. `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon.
 - Optional `REDIS_URL` (Node only, `server/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits and backs RPC limits.
-  Sessions are still written to PostgreSQL; Workers never import Redis.
+  Sessions are still written to PostgreSQL; Workers never import Redis. Requires
+  Redis 6.2+ or Valkey (`GETDEL`).
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
 - `secureHeaders` sends a deny-all CSP, `X-Frame-Options: DENY` and HSTS. Keep
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.

@@ -5,9 +5,10 @@
 - Better Auth stores limits in the PostgreSQL `rate_limit` table, so Node processes
   and Worker isolates share them. Built-in rules: sign-in/sign-up 3 per 10 s,
   verification and reset mail 3 per 60 s, other auth routes 100 per 60 s, per client IP.
-- Client IP comes from `AUTH_IP_HEADERS` (default `x-forwarded-for` with a single
-  address; Workers default to `cf-connecting-ip`). Set it to the header your trusted
-  proxy writes, or every client shares one bucket.
+- Client IP: the Node entry overwrites `x-raypx-client-ip` with the socket address and
+  uses it by default; Workers use `cf-connecting-ip`. Behind a proxy set
+  `AUTH_IP_HEADERS` (e.g. `x-forwarded-for`) and `AUTH_TRUSTED_PROXIES`, otherwise all
+  clients share the proxy's bucket. Unresolvable addresses share one bucket by design.
 - With `REDIS_URL` (Node only) Better Auth and RPC limits use Redis/Valkey counters
   instead of the table, and sessions are cached there too.
 - `apps/api/server/rate-limit.ts` limits RPC procedures per account in the same table:

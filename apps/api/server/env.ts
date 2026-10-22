@@ -14,9 +14,16 @@ export const apiServerEnv = {
     MAIL_DEFAULT_LOCALE: z.enum(["en", "zh"]).default("en"),
     AUTH_DOMAIN: z.string().min(1).optional(),
     AUTH_IP_HEADERS: z.string().optional(),
+    AUTH_TRUSTED_PROXIES: z.string().optional(),
     REDIS_URL: z.url().optional(),
   },
 } as const satisfies Preset;
+const list = (value: string | undefined) =>
+  (value ?? "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
   const env = createEnv({ extends: [apiServerEnv], runtimeEnv });
   if (env.NODE_ENV === "production") {
@@ -39,10 +46,8 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
     allowedOrigins: env.ALLOWED_ORIGINS.split(",")
       .map((v) => v.trim())
       .filter(Boolean),
-    ipAddressHeaders: (env.AUTH_IP_HEADERS ?? "")
-      .split(",")
-      .map((v) => v.trim().toLowerCase())
-      .filter(Boolean),
+    ipAddressHeaders: list(env.AUTH_IP_HEADERS).map((v) => v.toLowerCase()),
+    trustedProxies: list(env.AUTH_TRUSTED_PROXIES),
   };
 }
 export type ApiEnvironment = ReturnType<typeof getApiEnvironment>;

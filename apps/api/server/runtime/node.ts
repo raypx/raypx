@@ -8,18 +8,28 @@ import { connectRedis } from "./redis.js";
 
 export type { ApiRuntime } from "./shared.js";
 
+/** Socket address written by the Node entry; the default auth rate-limit key. */
+export const CLIENT_IP_HEADER = "x-raypx-client-ip";
+
 export async function createApiRuntime(environment: ApiEnvironment): Promise<ApiRuntime> {
   const logger = createApiLogging({
     environment: environment.NODE_ENV,
     sink: createStreamDrain(),
   });
-  return createRuntime(environment, {
-    logger,
-    onRevoke: (userId, deviceId) => nodeRelay.revoke(userId, deviceId),
-    connect: () => connectDatabase(environment.DATABASE_URL),
-    closeLogger: () => logger.close(),
-    ...(environment.REDIS_URL ? { redis: connectRedis(environment.REDIS_URL) } : {}),
-  });
+  // Without AUTH_IP_HEADERS a direct Node deployment limits by socket address.
+  const ipAddressHeaders = environment.ipAddressHeaders.length
+    ? environment.ipAddressHeaders
+    : [CLIENT_IP_HEADER];
+  return createRuntime(
+    { ...environment, ipAddressHeaders },
+    {
+      logger,
+      onRevoke: (userId, deviceId) => nodeRelay.revoke(userId, deviceId),
+      connect: () => connectDatabase(environment.DATABASE_URL),
+      closeLogger: () => logger.close(),
+      ...(environment.REDIS_URL ? { redis: connectRedis(environment.REDIS_URL) } : {}),
+    },
+  );
 }
 
 let runtimePromise: Promise<ApiRuntime> | undefined;

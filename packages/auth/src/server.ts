@@ -22,6 +22,8 @@ export interface AuthConfiguration {
   cookieDomain?: string;
   /** Headers set by the trusted edge that carry the client IP, in priority order. */
   ipAddressHeaders?: string[];
+  /** Proxy addresses/CIDRs skipped from the right of a forwarded-for chain. */
+  trustedProxies?: string[];
 }
 export type AuthSecondaryStorage = NonNullable<BetterAuthOptions["secondaryStorage"]>;
 export interface CreateAuthOptions {
@@ -85,9 +87,10 @@ export function createAuth({ database, mailer, config, secondaryStorage }: Creat
     verification: { storeInDatabase: true },
     advanced: {
       database: { generateId: () => crypto.randomUUID(), joins: false },
-      ...(config.ipAddressHeaders?.length
-        ? { ipAddress: { ipAddressHeaders: config.ipAddressHeaders } }
-        : {}),
+      ipAddress: {
+        ...(config.ipAddressHeaders?.length ? { ipAddressHeaders: config.ipAddressHeaders } : {}),
+        ...(config.trustedProxies?.length ? { trustedProxies: config.trustedProxies } : {}),
+      },
       defaultCookieAttributes: {
         httpOnly: true,
         sameSite: config.production ? "none" : "lax",
