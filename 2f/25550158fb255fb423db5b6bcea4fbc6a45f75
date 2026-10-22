@@ -1,0 +1,125 @@
+.env.example
+  s_adafa49206c7d6::t_b213d75727ebd3 7-8
+.github/workflows/ci.yml
+  s_adafa49206c7d6::t_ec9ac227f8e060 79,144
+.prettierignore
+  s_adafa49206c7d6::t_29dc6d063155cd 3-4
+README.md
+  s_adafa49206c7d6::t_75e2fa7f9e636c 42
+apps/api/AGENTS.md
+  s_adafa49206c7d6::t_3434a93ffe1600 54-56,86
+apps/api/package.json
+  s_adafa49206c7d6::t_46fae19470b4a9 20
+apps/desktop/AGENTS.md
+  s_adafa49206c7d6::t_84e51e196a619d 9,17-18,103
+apps/desktop/src/components/shell.tsx
+  s_adafa49206c7d6::t_d18ea397b66604 1,7-9,24,26
+apps/desktop/src/features/tasks/client.ts
+  s_adafa49206c7d6::t_dcb2cff44632a3 1-7
+apps/desktop/src/features/tasks/coordinator.tsx
+  s_adafa49206c7d6::t_6791bbe6d80f0d 2-3,11,14,31,39,42
+apps/desktop/src/features/tasks/workspace.tsx
+  s_adafa49206c7d6::t_553e5062dc4159 7-8,13
+apps/desktop/src/routeTree.gen.ts
+  s_adafa49206c7d6::t_36c23532ad1c3f 12,18-24,26-27,55-76,80,83,85,88,97-103,111-117,121,127-133,140-142,149,154-156,166,172-178,182,188-192,197-198,200-201,239-268,271,274-275,278-279,281-282,285-286,291-293,296-298,301-302,306,312-316
+apps/desktop/src/routes/(auth)/forgot-password.tsx
+  s_adafa49206c7d6::t_7c02c8ab18428e 2,4
+apps/desktop/src/routes/(auth)/login.tsx
+  s_adafa49206c7d6::t_4b3a174c6364b2 2,4-6
+apps/desktop/src/routes/(auth)/reset-password.tsx
+  s_adafa49206c7d6::t_574f179b4dabab 2,4
+apps/desktop/src/routes/(auth)/signup.tsx
+  s_adafa49206c7d6::t_005a1cafdfc448 2,4-6
+apps/desktop/src/routes/(auth)/verify-email.tsx
+  s_adafa49206c7d6::t_e99676b9467aa2 2,4
+apps/desktop/src/routes/(local)/automations.tsx
+  s_adafa49206c7d6::t_101ce0aaf08281 11,13,57
+apps/desktop/src/routes/(local)/index.tsx
+  s_adafa49206c7d6::t_c1ed22a9e1ed89 21,23,90
+apps/desktop/src/routes/(local)/route.tsx
+  s_adafa49206c7d6::t_cb47fe84232f15 7,38,42,44
+apps/desktop/src/routes/__root.tsx
+  s_adafa49206c7d6::t_e2414153d5262d 3
+apps/desktop/src/routes/account.tsx
+  s_adafa49206c7d6::t_df02bed7034379 14-15,20
+apps/desktop/src/routes/settings.tsx
+  s_adafa49206c7d6::t_b34318cce851dc 4-5,46
+apps/desktop/tests/renderer/component/features/auth/routes.test.tsx
+  s_adafa49206c7d6::t_7aac52913f58dd 53-55
+apps/desktop/tests/renderer/component/features/files/routes.test.tsx
+  s_adafa49206c7d6::t_6e3c2e5b1b42e2 69-71
+apps/desktop/tests/renderer/component/features/tasks/workspace.test.tsx
+  s_adafa49206c7d6::t_b506012a87b27b 24-26
+apps/desktop/tests/renderer/component/routes/account.test.tsx
+  s_adafa49206c7d6::t_db7c5719c85489 67-69
+apps/desktop/tests/renderer/component/routes/local.test.tsx
+  s_adafa49206c7d6::t_7c39ea2cc5b917 62-64,511
+apps/web/AGENTS.md
+  s_adafa49206c7d6::t_fa9a7c9fa7129c 22
+apps/web/src/components/shell.tsx
+  s_adafa49206c7d6::t_f9f165209c2155 8,24-25,82
+apps/web/src/features/tasks/client.ts
+  s_adafa49206c7d6::t_ebe281f3df1bcf 5
+apps/web/src/routes/(app)/approvals.tsx
+  s_adafa49206c7d6::t_bcaf64a47f247b 6-7,13
+apps/web/src/routes/(app)/route.tsx
+  s_adafa49206c7d6::t_a17d1a88b7d76e 2
+apps/web/src/routes/(app)/settings.tsx
+  s_adafa49206c7d6::t_16d239cb8ccf71 4,44
+apps/web/src/routes/(app)/tasks.tsx
+  s_adafa49206c7d6::t_36c95c7738a99e 6-7,13
+apps/web/tests/component/routes/auth.test.tsx
+  s_adafa49206c7d6::t_ec066743d761e1 46
+docs/architecture/analytics.md
+  s_adafa49206c7d6::t_adac0ed5bae114 71
+docs/architecture/remote-tasks.md
+  s_adafa49206c7d6::t_acc142ed085f13 128
+docs/development/cloudflare.md
+  s_adafa49206c7d6::t_708d46ace3ebd3 113
+docs/development/getting-started.md
+  s_adafa49206c7d6::t_a8b70c03df3f94 34
+docs/development/testing.md
+  s_adafa49206c7d6::t_8a71e0e217c90c 49,58
+packages/tooling/src/repository.ts
+  s_adafa49206c7d6::t_6aad4a8bbd1495 14
+skills/raypx/SKILL.md
+  s_adafa49206c7d6::t_4db54720cf47e8 100
+skills/raypx/references/database.md
+  s_adafa49206c7d6::t_578388451bffa3 10
+skills/raypx/references/deployment.md
+  s_adafa49206c7d6::t_e27c48fd7da761 14
+skills/raypx/references/setup.md
+  s_adafa49206c7d6::t_9756b8cefd44d2 20-29,34,41
+skills/raypx/references/verification.md
+  s_adafa49206c7d6::t_7c95342cdfd57c 12,16
+turbo.json
+  s_adafa49206c7d6::t_19b7d3cd5fe250 130
+apps/api/server/api.ts
+  s_900a66df702cc8::t_e4f9814149efc0 7,35-52,159-167,175
+package.json
+  s_900a66df702cc8::t_a28d21b5ced706 109,111,121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2f25550158fb255fb423db5b6bcea4fbc6a45f75",
+  "prompts": {},
+  "sessions": {
+    "s_900a66df702cc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "03572144-1301-4634-9139-ce7da7fe2fe2",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_adafa49206c7d6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15727-0890-77e0-a9f5-ce91cd071dd2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
