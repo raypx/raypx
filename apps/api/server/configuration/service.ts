@@ -1,10 +1,9 @@
 import type { AuthSession } from "@raypx/auth/types";
-import {
-  configurationSnapshotSchema,
-  configurationUpdateSchema,
-  type ConfigurationSnapshot,
-} from "@raypx/contracts/api";
-import type { ConfigurationCache, ConfigurationRepository, ConfigurationService } from "./types.js";
+import { configurationSnapshotSchema, configurationUpdateSchema } from "@raypx/contracts/api";
+import { createCache } from "../cache/cache.js";
+import { createMemoryStore } from "../cache/memory.js";
+import type { Cache } from "../cache/types.js";
+import type { ConfigurationRepository, ConfigurationService } from "./types.js";
 
 export class ConfigurationError extends Error {
   constructor(
@@ -22,19 +21,19 @@ export class ConfigurationError extends Error {
 export interface ConfigurationServiceOptions {
   repository: ConfigurationRepository;
   adminEmails: readonly string[];
-  /** Pass a longer-lived holder to share cached reads across short-lived services. */
-  cache?: ConfigurationCache;
+  /** Pass a longer-lived or shared cache; defaults to one private to this service. */
+  cache?: Cache;
   /** How long readCached() may serve a snapshot; changes elsewhere apply within it. */
   cacheTtlMs?: number;
-  now?: () => number;
 }
+
+const CACHE_KEY = "configuration:snapshot";
 
 export function createConfigurationService({
   repository,
   adminEmails,
-  cache = {},
+  cache = createCache(createMemoryStore()),
   cacheTtlMs = 5_000,
-  now = Date.now,
 }: ConfigurationServiceOptions): ConfigurationService {
   const admins = new Set(adminEmails.map((email) => email.trim().toLowerCase()));
   const isAdmin = (auth: AuthSession | null) =>
@@ -51,24 +50,15 @@ export function createConfigurationService({
       throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
     }
   }
-  function remember(snapshot: Promise<ConfigurationSnapshot>) {
-    const entry = { snapshot, expiresAt: now() + cacheTtlMs };
-    cache.entry = entry;
-    // A failed read must not be served until it expires.
-    snapshot.catch(() => {
-      if (cache.entry === entry) delete cache.entry;
-    });
-    return snapshot;
-  }
   return {
     isAdmin,
     read,
-    async readCached() {
-      const entry = cache.entry;
-      // Callers receive copies so a caller mutation never reaches the cache.
-      const snapshot = entry && entry.expiresAt > now() ? entry.snapshot : remember(read());
-      return structuredClone(await snapshot);
-    },
+    readCached: () =>
+      cache.getOrLoad(
+        CACHE_KEY,
+        { ttlMs: cacheTtlMs, parse: (value) => configurationSnapshotSchema.parse(value) },
+        read,
+      ),
     async update(input, auth) {
       if (!auth) throw new ConfigurationError("UNAUTHORIZED");
       if (!isAdmin(auth)) throw new ConfigurationError("FORBIDDEN");
@@ -86,7 +76,7 @@ export function createConfigurationService({
         throw new ConfigurationError("CONFIGURATION_UNAVAILABLE");
       }
       if (!saved) throw new ConfigurationError("CONFIGURATION_CONFLICT");
-      void remember(Promise.resolve(structuredClone(saved)));
+      await cache.set(CACHE_KEY, saved, cacheTtlMs);
       return saved;
     },
   };

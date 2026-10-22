@@ -1,16 +1,19 @@
 import { Redis } from "ioredis";
 import type { AuthSecondaryStorage } from "@raypx/auth/server";
 import type { RateLimiter } from "../rate-limit.js";
+import type { CacheStore } from "../cache/types.js";
 
 export interface RedisResources {
   secondaryStorage: AuthSecondaryStorage;
   rateLimit: RateLimiter;
+  cache: CacheStore;
   ping(): Promise<unknown>;
   close(): Promise<void>;
 }
 
 /**
- * Optional Node cache for Better Auth sessions and rate limits. Workers never import
+ * Optional Node cache for Better Auth sessions, rate limits and application values,
+ * shared across processes. Workers never import
  * this module: they keep PostgreSQL as the shared store.
  */
 export function connectRedis(url: string, prefix = "raypx:"): RedisResources {
@@ -45,6 +48,16 @@ export function connectRedis(url: string, prefix = "raypx:"): RedisResources {
     },
     // Fixed windows: the first request of a window sets the expiry.
     rateLimit: async (key, rule) => (await increment(`rate:${key}`, rule.window)) <= rule.max,
+    cache: {
+      get: (key) => client.get(key),
+      set: async (key, value, ttlMs) => {
+        if (ttlMs > 0) await client.set(key, value, "PX", Math.ceil(ttlMs));
+        else await client.del(key);
+      },
+      delete: async (key) => {
+        await client.del(key);
+      },
+    },
     ping: () => client.ping(),
     close: async () => {
       await client.quit().catch(() => client.disconnect());

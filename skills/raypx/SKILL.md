@@ -68,12 +68,14 @@ How the pieces talk: [architecture](references/architecture.md).
 | Analytics and browser errors       | `@raypx/analytics` on PostHog, opt-in            | [analytics](references/analytics.md)                       |
 | Observability                      | `@raypx-kit/logger` (evlog) in API and CLI       | [observability](references/observability.md)               |
 | Rate limiting and security headers | API and Web                                      | [security](references/security.md)                         |
+| Server cache                       | `apps/api/server/cache`: Redis or memory         | [caching](references/caching.md)                           |
+| Object storage                     | `@raypx/storage`, `runtime.storage` in API       | [storage](references/storage.md)                           |
 | Deployment                         | Node or Cloudflare Workers; Desktop packages     | [deployment](references/deployment.md)                     |
 | Environment and setup              | `@raypx-kit/env`, `.env`, toolchain              | [setup](references/setup.md)                               |
 
 Not present: payments, CMS, SEO tooling, feature flags, webhooks, push or in-app
 notifications (Desktop only shows a native pending-approval notice), collaboration,
-AI SDK features, object storage and server-side error alerting. Say so instead of inventing
+AI SDK features, file upload endpoints and server-side error alerting. Say so instead of inventing
 them; add a package only when its responsibility and consumers exist.
 
 ## Rules that bite

@@ -30,6 +30,11 @@ export const apiServerEnv = {
     AUTH_IP_HEADERS: z.string().optional(),
     AUTH_TRUSTED_PROXIES: z.string().optional(),
     REDIS_URL: z.url().optional(),
+    S3_ENDPOINT: z.url().optional(),
+    S3_REGION: z.string().min(1).default("auto"),
+    S3_BUCKET: z.string().min(1).optional(),
+    S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+    S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
     POSTHOG_HOST: z.url().optional(),
   },
@@ -57,8 +62,23 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
     if (new URL(env.AUTH_URL).protocol !== "https:")
       throw new Error("Production AUTH_URL must use HTTPS");
   }
+  const s3 = [env.S3_ENDPOINT, env.S3_BUCKET, env.S3_ACCESS_KEY_ID, env.S3_SECRET_ACCESS_KEY];
+  if (s3.some(Boolean) && !s3.every(Boolean))
+    throw new Error(
+      "Object storage requires S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY",
+    );
   return {
     ...env,
+    s3:
+      env.S3_ENDPOINT && env.S3_BUCKET && env.S3_ACCESS_KEY_ID && env.S3_SECRET_ACCESS_KEY
+        ? {
+            endpoint: env.S3_ENDPOINT,
+            region: env.S3_REGION,
+            bucket: env.S3_BUCKET,
+            accessKeyId: env.S3_ACCESS_KEY_ID,
+            secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+          }
+        : undefined,
     allowedOrigins: env.ALLOWED_ORIGINS.split(",")
       .map((v) => v.trim())
       .filter(Boolean),

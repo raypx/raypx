@@ -27,8 +27,3 @@ export interface ConfigurationRepository extends ConfigurationReader {
     actorId: string,
   ): Promise<ConfigurationSnapshot | null>;
 }
-
-/** Holder shared by services that should reuse one cached read, e.g. per Worker isolate. */
-export interface ConfigurationCache {
-  entry?: { snapshot: Promise<ConfigurationSnapshot>; expiresAt: number };
-}

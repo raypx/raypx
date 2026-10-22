@@ -1,6 +1,8 @@
 import { expect, it, vi } from "vite-plus/test";
 import type { AuthSession } from "@raypx/auth/types";
 import { configurationDefaults } from "@raypx/contracts/api";
+import { createCache } from "../../../server/cache/cache.js";
+import { createMemoryStore } from "../../../server/cache/memory.js";
 import { createConfigurationService } from "../../../server/configuration/service.js";
 import type {
   ConfigurationReader,
@@ -97,25 +99,24 @@ it("sanitizes injected storage failures and refuses malformed storage results", 
 it("serves brief cached reads, refreshes them after saves and never caches failures", async () => {
   const f = fixture();
   let time = 0;
-  const cache = {};
+  const cache = createCache(createMemoryStore({ now: () => time }));
   const service = createConfigurationService({
     repository: f.repository,
     adminEmails: ["admin@example.test"],
     cache,
     cacheTtlMs: 1000,
-    now: () => time,
   });
   expect((await service.readCached()).values.siteName).toBe("Raypx");
   f.snapshot.values.siteName = "Elsewhere";
   (await service.readCached()).values.siteName = "Local mutation";
   expect((await service.readCached()).values.siteName).toBe("Raypx");
   expect((await service.read()).values.siteName).toBe("Elsewhere");
-  // Another service sharing the holder, as per-request Worker runtimes do, reuses it.
+  // Another service sharing the cache, as per-request Worker runtimes do, reuses it.
   const sibling = createConfigurationService({
     repository: f.repository,
     adminEmails: [],
     cache,
-    now: () => time,
+    cacheTtlMs: 1000,
   });
   expect((await sibling.readCached()).values.siteName).toBe("Raypx");
   time = 1001;

@@ -29,6 +29,7 @@
         "@raypx/contracts": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/mail": "workspace:*",
+        "@raypx/storage": "workspace:*",
         "drizzle-orm": "catalog:",
         "evlog": "catalog:",
         "hono": "catalog:",

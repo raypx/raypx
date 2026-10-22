@@ -9,6 +9,8 @@
 - [Testing and release gates](development/testing.md)
 - [Node and Cloudflare deployments](development/cloudflare.md)
 - [Administrator configuration](development/configuration.md)
+- [Server caching](development/caching.md)
+- [Object storage](development/object-storage.md)
 - [Server jobs and expired-record cleanup](development/server-jobs.md)
 - [Raypx Kit library changes](development/intl-release.md)
 - [Foundation acceptance results](development/foundation-acceptance.md)

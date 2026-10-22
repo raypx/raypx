@@ -37,3 +37,14 @@ it("admits exactly the RPC limit under concurrent requests", async () => {
   );
   expect(results.filter(Boolean)).toHaveLength(3);
 });
+
+it("stores, expires and deletes application cache values in milliseconds", async () => {
+  const { cache } = redis;
+  await cache.set("value", "1", 60_000);
+  expect(await cache.get("value")).toBe("1");
+  await cache.delete("value");
+  expect(await cache.get("value")).toBeNull();
+  await cache.set("short", "1", 200);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  expect(await cache.get("short")).toBeNull();
+});

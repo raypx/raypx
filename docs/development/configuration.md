@@ -45,9 +45,10 @@ user ID and update timestamp. Defaults apply only when the migrated table has no
 row. Missing tables or failed queries return a safe unavailable error.
 
 The public projection, the sign-up pre-check and mail site names read through a
-5-second cache per Node runtime or Worker isolate, so other replicas apply a
-change within that window. Failed reads are never cached, and a save refreshes the
-cache of the instance that handled it. Admin reads, saves, cleanup runs and the
+5-second [server cache](caching.md): Redis when configured, otherwise memory per Node
+process or Worker isolate, so other replicas apply a change within that window.
+Failed reads are never cached, and a save refreshes the cache it uses (every Node
+process within a second with Redis, otherwise only the instance that handled it). Admin reads, saves, cleanup runs and the
 Better Auth user-create hook always read the database. That hook is the
 authoritative registration gate for every sign-in method, so a closed policy
 cannot be bypassed by a stale cache or a future provider. Web refreshes the public
@@ -96,9 +97,9 @@ const allowed = await registrationAllowed();
 
 The cleanup job is an actual reader consumer via `createCleanupJob`. HTTP and jobs
 receive the same service within a runtime. Each `read()` goes back to storage rather
-than capturing values at construction time. Pass `configurationCache` in
-`RuntimeProviders` to share `readCached()` across short-lived runtimes; the
-Cloudflare entry does this per isolate.
+than capturing values at construction time. Pass `cache` in `RuntimeProviders` to
+share `readCached()` across short-lived runtimes; the Cloudflare entry does this per
+isolate.
 
 Direct writes use the same validation, administrator policy, audit editor and revision
 checks as the GUI. Resolve the session from the server's authentication adapter for

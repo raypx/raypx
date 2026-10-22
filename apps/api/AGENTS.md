@@ -20,7 +20,10 @@ Use directories for test kind and runtime; filenames describe the behavior under
 
 Nitro owns the platform entry. Hono owns the shared Fetch application.
 Platform entry modules live in `app/`; runtime composition and adapters live in `runtime/`.
-`runtime/shared.ts` composes the injected database, logger, mailer and auth factory.
+`runtime/shared.ts` composes services from the injected database, logger and providers.
+`runtime/adapters.ts` picks each adapter (override, then Redis/S3 when configured, then
+PostgreSQL/memory/unavailable) and builds the auth config; `runtime/lifecycle.ts` closes
+owned resources in reverse order, every one even after a failure, and only once.
 `runtime/node.ts` initializes one process runtime, closed by `runtime/plugin.ts` through Nitro's close hook.
 `app/cloudflare.ts` creates a request runtime from bindings, then schedules cleanup
 with `waitUntil`. Workers reuse the console logger, never a database client or auth context.
@@ -55,7 +58,8 @@ See `docs/development/server-jobs.md` for policy and verification.
   Workers use `cf-connecting-ip`. `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon.
 - Optional `REDIS_URL` (Node only, `server/runtime/redis.ts` with ioredis) becomes
-  Better Auth's secondary storage for sessions and rate limits and backs RPC limits.
+  Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
+  stores `runtime.cache` values.
   Sessions are still written to PostgreSQL; Workers never import Redis. Requires
   Redis 7+ or Valkey (`EXPIRE NX`, `GETDEL`).
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
@@ -122,6 +126,16 @@ availability. Save with an expected revision; never overwrite concurrent edits.
 Registration is enforced by the Better Auth user-create hook with a fresh read, so
 it covers every sign-in method; the email signup route only pre-checks the 5-second
 `readCached()` snapshot. Use `readCached()` only where that delay is acceptable.
+Optional `S3_*` variables (all of endpoint, bucket and keys, or none) give `runtime.storage`
+an S3-compatible `@raypx/storage` store on Node and Workers alike; otherwise it is the
+unavailable storage whose operations fail with `STORAGE_NOT_CONFIGURED`. `RuntimeProviders.storage`
+overrides it. No route exposes storage yet; consumers must validate ownership before
+issuing keys or pre-signed URLs. See `docs/development/object-storage.md`.
+`server/cache/` owns the runtime cache (`runtime.cache`, `RuntimeProviders.cache`):
+Redis behind a one-second process-local copy when configured, else memory per process
+or Worker isolate. Values are JSON
+parsed by the caller's schema; store failures become misses. Cache only data that
+has a loader, and keep authoritative checks on the source. See `docs/development/caching.md`.
 Run the migration before deploying: signup fails closed without the table. Jobs combine the
 stored cleanup switch with deployment `JOBS_ENABLED`; disabled deployments do not
 query configuration on schedule. No secrets or arbitrary env keys enter the API.

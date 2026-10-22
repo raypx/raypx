@@ -4,7 +4,8 @@ import { getApiEnvironment } from "../env.js";
 import { createApiLogging, type ApiLogging } from "../logging.js";
 import { errorReports } from "../error-reports.js";
 import { createRuntime, type RuntimeProviders } from "./shared.js";
-import type { ConfigurationCache } from "../configuration/types.js";
+import { createCache } from "../cache/cache.js";
+import { createMemoryStore } from "../cache/memory.js";
 
 export interface CloudflareBindings {
   [key: string]: unknown;
@@ -28,8 +29,8 @@ export function getCloudflareEnvironment(bindings: CloudflareBindings) {
 // evlog configuration is global to the isolate. Reuse the console logger, while
 // every request owns its database client and auth context.
 let logging: ApiLogging | undefined;
-// Public configuration reads share one short-lived cache per isolate.
-const configurationCache: ConfigurationCache = {};
+// Request runtimes share one memory cache per isolate; values never span isolates.
+const cache = createCache(createMemoryStore());
 export async function createCloudflareRuntime(
   bindings: CloudflareBindings,
   providers: RuntimeProviders = {},
@@ -42,7 +43,7 @@ export async function createCloudflareRuntime(
     }),
   }));
   return createRuntime(environment, {
-    configurationCache,
+    cache,
     ...providers,
     logger,
     ...(bindings.RAYPX_RELAY
