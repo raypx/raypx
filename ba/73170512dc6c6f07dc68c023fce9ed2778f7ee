@@ -1,0 +1,27 @@
+deploy/beta/build.sh
+  s_cf970e05228493::t_2223d140faaee8 10-15
+apps/web/Dockerfile
+  s_cf970e05228493::t_2223d140faaee8 7-8,14-15
+apps/api/Dockerfile
+  s_cf970e05228493::t_2223d140faaee8 3-11,16-17,20-21
+deploy/beta/AGENTS.md
+  s_cf970e05228493::t_2223d140faaee8 14-15
+docs/development/beta.md
+  s_cf970e05228493::t_2223d140faaee8 42-46,48-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ba73170512dc6c6f07dc68c023fce9ed2778f7ee",
+  "prompts": {},
+  "sessions": {
+    "s_cf970e05228493": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16a88-bc2f-7783-aa2d-04f271fd3b86",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
