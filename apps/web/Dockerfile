@@ -1,11 +1,15 @@
 # syntax=docker/dockerfile:1
-FROM oven/bun:1.4.4 AS build
+FROM oven/bun:1.4.4 AS bun
+FROM node:24.15.0-bookworm-slim AS build
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 WORKDIR /app
 COPY . .
-RUN bun install --frozen-lockfile
+RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
 # Browser and server rendering both use the API origin baked into this build.
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_APP_RELEASE=unversioned
+ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
 RUN bun run build:web
 
 FROM node:24.15.0-bookworm-slim AS runtime

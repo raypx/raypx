@@ -11,6 +11,14 @@ out
 **/dist
 **/.output
 **/.output/**
+**/.output-cloudflare
+**/.hutch
+**/.wrangler
+**/.artifacts
+**/.turbo
+**/.tanstack
+apps/desktop/artifacts
+apps/desktop/build
 **/coverage
 **/playwright-report
 **/test-results

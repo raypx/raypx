@@ -8,6 +8,7 @@
 - [Development environment and commands](development/getting-started.md)
 - [Testing and release gates](development/testing.md)
 - [Node and Cloudflare deployments](development/cloudflare.md)
+- [Single-server beta deployment](development/beta.md)
 - [Administrator configuration](development/configuration.md)
 - [Server caching](development/caching.md)
 - [Object storage](development/object-storage.md)
