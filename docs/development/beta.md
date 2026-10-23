@@ -39,13 +39,15 @@ The build stages contain both pinned Node and Bun. Bun's fallback `node` shim is
 not the Node runtime used to build these artifacts. `VITE_APP_RELEASE` supplies
 release metadata because Docker build contexts intentionally omit `.git`.
 
-Create a bounded BuildKit builder once:
+The build script creates `raypx-beta-builder` on first use, limited to two CPUs,
+3 GiB memory and 4 GiB memory plus swap. Later runs reuse that builder and its
+BuildKit cache mounts for Bun downloads and Turbo results. A stopped builder starts
+on the next build. `RAYPX_BUILD_BUILDER` selects an existing custom builder; keep
+its resource limits at least as restrictive on a small server.
 
-```sh
-docker buildx create --name raypx-beta-builder --driver docker-container \
-  --driver-opt memory=3g --driver-opt memory-swap=4g \
-  --driver-opt cpu-quota=200000 --driver-opt cpu-period=100000
-```
+The migration image installs only the database workspace's production dependencies
+and runs as the `bun` user. It does not compile or include the API build, and skips
+install lifecycle scripts because migrations need no build tools.
 
 Choose a unique `RAYPX_RELEASE` for the exact source snapshot. Build sequentially:
 

@@ -7,6 +7,12 @@ cd "$root"
 : "${RAYPX_RELEASE:?Set a unique image release before building}"
 builder=${RAYPX_BUILD_BUILDER:-raypx-beta-builder}
 
+if ! docker buildx inspect "$builder" >/dev/null 2>&1; then
+  docker buildx create --name "$builder" --driver docker-container \
+    --driver-opt memory=3g --driver-opt memory-swap=4g \
+    --driver-opt cpu-quota=200000 --driver-opt cpu-period=100000
+fi
+
 # Run image builds sequentially; the container builder owns the CPU/memory budget.
 docker buildx build --builder "$builder" --load \
   --file apps/api/Dockerfile --target migrate \

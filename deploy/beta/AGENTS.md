@@ -11,6 +11,8 @@ Read `docs/development/beta.md` before changing deployment behavior.
 - Run migrations against the isolated beta database before starting the API.
 - Build versioned images sequentially with a bounded container builder. Preserve
   previous image versions and persistent volumes for rollbacks.
+- Keep the migration image on database production dependencies; it must not
+  inherit the API build or development tools. Share Bun/Turbo BuildKit caches.
 - Credentials belong in protected host files or Dokploy environment settings;
   examples contain no credentials. Never print resolved Compose environment values.
 
