@@ -1,0 +1,2 @@
+# Keep the generated theme byte-for-byte identical to the generator on Windows.
+packages/ui/src/styles/theme.css text eol=lf

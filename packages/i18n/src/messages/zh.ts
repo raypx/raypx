@@ -246,7 +246,7 @@ export default {
     verified: "邮箱已验证，现在可以登录了。",
     invalidLink: "链接无效或已过期，请重新发送邮件。",
     accountTitle: "你的账号",
-    accountIntro: "管理此设备上的登录状态。",
+    accountIntro: "查看个人信息，管理账号的登录状态。",
     signedOut: "你尚未登录",
     signedOutIntro: "登录以访问账号。桌面端的本地文件和定时任务无需登录即可使用。",
     verifiedLabel: "邮箱已验证",

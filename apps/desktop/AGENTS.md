@@ -104,7 +104,10 @@ verification and password recovery remain public; confirmed logout redirects to
 
 `bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile.
 Shell/restore first assert the standalone login page, then supply a synthetic
-session only inside the smoke scenario to exercise local UI. They do not validate authentication.
+session to exercise local UI. Their smoke-only preload installs a stable fetch
+proxy before Better Auth initializes; the scenario changes only its fixture data.
+Production and the real HTTPS write/read phases do not install that proxy.
+These local-tool scenarios do not validate authentication.
 
 ## Remote tasks
 

@@ -108,3 +108,18 @@ it("replaces a failed device read with retry instead of staying in loading", asy
   expect(screen.getByText("Studio MacBook")).toBeInTheDocument();
   expect(list).toHaveBeenCalledTimes(2);
 });
+
+it("can manage a reconnected computer with a new grant epoch", async () => {
+  const { list, revoke, computer } = devices();
+  fireEvent.click(await screen.findByRole("button", { name: "Disconnect computer" }));
+  const dialog = await screen.findByRole("dialog");
+  // Reconnecting can race the read after a successful disconnect, skipping the revoked snapshot.
+  list.mockResolvedValueOnce([{ ...computer, epoch: 8 }]);
+  fireEvent.click(within(dialog).getByRole("button", { name: "Disconnect computer" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  const disconnect = await screen.findByRole("button", { name: "Disconnect computer" });
+  expect(disconnect).toBeEnabled();
+  fireEvent.click(disconnect);
+  expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  expect(revoke).toHaveBeenCalledTimes(1);
+});

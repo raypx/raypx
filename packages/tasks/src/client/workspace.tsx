@@ -803,7 +803,12 @@ function Devices({ client, accountId }: { client: TaskClient; accountId: string 
             </p>
           </div>
           {!device.revoked && (
-            <DisconnectComputer client={client} device={device} onChanged={refresh} />
+            <DisconnectComputer
+              key={device.epoch}
+              client={client}
+              device={device}
+              onChanged={refresh}
+            />
           )}
         </div>
       ))}

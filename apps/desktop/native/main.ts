@@ -33,6 +33,14 @@ if (process.platform === "win32") {
 }
 
 const channel = await Updater.localInfo.channel();
+export const NATIVE_SMOKE_SESSION_KEY = "__raypxNativeSmokeSession";
+const smokePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
+// Better Auth captures fetch during client initialization. Install one stable
+// proxy before renderer modules load; the isolated shell fixture only changes its data.
+const smokeSessionPreload =
+  process.env.RAYPX_NATIVE_SMOKE === "1" && (smokePhase === "shell" || smokePhase === "restore")
+    ? `(()=>{const originalFetch=window.fetch.bind(window);window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]=null;window.fetch=(input,init)=>{const url=new URL(input instanceof Request?input.url:String(input),location.href);if(url.pathname==="/api/auth/get-session")return Promise.resolve(new Response(JSON.stringify(window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]),{headers:{"content-type":"application/json"}}));return originalFetch(input,init);};})();`
+    : "";
 let url = "views://main/index.html";
 if (channel === "dev" && process.env.RAYPX_NATIVE_SMOKE !== "1") {
   try {
@@ -173,7 +181,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
 export const view = new BrowserView({
   windowId: mainWindow.id,
   url,
-  preload: preferences.preload(),
+  preload: preferences.preload() + smokeSessionPreload,
   partition:
     process.env.RAYPX_NATIVE_SMOKE === "1" ? "persist:raypx-native-smoke" : "persist:raypx",
   frame: { x: 0, y: 0, width: 1120, height: 720 },

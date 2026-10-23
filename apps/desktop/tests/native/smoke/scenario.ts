@@ -7,6 +7,7 @@ import {
   engine,
   handleTrayAction,
   mainWindow,
+  NATIVE_SMOKE_SESSION_KEY,
   quitDesktop,
   tray,
   view,
@@ -52,7 +53,7 @@ async function localSessionFixture() {
   // The shell smoke isolates native local tools from account infrastructure.
   // Real packaged-origin authentication remains in the explicit write/read phases.
   await evaluate(
-    'const originalFetch=window.fetch.bind(window);window.fetch=(input,init)=>{const url=new URL(input instanceof Request?input.url:String(input),location.href);if(url.pathname==="/api/auth/get-session")return Promise.resolve(new Response("null",{headers:{"content-type":"application/json"}}));return originalFetch(input,init);};document.dispatchEvent(new Event("visibilitychange"));return true;',
+    `if(!Object.prototype.hasOwnProperty.call(window,${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}))throw new Error("Native smoke session preload is missing");window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]=null;document.dispatchEvent(new Event("visibilitychange"));return true;`,
   );
   await waitFor(
     async () =>
@@ -84,7 +85,7 @@ async function localSessionFixture() {
     },
   };
   await evaluate(
-    `const originalFetch=window.fetch.bind(window);window.fetch=(input,init)=>{const url=new URL(input instanceof Request?input.url:String(input),location.href);if(url.pathname==="/api/auth/get-session")return Promise.resolve(new Response(${JSON.stringify(JSON.stringify(fixture))},{headers:{"content-type":"application/json"}}));return originalFetch(input,init);};window.dispatchEvent(new Event("focus"));document.dispatchEvent(new Event("visibilitychange"));return true;`,
+    `window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]=${JSON.stringify(fixture)};window.dispatchEvent(new Event("focus"));document.dispatchEvent(new Event("visibilitychange"));return true;`,
   );
   await waitFor(
     async () =>
@@ -111,6 +112,37 @@ async function reloadRenderer() {
         ),
       ),
     "Renderer did not reload",
+  );
+}
+
+async function selectLanguage(locale: "en" | "zh") {
+  const label = locale === "en" ? "English" : "简体中文";
+  assert.equal(
+    await evaluate(
+      'const trigger=document.querySelector(\'[role="combobox"][aria-label="Language"], [role="combobox"][aria-label="语言"]\');if(!trigger)return false;trigger.focus();trigger.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowDown",code:"ArrowDown",bubbles:true}));return true;',
+    ),
+    true,
+    "Language select trigger is missing",
+  );
+  await waitFor(
+    async () =>
+      Boolean(
+        await evaluate(
+          `return [...document.querySelectorAll('[role="option"]')].some(option=>option.textContent.trim()===${JSON.stringify(label)})`,
+        ),
+      ),
+    `Language option ${label} did not open`,
+  );
+  assert.equal(
+    await evaluate(
+      `const option=[...document.querySelectorAll('[role="option"]')].find(option=>option.textContent.trim()===${JSON.stringify(label)});if(!option)return false;option.dispatchEvent(new PointerEvent("pointerdown",{pointerType:"mouse",button:0,bubbles:true}));option.click();return true;`,
+    ),
+    true,
+    `Language option ${label} is missing`,
+  );
+  await waitFor(
+    async () => (await evaluate("return document.documentElement.lang")) === locale,
+    `Language selection did not apply ${locale}`,
   );
 }
 
@@ -247,9 +279,9 @@ try {
         Boolean(await evaluate('return Boolean(document.querySelector("input[name=theme]"))')),
       "Settings route did not mount",
     );
-    await evaluate(
-      'document.querySelector("input[name=theme][value=dark]").click();const select=document.querySelector("[data-slot=language-select] select");select.value="zh";select.dispatchEvent(new Event("change",{bubbles:true}));return true',
-    );
+    await evaluate('document.querySelector("input[name=theme][value=dark]").click();return true');
+    await selectLanguage("en");
+    await selectLanguage("zh");
     await waitFor(
       async () =>
         Boolean(
@@ -322,9 +354,9 @@ try {
           Boolean(await evaluate('return Boolean(document.querySelector("input[name=theme]"))')),
         "Settings route did not mount",
       );
-      await evaluate(
-        'document.querySelector("input[name=theme][value=dark]").click();const select=document.querySelector("[data-slot=language-select] select");select.value="zh";select.dispatchEvent(new Event("change",{bubbles:true}));return true',
-      );
+      await evaluate('document.querySelector("input[name=theme][value=dark]").click();return true');
+      await selectLanguage("en");
+      await selectLanguage("zh");
       await waitFor(async () => {
         const file = Bun.file(join(dataDir, "preferences.json"));
         if (!(await file.exists())) return false;

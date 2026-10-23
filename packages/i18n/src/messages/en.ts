@@ -266,7 +266,7 @@ export default {
     verified: "Your email is verified. You can sign in now.",
     invalidLink: "This link is invalid or has expired. Request a new email.",
     accountTitle: "Your account",
-    accountIntro: "Manage your session on this device.",
+    accountIntro: "Review your profile and manage account access.",
     signedOut: "You’re not signed in",
     signedOutIntro:
       "Sign in to access your account. Your local files and automations are always available on desktop.",
