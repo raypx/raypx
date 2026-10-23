@@ -1,0 +1,39 @@
+docs/development/beta.md
+  s_cf970e05228493::t_30091fa68ca2e2 1-72
+  s_cf970e05228493::t_b973eb4a408270 73-79
+.dockerignore
+  s_cf970e05228493::t_dd4a82a91352f3 14-19
+  s_cf970e05228493::t_ffc8bf78bf2ab3 20-21
+docs/README.md
+  s_cf970e05228493::t_30091fa68ca2e2 11
+deploy/beta/build.sh
+  s_cf970e05228493::t_dd4a82a91352f3 1-23
+apps/api/Dockerfile
+  s_cf970e05228493::t_dd4a82a91352f3 2-4,7-9,12-13
+  s_cf970e05228493::t_d19a3cc7c3b8e2 14
+deploy/beta/compose.yaml
+  s_cf970e05228493::t_dd4a82a91352f3 1-122
+apps/web/Dockerfile
+  s_cf970e05228493::t_dd4a82a91352f3 2-4,7,11-12
+deploy/beta/AGENTS.md
+  s_cf970e05228493::t_30091fa68ca2e2 1-18
+deploy/beta/.env.example
+  s_cf970e05228493::t_dd4a82a91352f3 1-7
+  s_cf970e05228493::t_823c7f752bb645 8-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8927ca5e6845f5c0796341e0dc5a1a374dcde509",
+  "prompts": {},
+  "sessions": {
+    "s_cf970e05228493": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16a88-bc2f-7783-aa2d-04f271fd3b86",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
