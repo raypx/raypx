@@ -1,14 +1,19 @@
-# Beta deployment
+# Single-server deployment
 
-This directory owns the single-server Node beta stack managed by Dokploy Compose.
+This directory owns the shared Node deployment managed by Dokploy Compose.
 Build from the repository root with `build.sh`; Dockerfiles remain with Web/API.
-Read `docs/development/beta.md` before changing deployment behavior.
+Read `docs/development/deployment.md` before changing deployment behavior.
 
-- Keep the beta database and named volume separate from all other environments.
+- Read deployment configuration from explicit environment variables. Do not infer
+  credentials or hostnames from Git branches or server state.
+- Use the Compose project name for image and route namespaces; networks and
+  default volumes are project-scoped. Keep credentials and data per project.
+- Existing named storage is opt-in through POSTGRES_VOLUME_NAME; never discover
+  or reuse another project's volume automatically.
 - Only Traefik publishes application traffic. Database and application containers
   have no published host ports; the management panel stays behind SSH.
 - Keep one API process because Node relay routing has process-local authority.
-- Run migrations against the isolated beta database before starting the API.
+- Run migrations against that environment's isolated database before starting API.
 - Build versioned images sequentially with a bounded container builder. Preserve
   previous image versions and persistent volumes for rollbacks.
 - Keep the migration image on database production dependencies; it must not
