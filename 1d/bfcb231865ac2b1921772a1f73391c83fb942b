@@ -1,0 +1,23 @@
+bun.lock
+  s_525d200a0d307c::t_b2029583d4dad0 31,307-323,452-453,1004,1006,1016-1057,1092-1093,1474-1475,1496-1501,1504-1505,1518,1580-1585,1630-1631,1668-1669,1716-1717,1728-1729,1754-1755,1800-1801,1984-1985,2024-2025
+packages/email/src/server.ts
+  s_525d200a0d307c::t_856f87e87e25b9 40
+skills/raypx/SKILL.md
+  s_525d200a0d307c::t_c78f6ca4629c28 49,65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1dbfcb231865ac2b1921772a1f73391c83fb942b",
+  "prompts": {},
+  "sessions": {
+    "s_525d200a0d307c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1595d-432a-72b2-974a-dcbfa83701ab",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
