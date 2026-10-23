@@ -12,6 +12,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - raypx-dev tasks <task> [Turbo flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev policy | verify | doctor | clean
+- `clean` removes workspace outputs, native SDK/bundles and local test artifacts;
+  it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
+  and persistent user/database data stay intact.
 - raypx-dev smoke:cloudflare runs relocated Worker outputs under Node and Wrangler/workerd.
 - raypx-dev env -- <command>, db <operation>, desktop build
 - `./build/nitro` supplies shared Node/Workers build options to API and Web configs.

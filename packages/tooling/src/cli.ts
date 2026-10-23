@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 import { uploadAnalyticsMaps } from "./analytics.js";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import { readToolchain } from "@raypx-kit/devkit/toolchain";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
+import { clean } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
 import { discover, pinnedNode, turbo } from "./repository.js";
 import { scaffold } from "./scaffold.js";
@@ -115,11 +116,8 @@ async function main() {
       );
       break;
     case "clean": {
-      for (const w of discover(root).workspaces)
-        for (const output of ["dist", ".output", ".output-cloudflare", "coverage", ".turbo"])
-          rmSync(join(root, w.path, output), { recursive: true, force: true });
-      rmSync(join(root, ".turbo"), { recursive: true, force: true });
-      console.log("Build outputs removed; user profiles and database volumes preserved");
+      await clean(root);
+      console.log("Build outputs, native SDK and test artifacts removed");
       break;
     }
     case "doctor": {

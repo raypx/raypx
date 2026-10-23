@@ -99,6 +99,13 @@ live output and cross-owner controls remain proposed in the
 
 ## Build caches
 
+`bun run clean` removes workspace build outputs, coverage, Turbo and TanStack caches,
+Desktop's `build`, `artifacts`, `.hutch` and `.cottontail-tmp` directories, root
+`.artifacts`, and browser test results/reports. It awaits asynchronous deletion in
+batches of up to eight directories. It keeps dependencies, lockfiles,
+Git history, environment files, user profiles and database volumes. The next
+Desktop build/check/dev prepares the native SDK again.
+
 Turbo owns the task graph and caches declared build outputs; Vite+ runs the leaf
 commands. Use the root build/check/test commands to preserve dependency ordering.
 Language policy lives in i18n's public static `./config` export. Repository checks
