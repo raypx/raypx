@@ -1,0 +1,35 @@
+packages/tooling/tests/unit/clean-async.test.ts
+  s_207b06a115958b::t_a5e71c2701ffe8 1-36
+packages/tooling/tests/unit/clean.test.ts
+  s_207b06a115958b::t_9bd37b2fb4338e 46-47
+  s_207b06a115958b::t_d5a2f83bf23307 1-8,10-42,45,48
+  s_207b06a115958b::t_e12d3978ba3285 9,43-44
+packages/tooling/src/clean.ts
+  s_207b06a115958b::t_d5a2f83bf23307 2-4,12-19,28
+  s_207b06a115958b::t_e12d3978ba3285 1,5-11,20-27
+docs/development/getting-started.md
+  s_207b06a115958b::t_d5a2f83bf23307 102-103,106-108
+  s_207b06a115958b::t_e12d3978ba3285 104-105
+packages/tooling/src/cli.ts
+  s_207b06a115958b::t_d5a2f83bf23307 3,9,120
+  s_207b06a115958b::t_e12d3978ba3285 119
+packages/tooling/AGENTS.md
+  s_207b06a115958b::t_d5a2f83bf23307 15
+  s_207b06a115958b::t_e12d3978ba3285 16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b5a29bfe024a751c0fbe95c9a3b02955b64ce638",
+  "prompts": {},
+  "sessions": {
+    "s_207b06a115958b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16823-cc74-7ff1-a841-d1aa2123cbd4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
