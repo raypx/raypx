@@ -1,0 +1,31 @@
+packages/tooling/AGENTS.md
+  s_cf970e05228493::t_35fca2000d1ec9 14-15
+docs/development/testing.md
+  s_cf970e05228493::t_b8f158c6b65792 18-42
+  s_cf970e05228493::t_df61f94b8eb1f6 43-45
+package.json
+  s_cf970e05228493::t_35fca2000d1ec9 107,116
+  s_cf970e05228493::t_df61f94b8eb1f6 97
+turbo.json
+  s_cf970e05228493::t_35fca2000d1ec9 6
+test.config.ts
+  s_cf970e05228493::t_35fca2000d1ec9 19-20
+packages/tooling/src/cli.ts
+  s_cf970e05228493::t_35fca2000d1ec9 67,73-79,142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2956f5de61789486f53d3c5f1c4cd951155eb2c2",
+  "prompts": {},
+  "sessions": {
+    "s_cf970e05228493": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16a88-bc2f-7783-aa2d-04f271fd3b86",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
