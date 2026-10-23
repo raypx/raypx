@@ -1,0 +1,35 @@
+deploy/build.sh
+  s_cf970e05228493::t_017a3053760859 4,6-7,9-16,20-22,28-29,32-33,36-38
+.gitignore
+  s_cf970e05228493::t_1f0353cf3f37db 38
+.dockerignore
+  s_cf970e05228493::t_42f966804e6c8d 7-8
+deploy/compose.yaml
+  s_cf970e05228493::t_6b41d876ab0b2d 1-125
+deploy/AGENTS.md
+  s_cf970e05228493::t_017a3053760859 1,3,5,7-12,16
+docs/README.md
+  s_cf970e05228493::t_6b41d876ab0b2d 11-12
+deploy/.env.example
+  s_cf970e05228493::t_2d2d56bace07e5 1-7,9-10,15,17,19-36
+docs/development/beta.md
+  s_cf970e05228493::t_653cda61734a24 1,3-5,7,9-11,13-16,18-21,23-26
+docs/development/deployment.md
+  s_cf970e05228493::t_43d4214ea6a2ff 1-112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5cc9745e7b1a789f075ec483ec052a2467ea5aa6",
+  "prompts": {},
+  "sessions": {
+    "s_cf970e05228493": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16a88-bc2f-7783-aa2d-04f271fd3b86",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
