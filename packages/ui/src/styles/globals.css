@@ -96,6 +96,8 @@
   @media (pointer: coarse) {
     [data-slot="button"],
     [data-slot="input"],
+    [data-slot="select-trigger"],
+    [data-slot="select-item"],
     [data-slot="toggle-group-item"],
     [data-slot="tabs-trigger"],
     select {

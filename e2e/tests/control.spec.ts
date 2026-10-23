@@ -214,7 +214,8 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     await desktop.getByRole("button", { name: new RegExp(taskPrompt) }).click();
     await expect(desktop.getByText(completed.summary, { exact: true })).toBeVisible();
     await page.goto("http://127.0.0.1:4173/settings");
-    await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("zh");
+    await page.getByRole("combobox", { name: "Language", exact: true }).click();
+    await page.getByRole("option", { name: "简体中文", exact: true }).click();
     await page.getByRole("radio", { name: "深色", exact: true }).check();
     await page.goto("http://127.0.0.1:4173/tasks");
     await expect(page.getByRole("heading", { name: "Agent 任务", exact: true })).toBeVisible();

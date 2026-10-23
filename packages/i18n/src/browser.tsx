@@ -24,4 +24,3 @@ export {
   useTimeZone,
   useMessages,
 } from "./react.js";
-export { LanguageSelect } from "./browser/language-select.js";

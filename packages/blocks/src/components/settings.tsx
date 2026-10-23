@@ -1,6 +1,16 @@
 import { useId, type ReactNode } from "react";
 import { Languages } from "lucide-react";
-import { LanguageSelect, useTranslations } from "@raypx/i18n/browser";
+import { LOCALE_OPTIONS } from "@raypx/i18n";
+import { useLanguagePreference, useTranslations } from "@raypx/i18n/browser";
+import { parseLocalePreference } from "@raypx/i18n/preferences";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@raypx/ui/components/ui/select";
 import { ThemePicker } from "@raypx/ui/themes";
 
 export interface SettingsPageProps {
@@ -68,9 +78,33 @@ export function AppearanceSettings() {
 /** Device language preference; requires the i18n browser language provider. */
 export function LanguageSettings() {
   const t = useTranslations("settings");
+  const c = useTranslations("common");
+  const { preference, setPreference } = useLanguagePreference();
+  const items = [
+    { value: "system", label: c("system") },
+    ...LOCALE_OPTIONS.map(({ value, nativeName }) => ({ value, label: nativeName })),
+  ];
   return (
     <SettingsSection title={t("language")} description={t("languageHint")}>
-      <LanguageSelect icon={<Languages size={18} />} />
+      <Select
+        items={items}
+        value={preference}
+        onValueChange={(value) => setPreference(parseLocalePreference(value))}
+      >
+        <SelectTrigger aria-label={t("language")} className="w-52 max-w-full">
+          <Languages aria-hidden="true" className="text-muted-foreground" />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent align="end" alignItemWithTrigger={false}>
+          <SelectGroup>
+            {items.map(({ value, label }) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </SettingsSection>
   );
 }

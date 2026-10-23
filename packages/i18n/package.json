@@ -51,8 +51,7 @@
     "sourceTargets": {
       "src/client.ts": "browser",
       "src/browser.tsx": "browser",
-      "src/testing.ts": "universal",
-      "src/browser/**": "browser"
+      "src/testing.ts": "universal"
     }
   }
 }

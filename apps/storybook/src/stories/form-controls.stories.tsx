@@ -3,7 +3,14 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@raypx/ui/components/
 import { Input } from "@raypx/ui/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@raypx/ui/components/ui/input-group";
 import { Label } from "@raypx/ui/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@raypx/ui/components/ui/native-select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@raypx/ui/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
 import { Switch } from "@raypx/ui/components/ui/switch";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
@@ -93,11 +100,18 @@ export const Selection: Story = {
       </RadioGroup>
       <Field>
         <FieldLabel htmlFor="story-region">Region</FieldLabel>
-        <NativeSelect id="story-region" defaultValue="auto">
-          <NativeSelectOption value="auto">Automatic</NativeSelectOption>
-          <NativeSelectOption value="us">United States</NativeSelectOption>
-          <NativeSelectOption value="cn">中国</NativeSelectOption>
-        </NativeSelect>
+        <Select defaultValue="auto" items={{ auto: "Automatic", us: "United States", cn: "中国" }}>
+          <SelectTrigger id="story-region" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="auto">Automatic</SelectItem>
+              <SelectItem value="us">United States</SelectItem>
+              <SelectItem value="cn">中国</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </Field>
     </FieldGroup>
   ),

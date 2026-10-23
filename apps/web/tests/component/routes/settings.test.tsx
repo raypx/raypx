@@ -24,7 +24,10 @@ describe("device settings", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(localStorage.getItem("theme")).toBe("dark");
     expect(document.documentElement.dataset.theme).toBe("dark");
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "zh" } });
+    fireEvent.click(screen.getByRole("combobox", { name: "Language" }));
+    const chinese = await screen.findByRole("option", { name: "简体中文" });
+    fireEvent.pointerDown(chinese, { pointerType: "mouse" });
+    fireEvent.click(chinese);
     await waitFor(() =>
       expect(screen.getByRole("heading", { name: "按你的习惯设置" })).toBeTruthy(),
     );

@@ -16,6 +16,8 @@ the catalog gate also checks ICU syntax, argument names and rich tag names.
 Language controls are generated from the locale configuration and a complete
 native-name map. Application code imports hooks through `@raypx/i18n` platform
 entries. Dynamic keys are narrowed with domain types or explicit mappings.
+Blocks owns the shared language setting, using UI's shadcn Select; i18n
+provides the locale options and preference state without visual dependencies.
 
 Errors are translated through known key mappings and an explicit, typed fallback.
 External interpolation values are cleaned before a single dynamic type bridge.

@@ -6,6 +6,8 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { authClient, webUrl } from "../../features/auth/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { AccountSessions } from "../../features/auth/components/account-sessions";
+import { ProfileSettings } from "../../features/auth/components/profile-settings";
 
 export const Route = createFileRoute("/(app)/")({
   loader: ({ context }) => context.account,
@@ -19,11 +21,13 @@ function AccountPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const auth = useAuthActions({ client: authClient, webUrl });
+  const session = authClient.useSession();
   const [refreshing, setRefreshing] = useState(false);
   const busy = auth.busy || refreshing;
   async function reload() {
     setRefreshing(true);
     try {
+      await queryClient.invalidateQueries({ queryKey: ["account"] });
       await router.invalidate();
     } finally {
       setRefreshing(false);
@@ -54,6 +58,19 @@ function AccountPage() {
             })
           }
         >
+          <ProfileSettings
+            key={state.account.id}
+            client={authClient}
+            name={state.account.name}
+            onSaved={reload}
+          />
+          {session.data?.session.id && (
+            <AccountSessions
+              key={state.account.id}
+              client={authClient}
+              currentSessionId={session.data.session.id}
+            />
+          )}
           {auth.error && (
             <p
               role="alert"

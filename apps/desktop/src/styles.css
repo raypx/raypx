@@ -5,8 +5,6 @@
 @import "@raypx/analytics/client/styles.css";
 @import "@raypx/blocks/styles.css";
 
-@source "../../../packages/i18n/src/browser";
-
 .editor-header {
   display: flex;
   justify-content: space-between;

@@ -19,7 +19,8 @@ Code outside `src/components/` stays private.
   it sets `aria-current="page"` on active entries when `markActive` is true.
 - `settings`: `SettingsPage`, `SettingsSection` (heading-labelled row with a control),
   and the device preference sections `AppearanceSettings` (needs UI's ThemeProvider)
-  and `LanguageSettings` (needs i18n's BrowserLanguageProvider).
+  and `LanguageSettings` (needs i18n's BrowserLanguageProvider). LanguageSettings
+  composes UI's shadcn Select with i18n's preference hook and locale options.
 - `styles.css`: registers Blocks as a Tailwind source; applications import it.
 
 ## Constraints

@@ -41,6 +41,12 @@ application is an independent composition root and is never imported by another 
 - Authentication forms use `AuthForm` from `@raypx/auth/client`, backed by
   `@raypx/auth/hooks`.
   Sign-out uses the hook directly; routes own navigation and loader invalidation.
+- The account page composes `ProfileSettings` and `AccountSessions` from
+  `features/auth/components`. They call the existing Better Auth client methods.
+  Name saves invalidate the account query before reloading route context. Session
+  lists stay in component memory, never query caches or persisted storage; tokens
+  are used only for revocation and never rendered. Remount them on account changes.
+  Confirm session revocation with the shared shadcn dialog and keep failures retryable.
 - `src/routes/(auth)/` holds the authentication routes under the logo-only layout.
   Each route renders the thin `src/features/auth/components/auth-form.tsx` adapter
   with its mode. The adapter injects the client, router query and navigation into

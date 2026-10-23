@@ -4,6 +4,7 @@
 - [Opt-in browser analytics](architecture/analytics.md)
 - [Remote Agent tasks and approvals](architecture/remote-tasks.md)
 - [Internationalization and device preferences](architecture/internationalization.md)
+- [Account settings and session management](development/account-security.md)
 - [Adding and extracting packages](development/workspaces.md)
 - [Development environment and commands](development/getting-started.md)
 - [Testing and release gates](development/testing.md)

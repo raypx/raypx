@@ -11,9 +11,9 @@ Translation and formatting use the independently released `@raypx-kit/intl` faca
 - `config`: static default locale and language names, shared with repository checks.
 - `messages`: static English and Chinese foundation catalogs.
 - `preferences`: pure system/en/zh preference parsing and resolution.
-- `browser`: browser language provider, read-only Intl hooks, device persistence and LanguageSelect.
-  The select accepts an optional icon; it does not depend on UI or an icon library.
-  DOM consumers register `src/browser` as a Tailwind source for its control styles.
+- `browser`: browser language provider, read-only Intl hooks and device persistence.
+  Language controls belong to Blocks, composed from UI primitives and these hooks.
+  This package does not depend on UI or an icon library.
 - `client`: controlled IntlProvider and browser language composition.
 - `testing`: test-only catalog checks.
 

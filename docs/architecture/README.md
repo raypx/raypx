@@ -47,7 +47,8 @@ Auth and client do not depend on account. Shared feature styles live with their
 packages. Blocks composes UI and i18n into router-agnostic application chrome (the
 sidebar shell and settings page sections) that Web and Desktop fill with their own
 links and feature views; it never imports account, auth, tasks or analytics.
-ThemePicker belongs to UI's `themes` entry, and LanguageSelect to i18n's browser entry.
+ThemePicker belongs to UI's `themes` entry. Blocks composes the language control
+from UI's shadcn Select and i18n's browser preference hook.
 
 Contracts/api contains oRPC definitions; contracts/local contains Zod device
 messages. Client is the remote SDK. Local interfaces are never registered on

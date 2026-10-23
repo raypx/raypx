@@ -13,6 +13,7 @@ afterEach(cleanup);
 beforeEach(() => {
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
+  Object.defineProperty(navigator, "languages", { value: ["en-US"], configurable: true });
 });
 
 describe("settings blocks", () => {
@@ -42,8 +43,21 @@ describe("settings blocks", () => {
     );
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(localStorage.getItem("theme")).toBe("dark");
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "zh" } });
+    fireEvent.click(screen.getByRole("combobox", { name: "Language" }));
+    const chinese = await screen.findByRole("option", { name: "简体中文" });
+    fireEvent.pointerDown(chinese, { pointerType: "mouse" });
+    fireEvent.click(chinese);
     await waitFor(() => expect(screen.getByRole("region", { name: "语言" })).toBeTruthy());
     expect(localStorage.getItem("raypx_locale")).toBe("zh");
+    fireEvent.click(screen.getByRole("combobox", { name: "语言" }));
+    const system = await screen.findByRole("option", { name: "跟随系统" });
+    fireEvent.pointerDown(system, { pointerType: "mouse" });
+    fireEvent.click(system);
+    await waitFor(() => expect(screen.getByRole("region", { name: "Language" })).toBeTruthy());
+    expect(localStorage.getItem("raypx_locale")).toBe("system");
+    expect(screen.getByRole("combobox", { name: "Language" }).textContent).toContain(
+      "Follow system",
+    );
+    expect(localStorage.getItem("theme")).toBe("dark");
   });
 });

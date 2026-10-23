@@ -18,6 +18,19 @@ async function authResponse(route: Route, body: unknown, status = 200) {
   });
 }
 
+async function webShellFixture(page: Page) {
+  // This deliberately invalid cookie lets SSR render its API-unavailable state.
+  // Browser HTTP fixtures below supply UI data; this does not authenticate a user.
+  await page.context().addCookies([
+    {
+      name: "better-auth.session_token",
+      value: "browser-fixture-only",
+      url: web,
+      httpOnly: true,
+    },
+  ]);
+}
+
 async function signedInDesktop(page: Page) {
   const user = {
     id: "desktop-fixture",
@@ -49,6 +62,12 @@ async function signedInDesktop(page: Page) {
 // Browser acceptance isolates HTTP responses only. It never creates native IPC.
 // Real registration, verification, reset and revocation run in API's PostgreSQL gate.
 test.beforeEach(async ({ page }) => {
+  await page.route("**/rpc/configuration/public", (route) =>
+    authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
+  );
+  await page.route("**/rpc/configuration/access", (route) =>
+    authResponse(route, { json: { allowed: false } }),
+  );
   await page.route("**/rpc/account/get", async (route) => {
     if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
     return authResponse(
@@ -81,12 +100,13 @@ async function preferencesPersist(page: Page, base: string) {
   await expect(page.getByRole("heading", { name: "Make it yours" })).toBeVisible();
   await page.getByRole("radio", { name: "Dark", exact: true }).check();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("zh");
+  await page.getByRole("combobox", { name: "Language", exact: true }).click();
+  await page.getByRole("option", { name: "简体中文", exact: true }).click();
   await expect(page.getByRole("heading", { name: "按你的习惯设置" })).toBeVisible();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("combobox", { name: "语言", exact: true })).toHaveValue("zh");
+  await expect(page.getByRole("combobox", { name: "语言", exact: true })).toContainText("简体中文");
   await expect(page.getByRole("radio", { name: "深色", exact: true })).toBeChecked();
   await page.screenshot({
     path: test
@@ -96,11 +116,21 @@ async function preferencesPersist(page: Page, base: string) {
   });
 }
 
-test("Web keeps account and local preferences accessible while signed out", async ({ page }) => {
-  await page.goto(web);
-  await expect(page.getByRole("heading", { name: "Your account", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "You’re not signed in" })).toBeVisible();
-  await page.getByRole("link", { name: "Settings", exact: true }).click();
+test("Web redirects signed-out account routes to a standalone login page", async ({ page }) => {
+  for (const path of ["/", "/settings", "/tasks", "/approvals", "/admin/settings"]) {
+    await page.goto(web + path);
+    await expect(page).toHaveURL(web + "/login");
+    await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveCount(0);
+  }
+});
+
+test("Web preserves local appearance and language preferences with an account fixture", async ({
+  page,
+}) => {
+  await webShellFixture(page);
+  await signedInDesktop(page);
   await preferencesPersist(page, web);
 });
 
@@ -167,6 +197,8 @@ test("Web sign-in translates verification errors and exposes password recovery",
 test("Web settings remain usable on a narrow screen without horizontal overflow", async ({
   page,
 }) => {
+  await webShellFixture(page);
+  await signedInDesktop(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${web}/settings`);
   await expect(page.getByRole("combobox", { name: "Language", exact: true })).toBeVisible();
@@ -322,7 +354,8 @@ test("Desktop defaults to local tasks and opens remote tasks through an accessib
   expect(remoteReads).toBeGreaterThan(0);
   await page.goto(desktop + "/settings");
   await page.getByRole("radio", { name: "Dark", exact: true }).check();
-  await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("zh");
+  await page.getByRole("combobox", { name: "Language", exact: true }).click();
+  await page.getByRole("option", { name: "简体中文", exact: true }).click();
   await page.goto(desktop + "/tasks");
   await expect(page.getByRole("tab", { name: "此电脑", exact: true })).toHaveAttribute(
     "aria-selected",
@@ -391,6 +424,7 @@ for (const [surface, base] of [
   test(`${surface} virtual task list supports scrolling, keyboard access and page reset`, async ({
     page,
   }) => {
+    if (surface === "Web") await webShellFixture(page);
     await signedInDesktop(page);
     const tasks = Array.from({ length: 101 }, (_, index) => ({
       id: crypto.randomUUID(),
@@ -433,6 +467,7 @@ for (const [surface, base] of [
     await expect(first).toBeVisible();
     await expect.poll(() => rows.count()).toBeLessThan(30);
     await expect(last).toHaveCount(0);
+    await viewport.scrollIntoViewIfNeeded();
     await viewport.evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
@@ -493,16 +528,15 @@ for (const [surface, base] of [
     page,
   }) => {
     if (surface === "Web") await page.setViewportSize({ width: 390, height: 844 });
-    else await signedInDesktop(page);
+    if (surface === "Web") await webShellFixture(page);
+    await signedInDesktop(page);
     await page.goto(`${base}/settings`);
     const trigger = page.getByRole("button", { name: "Account menu", exact: true });
     await expect(trigger).toBeVisible();
     await trigger.focus();
     await page.keyboard.press("Enter");
     const menu = page.getByRole("menu", { name: "Account menu", exact: true });
-    await expect(
-      menu.getByRole("menuitem", { name: surface === "Web" ? "Sign in" : "Sign out", exact: true }),
-    ).toBeVisible();
+    await expect(menu.getByRole("menuitem", { name: "Sign out", exact: true })).toBeVisible();
     const bounds = await menu.boundingBox();
     expect(bounds).not.toBeNull();
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
@@ -516,19 +550,14 @@ for (const [surface, base] of [
     await expect(menu).not.toBeVisible();
     await expect(trigger).toBeFocused();
     await trigger.click();
-    if (surface === "Web") {
-      await page.getByRole("menuitem", { name: "Sign in", exact: true }).click();
-      await expect(page).toHaveURL(`${base}/login`);
-      await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
-    } else await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
     await page.goto(`${base}/settings`);
     await page.getByRole("radio", { name: "Dark", exact: true }).check();
-    await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("zh");
+    await page.getByRole("combobox", { name: "Language", exact: true }).click();
+    await page.getByRole("option", { name: "简体中文", exact: true }).click();
     await page.getByRole("button", { name: "账号菜单", exact: true }).click();
     await expect(page.getByRole("menuitem", { name: "设置", exact: true })).toBeVisible();
-    await expect(
-      page.getByRole("menuitem", { name: surface === "Web" ? "登录" : "退出登录", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "退出登录", exact: true })).toBeVisible();
     await page.screenshot({
       path: test.info().outputPath("account-menu-dark-zh.png"),
       fullPage: true,
@@ -539,6 +568,7 @@ for (const [surface, base] of [
   test(`${surface} shows the user avatar and allows retrying a failed sign-out from the menu`, async ({
     page,
   }) => {
+    if (surface === "Web") await webShellFixture(page);
     let signedIn = true;
     let attempts = 0;
     const image = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="#333"/><circle cx="16" cy="12" r="5" fill="#fff"/><path d="M6 30a10 10 0 0 1 20 0" fill="#fff"/></svg>')}`;
@@ -571,6 +601,15 @@ for (const [surface, base] of [
           : null,
       ),
     );
+    await page.route("**/rpc/account/get", (route) =>
+      signedIn
+        ? authResponse(route, { json: { id: user.id, name: user.name, email: user.email } })
+        : authResponse(
+            route,
+            { json: { defined: false, code: "UNAUTHORIZED", message: "Authentication required" } },
+            401,
+          ),
+    );
     await page.route("**/api/auth/sign-out", async (route) => {
       attempts++;
       if (attempts === 1)
@@ -580,6 +619,7 @@ for (const [surface, base] of [
           500,
         );
       signedIn = false;
+      await page.context().clearCookies();
       return authResponse(route, { success: true });
     });
     await page.goto(`${base}/settings`);
@@ -600,15 +640,14 @@ for (const [surface, base] of [
     );
     await expect(menu.getByText("private diagnostic")).toHaveCount(0);
     await menu.getByRole("menuitem", { name: "Sign out", exact: true }).click();
-    await expect(page).toHaveURL(base + (surface === "Web" ? "/" : "/login"));
+    await expect(page).toHaveURL(base + "/login");
     await expect(
       page.getByRole("heading", {
-        name: surface === "Web" ? "You’re not signed in" : "Welcome back",
+        name: "Welcome back",
         exact: true,
       }),
     ).toBeVisible();
-    if (surface === "Web") await expect(trigger).toContainText("Sign in");
-    else await expect(trigger).toHaveCount(0);
+    await expect(trigger).toHaveCount(0);
     expect(attempts).toBe(2);
   });
 }

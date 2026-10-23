@@ -49,6 +49,7 @@ export function useRemoteQuery<T>(
   return {
     data: enabled ? query.data : undefined,
     error: query.isError,
+    refreshing: query.isFetching,
     refresh: () => void query.refetch(),
   };
 }

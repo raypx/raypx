@@ -4,5 +4,3 @@
 @import "@raypx/account/client/styles.css";
 @import "@raypx/analytics/client/styles.css";
 @import "@raypx/blocks/styles.css";
-
-@source "../../../packages/i18n/src/browser";

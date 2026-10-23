@@ -19,6 +19,10 @@ import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group"
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { isTaskActive } from "../index.js";
 import { TaskList } from "./task-list.js";
+import { emptyTaskFilters, filterTasks, TaskFilterBar } from "./task-filters.js";
+import { EmptyState } from "@raypx/ui/empty-state";
+import { LoadingState } from "@raypx/ui/loading-state";
+import { Modal } from "@raypx/ui/modal";
 
 const failureCodes = [
   "LOCAL_UNAVAILABLE",
@@ -98,7 +102,7 @@ function Workspace({
     },
     [client, before, view],
   );
-  const { data, error, refresh } = useRemoteQuery(
+  const { data, error, refresh, refreshing } = useRemoteQuery(
     ["workspace", accountId, view, before ?? null],
     load,
     true,
@@ -106,6 +110,8 @@ function Workspace({
   );
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [filters, setFilters] = useState(emptyTaskFilters);
+  const filtered = filterTasks(data?.tasks ?? [], data?.devices ?? [], filters);
   return (
     <section
       data-tasks
@@ -119,8 +125,8 @@ function Workspace({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={refresh}>
-            {c("refresh")}
+          <Button variant="outline" onClick={refresh} disabled={refreshing}>
+            {c(refreshing ? "loading" : "refresh")}
           </Button>
           {view === "tasks" && (
             <Button onClick={() => setCreating((value) => !value)}>{t("create")}</Button>
@@ -128,12 +134,12 @@ function Workspace({
         </div>
       </header>
       {error && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
+        <p role="alert" className="mb-4 text-sm text-destructive-text">
           {t(local ? "LOCAL_UNAVAILABLE" : "NETWORK_UNAVAILABLE")}
         </p>
       )}
       {!data ? (
-        <div aria-busy="true" className="h-48 animate-pulse rounded-lg bg-muted" />
+        !error && <LoadingState label={c("loading")} />
       ) : (
         <>
           {creating && (
@@ -169,6 +175,15 @@ function Workspace({
           ) : (
             <div className="task-layout">
               <div>
+                {data.tasks.length > 0 && (
+                  <TaskFilterBar
+                    filters={filters}
+                    devices={data.devices}
+                    count={filtered.length}
+                    total={data.tasks.length}
+                    onChange={setFilters}
+                  />
+                )}
                 {data.tasks.length === 0 ? (
                   <div className="py-10">
                     <h2>{t("empty")}</h2>
@@ -176,10 +191,20 @@ function Workspace({
                       {t(local ? "localEmptyHint" : "emptyHint")}
                     </p>
                   </div>
+                ) : filtered.length === 0 ? (
+                  <EmptyState
+                    title={t("noMatches")}
+                    description={t("noMatchesHint")}
+                    action={
+                      <Button variant="outline" onClick={() => setFilters(emptyTaskFilters)}>
+                        {t("clearFilters")}
+                      </Button>
+                    }
+                  />
                 ) : (
                   <TaskList
-                    key={data.before ?? "latest"}
-                    tasks={data.tasks}
+                    key={JSON.stringify([data.before, filters])}
+                    tasks={filtered}
                     devices={data.devices}
                     selected={selected}
                     onSelect={setSelected}
@@ -258,6 +283,7 @@ function CreateTask({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ReturnType<typeof failureCode>>();
   const submission = useRef<{ key: string; id: string } | null>(null);
+  const submitting = useRef(false);
   const device = devices.find((item) => item.id === deviceId);
   const project = device?.projects.find((item) => item.id === projectId);
   const occupied = tasks.some(
@@ -270,7 +296,8 @@ function CreateTask({
   );
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!available || busy || occupied) return;
+    if (!available || submitting.current || occupied || !prompt.trim()) return;
+    submitting.current = true;
     const key = JSON.stringify({ deviceId, projectId, provider, prompt, mode });
     if (submission.current?.key !== key) submission.current = { key, id: crypto.randomUUID() };
     setBusy(true);
@@ -285,6 +312,7 @@ function CreateTask({
     } catch (failure) {
       setError(failureCode(failure));
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -428,7 +456,11 @@ function TaskDetail({
   const [failure, setFailure] = useState<ReturnType<typeof failureCode>>();
   const [prompt, setPrompt] = useState("");
   const followId = useRef<{ prompt: string; id: string } | null>(null);
+  const active = useRef(false);
   async function cancel() {
+    if (active.current) return;
+    active.current = true;
+    setFailure(undefined);
     setBusy(true);
     try {
       await client.tasks.cancel({ id }, { signal: AbortSignal.timeout(15_000) });
@@ -437,11 +469,15 @@ function TaskDetail({
     } catch (e) {
       setFailure(failureCode(e));
     } finally {
+      active.current = false;
       setBusy(false);
     }
   }
   async function follow(event: FormEvent) {
     event.preventDefault();
+    if (active.current || !prompt.trim()) return;
+    active.current = true;
+    setFailure(undefined);
     if (followId.current?.prompt !== prompt) followId.current = { prompt, id: crypto.randomUUID() };
     setBusy(true);
     try {
@@ -455,14 +491,22 @@ function TaskDetail({
     } catch (e) {
       setFailure(failureCode(e));
     } finally {
+      active.current = false;
       setBusy(false);
     }
   }
   if (!data)
     return (
-      <p role={error ? "alert" : "status"}>
-        {error ? t(local ? "LOCAL_UNAVAILABLE" : "NETWORK_UNAVAILABLE") : c("loading")}
-      </p>
+      <div className="space-y-3">
+        <p role={error ? "alert" : "status"}>
+          {error ? t(local ? "LOCAL_UNAVAILABLE" : "NETWORK_UNAVAILABLE") : c("loading")}
+        </p>
+        {error && (
+          <Button variant="outline" onClick={refresh}>
+            {c("retry")}
+          </Button>
+        )}
+      </div>
     );
   return (
     <div className="space-y-5">
@@ -478,7 +522,7 @@ function TaskDetail({
           </Button>
         )}
       </div>
-      <p className="whitespace-pre-wrap text-sm">{data.task.prompt}</p>
+      <p className="whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">{data.task.prompt}</p>
       <time className="block text-xs text-muted-foreground" dateTime={data.task.updatedAt}>
         {new Date(data.task.updatedAt).toLocaleString()}
       </time>
@@ -558,8 +602,12 @@ function Approval({
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ReturnType<typeof failureCode>>();
+  const active = useRef(false);
   const closed = request.status !== "pending";
   async function decide(decision: HumanDecision) {
+    if (active.current || closed) return;
+    active.current = true;
+    setError(undefined);
     setBusy(true);
     try {
       await client.approvals.decide(
@@ -571,6 +619,7 @@ function Approval({
       setError(failureCode(failure));
       onChanged();
     } finally {
+      active.current = false;
       setBusy(false);
     }
   }
@@ -655,7 +704,7 @@ function Approval({
               disabled={
                 busy ||
                 (request.kind === "question" &&
-                  request.questions.some((q) => !answers[q.id]?.length))
+                  request.questions.some((q) => !answers[q.id]?.some((answer) => answer.trim())))
               }
               onClick={() =>
                 void decide(
@@ -716,38 +765,36 @@ export function DeviceSettings({
 }
 function Devices({ client, accountId }: { client: TaskClient; accountId: string }) {
   const t = useTranslations("tasks");
+  const c = useTranslations("common");
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
-  const { data, error, refresh } = useRemoteQuery(["devices", accountId], load, true, client);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [mutationError, setMutationError] = useState(false);
-  async function revoke(device: SyncDevice) {
-    if (!window.confirm(t("revokeConfirm"))) return;
-    setBusy(device.id);
-    try {
-      await client.devices.revoke({ deviceId: device.id, epoch: device.epoch });
-      refresh();
-    } catch {
-      setMutationError(true);
-    } finally {
-      setBusy(null);
-    }
-  }
+  const { data, error, refresh, refreshing } = useRemoteQuery(
+    ["devices", accountId],
+    load,
+    true,
+    client,
+  );
   return (
     <section className="mt-8 border-t border-border pt-7" data-tasks>
       <h2 className="text-base">{t("devices")}</h2>
       <p className="mt-2 text-sm text-muted-foreground">{t("devicesHint")}</p>
-      {(error || mutationError) && (
-        <p role="alert" className="mt-3 text-sm text-destructive">
-          {t("NETWORK_UNAVAILABLE")}
-        </p>
+      {error && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <p role="alert" className="text-sm text-destructive-text">
+            {t("NETWORK_UNAVAILABLE")}
+          </p>
+          <Button variant="outline" disabled={refreshing} onClick={refresh}>
+            {c("retry")}
+          </Button>
+        </div>
       )}
+      {!data && !error && <LoadingState label={c("loading")} />}
       {data?.length === 0 && <p className="mt-5 text-sm text-muted-foreground">{t("noDevices")}</p>}
       {data?.map((device) => (
         <div
           key={device.id}
           className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-5"
         >
-          <div>
+          <div className="min-w-0 [overflow-wrap:anywhere]">
             <h3 className="text-sm font-medium">{device.name}</h3>
             <p className="mt-1 text-xs text-muted-foreground">
               {device.platform} ·{" "}
@@ -756,16 +803,81 @@ function Devices({ client, accountId }: { client: TaskClient; accountId: string 
             </p>
           </div>
           {!device.revoked && (
-            <Button
-              variant="outline"
-              disabled={busy === device.id}
-              onClick={() => void revoke(device)}
-            >
-              {t("revoke")}
-            </Button>
+            <DisconnectComputer client={client} device={device} onChanged={refresh} />
           )}
         </div>
       ))}
     </section>
+  );
+}
+
+function DisconnectComputer({
+  client,
+  device,
+  onChanged,
+}: {
+  client: TaskClient;
+  device: SyncDevice;
+  onChanged: () => void;
+}) {
+  const t = useTranslations("tasks");
+  const c = useTranslations("common");
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
+  const [revoked, setRevoked] = useState(false);
+  const active = useRef(false);
+  async function revoke() {
+    if (active.current) return;
+    active.current = true;
+    setBusy(true);
+    setError(false);
+    try {
+      await client.devices.revoke(
+        { deviceId: device.id, epoch: device.epoch },
+        { signal: AbortSignal.timeout(15_000) },
+      );
+      setRevoked(true);
+      setOpen(false);
+      onChanged();
+    } catch {
+      setError(true);
+    } finally {
+      active.current = false;
+      setBusy(false);
+    }
+  }
+  return (
+    <Modal
+      title={t("revoke")}
+      description={t("revokeConfirm")}
+      closeLabel={c("close")}
+      trigger={
+        <Button variant="outline" disabled={revoked}>
+          {t(revoked ? "revoked" : "revoke")}
+        </Button>
+      }
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value);
+        if (value) setError(false);
+      }}
+      busy={busy}
+    >
+      <p className="break-words text-sm font-medium">{device.name}</p>
+      {error && (
+        <p role="alert" className="text-sm text-destructive-text">
+          {t("NETWORK_UNAVAILABLE")}
+        </p>
+      )}
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" disabled={busy} onClick={() => setOpen(false)}>
+          {c("cancel")}
+        </Button>
+        <Button variant="destructive" disabled={busy} onClick={() => void revoke()}>
+          {busy ? c("working") : t("revoke")}
+        </Button>
+      </div>
+    </Modal>
   );
 }
