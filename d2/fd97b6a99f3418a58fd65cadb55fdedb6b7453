@@ -1,0 +1,118 @@
+packages/ui/shadcn-components.json
+  s_a9c257ef9e2b8f::t_c36745ecdc8301 18
+e2e/tests/control.spec.ts
+  s_a9c257ef9e2b8f::t_5bea7ac3ddd915 217-218
+packages/tasks/src/client/workspace.tsx
+  s_a9c257ef9e2b8f::t_6471ed3bea944e 22-25,105,113-114,128-129,137,142,178-186,194-203,206-207,286,299-300,315,459,461-463,472,478-480,494,500-509,525,605,608-610,622,707,768,770-775,780-788,790,797,806,813-883
+packages/tasks/AGENTS.md
+  s_a9c257ef9e2b8f::t_284828dd9bc60c 18-21
+apps/web/tests/component/routes/settings.test.tsx
+  s_a9c257ef9e2b8f::t_f50a04b78719e9 27-30
+apps/storybook/src/stories/form-controls.stories.tsx
+  s_a9c257ef9e2b8f::t_35d2b8ca3688bb 6-13,103-114
+packages/i18n/src/messages/en.ts
+  s_a9c257ef9e2b8f::t_a71731ec95ba27 59-70,225-241
+AGENTS.md
+  s_a9c257ef9e2b8f::t_c4dfcb10988b94 59-60
+apps/web/src/routes/(app)/index.tsx
+  s_a9c257ef9e2b8f::t_65aa5e556f751a 9-10,24,30,61-73
+apps/web/tests/component/features/device-settings.test.tsx
+  s_a9c257ef9e2b8f::t_f6677661262279 1-110
+packages/ui/src/components/ui/select.tsx
+  s_a9c257ef9e2b8f::t_cc9430b64d9155 1-185
+apps/web/AGENTS.md
+  s_a9c257ef9e2b8f::t_284828dd9bc60c 44-49
+packages/tasks/src/client/remote-query.ts
+  s_a9c257ef9e2b8f::t_c2db540ca3dd45 52
+packages/i18n/package.json
+  s_a9c257ef9e2b8f::t_c65b6d97935d27 54
+docs/README.md
+  s_a9c257ef9e2b8f::t_284828dd9bc60c 7
+packages/blocks/src/components/settings.tsx
+  s_a9c257ef9e2b8f::t_7cb0f4057427d9 3-13,81-86,89-107
+packages/tasks/src/client/task-filters.tsx
+  s_a9c257ef9e2b8f::t_4aff87ada310f3 1-140
+packages/tasks/src/client/task-list.tsx
+  s_a9c257ef9e2b8f::t_799fc59ed83c79 5-6,23,111-112,123,131-141,143
+packages/ui/src/styles/globals.css
+  s_a9c257ef9e2b8f::t_0ba4899955f887 99-100
+docs/architecture/README.md
+  s_a9c257ef9e2b8f::t_d05863f612f0d0 50-51
+packages/blocks/AGENTS.md
+  s_a9c257ef9e2b8f::t_6a33df1f14196a 22-23
+packages/blocks/tests/component/settings.test.tsx
+  s_a9c257ef9e2b8f::t_dc3b994f018064 16,46-49,52-61
+docs/development/account-security.md
+  s_a9c257ef9e2b8f::t_284828dd9bc60c 1-25
+apps/web/src/features/auth/components/account-sessions.tsx
+  s_a9c257ef9e2b8f::t_ce207118e11578 2-51,53,55-56,58,60-71,73,75,79-89,99-243
+  s_a9c257ef9e2b8f::t_f87c4c57472670 1,52,54,57,59,72,74,76-78,90-98
+  s_a9c257ef9e2b8f::t_67dbd591f9e317 244-247
+apps/web/src/features/auth/components/profile-settings.tsx
+  s_a9c257ef9e2b8f::t_562eaa5dfaec51 1-6,8-17,19-55,57-97
+packages/i18n/src/messages/zh.ts
+  s_a9c257ef9e2b8f::t_ae35ec85febeaa 50-61,209-222
+packages/i18n/AGENTS.md
+  s_a9c257ef9e2b8f::t_5ceb9d88d18491 14-16
+.github/workflows/ci.yml
+  s_a9c257ef9e2b8f::t_ec6732f6fe0b48 5
+e2e/tests/foundation.spec.ts
+  s_8dc12600293846::t_04b67805433eda 26-28,30-33,532
+  s_5722ecc24d1fe3::t_633031440b01da 65-70
+  s_927a787f99ed8d::t_193f6815360e7d 103,109,120-133,200-201
+  s_8dc12600293846::t_1cbb34371f6259 29,539,556-557
+  s_8dc12600293846::t_8112e85e65169b 531,560,571,604-605,611,643
+  s_8dc12600293846::t_e2925ddaeb9ce9 427,470
+  s_8dc12600293846::t_40fa149d5ca1b8 357-358
+  s_8dc12600293846::t_0d930cf15e04cc 606-610,612,622
+  s_8dc12600293846::t_af5a5cbc99c708 104,646,650
+  s_a9c257ef9e2b8f::t_a689989aa67162 21-25,119,553
+apps/web/tests/component/features/account-security.test.tsx
+  s_a9c257ef9e2b8f::t_87578756870da1 1-154
+packages/auth/tests/account-security.test.ts
+  s_a9c257ef9e2b8f::t_1d0dd98eea4825 1-148
+docs/architecture/internationalization.md
+  s_a9c257ef9e2b8f::t_c62149ca72f047 19-20
+apps/web/tests/component/features/task-filters.test.tsx
+  s_a9c257ef9e2b8f::t_e3aa50f4866568 1-200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d2fd97b6a99f3418a58fd65cadb55fdedb6b7453",
+  "prompts": {},
+  "sessions": {
+    "s_5722ecc24d1fe3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13eed-0d56-73d1-bfa0-ddde7cacea50",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_8dc12600293846": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a15a0b-3409-7190-9985-c657812904ed",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_927a787f99ed8d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a13aa1-6438-7621-8030-6bbbadb02497",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": null
+    }
+  }
+}
