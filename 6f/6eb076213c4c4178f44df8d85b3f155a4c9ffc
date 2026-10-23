@@ -1,0 +1,19 @@
+bun.lock
+  s_e3a480d3cea1c0::t_7c40faa731f8a4 318,322,491,983-984
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6f6eb076213c4c4178f44df8d85b3f155a4c9ffc",
+  "prompts": {},
+  "sessions": {
+    "s_e3a480d3cea1c0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a167de-d0bd-7063-afd9-8b4926832175",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
