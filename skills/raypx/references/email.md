@@ -1,6 +1,6 @@
 # Email
 
-Package: `@raypx/mail` ([AGENTS](../../../packages/mail/AGENTS.md)). Verification and
+Package: `@raypx/email` ([AGENTS](../../../packages/email/AGENTS.md)). Verification and
 password-reset mail in English and Chinese, delivered through Resend.
 
 - `/server`: `createMailer`; `/types`: the `Mailer` interface auth receives.

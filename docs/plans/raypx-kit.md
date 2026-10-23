@@ -107,9 +107,9 @@ next-forge 的 apps 对应关系：`app`、`web`、`api` 对应 raypx 的 web �
 
 ### `@raypx-kit/mail`（迁入）
 
-- 从 raypx `packages/mail/src/server.ts` 抽出与模板无关的部分：`Mailer` 接口、`createMailer(transport)`、
+- 从 raypx `packages/email/src/server.ts` 抽出与模板无关的部分：`Mailer` 接口、`createMailer(transport)`、
   `available` 标记、`memory` 驱动和 `resend` 驱动。
-- raypx 的 `@raypx/mail` 改为依赖 `@raypx-kit/mail`，只保留模板和渲染。迁移在 raypx 里单独提交。
+- raypx 的 `@raypx/email` 改为依赖 `@raypx-kit/mail`，只保留模板和渲染。迁移在 raypx 里单独提交。
 
 ### `@raypx-kit/security`（新建，可直接发布）
 
@@ -163,7 +163,7 @@ next-forge 的 apps 对应关系：`app`、`web`、`api` 对应 raypx 的 web �
    和 raypx 内的小适配层实现，改 api（Node 与 Workers 运行时、oRPC 日志插件）和 cli 的日志初始化，
    保留现有测试覆盖，然后删除 `vendor/`。如果某项策略适合通用，就先加进 `@raypx-kit/logger`。
 3. **rate-limit 和 notify 占位**：这两个是 raypx Web 手机端方案马上要用的，先建。
-4. **mail 迁入**：建 `@raypx-kit/mail` 并发布；raypx 的 `@raypx/mail` 改为依赖它（raypx 侧单独提交）。
+4. **mail 迁入**：建 `@raypx-kit/mail` 并发布；raypx 的 `@raypx/email` 改为依赖它（raypx 侧单独提交）。
 5. **security**：新建 CSP 生成、安全头和 Hono 中间件并发布；raypx 的 api 接入安全头（raypx 侧单独提交）。
 6. **其余占位**：webhooks、flags、analytics、observability、ai、payments，全部保持 `private`。
 7. **收尾**：docs 站点导航按“已发布”和“占位”分组；根 README 包表格加一列状态。

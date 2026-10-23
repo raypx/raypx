@@ -22,6 +22,8 @@
       "@raypx-kit/env": "0.0.0-alpha.0",
       "@raypx-kit/intl": "0.0.0-alpha.0",
       "@raypx-kit/logger": "0.0.0-alpha.1",
+      "@react-email/components": "^1.0.12",
+      "@react-email/render": "^2.1.1",
       "@xterm/addon-fit": "^0.11.0",
       "@xterm/xterm": "^6.0.0",
       "aws4fetch": "^1.0.20",

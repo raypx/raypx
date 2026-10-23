@@ -37,7 +37,7 @@ export function createMailer(
     const message: MailMessage = {
       to: input.email,
       from: options.from ?? "Raypx <noreply@raypx.local>",
-      ...renderLinkEmail(kind, input, options.defaultLocale),
+      ...(await renderLinkEmail(kind, input, options.defaultLocale)),
     };
     if (options.transport) {
       await options.transport.send(message);

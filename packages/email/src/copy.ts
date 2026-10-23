@@ -1,5 +1,7 @@
 import type { MailLocale, SendLinkEmailInput } from "./types.js";
 
+export type LinkEmailKind = "verification" | "reset";
+
 const copy = {
   en: {
     verification: [
@@ -22,27 +24,38 @@ const copy = {
     hello: "你好",
   },
 } as const;
-const escape = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
-  );
-export function renderLinkEmail(
-  kind: "verification" | "reset",
+
+export interface LinkEmailContent {
+  locale: MailLocale;
+  site: string;
+  subject: string;
+  greeting: string;
+  body: string;
+  action: string;
+  url: string;
+  ignore: string;
+}
+
+/** Resolves localized copy once so the HTML, text and subject always agree. */
+export function linkEmailContent(
+  kind: LinkEmailKind,
   input: SendLinkEmailInput,
   defaultLocale: MailLocale = "en",
-) {
+): LinkEmailContent {
   const locale = input.locale ?? defaultLocale;
   const t = copy[locale];
-  const [subject, action, copyBody] = t[kind];
+  const [subject, action, body] = t[kind];
   const site = input.siteName?.trim() || "Raypx";
-  const body = copyBody.replace("{site}", site);
   const url = new URL(input.url);
   if (!["http:", "https:"].includes(url.protocol)) throw new Error("Mail links must use HTTP(S)");
-  const greeting = `${t.hello}${input.name?.trim() ? ` ${input.name.trim()}` : ""}`;
   return {
+    locale,
+    site,
     subject,
-    html: `<!doctype html><html lang="${locale}"><body><h1>${escape(site)}</h1><p>${escape(greeting)}</p><p>${escape(body)}</p><p><a href="${escape(url.href)}">${action}</a></p><p>${escape(url.href)}</p><p>${t.ignore}</p></body></html>`,
-    text: `${greeting}\n\n${body}\n\n${action}: ${url.href}\n\n${t.ignore}`,
+    greeting: `${t.hello}${input.name?.trim() ? ` ${input.name.trim()}` : ""}`,
+    body: body.replace("{site}", site),
+    action,
+    url: url.href,
+    ignore: t.ignore,
   };
 }

@@ -1,5 +1,5 @@
 import type { Database } from "@raypx/database/connection";
-import { createMailer } from "@raypx/mail/server";
+import { createMailer } from "@raypx/email/server";
 import { createUnavailableStorage } from "@raypx/storage";
 import { createS3Storage } from "@raypx/storage/s3";
 import { sql } from "drizzle-orm";

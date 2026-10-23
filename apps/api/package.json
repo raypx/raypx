@@ -30,7 +30,7 @@
     "@raypx/auth": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "@raypx/database": "workspace:*",
-    "@raypx/mail": "workspace:*",
+    "@raypx/email": "workspace:*",
     "@raypx/storage": "workspace:*",
     "drizzle-orm": "catalog:",
     "evlog": "catalog:",

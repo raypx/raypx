@@ -1,5 +1,5 @@
 {
-  "name": "@raypx/mail",
+  "name": "@raypx/email",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -16,6 +16,10 @@
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
+    "@react-email/components": "catalog:",
+    "@react-email/render": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "resend": "catalog:"
   },
   "devDependencies": {

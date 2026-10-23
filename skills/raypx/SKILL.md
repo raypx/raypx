@@ -46,7 +46,7 @@ Details: [setup](references/setup.md).
 | `packages/ui`        | browser       | shadcn/Base UI primitives and neutral theme tokens                    |
 | `packages/blocks`    | browser       | Shared app chrome: sidebar shell and settings page sections           |
 | `packages/database`  | node          | Drizzle schema and migrations for the new database                    |
-| `packages/mail`      | node          | Auth email templates and Resend delivery                              |
+| `packages/email`     | node          | Auth email templates and Resend delivery                              |
 | `packages/storage`   | universal     | Object storage on unstorage: S3/R2/MinIO, pre-signed URLs             |
 | `packages/tooling`   | tooling / bun | `raypx-dev` CLI: policy, tasks, verify, smoke, db                     |
 | `e2e`                | tooling / bun | Chromium acceptance of Web and Desktop renderer                       |
@@ -62,7 +62,7 @@ How the pieces talk: [architecture](references/architecture.md).
 | Authentication                     | `@raypx/auth`, Better Auth on API                | [auth](references/auth.md)                                 |
 | Database                           | `@raypx/database`, PostgreSQL + Drizzle          | [database](references/database.md)                         |
 | API and RPC                        | `apps/api`, oRPC contracts in `@raypx/contracts` | [api](references/api.md)                                   |
-| Email                              | `@raypx/mail`, Resend                            | [email](references/email.md)                               |
+| Email                              | `@raypx/email`, Resend                           | [email](references/email.md)                               |
 | Agent tasks and remote control     | `@raypx/tasks`, relay, Desktop + CLI             | [remote-tasks](references/remote-tasks.md)                 |
 | Local runtime                      | `apps/cli`: files, Cron jobs, tools, terminals   | [local-runtime](references/local-runtime.md)               |
 | Internationalization               | `@raypx/i18n` on `@raypx-kit/intl`               | [internationalization](references/internationalization.md) |
