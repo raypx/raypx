@@ -19,9 +19,9 @@
       "@tanstack/react-router-ssr-query": "^1.167.3",
       "@tanstack/react-start": "1.169.3",
       "@tanstack/react-virtual": "^3.14.21",
-      "@raypx-kit/env": "0.0.0-alpha.0",
-      "@raypx-kit/intl": "0.0.0-alpha.0",
-      "@raypx-kit/logger": "0.0.0-alpha.1",
+      "@raypx-kit/env": "0.0.0-alpha.1",
+      "@raypx-kit/intl": "0.0.0-alpha.1",
+      "@raypx-kit/logger": "0.0.0-alpha.2",
       "@react-email/components": "^1.0.12",
       "@react-email/render": "^2.1.1",
       "@xterm/addon-fit": "^0.11.0",
@@ -48,7 +48,7 @@
       "unstorage": "2.0.0-beta.0",
       "zod": "^4.6.7",
       "zustand": "^5.0.16",
-      "@raypx-kit/analytics": "0.0.0-alpha.0"
+      "@raypx-kit/analytics": "0.0.0-alpha.1"
     },
     "catalogs": {
       "dev": {
@@ -63,9 +63,9 @@
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.1.2",
         "@vitest/coverage-v8": "5.0.5",
-        "@raypx-kit/devkit": "0.0.0-alpha.0",
-        "@raypx-kit/tsconfig": "0.0.0-alpha.0",
-        "drizzle-kit": "npm:@raypx-kit/drizzle-kit@0.0.0-alpha.0",
+        "@raypx-kit/devkit": "0.0.0-alpha.1",
+        "@raypx-kit/tsconfig": "0.0.0-alpha.1",
+        "drizzle-kit": "npm:@raypx-kit/drizzle-kit@0.0.0-alpha.1",
         "esbuild": "^0.28.2",
         "jiti": "^2.7.0",
         "jsdom": "^30.1.3",
