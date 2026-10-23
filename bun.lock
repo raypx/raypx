@@ -315,9 +315,11 @@
         "resend": "catalog:",
       },
       "devDependencies": {
+        "@raypx-kit/email-preview": "catalog:dev",
         "@raypx-kit/tsconfig": "catalog:dev",
         "@types/node": "catalog:dev",
         "@types/react": "catalog:dev",
+        "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
       },
     },
@@ -486,6 +488,7 @@
       "@playwright/test": "^1.64.1",
       "@posthog/cli": "^0.18.12",
       "@raypx-kit/devkit": "0.0.0-alpha.1",
+      "@raypx-kit/email-preview": "0.0.0-alpha.0",
       "@raypx-kit/tsconfig": "0.0.0-alpha.1",
       "@storybook/addon-a11y": "^10.6.3",
       "@storybook/addon-docs": "^10.6.3",
@@ -976,6 +979,8 @@
     "@raypx-kit/analytics": ["@raypx-kit/analytics@0.0.0-alpha.1", "", { "dependencies": { "posthog-js": "^1.438.14" }, "peerDependencies": { "react": "^19.0.0" }, "optionalPeers": ["react"] }, "sha512-VKVwD/q++V/jFDw+TlNP+J5UiRFjxH9gSg8O4Nea53ks2g6Z3eN/6p48bXDq9p7eqpohphglkmt7XrAgGyFJSg=="],
 
     "@raypx-kit/devkit": ["@raypx-kit/devkit@0.0.0-alpha.1", "", { "dependencies": { "@dotenvx/dotenvx": "^2.38.2", "confbox": "^0.3.1", "oxc-parser": "^0.155.0" } }, "sha512-QgKxpNLPOBoYGbStwhmVz87R4UZzEZockbK5ji6QvAnGW/iQoNfXz6Fj5BeU1ejFHzrkRsf4WK9frLOvOVWz/A=="],
+
+    "@raypx-kit/email-preview": ["@raypx-kit/email-preview@0.0.0-alpha.0", "", { "dependencies": { "@react-email/render": "^2.1.1", "prettier": "^3.9.10" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0", "vite": "^8.0.0" } }, "sha512-zcEF/1V5Ywvwx+VeMm2R5q7GI9OriMwGLS3Sjz9RIZ0G2zXO6X3mkDaR+Pi0GtbCoKEI8fWClng+22yVRr+xAg=="],
 
     "@raypx-kit/env": ["@raypx-kit/env@0.0.0-alpha.1", "", { "peerDependencies": { "zod": "^4.0.0" } }, "sha512-A1JN3ggbbcEyUSCWMzemQwi50b6XPE68ze8zZFUFjkNuDMesGfqKorOsj1pYGMfdqvk8Qcr09INNSCFOYa7UHQ=="],
 

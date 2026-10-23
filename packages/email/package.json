@@ -8,6 +8,7 @@
     "./types": "./src/types.ts"
   },
   "scripts": {
+    "email:dev": "bun vp dev",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
@@ -23,9 +24,11 @@
     "resend": "catalog:"
   },
   "devDependencies": {
+    "@raypx-kit/email-preview": "catalog:dev",
     "@raypx-kit/tsconfig": "catalog:dev",
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
+    "vite": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {

@@ -64,6 +64,7 @@
         "@vitejs/plugin-react": "^6.1.2",
         "@vitest/coverage-v8": "5.0.5",
         "@raypx-kit/devkit": "0.0.0-alpha.1",
+        "@raypx-kit/email-preview": "0.0.0-alpha.0",
         "@raypx-kit/tsconfig": "0.0.0-alpha.1",
         "drizzle-kit": "npm:@raypx-kit/drizzle-kit@0.0.0-alpha.1",
         "esbuild": "^0.28.2",

@@ -16,6 +16,13 @@ Authentication email templates and Resend delivery.
 
 Verification and password-reset mail only, in en/zh. Templates are React Email components in `src/emails/` (shared parts under `_components/`); localized copy lives in `src/copy.ts` and feeds the subject, HTML and text together. Accept injected transports in tests. Never log addresses, credentials, tokens, URLs or bodies. Unconfigured delivery fails in every environment when a send is attempted. Creation remains available for startup/liveness. The factory exposes availability so API mail actions can fail before Better Auth dispatch.
 
+## Preview
+
+`bun run --cwd packages/email email:dev` serves `src/emails` through
+`@raypx-kit/email-preview` at `http://127.0.0.1:3001`. Each template's
+`PreviewProps` supplies the sample data. `vite.config.ts` exists only for this
+preview; the package is never built.
+
 ## Verification
 
 ```sh
