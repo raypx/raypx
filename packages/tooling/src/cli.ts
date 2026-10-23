@@ -64,13 +64,19 @@ async function main() {
       findings(checkLocales(root), "Locale catalogs");
       break;
     case "verify":
+    case "verify:quick":
       findings(checkLocales(root), "Locale catalogs");
       findings(policy(root), "Repository policy");
       await run(process.execPath, ["--bun", "vp", "fmt", "--check"], root);
       // One graph shares native preparation across lint, checks and builds.
       // Start with check so verification never loads development dotenv into tests.
-      await turbo(root, "check", ["test", "build", "build:cloudflare", "//#lint"]);
-      await smoke(root);
+      await turbo(root, "check", [
+        "test",
+        ...(command === "verify" ? ["build", "build:cloudflare"] : []),
+        "//#lint",
+        "--summarize",
+      ]);
+      if (command === "verify") await smoke(root);
       break;
     case "smoke":
       await smoke(root);
@@ -133,7 +139,7 @@ async function main() {
     case undefined:
     default:
       console.log(
-        "raypx-dev: tasks | workspace | policy | i18n | verify | smoke | env | db | desktop | clean | doctor",
+        "raypx-dev: tasks | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | doctor",
       );
   }
 }

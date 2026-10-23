@@ -3,7 +3,7 @@
   "envMode": "loose",
   "agentGuidance": false,
   "cacheDir": ".turbo/cache",
-  "concurrency": "4",
+  "concurrency": "2",
   "remoteCache": {
     "signature": true
   },

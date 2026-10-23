@@ -1,4 +1,3 @@
-import { availableParallelism } from "node:os";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus/test/config";
 
@@ -17,8 +16,8 @@ export function workspaceTests(
     resolve: { dedupe: ["react", "react-dom"] },
     test: {
       environment: "node",
-      // Turbo already runs workspaces in parallel; bound each runner's process pool.
-      maxWorkers: Math.min(2, Math.max(availableParallelism() - 1, 1)),
+      // Turbo owns workspace parallelism; avoid multiplying its task budget per runner.
+      maxWorkers: 1,
       // Keep jsdom's real DOM without Bun's unsupported VM WindowProxy brands.
       execArgv: [
         "--no-env-file",

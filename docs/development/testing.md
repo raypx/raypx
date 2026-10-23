@@ -15,6 +15,34 @@ in `loose` environment mode, so tasks inherit the parent environment without
 before Bun changes PATH. Variables affecting cached outputs remain declared in
 `env`/`globalEnv` so their values participate in cache keys.
 
+## Daily feedback and machine load
+
+Use `bun run verify:quick` during development. It checks locale catalogs, repository
+policy, formatting, lint, types and workspace tests, without application builds or
+artifact probes. Run `bun run verify` before release; CI retains the complete gate.
+
+Turbo runs at most two workspace tasks concurrently and each Vitest runner uses
+one worker. This avoids multiplying workspace and file concurrency, although a
+build or test may still start its own subprocesses. Tests retain per-file isolation.
+Use `bun run test --concurrency=1` on a busy machine. A single workspace can opt
+into more workers with `bun run --cwd packages/ui test --maxWorkers=2`.
+
+Start with the changed workspace, then include its consumers when needed:
+
+```sh
+bun run test --filter=@raypx/ui
+bun run test '--filter=...@raypx/ui'
+```
+
+Root `test`, `verify:quick` and `verify` write task timings and cache results to
+`.turbo/runs/` using `--summarize`. Cached tasks replay earlier logs; their printed
+test duration is not the elapsed time of the current run. Use the summary to find
+slow tasks and cache misses before changing timeouts. Keep `.turbo/cache` between
+runs; cleaning it forces work to run again.
+
+The root `dev` command reserves three task slots for its two persistent Web/API
+servers; Turbo requires a spare slot beyond the number of persistent tasks.
+
 ## Test locations
 
 Every workspace keeps test suites, test-only setup and fixtures under `tests/`.

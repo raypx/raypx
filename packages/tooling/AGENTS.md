@@ -11,7 +11,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 
 - raypx-dev tasks <task> [Turbo flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
-- raypx-dev policy | verify | doctor | clean
+- raypx-dev policy | verify | verify:quick | doctor | clean
+- `verify:quick` checks source and tests; `verify` additionally builds and probes artifacts.
 - `clean` removes workspace outputs, native SDK/bundles and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
