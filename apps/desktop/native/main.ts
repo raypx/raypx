@@ -18,6 +18,7 @@ import * as Utils from "electrobun/main/utils";
 import { Session } from "electrobun/main/native";
 import { createDesktopApi, parseApiOrigin } from "./api";
 import { loadDesktopConfig, scopeLocalAccount } from "./config";
+import { createEncryptedCookies } from "./cookies";
 import manifest from "../package.json";
 import type { DesktopRpc } from "./rpc";
 import { wireWindow } from "./window";
@@ -114,7 +115,29 @@ const partition =
   (smokeDirectory
     ? `-smoke-${createHash("sha256").update(smokeDirectory).digest("hex").slice(0, 16)}`
     : "");
-export const desktopApi = createDesktopApi(apiOrigin, Session.fromPartition(partition).cookies);
+const serverDirectory = join(
+  smokeDirectory ?? Utils.paths.userData,
+  "servers",
+  connectionConfig.scope,
+);
+const cookies = await (async () => {
+  if (process.platform !== "win32") return Session.fromPartition(partition).cookies;
+  try {
+    return await createEncryptedCookies(serverDirectory, apiOrigin);
+  } catch {
+    if (!smokeDirectory) {
+      await Utils.showMessageBox({
+        type: "error",
+        title: "Raypx",
+        message: "Unable to open Windows secure session storage / 无法读取 Windows 安全登录存储",
+        buttons: ["Quit / 退出"],
+      });
+      Utils.quit();
+    }
+    throw new Error("Windows secure session storage unavailable");
+  }
+})();
+export const desktopApi = createDesktopApi(apiOrigin, cookies);
 const nativeApiClient = createApiClient({ baseUrl: apiOrigin, fetch: desktopApi.fetch });
 let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
 function notifyPending() {
@@ -143,7 +166,7 @@ export const engine = new LocalEngine(
   engineArgs,
 );
 export const control = new RemoteControl(
-  join(smokeDirectory ?? Utils.paths.userData, "servers", connectionConfig.scope),
+  serverDirectory,
   engine,
   notifyPending,
   () => {

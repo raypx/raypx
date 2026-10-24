@@ -70,8 +70,11 @@ verification and password recovery remain public; confirmed logout redirects to
 - Closing hides the window while tray scheduling continues. Actual Quit closes engine stdin and waits for cancellation before native exit.
 - Engine failures show retry state; account, theme and language remain usable.
 - Keep a persistent WebView partition. macOS uses WebKit; Windows bundles CEF with web security enabled.
-- `native/api.ts` owns HTTP authentication and RPC cookies through the SDK Session
-  store in that same partition. `src/lib/api-fetch.ts` injects this transport into
+- `native/api.ts` owns HTTP authentication and RPC cookies. macOS uses the SDK
+  Session store in that same partition. Windows CEF has no SDK cookie implementation;
+  `native/cookies.ts` owns an AES-GCM cookie jar with a per-server key in Windows
+  Credential Manager (`Bun.secrets`, local persistence), never a plaintext key/file.
+  `src/lib/api-fetch.ts` injects this transport into
   Better Auth and the API client; browser previews use ordinary fetch. WebKit can
   reject third-party cookies from `views://`, so do not rely on WebView fetch for
   signed-in API calls. Never return Cookie/Set-Cookie headers over the bridge.

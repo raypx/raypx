@@ -118,6 +118,16 @@ async function localSessionFixture() {
       expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
     },
   };
+  const response = await desktopApi.request({
+    path: "/api/auth/get-session",
+    method: "GET",
+    headers: {},
+  });
+  assert.equal(
+    JSON.parse(response.body)?.user?.id,
+    user.id,
+    "Native cookie transport did not return the synthetic session",
+  );
   await evaluate(
     'window.dispatchEvent(new Event("focus"));document.dispatchEvent(new Event("visibilitychange"));return true;',
   );
@@ -490,5 +500,6 @@ try {
   console.error(
     `Native smoke failed at ${stage}: ${error instanceof Error ? error.message : "Unknown failure"}`,
   );
+  if (process.env.CI) console.error(`::error title=Native smoke stage::${stage}`);
   void quitDesktop(1);
 }

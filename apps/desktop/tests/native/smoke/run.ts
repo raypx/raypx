@@ -1,6 +1,7 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { SESSION_KEY_SERVICE, sessionKeyName } from "../../../native/cookies";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),
@@ -115,5 +116,17 @@ try {
   if (phase === "write") await run("read", directory);
   if (phase === "beta") await run("beta-restore", directory);
 } finally {
-  if (!phase.startsWith("beta")) await rm(directory, { recursive: true, force: true });
+  if (!phase.startsWith("beta")) {
+    if (process.platform === "win32") {
+      const servers = join(directory, "servers");
+      for (const entry of await readdir(servers, { withFileTypes: true }).catch(() => [])) {
+        if (entry.isDirectory())
+          await Bun.secrets.delete({
+            service: SESSION_KEY_SERVICE,
+            name: sessionKeyName(join(servers, entry.name)),
+          });
+      }
+    }
+    await rm(directory, { recursive: true, force: true });
+  }
 }

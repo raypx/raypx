@@ -92,3 +92,11 @@ For isolated testing or a portable setup, `RAYPX_HOME` may name another absolute
 configuration directory. It changes where `config.toml` is read, not the server
 precedence. The GUI launched by Finder/Explorer may not inherit shell variables.
 Native smoke tests always use their own temporary configuration directory.
+
+Windows CEF does not implement the current SDK Session cookie interface. Native
+HTTP sessions use an authenticated AES-GCM cookie file in the server's local data
+directory; its random encryption key lives in Windows Credential Manager with
+local-only persistence, protected by DPAPI. Missing keys or corrupted ciphertext
+fail closed. Neither keys nor cookies enter `config.toml` or renderer storage.
+Session cookies without an expiry stay in memory; persistent cookies honor expiry
+and sign-out removal. macOS continues to use its native WebKit Session cookie store.
