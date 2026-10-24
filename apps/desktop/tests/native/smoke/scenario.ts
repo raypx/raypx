@@ -52,7 +52,6 @@ async function waitFor(check: () => Promise<boolean> | boolean, message: string)
 }
 let stage = "renderer startup";
 let fixtureSession: unknown = null;
-let fixtureCookie = "";
 const fixturePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
 const fixtureApi = new URL(apiOrigin);
 if (
@@ -66,7 +65,12 @@ const fixtureServer =
         hostname: fixtureApi.hostname,
         port: Number(fixtureApi.port),
         fetch: (request) => {
-          fixtureCookie = request.headers.get("cookie") ?? "";
+          if (new URL(request.url).pathname === "/api/auth/list-sessions")
+            return Response.json({
+              sessionCookiePresent: (request.headers.get("cookie") ?? "").includes(
+                "better-auth.session_token=raypx-native-server",
+              ),
+            });
           return new URL(request.url).pathname === "/api/auth/get-session"
             ? Response.json(
                 fixtureSession,
@@ -128,9 +132,9 @@ async function localSessionFixture() {
     user.id,
     "Native cookie transport did not return the synthetic session",
   );
-  await evaluate(
-    'window.dispatchEvent(new Event("focus"));document.dispatchEvent(new Event("visibilitychange"));return true;',
-  );
+  // Reset the auth client's cached signed-out result after changing the synthetic
+  // server fixture. Real sign-in invalidation is covered by the HTTPS gate.
+  await reloadRenderer();
   await waitFor(
     async () =>
       Boolean(
@@ -238,12 +242,16 @@ try {
       await evaluate(`return window[${JSON.stringify(CONNECTION_KEY)}]?.apiUrl`),
       apiOrigin,
     );
-    await desktopApi.request({ path: "/api/auth/get-session", method: "GET", headers: {} });
-    assert.equal(
-      fixtureCookie.includes("better-auth.session_token=raypx-native-server"),
-      restoredServer,
-      "Session cookie crossed servers or did not restore when returning to its server",
-    );
+    // Echo the cookie presence for this exact request. A global "last request"
+    // observation races the renderer's concurrent startup session checks.
+    await waitFor(async () => {
+      const response = await desktopApi.request({
+        path: "/api/auth/list-sessions",
+        method: "GET",
+        headers: {},
+      });
+      return JSON.parse(response.body).sessionCookiePresent === restoredServer;
+    }, "Session cookie crossed servers or did not restore when returning to its server");
     assert.equal(
       await evaluate('return localStorage.getItem("raypx-server-acceptance")'),
       restoredServer ? "saved" : null,
