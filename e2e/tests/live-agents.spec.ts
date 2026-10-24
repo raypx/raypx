@@ -106,7 +106,7 @@ test("Beta Web runs approved Claude and Codex tasks on a hidden packaged Desktop
       const allow = page.getByRole("button", { name: "Allow once", exact: true });
       if ((await allow.isVisible()) && (await allow.isEnabled())) {
         const permission = allow.locator("xpath=ancestor::section[1]");
-        const body = await permission.locator("pre").textContent();
+        const body = await permission.textContent();
         expect(body).toContain(file);
         if (body && !handled.has(body)) {
           handled.add(body);
@@ -116,9 +116,7 @@ test("Beta Web runs approved Claude and Codex tasks on a hidden packaged Desktop
       await page.waitForTimeout(250);
     }
     await expect(completed).toBeVisible();
-    const result = page
-      .getByRole("heading", { name: "Agent result", exact: true })
-      .locator("xpath=following-sibling::pre[1]");
+    const result = page.getByRole("region", { name: "Conversation", exact: true });
     await expect(result).toContainText(marker);
     expect((await readFile(join(native.project, file), "utf8")).trim()).toBe(marker);
     await page.screenshot({

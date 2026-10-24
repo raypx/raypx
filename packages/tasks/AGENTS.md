@@ -22,3 +22,10 @@ failed mutations open for a deliberate retry and block duplicate submissions.
 If a create receipt is lost, recover the same submitted task from its authoritative
 read projection instead of blocking its approval behind the creation form.
 Run this workspace check/test and the repository verification gate.
+
+Task details merge normalized conversation entries by ID/revision, load older
+pages on demand and follow streaming output only when the reader is near the end.
+Markdown must skip raw HTML and remote images. Recognized edit approvals have a
+bounded Diff plus the complete original request. In-flight controls depend on the
+host's advertised inputModes; explain Claude interrupt versus Codex current-turn
+steer. Recover lost input receipts by authoritative entry ID without resending.

@@ -2,6 +2,7 @@ import type { LocalEvent } from "@raypx/contracts/local";
 import {
   taskSchema,
   humanRequestSchema,
+  taskInputActivitySchema,
   type RelayRequest,
   type SyncDevice,
 } from "@raypx/contracts/tasks";
@@ -38,7 +39,11 @@ export function createLocalTaskClient(
   const inflight = new Map<string, Promise<unknown>>();
   // Cancel and decide have no client id, so identical in-flight calls share one command.
   const execute = (value: RelayRequest, signal?: AbortSignal) => {
-    if (value.method === "tasks.create" || value.method === "tasks.followUp")
+    if (
+      value.method === "tasks.create" ||
+      value.method === "tasks.followUp" ||
+      value.method === "tasks.input"
+    )
       return send(value.input.id, value, signal);
     const key = JSON.stringify(value);
     let pending = inflight.get(key);
@@ -94,6 +99,10 @@ export function createLocalTaskClient(
         taskSchema.parse(await execute({ method: "tasks.followUp", input }, options?.signal)),
       cancel: async (input, options) =>
         taskSchema.parse(await execute({ method: "tasks.cancel", input }, options?.signal)),
+      input: async (input, options) =>
+        taskInputActivitySchema.parse(
+          await execute({ method: "tasks.input", input }, options?.signal),
+        ),
     },
     approvals: {
       list: (_input, options) =>

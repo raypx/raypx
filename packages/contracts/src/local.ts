@@ -74,6 +74,7 @@ export const localParams = {
     ...agentAccount,
     id: z.string().uuid(),
     after: z.number().int().min(0).default(0),
+    beforeActivity: z.number().int().positive().optional(),
   }),
   "agents.local.approvals": z.object(agentAccount),
   "agents.local.execute": z.object({

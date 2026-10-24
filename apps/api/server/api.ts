@@ -340,7 +340,7 @@ export function createApiApp(options: ApiAppOptions) {
       ),
       get: os.tasks.get.handler(({ input, context }) =>
         controlCall(context, (control, auth) =>
-          control.getTask(auth.user.id, input.id, input.after),
+          control.getTask(auth.user.id, input.id, input.after, input.beforeActivity),
         ),
       ),
     },

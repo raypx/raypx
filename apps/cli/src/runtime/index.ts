@@ -58,7 +58,7 @@ export function createRuntime(
           }
           case "agents.local.get": {
             const p = localParams[method].parse(raw);
-            return getAgents().localTask(p.accountId, p.id, p.after);
+            return getAgents().localTask(p.accountId, p.id, p.after, p.beforeActivity);
           }
           case "agents.local.approvals":
             return getAgents().localApprovals(localParams[method].parse(raw).accountId);

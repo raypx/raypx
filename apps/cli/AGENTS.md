@@ -80,6 +80,13 @@ only after process-tree termination and stream draining complete, including deta
 
 Relay command receipts retain their original payload and result. Keep acknowledged
 events for cursor replay; a frozen paged snapshot covers journal compaction gaps.
+`tasks.input` records a durable instruction before dispatch. Queue runs only after
+a successful turn; Codex steer targets the current turn ID, while Claude confirms
+interrupt and waits for its result before sending on the same stream. Keep one
+turn active and retain the project lock across queued work. Restart never replays
+uncertain inference. Conversation projections select text, tool status and usage;
+exclude reasoning, child-agent content, tool arguments and stdout. Activity entries
+keep stable IDs and increasing revisions; throttle deltas and flush on termination.
 
 `agents.local.*` exposes account-scoped task reads, direct commands, device metadata
 and detach through private stdio only. Local tasks use a persistent device identity

@@ -9,6 +9,67 @@ import {
 } from "../helpers/control.js";
 
 describe("Desktop-owned task projections", () => {
+  it("routes task inputs by owner and retains only the latest conversation revision with paging", async () => {
+    const repository = memoryControlRepository(),
+      service = new ControlService(repository),
+      f = await connected(service),
+      task = await running(service, f);
+    const id = crypto.randomUUID(),
+      input = { id, taskId: task.id, mode: "queue" as const, prompt: "Next instruction" };
+    expect(
+      (await service.route(f.auth.user.id, id, { method: "tasks.input", input })).deviceId,
+    ).toBe(task.deviceId);
+    await expect(
+      service.route("other", id, { method: "tasks.input", input }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      service.route(f.auth.user.id, crypto.randomUUID(), { method: "tasks.input", input }),
+    ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    const entry = {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "message" as const,
+      order: 1,
+      revision: 1,
+      text: "Draft",
+      status: "streaming" as const,
+      truncated: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const event = { id: crypto.randomUUID(), taskId: task.id, kind: "activity" as const, entry };
+    await service.events(f.actor, f.announce.streamId, [
+      { sequence: 2, event },
+      {
+        sequence: 3,
+        event: {
+          ...event,
+          id: crypto.randomUUID(),
+          entry: { ...entry, revision: 2, text: "Final", status: "complete" },
+        },
+      },
+    ]);
+    const result = await service.getTask(f.auth.user.id, task.id, 0);
+    expect(result.activity).toEqual([expect.objectContaining({ revision: 2, text: "Final" })]);
+    expect(result.events.every((item) => item.event.kind !== "activity")).toBe(true);
+    const persisted = await repository.transaction(f.auth.user.id, (tx) => tx.list("event"));
+    expect(persisted).toHaveLength(2);
+    await service.snapshot(f.actor, f.announce.streamId, 3, [
+      { kind: "task", task },
+      { kind: "activity", entry },
+    ]);
+    expect((await service.getTask(f.auth.user.id, task.id, 0)).activity[0]?.revision).toBe(2);
+    expect((await service.getTask(f.auth.user.id, task.id, 0, 1)).activity).toEqual([]);
+    await expect(service.getTask("other", task.id, 0)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      service.events(f.actor, f.announce.streamId, [
+        {
+          sequence: 4,
+          event: { ...event, entry: { ...entry, revision: 2, text: "Changed same revision" } },
+        },
+      ]),
+    ).rejects.toMatchObject({ code: "EVENT_CONFLICT" });
+  });
   it("routes an owned command without inventing task or approval state in the cloud", async () => {
     const service = new ControlService(memoryControlRepository()),
       f = await connected(service);

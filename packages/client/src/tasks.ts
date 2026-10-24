@@ -3,6 +3,8 @@ import { RelayConnection, relayUrl, type RelaySocketFactory } from "./relay.js";
 import {
   taskSchema,
   humanRequestSchema,
+  taskInputActivitySchema,
+  type TaskInput,
   type RelayRequest,
   type RelayCursor,
 } from "@raypx/contracts/api";
@@ -25,6 +27,7 @@ export interface TaskClient extends Pick<
       input: Input<"tasks.cancel">,
       options?: { signal?: AbortSignal },
     ): Promise<ReturnType<typeof taskSchema.parse>>;
+    input(input: Input<"tasks.input">, options?: { signal?: AbortSignal }): Promise<TaskInput>;
   };
   approvals: ApiClient["approvals"] & {
     decide(
@@ -161,7 +164,9 @@ export function createTaskClient(
     }
     if (!connection) throw failure("NETWORK_UNAVAILABLE");
     const id =
-      value.method === "tasks.create" || value.method === "tasks.followUp"
+      value.method === "tasks.create" ||
+      value.method === "tasks.followUp" ||
+      value.method === "tasks.input"
         ? value.input.id
         : crypto.randomUUID();
     const key = JSON.stringify(value),
@@ -226,6 +231,10 @@ export function createTaskClient(
         taskSchema.parse(await request({ method: "tasks.followUp", input }, opts?.signal)),
       cancel: async (input, opts) =>
         taskSchema.parse(await request({ method: "tasks.cancel", input }, opts?.signal)),
+      input: async (input, opts) =>
+        taskInputActivitySchema.parse(
+          await request({ method: "tasks.input", input }, opts?.signal),
+        ),
     },
     approvals: {
       list: (...args) => api.approvals.list(...args),

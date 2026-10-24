@@ -53,13 +53,23 @@ export class JsonProcess {
             if (!value || typeof value !== "object" || Array.isArray(value))
               throw new LocalError("AGENT_PROTOCOL", "Invalid agent record");
             const message = value as Record<string, unknown>;
-            const pending = this.pending.get(String(message.id));
-            if (pending && ("result" in message || "error" in message)) {
+            const control =
+              message.type === "control_response" &&
+              message.response &&
+              typeof message.response === "object"
+                ? (message.response as Record<string, unknown>)
+                : undefined;
+            const id = control ? String(control.request_id) : String(message.id);
+            const pending = this.pending.get(id);
+            if (pending && (control || "result" in message || "error" in message)) {
               clearTimeout(pending.timer);
-              this.pending.delete(String(message.id));
-              if ("error" in message)
+              this.pending.delete(id);
+              if (control?.subtype === "error" || "error" in message)
                 pending.reject(new LocalError("AGENT_RPC_FAILED", "Agent request failed"));
-              else pending.resolve(message.result as Record<string, unknown>);
+              else
+                pending.resolve(
+                  (control?.response ?? message.result ?? {}) as Record<string, unknown>,
+                );
             } else onMessage(message);
           }
         }
@@ -91,6 +101,13 @@ export class JsonProcess {
   }
   request(method: string, params: unknown) {
     const id = String(++this.serial);
+    return this.exchange(id, { id, method, params });
+  }
+  control(request: Record<string, unknown>) {
+    const id = `control:${++this.serial}`;
+    return this.exchange(id, { type: "control_request", request_id: id, request });
+  }
+  private exchange(id: string, message: unknown) {
     return new Promise<Record<string, unknown>>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
@@ -98,7 +115,7 @@ export class JsonProcess {
       }, 15_000);
       this.pending.set(id, { resolve, reject, timer });
       try {
-        this.send({ id, method, params });
+        this.send(message);
       } catch (error) {
         clearTimeout(timer);
         this.pending.delete(id);

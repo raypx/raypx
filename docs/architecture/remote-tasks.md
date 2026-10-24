@@ -10,11 +10,11 @@ routes commands; a server clock cannot declare a local execution finished.
 Web / Desktop UI ↔ API relay ↔ Desktop native ↔ bundled CLI ↔ Claude Code / Codex.
 All remote connections are outbound HTTPS/WSS. Native exposes no public port.
 The local engine uses version-matched NDJSON over stdio. Codex uses its local
-stdio app-server; Claude uses print-mode JSON and authenticated session hooks on
+stdio app-server; Claude uses persistent stream-JSON input/output and authenticated session hooks on
 loopback. Provider wire messages and credentials remain on the computer.
 
 HTTP RPC serves account/device management, task/request projections and one-time
-viewer tickets. Remote task creation, follow-up, cancellation and approval decisions travel
+viewer tickets. Remote task creation, in-flight instructions, follow-up, cancellation and approval decisions travel
 through the relay. Visible pages subscribe to change events and refresh projections;
 hidden pages suspend those subscriptions. There is no two-second task polling loop.
 Native wakes on local engine events, retains the connection when the window hides,
@@ -104,11 +104,42 @@ JSONB comparisons canonicalize object keys when checking event identity. Retried
 events are deduplicated, while conflicting content for the same event ID fails.
 Stale connections cannot overwrite a newer host connection's projections.
 
+## Conversations and in-flight instructions
+
+Managed Claude and Codex tasks expose a normalized conversation: assistant text,
+tool names and outcomes, per-turn token usage, and user instruction receipts.
+The host throttles streaming text updates and retains the latest revision of each
+entry in SQLite. Local history remains local. API replaces remote activity read
+projections by entry ID/revision instead of storing a full transcript copy for
+every delta. Reads page up to 64 entries / 192 KiB; each message is capped at
+32,000 characters with an explicit truncation notice. Older messages are loaded
+on demand. Raw tool output, child-agent output and internal reasoning are excluded.
+
+`tasks.input` uses its instruction UUID as its immutable command ID. Queue holds
+up to 20 pending instructions on the executor, then starts each in the same session
+after the current turn succeeds. It retains the project lock across those turns.
+Codex Send now uses `turn/steer` with the active turn ID. Claude Send now confirms
+an interrupt through its control protocol, waits for the interrupted result, then
+sends the instruction on the existing stream. These semantics are explained in
+the composer. Pending approval blocks Send now, while Queue remains available.
+Errors do not automatically run queued work. Cancellation discards unsent work;
+restart marks uncertain delivery interrupted and never replays inference.
+
+The shared shadcn interface renders safe Markdown without raw HTML or remote
+images. Recognized Claude Edit/Write/MultiEdit inputs and Codex file-change patches
+have a Diff view alongside the complete original request. Previews show at most
+20 files / 1,200 lines per file and disclose limits. Replacement snippets use
+snippet-relative line numbers, not invented file locations. Unknown operations
+retain their original text approval. Token counts cover loaded turns only; Raypx
+does not infer a bill from them. Older hosts omit input capabilities and show an
+upgrade hint instead of nonfunctional controls.
+
 ## Data and limits
 
-For remote tasks, cloud receives prompts, status, requests, plans and result summaries. Project
-files, full provider transcripts, terminal streams and Agent credentials remain
-local. Agent text renders as text. Diagnostics exclude tokens, prompts, bodies,
+For remote tasks, cloud receives prompts, status, requests, plans, bounded visible
+conversation entries and result summaries. Project files, raw provider transcripts,
+terminal streams and Agent credentials remain local. Agent Markdown never executes HTML.
+Diagnostics exclude tokens, prompts, bodies,
 paths and results. Relay frames are bounded to 1 MiB, batches to 50 events and
 assembled snapshots to 32 MiB. Slow connections are disconnected and recover by
 cursor. Unsupported or oversized approvals fail closed.

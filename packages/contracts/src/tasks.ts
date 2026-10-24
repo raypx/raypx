@@ -1,4 +1,5 @@
 import { z } from "zod";
+export { taskActivityPage } from "./activity.js";
 
 export const agentProviderSchema = z.enum(["claude", "codex"]);
 export const taskModeSchema = z.enum(["run", "plan"]);
@@ -21,6 +22,10 @@ export const capabilitySchema = z.object({
   available: z.boolean(),
   version: z.string().max(120),
   reason: z.enum(["ready", "missing", "unsupported"]).default("ready"),
+  inputModes: z
+    .array(z.enum(["steer", "queue"]))
+    .max(2)
+    .optional(),
 });
 export const deviceProjectSchema = z.object({
   id: z.string().uuid(),
@@ -80,7 +85,58 @@ export const humanRequestSchema = z.object({
   status: z.enum(["pending", "decided", "applied", "expired", "cancelled"]),
   decision: decisionSchema.nullable(),
 });
+const activityBase = z.object({
+  id: z.string().uuid(),
+  taskId: z.string().uuid(),
+  order: z.number().int().positive(),
+  revision: z.number().int().positive(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const taskInputActivitySchema = activityBase.extend({
+  kind: z.literal("input"),
+  mode: z.enum(["steer", "queue"]),
+  text: z.string().min(1).max(32_000),
+  status: z.enum(["queued", "sending", "sent", "failed", "cancelled", "interrupted"]),
+  code: z.enum(["INPUT_DELIVERY_FAILED", "TASK_STOPPED", "HOST_RESTARTED"]).optional(),
+});
+export const taskActivitySchema = z.discriminatedUnion("kind", [
+  activityBase.extend({
+    kind: z.literal("message"),
+    text: z.string().max(32_000),
+    status: z.enum(["streaming", "complete", "interrupted"]),
+    truncated: z.boolean(),
+  }),
+  activityBase.extend({
+    kind: z.literal("tool"),
+    name: z.string().max(120),
+    status: z.enum(["running", "succeeded", "failed", "interrupted"]),
+  }),
+  activityBase.extend({
+    kind: z.literal("usage"),
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    cachedInputTokens: z.number().int().nonnegative(),
+    cacheWriteTokens: z.number().int().nonnegative(),
+    durationMs: z.number().int().nonnegative(),
+  }),
+  taskInputActivitySchema,
+]);
+export type TaskActivity = z.infer<typeof taskActivitySchema>;
+export type TaskInput = Extract<TaskActivity, { kind: "input" }>;
+export const taskInputSchema = z.object({
+  id: z.string().uuid(),
+  taskId: z.string().uuid(),
+  mode: z.enum(["steer", "queue"]),
+  prompt: z.string().trim().min(1).max(32_000),
+});
 export const agentEventSchema = z.discriminatedUnion("kind", [
+  z.object({
+    id: z.string().uuid(),
+    taskId: z.string().uuid(),
+    kind: z.literal("activity"),
+    entry: taskActivitySchema,
+  }),
   z.object({
     id: z.string().uuid(),
     taskId: z.string().uuid(),
@@ -157,6 +213,7 @@ export function validDecision(request: HumanRequest, decision: HumanDecision) {
 }
 
 export const relayRequestSchema = z.discriminatedUnion("method", [
+  z.object({ method: z.literal("tasks.input"), input: taskInputSchema }),
   z.object({ method: z.literal("tasks.create"), input: taskCreateSchema }),
   z.object({
     method: z.literal("tasks.followUp"),
@@ -179,6 +236,7 @@ export const relayCommandSchema = z.object({
   request: relayRequestSchema,
 });
 export const snapshotRecordSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("activity"), entry: taskActivitySchema }),
   z.object({ kind: z.literal("task"), task: taskSchema }),
   z.object({ kind: z.literal("request"), request: humanRequestSchema }),
 ]);

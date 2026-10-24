@@ -2,8 +2,12 @@ import { appendFileSync } from "node:fs";
 import { exitForVersion } from "./version.mjs";
 
 exitForVersion("claude");
-let prompt = "";
-for await (const chunk of process.stdin) prompt += chunk;
+let input = "";
+for await (const chunk of process.stdin) {
+  input += chunk;
+  if (input.includes("\n")) break;
+}
+const prompt = JSON.parse(input.split("\n")[0]).message.content;
 const mode = process.argv[process.argv.indexOf("--permission-mode") + 1];
 const resume = process.argv.includes("--resume")
   ? process.argv[process.argv.indexOf("--resume") + 1]

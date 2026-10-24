@@ -16,12 +16,14 @@ import {
   type SnapshotRecord,
   type RelayRequest,
   type SyncDevice,
+  type TaskInput,
   validDecision,
 } from "@raypx/contracts/tasks";
 import { type StateStore, acquireLock } from "../state";
 import { LocalError } from "../errors";
 import { AgentStore, desktopBinding, isDesktopBinding, type LocalAgentTask } from "./store";
 import { JsonProcess } from "./transport";
+import { ConversationRecorder } from "./activity";
 import manifest from "../../../package.json";
 
 type Pending = {
@@ -42,6 +44,14 @@ type Execution = {
   items: Map<string, Record<string, unknown>>;
   awaitingPlan?: boolean;
   planRequestHandled?: boolean;
+  conversation: ConversationRecorder;
+  inputs: TaskInput[];
+  operation: Promise<void>;
+  ready: boolean;
+  turnActive: boolean;
+  turnId: string;
+  interrupting: boolean;
+  sendTurn?: (prompt: string) => Promise<void>;
 };
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -120,12 +130,13 @@ export class AgentRuntime {
         .slice(0, limit),
     );
   }
-  localTask(accountId: string, id: string, after: number) {
+  localTask(accountId: string, id: string, after: number, beforeActivity?: number) {
     const binding = desktopBinding(accountId),
       local = this.store.get(id);
     if (!local || local.binding !== binding) throw new LocalError("NOT_FOUND", "Task unavailable");
     return {
       task: local.task,
+      ...this.store.activityPage(binding, id, beforeActivity),
       events: bounded(this.store.taskEvents(binding, id, after)),
       requests: bounded(
         this.store
@@ -158,7 +169,9 @@ export class AgentRuntime {
       deviceId = this.store.deviceId(binding);
     if (
       (request.method === "tasks.create" && request.input.deviceId !== deviceId) ||
-      ((request.method === "tasks.create" || request.method === "tasks.followUp") &&
+      ((request.method === "tasks.create" ||
+        request.method === "tasks.followUp" ||
+        request.method === "tasks.input") &&
         request.input.id !== id)
     )
       return { ok: false as const, code: "IDEMPOTENCY_CONFLICT" };
@@ -250,6 +263,7 @@ export class AgentRuntime {
             available: Boolean(supported),
             version,
             reason: supported ? ("ready" as const) : ("unsupported" as const),
+            ...(supported ? { inputModes: ["steer", "queue"] as ("steer" | "queue")[] } : {}),
           };
         } catch {
           return { provider, available: false, version: "", reason: "unsupported" as const };
@@ -318,6 +332,19 @@ export class AgentRuntime {
           .filter((request) => ids.has(request.taskId))
           .map((request) => ({ kind: "request" as const, request })),
       ];
+      const remaining = 32 * 1024 * 1024 - 64 * 1024 - Buffer.byteLength(JSON.stringify(records));
+      if (remaining > 128 * 1024)
+        records.push(
+          ...bounded(
+            selected.flatMap((local) =>
+              this.store
+                .activityPage(binding, local.task.id)
+                .activity.map((entry) => ({ kind: "activity" as const, entry })),
+            ),
+            true,
+            remaining,
+          ),
+        );
       this.snapshots.set(id, {
         binding,
         expires: Date.now() + 120_000,
@@ -383,6 +410,22 @@ export class AgentRuntime {
       return local;
     };
     const request = command.request;
+    if (
+      (request.method === "tasks.create" ||
+        request.method === "tasks.followUp" ||
+        request.method === "tasks.input") &&
+      request.input.id !== command.id
+    )
+      throw new LocalError("IDEMPOTENCY_CONFLICT", "Command identity changed");
+    if (request.method === "tasks.input") {
+      const local = getTask(request.input.taskId);
+      const old = this.store
+        .activity(binding, local.task.id)
+        .find((entry) => entry.id === request.input.id);
+      // A recorded receipt is never redispatched, including after a host restart.
+      if (old?.kind === "input") return old;
+      if (old) throw new LocalError("IDEMPOTENCY_CONFLICT", "Input identity changed");
+    }
     if (request.method === "tasks.create" || request.method === "tasks.followUp") {
       const existing = this.store.get(request.input.id);
       if (existing) {
@@ -423,6 +466,74 @@ export class AgentRuntime {
       }
       await this.start(binding, command.id, task, command.expiresAt);
       return getTask(task.id).task;
+    }
+    if (request.method === "tasks.input") {
+      const local = getTask(request.input.taskId);
+      const execution = this.active.get(local.task.id);
+      if (!execution || execution.finished || execution.cancelled)
+        throw new LocalError("TASK_STOPPED", "Task stopped");
+      if (!execution.ready) throw new LocalError("TASK_NOT_READY", "Agent is starting");
+      if (request.input.mode === "steer" && (execution.pending.size || execution.awaitingPlan))
+        throw new LocalError("INPUT_WAITING_APPROVAL", "Answer the pending approval first");
+      if (execution.inputs.length >= 20)
+        throw new LocalError("INPUT_QUEUE_FULL", "Input queue is full");
+      if (
+        request.input.mode === "steer" &&
+        execution.inputs.some((entry) => entry.mode === "steer")
+      )
+        throw new LocalError("INPUT_IN_PROGRESS", "A steer is being delivered");
+      const now = new Date().toISOString();
+      const entry = this.store.recordActivity(binding, {
+        id: request.input.id,
+        taskId: local.task.id,
+        kind: "input",
+        mode: request.input.mode,
+        text: request.input.prompt,
+        status: "queued",
+        createdAt: now,
+        updatedAt: now,
+      }) as TaskInput;
+      if (entry.mode === "steer") execution.inputs.unshift(entry);
+      else execution.inputs.push(entry);
+      this.changed();
+      if (entry.mode === "steer")
+        void this.serial(execution, async () => {
+          if (execution.pending.size || execution.awaitingPlan) {
+            execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
+            this.inputStatus(execution, entry, "failed", "INPUT_DELIVERY_FAILED");
+            return;
+          }
+          if (!execution.turnActive) {
+            await this.nextInput(execution);
+            return;
+          }
+          if (local.task.provider === "codex") {
+            this.inputStatus(execution, entry, "sending");
+            try {
+              await execution.process!.request("turn/steer", {
+                threadId: local.sessionId,
+                expectedTurnId: execution.turnId,
+                input: [{ type: "text", text: entry.text }],
+              });
+              execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
+              this.inputStatus(execution, entry, "sent");
+            } catch {
+              execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
+              this.inputStatus(execution, entry, "failed", "INPUT_DELIVERY_FAILED");
+            }
+          } else {
+            this.inputStatus(execution, entry, "sending");
+            execution.interrupting = true;
+            try {
+              await execution.process!.control({ subtype: "interrupt" });
+            } catch {
+              execution.interrupting = false;
+              execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
+              this.inputStatus(execution, entry, "failed", "INPUT_DELIVERY_FAILED");
+            }
+          }
+        });
+      return entry;
     }
     if (request.method === "tasks.cancel") {
       const local = getTask(request.input.id);
@@ -562,6 +673,21 @@ export class AgentRuntime {
       summary: "",
       preview: "",
       items: new Map(),
+      conversation: new ConversationRecorder(
+        task.id,
+        (entry) => {
+          const value = this.store.recordActivity(binding, entry);
+          this.changed();
+          return value;
+        },
+        isDesktopBinding(binding) ? 250 : 1000,
+      ),
+      inputs: [],
+      operation: Promise.resolve(),
+      ready: false,
+      turnActive: false,
+      turnId: "",
+      interrupting: false,
     };
     this.active.set(task.id, execution);
     this.status(local, "running");
@@ -569,6 +695,47 @@ export class AgentRuntime {
       this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"),
     );
     return { accepted: true };
+  }
+  private serial(execution: Execution, operation: () => Promise<void>) {
+    const next = execution.operation.then(async () => {
+      if (!execution.finished) await operation();
+    });
+    execution.operation = next.catch(() =>
+      this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"),
+    );
+    return execution.operation;
+  }
+  private inputStatus(
+    execution: Execution,
+    entry: TaskInput,
+    status: TaskInput["status"],
+    code?: TaskInput["code"],
+  ) {
+    if (execution.finished) return;
+    Object.assign(
+      entry,
+      this.store.recordActivity(execution.local.binding, {
+        ...entry,
+        status,
+        ...(code ? { code } : {}),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+    this.changed();
+  }
+  private async nextInput(execution: Execution) {
+    if (execution.finished || execution.turnActive || !execution.sendTurn) return false;
+    const entry = execution.inputs.shift();
+    if (!entry) return false;
+    this.inputStatus(execution, entry, "sending");
+    try {
+      await execution.sendTurn(entry.text);
+      this.inputStatus(execution, entry, "sent");
+    } catch {
+      this.inputStatus(execution, entry, "failed", "INPUT_DELIVERY_FAILED");
+      this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED");
+    }
+    return true;
   }
   private async ask(
     execution: Execution,
@@ -640,8 +807,11 @@ export class AgentRuntime {
         ["app-server", "--listen", "stdio://"],
         directory,
         (message) => {
+          if (execution.finished) return;
           const method = text(message.method);
           const params = object(message.params);
+          execution.conversation.codex(method, params);
+          if (method === "turn/started") execution.turnId = text(object(params.turn).id, 500);
           if (method === "item/started") {
             const item = object(params.item);
             execution.items.set(text(item.id, 500), item);
@@ -738,39 +908,28 @@ export class AgentRuntime {
             execution.preview = (execution.preview + text(params.delta, 128_001)).slice(0, 128_001);
           } else if (method === "turn/completed") {
             const turn = object(params.turn);
-            if (turn.status === "completed" && task.mode === "plan" && !execution.finished) {
-              void this.ask(execution, "plan", "Codex", execution.preview)
-                .then(async (decision) => {
-                  if (decision.type !== "allow") {
-                    if (decision.type === "deny" && decision.note.trim()) {
-                      execution.summary = "";
-                      await runner.request("turn/start", {
-                        threadId: execution.local.sessionId,
-                        input: [{ type: "text", text: decision.note }],
-                        sandboxPolicy: { type: "readOnly" },
-                      });
-                    } else this.finish(execution, "cancelled");
-                    return;
-                  }
-                  task.mode = "run";
-                  execution.summary = "";
-                  await runner.request("turn/start", {
-                    threadId: execution.local.sessionId,
-                    input: [
-                      {
-                        type: "text",
-                        text: "Implement the approved plan. Modify and validate only; do not commit, merge or push.",
-                      },
-                    ],
-                    sandboxPolicy: {
-                      type: "workspaceWrite",
-                      writableRoots: [directory],
-                      networkAccess: false,
-                    },
-                  });
-                })
-                .catch(() => this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"));
-            } else
+            void this.serial(execution, async () => {
+              execution.turnActive = false;
+              execution.conversation.endTurn(
+                turn.status === "completed" ? "complete" : "interrupted",
+              );
+              if (turn.status === "completed" && task.mode === "plan") {
+                const decision = await this.ask(execution, "plan", "Codex", execution.preview);
+                if (execution.finished) return;
+                if (decision.type !== "allow") {
+                  if (decision.type === "deny" && decision.note.trim()) {
+                    await execution.sendTurn!(decision.note);
+                  } else this.finish(execution, "cancelled");
+                  return;
+                }
+                task.mode = "run";
+                this.store.put(execution.local);
+                await execution.sendTurn!(
+                  "Implement the approved plan. Modify and validate only; do not commit, merge or push.",
+                );
+                return;
+              }
+              if (turn.status === "completed" && (await this.nextInput(execution))) return;
               this.finish(
                 execution,
                 turn.status === "completed"
@@ -780,6 +939,7 @@ export class AgentRuntime {
                     : "failed",
                 execution.summary,
               );
+            });
           }
         },
       );
@@ -804,18 +964,31 @@ export class AgentRuntime {
       });
       execution.local.sessionId = text(object(response.thread).id, 500);
       this.store.put(execution.local);
-      await runner.request("turn/start", {
-        threadId: execution.local.sessionId,
-        input: [
-          {
-            type: "text",
-            text:
-              task.prompt +
-              (task.mode === "plan"
-                ? "\nInspect the project and propose an implementation plan. Do not modify files before the plan is approved."
-                : "\nModify and validate only. Do not commit, merge, or push unless separately instructed by the user."),
-          },
-        ],
+      execution.sendTurn = async (prompt) => {
+        execution.turnActive = true;
+        execution.turnId = "";
+        execution.summary = "";
+        execution.preview = "";
+        execution.items.clear();
+        execution.conversation.startTurn();
+        const turnResponse = await runner.request("turn/start", {
+          threadId: execution.local.sessionId,
+          input: [{ type: "text", text: prompt }],
+          sandboxPolicy:
+            task.mode === "plan"
+              ? { type: "readOnly" }
+              : { type: "workspaceWrite", writableRoots: [directory], networkAccess: false },
+        });
+        execution.turnId = text(object(turnResponse.turn).id, 500) || execution.turnId;
+      };
+      await this.serial(execution, async () => {
+        await execution.sendTurn!(
+          task.prompt +
+            (task.mode === "plan"
+              ? "\nInspect the project and propose an implementation plan. Do not modify files before the plan is approved."
+              : "\nModify and validate only. Do not commit, merge, or push unless separately instructed by the user."),
+        );
+        execution.ready = true;
       });
     } else {
       execution.planRequestHandled = false;
@@ -838,8 +1011,12 @@ export class AgentRuntime {
       };
       const args = [
         "-p",
+        "--input-format",
+        "stream-json",
         "--output-format",
         "stream-json",
+        "--include-partial-messages",
+        "--replay-user-messages",
         "--verbose",
         "--permission-mode",
         task.mode === "plan" ? "plan" : "manual",
@@ -854,47 +1031,74 @@ export class AgentRuntime {
         args,
         directory,
         (message) => {
+          if (execution.finished || execution.process !== runner) return;
+          execution.conversation.claude(message);
           if (message.type === "system" && typeof message.session_id === "string") {
             execution.local.sessionId = message.session_id;
             this.store.put(execution.local);
           }
           if (message.type === "result") {
-            execution.summary = text(message.result, 32_000);
-            // Headless Claude may return a plan without exposing ExitPlanMode.
-            // The host must still offer approval and resume the same session.
-            if (
-              message.is_error !== true &&
-              task.mode === "plan" &&
-              !execution.planRequestHandled
-            ) {
-              execution.awaitingPlan = true;
-              void this.continueClaudePlan(
+            void this.serial(execution, async () => {
+              execution.turnActive = false;
+              const interrupted = execution.interrupting;
+              execution.interrupting = false;
+              execution.conversation.endTurn(
+                message.is_error === true || interrupted ? "interrupted" : "complete",
+              );
+              execution.summary = text(message.result, 32_000);
+              if (
+                (message.is_error !== true || interrupted) &&
+                (interrupted || task.mode !== "plan") &&
+                (await this.nextInput(execution))
+              )
+                return;
+              // Headless Claude may return a plan without exposing ExitPlanMode.
+              // The host must still offer approval and resume the same session.
+              if (
+                message.is_error !== true &&
+                !interrupted &&
+                task.mode === "plan" &&
+                !execution.planRequestHandled
+              ) {
+                execution.awaitingPlan = true;
+                await this.continueClaudePlan(
+                  execution,
+                  runner,
+                  executable,
+                  directory,
+                  text(message.result, 128_001),
+                );
+                return;
+              }
+              this.finish(
                 execution,
-                runner,
-                executable,
-                directory,
-                text(message.result, 128_001),
-              ).catch(() => this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"));
-              return;
-            }
-            this.finish(
-              execution,
-              message.is_error === true ? "failed" : "succeeded",
-              execution.summary,
-            );
+                message.is_error === true ? "failed" : "succeeded",
+                execution.summary,
+              );
+            });
           }
         },
         { ...process.env, RAYPX_AGENT_HOOK_TOKEN: token },
       );
       execution.process = runner;
-      const stdin = runner.child.stdin;
-      if (stdin && typeof stdin !== "number") {
-        void stdin.write(
-          (continuationPrompt ?? task.prompt) +
-            "\nModify and validate only. Do not commit, merge, or push unless separately instructed by the user.\n",
-        );
-        void stdin.end();
-      }
+      execution.sendTurn = async (prompt) => {
+        execution.turnActive = true;
+        execution.summary = "";
+        execution.conversation.startTurn();
+        runner.send({
+          type: "user",
+          uuid: crypto.randomUUID(),
+          ...(execution.local.sessionId ? { session_id: execution.local.sessionId } : {}),
+          message: { role: "user", content: prompt },
+          parent_tool_use_id: null,
+          client_composed: true,
+        });
+      };
+      await execution.sendTurn(
+        (continuationPrompt ?? task.prompt) +
+          "\nModify and validate only. Do not commit, merge, or push unless separately instructed by the user.",
+      );
+      execution.ready = true;
       void runner.completed.then(
         () => {
           if (!execution.finished && execution.process === runner && !execution.awaitingPlan)
@@ -911,12 +1115,11 @@ export class AgentRuntime {
     directory: string,
     plan: string,
   ) {
-    const exit = await runner.completed;
-    if (execution.finished) return;
     await runner.kill();
+    await runner.completed.catch(() => {});
+    if (execution.finished) return;
     if (execution.process === runner) delete execution.process;
     if (
-      exit !== 0 ||
       !execution.local.sessionId ||
       !plan.trim() ||
       plan.length > 128_000 ||
@@ -1057,6 +1260,7 @@ export class AgentRuntime {
   private finish(execution: Execution, status: AgentTask["status"], summary = "") {
     if (execution.finished) return;
     execution.finished = true;
+    execution.conversation.stop(status === "succeeded" ? "complete" : "interrupted");
     for (const item of execution.pending.values()) {
       clearTimeout(item.timer);
       item.resolve({ type: "deny", note: "Task stopped" });

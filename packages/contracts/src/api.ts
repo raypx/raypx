@@ -6,6 +6,7 @@ import {
   taskSchema,
   humanRequestSchema,
   agentEventSchema,
+  taskActivitySchema,
 } from "./tasks.js";
 export * from "./tasks.js";
 export * from "./configuration.js";
@@ -63,12 +64,20 @@ export const apiContract = {
       )
       .output(z.array(taskSchema)),
     get: oc
-      .input(z.object({ id: z.string().uuid(), after: z.number().int().min(0).default(0) }))
+      .input(
+        z.object({
+          id: z.string().uuid(),
+          after: z.number().int().min(0).default(0),
+          beforeActivity: z.number().int().positive().optional(),
+        }),
+      )
       .output(
         z.object({
           task: taskSchema,
           events: z.array(z.object({ cursor: z.number(), event: agentEventSchema })),
           requests: z.array(humanRequestSchema),
+          activity: z.array(taskActivitySchema).optional(),
+          activityBefore: z.number().int().positive().optional(),
         }),
       ),
   },

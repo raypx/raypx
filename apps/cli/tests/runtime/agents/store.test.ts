@@ -96,6 +96,34 @@ it("keeps Desktop identity and task history across restart without creating a re
     },
   };
   store.put(task);
+  const now = new Date().toISOString(),
+    queuedId = crypto.randomUUID(),
+    sendingId = crypto.randomUUID(),
+    messageId = crypto.randomUUID();
+  for (const [id, status] of [
+    [queuedId, "queued"],
+    [sendingId, "sending"],
+  ] as const)
+    store.recordActivity(binding, {
+      id,
+      taskId: task.task.id,
+      kind: "input",
+      mode: "queue",
+      text: "Never infer again automatically",
+      status,
+      createdAt: now,
+      updatedAt: now,
+    });
+  store.recordActivity(binding, {
+    id: messageId,
+    taskId: task.task.id,
+    kind: "message",
+    text: "Partial reply",
+    truncated: false,
+    status: "streaming",
+    createdAt: now,
+    updatedAt: now,
+  });
   store.close();
   const runtime = new AgentRuntime(state, () => {});
   try {
@@ -105,6 +133,20 @@ it("keeps Desktop identity and task history across restart without creating a re
       status: "interrupted",
     });
     expect(runtime.localTasks("account-b", 100)).toEqual([]);
+    const activity = runtime.localTask("account-a", task.task.id, 0).activity;
+    expect(activity.find((entry) => entry.id === queuedId)).toMatchObject({
+      status: "cancelled",
+      code: "HOST_RESTARTED",
+    });
+    expect(activity.find((entry) => entry.id === sendingId)).toMatchObject({
+      status: "interrupted",
+      code: "HOST_RESTARTED",
+    });
+    expect(activity.find((entry) => entry.id === messageId)).toMatchObject({
+      status: "interrupted",
+      text: "Partial reply",
+      revision: 2,
+    });
     expect(runtime.events(binding).events).toEqual([]);
     expect(runtime.replay("remote-binding", 0).events).toEqual([]);
     const reopened = new AgentStore(directory);

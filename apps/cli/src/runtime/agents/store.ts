@@ -7,9 +7,13 @@ import type {
   HumanRequest,
   RelayCommand,
   SequencedEvent,
+  TaskActivity,
 } from "@raypx/contracts/tasks";
 import { LocalError } from "../errors";
-import { activeTaskStatuses } from "@raypx/contracts/tasks";
+import { activeTaskStatuses, taskActivitySchema, taskActivityPage } from "@raypx/contracts/tasks";
+
+type Draft<T> = T extends unknown ? Omit<T, "order" | "revision"> : never;
+export type ActivityDraft = Draft<TaskActivity>;
 
 export interface LocalAgentTask {
   task: AgentTask;
@@ -35,6 +39,9 @@ export class AgentStore {
     );
     this.database.exec(
       "CREATE INDEX IF NOT EXISTS journal_binding ON journal (binding,sequence); CREATE INDEX IF NOT EXISTS journal_task ON journal (binding,json_extract(value,'$.taskId'),sequence);",
+    );
+    this.database.exec(
+      "CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY,binding TEXT NOT NULL,task_id TEXT NOT NULL,value TEXT NOT NULL); CREATE INDEX IF NOT EXISTS activity_task ON activity (binding,task_id);",
     );
     this.database
       .query("INSERT OR IGNORE INTO agent_meta VALUES ('stream',?)")
@@ -65,7 +72,7 @@ export class AgentStore {
   taskEvents(binding: string, id: string, after: number) {
     const rows = this.database
       .query(
-        "SELECT sequence,value FROM journal WHERE binding=? AND sequence>? AND json_extract(value,'$.taskId')=? ORDER BY sequence LIMIT 100",
+        "SELECT sequence,value FROM journal WHERE binding=? AND sequence>? AND json_extract(value,'$.taskId')=? AND json_extract(value,'$.kind')!='activity' ORDER BY sequence LIMIT 100",
       )
       .all(binding, after, id) as { sequence: number; value: string }[];
     return rows.map((row) => ({
@@ -103,11 +110,76 @@ export class AgentStore {
   transition(value: LocalAgentTask, event: AgentEvent) {
     this.database.transaction(() => {
       this.put(value);
-      if (!activeTaskStatuses.includes(value.task.status))
+      if (!activeTaskStatuses.includes(value.task.status)) {
         for (const request of this.requests(value.binding))
           if (request.taskId === value.task.id && ["pending", "decided"].includes(request.status))
             this.request(value.binding, { ...request, status: "cancelled" });
+        for (const entry of this.activity(value.binding, value.task.id))
+          if (entry.kind === "input" && ["queued", "sending"].includes(entry.status))
+            this.recordActivity(value.binding, {
+              ...entry,
+              status: entry.status === "sending" ? "interrupted" : "cancelled",
+              code: value.task.status === "interrupted" ? "HOST_RESTARTED" : "TASK_STOPPED",
+              updatedAt: new Date().toISOString(),
+            });
+          else if (
+            (entry.kind === "message" && entry.status === "streaming") ||
+            (entry.kind === "tool" && entry.status === "running")
+          )
+            this.recordActivity(value.binding, {
+              ...entry,
+              status: "interrupted",
+              updatedAt: new Date().toISOString(),
+            });
+      }
       this.event(value.binding, event);
+    })();
+  }
+  activity(binding: string, taskId: string): TaskActivity[] {
+    return (
+      this.database
+        .query("SELECT value FROM activity WHERE binding=? AND task_id=? ORDER BY rowid")
+        .all(binding, taskId) as { value: string }[]
+    ).map((row) => JSON.parse(row.value));
+  }
+  activityPage(binding: string, taskId: string, before?: number) {
+    return taskActivityPage(this.activity(binding, taskId), before);
+  }
+  recordActivity(binding: string, draft: ActivityDraft): TaskActivity {
+    return this.database.transaction(() => {
+      const old = this.database
+        .query("SELECT rowid,binding,task_id,value FROM activity WHERE id=?")
+        .get(draft.id) as { rowid: number; binding: string; task_id: string; value: string } | null;
+      if (old && (old.binding !== binding || old.task_id !== draft.taskId))
+        throw new LocalError("IDEMPOTENCY_CONFLICT", "Activity identity changed");
+      if (!old)
+        this.database
+          .query("INSERT INTO activity VALUES (?,?,?,?)")
+          .run(draft.id, binding, draft.taskId, "{}");
+      const order =
+        old?.rowid ??
+        (
+          this.database.query("SELECT rowid FROM activity WHERE id=?").get(draft.id) as {
+            rowid: number;
+          }
+        ).rowid;
+      const previous = old ? (JSON.parse(old.value) as TaskActivity) : undefined;
+      const entry = taskActivitySchema.parse({
+        ...draft,
+        createdAt: previous?.createdAt ?? draft.createdAt,
+        order,
+        revision: (previous?.revision ?? 0) + 1,
+      });
+      this.database
+        .query("UPDATE activity SET value=? WHERE id=?")
+        .run(JSON.stringify(entry), entry.id);
+      this.event(binding, {
+        id: crypto.randomUUID(),
+        taskId: entry.taskId,
+        kind: "activity",
+        entry,
+      });
+      return entry;
     })();
   }
   seen(id: string) {
@@ -181,6 +253,7 @@ export class AgentStore {
     this.database.transaction(() => {
       for (const id of ids) {
         this.database.query("DELETE FROM tasks WHERE id=?").run(id);
+        this.database.query("DELETE FROM activity WHERE binding=? AND task_id=?").run(binding, id);
         this.database
           .query("DELETE FROM requests WHERE binding=? AND json_extract(value,'$.taskId')=?")
           .run(binding, id);

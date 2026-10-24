@@ -1,5 +1,6 @@
 import type { AuthSession } from "@raypx/auth/types";
 import {
+  taskActivityPage,
   activeTaskStatuses,
   MAX_RELAY_BYTES,
   type AgentTask,
@@ -309,6 +310,14 @@ export class ControlService {
       const old = await tx.get<Task>("task", record.task.id);
       if (old && old.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
       await tx.put("task", { ...record.task, epoch: actor.epoch });
+    } else if (record.kind === "activity") {
+      await this.activity(
+        tx,
+        actor,
+        { id: record.entry.id, taskId: record.entry.taskId, kind: "activity", entry: record.entry },
+        "snapshot",
+        0,
+      );
     } else {
       const task = required(await tx.get<Task>("task", record.request.taskId));
       if (task.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
@@ -316,6 +325,44 @@ export class ControlService {
       if (old && old.taskId !== task.id) throw new ControlError("NOT_FOUND");
       await tx.put("request", { ...record.request, deviceId: actor.deviceId });
     }
+  }
+  private async activity(
+    tx: ControlTransaction,
+    actor: RelayActor,
+    event: Extract<AgentEvent, { kind: "activity" }>,
+    streamId: string,
+    cursor: number,
+  ) {
+    const task = required(await tx.get<Task>("task", event.taskId));
+    if (task.deviceId !== actor.deviceId || event.entry.taskId !== task.id)
+      throw new ControlError("NOT_FOUND");
+    // Streaming revisions replace the read projection; they do not duplicate the full
+    // message in cloud storage on every delta. The executor owns the replay journal.
+    const id = `${actor.deviceId}:activity:${event.entry.id}`,
+      old = await tx.get<Event>("event", id);
+    if (old) {
+      if (
+        old.taskId !== task.id ||
+        old.event.kind !== "activity" ||
+        old.event.entry.kind !== event.entry.kind ||
+        old.event.entry.order !== event.entry.order
+      )
+        throw new ControlError("EVENT_CONFLICT");
+      if (
+        old.event.entry.revision === event.entry.revision &&
+        canonical(old.event.entry) !== canonical(event.entry)
+      )
+        throw new ControlError("EVENT_CONFLICT");
+      if (old.event.entry.revision >= event.entry.revision) return;
+    }
+    await tx.put<Event>("event", {
+      id,
+      deviceId: actor.deviceId,
+      taskId: task.id,
+      streamId,
+      cursor,
+      event,
+    });
   }
   async snapshot(actor: RelayActor, streamId: string, sequence: number, records: SnapshotRecord[]) {
     await this.device(actor, async (tx, device) => {
@@ -369,19 +416,23 @@ export class ControlService {
         } else if (event.kind === "request") {
           if (event.request.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
           await this.record(tx, actor, { kind: "request", request: event.request });
+        } else if (event.kind === "activity") {
+          if (event.entry.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
+          await this.activity(tx, actor, event, streamId, item.sequence);
         } else {
           const request = await tx.get<StoredRequest>("request", event.requestId);
           if (request?.taskId === event.taskId && request.deviceId === device.id)
             await tx.put("request", { ...request, status: "applied" });
         }
-        await tx.put("event", {
-          id: key,
-          deviceId: device.id,
-          taskId: event.taskId,
-          streamId,
-          cursor: item.sequence,
-          event,
-        });
+        if (event.kind !== "activity")
+          await tx.put("event", {
+            id: key,
+            deviceId: device.id,
+            taskId: event.taskId,
+            streamId,
+            cursor: item.sequence,
+            event,
+          });
         device.cursor = item.sequence;
       }
       cursor = device.cursor;
@@ -398,13 +449,19 @@ export class ControlService {
         deviceId = required(
           await tx.get<Task>(
             "task",
-            request.method === "tasks.cancel" ? request.input.id : request.input.parentTaskId,
+            request.method === "tasks.cancel"
+              ? request.input.id
+              : request.method === "tasks.input"
+                ? request.input.taskId
+                : request.input.parentTaskId,
           ),
         ).deviceId;
       const device = required(await tx.get<Device>("device", deviceId));
       if (device.revoked) throw new ControlError("DEVICE_REVOKED");
       if (
-        (request.method === "tasks.create" || request.method === "tasks.followUp") &&
+        (request.method === "tasks.create" ||
+          request.method === "tasks.followUp" ||
+          request.method === "tasks.input") &&
         id !== request.input.id
       )
         throw new ControlError("IDEMPOTENCY_CONFLICT");
@@ -457,16 +514,28 @@ export class ControlService {
         .slice(0, input.limit),
     );
   }
-  getTask(userId: string, id: string, after: number) {
-    return this.repository.transaction(userId, async (tx) => ({
-      task: required(await tx.get<Task>("task", id)),
-      events: (await tx.list<Event>("event"))
-        .filter((item) => item.taskId === id && item.cursor > after)
-        .sort((a, b) => a.cursor - b.cursor)
-        .slice(0, 100)
-        .map((item) => ({ cursor: item.cursor, event: item.event })),
-      requests: (await tx.list<StoredRequest>("request")).filter((item) => item.taskId === id),
-    }));
+  getTask(userId: string, id: string, after: number, beforeActivity?: number) {
+    return this.repository.transaction(userId, async (tx) => {
+      const task = required(await tx.get<Task>("task", id));
+      const events = (await tx.list<Event>("event", task.deviceId)).filter(
+        (item) => item.taskId === id,
+      );
+      return {
+        task,
+        ...taskActivityPage(
+          events.flatMap((item) => (item.event.kind === "activity" ? [item.event.entry] : [])),
+          beforeActivity,
+        ),
+        events: events
+          .filter((item) => item.cursor > after && item.event.kind !== "activity")
+          .sort((a, b) => a.cursor - b.cursor)
+          .slice(0, 100)
+          .map((item) => ({ cursor: item.cursor, event: item.event })),
+        requests: (await tx.list<StoredRequest>("request", task.deviceId)).filter(
+          (item) => item.taskId === id,
+        ),
+      };
+    });
   }
   listApprovals(userId: string) {
     return this.repository.transaction(userId, async (tx) => {

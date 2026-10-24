@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { AgentTask, HumanRequest, SyncDevice } from "@raypx/contracts/tasks";
+import type { AgentTask, HumanRequest, SyncDevice, TaskActivity } from "@raypx/contracts/tasks";
 import { DesktopTaskWorkspace } from "../../../../../src/features/tasks/workspace";
 import { localTaskClient } from "../../../../../src/features/tasks/local-client";
 
@@ -31,6 +31,7 @@ vi.mock("../../../../../src/features/tasks/client", () => ({
   },
 }));
 let tasks: AgentTask[], request: HumanRequest | undefined;
+let activity: TaskActivity[];
 const device: SyncDevice = {
   id: crypto.randomUUID(),
   name: "Local computer",
@@ -43,7 +44,15 @@ const device: SyncDevice = {
   projects: [
     { id: crypto.randomUUID(), name: "Local project", providers: ["codex"], dirty: false },
   ],
-  capabilities: [{ provider: "codex", available: true, version: "0.163.0", reason: "ready" }],
+  capabilities: [
+    {
+      provider: "codex",
+      available: true,
+      version: "0.163.0",
+      reason: "ready",
+      inputModes: ["steer", "queue"],
+    },
+  ],
 };
 const histories: ReturnType<typeof createMemoryHistory>[] = [];
 beforeEach(() => {
@@ -54,6 +63,7 @@ beforeEach(() => {
   vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(480);
   vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(96);
   tasks = [];
+  activity = [];
   request = undefined;
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
@@ -78,6 +88,7 @@ beforeEach(() => {
             task: tasks.find((task) => task.id === params.id),
             events: [],
             requests: request ? [request] : [],
+            activity,
           };
         if (method === "agents.local.execute") {
           if (params.request?.method === "tasks.create") {
@@ -134,6 +145,108 @@ async function page() {
     </QueryClientProvider>,
   );
 }
+function runningTask() {
+  const task: AgentTask = {
+    id: crypto.randomUUID(),
+    deviceId: device.id,
+    projectId: device.projects[0]!.id,
+    provider: "codex",
+    mode: "run",
+    prompt: "Improve the current project",
+    status: "running",
+    summary: "",
+    parentTaskId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  tasks = [task];
+  return task;
+}
+it("shows safe Markdown, proposed Diff and original approval without rendering provider HTML or images", async () => {
+  const task = runningTask(),
+    now = new Date().toISOString();
+  activity = [
+    {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "message",
+      order: 1,
+      revision: 1,
+      createdAt: now,
+      updatedAt: now,
+      status: "complete",
+      truncated: false,
+      text: "## Plan\n\n**Safe answer**\n\n[Bad link](javascript:alert(1))\n\n![Remote](https://example.com/pixel.png)\n\n<script>window.injected=true</script>",
+    },
+  ];
+  request = {
+    id: crypto.randomUUID(),
+    taskId: task.id,
+    kind: "permission",
+    title: "Edit",
+    body: JSON.stringify({ file_path: "src/app.ts", old_string: "before", new_string: "after" }),
+    questions: [],
+    expiresAt: new Date(Date.now() + 60000).toISOString(),
+    status: "pending",
+    decision: null,
+  };
+  await page();
+  fireEvent.click(await screen.findByRole("button", { name: /Improve the current project/ }));
+  await screen.findByText("Safe answer");
+  expect(document.querySelector("script")).toBeNull();
+  expect(document.querySelector("img[src*=pixel]")).toBeNull();
+  expect(screen.getByText("Bad link").closest("a")?.getAttribute("href") ?? "").not.toMatch(
+    /^javascript:/,
+  );
+  expect(screen.getByRole("button", { name: "Send now" }).hasAttribute("disabled")).toBe(true);
+  expect(screen.getByRole("button", { name: "Queue next turn" }).hasAttribute("disabled")).toBe(
+    true,
+  );
+  expect(await screen.findByRole("cell", { name: "after" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("tab", { name: "Original request" }));
+  await screen.findByText(request.body);
+});
+it("recovers an accepted queued input after a lost receipt without sending it again", async () => {
+  const task = runningTask(),
+    original = mocks.request.getMockImplementation()!;
+  mocks.request.mockImplementation(async (method, params) => {
+    if (method === "agents.local.execute" && params.request.method === "tasks.input") {
+      const input = params.request.input,
+        now = new Date().toISOString();
+      activity = [
+        {
+          id: input.id,
+          taskId: task.id,
+          kind: "input",
+          mode: input.mode,
+          text: input.prompt,
+          status: "queued",
+          order: 1,
+          revision: 1,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      throw new Error("Lost receipt: private transport detail");
+    }
+    return original(method, params);
+  });
+  await page();
+  fireEvent.click(await screen.findByRole("button", { name: /Improve the current project/ }));
+  const input = await screen.findByRole("textbox", { name: "Add an instruction" });
+  fireEvent.change(input, { target: { value: "Validate the change next" } });
+  fireEvent.click(screen.getByRole("button", { name: "Queue next turn" }));
+  await screen.findByText("Validate the change next");
+  await waitFor(() => expect((input as HTMLTextAreaElement).value).toBe(""));
+  expect(
+    mocks.request.mock.calls.filter(
+      ([method, params]) =>
+        method === "agents.local.execute" && params.request.method === "tasks.input",
+    ),
+  ).toHaveLength(1);
+  expect(document.body.textContent).not.toContain("private transport detail");
+  expect(screen.queryByRole("alert")).toBeNull();
+});
 it("defaults to local tasks and completes an approval while the cloud API is unavailable", async () => {
   await page();
   fireEvent.click(await screen.findByRole("button", { name: "New task" }));

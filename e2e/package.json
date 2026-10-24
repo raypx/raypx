@@ -12,6 +12,7 @@
     "@playwright/test": "catalog:dev",
     "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/client": "workspace:*",
+    "@raypx/contracts": "workspace:*",
     "@types/bun": "catalog:dev"
   },
   "raypx": {

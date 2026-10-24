@@ -21,7 +21,9 @@
     "@raypx/contracts": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/ui": "workspace:*",
-    "@tanstack/react-virtual": "catalog:"
+    "@tanstack/react-virtual": "catalog:",
+    "react-markdown": "catalog:",
+    "remark-gfm": "catalog:"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",

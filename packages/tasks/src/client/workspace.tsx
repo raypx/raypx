@@ -8,6 +8,7 @@ import type {
   HumanRequest,
   HumanDecision,
   AgentEvent,
+  TaskActivity,
 } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -24,26 +25,11 @@ import { EmptyState } from "@raypx/ui/empty-state";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { Modal } from "@raypx/ui/modal";
 
-const failureCodes = [
-  "LOCAL_UNAVAILABLE",
-  "DEVICE_OFFLINE",
-  "PROJECT_BUSY",
-  "AGENT_UNAVAILABLE",
-  "REQUEST_EXPIRED",
-  "ALREADY_RESOLVED",
-  "REQUEST_CLOSED",
-  "DEVICE_REVOKED",
-  "SESSION_UNAVAILABLE",
-  "RATE_LIMITED",
-] as const;
-function failureCode(error: unknown) {
-  if (error && typeof error === "object" && "data" in error) {
-    const code = (error as { data?: { error?: { code?: string } } }).data?.error?.code;
-    const known = failureCodes.find((item) => item === code);
-    if (known) return known;
-  }
-  return "NETWORK_UNAVAILABLE" as const;
-}
+import { failureCode } from "./failure.js";
+import { Conversation } from "./conversation.js";
+import { TaskInputComposer } from "./task-input.js";
+import { ApprovalBody } from "./approval-body.js";
+
 interface Props {
   client: TaskWorkspaceClient;
   accountId: string | null;
@@ -242,6 +228,7 @@ function Workspace({
                     client={client}
                     id={selected}
                     local={local}
+                    devices={data.devices}
                     onChanged={refresh}
                   />
                 ) : (
@@ -426,6 +413,7 @@ function CreateTask({
   );
 }
 function TaskDetail({
+  devices,
   client,
   id,
   onChanged,
@@ -433,6 +421,7 @@ function TaskDetail({
 }: {
   client: TaskWorkspaceClient;
   id: string;
+  devices: SyncDevice[];
   onChanged: () => void;
   local: boolean;
 }) {
@@ -441,22 +430,46 @@ function TaskDetail({
   const followField = useId();
   const cursor = useRef(0);
   const history = useRef(new Map<number, AgentEvent>());
+  const activity = useRef(new Map<string, TaskActivity>());
+  const olderBefore = useRef<number | undefined>(undefined);
+  const initialized = useRef(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const mergeActivity = useCallback((entries: TaskActivity[]) => {
+    for (const entry of entries) {
+      const previous = activity.current.get(entry.id);
+      if (!previous || entry.revision > previous.revision) activity.current.set(entry.id, entry);
+    }
+  }, []);
   const load = useCallback(
     async (signal: AbortSignal) => {
       const result = await client.tasks.get({ id, after: cursor.current }, { signal });
+      const latestOrder = Math.max(
+        0,
+        ...[...activity.current.values()].map((entry) => entry.order),
+      );
+      if (
+        !initialized.current ||
+        (result.activity?.[0] && result.activity[0].order > latestOrder && result.activityBefore)
+      ) {
+        olderBefore.current = result.activityBefore;
+        initialized.current = true;
+      }
+      mergeActivity(result.activity ?? []);
       for (const item of result.events) {
         history.current.set(item.cursor, item.event);
         cursor.current = Math.max(cursor.current, item.cursor);
       }
       return {
         ...result,
+        activityBefore: olderBefore.current,
+        activity: [...activity.current.values()].sort((a, b) => a.order - b.order),
         events: [...history.current.entries()].map(([position, event]) => ({
           cursor: position,
           event,
         })),
       };
     },
-    [client, id],
+    [client, id, mergeActivity],
   );
   const { data, error, refresh } = useRemoteQuery(["task", id], load, true, client);
   const [busy, setBusy] = useState(false);
@@ -464,6 +477,23 @@ function TaskDetail({
   const [prompt, setPrompt] = useState("");
   const followId = useRef<{ prompt: string; id: string } | null>(null);
   const active = useRef(false);
+  async function loadOlder() {
+    if (loadingOlder || olderBefore.current === undefined) return;
+    setLoadingOlder(true);
+    try {
+      const result = await client.tasks.get(
+        { id, beforeActivity: olderBefore.current },
+        { signal: AbortSignal.timeout(15_000) },
+      );
+      mergeActivity(result.activity ?? []);
+      olderBefore.current = result.activityBefore;
+      refresh();
+    } catch (caught) {
+      setFailure(failureCode(caught));
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
   async function cancel() {
     if (active.current) return;
     active.current = true;
@@ -529,7 +559,6 @@ function TaskDetail({
           </Button>
         )}
       </div>
-      <p className="whitespace-pre-wrap text-sm [overflow-wrap:anywhere]">{data.task.prompt}</p>
       <time className="block text-xs text-muted-foreground" dateTime={data.task.updatedAt}>
         {new Date(data.task.updatedAt).toLocaleString()}
       </time>
@@ -544,11 +573,27 @@ function TaskDetail({
           }}
         />
       ))}
-      {data.task.summary && (
-        <>
-          <h3 className="text-sm font-medium">{t("result")}</h3>
-          <pre className="task-content">{data.task.summary}</pre>
-        </>
+      <Conversation
+        task={data.task}
+        entries={data.activity}
+        more={data.activityBefore !== undefined}
+        loading={loadingOlder}
+        loadOlder={loadOlder}
+      />
+      {isTaskActive(data.task) && (
+        <TaskInputComposer
+          client={client}
+          task={data.task}
+          entries={data.activity}
+          modes={
+            devices
+              .find((device) => device.id === data.task.deviceId)
+              ?.capabilities.find((capability) => capability.provider === data.task.provider)
+              ?.inputModes ?? []
+          }
+          waiting={data.requests.some((request) => ["pending", "decided"].includes(request.status))}
+          onChanged={refresh}
+        />
       )}
       <details>
         <summary className="cursor-pointer text-sm">{t("activity")}</summary>
@@ -637,7 +682,7 @@ function Approval({
         <span className="text-xs text-muted-foreground">{t(request.status)}</span>
       </div>
       {task && <p className="mb-3 line-clamp-2 text-xs text-muted-foreground">{task.prompt}</p>}
-      {request.body && <pre className="task-content">{request.body}</pre>}
+      {request.body && <ApprovalBody request={request} />}
       {!closed && (
         <div className="mt-4 space-y-4">
           {request.questions.map((question) => (
