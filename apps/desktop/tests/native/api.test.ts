@@ -119,7 +119,7 @@ it("rejects arbitrary destinations, private endpoints, methods and caller-suppli
     "file:///etc/passwd",
     "https://api.example.test/other",
   ])
-    expect(() => parseApiOrigin(origin)).toThrow(/API/);
+    expect(() => parseApiOrigin(origin)).toThrow(/Server URL/);
 });
 it("rejects insecure or unrelated-domain session cookies and response bodies over the bridge budget", async () => {
   const f = fixture();

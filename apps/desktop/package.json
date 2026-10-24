@@ -70,6 +70,7 @@
       "tests/native/**": "bun",
       "preferences.ts": "universal",
       "api.ts": "universal",
+      "config.ts": "universal",
       "scripts/**": "bun",
       "tests/scripts/**": "bun"
     }

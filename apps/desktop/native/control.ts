@@ -12,6 +12,7 @@ import {
   type SnapshotRecord,
 } from "@raypx/contracts/tasks";
 import type { LocalEngine } from "./engine";
+import { parseServerOrigin } from "../config";
 
 interface Binding {
   deviceId: string;
@@ -166,12 +167,7 @@ export class RemoteControl {
   }
   async attach(accountId: string, apiUrl: string, raw: DeviceGrant) {
     const grant = deviceGrantSchema.parse(raw);
-    const url = new URL(apiUrl);
-    if (
-      url.protocol !== "https:" &&
-      !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname))
-    )
-      throw new Error("Remote API requires HTTPS");
+    apiUrl = parseServerOrigin(apiUrl);
     if (
       !this.settings.accounts[accountId]?.enabled ||
       this.settings.accounts[accountId]?.pendingRevoke

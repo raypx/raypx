@@ -1,4 +1,5 @@
-import { readFileSync, statSync } from "node:fs";
+import { statSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { parseAnalyticsConsent } from "@raypx/analytics";
 import { dirname, join, resolve } from "node:path";
 import type { LocalEvent, RootGrant } from "@raypx/contracts/local";
@@ -16,6 +17,7 @@ import { Updater } from "electrobun/main/updater";
 import * as Utils from "electrobun/main/utils";
 import { Session } from "electrobun/main/native";
 import { createDesktopApi, parseApiOrigin } from "./api";
+import { loadDesktopConfig, scopeLocalAccount } from "./config";
 import manifest from "../package.json";
 import type { DesktopRpc } from "./rpc";
 import { wireWindow } from "./window";
@@ -34,6 +36,31 @@ if (process.platform === "win32") {
   if (build.defaultRenderer !== "cef" || !build.availableRenderers.includes("cef") || !cefAvailable)
     throw new Error("Windows Desktop requires packaged CEF with browser security enabled.");
 }
+
+const smokeDirectory =
+  process.env.RAYPX_NATIVE_SMOKE === "1"
+    ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
+    : undefined;
+export const connectionConfig = await (async () => {
+  try {
+    return loadDesktopConfig(smokeDirectory ? join(smokeDirectory, "config") : undefined);
+  } catch (error) {
+    if (smokeDirectory) throw error;
+    const chinese = Intl.DateTimeFormat().resolvedOptions().locale.startsWith("zh");
+    await Utils.showMessageBox({
+      type: "error",
+      title: "Raypx",
+      message: chinese
+        ? "无法读取连接配置，请修正后重新启动。"
+        : "Fix the connection configuration and restart Raypx.",
+      detail: error instanceof Error ? error.message : "Unable to load config.toml",
+      buttons: [chinese ? "退出" : "Quit"],
+    });
+    Utils.quit();
+    throw error;
+  }
+})();
+export const apiOrigin = connectionConfig.connection.apiUrl;
 
 const channel = await Updater.localInfo.channel();
 let url = "views://main/index.html";
@@ -78,33 +105,15 @@ export const tray = new Tray({
 const executable = process.platform === "win32" ? "raypx.exe" : "raypx";
 // Electrobun runs from its executable directory; copy destinations are in Resources.
 const cliBinary = resolve(dirname(process.execPath), "../Resources/app/bin", executable);
-const engineArgs =
-  process.env.RAYPX_NATIVE_SMOKE === "1"
-    ? [
-        "--profile",
-        "native-smoke",
-        "--data-dir",
-        resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data"),
-      ]
-    : [];
-const preferences = createPreferenceStore(
-  process.env.RAYPX_NATIVE_SMOKE === "1"
-    ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
-    : Utils.paths.userData,
-);
+const engineArgs = smokeDirectory
+  ? ["--profile", "native-smoke", "--data-dir", smokeDirectory]
+  : [];
+const preferences = createPreferenceStore(smokeDirectory ?? Utils.paths.userData);
 const partition =
-  process.env.RAYPX_NATIVE_SMOKE === "1" ? "persist:raypx-native-smoke" : "persist:raypx";
-const runtimeConfig: unknown = JSON.parse(
-  readFileSync(
-    resolve(dirname(process.execPath), "../Resources/app/views/main/runtime-config.json"),
-    "utf8",
-  ),
-);
-export const apiOrigin = parseApiOrigin(
-  runtimeConfig && typeof runtimeConfig === "object" && "apiUrl" in runtimeConfig
-    ? runtimeConfig.apiUrl
-    : undefined,
-);
+  connectionConfig.partition +
+  (smokeDirectory
+    ? `-smoke-${createHash("sha256").update(smokeDirectory).digest("hex").slice(0, 16)}`
+    : "");
 export const desktopApi = createDesktopApi(apiOrigin, Session.fromPartition(partition).cookies);
 const nativeApiClient = createApiClient({ baseUrl: apiOrigin, fetch: desktopApi.fetch });
 let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
@@ -134,9 +143,7 @@ export const engine = new LocalEngine(
   engineArgs,
 );
 export const control = new RemoteControl(
-  process.env.RAYPX_NATIVE_SMOKE === "1"
-    ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
-    : Utils.paths.userData,
+  join(smokeDirectory ?? Utils.paths.userData, "servers", connectionConfig.scope),
   engine,
   notifyPending,
   () => {
@@ -176,7 +183,12 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
       localRequest: ({ method, params }) => {
         if (method === "roots.register")
           throw new Error("Use the native directory picker to authorize a directory");
-        return engine.request(method, params);
+        return engine.request(
+          method,
+          method.startsWith("agents.local.")
+            ? scopeLocalAccount(connectionConfig.scope, params)
+            : params,
+        );
       },
       pickDirectory: async () => {
         const paths = await Utils.openFileDialog({
@@ -203,7 +215,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
 export const view = new BrowserView({
   windowId: mainWindow.id,
   url,
-  preload: preferences.preload(),
+  preload: connectionConfig.preload + preferences.preload(),
   partition,
   frame: { x: 0, y: 0, width: 1120, height: 720 },
   navigationRules: JSON.stringify([

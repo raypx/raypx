@@ -75,8 +75,18 @@ verification and password recovery remain public; confirmed logout redirects to
   Better Auth and the API client; browser previews use ordinary fetch. WebKit can
   reject third-party cookies from `views://`, so do not rely on WebView fetch for
   signed-in API calls. Never return Cookie/Set-Cookie headers over the bridge.
-  Native accepts bounded, allowed paths only at the API origin written by Vite to
-  `runtime-config.json`; renderer input cannot choose a destination or auth headers.
+  Native accepts bounded, allowed paths only at the API origin loaded from
+  `~/.raypx/config.toml` by `native/config.ts`; renderer input cannot choose a
+  destination or auth headers. The same origins reach the renderer through an
+  immutable preload before auth/task clients initialize. `config.ts` is the pure
+  shared connection contract. There is no environment-specific Desktop build.
+  The file supports `base_url`, `web_url` and selected `profiles`, defaults to
+  production, and requires a full Quit/restart after edits. Invalid input stops
+  startup rather than connecting elsewhere. `RAYPX_HOME` optionally selects an
+  absolute config directory; smoke tests use isolated config files.
+  Scope cookies/WebView storage, remote settings and local Agent account IDs to
+  the normalized API origin, including port. Keep native device preferences and
+  CLI file grants/jobs independent of the selected remote service.
 - Only bundled views and loopback development content receive native RPC. Renderer cannot register arbitrary directory grants; use native picker.
 - Local file authorization does not sandbox external commands. Commands run with normal OS user permissions.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.
@@ -111,9 +121,10 @@ verification and password recovery remain public; confirmed logout redirects to
 
 `bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile.
 Shell/restore first assert the standalone login page, then supply a synthetic
-session from a loopback fixture server owned by the scenario. They require a
-loopback API build and do not validate authentication; runtime code contains no
-auth fixture. Real HTTPS acceptance uses the separate beta phases.
+session from a loopback fixture server owned by the scenario. The runner writes
+isolated runtime TOML, switches servers and switches back to check cookie/storage
+and remote opt-in isolation. These phases do not validate authentication; runtime
+code contains no auth fixture. Real HTTPS acceptance uses the separate beta phases.
 
 `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents` runs real Claude and
 Codex through Desktop's LocalEngine and the standalone CLI in temporary projects.

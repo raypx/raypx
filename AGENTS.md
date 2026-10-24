@@ -78,5 +78,8 @@ docs/history is historical context and does not constrain the new foundation.
 
 Opted-in remote Agent tasks use explicit API projections and device-scoped grants.
 CLI owns execution, approval arbitration and the durable replay journal. Native
-owns the outbound WebSocket; API relays messages and stores read projections. WebView
-owns account-session grant renewal. Never publish the local method router or provider credentials.
+owns the outbound WebSocket and cookie-backed grant renewal; API relays messages
+and stores read projections. WebView handles initial opt-in. Never publish the
+local method router or provider credentials. Desktop connection settings are
+user-level runtime TOML; server origins isolate sessions, remote settings and
+account-specific local Agent history.

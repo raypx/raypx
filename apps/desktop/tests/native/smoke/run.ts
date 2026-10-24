@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -6,7 +6,7 @@ const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),
 ).json();
 
-async function run(phase: string, directory: string) {
+async function run(phase: string, directory: string, restoredServer = false) {
   const child = Bun.spawn([process.execPath, "--bun", "electrobun", "dev"], {
     cwd: resolve(import.meta.dirname, "../../.."),
     env: {
@@ -14,6 +14,7 @@ async function run(phase: string, directory: string) {
       RAYPX_NATIVE_SMOKE: "1",
       RAYPX_NATIVE_SMOKE_PHASE: phase,
       RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
+      RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
       // The packaged smoke cannot read the repository; it checks the CLI runtime against this pin.
       RAYPX_NATIVE_SMOKE_BUN: packageManager,
     },
@@ -81,9 +82,36 @@ if (
 const directory = phase.startsWith("beta")
   ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR!)
   : await mkdtemp(join(tmpdir(), "raypx-native-smoke-"));
+const loopbackOrigin = async () => {
+  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(null) });
+  const origin = `http://127.0.0.1:${server.port}`;
+  await server.stop(true);
+  return origin;
+};
+async function configure(origin: string) {
+  await mkdir(join(directory, "config"), { recursive: true });
+  await writeFile(
+    join(directory, "config/config.toml"),
+    `# Same packaged renderer; choose its server at runtime.\nprofile = "acceptance"\n[profiles.acceptance]\nbase_url = ${JSON.stringify(origin)}\n`,
+    { mode: 0o600 },
+  );
+}
 try {
+  const api =
+    phase === "shell" || phase === "restore"
+      ? await loopbackOrigin()
+      : process.env.RAYPX_NATIVE_SMOKE_API;
+  if (!api) throw new Error("HTTPS native acceptance requires RAYPX_NATIVE_SMOKE_API");
+  await configure(api);
   await run(phase, directory);
-  if (phase === "shell") await run("restore", directory);
+  if (phase === "shell") {
+    let other = await loopbackOrigin();
+    while (other === api) other = await loopbackOrigin();
+    await configure(other);
+    await run("restore", directory);
+    await configure(api);
+    await run("restore", directory, true);
+  }
   if (phase === "write") await run("read", directory);
   if (phase === "beta") await run("beta-restore", directory);
 } finally {

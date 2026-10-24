@@ -102,12 +102,14 @@ of a running child process. `RAYPX_LIVE_KEEP=1` retains its temporary evidence d
 For a real HTTPS environment, provision a dedicated verified `@raypx.example.test`
 account. Store `{ "email": "…", "password": "…", "userId": "…" }` in a private local
 file, never in source or command arguments. Use a fresh temporary native data directory.
-Build Desktop with `VITE_API_URL` and `VITE_WEB_URL` set to that environment's HTTPS
-origin. Native reads that same compiled API origin from `runtime-config.json`.
+Build Desktop normally. Native reads its API and Web origins from runtime TOML;
+no environment-specific package or `runtime-config.json` is required.
 
 Set `RAYPX_LIVE_AGENTS=1`, `RAYPX_NATIVE_SMOKE_API`,
 `RAYPX_NATIVE_SMOKE_CREDENTIALS` (the private file), and
 `RAYPX_NATIVE_SMOKE_DATA_DIR`, then run `bun run --cwd apps/desktop native:beta`.
+The runner creates `config/config.toml` under that isolated data directory using
+the supplied API origin, without reading or changing the user's `~/.raypx` file.
 After `native-ready.json` appears, set `RAYPX_LIVE_WEB_URL` to the same origin and
 run `bun run --cwd e2e e2e:live` with the same native directory and credentials.
 The isolated headed browser signs in, creates both providers' tasks, checks no
@@ -127,6 +129,11 @@ other environment data. Real macOS success does not establish Windows HTTPS beha
 Never replace production cookie security with trusting null origins or disabling
 web security. Do not count browser-preview tests as packaged-platform passes.
 Unavailable platform checks remain open release gates, with their reasons reported.
+
+`native:smoke` also switches the same packaged renderer between two loopback
+origins using TOML, then switches back. It checks native cookie and WebView-storage
+isolation, remote opt-in isolation, restoration of the original server state,
+and preservation of device preferences and local file/job state.
 
 ## DOM matchers with the hoisted install
 

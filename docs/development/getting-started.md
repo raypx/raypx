@@ -34,6 +34,13 @@ bun run db:studio opens Drizzle Studio (read/write) on the raypx_foundation sche
 bun run dev starts Web (Start SSR on 3000) and API (3002). bun run dev:desktop starts Desktop development;
 bun run package:desktop packages it with its version-matched CLI. Phones use the Web
 application; a native mobile app is deferred until it needs native capabilities.
+Desktop reads its connection at runtime from `~/.raypx/config.toml`, defaulting
+to production. To use the local API, set `base_url = "http://localhost:3002"`
+and `web_url = "http://localhost:3000"`, then fully quit and restart Desktop.
+Use a separate absolute `RAYPX_HOME` for isolated development configurations.
+See [Desktop configuration](desktop-configuration.md) for profiles/self-hosting.
+`VITE_API_URL` and `VITE_WEB_URL` still configure ordinary browser previews/Web
+builds; they do not override an installed Desktop's TOML settings.
 bun run dev:storybook previews `@raypx/ui` components on 6006; bun run build:storybook
 writes the static site to `apps/storybook/dist`.
 

@@ -7,6 +7,7 @@
 - [Account settings and session management](development/account-security.md)
 - [Adding and extracting packages](development/workspaces.md)
 - [Development environment and commands](development/getting-started.md)
+- [Desktop connection configuration](development/desktop-configuration.md)
 - [Testing and release gates](development/testing.md)
 - [Node and Cloudflare deployments](development/cloudflare.md)
 - [Shared deployment per project](development/deployment.md)

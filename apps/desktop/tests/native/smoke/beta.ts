@@ -5,6 +5,7 @@ import { messages } from "@raypx/i18n/messages";
 import type { RootGrant } from "@raypx/contracts/local";
 import {
   control,
+  apiOrigin,
   desktopApi,
   engine,
   handleTrayAction,
@@ -27,6 +28,11 @@ if (
     "Beta native acceptance requires explicit live inference, an isolated directory, HTTPS API and test credentials file",
   );
 const directory = suppliedDirectory;
+assert.equal(
+  apiOrigin,
+  new URL(api).origin,
+  "Runtime TOML must select the HTTPS acceptance server",
+);
 const credentials = (await Bun.file(credentialsPath).json()) as {
   email: string;
   password: string;

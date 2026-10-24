@@ -3,12 +3,14 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { JobDefinition, JobRun, RootGrant } from "@raypx/contracts/local";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
+import { CONNECTION_KEY } from "../../../config";
 import {
   engine,
   handleTrayAction,
   mainWindow,
   apiOrigin,
   desktopApi,
+  control,
   quitDesktop,
   tray,
   view,
@@ -50,6 +52,7 @@ async function waitFor(check: () => Promise<boolean> | boolean, message: string)
 }
 let stage = "renderer startup";
 let fixtureSession: unknown = null;
+let fixtureCookie = "";
 const fixturePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
 const fixtureApi = new URL(apiOrigin);
 if (
@@ -62,10 +65,22 @@ const fixtureServer =
     ? Bun.serve({
         hostname: fixtureApi.hostname,
         port: Number(fixtureApi.port),
-        fetch: (request) =>
-          new URL(request.url).pathname === "/api/auth/get-session"
-            ? Response.json(fixtureSession)
-            : new Response(null, { status: 503 }),
+        fetch: (request) => {
+          fixtureCookie = request.headers.get("cookie") ?? "";
+          return new URL(request.url).pathname === "/api/auth/get-session"
+            ? Response.json(
+                fixtureSession,
+                fixtureSession
+                  ? {
+                      headers: {
+                        "set-cookie":
+                          "better-auth.session_token=raypx-native-server; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600",
+                      },
+                    }
+                  : undefined,
+              )
+            : new Response(null, { status: 503 });
+        },
       })
     : undefined;
 
@@ -207,6 +222,30 @@ try {
   const dataDir = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
   if (!dataDir) throw new Error("Smoke requires an isolated data directory");
   if (phase === "shell" || phase === "restore") {
+    stage = "runtime server configuration and isolation";
+    const restoredServer = process.env.RAYPX_NATIVE_SMOKE_RESTORED_SERVER === "true";
+    assert.equal(
+      await evaluate(`return window[${JSON.stringify(CONNECTION_KEY)}]?.apiUrl`),
+      apiOrigin,
+    );
+    await desktopApi.request({ path: "/api/auth/get-session", method: "GET", headers: {} });
+    assert.equal(
+      fixtureCookie.includes("better-auth.session_token=raypx-native-server"),
+      restoredServer,
+      "Session cookie crossed servers or did not restore when returning to its server",
+    );
+    assert.equal(
+      await evaluate('return localStorage.getItem("raypx-server-acceptance")'),
+      restoredServer ? "saved" : null,
+      "WebView storage crossed server partitions",
+    );
+    assert.equal(
+      control.info("config-isolation").enabled,
+      restoredServer,
+      "Remote opt-in state crossed server settings",
+    );
+    await evaluate('localStorage.setItem("raypx-server-acceptance","saved");return true');
+    await control.enable("config-isolation", true);
     stage = "standalone login and local session fixture";
     await localSessionFixture();
   }
@@ -357,7 +396,7 @@ try {
     assert.equal(
       new URL(api).origin,
       apiOrigin,
-      "Build the packaged renderer for the HTTPS test API",
+      "Runtime configuration must select the HTTPS test API",
     );
     if (phase === "write") {
       const email = process.env.RAYPX_NATIVE_SMOKE_EMAIL,

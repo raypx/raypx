@@ -1,4 +1,7 @@
 import type { DesktopApiRequest, DesktopApiResponse } from "../api";
+import { parseServerOrigin } from "../config";
+
+export { parseServerOrigin as parseApiOrigin } from "../config";
 
 interface Cookie {
   name: string;
@@ -44,29 +47,13 @@ const rpcPaths = new Set([
 const requestHeaders = new Set(["accept", "accept-language", "content-type"]);
 const responseHeaders = new Set(["content-type", "retry-after", "x-request-id"]);
 
-export function parseApiOrigin(raw: unknown) {
-  if (typeof raw !== "string") throw new Error("API configuration unavailable");
-  const url = new URL(raw);
-  if (
-    (url.protocol !== "https:" &&
-      !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname))) ||
-    url.username ||
-    url.password ||
-    url.pathname !== "/" ||
-    url.search ||
-    url.hash
-  )
-    throw new Error("Invalid packaged API origin");
-  return url.origin;
-}
-
 /** WebKit can reject third-party cookies from views://. Keep the cookie jar in Native. */
 export function createDesktopApi(
   rawOrigin: unknown,
   cookies: NativeCookies,
   send: (input: string, init: RequestInit) => Promise<Response> = fetch,
 ) {
-  const origin = parseApiOrigin(rawOrigin);
+  const origin = parseServerOrigin(rawOrigin);
   const base = new URL(origin);
   function store(raw: string) {
     if (raw.length > 16_384) throw new Error("API cookie exceeds limit");
