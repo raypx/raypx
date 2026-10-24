@@ -1,0 +1,127 @@
+apps/desktop/tests/native/smoke/run.ts
+  s_a9c257ef9e2b8f::t_582c26c6645895 36-59,61-63,74-80,88,90
+  s_a9c257ef9e2b8f::t_d34530e4af4274 73
+  s_a9c257ef9e2b8f::t_82176f99e5ff61 81-83,87
+apps/desktop/electrobun.config.ts
+  s_a9c257ef9e2b8f::t_9a7759e5b28fcd 13-14,16-19
+  s_a9c257ef9e2b8f::t_582c26c6645895 15
+apps/desktop/tests/native/api.test.ts
+  s_a9c257ef9e2b8f::t_925bd08fff1ef2 1-8,20,30,36-38,56-57,66-67,72-76,95-97,99-102,112,115,123-130,132-133,135-140,147,154-157,159-160
+  s_a9c257ef9e2b8f::t_da696f6fe15bc2 21-23,134
+  s_a9c257ef9e2b8f::t_9543bafbcdfec2 9-19,24-29,31-35,39-55,58-65,69-71,77-94,103-111,113,116-121,141-146,148-153
+  s_a9c257ef9e2b8f::t_3e8594030a2bb1 68,98,114,122,131,158
+e2e/playwright.live.config.ts
+  s_a9c257ef9e2b8f::t_c0ecf54362e691 1-2,5-12,22
+  s_a9c257ef9e2b8f::t_c7afe884d6f19a 13-21
+  s_a9c257ef9e2b8f::t_82176f99e5ff61 3-4
+  s_a9c257ef9e2b8f::t_575169ade6c9b9 23-25
+apps/desktop/AGENTS.md
+  s_a9c257ef9e2b8f::t_82176f99e5ff61 141-146
+  s_a9c257ef9e2b8f::t_da696f6fe15bc2 73-79,114-126
+apps/desktop/src/features/tasks/client.ts
+  s_a9c257ef9e2b8f::t_e9620c3cecf13e 2,5
+  s_a9c257ef9e2b8f::t_54e37bf6e6c5d6 6-10
+apps/desktop/api.ts
+  s_a9c257ef9e2b8f::t_e9620c3cecf13e 1-12
+apps/desktop/native/control.ts
+  s_a9c257ef9e2b8f::t_c7afe884d6f19a 257-259,267-285,294-297,299-304,309-311
+  s_a9c257ef9e2b8f::t_da528caad402d2 62-63,69-72,188,224,248,254-256,260-266,286-293,298,305-308,312-313,514
+apps/cli/tests/runtime/agents/host.test.ts
+  s_a9c257ef9e2b8f::t_32705cf52df0de 15-20,316-340,343,360,372,391
+  s_a9c257ef9e2b8f::t_3d8f796719ab24 341-342,344-359,361-371,373-390
+apps/desktop/package.json
+  s_a9c257ef9e2b8f::t_597f1fdda0e0e0 22,72
+  s_a9c257ef9e2b8f::t_d34530e4af4274 25-26
+  s_a9c257ef9e2b8f::t_c710bc1f37c37e 24
+apps/desktop/native/main.ts
+  s_a9c257ef9e2b8f::t_597f1fdda0e0e0 1,17-18,108
+  s_a9c257ef9e2b8f::t_9a7759e5b28fcd 136
+  s_a9c257ef9e2b8f::t_da528caad402d2 7,95-107,109,145-152,158,162
+  s_a9c257ef9e2b8f::t_c98263d8f8dec7 163-165,206-207
+apps/desktop/src/lib/api-fetch.ts
+  s_a9c257ef9e2b8f::t_e9620c3cecf13e 1-3,6-15,19-30
+  s_a9c257ef9e2b8f::t_c73d75e4712154 4-5,16-18
+apps/desktop/vite.config.ts
+  s_a9c257ef9e2b8f::t_597f1fdda0e0e0 6,10-23
+  s_a9c257ef9e2b8f::t_24642bcc92854e 24-25,29
+e2e/AGENTS.md
+  s_a9c257ef9e2b8f::t_da696f6fe15bc2 32-37
+docs/development/testing.md
+  s_a9c257ef9e2b8f::t_82176f99e5ff61 91-126
+apps/cli/src/runtime/agents/index.ts
+  s_a9c257ef9e2b8f::t_cfdb6dddd92be6 916-924
+  s_a9c257ef9e2b8f::t_751d7cc1c5e1b0 928-930,932-936
+  s_a9c257ef9e2b8f::t_32705cf52df0de 43-44,621-626,821,849-850,863-879,893,900,907-915,925-926,931,937-951,956
+  s_a9c257ef9e2b8f::t_f73e566d76f90b 927,952-955,957,982,1013-1016
+apps/desktop/native/api.ts
+  s_a9c257ef9e2b8f::t_c73d75e4712154 20-31,34-42,51-59,64-68,80-87,90-91,93-94,97-103,106,111-112,114-117,120-129,134-138,140-152,154-161,166-170,173-174,177-178,180-181,183-184,193-198,200-203,208-210
+  s_a9c257ef9e2b8f::t_e9620c3cecf13e 1-19,32-33,43-50,60-63,69-79,88-89,92,95-96,107-110,113,130,133,139,153,162-165,171-172,175-176,179,182,185-192,204-207,211-214,234
+  s_a9c257ef9e2b8f::t_9543bafbcdfec2 104-105
+  s_a9c257ef9e2b8f::t_da696f6fe15bc2 118-119
+  s_a9c257ef9e2b8f::t_da528caad402d2 131,215-222,226,231-233
+  s_a9c257ef9e2b8f::t_3e8594030a2bb1 132,199,223-225,227-230
+apps/cli/tests/fixtures/agents/claude-headless-plan.mjs
+  s_a9c257ef9e2b8f::t_32705cf52df0de 1-19
+  s_a9c257ef9e2b8f::t_fb2b84205b56b2 20-24
+apps/desktop/tsconfig.native.json
+  s_a9c257ef9e2b8f::t_597f1fdda0e0e0 17
+  s_a9c257ef9e2b8f::t_134f33f36be28b 16
+e2e/package.json
+  s_a9c257ef9e2b8f::t_c0ecf54362e691 8-9
+apps/desktop/tests/native/smoke/scenario.ts
+  s_a9c257ef9e2b8f::t_590cf55e98f982 10,52-54,59,75-76,95,107,372-374,399-401
+  s_a9c257ef9e2b8f::t_82176f99e5ff61 11,55-58,60-70,357
+  s_a9c257ef9e2b8f::t_21fd812e323b80 358-361,368-371,402-405,408-419,421-422,436
+apps/desktop/native/rpc.ts
+  s_a9c257ef9e2b8f::t_e9620c3cecf13e 7,23
+e2e/tests/foundation.spec.ts
+  s_a9c257ef9e2b8f::t_1ef85d825383f2 536
+apps/desktop/tests/native/smoke/beta.ts
+  s_a9c257ef9e2b8f::t_590cf55e98f982 8,164
+  s_a9c257ef9e2b8f::t_82176f99e5ff61 35,177-182,184-188,215,217-220,222-225
+  s_a9c257ef9e2b8f::t_9a7759e5b28fcd 1-5,15,17-18,46-48,54-58,68,131,149,165-167,173-175,195,207,211,235,239-240,279,300-304
+  s_a9c257ef9e2b8f::t_0a3960a90ab12f 60-66,76,132,139-148,159-163,291-299
+  s_a9c257ef9e2b8f::t_35e8f22a5fdde5 70-75,81-90,92-102,104-108,111-114,116-127,133-138,281,283-289
+  s_a9c257ef9e2b8f::t_0ae2eb1c82d218 212,214,216,221,226-228,236,271
+  s_a9c257ef9e2b8f::t_0c1ddbae9ec326 241
+  s_a9c257ef9e2b8f::t_174e0c7f28b388 290
+  s_a9c257ef9e2b8f::t_da696f6fe15bc2 176,189
+  s_a9c257ef9e2b8f::t_d34530e4af4274 6-7,9-14,19-20,22-28,30-34,36-45,49-53,69,77-78,150-158,168-172,183,190-194,196-206,208-210,213,229-234,237-238,242-270,272-278
+  s_a9c257ef9e2b8f::t_582c26c6645895 59,79-80,91,103,109-110,115,128-130,280
+  s_a9c257ef9e2b8f::t_3e8594030a2bb1 16,21,29,67,282
+e2e/tests/live-agents.spec.ts
+  s_a9c257ef9e2b8f::t_55daf63f39f0a9 34,43,46
+  s_a9c257ef9e2b8f::t_e885ba17246e5d 37-41,53-55,74-88,104,107,109-114
+  s_a9c257ef9e2b8f::t_02c83ae05f3f10 50
+  s_a9c257ef9e2b8f::t_30cd15f6bbf319 8-11,13-22,24-30,44-45,56-69,91-100,119-121,124-127,129-131,134-135
+  s_a9c257ef9e2b8f::t_0ae2eb1c82d218 72-73,89-90
+  s_a9c257ef9e2b8f::t_c0ecf54362e691 1-7,12,23,31-33,35-36,42,47-49,51-52,70-71,101-103,105-106,108,115-118,122-123,128,132-133,136-137
+apps/desktop/tests/native/smoke/agents.ts
+  s_a9c257ef9e2b8f::t_c710bc1f37c37e 1-149
+  s_a9c257ef9e2b8f::t_d3d4800b99d464 150-217
+apps/desktop/tests/native/control.test.ts
+  s_a9c257ef9e2b8f::t_0ae2eb1c82d218 17,101,240,248-249,259-264,277-281,290-291,295
+  s_a9c257ef9e2b8f::t_c7afe884d6f19a 241-247,250-258,265-276,282-289,292-294
+  s_a9c257ef9e2b8f::t_5403a9fae2c496 296-297
+apps/cli/AGENTS.md
+  s_a9c257ef9e2b8f::t_da696f6fe15bc2 84-89
+apps/desktop/src/features/auth/client.ts
+  s_a9c257ef9e2b8f::t_e9620c3cecf13e 2,6-7
+  s_a9c257ef9e2b8f::t_599afcb9593419 8-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2b5cfa7c84292fec06184bc527b90b8866399615",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
