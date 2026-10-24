@@ -88,6 +88,42 @@ The existing script names select the mode; the default test command never connec
   WebKit/Windows CEF against HTTPS auth, bundled CLI resolution/version, picker grants,
   tray scheduling, restart, EOF/quit cleanup and PTY resize/cancellation.
 
+### Live AI and Beta-to-Desktop acceptance
+
+These opt-in checks invoke the configured real Claude Code and Codex CLIs and consume
+provider usage. Default verification uses subprocess fixtures and never invokes them.
+
+Build the CLI, then run `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents`.
+The gate creates temporary projects and uses Desktop's actual LocalEngine transport
+with the standalone executable. It verifies file reads, plan rejection and approval,
+generated Node tests, provider session resume across an engine restart, and cancellation
+of a running child process. `RAYPX_LIVE_KEEP=1` retains its temporary evidence directory.
+
+For a real HTTPS environment, provision a dedicated verified `@raypx.example.test`
+account. Store `{ "email": "…", "password": "…", "userId": "…" }` in a private local
+file, never in source or command arguments. Use a fresh temporary native data directory.
+Build Desktop with `VITE_API_URL` and `VITE_WEB_URL` set to that environment's HTTPS
+origin. Native reads that same compiled API origin from `runtime-config.json`.
+
+Set `RAYPX_LIVE_AGENTS=1`, `RAYPX_NATIVE_SMOKE_API`,
+`RAYPX_NATIVE_SMOKE_CREDENTIALS` (the private file), and
+`RAYPX_NATIVE_SMOKE_DATA_DIR`, then run `bun run --cwd apps/desktop native:beta`.
+After `native-ready.json` appears, set `RAYPX_LIVE_WEB_URL` to the same origin and
+run `bun run --cwd e2e e2e:live` with the same native directory and credentials.
+The isolated headed browser signs in, creates both providers' tasks, checks no
+project writes occur before approval, approves through Web, verifies real files
+and returned results, and reloads the persisted task list. During a pending task,
+Native renews its real grant while hidden and reconnects without cancelling it.
+No mock API, simulated device, credential override or disabled browser security
+is used by this gate. Traces are off to avoid capturing login request bodies.
+
+Web writes `web-complete.json`; the native gate checks local files and its actual
+remote-task renderer. It then restarts the packaged process, checks the real session
+and relay reconnect, and verifies logout clears the session and detaches the device.
+The receipts are `native-complete.json` and `native-restore-complete.json`.
+Remove only the dedicated account and its test records after acceptance; preserve
+other environment data. Real macOS success does not establish Windows HTTPS behavior.
+
 Never replace production cookie security with trusting null origins or disabling
 web security. Do not count browser-preview tests as packaged-platform passes.
 Unavailable platform checks remain open release gates, with their reasons reported.

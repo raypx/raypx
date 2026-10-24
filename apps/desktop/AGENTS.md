@@ -70,6 +70,13 @@ verification and password recovery remain public; confirmed logout redirects to
 - Closing hides the window while tray scheduling continues. Actual Quit closes engine stdin and waits for cancellation before native exit.
 - Engine failures show retry state; account, theme and language remain usable.
 - Keep a persistent WebView partition. macOS uses WebKit; Windows bundles CEF with web security enabled.
+- `native/api.ts` owns HTTP authentication and RPC cookies through the SDK Session
+  store in that same partition. `src/lib/api-fetch.ts` injects this transport into
+  Better Auth and the API client; browser previews use ordinary fetch. WebKit can
+  reject third-party cookies from `views://`, so do not rely on WebView fetch for
+  signed-in API calls. Never return Cookie/Set-Cookie headers over the bridge.
+  Native accepts bounded, allowed paths only at the API origin written by Vite to
+  `runtime-config.json`; renderer input cannot choose a destination or auth headers.
 - Only bundled views and loopback development content receive native RPC. Renderer cannot register arbitrary directory grants; use native picker.
 - Local file authorization does not sandbox external commands. Commands run with normal OS user permissions.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.
@@ -104,10 +111,19 @@ verification and password recovery remain public; confirmed logout redirects to
 
 `bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile.
 Shell/restore first assert the standalone login page, then supply a synthetic
-session to exercise local UI. Their smoke-only preload installs a stable fetch
-proxy before Better Auth initializes; the scenario changes only its fixture data.
-Production and the real HTTPS write/read phases do not install that proxy.
-These local-tool scenarios do not validate authentication.
+session from a loopback fixture server owned by the scenario. They require a
+loopback API build and do not validate authentication; runtime code contains no
+auth fixture. Real HTTPS acceptance uses the separate beta phases.
+
+`RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents` runs real Claude and
+Codex through Desktop's LocalEngine and the standalone CLI in temporary projects.
+It uses existing provider authentication and consumes inference usage. It checks
+plan rejection/approval, generated tests, session resume after restart and child
+process cancellation. It is opt-in and outside default verification.
+`native:beta` plus E2E `e2e:live` use a separately provisioned test account and
+isolated native data directory against an actual HTTPS deployment. The beta native
+phases cover packaged form login, hidden relay execution, process restart and
+logout. See the explicit gates in docs/development/testing.md.
 
 ## Remote tasks
 
@@ -122,9 +138,12 @@ Native shows the pending-task notification for `agent.changed` events carrying
 `pendingRequest`; Agent settings can clear finished local history. The sidebar
 approval count combines local and remote approvals.
 
-`native/control.ts` owns the outbound relay WebSocket and memory-only device grants. Root WebView code
-renews grants through the account session; hidden-window work must not rely on a
-renderer interval. Engine changes wake replay delivery; sequence ACKs checkpoint the
+`native/control.ts` owns the outbound relay WebSocket and memory-only device grants.
+The WebView handles initial opt-in registration. Native renews existing grants through
+its cookie-backed API client after checking the current account, so hidden-window
+work does not depend on renderer timers or events. Fence late renewals after detach
+or account changes; renewal reconnects the relay without cancelling host tasks.
+Engine changes wake replay delivery; sequence ACKs checkpoint the
 local outbox, and a retained journal or a consistent snapshot repairs reconnect gaps. Connection intent is persisted per account, without cookies or
 tokens. Logout, detach and Quit cancel the old binding while preserving local tools.
 

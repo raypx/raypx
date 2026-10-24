@@ -33,31 +33,34 @@ async function run(phase: string, directory: string) {
     }
   };
   const readers = [drain(child.stdout, process.stdout), drain(child.stderr, process.stderr)];
-  const timeout = setTimeout(() => {
-    timedOut = true;
-    console.error("Native smoke exceeded its 90 second deadline");
-    if (process.platform === "win32") {
-      void Bun.spawn(
-        [
-          join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe"),
-          "/PID",
-          String(child.pid),
-          "/T",
-          "/F",
-        ],
-        {
-          stdout: "ignore",
-          stderr: "ignore",
-        },
-      ).exited;
-    } else {
-      try {
-        process.kill(-child.pid, "SIGTERM");
-      } catch {
-        /* Already exited. */
+  const timeout = setTimeout(
+    () => {
+      timedOut = true;
+      console.error("Native smoke exceeded its deadline");
+      if (process.platform === "win32") {
+        void Bun.spawn(
+          [
+            join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe"),
+            "/PID",
+            String(child.pid),
+            "/T",
+            "/F",
+          ],
+          {
+            stdout: "ignore",
+            stderr: "ignore",
+          },
+        ).exited;
+      } else {
+        try {
+          process.kill(-child.pid, "SIGTERM");
+        } catch {
+          /* Already exited. */
+        }
       }
-    }
-  }, 90_000);
+    },
+    phase === "beta" ? 720_000 : 90_000,
+  );
   try {
     const code = await child.exited;
     await Promise.all(readers);
@@ -67,11 +70,22 @@ async function run(phase: string, directory: string) {
     clearTimeout(timeout);
   }
 }
-const directory = await mkdtemp(join(tmpdir(), "raypx-native-smoke-"));
-const phase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
+const phase = process.argv[2] ?? process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
+if (
+  phase.startsWith("beta") &&
+  (!process.env.RAYPX_NATIVE_SMOKE_DATA_DIR || process.env.RAYPX_LIVE_AGENTS !== "1")
+)
+  throw new Error(
+    "Beta smoke requires RAYPX_LIVE_AGENTS=1 and an isolated RAYPX_NATIVE_SMOKE_DATA_DIR",
+  );
+const directory = phase.startsWith("beta")
+  ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR!)
+  : await mkdtemp(join(tmpdir(), "raypx-native-smoke-"));
 try {
   await run(phase, directory);
   if (phase === "shell") await run("restore", directory);
+  if (phase === "write") await run("read", directory);
+  if (phase === "beta") await run("beta-restore", directory);
 } finally {
-  await rm(directory, { recursive: true, force: true });
+  if (!phase.startsWith("beta")) await rm(directory, { recursive: true, force: true });
 }

@@ -12,7 +12,12 @@ afterEach(async () => {
 });
 async function host(
   provider: AgentProvider,
-  fixture: "codex" | "codex-descendant" | "claude-question" | "claude-plan",
+  fixture:
+    | "codex"
+    | "codex-descendant"
+    | "claude-question"
+    | "claude-plan"
+    | "claude-headless-plan",
 ) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-agent-"));
   const file = join(directory, provider);
@@ -307,6 +312,82 @@ it("denies an oversized Claude plan without offering approval for a truncated pr
     )
     .toBe(true);
   expect(runtime.events("binding").events.some((event) => event.kind === "request")).toBe(false);
+});
+it("holds headless Claude plans for approval, resumes revisions, and executes only after approval", async () => {
+  const { runtime, task, directory } = await host("claude", "claude-headless-plan");
+  const binding = "plan-binding";
+  await runtime.start(
+    binding,
+    crypto.randomUUID(),
+    { ...task, mode: "plan" },
+    new Date(Date.now() + 60_000).toISOString(),
+  );
+  const plans = () =>
+    runtime
+      .events(binding)
+      .events.filter((event) => event.kind === "request" && event.request.status === "pending");
+  await expect.poll(() => plans().length).toBe(1);
+  expect(plans()[0]).toMatchObject({
+    request: { kind: "plan", body: "Initial implementation plan" },
+  });
+  expect(
+    runtime
+      .events(binding)
+      .events.some((event) => event.kind === "status" && event.status === "succeeded"),
+  ).toBe(false);
+  const decide = async (
+    index: number,
+    decision: { type: "allow" } | { type: "deny"; note: string },
+  ) => {
+    const event = plans()[index]!;
+    if (event.kind !== "request") throw new Error("Missing plan");
+    await runtime.command(binding, {
+      id: crypto.randomUUID(),
+      type: "decision",
+      taskId: task.id,
+      requestId: event.request.id,
+      decision,
+    });
+  };
+  await decide(0, { type: "deny", note: "Revise the plan first" });
+  await expect.poll(() => plans().length).toBe(2);
+  expect(plans()[1]).toMatchObject({ request: { body: "Revised implementation plan" } });
+  const starts = () =>
+    readFileSync(join(directory, "starts"), "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+  expect(starts().map((item) => item.mode)).toEqual(["plan", "plan"]);
+  expect(starts()[1]).toMatchObject({ resume: "headless-plan-session" });
+  expect(starts()[1].prompt).toContain("Revise the plan first");
+  await decide(1, { type: "allow" });
+  await expect
+    .poll(() =>
+      runtime
+        .events(binding)
+        .events.some((event) => event.kind === "status" && event.status === "succeeded"),
+    )
+    .toBe(true);
+  expect(starts().map((item) => item.mode)).toEqual(["plan", "plan", "manual"]);
+  expect(starts()[2]).toMatchObject({ resume: "headless-plan-session" });
+});
+it("cancels a headless Claude plan without spawning an implementation process", async () => {
+  const { runtime, task, directory } = await host("claude", "claude-headless-plan");
+  await runtime.start(
+    "binding",
+    crypto.randomUUID(),
+    { ...task, mode: "plan" },
+    new Date(Date.now() + 60_000).toISOString(),
+  );
+  await expect
+    .poll(() => runtime.events("binding").events.some((event) => event.kind === "request"))
+    .toBe(true);
+  await runtime.detach("binding");
+  expect(readFileSync(join(directory, "starts"), "utf8").trim().split("\n")).toHaveLength(1);
+  expect(runtime.events("binding").events.at(-1)).toMatchObject({
+    kind: "status",
+    status: "cancelled",
+  });
 });
 it("recovers an ambiguous persisted execution as interrupted instead of starting it again", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-agent-recovery-"));

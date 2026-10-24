@@ -533,6 +533,7 @@ for (const [surface, base] of [
     await page.goto(`${base}/settings`);
     const trigger = page.getByRole("button", { name: "Account menu", exact: true });
     await expect(trigger).toBeVisible();
+    await expect(trigger).toBeEnabled();
     await trigger.focus();
     await page.keyboard.press("Enter");
     const menu = page.getByRole("menu", { name: "Account menu", exact: true });

@@ -7,7 +7,8 @@ import {
   engine,
   handleTrayAction,
   mainWindow,
-  NATIVE_SMOKE_SESSION_KEY,
+  apiOrigin,
+  desktopApi,
   quitDesktop,
   tray,
   view,
@@ -48,13 +49,31 @@ async function waitFor(check: () => Promise<boolean> | boolean, message: string)
   throw new Error(message);
 }
 let stage = "renderer startup";
+let fixtureSession: unknown = null;
+const fixturePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
+const fixtureApi = new URL(apiOrigin);
+if (
+  (fixturePhase === "shell" || fixturePhase === "restore") &&
+  (fixtureApi.protocol !== "http:" || !["localhost", "127.0.0.1"].includes(fixtureApi.hostname))
+)
+  throw new Error("Synthetic shell acceptance requires a loopback API build");
+const fixtureServer =
+  fixturePhase === "shell" || fixturePhase === "restore"
+    ? Bun.serve({
+        hostname: fixtureApi.hostname,
+        port: Number(fixtureApi.port),
+        fetch: (request) =>
+          new URL(request.url).pathname === "/api/auth/get-session"
+            ? Response.json(fixtureSession)
+            : new Response(null, { status: 503 }),
+      })
+    : undefined;
 
 async function localSessionFixture() {
   // The shell smoke isolates native local tools from account infrastructure.
   // Real packaged-origin authentication remains in the explicit write/read phases.
-  await evaluate(
-    `if(!Object.prototype.hasOwnProperty.call(window,${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}))throw new Error("Native smoke session preload is missing");window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]=null;document.dispatchEvent(new Event("visibilitychange"));return true;`,
-  );
+  fixtureSession = null;
+  await evaluate('document.dispatchEvent(new Event("visibilitychange"));return true;');
   await waitFor(
     async () =>
       Boolean(
@@ -73,7 +92,7 @@ async function localSessionFixture() {
     createdAt,
     updatedAt: createdAt,
   };
-  const fixture = {
+  fixtureSession = {
     user,
     session: {
       id: "native-shell-session",
@@ -85,7 +104,7 @@ async function localSessionFixture() {
     },
   };
   await evaluate(
-    `window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]=${JSON.stringify(fixture)};window.dispatchEvent(new Event("focus"));document.dispatchEvent(new Event("visibilitychange"));return true;`,
+    'window.dispatchEvent(new Event("focus"));document.dispatchEvent(new Event("visibilitychange"));return true;',
   );
   await waitFor(
     async () =>
@@ -335,18 +354,24 @@ try {
     const api = process.env.RAYPX_NATIVE_SMOKE_API;
     if (!api || new URL(api).protocol !== "https:")
       throw new Error("Packaged authentication smoke requires an HTTPS test API");
+    assert.equal(
+      new URL(api).origin,
+      apiOrigin,
+      "Build the packaged renderer for the HTTPS test API",
+    );
     if (phase === "write") {
       const email = process.env.RAYPX_NATIVE_SMOKE_EMAIL,
         password = process.env.RAYPX_NATIVE_SMOKE_PASSWORD;
       if (!email || !password)
         throw new Error("Authentication smoke requires synthetic test credentials");
       stage = "packaged authentication";
-      assert.equal(
-        await evaluate(
-          `return (async()=>{const response=await fetch(${JSON.stringify(api + "/api/auth/sign-in/email")},{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:JSON.stringify(${JSON.stringify({ email, password })})});return response.ok;})()`,
-        ),
-        true,
-      );
+      const login = await desktopApi.request({
+        path: "/api/auth/sign-in/email",
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      assert.equal(login.status, 200);
       await reloadRenderer();
       await evaluate('location.hash="/settings";return true');
       await waitFor(
@@ -371,21 +396,30 @@ try {
         ),
         "valid:dark:zh",
       );
-      assert.equal(
-        await evaluate(
-          `return (async()=>{const response=await fetch(${JSON.stringify(api + "/api/auth/get-session")},{credentials:"include"});const value=await response.json();return Boolean(value?.user?.id);})()`,
-        ),
-        true,
+      const session = await desktopApi.request({
+        path: "/api/auth/get-session",
+        method: "GET",
+        headers: {},
+      });
+      assert.ok(
+        JSON.parse(session.body)?.user?.id,
         "Account cookie did not survive native restart",
       );
-      await evaluate(
-        `return fetch(${JSON.stringify(api + "/api/auth/sign-out")},{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:"{}"}).then(response=>response.ok)`,
-      );
+      const logout = await desktopApi.request({
+        path: "/api/auth/sign-out",
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      });
+      assert.equal(logout.status, 200);
+      const signedOut = await desktopApi.request({
+        path: "/api/auth/get-session",
+        method: "GET",
+        headers: {},
+      });
       assert.equal(
-        await evaluate(
-          `return (async()=>{const response=await fetch(${JSON.stringify(api + "/api/auth/get-session")},{credentials:"include"});const value=await response.json();return Boolean(value?.user?.id);})()`,
-        ),
-        false,
+        JSON.parse(signedOut.body)?.user?.id ?? null,
+        null,
         "Logout left an active native session",
       );
       await reloadRenderer();
@@ -399,6 +433,7 @@ try {
   console.info(
     `Native smoke ${phase} passed: packaged renderer, version-matched CLI, tray and window lifecycle.`,
   );
+  await fixtureServer?.stop(true);
   handleTrayAction("quit");
 } catch (error) {
   try {

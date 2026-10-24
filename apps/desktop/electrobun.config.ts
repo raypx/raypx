@@ -10,7 +10,13 @@ export default {
   },
   build: {
     mainProcess: "bun",
-    bun: { entrypoint: nativeSmoke ? "tests/native/smoke/scenario.ts" : "native/main.ts" },
+    bun: {
+      entrypoint: nativeSmoke
+        ? process.env.RAYPX_NATIVE_SMOKE_PHASE?.startsWith("beta")
+          ? "tests/native/smoke/beta.ts"
+          : "tests/native/smoke/scenario.ts"
+        : "native/main.ts",
+    },
     mac: { icons: "native/icons/icon.iconset" },
     win: {
       icon: "native/icons/icon.ico",

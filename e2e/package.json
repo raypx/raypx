@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
-    "e2e": "bun --bun playwright test"
+    "e2e": "bun --bun playwright test",
+    "e2e:live": "bun --bun playwright test --config playwright.live.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "catalog:dev",

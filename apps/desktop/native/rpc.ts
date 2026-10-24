@@ -4,6 +4,7 @@ import type { RPCSchema } from "electrobun/rpc";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
 import type { ControlInfo } from "./control";
 import type { DevicePreferences } from "../preferences";
+import type { DesktopApiRequest, DesktopApiResponse } from "../api";
 export type { DevicePreferences } from "../preferences";
 
 export interface EngineStatus {
@@ -19,6 +20,7 @@ export interface DesktopRuntime {
 export type DesktopRpc = {
   bun: RPCSchema<{
     requests: {
+      apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
       controlInfo: { params: { accountId: string }; response: ControlInfo };
       controlEnable: { params: { accountId: string; enabled: boolean }; response: ControlInfo };
       controlRevoked: { params: { accountId: string }; response: ControlInfo };

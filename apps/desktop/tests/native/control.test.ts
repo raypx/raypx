@@ -14,7 +14,7 @@ const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
 });
-async function control() {
+async function control(options: NonNullable<ConstructorParameters<typeof RemoteControl>[4]> = {}) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-relay-native-"));
   const streamId = crypto.randomUUID(),
     instanceId = crypto.randomUUID();
@@ -98,7 +98,7 @@ async function control() {
   );
   const notify = vi.fn(),
     renew = vi.fn(),
-    value = new RemoteControl(directory, { request }, notify, renew);
+    value = new RemoteControl(directory, { request }, notify, renew, options);
   const grant = {
     deviceId: crypto.randomUUID(),
     epoch: 1,
@@ -235,6 +235,64 @@ it("renews a connection without cancelling tasks and disables execution after se
   await expect.poll(() => f.value.info("account").enabled).toBe(false);
   expect(f.request).toHaveBeenCalledWith("agents.detach", {
     binding: `account:${f.grant.deviceId}:1`,
+  });
+});
+it("renews expiring grants entirely in Native without waking the renderer or detaching tasks", async () => {
+  const renewGrant = vi.fn(
+    async (_accountId: string, binding: { deviceId: string; epoch: number }) => ({
+      ...binding,
+      token: "native-renewed-token-" + crypto.randomUUID(),
+      expiresAt: new Date(Date.now() + 600_000).toISOString(),
+    }),
+  );
+  const f = await control({ renewGrant });
+  f.renew.mockClear();
+  await f.value.attach("account", f.base, {
+    ...f.grant,
+    expiresAt: new Date(Date.now() + 59_000).toISOString(),
+  });
+  await expect
+    .poll(() =>
+      f.frames.some(
+        (frame) => frame.type === "auth" && frame.token.startsWith("native-renewed-token-"),
+      ),
+    )
+    .toBe(true);
+  await expect.poll(() => f.value.info("account").connected).toBe(true);
+  expect(renewGrant).toHaveBeenCalledWith("account", { deviceId: f.grant.deviceId, epoch: 1 });
+  expect(f.renew).not.toHaveBeenCalled();
+  expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
+});
+it("does not reconnect a late native grant after logout and detaches on an expired account session", async () => {
+  let complete!: (value: {
+    deviceId: string;
+    epoch: number;
+    token: string;
+    expiresAt: string;
+  }) => void;
+  const f = await control({
+    renewGrant: () =>
+      new Promise((resolve) => {
+        complete = resolve;
+      }),
+  });
+  const pending = f.value.refreshGrant();
+  await f.value.detach();
+  complete({ ...f.grant, token: "late-token" });
+  expect(await pending).toBe(false);
+  expect(f.value.info("account").connected).toBe(false);
+  expect(f.frames.some((frame) => frame.type === "auth" && frame.token === "late-token")).toBe(
+    false,
+  );
+  const expired = await control({
+    renewGrant: async () => {
+      throw Object.assign(new Error("AUTH_REQUIRED"), { code: "UNAUTHORIZED" });
+    },
+  });
+  expect(await expired.value.refreshGrant()).toBe(false);
+  expect(expired.value.info("account").connected).toBe(false);
+  expect(expired.request).toHaveBeenCalledWith("agents.detach", {
+    binding: `account:${expired.grant.deviceId}:1`,
   });
 });
 it("keeps startup available when local connection metadata is corrupt", async () => {

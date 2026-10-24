@@ -40,6 +40,8 @@ type Execution = {
   summary: string;
   preview: string;
   items: Map<string, Record<string, unknown>>;
+  awaitingPlan?: boolean;
+  planRequestHandled?: boolean;
 };
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -616,7 +618,12 @@ export class AgentRuntime {
     if (!execution.cancelled && !execution.finished) this.status(execution.local, "running");
     return result;
   }
-  private async run(execution: Execution, executable: string, directory: string) {
+  private async run(
+    execution: Execution,
+    executable: string,
+    directory: string,
+    continuationPrompt?: string,
+  ) {
     const task = execution.local.task;
     const parent = task.parentTaskId ? this.store.get(task.parentTaskId) : undefined;
     if (
@@ -811,6 +818,7 @@ export class AgentRuntime {
         ],
       });
     } else {
+      execution.planRequestHandled = false;
       this.ensureHookServer();
       const token = crypto.randomUUID() + crypto.randomUUID();
       this.hookTokens.set(task.id, token);
@@ -838,7 +846,8 @@ export class AgentRuntime {
         "--settings",
         JSON.stringify(settings),
       ];
-      if (parent?.sessionId) args.push("--resume", parent.sessionId);
+      const sessionId = execution.local.sessionId ?? parent?.sessionId;
+      if (sessionId) args.push("--resume", sessionId);
       // Prompt text is written on stdin rather than exposed in process arguments.
       const runner = new JsonProcess(
         executable,
@@ -851,6 +860,23 @@ export class AgentRuntime {
           }
           if (message.type === "result") {
             execution.summary = text(message.result, 32_000);
+            // Headless Claude may return a plan without exposing ExitPlanMode.
+            // The host must still offer approval and resume the same session.
+            if (
+              message.is_error !== true &&
+              task.mode === "plan" &&
+              !execution.planRequestHandled
+            ) {
+              execution.awaitingPlan = true;
+              void this.continueClaudePlan(
+                execution,
+                runner,
+                executable,
+                directory,
+                text(message.result, 128_001),
+              ).catch(() => this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"));
+              return;
+            }
             this.finish(
               execution,
               message.is_error === true ? "failed" : "succeeded",
@@ -864,19 +890,70 @@ export class AgentRuntime {
       const stdin = runner.child.stdin;
       if (stdin && typeof stdin !== "number") {
         void stdin.write(
-          task.prompt +
+          (continuationPrompt ?? task.prompt) +
             "\nModify and validate only. Do not commit, merge, or push unless separately instructed by the user.\n",
         );
         void stdin.end();
       }
       void runner.completed.then(
         () => {
-          if (!execution.finished)
+          if (!execution.finished && execution.process === runner && !execution.awaitingPlan)
             this.finish(execution, execution.cancelled ? "cancelled" : "failed", "AGENT_EXITED");
         },
         () => this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"),
       );
     }
+  }
+  private async continueClaudePlan(
+    execution: Execution,
+    runner: JsonProcess,
+    executable: string,
+    directory: string,
+    plan: string,
+  ) {
+    const exit = await runner.completed;
+    if (execution.finished) return;
+    await runner.kill();
+    if (execution.process === runner) delete execution.process;
+    if (
+      exit !== 0 ||
+      !execution.local.sessionId ||
+      !plan.trim() ||
+      plan.length > 128_000 ||
+      Buffer.byteLength(JSON.stringify({ body: plan, questions: [] })) > 192 * 1024
+    ) {
+      this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED");
+      return;
+    }
+    const answer = this.ask(execution, "plan", "Claude Code", plan);
+    const request = [...execution.pending.values()].find(
+      (item) => item.request.kind === "plan",
+    )?.request;
+    const decision = await answer;
+    if (execution.finished) return;
+    const applied =
+      request &&
+      this.store.requests(execution.local.binding).find((item) => item.id === request.id);
+    if (applied?.status !== "applied") {
+      this.finish(execution, "cancelled");
+      return;
+    }
+    let prompt: string;
+    if (decision.type === "allow") {
+      execution.local.task.mode = "run";
+      prompt =
+        "Implement the approved plan. Modify and validate only; do not commit, merge or push.";
+    } else if (decision.type === "deny" && decision.note.trim()) {
+      prompt = decision.note;
+    } else {
+      this.finish(execution, "cancelled");
+      return;
+    }
+    execution.summary = "";
+    execution.preview = "";
+    execution.awaitingPlan = false;
+    this.store.put(execution.local);
+    await this.run(execution, executable, directory, prompt);
   }
   private ensureHookServer() {
     this.server ??= Bun.serve({
@@ -902,6 +979,7 @@ export class AgentRuntime {
           const tool = object(input.tool_input);
           const question = name === "AskUserQuestion";
           const plan = name === "ExitPlanMode";
+          if (plan) execution.planRequestHandled = true;
           const questions =
             question && Array.isArray(tool.questions)
               ? tool.questions.map((item: unknown, index: number) => {
@@ -932,6 +1010,10 @@ export class AgentRuntime {
                 : JSON.stringify(tool, null, 2),
             questions,
           );
+          if (plan && decision.type === "allow") {
+            execution.local.task.mode = "run";
+            this.store.put(execution.local);
+          }
           if (input.hook_event_name === "PermissionRequest")
             return Response.json({
               hookSpecificOutput: {

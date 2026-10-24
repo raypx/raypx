@@ -59,12 +59,17 @@ export class RemoteControl {
       }
     | undefined;
   private readonly notified = new Set<string>();
+  private apiUrl: string | undefined;
+  private renewing: Promise<boolean> | undefined;
   constructor(
     private readonly directory: string,
     private readonly engine: Pick<LocalEngine, "request">,
     private readonly notify: () => void,
     private readonly grantRequired: () => void,
-    private readonly options: { socket?: RelaySocketFactory } = {},
+    private readonly options: {
+      socket?: RelaySocketFactory;
+      renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
+    } = {},
   ) {
     this.settings = { installationId: crypto.randomUUID(), accounts: {} };
     try {
@@ -180,6 +185,7 @@ export class RemoteControl {
     this.accountId = accountId;
     this.binding = binding;
     this.grant = grant;
+    this.apiUrl = apiUrl;
     this.error = null;
     this.renewAt = 0;
     const saved = this.settings.accounts[accountId];
@@ -215,7 +221,7 @@ export class RemoteControl {
           this.error = code ?? "NETWORK_UNAVAILABLE";
           this.acknowledgement?.reject();
           if (code === "DEVICE_REVOKED" && this.accountId) void this.enable(this.accountId, false);
-          if (code === "AUTH_REQUIRED") this.grantRequired();
+          if (code === "AUTH_REQUIRED") void this.refreshGrant();
         }
       },
       message: (frame) => {
@@ -239,11 +245,71 @@ export class RemoteControl {
         Date.now() >= this.renewAt
       ) {
         this.renewAt = Date.now() + 15_000;
-        this.grantRequired();
+        void this.refreshGrant();
       }
     };
     check();
     this.timer = setInterval(check, 15_000);
+  }
+  /** Native renewal remains active when the renderer is hidden or suspended. */
+  refreshGrant(): Promise<boolean> {
+    if (this.renewing) return this.renewing;
+    const accountId = this.accountId,
+      grant = this.grant,
+      apiUrl = this.apiUrl;
+    if (!accountId || !grant || !apiUrl || !this.options.renewGrant) {
+      this.grantRequired();
+      return Promise.resolve(false);
+    }
+    const generation = this.generation;
+    const pending = (async () => {
+      try {
+        const next = deviceGrantSchema.parse(
+          await this.options.renewGrant!(accountId, {
+            deviceId: grant.deviceId,
+            epoch: grant.epoch,
+          }),
+        );
+        if (
+          generation !== this.generation ||
+          this.accountId !== accountId ||
+          !this.settings.accounts[accountId]?.enabled
+        )
+          return false;
+        if (
+          next.deviceId !== grant.deviceId ||
+          next.epoch !== grant.epoch ||
+          !Number.isFinite(Date.parse(next.expiresAt)) ||
+          Date.parse(next.expiresAt) <= Date.now()
+        )
+          throw new Error("Invalid renewed grant");
+        this.grant = next;
+        this.renewAt = 0;
+        this.error = null;
+        // Reconnect the relay without detaching the host binding or its tasks.
+        this.connect(apiUrl);
+        return true;
+      } catch (error) {
+        if (generation !== this.generation || this.accountId !== accountId) return false;
+        const failure =
+          error && typeof error === "object"
+            ? (error as { code?: string; data?: { error?: { code?: string } } })
+            : {};
+        if (failure.data?.error?.code === "DEVICE_REVOKED") await this.enable(accountId, false);
+        else if (failure.code === "UNAUTHORIZED" || failure.data?.error?.code === "AUTH_REQUIRED")
+          await this.detach();
+        else {
+          this.error = "NETWORK_UNAVAILABLE";
+          this.renewAt = Date.now() + 15_000;
+        }
+        return false;
+      }
+    })();
+    this.renewing = pending;
+    void pending.finally(() => {
+      if (this.renewing === pending) this.renewing = undefined;
+    });
+    return pending;
   }
   private async message(frame: RelayServerFrame, generation: number) {
     const binding = this.binding;
@@ -445,6 +511,7 @@ export class RemoteControl {
     this.resetConnection();
     this.binding = undefined;
     this.grant = undefined;
+    this.apiUrl = undefined;
     this.accountId = null;
     this.error = null;
     this.detaching = false;

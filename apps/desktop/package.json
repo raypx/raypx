@@ -19,9 +19,11 @@
     "native:build": "bun run scripts/native/prepare-cli.ts --release && bun --bun electrobun build --env=stable",
     "native:prepare": "bun --bun electrobun prepare && bun run native:types",
     "typecheck:native": "bun --check --tsconfig-override tsconfig.native.json",
-    "native:types": "bun --bun tsc --ignoreConfig --noCheck --declaration --emitDeclarationOnly --module ESNext --moduleResolution Bundler --target ES2022 --rootDir .hutch/devkit/api --outDir .hutch/types .hutch/devkit/api/sdks/main/entries/browser-view.ts .hutch/devkit/api/sdks/main/entries/browser-window.ts .hutch/devkit/api/sdks/main/entries/tray.ts .hutch/devkit/api/sdks/main/entries/updater.ts .hutch/devkit/api/sdks/main/entries/utils.ts .hutch/devkit/api/sdks/main/entries/rpc.ts .hutch/devkit/api/sdks/main/entries/build-config.ts .hutch/devkit/api/sdks/main/entries/events.ts",
+    "native:types": "bun --bun tsc --ignoreConfig --noCheck --declaration --emitDeclarationOnly --module ESNext --moduleResolution Bundler --target ES2022 --rootDir .hutch/devkit/api --outDir .hutch/types .hutch/devkit/api/sdks/main/entries/browser-view.ts .hutch/devkit/api/sdks/main/entries/browser-window.ts .hutch/devkit/api/sdks/main/entries/tray.ts .hutch/devkit/api/sdks/main/entries/updater.ts .hutch/devkit/api/sdks/main/entries/utils.ts .hutch/devkit/api/sdks/main/entries/rpc.ts .hutch/devkit/api/sdks/main/entries/build-config.ts .hutch/devkit/api/sdks/main/entries/events.ts .hutch/devkit/api/sdks/main/entries/native.ts",
     "native:cli": "bun run scripts/native/prepare-cli.ts",
-    "native:smoke": "bun run native:cli && bun run tests/native/smoke/run.ts"
+    "native:smoke": "bun run native:cli && bun run tests/native/smoke/run.ts",
+    "native:agents": "bun run native:cli && bun run tests/native/smoke/agents.ts",
+    "native:beta": "bun run native:cli && bun run tests/native/smoke/run.ts beta"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -67,6 +69,7 @@
       "native/**": "bun",
       "tests/native/**": "bun",
       "preferences.ts": "universal",
+      "api.ts": "universal",
       "scripts/**": "bun",
       "tests/scripts/**": "bun"
     }

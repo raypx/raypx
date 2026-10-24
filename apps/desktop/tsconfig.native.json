@@ -13,7 +13,8 @@
       "electrobun/main/updater": ["./.hutch/types/sdks/main/entries/updater.d.ts"],
       "electrobun/main/utils": ["./.hutch/types/sdks/main/entries/utils.d.ts"],
       "electrobun/main/build-config": ["./.hutch/types/sdks/main/entries/build-config.d.ts"],
-      "electrobun/main/events": ["./.hutch/types/sdks/main/entries/events.d.ts"]
+      "electrobun/main/events": ["./.hutch/types/sdks/main/entries/events.d.ts"],
+      "electrobun/main/native": ["./.hutch/types/sdks/main/entries/native.d.ts"]
     }
   },
   "include": ["native/**/*.ts", "tests/native/**/*.ts", "scripts/**/*.ts", "tests/scripts/**/*.ts"]

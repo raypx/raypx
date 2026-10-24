@@ -1,9 +1,10 @@
-import { statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { parseAnalyticsConsent } from "@raypx/analytics";
 import { dirname, join, resolve } from "node:path";
 import type { LocalEvent, RootGrant } from "@raypx/contracts/local";
 import { messages } from "@raypx/i18n/messages";
 import { RemoteControl } from "./control";
+import { createApiClient } from "@raypx/client";
 import { LocalEngine } from "./engine";
 import { createPreferenceStore } from "./preferences";
 import { BuildConfig } from "electrobun/main/build-config";
@@ -13,6 +14,8 @@ import ElectrobunEvents from "electrobun/main/events";
 import { Tray } from "electrobun/main/tray";
 import { Updater } from "electrobun/main/updater";
 import * as Utils from "electrobun/main/utils";
+import { Session } from "electrobun/main/native";
+import { createDesktopApi, parseApiOrigin } from "./api";
 import manifest from "../package.json";
 import type { DesktopRpc } from "./rpc";
 import { wireWindow } from "./window";
@@ -33,14 +36,6 @@ if (process.platform === "win32") {
 }
 
 const channel = await Updater.localInfo.channel();
-export const NATIVE_SMOKE_SESSION_KEY = "__raypxNativeSmokeSession";
-const smokePhase = process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
-// Better Auth captures fetch during client initialization. Install one stable
-// proxy before renderer modules load; the isolated shell fixture only changes its data.
-const smokeSessionPreload =
-  process.env.RAYPX_NATIVE_SMOKE === "1" && (smokePhase === "shell" || smokePhase === "restore")
-    ? `(()=>{const originalFetch=window.fetch.bind(window);window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]=null;window.fetch=(input,init)=>{const url=new URL(input instanceof Request?input.url:String(input),location.href);if(url.pathname==="/api/auth/get-session")return Promise.resolve(new Response(JSON.stringify(window[${JSON.stringify(NATIVE_SMOKE_SESSION_KEY)}]),{headers:{"content-type":"application/json"}}));return originalFetch(input,init);};})();`
-    : "";
 let url = "views://main/index.html";
 if (channel === "dev" && process.env.RAYPX_NATIVE_SMOKE !== "1") {
   try {
@@ -97,6 +92,21 @@ const preferences = createPreferenceStore(
     ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
     : Utils.paths.userData,
 );
+const partition =
+  process.env.RAYPX_NATIVE_SMOKE === "1" ? "persist:raypx-native-smoke" : "persist:raypx";
+const runtimeConfig: unknown = JSON.parse(
+  readFileSync(
+    resolve(dirname(process.execPath), "../Resources/app/views/main/runtime-config.json"),
+    "utf8",
+  ),
+);
+export const apiOrigin = parseApiOrigin(
+  runtimeConfig && typeof runtimeConfig === "object" && "apiUrl" in runtimeConfig
+    ? runtimeConfig.apiUrl
+    : undefined,
+);
+export const desktopApi = createDesktopApi(apiOrigin, Session.fromPartition(partition).cookies);
+const nativeApiClient = createApiClient({ baseUrl: apiOrigin, fetch: desktopApi.fetch });
 let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
 function notifyPending() {
   Utils.showNotification({
@@ -123,7 +133,7 @@ export const engine = new LocalEngine(
   },
   engineArgs,
 );
-const control = new RemoteControl(
+export const control = new RemoteControl(
   process.env.RAYPX_NATIVE_SMOKE === "1"
     ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
     : Utils.paths.userData,
@@ -132,15 +142,27 @@ const control = new RemoteControl(
   () => {
     void emitLocalEvent({ version: 1, event: "sync.grantRequired", data: {} });
   },
+  {
+    renewGrant: async (accountId, binding) => {
+      const account = await nativeApiClient.account.get({});
+      if (account.id !== accountId)
+        throw Object.assign(new Error("AUTH_REQUIRED"), { code: "UNAUTHORIZED" });
+      return nativeApiClient.devices.refreshGrant(binding);
+    },
+  },
 );
 const rpc = BrowserView.defineRPC<DesktopRpc>({
   maxRequestTime: 5000,
   handlers: {
     requests: {
+      apiFetch: (input) => desktopApi.request(input),
       controlInfo: ({ accountId }) => control.info(accountId),
       controlEnable: ({ accountId, enabled }) => control.enable(accountId, enabled),
       controlRevoked: ({ accountId }) => control.revoked(accountId),
-      controlAttach: ({ accountId, apiUrl, grant }) => control.attach(accountId, apiUrl, grant),
+      controlAttach: ({ accountId, apiUrl, grant }) => {
+        if (parseApiOrigin(apiUrl) !== apiOrigin) throw new Error("Unexpected remote API origin");
+        return control.attach(accountId, apiUrl, grant);
+      },
       controlDetach: async () => {
         await control.detach();
         return true;
@@ -181,9 +203,8 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
 export const view = new BrowserView({
   windowId: mainWindow.id,
   url,
-  preload: preferences.preload() + smokeSessionPreload,
-  partition:
-    process.env.RAYPX_NATIVE_SMOKE === "1" ? "persist:raypx-native-smoke" : "persist:raypx",
+  preload: preferences.preload(),
+  partition,
   frame: { x: 0, y: 0, width: 1120, height: 720 },
   navigationRules: JSON.stringify([
     "^*",

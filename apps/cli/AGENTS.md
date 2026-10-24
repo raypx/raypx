@@ -81,3 +81,9 @@ compaction; indexed task cursors paginate it. History survives logout until
 `agents.local.clear` removes finished tasks; active local work is cancelled
 on account change or engine shutdown. A new local approval adds `pendingRequest`
 to `agent.changed` so Desktop can notify; relay approvals notify after delivery.
+
+Headless Claude can return a plan without an ExitPlanMode tool. Keep the project
+locked, offer the complete plan as a host approval, and resume the same provider
+session only after an applied decision. Revision notes stay in plan mode; expiry
+and cancellation never start another inference call. An approved hook-based plan
+also moves the task to run mode so it is not offered twice.
