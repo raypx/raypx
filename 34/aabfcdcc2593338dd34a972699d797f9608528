@@ -1,0 +1,20 @@
+apps/desktop/tests/native/smoke/scenario.ts
+  s_a9c257ef9e2b8f::t_784697a30f16c4 68-69
+  s_a9c257ef9e2b8f::t_815b885da2902d 70-73,135-137,245-254
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "34aabfcdcc2593338dd34a972699d797f9608528",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
