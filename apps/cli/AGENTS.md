@@ -8,6 +8,15 @@ The standalone Raypx local execution host. It runs without login, Node or a glob
 
 `raypx files`, `raypx jobs`, `raypx tools`, and private `raypx stdio` share the runtime. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
 
+`raypx ai providers|models|complete` lazily loads `@raypx/ai` for Pi SDK model calls.
+CLI owns `[ai]` in `~/.raypx/config.toml` (`RAYPX_HOME` may select an absolute
+directory); it never rewrites the file. JSON params override those non-secret
+settings. Keys come only from provider environment variables or `api_key_env`.
+Catalog commands are offline and never create a profile database. Completion is
+one bounded request; signals abort it and close its client. Keep finite JSON
+output, stable LocalError codes, and prompts/credentials/provider errors out of
+diagnostics. Returned tool calls remain data for a caller to authorize and execute.
+
 Public commands use an explicit citty tree; `roots` and the existing JSON params remain supported.
 Validate global options strictly before dispatch, preserving operands after `--`. Generate scoped
 help with `renderUsage`; never use `runMain` or let citty print errors or exit the process.

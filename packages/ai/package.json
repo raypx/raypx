@@ -1,0 +1,35 @@
+{
+  "name": "@raypx/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run --passWithNoTests",
+    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
+    "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
+    "test:component": "bun --bun vp test --run --passWithNoTests component/"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "catalog:"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@types/node": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "node",
+    "entryTargets": {
+      "./config": "universal"
+    },
+    "sourceTargets": {
+      "src/config.ts": "universal",
+      "src/errors.ts": "universal"
+    }
+  }
+}

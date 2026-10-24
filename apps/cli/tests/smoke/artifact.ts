@@ -3,6 +3,7 @@ import { chmod, copyFile, mkdtemp, mkdir, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import manifest from "../../package.json";
+import { aiFixture } from "../helpers/ai";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../package.json"),
@@ -42,6 +43,111 @@ try {
   assert.equal((await new Response(version.stdout).text()).trim(), manifest.version);
   assert.equal(await version.exited, 0);
   completed(await new Response(version.stderr).text(), "version", "success");
+  const aiHome = join(dataDir, "ai-home");
+  for (const action of ["providers", "models"]) {
+    const catalog = Bun.spawn([binary, "ai", action, "--json"], {
+      cwd: dataDir,
+      env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const rows = JSON.parse(await new Response(catalog.stdout).text());
+    assert.equal(await catalog.exited, 0);
+    assert.ok(
+      Array.isArray(rows) && rows.length > 0,
+      "Pi catalogs must be embedded in the standalone CLI",
+    );
+    completed(await new Response(catalog.stderr).text(), "command", "success");
+  }
+  const aiServer = aiFixture();
+  try {
+    const ai = Bun.spawn(
+      [
+        binary,
+        "ai",
+        "complete",
+        JSON.stringify({
+          provider: "artifact",
+          model: "fixture-model",
+          api: "openai-completions",
+          base_url: aiServer.url,
+          prompt: "private-ai-prompt",
+          api_key_env: "RAYPX_AI_SMOKE_KEY",
+        }),
+        "--json",
+      ],
+      {
+        cwd: dataDir,
+        env: { ...process.env, PATH: "", RAYPX_HOME: aiHome, RAYPX_AI_SMOKE_KEY: "private-ai-key" },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    const answer = JSON.parse(await new Response(ai.stdout).text());
+    assert.equal(await ai.exited, 0);
+    assert.ok(
+      answer.content.some(
+        (block: { type: string; text?: string }) =>
+          block.type === "text" && block.text === "PI_AI_READY",
+      ),
+    );
+    assert.equal(answer.usage.totalTokens, 16);
+    assert.equal(aiServer.requests.length, 1);
+    const aiDiagnostics = await new Response(ai.stderr).text();
+    completed(aiDiagnostics, "command", "success");
+    assert.ok(
+      !aiDiagnostics.includes("private-ai-key") && !aiDiagnostics.includes("private-ai-prompt"),
+    );
+  } finally {
+    await aiServer.stop();
+  }
+  if (process.platform !== "win32") {
+    for (const [signal, exitCode] of [
+      ["SIGINT", 130],
+      ["SIGTERM", 143],
+    ] as const) {
+      const server = aiFixture({ stall: true });
+      const child = Bun.spawn(
+        [
+          binary,
+          "ai",
+          "complete",
+          JSON.stringify({
+            provider: "artifact",
+            model: "fixture-model",
+            api: "openai-completions",
+            base_url: server.url,
+            prompt: "private-ai-prompt",
+          }),
+          "--json",
+        ],
+        {
+          cwd: dataDir,
+          env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+      const watchdog = setTimeout(() => child.kill("SIGKILL"), 10_000);
+      try {
+        const deadline = performance.now() + 5000;
+        while (!server.requests.length && performance.now() < deadline) await Bun.sleep(10);
+        assert.equal(server.requests.length, 1, "AI request must start before cancellation");
+        child.kill(signal);
+        assert.equal(
+          await child.exited,
+          exitCode,
+          `${signal} must retain its conventional exit code`,
+        );
+        assert.equal(await new Response(child.stdout).text(), "");
+        completed(await new Response(child.stderr).text(), "command", "failed");
+      } finally {
+        clearTimeout(watchdog);
+        child.kill("SIGKILL");
+        await server.stop();
+      }
+    }
+  }
   const invalid = Bun.spawn([binary, "--json", "--profile"], {
     cwd: dataDir,
     env: { ...process.env, PATH: "" },
@@ -278,7 +384,9 @@ try {
     reader.releaseLock();
     child.kill();
   }
-  console.log("Copied standalone CLI smoke passed outside the repository with an empty PATH.");
+  console.log(
+    "Copied standalone CLI smoke passed outside the repository with an empty PATH, including Pi AI HTTP streaming.",
+  );
 } finally {
   await rm(dataDir, { recursive: true, force: true });
 }

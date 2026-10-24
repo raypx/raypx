@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@raypx-kit/logger": "catalog:",
+    "@raypx/ai": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "citty": "catalog:",
     "croner": "catalog:"

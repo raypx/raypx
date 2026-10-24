@@ -70,6 +70,11 @@ HTTPS is required except for loopback HTTP (`localhost`, `127.0.0.1`, `[::1]`).
 The file is limited to 16 KiB. It contains public connection settings only;
 passwords, session cookies and provider credentials do not belong here.
 
+An optional root `[ai]` table configures [Pi model calls](ai.md) in the bundled
+CLI. It is independent of connection profiles; Desktop accepts the table and
+the CLI validates its fields when an AI command runs. Keys remain in environment
+variables, referenced by name in `api_key_env`.
+
 ## Apply and isolate
 
 Quit Raypx from the tray/application menu and start it again after editing.

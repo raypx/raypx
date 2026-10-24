@@ -5,6 +5,7 @@ import manifest from "../../package.json";
 import { LocalError } from "../runtime/errors";
 import type { RecordDiagnostic } from "../diagnostics";
 import { globalArgs, type CliArgs } from "./args";
+import { createAiCommands } from "./ai";
 
 type PublicMethod = Exclude<LocalMethod, "runtime.info" | `terminal.${string}`>;
 type Operation = {
@@ -91,6 +92,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
       }),
     });
   }
+  groups.set("ai", createAiCommands(invocation));
   const stdio = defineCliCommand({
     meta: { name: "stdio", description: "Private Desktop NDJSON transport", hidden: true },
     args: globalArgs,

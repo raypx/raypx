@@ -48,7 +48,8 @@
       "unstorage": "2.0.0-beta.0",
       "zod": "^4.6.7",
       "zustand": "^5.0.16",
-      "@raypx-kit/analytics": "0.0.0-alpha.1"
+      "@raypx-kit/analytics": "0.0.0-alpha.1",
+      "@earendil-works/pi-ai": "1.4.0"
     },
     "catalogs": {
       "dev": {

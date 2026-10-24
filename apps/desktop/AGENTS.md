@@ -87,6 +87,8 @@ verification and password recovery remain public; confirmed logout redirects to
   production, and requires a full Quit/restart after edits. Invalid input stops
   startup rather than connecting elsewhere. `RAYPX_HOME` optionally selects an
   absolute config directory; smoke tests use isolated config files.
+  An optional `[ai]` table belongs to CLI's Pi model settings and does not change
+  the selected account server; Desktop only requires that it is a table.
   Scope cookies/WebView storage, remote settings and local Agent account IDs to
   the normalized API origin, including port. Keep native device preferences and
   CLI file grants/jobs independent of the selected remote service.

@@ -48,9 +48,13 @@ export function parseDesktopConfig(source: string): DesktopConnection {
   }
   if (
     !table(value) ||
-    Object.keys(value).some((key) => !["base_url", "web_url", "profile", "profiles"].includes(key))
+    Object.keys(value).some(
+      (key) => !["base_url", "web_url", "profile", "profiles", "ai"].includes(key),
+    )
   )
-    throw new Error("Unknown configuration option; use base_url, web_url, profile or profiles");
+    throw new Error("Unknown configuration option; use base_url, web_url, profile, profiles or ai");
+  // CLI owns model configuration. It does not select the Desktop account server.
+  if (value.ai !== undefined && !table(value.ai)) throw new Error("ai must be a table");
   const defaults = endpoints(value);
   const profiles = value.profiles ?? {};
   if (!table(profiles)) throw new Error("profiles must be a table");

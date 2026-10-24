@@ -65,6 +65,19 @@ web_url = "https://web.example.test"
   ).toEqual({ apiUrl: "https://api.example.test", webUrl: "https://web.example.test" });
 });
 
+it("keeps CLI AI settings separate from the selected account server", () => {
+  expect(
+    parseDesktopConfig(`
+base_url = "https://self.example.test"
+[ai]
+provider = "anthropic"
+model = "configured-model"
+api_key_env = "RAYPX_AI_API_KEY"
+`),
+  ).toEqual({ apiUrl: "https://self.example.test", webUrl: "https://self.example.test" });
+  expect(() => parseDesktopConfig("ai = 42")).toThrow("ai must be a table");
+});
+
 it("fails closed on invalid or misspelled config without overwriting it or echoing secrets", () => {
   const dir = mkdtempSync(join(tmpdir(), "raypx-config-invalid-"));
   try {
