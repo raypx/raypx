@@ -19,4 +19,6 @@ Search and status/agent/computer filters apply only to the loaded page; show the
 matching/loaded count and retain cursor navigation even when no rows match.
 Use shadcn controls and confirmation dialogs for disconnecting a computer. Keep
 failed mutations open for a deliberate retry and block duplicate submissions.
+If a create receipt is lost, recover the same submitted task from its authoritative
+read projection instead of blocking its approval behind the creation form.
 Run this workspace check/test and the repository verification gate.

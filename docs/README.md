@@ -12,6 +12,7 @@
 - [Node and Cloudflare deployments](development/cloudflare.md)
 - [Shared deployment per project](development/deployment.md)
 - [Existing beta environment](development/beta.md)
+- [Production environment](development/production.md)
 - [Administrator configuration](development/configuration.md)
 - [Server caching](development/caching.md)
 - [Object storage](development/object-storage.md)

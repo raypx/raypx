@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { TaskClient } from "@raypx/client";
 import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
 import type {
@@ -284,6 +284,13 @@ function CreateTask({
   const [error, setError] = useState<ReturnType<typeof failureCode>>();
   const submission = useRef<{ key: string; id: string } | null>(null);
   const submitting = useRef(false);
+  useEffect(() => {
+    // A lost relay receipt can leave a task accepted and running on Desktop.
+    // Recover from its authoritative projection without sending another command.
+    if (!error || !submission.current) return;
+    const accepted = tasks.find((task) => task.id === submission.current?.id);
+    if (accepted) onCreated(accepted);
+  }, [error, tasks, onCreated]);
   const device = devices.find((item) => item.id === deviceId);
   const project = device?.projects.find((item) => item.id === projectId);
   const occupied = tasks.some(

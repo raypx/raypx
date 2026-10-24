@@ -71,6 +71,7 @@ desktopApi.request = async (input) => {
   return result;
 };
 async function acceptance() {
+  handleTrayAction("show");
   await waitFor(() => engine.status.status === "ready", "standalone CLI startup");
   await waitFor(
     async () =>
@@ -243,6 +244,8 @@ async function acceptance() {
   for (const task of completed.tasks)
     assert.equal((await Bun.file(join(project, task.file)).text()).trim(), task.marker);
   stage = "Desktop renderer receives completed remote tasks";
+  // WebKit may suspend a hidden view; restore it before testing renderer interaction.
+  handleTrayAction("show");
   await evaluate('location.hash="/tasks";return true;');
   const remoteTab = messages.en.tasks.connectedComputers;
   await waitFor(
