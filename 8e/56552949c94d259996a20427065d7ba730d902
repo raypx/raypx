@@ -1,0 +1,39 @@
+docs/development/desktop-configuration.md
+  s_a9c257ef9e2b8f::t_b8c7ae51152fd1 95-102
+apps/desktop/AGENTS.md
+  s_a9c257ef9e2b8f::t_b8c7ae51152fd1 73-77
+apps/desktop/tests/native/cookies.test.ts
+  s_a9c257ef9e2b8f::t_9b4a56f713cb02 1-20,36-39,58,62,66-67,69,76
+  s_a9c257ef9e2b8f::t_52243bc0d4a829 40-57,61,68
+  s_a9c257ef9e2b8f::t_e09fdd03ea460b 21-35,59-60,63-65,70-75
+  s_a9c257ef9e2b8f::t_dea96537fa3ac5 77-78
+apps/desktop/tests/native/smoke/scenario.ts
+  s_a9c257ef9e2b8f::t_b8c7ae51152fd1 121-122
+  s_a9c257ef9e2b8f::t_028ec3e1216ae2 123-130,503
+apps/desktop/tests/native/smoke/run.ts
+  s_a9c257ef9e2b8f::t_b8c7ae51152fd1 1,4,119-127
+  s_a9c257ef9e2b8f::t_4d939a412fee52 128-131
+apps/desktop/native/main.ts
+  s_a9c257ef9e2b8f::t_9b4a56f713cb02 21,118-131
+  s_a9c257ef9e2b8f::t_25421af1064ad9 132-140,169
+apps/desktop/native/cookies.ts
+  s_a9c257ef9e2b8f::t_9b4a56f713cb02 1,11-25,31-40,43-47,61-66,68,75,78,82,85-86,90-96,102-104,108,114-119,128-130,137-140,147-149
+  s_a9c257ef9e2b8f::t_52243bc0d4a829 2-10,26-30,41-42,48-60,67,69-74,76-77,79-81,83-84,87-89,97-101,105-107,109-113,120-127,131-136,141-146
+  s_a9c257ef9e2b8f::t_3c328fa804b1d1 150-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8e56552949c94d259996a20427065d7ba730d902",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
