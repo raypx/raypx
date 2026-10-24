@@ -1,0 +1,157 @@
+apps/cli/tests/runtime/agents/host.test.ts
+  s_a9c257ef9e2b8f::t_1a0cd611f11847 18-19,186
+  s_a9c257ef9e2b8f::t_23ecb5f4bff214 67-153,156-161,163-171,173-185
+  s_a9c257ef9e2b8f::t_6a5bb2949b3f39 154-155,162,172
+  s_a9c257ef9e2b8f::t_0cf0c1921fd454 187-190
+apps/api/server/control/service.ts
+  s_a9c257ef9e2b8f::t_3b161421b7e139 3,313,419-420,517-518,521,537
+  s_a9c257ef9e2b8f::t_eac2c06c5a4541 314-320,329-335,337-338,341-342,344-355,358-365,427-435,452-456,462-464,519-520,522-534
+  s_a9c257ef9e2b8f::t_b54c117d4a0418 336,339-340,343,356,421
+  s_a9c257ef9e2b8f::t_7715011ad08852 357,366,535-536,538
+apps/api/tests/unit/control.test.ts
+  s_a9c257ef9e2b8f::t_c46add245bcebe 12-31,44,66
+  s_a9c257ef9e2b8f::t_61d90942927418 32-43,45-65,67-72
+apps/cli/src/runtime/agents/transport.ts
+  s_a9c257ef9e2b8f::t_56ef18b4579f6c 56-64,66-67,69-72,104-110
+  s_a9c257ef9e2b8f::t_ef4f55dd19fa3c 118
+apps/cli/src/runtime/agents/activity.ts
+  s_a9c257ef9e2b8f::t_af72c62ff3dd3c 4-10,24-28,82-88,91-99,108-131,135-140,147-151,154,160-161,166-169,173-174,177-186,188-200,205-212,215-218
+  s_a9c257ef9e2b8f::t_1dbfc2e2826aa1 79,164,222
+  s_a9c257ef9e2b8f::t_5e048d56c48baa 1-3,11-17,19-23,29-69,71-78,80-81,89-90,100-107,132-134,141-146,162-163,165,175-176,187,201-204,213-214,219-221,223-227
+  s_a9c257ef9e2b8f::t_2c74972110e057 18,70,152-153,155-159,170-172
+packages/contracts/src/tasks.ts
+  s_a9c257ef9e2b8f::t_a176cdf27cf170 25-28,88-92,100-119,121-132,134-138,239
+  s_a9c257ef9e2b8f::t_ff487e52733003 93-99,120
+  s_a9c257ef9e2b8f::t_d783b67027178c 2
+  s_a9c257ef9e2b8f::t_7ebce3b2e7eca6 139,216
+packages/i18n/src/messages/zh.ts
+  s_a9c257ef9e2b8f::t_1339871432a5bc 50-77
+  s_a9c257ef9e2b8f::t_94da52ed9b12e2 78-79
+packages/tasks/tests/approval-changes.test.ts
+  s_a9c257ef9e2b8f::t_830b71da439bd4 1-28
+  s_a9c257ef9e2b8f::t_d410cbbbb7ce7b 29-54
+e2e/tests/live-agents.spec.ts
+  s_a9c257ef9e2b8f::t_31b56081f32e8e 119
+  s_a9c257ef9e2b8f::t_8fe86ddaa3cf3f 109
+apps/cli/tests/runtime/agents/store.test.ts
+  s_a9c257ef9e2b8f::t_31b56081f32e8e 99-115
+  s_a9c257ef9e2b8f::t_b7eab0438b02fa 116-126,136-149
+apps/cli/tests/fixtures/agents/claude-headless-plan.mjs
+  s_a9c257ef9e2b8f::t_1a0cd611f11847 5-10
+packages/tasks/src/client/approval-body.tsx
+  s_a9c257ef9e2b8f::t_6470b56063a70a 2-13,59
+  s_a9c257ef9e2b8f::t_23ecb5f4bff214 1,14-58
+packages/client/src/tasks.ts
+  s_a9c257ef9e2b8f::t_ff487e52733003 6
+  s_a9c257ef9e2b8f::t_af72c62ff3dd3c 7,30,167-169,234-237
+packages/tasks/src/client/task-input.tsx
+  s_a9c257ef9e2b8f::t_737245ccc0858b 1-48
+  s_a9c257ef9e2b8f::t_ff4b2cbf112fa2 49-128
+apps/desktop/src/features/tasks/local-client.ts
+  s_a9c257ef9e2b8f::t_6d0611489267f4 42
+  s_a9c257ef9e2b8f::t_ff487e52733003 5
+  s_a9c257ef9e2b8f::t_c56a15d8e4e541 43-46,102-105
+apps/cli/tests/runtime/agents/activity.test.ts
+  s_a9c257ef9e2b8f::t_2c74972110e057 10-14,24-66,70-86,92-102,109-119
+  s_a9c257ef9e2b8f::t_830b71da439bd4 1-9,15-23,67-69,87-91,103-108,120-121
+  s_a9c257ef9e2b8f::t_5af0fe07877aba 122-127
+packages/tasks/package.json
+  s_a9c257ef9e2b8f::t_e1690b99d0108f 24-26
+apps/desktop/tests/renderer/component/features/tasks/workspace.test.tsx
+  s_a9c257ef9e2b8f::t_31b56081f32e8e 151
+  s_a9c257ef9e2b8f::t_8fe86ddaa3cf3f 12,34,47-55,66,91,148-150,152-178,181,183,187,200,203,208,224,227-228,243
+  s_a9c257ef9e2b8f::t_d92d4c3c696fe4 179-180,182,184-186,188-199,201-202,204-207,209-223,225-226,229-242,244-249
+docs/architecture/remote-tasks.md
+  s_a9c257ef9e2b8f::t_f9387368be9c39 13,17,107-136,139-142
+packages/contracts/src/api.ts
+  s_a9c257ef9e2b8f::t_a176cdf27cf170 9,67-73
+  s_a9c257ef9e2b8f::t_02fb47308b322b 79-80
+e2e/tests/foundation.spec.ts
+  s_a9c257ef9e2b8f::t_4060c6caf08f38 75-76,112,150-155,193-201,214-223,226,230-240,264
+  s_a9c257ef9e2b8f::t_af72c62ff3dd3c 68-74,77-111,113-149,156-192,202-213,224-225,227-229,241-244,247-253
+  s_a9c257ef9e2b8f::t_1f02cc07093b2e 3-8,245-246,254-263
+  s_a9c257ef9e2b8f::t_927e63ac59c168 265-269
+e2e/package.json
+  s_a9c257ef9e2b8f::t_af72c62ff3dd3c 15
+package.json
+  s_a9c257ef9e2b8f::t_e1690b99d0108f 45-46
+packages/tasks/src/client/conversation.tsx
+  s_a9c257ef9e2b8f::t_23ecb5f4bff214 1,8-20,22-24,28-31,33-44,46-134
+  s_a9c257ef9e2b8f::t_3a3a12ca8363ba 45
+  s_a9c257ef9e2b8f::t_6470b56063a70a 2-7,21,25-27,32,135
+packages/i18n/src/messages/en.ts
+  s_a9c257ef9e2b8f::t_1339871432a5bc 59-86
+  s_a9c257ef9e2b8f::t_bc29db5d98fa82 87-91
+apps/api/server/api.ts
+  s_a9c257ef9e2b8f::t_917a366cd36d61 343
+apps/cli/tests/fixtures/agents/codex-interactive.mjs
+  s_a9c257ef9e2b8f::t_1a0cd611f11847 1-29
+  s_a9c257ef9e2b8f::t_c6c5b4aefaed55 30-47
+apps/cli/tests/fixtures/agents/claude-interactive.mjs
+  s_a9c257ef9e2b8f::t_1a0cd611f11847 1-25
+  s_a9c257ef9e2b8f::t_694d803f29b3b8 26-42
+packages/tasks/src/client/approval-changes.ts
+  s_a9c257ef9e2b8f::t_6470b56063a70a 1-62
+  s_a9c257ef9e2b8f::t_c70f8f36387ae6 63-128
+packages/tasks/src/client/markdown.tsx
+  s_a9c257ef9e2b8f::t_6470b56063a70a 2,4,15
+  s_a9c257ef9e2b8f::t_2c74972110e057 3,6-11,16,19,24
+  s_a9c257ef9e2b8f::t_af72c62ff3dd3c 1,5,12-14,17-18,20-23
+packages/tasks/AGENTS.md
+  s_a9c257ef9e2b8f::t_f9387368be9c39 25-31
+apps/cli/AGENTS.md
+  s_a9c257ef9e2b8f::t_f9387368be9c39 83-89
+packages/contracts/src/local.ts
+  s_a9c257ef9e2b8f::t_a176cdf27cf170 77
+packages/tasks/src/client/styles.css
+  s_a9c257ef9e2b8f::t_cd6432f527fb01 2-41,46,50,52-53,58,64,69
+  s_a9c257ef9e2b8f::t_9b4632199ccd97 42-45,47-49,51,54-57,59-63,65-68,70-135
+apps/cli/src/runtime/index.ts
+  s_a9c257ef9e2b8f::t_d783b67027178c 61
+apps/cli/src/runtime/agents/store.ts
+  s_a9c257ef9e2b8f::t_d783b67027178c 10,13-16,113,117-119,122-134,138-139,141-142,145,148,167-168,175
+  s_a9c257ef9e2b8f::t_ff487e52733003 75
+  s_a9c257ef9e2b8f::t_1dbfc2e2826aa1 120-121
+  s_a9c257ef9e2b8f::t_3a88d2ee42f66e 43-45,140,143-144,146-147,149-166,169-174,176-184,256
+packages/tasks/src/client/failure.ts
+  s_a9c257ef9e2b8f::t_737245ccc0858b 1-9
+  s_a9c257ef9e2b8f::t_cdc8214aa9272e 10-25
+apps/cli/src/runtime/agents/index.ts
+  s_a9c257ef9e2b8f::t_f68be195a81032 335
+  s_a9c257ef9e2b8f::t_6a5bb2949b3f39 419,427
+  s_a9c257ef9e2b8f::t_eac2c06c5a4541 501-505
+  s_a9c257ef9e2b8f::t_bcdefdfecd5f54 810,813-814,911-912,916,923,931,942,967-973,975-976,981,983-984,991
+  s_a9c257ef9e2b8f::t_d783b67027178c 133,139
+  s_a9c257ef9e2b8f::t_af72c62ff3dd3c 172-174,336-347,413-418,422-424,473-474,478-483,486-495,499-500,506-508,510-533,535,676-684,700-705,708-713,715-723,913-915,917-922,924-930,932,974,977-980,982,985-990,1045-1047,1049-1073,1075-1076,1088-1095,1097-1100
+  s_a9c257ef9e2b8f::t_a6431c05a6f26b 1014-1015,1018-1019,1034-1035,1041-1044,1048,1077-1078,1084-1087,1096,1101,1119-1120,1263
+  s_a9c257ef9e2b8f::t_d9e9435876deb2 19,26,47-54,266,420-421,425-426,428,470-472,475-477,484-485,496-498,509,534,536-537,685-690,699,706-707,714,724-739
+packages/contracts/tests/activity.test.ts
+  s_a9c257ef9e2b8f::t_c46add245bcebe 1-4,6-16,18-19
+  s_a9c257ef9e2b8f::t_f68be195a81032 5,17
+  s_a9c257ef9e2b8f::t_fe8a8329102e34 20-37
+packages/contracts/src/activity.ts
+  s_a9c257ef9e2b8f::t_b5846139c7a124 4-10
+  s_a9c257ef9e2b8f::t_d783b67027178c 1-2,11-23,25-33
+  s_a9c257ef9e2b8f::t_830b71da439bd4 3,24
+packages/tasks/src/client/workspace.tsx
+  s_a9c257ef9e2b8f::t_af72c62ff3dd3c 11,28-32,231,416,424,433-442,446-457,464-465,472,480-490,493-496,576-596,685
+  s_a9c257ef9e2b8f::t_3a3a12ca8363ba 491-492
+bun.lock
+  s_a9c257ef9e2b8f::t_3ffb49a48c27e9 180,381-382,495-496,1347-1348,1355-1360,1363-1364,1377-1378,1419-1420,1523-1524,1553-1554,1557-1564,1581-1582,1615-1616,1631-1632,1637-1638,1683-1684,1687-1688,1743-1746,1755-1756,1771-1772,1775-1778,1781-1782,1785-1786,1789-1790,1857-1858,1871-1872,1875-1904,1907-1964,2015-2016,2061-2062,2083-2084,2093-2100,2147-2148,2159-2160,2167-2170,2205-2208,2239-2250,2259-2262,2329-2330,2389-2390
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9cfa0b2483fd1280de57fa41ca173670e7953290",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
