@@ -148,10 +148,10 @@ async function localSessionFixture() {
 }
 
 async function reloadRenderer() {
-  const href = await evaluate("return location.href");
   const previousOrigin = await evaluate("return performance.timeOrigin");
-  if (typeof href !== "string") throw new Error("Renderer location unavailable");
-  view.loadURL(href);
+  // CEF may treat loadURL(currentURL) as an unchanged navigation. Ask the page
+  // to reload after returning this bridge response so every renderer reloads.
+  await evaluate("setTimeout(()=>location.reload(),0);return true;");
   await waitFor(
     async () =>
       Boolean(
