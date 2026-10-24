@@ -1,0 +1,92 @@
+apps/desktop/tests/native/config.test.ts
+  s_a9c257ef9e2b8f::t_c21ee0e7f37fbc 68-78
+  s_a9c257ef9e2b8f::t_3c66bfa27b07c6 79-80
+apps/cli/tests/smoke/artifact.ts
+  s_a9c257ef9e2b8f::t_3bd04e92bb66d7 6,46-48,53-55,60-63,86-87,94-97,147
+  s_a9c257ef9e2b8f::t_c507ffed29c83e 49-52,56-59,64-85,88-93,98-128,142,145-146
+  s_a9c257ef9e2b8f::t_f8e5d6f4279af5 129-141,143-144,148-150,387-389
+packages/ai/src/index.ts
+  s_a9c257ef9e2b8f::t_eb61dae0223331 1-8
+  s_a9c257ef9e2b8f::t_995c48292b2e93 9-28
+packages/ai/src/client.ts
+  s_a9c257ef9e2b8f::t_411e0a380db18c 21-24,54,66-70,72,120
+  s_a9c257ef9e2b8f::t_eb61dae0223331 1-20,25-53,55-65,71,73-119,121-128
+  s_a9c257ef9e2b8f::t_d813d4f41c3e1c 129-198
+packages/ai/src/config.ts
+  s_a9c257ef9e2b8f::t_45b7fcb4ea14ab 1-8,10-15,26-33,40,45,50,57,63,68-69,77,83
+  s_a9c257ef9e2b8f::t_ae148b68cc3b6b 16-25,34-39,41-44,46-49,51-54,58-62,64-67,70-76,78-82
+  s_a9c257ef9e2b8f::t_6af42ee82181a5 9,55-56
+apps/desktop/native/config.ts
+  s_a9c257ef9e2b8f::t_45b7fcb4ea14ab 51-53,55
+  s_a9c257ef9e2b8f::t_38307ade9efe75 56-57
+apps/cli/src/commands/ai.ts
+  s_a9c257ef9e2b8f::t_61d29ca721584d 36-39,69
+  s_a9c257ef9e2b8f::t_6af42ee82181a5 144
+  s_a9c257ef9e2b8f::t_7ea6de61b1977f 12-13,31-33,47-65,81-88,95-117,119-120,125-127,130-135,138-141,148-150,157-164,167-168
+  s_a9c257ef9e2b8f::t_45b7fcb4ea14ab 1-11,14-30,34-35,40-46,66-68,70-80,89-94,118,121-124,128-129,136-137,142-143,145-147,151-156,165-166,169-177
+apps/cli/AGENTS.md
+  s_a9c257ef9e2b8f::t_3bd04e92bb66d7 11-19
+docs/development/desktop-configuration.md
+  s_a9c257ef9e2b8f::t_1a9d0911afa7ae 73-77
+apps/cli/tests/commands/ai.test.ts
+  s_a9c257ef9e2b8f::t_7ea6de61b1977f 94-97,99-108,110-114,158
+  s_a9c257ef9e2b8f::t_736d520dc838c9 1-19,22-24,28-31,41-42,46,53-55,60-71,77-80,88-91,117-119,129,144,150-152,166-168,172-175,183-188
+  s_a9c257ef9e2b8f::t_3cb56c8529ac00 20-21,25-27,32-40,43-45,47-52,56-59,72-76,81-87,92-93,98,109,115-116,120-128,130-143,145-149,153-157,159-165,169-171,176-182
+packages/ai/src/errors.ts
+  s_a9c257ef9e2b8f::t_eb61dae0223331 1-18
+packages/ai/tests/client.test.ts
+  s_a9c257ef9e2b8f::t_3bd04e92bb66d7 3
+  s_a9c257ef9e2b8f::t_c21ee0e7f37fbc 1-2,4-97
+  s_a9c257ef9e2b8f::t_6cfa6ebe76d54b 98-160
+docs/README.md
+  s_a9c257ef9e2b8f::t_6af42ee82181a5 11
+packages/ai/AGENTS.md
+  s_a9c257ef9e2b8f::t_eb61dae0223331 1-27
+docs/development/ai.md
+  s_a9c257ef9e2b8f::t_6af42ee82181a5 1-72,75-87,93-121
+  s_a9c257ef9e2b8f::t_3cb56c8529ac00 73-74,88-92
+packages/ai/src/providers.ts
+  s_a9c257ef9e2b8f::t_eb61dae0223331 1-73,79-80
+  s_a9c257ef9e2b8f::t_c21ee0e7f37fbc 74-78
+  s_a9c257ef9e2b8f::t_75ad145ae623cd 81-121
+packages/ai/tests/config.test.ts
+  s_a9c257ef9e2b8f::t_c21ee0e7f37fbc 1,4-6,15-18,31-35,50-53,59,68
+  s_a9c257ef9e2b8f::t_1a9d0911afa7ae 7-14,19-30,36-49,54-58,60-67
+  s_a9c257ef9e2b8f::t_3bd04e92bb66d7 2-3
+apps/desktop/AGENTS.md
+  s_a9c257ef9e2b8f::t_3bd04e92bb66d7 90-91
+apps/cli/tests/helpers/ai.ts
+  s_a9c257ef9e2b8f::t_3cb56c8529ac00 1-7,10-11,13-97,100-107
+  s_a9c257ef9e2b8f::t_736d520dc838c9 8-9,12,98-99,108
+  s_a9c257ef9e2b8f::t_4989b74d98a9e9 109-184
+apps/cli/src/commands/index.ts
+  s_a9c257ef9e2b8f::t_45b7fcb4ea14ab 8,95
+apps/cli/package.json
+  s_a9c257ef9e2b8f::t_338de0a562239d 19
+bun.lock
+  s_a9c257ef9e2b8f::t_60a79652fbc900 59,203-213,458,536-537,542-579,680-683,752-753,1038-1055,1072-1073,1180-1191,1358-1359,1478-1479,1506-1507,1516-1517,1520-1521,1526-1527,1572-1573,1620-1621,1656-1657,1664-1665,1674-1675,1680-1683,1690-1693,1712-1715,1750-1753,1758-1761,1794-1795,1834-1837,1846-1847,1858-1859,1866-1867,1906-1909,1944-1945,1952-1953,2030-2031,2044-2045,2082-2083,2134-2135,2186-2187,2208-2209
+package.json
+  s_a9c257ef9e2b8f::t_11b450c20f0b5b 51-52
+packages/ai/package.json
+  s_a9c257ef9e2b8f::t_6871e0cfe19411 1-35
+packages/ai/tsconfig.json
+  s_a9c257ef9e2b8f::t_80198cecc60bca 1-5
+packages/ai/vitest.config.ts
+  s_a9c257ef9e2b8f::t_5b02bdec606a3d 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "204d3516a147a6e430bf0f52258844673354faae",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
