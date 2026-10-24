@@ -1,0 +1,29 @@
+docs/development/production.md
+  s_a9c257ef9e2b8f::t_aa8d8e5d4cc2c3 1-36
+apps/web/tests/component/features/task-submission.test.tsx
+  s_a9c257ef9e2b8f::t_40fe111e757242 1-138
+apps/desktop/tests/native/smoke/beta.ts
+  s_a9c257ef9e2b8f::t_d38de62085efec 74,247-248
+packages/tasks/AGENTS.md
+  s_a9c257ef9e2b8f::t_bf7ee15c791bc8 22-23
+packages/tasks/src/client/workspace.tsx
+  s_a9c257ef9e2b8f::t_bf7ee15c791bc8 1,287-293
+docs/README.md
+  s_a9c257ef9e2b8f::t_aa8d8e5d4cc2c3 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9c967b120b8a61c3104ddcc80044308e25b74c42",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
