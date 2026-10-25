@@ -1,0 +1,162 @@
+apps/cli/src/runtime/index.ts
+  s_a9c257ef9e2b8f::t_679e66afcbbefb 24
+  s_a9c257ef9e2b8f::t_eeba9af5e241b2 25-35
+apps/api/tests/helpers/control.ts
+  s_a9c257ef9e2b8f::t_7fa223e5b927ba 1,37-39,47-56,67-73,84-86
+  s_a9c257ef9e2b8f::t_4c3d11dbb4f838 104,122
+packages/auth/tests/origins.test.ts
+  s_a9c257ef9e2b8f::t_d8138eaf76c621 1-5
+  s_a9c257ef9e2b8f::t_e0219a96b82001 6-17
+packages/contracts/src/tasks.ts
+  s_a9c257ef9e2b8f::t_13207d509bb268 4
+  s_a9c257ef9e2b8f::t_fcfbaf190d32dc 3
+packages/auth/src/origins.ts
+  s_a9c257ef9e2b8f::t_05fb31919cae8c 1-11
+  s_a9c257ef9e2b8f::t_bd099cae8ace94 12-19
+docs/development/review-remediation-2026-10-25.md
+  s_a9c257ef9e2b8f::t_7588bb8a3d6539 1-8,19-45,51-58,69-72,74
+  s_a9c257ef9e2b8f::t_421317e585cba7 9-18,46-48,50
+  s_a9c257ef9e2b8f::t_21f2508c884ae0 67
+  s_a9c257ef9e2b8f::t_f85bb8e179c2cf 49,59-66,68,73
+apps/api/server/api.ts
+  s_a9c257ef9e2b8f::t_05fb31919cae8c 12,68
+  s_a9c257ef9e2b8f::t_f12b247861fead 111,310
+apps/api/server/control/service.ts
+  s_a9c257ef9e2b8f::t_512a430f44a6ee 3,93,455,467-471,544-548,583-585,621-622
+apps/cli/tests/fixtures/agents/codex-interactive.mjs
+  s_a9c257ef9e2b8f::t_60c9d5bda7561f 46-53
+apps/desktop/native/cookies.ts
+  s_a9c257ef9e2b8f::t_60c9d5bda7561f 4,27-46,188,212,226
+  s_a9c257ef9e2b8f::t_af79c2235a980d 214-218,229
+apps/cli/src/runtime/agents/store.ts
+  s_a9c257ef9e2b8f::t_05fb31919cae8c 15,43,81-84
+  s_a9c257ef9e2b8f::t_60c9d5bda7561f 1,17,66-80,85-90,92,108,137,149,153,159,167-171,183,204,221,239,262-270,311,361,377,397,432,436
+  s_a9c257ef9e2b8f::t_7ed34bbbfa7d3b 16
+apps/api/tests/postgres/node/control.test.ts
+  s_a9c257ef9e2b8f::t_396fe25f9414c4 156-201,205-216,218-253
+  s_a9c257ef9e2b8f::t_b08e16c99145a7 202-204
+  s_a9c257ef9e2b8f::t_eb53ba0e833f83 217
+  s_a9c257ef9e2b8f::t_f05ff7e83d85e8 254-281
+apps/desktop/tests/native/instance.test.ts
+  s_a9c257ef9e2b8f::t_9a12b1034ddabf 32-94
+  s_a9c257ef9e2b8f::t_d2677122c06c52 95-105
+packages/contracts/src/task-text.ts
+  s_a9c257ef9e2b8f::t_eb53ba0e833f83 1-21
+  s_a9c257ef9e2b8f::t_55a1564787eb33 22
+apps/api/server/control/repository.ts
+  s_a9c257ef9e2b8f::t_2f344b739379d0 1,12-13,42-44,47,49,51-52,89-91,95-96,102,107,119-124
+  s_a9c257ef9e2b8f::t_e3a9c111f86838 45-46,48,50
+apps/cli/src/diagnostics.ts
+  s_a9c257ef9e2b8f::t_05fb31919cae8c 5
+apps/api/tests/integration/api.test.ts
+  s_a9c257ef9e2b8f::t_268d83d93abfe4 23-28
+  s_a9c257ef9e2b8f::t_3e2ae7e0514d9a 29-38
+apps/desktop/native/main.ts
+  s_a9c257ef9e2b8f::t_b56d3e977b1f5f 22,53
+apps/cli/src/logging.ts
+  s_a9c257ef9e2b8f::t_05fb31919cae8c 34
+apps/cli/tests/runtime/agents/host.test.ts
+  s_a9c257ef9e2b8f::t_62d615c38b6cf6 154
+  s_a9c257ef9e2b8f::t_60c9d5bda7561f 67-69,89-91,151-153,156,158-159
+  s_a9c257ef9e2b8f::t_386bd3c8bf0d5d 155,157,161
+  s_a9c257ef9e2b8f::t_021bf97710d5d1 160,162-178
+packages/contracts/package.json
+  s_a9c257ef9e2b8f::t_99cbe4195f8e52 11-12
+apps/desktop/native/control.ts
+  s_a9c257ef9e2b8f::t_eb53ba0e833f83 67,316-328,395
+apps/api/tests/unit/control.test.ts
+  s_a9c257ef9e2b8f::t_9a12b1034ddabf 90-91
+  s_a9c257ef9e2b8f::t_15dbef9bcfb409 92-103,132,134-138
+docs/development/deployment.md
+  s_a9c257ef9e2b8f::t_7588bb8a3d6539 140-143
+  s_a9c257ef9e2b8f::t_62d615c38b6cf6 125,131-139,144-160
+packages/auth/src/server.ts
+  s_a9c257ef9e2b8f::t_05fb31919cae8c 6,58
+apps/web/tests/component/features/select-helper.test.tsx
+  s_a9c257ef9e2b8f::t_283198110705ec 1-15,17-22
+  s_a9c257ef9e2b8f::t_ac96a112fedc9d 16
+  s_a9c257ef9e2b8f::t_1f794d7109ce75 23-52
+apps/cli/src/runtime/agents/index.ts
+  s_a9c257ef9e2b8f::t_512a430f44a6ee 6,65,106-109,111,113-114,225-230,234,245-249,562-568,775-784,825-826,970-975,1133-1137
+  s_a9c257ef9e2b8f::t_fbb63aa81fc299 1
+apps/desktop/tests/native/cookies.test.ts
+  s_a9c257ef9e2b8f::t_9a12b1034ddabf 2-10,98
+  s_a9c257ef9e2b8f::t_81dd2ecdd33d19 105-106,121-129
+apps/desktop/tests/native/control.test.ts
+  s_a9c257ef9e2b8f::t_386bd3c8bf0d5d 210-227,233-235
+  s_a9c257ef9e2b8f::t_fd9bd9c0e7af28 236-276
+apps/api/server/relay/hub.ts
+  s_a9c257ef9e2b8f::t_7fa223e5b927ba 3,64-69,78-80,83,86-93
+  s_a9c257ef9e2b8f::t_eda45a85f108ae 94
+apps/web/tests/helpers/select.ts
+  s_a9c257ef9e2b8f::t_283198110705ec 7-18
+  s_a9c257ef9e2b8f::t_50735d3c3f45e0 20-22
+apps/cli/tests/runtime/agents/store.test.ts
+  s_a9c257ef9e2b8f::t_60c9d5bda7561f 2,30-36,40-44,48-53,61,65-67,76,92
+  s_a9c257ef9e2b8f::t_d8138eaf76c621 12-29,37-39,45-47,54-60,62-64,68-75
+  s_a9c257ef9e2b8f::t_ed8b945cbcd076 77-91,185
+apps/api/server/app/client-ip.ts
+  s_a9c257ef9e2b8f::t_7be7b670d2564b 29-43
+apps/api/server/env.ts
+  s_a9c257ef9e2b8f::t_ffce0de8b35353 1,83
+apps/api/tests/integration/configuration.test.ts
+  s_a9c257ef9e2b8f::t_4995aff02ed379 37
+apps/api/tests/unit/client-ip.test.ts
+  s_a9c257ef9e2b8f::t_5b147778390bff 13-34
+apps/api/tests/unit/relay.test.ts
+  s_a9c257ef9e2b8f::t_5b101e13ac7148 53-70
+apps/cli/src/runtime/agents/activity.ts
+  s_a9c257ef9e2b8f::t_c7847015025093 1,100-101,104,109,118,205-218,220
+apps/cli/tests/runtime/agents/activity.test.ts
+  s_a9c257ef9e2b8f::t_25175386cc9771 176-222
+apps/cli/tests/smoke/artifact.ts
+  s_a9c257ef9e2b8f::t_98ff4989adbb06 136-137,139
+apps/desktop/native/instance.ts
+  s_a9c257ef9e2b8f::t_9eeb57543d83de 1-2,5-10,13-32,34-36,38
+apps/desktop/src/lib/external-links.ts
+  s_a9c257ef9e2b8f::t_71177bf9cac741 1-8
+apps/desktop/src/routes/(local)/automations.tsx
+  s_a9c257ef9e2b8f::t_52c1b840f53324 399
+apps/desktop/src/routes/(local)/index.tsx
+  s_a9c257ef9e2b8f::t_45bdbf7fca0627 113
+apps/desktop/src/routes/__root.tsx
+  s_a9c257ef9e2b8f::t_e01acf76309fed 10,49-50,53
+apps/desktop/tests/renderer/unit/external-links.test.ts
+  s_a9c257ef9e2b8f::t_c568af73a6ae1e 1-18
+deploy/update.sh
+  s_a9c257ef9e2b8f::t_5886b15737705e 7-51,53-54,56,59
+packages/ai/src/config.ts
+  s_a9c257ef9e2b8f::t_30b59cf4b24815 15-24,39-42
+packages/ai/tests/config.test.ts
+  s_a9c257ef9e2b8f::t_36c420f506211b 96-109
+packages/auth/package.json
+  s_a9c257ef9e2b8f::t_271df344d766e4 11-12,49-50
+packages/auth/tests/session-security.test.ts
+  s_a9c257ef9e2b8f::t_007ac9c125615d 20,76-78
+packages/contracts/tests/task-text.test.ts
+  s_a9c257ef9e2b8f::t_bdddc071cdc95e 1-15
+packages/database/src/migrate.ts
+  s_a9c257ef9e2b8f::t_23bfb735ec572c 1,10,12-13
+packages/tasks/src/client/approval-changes.ts
+  s_a9c257ef9e2b8f::t_86b559418fa02c 9,56-104,184-197,199-200
+packages/tasks/tests/approval-changes.test.ts
+  s_a9c257ef9e2b8f::t_a9c5ddc0997190 106-140
+packages/tooling/tests/integration/deployment.test.ts
+  s_a9c257ef9e2b8f::t_dee45e467ffa26 36,39-43,48,51,101-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5844c15c4e38647995094ef7f41fe13ad942a030",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
