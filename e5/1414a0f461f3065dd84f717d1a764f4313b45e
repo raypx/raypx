@@ -1,0 +1,211 @@
+packages/contracts/package.json
+  s_a9c257ef9e2b8f::t_3724a15eee50bc 12-13
+apps/cli/tests/fixtures/terminal/stale-host.ts
+  s_a9c257ef9e2b8f::t_9ca112ce73f528 1-2
+docs/plans/terminal-session-host.md
+  s_a9c257ef9e2b8f::t_19f041d2a9f091 3-4,8,16,104,129,151,189-190,264,268,270,272,274-276
+  s_a9c257ef9e2b8f::t_34d648e062b42b 98,167-168,177-178,180-188,191,193,195,197,199,201,207-210,212,215-220,224-225,227
+  s_a9c257ef9e2b8f::t_6f930f7e971cb8 40,205,251-262
+  s_a9c257ef9e2b8f::t_9c5278014f75b9 125-126,134
+  s_a9c257ef9e2b8f::t_28cbb687becc70 229-248,265,277-278
+  s_a9c257ef9e2b8f::t_76805949da098c 2,5-7,9,24-25,35-39,41-47,49,52-59,61-69,72-77,80,82-84,90-97,103,108-109,118-124,136-150,152-166,169-176,179,192,194,196,198,200,202,221-223,226,228,249-250,263,266-267,269,271,273
+  s_a9c257ef9e2b8f::t_5b89526ce84dc4 12-15,17,135,203-204,206,211,213-214
+  s_a9c257ef9e2b8f::t_9bd2cfb67b455b 1,10-11,18-23,26-34,48,50-51,60,70-71,78-79,81,85-89,99-102,105-107,110-117,127-128,130-133
+apps/cli/package.json
+  s_a9c257ef9e2b8f::t_6f713ebfcf34ff 24-25
+  s_a9c257ef9e2b8f::t_a18f16d1bbb6f7 15-17
+packages/contracts/src/terminal.ts
+  s_a9c257ef9e2b8f::t_499a19a361e65a 13
+  s_a9c257ef9e2b8f::t_3487e3759121c4 81-86
+  s_a9c257ef9e2b8f::t_6084f58e374481 3,9,22,36,39
+  s_a9c257ef9e2b8f::t_3ebcd9ba0497e0 64-65,69
+  s_a9c257ef9e2b8f::t_fcfbaf190d32dc 2,24,66-68,70-80
+  s_a9c257ef9e2b8f::t_99cbe4195f8e52 1,4-8,10-12,14-21,23,25-35,37-38,40-63
+  s_a9c257ef9e2b8f::t_22aabe9a231c86 87-103
+docs/development/terminal-protocol-p0.md
+  s_a9c257ef9e2b8f::t_5f5eec3fb20c3f 19-20,78,82-83
+  s_a9c257ef9e2b8f::t_e0b98ab296df58 26-30,98-112
+  s_a9c257ef9e2b8f::t_47d7bfe83fb560 47,86-91
+  s_a9c257ef9e2b8f::t_19f041d2a9f091 1-18,21-25,31-37,49-58,71-77,79-81,84-85,92-97
+  s_a9c257ef9e2b8f::t_8ae8abbb950a86 38-46,48,59-70
+  s_a9c257ef9e2b8f::t_d8f68165731c70 113-117
+apps/cli/src/runtime/terminal/protocol.ts
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 23-26,38-40,42-43,49-53,61-62,66-67,70-76,78-79,81-89,91-96,99-107,123-124,131-134,138-146,151-153
+  s_a9c257ef9e2b8f::t_3bc3a242b5b3d5 41,60
+  s_a9c257ef9e2b8f::t_99cbe4195f8e52 2-22,27-28,32-37,44-47,54-59,63-64,68-69,77,80,90,97-98,108-121,125-130,135-137,147-150,154-156
+  s_a9c257ef9e2b8f::t_04fc49c3387de8 48,65
+  s_a9c257ef9e2b8f::t_443dc2f7ef927b 1
+  s_a9c257ef9e2b8f::t_499a19a361e65a 29,122
+  s_a9c257ef9e2b8f::t_a1c19736ad66bd 30-31
+  s_a9c257ef9e2b8f::t_8af2454ce04530 157-165
+apps/cli/tests/runtime/terminal/recorded.test.ts
+  s_a9c257ef9e2b8f::t_1010f72c2f8348 11-21,23-29,34,38,42,44-47,49,52-109
+  s_a9c257ef9e2b8f::t_2a1a9d6b4ae64a 48
+  s_a9c257ef9e2b8f::t_adcd4a43f43b61 1-10,22,35-37,39-41,50-51
+  s_a9c257ef9e2b8f::t_db87f27ca7def7 30-33,43
+apps/cli/src/runtime/terminal/store.ts
+  s_a9c257ef9e2b8f::t_7fcd107f018c15 27-29,85-90,93-97,101-106,108-113
+  s_a9c257ef9e2b8f::t_18bfb9b48a1335 26,31-37
+  s_a9c257ef9e2b8f::t_13207d509bb268 1-3,11-24,30,38-39,54-56,60-62,70-72,82-83,119
+  s_a9c257ef9e2b8f::t_a4fd47e60f9400 4-10,25,40-53,57-59,63-69,73-81,84,91-92,98-100,107,114-118
+  s_a9c257ef9e2b8f::t_0941128fe8b5a9 120-121
+packages/contracts/src/human.ts
+  s_a9c257ef9e2b8f::t_fcfbaf190d32dc 1-14
+  s_a9c257ef9e2b8f::t_af1498662ab645 15-19
+apps/cli/src/runtime/terminal/socket.ts
+  s_a9c257ef9e2b8f::t_7883f6c6f088e0 1-23
+  s_a9c257ef9e2b8f::t_13710a24153763 24-50
+apps/cli/tests/runtime/terminal/broker.test.ts
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 5-9,13-20,22-23,26,30-33,38-40,42-51,67,70-71,76-78,85-86,95-96,107-114,119-125,134-135,137-143,174-175,177-181,189-192,197-198,201-203,207
+  s_a9c257ef9e2b8f::t_268d83d93abfe4 27-29,52-66
+  s_a9c257ef9e2b8f::t_2d0ab97b02b224 195-196,199-200,204-206,208
+  s_a9c257ef9e2b8f::t_f6237f27dd64ee 154-170
+  s_a9c257ef9e2b8f::t_a0e20f4b37b95c 1-4,10-12,21,24-25,34-37,41,68-69,72-75,79-84,87-94,97-106,115-118,126-133,136,144-153,171-173,176,182-188,193-194
+  s_a9c257ef9e2b8f::t_722bf4ed122831 209-223
+apps/cli/tests/runtime/terminal/protocol.test.ts
+  s_a9c257ef9e2b8f::t_a0e20f4b37b95c 1,7,32,45-46,61-62,72-73,77,89
+  s_a9c257ef9e2b8f::t_499a19a361e65a 2-6,8-31,33-44,47-60,63-71,74-76,78-88
+  s_a9c257ef9e2b8f::t_facd348cb182e3 90-94
+apps/cli/tests/fixtures/terminal/recorded/README.md
+  s_a9c257ef9e2b8f::t_a18f16d1bbb6f7 1-7,10-11,14-29
+  s_a9c257ef9e2b8f::t_5f5eec3fb20c3f 8-9
+  s_a9c257ef9e2b8f::t_47d7bfe83fb560 12-13
+apps/cli/src/runtime/terminal/broker.ts
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 24-27,33-36,55-59,67-77,84-88,90-93,95-105,108-109,114-118,121-131,133-134,141-145,165-166,170-177,182-189,201-205,211-212,214-218,232-237,239-243
+  s_a9c257ef9e2b8f::t_13207d509bb268 81-82,140,146,158,195,206-207,213,220,226,231,238
+  s_a9c257ef9e2b8f::t_f6237f27dd64ee 148-154
+  s_a9c257ef9e2b8f::t_2d0ab97b02b224 222,230,244-247
+  s_a9c257ef9e2b8f::t_24e32969005a8b 1-20,22-23,28-32,37-54,60-64,78-80,83,89,94,106-107,119-120,132,135-139,147,155-157,159-164,167-169,178-181,190-194,196-200,208-210,219,221,223-225,227-229,248-249
+  s_a9c257ef9e2b8f::t_a4fd47e60f9400 21,65-66,110-113
+  s_a9c257ef9e2b8f::t_06d717504204bc 250-254
+packages/contracts/src/tasks.ts
+  s_a9c257ef9e2b8f::t_fcfbaf190d32dc 2
+  s_a9c257ef9e2b8f::t_13207d509bb268 202
+  s_a9c257ef9e2b8f::t_61e900930f37b8 3,203-205
+apps/cli/tests/runtime/terminal/settings.test.ts
+  s_a9c257ef9e2b8f::t_d8138eaf76c621 2,8-19,21-45,47-49,51-52,55-59,62-63,65-66,74-76
+  s_a9c257ef9e2b8f::t_53b583cd0af7cb 1,3-7,20,46,50,53-54,60-61,64,67-73,77
+  s_a9c257ef9e2b8f::t_225ab144d6fa3f 78-89
+apps/cli/src/runtime/terminal/host.ts
+  s_a9c257ef9e2b8f::t_5e83c829d19dd7 10-12,20-24,26-27,33-35,39-41,43-45,50-53,66-67,71-72,74-76,81,87,91-92,95-99,102-103,117,125-127,129-135,139-140,143,151,162-164,173,175,198,201,211-213,218-225,252-253,258-260,266,276-281,283-289,297-298,304-307
+  s_a9c257ef9e2b8f::t_47ca649a1661b7 13,49,170
+  s_a9c257ef9e2b8f::t_f5345be3617bc8 118-122,243
+  s_a9c257ef9e2b8f::t_04fc49c3387de8 229,240
+  s_a9c257ef9e2b8f::t_499a19a361e65a 146-149
+  s_a9c257ef9e2b8f::t_7fcd107f018c15 42,141-142,152-155,157-161,192-195,271-272
+  s_a9c257ef9e2b8f::t_b5ed0dc60296dd 93-94
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 1-9,14-19,28-32,36-38,54-65,82-86,88-89,100-101,104-116,123-124,136-138,144-145,150,165-168,171-172,176-186,188-191,199-200,202-210,214-217,230-239,244-248,254-256,262-264,267-270,273-275,290-296,300-303
+  s_a9c257ef9e2b8f::t_a1c19736ad66bd 68-70,73,90,241,249-251,261,265,282,299
+  s_a9c257ef9e2b8f::t_18bfb9b48a1335 156,196-197
+  s_a9c257ef9e2b8f::t_2d0ab97b02b224 128
+  s_a9c257ef9e2b8f::t_a4fd47e60f9400 46-48,77,169,174,187,226-228,242,257
+  s_a9c257ef9e2b8f::t_7883f6c6f088e0 25,78-80
+  s_a9c257ef9e2b8f::t_5c3c56cd8d05ac 308-309
+apps/cli/tests/runtime/terminal/hook.test.ts
+  s_a9c257ef9e2b8f::t_a522870096b8f6 11-22,25-27,31-37,40-46,48-53,57-60
+  s_a9c257ef9e2b8f::t_a18f16d1bbb6f7 1-10,23-24,28-30,38-39,47,54-56,61
+  s_a9c257ef9e2b8f::t_70bc1b7c7f0f1c 62-64
+apps/cli/tests/fixtures/terminal/capture-hook.ts
+  s_a9c257ef9e2b8f::t_77aed3ffe5ee3b 2
+  s_a9c257ef9e2b8f::t_3ca52b76cfb1ac 1,31-32
+  s_a9c257ef9e2b8f::t_f8f06087e0bced 4-12,53
+  s_a9c257ef9e2b8f::t_fad1e4ac00590e 3,33-35,46,51-52
+  s_a9c257ef9e2b8f::t_2a1a9d6b4ae64a 13-30,36-45,47-50
+  s_a9c257ef9e2b8f::t_41a32a898a5d15 54-57
+apps/cli/tests/smoke/terminal-hooks.ts
+  s_a9c257ef9e2b8f::t_f8f06087e0bced 1,13,15,18,32,35
+  s_a9c257ef9e2b8f::t_db87f27ca7def7 22-24,40-41,44-48,61,105,123-124,201,266,270,276-277
+  s_a9c257ef9e2b8f::t_4c771a67d2e424 12,19,31,128
+  s_a9c257ef9e2b8f::t_77aed3ffe5ee3b 20,25,69-72,279,283,288-289
+  s_a9c257ef9e2b8f::t_2c317b324775f6 33-34
+  s_a9c257ef9e2b8f::t_ba382547f9c93a 21,192,207
+  s_a9c257ef9e2b8f::t_fad1e4ac00590e 14,36
+  s_a9c257ef9e2b8f::t_2a1a9d6b4ae64a 269
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 2-11,16-17,26-30,37-39,42-43,49-60,62-68,73-104,106-122,125-127,129-191,193-200,202-206,208-265,267-268,271-275,278,280-282,284-287
+apps/cli/tests/smoke/export-terminal-recording.ts
+  s_a9c257ef9e2b8f::t_06a9402155da98 8
+  s_a9c257ef9e2b8f::t_ab9107f1d46ac0 5,30,33-34,38-40,47-50,61,70,109
+  s_a9c257ef9e2b8f::t_443dc2f7ef927b 1-4,9-10,71-75,79,87-91,95-96,108,110-111
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 6-7,11-29,31-32,35-37,41-46,51-60,62-69,76-78,81-86,92-94,97-107,112-114
+  s_a9c257ef9e2b8f::t_726f0ab844215a 80
+  s_a9c257ef9e2b8f::t_edcf3cf8a07b87 115-116
+packages/contracts/AGENTS.md
+  s_a9c257ef9e2b8f::t_b08e16c99145a7 29-31
+packages/contracts/tests/terminal.test.ts
+  s_a9c257ef9e2b8f::t_2d0ab97b02b224 1,9,28-35,48-53
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 2-8,10-11,16-27,36-43,45-47
+  s_a9c257ef9e2b8f::t_8be16822786c0a 12-15,44
+apps/cli/tests/fixtures/terminal/driver.py
+  s_a9c257ef9e2b8f::t_e4f7319d55f259 1-5,7-15,21-27,29,32-33,38-43,47-54,76-82,85,92-107
+  s_a9c257ef9e2b8f::t_be97494a7c5f6f 59,63,65,84,89-90
+  s_a9c257ef9e2b8f::t_6084f58e374481 62
+  s_a9c257ef9e2b8f::t_9d8cba83222f7b 16-20
+  s_a9c257ef9e2b8f::t_6635eb55762238 6,44-46,83,86,88,91
+  s_a9c257ef9e2b8f::t_316c22b09ae005 57,72-75
+  s_a9c257ef9e2b8f::t_2a1a9d6b4ae64a 87
+  s_a9c257ef9e2b8f::t_58aecac5295872 31,34-37,67-71
+  s_a9c257ef9e2b8f::t_ba382547f9c93a 30,55-56,58,60-61,64,66
+  s_a9c257ef9e2b8f::t_d2394526958c23 28
+apps/cli/src/runtime/terminal/hook.ts
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 8-18,21-25,29-39,41-46,55-59,62-64
+  s_a9c257ef9e2b8f::t_b5ed0dc60296dd 1-7,19-20,26-28,40,47-54,60-61,65
+apps/cli/AGENTS.md
+  s_a9c257ef9e2b8f::t_a18f16d1bbb6f7 70-78
+apps/cli/tests/runtime/terminal/host.test.ts
+  s_a9c257ef9e2b8f::t_f6237f27dd64ee 184,186-191,201-204,206-208,223
+  s_a9c257ef9e2b8f::t_9ca112ce73f528 4-6,11-23,25-66,68-112
+  s_a9c257ef9e2b8f::t_47da23b35d246f 1-3,24
+  s_a9c257ef9e2b8f::t_45408f143fa2dd 7-10,67,113-183,185,192-200,205,209-222,224-225
+  s_a9c257ef9e2b8f::t_7ccce2da119875 226-256
+apps/cli/tests/smoke/terminal-stream.ts
+  s_a9c257ef9e2b8f::t_1d21c2cc8b0bd6 1-41
+  s_a9c257ef9e2b8f::t_36707f45cef5af 42-89
+apps/cli/src/runtime/terminal/settings.ts
+  s_a9c257ef9e2b8f::t_499a19a361e65a 53-54
+  s_a9c257ef9e2b8f::t_18bfb9b48a1335 2,97-99,104,111,114-116,121,132-133,143-145
+  s_a9c257ef9e2b8f::t_53d05aba7ab379 8-13,25-34,36-48,51-52,56-62,65-66,69-74,77-81,100-103,105-108,117-120,123-124,130-131,134,137-138,146,149-151
+  s_a9c257ef9e2b8f::t_53b583cd0af7cb 1,3-7,14-24,35,49-50,55,63-64,67-68,75-76,82-96,109-110,112-113,122,125-129,135-136,139-142,147-148,152
+  s_a9c257ef9e2b8f::t_d5714d9b53f1dd 153-157
+apps/cli/tests/fixtures/terminal/recorded/claude-permission-allow.json
+  s_a9c257ef9e2b8f::t_3b4b27caa8a9a8 1-51
+apps/cli/tests/fixtures/terminal/recorded/claude-permission-deny.json
+  s_a9c257ef9e2b8f::t_b9a4f5df70dd0a 1-52
+apps/cli/tests/fixtures/terminal/recorded/claude-permission-disconnected.json
+  s_a9c257ef9e2b8f::t_1010233eef58d7 1-44
+apps/cli/tests/fixtures/terminal/recorded/claude-permission-expired.json
+  s_a9c257ef9e2b8f::t_211ef4a5baba0e 1-44
+apps/cli/tests/fixtures/terminal/recorded/claude-permission-fallback.json
+  s_a9c257ef9e2b8f::t_1fe5135c641a84 1-44
+apps/cli/tests/fixtures/terminal/recorded/claude-stream.json
+  s_a9c257ef9e2b8f::t_534668058836c2 1-924
+apps/cli/tests/fixtures/terminal/recorded/codex-permission-allow.json
+  s_a9c257ef9e2b8f::t_d2449540b0ae86 1-42
+apps/cli/tests/fixtures/terminal/recorded/codex-permission-deny.json
+  s_a9c257ef9e2b8f::t_2402e18568ac46 1-43
+apps/cli/tests/fixtures/terminal/recorded/codex-permission-disconnected.json
+  s_a9c257ef9e2b8f::t_7e9f191bd7e24d 1-35
+apps/cli/tests/fixtures/terminal/recorded/codex-permission-expired.json
+  s_a9c257ef9e2b8f::t_1194a49424367c 1-35
+apps/cli/tests/fixtures/terminal/recorded/codex-permission-fallback.json
+  s_a9c257ef9e2b8f::t_6790725baf8f68 1-35
+apps/cli/tests/fixtures/terminal/recorded/codex-stream.json
+  s_a9c257ef9e2b8f::t_ff635eee28cd98 1-226
+bun.lock
+  s_a9c257ef9e2b8f::t_0bb96548da07e4 63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e51414a0f461f3065dd84f717d1a764f4313b45e",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
