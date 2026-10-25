@@ -41,6 +41,7 @@ export class RelayConnection {
   start() {
     if (this.enabled) return;
     this.enabled = true;
+    this.fallbackVersion = undefined;
     this.connect();
   }
   restart() {
@@ -117,7 +118,7 @@ export class RelayConnection {
         if (fallback) {
           this.fallbackVersion = 2;
           this.options.protocolChanged?.(2);
-        }
+        } else if (this.accepted) this.fallbackVersion = undefined;
         this.options.status(
           false,
           event.code === 4006 && !fallback

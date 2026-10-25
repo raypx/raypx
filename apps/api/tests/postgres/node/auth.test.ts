@@ -2,11 +2,13 @@ import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, readAuthSession } from "@raypx/auth/server";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
-import { schema, user } from "@raypx/database/schema";
+import { schema, user, session } from "@raypx/database/schema";
 import { eq } from "drizzle-orm";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../../server/api.js";
 import type { AuthMailInput } from "@raypx/auth/server";
+import { ControlService } from "../../../server/control/service.js";
+import { createControlRepository } from "../../../server/control/repository.js";
 
 const databaseURL = process.env.TEST_DATABASE_URL;
 if (!databaseURL || !new URL(databaseURL).pathname.endsWith("_test"))
@@ -14,7 +16,10 @@ if (!databaseURL || !new URL(databaseURL).pathname.endsWith("_test"))
 const connection = connectDatabase(databaseURL);
 const emails: AuthMailInput[] = [];
 const email = `foundation-${crypto.randomUUID()}@example.com`;
+const control = new ControlService(createControlRepository(connection.db));
 const auth = createAuth({
+  revokeHostAuthorizations: (userId, sessionId) =>
+    control.revokeHostAuthorizations(userId, sessionId),
   database: drizzleAdapter(connection.db, { provider: "pg", schema }),
   config: {
     baseURL: "http://localhost:3002",
@@ -32,11 +37,12 @@ const auth = createAuth({
   },
 });
 const app = createApiApp({
+  control,
   authHandler: (request) => auth.handler(request),
   readSession: (headers) => readAuthSession(auth, headers),
   allowedOrigins: ["http://localhost:3000"],
 });
-const request = (path: string, data: object) =>
+const request = (path: string, data: object, cookie?: string) =>
   app.fetch(
     new Request(`http://localhost:3002/api/auth/${path}`, {
       method: "POST",
@@ -44,6 +50,7 @@ const request = (path: string, data: object) =>
         "content-type": "application/json",
         origin: "http://localhost:3000",
         "accept-language": "zh",
+        ...(cookie ? { cookie } : {}),
       },
       body: JSON.stringify(data),
     }),
@@ -128,4 +135,90 @@ it("registers, verifies, signs in, resets password and revokes the session", asy
   );
   expect(signOut.status).toBe(200);
   expect(await readAuthSession(auth, new Headers({ cookie: replacementCookie }))).toBeNull();
+}, 30000);
+
+it("reauthenticates stale host bootstrap in place and scopes successful session revocations", async () => {
+  const address = `host-${crypto.randomUUID()}@example.test`,
+    password = "host-password-123456";
+  const cookieOf = (response: Response) =>
+    response.headers
+      .getSetCookie()
+      .map((value) => value.split(";")[0])
+      .join("; ");
+  const client = (cookie: string) =>
+    createApiClient({
+      baseUrl: "http://localhost:3002",
+      headers: { cookie, origin: "http://localhost:3000" },
+      fetch: async (input, init) => app.fetch(new Request(input, init)),
+    });
+  try {
+    expect(
+      (await request("sign-up/email", { email: address, name: "Host User", password })).status,
+    ).toBe(200);
+    await connection.db.update(user).set({ emailVerified: true }).where(eq(user.email, address));
+    const stale = await request("sign-in/email", { email: address, password });
+    const staleCookie = cookieOf(stale);
+    const staleSession = (await readAuthSession(auth, new Headers({ cookie: staleCookie })))!;
+    await connection.db
+      .update(session)
+      .set({ createdAt: new Date(Date.now() - 3600_000) })
+      .where(eq(session.id, staleSession.session.id));
+    const first = await client(staleCookie).devices.register({
+      installationId: crypto.randomUUID(),
+      name: "First Mac",
+      platform: "darwin",
+      appVersion: "0.1.0",
+      reconnect: false,
+    });
+    await expect(client(staleCookie).hosts.authorize(first)).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+    // The same logged-in account signs in again without logout or device detachment.
+    const fresh = await request("sign-in/email", { email: address, password }, staleCookie);
+    expect(fresh.status).toBe(200);
+    const firstCookie = cookieOf(fresh);
+    const freshSession = (await readAuthSession(auth, new Headers({ cookie: firstCookie })))!;
+    expect(freshSession.session.id).not.toBe(staleSession.session.id);
+    const firstKey = await client(firstCookie).hosts.authorize(first);
+    const secondSignIn = await request("sign-in/email", { email: address, password });
+    const secondCookie = cookieOf(secondSignIn);
+    const secondClient = client(secondCookie);
+    const second = await secondClient.devices.register({
+      installationId: crypto.randomUUID(),
+      name: "Second Mac",
+      platform: "darwin",
+      appVersion: "0.1.0",
+      reconnect: false,
+    });
+    const secondKey = await secondClient.hosts.authorize(second);
+    const [target] = await connection.db
+      .select()
+      .from(session)
+      .where(eq(session.id, freshSession.session.id));
+    expect((await request("revoke-session", { token: target!.token }, secondCookie)).status).toBe(
+      200,
+    );
+    await expect(
+      secondClient.hosts.grant({ credential: firstKey.credential }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(
+      secondClient.hosts.grant({ credential: secondKey.credential }),
+    ).resolves.toHaveProperty("accountId", secondKey.accountId);
+    expect((await request("revoke-other-sessions", {}, secondCookie)).status).toBe(200);
+    await expect(
+      secondClient.hosts.grant({ credential: secondKey.credential }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(secondClient.hosts.authorize(second)).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+    const restored = cookieOf(
+      await request("sign-in/email", { email: address, password }, secondCookie),
+    );
+    await expect(client(restored).hosts.authorize(second)).resolves.toHaveProperty(
+      "accountId",
+      secondKey.accountId,
+    );
+  } finally {
+    await connection.db.delete(user).where(eq(user.email, address));
+  }
 }, 30000);

@@ -110,7 +110,7 @@ async function fixture(seed = false) {
         provider: "claude",
         invocationId: crypto.randomUUID(),
         kind: "permission",
-        title: "Bash",
+        title: `Bash ${index}`,
         encoding: "plain",
         body: "{}",
         questions: [],
@@ -248,6 +248,8 @@ it.skipIf(process.platform === "win32")(
       expect(projection.requests).toHaveLength(100);
       expect(projection.requests.every((request) => ids.has(request.sessionId))).toBe(true);
       expect(projection.sessions.length).toBeLessThanOrEqual(100);
+      expect(projection.requests[0]?.title).toBe("Bash 110");
+      expect(projection.requests.at(-1)?.title).toBe("Bash 11");
     } finally {
       await f.close();
     }

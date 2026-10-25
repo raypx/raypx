@@ -25,6 +25,9 @@ instances, callback origins, query sources, navigation adapters and session data
 Do not import database, mail, remote client or application implementations. Require
 verified email for password sign-in. Resolve sessions on the server for each RPC.
 Keep account types free from credentials and retired role/status requirements.
+The injected host-revocation callback runs only after successful session-security
+operations. Single-session revocation passes its ID; bulk revocation omits it.
+Ordinary sign-out/expiry does not revoke independent host credentials.
 
 Hooks own request status, safe error keys and duplicate-submit protection. Keep
 success callbacks inside the busy lifecycle and distinguish their failures from

@@ -69,7 +69,10 @@ export default {
     terminalUnsupported: "当前连接器不支持远程回答此类请求。",
     terminalExpires: "{time} 交还终端",
     terminalChanged: "请求已变化，请刷新后再回答。",
-    daemonAuthorizationRequired: "宿主授权已过期或被撤销。请重新登录以授权这台电脑。",
+    daemonAuthorizationRequired: "授权这台电脑需要近期登录。请确认密码后继续。",
+    daemonReauthorize: "重新授权这台电脑",
+    daemonReauthorizeHint:
+      "确认当前账号的密码后，Raypx 会刷新登录并重试宿主授权。正在运行的任务会继续。",
     daemonHint: "macOS 上退出 Desktop 后任务继续运行。登出或断开连接会停止此账户的任务。",
     daemonMemoryOnly: "安全存储不可用，宿主重启后需要重新授权这台电脑。",
     terminalSettings: "终端连接",
@@ -330,7 +333,8 @@ export default {
     revokeSession: "退出此会话",
     revokeSessionHint: "此会话将失去账号访问权限，再次登录需要输入密码。",
     revokeOtherSessions: "退出其他所有会话",
-    revokeOtherSessionsHint: "其他浏览器和设备将失去账号访问权限，当前会话保持登录。",
+    revokeOtherSessionsHint:
+      "其他浏览器会话和所有执行宿主将失去账号访问权限。当前浏览器保持登录，各电脑需要重新授权。",
     sessionReauth: "请退出并重新登录后再管理会话。",
     sessionUnauthorized: "登录已失效，请重新登录后管理会话。",
     sessionForbidden: "当前无法管理会话，请刷新页面后重试。",

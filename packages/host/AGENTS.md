@@ -28,3 +28,5 @@ A rejected v3 handshake negotiates managed-only v2 once. Do not send observed
 frames or advertise terminal support on that connection. Terminal renewal failures
 call the owner's authorization-loss handler; that handler owns binding cleanup.
 Consume background promise failures and fence queued cleanup to its original binding.
+Always authenticate with the configured preferred protocol on a new connection
+cycle, including grant renewal; the accepted version is connection-local state.

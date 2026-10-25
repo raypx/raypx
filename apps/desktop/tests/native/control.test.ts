@@ -17,6 +17,7 @@ afterEach(async () => {
 async function control(
   options: NonNullable<ConstructorParameters<typeof RemoteControl>[4]> = {},
   rejectAuthentication = () => false,
+  supportedVersion?: () => 2 | 3,
 ) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-relay-native-"));
   const streamId = crypto.randomUUID(),
@@ -60,8 +61,17 @@ async function control(
           peer.close(4001, "Rejected grant");
           return;
         }
-        if (frame.type === "auth")
-          peer.send({ type: "ready", protocolVersion: 2, role: frame.role });
+        if (frame.type === "auth") {
+          if (supportedVersion && frame.protocolVersion > supportedVersion()) {
+            peer.close(4006, "UPGRADE_REQUIRED");
+            return;
+          }
+          peer.send({
+            type: "ready",
+            protocolVersion: supportedVersion?.() ?? 2,
+            role: frame.role,
+          });
+        }
         if (frame.type === "announce")
           peer.send({ type: "resume", streamId, sequence: cursor, snapshot: !initialized });
         if (frame.type === "snapshot" && frame.done) {
@@ -483,4 +493,39 @@ it("tries the preferred protocol again when explicitly attaching after an old-se
   expect(fixture.frames.filter((frame) => frame.type === "auth").at(-1)).toMatchObject({
     protocolVersion: 3,
   });
+});
+
+it("recovers v3 after an old server is upgraded, on reconnect and grant renewal", async () => {
+  let version: 2 | 3 = 2;
+  const renewGrant = vi.fn(
+    async (_account: string, binding: { deviceId: string; epoch: number }) => ({
+      ...binding,
+      token: "renewed-" + crypto.randomUUID(),
+      expiresAt: new Date(Date.now() + 600_000).toISOString(),
+    }),
+  );
+  const f = await control(
+    { protocolVersion: 3, renewGrant },
+    () => false,
+    () => version,
+  );
+  const versions = () =>
+    f.frames.filter((frame) => frame.type === "auth").map((frame) => frame.protocolVersion);
+  expect(versions()).toEqual([3, 2]);
+  expect(f.value.info("account").terminalSupported).toBe(false);
+  version = 3;
+  for (const socket of f.sockets) socket.close(1012, "Server upgraded");
+  await expect.poll(() => f.value.info("account").terminalSupported).toBe(true);
+  expect(versions()).toEqual([3, 2, 3]);
+  // Roll back once, then upgrade again while renewing a credential. Neither
+  // recovery requires a renderer attach or a daemon restart.
+  version = 2;
+  for (const socket of f.sockets) socket.close(1012, "Rolling deployment");
+  await expect.poll(versions, { timeout: 8000 }).toEqual([3, 2, 3, 3, 2]);
+  await expect.poll(() => f.value.info("account").connected).toBe(true);
+  version = 3;
+  expect(await f.value.refreshGrant()).toBe(true);
+  await expect.poll(() => f.value.info("account").terminalSupported).toBe(true);
+  expect(versions()).toEqual([3, 2, 3, 3, 2, 3]);
+  expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
 });

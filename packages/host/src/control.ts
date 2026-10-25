@@ -242,7 +242,9 @@ export class RemoteControl {
       ...(this.options.socket ? { socket: this.options.socket } : {}),
       authenticate: async () => ({
         type: "auth",
-        protocolVersion: this.protocolVersion,
+        // Negotiate from the preferred version on every connection cycle. The
+        // accepted version describes this connection, not the server forever.
+        protocolVersion: this.options.protocolVersion ?? 2,
         role: "device",
         token: grant.token,
       }),

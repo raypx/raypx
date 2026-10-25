@@ -173,8 +173,8 @@ RPCs. Credentials go directly to private IPC and Keychain, never the renderer.
 The independent daemon renews short grants without browser cookies. Missing browser
 sessions and renderer unmount do not revoke authorization; explicit account sign-out
 uses `features/tasks/host-session.ts`, and account/origin changes detach the old binding.
-`native/control.ts` re-exports `@raypx/host` for the legacy Windows foreground host.
-The shared transport retains replay, connection fencing and bounded renewal backoff.
+Host bootstrap needs recent sign-in; settings' shadcn password dialog refreshes it without logout or daemon detachment.
+`native/control.ts` re-exports `@raypx/host` for Windows, retaining replay, connection fencing and renewal backoff.
 
 `features/tasks/terminal-settings.tsx` installs/removes explicitly owned Claude/Codex
 hooks and configures Away per authorized project. Default waiting is five minutes,

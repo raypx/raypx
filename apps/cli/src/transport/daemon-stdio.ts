@@ -1,6 +1,5 @@
 import { localRequestSchema } from "@raypx/contracts/local";
 import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint";
-import { refreshStableCli } from "../runtime/daemon/connectors";
 import { errorPayload, LocalError } from "../runtime/errors";
 
 /** Transport chunks are not protocol records; only complete bounded lines may mix with RPC. */
@@ -26,7 +25,6 @@ export async function* daemonEventLines(body: ReadableStream<Uint8Array>) {
 
 /** Losing this pipe disconnects one Desktop client, never its execution owner. */
 export async function serveDaemonStdio(options: ProfileOptions) {
-  refreshStableCli();
   let endpoint;
   try {
     endpoint = await connectDaemon(options);

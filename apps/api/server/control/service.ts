@@ -62,6 +62,7 @@ interface Grant extends ControlRecord {
 }
 interface HostCredential extends ControlRecord {
   userId: string;
+  bootstrapSessionId?: string;
   securityVersion?: string;
   epoch: number;
   expiresAt: string;
@@ -248,6 +249,7 @@ export class ControlService {
       await tx.put<HostCredential>("credential", {
         id: await hash(credential),
         securityVersion: await tx.securityVersion(),
+        bootstrapSessionId: auth.session.id,
         userId: auth.user.id,
         deviceId: device.id,
         epoch: device.epoch,
@@ -330,15 +332,20 @@ export class ControlService {
       });
     return { revoked: true as const };
   }
-  revokeHostAuthorizations(userId: string) {
+  revokeHostAuthorizations(userId: string, sessionId?: string) {
     return this.repository.transaction(userId, async (tx) => {
-      await tx.revokeHostSecurity();
-      for (const credential of await tx.list<HostCredential>("credential"))
-        await tx.remove("credential", credential.id);
+      if (!sessionId) await tx.revokeHostSecurity();
+      const credentials = (await tx.list<HostCredential>("credential")).filter(
+        (credential) => !sessionId || credential.bootstrapSessionId === sessionId,
+      );
+      const ids = new Set(credentials.map((credential) => credential.id));
+      const devices = new Set(credentials.map((credential) => credential.deviceId));
+      for (const credential of credentials) await tx.remove("credential", credential.id);
       for (const grant of await tx.list<Grant>("grant"))
-        if (grant.credentialId) await tx.remove("grant", grant.id);
+        if (grant.credentialId && (!sessionId || ids.has(grant.credentialId)))
+          await tx.remove("grant", grant.id);
       for (const request of await tx.list<ObservedRequest>("observed_request"))
-        if (request.status === "pending")
+        if (request.status === "pending" && (!sessionId || devices.has(request.deviceId)))
           await tx.put("observed_request", {
             ...request,
             status: "cancelled",

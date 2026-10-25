@@ -5,6 +5,9 @@ import { taskSchema } from "@raypx/contracts/api";
 
 it("negotiates v2 with an older server and retains managed task actions", async () => {
   const versions: number[] = [];
+  let olderServer = true,
+    disconnect = () => {},
+    observedReads = 0;
   const task = taskSchema.parse({
     id: crypto.randomUUID(),
     deviceId: crypto.randomUUID(),
@@ -23,6 +26,7 @@ it("negotiates v2 with an older server and retains managed task actions", async 
     bufferedAmount = 0;
     constructor() {
       super();
+      disconnect = () => this.close(1012);
       queueMicrotask(() => this.dispatchEvent(new Event("open")));
     }
     close(code = 1000) {
@@ -37,8 +41,8 @@ it("negotiates v2 with an older server and retains managed task actions", async 
         );
       if (frame.type === "auth") {
         versions.push(frame.protocolVersion);
-        if (frame.protocolVersion === 3) this.close(4006);
-        else reply({ type: "ready", role: "viewer", protocolVersion: 2 });
+        if (olderServer && frame.protocolVersion === 3) this.close(4006);
+        else reply({ type: "ready", role: "viewer", protocolVersion: frame.protocolVersion });
       }
       if (frame.type === "request")
         reply({ type: "result", id: frame.id, result: { ok: true, value: task } });
@@ -49,7 +53,9 @@ it("negotiates v2 with an older server and retains managed task actions", async 
     tasks: { list: async () => [] },
     observed: {
       list: async () => {
-        throw new Error("old API must not be called after negotiation");
+        observedReads++;
+        if (olderServer) throw new Error("old API must not be called after negotiation");
+        return { sessions: [], requests: [] };
       },
     },
   } as unknown as ApiClient;
@@ -66,6 +72,16 @@ it("negotiates v2 with an older server and retains managed task actions", async 
       status: "cancelled",
     });
     expect(await client.observed!.list({})).toEqual({ sessions: [], requests: [] });
+    expect(observedReads).toBe(0);
+    olderServer = false;
+    disconnect();
+    await expect.poll(() => versions).toEqual([3, 2, 3]);
+    await expect
+      .poll(async () => {
+        await client.observed!.list({});
+        return observedReads;
+      })
+      .toBeGreaterThan(0);
   } finally {
     release();
     client.setAccount(null);

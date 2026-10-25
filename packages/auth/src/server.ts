@@ -39,8 +39,8 @@ export interface CreateAuthOptions {
   registrationAllowed?: () => Promise<boolean>;
   /** Display name for authentication mail; resolve to a fallback rather than throwing. */
   siteName?: () => Promise<string>;
-  /** Security revocation also invalidates independent host credentials; ordinary sign-out does not. */
-  revokeHostAuthorizations?: (userId: string) => Promise<void>;
+  /** A successful security revocation invalidates all hosts, or only the session's hosts. */
+  revokeHostAuthorizations?: (userId: string, sessionId?: string) => Promise<void>;
 }
 export function recipientLocale(request?: Request): { locale?: Locale } {
   const locale = matchLocale(
@@ -98,8 +98,37 @@ export function createAuth({
         ) {
           const session = await getAuthoritativeSessionFromCtx(ctx);
           if (!session) throw new APIError("UNAUTHORIZED", { message: "Authentication required" });
-          await revokeHostAuthorizations(session.user.id);
+          let sessionId: string | undefined;
+          if (ctx.path === "/revoke-session") {
+            const token = ctx.body?.token;
+            if (typeof token !== "string") return;
+            const target = await ctx.context.internalAdapter.findSession(token);
+            if (target?.session.userId !== session.user.id) return;
+            sessionId = target.session.id;
+          }
+          // Capture identity before the endpoint deletes sessions, without revoking
+          // anything until that endpoint has actually succeeded.
+          return {
+            context: { context: { hostRevocation: { userId: session.user.id, sessionId } } },
+          };
         }
+      }),
+      after: createAuthMiddleware(async (ctx) => {
+        const revocation = (
+          ctx.context as typeof ctx.context & {
+            hostRevocation?: { userId: string; sessionId?: string };
+          }
+        ).hostRevocation;
+        const result = ctx.context.returned;
+        if (
+          revokeHostAuthorizations &&
+          revocation &&
+          result &&
+          typeof result === "object" &&
+          "status" in result &&
+          result.status === true
+        )
+          await revokeHostAuthorizations(revocation.userId, revocation.sessionId);
       }),
     },
     emailAndPassword: {

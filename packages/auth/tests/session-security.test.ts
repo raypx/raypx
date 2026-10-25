@@ -78,7 +78,22 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
   expect(
     (await call("update-user", { name: "Web user" }, cookie, "https://web.example.test")).status,
   ).toBe(200);
+  // Capture the target before deletion, but scope the callback to that session.
+  await call("sign-in/email", { email: "user@example.test", password: "password-123456" });
+  const target = data.session!.at(-1)!;
+  const failingDelete = vi
+    .spyOn((await auth.$context).internalAdapter, "deleteSession")
+    .mockRejectedValueOnce(new Error("synthetic deletion failure"));
+  expect((await call("revoke-session", { token: target.token }, cookie, origin)).status).toBe(500);
+  expect(revokeHostAuthorizations).not.toHaveBeenCalled();
+  failingDelete.mockRestore();
+  expect((await call("revoke-session", { token: 1 }, cookie, origin)).status).toBe(400);
+  expect((await call("revoke-session", { token: "missing" }, cookie, origin)).status).toBe(200);
+  expect(revokeHostAuthorizations).not.toHaveBeenCalled();
+  expect((await call("revoke-session", { token: target.token }, cookie, origin)).status).toBe(200);
+  expect(revokeHostAuthorizations).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id, target.id);
+  revokeHostAuthorizations.mockClear();
   expect((await call("revoke-other-sessions", {}, cookie, origin)).status).toBe(200);
-  expect(revokeHostAuthorizations).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id);
+  expect(revokeHostAuthorizations).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id, undefined);
   expect((await call("list-sessions")).status).toBe(401);
 });

@@ -84,6 +84,40 @@ it("replaces lost host keys atomically instead of exhausting an eight-key allowa
     await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
   expect((await service.hostGrant(keys.at(-1)!.credential)).accountId).toBe(host.auth.user.id);
 });
+it("revokes only credentials bootstrapped by the selected browser session", async () => {
+  const service = new ControlService(memoryControlRepository());
+  const first = await connected(service);
+  const other = controlAuth(first.auth.user.id);
+  other.session.id = crypto.randomUUID();
+  const second = await connected(service, other);
+  const firstKey = await service.authorizeHost(first.auth, first.grant);
+  const secondKey = await service.authorizeHost(other, second.grant);
+  const firstGrant = await service.hostGrant(firstKey.credential);
+  const secondGrant = await service.hostGrant(secondKey.credential);
+  const firstActor = await service.authenticate(
+    "device",
+    firstGrant.grant.token,
+    crypto.randomUUID(),
+  );
+  const secondActor = await service.authenticate(
+    "device",
+    secondGrant.grant.token,
+    crypto.randomUUID(),
+  );
+  await service.revokeHostAuthorizations(first.auth.user.id, first.auth.session.id);
+  await expect(service.hostGrant(firstKey.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.validate(firstActor)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.hostGrant(secondKey.credential)).resolves.toHaveProperty(
+    "accountId",
+    other.user.id,
+  );
+  await expect(service.validate(secondActor)).resolves.toBeUndefined();
+  // A no-op session revocation must not change the security epoch or surviving keys.
+  await service.revokeHostAuthorizations(first.auth.user.id, "unknown-session");
+  await expect(service.validate(secondActor)).resolves.toBeUndefined();
+  await service.revokeHostAuthorizations(first.auth.user.id);
+  await expect(service.hostGrant(secondKey.credential)).rejects.toThrow("AUTH_REQUIRED");
+});
 it("requires a recent session for bootstrap and invalidates grants after password/security revocation", async () => {
   const repository = memoryControlRepository(),
     service = new ControlService(repository),

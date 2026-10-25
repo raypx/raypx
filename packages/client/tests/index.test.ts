@@ -32,4 +32,24 @@ it("recognizes old plain 404 responses without hiding authentication/server fail
     expect(error).toBeInstanceOf(Error);
     expect(isMissingProcedure(error)).toBe(status === 404);
   }
+  const api = createApiClient({
+    baseUrl: "https://api.example.test",
+    fetch: async () =>
+      Response.json(
+        {
+          json: {
+            defined: false,
+            code: "NOT_FOUND",
+            message: "Not found",
+            data: { error: { code: "NOT_FOUND" } },
+          },
+        },
+        { status: 404 },
+      ),
+  });
+  const error = await api.hosts
+    .authorize({ deviceId: crypto.randomUUID(), epoch: 1 })
+    .catch((failure: unknown) => failure);
+  expect(error).toMatchObject({ code: "NOT_FOUND" });
+  expect(isMissingProcedure(error)).toBe(false);
 });

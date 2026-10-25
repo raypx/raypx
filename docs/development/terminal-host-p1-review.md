@@ -21,17 +21,17 @@ recoverable; no blind PID kill or automatic replay is added.
 
 ## Medium-priority findings
 
-| Finding                                                 | Resolution                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| M1: every settings save releases hooks                  | Reconfigure project/Away policy in place. Wait changes apply to future requests; adding a project preserves pending requests and epoch. Removing access withdraws only affected requests; Away off withdraws all.                                                                                                                                                              |
-| M2: GUI/service loses custom config directories         | `[connectors]` in user TOML selects absolute paths. Native passes its loaded config/environment explicitly. launchd preserves the supported environment overrides, and successful installs remember their destinations per profile. Status shows the actual settings path.                                                                                                     |
-| M3: stale/missing hook executable looks installed       | Check executable presence, execution permission and ownership digest. Show update/repair separately from uninstall. Compiled proxy/owner startup refreshes an existing owned installation. Version/build metadata prevents an older binary overwriting a newer one; externally modified executables require review.                                                            |
-| M4: no old-server compatibility                         | A rejected v3 handshake falls back once to v2, with a fresh authentication attempt; explicit reattachment retries the preferred version. Only managed actions remain enabled. If the host API is absent, Native uses browser-renewed device grants; auth/network failures do not trigger this fallback. Plain HTTP 404 and typed RPC NOT_FOUND are both covered.               |
-| M5: eight unusable keys exhaust authorization           | Atomically replace the device's prior credential and derived grants. The existing account write lock serializes issuance; it was already present. Repeated loss of Keychain no longer accumulates eight live keys.                                                                                                                                                             |
-| M6: security revocation leaves host keys usable         | Bootstrap needs a session created within ten minutes. Credentials bind a password fingerprint and account security epoch. Password changes/reset invalidate them. Session-security revocation advances the epoch, removes host keys and prevents the old cookie minting a replacement during the revocation race. Ordinary cookie expiry/sign-out is not this security action. |
-| M7: stopped owner admits clients                        | Mark closing before returning the stop ACK; reject new event/RPC clients immediately. Startup waits for owner lock release.                                                                                                                                                                                                                                                    |
-| M8: background rejection exits owner                    | Consume renewal/maintenance/shutdown promise failures. An owner-scoped unhandled-rejection handler emits a bounded diagnostic without private exception content.                                                                                                                                                                                                               |
-| M9: independently truncated sessions lose valid actions | Select the request page first, prioritizing pending requests; include exactly its referenced sessions, up to the same 100-item bound.                                                                                                                                                                                                                                          |
+| Finding                                                 | Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M1: every settings save releases hooks                  | Reconfigure project/Away policy in place. Wait changes apply to future requests; adding a project preserves pending requests and epoch. Removing access withdraws only affected requests; Away off withdraws all.                                                                                                                                                                                                                                           |
+| M2: GUI/service loses custom config directories         | `[connectors]` in user TOML selects absolute paths. Native passes its loaded config/environment explicitly. launchd preserves the supported environment overrides, and successful installs remember their destinations per profile. Status shows the actual settings path.                                                                                                                                                                                  |
+| M3: stale/missing hook executable looks installed       | Check executable presence, execution permission and ownership digest. Show update/repair separately from uninstall. Compiled owner startup refreshes an existing owned installation; proxies do not repeat the binary hash. Version/build metadata prevents an older binary overwriting a newer one; externally modified executables require review.                                                                                                        |
+| M4: no old-server compatibility                         | A rejected v3 handshake falls back once to v2, with a fresh authentication attempt; each new connection cycle, explicit restart and grant renewal retries the preferred version. Only managed actions remain enabled. If the host API is absent, Native uses browser-renewed device grants; auth/network failures do not trigger this fallback. Only a plain HTTP 404 triggers fallback; typed RPC NOT_FOUND is a domain error.                             |
+| M5: eight unusable keys exhaust authorization           | Atomically replace the device's prior credential and derived grants. The existing account write lock serializes issuance; it was already present. Repeated loss of Keychain no longer accumulates eight live keys.                                                                                                                                                                                                                                          |
+| M6: security revocation leaves host keys usable         | Bootstrap needs a session created within ten minutes. Credentials bind a password fingerprint and account security epoch. Password changes/reset invalidate them. Successful bulk session-security revocation advances the epoch, removes host keys and prevents old cookies minting replacements. Successful single-session revocation removes only credentials bootstrapped by that session. Ordinary cookie expiry/sign-out is not this security action. |
+| M7: stopped owner admits clients                        | Mark closing before returning the stop ACK; reject new event/RPC clients immediately. Startup waits for owner lock release.                                                                                                                                                                                                                                                                                                                                 |
+| M8: background rejection exits owner                    | Consume renewal/maintenance/shutdown promise failures. An owner-scoped unhandled-rejection handler emits a bounded diagnostic without private exception content.                                                                                                                                                                                                                                                                                            |
+| M9: independently truncated sessions lose valid actions | Select the request page first, prioritizing pending requests then newest completed requests; include exactly its referenced sessions, up to the same 100-item bound.                                                                                                                                                                                                                                                                                        |
 
 The old-server fallback retains the daemon's local process lifetime, but it cannot
 renew browser-backed relay grants after Desktop fully quits. Terminal approvals
@@ -71,7 +71,7 @@ Existing private-testing host credentials have no security fingerprint and requi
 fresh authorization. Signing in again supplies the recent session needed for
 bootstrap; expiry of an ordinary browser cookie does not revoke a valid host key.
 
-## Acceptance
+## Acceptance at 843adac
 
 The default suite uses redacted protocol recordings and synthetic local servers;
 it does not consume model usage. PostgreSQL acceptance uses a newly initialized,
@@ -92,3 +92,53 @@ Private logs are in ignored `.artifacts/task-workspace/p1-review-*.log`.
 Production HTTPS/edge,
 real launchd registration, Windows, iOS, notification action buttons, concurrent
 native-terminal answering and full ten-minute provider waits remain separate gates.
+
+## Second review follow-up
+
+Baseline: `843adac`. Single-session revocation previously invalidated every host,
+and it ran before the authentication endpoint could fail. The before hook now
+captures the validated actor and target session only. The after hook invokes
+revocation only for a successful endpoint response. New credentials retain their
+bootstrap session ID, so a selected session revokes its own credentials and derived
+grants without advancing the account security epoch or cancelling other hosts'
+requests. Bulk revocation and password changes retain account-wide invalidation.
+Legacy credentials lacking a bootstrap session ID cannot be attributed to a single
+session; explicit device revocation, bulk security revocation and expiry still
+invalidate them. No database migration is needed for the optional JSON field.
+
+A v2 fallback now lasts for the connection cycle. After a connected socket closes,
+restart or grant renewal, authentication tries the configured preferred version
+again. One rejected v3 attempt may still fall back to v2 with the existing backoff;
+rejecting both versions still stops negotiation. No task command is automatically
+resent. Tests cover old server → upgraded server → rollback → grant renewal,
+including restored terminal capability without restarting the daemon.
+
+The Desktop authorization error previously contained text only. Agent settings now
+provide an account-bound password dialog using shadcn components. Successful sign-in
+refreshes the browser session and retries host bootstrap without signing out or
+detaching tasks. Incorrect credentials stay in the dialog with translated feedback;
+password fields clear after submission and cancellation. The recent-sign-in rule
+remains ten minutes. Ordinary browser expiry remains independent of a valid host
+credential.
+
+Other corrections: pending requests precede the newest completed requests in the
+100-item page; typed RPC NOT_FOUND no longer impersonates a missing procedure; the
+proxy no longer rehashes the stable executable that the owner checks on startup.
+Externally modified binaries remain preserved and require manual review; automatic
+refresh intentionally does not overwrite them. The nonurgent items about installer
+feedback, pending-count isolation, host-grant rate limits and revoked-device data
+retention remain outside this follow-up.
+
+| Follow-up gate                | Result                                                                                                                                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository verify             | 49/49 tasks passed; CLI 218, Desktop 154, API 97, Web 63 tests. Type checks, lint, format, policy and i18n passed. Node/Cloudflare builds and standalone artifact probes passed.                                    |
+| Real PostgreSQL               | 17/17 passed, including real password sign-in, stale-session bootstrap rejection, in-place reauthentication and scoped/bulk host revocation.                                                                        |
+| Local Cloudflare + PostgreSQL | 4/4 passed with direct and Hyperdrive adapters.                                                                                                                                                                     |
+| macOS packaged shell          | Shell plus both restore/server-switch phases passed, including GUI Quit preserving daemon lifetime.                                                                                                                 |
+| Reauthorization UI            | Component regressions cover stale-session retry, fixed account identity, wrong-password feedback, clearing passwords and avoiding task detachment. The packaged smoke does not separately exercise this new dialog. |
+| Real provider use             | No new inference run; recorded Claude/Codex protocol regressions passed.                                                                                                                                            |
+
+Private logs use `.artifacts/task-workspace/p1-followup-*.log`. PostgreSQL acceptance
+used a newly initialized, loopback-only `raypx_p1_followup_test` database, removed
+after verification. No deployed environment, personal hook or launchd registration
+was changed. The platform and HTTPS exclusions listed above still apply.

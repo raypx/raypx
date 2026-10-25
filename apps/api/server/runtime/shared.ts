@@ -61,7 +61,8 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     });
     const control = new ControlService(createControlRepository(db));
     const auth = createAuth({
-      revokeHostAuthorizations: (userId) => control.revokeHostAuthorizations(userId),
+      revokeHostAuthorizations: (userId, sessionId) =>
+        control.revokeHostAuthorizations(userId, sessionId),
       registrationAllowed: async () => (await configuration.read()).values.registrationEnabled,
       siteName: () =>
         configuration.readCached().then(

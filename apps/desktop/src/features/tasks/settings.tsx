@@ -7,6 +7,7 @@ import type { ControlInfo } from "@raypx/contracts/terminal";
 import { getBridge, isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
 import { authClient } from "../auth/client";
 import { TerminalSettings } from "./terminal-settings";
+import { ReauthorizeHost } from "./reauthorize";
 
 export function AgentSettings() {
   const t = useTranslations("tasks");
@@ -187,6 +188,11 @@ export function AgentSettings() {
             )}
           </p>
         )}
+        {info?.daemon &&
+          (info.error === "AUTH_REQUIRED" || info.error === "UNAUTHORIZED") &&
+          session.data?.user.email && (
+            <ReauthorizeHost key={accountId} email={session.data.user.email} />
+          )}
       </div>
       {info?.daemon && (
         <TerminalSettings key={accountId} accountId={accountId} info={info} projects={projects} />

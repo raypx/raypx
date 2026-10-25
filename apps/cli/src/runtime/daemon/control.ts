@@ -594,7 +594,10 @@ export class DaemonControl {
       const deviceId = this.current.deviceId;
       const requests = [
         ...this.terminal.broker.pendingRequests(),
-        ...this.terminal.broker.list(256).filter((request) => request.status !== "pending"),
+        ...this.terminal.broker
+          .list(256)
+          .filter((request) => request.status !== "pending")
+          .reverse(),
       ].slice(0, 100);
       const ids = new Set(requests.map((request) => request.sessionId));
       return {

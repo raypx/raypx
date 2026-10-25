@@ -78,6 +78,7 @@ export function RemoteCoordinator() {
           typeof error === "object" &&
           "code" in error &&
           error.code === "UNAUTHORIZED" &&
+          !isDaemonDesktop() &&
           active
         )
           await (await getBridge()).request.controlDetach({});

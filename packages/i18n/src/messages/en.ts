@@ -81,7 +81,10 @@ export default {
     terminalExpires: "Returns to terminal at {time}",
     terminalChanged: "The request changed. Refresh before answering.",
     daemonAuthorizationRequired:
-      "Host authorization has expired or was revoked. Sign in again to authorize this computer.",
+      "Authorizing this computer requires a recent sign-in. Confirm your password to continue.",
+    daemonReauthorize: "Authorize this computer again",
+    daemonReauthorizeHint:
+      "Confirm the password for this account. Raypx will refresh your sign-in and retry host authorization. Running tasks will continue.",
     daemonHint:
       "On macOS, tasks continue after quitting Desktop. Signing out or disconnecting stops this account's work.",
     daemonMemoryOnly:
@@ -364,7 +367,7 @@ export default {
       "This session will lose account access. Signing in again will require your password.",
     revokeOtherSessions: "Sign out all other sessions",
     revokeOtherSessionsHint:
-      "All other browsers and devices will lose account access. This session stays signed in.",
+      "All other browser sessions and all execution hosts will lose account access. This browser stays signed in; computers will need authorization again.",
     sessionReauth: "Sign out and sign in again before managing sessions.",
     sessionUnauthorized: "Your session has expired. Sign in again to manage sessions.",
     sessionForbidden: "Session management is not permitted. Refresh the page and try again.",
