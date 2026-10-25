@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it, vi } from "vite-plus/test";
 import { createTaskClient } from "../src/tasks.js";
 import type { ApiClient } from "../src/index.js";
 import { taskSchema } from "@raypx/contracts/api";
@@ -63,10 +63,14 @@ it("negotiates v2 with an older server and retains managed task actions", async 
     baseUrl: "https://api.example.test",
     socket: () => new Socket() as unknown as WebSocket,
   });
-  client.setAccount("account");
-  const release = client.subscribe(() => {});
+  vi.useFakeTimers();
+  let release = () => {};
   try {
-    await expect.poll(() => versions).toEqual([3, 2]);
+    client.setAccount("account");
+    release = client.subscribe(() => {});
+    // Drive the complete retry windows without racing the polling deadline.
+    await vi.advanceTimersByTimeAsync(500);
+    expect(versions).toEqual([3, 2]);
     expect(await client.tasks.cancel({ id: task.id })).toMatchObject({
       id: task.id,
       status: "cancelled",
@@ -75,15 +79,13 @@ it("negotiates v2 with an older server and retains managed task actions", async 
     expect(observedReads).toBe(0);
     olderServer = false;
     disconnect();
-    await expect.poll(() => versions).toEqual([3, 2, 3]);
-    await expect
-      .poll(async () => {
-        await client.observed!.list({});
-        return observedReads;
-      })
-      .toBeGreaterThan(0);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(versions).toEqual([3, 2, 3]);
+    await client.observed!.list({});
+    expect(observedReads).toBe(1);
   } finally {
     release();
     client.setAccount(null);
+    vi.useRealTimers();
   }
 });

@@ -179,3 +179,14 @@ The observed macOS cookie-restoration instability remains an open validation iss
 Private evidence is retained under ignored `.artifacts/task-workspace/p1-remaining-*.log`,
 including the initial failed E2E/native runs and their subsequent runs. No deployment,
 personal hook, live inference or launchd registration was changed.
+
+## Deployment CI follow-up, 2026-10-26
+
+The `bfc0fd8` push passed packaged native checks on GitHub's macOS and Windows
+runners. Linux exposed a timing race in the existing relay negotiation test: its
+one-second polling deadline competed with a reconnect delay of up to one second.
+The regression now advances a virtual clock through both backoff windows and
+checks managed-only fallback, the preferred v3 retry and restored observed reads.
+The targeted client suite passes 3/3 without changing production retry behavior.
+The earlier locally observed macOS restoration failure remains recorded above;
+successful CI runs do not establish its root cause.
