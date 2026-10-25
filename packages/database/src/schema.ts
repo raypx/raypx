@@ -10,7 +10,7 @@ import {
   jsonb,
   primaryKey,
 } from "drizzle-orm/pg-core";
-import { defineRelations } from "drizzle-orm";
+import { defineRelations, sql } from "drizzle-orm";
 
 export const foundation = pgSchema("raypx_foundation");
 const date = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -125,6 +125,36 @@ const controlRecord = (name: string) =>
     (table) => [
       primaryKey({ columns: [table.userId, table.id] }),
       index(`${name}_device_idx`).on(table.userId, table.deviceId),
+      ...(name === "control_request"
+        ? [index("control_request_task_idx").on(table.userId, sql`(${table.body}->>'taskId')`)]
+        : []),
+      ...(name === "control_event"
+        ? [
+            index("control_event_activity_idx")
+              .on(
+                table.userId,
+                sql`(${table.body}->>'taskId')`,
+                sql`((${table.body}->'event'->'entry'->>'order')::bigint)`,
+              )
+              .where(sql`${table.body}->'event'->>'kind' = 'activity'`),
+            index("control_event_task_cursor_idx")
+              .on(
+                table.userId,
+                sql`(${table.body}->>'taskId')`,
+                sql`((${table.body}->>'cursor')::bigint)`,
+              )
+              .where(sql`${table.body}->'event'->>'kind' != 'activity'`),
+            index("control_event_replay_idx")
+              .on(table.userId, table.deviceId, sql`((${table.body}->>'cursor')::bigint)`)
+              .where(sql`${table.body}->'event'->>'kind' != 'activity'`),
+            index("control_event_stream_idx").on(
+              table.userId,
+              table.deviceId,
+              sql`(${table.body}->>'streamId')`,
+              sql`((${table.body}->>'cursor')::bigint)`,
+            ),
+          ]
+        : []),
     ],
   );
 export const controlDevice = controlRecord("control_device");

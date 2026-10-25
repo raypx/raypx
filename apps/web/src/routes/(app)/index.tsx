@@ -59,17 +59,37 @@ function AccountPage() {
           }
         >
           <ProfileSettings
-            key={state.account.id}
+            key={`profile:${state.account.id}`}
             client={authClient}
             name={state.account.name}
             onSaved={reload}
           />
-          {session.data?.session.id && (
+          {session.data?.session.id ? (
             <AccountSessions
-              key={state.account.id}
+              key={`sessions:${state.account.id}`}
               client={authClient}
               currentSessionId={session.data.session.id}
             />
+          ) : (
+            <section className="mt-9 border-t border-border pt-7" aria-label={t("sessionsTitle")}>
+              <p role={session.isPending ? "status" : "alert"}>
+                {session.error
+                  ? c("networkError")
+                  : session.isPending
+                    ? c("loading")
+                    : t("sessionUnauthorized")}
+              </p>
+              {!session.isPending && (
+                <Button variant="outline" onClick={() => void session.refetch()}>
+                  {c("retry")}
+                </Button>
+              )}
+              {!session.isPending && !session.error && (
+                <a href="/login" className="ml-3 underline">
+                  {c("signIn")}
+                </a>
+              )}
+            </section>
           )}
           {auth.error && (
             <p

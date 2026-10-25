@@ -1,4 +1,5 @@
 import { Button } from "@raypx/ui/components/ui/button";
+import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { useTranslations } from "@raypx/i18n/browser";
 import { isDirty, useFilesStore } from "../store";
 
@@ -26,7 +27,7 @@ export function FileEditor({ onSave, onClose }: { onSave: () => unknown; onClose
       <label htmlFor="file-editor" className="sr-only">
         {t("editor")}
       </label>
-      <textarea
+      <Textarea
         id="file-editor"
         className="min-h-90 w-full resize-y border-0 bg-background p-5 font-mono text-[13px] leading-[1.7] text-foreground [tab-size:2] focus-visible:-outline-offset-2"
         value={editor.text}

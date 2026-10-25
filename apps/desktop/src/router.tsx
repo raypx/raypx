@@ -23,6 +23,7 @@ export function getRouter() {
       : {}),
     defaultPreload: "intent",
     scrollRestoration: true,
+    scrollToTopSelectors: ["#main"],
     Wrap: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),

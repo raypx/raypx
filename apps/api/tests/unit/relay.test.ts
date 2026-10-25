@@ -1,7 +1,22 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it, vi } from "vite-plus/test";
 import { RelayHub } from "../../server/relay/hub.js";
 import { ControlService } from "../../server/control/service.js";
 import { connected, memoryControlRepository } from "../helpers/control.js";
+it("rejects old relay versions with a terminal upgrade code", async () => {
+  const service = new ControlService(memoryControlRepository()),
+    hub = new RelayHub(async (run) => run(service)),
+    id = crypto.randomUUID(),
+    send = vi.fn(),
+    close = vi.fn();
+  hub.open({ id, send, close });
+  await hub.receive(
+    id,
+    JSON.stringify({ type: "auth", role: "viewer", token: "synthetic-token-without-version" }),
+  );
+  expect(send).toHaveBeenCalledWith({ type: "error", code: "UPGRADE_REQUIRED" });
+  expect(close).toHaveBeenCalledWith(4006, "UPGRADE_REQUIRED");
+  await hub.shutdown();
+});
 
 it("drains in-flight device frames before disconnecting on shutdown", async () => {
   const control = new ControlService(memoryControlRepository()),
@@ -21,7 +36,10 @@ it("drains in-flight device frames before disconnecting on shutdown", async () =
     return run(control);
   });
   hub.open({ id, send() {}, close() {} });
-  await hub.receive(id, JSON.stringify({ type: "auth", role: "device", token: f.grant.token }));
+  await hub.receive(
+    id,
+    JSON.stringify({ type: "auth", protocolVersion: 2, role: "device", token: f.grant.token }),
+  );
   blocked = true;
   const announce = hub.receive(id, JSON.stringify(f.announce));
   await started;

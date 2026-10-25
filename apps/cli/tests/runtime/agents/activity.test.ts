@@ -17,6 +17,54 @@ function recorder() {
   });
   return { recorder: new ConversationRecorder(crypto.randomUUID(), write), entries, write };
 }
+it("accumulates total usage across calls, rejects duplicate or old-turn updates and reuses fallback message identity", () => {
+  const { recorder: r, entries, write } = recorder();
+  r.setTokenBaseline({
+    inputTokens: 0,
+    outputTokens: 0,
+    cachedInputTokens: 0,
+    cacheWriteInputTokens: 0,
+  });
+  r.startTurn();
+  r.setTurnId("one");
+  const update = (inputTokens: number, outputTokens: number, turnId = "one") =>
+    r.codex("thread/tokenUsage/updated", {
+      turnId,
+      tokenUsage: {
+        total: { inputTokens, outputTokens },
+        last: { inputTokens: 6, outputTokens: 2 },
+      },
+    });
+  update(10, 3);
+  update(16, 5);
+  const calls = write.mock.calls.length;
+  update(16, 5);
+  update(99, 99, "old");
+  expect(write).toHaveBeenCalledTimes(calls);
+  expect([...entries.values()].find((entry) => entry.kind === "usage")).toMatchObject({
+    inputTokens: 16,
+    outputTokens: 5,
+    known: true,
+  });
+  r.codex("item/agentMessage/delta", { delta: "x".repeat(40_000) });
+  r.flush();
+  const boundedCalls = write.mock.calls.length;
+  r.codex("item/agentMessage/delta", { delta: "more" });
+  r.flush();
+  expect(write).toHaveBeenCalledTimes(boundedCalls);
+  r.codex("item/completed", { item: { type: "agentMessage", text: "x".repeat(32_000) } });
+  expect([...entries.values()].filter((entry) => entry.kind === "message")).toHaveLength(1);
+  r.endTurn("complete");
+  r.startTurn();
+  r.setTurnId("two");
+  update(24, 7, "two");
+  r.stop("complete");
+  expect(
+    [...entries.values()]
+      .filter((entry) => entry.kind === "usage")
+      .map((entry) => entry.inputTokens),
+  ).toEqual([16, 8]);
+});
 it("joins streaming and final Claude messages by identity and excludes reasoning, child runs and tool content", () => {
   const { recorder: r, entries } = recorder();
   r.startTurn();
@@ -77,7 +125,7 @@ it("joins streaming and final Claude messages by identity and excludes reasoning
     expect.arrayContaining([
       expect.objectContaining({
         kind: "message",
-        text: "Hello world",
+        text: "Hello\n world",
         status: "complete",
         revision: 2,
       }),

@@ -56,8 +56,13 @@ The accepted foundation design supersedes documents in docs/history.
 - Local protocol dates are ISO strings; terminal bytes use base64.
 - Preserve original logos and neutral light/dark visual tokens. Keep keyboard focus,
   accessible labels, reduced motion and Chinese/English copy.
-- Prefer existing shadcn/Base UI primitives from `@raypx/ui` for DOM controls.
+- Use existing shadcn/Base UI primitives from `@raypx/ui` for DOM controls.
   Compose product-specific controls in Blocks or the owning feature package.
+  Use Select, RadioGroup and Collapsible for feature interaction instead of
+  native select/radio/details controls; keep semantic form grouping and labels.
+- Use Tailwind utilities for feature layout and styling. Keep CSS entry points for
+  imports, source registration, shared theme tokens and necessary global/library rules;
+  do not add feature-specific CSS selectors.
 - Do not edit generated route trees or vendored agent skills by hand.
 - Preserve unrelated user changes. Build/cache files are not source artifacts.
 

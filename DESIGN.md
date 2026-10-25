@@ -3,6 +3,8 @@
 Keep original logos and icons. Use neutral light/dark semantic tokens, Base UI
 for DOM primitives, Tailwind v4, Lucide icons and the existing system font stack.
 Primary actions are dark on light backgrounds and light on dark backgrounds.
+Express feature styles and responsive states with Tailwind utilities in components.
+CSS entry points register sources and shared styles; avoid feature-specific selectors.
 
 Web has a quiet account/settings shell. Desktop adds Files, Automations and
 Terminal navigation behind the Desktop login page. Task views default to This

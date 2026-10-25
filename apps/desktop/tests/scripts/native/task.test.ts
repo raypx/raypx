@@ -24,6 +24,7 @@ function fixture() {
           "typecheck:node",
           "typecheck:native",
           "native:cli",
+          "native:csp",
           "native:prepare",
         ].map((name) => [name, `bun record.ts ${name}`]),
       ),
@@ -122,6 +123,7 @@ describe("Desktop task graph entry", () => {
         args: ["env", "--", process.execPath, "--bun", "vp", "build", "--mode", "staging"],
         forwarded: {},
       },
+      { name: "native:csp", args: [], forwarded: {} },
     ]);
   });
 

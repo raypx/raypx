@@ -1,3 +1,4 @@
+import { createEvaluator } from "./evaluate";
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -17,20 +18,13 @@ import {
   windowActions,
 } from "../../../native/main";
 
-const rpc = view.rpc as unknown as {
-  request: {
-    evaluateJavascriptWithResponse(
-      input: { script: string },
-      options?: { maxRequestTime: number },
-    ): Promise<unknown>;
-  };
-};
+const evaluateNative = createEvaluator(view);
 async function evaluate(script: string): Promise<unknown> {
   // Native WebView startup/activation can lose an early diagnostic request.
   // Smoke actions operate only on isolated acceptance data.
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      return await rpc.request.evaluateJavascriptWithResponse({ script }, { maxRequestTime: 5000 });
+      return await evaluateNative(script);
     } catch (error) {
       if (attempt === 2) throw error;
       await Bun.sleep(100);
@@ -196,6 +190,17 @@ async function selectLanguage(locale: "en" | "zh") {
 
 try {
   assert.equal(tray.visible, true, "Native tray was not created");
+  if (process.platform === "darwin") {
+    const bounds = tray.getBounds();
+    console.info(`Native smoke tray bounds: ${bounds.width} x ${bounds.height}`);
+    assert.ok(bounds.width > 0 && bounds.width <= 36, `Tray width is too large: ${bounds.width}`);
+  }
+  console.info(
+    "Native smoke renderer status:",
+    await evaluate(
+      'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.__electrobunWebviewId });',
+    ),
+  );
   await waitFor(
     async () =>
       // The prerendered skeleton has no #main; it appears once the shell hydrates.
@@ -282,7 +287,9 @@ try {
     await evaluate('location.hash="/settings";return true');
     await waitFor(
       async () =>
-        Boolean(await evaluate('return Boolean(document.querySelector("input[name=theme]"))')),
+        Boolean(
+          await evaluate('return Boolean(document.querySelector("[data-slot=radio-group-item]"))'),
+        ),
       "Settings route did not mount",
     );
     await evaluate('location.hash="/";return true');
@@ -316,7 +323,7 @@ try {
       async () =>
         Boolean(
           await evaluate(
-            'return [...document.querySelectorAll(".job-row h2")].some(node=>node.textContent==="Native smoke scan")',
+            'return [...document.querySelectorAll("article h2")].some(node=>node.textContent==="Native smoke scan")',
           ),
         ),
       "Renderer did not list the persisted task",
@@ -337,13 +344,13 @@ try {
         ? ["/d", "/c", "echo raypx-native-pty"]
         : ["-c", "printf 'raypx-native-pty\\n'"];
     await evaluate(
-      `document.querySelector("#terminal-executable").value=${JSON.stringify(shell)};document.querySelector("#terminal-cwd").value=${JSON.stringify(directory)};document.querySelector("#terminal-args").value=${JSON.stringify(JSON.stringify(args))};document.querySelector(".terminal-form").requestSubmit();return true`,
+      `document.querySelector("#terminal-executable").value=${JSON.stringify(shell)};document.querySelector("#terminal-cwd").value=${JSON.stringify(directory)};document.querySelector("#terminal-args").value=${JSON.stringify(JSON.stringify(args))};document.querySelector("#terminal-executable").form.requestSubmit();return true`,
     );
     await waitFor(
       async () =>
         Boolean(
           await evaluate(
-            'return document.querySelector(".terminal-status")?.textContent.includes("(0)")',
+            'return [...document.querySelectorAll("[role=status]")].some(node=>node.textContent.includes("(0)"))',
           ),
         ),
       "Renderer terminal did not complete with a successful exit",
@@ -352,10 +359,12 @@ try {
     await evaluate('location.hash="/settings";return true');
     await waitFor(
       async () =>
-        Boolean(await evaluate('return Boolean(document.querySelector("input[name=theme]"))')),
+        Boolean(
+          await evaluate('return Boolean(document.querySelector("[data-slot=radio-group-item]"))'),
+        ),
       "Settings route did not mount",
     );
-    await evaluate('document.querySelector("input[name=theme][value=dark]").click();return true');
+    await evaluate('document.querySelector("[data-theme-option=dark]").click();return true');
     await selectLanguage("en");
     await selectLanguage("zh");
     await waitFor(
@@ -402,7 +411,7 @@ try {
       async () =>
         Boolean(
           await evaluate(
-            'return Boolean(document.querySelector("input[name=theme][value=dark]:checked"))&&document.documentElement.dataset.theme==="dark"&&document.documentElement.lang==="zh"',
+            'return Boolean(document.querySelector("[data-theme-option=dark][aria-checked=true]"))&&document.documentElement.dataset.theme==="dark"&&document.documentElement.lang==="zh"',
           ),
         ),
       "Device preferences did not survive process restart",
@@ -433,10 +442,14 @@ try {
       await evaluate('location.hash="/settings";return true');
       await waitFor(
         async () =>
-          Boolean(await evaluate('return Boolean(document.querySelector("input[name=theme]"))')),
+          Boolean(
+            await evaluate(
+              'return Boolean(document.querySelector("[data-slot=radio-group-item]"))',
+            ),
+          ),
         "Settings route did not mount",
       );
-      await evaluate('document.querySelector("input[name=theme][value=dark]").click();return true');
+      await evaluate('document.querySelector("[data-theme-option=dark]").click();return true');
       await selectLanguage("en");
       await selectLanguage("zh");
       await waitFor(async () => {

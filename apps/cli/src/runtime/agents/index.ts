@@ -17,6 +17,7 @@ import {
   type RelayRequest,
   type SyncDevice,
   type TaskInput,
+  type TaskChange,
   validDecision,
 } from "@raypx/contracts/tasks";
 import { type StateStore, acquireLock } from "../state";
@@ -51,6 +52,7 @@ type Execution = {
   turnActive: boolean;
   turnId: string;
   interrupting: boolean;
+  interruptTimer?: ReturnType<typeof setTimeout>;
   sendTurn?: (prompt: string) => Promise<void>;
 };
 const object = (value: unknown): Record<string, unknown> =>
@@ -98,7 +100,7 @@ export class AgentRuntime {
   constructor(
     private readonly state: StateStore,
     // A pending request id is passed only for local work; relay delivery notifies separately.
-    private readonly changed: (pendingRequest?: string) => void,
+    private readonly changed: (pendingRequest?: string, change?: TaskChange) => void,
     private readonly options: { executables?: Partial<Record<AgentProvider, string>> } = {},
   ) {
     this.store = new AgentStore(state.directory);
@@ -204,7 +206,15 @@ export class AgentRuntime {
   }
   private emit(local: LocalAgentTask, event: AgentEvent) {
     this.store.event(local.binding, event);
-    this.changed();
+    this.changedFor(local, event);
+  }
+  private changedFor(local: LocalAgentTask, event: AgentEvent) {
+    this.changed(undefined, {
+      type: "events",
+      local: isDesktopBinding(local.binding),
+      deviceId: local.task.deviceId,
+      events: [{ sequence: 1, event }],
+    });
   }
   private status(local: LocalAgentTask, status: AgentTask["status"], summary = "") {
     const task = {
@@ -213,19 +223,17 @@ export class AgentRuntime {
       summary: summary.slice(0, 32_000),
       updatedAt: new Date().toISOString(),
     };
-    this.store.transition(
-      { ...local, task },
-      {
-        id: crypto.randomUUID(),
-        taskId: task.id,
-        kind: "status",
-        status,
-        summary: task.summary,
-        task,
-      },
-    );
+    const event: AgentEvent = {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "status",
+      status,
+      summary: task.summary,
+      task,
+    };
+    this.store.transition({ ...local, task }, event);
     Object.assign(local.task, task);
-    this.changed();
+    this.changedFor(local, event);
   }
   async capabilities(): Promise<AgentCapability[]> {
     if (this.capabilitiesCache) return this.capabilitiesCache;
@@ -333,18 +341,23 @@ export class AgentRuntime {
           .map((request) => ({ kind: "request" as const, request })),
       ];
       const remaining = 32 * 1024 * 1024 - 64 * 1024 - Buffer.byteLength(JSON.stringify(records));
-      if (remaining > 128 * 1024)
-        records.push(
-          ...bounded(
-            selected.flatMap((local) =>
-              this.store
-                .activityPage(binding, local.task.id)
-                .activity.map((entry) => ({ kind: "activity" as const, entry })),
-            ),
-            true,
-            remaining,
-          ),
-        );
+      if (remaining > 128 * 1024) {
+        const pages = selected.map((local) => this.store.snapshotActivity(binding, local.task.id));
+        const activity: SnapshotRecord[] = [];
+        for (let activityOffset = 0; pages.some((page) => page[activityOffset]); activityOffset++)
+          for (const page of pages)
+            if (page[activityOffset])
+              activity.push({ kind: "activity", entry: page[activityOffset]! });
+        records.push(...bounded(activity, false, remaining));
+      }
+      for (const record of records)
+        if (record.kind === "task") {
+          const total = this.store.activityCount(binding, record.task.id);
+          const included = records.filter(
+            (entry) => entry.kind === "activity" && entry.entry.taskId === record.task.id,
+          ).length;
+          record.task = { ...record.task, activityIncomplete: included < total };
+        }
       this.snapshots.set(id, {
         binding,
         expires: Date.now() + 120_000,
@@ -517,7 +530,16 @@ export class AgentRuntime {
               });
               execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
               this.inputStatus(execution, entry, "sent");
-            } catch {
+            } catch (error) {
+              if (error instanceof LocalError && error.code === "AGENT_TURN_CHANGED") {
+                entry.mode = "queue";
+                this.inputStatus(execution, entry, "queued");
+                execution.interruptTimer = setTimeout(
+                  () => this.expireInput(execution, entry),
+                  10_000,
+                );
+                return;
+              }
               execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
               this.inputStatus(execution, entry, "failed", "INPUT_DELIVERY_FAILED");
             }
@@ -526,6 +548,11 @@ export class AgentRuntime {
             execution.interrupting = true;
             try {
               await execution.process!.control({ subtype: "interrupt" });
+              if (execution.turnActive && !execution.finished)
+                execution.interruptTimer = setTimeout(
+                  () => this.expireInput(execution, entry),
+                  10_000,
+                );
             } catch {
               execution.interrupting = false;
               execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
@@ -677,10 +704,18 @@ export class AgentRuntime {
         task.id,
         (entry) => {
           const value = this.store.recordActivity(binding, entry);
-          this.changed();
+          this.changedFor(local, {
+            id: crypto.randomUUID(),
+            taskId: value.taskId,
+            kind: "activity",
+            entry: value,
+          });
           return value;
         },
         isDesktopBinding(binding) ? 250 : 1000,
+        (totals) => {
+          this.store.recordTokenUsage(local, totals);
+        },
       ),
       inputs: [],
       operation: Promise.resolve(),
@@ -722,6 +757,12 @@ export class AgentRuntime {
       }),
     );
     this.changed();
+  }
+  private expireInput(execution: Execution, entry: TaskInput) {
+    if (execution.finished) return;
+    execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
+    this.inputStatus(execution, entry, "failed", "INPUT_DELIVERY_FAILED");
+    this.finish(execution, "interrupted", "INPUT_DELIVERY_FAILED");
   }
   private async nextInput(execution: Execution) {
     if (execution.finished || execution.turnActive || !execution.sendTurn) return false;
@@ -807,7 +848,7 @@ export class AgentRuntime {
         ["app-server", "--listen", "stdio://"],
         directory,
         (message) => {
-          if (execution.finished) return;
+          if (execution.finished || execution.process !== runner) return;
           const method = text(message.method);
           const params = object(message.params);
           execution.conversation.codex(method, params);
@@ -909,6 +950,8 @@ export class AgentRuntime {
           } else if (method === "turn/completed") {
             const turn = object(params.turn);
             void this.serial(execution, async () => {
+              clearTimeout(execution.interruptTimer);
+              delete execution.interruptTimer;
               execution.turnActive = false;
               execution.conversation.endTurn(
                 turn.status === "completed" ? "complete" : "interrupted",
@@ -946,10 +989,13 @@ export class AgentRuntime {
       execution.process = runner;
       void runner.completed.then(
         () => {
-          if (!execution.finished)
+          if (!execution.finished && execution.process === runner)
             this.finish(execution, execution.cancelled ? "cancelled" : "failed", "AGENT_EXITED");
         },
-        () => this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"),
+        () => {
+          if (execution.process === runner && !execution.awaitingPlan)
+            this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED");
+        },
       );
       await runner.request("initialize", {
         clientInfo: { name: "raypx", title: "Raypx", version: "0.1.0" },
@@ -964,6 +1010,13 @@ export class AgentRuntime {
       });
       execution.local.sessionId = text(object(response.thread).id, 500);
       this.store.put(execution.local);
+      execution.conversation.setTokenBaseline(
+        this.store.tokenUsage(execution.local.sessionId) ??
+          execution.local.tokenUsage ??
+          (parent
+            ? parent.tokenUsage
+            : { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, cacheWriteInputTokens: 0 }),
+      );
       execution.sendTurn = async (prompt) => {
         execution.turnActive = true;
         execution.turnId = "";
@@ -980,6 +1033,7 @@ export class AgentRuntime {
               : { type: "workspaceWrite", writableRoots: [directory], networkAccess: false },
         });
         execution.turnId = text(object(turnResponse.turn).id, 500) || execution.turnId;
+        execution.conversation.setTurnId(execution.turnId);
       };
       await this.serial(execution, async () => {
         await execution.sendTurn!(
@@ -1038,9 +1092,11 @@ export class AgentRuntime {
             this.store.put(execution.local);
           }
           if (message.type === "result") {
+            const interrupted = message.is_error === true && execution.interrupting;
             void this.serial(execution, async () => {
+              clearTimeout(execution.interruptTimer);
+              delete execution.interruptTimer;
               execution.turnActive = false;
-              const interrupted = execution.interrupting;
               execution.interrupting = false;
               execution.conversation.endTurn(
                 message.is_error === true || interrupted ? "interrupted" : "complete",
@@ -1104,7 +1160,10 @@ export class AgentRuntime {
           if (!execution.finished && execution.process === runner && !execution.awaitingPlan)
             this.finish(execution, execution.cancelled ? "cancelled" : "failed", "AGENT_EXITED");
         },
-        () => this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED"),
+        () => {
+          if (execution.process === runner && !execution.awaitingPlan)
+            this.finish(execution, "failed", "AGENT_PROTOCOL_FAILED");
+        },
       );
     }
   }
@@ -1260,6 +1319,7 @@ export class AgentRuntime {
   private finish(execution: Execution, status: AgentTask["status"], summary = "") {
     if (execution.finished) return;
     execution.finished = true;
+    clearTimeout(execution.interruptTimer);
     execution.conversation.stop(status === "succeeded" ? "complete" : "interrupted");
     for (const item of execution.pending.values()) {
       clearTimeout(item.timer);

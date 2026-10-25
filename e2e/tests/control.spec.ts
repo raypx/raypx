@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { selectOption } from "./helpers/select.js";
 import {
   createApiClient,
   type ApiClient,
@@ -58,7 +59,7 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     socket.addEventListener("error", () => reject(new Error("Relay unavailable")), { once: true });
   });
   try {
-    send({ type: "auth", role: "device", token: grant.token });
+    send({ type: "auth", protocolVersion: 2, role: "device", token: grant.token });
     await take("ready");
     const projectId = crypto.randomUUID(),
       streamId = crypto.randomUUID();
@@ -89,11 +90,20 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("http://127.0.0.1:4173/tasks");
     await page.getByRole("button", { name: "New task", exact: true }).click();
-    await page
-      .getByRole("combobox", { name: "Computer", exact: true })
-      .selectOption(grant.deviceId);
-    await page.getByRole("combobox", { name: "Project", exact: true }).selectOption(projectId);
-    await page.getByRole("combobox", { name: "Agent", exact: true }).selectOption("codex");
+    const form = page
+      .getByRole("textbox", { name: "What should the agent do?", exact: true })
+      .locator("xpath=ancestor::form[1]");
+    await selectOption(
+      page,
+      form.getByRole("combobox", { name: "Computer", exact: true }),
+      grant.deviceId,
+    );
+    await selectOption(
+      page,
+      form.getByRole("combobox", { name: "Project", exact: true }),
+      projectId,
+    );
+    await selectOption(page, form.getByRole("combobox", { name: "Agent", exact: true }), "codex");
     await page
       .getByRole("textbox", { name: "What should the agent do?", exact: true })
       .fill(taskPrompt);

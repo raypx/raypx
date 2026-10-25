@@ -2,7 +2,7 @@ import { readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { defineCommand, type CommandDef } from "citty";
-import { parseAiSettings, type AiSettings } from "@raypx/ai/config";
+import { mergeAiSettings, parseAiSettings, type AiSettings } from "@raypx/ai/config";
 import type { AiRequestOptions } from "@raypx/ai";
 import { LocalError } from "../runtime/errors";
 import { globalArgs, type CliArgs } from "./args";
@@ -90,7 +90,12 @@ async function runAiCommand(action: string, value: Record<string, unknown>, invo
     const { prompt, system, ...configuration } = value;
     if (action !== "complete" && (prompt !== undefined || system !== undefined))
       throw new LocalError("INVALID_INPUT", "Only ai complete accepts prompt and system.");
-    const settings = parseAiSettings({ ...loadSettings(), ...parseAiSettings(configuration) });
+    if (action === "providers" && Object.keys(value).length)
+      throw new LocalError("INVALID_INPUT", "ai providers does not accept settings.");
+    if (action === "models" && Object.keys(configuration).some((key) => key !== "provider"))
+      throw new LocalError("INVALID_INPUT", "ai models only accepts a provider filter.");
+    const override = parseAiSettings(configuration);
+    const settings = action === "complete" ? mergeAiSettings(loadSettings(), override) : override;
     const custom = settings.base_url !== undefined;
     if (custom && (!settings.provider || !settings.model || !settings.api))
       throw new AiError("AI_INVALID_CONFIG");

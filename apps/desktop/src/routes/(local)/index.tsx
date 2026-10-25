@@ -1,6 +1,7 @@
 import { createFileRoute, getRouteApi, useBlocker, useRouter } from "@tanstack/react-router";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
+import { useConfirmation } from "@raypx/ui/confirmation";
 import { useTranslations } from "@raypx/i18n/browser";
 import type { FileListing } from "@raypx/contracts/local";
 import { localRequest } from "../../lib/desktop";
@@ -66,23 +67,32 @@ function FilesPage() {
   const router = useRouter();
   const t = useTranslations("files");
   const c = useTranslations("common");
+  const { confirm, dialog } = useConfirmation();
   const store = useFilesStoreApi();
   const dirty = useFilesStore(isDirty);
   const busy = useFilesStore((s) => s.busy);
   const error = useFilesStore((s) => s.error);
   const notice = useFilesStore((s) => s.notice);
-  function confirmDiscard() {
-    return !isDirty(store.getState()) || window.confirm(t("unsaved"));
+  async function confirmDiscard() {
+    return (
+      !isDirty(store.getState()) ||
+      confirm({
+        title: t("unsaved"),
+        description: store.getState().editor?.path ?? "",
+        confirmLabel: c("discard"),
+        cancelLabel: c("cancel"),
+      })
+    );
   }
   useBlocker({
     enableBeforeUnload: dirty,
-    shouldBlockFn: ({ next }) => {
+    shouldBlockFn: async ({ next }) => {
       if (next.routeId === Route.id) {
         const search = filesSearch(next.search);
         const nextRoot = search.rootId || roots?.[0]?.id || "";
         if (nextRoot === data.rootId && (search.path ?? "") === data.path) return false;
       }
-      return !confirmDiscard();
+      return !(await confirmDiscard());
     },
   });
   function refresh() {
@@ -93,7 +103,19 @@ function FilesPage() {
   function navigateDirectory(rootId: string, path: string) {
     return router.navigate({ to: "/", search: { rootId, path } });
   }
-  const actions = useFileActions({ rootId: data.rootId, path: data.path, refresh, confirmDiscard });
+  const actions = useFileActions({
+    rootId: data.rootId,
+    path: data.path,
+    refresh,
+    confirmDiscard,
+    confirmDelete: (entry) =>
+      confirm({
+        title: `${c("delete")}: ${entry.name}`,
+        description: t("deleteConfirm"),
+        confirmLabel: c("delete"),
+        cancelLabel: c("cancel"),
+      }),
+  });
   function chooseFolder() {
     return actions.chooseFolder(async (rootId) => {
       await navigateDirectory(rootId, "");
@@ -164,9 +186,7 @@ function FilesPage() {
                 ? navigateDirectory(data.rootId, entry.path)
                 : actions.open(entry)
             }
-            onDelete={(entry) => {
-              if (window.confirm(t("deleteConfirm"))) return actions.remove(entry);
-            }}
+            onDelete={actions.remove}
             onPage={(offset) =>
               router.navigate({
                 to: "/",
@@ -178,6 +198,7 @@ function FilesPage() {
         </>
       )}
       <FileEditor onSave={actions.save} onClose={actions.close} />
+      {dialog}
     </section>
   );
 }

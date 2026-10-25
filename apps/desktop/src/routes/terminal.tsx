@@ -204,9 +204,12 @@ function TerminalPage() {
           {error}
         </p>
       )}
-      <form onSubmit={open} className="terminal-form">
-        <div className="form-row">
-          <label htmlFor="terminal-executable">
+      <form onSubmit={open} className="flex flex-col gap-4.5">
+        <div className="flex gap-5">
+          <label
+            htmlFor="terminal-executable"
+            className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
+          >
             {t("executable")}
             <Input
               id="terminal-executable"
@@ -218,13 +221,19 @@ function TerminalPage() {
               }
             />
           </label>
-          <label htmlFor="terminal-cwd">
+          <label
+            htmlFor="terminal-cwd"
+            className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
+          >
             {t("cwd")}
             <Input id="terminal-cwd" name="cwd" required disabled={running || opening} />
           </label>
         </div>
-        <div className="form-row terminal-arguments">
-          <label htmlFor="terminal-args">
+        <div className="flex gap-5">
+          <label
+            htmlFor="terminal-args"
+            className="flex min-w-0 flex-1 flex-col gap-1.75 text-[13px]"
+          >
             {t("arguments")}
             <Input id="terminal-args" name="args" defaultValue="[]" disabled={running || opening} />
           </label>
@@ -242,9 +251,14 @@ function TerminalPage() {
             )}
           </div>
         </div>
-        <p className="field-hint">{t("permissionHint")}</p>
+        <p className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
+          {t("permissionHint")}
+        </p>
       </form>
-      <div className="terminal-status" role="status">
+      <div
+        className="mt-6 flex items-center gap-2 border-t border-border pt-6 pb-3 text-[12px] text-muted-foreground"
+        role="status"
+      >
         {running ? (
           <>
             <span className="size-1.5 rounded-full bg-foreground" />
@@ -256,8 +270,16 @@ function TerminalPage() {
           t("empty")
         )}
       </div>
-      <div className="terminal-container" ref={container} aria-label={c("terminal")} />
-      {!started && <p className="field-hint terminal-hint">{t("emptyHint")}</p>}
+      <div
+        className="h-[42dvh] min-h-95 overflow-hidden rounded-md border border-border p-4 [&_.xterm]:h-full [&_.xterm-viewport]:rounded-[4px]"
+        ref={container}
+        aria-label={c("terminal")}
+      />
+      {!started && (
+        <p className="mt-3 text-[12px] leading-[1.6] font-normal text-muted-foreground">
+          {t("emptyHint")}
+        </p>
+      )}
     </section>
   );
 }

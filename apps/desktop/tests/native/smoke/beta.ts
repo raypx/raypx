@@ -1,3 +1,4 @@
+import { createEvaluator } from "./evaluate";
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -39,16 +40,7 @@ const credentials = (await Bun.file(credentialsPath).json()) as {
   userId: string;
 };
 assert.match(credentials.email, /@raypx\.example\.test$/, "Use a dedicated acceptance account");
-const rpc = view.rpc as unknown as {
-  request: {
-    evaluateJavascriptWithResponse(
-      input: { script: string },
-      options: { maxRequestTime: number },
-    ): Promise<unknown>;
-  };
-};
-const evaluate = (script: string) =>
-  rpc.request.evaluateJavascriptWithResponse({ script }, { maxRequestTime: 5000 });
+const evaluate = createEvaluator(view);
 async function waitFor(check: () => Promise<boolean> | boolean, label: string, timeout = 30_000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {

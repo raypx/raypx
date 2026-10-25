@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import type { AgentTask, SyncDevice } from "@raypx/tasks";
 import type { TaskClient } from "@raypx/client";
+import { selectOption } from "../../helpers/select.js";
 
 beforeEach(() => {
   // Keep the real virtualizer while supplying jsdom's missing layout dimensions.
@@ -113,15 +114,9 @@ it.each([
 it("combines status, agent and computer filters and clears an empty result", async () => {
   workspace();
   await screen.findByRole("searchbox", { name: "Search this page" });
-  fireEvent.change(screen.getByRole("combobox", { name: "Status" }), {
-    target: { value: "active" },
-  });
-  fireEvent.change(screen.getByRole("combobox", { name: "Agent" }), {
-    target: { value: "claude" },
-  });
-  fireEvent.change(screen.getByRole("combobox", { name: "Computer" }), {
-    target: { value: windows.id },
-  });
+  await selectOption("Status", "active");
+  await selectOption("Agent", "claude");
+  await selectOption("Computer", windows.id);
   await waitFor(() => expect(visiblePrompts()).toEqual(["Review approval"]));
   fireEvent.change(screen.getByRole("searchbox"), { target: { value: "unmatched query" } });
   await screen.findByText("No matching tasks");
@@ -129,9 +124,9 @@ it("combines status, agent and computer filters and clears an empty result", asy
   fireEvent.click(screen.getAllByRole("button", { name: "Clear filters" })[0]!);
   await waitFor(() => expect(visiblePrompts()).toEqual(sampleTasks.map((item) => item.prompt)));
   expect(screen.getByRole("searchbox")).toHaveValue("");
-  expect(screen.getByRole("combobox", { name: "Status" })).toHaveValue("all");
-  expect(screen.getByRole("combobox", { name: "Agent" })).toHaveValue("");
-  expect(screen.getByRole("combobox", { name: "Computer" })).toHaveValue("");
+  expect(screen.getByRole("combobox", { name: "Status" })).toHaveTextContent("All statuses");
+  expect(screen.getByRole("combobox", { name: "Agent" })).toHaveTextContent("All agents");
+  expect(screen.getByRole("combobox", { name: "Computer" })).toHaveTextContent("All computers");
 });
 
 it.each([
@@ -152,8 +147,8 @@ it.each([
     "delivery_failed",
   ];
   workspace(statuses.map((status) => task(`Task ${status}`, { status })));
-  const status = await screen.findByRole("combobox", { name: "Status" });
-  fireEvent.change(status, { target: { value: filter } });
+  await screen.findByRole("combobox", { name: "Status" });
+  await selectOption("Status", filter);
   await waitFor(() => expect(visiblePrompts()).toEqual(expected.map((item) => `Task ${item}`)));
 });
 

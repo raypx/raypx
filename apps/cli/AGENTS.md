@@ -91,7 +91,7 @@ keep stable IDs and increasing revisions; throttle deltas and flush on terminati
 `agents.local.*` exposes account-scoped task reads, direct commands, device metadata
 and detach through private stdio only. Local tasks use a persistent device identity
 and a `desktop:` binding, share the same execution locks and approval arbitration,
-and write journal history without a cloud outbox. Never include these bindings in
+and keep status/request journal history without a cloud outbox. Activity lives only in its latest projection. Never include these bindings in
 remote snapshots or replay. Local activity is durable and exempt from relay journal
 compaction; indexed task cursors paginate it. History survives logout until
 `agents.local.clear` removes finished tasks; active local work is cancelled

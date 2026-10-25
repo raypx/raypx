@@ -10,6 +10,12 @@ const count = (value: unknown) =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : 0;
 type Message = Extract<ActivityDraft, { kind: "message" }>;
 type Tool = Extract<ActivityDraft, { kind: "tool" }>;
+export type TokenTotals = {
+  inputTokens: number;
+  outputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteInputTokens: number;
+};
 
 /** Select public conversation fields; reasoning, tool output and provider envelopes stay private. */
 export class ConversationRecorder {
@@ -21,11 +27,28 @@ export class ConversationRecorder {
   private startedAt = Date.now();
   private currentMessage = "";
   private stopped = false;
+  private totals: TokenTotals | undefined;
+  private turnUsage: TokenTotals = {
+    inputTokens: 0,
+    outputTokens: 0,
+    cachedInputTokens: 0,
+    cacheWriteInputTokens: 0,
+  };
+  private usageKnown = true;
+  private codexTurn = "";
+  private blockIndex = 0;
   constructor(
     private readonly taskId: string,
     private readonly write: (entry: ActivityDraft) => TaskActivity,
     private readonly interval = 250,
+    private readonly persistTotals?: (value: TokenTotals) => void,
   ) {}
+  setTokenBaseline(value: TokenTotals | undefined) {
+    this.totals = value;
+  }
+  setTurnId(value: string) {
+    this.codexTurn = value;
+  }
   private base() {
     const now = new Date().toISOString();
     return { id: crypto.randomUUID(), taskId: this.taskId, createdAt: now, updatedAt: now };
@@ -34,6 +57,15 @@ export class ConversationRecorder {
     this.turn++;
     this.startedAt = Date.now();
     this.currentMessage = `turn:${this.turn}`;
+    this.codexTurn = "";
+    this.usageKnown = this.totals !== undefined;
+    this.turnUsage = {
+      inputTokens: 0,
+      outputTokens: 0,
+      cachedInputTokens: 0,
+      cacheWriteInputTokens: 0,
+    };
+    this.blockIndex = 0;
   }
   private save(key: string, immediate = false) {
     if (this.stopped) return;
@@ -65,6 +97,13 @@ export class ConversationRecorder {
       this.entries.set(key, entry);
     }
     const next = append ? entry.text + value : value;
+    if (
+      !created &&
+      entry.text === next.slice(0, 32_000) &&
+      entry.status === (complete ? "complete" : "streaming") &&
+      (entry.truncated || next.length <= 32_000)
+    )
+      return;
     entry.text = next.slice(0, 32_000);
     entry.truncated ||= next.length > 32_000;
     entry.status = complete ? "complete" : "streaming";
@@ -85,6 +124,7 @@ export class ConversationRecorder {
     cachedInputTokens: number,
     cacheWriteTokens = 0,
     durationMs = Date.now() - this.startedAt,
+    known = true,
   ) {
     const key = `usage:${this.turn}`;
     const old = this.entries.get(key);
@@ -96,10 +136,12 @@ export class ConversationRecorder {
       cachedInputTokens,
       cacheWriteTokens,
       durationMs: Math.max(0, Math.round(durationMs)),
+      known,
     });
     this.save(key, true);
   }
   codex(method: string, params: Record<string, unknown>) {
+    if (method === "turn/started") this.codexTurn = text(object(params.turn).id);
     if (method === "item/agentMessage/delta") {
       const key = params.itemId ? `codex:${text(params.itemId)}` : this.currentMessage;
       this.message(key, text(params.delta), false, true);
@@ -109,7 +151,11 @@ export class ConversationRecorder {
         id = text(item.id),
         kind = text(item.type);
       if (kind === "agentMessage")
-        this.message(`codex:${id || this.turn}`, text(item.text), method === "item/completed");
+        this.message(
+          id ? `codex:${id}` : this.currentMessage,
+          text(item.text),
+          method === "item/completed",
+        );
       const names: Record<string, string> = {
         commandExecution: "Shell",
         fileChange: "Edit",
@@ -131,12 +177,49 @@ export class ConversationRecorder {
         );
     }
     if (method === "thread/tokenUsage/updated") {
-      const usage = object(object(params.tokenUsage).last);
+      if (params.turnId && this.codexTurn && params.turnId !== this.codexTurn) return;
+      const total = object(object(params.tokenUsage).total);
+      const usage: TokenTotals = {
+        inputTokens: count(total.inputTokens),
+        outputTokens: count(total.outputTokens),
+        cachedInputTokens: count(total.cachedInputTokens),
+        cacheWriteInputTokens: count(total.cacheWriteInputTokens),
+      };
+      if (!this.turn && Object.keys(total).length) {
+        this.totals = usage;
+        this.persistTotals?.(usage);
+        return;
+      }
+      if (!Object.keys(total).length) {
+        this.usageKnown = false;
+        this.usage(0, 0, 0, 0, undefined, false);
+        return;
+      }
+      if (this.totals) {
+        if (
+          (Object.keys(usage) as (keyof TokenTotals)[]).some(
+            (key) => usage[key] < this.totals![key],
+          )
+        )
+          return;
+        if (
+          (Object.keys(usage) as (keyof TokenTotals)[]).every(
+            (key) => usage[key] === this.totals![key],
+          )
+        )
+          return;
+        for (const key of Object.keys(usage) as (keyof TokenTotals)[])
+          this.turnUsage[key] += usage[key] - this.totals[key];
+      } else this.usageKnown = false;
+      this.totals = usage;
+      this.persistTotals?.(usage);
       this.usage(
-        count(usage.inputTokens),
-        count(usage.outputTokens),
-        count(usage.cachedInputTokens),
-        count(usage.cacheWriteInputTokens),
+        this.turnUsage.inputTokens,
+        this.turnUsage.outputTokens,
+        this.turnUsage.cachedInputTokens,
+        this.turnUsage.cacheWriteInputTokens,
+        undefined,
+        this.usageKnown,
       );
     }
   }
@@ -147,11 +230,22 @@ export class ConversationRecorder {
       const event = object(message.event),
         block = object(event.content_block),
         delta = object(event.delta);
-      if (event.type === "message_start")
+      if (event.type === "message_start") {
         this.currentMessage = `claude:${text(object(event.message).id) || crypto.randomUUID()}`;
+        this.blockIndex = 0;
+      }
       if (event.type === "content_block_delta" && delta.type === "text_delta") {
         this.streamedMessages.add(this.currentMessage);
-        this.message(this.currentMessage, text(delta.text), false, true);
+        const index = count(event.index),
+          previous = this.entries.get(this.currentMessage);
+        this.message(
+          this.currentMessage,
+          (previous?.kind === "message" && previous.text && index !== this.blockIndex ? "\n" : "") +
+            text(delta.text),
+          false,
+          true,
+        );
+        this.blockIndex = index;
       }
       if (event.type === "message_stop") {
         const entry = this.entries.get(this.currentMessage);

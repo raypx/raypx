@@ -92,6 +92,15 @@ verification and password recovery remain public; confirmed logout redirects to
   Scope cookies/WebView storage, remote settings and local Agent account IDs to
   the normalized API origin, including port. Keep native device preferences and
   CLI file grants/jobs independent of the selected remote service.
+- Acquire the per-user-data-directory instance lock before opening sessions. Corrupt
+  encrypted sessions or missing keys are quarantined and start signed out; a temporarily
+  unavailable key service uses memory without replacing existing encrypted data. Show
+  the recovery notice. Cookie response batches validate before mutation and roll back
+  SDK failures; failed rollback disables that session's transport. Native owns the 30 s
+  request deadline and renderer request IDs/cancellation. Never retry uncertain writes.
+- Packaged HTML uses hashed startup scripts and a restrictive CSP. Validate HTTP(S)
+  external links in Native before opening the system browser. Keep IPC, theme and terminal
+  checks in the packaged smoke after CSP changes.
 - Only bundled views and loopback development content receive native RPC. Renderer cannot register arbitrary directory grants; use native picker.
 - Local file authorization does not sandbox external commands. Commands run with normal OS user permissions.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.
@@ -159,6 +168,9 @@ The WebView handles initial opt-in registration. Native renews existing grants t
 its cookie-backed API client after checking the current account, so hidden-window
 work does not depend on renderer timers or events. Fence late renewals after detach
 or account changes; renewal reconnects the relay without cancelling host tasks.
+4001 and AUTH_REQUIRED share jittered exponential renewal backoff; reset it only after
+successful synchronization. Proactive renewal drains all in-flight command callbacks
+before switching sockets. Unexpected disconnects recover through durable receipts.
 Engine changes wake replay delivery; sequence ACKs checkpoint the
 local outbox, and a retained journal or a consistent snapshot repairs reconnect gaps. Connection intent is persisted per account, without cookies or
 tokens. Logout, detach and Quit cancel the old binding while preserving local tools.

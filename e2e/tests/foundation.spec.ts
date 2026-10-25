@@ -1,5 +1,7 @@
 import { gunzipSync } from "node:zlib";
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { selectOption } from "./helpers/select.js";
+import { expectViewportShell } from "./helpers/layout.js";
 import type {
   AgentTask,
   HumanRequest,
@@ -193,7 +195,8 @@ for (const [surface, base] of [
     await page.routeWebSocket(/\/relay(?:\?|$)/, (socket) => {
       socket.onMessage((raw) => {
         const frame = JSON.parse(String(raw)) as RelayClientFrame;
-        if (frame.type === "auth") socket.send(JSON.stringify({ type: "ready", role: "viewer" }));
+        if (frame.type === "auth")
+          socket.send(JSON.stringify({ type: "ready", protocolVersion: 2, role: "viewer" }));
         if (frame.type !== "request") return;
         let value: unknown;
         if (frame.request.method === "tasks.input") {
@@ -223,11 +226,22 @@ for (const [surface, base] of [
     await page.goto(base + "/tasks");
     if (surface === "Desktop")
       await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+    const agentFilter = page.getByRole("combobox", { name: "Agent", exact: true });
+    await selectOption(page, agentFilter, "claude");
+    await expect(
+      page.getByRole("button", { name: /Improve task delivery reliability/ }),
+    ).toHaveCount(0);
+    await selectOption(page, agentFilter, "");
     await page.getByRole("button", { name: /Improve task delivery reliability/ }).click();
     await expect(
       page.getByRole("cell", { name: "await persist(input);", exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Delivery plan", exact: true })).toBeVisible();
+    const activityToggle = page.getByRole("button", { name: "Activity", exact: true });
+    await activityToggle.click();
+    await expect(activityToggle).toHaveAttribute("aria-expanded", "true");
+    await activityToggle.press("Space");
+    await expect(activityToggle).toHaveAttribute("aria-expanded", "false");
     const composer = page.getByRole("textbox", { name: "Add an instruction", exact: true });
     await composer.fill("Validate the queue after this turn.");
     await expect(page.getByRole("button", { name: "Send now", exact: true })).toBeDisabled();
@@ -238,16 +252,61 @@ for (const [surface, base] of [
     await page.getByRole("button", { name: "Send now", exact: true }).click();
     await expect(composer).toHaveValue("");
     expect(inputs).toEqual(["queue", "steer"]);
+    await expectViewportShell(page);
     await page.screenshot({
       path: test.info().outputPath(`${surface.toLowerCase()}-conversation.png`),
       fullPage: true,
     });
     // The native Desktop shell has an 800px minimum window width.
     await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
+    await expectViewportShell(page);
     await page.screenshot({
       path: test.info().outputPath(`${surface.toLowerCase()}-conversation-mobile.png`),
       fullPage: true,
     });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    );
+    await page.getByRole("main").evaluate((element) => element.scrollTo(0, element.scrollHeight));
+    await page.getByRole("link", { name: "Settings", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Make it yours", exact: true })).toBeVisible();
+    await expect
+      .poll(() => page.getByRole("main").evaluate((element) => element.scrollTop))
+      .toBe(0);
+    await page.goBack();
+    if (surface === "Desktop")
+      await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+    await expect(page.getByRole("button", { name: "New task", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "New task", exact: true }).click();
+    const createForm = page
+      .getByRole("textbox", { name: "What should the agent do?", exact: true })
+      .locator("xpath=ancestor::form[1]");
+    await selectOption(
+      page,
+      createForm.getByRole("combobox", { name: "Computer", exact: true }),
+      deviceId,
+    );
+    await selectOption(
+      page,
+      createForm.getByRole("combobox", { name: "Project", exact: true }),
+      projectId,
+    );
+    await selectOption(
+      page,
+      createForm.getByRole("combobox", { name: "Agent", exact: true }),
+      "codex",
+    );
+    await selectOption(
+      page,
+      createForm.getByRole("combobox", { name: "Execution", exact: true }),
+      "plan",
+    );
+    await expect(createForm.getByRole("combobox", { name: "Project", exact: true })).toContainText(
+      "Raypx",
+    );
+    await expect(
+      createForm.getByRole("combobox", { name: "Execution", exact: true }),
+    ).toContainText("Analyze, then ask before implementing");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     );
@@ -259,8 +318,14 @@ for (const [surface, base] of [
       await page.goto(base + "/tasks");
       await page.getByRole("button", { name: /Improve task delivery reliability/ }).click();
       await expect(page.getByRole("heading", { name: "会话", exact: true })).toBeVisible();
+      await expectViewportShell(page);
       await page.screenshot({
         path: test.info().outputPath("web-conversation-dark-zh.png"),
+        fullPage: true,
+      });
+      await page.getByRole("main").evaluate((element) => element.scrollTo(0, element.scrollHeight));
+      await page.screenshot({
+        path: test.info().outputPath("web-conversation-dark-zh-bottom.png"),
         fullPage: true,
       });
     }

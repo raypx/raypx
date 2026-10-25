@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import type { TaskClient } from "@raypx/client";
+import type { TaskClient, TaskChange } from "@raypx/client";
 
 beforeEach(() => {
   // jsdom has no layout; provide dimensions for the real virtualizer.
@@ -12,10 +12,201 @@ beforeEach(() => {
   });
   vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(480);
   vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(96);
+  vi.spyOn(document, "hidden", "get").mockReturnValue(false);
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
 });
 afterEach(() => vi.restoreAllMocks());
+it("merges live activity without refreshing workspace queries and recovers a missing delta base", async () => {
+  const task = {
+    id: crypto.randomUUID(),
+    deviceId: crypto.randomUUID(),
+    projectId: crypto.randomUUID(),
+    provider: "codex" as const,
+    mode: "run" as const,
+    prompt: "Stream task",
+    status: "running" as const,
+    summary: "",
+    parentTaskId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  const entry = {
+    id: crypto.randomUUID(),
+    taskId: task.id,
+    kind: "message" as const,
+    order: 1,
+    revision: 1,
+    text: "Hello",
+    status: "streaming" as const,
+    truncated: false,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+  };
+  let checkpoint = false;
+  const get = vi.fn(async (_input: { beforeActivity?: number }) => ({
+    task,
+    events: [],
+    requests: [],
+    activity: [{ ...entry, ...(checkpoint ? { text: "Checkpoint", revision: 4 } : {}) }],
+  }));
+  const list = vi.fn(async (input: { limit?: number }) => (input.limit === 1 ? [] : [task]));
+  const devices = vi.fn(async () => []),
+    approvals = vi.fn(async () => []);
+  const listeners = new Set<(change?: TaskChange) => void>();
+  const client = {
+    tasks: { list, get },
+    devices: { list: devices },
+    approvals: { list: approvals },
+    subscribe: (listener: (change?: TaskChange) => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  } as unknown as TaskClient;
+  render(
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <BrowserLanguageProvider>
+        <TaskWorkspace client={client} accountId="stream-account" />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: /Stream task/ }));
+  await screen.findByText("Hello");
+  await waitFor(() => expect(get.mock.calls.length).toBeGreaterThanOrEqual(2));
+  const counts = {
+    list: list.mock.calls.length,
+    get: get.mock.calls.length,
+    devices: devices.mock.calls.length,
+    approvals: approvals.mock.calls.length,
+  };
+  const delta = {
+    id: crypto.randomUUID(),
+    taskId: task.id,
+    kind: "activity_delta" as const,
+    entryId: entry.id,
+    baseRevision: 1,
+    revision: 2,
+    append: " world",
+    truncated: false,
+    updatedAt: task.updatedAt,
+  };
+  act(() => {
+    for (const listener of listeners)
+      listener({ type: "events", events: [{ sequence: 1, event: delta }] });
+  });
+  await screen.findByText("Hello world");
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  expect({
+    list: list.mock.calls.length,
+    get: get.mock.calls.length,
+    devices: devices.mock.calls.length,
+    approvals: approvals.mock.calls.length,
+  }).toEqual(counts);
+  checkpoint = true;
+  act(() => {
+    for (const listener of listeners)
+      listener({
+        type: "events",
+        events: [
+          {
+            sequence: 2,
+            event: { ...delta, id: crypto.randomUUID(), baseRevision: 3, revision: 4 },
+          },
+        ],
+      });
+  });
+  await screen.findByText("Checkpoint");
+  expect(get.mock.calls.length).toBe(counts.get + 1);
+  expect(devices.mock.calls.length).toBe(counts.devices);
+  const latest = {
+    ...entry,
+    id: crypto.randomUUID(),
+    order: 65,
+    text: "Newest after hidden period",
+  };
+  const missing = { ...entry, id: crypto.randomUUID(), order: 2, text: "Recovered middle history" };
+  get.mockImplementation(async (input) => ({
+    task,
+    events: [],
+    requests: [],
+    activity: input.beforeActivity ? [missing] : [latest],
+    ...(input.beforeActivity ? {} : { activityBefore: 65 }),
+  }));
+  fireEvent(document, new Event("visibilitychange"));
+  const gap = await screen.findByRole("button", {
+    name: "Some messages are missing here. Load the missing history.",
+  });
+  fireEvent.click(gap);
+  await screen.findByText("Recovered middle history");
+  await waitFor(() =>
+    expect(
+      screen.queryByRole("button", {
+        name: "Some messages are missing here. Load the missing history.",
+      }),
+    ).toBeNull(),
+  );
+  expect(get.mock.calls.some(([input]) => input.beforeActivity === 65)).toBe(true);
+});
+
+it.each(["pending", "cancelling", "running"] as const)(
+  "shares disabled submission rules with the keyboard while %s",
+  async (status) => {
+    const now = new Date().toISOString();
+    const task = {
+      id: crypto.randomUUID(),
+      deviceId: crypto.randomUUID(),
+      projectId: crypto.randomUUID(),
+      provider: "codex" as const,
+      mode: "run" as const,
+      prompt: "Input guard",
+      status,
+      summary: "",
+      parentTaskId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const input = vi.fn(() => new Promise<never>(() => {}));
+    const client = {
+      tasks: {
+        list: async () => [task],
+        get: async () => ({ task, events: [], requests: [], activity: [] }),
+        input,
+      },
+      devices: {
+        list: async () => [
+          {
+            id: task.deviceId,
+            name: "Test",
+            projects: [],
+            capabilities: [{ provider: "codex", available: true, inputModes: ["queue", "steer"] }],
+          },
+        ],
+      },
+      approvals: { list: async () => [] },
+    } as unknown as TaskClient;
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <BrowserLanguageProvider>
+          <TaskWorkspace client={client} accountId="input-guard" />
+        </BrowserLanguageProvider>
+      </QueryClientProvider>,
+    );
+    fireEvent.click(await screen.findByRole("button", { name: /Input guard/ }));
+    const prompt = await screen.findByRole("textbox", { name: "Add an instruction" });
+    fireEvent.change(prompt, { target: { value: "Next" } });
+    fireEvent.keyDown(prompt, { key: "Enter", ctrlKey: true });
+    fireEvent.keyDown(prompt, { key: "Enter", metaKey: true });
+    fireEvent.submit(prompt.closest("form")!);
+    expect(input).toHaveBeenCalledTimes(status === "running" ? 1 : 0);
+    expect(
+      screen.getByRole("button", { name: status === "running" ? "Sending…" : "Queue next turn" }),
+    ).toBeDisabled();
+  },
+);
 
 async function workspace() {
   const task = {

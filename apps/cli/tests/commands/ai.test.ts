@@ -59,6 +59,11 @@ it("lists providers and catalogs without credentials or a local database", async
   });
   await expect(readFile(join(directory, "config.toml"))).rejects.toMatchObject({ code: "ENOENT" });
 });
+it("keeps offline catalogs independent of invalid TOML and custom endpoints", async () => {
+  await writeFile(join(directory, "config.toml"), "[ai\ninvalid");
+  expect((await invoke("providers")).map((p: { id: string }) => p.id)).toContain("google");
+  expect((await invoke("models", { provider: "openai" })).length).toBeGreaterThan(0);
+});
 
 it("reads AI settings alongside server profiles and never modifies the user's TOML", async () => {
   const server = fixture();
@@ -181,7 +186,9 @@ it("requires a model selection and rejects plaintext keys or parser diagnostics"
     '[ai]\nmodel = "unterminated-private-key',
   ]) {
     await writeFile(join(directory, "config.toml"), source);
-    const failure = await invoke("models").catch((error: unknown) => error);
+    const failure = await invoke("complete", { prompt: "Test Pi" }).catch(
+      (error: unknown) => error,
+    );
     expect(failure).toMatchObject({ code: "AI_INVALID_CONFIG" });
     expect(String(failure)).not.toContain("private-key");
   }

@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17-alpine@sha256:${POSTGRES_IMAGE_DIGEST:?Set the verified PostgreSQL manifest digest}
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?Set the environment database name}
@@ -71,7 +71,7 @@ services:
       start_period: 20s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=${TRAEFIK_NETWORK:-dokploy-network}"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.rule=Host(`${APP_HOST:?}`) && (PathPrefix(`/api/`) || PathPrefix(`/rpc/`) || Path(`/relay`) || Path(`/health`) || Path(`/ready`))"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.priority=100"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-api.entrypoints=websecure"
@@ -101,7 +101,7 @@ services:
       start_period: 20s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=${TRAEFIK_NETWORK:-dokploy-network}"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-web.rule=Host(`${APP_HOST:?}`)"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-web.priority=1"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME:?}-web.entrypoints=websecure"
@@ -122,4 +122,4 @@ networks:
     internal: true
   proxy:
     external: true
-    name: ${TRAEFIK_NETWORK:-dokploy-network}
+    name: ${TRAEFIK_NETWORK:-${COMPOSE_PROJECT_NAME:?}-ingress}

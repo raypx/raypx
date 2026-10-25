@@ -119,3 +119,16 @@ against an isolated HTTP/SSE server, including keyless endpoints, explicit keys,
 HTTP errors and custom configuration. The copied standalone CLI smoke runs those
 model calls outside the repository with an empty PATH. These gates use no paid
 inference; a real-provider check must be reported separately.
+
+## Configuration precedence
+
+`ai providers` and `ai models` never load TOML or resolve credentials. Models use
+only the explicit JSON provider filter. Completion JSON overrides TOML within
+the same target. Changing provider discards inherited model, endpoint, API,
+credential/auth and model limits; changing endpoint discards inherited credentials,
+auth and model limits. Explicit JSON fields apply last; timeout and temperature
+remain request defaults. Custom endpoints without an explicit key remain keyless.
+
+The standalone smoke compiles the production JS behind an offline fetch harness
+and initializes all four provider SDKs. `dist/provider-smoke.json` records provider
+coverage and executable/JS sizes; it contains no prompts or credentials.

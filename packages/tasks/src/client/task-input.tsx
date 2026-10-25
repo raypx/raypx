@@ -39,8 +39,14 @@ export function TaskInputComposer({
       setFailure(undefined);
     }
   }, [entries, prompt]);
+  const canSend = (mode: TaskInput["mode"]) =>
+    !busy &&
+    Boolean(prompt.trim()) &&
+    modes.includes(mode) &&
+    (task.status === "running" || task.status === "waiting") &&
+    !(mode === "steer" && waiting);
   async function send(mode: TaskInput["mode"]) {
-    if (active.current || !prompt.trim()) return;
+    if (active.current || !canSend(mode)) return;
     active.current = true;
     setBusy(true);
     setFailure(undefined);
@@ -66,8 +72,6 @@ export function TaskInputComposer({
     }
   }
   if (!modes.length) return <p className="text-xs text-muted-foreground">{t("inputUpgrade")}</p>;
-  const disabled =
-    busy || !prompt.trim() || task.status === "cancelling" || task.status === "pending";
   return (
     <form
       className="space-y-3 border-t border-border pt-5"
@@ -103,7 +107,7 @@ export function TaskInputComposer({
       {waiting && <p className="text-xs text-muted-foreground">{t("inputWaitingHint")}</p>}
       <div className="flex flex-wrap gap-2">
         {modes.includes("queue") && (
-          <Button type="submit" disabled={disabled}>
+          <Button type="submit" disabled={!canSend("queue")}>
             {t(busy ? "sending" : "queue")}
           </Button>
         )}
@@ -111,7 +115,7 @@ export function TaskInputComposer({
           <Button
             type="button"
             variant="outline"
-            disabled={disabled || waiting}
+            disabled={!canSend("steer")}
             onClick={() => void send("steer")}
           >
             {t("steer")}

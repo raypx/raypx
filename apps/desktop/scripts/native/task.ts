@@ -33,7 +33,10 @@ if (!inTurbo) {
     [bun, "run", "typecheck:native", ...args],
   ];
 } else if (task === "build") {
-  commands = [[bun, "run", "raypx-dev", "env", "--", bun, "--bun", "vp", "build", ...args]];
+  commands = [
+    [bun, "run", "raypx-dev", "env", "--", bun, "--bun", "vp", "build", ...args],
+    [bun, "run", "native:csp"],
+  ];
 } else {
   commands = [
     [bun, "run", "native:cli"],

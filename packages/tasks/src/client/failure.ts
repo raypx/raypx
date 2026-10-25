@@ -1,4 +1,5 @@
 const failureCodes = [
+  "UPGRADE_REQUIRED",
   "LOCAL_UNAVAILABLE",
   "DEVICE_OFFLINE",
   "PROJECT_BUSY",

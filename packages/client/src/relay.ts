@@ -67,10 +67,21 @@ export class RelayConnection {
             new TextEncoder().encode(event.data).byteLength > MAX_RELAY_BYTES
           )
             throw new Error("Invalid relay frame");
-          const frame = relayServerSchema.parse(JSON.parse(event.data));
+          const raw: unknown = JSON.parse(event.data);
+          if (
+            raw &&
+            typeof raw === "object" &&
+            "type" in raw &&
+            raw.type === "ready" &&
+            (!("protocolVersion" in raw) || raw.protocolVersion !== 2)
+          ) {
+            socket.close(4006, "UPGRADE_REQUIRED");
+            return;
+          }
+          const frame = relayServerSchema.parse(raw);
+          if (frame.type === "pong" || frame.type === "changed") this.failures = 0;
           this.lastMessage = Date.now();
           if (frame.type === "ready") {
-            this.failures = 0;
             this.options.status(true);
             this.heartbeat = setInterval(() => {
               if (Date.now() - this.lastMessage > 45_000) socket.close(4000, "Heartbeat timeout");
@@ -90,21 +101,28 @@ export class RelayConnection {
         this.socket = undefined;
         this.options.status(
           false,
-          event.code === 4003
-            ? "DEVICE_REVOKED"
-            : event.code === 4001
-              ? "AUTH_REQUIRED"
-              : "NETWORK_UNAVAILABLE",
+          event.code === 4006
+            ? "UPGRADE_REQUIRED"
+            : event.code === 4003
+              ? "DEVICE_REVOKED"
+              : event.code === 4001
+                ? "AUTH_REQUIRED"
+                : "NETWORK_UNAVAILABLE",
         );
+        if (event.code === 4006) this.enabled = false;
         if (this.enabled && generation === this.generation)
           this.retry = setTimeout(
             () => this.connect(),
-            Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)),
+            Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) * (0.8 + Math.random() * 0.2),
           );
       });
     } catch {
       this.options.status(false, "NETWORK_UNAVAILABLE");
-      if (this.enabled) this.retry = setTimeout(() => this.connect(), 2000);
+      if (this.enabled && generation === this.generation)
+        this.retry = setTimeout(
+          () => this.connect(),
+          Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) * (0.8 + Math.random() * 0.2),
+        );
     }
   }
   send(frame: RelayClientFrame) {
@@ -117,6 +135,7 @@ export class RelayConnection {
       throw new Error("NETWORK_UNAVAILABLE");
     }
     this.socket.send(value);
+    if (frame.type === "available") this.failures = 0;
   }
   stop() {
     this.enabled = false;

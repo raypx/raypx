@@ -32,7 +32,7 @@ DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd packages/d
 ```
 
 Remote control records share the foundation schema and cascade with the account.
-`control_owner` provides a transactional cross-instance account lock; payloads are
+`control_owner` provides a transactional cross-instance account write lock; read-only projections do not acquire it; payloads are
 explicit domain projections. Changes require generated foundation migrations.
 
 `system_configuration` stores the singleton non-secret site settings with revision

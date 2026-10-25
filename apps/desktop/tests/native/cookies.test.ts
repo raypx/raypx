@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createEncryptedCookies } from "../../native/cookies";
@@ -37,6 +37,26 @@ it("encrypts native sessions, restores them, isolates origins, clears logout and
     expect(encrypted.includes(Buffer.from("synthetic-private-token"))).toBe(false);
     const restored = await createEncryptedCookies(directory, origin, keys);
     expect(restored.get({ url: origin })[0]?.value).toBe("synthetic-private-token");
+    const unavailableReports: unknown[] = [];
+    const temporaryDuringOutage = await createEncryptedCookies(
+      directory,
+      origin,
+      {
+        get: async () => {
+          throw new Error("Key service temporarily unavailable");
+        },
+        set: async () => {
+          throw new Error("Key service temporarily unavailable");
+        },
+      },
+      (value) => unavailableReports.push(value),
+    );
+    expect(temporaryDuringOutage.get({ url: origin })).toEqual([]);
+    expect(unavailableReports).toMatchObject([{ kind: "temporary" }]);
+    expect(readFileSync(join(directory, "session.enc"))).toEqual(encrypted);
+    expect(
+      (await createEncryptedCookies(directory, origin, keys)).get({ url: origin })[0]?.value,
+    ).toBe("synthetic-private-token");
     expect(
       restored.set({
         name: "better-auth.ephemeral",
@@ -56,22 +76,58 @@ it("encrypts native sessions, restores them, isolates origins, clears logout and
         .some((cookie) => cookie.name === "better-auth.ephemeral"),
     ).toBe(false);
     expect(restored.get({ url: "https://other.example.test" })).toEqual([]);
-    await expect(
-      createEncryptedCookies(directory, "https://other.example.test", keys),
-    ).rejects.toThrow("Native session authentication failed");
+    expect(
+      (
+        await createEncryptedCookies(join(directory, "other"), "https://other.example.test", keys)
+      ).get({ url: origin }),
+    ).toEqual([]);
     expect(restored.remove(origin, "__Secure-better-auth.session_token")).toBe(true);
     expect((await createEncryptedCookies(directory, origin, keys)).get({ url: origin })).toEqual(
       [],
     );
     encrypted[encrypted.length - 1]! ^= 1;
     writeFileSync(join(directory, "session.enc"), encrypted);
-    await expect(createEncryptedCookies(directory, origin, keys)).rejects.toThrow(
-      "Native session authentication failed",
+    const recovery: unknown[] = [];
+    expect(
+      (await createEncryptedCookies(directory, origin, keys, (value) => recovery.push(value))).get({
+        url: origin,
+      }),
+    ).toEqual([]);
+    expect(recovery).toMatchObject([{ kind: "reset" }]);
+    expect(readdirSync(directory).some((file) => file.startsWith("session.enc.corrupt-"))).toBe(
+      true,
     );
+    writeFileSync(join(directory, "session.enc"), encrypted);
     secrets.clear();
-    await expect(createEncryptedCookies(directory, origin, keys)).rejects.toThrow(
-      "key unavailable",
+    expect((await createEncryptedCookies(directory, origin, keys)).get({ url: origin })).toEqual(
+      [],
     );
+    for (const bytes of [Buffer.from([1, 2]), Buffer.from([99, ...Array(40).fill(0)])]) {
+      writeFileSync(join(directory, "session.enc"), bytes);
+      expect((await createEncryptedCookies(directory, origin, keys)).get({ url: origin })).toEqual(
+        [],
+      );
+    }
+    const temporary = await createEncryptedCookies(directory, origin, {
+      get: async () => {
+        throw new Error("Unavailable");
+      },
+      set: async () => {
+        throw new Error("Unavailable");
+      },
+    });
+    expect(
+      temporary.set({
+        name: "better-auth.session_token",
+        value: "memory-only",
+        domain: "api.example.test",
+        path: "/",
+        httpOnly: true,
+        secure: true,
+      }),
+    ).toBe(true);
+    expect(temporary.get({ url: origin })).toHaveLength(1);
+    expect(existsSync(join(directory, "session.enc"))).toBe(false);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

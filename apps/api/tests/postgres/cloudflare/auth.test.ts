@@ -173,6 +173,7 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
     });
     const native = await relaySocket(base, (await client.account.get({})).id, {
       type: "auth",
+      protocolVersion: 2,
       role: "device",
       token: grant.token,
     });

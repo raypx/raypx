@@ -8,11 +8,13 @@ export function useFileActions({
   path,
   refresh,
   confirmDiscard,
+  confirmDelete,
 }: {
   rootId: string;
   path: string;
   refresh: () => Promise<unknown>;
-  confirmDiscard: () => boolean;
+  confirmDiscard: () => Promise<boolean>;
+  confirmDelete: (entry: FileEntry) => Promise<boolean>;
 }) {
   const store = useFilesStoreApi();
   const generation = useRef(0);
@@ -53,16 +55,19 @@ export function useFileActions({
         const root = await pickDirectory();
         if (root && current()) await select(root.id);
       }),
-    open: (entry: FileEntry) => {
-      if (!confirmDiscard()) return Promise.resolve();
+    open: async (entry: FileEntry) => {
+      const version = generation.current;
+      if (!(await confirmDiscard()) || version !== generation.current) return;
       return run(async (current) => {
         const content = await localRequest<FileContent>("files.read", { rootId, path: entry.path });
         if (current())
           store.setState({ editor: { rootId, path: entry.path, content, text: content.text } });
       }, fileErrors.readOnly);
     },
-    close: () => {
-      if (confirmDiscard()) store.setState({ editor: null });
+    close: async () => {
+      const version = generation.current;
+      if ((await confirmDiscard()) && version === generation.current)
+        store.setState({ editor: null });
     },
     save: () =>
       run(async (current) => {
@@ -78,8 +83,10 @@ export function useFileActions({
         store.setState({ editor: { ...editor, content, text: content.text }, notice: "saved" });
         await refresh();
       }),
-    remove: (entry: FileEntry) =>
-      run(async (current) => {
+    remove: async (entry: FileEntry) => {
+      const version = generation.current;
+      if (!(await confirmDelete(entry)) || version !== generation.current) return;
+      return run(async (current) => {
         await localRequest("files.delete", {
           rootId,
           path: entry.path,
@@ -89,7 +96,8 @@ export function useFileActions({
         if (!current()) return;
         if (store.getState().editor?.path === entry.path) store.setState({ editor: null });
         await refresh();
-      }),
+      });
+    },
     perform: (value: string) =>
       run(async (current) => {
         const operation = store.getState().operation;

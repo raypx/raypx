@@ -8,7 +8,8 @@ import {
   RouterProvider,
   type RootRouteOptions,
 } from "@tanstack/react-router";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import * as matchers from "@testing-library/jest-dom/matchers";
 // Load matcher types without registering against jest-dom's separate Vitest runtime.
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
@@ -260,7 +261,9 @@ describe("Desktop local file routes", () => {
       otherDestination: "/" as const,
       assertAuthorizedPage: async () => {
         fireEvent.click(await screen.findByRole("button", { name: "New automation" }));
-        await waitFor(() => expect(screen.getByLabelText("Folder")).toHaveValue("work"));
+        await waitFor(() =>
+          expect(screen.getByRole("combobox", { name: "Folder" })).toHaveTextContent("Work"),
+        );
       },
     },
   ])(
@@ -317,7 +320,7 @@ describe("Desktop local file routes", () => {
     expect(screen.queryByText("private jobs diagnostic")).toBeNull();
     expect(screen.getByRole("heading", { name: "Keep things moving" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "New automation" }));
-    expect(screen.getByLabelText("Folder")).toHaveValue("work");
+    expect(screen.getByRole("combobox", { name: "Folder" })).toHaveTextContent("Work");
     failed = false;
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     expect(await screen.findByRole("heading", { name: "Recovered automation" })).toBeTruthy();
@@ -403,7 +406,7 @@ describe("Desktop local file routes", () => {
     );
     expect(screen.getByRole("heading", { name: "Nightly scan" })).toBeTruthy();
     expect(screen.getByLabelText("Name")).toHaveValue("Unsaved draft");
-    expect(screen.getByLabelText("Folder")).toHaveValue("work");
+    expect(screen.getByRole("combobox", { name: "Folder" })).toHaveTextContent("Work");
     expect(screen.getByText("No runs yet.")).toBeTruthy();
     expect(screen.queryByText("private refresh diagnostic")).toBeNull();
 
@@ -414,6 +417,35 @@ describe("Desktop local file routes", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByLabelText("Name")).toHaveValue("Unsaved draft");
     expect(screen.getByText("No runs yet.")).toBeTruthy();
+  });
+
+  it("opens run output with a keyboard-accessible history disclosure", async () => {
+    const user = userEvent.setup();
+    mocks.localRequest.mockImplementation(async (method) => {
+      if (method === "jobs.list") return [job()];
+      if (method === "roots.list") return grants;
+      if (method === "jobs.history")
+        return [
+          {
+            id: "run-1",
+            jobId: "job-1",
+            startedAt: "2026-10-24T09:00:00.000Z",
+            finishedAt: "2026-10-24T09:00:01.000Z",
+            status: "success",
+            output: "Synthetic scan output",
+            exitCode: 0,
+          },
+        ];
+      throw new Error(`Unexpected local request: ${method}`);
+    });
+    await page("/automations");
+    fireEvent.click(screen.getByRole("button", { name: "Run history" }));
+    const toggle = await screen.findByRole("button", { name: /Exit code: 0/ });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(toggle);
+    expect(await screen.findByText("Synthetic scan output")).toBeVisible();
+    await user.keyboard("[Space]");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
   it("keeps a late jobs refresh from replacing the route after navigating away", async () => {
@@ -460,7 +492,6 @@ describe("Desktop local file routes", () => {
       }
       throw new Error(`Unexpected local request: ${method}`);
     });
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     await page("/automations");
     fireEvent.click(screen.getByRole("button", { name: "New automation" }));
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Nightly scan" } });
@@ -493,6 +524,9 @@ describe("Desktop local file routes", () => {
       expect(screen.getByRole("button", { name: "Delete: Nightly scan" })).toBeEnabled(),
     );
     fireEvent.click(screen.getByRole("button", { name: "Delete: Nightly scan" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Delete: Nightly scan" });
+    expect(mocks.localRequest.mock.calls.some(([method]) => method === "jobs.delete")).toBe(false);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
     expect(await screen.findByRole("heading", { name: "Nothing scheduled yet" })).toBeTruthy();
     expect(mocks.localRequest).toHaveBeenCalledWith("jobs.delete", { id: "job-1" });
     expect(mocks.localRequest.mock.calls.filter(([method]) => method === "jobs.list")).toHaveLength(

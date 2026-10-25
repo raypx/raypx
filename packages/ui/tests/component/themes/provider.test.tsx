@@ -323,6 +323,10 @@ describe("theme provider", () => {
     await user.click(screen.getByRole("radio", { name: "Dark" }));
     expect(screen.getByTestId("theme")).toHaveTextContent("dark");
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(screen.getByRole("radio", { name: "Dark" })).toHaveFocus();
+    await user.keyboard("[ArrowRight]");
+    expect(screen.getByRole("radio", { name: "System" })).toBeChecked();
+    expect(screen.getByTestId("theme")).toHaveTextContent("system");
   });
 
   it("stores and reads preferences outside the provider", () => {

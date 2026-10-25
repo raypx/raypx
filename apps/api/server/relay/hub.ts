@@ -60,14 +60,29 @@ export class RelayHub {
         if (this.peers.get(id) !== client) return;
         if (new TextEncoder().encode(data).byteLength > MAX_RELAY_BYTES)
           throw new ControlError("TOO_LARGE");
-        const frame = relayClientSchema.parse(JSON.parse(data));
+        const raw: unknown = JSON.parse(data);
+        if (
+          raw &&
+          typeof raw === "object" &&
+          "type" in raw &&
+          raw.type === "auth" &&
+          (!("protocolVersion" in raw) || raw.protocolVersion !== 2)
+        )
+          throw new ControlError("UPGRADE_REQUIRED");
+        const frame = relayClientSchema.parse(raw);
         await this.frame(client, frame);
       })
       .catch((error) => {
         const code = error instanceof ControlError ? error.code : "INVALID_FRAME";
         this.send(client, { type: "error", code });
         client.peer.close(
-          code === "DEVICE_REVOKED" ? 4003 : code === "AUTH_REQUIRED" ? 4001 : 4000,
+          code === "UPGRADE_REQUIRED"
+            ? 4006
+            : code === "DEVICE_REVOKED"
+              ? 4003
+              : code === "AUTH_REQUIRED"
+                ? 4001
+                : 4000,
           code,
         );
       });
@@ -109,7 +124,7 @@ export class RelayHub {
             other.actor.deviceId === actor.deviceId
           )
             other.peer.close(4002, "Device reconnected");
-      this.send(client, { type: "ready", role: actor.role });
+      this.send(client, { type: "ready", protocolVersion: 2, role: actor.role });
       if (actor.role === "viewer")
         for (const event of await this.use((control) =>
           control.replay(actor.userId, frame.cursors ?? []),
@@ -231,6 +246,7 @@ export class RelayHub {
       return;
     }
     if (frame.type === "available") {
+      if (client.ready) return;
       client.ready = true;
       await this.use((control) => control.touch(actor));
       if (client.cursor)

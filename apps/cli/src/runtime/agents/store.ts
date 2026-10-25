@@ -19,6 +19,12 @@ export interface LocalAgentTask {
   task: AgentTask;
   binding: string;
   sessionId: string | null;
+  tokenUsage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cachedInputTokens: number;
+    cacheWriteInputTokens: number;
+  };
 }
 export const desktopBinding = (accountId: string) => `desktop:${accountId}`;
 export const isDesktopBinding = (binding: string) => binding.startsWith("desktop:");
@@ -29,6 +35,7 @@ export class AgentStore {
   constructor(
     directory: string,
     private readonly retained = 4096,
+    private readonly retainedBytes = 8 * 1024 * 1024,
   ) {
     this.database = new Database(join(directory, "agents.sqlite"), { create: true, strict: true });
     this.database.exec(
@@ -51,6 +58,21 @@ export class AgentStore {
         value: string;
       }
     ).value;
+    let removed: number;
+    do {
+      removed = this.database
+        .query(
+          "DELETE FROM journal WHERE sequence IN (SELECT sequence FROM journal WHERE binding LIKE 'desktop:%' AND json_extract(value,'$.kind') IN ('activity','activity_delta') LIMIT 1000)",
+        )
+        .run().changes;
+    } while (removed === 1000);
+    this.database.exec(
+      "DELETE FROM outbox WHERE id NOT IN (SELECT id FROM journal); UPDATE outbox SET value='' WHERE value!='';",
+    );
+    for (const row of this.database
+      .query("SELECT DISTINCT binding FROM journal WHERE binding NOT LIKE 'desktop:%'")
+      .all() as { binding: string }[])
+      this.compact(row.binding);
   }
   projects(): { id: string; providers: AgentProvider[] }[] {
     return (
@@ -59,6 +81,22 @@ export class AgentStore {
         providers: string;
       }[]
     ).map((row) => ({ id: row.id, providers: JSON.parse(row.providers) }));
+  }
+  tokenUsage(sessionId: string): LocalAgentTask["tokenUsage"] {
+    const row = this.database
+      .query("SELECT value FROM agent_meta WHERE id=?")
+      .get(`usage:codex:${sessionId}`) as { value: string } | null;
+    return row ? JSON.parse(row.value) : undefined;
+  }
+  recordTokenUsage(local: LocalAgentTask, totals: NonNullable<LocalAgentTask["tokenUsage"]>) {
+    this.database.transaction(() => {
+      local.tokenUsage = totals;
+      this.put(local);
+      if (local.sessionId)
+        this.database
+          .query("INSERT OR REPLACE INTO agent_meta VALUES (?,?)")
+          .run(`usage:codex:${local.sessionId}`, JSON.stringify(totals));
+    })();
   }
   deviceId(binding: string) {
     const key = `device:${binding}`;
@@ -72,7 +110,7 @@ export class AgentStore {
   taskEvents(binding: string, id: string, after: number) {
     const rows = this.database
       .query(
-        "SELECT sequence,value FROM journal WHERE binding=? AND sequence>? AND json_extract(value,'$.taskId')=? AND json_extract(value,'$.kind')!='activity' ORDER BY sequence LIMIT 100",
+        "SELECT sequence,value FROM journal WHERE binding=? AND sequence>? AND json_extract(value,'$.taskId')=? AND json_extract(value,'$.kind') NOT IN ('activity','activity_delta') ORDER BY sequence LIMIT 100",
       )
       .all(binding, after, id) as { sequence: number; value: string }[];
     return rows.map((row) => ({
@@ -143,7 +181,42 @@ export class AgentStore {
     ).map((row) => JSON.parse(row.value));
   }
   activityPage(binding: string, taskId: string, before?: number) {
-    return taskActivityPage(this.activity(binding, taskId), before);
+    const rows = (
+      before === undefined
+        ? this.database
+            .query(
+              "SELECT value FROM activity WHERE binding=? AND task_id=? ORDER BY rowid DESC LIMIT 65",
+            )
+            .all(binding, taskId)
+        : this.database
+            .query(
+              "SELECT value FROM activity WHERE binding=? AND task_id=? AND rowid<? ORDER BY rowid DESC LIMIT 65",
+            )
+            .all(binding, taskId, before)
+    ) as { value: string }[];
+    return taskActivityPage(
+      rows.map((row) => JSON.parse(row.value) as TaskActivity),
+      before,
+    );
+  }
+  activityCount(binding: string, taskId: string) {
+    return (
+      this.database
+        .query("SELECT count(*) AS count FROM activity WHERE binding=? AND task_id=?")
+        .get(binding, taskId) as { count: number }
+    ).count;
+  }
+  snapshotActivity(binding: string, taskId: string) {
+    const active = this.database
+      .query(
+        "SELECT value FROM activity WHERE binding=? AND task_id=? AND json_extract(value,'$.status') IN ('streaming','running','queued','sending') ORDER BY rowid DESC LIMIT 64",
+      )
+      .all(binding, taskId) as { value: string }[];
+    const entries = [
+      ...active.map((row) => JSON.parse(row.value) as TaskActivity),
+      ...this.activityPage(binding, taskId).activity.reverse(),
+    ];
+    return [...new Map(entries.map((entry) => [entry.id, entry])).values()];
   }
   recordActivity(binding: string, draft: ActivityDraft): TaskActivity {
     return this.database.transaction(() => {
@@ -173,12 +246,32 @@ export class AgentStore {
       this.database
         .query("UPDATE activity SET value=? WHERE id=?")
         .run(JSON.stringify(entry), entry.id);
-      this.event(binding, {
-        id: crypto.randomUUID(),
-        taskId: entry.taskId,
-        kind: "activity",
-        entry,
-      });
+      if (!isDesktopBinding(binding))
+        this.event(
+          binding,
+          previous?.kind === "message" &&
+            entry.kind === "message" &&
+            previous.status === "streaming" &&
+            entry.status === "streaming" &&
+            entry.text.startsWith(previous.text)
+            ? {
+                id: crypto.randomUUID(),
+                taskId: entry.taskId,
+                kind: "activity_delta",
+                entryId: entry.id,
+                baseRevision: previous.revision,
+                revision: entry.revision,
+                append: entry.text.slice(previous.text.length),
+                updatedAt: entry.updatedAt,
+                truncated: entry.truncated,
+              }
+            : {
+                id: crypto.randomUUID(),
+                taskId: entry.taskId,
+                kind: "activity",
+                entry,
+              },
+        );
       return entry;
     })();
   }
@@ -195,17 +288,26 @@ export class AgentStore {
       if (!local)
         this.database
           .query("INSERT INTO outbox (id,binding,value) VALUES (?,?,?)")
-          .run(event.id, binding, value);
+          .run(event.id, binding, "");
       this.database
         .query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)")
         .run(event.id, binding, value);
       // Local history has no cloud copy; only relay replay is a rolling cache.
-      if (!local)
-        this.database
-          .query(
-            "DELETE FROM journal WHERE binding=? AND sequence < (SELECT sequence FROM journal WHERE binding=? ORDER BY sequence DESC LIMIT 1 OFFSET ?)",
-          )
-          .run(binding, binding, this.retained - 1);
+      if (!local) this.compact(binding);
+    })();
+  }
+  private compact(binding: string) {
+    this.database.transaction(() => {
+      this.database
+        .query(
+          "DELETE FROM journal WHERE binding=? AND sequence IN (SELECT sequence FROM (SELECT sequence, row_number() OVER (ORDER BY sequence DESC) AS position, sum(length(CAST(value AS BLOB))) OVER (ORDER BY sequence DESC) AS bytes FROM journal WHERE binding=?) WHERE position>? OR bytes>?)",
+        )
+        .run(binding, binding, this.retained, this.retainedBytes);
+      this.database
+        .query(
+          "DELETE FROM outbox WHERE binding=? AND id NOT IN (SELECT id FROM journal WHERE binding=?)",
+        )
+        .run(binding, binding);
     })();
   }
   sequence(binding: string) {
@@ -298,7 +400,9 @@ export class AgentStore {
   events(binding: string): AgentEvent[] {
     const values = (
       this.database
-        .query("SELECT value FROM outbox WHERE binding=? ORDER BY sequence LIMIT 50")
+        .query(
+          "SELECT journal.value FROM outbox JOIN journal ON journal.id=outbox.id AND journal.binding=outbox.binding WHERE outbox.binding=? ORDER BY journal.sequence LIMIT 50",
+        )
         .all(binding) as { value: string }[]
     ).map((row) => JSON.parse(row.value) as AgentEvent);
     const batch: AgentEvent[] = [];

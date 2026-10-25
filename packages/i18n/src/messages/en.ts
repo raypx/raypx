@@ -70,6 +70,12 @@ export default {
     diffHint:
       "Review the proposed changes before allowing this operation. Replacement snippets use snippet line numbers. Up to 20 files are shown; the original request contains the full proposal.",
     diffTruncated: "Preview shortened. Review the original request for the full change.",
+    writeOriginalUnknown: "Write or overwrite. The original contents are unavailable.",
+    historyGap: "Some messages are missing here. Load the missing history.",
+    snapshotIncomplete:
+      "This snapshot did not include the full conversation. Check the computer running this task if earlier content is missing.",
+    usageUnknown: "Token usage is incomplete for this conversation.",
+    UPGRADE_REQUIRED: "Update Web, API and Desktop to the same relay version.",
     addInstruction: "Add an instruction",
     steer: "Send now",
     queue: "Queue next turn",
@@ -224,6 +230,7 @@ export default {
     terminal: "Terminal",
     back: "Back",
     cancel: "Cancel",
+    discard: "Discard changes",
     save: "Save changes",
     delete: "Delete",
     refresh: "Refresh",
@@ -244,6 +251,7 @@ export default {
     desktopOnly: "Open the desktop app to use local tools.",
     working: "Working…",
     confirmDelete: "Delete this item? This cannot be undone.",
+    deleteNamed: "Delete: {name}",
     previous: "Previous",
     next: "Next",
     edit: "Edit",
@@ -272,6 +280,8 @@ export default {
     revokeOtherSessionsHint:
       "All other browsers and devices will lose account access. This session stays signed in.",
     sessionReauth: "Sign out and sign in again before managing sessions.",
+    sessionUnauthorized: "Your session has expired. Sign in again to manage sessions.",
+    sessionForbidden: "Session management is not permitted. Refresh the page and try again.",
     registrationDisabled: "Registration is closed. Existing accounts can still sign in.",
     mailUnavailable: "Email delivery is unavailable right now. Please try again later.",
     title: "Your account, across devices.",

@@ -1,9 +1,16 @@
 import { createFileRoute, getRouteApi, useRouter } from "@tanstack/react-router";
 import { formText } from "../../form-data";
 import { useState, type FormEvent } from "react";
-import { Clock, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, Clock, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@raypx/ui/components/ui/collapsible";
 import { Input } from "@raypx/ui/components/ui/input";
+import { SelectField } from "@raypx/ui/select-field";
+import { useConfirmation } from "@raypx/ui/confirmation";
 import { useLocale, useTranslations } from "@raypx/i18n/browser";
 import type { JobDefinition, JobInput, JobRun, RootGrant } from "@raypx/contracts/local";
 import { localRequest } from "../../lib/desktop";
@@ -41,6 +48,7 @@ function JobsPage() {
   const t = useTranslations("jobs");
   const c = useTranslations("common");
   const locale = useLocale();
+  const { confirm, dialog } = useConfirmation();
   const [jobs, setJobs] = useState(data.jobs);
   const [roots, setRoots] = useState<RootGrant[]>(local.roots ?? []);
   // Keep the last successful lists during a failed background reload.
@@ -50,6 +58,8 @@ function JobsPage() {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<JobDefinition | null | false>(false);
   const [action, setAction] = useState("directory.scan");
+  const [selectedRoot, setRootId] = useState<string | null>(null);
+  const rootId = selectedRoot ?? roots[0]?.id ?? null;
   const [history, setHistory] = useState<{ job: JobDefinition; runs: JobRun[] } | null>(null);
   function refresh() {
     return router.invalidate({
@@ -60,6 +70,7 @@ function JobsPage() {
   function edit(job: JobDefinition | null) {
     setEditing(job);
     setAction(job?.action.type ?? "directory.scan");
+    setRootId(job?.action.type === "directory.scan" ? job.action.rootId : (roots[0]?.id ?? null));
     setError("");
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -120,7 +131,15 @@ function JobsPage() {
     }
   }
   async function remove(job: JobDefinition) {
-    if (!window.confirm(c("confirmDelete"))) return;
+    if (
+      !(await confirm({
+        title: c("deleteNamed", { name: job.name }),
+        description: c("confirmDelete"),
+        confirmLabel: c("delete"),
+        cancelLabel: c("cancel"),
+      }))
+    )
+      return;
     setBusy(true);
     setError("");
     try {
@@ -190,12 +209,12 @@ function JobsPage() {
         </p>
       )}
       {editing !== false && (
-        <section className="job-form-panel">
-          <h2>{t("create")}</h2>
+        <section className="mb-8 rounded-lg border border-border bg-sidebar p-6">
+          <h2 className="mb-5.5">{t("create")}</h2>
           <form
             key={editing?.id ?? "new"}
             onSubmit={save}
-            className="job-form flex flex-col gap-[19px] [&_label]:flex [&_label]:flex-col [&_label]:gap-[7px] [&_label]:text-[13px] [&_label]:font-medium [&_input]:min-h-[39px] [&>button]:mt-1"
+            className="flex max-w-180 flex-col gap-[19px] [&_label]:flex [&_label]:flex-col [&_label]:gap-[7px] [&_label]:text-[13px] [&_label]:font-medium [&_input]:min-h-[39px] [&>button]:mt-1"
           >
             <label htmlFor="job-name">
               {c("name")}
@@ -207,7 +226,7 @@ function JobsPage() {
                 required
               />
             </label>
-            <div className="form-row">
+            <div className="flex gap-5 [&>label]:min-w-0 [&>label]:flex-1">
               <label htmlFor="job-cron">
                 {t("schedule")}
                 <Input
@@ -216,7 +235,9 @@ function JobsPage() {
                   defaultValue={editing?.cron ?? "0 9 * * 1-5"}
                   required
                 />
-                <span className="field-hint">{t("timezoneHint")}</span>
+                <span className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
+                  {t("timezoneHint")}
+                </span>
               </label>
               <label htmlFor="job-timezone">
                 {t("timezone")}
@@ -232,36 +253,29 @@ function JobsPage() {
             </div>
             <label htmlFor="job-action">
               {t("action")}
-              <select
+              <SelectField
                 id="job-action"
                 value={action}
-                onChange={(event) => setAction(event.target.value)}
-              >
-                <option value="directory.scan">{t("scan")}</option>
-                <option value="command.run">{t("command")}</option>
-              </select>
+                onValueChange={setAction}
+                options={[
+                  { value: "directory.scan", label: t("scan") },
+                  { value: "command.run", label: t("command") },
+                ]}
+              />
             </label>
             {action === "directory.scan" ? (
-              <div className="form-row">
+              <div className="flex gap-5 [&>label]:min-w-0 [&>label]:flex-1">
                 <label htmlFor="job-root">
                   {t("folder")}
-                  <select
+                  <SelectField
                     id="job-root"
                     name="rootId"
-                    defaultValue={
-                      editing && editing.action.type === "directory.scan"
-                        ? editing.action.rootId
-                        : roots[0]?.id
-                    }
+                    value={rootId}
+                    onValueChange={setRootId}
                     required
-                  >
-                    {!roots.length && <option value="">{t("chooseFolderFirst")}</option>}
-                    {roots.map((root) => (
-                      <option value={root.id} key={root.id}>
-                        {root.name}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder={t("chooseFolderFirst")}
+                    options={roots.map((root) => ({ value: root.id, label: root.name }))}
+                  />
                 </label>
                 <label htmlFor="job-path">
                   {t("relativePath")}
@@ -297,7 +311,9 @@ function JobsPage() {
                   {t("cwd")}
                   <Input id="job-cwd" name="cwd" defaultValue={command?.cwd ?? ""} required />
                 </label>
-                <p className="field-hint">{t("commandHint")}</p>
+                <p className="text-[12px] leading-[1.6] font-normal text-muted-foreground">
+                  {t("commandHint")}
+                </p>
               </>
             )}
             <div className="flex flex-wrap items-center gap-5">
@@ -321,18 +337,23 @@ function JobsPage() {
           <p className="mt-[9px] max-w-[50ch] text-muted-foreground">{t("emptyHint")}</p>
         </div>
       ) : (
-        <div className="job-list">
+        <div>
           {jobs?.map((job) => (
-            <article className="job-row" key={job.id}>
-              <div className="job-icon">
+            <article
+              className="flex items-start gap-4 border-t border-border py-6 max-[1100px]:flex-wrap"
+              key={job.id}
+            >
+              <div className="grid size-9.5 shrink-0 place-items-center rounded-[9px] border border-border text-muted-foreground">
                 <Clock size={21} />
               </div>
-              <div className="job-main">
-                <div className="job-title">
-                  <h2>{job.name}</h2>
-                  <span className="small-badge">{t(job.enabled ? "enabled" : "disabled")}</span>
+              <div className="min-w-30 flex-1">
+                <div className="mb-2 flex items-center gap-2.5">
+                  <h2 className="text-[15px]">{job.name}</h2>
+                  <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
+                    {t(job.enabled ? "enabled" : "disabled")}
+                  </span>
                 </div>
-                <p>
+                <p className="flex flex-wrap items-center gap-1.75 text-[12px] text-muted-foreground">
                   <code>{job.cron}</code>
                   <span>·</span>
                   {job.timezone}
@@ -340,12 +361,12 @@ function JobsPage() {
                   {t(job.action.type === "directory.scan" ? "scan" : "command")}
                 </p>
                 {job.nextRuns[0] && job.enabled && (
-                  <p>
+                  <p className="mt-1.5 flex flex-wrap items-center gap-1.75 text-[12px] text-muted-foreground">
                     {t("next")}: {date(job.nextRuns[0])}
                   </p>
                 )}
               </div>
-              <div className="job-actions">
+              <div className="flex max-w-82.5 flex-wrap items-center justify-end gap-0.75 max-[1100px]:ml-13.5 max-[1100px]:max-w-none">
                 <Button variant="outline" disabled={busy} onClick={() => void run(job)}>
                   <Play size={14} />
                   {t("run")}
@@ -385,10 +406,11 @@ function JobsPage() {
           ))}
         </div>
       )}
+      {dialog}
       {history && (
-        <section className="history-panel">
-          <header className="editor-header">
-            <h2>
+        <section className="mt-8">
+          <header className="flex items-center justify-between gap-5 border-b border-border py-3 pr-4">
+            <h2 className="text-[length:inherit] leading-[inherit] font-medium wrap-anywhere">
               {history.job.name} · {t("history")}
             </h2>
             <Button variant="ghost" onClick={() => setHistory(null)}>
@@ -399,20 +421,36 @@ function JobsPage() {
             <p className="text-muted-foreground">{t("noHistory")}</p>
           ) : (
             history.runs.map((jobRun) => (
-              <details className="run-row" key={jobRun.id}>
-                <summary>
+              <Collapsible className="border-b border-border" key={jobRun.id}>
+                <CollapsibleTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      className="group h-auto w-full flex-wrap justify-start gap-5 rounded-none px-0 py-3.5 text-xs font-normal"
+                    />
+                  }
+                >
+                  <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
                   <span>{date(jobRun.startedAt)}</span>
-                  <span className="small-badge">{c(jobRun.status)}</span>
+                  <span className="rounded-[5px] bg-muted px-1.75 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
+                    {c(jobRun.status)}
+                  </span>
                   <span>{jobRun.exitCode === null ? "" : `${t("exit")}: ${jobRun.exitCode}`}</span>
-                </summary>
-                {jobRun.output && <pre>{jobRun.output}</pre>}
-              </details>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  {jobRun.output && (
+                    <pre className="max-h-90 overflow-auto rounded-[7px] bg-muted p-4 font-mono text-xs leading-[1.65] whitespace-pre-wrap wrap-anywhere">
+                      {jobRun.output}
+                    </pre>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             ))
           )}
           {history.job.nextRuns.length > 0 && (
-            <div className="next-runs">
-              <h3>{t("preview")}</h3>
-              <ul>
+            <div className="mt-6 text-[12px] text-muted-foreground">
+              <h3 className="text-[13px] font-medium text-foreground">{t("preview")}</h3>
+              <ul className="pl-4.5 leading-[1.9]">
                 {history.job.nextRuns.map((value) => (
                   <li key={value}>{date(value)}</li>
                 ))}

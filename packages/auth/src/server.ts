@@ -1,5 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { APIError } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
 import type { AuthSession, AuthUser } from "./types.js";
@@ -54,6 +54,13 @@ export function createAuth({
   siteName,
 }: CreateAuthOptions) {
   const mailSite = async () => (siteName ? { siteName: await siteName() } : {});
+  const origins = [...new Set([new URL(config.baseURL).origin, ...config.trustedOrigins])];
+  const name = (value: string) => {
+    const result = value.trim();
+    if (!result || result.length > 80)
+      throw new APIError("BAD_REQUEST", { code: "INVALID_NAME", message: "Invalid display name" });
+    return result;
+  };
   if (config.secret.length < 32) throw new Error("AUTH_SECRET must contain at least 32 characters");
   if (config.production && new URL(config.baseURL).protocol !== "https:")
     throw new Error("Production AUTH_URL must use HTTPS");
@@ -63,7 +70,26 @@ export function createAuth({
     baseURL: config.baseURL,
     basePath: "/api/auth",
     secret: config.secret,
-    trustedOrigins: [...new Set([config.baseURL, ...config.trustedOrigins])],
+    trustedOrigins: origins,
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (
+          [
+            "/update-user",
+            "/revoke-session",
+            "/revoke-other-sessions",
+            "/revoke-sessions",
+          ].includes(ctx.path)
+        ) {
+          const origin = ctx.headers?.get("origin");
+          if (!origin || !origins.includes(origin))
+            throw new APIError("FORBIDDEN", {
+              code: "INVALID_ORIGIN",
+              message: "Untrusted origin",
+            });
+        }
+      }),
+    },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
@@ -88,25 +114,25 @@ export function createAuth({
           ...(await mailSite()),
         }),
     },
-    ...(registrationAllowed
-      ? {
-          databaseHooks: {
-            user: {
-              create: {
-                // Sign-up turns a 403 into its generic duplicate-email success, so use 400.
-                before: async () => {
-                  if (!(await registrationAllowed()))
-                    throw new APIError("BAD_REQUEST", {
-                      code: "REGISTRATION_DISABLED",
-                      message: "Registration is closed",
-                    });
-                },
-              },
-            },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            if (registrationAllowed && !(await registrationAllowed()))
+              throw new APIError("BAD_REQUEST", {
+                code: "REGISTRATION_DISABLED",
+                message: "Registration is closed",
+              });
+            return { data: { ...user, name: name(user.name) } };
           },
-        }
-      : {}),
-    session: { storeSessionInDatabase: true },
+        },
+        update: {
+          before: async (user) =>
+            user.name === undefined ? undefined : { data: { ...user, name: name(user.name) } },
+        },
+      },
+    },
+    session: { storeSessionInDatabase: true, freshAge: 0 },
     // Shared storage keeps limits consistent across Node processes and Worker isolates.
     // Better Auth applies stricter built-in rules to sign-in, sign-up and mail requests.
     rateLimit: {

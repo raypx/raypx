@@ -24,7 +24,7 @@ export interface ShellNavItem<To extends string> {
 }
 
 export interface AppShellProps<To extends string> {
-  /** `document` scrolls the page; `window` pins a native window and scrolls only main. */
+  /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
   frame?: "document" | "window";
   brand: { to: To; label: string };
   /** Groups are separated by a rule. */
@@ -53,7 +53,7 @@ export function AppShell<To extends string>({
   const c = useTranslations("common");
   const windowed = frame === "window";
   return (
-    <div className={cn("flex min-h-dvh", windowed && "h-dvh")}>
+    <div className="flex h-dvh min-h-0 overflow-hidden">
       <a
         href="#main"
         className="fixed top-2 left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0"
@@ -62,11 +62,9 @@ export function AppShell<To extends string>({
       </a>
       <aside
         className={cn(
-          "flex w-56 shrink-0 flex-col border-r border-border bg-sidebar px-4 pb-5 max-[760px]:w-18 max-[760px]:px-2.5 max-[420px]:w-[58px] max-[420px]:px-1.5",
-          // Native windows reserve the title-bar inset; documents keep the sidebar in view.
-          windowed
-            ? "overflow-y-auto pt-11 max-[1100px]:w-[190px]"
-            : "sticky top-0 h-dvh overflow-y-auto pt-7 max-[760px]:py-5",
+          "flex min-h-0 w-56 shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border bg-sidebar px-4 pb-5 max-[760px]:w-18 max-[760px]:px-2.5 max-[420px]:w-[58px] max-[420px]:px-1.5",
+          // Native windows reserve the title-bar inset; browsers use ordinary top spacing.
+          windowed ? "pt-11 max-[1100px]:w-[190px]" : "pt-7 max-[760px]:py-5",
         )}
       >
         <LinkComponent
@@ -101,7 +99,7 @@ export function AppShell<To extends string>({
         </nav>
         {account !== undefined && <div className="mt-auto pt-7">{account}</div>}
       </aside>
-      <div className={cn("min-w-0 flex-1", windowed && "flex flex-col")}>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           className={cn(
             "flex h-[66px] shrink-0 items-center gap-[13px] border-b border-border px-10 text-[13px] text-muted-foreground max-[760px]:h-[58px] max-[760px]:px-6",
@@ -130,7 +128,7 @@ export function AppShell<To extends string>({
         <main
           id="main"
           tabIndex={-1}
-          className={cn("outline-none", windowed && "flex-1 overflow-auto")}
+          className="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain outline-none"
         >
           {children}
         </main>

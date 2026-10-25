@@ -13,14 +13,32 @@ export function createDesktopFetch(baseUrl: string) {
       const value = request.headers.get(name);
       if (value !== null) headers[name] = value;
     }
-    const result = await (
-      await getBridge()
-    ).request.apiFetch({
+    const bridge = await getBridge(),
+      id = crypto.randomUUID();
+    const body = request.body === null ? undefined : await request.text();
+    request.signal.throwIfAborted();
+    const pending = bridge.request.apiFetch({
+      id,
       path: url.pathname + url.search,
       method: request.method,
       headers,
-      ...(request.body === null ? {} : { body: await request.text() }),
+      ...(body === undefined ? {} : { body }),
     });
+    let abort!: () => void;
+    const cancelled = new Promise<never>((_resolve, reject) => {
+      abort = () => {
+        void bridge.request.apiCancel({ id }).catch(() => {});
+        reject(request.signal.reason ?? new DOMException("Aborted", "AbortError"));
+      };
+      request.signal.addEventListener("abort", abort, { once: true });
+      if (request.signal.aborted) abort();
+    });
+    let result: Awaited<typeof pending>;
+    try {
+      result = await Promise.race([pending, cancelled]);
+    } finally {
+      request.signal.removeEventListener("abort", abort);
+    }
     request.signal.throwIfAborted();
     return new Response([204, 205, 304].includes(result.status) ? null : result.body, {
       status: result.status,

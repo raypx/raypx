@@ -89,7 +89,7 @@ merge or push.
 CLI atomically commits task status and its event into SQLite. A persistent stream
 ID and increasing sequence numbers survive process restart. The outbox is
 checkpointed only after API acknowledges durable projection updates. A retained
-journal keeps the latest 4,096 events per remote binding, including acknowledged events,
+journal keeps at most 4,096 events and 8 MiB per remote binding, including acknowledged events,
 so reconnect can continue after the server's cursor without re-executing commands.
 
 When a cursor falls behind journal retention, native sends a frozen, paged snapshot
@@ -167,3 +167,23 @@ Native transport tests and CLI subprocess fixtures cover their boundaries
 separately. Packaged native GUI behavior, hidden-window credential renewal,
 notifications, Windows process cleanup and live provider inference still require
 explicit platform acceptance; browser tests do not imply those checks passed.
+
+## Relay v2 and read isolation
+
+Both auth and ready frames declare protocol version 2. Messages begin with a full
+activity checkpoint, then carry append-only deltas with base/new revisions;
+replacements and terminal updates are full checkpoints. A missing base requires
+snapshot recovery. Outbox rows reference journal events rather than copy text.
+Local activity updates only its normalized SQLite projection and never enters the
+journal. Content that has reached its display bound stops generating unchanged writes.
+
+API read transactions are repeatable-read, read-only and never acquire the
+account decision lock. Task activity/event/request queries filter by user/task
+and cursor in SQL, supported by expression indexes. Write decisions still use
+the account lock. Cloud activity retains its latest revision indefinitely; only
+bounded replay/obsolete stream records and orphan projections are reclaimed.
+An absent task in a partial snapshot is never evidence that its history was deleted.
+
+Typed change notifications patch the open conversation. Activity-only updates do
+not invalidate workspace/device/approval lists. Incomplete snapshots and gaps
+after suspension are labelled; contiguous history can be loaded deliberately.

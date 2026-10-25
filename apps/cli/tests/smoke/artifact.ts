@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chmod, copyFile, mkdtemp, mkdir, realpath, rm } from "node:fs/promises";
+import { chmod, copyFile, mkdtemp, mkdir, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import manifest from "../../package.json";
@@ -59,6 +59,88 @@ try {
     );
     completed(await new Response(catalog.stderr).text(), "command", "success");
   }
+  // Compile the exact production JS/chunks behind an offline fetch harness. This
+  // exercises lazy SDK initialization without adding a test hook to the product.
+  const marker = join(dataDir, "provider-fetch"),
+    bootstrap = join(dataDir, "provider-probe.ts");
+  await writeFile(
+    bootstrap,
+    `globalThis.fetch = async () => { await Bun.write(${JSON.stringify(marker)}, "reached"); return Response.json({error:{code:401,message:"Unauthenticated",status:"UNAUTHENTICATED"}},{status:401}); }; await import(${JSON.stringify(resolve(import.meta.dirname, "../../dist/main.mjs"))});`,
+  );
+  const probeBinary = join(
+    dataDir,
+    process.platform === "win32" ? "provider-probe.exe" : "provider-probe",
+  );
+  const probeBuild = await Bun.build({
+    entrypoints: [bootstrap],
+    compile: { outfile: probeBinary },
+    target: "bun",
+    format: "esm",
+    bytecode: true,
+  });
+  assert.ok(probeBuild.success, "Default provider chunks must compile into the offline probe");
+  const providerIds = ["anthropic", "openai", "google", "openrouter"];
+  for (const provider of providerIds) {
+    const catalog = Bun.spawn([binary, "ai", "models", JSON.stringify({ provider }), "--json"], {
+      cwd: dataDir,
+      env: { ...process.env, PATH: "", RAYPX_HOME: aiHome },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const models = JSON.parse(await new Response(catalog.stdout).text()) as { id: string }[];
+    await new Response(catalog.stderr).text();
+    assert.equal(await catalog.exited, 0);
+    assert.ok(models[0]);
+    await rm(marker, { force: true });
+    const probe = Bun.spawn(
+      [
+        probeBinary,
+        "ai",
+        "complete",
+        JSON.stringify({
+          provider,
+          model: models[0].id,
+          prompt: "offline loading probe",
+          api_key_env: "RAYPX_PROVIDER_SMOKE_KEY",
+        }),
+        "--json",
+      ],
+      {
+        cwd: dataDir,
+        env: {
+          ...process.env,
+          PATH: "",
+          RAYPX_HOME: aiHome,
+          RAYPX_PROVIDER_SMOKE_KEY: "synthetic-smoke-key",
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    await new Response(probe.stdout).text();
+    const errors = await new Response(probe.stderr).text();
+    assert.notEqual(await probe.exited, 0);
+    assert.equal(
+      await Bun.file(marker).text(),
+      "reached",
+      `${provider} must load its compiled SDK and reach the offline transport`,
+    );
+    assert.ok(!errors.includes("synthetic-smoke-key"));
+  }
+  let bundledJsBytes = 0;
+  for await (const file of new Bun.Glob("**/*.mjs").scan({
+    cwd: resolve(import.meta.dirname, "../../dist"),
+    absolute: true,
+  }))
+    bundledJsBytes += (await stat(file)).size;
+  await writeFile(
+    resolve(import.meta.dirname, "../../dist/provider-smoke.json"),
+    JSON.stringify(
+      { providers: providerIds, binaryBytes: (await stat(binary)).size, bundledJsBytes },
+      null,
+      2,
+    ),
+  );
   const aiServer = aiFixture();
   try {
     const ai = Bun.spawn(

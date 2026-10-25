@@ -46,7 +46,7 @@ export function Conversation({
       <h3 className="text-sm font-medium">{t("conversation")}</h3>
       <div
         ref={viewport}
-        className="task-conversation"
+        className="flex max-h-[min(65vh,48rem)] min-h-48 flex-col gap-5 overflow-auto overscroll-contain rounded-md border border-border p-4 text-sm leading-[1.7]"
         tabIndex={0}
         role="region"
         aria-label={t("conversation")}
@@ -69,7 +69,7 @@ export function Conversation({
             {t(loading ? "loadingHistory" : "olderMessages")}
           </Button>
         ) : (
-          <article className="task-user-message">
+          <article className="rounded-sm bg-muted px-4 py-3">
             <p className="mb-2 text-xs font-medium text-muted-foreground">{t("you")}</p>
             <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{task.prompt}</p>
           </article>
@@ -93,7 +93,7 @@ export function Conversation({
               )}
             </article>
           ) : entry.kind === "input" ? (
-            <article key={entry.id} className="task-user-message">
+            <article key={entry.id} className="rounded-sm bg-muted px-4 py-3">
               <p className="mb-2 text-xs font-medium text-muted-foreground">
                 {t("you")} · {t(entry.mode)} ·{" "}
                 {t(
@@ -121,14 +121,18 @@ export function Conversation({
           <TaskMarkdown>{task.summary}</TaskMarkdown>
         )}
       </div>
-      {(usage.input > 0 || usage.output > 0) && (
-        <p className="text-xs tabular-nums text-muted-foreground">
-          {t("tokenUsage", {
-            input: usage.input.toLocaleString(),
-            output: usage.output.toLocaleString(),
-            cached: usage.cached.toLocaleString(),
-          })}
-        </p>
+      {entries.some((entry) => entry.kind === "usage" && entry.known === false) ? (
+        <p className="text-xs text-muted-foreground">{t("usageUnknown")}</p>
+      ) : (
+        (usage.input > 0 || usage.output > 0) && (
+          <p className="text-xs tabular-nums text-muted-foreground">
+            {t("tokenUsage", {
+              input: usage.input.toLocaleString(),
+              output: usage.output.toLocaleString(),
+              cached: usage.cached.toLocaleString(),
+            })}
+          </p>
+        )
       )}
     </section>
   );

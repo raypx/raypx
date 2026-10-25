@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
-import type { NativeCookies } from "./api";
+import type { NativeCookies, CookieMutation } from "./api";
 import { parseServerOrigin } from "../config";
 
 type Cookie = ReturnType<NativeCookies["get"]>[number];
@@ -21,9 +21,10 @@ interface KeyStore {
   get(options: { service: string; name: string }): Promise<string | null>;
   set(options: { service: string; name: string; value: string; persist: "local" }): Promise<void>;
 }
+class SessionKeyUnavailable extends Error {}
 
 /** CEF's Windows SDK has no cookie implementation. Keep its native HTTP jar encrypted. */
-export async function createEncryptedCookies(
+async function openEncryptedCookies(
   directory: string,
   rawOrigin: string,
   keys: KeyStore = Bun.secrets,
@@ -116,6 +117,10 @@ export async function createEncryptedCookies(
     }
   }
   return {
+    apply(changes) {
+      const next = applyCookies(values, changes);
+      return next.every(valid) && save(next);
+    },
     get({ url }) {
       const target = new URL(url);
       if (target.origin !== origin) return [];
@@ -148,4 +153,121 @@ export async function createEncryptedCookies(
       );
     },
   };
+}
+
+/** Unreadable credentials never prevent local startup and are never stored in plaintext. */
+export async function createEncryptedCookies(
+  directory: string,
+  rawOrigin: string,
+  keys: KeyStore = Bun.secrets,
+  report?: (recovery: { kind: "reset" | "temporary"; path: string }) => void,
+): Promise<NativeCookies> {
+  const origin = parseServerOrigin(rawOrigin),
+    file = join(directory, "session.enc");
+  const availableKeys: KeyStore = {
+    async get(options) {
+      try {
+        return await keys.get(options);
+      } catch {
+        throw new SessionKeyUnavailable();
+      }
+    },
+    async set(options) {
+      try {
+        await keys.set(options);
+      } catch {
+        throw new SessionKeyUnavailable();
+      }
+    },
+  };
+  try {
+    return await openEncryptedCookies(directory, origin, availableKeys);
+  } catch (error) {
+    if (error instanceof SessionKeyUnavailable) {
+      report?.({ kind: "temporary", path: file });
+      return createMemoryCookies(origin);
+    }
+    try {
+      if (existsSync(file)) renameSync(file, `${file}.corrupt-${crypto.randomUUID()}`);
+      await availableKeys.set({
+        service: SESSION_KEY_SERVICE,
+        name: sessionKeyName(directory),
+        value: randomBytes(32).toString("base64"),
+        persist: "local",
+      });
+      const result = await openEncryptedCookies(directory, origin, availableKeys);
+      report?.({ kind: "reset", path: file });
+      return result;
+    } catch {
+      report?.({ kind: "temporary", path: file });
+      return createMemoryCookies(origin);
+    }
+  }
+}
+
+export function createMemoryCookies(origin: string): NativeCookies {
+  let values: Cookie[] = [];
+  const host = new URL(origin).hostname;
+  const valid = (cookie: Cookie) =>
+    cookie.domain === host &&
+    /^(?:__Secure-)?better-auth\.[a-zA-Z0-9_.-]+$/.test(cookie.name) &&
+    typeof cookie.value === "string" &&
+    cookie.value.length <= 16_384 &&
+    !/[\r\n;]/.test(cookie.value) &&
+    typeof cookie.path === "string" &&
+    cookie.path.startsWith("/");
+  return {
+    get({ url }) {
+      const target = new URL(url);
+      return target.origin === origin
+        ? values
+            .filter(
+              (cookie) =>
+                target.pathname.startsWith(cookie.path!) &&
+                (!cookie.secure || target.protocol === "https:") &&
+                (cookie.expirationDate === undefined || cookie.expirationDate > Date.now() / 1000),
+            )
+            .map((cookie) => ({ ...cookie }))
+        : [];
+    },
+    set(cookie) {
+      if (!valid(cookie)) return false;
+      values = [
+        ...values.filter((value) => value.name !== cookie.name || value.path !== cookie.path),
+        { ...cookie },
+      ];
+      return true;
+    },
+    remove(url, name) {
+      if (new URL(url).origin !== origin) return false;
+      values = values.filter((cookie) => cookie.name !== name);
+      return true;
+    },
+    apply(changes) {
+      const next = applyCookies(values, changes);
+      if (next.length > 32 || !next.every(valid)) return false;
+      values = next;
+      return true;
+    },
+  };
+}
+
+function applyCookies(values: Cookie[], changes: CookieMutation[]): Cookie[] {
+  let result = values.map((cookie) => ({ ...cookie }));
+  for (const change of changes) {
+    if ("cookie" in change)
+      result = [
+        ...result.filter(
+          (cookie) => cookie.name !== change.cookie.name || cookie.path !== change.cookie.path,
+        ),
+        { ...change.cookie },
+      ];
+    else
+      result = result.filter(
+        (cookie) =>
+          cookie.name !== change.name ||
+          !new URL(change.url).pathname.startsWith(cookie.path ?? "/"),
+      );
+  }
+  return result;
 }

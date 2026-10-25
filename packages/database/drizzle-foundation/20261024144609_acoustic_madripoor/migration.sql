@@ -1,0 +1,4 @@
+CREATE INDEX "control_event_activity_idx" ON "raypx_foundation"."control_event" ("user_id",("body"->>'taskId'),(("body"->'event'->'entry'->>'order')::bigint)) WHERE "body"->'event'->>'kind' = 'activity';--> statement-breakpoint
+CREATE INDEX "control_event_task_cursor_idx" ON "raypx_foundation"."control_event" ("user_id",("body"->>'taskId'),(("body"->>'cursor')::bigint)) WHERE "body"->'event'->>'kind' != 'activity';--> statement-breakpoint
+CREATE INDEX "control_event_stream_idx" ON "raypx_foundation"."control_event" ("user_id","device_id",("body"->>'streamId'),(("body"->>'cursor')::bigint));--> statement-breakpoint
+CREATE INDEX "control_request_task_idx" ON "raypx_foundation"."control_request" ("user_id",("body"->>'taskId'));

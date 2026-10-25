@@ -61,11 +61,28 @@ export class JsonProcess {
                 : undefined;
             const id = control ? String(control.request_id) : String(message.id);
             const pending = this.pending.get(id);
+            const errorMessage =
+              message.error && typeof message.error === "object"
+                ? (message.error as Record<string, unknown>).message
+                : undefined;
             if (pending && (control || "result" in message || "error" in message)) {
               clearTimeout(pending.timer);
               this.pending.delete(id);
               if (control?.subtype === "error" || "error" in message)
-                pending.reject(new LocalError("AGENT_RPC_FAILED", "Agent request failed"));
+                pending.reject(
+                  new LocalError(
+                    !control &&
+                      message.error &&
+                      typeof message.error === "object" &&
+                      typeof errorMessage === "string" &&
+                      /expected.?turn|turn.*(?:mismatch|not.*active|already.*complet)|no active turn/i.test(
+                        errorMessage,
+                      )
+                      ? "AGENT_TURN_CHANGED"
+                      : "AGENT_RPC_FAILED",
+                    "Agent request failed",
+                  ),
+                );
               else
                 pending.resolve(
                   (control?.response ?? message.result ?? {}) as Record<string, unknown>,

@@ -6,8 +6,153 @@ import { AgentStore, desktopBinding, type LocalAgentTask } from "../../../src/ru
 import { AgentRuntime } from "../../../src/runtime/agents";
 import { StateStore } from "../../../src/runtime/state";
 import { taskSchema, type AgentEvent } from "@raypx/contracts/tasks";
+import { Database } from "bun:sqlite";
 
 afterEach(() => vi.restoreAllMocks());
+it("stores local text once and sends linear-size relay deltas with a bounded referenced outbox", () => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-stream-storage-"));
+  const store = new AgentStore(directory);
+  const now = new Date().toISOString(),
+    taskId = crypto.randomUUID();
+  const message = {
+    taskId,
+    id: crypto.randomUUID(),
+    kind: "message" as const,
+    text: "",
+    status: "streaming" as const,
+    truncated: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+  try {
+    for (const binding of [desktopBinding("account"), "relay"]) {
+      const draft = { ...message, id: crypto.randomUUID() };
+      for (let index = 0; index <= 1000; index++)
+        store.recordActivity(binding, { ...draft, text: "x".repeat(index * 32) });
+      store.recordActivity(binding, { ...draft, text: "x".repeat(32_000), status: "complete" });
+      expect(store.activity(binding, taskId)).toHaveLength(1);
+    }
+    const db = new Database(join(directory, "agents.sqlite"));
+    try {
+      expect(
+        db.query("SELECT count(*) AS count FROM journal WHERE binding LIKE 'desktop:%'").get(),
+      ).toEqual({ count: 0 });
+      const rows = db.query("SELECT value FROM journal WHERE binding='relay'").all() as {
+        value: string;
+      }[];
+      expect(rows.filter((row) => JSON.parse(row.value).kind === "activity_delta")).toHaveLength(
+        1000,
+      );
+      expect(rows.reduce((bytes, row) => bytes + Buffer.byteLength(row.value), 0)).toBeLessThan(
+        32_000 * 2 + rows.length * 600,
+      );
+      expect(db.query("SELECT count(*) AS count FROM outbox WHERE value!=''").get()).toEqual({
+        count: 0,
+      });
+    } finally {
+      db.close();
+    }
+  } finally {
+    store.close();
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+it("compacts journal bytes and removes dangling outbox references without removing final activity", () => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-byte-window-")),
+    store = new AgentStore(directory, 4096, 2048);
+  try {
+    for (let index = 0; index < 20; index++)
+      store.event("relay", {
+        id: crypto.randomUUID(),
+        taskId: crypto.randomUUID(),
+        kind: "status",
+        status: "succeeded",
+        summary: "x".repeat(600),
+      });
+    const db = new Database(join(directory, "agents.sqlite"));
+    try {
+      expect(
+        (
+          db.query("SELECT sum(length(CAST(value AS BLOB))) AS bytes FROM journal").get() as {
+            bytes: number;
+          }
+        ).bytes,
+      ).toBeLessThanOrEqual(2048);
+      expect(
+        db
+          .query("SELECT count(*) AS count FROM outbox WHERE id NOT IN (SELECT id FROM journal)")
+          .get(),
+      ).toEqual({ count: 0 });
+    } finally {
+      db.close();
+    }
+    const cursor = store.sequence("relay");
+    store.checkpoint("relay", cursor);
+    store.checkpoint("relay", cursor);
+    expect(store.events("relay")).toEqual([]);
+    expect(store.replay("relay", 0).floor).toBeGreaterThan(1);
+  } finally {
+    store.close();
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+it("migrates old local revisions and bounds existing remote replay on restart", () => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-old-journal-"));
+  const initial = new AgentStore(directory);
+  initial.close();
+  const db = new Database(join(directory, "agents.sqlite"));
+  const local = desktopBinding("account");
+  const status = {
+    id: crypto.randomUUID(),
+    taskId: crypto.randomUUID(),
+    kind: "status",
+    status: "succeeded",
+    summary: "kept",
+  };
+  db.query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
+    status.id,
+    local,
+    JSON.stringify(status),
+  );
+  for (let index = 0; index < 1100; index++) {
+    const event = { ...status, id: crypto.randomUUID(), kind: "activity" };
+    db.query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
+      event.id,
+      local,
+      JSON.stringify(event),
+    );
+  }
+  for (let index = 0; index < 10; index++) {
+    const event = { ...status, id: crypto.randomUUID() };
+    db.query("INSERT INTO journal (id,binding,value) VALUES (?,?,?)").run(
+      event.id,
+      "relay",
+      JSON.stringify(event),
+    );
+    db.query("INSERT INTO outbox (id,binding,value) VALUES (?,?,?)").run(
+      event.id,
+      "relay",
+      JSON.stringify(event),
+    );
+  }
+  const restored = new AgentStore(directory, 3);
+  try {
+    expect(restored.taskEvents(local, status.taskId, 0).map((item) => item.event)).toEqual([
+      status,
+    ]);
+    expect(db.query("SELECT count(*) AS count FROM journal WHERE binding=?").get(local)).toEqual({
+      count: 1,
+    });
+    expect(restored.events("relay")).toHaveLength(3);
+    expect(db.query("SELECT count(*) AS count FROM outbox WHERE value!=''").get()).toEqual({
+      count: 0,
+    });
+  } finally {
+    restored.close();
+    db.close();
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 it("rolls back the task transition when its outbox write fails and preserves a committed result across restart", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-agent-transition-"));

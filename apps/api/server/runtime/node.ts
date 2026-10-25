@@ -6,26 +6,25 @@ import { createApiLogging } from "../logging.js";
 import { errorReports } from "../error-reports.js";
 import { createRuntime, type ApiRuntime, type RuntimeProviders } from "./shared.js";
 import { connectRedis } from "./redis.js";
+import { createClientIpReader } from "../app/client-ip.js";
 
 export type { ApiRuntime } from "./shared.js";
 
 /** Socket address written by the Node entry; the default auth rate-limit key. */
 export const CLIENT_IP_HEADER = "x-raypx-client-ip";
+type NodeRuntime = ApiRuntime & { clientIp: ReturnType<typeof createClientIpReader> };
 
 export async function createApiRuntime(
   environment: ApiEnvironment,
   providers: RuntimeProviders = {},
-): Promise<ApiRuntime> {
+): Promise<NodeRuntime> {
   const logger = createApiLogging({
     environment: environment.NODE_ENV,
     sink: errorReports(environment, createStreamDrain()),
   });
   // Without AUTH_IP_HEADERS a direct Node deployment limits by socket address.
-  const ipAddressHeaders = environment.ipAddressHeaders.length
-    ? environment.ipAddressHeaders
-    : [CLIENT_IP_HEADER];
-  return createRuntime(
-    { ...environment, ipAddressHeaders },
+  const runtime = await createRuntime(
+    { ...environment, ipAddressHeaders: [CLIENT_IP_HEADER], trustedProxies: [] },
     {
       ...providers,
       logger,
@@ -35,11 +34,15 @@ export async function createApiRuntime(
       ...(environment.REDIS_URL ? { redis: connectRedis(environment.REDIS_URL) } : {}),
     },
   );
+  return {
+    ...runtime,
+    clientIp: createClientIpReader(environment.ipAddressHeaders, environment.trustedProxies),
+  };
 }
 
-let runtimePromise: Promise<ApiRuntime> | undefined;
+let runtimePromise: Promise<NodeRuntime> | undefined;
 export const nodeRelay = new RelayHub(async (run) => run((await getApiRuntime()).control));
-export function getApiRuntime(): Promise<ApiRuntime> {
+export function getApiRuntime(): Promise<NodeRuntime> {
   return (runtimePromise ??= Promise.resolve().then(() => createApiRuntime(getApiEnvironment())));
 }
 export async function closeApiRuntime(): Promise<void> {

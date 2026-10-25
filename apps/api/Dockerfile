@@ -1,11 +1,22 @@
 # syntax=docker/dockerfile:1
 FROM oven/bun:1.4.4 AS bun
 
-FROM bun AS migrate
+FROM bun AS manifests
 WORKDIR /app
 COPY . .
+RUN bun deploy/manifests.ts /app /manifests
+
+FROM bun AS migrate-dependencies
+WORKDIR /app
+COPY --from=manifests /manifests/ ./
 RUN --mount=type=cache,id=raypx-bun-install,target=/root/.bun/install/cache,sharing=locked \
     bun install --frozen-lockfile --production --filter @raypx/database --ignore-scripts
+
+FROM bun AS migrate
+WORKDIR /app
+COPY --from=migrate-dependencies /app/ ./
+COPY packages/database/src/ ./packages/database/src/
+COPY packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
 USER bun
 CMD ["bun", "run", "--cwd", "packages/database", "migrate"]
 

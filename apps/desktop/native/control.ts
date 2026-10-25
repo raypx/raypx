@@ -62,6 +62,25 @@ export class RemoteControl {
   private readonly notified = new Set<string>();
   private apiUrl: string | undefined;
   private renewing: Promise<boolean> | undefined;
+  private renewalFailures = 0;
+  private renewalTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly commands = new Set<Promise<void>>();
+  private scheduleRenewal(disconnect = true) {
+    if (this.renewalTimer || !this.accountId || this.error === "UPGRADE_REQUIRED") return;
+    if (disconnect) this.resetConnection();
+    const delay = Math.max(
+      this.renewAt - Date.now(),
+      Math.min(30_000, 500 * 2 ** Math.min(this.renewalFailures++, 6)) *
+        (0.8 + Math.random() * 0.2),
+    );
+    this.renewAt = Date.now() + delay;
+    this.renewalTimer = setTimeout(() => {
+      this.renewalTimer = undefined;
+      void this.refreshGrant().then((restored) => {
+        if (!restored && this.accountId && !this.connected) this.scheduleRenewal(false);
+      });
+    }, delay);
+  }
   constructor(
     private readonly directory: string,
     private readonly engine: Pick<LocalEngine, "request">,
@@ -208,7 +227,12 @@ export class RemoteControl {
     this.connection = new RelayConnection({
       url: relayUrl(apiUrl, this.accountId),
       ...(this.options.socket ? { socket: this.options.socket } : {}),
-      authenticate: async () => ({ type: "auth", role: "device", token: grant.token }),
+      authenticate: async () => ({
+        type: "auth",
+        protocolVersion: 2,
+        role: "device",
+        token: grant.token,
+      }),
       status: (connected, code) => {
         if (generation !== this.generation) return;
         if (!connected) {
@@ -217,17 +241,22 @@ export class RemoteControl {
           this.error = code ?? "NETWORK_UNAVAILABLE";
           this.acknowledgement?.reject();
           if (code === "DEVICE_REVOKED" && this.accountId) void this.enable(this.accountId, false);
-          if (code === "AUTH_REQUIRED") void this.refreshGrant();
+          if (code === "AUTH_REQUIRED") this.scheduleRenewal();
         }
       },
       message: (frame) => {
-        if (generation === this.generation)
-          void this.message(frame, generation).catch(() => {
+        if (generation === this.generation) {
+          const pending = this.message(frame, generation).catch(() => {
             if (generation === this.generation) {
               this.error = "NETWORK_UNAVAILABLE";
               this.connection?.restart();
             }
           });
+          if (frame.type === "command") {
+            this.commands.add(pending);
+            void pending.finally(() => this.commands.delete(pending));
+          }
+        }
       },
     });
     this.connection.start();
@@ -235,12 +264,14 @@ export class RemoteControl {
   private maintenance() {
     if (this.timer) clearInterval(this.timer);
     const check = () => {
-      if (!this.accountId) return;
+      if (!this.accountId || this.error === "UPGRADE_REQUIRED") return;
       if (
         (!this.grant || Date.parse(this.grant.expiresAt) - Date.now() < 60_000) &&
-        Date.now() >= this.renewAt
+        Date.now() >= this.renewAt &&
+        !this.renewalTimer &&
+        !this.renewing
       ) {
-        this.renewAt = Date.now() + 15_000;
+        if (!this.grant) this.renewAt = Date.now() + 15_000;
         void this.refreshGrant();
       }
     };
@@ -280,8 +311,9 @@ export class RemoteControl {
         )
           throw new Error("Invalid renewed grant");
         this.grant = next;
-        this.renewAt = 0;
         this.error = null;
+        while (this.commands.size) await Promise.allSettled(this.commands);
+        if (generation !== this.generation || this.accountId !== accountId) return false;
         // Reconnect the relay without detaching the host binding or its tasks.
         this.connect(apiUrl);
         return true;
@@ -296,7 +328,7 @@ export class RemoteControl {
           await this.detach();
         else {
           this.error = "NETWORK_UNAVAILABLE";
-          this.renewAt = Date.now() + 15_000;
+          this.scheduleRenewal(false);
         }
         return false;
       }
@@ -334,7 +366,7 @@ export class RemoteControl {
     } else if (frame.type === "resume") {
       this.cursor = frame.sequence;
       this.streamId = frame.streamId;
-      this.snapshotNeeded = frame.snapshot;
+      this.snapshotNeeded ||= frame.snapshot;
       this.ready = true;
       await this.wake();
     } else if (frame.type === "ack") {
@@ -366,7 +398,8 @@ export class RemoteControl {
         this.connection?.send({ type: "result", routeId: frame.routeId, result });
     } else if (frame.type === "error") {
       this.error = frame.code;
-      if (frame.code === "AUTH_REQUIRED") this.grantRequired();
+      if (frame.code === "AUTH_REQUIRED") this.scheduleRenewal();
+      if (frame.code === "ACTIVITY_BASE_MISMATCH") this.snapshotNeeded = true;
     }
   }
   private waitForAck(sequence: number, snapshotId?: string) {
@@ -469,6 +502,8 @@ export class RemoteControl {
         if (generation !== this.generation) return;
         this.connection?.send({ type: "available" });
         this.connected = true;
+        this.renewalFailures = 0;
+        this.renewAt = 0;
         this.error = null;
         if (!this.dirty) return;
         continue;
@@ -492,6 +527,8 @@ export class RemoteControl {
     }
   }
   async detach() {
+    clearTimeout(this.renewalTimer);
+    this.renewalTimer = undefined;
     if (this.timer) clearInterval(this.timer);
     this.timer = undefined;
     const binding = this.binding;

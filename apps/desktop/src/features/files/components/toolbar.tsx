@@ -1,6 +1,7 @@
 import type { RootGrant } from "@raypx/contracts/local";
 import { ArrowUp, Folder, Plus } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
+import { SelectField } from "@raypx/ui/select-field";
 import { useTranslations } from "@raypx/i18n/browser";
 import { useFilesStore } from "../store";
 
@@ -23,23 +24,15 @@ export function FilesToolbar({
   const setOperation = useFilesStore((s) => s.setOperation);
   return (
     <div className="flex flex-wrap items-center gap-3.5 pb-5">
-      <label>
-        <span className="sr-only">{t("roots")}</span>
-        <select
-          value={rootId}
-          disabled={busy}
-          onChange={(event) => void onDirectory(event.target.value, "")}
-        >
-          {!roots.some((root) => root.id === rootId) && (
-            <option value={rootId}>{t("roots")}</option>
-          )}
-          {roots.map((root) => (
-            <option key={root.id} value={root.id}>
-              {root.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <SelectField
+        aria-label={t("roots")}
+        className="w-52 max-w-full"
+        value={roots.some((root) => root.id === rootId) ? rootId : null}
+        placeholder={t("roots")}
+        disabled={busy || roots.length === 0}
+        onValueChange={(value) => void onDirectory(value, "")}
+        options={roots.map((root) => ({ value: root.id, label: root.name }))}
+      />
       <span
         className="min-w-[50px] flex-1 truncate font-mono text-muted-foreground"
         title={path || "/"}

@@ -33,6 +33,72 @@ const get = (path = "/api/auth/get-session"): DesktopApiRequest => ({
   method: "GET",
   headers: {},
 });
+it("validates all cookies before mutation and rolls back a partially failed SDK batch", async () => {
+  const f = fixture();
+  f.cookies.set({
+    name: "better-auth.session_token",
+    value: "old",
+    domain: "api.example.test",
+    path: "/",
+    secure: true,
+    httpOnly: true,
+  });
+  const headers = new Headers();
+  headers.append("set-cookie", "better-auth.session_token=new; Path=/; Secure; HttpOnly");
+  headers.append("set-cookie", "better-auth.other=bad; Domain=evil.test; Path=/; Secure; HttpOnly");
+  f.send.mockResolvedValueOnce(Response.json({}, { headers }));
+  await expect(f.api.request(get())).rejects.toThrow("cookie domain");
+  expect(f.values[0]?.value).toBe("old");
+  const valid = new Headers();
+  valid.append("set-cookie", "better-auth.session_token=new; Path=/; Secure; HttpOnly");
+  valid.append("set-cookie", "better-auth.other=new; Path=/; Secure; HttpOnly");
+  const original = f.cookies.set.bind(f.cookies);
+  let failed = false;
+  vi.spyOn(f.cookies, "set").mockImplementation((cookie) => {
+    if (!failed && cookie.name === "better-auth.other") {
+      failed = true;
+      return false;
+    }
+    return original(cookie);
+  });
+  f.send.mockResolvedValueOnce(Response.json({}, { headers: valid }));
+  await expect(f.api.request(get())).rejects.toThrow("persist API session");
+  expect(f.values).toMatchObject([{ name: "better-auth.session_token", value: "old" }]);
+  expect(f.values).toHaveLength(1);
+});
+it("cancels the native fetch for an owned request id", async () => {
+  const f = fixture(),
+    id = crypto.randomUUID();
+  f.send.mockImplementation(
+    async (_url, init) =>
+      new Promise((_resolve, reject) => {
+        init.signal?.addEventListener(
+          "abort",
+          () => reject(new DOMException("Aborted", "AbortError")),
+          { once: true },
+        );
+      }),
+  );
+  const pending = f.api.request({ ...get(), id });
+  expect(f.api.cancel(id)).toBe(true);
+  await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+});
+it("stops sending cookies after rollback itself throws", async () => {
+  const f = fixture();
+  vi.spyOn(f.cookies, "set").mockReturnValue(false);
+  vi.spyOn(f.cookies, "remove").mockImplementation(() => {
+    throw new Error("SDK failed");
+  });
+  f.send.mockResolvedValueOnce(
+    Response.json(
+      {},
+      { headers: { "set-cookie": "better-auth.session_token=x; Path=/; Secure; HttpOnly" } },
+    ),
+  );
+  await expect(f.api.request(get())).rejects.toThrow("persist API session");
+  await expect(f.api.request(get())).rejects.toThrow("restart required");
+  expect(f.send).toHaveBeenCalledTimes(1);
+});
 
 it("keeps secure login cookies in Native, restores them in a new client, and strips them from bridge responses", async () => {
   const f = fixture();
@@ -126,6 +192,9 @@ it("rejects insecure or unrelated-domain session cookies and response bodies ove
   for (const cookie of [
     "__Secure-better-auth.session_token=x; Path=/; HttpOnly",
     "__Secure-better-auth.session_token=x; Path=/; HttpOnly; Secure; Domain=evil.example",
+    "better-auth.session_token=x; Path=/; HttpOnly; Secure; Max-Age=invalid",
+    "better-auth.session_token=x; Path=/; HttpOnly; Secure; Expires=invalid",
+    "better-auth.session_token=x; Path=/; HttpOnly; Secure; SameSite=invalid",
   ]) {
     f.send.mockResolvedValueOnce(Response.json({}, { headers: { "set-cookie": cookie } }));
     await expect(f.api.request(get())).rejects.toThrow(/API.*cookie/);

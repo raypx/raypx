@@ -73,14 +73,18 @@ keep Dokploy's port 3000 behind an SSH tunnel. Both host and Docker forwarding
 firewalls must block public management access. Allow TCP 22, 80 and 443; UDP 443 is
 optional for HTTP/3. Only Traefik publishes application traffic.
 
-Point `APP_HOST` at the host. `TRAEFIK_NETWORK` defaults to `dokploy-network`, which
-must already exist. Set the certificate account email before requesting TLS using
+Point `APP_HOST` at the host. `TRAEFIK_NETWORK` defaults to `<COMPOSE_PROJECT_NAME>-ingress`, which
+must already exist and contain only this project's Web/API containers and Traefik.
+Create a distinct network for each project and explicitly connect Traefik with a
+stable address. Do not attach application containers to the shared Dokploy network. Set the certificate account email before requesting TLS using
 `TRAEFIK_CERT_RESOLVER` (default `letsencrypt`). With Cloudflare, check public HTTPS
 and the origin certificate. Web and API share an origin for cookies and relay.
 
 Set Traefik entry-point `forwardedHeaders.trustedIPs` to trusted edge ranges.
 `AUTH_IP_HEADERS=x-forwarded-for` and `AUTH_TRUSTED_PROXIES` include those ranges
-plus the actual Docker proxy subnet. Keep untrusted forwarding disabled.
+plus Traefik's exact `/32` or `/128` address. Never trust an entire shared Docker
+subnet. The Node entry verifies the real socket peer before accepting forwarding
+headers. Keep untrusted forwarding disabled.
 
 Validate without printing resolved secrets:
 
@@ -110,3 +114,24 @@ Back up its database before migrations. Preserve project name and named storage.
 Image rollback does not reverse schema changes; confirm compatibility first.
 Use the exact Dokploy project name for manual `docker compose -p` operations.
 Never use `down --volumes` or reset a deployment database.
+
+## Digest and migration compatibility
+
+Set `POSTGRES_IMAGE_DIGEST` to the verified 64-character manifest digest for
+`postgres:17-alpine`; there is no floating-tag fallback. Resolve it from the
+official registry in the deployment environment and retain the previous digest
+for rollback. An unavailable registry is not evidence of a verified image.
+
+All migrations must support the old API while they run: use expand/contract,
+adding indexes/tables/optional fields first. A later release may remove the old
+shape only after every consumer has migrated. The current control indexes are
+additive. An image rollback must not require reversing a migration.
+
+After backup and image builds, use `sh deploy/update.sh /absolute/path/to/.env`.
+It validates Compose without printing secrets, waits for PostgreSQL, runs the
+isolated migration and only then replaces API and Web. Migration failure stops
+the script before API replacement. Keep one API instance; replacing it can
+briefly reconnect relay clients and is not a zero-downtime replica rollout.
+
+Deploy relay v2 Web/API/Desktop together. Older relay peers receive
+`UPGRADE_REQUIRED`; new clients stop retrying a version mismatch.

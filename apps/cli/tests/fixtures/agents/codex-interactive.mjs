@@ -15,7 +15,13 @@ setInterval(() => {
   });
   send({
     method: "thread/tokenUsage/updated",
-    params: { tokenUsage: { last: { inputTokens: 20, outputTokens: 3, cachedInputTokens: 5 } } },
+    params: {
+      turnId: `turn-${turn}`,
+      tokenUsage: {
+        total: { inputTokens: 20 * turn, outputTokens: 3 * turn, cachedInputTokens: 5 * turn },
+        last: { inputTokens: 20, outputTokens: 3, cachedInputTokens: 5 },
+      },
+    },
   });
   send({ method: "turn/completed", params: { turn: { id: `turn-${turn}`, status: "completed" } } });
 }, 10);
@@ -37,6 +43,18 @@ for await (const line of createInterface({ input: process.stdin })) {
   }
   if (message.method === "turn/steer") {
     appendFileSync("delivered", JSON.stringify(message) + "\n");
+    if (existsSync("steer-expired")) {
+      active = false;
+      send({
+        method: "turn/completed",
+        params: { turn: { id: `turn-${turn}`, status: "completed" } },
+      });
+      send({
+        id: message.id,
+        error: { code: -32600, message: "expectedTurnId does not match the active turn" },
+      });
+      continue;
+    }
     send({
       id: message.id,
       ...(active && message.params.expectedTurnId === `turn-${turn}`

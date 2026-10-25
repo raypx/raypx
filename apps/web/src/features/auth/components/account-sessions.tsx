@@ -9,6 +9,13 @@ import type { authClient } from "../client";
 
 type Client = Pick<typeof authClient, "listSessions" | "revokeSession" | "revokeOtherSessions">;
 type Session = NonNullable<Awaited<ReturnType<Client["listSessions"]>>["data"]>[number];
+function sessionFailure(error: { code?: string | undefined; status?: number | undefined }) {
+  if (error.code === "SESSION_NOT_FRESH") return "sessionReauth" as const;
+  if (error.status === 401 || error.code === "UNAUTHORIZED") return "sessionUnauthorized" as const;
+  if (error.status === 403 || error.code === "FORBIDDEN" || error.code === "INVALID_ORIGIN")
+    return "sessionForbidden" as const;
+  return "network" as const;
+}
 
 function sessionLabel(userAgent?: string | null) {
   if (!userAgent) return null;
@@ -48,7 +55,7 @@ export function AccountSessions({
   const locale = useLocale();
   const [sessions, setSessions] = useState<Session[]>();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<ReturnType<typeof sessionFailure> | null>(null);
   const [revision, setRevision] = useState(0);
   const request = useRef<AbortController | null>(null);
   useEffect(() => {
@@ -61,7 +68,9 @@ export function AccountSessions({
       .then((response) => {
         if (controller.signal.aborted) return;
         if (response.error || !response.data) {
-          setError(true);
+          const failure = response.error ? sessionFailure(response.error) : "network";
+          setError(failure);
+          if (failure === "sessionUnauthorized") setSessions(undefined);
           return;
         }
         setSessions(
@@ -73,7 +82,7 @@ export function AccountSessions({
         );
       })
       .catch(() => {
-        if (!controller.signal.aborted) setError(true);
+        if (!controller.signal.aborted) setError("network");
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -96,7 +105,7 @@ export function AccountSessions({
           disabled={loading}
           onClick={() => {
             setLoading(true);
-            setError(false);
+            setError(null);
             setRevision((value) => value + 1);
           }}
         >
@@ -106,7 +115,12 @@ export function AccountSessions({
       <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("sessionsHint")}</p>
       {error && (
         <p role="alert" className="mt-4 text-sm text-destructive-text">
-          {c("networkError")}
+          {error === "network" ? c("networkError") : t(error)}
+          {error === "sessionUnauthorized" && (
+            <a className="ml-2 underline" href="/login">
+              {c("signIn")}
+            </a>
+          )}
         </p>
       )}
       {!sessions && loading && <LoadingState label={c("loading")} />}
@@ -193,7 +207,7 @@ function RevokeSession({
   const c = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<"network" | "reauth" | null>(null);
+  const [error, setError] = useState<ReturnType<typeof sessionFailure> | null>(null);
   const active = useRef(false);
   async function submit() {
     if (active.current) return;
@@ -203,7 +217,7 @@ function RevokeSession({
     try {
       const response = await revoke();
       if (response.error) {
-        setError(response.error.code === "SESSION_NOT_FRESH" ? "reauth" : "network");
+        setError(sessionFailure(response.error));
         return;
       }
       setOpen(false);
@@ -231,7 +245,7 @@ function RevokeSession({
       {label && <p className="text-sm font-medium">{label}</p>}
       {error && (
         <p role="alert" className="text-sm text-destructive-text">
-          {error === "reauth" ? t("sessionReauth") : c("networkError")}
+          {error === "network" ? c("networkError") : t(error)}
         </p>
       )}
       <div className="flex flex-wrap justify-end gap-2">

@@ -19,6 +19,7 @@ async function setup() {
   });
   const native = await relaySocket(f.base, f.auth.user.id, {
     type: "auth",
+    protocolVersion: 2,
     role: "device",
     token: grant.token,
   });
@@ -51,6 +52,7 @@ async function setup() {
   const ticket = await api.relay.ticket({}),
     viewer = await relaySocket(f.base, f.auth.user.id, {
       type: "auth",
+      protocolVersion: 2,
       role: "viewer",
       token: ticket.token,
     });
@@ -135,6 +137,7 @@ it("resumes device events and replays the viewer cursor after reconnect", async 
   f.native.socket.close();
   const next = await relaySocket(f.base, f.auth.user.id, {
     type: "auth",
+    protocolVersion: 2,
     role: "device",
     token: f.grant.token,
   });
@@ -147,6 +150,7 @@ it("resumes device events and replays the viewer cursor after reconnect", async 
   const ticket = await f.api.relay.ticket({}),
     viewer = await relaySocket(f.base, f.auth.user.id, {
       type: "auth",
+      protocolVersion: 2,
       role: "viewer",
       token: ticket.token,
       cursors: [{ deviceId: f.grant.deviceId, streamId: f.announce.streamId, sequence: 0 }],
@@ -160,6 +164,7 @@ it("rejects cross-account commands and closes an authenticated device when revok
     ticket = await f.control.ticket(other);
   const viewer = await relaySocket(f.base, other.user.id, {
     type: "auth",
+    protocolVersion: 2,
     role: "viewer",
     token: ticket.token,
   });
@@ -179,12 +184,14 @@ it("rejects replaying a consumed viewer ticket", async () => {
     ticket = await f.api.relay.ticket({});
   const viewer = await relaySocket(f.base, f.auth.user.id, {
     type: "auth",
+    protocolVersion: 2,
     role: "viewer",
     token: ticket.token,
   });
   await viewer.take("ready");
   const duplicate = await relaySocket(f.base, f.auth.user.id, {
     type: "auth",
+    protocolVersion: 2,
     role: "viewer",
     token: ticket.token,
   });

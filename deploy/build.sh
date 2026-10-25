@@ -14,6 +14,13 @@ case "$APP_HOST" in
 esac
 builder=${RAYPX_BUILD_BUILDER:-raypx-builder}
 release=$COMPOSE_PROJECT_NAME-$RAYPX_RELEASE
+case "$RAYPX_RELEASE" in
+  [!a-zA-Z0-9_]*|*[!a-zA-Z0-9_.-]*) echo "RAYPX_RELEASE must be a valid image tag component" >&2; exit 1 ;;
+esac
+if [ "${#release}" -gt 128 ]; then
+  echo "The project-prefixed image tag exceeds 128 characters" >&2
+  exit 1
+fi
 
 if ! docker buildx inspect "$builder" >/dev/null 2>&1; then
   docker buildx create --name "$builder" --driver docker-container \

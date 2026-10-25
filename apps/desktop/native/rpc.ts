@@ -20,7 +20,9 @@ export interface DesktopRuntime {
 export type DesktopRpc = {
   bun: RPCSchema<{
     requests: {
+      openExternal: { params: { url: string }; response: boolean };
       apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
+      apiCancel: { params: { id: string }; response: boolean };
       controlInfo: { params: { accountId: string }; response: ControlInfo };
       controlEnable: { params: { accountId: string; enabled: boolean }; response: ControlInfo };
       controlRevoked: { params: { accountId: string }; response: ControlInfo };

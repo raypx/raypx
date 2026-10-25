@@ -5,6 +5,8 @@ import {
   taskInputActivitySchema,
   type RelayRequest,
   type SyncDevice,
+  taskChangeSchema,
+  type TaskChange,
 } from "@raypx/contracts/tasks";
 import type { TaskWorkspaceClient } from "@raypx/tasks/client";
 import { localRequest, onLocalEvent } from "../../lib/desktop";
@@ -17,10 +19,10 @@ export function createLocalTaskClient(
   events: (listener: (event: LocalEvent) => void) => () => void = onLocalEvent,
 ): TaskWorkspaceClient & { setAccount(accountId: string | null): void } {
   let account: string | null = null;
-  const listeners = new Set<() => void>();
+  const listeners = new Set<(change?: TaskChange) => void>();
   let stopEvents: (() => void) | undefined;
-  const changed = () => {
-    for (const listener of listeners) listener();
+  const changed = (change?: TaskChange) => {
+    for (const listener of listeners) listener(change);
   };
   const read = async <T>(run: (accountId: string) => Promise<T>, signal?: AbortSignal) => {
     const id = account;
@@ -128,7 +130,11 @@ export function createLocalTaskClient(
     subscribe(listener) {
       listeners.add(listener);
       stopEvents ??= events((event) => {
-        if (event.event === "agent.changed" || event.event === "engine.status") changed();
+        if (event.event === "agent.changed") {
+          const change = taskChangeSchema.safeParse(event.data.change);
+          if (!change.success || change.data.local !== false)
+            changed(change.success ? change.data : undefined);
+        } else if (event.event === "engine.status") changed();
       });
       return () => {
         listeners.delete(listener);

@@ -1,6 +1,7 @@
 import type { AuthSession } from "@raypx/auth/types";
 import {
   taskActivityPage,
+  applyActivityEvent,
   activeTaskStatuses,
   MAX_RELAY_BYTES,
   type AgentTask,
@@ -15,7 +16,12 @@ import {
   type SnapshotRecord,
   type SequencedEvent,
 } from "@raypx/contracts/tasks";
-import type { ControlRecord, ControlRepository, ControlTransaction } from "./repository.js";
+import type {
+  ControlRecord,
+  ControlRepository,
+  ControlTransaction,
+  ControlReader,
+} from "./repository.js";
 
 export class ControlError extends Error {
   constructor(readonly code: string) {
@@ -229,7 +235,7 @@ export class ControlService {
       };
     });
   }
-  private async check(tx: ControlTransaction, actor: RelayActor) {
+  private async check(tx: ControlReader, actor: RelayActor) {
     if (
       Date.parse(actor.expiresAt) <= this.clock() ||
       !(await tx.sessionActive(actor.sessionId, new Date(this.clock())))
@@ -242,7 +248,7 @@ export class ControlService {
     }
   }
   validate(actor: RelayActor) {
-    return this.repository.transaction(actor.userId, (tx) => this.check(tx, actor));
+    return this.repository.read(actor.userId, (tx) => this.check(tx, actor));
   }
   private device(
     actor: RelayActor,
@@ -309,7 +315,13 @@ export class ControlService {
       if (record.task.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
       const old = await tx.get<Task>("task", record.task.id);
       if (old && old.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
-      await tx.put("task", { ...record.task, epoch: actor.epoch });
+      await tx.put("task", {
+        ...record.task,
+        ...(record.task.activityIncomplete === undefined && old?.activityIncomplete
+          ? { activityIncomplete: true }
+          : {}),
+        epoch: actor.epoch,
+      });
     } else if (record.kind === "activity") {
       await this.activity(
         tx,
@@ -383,6 +395,7 @@ export class ControlService {
           await tx.put("request", { ...request, status: "cancelled" });
       device.cursor = sequence;
       device.initialized = true;
+      await tx.pruneEvents(device.id, streamId, true);
     });
   }
   async events(actor: RelayActor, streamId: string, events: SequencedEvent[]) {
@@ -416,6 +429,20 @@ export class ControlService {
         } else if (event.kind === "request") {
           if (event.request.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
           await this.record(tx, actor, { kind: "request", request: event.request });
+        } else if (event.kind === "activity_delta") {
+          const projection = await tx.get<Event>("event", `${device.id}:activity:${event.entryId}`);
+          const entry = applyActivityEvent(
+            projection?.event.kind === "activity" ? projection.event.entry : undefined,
+            event,
+          );
+          if (!entry) throw new ControlError("ACTIVITY_BASE_MISMATCH");
+          await this.activity(
+            tx,
+            actor,
+            { id: event.id, taskId: event.taskId, kind: "activity", entry },
+            streamId,
+            item.sequence,
+          );
         } else if (event.kind === "activity") {
           if (event.entry.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
           await this.activity(tx, actor, event, streamId, item.sequence);
@@ -436,6 +463,8 @@ export class ControlService {
         device.cursor = item.sequence;
       }
       cursor = device.cursor;
+      if (events.some((item) => item.event.kind !== "activity"))
+        await tx.pruneEvents(device.id, streamId);
     });
     return cursor;
   }
@@ -469,7 +498,7 @@ export class ControlService {
     });
   }
   listDevices(userId: string) {
-    return this.repository.transaction(userId, async (tx) =>
+    return this.repository.read(userId, async (tx) =>
       Promise.all(
         (await tx.list<Device>("device")).map(async (device) => ({
           id: device.id,
@@ -507,7 +536,7 @@ export class ControlService {
     });
   }
   listTasks(userId: string, input: { limit: number; before?: string | undefined }) {
-    return this.repository.transaction(userId, async (tx) =>
+    return this.repository.read(userId, async (tx) =>
       (await tx.list<Task>("task"))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
         .filter((task) => !input.before || `${task.createdAt}:${task.id}` < input.before)
@@ -515,15 +544,25 @@ export class ControlService {
     );
   }
   getTask(userId: string, id: string, after: number, beforeActivity?: number) {
-    return this.repository.transaction(userId, async (tx) => {
+    return this.repository.read(userId, async (tx) => {
       const task = required(await tx.get<Task>("task", id));
-      const events = (await tx.list<Event>("event", task.deviceId)).filter(
-        (item) => item.taskId === id,
-      );
+      const events = await tx.list<Event>("event", task.deviceId, {
+        taskId: id,
+        activity: false,
+        after,
+        limit: 100,
+      });
+      const activity = await tx.list<Event>("event", task.deviceId, {
+        taskId: id,
+        activity: true,
+        ...(beforeActivity === undefined ? {} : { beforeActivity }),
+        limit: 65,
+        descending: true,
+      });
       return {
         task,
         ...taskActivityPage(
-          events.flatMap((item) => (item.event.kind === "activity" ? [item.event.entry] : [])),
+          activity.flatMap((item) => (item.event.kind === "activity" ? [item.event.entry] : [])),
           beforeActivity,
         ),
         events: events
@@ -531,14 +570,12 @@ export class ControlService {
           .sort((a, b) => a.cursor - b.cursor)
           .slice(0, 100)
           .map((item) => ({ cursor: item.cursor, event: item.event })),
-        requests: (await tx.list<StoredRequest>("request", task.deviceId)).filter(
-          (item) => item.taskId === id,
-        ),
+        requests: await tx.list<StoredRequest>("request", task.deviceId, { taskId: id }),
       };
     });
   }
   listApprovals(userId: string) {
-    return this.repository.transaction(userId, async (tx) => {
+    return this.repository.read(userId, async (tx) => {
       const tasks = new Map((await tx.list<Task>("task")).map((task) => [task.id, task]));
       return (await tx.list<StoredRequest>("request"))
         .filter(
@@ -554,24 +591,38 @@ export class ControlService {
     userId: string,
     cursors: RelayCursor[],
   ): Promise<Extract<RelayServerFrame, { type: "changed" }>[]> {
-    return this.repository.transaction(userId, async (tx) => {
+    return this.repository.read(userId, async (tx) => {
       const output: Extract<RelayServerFrame, { type: "changed" }>[] = [];
       for (const device of await tx.list<Device>("device")) {
         if (!device.streamId) continue;
         const cursor = cursors.find(
           (item) => item.deviceId === device.id && item.streamId === device.streamId,
         );
-        const events = (await tx.list<Event>("event", device.id))
+        const rows = (
+          await tx.list<Event>("event", device.id, {
+            streamId: device.streamId,
+            after: cursor?.sequence ?? 0,
+            limit: 51,
+          })
+        )
           .filter(
             (event) => event.streamId === device.streamId && event.cursor > (cursor?.sequence ?? 0),
           )
           .sort((a, b) => a.cursor - b.cursor);
+        const byCursor = new Map<number, Event>();
+        for (const event of rows)
+          if (!byCursor.has(event.cursor) || event.event.kind === "activity")
+            byCursor.set(event.cursor, event);
+        const events = [...byCursor.values()];
         output.push({
           type: "changed",
           deviceId: device.id,
           streamId: device.streamId,
           sequence: device.cursor,
           ...(cursor &&
+          (events.length
+            ? events[0]!.cursor <= cursor.sequence + 1 && events.at(-1)!.cursor === device.cursor
+            : cursor.sequence === device.cursor) &&
           events.length <= 50 &&
           new TextEncoder().encode(JSON.stringify(events)).byteLength < MAX_RELAY_BYTES - 2048
             ? { events: events.map((event) => ({ sequence: event.cursor, event: event.event })) }

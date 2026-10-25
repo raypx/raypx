@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { ControlService } from "../../server/control/service.js";
 import {
   connected,
@@ -9,6 +9,130 @@ import {
 } from "../helpers/control.js";
 
 describe("Desktop-owned task projections", () => {
+  it("bounds replay and removes orphans without deleting conversation history absent from a snapshot", async () => {
+    const repository = memoryControlRepository(),
+      service = new ControlService(repository),
+      f = await connected(service),
+      task = await running(service, f);
+    const now = new Date().toISOString();
+    const entry = {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "message" as const,
+      order: 1,
+      revision: 1,
+      text: "Retained history",
+      status: "complete" as const,
+      truncated: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await service.events(f.actor, f.announce.streamId, [
+      { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
+      {
+        sequence: 3,
+        event: {
+          id: crypto.randomUUID(),
+          taskId: task.id,
+          kind: "status",
+          status: "succeeded",
+          summary: "Done",
+        },
+      },
+    ]);
+    const streamId = crypto.randomUUID();
+    await service.announce(f.actor, { ...f.announce, streamId });
+    await repository.transaction(f.auth.user.id, async (tx) => {
+      for (let cursor = 1; cursor <= 5000; cursor++)
+        await tx.put("event", {
+          id: `replay-${cursor}`,
+          deviceId: task.deviceId,
+          taskId: task.id,
+          streamId,
+          cursor,
+          event: {
+            id: `event-${cursor}`,
+            taskId: task.id,
+            kind: "status",
+            status: "succeeded",
+            summary: "x".repeat(2048),
+          },
+        });
+      await tx.put("event", {
+        id: "orphan",
+        deviceId: task.deviceId,
+        taskId: "missing",
+        streamId,
+        cursor: 5001,
+        event: { kind: "activity" },
+      });
+    });
+    await service.snapshot(f.actor, streamId, 5001, []);
+    const rows = await repository.read(f.auth.user.id, (tx) =>
+      tx.list<{ id: string; deviceId: string; streamId: string; event: { kind: string } }>(
+        "event",
+        task.deviceId,
+      ),
+    );
+    const replay = rows.filter((row) => row.event.kind !== "activity");
+    expect(replay.length).toBeLessThanOrEqual(4096);
+    expect(
+      replay.reduce((bytes, row) => bytes + Buffer.byteLength(JSON.stringify(row)), 0),
+    ).toBeLessThanOrEqual(8 * 1024 * 1024);
+    expect(replay.every((row) => row.streamId === streamId)).toBe(true);
+    expect(rows.some((row) => row.id === "orphan")).toBe(false);
+    const result = await service.getTask(f.auth.user.id, task.id, 0);
+    expect(result.task.status).toBe("succeeded");
+    expect(result.activity).toEqual([entry]);
+  });
+  it("applies deltas atomically, requires a baseline and reads without the write transaction", async () => {
+    const repository = memoryControlRepository(),
+      service = new ControlService(repository),
+      f = await connected(service),
+      task = await running(service, f);
+    const entry = {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "message" as const,
+      order: 1,
+      revision: 1,
+      text: "Hello",
+      status: "streaming" as const,
+      truncated: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await service.events(f.actor, f.announce.streamId, [
+      { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
+    ]);
+    const delta = {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "activity_delta" as const,
+      entryId: entry.id,
+      baseRevision: 1,
+      revision: 2,
+      append: " world",
+      updatedAt: entry.updatedAt,
+      truncated: false,
+    };
+    await service.events(f.actor, f.announce.streamId, [{ sequence: 3, event: delta }]);
+    await expect(
+      service.events(f.actor, f.announce.streamId, [
+        { sequence: 4, event: { ...delta, id: crypto.randomUUID(), baseRevision: 3, revision: 4 } },
+      ]),
+    ).rejects.toMatchObject({ code: "ACTIVITY_BASE_MISMATCH" });
+    const write = vi
+      .spyOn(repository, "transaction")
+      .mockRejectedValue(new Error("Write lock unavailable"));
+    try {
+      expect((await service.getTask(f.auth.user.id, task.id, 0)).activity).toMatchObject([
+        { text: "Hello world", revision: 2 },
+      ]);
+    } finally {
+      write.mockRestore();
+    }
+  });
   it("routes task inputs by owner and retains only the latest conversation revision with paging", async () => {
     const repository = memoryControlRepository(),
       service = new ControlService(repository),

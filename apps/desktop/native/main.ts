@@ -19,6 +19,8 @@ import { Session } from "electrobun/main/native";
 import { createDesktopApi, parseApiOrigin } from "./api";
 import { loadDesktopConfig, scopeLocalAccount } from "./config";
 import { createEncryptedCookies } from "./cookies";
+import { acquireDesktopInstance } from "./instance";
+import { externalUrl } from "./external";
 import manifest from "../package.json";
 import type { DesktopRpc } from "./rpc";
 import { wireWindow } from "./window";
@@ -42,6 +44,18 @@ const smokeDirectory =
   process.env.RAYPX_NATIVE_SMOKE === "1"
     ? resolve(process.env.RAYPX_NATIVE_SMOKE_DATA_DIR ?? ".hutch/native-smoke-data")
     : undefined;
+const releaseInstance = acquireDesktopInstance(smokeDirectory ?? Utils.paths.userData);
+if (!releaseInstance) {
+  await Utils.showMessageBox({
+    type: "info",
+    title: "Raypx",
+    message: "Raypx is already running / Raypx 已在运行",
+    buttons: ["OK / 确定"],
+  });
+  Utils.quit();
+  throw new Error("Desktop instance already running");
+}
+process.once("exit", releaseInstance);
 export const connectionConfig = await (async () => {
   try {
     return loadDesktopConfig(smokeDirectory ? join(smokeDirectory, "config") : undefined);
@@ -99,8 +113,8 @@ mainWindow.webview.remove();
 export const tray = new Tray({
   image: "views://assets/tray-icon.png",
   template: false,
-  width: 20,
-  height: 20,
+  width: 16,
+  height: 16,
 });
 
 const executable = process.platform === "win32" ? "raypx.exe" : "raypx";
@@ -123,7 +137,19 @@ const serverDirectory = join(
 const cookies = await (async () => {
   if (process.platform !== "win32") return Session.fromPartition(partition).cookies;
   try {
-    return await createEncryptedCookies(serverDirectory, apiOrigin);
+    return await createEncryptedCookies(serverDirectory, apiOrigin, Bun.secrets, (recovery) => {
+      if (!smokeDirectory)
+        void Utils.showMessageBox({
+          type: "warning",
+          title: "Raypx",
+          message:
+            recovery.kind === "reset"
+              ? "Session storage was reset. Sign in again. / 登录存储已重置，请重新登录。"
+              : "Secure storage is unavailable. This login will not survive a restart. / 安全存储不可用，本次登录不会保存。",
+          detail: recovery.path,
+          buttons: ["OK / 确定"],
+        });
+    });
   } catch {
     if (!smokeDirectory) {
       await Utils.showMessageBox({
@@ -157,7 +183,7 @@ export const engine = new LocalEngine(
   manifest.version,
   (event) => {
     if (event.event === "agent.changed") {
-      void control.wake();
+      if (event.data.local !== true) void control.wake();
       // Local approvals never reach the relay, so the engine flags them directly.
       if (typeof event.data.pendingRequest === "string") notifyPending();
     }
@@ -185,6 +211,11 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
   maxRequestTime: 5000,
   handlers: {
     requests: {
+      openExternal: (input) => {
+        const safe = externalUrl(input.url);
+        return safe ? Utils.openExternal(safe) : false;
+      },
+      apiCancel: ({ id }) => desktopApi.cancel(id),
       apiFetch: (input) => desktopApi.request(input),
       controlInfo: ({ accountId }) => control.info(accountId),
       controlEnable: ({ accountId, enabled }) => control.enable(accountId, enabled),
@@ -291,6 +322,7 @@ export async function quitDesktop(code = 0) {
       }
     });
   } finally {
+    releaseInstance?.();
     Utils.quitAfterApproval(approval, code);
   }
 }

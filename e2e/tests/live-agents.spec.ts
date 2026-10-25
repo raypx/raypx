@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { selectOption } from "./helpers/select.js";
 
 const directory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 const credentialsPath = process.env.RAYPX_NATIVE_SMOKE_CREDENTIALS;
@@ -53,14 +54,22 @@ test("Beta Web runs approved Claude and Codex tasks on a hidden packaged Desktop
     const form = page
       .getByRole("textbox", { name: "What should the agent do?", exact: true })
       .locator("xpath=ancestor::form[1]");
-    await form
-      .getByRole("combobox", { name: "Computer", exact: true })
-      .selectOption(native.deviceId);
-    await form
-      .getByRole("combobox", { name: "Project", exact: true })
-      .selectOption(native.projectId);
-    await form.getByRole("combobox", { name: "Agent", exact: true }).selectOption(provider);
-    await form.getByRole("combobox", { name: "Execution", exact: true }).selectOption("plan");
+    await selectOption(
+      page,
+      form.getByRole("combobox", { name: "Computer", exact: true }),
+      native.deviceId,
+    );
+    await selectOption(
+      page,
+      form.getByRole("combobox", { name: "Project", exact: true }),
+      native.projectId,
+    );
+    await selectOption(page, form.getByRole("combobox", { name: "Agent", exact: true }), provider);
+    await selectOption(
+      page,
+      form.getByRole("combobox", { name: "Execution", exact: true }),
+      "plan",
+    );
     await form
       .getByRole("textbox", { name: "What should the agent do?", exact: true })
       .fill(

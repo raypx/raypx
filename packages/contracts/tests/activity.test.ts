@@ -1,5 +1,10 @@
 import { expect, it } from "vite-plus/test";
-import { taskActivityPage, taskActivitySchema, type TaskActivity } from "../src/tasks.js";
+import {
+  applyActivityEvent,
+  taskActivityPage,
+  taskActivitySchema,
+  type TaskActivity,
+} from "../src/tasks.js";
 const base = {
   id: "11111111-1111-4111-8111-111111111111",
   taskId: "22222222-2222-4222-8222-222222222222",
@@ -12,6 +17,35 @@ const base = {
   createdAt: "2026-10-24T00:00:00Z",
   updatedAt: "2026-10-24T00:00:00Z",
 };
+it("requires a delta baseline and accepts the final full item as authoritative", () => {
+  const streaming = { ...base, status: "streaming" as const };
+  const delta = {
+    id: "33333333-3333-4333-8333-333333333333",
+    taskId: base.taskId,
+    kind: "activity_delta" as const,
+    entryId: base.id,
+    baseRevision: 1,
+    revision: 2,
+    append: " world",
+    updatedAt: base.updatedAt,
+    truncated: false,
+  };
+  expect(applyActivityEvent(undefined, delta)).toBeUndefined();
+  expect(applyActivityEvent({ ...streaming, revision: 0 }, delta)).toBeUndefined();
+  const updated = applyActivityEvent(streaming, delta);
+  expect(updated).toMatchObject({ text: "Hello world", revision: 2 });
+  expect(applyActivityEvent(updated, delta)).toEqual(updated);
+  const final = { ...base, revision: 3, text: "Authoritative final" };
+  expect(
+    applyActivityEvent(updated, {
+      id: "44444444-4444-4444-8444-444444444444",
+      taskId: base.taskId,
+      kind: "activity",
+      entry: final,
+    }),
+  ).toEqual(final);
+  expect(applyActivityEvent(final, { ...delta, baseRevision: 3, revision: 4 })).toBeUndefined();
+});
 it("uses latest revisions and pages bounded Unicode messages without omitting an entry", () => {
   const entries: Extract<TaskActivity, { kind: "message" }>[] = Array.from(
     { length: 70 },

@@ -1,5 +1,6 @@
 import { z } from "zod";
-export { taskActivityPage } from "./activity.js";
+export { taskActivityPage, applyActivityEvent } from "./activity.js";
+export const RELAY_VERSION = 2;
 
 export const agentProviderSchema = z.enum(["claude", "codex"]);
 export const taskModeSchema = z.enum(["run", "plan"]);
@@ -54,6 +55,7 @@ export const taskSchema = z.object({
   prompt: z.string().min(1).max(32_000),
   status: taskStatusSchema,
   summary: z.string().max(32_000),
+  activityIncomplete: z.boolean().optional(),
   parentTaskId: z.string().uuid().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -119,6 +121,7 @@ export const taskActivitySchema = z.discriminatedUnion("kind", [
     cachedInputTokens: z.number().int().nonnegative(),
     cacheWriteTokens: z.number().int().nonnegative(),
     durationMs: z.number().int().nonnegative(),
+    known: z.boolean().optional(),
   }),
   taskInputActivitySchema,
 ]);
@@ -131,6 +134,17 @@ export const taskInputSchema = z.object({
   prompt: z.string().trim().min(1).max(32_000),
 });
 export const agentEventSchema = z.discriminatedUnion("kind", [
+  z.object({
+    id: z.string().uuid(),
+    taskId: z.string().uuid(),
+    kind: z.literal("activity_delta"),
+    entryId: z.string().uuid(),
+    baseRevision: z.number().int().positive(),
+    revision: z.number().int().positive(),
+    append: z.string().max(32_000),
+    updatedAt: z.string(),
+    truncated: z.boolean(),
+  }),
   z.object({
     id: z.string().uuid(),
     taskId: z.string().uuid(),
@@ -252,6 +266,7 @@ export const relayCursorSchema = z.object({
 export const relayClientSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("auth"),
+    protocolVersion: z.literal(RELAY_VERSION),
     role: z.enum(["device", "viewer"]),
     token: z.string().min(32).max(200),
     cursors: z.array(relayCursorSchema).max(200).optional(),
@@ -289,7 +304,11 @@ export const relayClientSchema = z.discriminatedUnion("type", [
   }),
 ]);
 export const relayServerSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("ready"), role: z.enum(["device", "viewer"]) }),
+  z.object({
+    type: z.literal("ready"),
+    protocolVersion: z.literal(RELAY_VERSION),
+    role: z.enum(["device", "viewer"]),
+  }),
   z.object({ type: z.literal("pong") }),
   z.object({
     type: z.literal("resume"),
@@ -327,4 +346,11 @@ export type RelayServerFrame = z.infer<typeof relayServerSchema>;
 export type SnapshotRecord = z.infer<typeof snapshotRecordSchema>;
 export type SequencedEvent = z.infer<typeof sequencedEventSchema>;
 export type RelayCursor = z.infer<typeof relayCursorSchema>;
+export const taskChangeSchema = z.object({
+  type: z.enum(["reset", "events", "devices"]),
+  deviceId: z.string().uuid().optional(),
+  local: z.boolean().optional(),
+  events: z.array(sequencedEventSchema).max(50).optional(),
+});
+export type TaskChange = z.infer<typeof taskChangeSchema>;
 export const MAX_RELAY_BYTES = 1024 * 1024;

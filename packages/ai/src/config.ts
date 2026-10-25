@@ -12,6 +12,26 @@ export interface AiSettings {
   timeout_ms?: number;
   temperature?: number;
 }
+/** A destination change must not borrow another provider's identity or credentials. */
+export function mergeAiSettings(file: AiSettings, override: AiSettings): AiSettings {
+  const inherited = { ...file };
+  if (override.provider !== undefined && override.provider !== file.provider) {
+    for (const field of [
+      "model",
+      "base_url",
+      "api",
+      "api_key_env",
+      "auth",
+      "context_window",
+      "max_tokens",
+    ] as const)
+      delete inherited[field];
+  } else if (override.base_url !== undefined && override.base_url !== file.base_url) {
+    for (const field of ["api_key_env", "auth", "context_window", "max_tokens"] as const)
+      delete inherited[field];
+  }
+  return parseAiSettings({ ...inherited, ...override });
+}
 const fields = new Set([
   "provider",
   "model",

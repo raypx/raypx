@@ -13,10 +13,12 @@ interface Cookie {
   sameSite?: "no_restriction" | "lax" | "strict";
   expirationDate?: number;
 }
+export type CookieMutation = { cookie: Cookie } | { url: string; name: string };
 export interface NativeCookies {
   get(filter: { url: string }): Cookie[];
   set(cookie: Cookie): boolean;
   remove(url: string, name: string): boolean;
+  apply?(changes: CookieMutation[]): boolean;
 }
 const authCookie = (name: string) => /^(?:__Secure-)?better-auth\.[a-zA-Z0-9_.-]+$/.test(name);
 const authPaths = new Set([
@@ -55,7 +57,9 @@ export function createDesktopApi(
 ) {
   const origin = parseServerOrigin(rawOrigin);
   const base = new URL(origin);
-  function store(raw: string) {
+  let poisoned = false;
+  const requests = new Map<string, AbortController>();
+  function parseCookie(raw: string): CookieMutation | undefined {
     if (raw.length > 16_384) throw new Error("API cookie exceeds limit");
     const [pair, ...attributes] = raw.split(";");
     const equal = pair!.indexOf("=");
@@ -63,7 +67,8 @@ export function createDesktopApi(
     const name = pair!.slice(0, equal).trim();
     if (!authCookie(name)) return;
     const value = pair!.slice(equal + 1).trim();
-    if (/[\r\n;]/.test(value)) throw new Error("Invalid API cookie");
+    if (!/^[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]*$/.test(value))
+      throw new Error("Invalid API cookie");
     const fields = new Map(
       attributes.map((attribute) => {
         const offset = attribute.indexOf("=");
@@ -77,10 +82,26 @@ export function createDesktopApi(
     if (base.hostname !== host && !base.hostname.endsWith("." + host))
       throw new Error("Invalid API cookie domain");
     const path = fields.get("path") ?? "/";
-    if (path !== "/" && !path.startsWith("/api/") && !path.startsWith("/rpc/"))
+    if (
+      /[\s?#\\]/.test(path) ||
+      (path !== "/" && !path.startsWith("/api/") && !path.startsWith("/rpc/"))
+    )
       throw new Error("Invalid API cookie path");
     const maxAge = fields.has("max-age") ? Number(fields.get("max-age")) : undefined;
     const expires = fields.has("expires") ? Date.parse(fields.get("expires")!) / 1000 : undefined;
+    if (
+      (maxAge !== undefined &&
+        (!/^-?\d+$/.test(fields.get("max-age")!) || !Number.isSafeInteger(maxAge))) ||
+      (expires !== undefined && !Number.isFinite(expires))
+    )
+      throw new Error("Invalid API cookie expiration");
+    const secure = fields.has("secure");
+    const httpOnly = fields.has("httponly");
+    if ((base.protocol === "https:" || name.startsWith("__Secure-")) && (!secure || !httpOnly))
+      throw new Error("Insecure API session cookie");
+    const sameSite = fields.get("samesite")?.toLowerCase();
+    if (sameSite !== undefined && !["none", "lax", "strict"].includes(sameSite))
+      throw new Error("Invalid API cookie SameSite");
     const expirationDate =
       maxAge !== undefined && Number.isFinite(maxAge) ? Date.now() / 1000 + maxAge : expires;
     if (
@@ -89,17 +110,10 @@ export function createDesktopApi(
       expirationDate <= Date.now() / 1000
     ) {
       const url = new URL(path, origin).href;
-      if (cookies.get({ url }).some((cookie) => cookie.name === name) && !cookies.remove(url, name))
-        throw new Error("Unable to clear API session");
-      return;
+      return { url, name };
     }
-    const secure = fields.has("secure");
-    const httpOnly = fields.has("httponly");
-    if (base.protocol === "https:" && (!secure || !httpOnly))
-      throw new Error("Insecure API session cookie");
-    const sameSite = fields.get("samesite")?.toLowerCase();
-    if (
-      !cookies.set({
+    return {
+      cookie: {
         name,
         value,
         // Native only calls one API host, so keep even parent-domain cookies host-scoped.
@@ -111,12 +125,64 @@ export function createDesktopApi(
         ...(expirationDate !== undefined && Number.isFinite(expirationDate)
           ? { expirationDate }
           : {}),
-      })
-    )
+      },
+    };
+  }
+  function commit(changes: CookieMutation[]) {
+    if (!changes.length) return;
+    if (cookies.apply) {
+      if (!cookies.apply(changes)) throw new Error("Unable to persist API session");
+      return;
+    }
+    const urls = changes.map((change) =>
+      "cookie" in change ? new URL(change.cookie.path ?? "/", origin).href : change.url,
+    );
+    const before = [
+      ...new Map(
+        urls
+          .flatMap((url) => cookies.get({ url }))
+          .map((cookie) => [cookie.name + ":" + cookie.path, { ...cookie }]),
+      ).values(),
+    ];
+    try {
+      for (const change of changes)
+        if (
+          !("cookie" in change
+            ? cookies.set(change.cookie)
+            : cookies.remove(change.url, change.name))
+        )
+          throw new Error("Unable to persist API session");
+    } catch {
+      poisoned = true;
+      let restored = true;
+      for (const [index, change] of changes.entries())
+        try {
+          if (!cookies.remove(urls[index]!, "cookie" in change ? change.cookie.name : change.name))
+            restored = false;
+        } catch {
+          restored = false;
+        }
+      for (const cookie of before)
+        try {
+          if (!cookies.set(cookie)) restored = false;
+        } catch {
+          restored = false;
+        }
+      poisoned = !restored;
       throw new Error("Unable to persist API session");
+    }
   }
   const api = {
-    async request(this: void, input: DesktopApiRequest): Promise<DesktopApiResponse> {
+    cancel(id: string) {
+      requests.get(id)?.abort();
+      return true;
+    },
+    async request(
+      this: void,
+      input: DesktopApiRequest,
+      callerSignal?: AbortSignal,
+    ): Promise<DesktopApiResponse> {
+      if (poisoned) throw new Error("Native session storage unavailable; restart required");
       if (
         !input ||
         typeof input.path !== "string" ||
@@ -163,40 +229,56 @@ export function createDesktopApi(
       if (stored.length > 32) throw new Error("Too many API session cookies");
       if (stored.length)
         headers.set("cookie", stored.map((cookie) => cookie.name + "=" + cookie.value).join("; "));
-      const response = await send(url.href, {
-        method: input.method,
-        headers,
-        ...(input.body === undefined ? {} : { body: input.body }),
-        redirect: "manual",
-        signal: AbortSignal.timeout(10_000),
-      });
-      const setCookies = response.headers.getSetCookie();
-      if (setCookies.length > 32) throw new Error("Too many API response cookies");
-      for (const value of setCookies) store(value);
-      // Read with a byte limit before crossing the native RPC boundary.
-      const reader = response.body?.getReader();
-      const chunks: Uint8Array[] = [];
-      let length = 0;
-      if (reader)
-        try {
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            length += value.byteLength;
-            if (length > 8 * 1024 * 1024) throw new Error("API response exceeds limit");
-            chunks.push(value);
+      const controller = new AbortController();
+      if (input.id !== undefined && (!/^[a-f0-9-]{36}$/.test(input.id) || requests.has(input.id)))
+        throw new Error("Invalid API request identity");
+      if (requests.size >= 128) throw new Error("Too many API requests");
+      if (input.id) requests.set(input.id, controller);
+      try {
+        const response = await send(url.href, {
+          method: input.method,
+          headers,
+          ...(input.body === undefined ? {} : { body: input.body }),
+          redirect: "manual",
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(30_000),
+            ...(callerSignal ? [callerSignal] : []),
+          ]),
+        });
+        const setCookies = response.headers.getSetCookie();
+        if (setCookies.length > 32) throw new Error("Too many API response cookies");
+        const changes = setCookies
+          .map(parseCookie)
+          .filter((change): change is CookieMutation => change !== undefined);
+        commit(changes);
+        // Read with a byte limit before crossing the native RPC boundary.
+        const reader = response.body?.getReader();
+        const chunks: Uint8Array[] = [];
+        let length = 0;
+        if (reader)
+          try {
+            for (;;) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              length += value.byteLength;
+              if (length > 8 * 1024 * 1024) throw new Error("API response exceeds limit");
+              chunks.push(value);
+            }
+          } finally {
+            await reader.cancel();
           }
-        } finally {
-          await reader.cancel();
-        }
-      const body = Buffer.concat(chunks).toString("utf8");
-      return {
-        status: response.status,
-        headers: Object.fromEntries(
-          [...response.headers].filter(([name]) => responseHeaders.has(name)),
-        ),
-        body,
-      };
+        const body = Buffer.concat(chunks).toString("utf8");
+        return {
+          status: response.status,
+          headers: Object.fromEntries(
+            [...response.headers].filter(([name]) => responseHeaders.has(name)),
+          ),
+          body,
+        };
+      } finally {
+        if (input.id) requests.delete(input.id);
+      }
     },
   };
   return Object.assign(api, {
@@ -204,14 +286,18 @@ export function createDesktopApi(
       const request = new Request(input, init);
       const url = new URL(request.url);
       if (url.origin !== origin) throw new Error("Invalid native API origin");
-      const result = await api.request({
-        path: url.pathname + url.search,
-        method: request.method,
-        headers: Object.fromEntries(
-          [...request.headers].filter(([name]) => requestHeaders.has(name)),
-        ),
-        ...(request.body === null ? {} : { body: await request.text() }),
-      });
+      const result = await api.request(
+        {
+          id: crypto.randomUUID(),
+          path: url.pathname + url.search,
+          method: request.method,
+          headers: Object.fromEntries(
+            [...request.headers].filter(([name]) => requestHeaders.has(name)),
+          ),
+          ...(request.body === null ? {} : { body: await request.text() }),
+        },
+        request.signal,
+      );
       return new Response([204, 205, 304].includes(result.status) ? null : result.body, {
         status: result.status,
         headers: result.headers,

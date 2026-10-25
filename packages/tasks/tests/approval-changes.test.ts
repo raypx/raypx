@@ -36,9 +36,60 @@ it("reads Codex unified changes and new Claude files without confusing header li
     { kind: "add", text: "after", next: 5 },
   ]);
   expect(approvalChanges(JSON.stringify({ file_path: "new", content: "hello" }))[0]?.lines).toEqual(
-    [{ kind: "add", text: "hello", next: 1 }],
+    [{ kind: "context", text: "hello" }],
   );
   expect(approvalChanges("bun test")).toEqual([]);
+});
+it("keeps header-like content inside hunks and honors Codex file kinds", () => {
+  const [file] = approvalChanges(
+    JSON.stringify({
+      changes: [
+        {
+          path: "a",
+          kind: { type: "update" },
+          diff: "--- a/a\n+++ b/a\n@@ -2,2 +2,2 @@\n--- drop x\n+++ x\n keep",
+        },
+      ],
+    }),
+  );
+  expect(file?.lines.slice(1)).toEqual([
+    { kind: "remove", text: "-- drop x", old: 2 },
+    { kind: "add", text: "++ x", next: 2 },
+    { kind: "context", text: "keep", old: 3, next: 3 },
+  ]);
+  for (const type of ["add", "delete"])
+    expect(
+      approvalChanges(
+        JSON.stringify({ changes: [{ path: "a", kind: { type }, diff: "- item\n+++ content" }] }),
+      )[0]?.lines.map((line) => line.kind),
+    ).toEqual(type === "add" ? ["add", "add"] : ["remove", "remove"]);
+  expect(
+    approvalChanges(
+      JSON.stringify({ changes: [{ path: "a", kind: { type: "unknown" }, diff: "x" }] }),
+    ),
+  ).toEqual([]);
+  expect(
+    approvalChanges(
+      JSON.stringify({
+        changes: [
+          { path: "known", kind: { type: "add" }, diff: "hello" },
+          { path: "unknown", kind: { type: "future" }, diff: "secret change" },
+        ],
+      }),
+    ),
+  ).toEqual([]);
+  expect(
+    approvalChanges(
+      JSON.stringify({
+        changes: [
+          { path: "a", kind: { type: "update" }, diff: "--- a/a\n+++ b/a\n@@\n--- drop x\n+++ x" },
+        ],
+      }),
+    )[0]?.lines.slice(1),
+  ).toEqual([
+    { kind: "remove", text: "-- drop x" },
+    { kind: "add", text: "++ x" },
+  ]);
 });
 it("bounds large diffs and parses apply_patch file boundaries", () => {
   const files = approvalChanges(

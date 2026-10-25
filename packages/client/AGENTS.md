@@ -9,6 +9,9 @@ The browser/native-safe remote API SDK.
 `.` exports createApiClient, createTaskClient, their client types, RelayConnection
 and injectable fetch/socket types. Task mutations use the relay; HTTP reads retain
 the existing projection contracts. Relay traffic contains no credentials in URLs.
+Task subscriptions carry typed device/event/reset changes. Relay v2 mismatches stop
+reconnection with UPGRADE_REQUIRED. Incremental activities require their exact baseline;
+consumers recover missing revisions from the task checkpoint.
 
 ## Ownership
 

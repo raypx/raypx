@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { TaskClient } from "@raypx/client";
+import { applyActivityEvent } from "@raypx/contracts/tasks";
 import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
 import type {
   AgentTask,
@@ -12,10 +13,16 @@ import type {
 } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@raypx/ui/components/ui/collapsible";
+import { ChevronRight } from "lucide-react";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@raypx/ui/components/ui/native-select";
+import { SelectField } from "@raypx/ui/select-field";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { isTaskActive } from "../index.js";
@@ -88,7 +95,7 @@ function Workspace({
     },
     [client, before, view],
   );
-  const { data, error, refresh, refreshing } = useRemoteQuery(
+  const { data, error, errorCode, refresh, refreshing } = useRemoteQuery(
     ["workspace", accountId, view, before ?? null],
     load,
     true,
@@ -121,7 +128,7 @@ function Workspace({
       </header>
       {error && (
         <p role="alert" className="mb-4 text-sm text-destructive-text">
-          {t(local ? "LOCAL_UNAVAILABLE" : "NETWORK_UNAVAILABLE")}
+          {t(errorCode)}
         </p>
       )}
       {!data ? (
@@ -159,7 +166,7 @@ function Workspace({
               )}
             </div>
           ) : (
-            <div className="task-layout">
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-8 max-[1050px]:grid-cols-1 max-[1050px]:gap-6">
               <div>
                 {data.tasks.length > 0 && (
                   <TaskFilterBar
@@ -318,69 +325,65 @@ function CreateTask({
       <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
         <Field>
           <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
-          <NativeSelect
+          <SelectField
             id={`${id}-device`}
             className="w-full"
             required
-            value={deviceId}
-            onChange={(event) => {
-              setDeviceId(event.target.value);
+            value={deviceId || null}
+            placeholder={t("chooseDevice")}
+            onValueChange={(value) => {
+              setDeviceId(value);
               setProjectId("");
             }}
-          >
-            <NativeSelectOption value="">{t("chooseDevice")}</NativeSelectOption>
-            {devices
+            options={devices
               .filter((d) => !d.revoked)
-              .map((d) => (
-                <NativeSelectOption key={d.id} value={d.id} disabled={!d.online}>
-                  {d.name} · {t(d.online ? "online" : "offline")}
-                </NativeSelectOption>
-              ))}
-          </NativeSelect>
+              .map((d) => ({
+                value: d.id,
+                label: `${d.name} · ${t(d.online ? "online" : "offline")}`,
+                disabled: !d.online,
+              }))}
+          />
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
-          <NativeSelect
+          <SelectField
             id={`${id}-project`}
             className="w-full"
             required
-            value={projectId}
-            onChange={(event) => setProjectId(event.target.value)}
-          >
-            <NativeSelectOption value="">{t("chooseProject")}</NativeSelectOption>
-            {device?.projects.map((p) => (
-              <NativeSelectOption key={p.id} value={p.id}>
-                {p.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+            value={projectId || null}
+            placeholder={t("chooseProject")}
+            onValueChange={setProjectId}
+            options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
+          />
         </Field>
       </div>
       {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
       <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
         <Field>
           <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
-          <NativeSelect
+          <SelectField<AgentProvider>
             id={`${id}-agent`}
             className="w-full"
             value={provider}
-            onChange={(event) => setProvider(event.target.value as AgentProvider)}
-          >
-            <NativeSelectOption value="claude">Claude Code</NativeSelectOption>
-            <NativeSelectOption value="codex">Codex</NativeSelectOption>
-          </NativeSelect>
+            onValueChange={setProvider}
+            options={[
+              { value: "claude", label: "Claude Code" },
+              { value: "codex", label: "Codex" },
+            ]}
+          />
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-mode`}>{t("mode")}</FieldLabel>
-          <NativeSelect
+          <SelectField<"run" | "plan">
             id={`${id}-mode`}
             className="w-full"
             value={mode}
-            onChange={(event) => setMode(event.target.value as "run" | "plan")}
-          >
-            <NativeSelectOption value="run">{t("runMode")}</NativeSelectOption>
-            <NativeSelectOption value="plan">{t("planMode")}</NativeSelectOption>
-          </NativeSelect>
+            onValueChange={setMode}
+            options={[
+              { value: "run", label: t("runMode") },
+              { value: "plan", label: t("planMode") },
+            ]}
+          />
         </Field>
       </div>
       <Field>
@@ -433,6 +436,7 @@ function TaskDetail({
   const activity = useRef(new Map<string, TaskActivity>());
   const olderBefore = useRef<number | undefined>(undefined);
   const initialized = useRef(false);
+  const gap = useRef<{ before: number; after: number } | undefined>(undefined);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const mergeActivity = useCallback((entries: TaskActivity[]) => {
     for (const entry of entries) {
@@ -447,13 +451,16 @@ function TaskDetail({
         0,
         ...[...activity.current.values()].map((entry) => entry.order),
       );
-      if (
-        !initialized.current ||
-        (result.activity?.[0] && result.activity[0].order > latestOrder && result.activityBefore)
-      ) {
+      if (!initialized.current) {
         olderBefore.current = result.activityBefore;
         initialized.current = true;
-      }
+      } else if (
+        result.activity?.[0] &&
+        latestOrder &&
+        result.activityBefore !== undefined &&
+        result.activityBefore > latestOrder
+      )
+        gap.current = { before: result.activityBefore, after: latestOrder };
       mergeActivity(result.activity ?? []);
       for (const item of result.events) {
         history.current.set(item.cursor, item.event);
@@ -462,6 +469,7 @@ function TaskDetail({
       return {
         ...result,
         activityBefore: olderBefore.current,
+        activityGap: gap.current?.before,
         activity: [...activity.current.values()].sort((a, b) => a.order - b.order),
         events: [...history.current.entries()].map(([position, event]) => ({
           cursor: position,
@@ -471,12 +479,49 @@ function TaskDetail({
     },
     [client, id, mergeActivity],
   );
-  const { data, error, refresh } = useRemoteQuery(["task", id], load, true, client);
+  const mergeEvents = useCallback((events: AgentEvent[]) => {
+    for (const event of events) {
+      if (event.kind !== "activity" && event.kind !== "activity_delta") return undefined;
+      const entryId = event.kind === "activity" ? event.entry.id : event.entryId;
+      const entry = applyActivityEvent(activity.current.get(entryId), event);
+      if (!entry) return undefined;
+      activity.current.set(entryId, entry);
+    }
+    return [...activity.current.values()].sort((a, b) => a.order - b.order);
+  }, []);
+  const { data, error, errorCode, refresh } = useRemoteQuery(
+    ["task", id],
+    load,
+    true,
+    client,
+    mergeEvents,
+  );
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ReturnType<typeof failureCode>>();
   const [prompt, setPrompt] = useState("");
   const followId = useRef<{ prompt: string; id: string } | null>(null);
   const active = useRef(false);
+  async function loadGap() {
+    if (!gap.current || loadingOlder) return;
+    setLoadingOlder(true);
+    try {
+      const boundary = gap.current;
+      const result = await client.tasks.get(
+        { id, beforeActivity: boundary.before },
+        { signal: AbortSignal.timeout(15_000) },
+      );
+      mergeActivity(result.activity ?? []);
+      gap.current =
+        result.activityBefore !== undefined && result.activityBefore > boundary.after
+          ? { ...boundary, before: result.activityBefore }
+          : undefined;
+      refresh();
+    } catch (caught) {
+      setFailure(failureCode(caught));
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
   async function loadOlder() {
     if (loadingOlder || olderBefore.current === undefined) return;
     setLoadingOlder(true);
@@ -536,7 +581,15 @@ function TaskDetail({
     return (
       <div className="space-y-3">
         <p role={error ? "alert" : "status"}>
-          {error ? t(local ? "LOCAL_UNAVAILABLE" : "NETWORK_UNAVAILABLE") : c("loading")}
+          {error
+            ? t(
+                errorCode === "UPGRADE_REQUIRED"
+                  ? errorCode
+                  : local
+                    ? "LOCAL_UNAVAILABLE"
+                    : errorCode,
+              )
+            : c("loading")}
         </p>
         {error && (
           <Button variant="outline" onClick={refresh}>
@@ -573,6 +626,16 @@ function TaskDetail({
           }}
         />
       ))}
+      {data.activityGap !== undefined && (
+        <Button variant="outline" disabled={loadingOlder} onClick={() => void loadGap()}>
+          {t("historyGap")}
+        </Button>
+      )}
+      {data.task.activityIncomplete && (
+        <p role="status" className="text-xs text-muted-foreground">
+          {t("snapshotIncomplete")}
+        </p>
+      )}
       <Conversation
         task={data.task}
         entries={data.activity}
@@ -595,22 +658,27 @@ function TaskDetail({
           onChanged={refresh}
         />
       )}
-      <details>
-        <summary className="cursor-pointer text-sm">{t("activity")}</summary>
-        <ol className="mt-3 space-y-2 text-xs text-muted-foreground">
-          {data.events.map(
-            ({ cursor: eventCursor, event }: { cursor: number; event: AgentEvent }) => (
-              <li key={eventCursor}>
-                {event.kind === "status"
-                  ? t(event.status)
-                  : event.kind === "request"
-                    ? event.request.title
-                    : t("applied")}
-              </li>
-            ),
-          )}
-        </ol>
-      </details>
+      <Collapsible>
+        <CollapsibleTrigger render={<Button variant="ghost" size="sm" className="group" />}>
+          <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
+          {t("activity")}
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <ol className="mt-3 space-y-2 text-xs text-muted-foreground">
+            {data.events.map(
+              ({ cursor: eventCursor, event }: { cursor: number; event: AgentEvent }) => (
+                <li key={eventCursor}>
+                  {event.kind === "status"
+                    ? t(event.status)
+                    : event.kind === "request"
+                      ? event.request.title
+                      : t("applied")}
+                </li>
+              ),
+            )}
+          </ol>
+        </CollapsibleContent>
+      </Collapsible>
       {!isTaskActive(data.task) && (
         <form onSubmit={(event) => void follow(event)} className="space-y-3">
           <Field>
@@ -819,7 +887,7 @@ function Devices({ client, accountId }: { client: TaskClient; accountId: string 
   const t = useTranslations("tasks");
   const c = useTranslations("common");
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
-  const { data, error, refresh, refreshing } = useRemoteQuery(
+  const { data, error, errorCode, refresh, refreshing } = useRemoteQuery(
     ["devices", accountId],
     load,
     true,
@@ -832,7 +900,7 @@ function Devices({ client, accountId }: { client: TaskClient; accountId: string 
       {error && (
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <p role="alert" className="text-sm text-destructive-text">
-            {t("NETWORK_UNAVAILABLE")}
+            {t(errorCode)}
           </p>
           <Button variant="outline" disabled={refreshing} onClick={refresh}>
             {c("retry")}

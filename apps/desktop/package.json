@@ -21,6 +21,7 @@
     "typecheck:native": "bun --check --tsconfig-override tsconfig.native.json",
     "native:types": "bun --bun tsc --ignoreConfig --noCheck --declaration --emitDeclarationOnly --module ESNext --moduleResolution Bundler --target ES2022 --rootDir .hutch/devkit/api --outDir .hutch/types .hutch/devkit/api/sdks/main/entries/browser-view.ts .hutch/devkit/api/sdks/main/entries/browser-window.ts .hutch/devkit/api/sdks/main/entries/tray.ts .hutch/devkit/api/sdks/main/entries/updater.ts .hutch/devkit/api/sdks/main/entries/utils.ts .hutch/devkit/api/sdks/main/entries/rpc.ts .hutch/devkit/api/sdks/main/entries/build-config.ts .hutch/devkit/api/sdks/main/entries/events.ts .hutch/devkit/api/sdks/main/entries/native.ts",
     "native:cli": "bun run scripts/native/prepare-cli.ts",
+    "native:csp": "bun scripts/native/csp.ts",
     "native:smoke": "bun run native:cli && bun run tests/native/smoke/run.ts",
     "native:agents": "bun run native:cli && bun run tests/native/smoke/agents.ts",
     "native:beta": "bun run native:cli && bun run tests/native/smoke/run.ts beta"
@@ -51,6 +52,7 @@
     "@tailwindcss/vite": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
+    "@testing-library/user-event": "catalog:dev",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",

@@ -8,7 +8,8 @@ import {
   RouterProvider,
   type RootRouteOptions,
 } from "@tanstack/react-router";
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import * as matchers from "@testing-library/jest-dom/matchers";
 // Load matcher types without registering against jest-dom's separate Vitest runtime.
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
@@ -178,6 +179,11 @@ async function page(url: string, hash = false) {
 }
 
 describe("Files route and workspace", () => {
+  async function answerConfirmation(label: "Cancel" | "Discard changes" | "Delete") {
+    const dialog = await screen.findByRole("alertdialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: label }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  }
   async function draft() {
     fireEvent.click(await screen.findByRole("button", { name: /^readme\.txt$/ }));
     fireEvent.change(await screen.findByLabelText("Text editor"), { target: { value: "draft" } });
@@ -228,7 +234,6 @@ describe("Files route and workspace", () => {
     });
     await page("/");
     await draft();
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() =>
       expect(mocks.localRequest).toHaveBeenCalledWith(
@@ -237,7 +242,7 @@ describe("Files route and workspace", () => {
       ),
     );
     expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
-    expect(confirm).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
     await act(async () => second.resolve(listing("", 100)));
     expect(await screen.findByText("101–200 / 201")).toBeTruthy();
     expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
@@ -246,18 +251,16 @@ describe("Files route and workspace", () => {
   it("confirms once and leaves a cancelled directory navigation unchanged", async () => {
     const router = await page("/");
     await draft();
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     const reads = mocks.localRequest.mock.calls.length;
     fireEvent.click(screen.getByRole("button", { name: /^docs$/ }));
-    await waitFor(() => expect(confirm).toHaveBeenCalledTimes(1));
+    await answerConfirmation("Cancel");
     expect(router.state.location.search.path).toBeUndefined();
     expect(screen.getByLabelText("Text editor")).toHaveValue("draft");
     expect(mocks.localRequest).toHaveBeenCalledTimes(reads);
-    confirm.mockReturnValue(true);
     fireEvent.click(screen.getByRole("button", { name: /^docs$/ }));
+    await answerConfirmation("Discard changes");
     await waitFor(() => expect(router.state.location.search.path).toBe("docs"));
     await waitFor(() => expect(screen.queryByLabelText("Text editor")).toBeNull());
-    expect(confirm).toHaveBeenCalledTimes(2);
     await act(async () => router.history.back());
     await screen.findByRole("button", { name: /^readme\.txt$/ });
     expect(screen.queryByLabelText("Text editor")).toBeNull();
@@ -319,9 +322,12 @@ describe("Files route and workspace", () => {
   it("creates a clean store on return and prevents stale list results from replacing a new location", async () => {
     const router = await page("/");
     await draft();
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
-    await act(async () => router.navigate({ to: "/settings" }));
-    expect(confirm).toHaveBeenCalledTimes(1);
+    let navigation!: Promise<void>;
+    act(() => {
+      navigation = router.navigate({ to: "/settings" });
+    });
+    await answerConfirmation("Discard changes");
+    await act(async () => navigation);
     await act(async () => router.navigate({ to: "/" }));
     expect(screen.queryByLabelText("Text editor")).toBeNull();
     const old = deferred<FileListing>();
@@ -395,11 +401,11 @@ describe("Files route and workspace", () => {
       to: "renamed.txt",
       version: "v1",
     });
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     fireEvent.click(await screen.findByRole("button", { name: "Delete: readme.txt" }));
+    await answerConfirmation("Cancel");
     expect(mocks.localRequest.mock.calls.some(([m]) => m === "files.delete")).toBe(false);
-    confirm.mockReturnValue(true);
     fireEvent.click(screen.getByRole("button", { name: "Delete: readme.txt" }));
+    await answerConfirmation("Delete");
     await waitFor(() =>
       expect(mocks.localRequest).toHaveBeenCalledWith("files.delete", {
         rootId: "work",
@@ -421,10 +427,11 @@ describe("Files route and workspace", () => {
     });
     const router = await page("/");
     await draft();
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: "other" } });
-    await waitFor(() => expect(confirm).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole("combobox")).toHaveValue("work");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("combobox", { name: "Folders" }));
+    await user.click(screen.getByRole("option", { name: "Other" }));
+    await answerConfirmation("Cancel");
+    expect(screen.getByRole("combobox")).toHaveTextContent("Work");
     expect(router.state.location.search.rootId).toBeUndefined();
     failed = true;
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import type { AgentTask, SyncDevice } from "@raypx/tasks";
 import type { TaskClient } from "@raypx/client";
+import { selectOption } from "../../helpers/select.js";
 
 beforeEach(() => {
   vi.spyOn(Element.prototype, "clientHeight", "get").mockReturnValue(480);
@@ -88,12 +89,8 @@ async function submission() {
     </QueryClientProvider>,
   );
   fireEvent.click(await screen.findByRole("button", { name: "New task" }));
-  fireEvent.change(screen.getByRole("combobox", { name: "Computer" }), {
-    target: { value: device.id },
-  });
-  fireEvent.change(screen.getByRole("combobox", { name: "Project" }), {
-    target: { value: projectId },
-  });
+  await selectOption("Computer", device.id);
+  await selectOption("Project", projectId);
   const prompt = screen.getByRole("textbox", { name: "What should the agent do?" });
   fireEvent.change(prompt, { target: { value: "Create an acceptance file" } });
   fireEvent.submit(prompt.closest("form")!);

@@ -14,7 +14,10 @@ const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
 });
-async function control(options: NonNullable<ConstructorParameters<typeof RemoteControl>[4]> = {}) {
+async function control(
+  options: NonNullable<ConstructorParameters<typeof RemoteControl>[4]> = {},
+  rejectAuthentication = () => false,
+) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-relay-native-"));
   const streamId = crypto.randomUUID(),
     instanceId = crypto.randomUUID();
@@ -53,7 +56,12 @@ async function control(options: NonNullable<ConstructorParameters<typeof RemoteC
         const frame = relayClientSchema.parse(JSON.parse(String(value)));
         frames.push(frame);
         const peer = socket.data.peer;
-        if (frame.type === "auth") peer.send({ type: "ready", role: frame.role });
+        if (frame.type === "auth" && rejectAuthentication()) {
+          peer.close(4001, "Rejected grant");
+          return;
+        }
+        if (frame.type === "auth")
+          peer.send({ type: "ready", protocolVersion: 2, role: frame.role });
         if (frame.type === "announce")
           peer.send({ type: "resume", streamId, sequence: cursor, snapshot: !initialized });
         if (frame.type === "snapshot" && frame.done) {
@@ -131,12 +139,90 @@ async function control(options: NonNullable<ConstructorParameters<typeof RemoteC
     },
   };
 }
+it.each(["close", "error"] as const)(
+  "backs off grants rejected through %s after successful renewal",
+  async (trigger) => {
+    let reject = false;
+    const attempts: number[] = [];
+    const renewGrant = vi.fn(
+      async (_account: string, binding: { deviceId: string; epoch: number }) => {
+        attempts.push(Date.now());
+        return {
+          ...binding,
+          token: "renewed-" + crypto.randomUUID(),
+          expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        };
+      },
+    );
+    const f = await control({ renewGrant }, () => reject);
+    const initialRequests = f.renew.mock.calls.length;
+    reject = true;
+    for (const peer of f.sockets) {
+      if (trigger === "close") peer.close(4001, "Rejected grant");
+      else peer.send({ type: "error", code: "AUTH_REQUIRED" });
+    }
+    await expect.poll(() => attempts.length, { timeout: 8000 }).toBeGreaterThanOrEqual(3);
+    expect(attempts[1]! - attempts[0]!).toBeGreaterThanOrEqual(700);
+    expect(attempts[2]! - attempts[1]!).toBeGreaterThanOrEqual(1400);
+    expect(f.renew).toHaveBeenCalledTimes(initialRequests);
+  },
+  10_000,
+);
+it("finishes an in-flight command before replacing its socket for proactive renewal", async () => {
+  const renewGrant = vi.fn(
+    async (_account: string, binding: { deviceId: string; epoch: number }) => ({
+      ...binding,
+      token: "renewed-" + crypto.randomUUID(),
+      expiresAt: new Date(Date.now() + 600_000).toISOString(),
+    }),
+  );
+  const f = await control({ renewGrant }),
+    original = f.request.getMockImplementation()!;
+  let release!: () => void,
+    started = false;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  f.request.mockImplementation(async (method, params) => {
+    if (method === "agents.remote") {
+      started = true;
+      await gate;
+      return { ok: true, value: {} };
+    }
+    return original(method, params);
+  });
+  const routeId = crypto.randomUUID();
+  for (const peer of f.sockets)
+    peer.send({
+      type: "command",
+      routeId,
+      command: {
+        id: crypto.randomUUID(),
+        deviceId: f.grant.deviceId,
+        expiresAt: new Date(Date.now() + 15_000).toISOString(),
+        request: { method: "tasks.cancel", input: { id: crypto.randomUUID() } },
+      },
+    });
+  await expect.poll(() => started).toBe(true);
+  const pending = f.value.refreshGrant();
+  await expect.poll(() => renewGrant.mock.calls.length).toBe(1);
+  expect(f.frames.filter((frame) => frame.type === "auth")).toHaveLength(1);
+  release();
+  expect(await pending).toBe(true);
+  await expect.poll(() => f.frames.filter((frame) => frame.type === "auth").length).toBe(2);
+  expect(f.frames.some((frame) => frame.type === "result" && frame.routeId === routeId)).toBe(true);
+});
 it("persists installation identity and account intent while keeping credentials off disk and URLs", async () => {
   const f = await control(),
     saved = readFileSync(join(f.directory, "remote-control.json"), "utf8");
   expect(saved).not.toContain(f.grant.token);
   expect(f.urls.every((url) => !url.includes(f.grant.token))).toBe(true);
-  expect(f.frames[0]).toMatchObject({ type: "auth", role: "device", token: f.grant.token });
+  expect(f.frames[0]).toMatchObject({
+    type: "auth",
+    protocolVersion: 2,
+    role: "device",
+    token: f.grant.token,
+  });
   const restored = new RemoteControl(
     f.directory,
     { request: async () => ({}) },

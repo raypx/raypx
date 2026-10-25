@@ -35,4 +35,9 @@ export function createApiClient(options: CreateApiClientOptions = {}): ApiClient
   return createORPCClient(link);
 }
 
-export type { RelayClientFrame, RelayServerFrame, RelayCommand } from "@raypx/contracts/api";
+export type {
+  RelayClientFrame,
+  RelayServerFrame,
+  RelayCommand,
+  TaskChange,
+} from "@raypx/contracts/api";

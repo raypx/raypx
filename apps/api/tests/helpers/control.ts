@@ -11,40 +11,96 @@ import type { AgentTask, HumanRequest } from "@raypx/contracts/tasks";
 export function memoryControlRepository(): ControlRepository & { validSession: boolean } {
   let data = new Map<string, ControlRecord>();
   let queue = Promise.resolve();
-  const repository = {
+  const transaction = (draft: Map<string, ControlRecord>, userId: string): ControlTransaction => {
+    const key = (kind: RecordKind, id: string) => `${userId}:${kind}:${id}`;
+    return {
+      sessionActive: async () => repository.validSession,
+      async get<R extends ControlRecord>(kind: RecordKind, id: string) {
+        return structuredClone(draft.get(key(kind, id))) as R | undefined;
+      },
+      async list<R extends ControlRecord>(
+        kind: RecordKind,
+        deviceId?: string,
+        query: import("../../server/control/repository.js").ControlQuery = {},
+      ) {
+        const rows = [...draft.entries()]
+          .filter(
+            ([id, item]) =>
+              id.startsWith(`${userId}:${kind}:`) &&
+              (deviceId === undefined || item.deviceId === deviceId),
+          )
+          .map(
+            ([, item]) =>
+              structuredClone(item) as R & {
+                taskId?: string;
+                streamId?: string;
+                cursor?: number;
+                event?: { kind: string; entry?: { order: number } };
+              },
+          )
+          .filter(
+            (item) =>
+              (query.taskId === undefined || item.taskId === query.taskId) &&
+              (query.streamId === undefined || item.streamId === query.streamId) &&
+              (query.activity === undefined ||
+                (query.activity
+                  ? item.event?.kind === "activity"
+                  : !["activity", "activity_delta"].includes(item.event?.kind ?? ""))) &&
+              (query.after === undefined || (item.cursor ?? 0) > query.after) &&
+              (query.beforeActivity === undefined ||
+                (item.event?.entry?.order ?? 0) < query.beforeActivity),
+          );
+        if (kind === "event")
+          rows.sort(
+            (a, b) =>
+              ((query.activity ? a.event?.entry?.order : a.cursor) ?? 0) -
+              ((query.activity ? b.event?.entry?.order : b.cursor) ?? 0),
+          );
+        if (query.descending) rows.reverse();
+        return query.limit === undefined ? rows : rows.slice(0, query.limit);
+      },
+      async put(kind, item) {
+        draft.set(key(kind, item.id), structuredClone(item));
+        return item;
+      },
+      async remove(kind, id) {
+        draft.delete(key(kind, id));
+      },
+      async pruneEvents(deviceId, streamId, orphans = false) {
+        const rows = await transaction(draft, userId).list<
+          ControlRecord & {
+            taskId: string;
+            streamId: string;
+            cursor: number;
+            event: { kind: string };
+          }
+        >("event", deviceId);
+        let bytes = 0,
+          count = 0;
+        for (const item of rows.sort((a, b) => b.cursor - a.cursor)) {
+          if (orphans && !draft.has(key("task", item.taskId))) draft.delete(key("event", item.id));
+          else if (item.event.kind !== "activity") {
+            bytes += new TextEncoder().encode(JSON.stringify(item)).byteLength;
+            if (++count > 4096 || bytes > 8 * 1024 * 1024 || item.streamId !== streamId)
+              draft.delete(key("event", item.id));
+          }
+        }
+      },
+    };
+  };
+  const repository: ControlRepository & { validSession: boolean } = {
     validSession: true,
-    async findGrant(hash: string) {
+    async findGrant(hash) {
       for (const [key, value] of data)
         if (key.endsWith(`:grant:${hash}`))
           return { userId: (value as ControlRecord & { userId: string }).userId };
       return undefined;
     },
+    read: (userId, run) => run(transaction(structuredClone(data), userId)),
     transaction<T>(userId: string, run: (tx: ControlTransaction) => Promise<T>): Promise<T> {
       const result = queue.then(async () => {
         const draft = structuredClone(data);
-        const key = (kind: RecordKind, id: string) => `${userId}:${kind}:${id}`;
-        const value = await run({
-          sessionActive: async () => repository.validSession,
-          async get<R extends ControlRecord>(kind: RecordKind, id: string) {
-            return structuredClone(draft.get(key(kind, id))) as R | undefined;
-          },
-          async list<R extends ControlRecord>(kind: RecordKind, deviceId?: string) {
-            return [...draft.entries()]
-              .filter(
-                ([id, item]) =>
-                  id.startsWith(`${userId}:${kind}:`) &&
-                  (deviceId === undefined || item.deviceId === deviceId),
-              )
-              .map(([, item]) => structuredClone(item) as R);
-          },
-          async put(kind, item) {
-            draft.set(key(kind, item.id), structuredClone(item));
-            return item;
-          },
-          async remove(kind, id) {
-            draft.delete(key(kind, id));
-          },
-        });
+        const value = await run(transaction(draft, userId));
         data = draft;
         return value;
       });

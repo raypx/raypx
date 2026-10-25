@@ -108,6 +108,11 @@ first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
 and one-time viewer tickets. No HTTP task mutation or polling exchange remains.
 Node uses one relay process; Cloudflare uses an account-named Durable Object with
 connections fenced by identity. Keep credentials out of URLs and diagnostics.
+Relay v2 requires an explicit protocol version. Preserve full activity checkpoints
+and bounded incremental replay; a missing revision requests a snapshot. Keep the latest
+activity projection until explicit history removal. Missing entries in partial snapshots
+never authorize deleting conversation history. Read projections through the repository's
+read-only transaction without the owner write lock; constrain task history in SQL.
 
 ## Administrator configuration
 

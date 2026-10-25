@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import type { ElectrobunConfig } from "./.hutch/devkit/api/config/ElectrobunConfig";
 
 const nativeSmoke = process.env.RAYPX_NATIVE_SMOKE === "1";
@@ -32,7 +34,8 @@ export default {
       "dist/client": "views/main",
       [`.hutch/bin/${process.platform === "win32" ? "raypx.exe" : "raypx"}`]: `bin/${process.platform === "win32" ? "raypx.exe" : "raypx"}`,
       "native/close.html": "views/close/index.html",
-      "native/icons/icon.png": "views/assets/tray-icon.png",
+      "native/icons/icon.iconset/icon_16x16.png": "views/assets/tray-icon.png",
+      "native/icons/icon.iconset/icon_16x16@2x.png": "views/assets/tray-icon@2x.png",
     },
   },
   runtime: { exitOnLastWindowClosed: false },

@@ -1,6 +1,33 @@
 import { expect, it } from "vite-plus/test";
-import { parseAiSettings } from "../src/config.js";
+import { mergeAiSettings, parseAiSettings } from "../src/config.js";
 import { createCompatibleProvider } from "../src/providers.js";
+it("isolates provider and endpoint credentials while retaining request defaults", () => {
+  const file = parseAiSettings({
+    provider: "anthropic",
+    model: "old",
+    base_url: "https://old.test",
+    api: "anthropic-messages",
+    api_key_env: "OLD_KEY",
+    auth: "bearer",
+    max_tokens: 500,
+    context_window: 1000,
+    timeout_ms: 1000,
+  });
+  expect(mergeAiSettings(file, { provider: "openrouter", model: "new" })).toEqual({
+    provider: "openrouter",
+    model: "new",
+    timeout_ms: 1000,
+  });
+  expect(mergeAiSettings(file, { base_url: "https://new.test", api_key_env: "NEW_KEY" })).toEqual({
+    provider: "anthropic",
+    model: "old",
+    base_url: "https://new.test",
+    api: "anthropic-messages",
+    api_key_env: "NEW_KEY",
+    timeout_ms: 1000,
+  });
+  expect(mergeAiSettings(file, { temperature: 0.5 })).toEqual({ ...file, temperature: 0.5 });
+});
 
 it("reads optional AI settings with environment references instead of keys", () => {
   expect(parseAiSettings(undefined)).toEqual({});

@@ -4,7 +4,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@raypx/ui/components/ui/native-select";
+import { SelectField } from "@raypx/ui/select-field";
 import { isTaskActive } from "../index.js";
 
 export interface TaskFilters {
@@ -65,9 +65,9 @@ export function TaskFilterBar({
     filters.device !== "" ||
     filters.provider !== "";
   return (
-    <div className="mb-5 space-y-3">
-      <div className="grid grid-cols-2 gap-3 min-[1200px]:grid-cols-4">
-        <Field className="col-span-2 min-[1200px]:col-span-1">
+    <div className="@container mb-5 space-y-3">
+      <div className="grid grid-cols-2 gap-3 @min-[48rem]:grid-cols-4">
+        <Field className="col-span-2 @min-[48rem]:col-span-1">
           <FieldLabel htmlFor={`${id}-search`}>{t("searchTasks")}</FieldLabel>
           <Input
             id={`${id}-search`}
@@ -80,49 +80,46 @@ export function TaskFilterBar({
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-status`}>{c("status")}</FieldLabel>
-          <NativeSelect
+          <SelectField<TaskFilters["status"]>
             id={`${id}-status`}
             className="w-full"
             value={filters.status}
-            onChange={(event) =>
-              onChange({ ...filters, status: event.target.value as TaskFilters["status"] })
-            }
-          >
-            <NativeSelectOption value="all">{t("allStatuses")}</NativeSelectOption>
-            <NativeSelectOption value="active">{t("activeTasks")}</NativeSelectOption>
-            <NativeSelectOption value="attention">{t("waiting")}</NativeSelectOption>
-            <NativeSelectOption value="finished">{t("finishedTasks")}</NativeSelectOption>
-            <NativeSelectOption value="errors">{t("taskErrors")}</NativeSelectOption>
-          </NativeSelect>
+            onValueChange={(status) => onChange({ ...filters, status })}
+            options={[
+              { value: "all", label: t("allStatuses") },
+              { value: "active", label: t("activeTasks") },
+              { value: "attention", label: t("waiting") },
+              { value: "finished", label: t("finishedTasks") },
+              { value: "errors", label: t("taskErrors") },
+            ]}
+          />
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
-          <NativeSelect
+          <SelectField
             id={`${id}-agent`}
             className="w-full"
             value={filters.provider}
-            onChange={(event) => onChange({ ...filters, provider: event.target.value })}
-          >
-            <NativeSelectOption value="">{t("allAgents")}</NativeSelectOption>
-            <NativeSelectOption value="claude">Claude Code</NativeSelectOption>
-            <NativeSelectOption value="codex">Codex</NativeSelectOption>
-          </NativeSelect>
+            onValueChange={(provider) => onChange({ ...filters, provider })}
+            options={[
+              { value: "", label: t("allAgents") },
+              { value: "claude", label: "Claude Code" },
+              { value: "codex", label: "Codex" },
+            ]}
+          />
         </Field>
-        <Field className="col-span-2 min-[1200px]:col-span-1">
+        <Field className="col-span-2 @min-[48rem]:col-span-1">
           <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
-          <NativeSelect
+          <SelectField
             id={`${id}-device`}
             className="w-full"
             value={filters.device}
-            onChange={(event) => onChange({ ...filters, device: event.target.value })}
-          >
-            <NativeSelectOption value="">{t("allDevices")}</NativeSelectOption>
-            {devices.map((device) => (
-              <NativeSelectOption key={device.id} value={device.id}>
-                {device.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+            onValueChange={(device) => onChange({ ...filters, device })}
+            options={[
+              { value: "", label: t("allDevices") },
+              ...devices.map((device) => ({ value: device.id, label: device.name })),
+            ]}
+          />
         </Field>
       </div>
       <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">

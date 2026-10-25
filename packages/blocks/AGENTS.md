@@ -13,8 +13,10 @@ Each block is one `src/components/<name>.tsx` file with an explicit
 Code outside `src/components/` stays private.
 
 - `shell`: `AppShell` with skip link, brand, grouped navigation, account slot,
-  breadcrumbs, notice slot and `#main`. `frame="document"` scrolls the page;
-  `frame="window"` pins a native window, reserves the title-bar inset and scrolls main.
+  breadcrumbs, notice slot and `#main`. Both frames fill the viewport and scroll
+  main independently of navigation and the top bar. `frame="document"` uses browser
+  spacing; `frame="window"` reserves the native title-bar inset. Applications register
+  `#main` with their router's scroll restoration/reset behavior.
   Applications pass a `LinkComponent` adapting their router to `ShellLinkProps`;
   it sets `aria-current="page"` on active entries when `markActive` is true.
 - `settings`: `SettingsPage`, `SettingsSection` (heading-labelled row with a control),

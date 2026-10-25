@@ -64,6 +64,86 @@ async function host(
   };
   return { runtime, task, directory, state, pending };
 }
+async function inputRace(scenario: "claude-timeout" | "claude-natural" | "codex-expired") {
+  const provider: AgentProvider = scenario.startsWith("claude") ? "claude" : "codex";
+  const f = await host(provider, `${provider}-interactive`),
+    account = "input-races",
+    device = await f.runtime.localDevice(account);
+  const input = {
+    id: f.task.id,
+    deviceId: device.id,
+    projectId: f.task.projectId,
+    provider,
+    mode: "run" as const,
+    prompt: "First",
+  };
+  await f.runtime.localExecute(account, input.id, { method: "tasks.create", input });
+  await expect.poll(() => existsSync(join(f.directory, "delivered"))).toBe(true);
+  const marker =
+    scenario === "claude-timeout"
+      ? "interrupt-without-result"
+      : scenario === "claude-natural"
+        ? "interrupt-natural-result"
+        : "steer-expired";
+  writeFileSync(join(f.directory, marker), "");
+  const steer = {
+    id: crypto.randomUUID(),
+    taskId: input.id,
+    mode: "steer" as const,
+    prompt: "Next",
+  };
+  expect(
+    await f.runtime.localExecute(account, steer.id, { method: "tasks.input", input: steer }),
+  ).toMatchObject({ ok: true });
+  return { ...f, account, input, steer };
+}
+it("ends a Claude interrupt without result after ten seconds and releases the project lock", async () => {
+  const f = await inputRace("claude-timeout");
+  await expect
+    .poll(() => f.runtime.localTask(f.account, f.input.id, 0).task.status, { timeout: 15_000 })
+    .toBe("interrupted");
+  expect(
+    f.runtime.localTask(f.account, f.input.id, 0).activity.find((entry) => entry.id === f.steer.id),
+  ).toMatchObject({ status: "failed", code: "INPUT_DELIVERY_FAILED" });
+  const next = { ...f.input, id: crypto.randomUUID() };
+  expect(
+    await f.runtime.localExecute(f.account, next.id, { method: "tasks.create", input: next }),
+  ).toMatchObject({ ok: true });
+  await expect.poll(() => f.runtime.localTask(f.account, next.id, 0).task.status).toBe("running");
+}, 20_000);
+it("keeps a natural Claude result complete when it crosses an interrupt", async () => {
+  const f = await inputRace("claude-natural");
+  await expect
+    .poll(
+      () =>
+        f.runtime
+          .localTask(f.account, f.input.id, 0)
+          .activity.filter((entry) => entry.kind === "input")
+          .find((entry) => entry.id === f.steer.id)?.status,
+    )
+    .toBe("sent");
+  expect(
+    f.runtime.localTask(f.account, f.input.id, 0).activity.find((entry) => entry.kind === "message")
+      ?.status,
+  ).toBe("complete");
+});
+it("queues an explicitly rejected Codex steer after the completed turn", async () => {
+  const f = await inputRace("codex-expired");
+  await expect
+    .poll(
+      () =>
+        f.runtime
+          .localTask(f.account, f.input.id, 0)
+          .activity.filter((entry) => entry.kind === "input")
+          .find((entry) => entry.id === f.steer.id)?.status,
+    )
+    .toBe("sent");
+  const delivered = readFileSync(join(f.directory, "delivered"), "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  expect(delivered.filter((entry) => entry.method === "turn/start")).toHaveLength(2);
+});
 it.each(["codex", "claude"] as const)(
   "delivers %s steer and queued turns once, in order, on the same session",
   async (provider) => {

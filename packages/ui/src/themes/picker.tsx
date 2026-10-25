@@ -1,6 +1,7 @@
 import { Monitor, Moon, Sun } from "lucide-react";
 import { use } from "react";
 import { cn } from "../lib/utils";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import type { UserTheme } from "./config";
 import { ThemeContext } from "./provider";
 
@@ -24,8 +25,12 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
   const current = value ?? context?.theme ?? "system";
   const change = onValueChange ?? context?.setTheme;
   return (
-    <fieldset className="m-0 flex gap-3 border-0 p-0 [@media(width<=420px)]:gap-[9px]">
-      <legend className="sr-only">{label}</legend>
+    <RadioGroup
+      aria-label={label}
+      value={current}
+      onValueChange={(theme) => change?.(theme as UserTheme)}
+      className="flex w-auto gap-3 [@media(width<=420px)]:gap-[9px]"
+    >
       {(
         [
           ["light", Sun],
@@ -37,13 +42,11 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
           className="relative w-[100px] cursor-pointer has-[:focus-visible]:rounded-[8px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-offset-4 [@media(width<=420px)]:w-[76px]"
           key={theme}
         >
-          <input
+          <RadioGroupItem
             className="absolute size-px opacity-0"
-            type="radio"
-            name="theme"
             value={theme}
-            checked={current === theme}
-            onChange={() => change?.(theme)}
+            aria-label={labels[theme]}
+            data-theme-option={theme}
           />
           <span
             className={cn(
@@ -63,6 +66,6 @@ export function ThemePicker({ label, labels, value, onValueChange }: ThemePicker
           </span>
         </label>
       ))}
-    </fieldset>
+    </RadioGroup>
   );
 }

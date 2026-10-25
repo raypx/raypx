@@ -1,4 +1,35 @@
-import type { TaskActivity } from "./tasks.js";
+import type { AgentEvent, TaskActivity } from "./tasks.js";
+
+/** Undefined means the consumer must recover an authoritative checkpoint. */
+export function applyActivityEvent(
+  previous: TaskActivity | undefined,
+  event: AgentEvent,
+): TaskActivity | undefined {
+  if (event.kind === "activity")
+    return !previous || event.entry.revision > previous.revision ? event.entry : previous;
+  if (
+    event.kind !== "activity_delta" ||
+    previous?.kind !== "message" ||
+    previous.id !== event.entryId ||
+    previous.taskId !== event.taskId
+  )
+    return undefined;
+  if (previous.revision >= event.revision) return previous;
+  if (
+    previous.status !== "streaming" ||
+    previous.revision !== event.baseRevision ||
+    event.revision !== event.baseRevision + 1 ||
+    previous.text.length + event.append.length > 32_000
+  )
+    return undefined;
+  return {
+    ...previous,
+    text: previous.text + event.append,
+    revision: event.revision,
+    updatedAt: event.updatedAt,
+    truncated: event.truncated,
+  };
+}
 
 function utf8Bytes(value: string) {
   let size = 0;

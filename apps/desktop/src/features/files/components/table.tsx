@@ -79,16 +79,16 @@ function LoadedFileTable({
             {listing.entries.map((entry) => (
               <tr key={entry.path}>
                 <td className="w-[45%] border-b border-border py-2 pr-3">
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     data-slot="file-entry"
-                    className="inline-flex items-center gap-[11px] border-0 bg-transparent py-[7px] text-left text-foreground [overflow-wrap:anywhere] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:text-muted-foreground [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+                    className="h-auto max-w-full justify-start gap-[11px] px-0 py-[7px] text-left font-normal whitespace-normal wrap-anywhere disabled:text-muted-foreground [&_svg]:size-4.5 [&_svg]:text-muted-foreground"
                     disabled={busy || !["file", "directory"].includes(entry.kind)}
                     onClick={() => void onOpen(entry)}
                   >
                     {entry.kind === "directory" ? <Folder size={18} /> : <FileText size={18} />}{" "}
                     {entry.name}
-                  </button>
+                  </Button>
                 </td>
                 <td className="border-b border-border px-3 py-2 text-muted-foreground">
                   {entry.kind === "directory"

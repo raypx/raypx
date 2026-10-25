@@ -7,6 +7,7 @@ import {
   type TaskInput,
   type RelayRequest,
   type RelayCursor,
+  type TaskChange,
 } from "@raypx/contracts/api";
 
 type Input<M extends RelayRequest["method"]> = Extract<RelayRequest, { method: M }>["input"];
@@ -35,7 +36,7 @@ export interface TaskClient extends Pick<
       options?: { signal?: AbortSignal },
     ): Promise<ReturnType<typeof humanRequestSchema.parse>>;
   };
-  subscribe(listener: () => void): () => void;
+  subscribe(listener: (change?: TaskChange) => void): () => void;
   setAccount(accountId: string | null): void;
 }
 function failure(code: string) {
@@ -51,8 +52,9 @@ export function createTaskClient(
   let account: string | null = null,
     connection: RelayConnection | undefined,
     connected = false;
+  let terminalError: string | null = null;
   const inFlight = new Map<string, { key: string; promise: Promise<unknown> }>();
-  const listeners = new Set<() => void>(),
+  const listeners = new Set<(change?: TaskChange) => void>(),
     cursors = new Map<string, RelayCursor>();
   const pending = new Map<
     string,
@@ -63,8 +65,8 @@ export function createTaskClient(
       dispose(): void;
     }
   >();
-  const changed = () => {
-    for (const listener of listeners) listener();
+  const changed = (change: TaskChange = { type: "reset" }) => {
+    for (const listener of listeners) listener(change);
   };
   const rejectAll = (code: string) => {
     for (const item of pending.values()) {
@@ -81,7 +83,7 @@ export function createTaskClient(
     rejectAll("NETWORK_UNAVAILABLE");
   };
   const connect = () => {
-    if (!account || connection || !listeners.size) return;
+    if (!account || connection || !listeners.size || terminalError) return;
     const currentAccount = account;
     connection = new RelayConnection({
       url: relayUrl(options.baseUrl, currentAccount),
@@ -91,12 +93,14 @@ export function createTaskClient(
         if (account !== currentAccount) throw new Error("Account changed");
         return {
           type: "auth",
+          protocolVersion: 2,
           role: "viewer",
           token: ticket.token,
           cursors: [...cursors.values()],
         };
       },
       status: (value, code) => {
+        if (code === "UPGRADE_REQUIRED") terminalError = code;
         connected = value;
         if (!value) rejectAll(code ?? "NETWORK_UNAVAILABLE");
         changed();
@@ -108,7 +112,11 @@ export function createTaskClient(
             streamId: frame.streamId,
             sequence: frame.sequence,
           });
-          changed();
+          changed({
+            type: frame.reset ? "reset" : frame.events ? "events" : "devices",
+            deviceId: frame.deviceId,
+            ...(frame.events ? { events: frame.events } : {}),
+          });
         }
         if (frame.type === "result") {
           const item = pending.get(frame.id);
@@ -124,7 +132,7 @@ export function createTaskClient(
     });
     connection.start();
   };
-  const subscribe = (listener: () => void) => {
+  const subscribe = (listener: (change?: TaskChange) => void) => {
     listeners.add(listener);
     connect();
     return () => {
@@ -133,6 +141,7 @@ export function createTaskClient(
     };
   };
   const sendRequest = async (value: RelayRequest, signal?: AbortSignal) => {
+    if (terminalError) throw failure(terminalError);
     if (!connected) {
       if (!account) throw failure("AUTH_REQUIRED");
       connect();
@@ -143,6 +152,11 @@ export function createTaskClient(
           signal?.removeEventListener("abort", abort);
         };
         const ready = () => {
+          if (terminalError) {
+            dispose();
+            reject(failure(terminalError));
+            return;
+          }
           if (connected) {
             dispose();
             resolve();
@@ -223,8 +237,10 @@ export function createTaskClient(
     devices: api.devices,
     relay: api.relay,
     tasks: {
-      list: (...args) => api.tasks.list(...args),
-      get: (...args) => api.tasks.get(...args),
+      list: (...args) =>
+        terminalError ? Promise.reject(failure(terminalError)) : api.tasks.list(...args),
+      get: (...args) =>
+        terminalError ? Promise.reject(failure(terminalError)) : api.tasks.get(...args),
       create: async (input, opts) =>
         taskSchema.parse(await request({ method: "tasks.create", input }, opts?.signal)),
       followUp: async (input, opts) =>
@@ -247,6 +263,7 @@ export function createTaskClient(
       if (account === value) return;
       stop();
       account = value;
+      terminalError = null;
       cursors.clear();
       connect();
       changed();
