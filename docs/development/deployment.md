@@ -122,16 +122,42 @@ Set `POSTGRES_IMAGE_DIGEST` to the verified 64-character manifest digest for
 official registry in the deployment environment and retain the previous digest
 for rollback. An unavailable registry is not evidence of a verified image.
 
-All migrations must support the old API while they run: use expand/contract,
+All migrations must remain compatible with the old API: use expand/contract,
 adding indexes/tables/optional fields first. A later release may remove the old
 shape only after every consumer has migrated. The current control indexes are
 additive. An image rollback must not require reversing a migration.
 
 After backup and image builds, use `sh deploy/update.sh /absolute/path/to/.env`.
-It validates Compose without printing secrets, waits for PostgreSQL, runs the
-isolated migration and only then replaces API and Web. Migration failure stops
-the script before API replacement. Keep one API instance; replacing it can
-briefly reconnect relay clients and is not a zero-downtime replica rollout.
+It validates Compose without printing secrets, records the running API/Web image
+digests, waits for PostgreSQL, **stops API**, runs the isolated migration and then
+replaces API and Web with health waits. Schedule a maintenance window for the whole
+operation: the generated index migrations use transactional `CREATE INDEX` and
+cannot serve device writes concurrently. Do not run a separate old API against
+this database during migration. Migration connections use a ten-second lock timeout;
+an unexpected external writer causes a bounded failure rather than an indefinite wait.
+Generated migration history is unchanged. This is a single-API deployment with an
+outage, rather than a zero-downtime replica rollout.
+For releases containing these index migrations, disable Dokploy's automatic
+redeploy and run the update script on the host during the agreed maintenance
+window. An ordinary Compose reconciliation alone does not stop the old writer
+before starting the migration job.
+
+On migration failure the script restarts the untouched previous API container. On
+API or Web replacement/health failure it stops the failed services and recreates
+the previous running images by their immutable local digests. It returns failure
+even if recovery succeeds. A first deployment has no previous image to restore;
+failed services remain stopped. The script removes its protected temporary Compose
+override on exit. Database schema is never rolled back automatically.
+
+Before deployment retain the previous protected environment file, image digests
+and a database backup separately. Image rollback uses the environment file passed
+to the update; it cannot recover secrets or settings overwritten outside the script.
+If automatic recovery fails, inspect `docker compose ... logs --tail 100 api migrate`
+in a protected terminal, validate the previous environment with `config --quiet`,
+then use a protected Compose override specifying the captured `sha256:` images and
+`up -d --no-deps --wait api web`. Keep the same project name and volume. Verify
+`/health`, `/ready`, login and relay before ending maintenance. Retain additive
+migrations when reverting an application image; never delete migrations or volumes.
 
 Deploy relay v2 Web/API/Desktop together. Older relay peers receive
 `UPGRADE_REQUIRED`; new clients stop retrying a version mismatch.

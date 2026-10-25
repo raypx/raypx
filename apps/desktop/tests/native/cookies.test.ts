@@ -1,5 +1,13 @@
 import { expect, it } from "vite-plus/test";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+  utimesSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createEncryptedCookies } from "../../native/cookies";
@@ -87,13 +95,15 @@ it("encrypts native sessions, restores them, isolates origins, clears logout and
     );
     encrypted[encrypted.length - 1]! ^= 1;
     writeFileSync(join(directory, "session.enc"), encrypted);
-    const recovery: unknown[] = [];
+    const recovery: { kind: string; path: string }[] = [];
     expect(
       (await createEncryptedCookies(directory, origin, keys, (value) => recovery.push(value))).get({
         url: origin,
       }),
     ).toEqual([]);
     expect(recovery).toMatchObject([{ kind: "reset" }]);
+    expect(recovery[0]!.path).toContain("session.enc.corrupt-");
+    expect(readFileSync(recovery[0]!.path)).toEqual(encrypted);
     expect(readdirSync(directory).some((file) => file.startsWith("session.enc.corrupt-"))).toBe(
       true,
     );
@@ -108,6 +118,15 @@ it("encrypts native sessions, restores them, isolates origins, clears logout and
         [],
       );
     }
+    expect(
+      readdirSync(directory).filter((file) => file.startsWith("session.enc.corrupt-")),
+    ).toHaveLength(3);
+    const old = join(directory, "session.enc.corrupt-00000000-0000-0000-0000-000000000000");
+    writeFileSync(old, "old");
+    const expired = new Date(Date.now() - 8 * 86400_000);
+    utimesSync(old, expired, expired);
+    await createEncryptedCookies(directory, origin, keys);
+    expect(existsSync(old)).toBe(false);
     const temporary = await createEncryptedCookies(directory, origin, {
       get: async () => {
         throw new Error("Unavailable");

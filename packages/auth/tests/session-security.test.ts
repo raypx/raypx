@@ -17,7 +17,7 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
     config: {
       baseURL: origin + "/",
       secret: "session-security-test-secret-with-32-characters",
-      trustedOrigins: ["views://main"],
+      trustedOrigins: ["views://main", "https://web.example.test/", "invalid", "null"],
       production: true,
     },
   });
@@ -73,6 +73,9 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
     200,
   );
   expect(data.user?.[0]?.name).toBe("Updated");
+  expect(
+    (await call("update-user", { name: "Web user" }, cookie, "https://web.example.test")).status,
+  ).toBe(200);
   expect((await call("revoke-other-sessions", {}, cookie, origin)).status).toBe(200);
   expect((await call("list-sessions")).status).toBe(401);
 });

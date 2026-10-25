@@ -12,6 +12,16 @@ export interface AiSettings {
   timeout_ms?: number;
   temperature?: number;
 }
+function endpoint(value: string | undefined) {
+  if (value === undefined) return value;
+  try {
+    const url = new URL(value);
+    url.pathname = url.pathname.replace(/\/+$/, "") || "/";
+    return url.href;
+  } catch {
+    return value;
+  }
+}
 /** A destination change must not borrow another provider's identity or credentials. */
 export function mergeAiSettings(file: AiSettings, override: AiSettings): AiSettings {
   const inherited = { ...file };
@@ -26,7 +36,10 @@ export function mergeAiSettings(file: AiSettings, override: AiSettings): AiSetti
       "max_tokens",
     ] as const)
       delete inherited[field];
-  } else if (override.base_url !== undefined && override.base_url !== file.base_url) {
+  } else if (
+    override.base_url !== undefined &&
+    endpoint(override.base_url) !== endpoint(file.base_url)
+  ) {
     for (const field of ["api_key_env", "auth", "context_window", "max_tokens"] as const)
       delete inherited[field];
   }

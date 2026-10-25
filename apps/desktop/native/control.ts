@@ -64,6 +64,7 @@ export class RemoteControl {
   private renewing: Promise<boolean> | undefined;
   private renewalFailures = 0;
   private renewalTimer: ReturnType<typeof setTimeout> | undefined;
+  private draining = false;
   private readonly commands = new Set<Promise<void>>();
   private scheduleRenewal(disconnect = true) {
     if (this.renewalTimer || !this.accountId || this.error === "UPGRADE_REQUIRED") return;
@@ -312,7 +313,19 @@ export class RemoteControl {
           throw new Error("Invalid renewed grant");
         this.grant = next;
         this.error = null;
-        while (this.commands.size) await Promise.allSettled(this.commands);
+        this.draining = true;
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        try {
+          await Promise.race([
+            Promise.allSettled(this.commands),
+            new Promise<void>((resolve) => {
+              timeout = setTimeout(resolve, 10_000);
+            }),
+          ]);
+        } finally {
+          clearTimeout(timeout);
+          this.draining = false;
+        }
         if (generation !== this.generation || this.accountId !== accountId) return false;
         // Reconnect the relay without detaching the host binding or its tasks.
         this.connect(apiUrl);
@@ -379,7 +392,7 @@ export class RemoteControl {
       )
         pending.resolve();
     } else if (frame.type === "command") {
-      if (this.detaching) {
+      if (this.detaching || this.draining) {
         this.connection?.send({
           type: "result",
           routeId: frame.routeId,

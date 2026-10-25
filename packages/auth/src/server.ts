@@ -3,6 +3,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
 import type { AuthSession, AuthUser } from "./types.js";
+import { normalizeTrustedOrigins } from "./origins.js";
 
 export interface AuthMailInput {
   email: string;
@@ -54,7 +55,7 @@ export function createAuth({
   siteName,
 }: CreateAuthOptions) {
   const mailSite = async () => (siteName ? { siteName: await siteName() } : {});
-  const origins = [...new Set([new URL(config.baseURL).origin, ...config.trustedOrigins])];
+  const origins = normalizeTrustedOrigins([config.baseURL, ...config.trustedOrigins]);
   const name = (value: string) => {
     const result = value.trim();
     if (!result || result.length > 80)

@@ -34,7 +34,7 @@ function fixture() {
     configuration,
     authHandler,
     readSession: async () => auth,
-    allowedOrigins: ["https://web.example.test"],
+    allowedOrigins: ["https://web.example.test/", "invalid"],
     jobsEnabled: false,
     mailAvailable: true,
   });

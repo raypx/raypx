@@ -87,7 +87,20 @@ describe("Desktop-owned task projections", () => {
   });
   it("applies deltas atomically, requires a baseline and reads without the write transaction", async () => {
     const repository = memoryControlRepository(),
-      service = new ControlService(repository),
+      prune = vi.fn(),
+      service = new ControlService({
+        ...repository,
+        transaction: (owner, run) =>
+          repository.transaction(owner, (tx) =>
+            run({
+              ...tx,
+              pruneEvents: async (...args) => {
+                prune();
+                return tx.pruneEvents(...args);
+              },
+            }),
+          ),
+      }),
       f = await connected(service),
       task = await running(service, f);
     const entry = {
@@ -116,7 +129,13 @@ describe("Desktop-owned task projections", () => {
       updatedAt: entry.updatedAt,
       truncated: false,
     };
+    prune.mockClear();
     await service.events(f.actor, f.announce.streamId, [{ sequence: 3, event: delta }]);
+    expect(prune).not.toHaveBeenCalled();
+    const records = await repository.read(f.auth.user.id, (tx) =>
+      tx.list<{ id: string; deviceId: string; event: { kind: string } }>("event", task.deviceId),
+    );
+    expect(records.some((record) => record.event.kind === "activity_delta")).toBe(false);
     await expect(
       service.events(f.actor, f.announce.streamId, [
         { sequence: 4, event: { ...delta, id: crypto.randomUUID(), baseRevision: 3, revision: 4 } },

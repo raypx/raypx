@@ -7,6 +7,7 @@ import { SessionGate } from "../features/auth/components/session-gate";
 import { RemoteCoordinator } from "../features/tasks/coordinator";
 import { getBridge, isDesktop } from "../lib/desktop";
 import { AppAnalytics } from "../features/analytics/provider";
+import { externalLinkTarget } from "../lib/external-links";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -45,12 +46,11 @@ function RootComponent() {
     if (isDesktop()) void getBridge().catch(() => {});
     const open = (event: MouseEvent) => {
       if (!isDesktop() || event.defaultPrevented || event.button !== 0) return;
-      const anchor =
-        event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
-      if (!anchor || !/^https?:/.test(anchor.href)) return;
+      const url = externalLinkTarget(event, location.origin);
+      if (!url) return;
       event.preventDefault();
       void getBridge()
-        .then((bridge) => bridge.request.openExternal({ url: anchor.href }))
+        .then((bridge) => bridge.request.openExternal({ url }))
         .catch(() => {});
     };
     document.addEventListener("click", open, true);

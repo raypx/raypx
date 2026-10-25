@@ -153,3 +153,129 @@ it("uses real HTTP contracts for one-time relay tickets and rejects anonymous re
     service.authenticate("viewer", ticket.token, crypto.randomUUID()),
   ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
 });
+
+it("accepts malformed legacy Unicode at the repository boundary and continues acknowledging events", async () => {
+  const f = await connected(service, auth),
+    task = await running(service, f),
+    now = new Date().toISOString();
+  const entry = {
+    id: crypto.randomUUID(),
+    taskId: task.id,
+    kind: "message" as const,
+    order: 1,
+    revision: 1,
+    text: "x".repeat(31999) + "\ud83d",
+    status: "streaming" as const,
+    truncated: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  expect(
+    await service.events(f.actor, f.announce.streamId, [
+      { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
+    ]),
+  ).toBe(2);
+  expect((await service.getTask(auth.user.id, task.id, 0)).activity[0]).toMatchObject({
+    text: "x".repeat(31999) + "�",
+  });
+  expect(
+    await service.events(f.actor, f.announce.streamId, [
+      {
+        sequence: 3,
+        event: {
+          id: crypto.randomUUID(),
+          taskId: task.id,
+          kind: "status",
+          status: "succeeded",
+          summary: "\ude00\0",
+        },
+      },
+    ]),
+  ).toBe(3);
+  expect((await service.getTask(auth.user.id, task.id, 0)).task.summary).toBe("��");
+});
+
+it("prunes the actual SQL replay window without evicting activity and pages tasks/approvals in SQL", async () => {
+  const { eventWindowPrune } = await import("../../../server/control/repository.js");
+  const f = await connected(service, auth),
+    task = await running(service, f);
+  const now = new Date().toISOString();
+  const entry = {
+    id: crypto.randomUUID(),
+    taskId: task.id,
+    kind: "message" as const,
+    order: 1,
+    revision: 1,
+    text: "Preserved conversation",
+    status: "complete" as const,
+    truncated: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await service.events(f.actor, f.announce.streamId, [
+    { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
+  ]);
+  await connection.db
+    .execute(sql`insert into raypx_foundation.control_event (id,user_id,device_id,body)
+    select 'review-window-' || ${f.grant.deviceId} || '-' || n, ${auth.user.id}, ${f.grant.deviceId},
+      jsonb_build_object('id','window-' || n,'deviceId',${f.grant.deviceId}::text,'taskId',${task.id}::text,'streamId',${f.announce.streamId}::text,'cursor',n,'event',jsonb_build_object('kind','status','summary',repeat('x',2048))) from generate_series(2,5002) n`);
+  const rows = await connection.db.execute(
+    sql`explain (analyze, buffers, format json) ${eventWindowPrune(auth.user.id, f.grant.deviceId, f.announce.streamId)}`,
+  );
+  expect(JSON.stringify(rows)).toContain("WindowAgg");
+  const plan = rows[0]!["QUERY PLAN"] as { "Execution Time": number; Plan: unknown }[];
+  const windows: Record<string, unknown>[] = [];
+  function visit(value: unknown) {
+    if (!value || typeof value !== "object") return;
+    if ("Node Type" in value && value["Node Type"] === "WindowAgg") windows.push(value);
+    for (const child of Object.values(value)) visit(child);
+  }
+  visit(plan);
+  expect(windows).toHaveLength(1);
+  expect(windows[0]!["Actual Loops"]).toBe(1);
+  console.info(
+    "Replay prune EXPLAIN",
+    JSON.stringify({
+      milliseconds: plan[0]!["Execution Time"],
+      rows: windows[0]!["Actual Rows"],
+      loops: windows[0]!["Actual Loops"],
+    }),
+  );
+  const remaining = await connection.db.execute(
+    sql`select count(*)::int as count,coalesce(sum(octet_length(body::text)),0)::int as bytes from raypx_foundation.control_event where user_id=${auth.user.id} and device_id=${f.grant.deviceId} and body->'event'->>'kind' not in ('activity','activity_delta')`,
+  );
+  expect(Number(remaining[0]!.count)).toBeLessThanOrEqual(4096);
+  expect(Number(remaining[0]!.bytes)).toBeLessThanOrEqual(8388608);
+  // Independently exercise the row bound with tiny replay events.
+  await connection.db.execute(
+    sql`delete from raypx_foundation.control_event where user_id=${auth.user.id} and device_id=${f.grant.deviceId} and body->'event'->>'kind'='status'`,
+  );
+  await connection.db.execute(
+    sql`insert into raypx_foundation.control_event (id,user_id,device_id,body) select 'row-window-' || ${f.grant.deviceId} || '-' || n,${auth.user.id},${f.grant.deviceId},jsonb_build_object('streamId',${f.announce.streamId}::text,'cursor',n,'event',jsonb_build_object('kind','status')) from generate_series(3,5003) n`,
+  );
+  await connection.db.execute(
+    eventWindowPrune(auth.user.id, f.grant.deviceId, f.announce.streamId),
+  );
+  const count = await connection.db.execute(
+    sql`select count(*)::int as count from raypx_foundation.control_event where user_id=${auth.user.id} and device_id=${f.grant.deviceId} and body->'event'->>'kind'='status'`,
+  );
+  expect(count[0]!.count).toBe(4096);
+  expect((await service.getTask(auth.user.id, task.id, 5003)).activity).toEqual([entry]);
+  const first = await service.listTasks(auth.user.id, { limit: 1 });
+  expect(first).toHaveLength(1);
+  expect(
+    (
+      await service.listTasks(auth.user.id, {
+        limit: 1,
+        before: `${first[0]!.createdAt}:${first[0]!.id}`,
+      })
+    ).every((item) => `${item.createdAt}:${item.id}` < `${first[0]!.createdAt}:${first[0]!.id}`),
+  ).toBe(true);
+  const request = humanRequest(task);
+  await repository.transaction(auth.user.id, (tx) =>
+    tx.put("request", { ...request, deviceId: task.deviceId }),
+  );
+  expect((await service.listApprovals(auth.user.id)).some((item) => item.id === request.id)).toBe(
+    true,
+  );
+});

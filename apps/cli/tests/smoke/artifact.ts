@@ -133,8 +133,10 @@ try {
     absolute: true,
   }))
     bundledJsBytes += (await stat(file)).size;
+  const reportDirectory = resolve(import.meta.dirname, "../../../../.artifacts/cli");
+  await mkdir(reportDirectory, { recursive: true });
   await writeFile(
-    resolve(import.meta.dirname, "../../dist/provider-smoke.json"),
+    join(reportDirectory, "provider-smoke.json"),
     JSON.stringify(
       { providers: providerIds, binaryBytes: (await stat(binary)).size, bundledJsBytes },
       null,

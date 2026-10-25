@@ -1,3 +1,4 @@
+import { normalizeTaskJson } from "@raypx/contracts/tasks";
 import type { AuthSession } from "@raypx/auth/types";
 import type {
   ControlRecord,
@@ -33,6 +34,9 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
             ([, item]) =>
               structuredClone(item) as R & {
                 taskId?: string;
+                createdAt?: string;
+                expiresAt?: string;
+                status?: string;
                 streamId?: string;
                 cursor?: number;
                 event?: { kind: string; entry?: { order: number } };
@@ -40,6 +44,16 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
           )
           .filter(
             (item) =>
+              (!query.beforeTask || `${item.createdAt}:${item.id}` < query.beforeTask) &&
+              (!query.pendingApprovals ||
+                (["pending", "decided"].includes(item.status ?? "") &&
+                  ["pending", "running", "waiting", "cancelling"].includes(
+                    (
+                      draft.get(key("task", item.taskId ?? "")) as
+                        | (ControlRecord & { status: string })
+                        | undefined
+                    )?.status ?? "",
+                  ))) &&
               (query.taskId === undefined || item.taskId === query.taskId) &&
               (query.streamId === undefined || item.streamId === query.streamId) &&
               (query.activity === undefined ||
@@ -50,6 +64,13 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
               (query.beforeActivity === undefined ||
                 (item.event?.entry?.order ?? 0) < query.beforeActivity),
           );
+        if (kind === "task")
+          rows.sort(
+            (a, b) =>
+              (b.createdAt ?? "").localeCompare(a.createdAt ?? "") || b.id.localeCompare(a.id),
+          );
+        if (query.pendingApprovals)
+          rows.sort((a, b) => (a.expiresAt ?? "").localeCompare(b.expiresAt ?? ""));
         if (kind === "event")
           rows.sort(
             (a, b) =>
@@ -60,8 +81,9 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
         return query.limit === undefined ? rows : rows.slice(0, query.limit);
       },
       async put(kind, item) {
-        draft.set(key(kind, item.id), structuredClone(item));
-        return item;
+        const normalized = normalizeTaskJson(item);
+        draft.set(key(kind, item.id), structuredClone(normalized));
+        return normalized;
       },
       async remove(kind, id) {
         draft.delete(key(kind, id));
@@ -79,6 +101,7 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
           count = 0;
         for (const item of rows.sort((a, b) => b.cursor - a.cursor)) {
           if (orphans && !draft.has(key("task", item.taskId))) draft.delete(key("event", item.id));
+          else if (item.event.kind === "activity_delta") draft.delete(key("event", item.id));
           else if (item.event.kind !== "activity") {
             bytes += new TextEncoder().encode(JSON.stringify(item)).byteLength;
             if (++count > 4096 || bytes > 8 * 1024 * 1024 || item.streamId !== streamId)
@@ -96,6 +119,7 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
           return { userId: (value as ControlRecord & { userId: string }).userId };
       return undefined;
     },
+
     read: (userId, run) => run(transaction(structuredClone(data), userId)),
     transaction<T>(userId: string, run: (tx: ControlTransaction) => Promise<T>): Promise<T> {
       const result = queue.then(async () => {

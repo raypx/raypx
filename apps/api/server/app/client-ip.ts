@@ -26,9 +26,21 @@ export function createClientIpReader(headers: string[], proxies: string[]) {
     for (const name of headers) {
       const value = incoming.get(name);
       if (!value || value.length > 8192) continue;
-      const chain = value.split(",").map((ip) => normalize(ip.trim()));
-      if (chain.length > 32 || chain.some((ip) => !isIP(ip))) continue;
-      for (const ip of chain.reverse()) if (!trusted(ip)) return ip;
+      const chain = value.split(",");
+      if (chain.length > 32) continue;
+      let client = peer;
+      for (let index = chain.length - 1; index >= 0; index--) {
+        // Stop at the first untrusted hop. Anything farther left is supplied by
+        // that hop and must not invalidate the trusted suffix.
+        if (!trusted(client)) return client;
+        const raw = chain[index]!.trim();
+        const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(raw);
+        const ipv4Port = /^(\d+\.\d+\.\d+\.\d+):\d+$/.exec(raw);
+        const address = normalize(bracketed?.[1] ?? ipv4Port?.[1] ?? raw);
+        if (!isIP(address)) return client;
+        client = address;
+      }
+      return client;
     }
     return peer;
   };

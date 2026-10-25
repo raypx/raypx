@@ -2,6 +2,7 @@ import type { JobRun } from "@raypx/contracts/local";
 import { LocalError } from "./runtime/errors";
 
 export type Diagnostic =
+  | { operation: "agent.maintenance"; code: "VACUUM_DEFERRED"; outcome: "deferred" }
   | {
       operation: "cli.completed";
       mode: "command" | "stdio" | "version" | "tui";

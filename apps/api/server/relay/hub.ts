@@ -1,5 +1,6 @@
 import {
   relayClientSchema,
+  normalizeTaskJson,
   taskSchema,
   humanRequestSchema,
   MAX_RELAY_BYTES,
@@ -60,7 +61,12 @@ export class RelayHub {
         if (this.peers.get(id) !== client) return;
         if (new TextEncoder().encode(data).byteLength > MAX_RELAY_BYTES)
           throw new ControlError("TOO_LARGE");
-        const raw: unknown = JSON.parse(data);
+        let raw: unknown;
+        try {
+          raw = normalizeTaskJson(JSON.parse(data));
+        } catch {
+          throw new ControlError("INVALID_FRAME");
+        }
         if (
           raw &&
           typeof raw === "object" &&
@@ -69,20 +75,23 @@ export class RelayHub {
           (!("protocolVersion" in raw) || raw.protocolVersion !== 2)
         )
           throw new ControlError("UPGRADE_REQUIRED");
-        const frame = relayClientSchema.parse(raw);
-        await this.frame(client, frame);
+        const parsed = relayClientSchema.safeParse(raw);
+        if (!parsed.success) throw new ControlError("INVALID_FRAME");
+        await this.frame(client, parsed.data);
       })
       .catch((error) => {
-        const code = error instanceof ControlError ? error.code : "INVALID_FRAME";
+        const code = error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE";
         this.send(client, { type: "error", code });
         client.peer.close(
-          code === "UPGRADE_REQUIRED"
-            ? 4006
-            : code === "DEVICE_REVOKED"
-              ? 4003
-              : code === "AUTH_REQUIRED"
-                ? 4001
-                : 4000,
+          code === "SERVER_UNAVAILABLE"
+            ? 1011
+            : code === "UPGRADE_REQUIRED"
+              ? 4006
+              : code === "DEVICE_REVOKED"
+                ? 4003
+                : code === "AUTH_REQUIRED"
+                  ? 4001
+                  : 4000,
           code,
         );
       });

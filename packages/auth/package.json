@@ -8,7 +8,8 @@
     "./client": "./src/client.ts",
     "./hooks": "./src/hooks.ts",
     "./types": "./src/types.ts",
-    "./client/styles.css": "./src/client/styles.css"
+    "./client/styles.css": "./src/client/styles.css",
+    "./origins": "./src/origins.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -45,7 +46,8 @@
       "./server": "node",
       "./client": "browser",
       "./hooks": "universal",
-      "./client/styles.css": "browser"
+      "./client/styles.css": "browser",
+      "./origins": "universal"
     },
     "sourceTargets": {
       "src/server.ts": "node",

@@ -6,6 +6,7 @@ export type DiffLine = {
 };
 export type DiffFile = {
   path: string;
+  previousPath?: string;
   lines: DiffLine[];
   truncated: boolean;
   originalUnknown?: boolean;
@@ -51,6 +52,55 @@ function unified(path: string, diff: string): DiffFile {
     else if (text.trim()) lines.push({ kind: "hunk", text });
   }
   return { path, lines, truncated: source.length > limit };
+}
+/** Split file sections only outside a counted hunk. Header-looking source lines
+ * inside a hunk remain actual additions/removals. */
+function unifiedFiles(path: string, diff: string): DiffFile[] {
+  const rows = diff.split("\n"),
+    files: DiffFile[] = [];
+  let section: string[] = [],
+    currentPath = path,
+    oldRemaining = 0,
+    newRemaining = 0,
+    hunk = false;
+  const flush = () => {
+    if (section.length) files.push(unified(currentPath, section.join("\n")));
+    section = [];
+  };
+  const headerPath = (value: string) => value.replace(/^[ab]\//, "").split("\t")[0]!;
+  for (let index = 0; index < Math.min(rows.length, limit); index++) {
+    const row = rows[index]!;
+    if (row.startsWith("diff --git ")) {
+      flush();
+      hunk = false;
+      oldRemaining = 0;
+      newRemaining = 0;
+      currentPath = / b\/(.+)$/.exec(row)?.[1] ?? path;
+    }
+    if (
+      row.startsWith("--- ") &&
+      rows[index + 1]?.startsWith("+++ ") &&
+      (!hunk || (!oldRemaining && !newRemaining))
+    ) {
+      if (section.some((line) => line.startsWith("@@"))) flush();
+      const nextPath = headerPath(rows[index + 1]!.slice(4));
+      currentPath = nextPath === "/dev/null" ? headerPath(row.slice(4)) : nextPath;
+      hunk = false;
+    }
+    const counts = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/.exec(row);
+    if (row.startsWith("@@")) {
+      hunk = true;
+      oldRemaining = counts ? Number(counts[1] ?? 1) : Infinity;
+      newRemaining = counts ? Number(counts[2] ?? 1) : Infinity;
+    } else if (hunk) {
+      if (row.startsWith("-") || row.startsWith(" ")) oldRemaining--;
+      if (row.startsWith("+") || row.startsWith(" ")) newRemaining--;
+    }
+    section.push(row);
+  }
+  flush();
+  for (const file of files) file.truncated ||= rows.length > limit;
+  return files;
 }
 function replacement(path: string, before: string, after: string): DiffFile {
   const a = before ? before.split("\n") : [],
@@ -131,18 +181,23 @@ export function approvalChanges(body: string): DiffFile[] {
       })
     )
       return [];
-    return changes.slice(0, 20).map((change) => {
-      const item = object(change);
-      const kind = object(item.kind).type;
-      const file =
-        kind === "add"
-          ? replacement(string(item.path), "", string(item.diff))
-          : kind === "delete"
-            ? replacement(string(item.path), string(item.diff), "")
-            : unified(string(item.path), string(item.diff));
-      file.truncated ||= changes.length > 20;
-      return file;
+    const files = changes.slice(0, 20).flatMap((change) => {
+      const item = object(change),
+        kind = object(item.kind);
+      const output =
+        kind.type === "add"
+          ? [replacement(string(item.path), "", string(item.diff))]
+          : kind.type === "delete"
+            ? [replacement(string(item.path), string(item.diff), "")]
+            : unifiedFiles(string(item.path), string(item.diff));
+      if (typeof kind.move_path === "string" && kind.move_path && output[0]) {
+        output[0].previousPath = string(item.path);
+        output[0].path = kind.move_path;
+      }
+      return output;
     });
+    for (const file of files) file.truncated ||= changes.length > 20 || files.length > 20;
+    return files.slice(0, 20);
   }
   const patch = string(value.patch ?? value.input) || body;
   if (!patch.includes("*** Begin Patch")) return [];

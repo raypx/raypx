@@ -93,3 +93,17 @@ it.each([
     }),
   ).toThrow("AI configuration is invalid.");
 });
+
+it("keeps credentials for equivalent endpoint URLs while separating different paths", () => {
+  const settings = {
+    provider: "openai",
+    base_url: "https://EXAMPLE.test:443/v1/",
+    api_key_env: "SAVED_KEY",
+  };
+  expect(mergeAiSettings(settings, { base_url: "https://example.test/v1" }).api_key_env).toBe(
+    "SAVED_KEY",
+  );
+  expect(
+    mergeAiSettings(settings, { base_url: "https://example.test/v2" }).api_key_env,
+  ).toBeUndefined();
+});

@@ -9,6 +9,7 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { TimeoutHandlerPlugin } from "@orpc/server/plugins";
 import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
+import { normalizeTrustedOrigins } from "@raypx/auth/origins";
 import { createAccountService } from "@raypx/account/server";
 import type { RequestLogger } from "@raypx-kit/logger";
 import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logging.js";
@@ -64,6 +65,7 @@ export function newRequestId(): string {
   return `req_${Array.from(crypto.getRandomValues(new Uint8Array(24)), (byte) => alphabet[byte % 26]).join("")}`;
 }
 export function createApiApp(options: ApiAppOptions) {
+  const allowedOrigins = normalizeTrustedOrigins(options.allowedOrigins);
   const accountService = createAccountService({
     readSession: (headers) => options.readSession(headers),
   });
@@ -106,7 +108,7 @@ export function createApiApp(options: ApiAppOptions) {
   app.use(
     "*",
     cors({
-      origin: (origin) => (options.allowedOrigins.includes(origin) ? origin : undefined),
+      origin: (origin) => (allowedOrigins.includes(origin) ? origin : undefined),
       credentials: true,
       allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
       allowHeaders: ["Content-Type", "Authorization", "Accept-Language", "X-Request-Id"],
@@ -305,7 +307,7 @@ export function createApiApp(options: ApiAppOptions) {
         const auth = await requireAdmin(context, "configuration.update");
         // Cookie-authenticated writes require an explicit trusted browser origin.
         const origin = context.headers.get("origin");
-        if (!origin || !options.allowedOrigins.includes(origin))
+        if (!origin || !allowedOrigins.includes(origin))
           throw new ORPCError("FORBIDDEN", {
             data: { error: { code: "ORIGIN_REJECTED" }, requestId: context.requestId },
           });

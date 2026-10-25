@@ -20,6 +20,22 @@ const client = (cookie?: string) =>
     fetch: async (input, init) => app.fetch(new Request(input, init)),
   });
 describe("HTTP foundation", () => {
+  it("normalizes CORS origins and ignores malformed configuration entries", async () => {
+    const normalized = createApiApp({
+      authHandler: async () => Response.json({}),
+      readSession: async () => null,
+      allowedOrigins: ["invalid", "null", "https://web.example.com/", "views://main/"],
+    });
+    const response = await normalized.request("/health", {
+      headers: { origin: "https://web.example.com" },
+    });
+    expect(response.headers.get("access-control-allow-origin")).toBe("https://web.example.com");
+    expect(
+      (
+        await normalized.request("/health", { headers: { origin: "https://untrusted.test" } })
+      ).headers.has("access-control-allow-origin"),
+    ).toBe(false);
+  });
   it("rejects unavailable authentication mail actions before dispatch without blocking health or sign-in", async () => {
     let dispatched = 0;
     const unavailable = createApiApp({

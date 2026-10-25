@@ -19,7 +19,7 @@ import { Session } from "electrobun/main/native";
 import { createDesktopApi, parseApiOrigin } from "./api";
 import { loadDesktopConfig, scopeLocalAccount } from "./config";
 import { createEncryptedCookies } from "./cookies";
-import { acquireDesktopInstance } from "./instance";
+import { acquireDesktopInstance, desktopInstancePath } from "./instance";
 import { externalUrl } from "./external";
 import manifest from "../package.json";
 import type { DesktopRpc } from "./rpc";
@@ -50,6 +50,7 @@ if (!releaseInstance) {
     type: "info",
     title: "Raypx",
     message: "Raypx is already running / Raypx 已在运行",
+    detail: desktopInstancePath(smokeDirectory ?? Utils.paths.userData),
     buttons: ["OK / 确定"],
   });
   Utils.quit();

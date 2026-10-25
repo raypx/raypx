@@ -1,3 +1,4 @@
+import { normalizeTaskJson } from "@raypx/contracts/tasks";
 import { sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 
@@ -8,6 +9,8 @@ export interface ControlRecord {
 }
 export interface ControlQuery {
   taskId?: string;
+  beforeTask?: string;
+  pendingApprovals?: boolean;
   activity?: boolean;
   after?: number;
   beforeActivity?: number;
@@ -35,6 +38,17 @@ export interface ControlRepository {
 }
 const table = (kind: RecordKind) =>
   sql`${sql.identifier("raypx_foundation")}.${sql.identifier(`control_${kind}`)}`;
+
+/** Shared by production execution and the real-PostgreSQL EXPLAIN gate. */
+export function eventWindowPrune(userId: string, deviceId: string, streamId: string) {
+  // Keep physical row pointers within this statement. Joining by id can make
+  // stale per-device statistics rescan the materialized window for every row.
+  return sql`with replay as materialized (
+          select ctid as pointer, body->>'streamId' as stream_id, row_number() over (order by (body->>'cursor')::bigint desc) as position, sum(octet_length(body::text)) over (order by (body->>'cursor')::bigint desc) as bytes
+          from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and body->'event'->>'kind' NOT IN ('activity','activity_delta'))
+          delete from raypx_foundation.control_event e using replay r where e.user_id=${userId} and e.device_id=${deviceId} and e.ctid=r.pointer
+          and (r.stream_id != ${streamId} or r.position>4096 or r.bytes>8388608)`;
+}
 
 export function createControlRepository(database: Database): ControlRepository {
   const execute = <T>(
@@ -72,19 +86,25 @@ export function createControlRepository(database: Database): ControlRepository {
           ) {
             const activityOrder = sql`((body->'event'->'entry'->>'order')::bigint)`;
             const cursor = sql`((body->>'cursor')::bigint)`;
+            const separator = query.beforeTask?.lastIndexOf(":") ?? -1;
+            const beforeDate = query.beforeTask?.slice(0, separator);
+            const beforeId = query.beforeTask?.slice(separator + 1);
             const rows =
               await databaseTx.execute(sql`select body from ${table(kind)} where user_id = ${userId}
           ${deviceId === undefined ? sql`` : sql`and device_id = ${deviceId}`}
+          ${query.beforeTask === undefined ? sql`` : sql`and (body->>'createdAt',id) < (${beforeDate},${beforeId})`}
+          ${!query.pendingApprovals ? sql`` : sql`and body->>'status' in ('pending','decided') and exists (select 1 from raypx_foundation.control_task task where task.user_id=${userId} and task.id=${table(kind)}.body->>'taskId' and task.body->>'status' in ('pending','running','waiting','cancelling'))`}
           ${query.taskId === undefined ? sql`` : sql`and body->>'taskId' = ${query.taskId}`}
           ${query.activity === undefined ? sql`` : query.activity ? sql`and body->'event'->>'kind' = 'activity'` : sql`and body->'event'->>'kind' NOT IN ('activity','activity_delta')`}
           ${query.streamId === undefined ? sql`` : sql`and body->>'streamId' = ${query.streamId}`}
           ${query.after === undefined ? sql`` : sql`and ${cursor} > ${query.after}`}
           ${query.beforeActivity === undefined ? sql`` : sql`and ${activityOrder} < ${query.beforeActivity}`}
-          ${kind !== "event" ? sql`` : sql`order by ${query.activity ? activityOrder : cursor} ${query.descending ? sql`desc` : sql`asc`}`}
+          ${kind === "task" ? sql`order by body->>'createdAt' desc,id desc` : query.pendingApprovals ? sql`order by body->>'expiresAt' asc,id asc` : kind === "event" ? sql`order by ${query.activity ? activityOrder : cursor} ${query.descending ? sql`desc` : sql`asc`}` : sql``}
           ${query.limit === undefined ? sql`` : sql`limit ${query.limit}`}`);
             return rows.map((row) => row.body as R);
           },
           async put(kind, value) {
+            value = normalizeTaskJson(value);
             await databaseTx.execute(
               sql`insert into ${table(kind)} (id, user_id, device_id, body) values (${value.id}, ${userId}, ${value.deviceId}, ${JSON.stringify(value)}::jsonb) on conflict (user_id, id) do update set body = excluded.body, device_id = excluded.device_id`,
             );
@@ -96,10 +116,12 @@ export function createControlRepository(database: Database): ControlRepository {
             );
           },
           async pruneEvents(deviceId, streamId, orphans = false) {
-            await databaseTx.execute(sql`delete from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and id in (
-          select id from (select id, body, row_number() over (order by (body->>'cursor')::bigint desc) as position, sum(octet_length(body::text)) over (order by (body->>'cursor')::bigint desc) as bytes
-          from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and body->'event'->>'kind' != 'activity') replay
-          where body->>'streamId' != ${streamId} or position>4096 or bytes>8388608)`);
+            await databaseTx.execute(eventWindowPrune(userId, deviceId, streamId));
+            // Remove pre-upgrade delta replay rows in bounded batches. New deltas
+            // update only the authoritative activity projection.
+            await databaseTx.execute(
+              sql`delete from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and id in (select id from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and body->'event'->>'kind'='activity_delta' limit 1000)`,
+            );
             if (orphans)
               await databaseTx.execute(
                 sql`delete from raypx_foundation.control_event where user_id=${userId} and id in (select e.id from raypx_foundation.control_event e where e.user_id=${userId} and e.device_id=${deviceId} and not exists (select 1 from raypx_foundation.control_task t where t.user_id=e.user_id and t.id=e.body->>'taskId') limit 1000)`,

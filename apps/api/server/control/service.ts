@@ -1,5 +1,6 @@
 import type { AuthSession } from "@raypx/auth/types";
 import {
+  normalizeTaskJson,
   taskActivityPage,
   applyActivityEvent,
   activeTaskStatuses,
@@ -89,7 +90,7 @@ const hash = async (value: string) =>
     (byte) => byte.toString(16).padStart(2, "0"),
   ).join("");
 const canonical = (value: unknown) =>
-  JSON.stringify(value, (_key, item: unknown) =>
+  JSON.stringify(normalizeTaskJson(value), (_key, item: unknown) =>
     item && typeof item === "object" && !Array.isArray(item)
       ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
       : item,
@@ -451,7 +452,7 @@ export class ControlService {
           if (request?.taskId === event.taskId && request.deviceId === device.id)
             await tx.put("request", { ...request, status: "applied" });
         }
-        if (event.kind !== "activity")
+        if (event.kind !== "activity" && event.kind !== "activity_delta")
           await tx.put("event", {
             id: key,
             deviceId: device.id,
@@ -463,7 +464,11 @@ export class ControlService {
         device.cursor = item.sequence;
       }
       cursor = device.cursor;
-      if (events.some((item) => item.event.kind !== "activity"))
+      if (
+        events.some(
+          (item) => item.event.kind !== "activity" && item.event.kind !== "activity_delta",
+        )
+      )
         await tx.pruneEvents(device.id, streamId);
     });
     return cursor;
@@ -536,11 +541,11 @@ export class ControlService {
     });
   }
   listTasks(userId: string, input: { limit: number; before?: string | undefined }) {
-    return this.repository.read(userId, async (tx) =>
-      (await tx.list<Task>("task"))
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
-        .filter((task) => !input.before || `${task.createdAt}:${task.id}` < input.before)
-        .slice(0, input.limit),
+    return this.repository.read(userId, (tx) =>
+      tx.list<Task>("task", undefined, {
+        limit: input.limit,
+        ...(input.before ? { beforeTask: input.before } : {}),
+      }),
     );
   }
   getTask(userId: string, id: string, after: number, beforeActivity?: number) {
@@ -575,17 +580,9 @@ export class ControlService {
     });
   }
   listApprovals(userId: string) {
-    return this.repository.read(userId, async (tx) => {
-      const tasks = new Map((await tx.list<Task>("task")).map((task) => [task.id, task]));
-      return (await tx.list<StoredRequest>("request"))
-        .filter(
-          (request) =>
-            ["pending", "decided"].includes(request.status) &&
-            !terminal(required(tasks.get(request.taskId))),
-        )
-        .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt))
-        .slice(0, 100);
-    });
+    return this.repository.read(userId, (tx) =>
+      tx.list<StoredRequest>("request", undefined, { pendingApprovals: true, limit: 100 }),
+    );
   }
   replay(
     userId: string,
@@ -621,7 +618,8 @@ export class ControlService {
           sequence: device.cursor,
           ...(cursor &&
           (events.length
-            ? events[0]!.cursor <= cursor.sequence + 1 && events.at(-1)!.cursor === device.cursor
+            ? events.every((event, index) => event.cursor === cursor.sequence + index + 1) &&
+              events.at(-1)!.cursor === device.cursor
             : cursor.sequence === device.cursor) &&
           events.length <= 50 &&
           new TextEncoder().encode(JSON.stringify(events)).byteLength < MAX_RELAY_BYTES - 2048

@@ -21,15 +21,18 @@ export function createRuntime(
   const state = new StateStore(profilePath(options));
   let agentHost: AgentRuntime | undefined;
   const getAgents = () =>
-    (agentHost ??= new AgentRuntime(state, (pendingRequest, change) =>
-      emit({
-        version: 1,
-        event: "agent.changed",
-        data: {
-          ...(pendingRequest ? { pendingRequest } : {}),
-          ...(change ? { change, local: change.local } : {}),
-        },
-      }),
+    (agentHost ??= new AgentRuntime(
+      state,
+      (pendingRequest, change) =>
+        emit({
+          version: 1,
+          event: "agent.changed",
+          data: {
+            ...(pendingRequest ? { pendingRequest } : {}),
+            ...(change ? { change, local: change.local } : {}),
+          },
+        }),
+      options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {},
     ));
   const files = new FileRuntime(state);
   const processes = new ProcessRuntime(emit);

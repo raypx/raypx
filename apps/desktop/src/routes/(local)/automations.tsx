@@ -396,7 +396,7 @@ function JobsPage() {
                   variant="ghost"
                   size="icon"
                   disabled={busy}
-                  aria-label={`${c("delete")}: ${job.name}`}
+                  aria-label={c("deleteNamed", { name: job.name })}
                   onClick={() => void remove(job)}
                 >
                   <Trash2 />

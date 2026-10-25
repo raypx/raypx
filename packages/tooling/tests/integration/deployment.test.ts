@@ -33,17 +33,22 @@ it.each([false, true])(
       expect(commands.filter((line) => /--wait (api|web)/.test(line)).length).toBe(fail ? 0 : 2);
       expect(
         commands
-          .slice(1)
+          .filter((line) => /(?:up -d|run --rm|stop api$)/.test(line))
           .map((line) =>
             line.slice(
-              line.indexOf("up -d") >= 0 ? line.indexOf("up -d") : line.indexOf("run --rm"),
+              line.indexOf("stop api") >= 0
+                ? line.indexOf("stop api")
+                : line.indexOf("up -d") >= 0
+                  ? line.indexOf("up -d")
+                  : line.indexOf("run --rm"),
             ),
           ),
       ).toEqual(
         fail
-          ? ["up -d postgres", "run --rm migrate"]
+          ? ["up -d postgres", "stop api", "run --rm migrate"]
           : [
               "up -d postgres",
+              "stop api",
               "run --rm migrate",
               "up -d --no-deps --wait api",
               "up -d --no-deps --wait web",
@@ -89,6 +94,53 @@ it("discovers build manifests without copying application code or secrets", () =
     expect(result.status).toBe(0);
     expect(readFileSync(join(output, "modules/one/package.json"), "utf8")).toContain('"one"');
     expect(() => readFileSync(join(output, "modules/one/source.ts"))).toThrow(/ENOENT/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+it.each(["api", "web"])("restores exact previous images when %s health fails", (failure) => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-deploy-rollback-"));
+  const log = join(directory, "commands"),
+    environment = join(directory, ".env"),
+    captured = join(directory, "rollback.yaml");
+  try {
+    writeFileSync(environment, "COMPOSE_PROJECT_NAME=isolated-test\n");
+    writeFileSync(
+      join(directory, "docker"),
+      `#!/bin/sh
+printf '%s\\n' "$*" >> "$RAYPX_DEPLOY_TEST_LOG"
+case "$*" in
+  *"ps -q api") echo old-api ;;
+  *"ps -q web") echo old-web ;;
+  "inspect --format {{.Image}} old-api") echo sha256:${"a".repeat(64)} ;;
+  "inspect --format {{.Image}} old-web") echo sha256:${"b".repeat(64)} ;;
+  *"--wait $RAYPX_DEPLOY_TEST_FAIL") exit 9 ;;
+esac
+case "$*" in
+  *"--wait api web")
+    for arg in "$@"; do case "$arg" in *raypx-rollback.*) cp "$arg" "$RAYPX_DEPLOY_TEST_CAPTURE" ;; esac; done ;;
+esac
+`,
+      { mode: 0o700 },
+    );
+    const result = spawnSync("/bin/sh", [join(root, "deploy/update.sh"), environment], {
+      env: {
+        ...process.env,
+        PATH: `${directory}:/usr/bin:/bin`,
+        RAYPX_DEPLOY_TEST_LOG: log,
+        RAYPX_DEPLOY_TEST_FAIL: failure,
+        RAYPX_DEPLOY_TEST_CAPTURE: captured,
+      },
+      encoding: "utf8",
+    });
+    expect(result.status).toBe(9);
+    const commands = readFileSync(log, "utf8");
+    expect(commands).toContain("stop api web");
+    expect(commands).toContain("up -d --no-deps --wait api web");
+    const override = readFileSync(captured, "utf8");
+    expect(override).toContain(`sha256:${"a".repeat(64)}`);
+    expect(override).toContain(`sha256:${"b".repeat(64)}`);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

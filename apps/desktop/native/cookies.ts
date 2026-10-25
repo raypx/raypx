@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import {
   existsSync,
+  readdirSync,
   mkdirSync,
   readFileSync,
   renameSync,
@@ -22,6 +23,26 @@ interface KeyStore {
   set(options: { service: string; name: string; value: string; persist: "local" }): Promise<void>;
 }
 class SessionKeyUnavailable extends Error {}
+
+function cleanQuarantinedSessions(directory: string, preserve?: string) {
+  try {
+    const files = readdirSync(directory)
+      .filter((name) => /^session\.enc\.corrupt-[a-f0-9-]+$/.test(name))
+      .map((name) => ({
+        path: join(directory, name),
+        modified: statSync(join(directory, name)).mtimeMs,
+      }))
+      .sort(
+        (a, b) =>
+          Number(b.path === preserve) - Number(a.path === preserve) || b.modified - a.modified,
+      );
+    for (const [index, file] of files.entries())
+      if (file.path !== preserve && (index >= 3 || Date.now() - file.modified > 7 * 86400_000))
+        rmSync(file.path);
+  } catch {
+    // Recovery-file retention must never block a healthy session or local startup.
+  }
+}
 
 /** CEF's Windows SDK has no cookie implementation. Keep its native HTTP jar encrypted. */
 async function openEncryptedCookies(
@@ -164,6 +185,7 @@ export async function createEncryptedCookies(
 ): Promise<NativeCookies> {
   const origin = parseServerOrigin(rawOrigin),
     file = join(directory, "session.enc");
+  cleanQuarantinedSessions(directory);
   const availableKeys: KeyStore = {
     async get(options) {
       try {
@@ -187,8 +209,13 @@ export async function createEncryptedCookies(
       report?.({ kind: "temporary", path: file });
       return createMemoryCookies(origin);
     }
+    let quarantine = file;
     try {
-      if (existsSync(file)) renameSync(file, `${file}.corrupt-${crypto.randomUUID()}`);
+      if (existsSync(file)) {
+        quarantine = `${file}.corrupt-${crypto.randomUUID()}`;
+        renameSync(file, quarantine);
+      }
+      cleanQuarantinedSessions(directory, quarantine);
       await availableKeys.set({
         service: SESSION_KEY_SERVICE,
         name: sessionKeyName(directory),
@@ -196,10 +223,10 @@ export async function createEncryptedCookies(
         persist: "local",
       });
       const result = await openEncryptedCookies(directory, origin, availableKeys);
-      report?.({ kind: "reset", path: file });
+      report?.({ kind: "reset", path: quarantine });
       return result;
     } catch {
-      report?.({ kind: "temporary", path: file });
+      report?.({ kind: "temporary", path: quarantine });
       return createMemoryCookies(origin);
     }
   }

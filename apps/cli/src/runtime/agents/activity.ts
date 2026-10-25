@@ -1,3 +1,4 @@
+import { taskText } from "@raypx/contracts/tasks";
 import type { TaskActivity } from "@raypx/contracts/tasks";
 import type { ActivityDraft } from "./store";
 
@@ -96,15 +97,16 @@ export class ConversationRecorder {
       entry = { ...this.base(), kind: "message", text: "", status: "streaming", truncated: false };
       this.entries.set(key, entry);
     }
-    const next = append ? entry.text + value : value;
+    const next = append ? (entry.truncated ? entry.text : entry.text + value) : value;
+    const clipped = taskText(next, 32_000);
     if (
       !created &&
-      entry.text === next.slice(0, 32_000) &&
+      entry.text === clipped &&
       entry.status === (complete ? "complete" : "streaming") &&
       (entry.truncated || next.length <= 32_000)
     )
       return;
-    entry.text = next.slice(0, 32_000);
+    entry.text = clipped;
     entry.truncated ||= next.length > 32_000;
     entry.status = complete ? "complete" : "streaming";
     this.save(key, created || complete);
@@ -113,7 +115,7 @@ export class ConversationRecorder {
     const key = `tool:${id}`;
     let entry = this.entries.get(key) as Tool | undefined;
     if (!entry) {
-      entry = { ...this.base(), kind: "tool", name: name.slice(0, 120), status };
+      entry = { ...this.base(), kind: "tool", name: taskText(name, 120), status };
       this.entries.set(key, entry);
     } else if (entry.status === "running" || status !== "running") entry.status = status;
     this.save(key, true);
@@ -200,8 +202,22 @@ export class ConversationRecorder {
           (Object.keys(usage) as (keyof TokenTotals)[]).some(
             (key) => usage[key] < this.totals![key],
           )
-        )
+        ) {
+          // A resumed provider can reset any cumulative counter. Do not fabricate
+          // the missing interval; use the new totals as the next baseline.
+          this.totals = usage;
+          this.persistTotals?.(usage);
+          this.usageKnown = false;
+          this.usage(
+            this.turnUsage.inputTokens,
+            this.turnUsage.outputTokens,
+            this.turnUsage.cachedInputTokens,
+            this.turnUsage.cacheWriteInputTokens,
+            undefined,
+            false,
+          );
           return;
+        }
         if (
           (Object.keys(usage) as (keyof TokenTotals)[]).every(
             (key) => usage[key] === this.totals![key],

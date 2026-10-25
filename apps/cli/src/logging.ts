@@ -31,6 +31,7 @@ export async function createCliLogging() {
   });
   const record: RecordDiagnostic = (event) => {
     const log = createLogger({ ...event });
+    if (event.operation === "agent.maintenance") log.setLevel("warn");
     if (
       event.operation === "scheduler.failed" ||
       ("outcome" in event && event.outcome === "failed") ||

@@ -43,12 +43,14 @@ for await (const line of createInterface({ input: process.stdin })) {
   }
   if (message.method === "turn/steer") {
     appendFileSync("delivered", JSON.stringify(message) + "\n");
-    if (existsSync("steer-expired")) {
-      active = false;
-      send({
-        method: "turn/completed",
-        params: { turn: { id: `turn-${turn}`, status: "completed" } },
-      });
+    if (existsSync("steer-expired") || existsSync("steer-expired-delayed")) {
+      if (!existsSync("steer-expired-delayed")) {
+        active = false;
+        send({
+          method: "turn/completed",
+          params: { turn: { id: `turn-${turn}`, status: "completed" } },
+        });
+      }
       send({
         id: message.id,
         error: { code: -32600, message: "expectedTurnId does not match the active turn" },

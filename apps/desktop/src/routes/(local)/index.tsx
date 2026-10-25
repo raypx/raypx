@@ -110,7 +110,7 @@ function FilesPage() {
     confirmDiscard,
     confirmDelete: (entry) =>
       confirm({
-        title: `${c("delete")}: ${entry.name}`,
+        title: c("deleteNamed", { name: entry.name }),
         description: t("deleteConfirm"),
         confirmLabel: c("delete"),
         cancelLabel: c("cancel"),

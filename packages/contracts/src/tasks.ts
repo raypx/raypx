@@ -1,5 +1,7 @@
 import { z } from "zod";
 export { taskActivityPage, applyActivityEvent } from "./activity.js";
+export { taskText, normalizeTaskJson } from "./task-text.js";
+
 export const RELAY_VERSION = 2;
 
 export const agentProviderSchema = z.enum(["claude", "codex"]);

@@ -50,3 +50,21 @@ it("drains in-flight device frames before disconnecting on shutdown", async () =
     code: "DEVICE_REPLACED",
   });
 });
+
+it("classifies repository failures as retryable server errors, never invalid client frames", async () => {
+  const hub = new RelayHub(async () => {
+    throw new Error("private database failure");
+  });
+  const id = crypto.randomUUID(),
+    send = vi.fn(),
+    close = vi.fn();
+  hub.open({ id, send, close });
+  await hub.receive(
+    id,
+    JSON.stringify({ type: "auth", protocolVersion: 2, role: "viewer", token: "x".repeat(72) }),
+  );
+  expect(send).toHaveBeenCalledWith({ type: "error", code: "SERVER_UNAVAILABLE" });
+  expect(close).toHaveBeenCalledWith(1011, "SERVER_UNAVAILABLE");
+  expect(JSON.stringify(send.mock.calls)).not.toContain("private");
+  await hub.shutdown();
+});

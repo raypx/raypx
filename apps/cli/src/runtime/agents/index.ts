@@ -1,7 +1,9 @@
+import type { RecordDiagnostic } from "../../diagnostics";
 import { existsSync, realpathSync } from "node:fs";
 import { homedir, hostname } from "node:os";
 import { join } from "node:path";
 import {
+  taskText,
   activeTaskStatuses,
   humanRequestSchema,
   type AgentTask,
@@ -60,7 +62,7 @@ const object = (value: unknown): Record<string, unknown> =>
     ? (value as Record<string, unknown>)
     : {};
 const text = (value: unknown, max = 128_000) =>
-  typeof value === "string" ? value.slice(0, max) : "";
+  typeof value === "string" ? taskText(value, max) : "";
 // The first record always passes so cursors advance past oversized events.
 // Unordered sets skip a record that does not fit instead of hiding the rest.
 export function bounded<T>(records: T[], skip = false, budget = 256 * 1024): T[] {
@@ -101,11 +103,15 @@ export class AgentRuntime {
     private readonly state: StateStore,
     // A pending request id is passed only for local work; relay delivery notifies separately.
     private readonly changed: (pendingRequest?: string, change?: TaskChange) => void,
-    private readonly options: { executables?: Partial<Record<AgentProvider, string>> } = {},
+    private readonly options: {
+      executables?: Partial<Record<AgentProvider, string>>;
+      recordDiagnostic?: RecordDiagnostic;
+    } = {},
   ) {
-    this.store = new AgentStore(state.directory);
+    this.store = new AgentStore(state.directory, undefined, undefined, options.recordDiagnostic);
     for (const local of this.store.tasks())
-      if (activeTaskStatuses.includes(local.task.status)) this.status(local, "interrupted");
+      if (activeTaskStatuses.includes(local.task.status))
+        this.status(local, "interrupted", undefined, "HOST_RESTARTED");
   }
   async localDevice(accountId: string): Promise<SyncDevice> {
     return {
@@ -216,11 +222,16 @@ export class AgentRuntime {
       events: [{ sequence: 1, event }],
     });
   }
-  private status(local: LocalAgentTask, status: AgentTask["status"], summary = "") {
+  private status(
+    local: LocalAgentTask,
+    status: AgentTask["status"],
+    summary = "",
+    inputCode?: TaskInput["code"],
+  ) {
     const task = {
       ...local.task,
       status,
-      summary: summary.slice(0, 32_000),
+      summary: taskText(summary, 32_000),
       updatedAt: new Date().toISOString(),
     };
     const event: AgentEvent = {
@@ -231,7 +242,11 @@ export class AgentRuntime {
       summary: task.summary,
       task,
     };
-    this.store.transition({ ...local, task }, event);
+    this.store.transition(
+      { ...local, task },
+      event,
+      inputCode ?? (summary === "INPUT_DELIVERY_FAILED" ? "INPUT_DELIVERY_FAILED" : "TASK_STOPPED"),
+    );
     Object.assign(local.task, task);
     this.changedFor(local, event);
   }
@@ -534,10 +549,6 @@ export class AgentRuntime {
               if (error instanceof LocalError && error.code === "AGENT_TURN_CHANGED") {
                 entry.mode = "queue";
                 this.inputStatus(execution, entry, "queued");
-                execution.interruptTimer = setTimeout(
-                  () => this.expireInput(execution, entry),
-                  10_000,
-                );
                 return;
               }
               execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
@@ -548,11 +559,13 @@ export class AgentRuntime {
             execution.interrupting = true;
             try {
               await execution.process!.control({ subtype: "interrupt" });
-              if (execution.turnActive && !execution.finished)
-                execution.interruptTimer = setTimeout(
-                  () => this.expireInput(execution, entry),
-                  10_000,
-                );
+              if (execution.turnActive && !execution.finished) {
+                clearTimeout(execution.interruptTimer);
+                const runner = execution.process;
+                execution.interruptTimer = setTimeout(() => {
+                  if (execution.process === runner) this.expireInput(execution, entry);
+                }, 10_000);
+              }
             } catch {
               execution.interrupting = false;
               execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
@@ -759,7 +772,16 @@ export class AgentRuntime {
     this.changed();
   }
   private expireInput(execution: Execution, entry: TaskInput) {
-    if (execution.finished) return;
+    if (
+      execution.finished ||
+      !execution.turnActive ||
+      !execution.interrupting ||
+      entry.status !== "sending" ||
+      !execution.inputs.some((input) => input.id === entry.id)
+    )
+      return;
+    clearTimeout(execution.interruptTimer);
+    delete execution.interruptTimer;
     execution.inputs = execution.inputs.filter((input) => input.id !== entry.id);
     this.inputStatus(execution, entry, "failed", "INPUT_DELIVERY_FAILED");
     this.finish(execution, "interrupted", "INPUT_DELIVERY_FAILED");
@@ -800,8 +822,8 @@ export class AgentRuntime {
       id: crypto.randomUUID(),
       taskId: execution.local.task.id,
       kind,
-      title: title.slice(0, 500),
-      body: body.slice(0, 128_000),
+      title: taskText(title, 500),
+      body: taskText(body, 128_000),
       questions,
       expiresAt,
       status: "pending",
@@ -945,8 +967,12 @@ export class AgentRuntime {
               error: { code: -32601, message: "Unsupported host request" },
             });
           else if (method === "item/agentMessage/delta") {
-            execution.summary = (execution.summary + text(params.delta, 32_000)).slice(-32_000);
-            execution.preview = (execution.preview + text(params.delta, 128_001)).slice(0, 128_001);
+            execution.summary = taskText(
+              execution.summary + text(params.delta, 32_000),
+              32_000,
+              true,
+            );
+            execution.preview = taskText(execution.preview + text(params.delta, 128_001), 128_001);
           } else if (method === "turn/completed") {
             const turn = object(params.turn);
             void this.serial(execution, async () => {
@@ -1104,7 +1130,11 @@ export class AgentRuntime {
               execution.summary = text(message.result, 32_000);
               if (
                 (message.is_error !== true || interrupted) &&
-                (interrupted || task.mode !== "plan") &&
+                (interrupted ||
+                  task.mode !== "plan" ||
+                  execution.inputs.some(
+                    (entry) => entry.mode === "steer" && entry.status === "sending",
+                  )) &&
                 (await this.nextInput(execution))
               )
                 return;

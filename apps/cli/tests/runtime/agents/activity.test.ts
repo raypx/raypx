@@ -173,3 +173,50 @@ it("retains bounded Codex text, finalizes cancellation and never includes comman
   );
   expect(JSON.stringify(values)).not.toContain("PRIVATE_");
 });
+
+it("marks a cumulative counter reset unknown, then counts subsequent updates from the new baseline", () => {
+  const { recorder: r, entries } = recorder();
+  r.setTokenBaseline({
+    inputTokens: 1000,
+    outputTokens: 100,
+    cachedInputTokens: 200,
+    cacheWriteInputTokens: 0,
+  });
+  r.startTurn();
+  r.setTurnId("reset");
+  const update = (inputTokens: number) =>
+    r.codex("thread/tokenUsage/updated", {
+      turnId: "reset",
+      tokenUsage: { total: { inputTokens, outputTokens: 5, cachedInputTokens: 1 } },
+    });
+  update(10);
+  update(30);
+  expect([...entries.values()].find((entry) => entry.kind === "usage")).toMatchObject({
+    known: false,
+    inputTokens: 20,
+  });
+  r.endTurn("complete");
+  r.startTurn();
+  r.setTurnId("reset");
+  update(50);
+  r.stop("complete");
+  expect(
+    [...entries.values()]
+      .filter((entry) => entry.kind === "usage")
+      .map((entry) => ({ known: entry.known, input: entry.inputTokens })),
+  ).toEqual([
+    { known: false, input: 20 },
+    { known: true, input: 20 },
+  ]);
+});
+it("never appends into a partially filled Unicode truncation boundary", () => {
+  const { recorder: r, entries } = recorder();
+  r.startTurn();
+  r.codex("item/agentMessage/delta", { itemId: "unicode", delta: "x".repeat(31999) + "😀" });
+  r.codex("item/agentMessage/delta", { itemId: "unicode", delta: "later" });
+  r.stop("complete");
+  expect([...entries.values()].find((entry) => entry.kind === "message")).toMatchObject({
+    text: "x".repeat(31999),
+    truncated: true,
+  });
+});

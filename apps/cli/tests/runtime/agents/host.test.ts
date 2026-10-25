@@ -64,7 +64,9 @@ async function host(
   };
   return { runtime, task, directory, state, pending };
 }
-async function inputRace(scenario: "claude-timeout" | "claude-natural" | "codex-expired") {
+async function inputRace(
+  scenario: "claude-timeout" | "claude-natural" | "codex-expired" | "codex-delayed",
+) {
   const provider: AgentProvider = scenario.startsWith("claude") ? "claude" : "codex";
   const f = await host(provider, `${provider}-interactive`),
     account = "input-races",
@@ -84,7 +86,9 @@ async function inputRace(scenario: "claude-timeout" | "claude-natural" | "codex-
       ? "interrupt-without-result"
       : scenario === "claude-natural"
         ? "interrupt-natural-result"
-        : "steer-expired";
+        : scenario === "codex-delayed"
+          ? "steer-expired-delayed"
+          : "steer-expired";
   writeFileSync(join(f.directory, marker), "");
   const steer = {
     id: crypto.randomUUID(),
@@ -144,6 +148,34 @@ it("queues an explicitly rejected Codex steer after the completed turn", async (
     .map((line) => JSON.parse(line));
   expect(delivered.filter((entry) => entry.method === "turn/start")).toHaveLength(2);
 });
+it("keeps two rejected Codex steers queued when completion takes longer than ten seconds", async () => {
+  const f = await inputRace("codex-delayed");
+  const activity = () =>
+    f.runtime
+      .localTask(f.account, f.input.id, 0)
+      .activity.filter((entry) => entry.kind === "input");
+  await expect
+    .poll(() => activity().find((entry) => entry.id === f.steer.id)?.status)
+    .toBe("queued");
+  const second = { ...f.steer, id: crypto.randomUUID(), prompt: "Third" };
+  expect(
+    await f.runtime.localExecute(f.account, second.id, { method: "tasks.input", input: second }),
+  ).toMatchObject({ ok: true });
+  await expect
+    .poll(() => activity().find((entry) => entry.id === second.id)?.status)
+    .toBe("queued");
+  await new Promise((resolve) => setTimeout(resolve, 10_200));
+  expect(f.runtime.localTask(f.account, f.input.id, 0).task.status).toBe("running");
+  writeFileSync(join(f.directory, "complete"), "");
+  const sent = () =>
+    activity().filter(
+      (entry) => (entry.id === f.steer.id || entry.id === second.id) && entry.status === "sent",
+    ).length;
+  await expect.poll(sent).toBe(1);
+  writeFileSync(join(f.directory, "complete"), "");
+  await expect.poll(sent).toBe(2);
+  expect(f.runtime.localTask(f.account, f.input.id, 0).task.status).toBe("running");
+}, 20_000);
 it.each(["codex", "claude"] as const)(
   "delivers %s steer and queued turns once, in order, on the same session",
   async (provider) => {

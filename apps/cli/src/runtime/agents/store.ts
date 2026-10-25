@@ -1,3 +1,4 @@
+import { normalizeTaskJson } from "@raypx/contracts/tasks";
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
 import type {
@@ -11,6 +12,9 @@ import type {
 } from "@raypx/contracts/tasks";
 import { LocalError } from "../errors";
 import { activeTaskStatuses, taskActivitySchema, taskActivityPage } from "@raypx/contracts/tasks";
+import { recordDiagnostic, type RecordDiagnostic } from "../../diagnostics";
+
+const stored = (value: string) => normalizeTaskJson(JSON.parse(value));
 
 type Draft<T> = T extends unknown ? Omit<T, "order" | "revision"> : never;
 export type ActivityDraft = Draft<TaskActivity>;
@@ -36,6 +40,7 @@ export class AgentStore {
     directory: string,
     private readonly retained = 4096,
     private readonly retainedBytes = 8 * 1024 * 1024,
+    diagnostics?: RecordDiagnostic,
   ) {
     this.database = new Database(join(directory, "agents.sqlite"), { create: true, strict: true });
     this.database.exec(
@@ -58,19 +63,33 @@ export class AgentStore {
         value: string;
       }
     ).value;
-    let removed: number;
-    do {
-      removed = this.database
-        .query(
-          "DELETE FROM journal WHERE sequence IN (SELECT sequence FROM journal WHERE binding LIKE 'desktop:%' AND json_extract(value,'$.kind') IN ('activity','activity_delta') LIMIT 1000)",
-        )
-        .run().changes;
-    } while (removed === 1000);
-    this.database.exec(
-      "DELETE FROM outbox WHERE id NOT IN (SELECT id FROM journal); UPDATE outbox SET value='' WHERE value!='';",
-    );
+    // One-time, indexed legacy cleanup. Commit the marker before vacuuming;
+    // a separate pending marker retries disk reclamation after a crash.
+    if (!this.database.query("SELECT 1 FROM agent_meta WHERE id='local-journal-v2'").get()) {
+      this.database.transaction(() => {
+        this.database.exec(
+          "DELETE FROM journal WHERE binding GLOB 'desktop:*' AND json_extract(value,'$.kind') IN ('activity','activity_delta'); DELETE FROM outbox WHERE id NOT IN (SELECT id FROM journal); UPDATE outbox SET value='' WHERE value!=''; INSERT OR REPLACE INTO agent_meta VALUES ('local-journal-v2','done'); INSERT OR REPLACE INTO agent_meta VALUES ('vacuum-pending','1');",
+        );
+      })();
+    }
+    if (this.database.query("SELECT 1 FROM agent_meta WHERE id='vacuum-pending'").get()) {
+      try {
+        this.database.exec("PRAGMA wal_checkpoint(TRUNCATE); VACUUM;");
+        this.database.exec(
+          "DELETE FROM agent_meta WHERE id='vacuum-pending'; PRAGMA wal_checkpoint(TRUNCATE);",
+        );
+      } catch {
+        // Reclamation is optional, including FULL/IOERR. Keep the retry marker
+        // without preventing reads or rerunning the committed row migration.
+        recordDiagnostic(diagnostics, {
+          operation: "agent.maintenance",
+          code: "VACUUM_DEFERRED",
+          outcome: "deferred",
+        });
+      }
+    }
     for (const row of this.database
-      .query("SELECT DISTINCT binding FROM journal WHERE binding NOT LIKE 'desktop:%'")
+      .query("SELECT DISTINCT binding FROM journal WHERE binding NOT GLOB 'desktop:*'")
       .all() as { binding: string }[])
       this.compact(row.binding);
   }
@@ -86,7 +105,7 @@ export class AgentStore {
     const row = this.database
       .query("SELECT value FROM agent_meta WHERE id=?")
       .get(`usage:codex:${sessionId}`) as { value: string } | null;
-    return row ? JSON.parse(row.value) : undefined;
+    return row ? stored(row.value) : undefined;
   }
   recordTokenUsage(local: LocalAgentTask, totals: NonNullable<LocalAgentTask["tokenUsage"]>) {
     this.database.transaction(() => {
@@ -115,7 +134,7 @@ export class AgentStore {
       .all(binding, after, id) as { sequence: number; value: string }[];
     return rows.map((row) => ({
       cursor: row.sequence,
-      event: JSON.parse(row.value) as AgentEvent,
+      event: stored(row.value) as AgentEvent,
     }));
   }
   configure(id: string, providers: AgentProvider[]) {
@@ -127,17 +146,17 @@ export class AgentStore {
     const row = this.database.query("SELECT value FROM tasks WHERE id=?").get(id) as {
       value: string;
     } | null;
-    return row ? JSON.parse(row.value) : undefined;
+    return row ? stored(row.value) : undefined;
   }
   tasks(): LocalAgentTask[] {
     return (this.database.query("SELECT value FROM tasks").all() as { value: string }[]).map(
-      (row) => JSON.parse(row.value),
+      (row) => stored(row.value),
     );
   }
   put(value: LocalAgentTask) {
     this.database
       .query("INSERT OR REPLACE INTO tasks VALUES (?,?)")
-      .run(value.task.id, JSON.stringify(value));
+      .run(value.task.id, JSON.stringify(normalizeTaskJson(value)));
   }
   accept(value: LocalAgentTask, id: string) {
     this.database.transaction(() => {
@@ -145,7 +164,11 @@ export class AgentStore {
       this.put(value);
     })();
   }
-  transition(value: LocalAgentTask, event: AgentEvent) {
+  transition(
+    value: LocalAgentTask,
+    event: AgentEvent,
+    inputCode: Extract<TaskActivity, { kind: "input" }>["code"] = "TASK_STOPPED",
+  ) {
     this.database.transaction(() => {
       this.put(value);
       if (!activeTaskStatuses.includes(value.task.status)) {
@@ -157,7 +180,7 @@ export class AgentStore {
             this.recordActivity(value.binding, {
               ...entry,
               status: entry.status === "sending" ? "interrupted" : "cancelled",
-              code: value.task.status === "interrupted" ? "HOST_RESTARTED" : "TASK_STOPPED",
+              code: inputCode,
               updatedAt: new Date().toISOString(),
             });
           else if (
@@ -178,7 +201,7 @@ export class AgentStore {
       this.database
         .query("SELECT value FROM activity WHERE binding=? AND task_id=? ORDER BY rowid")
         .all(binding, taskId) as { value: string }[]
-    ).map((row) => JSON.parse(row.value));
+    ).map((row) => stored(row.value));
   }
   activityPage(binding: string, taskId: string, before?: number) {
     const rows = (
@@ -195,7 +218,7 @@ export class AgentStore {
             .all(binding, taskId, before)
     ) as { value: string }[];
     return taskActivityPage(
-      rows.map((row) => JSON.parse(row.value) as TaskActivity),
+      rows.map((row) => stored(row.value) as TaskActivity),
       before,
     );
   }
@@ -213,7 +236,7 @@ export class AgentStore {
       )
       .all(binding, taskId) as { value: string }[];
     const entries = [
-      ...active.map((row) => JSON.parse(row.value) as TaskActivity),
+      ...active.map((row) => stored(row.value) as TaskActivity),
       ...this.activityPage(binding, taskId).activity.reverse(),
     ];
     return [...new Map(entries.map((entry) => [entry.id, entry])).values()];
@@ -236,13 +259,15 @@ export class AgentStore {
             rowid: number;
           }
         ).rowid;
-      const previous = old ? (JSON.parse(old.value) as TaskActivity) : undefined;
-      const entry = taskActivitySchema.parse({
-        ...draft,
-        createdAt: previous?.createdAt ?? draft.createdAt,
-        order,
-        revision: (previous?.revision ?? 0) + 1,
-      });
+      const previous = old ? (stored(old.value) as TaskActivity) : undefined;
+      const entry = taskActivitySchema.parse(
+        normalizeTaskJson({
+          ...draft,
+          createdAt: previous?.createdAt ?? draft.createdAt,
+          order,
+          revision: (previous?.revision ?? 0) + 1,
+        }),
+      );
       this.database
         .query("UPDATE activity SET value=? WHERE id=?")
         .run(JSON.stringify(entry), entry.id);
@@ -283,7 +308,7 @@ export class AgentStore {
   }
   event(binding: string, event: AgentEvent) {
     this.database.transaction(() => {
-      const value = JSON.stringify(event),
+      const value = JSON.stringify(normalizeTaskJson(event)),
         local = isDesktopBinding(binding);
       if (!local)
         this.database
@@ -333,7 +358,7 @@ export class AgentStore {
     for (const row of rows) {
       bytes += Buffer.byteLength(row.value);
       if (bytes > 768 * 1024) break;
-      events.push({ sequence: row.sequence, event: JSON.parse(row.value) });
+      events.push({ sequence: row.sequence, event: stored(row.value) });
     }
     return { streamId: this.streamId, sequence: this.sequence(binding), floor, events };
   }
@@ -349,7 +374,7 @@ export class AgentStore {
       this.database
         .query("SELECT value FROM requests WHERE binding=? ORDER BY rowid")
         .all(binding) as { value: string }[]
-    ).map((row) => JSON.parse(row.value));
+    ).map((row) => stored(row.value));
   }
   forget(binding: string, ids: string[]) {
     this.database.transaction(() => {
@@ -369,7 +394,7 @@ export class AgentStore {
     this.database.transaction(() => {
       this.database
         .query("INSERT OR REPLACE INTO requests VALUES (?,?,?)")
-        .run(value.id, binding, JSON.stringify(value));
+        .run(value.id, binding, JSON.stringify(normalizeTaskJson(value)));
       this.event(binding, {
         id: crypto.randomUUID(),
         taskId: value.taskId,
@@ -404,11 +429,11 @@ export class AgentStore {
           "SELECT journal.value FROM outbox JOIN journal ON journal.id=outbox.id AND journal.binding=outbox.binding WHERE outbox.binding=? ORDER BY journal.sequence LIMIT 50",
         )
         .all(binding) as { value: string }[]
-    ).map((row) => JSON.parse(row.value) as AgentEvent);
+    ).map((row) => stored(row.value) as AgentEvent);
     const batch: AgentEvent[] = [];
     let bytes = 0;
     for (const value of values) {
-      const size = Buffer.byteLength(JSON.stringify(value));
+      const size = Buffer.byteLength(JSON.stringify(normalizeTaskJson(value)));
       if (bytes + size > 256 * 1024) break;
       bytes += size;
       batch.push(value);

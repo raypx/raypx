@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./api": "./src/api.ts",
     "./local": "./src/local.ts",
-    "./tasks": "./src/tasks.ts"
+    "./tasks": "./src/tasks.ts",
+    "./task-text": "./src/task-text.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

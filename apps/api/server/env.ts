@@ -1,3 +1,4 @@
+import { normalizeTrustedOrigins } from "@raypx/auth/origins";
 import { createEnv, type Preset, z } from "@raypx-kit/env";
 export const apiServerEnv = {
   id: "api",
@@ -79,9 +80,7 @@ export function getApiEnvironment(runtimeEnv: Record<string, string | undefined>
             secretAccessKey: env.S3_SECRET_ACCESS_KEY,
           }
         : undefined,
-    allowedOrigins: env.ALLOWED_ORIGINS.split(",")
-      .map((v) => v.trim())
-      .filter(Boolean),
+    allowedOrigins: normalizeTrustedOrigins(env.ALLOWED_ORIGINS.split(",")),
     ipAddressHeaders: list(env.AUTH_IP_HEADERS).map((v) => v.toLowerCase()),
     trustedProxies: list(env.AUTH_TRUSTED_PROXIES),
   };

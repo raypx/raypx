@@ -103,3 +103,38 @@ it("bounds large diffs and parses apply_patch file boundaries", () => {
   expect(large.lines.length).toBeLessThanOrEqual(1200);
   expect(large.truncated).toBe(true);
 });
+
+it("separates multiple unified files without treating later file headers as edits", () => {
+  const files = approvalChanges(
+    JSON.stringify({
+      changes: [
+        {
+          path: "one.ts",
+          kind: { type: "update" },
+          diff: "diff --git a/one.ts b/one.ts\n--- a/one.ts\n+++ b/one.ts\n@@ -1 +1 @@\n-old\n+new\ndiff --git a/two.ts b/two.ts\n--- a/two.ts\n+++ b/two.ts\n@@ -4 +4 @@\n-before\n+after",
+        },
+      ],
+    }),
+  );
+  expect(files.map((file) => file.path)).toEqual(["one.ts", "two.ts"]);
+  expect(
+    files[1]!.lines
+      .filter((line) => line.kind === "add" || line.kind === "remove")
+      .map((line) => line.text),
+  ).toEqual(["before", "after"]);
+});
+it("shows Codex move_path as a rename", () => {
+  expect(
+    approvalChanges(
+      JSON.stringify({
+        changes: [
+          {
+            path: "old.ts",
+            kind: { type: "update", move_path: "new.ts" },
+            diff: "@@ -1 +1 @@\n-old\n+new",
+          },
+        ],
+      }),
+    )[0],
+  ).toMatchObject({ path: "new.ts", previousPath: "old.ts" });
+});

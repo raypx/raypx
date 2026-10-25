@@ -207,11 +207,73 @@ it("finishes an in-flight command before replacing its socket for proactive rene
   const pending = f.value.refreshGrant();
   await expect.poll(() => renewGrant.mock.calls.length).toBe(1);
   expect(f.frames.filter((frame) => frame.type === "auth")).toHaveLength(1);
+  const deferredRoute = crypto.randomUUID();
+  for (const peer of f.sockets)
+    peer.send({
+      type: "command",
+      routeId: deferredRoute,
+      command: {
+        id: crypto.randomUUID(),
+        deviceId: f.grant.deviceId,
+        expiresAt: new Date(Date.now() + 15_000).toISOString(),
+        request: { method: "tasks.cancel", input: { id: crypto.randomUUID() } },
+      },
+    });
+  await expect
+    .poll(() =>
+      f.frames.find((frame) => frame.type === "result" && frame.routeId === deferredRoute),
+    )
+    .toMatchObject({ result: { ok: false, code: "REQUEST_CLOSED" } });
+  expect(f.request.mock.calls.filter(([method]) => method === "agents.remote")).toHaveLength(1);
   release();
   expect(await pending).toBe(true);
   await expect.poll(() => f.frames.filter((frame) => frame.type === "auth").length).toBe(2);
   expect(f.frames.some((frame) => frame.type === "result" && frame.routeId === routeId)).toBe(true);
 });
+it("caps proactive renewal draining at ten seconds without cancelling the in-flight task", async () => {
+  const renewGrant = vi.fn(
+    async (_account: string, binding: { deviceId: string; epoch: number }) => ({
+      ...binding,
+      token: "renewed-" + crypto.randomUUID(),
+      expiresAt: new Date(Date.now() + 600_000).toISOString(),
+    }),
+  );
+  const f = await control({ renewGrant }),
+    original = f.request.getMockImplementation()!;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  f.request.mockImplementation(async (method, params) =>
+    method === "agents.remote"
+      ? gate.then(() => ({ ok: true, value: {} }))
+      : original(method, params),
+  );
+  for (const peer of f.sockets)
+    peer.send({
+      type: "command",
+      routeId: crypto.randomUUID(),
+      command: {
+        id: crypto.randomUUID(),
+        deviceId: f.grant.deviceId,
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        request: { method: "tasks.cancel", input: { id: crypto.randomUUID() } },
+      },
+    });
+  await expect
+    .poll(() => f.request.mock.calls.some(([method]) => method === "agents.remote"))
+    .toBe(true);
+  try {
+    const started = Date.now();
+    expect(await f.value.refreshGrant()).toBe(true);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(9_900);
+    expect(Date.now() - started).toBeLessThan(13_000);
+    await expect.poll(() => f.frames.filter((frame) => frame.type === "auth").length).toBe(2);
+    expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
+  } finally {
+    release();
+  }
+}, 18_000);
 it("persists installation identity and account intent while keeping credentials off disk and URLs", async () => {
   const f = await control(),
     saved = readFileSync(join(f.directory, "remote-control.json"), "utf8");
