@@ -1,0 +1,21 @@
+docs/development/terminal-host-p1-review.md
+  s_c99f3390b62e01::t_aa0137e34ece9d 182-192
+packages/client/tests/relay.test.ts
+  s_c99f3390b62e01::t_516e357257a018 1,66-67,69-73,82-85,89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "49e83ec41551ca76acfbb59f52a655e01799883b",
+  "prompts": {},
+  "sessions": {
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
