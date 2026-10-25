@@ -1,0 +1,86 @@
+packages/i18n/src/messages/en.ts
+  s_a9c257ef9e2b8f::t_8074155b5af5e3 370
+  s_a9c257ef9e2b8f::t_6944f2fda8f9e7 84-87
+apps/desktop/tests/native/control.test.ts
+  s_a9c257ef9e2b8f::t_e5d2b9f20f84dd 20,64-70
+  s_a9c257ef9e2b8f::t_8074155b5af5e3 512
+  s_a9c257ef9e2b8f::t_ab153444a5f119 497-511,513-519
+  s_a9c257ef9e2b8f::t_3256d0aa8b6551 71-74,520-531
+apps/desktop/src/features/tasks/reauthorize.tsx
+  s_a9c257ef9e2b8f::t_6944f2fda8f9e7 1-93
+  s_a9c257ef9e2b8f::t_58d93a8817c733 94-106
+packages/client/AGENTS.md
+  s_a9c257ef9e2b8f::t_b79f2a312efaee 15-18
+apps/api/server/control/service.ts
+  s_a9c257ef9e2b8f::t_a5bd2b25aa2e7c 65,252,335,337-343,345-346,348
+packages/auth/AGENTS.md
+  s_a9c257ef9e2b8f::t_b79f2a312efaee 28-30
+packages/host/AGENTS.md
+  s_a9c257ef9e2b8f::t_b79f2a312efaee 31-32
+packages/i18n/src/messages/zh.ts
+  s_a9c257ef9e2b8f::t_6944f2fda8f9e7 72-74
+  s_a9c257ef9e2b8f::t_d025c1f80a5a63 75,336-337
+packages/auth/src/server.ts
+  s_a9c257ef9e2b8f::t_a5bd2b25aa2e7c 42-43,101-113,116-131
+  s_a9c257ef9e2b8f::t_eaf98c811f3341 132
+packages/auth/tests/session-security.test.ts
+  s_a9c257ef9e2b8f::t_cf73cbce022fbf 81-94
+  s_a9c257ef9e2b8f::t_fc22d2b3acd952 95,97
+apps/cli/src/runtime/daemon/control.ts
+  s_a9c257ef9e2b8f::t_a5bd2b25aa2e7c 597-600
+packages/client/tests/relay.test.ts
+  s_a9c257ef9e2b8f::t_213cd3951b1019 8-10,29,77,79-84
+  s_a9c257ef9e2b8f::t_e5d2b9f20f84dd 44-45,56-58,75-76,78
+packages/client/src/response.ts
+  s_a9c257ef9e2b8f::t_a5bd2b25aa2e7c 5
+apps/api/server/runtime/shared.ts
+  s_a9c257ef9e2b8f::t_a5bd2b25aa2e7c 64-65
+apps/api/tests/unit/hosts.test.ts
+  s_a9c257ef9e2b8f::t_1c673fb169a442 91
+  s_a9c257ef9e2b8f::t_cf73cbce022fbf 87-90,92-109
+  s_a9c257ef9e2b8f::t_e57aa99808b5e9 110-120
+apps/desktop/tests/renderer/component/features/reauthorize.test.tsx
+  s_a9c257ef9e2b8f::t_05e1b53e176c88 1-15,17-114
+  s_a9c257ef9e2b8f::t_1c673fb169a442 16
+  s_a9c257ef9e2b8f::t_25605791ae24bd 115-131
+packages/client/src/relay.ts
+  s_a9c257ef9e2b8f::t_a5bd2b25aa2e7c 44,121
+apps/desktop/src/features/tasks/coordinator.tsx
+  s_a9c257ef9e2b8f::t_6944f2fda8f9e7 81
+apps/cli/tests/runtime/daemon/control.test.ts
+  s_a9c257ef9e2b8f::t_cf73cbce022fbf 113,251-252
+apps/desktop/src/features/tasks/settings.tsx
+  s_a9c257ef9e2b8f::t_6944f2fda8f9e7 10,191-195
+apps/api/tests/postgres/node/auth.test.ts
+  s_a9c257ef9e2b8f::t_7cd05ff14bf4ad 5,10-11,19,21
+  s_a9c257ef9e2b8f::t_316998fc3e9e1a 139-184
+  s_a9c257ef9e2b8f::t_3ea579b18aba1c 22,40,45,53,185-224
+apps/desktop/AGENTS.md
+  s_a9c257ef9e2b8f::t_c6b9a4a924bf75 176
+  s_a9c257ef9e2b8f::t_77257bdfd602d6 177
+packages/host/src/control.ts
+  s_a9c257ef9e2b8f::t_a5bd2b25aa2e7c 245-247
+packages/client/tests/index.test.ts
+  s_a9c257ef9e2b8f::t_cf73cbce022fbf 35-45
+  s_a9c257ef9e2b8f::t_e7ae469f645f22 46-54
+docs/development/terminal-host-p1-review.md
+  s_a9c257ef9e2b8f::t_c2921d801dc19b 24-34,74,95-144
+docs/development/terminal-host-p1.md
+  s_a9c257ef9e2b8f::t_faaae5087c9675 49-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f2e14bf7cf7c6243f79b343fdee15b8267e3096c",
+  "prompts": {},
+  "sessions": {
+    "s_a9c257ef9e2b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16ae8-1da4-7571-85c7-63b775168ae1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
