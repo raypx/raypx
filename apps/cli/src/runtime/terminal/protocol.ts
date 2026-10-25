@@ -1,5 +1,9 @@
 import { normalizeTaskJson, type AgentProvider, type HumanDecision } from "@raypx/contracts/tasks";
-import type { TerminalRequest, TerminalSession } from "@raypx/contracts/terminal";
+import {
+  terminalPermissionSupported,
+  type TerminalRequest,
+  type TerminalSession,
+} from "@raypx/contracts/terminal";
 
 const object = (value: unknown): Record<string, unknown> | undefined =>
   value !== null && typeof value === "object" && !Array.isArray(value)
@@ -61,12 +65,7 @@ export function parseHookInvocation(
       ? !capabilities.question
       : plan
         ? !capabilities.plan
-        : !capabilities.permission ||
-          !capabilities.permissionTools.some(
-            (tool) =>
-              tool === raw.tool_name ||
-              (tool === "MCP" && /^mcp__[^\s]+$/.test(String(raw.tool_name))),
-          )
+        : !terminalPermissionSupported(capabilities, raw.tool_name)
   )
     return;
   const questions: TerminalRequest["questions"] = [];

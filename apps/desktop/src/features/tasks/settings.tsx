@@ -180,7 +180,11 @@ export function AgentSettings() {
         </div>
         {(error === "remote" || info?.error) && (
           <p role="alert" className="mt-3 text-sm text-destructive">
-            {t("NETWORK_UNAVAILABLE")}
+            {t(
+              info?.error === "AUTH_REQUIRED" || info?.error === "UNAUTHORIZED"
+                ? "daemonAuthorizationRequired"
+                : "NETWORK_UNAVAILABLE",
+            )}
           </p>
         )}
       </div>

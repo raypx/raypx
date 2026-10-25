@@ -126,3 +126,58 @@ it("fences other devices and revoked accounts from observed records", async () =
   const other = await connected(service, first.auth);
   await expect(service.observed(other.actor, f.frame)).rejects.toThrow("NOT_FOUND");
 });
+
+it("keeps server cancellation outside the host revision sequence across epoch recovery", async () => {
+  const service = new ControlService(memoryControlRepository()),
+    host = await connected(service),
+    f = observed(host.input.projectId);
+  await service.observed(host.actor, f.frame);
+  const next = observed(host.input.projectId);
+  await service.observed(host.actor, next.frame);
+  expect(await service.getObserved(host.auth.user.id, f.request.id)).toMatchObject({
+    status: "cancelled",
+    revision: 1,
+  });
+  await service.observed(host.actor, {
+    ...next.frame,
+    revision: 2,
+    sessions: [f.session, next.session],
+    requests: [{ ...f.request, status: "expired", revision: 2 }, next.request],
+  });
+  expect(await service.getObserved(host.auth.user.id, f.request.id)).toMatchObject({
+    status: "expired",
+    revision: 2,
+  });
+  await service.observed(host.actor, {
+    ...next.frame,
+    revision: 3,
+    requests: [{ ...next.request, status: "delivered", revision: 3, decision: { type: "allow" } }],
+  });
+  expect((await service.getObserved(host.auth.user.id, next.request.id)).status).toBe("delivered");
+});
+
+it("repairs the equal-revision cancellation written by the previous server", async () => {
+  const repository = memoryControlRepository(),
+    service = new ControlService(repository),
+    host = await connected(service),
+    f = observed(host.input.projectId);
+  await service.observed(host.actor, f.frame);
+  await repository.transaction(host.auth.user.id, (tx) =>
+    tx.put("observed_request", {
+      ...f.request,
+      deviceId: host.grant.deviceId,
+      status: "cancelled",
+      revision: 2,
+    }),
+  );
+  const next = observed(host.input.projectId);
+  await service.observed(host.actor, {
+    ...next.frame,
+    sessions: [f.session, next.session],
+    requests: [{ ...f.request, status: "expired", revision: 2 }, next.request],
+  });
+  expect(await service.getObserved(host.auth.user.id, f.request.id)).toMatchObject({
+    status: "expired",
+    revision: 2,
+  });
+});

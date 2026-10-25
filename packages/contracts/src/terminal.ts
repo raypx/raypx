@@ -98,6 +98,26 @@ export interface ControlInfo {
   binding: { deviceId: string; epoch: number } | null;
   error: string | null;
   daemon?: boolean;
+  legacy?: boolean;
   persistent?: boolean;
   authorized?: boolean;
+  terminalSupported?: boolean;
+}
+
+/** The same permission gate is used by protocol parsing, hook installation and UI. */
+export function terminalPermissionSupported(
+  capabilities: TerminalSession["capabilities"],
+  tool: string,
+) {
+  return (
+    capabilities.permission &&
+    capabilities.permissionTools.some(
+      (value) => value === tool || (value === "MCP" && /^mcp__[^\s]+$/.test(tool)),
+    )
+  );
+}
+export function terminalPermissionMatcher(capabilities: TerminalSession["capabilities"]) {
+  return capabilities.permission
+    ? capabilities.permissionTools.map((tool) => (tool === "MCP" ? "mcp__.*" : tool)).join("|")
+    : "(?!)";
 }

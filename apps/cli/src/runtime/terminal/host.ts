@@ -40,17 +40,19 @@ export function readTerminalEndpoint(directory: string): TerminalEndpoint {
 const decisionInput = z.object({ id: z.string().uuid(), epoch: z.string().uuid() });
 
 /** Private hook endpoint; never exposes the daemon's local method router. */
-export function startTerminalHost(options: {
+type TerminalOptions = {
   directory: string;
   projects: string[];
   projectIds?: ReadonlyMap<string, string>;
   discoveryDirectory?: string;
   reachable?: () => boolean;
   authorizeProject?: (path: string, provider: AgentProvider) => boolean;
+  ignoreSession?: (provider: AgentProvider, sessionId: string) => boolean;
   away?: boolean;
   waitSeconds?: number;
   changed?: (request: TerminalRequest) => void;
-}) {
+};
+export function startTerminalHost(options: TerminalOptions) {
   if (process.platform === "win32")
     throw new LocalError("UNSUPPORTED_PLATFORM", "Terminal host requires a POSIX Unix socket");
   if (
@@ -60,7 +62,7 @@ export function startTerminalHost(options: {
       options.waitSeconds > 600)
   )
     throw new LocalError("INVALID_WAIT", "Away wait must be between 60 and 600 seconds");
-  const projects = options.projects.map((path) => {
+  let projects = options.projects.map((path) => {
     if (!isAbsolute(path))
       throw new LocalError("INVALID_PROJECT", "Terminal projects must use absolute paths");
     return realpathSync(path);
@@ -141,7 +143,11 @@ export function startTerminalHost(options: {
               .object({ provider: z.enum(["claude", "codex"]), input: z.unknown() })
               .parse(await request.json());
             const invocation = parseHookInvocation(raw.provider, raw.input);
-            if (!invocation) return Response.json({ fallback: true });
+            if (
+              !invocation ||
+              options.ignoreSession?.(invocation.provider, invocation.providerSessionId)
+            )
+              return Response.json({ fallback: true });
             if (!away || !(options.reachable?.() ?? viewerUntil > Date.now()))
               return Response.json({ fallback: true });
             const directory = realpathSync(invocation.cwd);
@@ -257,6 +263,39 @@ export function startTerminalHost(options: {
       endpoint,
       projectNames: projects.map((project) => basename(project)),
       sessions: () => [...sessions.values()].map((value) => structuredClone(value)),
+      configure(
+        next: Pick<
+          TerminalOptions,
+          "projects" | "projectIds" | "away" | "waitSeconds" | "authorizeProject"
+        >,
+      ) {
+        const wait = next.waitSeconds ?? 300;
+        if (!Number.isInteger(wait) || wait < 60 || wait > 600)
+          throw new LocalError("INVALID_WAIT", "Away wait must be between 60 and 600 seconds");
+        const paths = next.projects.map((path) => {
+          if (!isAbsolute(path))
+            throw new LocalError("INVALID_PROJECT", "Terminal projects must use absolute paths");
+          return realpathSync(path);
+        });
+        options = { ...options, ...next };
+        projects = paths;
+        away = next.away ?? false;
+        for (const request of broker.pendingRequests()) {
+          const session = [...sessions.values()].find((value) => value.id === request.sessionId);
+          const path = session
+            ? projects.find(
+                (value) =>
+                  (options.projectIds?.get(value) ?? store!.projectId(value)) === session.projectId,
+              )
+            : undefined;
+          if (
+            !away ||
+            !path ||
+            (options.authorizeProject && !options.authorizeProject(path, request.provider))
+          )
+            broker.cancel(request.id, away ? "unavailable" : "away_off");
+        }
+      },
       async close() {
         if (closed) return;
         closed = true;

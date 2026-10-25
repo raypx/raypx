@@ -45,8 +45,11 @@ viewers and new authorization, but are not the daemon's renewal credential.
 If Keychain is unavailable the secret stays in memory and settings explicitly
 show that restart requires authorization again. Initial network failure retries
 without changing origin. Definite revocation or expiry requires authorization.
-Full Better Auth device-code login and credential rotation are still needed for
-CLI-only onboarding; this phase does not claim that headless login flow.
+Bootstrap requires a session created within ten minutes and after the last
+security revocation. Each device has one current credential; reauthorization
+rotates its key and derived grants. Password changes and session-security
+revocation invalidate host access. Full Better Auth device-code login remains
+needed for CLI-only onboarding; this phase does not claim that headless login flow.
 
 ## Terminal connectors
 
@@ -179,3 +182,10 @@ receipt reclamation, symlink/permission handling, stale socket cleanup after
 SIGKILL, the persistent Desktop request banner, optional VACUUM failures and
 normalized/invalid origin configuration. This follow-up does not add a new live
 provider, PostgreSQL, production or mobile acceptance claim.
+
+## Subsequent review
+
+[The P1 review remediation](terminal-host-p1-review.md) records stream framing,
+upgrade recovery, host-owned revisions, authorization revocation, old-server
+compatibility and connector updates. Its migration and fresh-bootstrap requirements
+supersede the initial private-testing credential policy above.

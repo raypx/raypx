@@ -107,6 +107,8 @@ export const systemConfiguration = foundation.table("system_configuration", {
 
 // Control records are separate from authentication and never contain CLI credentials.
 export const controlOwner = foundation.table("control_owner", {
+  securityEpoch: integer("security_epoch").notNull().default(0),
+  securityRevokedAt: date("security_revoked_at"),
   userId: text("user_id")
     .primaryKey()
     .references(() => user.id, { onDelete: "cascade" }),

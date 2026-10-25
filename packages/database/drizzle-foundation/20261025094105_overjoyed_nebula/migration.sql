@@ -1,0 +1,2 @@
+ALTER TABLE "raypx_foundation"."control_owner" ADD COLUMN "security_epoch" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "raypx_foundation"."control_owner" ADD COLUMN "security_revoked_at" timestamp with time zone;

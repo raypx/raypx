@@ -59,7 +59,9 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       adminEmails: environment.ADMIN_EMAILS,
       cache,
     });
+    const control = new ControlService(createControlRepository(db));
     const auth = createAuth({
+      revokeHostAuthorizations: (userId) => control.revokeHostAuthorizations(userId),
       registrationAllowed: async () => (await configuration.read()).values.registrationEnabled,
       siteName: () =>
         configuration.readCached().then(
@@ -71,7 +73,6 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       ...(secondaryStorage ? { secondaryStorage } : {}),
       config: createAuthConfig(environment),
     });
-    const control = new ControlService(createControlRepository(db));
     // Resolve from the same auth adapter for HTTP and direct server callers.
     // Keep sessions request-owned even when Node reuses the runtime.
     const readSession = (headers: Headers) => readAuthSession(auth, headers);

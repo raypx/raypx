@@ -3,15 +3,18 @@ import userEvent from "@testing-library/user-event";
 
 export async function selectOption(name: string, value: string) {
   const user = userEvent.setup();
-  const trigger = screen.getByRole("combobox", { name });
   let label = "";
   await waitFor(async () => {
+    const trigger = screen.getByRole("combobox", { name });
     const accepted = () =>
       label &&
       trigger.querySelector('[data-slot="select-value"]')?.textContent?.trim() === label &&
       trigger.getAttribute("aria-expanded") !== "true";
     if (accepted()) return;
-    if (trigger.getAttribute("aria-expanded") !== "true") await user.click(trigger);
+    if (trigger.getAttribute("aria-expanded") !== "true") {
+      trigger.focus();
+      await user.keyboard("{ArrowDown}");
+    }
     const option = screen
       .getAllByRole("option")
       .find((item) => item.getAttribute("data-value") === value);

@@ -1,11 +1,50 @@
 import { localRequestSchema } from "@raypx/contracts/local";
 import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint";
+import { refreshStableCli } from "../runtime/daemon/connectors";
 import { errorPayload, LocalError } from "../runtime/errors";
+
+/** Transport chunks are not protocol records; only complete bounded lines may mix with RPC. */
+export async function* daemonEventLines(body: ReadableStream<Uint8Array>) {
+  const decoder = new TextDecoder();
+  let pending = "";
+  for await (const chunk of body) {
+    pending += decoder.decode(chunk, { stream: true });
+    let newline: number;
+    while ((newline = pending.indexOf("\n")) >= 0) {
+      const line = pending.slice(0, newline + 1);
+      if (Buffer.byteLength(line) > 8 * 1024 * 1024)
+        throw new LocalError("TOO_LARGE", "Daemon event exceeds 8 MiB");
+      pending = pending.slice(newline + 1);
+      yield line;
+    }
+    if (Buffer.byteLength(pending) > 8 * 1024 * 1024)
+      throw new LocalError("TOO_LARGE", "Daemon event exceeds 8 MiB");
+  }
+  pending += decoder.decode();
+  if (pending) throw new LocalError("INVALID_FRAME", "Daemon ended with an incomplete event");
+}
 
 /** Losing this pipe disconnects one Desktop client, never its execution owner. */
 export async function serveDaemonStdio(options: ProfileOptions) {
-  const endpoint = await connectDaemon(options),
-    clientId = crypto.randomUUID();
+  refreshStableCli();
+  let endpoint;
+  try {
+    endpoint = await connectDaemon(options);
+  } catch (error) {
+    const failure = errorPayload(error);
+    await new Promise<void>((resolve) =>
+      process.stdout.write(
+        JSON.stringify({
+          version: 1,
+          event: "engine.status",
+          data: { status: "error", code: failure.code, message: failure.message },
+        }) + "\n",
+        () => resolve(),
+      ),
+    );
+    throw error;
+  }
+  const clientId = crypto.randomUUID();
   const controller = new AbortController(),
     active = new Set<Promise<void>>();
   const output = async (value: string) => {
@@ -40,8 +79,7 @@ export async function serveDaemonStdio(options: ProfileOptions) {
   };
   const reader = (async () => {
     try {
-      const decoder = new TextDecoder();
-      for await (const chunk of events.body!) await write(decoder.decode(chunk, { stream: true }));
+      for await (const line of daemonEventLines(events.body!)) await write(line);
     } catch {
       /* Report a closed host through the input loop below. */
     } finally {

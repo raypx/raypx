@@ -32,6 +32,7 @@ export default defineConfig({
             outfile: resolve(options.outDir, process.platform === "win32" ? "raypx.exe" : "raypx"),
           },
           target: "bun",
+          define: { __RAYPX_CLI_BUILT_AT__: String(Date.now()) },
           // Keep ESM so bytecode compilation supports the entrypoint's top-level await.
           format: "esm",
           bytecode: true,

@@ -1,6 +1,7 @@
 import { createCloudflareRuntime, type CloudflareBindings } from "../runtime/cloudflare.js";
 import type { ApiRuntime } from "../runtime/shared.js";
 import { newRequestId } from "../api.js";
+import { normalizeTrustedOrigins } from "@raypx/auth/origins";
 
 export interface CloudflareRequest extends Request {
   runtime?: {
@@ -23,9 +24,9 @@ export function createCloudflareApp(
         if (!cloudflare?.env.RAYPX_RELAY) return new Response(null, { status: 503 });
         const origin = request.headers.get("origin"),
           origins = cloudflare.env.ALLOWED_ORIGINS,
-          allowed = (typeof origins === "string" ? origins : "")
-            .split(",")
-            .map((value) => value.trim());
+          allowed = normalizeTrustedOrigins(
+            (typeof origins === "string" ? origins : "").split(","),
+          );
         if (origin && !allowed.includes(origin)) return new Response(null, { status: 403 });
         if (request.headers.get("upgrade")?.toLowerCase() !== "websocket")
           return new Response(null, { status: 426 });

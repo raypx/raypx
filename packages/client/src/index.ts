@@ -2,6 +2,7 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { ContractRouterClient } from "@orpc/contract";
 import type { apiContract } from "@raypx/contracts/api";
+export { isMissingProcedure } from "./response.js";
 export { RelayConnection, relayUrl, type RelaySocketFactory } from "./relay.js";
 export { createTaskClient, type TaskClient } from "./tasks.js";
 

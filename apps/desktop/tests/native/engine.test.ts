@@ -40,3 +40,37 @@ await Bun.write(${JSON.stringify(receipt)},'drained');
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+it("preserves an incompatible-owner error and replaces it only through explicit recovery", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-engine-upgrade-")),
+    marker = join(directory, "replaced"),
+    binary = join(directory, "engine");
+  writeFileSync(
+    binary,
+    `#!${process.execPath}
+import {existsSync,writeFileSync} from 'node:fs';
+import {createInterface} from 'node:readline';
+if(process.argv.includes('restart')) {writeFileSync(${JSON.stringify(marker)},'');process.exit(0);}
+if(!existsSync(${JSON.stringify(marker)})) {
+ process.stdout.write(JSON.stringify({version:1,event:'engine.status',data:{status:'error',code:'HOST_VERSION_MISMATCH'}})+'\\n');
+ await Bun.sleep(100);process.exit(1);
+}
+for await(const line of createInterface({input:process.stdin})) {
+ const request=JSON.parse(line);process.stdout.write(JSON.stringify({version:1,id:request.id,result:{version:'fixture',protocolVersion:1,owner:'daemon'}})+'\\n');
+}
+`,
+    { mode: 0o700 },
+  );
+  const engine = new LocalEngine(binary, "fixture", () => {}, [], true);
+  try {
+    expect(await engine.start()).toBe(false);
+    expect(engine.status).toMatchObject({ status: "error", code: "HOST_VERSION_MISMATCH" });
+    expect(existsSync(marker)).toBe(false);
+    expect(await engine.replaceOwner()).toBe(true);
+    expect(existsSync(marker)).toBe(true);
+    expect(engine.status.status).toBe("ready");
+  } finally {
+    await engine.stop();
+    rmSync(directory, { recursive: true, force: true });
+  }
+});

@@ -23,6 +23,7 @@
 - [Review remediation, 2026-10-25](development/review-remediation-2026-10-25.md)
 - [Terminal protocol P0 implementation](development/terminal-protocol-p0.md)
 - [Independent terminal host P1](development/terminal-host-p1.md)
+- [Terminal host P1 review remediation](development/terminal-host-p1-review.md)
 - [Foundation decision](architecture/0034-extensible-foundation.md)
 - [Historical documentation](history/README.md)
 

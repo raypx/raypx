@@ -254,3 +254,46 @@ it.skipIf(process.platform === "win32")(
     }
   },
 );
+
+it.skipIf(process.platform === "win32")(
+  "ignores only the managed session while accepting a nested external agent",
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), "raypx-managed-hook-")),
+      project = await realpath(directory);
+    const host = startTerminalHost({
+      directory,
+      projects: [project],
+      away: true,
+      reachable: () => true,
+      ignoreSession: (_provider, id) => id === "managed",
+    });
+    const hook = (session_id: string) =>
+      terminalFetch(host.endpoint, "hook", "/hook", {
+        provider: "claude",
+        input: {
+          hook_event_name: "PermissionRequest",
+          session_id,
+          cwd: project,
+          tool_name: "Bash",
+          tool_input: { command: "printf synthetic" },
+        },
+      });
+    try {
+      expect(await (await hook("managed")).json()).toEqual({ fallback: true });
+      const nested = hook("nested");
+      await expect.poll(() => host.broker.pendingRequests().length).toBe(1);
+      const request = host.broker.pendingRequests()[0]!;
+      host.broker.decide({
+        id: request.id,
+        epoch: request.epoch,
+        revision: request.revision,
+        receiptId: crypto.randomUUID(),
+        decision: { type: "deny", note: "synthetic" },
+      });
+      expect(await (await nested).json()).toMatchObject({ decision: { type: "deny" } });
+    } finally {
+      await host.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);

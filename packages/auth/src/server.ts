@@ -1,5 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware, getAuthoritativeSessionFromCtx } from "better-auth/api";
 import { matchLocale, parseAcceptLanguage } from "@raypx/i18n";
 import type { Locale } from "@raypx/i18n/types";
 import type { AuthSession, AuthUser } from "./types.js";
@@ -39,6 +39,8 @@ export interface CreateAuthOptions {
   registrationAllowed?: () => Promise<boolean>;
   /** Display name for authentication mail; resolve to a fallback rather than throwing. */
   siteName?: () => Promise<string>;
+  /** Security revocation also invalidates independent host credentials; ordinary sign-out does not. */
+  revokeHostAuthorizations?: (userId: string) => Promise<void>;
 }
 export function recipientLocale(request?: Request): { locale?: Locale } {
   const locale = matchLocale(
@@ -53,6 +55,7 @@ export function createAuth({
   secondaryStorage,
   registrationAllowed,
   siteName,
+  revokeHostAuthorizations,
 }: CreateAuthOptions) {
   const mailSite = async () => (siteName ? { siteName: await siteName() } : {});
   const origins = normalizeTrustedOrigins([config.baseURL, ...config.trustedOrigins]);
@@ -88,6 +91,14 @@ export function createAuth({
               code: "INVALID_ORIGIN",
               message: "Untrusted origin",
             });
+        }
+        if (
+          revokeHostAuthorizations &&
+          ["/revoke-session", "/revoke-sessions", "/revoke-other-sessions"].includes(ctx.path)
+        ) {
+          const session = await getAuthoritativeSessionFromCtx(ctx);
+          if (!session) throw new APIError("UNAUTHORIZED", { message: "Authentication required" });
+          await revokeHostAuthorizations(session.user.id);
         }
       }),
     },
@@ -198,6 +209,7 @@ export async function readAuthSession(
       id: result.session.id,
       userId: result.session.userId,
       expiresAt: result.session.expiresAt,
+      createdAt: result.session.createdAt,
     },
   };
 }

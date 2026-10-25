@@ -53,8 +53,8 @@ export async function getDesktopRuntime(): Promise<DesktopRuntime> {
 export async function pickDirectory(): Promise<RootGrant | null> {
   return (await getBridge()).request.pickDirectory({});
 }
-export async function restartEngine() {
-  return (await getBridge()).request.restartEngine({});
+export async function restartEngine(replaceOwner = false) {
+  return (await getBridge()).request.restartEngine({ replaceOwner });
 }
 export async function localRequest<T, M extends LocalMethod = LocalMethod>(
   method: M,

@@ -42,3 +42,6 @@ and last-editor metadata. API owns validation, permissions and compare-and-swap.
 issuance and revocation. `control_observed_session` and `control_observed_request`
 store bounded observed projections separately from managed tasks. Their migrations
 are generated with the foundation schema and never applied to a retired database.
+
+`control_owner.security_epoch/security_revoked_at` fence host credentials and stale
+bootstrap cookies during security revocation. Auth/API own their transition policy.

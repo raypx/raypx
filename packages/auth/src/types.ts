@@ -8,5 +8,5 @@ export interface AuthUser {
 }
 export interface AuthSession {
   user: AuthUser;
-  session: { id: string; userId: string; expiresAt: Date };
+  session: { id: string; userId: string; expiresAt: Date; createdAt?: Date };
 }

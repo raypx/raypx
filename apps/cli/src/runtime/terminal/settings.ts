@@ -1,9 +1,13 @@
 import { createHash } from "node:crypto";
 import { chmod, lstat, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute } from "node:path";
-import { TERMINAL_HOOK_TIMEOUT_SECONDS } from "@raypx/contracts/terminal";
+import {
+  TERMINAL_HOOK_TIMEOUT_SECONDS,
+  terminalPermissionMatcher,
+} from "@raypx/contracts/terminal";
 import type { AgentProvider } from "@raypx/contracts/tasks";
 import { LocalError } from "../errors";
+import { terminalCapabilities } from "./protocol";
 
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
@@ -51,7 +55,7 @@ export function planHookSettings(
   if (!Array.isArray(previous))
     throw new LocalError("INVALID_HOOK_SETTINGS", "PermissionRequest matchers must be an array");
   // Broaden only when a real recorded contract enables the additional tool.
-  const matcher = "Bash";
+  const matcher = terminalPermissionMatcher(terminalCapabilities(provider));
   const handler = { type: "command", command, timeout: TERMINAL_HOOK_TIMEOUT_SECONDS };
   const sameHandler = (value: Record<string, unknown>) =>
     Object.keys(value).length === 3 &&

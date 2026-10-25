@@ -1,12 +1,13 @@
 import type { ControlInfo } from "@raypx/host";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
-import type { ApiClient } from "@raypx/client";
+import { isMissingProcedure, type ApiClient } from "@raypx/client";
 import type { LocalEngine } from "./engine";
 
 /** Native bootstraps a restricted device credential; it never owns or renews it. */
 export class DaemonControlProxy {
   private accountId: string | null = null;
   private generation = 0;
+  private authorizationError: "AUTH_REQUIRED" | undefined;
   private selecting = Promise.resolve();
   constructor(
     private readonly engine: Pick<LocalEngine, "request">,
@@ -23,6 +24,7 @@ export class DaemonControlProxy {
       }
       if (generation !== this.generation) return false;
       await this.engine.request("host.session", { accountId, apiUrl: this.apiUrl });
+      if (this.accountId !== accountId) this.authorizationError = undefined;
       this.accountId = accountId;
       return true;
     });
@@ -32,11 +34,13 @@ export class DaemonControlProxy {
     );
     return operation;
   }
-  info(accountId: string) {
-    return this.engine.request("host.info", {
+  async info(accountId: string): Promise<ControlInfo> {
+    const info = (await this.engine.request("host.info", {
       accountId,
       apiUrl: this.apiUrl,
-    }) as Promise<ControlInfo>;
+    })) as ControlInfo;
+    if (info.authorized || info.connected) this.authorizationError = undefined;
+    return this.authorizationError ? { ...info, error: this.authorizationError } : info;
   }
   enable(accountId: string, enabled: boolean) {
     return this.engine.request("host.enable", {
@@ -65,10 +69,27 @@ export class DaemonControlProxy {
       return info;
     const profile = await this.api.account.get({});
     if (profile.id !== accountId) throw new Error("AUTH_REQUIRED");
-    const authorization = await this.api.hosts.authorize({
-      deviceId: grant.deviceId,
-      epoch: grant.epoch,
-    });
+    let authorization;
+    try {
+      authorization = await this.api.hosts.authorize({
+        deviceId: grant.deviceId,
+        epoch: grant.epoch,
+      });
+    } catch (error) {
+      if (isMissingProcedure(error)) {
+        if (generation !== this.generation || this.accountId !== accountId)
+          throw new Error("AUTH_REQUIRED", { cause: error });
+        return this.engine.request("host.legacy", {
+          accountId,
+          apiUrl: this.apiUrl,
+          grant,
+        }) as Promise<ControlInfo>;
+      }
+      if (error && typeof error === "object" && "code" in error && error.code === "UNAUTHORIZED")
+        this.authorizationError = "AUTH_REQUIRED";
+      throw error;
+    }
+    this.authorizationError = undefined;
     if (generation !== this.generation || this.accountId !== accountId) {
       await this.api.hosts.revoke({ credential: authorization.credential }).catch(() => {});
       throw new Error("AUTH_REQUIRED");

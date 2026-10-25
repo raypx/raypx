@@ -162,3 +162,10 @@ separately from managed tasks, validates connection/epoch/revision and ACKs only
 commit. Summary reads omit bodies/questions/answers; fetch one body only on expansion.
 Private local host/router methods are never public HTTP methods. Terminal content is
 explicitly plain private testing data; E2EE is a later public-release gate.
+
+Host bootstrap requires a session created within ten minutes and after the last
+security revocation. Replace the prior device key atomically under the account
+write lock. Validate password fingerprint and `control_owner.security_epoch` on
+host grants/relay access. Auth security revocation advances the epoch before
+deleting browser sessions; ordinary expiry is independent. Server cancellation
+uses a projection marker and never increments host-owned request revisions.

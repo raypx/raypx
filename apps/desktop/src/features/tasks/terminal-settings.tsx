@@ -12,6 +12,9 @@ type Settings = { rootIds: string[]; away: boolean; waitSeconds: number };
 type Connector = {
   provider: "claude" | "codex";
   installed: boolean;
+  hookInstalled?: boolean;
+  updateAvailable?: boolean;
+  settingsFile?: string;
   modified: boolean;
   requiresTrust: boolean;
   error: string | null;
@@ -77,6 +80,7 @@ export function TerminalSettings({
       setBusy(false);
     }
   }
+  const unavailable = !info.authorized || info.terminalSupported === false;
   const durations = [
     ...new Set([
       ...Array.from({ length: 10 }, (_, index) => (index + 1) * 60),
@@ -102,34 +106,77 @@ export function TerminalSettings({
               <p className="mt-1 text-xs text-muted-foreground">
                 {t(connector.installed ? "terminalInstalled" : "terminalNotInstalled")}
               </p>
+              {connector.settingsFile && (
+                <p className="mt-1 max-w-[65ch] break-all font-mono text-xs text-muted-foreground">
+                  {connector.settingsFile}
+                </p>
+              )}
               {(connector.modified || connector.error) && (
                 <p className="mt-1 max-w-[65ch] text-xs text-destructive-text">
                   {t(
                     connector.error === "HOOK_SETTINGS_SYMLINK"
                       ? "terminalSettingsSymlink"
-                      : "terminalSettingsConflict",
+                      : ["HOST_BINARY_MISSING", "HOST_BINARY_NOT_EXECUTABLE"].includes(
+                            connector.error ?? "",
+                          )
+                        ? "terminalRepairHint"
+                        : "terminalSettingsConflict",
                   )}
                 </p>
               )}
             </div>
-            <Button
-              disabled={busy || connector.modified || !!connector.error}
-              variant="outline"
-              onClick={() =>
-                void action(() =>
-                  localRequest(
-                    connector.installed ? "connectors.uninstall" : "connectors.install",
-                    { provider: connector.provider },
-                  ),
-                )
-              }
-            >
-              {t(connector.installed ? "terminalUninstall" : "terminalInstall")}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {(!connector.installed || connector.updateAvailable) && (
+                <Button
+                  disabled={
+                    busy ||
+                    connector.modified ||
+                    Boolean(
+                      connector.error &&
+                      !["HOST_BINARY_MISSING", "HOST_BINARY_NOT_EXECUTABLE"].includes(
+                        connector.error,
+                      ),
+                    )
+                  }
+                  variant="outline"
+                  onClick={() =>
+                    void action(() =>
+                      localRequest("connectors.install", { provider: connector.provider }),
+                    )
+                  }
+                >
+                  {t(
+                    connector.updateAvailable
+                      ? "terminalUpdate"
+                      : connector.hookInstalled
+                        ? "terminalRepair"
+                        : "terminalInstall",
+                  )}
+                </Button>
+              )}
+              {(connector.hookInstalled ?? connector.installed) && (
+                <Button
+                  disabled={busy || connector.modified}
+                  variant="outline"
+                  onClick={() =>
+                    void action(() =>
+                      localRequest("connectors.uninstall", { provider: connector.provider }),
+                    )
+                  }
+                >
+                  {t("terminalUninstall")}
+                </Button>
+              )}
+            </div>
           </li>
         ))}
       </ul>
       <p className="mt-3 max-w-[65ch] text-xs text-muted-foreground">{t("terminalTrust")}</p>
+      {info.terminalSupported === false && (
+        <p role="status" className="mt-3 max-w-[65ch] text-sm text-muted-foreground">
+          {t("terminalServerUpgrade")}
+        </p>
+      )}
       {settings && (
         <div className="mt-6 space-y-5">
           <div className="flex items-start justify-between gap-5">
@@ -143,7 +190,7 @@ export function TerminalSettings({
               id={`${id}-away`}
               checked={settings.away}
               onCheckedChange={(away) => update({ away })}
-              disabled={busy || !info.authorized}
+              disabled={busy || unavailable}
             />
           </div>
           <div className="max-w-xs space-y-2">
@@ -157,7 +204,7 @@ export function TerminalSettings({
                 value: String(seconds),
                 label: t("terminalWaitMinutes", { minutes: seconds / 60 }),
               }))}
-              disabled={busy || !info.authorized}
+              disabled={busy || unavailable}
               onValueChange={(value) => update({ waitSeconds: Number(value) })}
             />
           </div>
@@ -169,7 +216,7 @@ export function TerminalSettings({
               <label key={project.id} className="flex min-h-9 items-center gap-3 text-sm">
                 <Checkbox
                   checked={settings.rootIds.includes(project.id)}
-                  disabled={busy || !info.authorized}
+                  disabled={busy || unavailable}
                   onCheckedChange={(checked) =>
                     update({
                       rootIds: checked
@@ -185,7 +232,7 @@ export function TerminalSettings({
             ))}
           </div>
           <Button
-            disabled={busy || !dirty || !info.authorized}
+            disabled={busy || !dirty || unavailable}
             onClick={() =>
               void action(
                 () =>

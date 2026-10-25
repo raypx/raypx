@@ -64,11 +64,48 @@ it("revokes a host credential and its outstanding grants without relying on cook
     response = await service.hostGrant(authorization.credential);
   const actor = await service.authenticate("device", response.grant.token, crypto.randomUUID());
   const second = await service.authorizeHost(fixture.auth, fixture.grant);
-  await service.revokeHost(authorization.credential);
+  await expect(service.hostGrant(authorization.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await service.revokeHost(second.credential);
   await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
   await expect(service.hostGrant(authorization.credential)).rejects.toThrow("AUTH_REQUIRED");
   await expect(service.hostGrant(second.credential)).rejects.toThrow("AUTH_REQUIRED");
   await expect(service.authorizeHost(controlAuth("other-user"), fixture.grant)).rejects.toThrow(
     "NOT_FOUND",
   );
+});
+
+it("replaces lost host keys atomically instead of exhausting an eight-key allowance", async () => {
+  const service = new ControlService(memoryControlRepository()),
+    host = await connected(service);
+  const keys = await Promise.all(
+    Array.from({ length: 12 }, () => service.authorizeHost(host.auth, host.grant)),
+  );
+  for (const key of keys.slice(0, -1))
+    await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  expect((await service.hostGrant(keys.at(-1)!.credential)).accountId).toBe(host.auth.user.id);
+});
+it("requires a recent session for bootstrap and invalidates grants after password/security revocation", async () => {
+  const repository = memoryControlRepository(),
+    service = new ControlService(repository),
+    host = await connected(service);
+  await expect(
+    service.authorizeHost(
+      {
+        ...host.auth,
+        session: { ...host.auth.session, createdAt: new Date(Date.now() - 3600_000) },
+      },
+      host.grant,
+    ),
+  ).rejects.toThrow("AUTH_REQUIRED");
+  const key = await service.authorizeHost(host.auth, host.grant),
+    grant = await service.hostGrant(key.credential);
+  const actor = await service.authenticate("device", grant.grant.token, crypto.randomUUID());
+  repository.securityVersion = "password changed";
+  await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  const replacement = await service.authorizeHost(host.auth, host.grant);
+  await service.revokeHostAuthorizations(host.auth.user.id);
+  await expect(service.hostGrant(replacement.credential)).rejects.toThrow("AUTH_REQUIRED");
+  // The old cookie cannot mint another key in the interval before auth deletes sessions.
+  await expect(service.authorizeHost(host.auth, host.grant)).rejects.toThrow("AUTH_REQUIRED");
 });

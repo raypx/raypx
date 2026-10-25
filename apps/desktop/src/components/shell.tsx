@@ -21,7 +21,7 @@ import {
   CircleUserRound,
 } from "lucide-react";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
-import { Button } from "@raypx/ui/components/ui/button";
+import { EngineNotice } from "../features/engine/notice";
 import { useTranslations } from "@raypx/i18n/browser";
 import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "../lib/desktop";
 
@@ -59,21 +59,25 @@ export function DesktopShell() {
   const auth = useAuthActions({ client: authClient, webUrl });
   const path = useRouterState({ select: (state) => state.location.pathname });
   const c = useTranslations("common");
-  const e = useTranslations("engine");
   const [engine, setEngine] = useState("starting");
-  const [restarting, setRestarting] = useState(false);
+  const [engineCode, setEngineCode] = useState<string>();
   useEffect(() => {
     let active = true;
     void getDesktopRuntime()
       .then((runtime) => {
-        if (active) setEngine(runtime.engine.status);
+        if (active) {
+          setEngine(runtime.engine.status);
+          setEngineCode(runtime.engine.code);
+        }
       })
       .catch(() => {
         if (active) setEngine("error");
       });
     const stop = onLocalEvent((event) => {
-      if (event.event === "engine.status" && typeof event.data.status === "string")
+      if (event.event === "engine.status" && typeof event.data.status === "string") {
         setEngine(event.data.status);
+        setEngineCode(typeof event.data.code === "string" ? event.data.code : undefined);
+      }
       if (event.event === "approval.open")
         void router.navigate({
           to: "/approvals",
@@ -85,16 +89,6 @@ export function DesktopShell() {
       stop();
     };
   }, [router]);
-  async function retry() {
-    setRestarting(true);
-    try {
-      setEngine((await restartEngine()) ? "ready" : "error");
-    } catch {
-      setEngine("error");
-    } finally {
-      setRestarting(false);
-    }
-  }
   const accountId = session.data?.user.id ?? null;
   return (
     <>
@@ -152,18 +146,14 @@ export function DesktopShell() {
           <>
             <TerminalRequestNotice accountId={accountId} />
             {engine === "error" && isDesktop() && (
-              <div
-                className="flex items-center justify-between gap-5 bg-muted px-8 py-4"
-                role="alert"
-              >
-                <div>
-                  <strong className="text-[13px] font-medium">{e("unavailable")}</strong>
-                  <p className="text-xs text-muted-foreground">{e("hint")}</p>
-                </div>
-                <Button variant="outline" disabled={restarting} onClick={() => void retry()}>
-                  {e("retry")}
-                </Button>
-              </div>
+              <EngineNotice
+                code={engineCode}
+                restart={async (replace) => {
+                  const ready = await restartEngine(replace);
+                  setEngine(ready ? "ready" : "error");
+                  return ready;
+                }}
+              />
             )}
           </>
         }

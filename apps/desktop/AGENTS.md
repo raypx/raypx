@@ -192,3 +192,8 @@ with statistics consent, reset on logout and never capture raw task parameters.
 Restore analytics through getAnalyticsPreferences with a five-second RPC timeout;
 keep capture disabled until the latest Native value arrives, never authorize from preload.
 Source-map upload is an explicit release step; ship those same injected assets.
+
+Engine mismatch recovery explicitly confirms cancellation before replacing the
+old daemon. Native forwards loaded `[connectors]` paths/environment to the daemon;
+settings show actual destinations and owned-binary repair/update. Older servers
+use browser-renewed managed-only grants, with terminal approvals disabled.

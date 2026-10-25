@@ -58,6 +58,7 @@ export class RemoteControl {
   private renewalFailures = 0;
   private renewalTimer: ReturnType<typeof setTimeout> | undefined;
   private draining = false;
+  private protocolVersion: 2 | 3;
   private readonly commands = new Set<Promise<void>>();
   private scheduleRenewal(disconnect = true) {
     if (this.renewalTimer || !this.accountId || this.error === "UPGRADE_REQUIRED") return;
@@ -70,9 +71,13 @@ export class RemoteControl {
     this.renewAt = Date.now() + delay;
     this.renewalTimer = setTimeout(() => {
       this.renewalTimer = undefined;
-      void this.refreshGrant().then((restored) => {
-        if (!restored && this.accountId && !this.connected) this.scheduleRenewal(false);
-      });
+      void this.refreshGrant()
+        .then((restored) => {
+          if (!restored && this.accountId && !this.connected) this.scheduleRenewal(false);
+        })
+        .catch(() => {
+          this.error = "NETWORK_UNAVAILABLE";
+        });
     }, delay);
   }
   constructor(
@@ -84,6 +89,7 @@ export class RemoteControl {
       socket?: RelaySocketFactory;
       renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
       protocolVersion?: 2 | 3;
+      authorizationLost?: (code: "AUTH_REQUIRED" | "DEVICE_REVOKED") => Promise<void>;
       bindingKey?: (accountId: string, grant: DeviceGrant) => string;
       syncObserved?: (
         send: (
@@ -93,6 +99,7 @@ export class RemoteControl {
       observedAck?: (epoch: string, revision: number) => void;
     } = {},
   ) {
+    this.protocolVersion = options.protocolVersion ?? 2;
     this.settings = { installationId: crypto.randomUUID(), accounts: {} };
     try {
       mkdirSync(directory, { recursive: true });
@@ -156,6 +163,7 @@ export class RemoteControl {
       connected: this.accountId === accountId && this.connected,
       pendingRevoke: saved?.pendingRevoke ?? null,
       binding: saved?.binding ?? null,
+      terminalSupported: this.protocolVersion === 3,
       error: this.storageUnavailable
         ? "SETTINGS_UNAVAILABLE"
         : this.accountId === accountId
@@ -205,6 +213,7 @@ export class RemoteControl {
     this.binding = binding;
     this.grant = grant;
     this.apiUrl = apiUrl;
+    this.protocolVersion = this.options.protocolVersion ?? 2;
     this.error = null;
     this.renewAt = 0;
     const saved = this.settings.accounts[accountId];
@@ -233,10 +242,13 @@ export class RemoteControl {
       ...(this.options.socket ? { socket: this.options.socket } : {}),
       authenticate: async () => ({
         type: "auth",
-        protocolVersion: this.options.protocolVersion ?? 2,
+        protocolVersion: this.protocolVersion,
         role: "device",
         token: grant.token,
       }),
+      protocolChanged: (version) => {
+        this.protocolVersion = version;
+      },
       status: (connected, code) => {
         if (generation !== this.generation) return;
         if (!connected) {
@@ -244,7 +256,10 @@ export class RemoteControl {
           this.connected = false;
           this.error = code ?? "NETWORK_UNAVAILABLE";
           this.acknowledgement?.reject();
-          if (code === "DEVICE_REVOKED" && this.accountId) void this.enable(this.accountId, false);
+          if (code === "DEVICE_REVOKED" && this.accountId)
+            void this.loseAuthorization(this.accountId, code).catch(() => {
+              this.error = code;
+            });
           if (code === "AUTH_REQUIRED") this.scheduleRenewal();
         }
       },
@@ -258,7 +273,10 @@ export class RemoteControl {
           });
           if (frame.type === "command") {
             this.commands.add(pending);
-            void pending.finally(() => this.commands.delete(pending));
+            void pending.then(
+              () => this.commands.delete(pending),
+              () => this.commands.delete(pending),
+            );
           }
         }
       },
@@ -276,7 +294,9 @@ export class RemoteControl {
         !this.renewing
       ) {
         if (!this.grant) this.renewAt = Date.now() + 15_000;
-        void this.refreshGrant();
+        void this.refreshGrant().catch(() => {
+          this.error = "NETWORK_UNAVAILABLE";
+        });
       }
     };
     check();
@@ -339,9 +359,10 @@ export class RemoteControl {
           error && typeof error === "object"
             ? (error as { code?: string; data?: { error?: { code?: string } } })
             : {};
-        if (failure.data?.error?.code === "DEVICE_REVOKED") await this.enable(accountId, false);
-        else if (failure.code === "UNAUTHORIZED" || failure.data?.error?.code === "AUTH_REQUIRED")
-          await this.detach();
+        const code = failure.data?.error?.code ?? failure.code;
+        if (code === "DEVICE_REVOKED") await this.loseAuthorization(accountId, code);
+        else if (code === "AUTH_REQUIRED" || code === "UNAUTHORIZED")
+          await this.loseAuthorization(accountId, "AUTH_REQUIRED");
         else {
           this.error = "NETWORK_UNAVAILABLE";
           this.scheduleRenewal(false);
@@ -350,10 +371,19 @@ export class RemoteControl {
       }
     })();
     this.renewing = pending;
-    void pending.finally(() => {
+    const completed = () => {
       if (this.renewing === pending) this.renewing = undefined;
-    });
+    };
+    void pending.then(completed, completed);
     return pending;
+  }
+  private async loseAuthorization(accountId: string, code: "AUTH_REQUIRED" | "DEVICE_REVOKED") {
+    if (this.options.authorizationLost) {
+      await this.options.authorizationLost(code);
+      return;
+    }
+    if (code === "DEVICE_REVOKED") await this.enable(accountId, false);
+    else await this.detach();
   }
   private async message(frame: RelayServerFrame, generation: number) {
     const binding = this.binding;
@@ -466,7 +496,10 @@ export class RemoteControl {
       })
       .finally(() => {
         if (this.syncing === operation) this.syncing = undefined;
-        if (this.dirty && this.ready) void this.wake();
+        if (this.dirty && this.ready)
+          void this.wake().catch(() => {
+            this.error = "NETWORK_UNAVAILABLE";
+          });
       });
     this.syncing = operation;
     return operation;
@@ -536,7 +569,8 @@ export class RemoteControl {
         this.renewalFailures = 0;
         this.renewAt = 0;
         this.error = null;
-        await this.options.syncObserved?.((frame) => this.connection!.send(frame));
+        if (this.protocolVersion === 3)
+          await this.options.syncObserved?.((frame) => this.connection!.send(frame));
         if (!this.dirty) return;
         continue;
       }

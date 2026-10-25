@@ -158,3 +158,10 @@ it("injects the same immutable runtime origins before renderer authentication st
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+it("accepts explicit connector paths without changing the selected server", () => {
+  expect(
+    parseDesktopConfig('[connectors]\nclaude_config_dir="/tmp/claude"\ncodex_home="/tmp/codex"'),
+  ).toEqual(DEFAULT_CONNECTION);
+  expect(() => parseDesktopConfig('[connectors]\ncodex_home="relative"')).toThrow("absolute");
+});

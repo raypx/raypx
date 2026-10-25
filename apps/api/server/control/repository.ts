@@ -33,6 +33,9 @@ export interface ControlQuery {
 }
 export interface ControlTransaction {
   sessionActive(id: string, now: Date): Promise<boolean>;
+  securityVersion(): Promise<string>;
+  hostSessionAllowed(createdAt: Date): Promise<boolean>;
+  revokeHostSecurity(): Promise<void>;
   get<T extends ControlRecord>(kind: RecordKind, id: string): Promise<T | undefined>;
   list<T extends ControlRecord>(
     kind: RecordKind,
@@ -43,7 +46,10 @@ export interface ControlTransaction {
   remove(kind: RecordKind, id: string): Promise<void>;
   pruneEvents(deviceId: string, streamId: string, orphans?: boolean): Promise<void>;
 }
-export type ControlReader = Omit<ControlTransaction, "put" | "remove" | "pruneEvents">;
+export type ControlReader = Omit<
+  ControlTransaction,
+  "put" | "remove" | "pruneEvents" | "revokeHostSecurity"
+>;
 export interface ControlRepository {
   read<T>(userId: string, run: (tx: ControlReader) => Promise<T>): Promise<T>;
   transaction<T>(userId: string, run: (tx: ControlTransaction) => Promise<T>): Promise<T>;
@@ -86,6 +92,24 @@ export function createControlRepository(database: Database): ControlRepository {
               sql`select id from raypx_foundation.session where id = ${id} and user_id = ${userId} and expires_at > ${now.toISOString()}::timestamptz`,
             );
             return rows.length > 0;
+          },
+          async securityVersion() {
+            // Password changes/reset invalidate host credentials even if cookie cleanup fails.
+            const rows = await databaseTx.execute(
+              sql`select md5(coalesce(string_agg(id || ':' || coalesce(password,''), ',' order by id),'') || ':' || coalesce((select security_epoch::text from raypx_foundation.control_owner where user_id=${userId}),'0')) as version from raypx_foundation.account where user_id=${userId}`,
+            );
+            return String(rows[0]!.version);
+          },
+          async hostSessionAllowed(createdAt) {
+            const rows = await databaseTx.execute(
+              sql`select user_id from raypx_foundation.control_owner where user_id=${userId} and (security_revoked_at is null or security_revoked_at < ${createdAt.toISOString()}::timestamptz)`,
+            );
+            return rows.length > 0;
+          },
+          async revokeHostSecurity() {
+            await databaseTx.execute(
+              sql`update raypx_foundation.control_owner set security_epoch=security_epoch+1, security_revoked_at=clock_timestamp() where user_id=${userId}`,
+            );
           },
           async get<R extends ControlRecord>(kind: RecordKind, id: string) {
             const rows = await databaseTx.execute(

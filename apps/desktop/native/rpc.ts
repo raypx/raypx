@@ -10,6 +10,7 @@ export type { DevicePreferences } from "../preferences";
 export interface EngineStatus {
   status: "starting" | "ready" | "error";
   message?: string;
+  code?: string;
 }
 export interface DesktopRuntime {
   appVersion: string;
@@ -36,7 +37,7 @@ export type DesktopRpc = {
       hideWindow: { params: Record<string, never>; response: boolean };
       pickDirectory: { params: Record<string, never>; response: RootGrant | null };
       localRequest: { params: { method: LocalMethod; params: unknown }; response: unknown };
-      restartEngine: { params: Record<string, never>; response: boolean };
+      restartEngine: { params: { replaceOwner?: boolean }; response: boolean };
       getAnalyticsPreferences: { params: Record<string, never>; response: AnalyticsConsent };
       saveAnalyticsPreferences: { params: AnalyticsConsent; response: boolean };
       savePreferences: { params: DevicePreferences; response: boolean };

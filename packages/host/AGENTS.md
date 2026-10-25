@@ -23,3 +23,8 @@ Validate remote origins and keep secrets out of disk settings and diagnostics.
 
 Run `bun run --cwd packages/host check`; transport regression tests currently live
 in Desktop's `tests/native/control.test.ts` and daemon integration tests in CLI.
+
+A rejected v3 handshake negotiates managed-only v2 once. Do not send observed
+frames or advertise terminal support on that connection. Terminal renewal failures
+call the owner's authorization-loss handler; that handler owns binding cleanup.
+Consume background promise failures and fence queued cleanup to its original binding.

@@ -23,7 +23,7 @@ export class JsonProcess {
   ) {
     this.child = Bun.spawn([executable, ...args], {
       cwd,
-      env: { ...(env ?? process.env), RAYPX_MANAGED_AGENT: "1" },
+      env: env ?? process.env,
       stdin: "pipe",
       stdout: "pipe",
       stderr: "pipe",

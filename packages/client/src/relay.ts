@@ -25,12 +25,16 @@ export class RelayConnection {
   private generation = 0;
   private failures = 0;
   private lastMessage = 0;
+  private fallbackVersion: 2 | undefined;
+  private attemptedVersion: 2 | 3 = 2;
+  private accepted = false;
   constructor(
     private readonly options: {
       url: string;
       authenticate: () => Promise<Extract<RelayClientFrame, { type: "auth" }>>;
       message: (frame: RelayServerFrame) => void;
       status: (connected: boolean, code?: string) => void;
+      protocolChanged?: (version: 2 | 3) => void;
       socket?: RelaySocketFactory;
     },
   ) {}
@@ -46,13 +50,17 @@ export class RelayConnection {
   private connect() {
     if (!this.enabled) return;
     const generation = ++this.generation;
+    this.accepted = false;
     try {
       const socket = (this.options.socket ?? ((url) => new WebSocket(url)))(this.options.url);
       this.socket = socket;
       socket.addEventListener("open", () => {
         void this.options.authenticate().then(
           (frame) => {
-            if (this.enabled && generation === this.generation) this.send(frame);
+            if (this.enabled && generation === this.generation) {
+              this.attemptedVersion = this.fallbackVersion ?? frame.protocolVersion;
+              this.send({ ...frame, protocolVersion: this.attemptedVersion });
+            }
           },
           () => {
             if (generation === this.generation) socket.close(4001, "Authentication unavailable");
@@ -82,6 +90,8 @@ export class RelayConnection {
           if (frame.type === "pong" || frame.type === "changed") this.failures = 0;
           this.lastMessage = Date.now();
           if (frame.type === "ready") {
+            this.accepted = true;
+            this.options.protocolChanged?.(frame.protocolVersion);
             this.options.status(true);
             this.heartbeat = setInterval(() => {
               if (Date.now() - this.lastMessage > 45_000) socket.close(4000, "Heartbeat timeout");
@@ -99,9 +109,18 @@ export class RelayConnection {
         if (this.heartbeat) clearInterval(this.heartbeat);
         this.heartbeat = undefined;
         this.socket = undefined;
+        const fallback =
+          event.code === 4006 &&
+          !this.accepted &&
+          this.attemptedVersion === 3 &&
+          this.fallbackVersion === undefined;
+        if (fallback) {
+          this.fallbackVersion = 2;
+          this.options.protocolChanged?.(2);
+        }
         this.options.status(
           false,
-          event.code === 4006
+          event.code === 4006 && !fallback
             ? "UPGRADE_REQUIRED"
             : event.code === 4003
               ? "DEVICE_REVOKED"
@@ -109,7 +128,7 @@ export class RelayConnection {
                 ? "AUTH_REQUIRED"
                 : "NETWORK_UNAVAILABLE",
         );
-        if (event.code === 4006) this.enabled = false;
+        if (event.code === 4006 && !fallback) this.enabled = false;
         if (this.enabled && generation === this.generation)
           this.retry = setTimeout(
             () => this.connect(),

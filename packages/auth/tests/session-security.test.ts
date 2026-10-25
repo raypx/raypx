@@ -1,4 +1,4 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it, vi } from "vite-plus/test";
 import { memoryAdapter } from "better-auth/adapters/memory";
 import { createAuth } from "../src/server.js";
 
@@ -11,7 +11,9 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
     rateLimit: [],
   };
   const origin = "https://api.example.test";
+  const revokeHostAuthorizations = vi.fn(async () => {});
   const auth = createAuth({
+    revokeHostAuthorizations,
     database: memoryAdapter(data),
     mailer: { sendVerification: async () => {}, sendPasswordReset: async () => {} },
     config: {
@@ -77,5 +79,6 @@ it("allows old valid sessions, validates names and requires trusted mutation ori
     (await call("update-user", { name: "Web user" }, cookie, "https://web.example.test")).status,
   ).toBe(200);
   expect((await call("revoke-other-sessions", {}, cookie, origin)).status).toBe(200);
+  expect(revokeHostAuthorizations).toHaveBeenCalledExactlyOnceWith(data.user![0]!.id);
   expect((await call("list-sessions")).status).toBe(401);
 });

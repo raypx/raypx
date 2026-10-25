@@ -9,6 +9,8 @@ import { DaemonControl } from "./control";
 import type { HostVault } from "./vault";
 import manifest from "../../../package.json";
 import type { AgentProvider } from "@raypx/contracts/tasks";
+import { cliBuild } from "./build";
+import { refreshStableCli } from "./connectors";
 import { privateSocketDirectory } from "../terminal/socket";
 
 type Client = {
@@ -40,6 +42,7 @@ export async function startDaemon(
   const endpoint: DaemonEndpoint = {
     protocol: 1,
     version: manifest.version,
+    builtAt: cliBuild.builtAt,
     epoch: crypto.randomUUID(),
     socket: join(socketDirectory, "host.sock"),
     token: crypto.randomUUID() + crypto.randomUUID(),
@@ -49,6 +52,9 @@ export async function startDaemon(
   let runtime: LocalRuntime | undefined,
     control: DaemonControl | undefined,
     server: ReturnType<typeof Bun.serve> | undefined;
+  let stopping = false;
+  const backgroundFailure = () =>
+    console.error(JSON.stringify({ operation: "daemon.background", code: "BACKGROUND_FAILED" }));
   let closing: Promise<void> | undefined,
     resolveStopped = () => {};
   const stopped = new Promise<void>((resolve) => {
@@ -87,10 +93,11 @@ export async function startDaemon(
       (event.event === "agent.changed" || event.event === "observed.changed") &&
       !event.data.notificationOnly
     )
-      void control?.wake();
+      void control?.wake().catch(backgroundFailure);
   };
-  const close = () =>
-    (closing ??= (async () => {
+  const close = () => {
+    stopping = true;
+    return (closing ??= (async () => {
       try {
         for (const id of clients.keys()) releaseClient(id);
         try {
@@ -114,7 +121,9 @@ export async function startDaemon(
         resolveStopped();
       }
     })());
+  };
   try {
+    refreshStableCli();
     runtime = createRuntime({ ...options, scheduler: true, exclusiveOwner: true, emit });
     control = new DaemonControl(directory, runtime, emit, options.vault);
     server = Bun.serve({
@@ -129,15 +138,19 @@ export async function startDaemon(
           return Response.json({
             protocol: 1,
             version: manifest.version,
+            builtAt: cliBuild.builtAt,
             epoch: endpoint.epoch,
             owner: "daemon",
+            closing: stopping,
           });
         if (url.pathname === "/stop" && request.method === "POST") {
+          stopping = true;
           setTimeout(() => {
-            void close();
+            void close().catch(backgroundFailure);
           }, 25);
           return Response.json({ stopped: true });
         }
+        if (stopping) return new Response(null, { status: 503 });
         const id = url.searchParams.get("client");
         if (!id || !/^[a-f0-9-]{36}$/.test(id)) return new Response(null, { status: 400 });
         if (url.pathname === "/events" && request.method === "GET") {
@@ -232,16 +245,23 @@ export async function startDaemon(
 }
 
 export async function runDaemon(options: ProfileOptions) {
-  const host = await startDaemon(options),
-    stop = () => {
-      void host.close();
-    };
-  process.once("SIGINT", stop);
-  process.once("SIGTERM", stop);
+  const rejected = () =>
+    console.error(JSON.stringify({ operation: "daemon.background", code: "UNHANDLED_REJECTION" }));
+  process.on("unhandledRejection", rejected);
+  let stop: (() => void) | undefined;
   try {
+    const host = await startDaemon(options);
+    stop = () => {
+      void host.close().catch(rejected);
+    };
+    process.once("SIGINT", stop);
+    process.once("SIGTERM", stop);
     await host.stopped;
   } finally {
-    process.off("SIGINT", stop);
-    process.off("SIGTERM", stop);
+    if (stop) {
+      process.off("SIGINT", stop);
+      process.off("SIGTERM", stop);
+    }
+    process.off("unhandledRejection", rejected);
   }
 }

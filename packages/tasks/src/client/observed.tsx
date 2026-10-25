@@ -1,3 +1,4 @@
+import { terminalPermissionSupported } from "@raypx/contracts/terminal";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type {
   TerminalDecision,
@@ -193,10 +194,8 @@ function ObservedRequest({
     current && request?.status === "pending" && Date.parse(request.expiresAt) > now;
   const supported =
     request?.kind === "permission" &&
-    session?.capabilities.permission &&
-    session.capabilities.permissionTools.some(
-      (tool) => tool === request.title || (tool === "MCP" && request.title.startsWith("mcp__")),
-    );
+    session &&
+    terminalPermissionSupported(session.capabilities, request.title);
   async function decide(type: "allow" | "deny") {
     if (!request || !actionable || !supported || busy) return;
     const input = receipt.current ?? {

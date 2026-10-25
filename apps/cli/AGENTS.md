@@ -6,7 +6,7 @@ The standalone Raypx local execution host. It runs without login, Node or a glob
 
 ## Interface
 
-`raypx daemon start|run|status|stop|install|uninstall` owns the macOS execution host;
+`raypx daemon start|run|status|stop|restart|install|uninstall` owns the macOS execution host;
 private `daemon proxy` connects Desktop over authenticated Unix IPC. Explicit
 `connectors install|uninstall claude|codex` manages owned terminal hooks.
 `raypx files`, `raypx jobs`, `raypx tools`, and private legacy `raypx stdio` share the runtime. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
@@ -131,3 +131,12 @@ locked, offer the complete plan as a host approval, and resume the same provider
 session only after an applied decision. Revision notes stay in plan mode; expiry
 and cancellation never start another inference call. An approved hook-based plan
 also moves the task to run mode so it is not offered twice.
+
+P1 review hardening: proxy stdout contains complete bounded NDJSON lines only.
+Administrative stop accepts an older known IPC version and waits for owner lock
+release; explicit restart cancels owned work. Closing rejects new clients. Compiled
+build identity also fences same-version upgrades. Connector status validates the
+owned executable, repair/update retains ownership and refuses downgrades. Explicit
+`[connectors]` paths and Native overrides survive launchd environment differences.
+Away policy changes update the existing broker, preserving unaffected waiters and
+epoch. Detect managed provider session IDs instead of inheritable environment flags.

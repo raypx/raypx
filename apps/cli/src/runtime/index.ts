@@ -78,6 +78,7 @@ export function createRuntime(
       const operation = (async () => {
         // Narrow each schema independently to preserve method-specific types.
         switch (method) {
+          case "host.legacy":
           case "host.authorize":
           case "host.detach":
           case "host.enable":

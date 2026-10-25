@@ -80,6 +80,8 @@ export default {
     terminalUnsupported: "This request cannot be answered remotely with the current connector.",
     terminalExpires: "Returns to terminal at {time}",
     terminalChanged: "The request changed. Refresh before answering.",
+    daemonAuthorizationRequired:
+      "Host authorization has expired or was revoked. Sign in again to authorize this computer.",
     daemonHint:
       "On macOS, tasks continue after quitting Desktop. Signing out or disconnecting stops this account's work.",
     daemonMemoryOnly:
@@ -96,6 +98,12 @@ export default {
       "Review your agent's hook settings, then refresh this page. Raypx preserves edited or unrecognized settings.",
     terminalProject: "Sync terminal requests for {name}",
     terminalNoProjects: "Enable a project above, then choose which terminal requests to sync.",
+    terminalUpdate: "Update hook binary",
+    terminalRepair: "Repair hook",
+    terminalRepairHint:
+      "The hook binary is missing or cannot run. Repair it to restore terminal approvals.",
+    terminalServerUpgrade:
+      "Managed tasks remain available. Upgrade your server to enable terminal approvals.",
     terminalInstall: "Install hook",
     terminalUninstall: "Remove hook",
     terminalInstalled: "Hook installed",
@@ -484,6 +492,9 @@ export default {
     permissionHint: "This process uses your operating system permissions.",
   },
   engine: {
+    replaceOwner: "Stop old host and update",
+    upgradeWarning: "An older host is still running. Replacing it cancels its active tasks.",
+    upgradeTitle: "Update the execution host",
     unavailable: "Local tools are unavailable",
     retry: "Restart local tools",
     hint: "You can still use your account and preferences.",

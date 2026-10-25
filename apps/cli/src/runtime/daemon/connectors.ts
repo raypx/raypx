@@ -3,6 +3,7 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
+  statSync,
   readFileSync,
   renameSync,
   writeFileSync,
@@ -14,6 +15,7 @@ import type { AgentProvider } from "@raypx/contracts/tasks";
 import { applyHookSettings, planHookSettings, readHookSettings } from "../terminal/settings";
 import { LocalError } from "../errors";
 import { acquireLock } from "../state";
+import { cliBuild } from "./build";
 
 export function raypxHome() {
   const directory = process.env.RAYPX_HOME ?? join(homedir(), ".raypx");
@@ -61,14 +63,98 @@ export function planConnectorSettings(
   }
   return plan;
 }
-function settingsFile(provider: AgentProvider) {
-  const directory =
-    provider === "claude"
-      ? (process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), ".claude"))
-      : (process.env.CODEX_HOME ?? join(homedir(), ".codex"));
-  if (!isAbsolute(directory))
+export type ConnectorDirectories = Partial<Record<AgentProvider, string | undefined>>;
+function savedDirectories(directory: string): ConnectorDirectories {
+  const file = join(directory, "connector-paths.json");
+  if (!existsSync(file)) return {};
+  const text = readFileSync(file, "utf8");
+  if (text.length > 16384)
+    throw new LocalError("SETTINGS_UNAVAILABLE", "Connector paths require recovery");
+  return JSON.parse(text) as ConnectorDirectories;
+}
+export function connectorSettingsFile(
+  provider: AgentProvider,
+  directory: string,
+  requested: ConnectorDirectories = {},
+) {
+  const config = join(raypxHome(), "config.toml");
+  let configured: unknown;
+  if (existsSync(config)) {
+    const source = readFileSync(config, "utf8");
+    if (Buffer.byteLength(source) > 16384)
+      throw new LocalError("INVALID_CONFIG", "Raypx config exceeds 16 KiB");
+    try {
+      configured = (Bun.TOML.parse(source) as Record<string, unknown>).connectors;
+    } catch {
+      throw new LocalError("INVALID_CONFIG", "Invalid connector configuration");
+    }
+  }
+  if (
+    configured !== undefined &&
+    (!configured || typeof configured !== "object" || Array.isArray(configured))
+  )
+    throw new LocalError("INVALID_CONFIG", "connectors must be a table");
+  const key = provider === "claude" ? "claude_config_dir" : "codex_home";
+  const target =
+    requested[provider] ??
+    (configured as Record<string, unknown> | undefined)?.[key] ??
+    (provider === "claude" ? process.env.CLAUDE_CONFIG_DIR : process.env.CODEX_HOME) ??
+    savedDirectories(directory)[provider] ??
+    join(homedir(), provider === "claude" ? ".claude" : ".codex");
+  if (typeof target !== "string" || !isAbsolute(target))
     throw new LocalError("INVALID_SETTINGS_PATH", "Agent config directory must be absolute");
-  return join(directory, provider === "claude" ? "settings.json" : "hooks.json");
+  return join(target, provider === "claude" ? "settings.json" : "hooks.json");
+}
+export function assertStableUpgrade(
+  previous: { version?: string; builtAt?: number },
+  next = cliBuild,
+) {
+  if (
+    previous.version &&
+    (Bun.semver.order(previous.version, next.version) > 0 ||
+      (previous.version === next.version && (previous.builtAt ?? 0) > next.builtAt))
+  )
+    throw new LocalError(
+      "HOST_DOWNGRADE",
+      "A newer Raypx binary is already installed; use that version",
+    );
+}
+const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex");
+export function stableCliStatus(binary = stableCliPath()) {
+  const metadata = join(dirname(binary), "installation.json");
+  try {
+    if (!existsSync(binary)) return { error: "HOST_BINARY_MISSING", updateAvailable: false };
+    if (!existsSync(metadata)) return { error: "INSTALLATION_CONFLICT", updateAvailable: false };
+    const previous = JSON.parse(readFileSync(metadata, "utf8"));
+    if (!statSync(binary).isFile() || previous.digest !== digest(binary))
+      return { error: "INSTALLATION_CONFLICT", updateAvailable: false };
+    const updateAvailable =
+      previous.version !== cliBuild.version ||
+      (cliBuild.builtAt > 0 && previous.builtAt !== cliBuild.builtAt);
+    return {
+      error: statSync(binary).mode & 0o111 ? null : "HOST_BINARY_NOT_EXECUTABLE",
+      updateAvailable,
+    };
+  } catch {
+    return { error: "INSTALLATION_CONFLICT", updateAvailable: false };
+  }
+}
+export function refreshStableCli() {
+  if (/(?:^|[/\\])bun(?:\.exe)?$/.test(process.execPath)) return;
+  const metadata = join(dirname(stableCliPath()), "installation.json");
+  if (!existsSync(metadata)) return;
+  const status = stableCliStatus();
+  if (status.error === "INSTALLATION_CONFLICT") return;
+  // An owned installation may be repaired/upgraded, never silently downgraded.
+  if (status.error || status.updateAvailable) {
+    try {
+      installStableCli();
+    } catch {
+      console.error(
+        JSON.stringify({ operation: "daemon.installation", code: "HOST_UPDATE_REQUIRED" }),
+      );
+    }
+  }
 }
 const source = async (file: string) => (await readHookSettings(file))?.text ?? null;
 
@@ -91,7 +177,7 @@ export function installStableCli() {
   const release = acquireLock(directory, "installation");
   if (!release) throw new LocalError("INSTALLATION_BUSY", "Another Raypx installation is running");
   try {
-    const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex");
+    if (existsSync(ownership)) assertStableUpgrade(JSON.parse(readFileSync(ownership, "utf8")));
     if (existsSync(binary)) {
       if (!existsSync(ownership))
         throw new LocalError(
@@ -109,29 +195,36 @@ export function installStableCli() {
       renameSync(temporary, binary);
     }
     const temporary = `${ownership}.tmp`;
-    writeFileSync(temporary, JSON.stringify({ digest: digest(binary) }), { mode: 0o600 });
+    writeFileSync(temporary, JSON.stringify({ digest: digest(binary), ...cliBuild }), {
+      mode: 0o600,
+    });
     renameSync(temporary, ownership);
     return binary;
   } finally {
     release();
   }
 }
-export async function connectorStatus(directory: string) {
+export async function connectorStatus(directory: string, requested: ConnectorDirectories = {}) {
   return Promise.all(
     (["claude", "codex"] as const).map(async (provider) => {
       try {
+        const file = connectorSettingsFile(provider, directory, requested);
         const plan = planHookSettings(
           provider,
-          await source(settingsFile(provider)),
+          await source(file),
           connectorCommand(directory, provider),
           "uninstall",
         );
+        const binary = stableCliStatus();
         return {
           provider,
-          installed: plan.changed,
+          settingsFile: file,
+          hookInstalled: plan.changed,
+          updateAvailable: plan.changed && binary.updateAvailable,
+          installed: plan.changed && !binary.error,
           modified: plan.preservedModified,
           requiresTrust: provider === "codex",
-          error: null,
+          error: plan.changed ? binary.error : null,
         };
       } catch (error) {
         return {
@@ -149,8 +242,9 @@ export async function connectorAction(
   directory: string,
   provider: AgentProvider,
   action: "install" | "uninstall",
+  requested: ConnectorDirectories = {},
 ) {
-  const file = settingsFile(provider);
+  const file = connectorSettingsFile(provider, directory, requested);
   mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
   const release = acquireLock(dirname(file), "raypx-hooks");
   if (!release)
@@ -160,6 +254,12 @@ export async function connectorAction(
       plan = planConnectorSettings(provider, await source(file), command, action);
     if (action === "install") installStableCli();
     const result = await applyHookSettings(file, plan);
+    mkdirSync(directory, { recursive: true, mode: 0o700 });
+    const paths = savedDirectories(directory);
+    paths[provider] = dirname(file);
+    const temporary = join(directory, `connector-paths.${crypto.randomUUID()}.tmp`);
+    writeFileSync(temporary, JSON.stringify(paths), { flag: "wx", mode: 0o600 });
+    renameSync(temporary, join(directory, "connector-paths.json"));
     return {
       ...result,
       provider,

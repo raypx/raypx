@@ -96,6 +96,8 @@ it.skipIf(process.platform === "win32")(
         }),
       ).toMatchObject({ ok: true, value: { status: "running" } });
       await expect.poll(() => existsSync(join(project, "delivered"))).toBe(true);
+      expect(host.runtime.agents.managesSession("codex", "interactive")).toBe(true);
+      expect(host.runtime.agents.managesSession("codex", "nested-session")).toBe(false);
       first.controller.abort();
       const competing = createRuntime({ dataDir });
       try {

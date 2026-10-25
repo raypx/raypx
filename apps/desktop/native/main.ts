@@ -254,11 +254,24 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
           throw new Error("Use the native directory picker to authorize a directory");
         return engine.request(
           method,
-          method.startsWith("observed.") && params && typeof params === "object"
-            ? { ...params, apiUrl: apiOrigin }
-            : method.startsWith("agents.local.")
-              ? scopeLocalAccount(connectionConfig.scope, params)
-              : params,
+          method.startsWith("connectors.") && params && typeof params === "object"
+            ? {
+                ...params,
+                configDirs: {
+                  ...connectionConfig.connectorDirectories,
+                  ...(!connectionConfig.connectorDirectories.claude && process.env.CLAUDE_CONFIG_DIR
+                    ? { claude: process.env.CLAUDE_CONFIG_DIR }
+                    : {}),
+                  ...(!connectionConfig.connectorDirectories.codex && process.env.CODEX_HOME
+                    ? { codex: process.env.CODEX_HOME }
+                    : {}),
+                },
+              }
+            : method.startsWith("observed.") && params && typeof params === "object"
+              ? { ...params, apiUrl: apiOrigin }
+              : method.startsWith("agents.local.")
+                ? scopeLocalAccount(connectionConfig.scope, params)
+                : params,
         );
       },
       pickDirectory: async () => {
@@ -270,7 +283,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
         const path = paths[0];
         return path ? ((await engine.request("roots.register", { path })) as RootGrant) : null;
       },
-      restartEngine: () => engine.start(),
+      restartEngine: ({ replaceOwner }) => (replaceOwner ? engine.replaceOwner() : engine.start()),
       saveAnalyticsPreferences: (input) => preferences.saveAnalytics(input),
       getAnalyticsPreferences: () => parseAnalyticsConsent(preferences.read().analytics),
       savePreferences: (input) => preferences.save(input),

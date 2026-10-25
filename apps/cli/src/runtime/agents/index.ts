@@ -301,6 +301,16 @@ export class AgentRuntime {
     this.changed();
     return { configured: true };
   }
+  managesSession(provider: AgentProvider, sessionId: string) {
+    return this.store
+      .tasks()
+      .some(
+        (local) =>
+          local.task.provider === provider &&
+          local.sessionId === sessionId &&
+          activeTaskStatuses.includes(local.task.status),
+      );
+  }
   projectProviders(rootId: string) {
     return this.store.projects().find((project) => project.id === rootId)?.providers ?? [];
   }

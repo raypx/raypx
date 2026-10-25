@@ -62,11 +62,12 @@ interface Grant extends ControlRecord {
 }
 interface HostCredential extends ControlRecord {
   userId: string;
+  securityVersion?: string;
   epoch: number;
   expiresAt: string;
 }
 type ObservedSession = TerminalSession & ControlRecord;
-type ObservedRequest = TerminalRequest & ControlRecord;
+type ObservedRequest = TerminalRequest & ControlRecord & { serverCancelled?: true };
 interface Task extends AgentTask {
   epoch: number;
 }
@@ -225,14 +226,28 @@ export class ControlService {
     return this.repository.transaction(auth.user.id, async (tx) => {
       const device = required(await tx.get<Device>("device", input.deviceId));
       if (device.revoked || device.epoch !== input.epoch) throw new ControlError("DEVICE_REVOKED");
+      const age = auth.session.createdAt
+        ? this.clock() - auth.session.createdAt.getTime()
+        : Infinity;
+      if (
+        age < -30_000 ||
+        age > 600_000 ||
+        !(await tx.sessionActive(auth.session.id, new Date(this.clock())))
+      )
+        throw new ControlError("AUTH_REQUIRED");
+      if (!(await tx.hostSessionAllowed(auth.session.createdAt!)))
+        throw new ControlError("AUTH_REQUIRED");
+      // Owner-scoped transactions serialize replacement. One current credential
+      // per device cannot accumulate unusable keys when Keychain is unavailable.
       for (const item of await tx.list<HostCredential>("credential", device.id))
-        if (Date.parse(item.expiresAt) <= this.clock()) await tx.remove("credential", item.id);
-      if ((await tx.list("credential", device.id)).length >= 8)
-        throw new ControlError("AUTHORIZATION_LIMIT");
+        await tx.remove("credential", item.id);
+      for (const grant of await tx.list<Grant>("grant", device.id))
+        if (grant.credentialId) await tx.remove("grant", grant.id);
       const credential = crypto.randomUUID() + crypto.randomUUID();
       const expiresAt = new Date(this.clock() + 30 * 86_400_000).toISOString();
       await tx.put<HostCredential>("credential", {
         id: await hash(credential),
+        securityVersion: await tx.securityVersion(),
         userId: auth.user.id,
         deviceId: device.id,
         epoch: device.epoch,
@@ -253,7 +268,11 @@ export class ControlService {
     if (!owner) throw new ControlError("AUTH_REQUIRED");
     return this.repository.transaction(owner.userId, async (tx) => {
       const credential = await tx.get<HostCredential>("credential", id);
-      if (!credential || Date.parse(credential.expiresAt) <= this.clock())
+      if (
+        !credential ||
+        Date.parse(credential.expiresAt) <= this.clock() ||
+        credential.securityVersion !== (await tx.securityVersion())
+      )
         throw new ControlError("AUTH_REQUIRED");
       const device = required(await tx.get<Device>("device", credential.deviceId));
       if (device.revoked || device.epoch !== credential.epoch)
@@ -306,15 +325,35 @@ export class ControlService {
             await tx.put("observed_request", {
               ...request,
               status: "cancelled",
-              revision: request.revision + 1,
+              serverCancelled: true,
             });
       });
     return { revoked: true as const };
   }
+  revokeHostAuthorizations(userId: string) {
+    return this.repository.transaction(userId, async (tx) => {
+      await tx.revokeHostSecurity();
+      for (const credential of await tx.list<HostCredential>("credential"))
+        await tx.remove("credential", credential.id);
+      for (const grant of await tx.list<Grant>("grant"))
+        if (grant.credentialId) await tx.remove("grant", grant.id);
+      for (const request of await tx.list<ObservedRequest>("observed_request"))
+        if (request.status === "pending")
+          await tx.put("observed_request", {
+            ...request,
+            status: "cancelled",
+            serverCancelled: true,
+          });
+    });
+  }
   private async authorized(tx: ControlReader, sessionId: string, credentialId?: string) {
     if (!credentialId) return tx.sessionActive(sessionId, new Date(this.clock()));
     const credential = await tx.get<HostCredential>("credential", credentialId);
-    return Boolean(credential && Date.parse(credential.expiresAt) > this.clock());
+    return Boolean(
+      credential &&
+      Date.parse(credential.expiresAt) > this.clock() &&
+      credential.securityVersion === (await tx.securityVersion()),
+    );
   }
   async authenticate(
     role: RelayActor["role"],
@@ -672,7 +711,7 @@ export class ControlService {
           await tx.put("observed_request", {
             ...request,
             status: "cancelled",
-            revision: request.revision + 1,
+            serverCancelled: true,
           });
       return { revoked: true as const };
     });
@@ -732,7 +771,7 @@ export class ControlService {
             await tx.put("observed_request", {
               ...request,
               status: "cancelled",
-              revision: request.revision + 1,
+              serverCancelled: true,
             });
         state.observedEpoch = frame.epoch;
         state.observedRevision = 0;
@@ -762,12 +801,26 @@ export class ControlService {
         const old = await tx.get<ObservedRequest>("observed_request", request.id);
         if (old && (old.deviceId !== actor.deviceId || old.sessionId !== request.sessionId))
           throw new ControlError("NOT_FOUND");
-        if (old?.revision === request.revision) {
-          const { deviceId: _deviceId, ...projection } = old;
-          if (canonical(projection) !== canonical(request))
+        if (
+          old?.revision === request.revision &&
+          !(old.status === "cancelled" && old.epoch !== frame.epoch && request.status !== "pending")
+        ) {
+          const { deviceId: _deviceId, serverCancelled: _cancelled, ...projection } = old;
+          if (
+            canonical(old.serverCancelled ? { ...projection, status: "pending" } : projection) !==
+            canonical(request)
+          )
             throw new ControlError("EVENT_CONFLICT");
         }
-        if (!old || old.revision < request.revision)
+        // Only the host assigns request revisions. A server-side cancellation is a
+        // projection fence and must never consume its next revision.
+        const legacyCancellation =
+          old?.status === "cancelled" && old.epoch !== frame.epoch && request.status !== "pending";
+        if (
+          !old ||
+          old.revision < request.revision ||
+          (legacyCancellation && old.revision === request.revision)
+        )
           await tx.put("observed_request", { ...request, deviceId: actor.deviceId });
       }
       const history = await tx.list<ObservedRequest>("observed_request", device.id, {

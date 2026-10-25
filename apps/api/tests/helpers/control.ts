@@ -9,7 +9,10 @@ import type {
 import type { ControlService } from "../../server/control/service.js";
 import type { AgentTask, HumanRequest } from "@raypx/contracts/tasks";
 
-export function memoryControlRepository(): ControlRepository & { validSession: boolean } {
+export function memoryControlRepository(): ControlRepository & {
+  validSession: boolean;
+  securityVersion: string;
+} {
   let data = new Map<string, ControlRecord>();
   let queue = Promise.resolve();
   const transaction = (draft: Map<string, ControlRecord>, userId: string): ControlTransaction => {
@@ -20,6 +23,28 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
     };
     return {
       sessionActive: async () => repository.validSession,
+      securityVersion: async () =>
+        repository.securityVersion +
+        ":" +
+        ((draft.get(`${userId}:security`) as (ControlRecord & { epoch: number }) | undefined)
+          ?.epoch ?? 0),
+      hostSessionAllowed: async (createdAt) => {
+        const state = draft.get(`${userId}:security`) as
+          | (ControlRecord & { revokedAt: number })
+          | undefined;
+        return !state || createdAt.getTime() > state.revokedAt;
+      },
+      revokeHostSecurity: async () => {
+        const old = draft.get(`${userId}:security`) as
+          | (ControlRecord & { epoch: number })
+          | undefined;
+        draft.set(`${userId}:security`, {
+          id: "security",
+          deviceId: "security",
+          epoch: (old?.epoch ?? 0) + 1,
+          revokedAt: Date.now(),
+        } as ControlRecord);
+      },
       async get<R extends ControlRecord>(kind: RecordKind, id: string) {
         return structuredClone(draft.get(key(kind, id))) as R | undefined;
       },
@@ -133,8 +158,9 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
       },
     };
   };
-  const repository: ControlRepository & { validSession: boolean } = {
+  const repository: ControlRepository & { validSession: boolean; securityVersion: string } = {
     validSession: true,
+    securityVersion: "initial",
     async findGrant(hash) {
       for (const [key, value] of data)
         if (key.endsWith(`:grant:${hash}`))
@@ -167,7 +193,12 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
 export function controlAuth(userId = "user-a"): AuthSession {
   return {
     user: { id: userId, email: `${userId}@example.com`, name: userId, emailVerified: true },
-    session: { id: `session-${userId}`, userId, expiresAt: new Date(Date.now() + 3_600_000) },
+    session: {
+      id: `session-${userId}`,
+      userId,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 3_600_000),
+    },
   };
 }
 export async function connected(service: ControlService, auth = controlAuth()) {

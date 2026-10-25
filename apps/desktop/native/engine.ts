@@ -62,7 +62,8 @@ export class LocalEngine {
       void child.exited.then(() => {
         if (generation !== this.generation) return;
         this.child = undefined;
-        this.fail(new Error("Local engine exited; retry to restart"));
+        if (this.status.code !== "HOST_VERSION_MISMATCH")
+          this.fail(new Error("Local engine exited; retry to restart"));
       });
       const info = (await this.request("runtime.info", {})) as {
         version: string;
@@ -84,7 +85,11 @@ export class LocalEngine {
     }
   }
   private fail(error: Error) {
-    this.setStatus({ status: "error", message: error.message });
+    this.setStatus({
+      status: "error",
+      message: error.message,
+      ...("code" in error && error.code === "HOST_VERSION_MISMATCH" ? { code: error.code } : {}),
+    });
     for (const item of this.pending.values()) {
       clearTimeout(item.timer);
       item.reject(error);
@@ -111,7 +116,18 @@ export class LocalEngine {
           const value: unknown = JSON.parse(line);
           const event = localEventSchema.safeParse(value);
           if (event.success) {
-            if (event.data.event !== "engine.status") await this.emit(event.data);
+            if (
+              event.data.event === "engine.status" &&
+              event.data.data.status === "error" &&
+              event.data.data.code === "HOST_VERSION_MISMATCH"
+            )
+              this.fail(
+                Object.assign(
+                  new Error("The previous execution owner must be stopped before upgrading"),
+                  { code: "HOST_VERSION_MISMATCH" },
+                ),
+              );
+            else if (event.data.event !== "engine.status") await this.emit(event.data);
             continue;
           }
           const response = localResponseSchema.parse(value);
@@ -159,6 +175,25 @@ export class LocalEngine {
         child.kill();
       });
     });
+  }
+  async replaceOwner() {
+    if (!this.daemon || this.status.code !== "HOST_VERSION_MISMATCH") return false;
+    await this.stop();
+    const child = Bun.spawn([this.binary, "daemon", "restart", ...this.args], {
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    if ((await child.exited) !== 0) {
+      this.fail(
+        Object.assign(
+          new Error("The previous daemon could not be replaced; retry after it stops"),
+          { code: "HOST_VERSION_MISMATCH" },
+        ),
+      );
+      return false;
+    }
+    return this.start();
   }
   async stop() {
     this.generation++;

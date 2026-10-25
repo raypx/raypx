@@ -43,6 +43,66 @@ try {
   assert.equal((await new Response(version.stdout).text()).trim(), manifest.version);
   assert.equal(await version.exited, 0);
   completed(await new Response(version.stderr).text(), "version", "success");
+  if (process.platform === "darwin") {
+    const home = join(dataDir, "connector-home"),
+      state = join(home, "state"),
+      claude = join(home, "claude"),
+      codex = join(home, "codex");
+    const invoke = async (args: string[], success = true) => {
+      const child = Bun.spawn([binary, ...args, "--data-dir", state, "--json"], {
+        cwd: dataDir,
+        env: {
+          ...process.env,
+          PATH: "",
+          RAYPX_HOME: home,
+          CLAUDE_CONFIG_DIR: claude,
+          CODEX_HOME: codex,
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const [stdout, stderr, exit] = await Promise.all([
+        new Response(child.stdout).text(),
+        new Response(child.stderr).text(),
+        child.exited,
+      ]);
+      assert.equal(exit, success ? 0 : 1, `Connector lifecycle command ${args.join(" ")} failed`);
+      return { stdout, stderr };
+    };
+    await invoke(["connectors", "install", "claude"]);
+    const stable = join(home, "bin", "raypx"),
+      metadataFile = join(home, "bin", "installation.json");
+    const metadata = await Bun.file(metadataFile).json();
+    assert.equal(metadata.version, manifest.version);
+    assert.ok(metadata.builtAt > 0, "Standalone build identity must be embedded");
+    let status = JSON.parse((await invoke(["connectors", "status"])).stdout)[0];
+    assert.equal(status.installed, true);
+    assert.equal(status.settingsFile, join(claude, "settings.json"));
+    await rm(stable);
+    status = JSON.parse((await invoke(["connectors", "status"])).stdout)[0];
+    assert.equal(status.installed, false);
+    assert.equal(status.error, "HOST_BINARY_MISSING");
+    await invoke(["connectors", "install", "claude"]);
+    await Bun.write(
+      metadataFile,
+      JSON.stringify({ ...metadata, builtAt: metadata.builtAt + 100000 }),
+    );
+    assert.ok(
+      (await invoke(["connectors", "install", "claude"], false)).stderr.includes("HOST_DOWNGRADE"),
+    );
+    await Bun.write(metadataFile, JSON.stringify({ ...metadata, version: "0.0.1", builtAt: 0 }));
+    try {
+      await invoke(["daemon", "start"]);
+      assert.equal(
+        (await Bun.file(metadataFile).json()).builtAt,
+        metadata.builtAt,
+        "Starting the bundled daemon updates its owned hook binary",
+      );
+    } finally {
+      await invoke(["daemon", "stop"]);
+    }
+    await invoke(["connectors", "uninstall", "claude"]);
+  }
   const aiHome = join(dataDir, "ai-home");
   for (const action of ["providers", "models"]) {
     const catalog = Bun.spawn([binary, "ai", action, "--json"], {

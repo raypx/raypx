@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   taskSchema,
+  deviceGrantSchema,
   deviceCommandSchema,
   agentProviderSchema,
   relayCommandSchema,
@@ -74,6 +75,7 @@ export const localParams = {
   "host.refresh": z.object(hostScope),
   "host.enable": z.object({ ...hostScope, enabled: z.boolean() }),
   "host.revoked": z.object(hostScope),
+  "host.legacy": z.object({ ...hostScope, grant: deviceGrantSchema }),
   "host.authorize": z.object({ ...hostScope, authorization: hostAuthorizationSchema }),
   "host.detach": z.object(hostScope),
   "observed.list": z.object(hostScope),
@@ -90,9 +92,32 @@ export const localParams = {
     binding: z.string().min(1).max(300),
     decision: terminalDecisionSchema,
   }),
-  "connectors.status": z.object({}),
-  "connectors.install": z.object({ provider: agentProviderSchema }),
-  "connectors.uninstall": z.object({ provider: agentProviderSchema }),
+  "connectors.status": z.object({
+    configDirs: z
+      .object({
+        claude: z.string().min(1).max(4096).optional(),
+        codex: z.string().min(1).max(4096).optional(),
+      })
+      .optional(),
+  }),
+  "connectors.install": z.object({
+    provider: agentProviderSchema,
+    configDirs: z
+      .object({
+        claude: z.string().min(1).max(4096).optional(),
+        codex: z.string().min(1).max(4096).optional(),
+      })
+      .optional(),
+  }),
+  "connectors.uninstall": z.object({
+    provider: agentProviderSchema,
+    configDirs: z
+      .object({
+        claude: z.string().min(1).max(4096).optional(),
+        codex: z.string().min(1).max(4096).optional(),
+      })
+      .optional(),
+  }),
   "agents.local.device": z.object(agentAccount),
   "agents.local.list": z.object({
     ...agentAccount,

@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { createApiClient } from "@raypx/client";
+import { createApiClient, isMissingProcedure } from "@raypx/client";
 import { RemoteControl, serverOrigin, type ControlInfo } from "@raypx/host";
 import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 import {
@@ -68,6 +68,8 @@ export class DaemonControl {
   private readonly controls = new Map<string, RemoteControl>();
   private current: HostBinding | undefined;
   private persistent = false;
+  private legacy = false;
+  private readonly authorizationErrors = new Map<string, string>();
   private retry: ReturnType<typeof setTimeout> | undefined;
   private terminal: ReturnType<typeof startTerminalHost> | undefined;
   private revision = 0;
@@ -131,9 +133,26 @@ export class DaemonControl {
       () => this.emit({ version: 1, event: "sync.grantRequired", data: {} }),
       {
         protocolVersion: 3,
+        authorizationLost: (code) => {
+          const expected = this.current;
+          return this.serial(async () => {
+            if (!expected || this.current !== expected || !this.isCurrent(scope)) return;
+            try {
+              await this.detachCurrent();
+            } finally {
+              this.authorizationErrors.set(key, code);
+              this.emit({ version: 1, event: "sync.grantRequired", data: {} });
+              this.emit({ version: 1, event: "observed.changed", data: {} });
+            }
+          });
+        },
         bindingKey: (accountId, grant) =>
           remoteBinding({ ...grant, accountId, apiUrl: scope.apiUrl }),
         renewGrant: async () => {
+          if (this.legacy) {
+            this.emit({ version: 1, event: "sync.grantRequired", data: {} });
+            throw new LocalError("NETWORK_UNAVAILABLE", "Legacy server renewal requires Desktop");
+          }
           const current = this.current;
           if (!current || !this.isCurrent(scope))
             throw new LocalError("AUTH_REQUIRED", "Host authorization is unavailable");
@@ -205,18 +224,30 @@ export class DaemonControl {
         await this.control(binding).attach(binding.accountId, binding.apiUrl, grant);
     } catch (error) {
       if (this.closing || this.current !== binding) return;
-      const code =
-        error && typeof error === "object" && "data" in error
-          ? (error as { data?: { error?: { code?: string } } }).data?.error?.code
+      const code = isMissingProcedure(error)
+        ? "NOT_FOUND"
+        : error && typeof error === "object"
+          ? ((error as { data?: { error?: { code?: string } } }).data?.error?.code ??
+            (error as { code?: string }).code)
           : undefined;
-      if (code === "AUTH_REQUIRED" || code === "DEVICE_REVOKED") {
+      if (
+        code === "AUTH_REQUIRED" ||
+        code === "DEVICE_REVOKED" ||
+        code === "UNAUTHORIZED" ||
+        code === "NOT_FOUND"
+      ) {
         await this.detachCurrent();
+        this.authorizationErrors.set(
+          bindingKey(binding.apiUrl, binding.accountId),
+          code === "NOT_FOUND" ? "UPGRADE_REQUIRED" : code,
+        );
+        this.emit({ version: 1, event: "sync.grantRequired", data: {} });
         return;
       }
       if (this.isCurrent(binding) && !this.closing)
         this.retry = setTimeout(() => {
           this.retry = undefined;
-          void this.reconnect(binding);
+          void this.reconnect(binding).catch(() => this.backgroundFailure());
         }, 15_000);
     }
   }
@@ -225,7 +256,11 @@ export class DaemonControl {
       ...this.control(scope).info(scope.accountId),
       daemon: true,
       persistent: this.isCurrent(scope) && this.persistent,
-      authorized: this.isCurrent(scope),
+      authorized: this.isCurrent(scope) && !this.legacy,
+      legacy: this.isCurrent(scope) && this.legacy,
+      ...(this.authorizationErrors.has(bindingKey(scope.apiUrl, scope.accountId))
+        ? { error: this.authorizationErrors.get(bindingKey(scope.apiUrl, scope.accountId))! }
+        : {}),
     };
   }
   private async authorize(scope: Scope, raw: HostAuthorization) {
@@ -256,6 +291,8 @@ export class DaemonControl {
     const previous = this.current;
     if (previous && remoteBinding(previous) !== remoteBinding(binding)) await this.detachCurrent();
     this.current = binding;
+    this.legacy = false;
+    this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
     writeJson(join(this.directory, "host-binding.json"), binding);
     const control = this.control(scope);
     await control.enable(scope.accountId, true);
@@ -270,6 +307,7 @@ export class DaemonControl {
     if (!current) return;
     const authorization = await this.vault.get(current);
     this.current = undefined;
+    this.legacy = false;
     this.persistent = false;
     this.ack?.reject();
     this.ack = undefined;
@@ -312,24 +350,18 @@ export class DaemonControl {
     return true;
   }
   private async startTerminal(scope: Scope) {
-    this.ack?.reject();
-    this.ack = undefined;
-    await this.terminal?.close();
-    this.terminal = undefined;
-    this.dirty.clear();
-    this.revision = 0;
     const settings = this.settings(scope),
       roots = this.runtime.state.roots().filter((root) => settings.rootIds.includes(root.id));
     const paths = terminalProjectPaths(roots);
-    this.terminal = startTerminalHost({
-      directory: this.path(scope),
-      discoveryDirectory: this.directory,
+    const configuration = {
       projects: [...paths.keys()],
       projectIds: paths,
       away: settings.away,
       waitSeconds: settings.waitSeconds,
-      reachable: () => this.isCurrent(scope) && this.control(scope).info(scope.accountId).connected,
-      authorizeProject: (path, provider) => {
+      authorizeProject: (
+        path: string,
+        provider: import("@raypx/contracts/tasks").AgentProvider,
+      ) => {
         const id = paths.get(path);
         return Boolean(
           id &&
@@ -342,6 +374,22 @@ export class DaemonControl {
             }
           }),
         );
+      },
+    };
+    if (this.terminal) {
+      this.terminal.configure(configuration);
+      return;
+    }
+    this.revision = 0;
+    this.terminal = startTerminalHost({
+      directory: this.path(scope),
+      discoveryDirectory: this.directory,
+      ...configuration,
+      ignoreSession: (provider, sessionId) =>
+        this.runtime.agents.managesSession(provider, sessionId),
+      reachable: () => {
+        const info = this.control(scope).info(scope.accountId);
+        return this.isCurrent(scope) && info.connected && info.terminalSupported !== false;
       },
       changed: (request) => {
         this.dirty.set(request.id, request);
@@ -398,6 +446,9 @@ export class DaemonControl {
           this.dirty.delete(request.id);
     }
   }
+  private backgroundFailure() {
+    console.error(JSON.stringify({ operation: "daemon.background", code: "BACKGROUND_FAILED" }));
+  }
   wake() {
     return this.current ? this.control(this.current).wake() : Promise.resolve();
   }
@@ -436,13 +487,15 @@ export class DaemonControl {
       const input = localParams[method].parse(raw);
       return this.serial(() => this.selectAccount(input));
     }
-    if (method === "connectors.status") return connectorStatus(this.directory);
+    if (method === "connectors.status")
+      return connectorStatus(this.directory, localParams[method].parse(raw).configDirs);
     if (method === "connectors.install" || method === "connectors.uninstall")
       return this.serial(() =>
         connectorAction(
           this.directory,
           localParams[method].parse(raw).provider,
           method === "connectors.install" ? "install" : "uninstall",
+          localParams[method].parse(raw).configDirs,
         ),
       );
     if (method === "observed.remote") {
@@ -476,6 +529,28 @@ export class DaemonControl {
         persistent: this.isCurrent(scope) && this.persistent,
       }));
     }
+    if (method === "host.legacy") {
+      const input = localParams[method].parse(raw),
+        scope = this.scope(input);
+      return this.serial(async () => {
+        const binding: HostBinding = {
+          ...scope,
+          deviceId: input.grant.deviceId,
+          epoch: input.grant.epoch,
+          expiresAt: input.grant.expiresAt,
+        };
+        if (this.current && remoteBinding(this.current) !== remoteBinding(binding))
+          await this.detachCurrent();
+        this.current = binding;
+        this.legacy = true;
+        this.persistent = false;
+        this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
+        const control = this.control(scope);
+        await control.enable(scope.accountId, true);
+        await control.attach(scope.accountId, scope.apiUrl, input.grant);
+        return this.info(scope);
+      });
+    }
     if (method === "host.authorize") {
       const input = localParams[method].parse(raw);
       return this.serial(() => this.authorize(this.scope(input), input.authorization));
@@ -508,7 +583,7 @@ export class DaemonControl {
         const settings = settingsSchema.parse({ ...input, rootIds: [...new Set(input.rootIds)] });
         writeJson(join(this.path(scope), "observed.json"), settings);
         await this.startTerminal(scope);
-        void this.wake();
+        void this.wake().catch(() => this.backgroundFailure());
         return settings;
       });
     }
@@ -517,17 +592,23 @@ export class DaemonControl {
       if (!this.isCurrent(scope) || !this.terminal || !this.current)
         return { sessions: [], requests: [] };
       const deviceId = this.current.deviceId;
+      const requests = [
+        ...this.terminal.broker.pendingRequests(),
+        ...this.terminal.broker.list(256).filter((request) => request.status !== "pending"),
+      ].slice(0, 100);
+      const ids = new Set(requests.map((request) => request.sessionId));
       return {
         sessions: this.terminal
           .sessions()
+          .filter((session) => ids.has(session.id))
           .map((session) => ({ ...session, deviceId, deviceName: this.info(scope).name }))
           .slice(-100),
-        requests: this.terminal.broker
-          .list()
-          .map(({ body: _body, questions: _questions, decision: _decision, ...request }) => ({
+        requests: requests.map(
+          ({ body: _body, questions: _questions, decision: _decision, ...request }) => ({
             ...request,
             deviceId,
-          })),
+          }),
+        ),
       } satisfies ObservedProjection;
     }
     if (method === "observed.get") {

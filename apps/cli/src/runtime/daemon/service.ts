@@ -34,7 +34,13 @@ export function serviceDefinition(options: ProfileOptions, binary: string, home 
     "/usr/bin",
     "/bin",
   ].join(":");
-  const plist = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>Label</key><string>${xml(label)}</string><key>ProgramArguments</key><array>${args.map((value) => `<string>${xml(value)}</string>`).join("")}</array><key>RunAtLoad</key><true/><key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict><key>ThrottleInterval</key><integer>10</integer><key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(path)}</string><key>RAYPX_HOME</key><string>${xml(raypxHome())}</string></dict></dict></plist>\n`;
+  const configEnvironment = ["CLAUDE_CONFIG_DIR", "CODEX_HOME"]
+    .flatMap((key) => {
+      const value = process.env[key];
+      return value ? [`<key>${key}</key><string>${xml(value)}</string>`] : [];
+    })
+    .join("");
+  const plist = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>Label</key><string>${xml(label)}</string><key>ProgramArguments</key><array>${args.map((value) => `<string>${xml(value)}</string>`).join("")}</array><key>RunAtLoad</key><true/><key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict><key>ThrottleInterval</key><integer>10</integer><key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(path)}</string><key>RAYPX_HOME</key><string>${xml(raypxHome())}</string>${configEnvironment}</dict></dict></plist>\n`;
   return { label, plist, file: join(home, "Library", "LaunchAgents", `${label}.plist`) };
 }
 export async function configureService(options: ProfileOptions, action: "install" | "uninstall") {

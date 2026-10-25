@@ -92,3 +92,27 @@ it("returns a safe request identifier when initialization fails and can recover 
   expect(JSON.stringify(output.mock.calls)).not.toContain("private-database-credentials");
   expect((await app.fetch(workerRequest("recovered"))).status).toBe(200);
 });
+
+it("normalizes the worker relay origin whitelist and discards malformed entries", async () => {
+  const forwarded = vi.fn(async () => new Response(null, { status: 204 }));
+  const app = createCloudflareApp();
+  const request = (origin: string): CloudflareRequest =>
+    Object.assign(
+      new Request("https://api.example.test/relay?account=account", {
+        headers: { origin, upgrade: "websocket" },
+      }),
+      {
+        runtime: {
+          cloudflare: {
+            env: {
+              ALLOWED_ORIGINS: "invalid, https://web.example.test/",
+              RAYPX_RELAY: { getByName: () => ({ fetch: forwarded }) },
+            },
+          },
+        },
+      },
+    );
+  expect((await app.fetch(request("https://web.example.test"))).status).toBe(204);
+  expect((await app.fetch(request("https://attacker.example.test"))).status).toBe(403);
+  expect(forwarded).toHaveBeenCalledOnce();
+});

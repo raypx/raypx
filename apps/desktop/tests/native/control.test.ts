@@ -459,3 +459,28 @@ it("keeps startup available when local connection metadata is corrupt", async ()
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+it("delegates terminal authorization loss to its owner", async () => {
+  const lost = vi.fn(async () => {});
+  const fixture = await control({
+    renewGrant: async () => {
+      throw Object.assign(new Error("expired"), { code: "UNAUTHORIZED" });
+    },
+    authorizationLost: lost,
+  });
+  expect(await fixture.value.refreshGrant()).toBe(false);
+  expect(lost).toHaveBeenCalledExactlyOnceWith("AUTH_REQUIRED");
+});
+
+it("tries the preferred protocol again when explicitly attaching after an old-server connection", async () => {
+  const fixture = await control({ protocolVersion: 3 });
+  expect(fixture.value.info("account").terminalSupported).toBe(false);
+  await fixture.value.attach("account", fixture.base, {
+    ...fixture.grant,
+    token: "new-grant-" + crypto.randomUUID(),
+  });
+  await expect.poll(() => fixture.frames.filter((frame) => frame.type === "auth").length).toBe(2);
+  expect(fixture.frames.filter((frame) => frame.type === "auth").at(-1)).toMatchObject({
+    protocolVersion: 3,
+  });
+});

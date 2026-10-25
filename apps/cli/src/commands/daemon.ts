@@ -2,7 +2,7 @@ import { defineCommand, type CommandDef } from "citty";
 import { globalArgs, type CliArgs } from "./args";
 import { LocalError } from "../runtime/errors";
 import { profilePath } from "../runtime/state";
-import { connectDaemon, daemonFetch, type ProfileOptions } from "../runtime/daemon/endpoint";
+import { connectDaemon, stopDaemon, type ProfileOptions } from "../runtime/daemon/endpoint";
 
 const command = (definition: CommandDef) => defineCommand(definition);
 function group(
@@ -37,6 +37,7 @@ export function createDaemonCommands(invocation: CliArgs, options: ProfileOption
       run: "Run the host in the foreground",
       status: "Read host status",
       stop: "Stop the host and cancel managed work",
+      restart: "Stop the previous host, cancel managed work and start this version",
       proxy: "Private Desktop client transport",
       install: "Install the macOS user service",
       uninstall: "Remove the macOS user service",
@@ -58,11 +59,23 @@ export function createDaemonCommands(invocation: CliArgs, options: ProfileOption
         ).configureService(options, action);
       else {
         try {
-          const endpoint = await connectDaemon(options, action === "start");
-          result =
-            action === "stop"
-              ? await (await daemonFetch(endpoint, "/stop", {}, AbortSignal.timeout(5000))).json()
-              : { running: true, version: endpoint.version };
+          if (action === "stop") result = await stopDaemon(options);
+          else {
+            if (action === "restart") {
+              try {
+                await stopDaemon(options);
+              } catch (error) {
+                if (!(error instanceof LocalError) || error.code !== "HOST_NOT_RUNNING")
+                  throw error;
+              }
+            }
+            const endpoint = await connectDaemon(
+              options,
+              action === "start" || action === "restart",
+              action === "status" ? "any" : "match",
+            );
+            result = { running: true, version: endpoint.version };
+          }
         } catch (error) {
           if (error instanceof LocalError && error.code === "HOST_NOT_RUNNING")
             result = { running: false };
@@ -85,7 +98,6 @@ export function createConnectorCommands(invocation: CliArgs, options: ProfileOpt
     async (action, inputs) => {
       const provider = inputs[0];
       if (action === "hook") {
-        if (process.env.RAYPX_MANAGED_AGENT === "1") return;
         try {
           if (inputs.length !== 1 || (provider !== "claude" && provider !== "codex")) return;
           let raw = "";

@@ -49,12 +49,25 @@ export function parseDesktopConfig(source: string): DesktopConnection {
   if (
     !table(value) ||
     Object.keys(value).some(
-      (key) => !["base_url", "web_url", "profile", "profiles", "ai"].includes(key),
+      (key) => !["base_url", "web_url", "profile", "profiles", "ai", "connectors"].includes(key),
     )
   )
-    throw new Error("Unknown configuration option; use base_url, web_url, profile, profiles or ai");
+    throw new Error(
+      "Unknown configuration option; use base_url, web_url, profile, profiles, ai or connectors",
+    );
   // CLI owns model configuration. It does not select the Desktop account server.
   if (value.ai !== undefined && !table(value.ai)) throw new Error("ai must be a table");
+  if (
+    value.connectors !== undefined &&
+    (!table(value.connectors) ||
+      Object.entries(value.connectors).some(
+        ([key, path]) =>
+          !["claude_config_dir", "codex_home"].includes(key) ||
+          typeof path !== "string" ||
+          !isAbsolute(path),
+      ))
+  )
+    throw new Error("connectors supports absolute claude_config_dir and codex_home paths only");
   const defaults = endpoints(value);
   const profiles = value.profiles ?? {};
   if (!table(profiles)) throw new Error("profiles must be a table");
@@ -98,11 +111,20 @@ export function loadDesktopConfig(directory = process.env.RAYPX_HOME ?? join(hom
     const stat = statSync(file);
     if (!stat.isFile() || stat.size > 16 * 1024)
       throw new Error("config.toml must be a file of at most 16 KiB");
-    const connection = parseDesktopConfig(readFileSync(file, "utf8"));
+    const source = readFileSync(file, "utf8");
+    const connection = parseDesktopConfig(source);
+    const configured = (
+      Bun.TOML.parse(source) as { connectors?: { claude_config_dir?: string; codex_home?: string } }
+    ).connectors;
+    const connectorDirectories = {
+      ...(configured?.claude_config_dir ? { claude: configured.claude_config_dir } : {}),
+      ...(configured?.codex_home ? { codex: configured.codex_home } : {}),
+    };
     const scope = createHash("sha256").update(connection.apiUrl).digest("hex").slice(0, 32);
     return {
       file,
       connection,
+      connectorDirectories,
       scope,
       partition: `persist:raypx-${scope}`,
       preload: `Object.defineProperty(window,${JSON.stringify(CONNECTION_KEY)},{value:Object.freeze(${JSON.stringify(connection)})});`,

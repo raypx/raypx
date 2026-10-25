@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
-import { user, session } from "@raypx/database/schema";
+import { user, session, account } from "@raypx/database/schema";
 import { eq, sql } from "drizzle-orm";
 import { createControlRepository } from "../../../server/control/repository.js";
 import { ControlService } from "../../../server/control/service.js";
@@ -278,4 +278,25 @@ it("prunes the actual SQL replay window without evicting activity and pages task
   expect((await service.listApprovals(auth.user.id)).some((item) => item.id === request.id)).toBe(
     true,
   );
+});
+
+it("invalidates actual PostgreSQL credentials after password updates and security revocation", async () => {
+  const host = await connected(service, auth);
+  const key = await service.authorizeHost(auth, host.grant);
+  const grant = await service.hostGrant(key.credential);
+  const actor = await service.authenticate("device", grant.grant.token, crypto.randomUUID());
+  const id = crypto.randomUUID();
+  await connection.db.insert(account).values({
+    id,
+    accountId: auth.user.id,
+    userId: auth.user.id,
+    providerId: "credential",
+    password: "synthetic-changed-password-hash",
+  });
+  await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  const next = await service.authorizeHost(auth, host.grant);
+  await service.revokeHostAuthorizations(auth.user.id);
+  await expect(service.hostGrant(next.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.authorizeHost(auth, host.grant)).rejects.toThrow("AUTH_REQUIRED");
 });
