@@ -125,6 +125,7 @@ const controlRecord = (name: string) =>
     (table) => [
       primaryKey({ columns: [table.userId, table.id] }),
       index(`${name}_device_idx`).on(table.userId, table.deviceId),
+      ...(name === "control_credential" ? [index("control_credential_hash_idx").on(table.id)] : []),
       ...(name === "control_request"
         ? [index("control_request_task_idx").on(table.userId, sql`(${table.body}->>'taskId')`)]
         : []),
@@ -164,6 +165,9 @@ export const controlRequest = controlRecord("control_request");
 export const controlEvent = controlRecord("control_event");
 export const controlCommand = controlRecord("control_command");
 export const controlGrant = controlRecord("control_grant");
+export const controlCredential = controlRecord("control_credential");
+export const controlObservedSession = controlRecord("control_observed_session");
+export const controlObservedRequest = controlRecord("control_observed_request");
 
 export const schema = {
   systemConfiguration,
@@ -180,6 +184,9 @@ export const schema = {
   controlEvent,
   controlCommand,
   controlGrant,
+  controlCredential,
+  controlObservedSession,
+  controlObservedRequest,
 };
 export const relations = defineRelations(schema, (r) => ({
   user: {

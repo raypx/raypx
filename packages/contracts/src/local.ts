@@ -6,11 +6,13 @@ import {
   relayCommandSchema,
   relayRequestSchema,
 } from "./tasks.js";
+import { hostAuthorizationSchema, terminalDecisionSchema } from "./terminal.js";
 
 export const LOCAL_PROTOCOL_VERSION = 1 as const;
 export const MAX_TEXT_BYTES = 1024 * 1024;
 const pathRef = { rootId: z.string().min(1), path: z.string().default("") };
 const agentAccount = { accountId: z.string().min(1).max(200) };
+const hostScope = { ...agentAccount, apiUrl: z.string().min(1).max(2048) };
 export const rootGrantSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -64,6 +66,33 @@ export const jobRunSchema = z.object({
 });
 export type JobRun = z.infer<typeof jobRunSchema>;
 export const localParams = {
+  "host.session": z.object({
+    accountId: z.string().min(1).max(200).nullable(),
+    apiUrl: z.string().max(2048),
+  }),
+  "host.info": z.object(hostScope),
+  "host.refresh": z.object(hostScope),
+  "host.enable": z.object({ ...hostScope, enabled: z.boolean() }),
+  "host.revoked": z.object(hostScope),
+  "host.authorize": z.object({ ...hostScope, authorization: hostAuthorizationSchema }),
+  "host.detach": z.object(hostScope),
+  "observed.list": z.object(hostScope),
+  "observed.get": z.object({ ...hostScope, id: z.string().uuid() }),
+  "observed.settings": z.object(hostScope),
+  "observed.configure": z.object({
+    ...hostScope,
+    rootIds: z.array(z.string().uuid()).max(200),
+    away: z.boolean(),
+    waitSeconds: z.number().int().min(60).max(600),
+  }),
+  "observed.decide": z.object({ ...hostScope, decision: terminalDecisionSchema }),
+  "observed.remote": z.object({
+    binding: z.string().min(1).max(300),
+    decision: terminalDecisionSchema,
+  }),
+  "connectors.status": z.object({}),
+  "connectors.install": z.object({ provider: agentProviderSchema }),
+  "connectors.uninstall": z.object({ provider: agentProviderSchema }),
   "agents.local.device": z.object(agentAccount),
   "agents.local.list": z.object({
     ...agentAccount,
@@ -171,6 +200,8 @@ export const localEventSchema = z.object({
     "engine.status",
     "agent.changed",
     "sync.grantRequired",
+    "observed.changed",
+    "approval.open",
   ]),
   data: z.record(z.string(), z.unknown()),
 });

@@ -118,7 +118,7 @@ it.each(["before", "after"])(
       await fixture.publish();
     }
     await screen.findByRole("button", { name: "Approve plan" });
-    expect(screen.queryByRole("textbox", { name: "What should the agent do?" })).toBeNull();
+    expect(screen.getByRole("textbox", { name: "What should the agent do?" })).toHaveValue("");
     expect(fixture.create).toHaveBeenCalledTimes(1);
   },
 );

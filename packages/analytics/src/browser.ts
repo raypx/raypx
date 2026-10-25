@@ -103,7 +103,7 @@ export function browserPreferenceStore(): AnalyticsPreferenceStore {
     },
   };
 }
-type WorkspaceClient = Pick<TaskClient, "tasks" | "approvals" | "subscribe"> & {
+type WorkspaceClient = Pick<TaskClient, "tasks" | "approvals" | "subscribe" | "observed"> & {
   devices: Pick<TaskClient["devices"], "list">;
 };
 /** Observe actual mutation attempts. Reads and relay invalidations never emit product results. */

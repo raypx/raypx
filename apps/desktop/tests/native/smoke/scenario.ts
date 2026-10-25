@@ -263,7 +263,7 @@ try {
       "WebView storage crossed server partitions",
     );
     assert.equal(
-      control.info("config-isolation").enabled,
+      (await control.info("config-isolation")).enabled,
       restoredServer,
       "Remote opt-in state crossed server settings",
     );
@@ -271,6 +271,12 @@ try {
     await control.enable("config-isolation", true);
     stage = "standalone login and local session fixture";
     await localSessionFixture();
+    handleTrayAction("pending");
+    await waitFor(
+      async () => String(await evaluate("return location.hash")).includes("/approvals"),
+      "Tray review action did not open the approval page",
+    );
+    await evaluate('location.hash="/";return true');
   }
   if (phase === "shell") {
     assert.equal(await evaluate("return location.protocol"), "views:");

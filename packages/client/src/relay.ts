@@ -73,7 +73,7 @@ export class RelayConnection {
             typeof raw === "object" &&
             "type" in raw &&
             raw.type === "ready" &&
-            (!("protocolVersion" in raw) || raw.protocolVersion !== 2)
+            (!("protocolVersion" in raw) || ![2, 3].includes(Number(raw.protocolVersion)))
           ) {
             socket.close(4006, "UPGRADE_REQUIRED");
             return;

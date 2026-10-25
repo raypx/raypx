@@ -14,12 +14,15 @@
     "smoke": "bun run tests/smoke/artifact.ts",
     "smoke:tui": "bun run tests/smoke/tui.ts",
     "smoke:terminal": "bun run tests/smoke/terminal-hooks.ts",
-    "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts"
+    "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts",
+    "smoke:daemon-agents": "bun run tests/smoke/daemon-agents.ts"
   },
   "dependencies": {
     "@raypx-kit/logger": "catalog:",
     "@raypx/ai": "workspace:*",
+    "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
+    "@raypx/host": "workspace:*",
     "citty": "catalog:",
     "croner": "catalog:",
     "zod": "catalog:"

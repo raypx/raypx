@@ -1,7 +1,39 @@
-import { Fragment, type ComponentType, type ReactNode } from "react";
+import {
+  Fragment,
+  useId,
+  useMemo,
+  useSyncExternalStore,
+  type ComponentType,
+  type ReactNode,
+  type CSSProperties,
+} from "react";
+import { sidebarPreference } from "./sidebar-preference";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { cn } from "@raypx/ui/lib/utils";
 import { Logo } from "@raypx/ui/logo";
+import {
+  Sidebar,
+  SidebarProvider,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarMenuBadge,
+  SidebarTrigger,
+  useSidebar,
+} from "@raypx/ui/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@raypx/ui/components/ui/tooltip";
 
 /** Applications adapt their router link to this shape. */
 export interface ShellLinkProps<To extends string> {
@@ -27,8 +59,11 @@ export interface AppShellProps<To extends string> {
   /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
   frame?: "document" | "window";
   brand: { to: To; label: string };
-  /** Groups are separated by a rule. */
+  /** Main navigation groups, with optional captions supplied by navigationLabels. */
   navigation: readonly (readonly ShellNavItem<To>[])[];
+  navigationLabels?: readonly string[];
+  /** Account and preferences stay above the account menu, separate from task navigation. */
+  secondaryNavigation?: readonly ShellNavItem<To>[];
   account?: ReactNode;
   breadcrumbs: readonly string[];
   /** Shown between the top bar and main content, such as a service alert. */
@@ -37,13 +72,38 @@ export interface AppShellProps<To extends string> {
   children: ReactNode;
 }
 
-const navigationItemClassName =
-  "flex min-h-10 items-center gap-[11px] rounded-[7px] px-3 text-muted-foreground transition-[background-color,color] duration-150 motion-reduce:transition-none hover:bg-muted hover:text-foreground aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-[550] aria-[current=page]:text-foreground aria-[current=page]:hover:bg-sidebar-accent max-[760px]:justify-center max-[760px]:px-0 max-[760px]:[&_svg]:size-[21px]";
+export function AppShell<To extends string>(props: AppShellProps<To>) {
+  const preference = useMemo(() => sidebarPreference(), []);
+  const open = useSyncExternalStore(preference.subscribe, preference.snapshot, () => true);
+  return (
+    <TooltipProvider delay={300}>
+      <SidebarProvider
+        open={open}
+        onOpenChange={preference.set}
+        mobileBehavior="rail"
+        style={
+          {
+            "--sidebar-width": "var(--app-sidebar-width, 14rem)",
+            "--sidebar-width-icon": "var(--app-rail-width, 4rem)",
+          } as CSSProperties
+        }
+        className={cn(
+          "h-dvh min-h-0 overflow-hidden max-[420px]:[--app-rail-width:3.625rem]",
+          props.frame === "window" && "max-[1100px]:[--app-sidebar-width:11.875rem]",
+        )}
+      >
+        <ShellContents {...props} />
+      </SidebarProvider>
+    </TooltipProvider>
+  );
+}
 
-export function AppShell<To extends string>({
+function ShellContents<To extends string>({
   frame = "document",
   brand,
   navigation,
+  navigationLabels,
+  secondaryNavigation,
   account,
   breadcrumbs,
   notice,
@@ -51,61 +111,130 @@ export function AppShell<To extends string>({
   children,
 }: AppShellProps<To>) {
   const c = useTranslations("common");
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const sidebarId = useId();
+  const toggleLabel = c(collapsed ? "expandSidebar" : "collapseSidebar");
   const windowed = frame === "window";
+  function renderItem(item: ShellNavItem<To>) {
+    return (
+      <SidebarMenuItem key={item.to}>
+        <SidebarMenuButton
+          tooltip={item.label}
+          className="relative min-h-10 gap-3 rounded-lg px-3 text-[13px] text-muted-foreground focus-visible:ring-inset aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-foreground max-[760px]:min-h-11 [&_svg]:size-5 [&_svg]:stroke-[1.75]"
+          render={
+            <LinkComponent
+              to={item.to}
+              markActive
+              {...(item.exact ? { exact: true } : {})}
+              className=""
+            >
+              <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center">
+                {item.icon}
+              </span>
+              <span className="min-w-0 truncate group-data-[collapsible=icon]/sidebar:sr-only">
+                {item.label}
+              </span>
+              {item.badge !== undefined && (
+                <SidebarMenuBadge className="static ml-auto h-auto p-0 empty:hidden [&>span]:rounded-full [&>span]:text-[10px] group-data-[collapsible=icon]/sidebar:absolute group-data-[collapsible=icon]/sidebar:top-0.5 group-data-[collapsible=icon]/sidebar:right-0 group-data-[collapsible=icon]/sidebar:flex group-data-[collapsible=icon]/sidebar:[&>span]:bg-foreground group-data-[collapsible=icon]/sidebar:[&>span]:text-background">
+                  {item.badge}
+                </SidebarMenuBadge>
+              )}
+            </LinkComponent>
+          }
+        />
+      </SidebarMenuItem>
+    );
+  }
   return (
-    <div className="flex h-dvh min-h-0 overflow-hidden">
+    <>
       <a
         href="#main"
         className="fixed top-2 left-2 z-30 -translate-y-[160%] bg-foreground px-4 py-2 text-background focus:translate-y-0"
       >
         {c("skipNavigation")}
       </a>
-      <aside
+      <Sidebar
+        id={sidebarId}
+        role="complementary"
+        collapsible="icon"
         className={cn(
-          "flex min-h-0 w-56 shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border bg-sidebar px-4 pb-5 max-[760px]:w-18 max-[760px]:px-2.5 max-[420px]:w-[58px] max-[420px]:px-1.5",
-          // Native windows reserve the title-bar inset; browsers use ordinary top spacing.
-          windowed ? "pt-11 max-[1100px]:w-[190px]" : "pt-7 max-[760px]:py-5",
+          "min-h-0 overflow-hidden border-border bg-sidebar pb-3 px-3 group-data-[collapsible=icon]/sidebar:px-2 max-[420px]:group-data-[collapsible=icon]/sidebar:px-1.5",
+          windowed ? "pt-11" : "pt-6 max-[760px]:pt-5",
         )}
       >
-        <LinkComponent
-          to={brand.to}
-          markActive={false}
-          aria-label={brand.label}
-          className="mx-3 mb-[38px] w-fit max-w-full min-w-0 max-[760px]:mx-auto max-[760px]:mb-8 max-[760px]:[&_[data-slot=logo]>span]:hidden"
-        >
-          <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
-        </LinkComponent>
-        <nav aria-label={brand.label} className="flex flex-col gap-1.25">
-          {navigation.map((group, index) => (
-            <Fragment key={index}>
-              {index > 0 && <span aria-hidden="true" className="mx-2.5 my-[18px] h-px bg-border" />}
-              {group.map((item) => (
-                <LinkComponent
-                  key={item.to}
-                  to={item.to}
-                  markActive
-                  {...(item.exact ? { exact: true } : {})}
-                  className={navigationItemClassName}
-                >
-                  {item.icon}
-                  <span className="min-w-0 truncate max-[760px]:sr-only">{item.label}</span>
-                  {item.badge !== undefined && (
-                    <span className="ml-auto max-[760px]:hidden">{item.badge}</span>
-                  )}
-                </LinkComponent>
-              ))}
-            </Fragment>
-          ))}
+        <SidebarHeader className="mb-7 shrink-0 p-0">
+          <LinkComponent
+            to={brand.to}
+            markActive={false}
+            aria-label={brand.label}
+            className="mx-3 w-fit max-w-full min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]/sidebar:mx-auto group-data-[collapsible=icon]/sidebar:[&_[data-slot=logo]>span]:hidden"
+          >
+            <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
+          </LinkComponent>
+        </SidebarHeader>
+        <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">
+          <SidebarContent className="gap-5">
+            {navigation.map((group, index) => (
+              <SidebarGroup
+                key={index}
+                role="group"
+                aria-label={navigationLabels?.[index]}
+                className="p-0"
+              >
+                {navigationLabels?.[index] && (
+                  <SidebarGroupLabel
+                    aria-hidden="true"
+                    className="mb-2 h-auto px-3 text-muted-foreground"
+                  >
+                    {navigationLabels[index]}
+                  </SidebarGroupLabel>
+                )}
+                <SidebarGroupContent>
+                  <SidebarMenu className="gap-1">{group.map(renderItem)}</SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </SidebarContent>
+          {secondaryNavigation && secondaryNavigation.length > 0 && (
+            <SidebarFooter className="mt-3 shrink-0 border-t border-border px-0 pt-3 pb-0">
+              <SidebarMenu className="gap-1">{secondaryNavigation.map(renderItem)}</SidebarMenu>
+            </SidebarFooter>
+          )}
         </nav>
-        {account !== undefined && <div className="mt-auto pt-7">{account}</div>}
-      </aside>
+        {account !== undefined && (
+          <SidebarFooter className="mt-2 shrink-0 border-t border-border px-0 pt-2 pb-0">
+            {account}
+          </SidebarFooter>
+        )}
+      </Sidebar>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           className={cn(
-            "flex h-[66px] shrink-0 items-center gap-[13px] border-b border-border px-10 text-[13px] text-muted-foreground max-[760px]:h-[58px] max-[760px]:px-6",
+            "flex h-[66px] shrink-0 items-center gap-[13px] border-b border-border px-6 text-[13px] text-muted-foreground max-[760px]:h-[58px] max-[760px]:px-5",
             windowed && "[-webkit-app-region:drag]",
           )}
         >
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <SidebarTrigger
+                  size="icon"
+                  aria-label={toggleLabel}
+                  aria-controls={sidebarId}
+                  aria-expanded={!collapsed}
+                  className="mr-1 text-muted-foreground max-[760px]:hidden"
+                />
+              }
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="size-[18px]" />
+              ) : (
+                <PanelLeftClose className="size-[18px]" />
+              )}
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{toggleLabel}</TooltipContent>
+          </Tooltip>
           {breadcrumbs.map((crumb, index) => (
             <Fragment key={index}>
               {index > 0 && (
@@ -133,6 +262,6 @@ export function AppShell<To extends string>({
           {children}
         </main>
       </div>
-    </div>
+    </>
   );
 }

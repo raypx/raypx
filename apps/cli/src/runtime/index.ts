@@ -3,9 +3,10 @@ import { AgentRuntime } from "./agents";
 import { FileRuntime } from "./files";
 import { JobRuntime } from "./jobs";
 import { ProcessRuntime } from "./process";
-import { StateStore, profilePath } from "./state";
+import { StateStore, profilePath, acquireLock } from "./state";
 import { LocalError } from "./errors";
 import manifest from "../../package.json";
+import type { AgentProvider } from "@raypx/contracts/tasks";
 import type { RecordDiagnostic } from "../diagnostics";
 
 export function createRuntime(
@@ -14,14 +15,25 @@ export function createRuntime(
     profile?: string;
     emit?: (event: LocalEvent) => void;
     scheduler?: boolean;
+    exclusiveOwner?: boolean;
+    agentExecutables?: Partial<Record<AgentProvider, string>>;
     recordDiagnostic?: RecordDiagnostic;
   } = {},
 ) {
   const emit = options.emit ?? (() => {});
   const state = new StateStore(profilePath(options));
+  let releaseOwner: (() => void) | undefined;
+  const ownAgents = () => {
+    if (releaseOwner) return;
+    const release = acquireLock(state.directory, "agents-owner");
+    if (!release)
+      throw new LocalError("HOST_RUNNING", "An execution host already owns this profile");
+    releaseOwner = release;
+  };
   let agentHost: AgentRuntime | undefined;
-  const getAgents = () =>
-    (agentHost ??= new AgentRuntime(
+  const getAgents = () => {
+    ownAgents();
+    return (agentHost ??= new AgentRuntime(
       state,
       (pendingRequest, change) =>
         emit({
@@ -32,8 +44,12 @@ export function createRuntime(
             ...(change ? { change, local: change.local } : {}),
           },
         }),
-      options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {},
+      {
+        ...(options.agentExecutables ? { executables: options.agentExecutables } : {}),
+        ...(options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {}),
+      },
     ));
+  };
   const files = new FileRuntime(state);
   const processes = new ProcessRuntime(emit);
   const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
@@ -41,8 +57,10 @@ export function createRuntime(
   let closingPromise: Promise<void> | undefined;
   const pending = new Set<Promise<unknown>>();
   try {
+    if (options.exclusiveOwner) ownAgents();
     if (options.scheduler) jobs.startScheduler();
   } catch (error) {
+    releaseOwner?.();
     state.close();
     throw error;
   }
@@ -60,6 +78,26 @@ export function createRuntime(
       const operation = (async () => {
         // Narrow each schema independently to preserve method-specific types.
         switch (method) {
+          case "host.authorize":
+          case "host.detach":
+          case "host.enable":
+          case "host.info":
+          case "host.refresh":
+          case "host.revoked":
+          case "host.session":
+          case "observed.configure":
+          case "observed.decide":
+          case "observed.get":
+          case "observed.list":
+          case "observed.remote":
+          case "observed.settings":
+          case "connectors.install":
+          case "connectors.status":
+          case "connectors.uninstall":
+            throw new LocalError(
+              "DAEMON_REQUIRED",
+              "Connect through the independent daemon for this method",
+            );
           case "agents.local.device":
             return getAgents().localDevice(localParams[method].parse(raw).accountId);
           case "agents.local.list": {
@@ -221,6 +259,7 @@ export function createRuntime(
         ]);
         await Promise.allSettled(pending);
         state.close();
+        releaseOwner?.();
       })();
       return closingPromise;
     },

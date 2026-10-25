@@ -95,7 +95,13 @@ controlled machine. Export with `tests/smoke/export-terminal-recording.ts`, insp
 the redaction, then run the default replay tests. No unattended schedule or CI
 credential configuration has been installed by this change.
 
-## Open gates
+## Follow-on status
+
+The [P1 implementation](terminal-host-p1.md) now promotes the private broker into
+an independent macOS daemon with restricted host authorization, relay v3 and
+Web/Desktop observed-request approvals. P0 remains the source of recorded vendor
+contract evidence. Its original standalone smoke does not by itself prove relay
+integration; use P1's real PostgreSQL/relay acceptance for that claim.
 
 Concurrent terminal/remote answering, questions/plans, Codex apply_patch/MCP,
 interactive trust UX and the full maximum-duration timeout remain open gates.
@@ -110,8 +116,8 @@ capabilities for both providers. Settings replacement preserves file permissions
 indentation and newline style; symbolic links return an explicit manual-dotfiles
 instruction without replacing the link. Private socket directories carry a profile
 ownership marker; a SIGKILL/restart fixture verifies safe reclamation of a matching
-stale directory without recursively deleting unknown files. The hook forwarder exposes an explicit delivered acknowledgement; P1 wires it
-to the production hook command after its response is written.
+stale directory without recursively deleting unknown files. The production hook
+command sends its delivered acknowledgement only after writing its response.
 
 The isolated P0 commit passed CLI checks and 204 tests, plus contracts checks and
 9 tests. It requires no daemon package or P1 relay schema to build or run.

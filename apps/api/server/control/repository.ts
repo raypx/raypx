@@ -2,7 +2,17 @@ import { normalizeTaskJson } from "@raypx/contracts/tasks";
 import { sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 
-export type RecordKind = "device" | "project" | "task" | "request" | "event" | "command" | "grant";
+export type RecordKind =
+  | "device"
+  | "project"
+  | "task"
+  | "request"
+  | "event"
+  | "command"
+  | "grant"
+  | "credential"
+  | "observed_session"
+  | "observed_request";
 export interface ControlRecord {
   id: string;
   deviceId: string;
@@ -17,6 +27,9 @@ export interface ControlQuery {
   limit?: number;
   streamId?: string;
   descending?: boolean;
+  ids?: string[];
+  observedAt?: string;
+  summary?: boolean;
 }
 export interface ControlTransaction {
   sessionActive(id: string, now: Date): Promise<boolean>;
@@ -35,6 +48,7 @@ export interface ControlRepository {
   read<T>(userId: string, run: (tx: ControlReader) => Promise<T>): Promise<T>;
   transaction<T>(userId: string, run: (tx: ControlTransaction) => Promise<T>): Promise<T>;
   findGrant(hash: string): Promise<{ userId: string } | undefined>;
+  findCredential(hash: string): Promise<{ userId: string } | undefined>;
 }
 const table = (kind: RecordKind) =>
   sql`${sql.identifier("raypx_foundation")}.${sql.identifier(`control_${kind}`)}`;
@@ -90,8 +104,19 @@ export function createControlRepository(database: Database): ControlRepository {
             const beforeDate = query.beforeTask?.slice(0, separator);
             const beforeId = query.beforeTask?.slice(separator + 1);
             const rows =
-              await databaseTx.execute(sql`select body from ${table(kind)} where user_id = ${userId}
+              await databaseTx.execute(sql`select ${query.summary ? sql`body - 'body' - 'questions' - 'decision'` : sql`body`} as body from ${table(kind)} where user_id = ${userId}
           ${deviceId === undefined ? sql`` : sql`and device_id = ${deviceId}`}
+          ${
+            query.ids === undefined
+              ? sql``
+              : query.ids.length
+                ? sql`and id in (${sql.join(
+                    query.ids.map((id) => sql`${id}`),
+                    sql`,`,
+                  )})`
+                : sql`and false`
+          }
+          ${query.observedAt === undefined ? sql`` : sql`and exists (select 1 from raypx_foundation.control_device d where d.user_id=${userId} and d.id=${table(kind)}.device_id and d.body->>'revoked'='false')`}
           ${query.beforeTask === undefined ? sql`` : sql`and (body->>'createdAt',id) < (${beforeDate},${beforeId})`}
           ${!query.pendingApprovals ? sql`` : sql`and body->>'status' in ('pending','decided') and exists (select 1 from raypx_foundation.control_task task where task.user_id=${userId} and task.id=${table(kind)}.body->>'taskId' and task.body->>'status' in ('pending','running','waiting','cancelling'))`}
           ${query.taskId === undefined ? sql`` : sql`and body->>'taskId' = ${query.taskId}`}
@@ -99,7 +124,7 @@ export function createControlRepository(database: Database): ControlRepository {
           ${query.streamId === undefined ? sql`` : sql`and body->>'streamId' = ${query.streamId}`}
           ${query.after === undefined ? sql`` : sql`and ${cursor} > ${query.after}`}
           ${query.beforeActivity === undefined ? sql`` : sql`and ${activityOrder} < ${query.beforeActivity}`}
-          ${kind === "task" ? sql`order by body->>'createdAt' desc,id desc` : query.pendingApprovals ? sql`order by body->>'expiresAt' asc,id asc` : kind === "event" ? sql`order by ${query.activity ? activityOrder : cursor} ${query.descending ? sql`desc` : sql`asc`}` : sql``}
+          ${query.observedAt !== undefined ? sql`order by (body->>'status'='pending' and body->>'expiresAt'>${query.observedAt}) desc,body->>'createdAt' desc,id desc` : kind === "task" ? sql`order by body->>'createdAt' desc,id desc` : query.pendingApprovals ? sql`order by body->>'expiresAt' asc,id asc` : kind === "event" ? sql`order by ${query.activity ? activityOrder : cursor} ${query.descending ? sql`desc` : sql`asc`}` : sql``}
           ${query.limit === undefined ? sql`` : sql`limit ${query.limit}`}`);
             return rows.map((row) => row.body as R);
           },
@@ -141,6 +166,12 @@ export function createControlRepository(database: Database): ControlRepository {
       );
       const row = rows[0];
       return row ? { userId: String(row.user_id) } : undefined;
+    },
+    async findCredential(hash) {
+      const rows = await database.execute(
+        sql`select user_id from raypx_foundation.control_credential where id=${hash}`,
+      );
+      return rows[0] ? { userId: String(rows[0].user_id) } : undefined;
     },
   };
 }

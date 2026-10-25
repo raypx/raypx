@@ -114,6 +114,7 @@ it.each([
 it("combines status, agent and computer filters and clears an empty result", async () => {
   workspace();
   await screen.findByRole("searchbox", { name: "Search this page" });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   await selectOption("Status", "active");
   await selectOption("Agent", "claude");
   await selectOption("Computer", windows.id);
@@ -132,6 +133,7 @@ it("combines status, agent and computer filters and clears an empty result", asy
 it.each([
   ["active", ["pending", "running", "waiting", "cancelling"]],
   ["attention", ["waiting"]],
+  ["working", ["pending", "running", "cancelling"]],
   ["finished", ["succeeded", "failed", "cancelled", "interrupted", "delivery_failed"]],
   ["errors", ["failed", "interrupted", "delivery_failed"]],
 ] as const)("includes every relevant task state in the %s filter", async (filter, expected) => {
@@ -147,6 +149,7 @@ it.each([
     "delivery_failed",
   ];
   workspace(statuses.map((status) => task(`Task ${status}`, { status })));
+  fireEvent.click(await screen.findByRole("button", { name: "Filters" }));
   await screen.findByRole("combobox", { name: "Status" });
   await selectOption("Status", filter);
   await waitFor(() => expect(visiblePrompts()).toEqual(expected.map((item) => `Task ${item}`)));

@@ -6,7 +6,10 @@ The standalone Raypx local execution host. It runs without login, Node or a glob
 
 ## Interface
 
-`raypx files`, `raypx jobs`, `raypx tools`, and private `raypx stdio` share the runtime. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
+`raypx daemon start|run|status|stop|install|uninstall` owns the macOS execution host;
+private `daemon proxy` connects Desktop over authenticated Unix IPC. Explicit
+`connectors install|uninstall claude|codex` manages owned terminal hooks.
+`raypx files`, `raypx jobs`, `raypx tools`, and private legacy `raypx stdio` share the runtime. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
 
 `raypx ai providers|models|complete` lazily loads `@raypx/ai` for Pi SDK model calls.
 CLI owns `[ai]` in `~/.raypx/config.toml` (`RAYPX_HOME` may select an absolute
@@ -36,7 +39,9 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
 ## Constraints
 
 - Never import another application or authentication code.
-- Only the Desktop-owned stdio engine starts scheduling. Foreground CLI commands never install a daemon.
+- The explicit daemon owns scheduling on macOS. Legacy Desktop stdio owns it on Windows.
+  Ordinary foreground commands never install a daemon or system service. Desktop may start
+  an independent owner on demand; `daemon install` alone registers launchd.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
 - The executable configures `@raypx-kit/logger` (evlog) once with an explicit field policy and a
   stderr stream drain, and closes it after runtime shutdown.
@@ -48,7 +53,9 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
   measures only its short-lived logging scope.
 - Built-in file operations reject traversal and symlinks. External commands run with ordinary user permissions.
 - Deletion requires explicit confirmation. File writes require the current version or null for creation.
-- EOF/quit stops scheduling and cancels managed descendants. Missed Cron triggers are skipped.
+- Legacy stdio EOF and explicit daemon stop cancel owned descendants. Daemon proxy EOF
+  disconnects one client and cancels its tools/PTYs, preserving Agent tasks and scheduling.
+  Missed Cron triggers are skipped.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
 - Vite+ `vp pack` bundles the ESM entry and dependencies; its build hook compiles the
   bundle with the pinned Bun runtime and bytecode into `dist/raypx` (`raypx.exe` on Windows).
@@ -69,6 +76,9 @@ runtime dependency or part of the cross-platform default verify gate.
 
 `runtime/terminal` supplies the observed-session RequestBroker, private authenticated
 Unix hook socket, bounded plain-content envelopes and safe hook settings plans.
+`runtime/daemon` owns relay v3, project-specific Away opt-in, host authorization
+in Keychain and connector/service installation. Host credentials never enter JSON
+settings or Desktop renderer responses. See docs/development/terminal-host-p1.md.
 Hook failure returns no decision, unlike the managed Agent's blocking hook policy.
 `smoke:terminal claude|codex` and `smoke:terminal-stream` require
 `RAYPX_LIVE_AGENTS=1`, use isolated synthetic projects, and consume provider usage.
@@ -106,6 +116,15 @@ compaction; indexed task cursors paginate it. History survives logout until
 `agents.local.clear` removes finished tasks; active local work is cancelled
 on account change or engine shutdown. A new local approval adds `pendingRequest`
 to `agent.changed` so Desktop can notify; relay approvals notify after delivery.
+Legacy local activity journal cleanup is a marked, indexed one-time migration,
+followed by VACUUM to reclaim disk. Any optional VACUUM failure emits a sanitized
+warning and leaves reclamation pending for the next startup without blocking the
+engine or repeating row cleanup. Use contracts' code-point-safe
+text clipping and JSON normalization at persistence boundaries. Codex counter resets
+replace the baseline and mark the affected turn's usage unknown. A rejected steer
+waits in the queue for actual turn completion; it never times out a healthy turn.
+The executable smoke writes its evidence to `.artifacts/cli/provider-smoke.json`,
+outside the cache-restored compiled `dist` output.
 
 Headless Claude can return a plan without an ExitPlanMode tool. Keep the project
 locked, offer the complete plan as a host approval, and resume the same provider

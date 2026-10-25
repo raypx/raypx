@@ -20,6 +20,9 @@
 - [Server jobs and expired-record cleanup](development/server-jobs.md)
 - [Raypx Kit library changes](development/intl-release.md)
 - [Foundation acceptance results](development/foundation-acceptance.md)
+- [Review remediation, 2026-10-25](development/review-remediation-2026-10-25.md)
+- [Terminal protocol P0 implementation](development/terminal-protocol-p0.md)
+- [Independent terminal host P1](development/terminal-host-p1.md)
 - [Foundation decision](architecture/0034-extensible-foundation.md)
 - [Historical documentation](history/README.md)
 
@@ -28,7 +31,10 @@ worker and business-layer designs are retained as historical context.
 
 ## Proposed designs
 
+- [多 Agent 宿主与 Expo 移动 App](plans/terminal-session-host.md)
 - [CLI, terminal interaction and desktop execution](plans/cli-desktop-runtime.md)
 - [Web mobile capabilities](plans/web-mobile-capabilities.md)
 
 These plans describe proposed work and acceptance gates, not shipped capabilities.
+The multi-Agent host plan reflects the latest mobile direction: an Expo App and
+remote approvals replace the earlier Web-only, read-only mobile proposal.

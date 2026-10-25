@@ -17,7 +17,9 @@ try {
   const invocation = parseCliArgs(args);
   mode = invocation.version
     ? "version"
-    : invocation.positionals[0] === "stdio" && !invocation.help
+    : (invocation.positionals[0] === "stdio" ||
+          (invocation.positionals[0] === "daemon" && invocation.positionals[1] === "proxy")) &&
+        !invocation.help
       ? "stdio"
       : invocation.positionals[0] === "tui" && !invocation.help
         ? "tui"

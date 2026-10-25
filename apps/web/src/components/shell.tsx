@@ -45,23 +45,25 @@ export function WebShell() {
   const c = useTranslations("common");
   const path = useRouterState({ select: (state) => state.location.pathname });
   const navigation: ShellNavItem<WebPath>[] = [
-    { to: "/", label: c("account"), icon: <CircleUserRound size={19} />, exact: true },
-    { to: "/settings", label: c("settings"), icon: <Settings size={19} /> },
-    { to: "/tasks", label: c("tasks"), icon: <ListTodo size={19} /> },
+    { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
     {
       to: "/approvals",
       label: c("approvals"),
-      icon: <Inbox size={19} />,
+      icon: <Inbox />,
       badge: (
         <PendingCount key={accountId ?? "signed-out"} client={taskClient} accountId={accountId} />
       ),
     },
   ];
+  const secondaryNavigation: ShellNavItem<WebPath>[] = [
+    { to: "/", label: c("account"), icon: <CircleUserRound />, exact: true },
+    { to: "/settings", label: c("settings"), icon: <Settings /> },
+  ];
   if (access.data?.allowed)
-    navigation.push({
+    secondaryNavigation.push({
       to: "/admin/settings",
       label: c("adminSettings"),
-      icon: <SlidersHorizontal size={19} />,
+      icon: <SlidersHorizontal />,
     });
   return (
     <>
@@ -69,6 +71,8 @@ export function WebShell() {
       <AppShell
         brand={{ to: "/", label: siteName }}
         navigation={[navigation]}
+        navigationLabels={[c("workspace")]}
+        secondaryNavigation={secondaryNavigation}
         breadcrumbs={[
           siteName,
           c(

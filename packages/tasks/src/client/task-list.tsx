@@ -3,6 +3,7 @@ import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/rea
 import type { AgentTask, SyncDevice } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
+import { Bot } from "lucide-react";
 import { Badge } from "@raypx/ui/components/ui/badge";
 
 export function TaskList({
@@ -82,7 +83,7 @@ export function TaskList({
     <div
       ref={viewport}
       data-task-list
-      className="overflow-auto overscroll-contain"
+      className="relative overflow-auto overscroll-contain"
       style={{ maxHeight: "min(60dvh, 40rem)" }}
     >
       <span id={helpId} className="sr-only">
@@ -122,12 +123,25 @@ export function TaskList({
                 aria-pressed={selected === task.id}
                 className="h-auto w-full items-stretch gap-2 rounded-none border-b border-border p-4 text-left whitespace-normal hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring aria-pressed:bg-muted flex-col"
               >
-                <span className="line-clamp-2 text-sm font-medium [overflow-wrap:anywhere]">
-                  {task.prompt}
+                <span className="flex w-full min-w-0 items-start gap-2.5">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground"
+                  >
+                    <Bot className="size-4" />
+                  </span>
+                  <span className="min-w-0 flex-1 line-clamp-2 text-sm font-medium [overflow-wrap:anywhere]">
+                    {task.prompt}
+                  </span>
                 </span>
                 <span className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                   <span>{task.provider === "claude" ? "Claude Code" : "Codex"}</span>
-                  <span>{devices.find((device) => device.id === task.deviceId)?.name}</span>
+                  <span className="truncate">
+                    {devices
+                      .find((device) => device.id === task.deviceId)
+                      ?.projects.find((project) => project.id === task.projectId)?.name ??
+                      devices.find((device) => device.id === task.deviceId)?.name}
+                  </span>
                   <Badge
                     variant={
                       ["failed", "interrupted", "delivery_failed"].includes(task.status)

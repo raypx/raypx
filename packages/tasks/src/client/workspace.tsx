@@ -4,7 +4,6 @@ import { applyActivityEvent } from "@raypx/contracts/tasks";
 import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
 import type {
   AgentTask,
-  AgentProvider,
   SyncDevice,
   HumanRequest,
   HumanDecision,
@@ -18,11 +17,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, ListTodo, Plus } from "lucide-react";
+import { Badge } from "@raypx/ui/components/ui/badge";
+import { TaskComposer } from "./task-composer.js";
+import { TaskOverview } from "./task-overview.js";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Input } from "@raypx/ui/components/ui/input";
-import { SelectField } from "@raypx/ui/select-field";
 import { RadioGroup, RadioGroupItem } from "@raypx/ui/components/ui/radio-group";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { isTaskActive } from "../index.js";
@@ -36,12 +37,15 @@ import { failureCode } from "./failure.js";
 import { Conversation } from "./conversation.js";
 import { TaskInputComposer } from "./task-input.js";
 import { ApprovalBody } from "./approval-body.js";
+import { ObservedApprovals } from "./observed.js";
 
 interface Props {
   client: TaskWorkspaceClient;
   accountId: string | null;
   pending?: boolean;
   local?: boolean;
+  /** Server identity for account-scoped device-only drafts. */
+  draftNamespace?: string;
 }
 function Gate({ pending }: { pending?: boolean }) {
   const t = useTranslations("tasks");
@@ -72,7 +76,8 @@ function Workspace({
   accountId,
   view = "tasks",
   local = false,
-}: Props & { view?: "tasks" | "approvals" }) {
+  draftNamespace = "default",
+}: Props & { view?: "tasks" | "approvals"; accountId: string }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
   const [pages, setPages] = useState<string[]>([]);
@@ -102,15 +107,26 @@ function Workspace({
     client,
   );
   const [selected, setSelected] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const composer = useRef<HTMLTextAreaElement>(null);
+  const detail = useRef<HTMLDivElement>(null);
+  const taskHistory = useRef<HTMLElement>(null);
+  const revealPage = useRef(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  useEffect(() => {
+    if (!data || !revealPage.current) return;
+    revealPage.current = false;
+    const list = taskHistory.current?.querySelector<HTMLElement>("[data-task-list]");
+    list?.scrollIntoView?.({ block: "start", behavior: "instant" });
+    list?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
+  }, [data]);
   const [filters, setFilters] = useState(emptyTaskFilters);
   const filtered = filterTasks(data?.tasks ?? [], data?.devices ?? [], filters);
   return (
     <section
       data-tasks
-      className="mx-auto max-w-[1400px] px-10 py-10 max-[760px]:px-5 max-[760px]:py-7"
+      className="@container mx-auto max-w-[1600px] px-8 py-7 max-[760px]:px-5 max-[760px]:py-6"
     >
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1>{t(view === "approvals" ? "inbox" : "title")}</h1>
           <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">
@@ -121,11 +137,20 @@ function Workspace({
           <Button variant="outline" onClick={refresh} disabled={refreshing}>
             {c(refreshing ? "loading" : "refresh")}
           </Button>
-          {view === "tasks" && (
-            <Button onClick={() => setCreating((value) => !value)}>{t("create")}</Button>
+          {view === "tasks" && data && (
+            <Button
+              onClick={() => {
+                setOptionsOpen(true);
+                composer.current?.focus();
+              }}
+            >
+              <Plus aria-hidden="true" />
+              {t("create")}
+            </Button>
           )}
         </div>
       </header>
+      <ObservedApprovals client={client} accountId={accountId} />
       {error && (
         <p role="alert" className="mb-4 text-sm text-destructive-text">
           {t(errorCode)}
@@ -135,24 +160,15 @@ function Workspace({
         !error && <LoadingState label={c("loading")} />
       ) : (
         <>
-          {creating && (
-            <CreateTask
-              client={client}
-              devices={data.devices}
-              tasks={data.tasks}
-              local={local}
-              onCreated={(task) => {
-                setSelected(task.id);
-                setPages([]);
-                setCreating(false);
-                refresh();
-              }}
-            />
-          )}
           {view === "approvals" ? (
             <div className="space-y-6">
+              {client.observed && (
+                <h2 className="text-base font-semibold">{t("managedRequests")}</h2>
+              )}
               {data.requests.length === 0 ? (
-                <p className="py-10 text-sm text-muted-foreground">{t("nothingWaiting")}</p>
+                <p className="py-10 text-sm text-muted-foreground">
+                  {t(client.observed ? "managedNothingWaiting" : "nothingWaiting")}
+                </p>
               ) : (
                 data.requests.map((request) => (
                   <Approval
@@ -166,69 +182,136 @@ function Workspace({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-8 max-[1050px]:grid-cols-1 max-[1050px]:gap-6">
-              <div>
-                {data.tasks.length > 0 && (
-                  <TaskFilterBar
-                    filters={filters}
-                    devices={data.devices}
-                    count={filtered.length}
-                    total={data.tasks.length}
-                    onChange={setFilters}
-                  />
-                )}
-                {data.tasks.length === 0 ? (
-                  <div className="py-10">
-                    <h2>{t("empty")}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {t(local ? "localEmptyHint" : "emptyHint")}
-                    </p>
-                  </div>
-                ) : filtered.length === 0 ? (
-                  <EmptyState
-                    title={t("noMatches")}
-                    description={t("noMatchesHint")}
-                    action={
-                      <Button variant="outline" onClick={() => setFilters(emptyTaskFilters)}>
-                        {t("clearFilters")}
+            <div className="grid items-start grid-cols-1 gap-7 @min-[58rem]:grid-cols-[minmax(21rem,0.9fr)_minmax(0,1.3fr)] @min-[58rem]:gap-8">
+              <div className="min-w-0 space-y-6">
+                <TaskComposer
+                  key={JSON.stringify([draftNamespace, accountId, local])}
+                  client={client}
+                  devices={data.devices}
+                  tasks={data.tasks}
+                  local={local}
+                  draftKey={JSON.stringify([
+                    "raypx.task-drafts.v1",
+                    draftNamespace,
+                    accountId,
+                    local,
+                  ])}
+                  optionsOpen={optionsOpen}
+                  onOptionsOpenChange={setOptionsOpen}
+                  promptRef={composer}
+                  onCreated={(task) => {
+                    setSelected(task.id);
+                    setPages([]);
+                    refresh();
+                  }}
+                />
+                <section ref={taskHistory} aria-label={t("taskHistory")}>
+                  {data.tasks.length > 0 && (
+                    <TaskOverview tasks={data.tasks} filters={filters} onChange={setFilters} />
+                  )}
+                  {data.tasks.length > 0 && (
+                    <TaskFilterBar
+                      filters={filters}
+                      devices={data.devices}
+                      count={filtered.length}
+                      total={data.tasks.length}
+                      onChange={setFilters}
+                    />
+                  )}
+                  {data.tasks.length === 0 ? (
+                    <div className="py-10">
+                      <h2>{t("empty")}</h2>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {t(local ? "localEmptyHint" : "emptyHint")}
+                      </p>
+                    </div>
+                  ) : filtered.length === 0 ? (
+                    <EmptyState
+                      title={t("noMatches")}
+                      description={t("noMatchesHint")}
+                      action={
+                        <Button variant="outline" onClick={() => setFilters(emptyTaskFilters)}>
+                          {t("clearFilters")}
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <TaskList
+                      key={JSON.stringify([data.before, filters])}
+                      tasks={filtered}
+                      devices={data.devices}
+                      selected={selected}
+                      onSelect={(id) => {
+                        setSelected(id);
+                        // Stacked layouts move focus to details instead of leaving them below the fold.
+                        if (
+                          detail.current &&
+                          getComputedStyle(detail.current.parentElement!).gridTemplateColumns.split(
+                            " ",
+                          ).length === 1
+                        ) {
+                          detail.current.scrollIntoView?.({ block: "start", behavior: "instant" });
+                          detail.current.focus({ preventScroll: true });
+                        }
+                      }}
+                    />
+                  )}
+                  {(pages.length > 0 || data.next) && (
+                    <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        disabled={!pages.length}
+                        onClick={() => {
+                          revealPage.current = true;
+                          setPages((previous) => previous.slice(0, -1));
+                          setSelected(null);
+                        }}
+                      >
+                        {t("newerTasks")}
                       </Button>
-                    }
-                  />
-                ) : (
-                  <TaskList
-                    key={JSON.stringify([data.before, filters])}
-                    tasks={filtered}
-                    devices={data.devices}
-                    selected={selected}
-                    onSelect={setSelected}
-                  />
-                )}
-                {(pages.length > 0 || data.next) && (
-                  <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      disabled={!pages.length}
-                      onClick={() => {
-                        setPages((previous) => previous.slice(0, -1));
-                        setSelected(null);
-                      }}
-                    >
-                      {t("newerTasks")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled={!data.next || data.before !== before}
-                      onClick={() => {
-                        if (data.next) setPages((previous) => [...previous, data.next!]);
-                        setSelected(null);
-                      }}
-                    >
-                      {t("olderTasks")}
-                    </Button>
-                  </nav>
-                )}
+                      <Button
+                        variant="outline"
+                        disabled={!data.next || data.before !== before}
+                        onClick={() => {
+                          revealPage.current = true;
+                          if (data.next) setPages((previous) => [...previous, data.next!]);
+                          setSelected(null);
+                        }}
+                      >
+                        {t("olderTasks")}
+                      </Button>
+                    </nav>
+                  )}
+                </section>
               </div>
-              <div>
+              <div
+                ref={detail}
+                tabIndex={-1}
+                aria-label={t("taskDetails")}
+                role="region"
+                className="min-w-0 scroll-mt-5 border-t border-border pt-6 outline-none @min-[58rem]:border-t-0 @min-[58rem]:border-l @min-[58rem]:pl-8 @min-[58rem]:pt-0"
+              >
+                {selected && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="mb-4 @min-[58rem]:hidden"
+                    onClick={() => {
+                      const row = taskHistory.current?.querySelector<HTMLButtonElement>(
+                        '[data-task-list] [aria-pressed="true"]',
+                      );
+                      (row ?? taskHistory.current)?.scrollIntoView?.({
+                        block: "start",
+                        behavior: "instant",
+                      });
+                      row?.focus({ preventScroll: true });
+                    }}
+                  >
+                    <ArrowLeft aria-hidden="true" />
+                    {t("backToTasks")}
+                  </Button>
+                )}
                 {selected ? (
                   <TaskDetail
                     key={selected}
@@ -239,7 +322,11 @@ function Workspace({
                     onChanged={refresh}
                   />
                 ) : (
-                  <p className="py-10 text-sm text-muted-foreground">{t("selectTask")}</p>
+                  <div className="flex min-h-72 flex-col items-center justify-center gap-3 px-5 text-center">
+                    <ListTodo aria-hidden="true" className="size-8 text-muted-foreground" />
+                    <h2 className="text-base">{t("taskDetails")}</h2>
+                    <p className="max-w-72 text-sm text-muted-foreground">{t("selectTask")}</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -247,172 +334,6 @@ function Workspace({
         </>
       )}
     </section>
-  );
-}
-function CreateTask({
-  client,
-  devices,
-  tasks,
-  onCreated,
-  local,
-}: {
-  client: TaskWorkspaceClient;
-  devices: SyncDevice[];
-  tasks: AgentTask[];
-  onCreated: (task: AgentTask) => void;
-  local: boolean;
-}) {
-  const t = useTranslations("tasks");
-  const id = useId();
-  const localDevice = local ? devices[0] : undefined;
-  const [deviceId, setDeviceId] = useState(localDevice?.id ?? "");
-  const [projectId, setProjectId] = useState(
-    localDevice?.projects.length === 1 ? localDevice.projects[0]!.id : "",
-  );
-  const [provider, setProvider] = useState<AgentProvider>(
-    localDevice?.capabilities.find((capability) => capability.available)?.provider ?? "claude",
-  );
-  const [prompt, setPrompt] = useState("");
-  const [mode, setMode] = useState<"run" | "plan">("run");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<ReturnType<typeof failureCode>>();
-  const submission = useRef<{ key: string; id: string } | null>(null);
-  const submitting = useRef(false);
-  useEffect(() => {
-    // A lost relay receipt can leave a task accepted and running on Desktop.
-    // Recover from its authoritative projection without sending another command.
-    if (!error || !submission.current) return;
-    const accepted = tasks.find((task) => task.id === submission.current?.id);
-    if (accepted) onCreated(accepted);
-  }, [error, tasks, onCreated]);
-  const device = devices.find((item) => item.id === deviceId);
-  const project = device?.projects.find((item) => item.id === projectId);
-  const occupied = tasks.some(
-    (task) => task.deviceId === deviceId && task.projectId === projectId && isTaskActive(task),
-  );
-  const available = Boolean(
-    device?.online &&
-    project?.providers.includes(provider) &&
-    device.capabilities.some((c) => c.provider === provider && c.available),
-  );
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!available || submitting.current || occupied || !prompt.trim()) return;
-    submitting.current = true;
-    const key = JSON.stringify({ deviceId, projectId, provider, prompt, mode });
-    if (submission.current?.key !== key) submission.current = { key, id: crypto.randomUUID() };
-    setBusy(true);
-    setError(undefined);
-    try {
-      onCreated(
-        await client.tasks.create(
-          { id: submission.current.id, deviceId, projectId, provider, prompt, mode },
-          { signal: AbortSignal.timeout(15_000) },
-        ),
-      );
-    } catch (failure) {
-      setError(failureCode(failure));
-    } finally {
-      submitting.current = false;
-      setBusy(false);
-    }
-  }
-  return (
-    <form
-      onSubmit={(event) => void submit(event)}
-      className="mb-8 space-y-4 rounded-lg border border-border bg-sidebar p-5"
-    >
-      <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
-        <Field>
-          <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
-          <SelectField
-            id={`${id}-device`}
-            className="w-full"
-            required
-            value={deviceId || null}
-            placeholder={t("chooseDevice")}
-            onValueChange={(value) => {
-              setDeviceId(value);
-              setProjectId("");
-            }}
-            options={devices
-              .filter((d) => !d.revoked)
-              .map((d) => ({
-                value: d.id,
-                label: `${d.name} · ${t(d.online ? "online" : "offline")}`,
-                disabled: !d.online,
-              }))}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
-          <SelectField
-            id={`${id}-project`}
-            className="w-full"
-            required
-            value={projectId || null}
-            placeholder={t("chooseProject")}
-            onValueChange={setProjectId}
-            options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
-          />
-        </Field>
-      </div>
-      {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
-      <div className="grid grid-cols-2 gap-4 max-[600px]:grid-cols-1">
-        <Field>
-          <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
-          <SelectField<AgentProvider>
-            id={`${id}-agent`}
-            className="w-full"
-            value={provider}
-            onValueChange={setProvider}
-            options={[
-              { value: "claude", label: "Claude Code" },
-              { value: "codex", label: "Codex" },
-            ]}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-mode`}>{t("mode")}</FieldLabel>
-          <SelectField<"run" | "plan">
-            id={`${id}-mode`}
-            className="w-full"
-            value={mode}
-            onValueChange={setMode}
-            options={[
-              { value: "run", label: t("runMode") },
-              { value: "plan", label: t("planMode") },
-            ]}
-          />
-        </Field>
-      </div>
-      <Field>
-        <FieldLabel htmlFor={`${id}-prompt`}>{t("prompt")}</FieldLabel>
-        <Textarea
-          id={`${id}-prompt`}
-          className="min-h-24"
-          required
-          maxLength={32000}
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-        />
-      </Field>
-      <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
-      {occupied && (
-        <p role="status" className="text-sm">
-          {t("PROJECT_BUSY")}
-        </p>
-      )}
-      {!available && <p className="text-sm text-muted-foreground">{t("availabilityHint")}</p>}
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {t(error)}
-        </p>
-      )}
-      <Button type="submit" disabled={!available || occupied || busy || !prompt.trim()}>
-        {t(busy ? "sending" : "send")}
-      </Button>
-    </form>
   );
 }
 function TaskDetail({
@@ -436,7 +357,7 @@ function TaskDetail({
   const activity = useRef(new Map<string, TaskActivity>());
   const olderBefore = useRef<number | undefined>(undefined);
   const initialized = useRef(false);
-  const gap = useRef<{ before: number; after: number } | undefined>(undefined);
+  const gaps = useRef<{ id: number; before: number; after: number }[]>([]);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const mergeActivity = useCallback((entries: TaskActivity[]) => {
     for (const entry of entries) {
@@ -459,8 +380,22 @@ function TaskDetail({
         latestOrder &&
         result.activityBefore !== undefined &&
         result.activityBefore > latestOrder
-      )
-        gap.current = { before: result.activityBefore, after: latestOrder };
+      ) {
+        const next = {
+          id: result.activityBefore,
+          before: result.activityBefore,
+          after: latestOrder,
+        };
+        const overlapping = gaps.current.filter(
+          (gap) => gap.after < next.before && gap.before > next.after,
+        );
+        gaps.current = gaps.current.filter((gap) => !overlapping.includes(gap));
+        for (const gap of overlapping) {
+          next.before = Math.max(next.before, gap.before);
+          next.after = Math.min(next.after, gap.after);
+        }
+        gaps.current.push(next);
+      }
       mergeActivity(result.activity ?? []);
       for (const item of result.events) {
         history.current.set(item.cursor, item.event);
@@ -469,7 +404,7 @@ function TaskDetail({
       return {
         ...result,
         activityBefore: olderBefore.current,
-        activityGap: gap.current?.before,
+        activityGaps: [...gaps.current],
         activity: [...activity.current.values()].sort((a, b) => a.order - b.order),
         events: [...history.current.entries()].map(([position, event]) => ({
           cursor: position,
@@ -501,20 +436,23 @@ function TaskDetail({
   const [prompt, setPrompt] = useState("");
   const followId = useRef<{ prompt: string; id: string } | null>(null);
   const active = useRef(false);
-  async function loadGap() {
-    if (!gap.current || loadingOlder) return;
+  async function loadGap(gapId: number) {
+    const boundary = gaps.current.find((gap) => gap.id === gapId);
+    if (!boundary || loadingOlder) return;
     setLoadingOlder(true);
     try {
-      const boundary = gap.current;
       const result = await client.tasks.get(
         { id, beforeActivity: boundary.before },
         { signal: AbortSignal.timeout(15_000) },
       );
       mergeActivity(result.activity ?? []);
-      gap.current =
-        result.activityBefore !== undefined && result.activityBefore > boundary.after
-          ? { ...boundary, before: result.activityBefore }
-          : undefined;
+      gaps.current = gaps.current.flatMap((gap) =>
+        gap.id !== boundary.id
+          ? [gap]
+          : result.activityBefore !== undefined && result.activityBefore > gap.after
+            ? [{ ...gap, before: result.activityBefore }]
+            : [],
+      );
       refresh();
     } catch (caught) {
       setFailure(failureCode(caught));
@@ -601,7 +539,22 @@ function TaskDetail({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
-        <h2>{t(data.task.status)}</h2>
+        <div className="min-w-0 space-y-3">
+          <Badge
+            variant={
+              data.task.status === "waiting"
+                ? "default"
+                : ["failed", "interrupted", "delivery_failed"].includes(data.task.status)
+                  ? "destructive"
+                  : "secondary"
+            }
+          >
+            {t(data.task.status)}
+          </Badge>
+          <h2 className="line-clamp-3 text-xl leading-snug font-semibold [overflow-wrap:anywhere]">
+            {data.task.prompt}
+          </h2>
+        </div>
         {isTaskActive(data.task) && (
           <Button
             variant="outline"
@@ -612,9 +565,18 @@ function TaskDetail({
           </Button>
         )}
       </div>
-      <time className="block text-xs text-muted-foreground" dateTime={data.task.updatedAt}>
-        {new Date(data.task.updatedAt).toLocaleString()}
-      </time>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border pb-5 text-xs text-muted-foreground">
+        <span>{data.task.provider === "claude" ? "Claude Code" : "Codex"}</span>
+        <span>{devices.find((device) => device.id === data.task.deviceId)?.name}</span>
+        <span>
+          {
+            devices
+              .find((device) => device.id === data.task.deviceId)
+              ?.projects.find((project) => project.id === data.task.projectId)?.name
+          }
+        </span>
+        <time dateTime={data.task.updatedAt}>{new Date(data.task.updatedAt).toLocaleString()}</time>
+      </div>
       {data.requests.map((request) => (
         <Approval
           key={request.id}
@@ -626,11 +588,6 @@ function TaskDetail({
           }}
         />
       ))}
-      {data.activityGap !== undefined && (
-        <Button variant="outline" disabled={loadingOlder} onClick={() => void loadGap()}>
-          {t("historyGap")}
-        </Button>
-      )}
       {data.task.activityIncomplete && (
         <p role="status" className="text-xs text-muted-foreground">
           {t("snapshotIncomplete")}
@@ -639,6 +596,8 @@ function TaskDetail({
       <Conversation
         task={data.task}
         entries={data.activity}
+        gaps={data.activityGaps}
+        loadGap={loadGap}
         more={data.activityBefore !== undefined}
         loading={loadingOlder}
         loadOlder={loadOlder}

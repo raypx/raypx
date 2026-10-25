@@ -141,3 +141,12 @@ Register @testing-library/jest-dom/matchers using expect.extend on the expect
 exported by vite-plus/test. Keep the jest-dom/vitest import type-only for assertion
 augmentation; its runtime side effect can extend a different auto-installed Vitest
 peer. Independent runner setup files preserve the shared Bun/jsdom preload.
+
+## Independent terminal host
+
+The [P1 host guide](terminal-host-p1.md) documents the isolated real Claude/Codex
+terminal-to-Web gate, daemon lifetime and capability restrictions. It complements
+the HTTPS Beta gate rather than replacing it. Default tests cover private IPC,
+GUI-client disconnect, retention and Native authorization fences. `native:smoke`
+also probes the daemon after actual GUI Quit and explicitly stops its isolated
+owner at cleanup. Production service installation and iOS are separate gates.

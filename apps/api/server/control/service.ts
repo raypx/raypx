@@ -1,4 +1,11 @@
 import type { AuthSession } from "@raypx/auth/types";
+import type {
+  HostAuthorization,
+  TerminalRequest,
+  TerminalRequestSummary,
+  TerminalSession,
+  ObservedProjection,
+} from "@raypx/contracts/terminal";
 import {
   normalizeTaskJson,
   taskActivityPage,
@@ -51,7 +58,15 @@ interface Grant extends ControlRecord {
   expiresAt: string;
   parentExpiresAt: string;
   role: "device" | "viewer";
+  credentialId?: string;
 }
+interface HostCredential extends ControlRecord {
+  userId: string;
+  epoch: number;
+  expiresAt: string;
+}
+type ObservedSession = TerminalSession & ControlRecord;
+type ObservedRequest = TerminalRequest & ControlRecord;
 interface Task extends AgentTask {
   epoch: number;
 }
@@ -79,6 +94,7 @@ export interface RelayActor {
   grantId: string;
   expiresAt: string;
   connectionId: string;
+  credentialId?: string;
 }
 const required = <T>(value: T | undefined): T => {
   if (!value) throw new ControlError("NOT_FOUND");
@@ -202,6 +218,104 @@ export class ControlService {
       };
     });
   }
+  authorizeHost(
+    auth: AuthSession,
+    input: { deviceId: string; epoch: number },
+  ): Promise<HostAuthorization> {
+    return this.repository.transaction(auth.user.id, async (tx) => {
+      const device = required(await tx.get<Device>("device", input.deviceId));
+      if (device.revoked || device.epoch !== input.epoch) throw new ControlError("DEVICE_REVOKED");
+      for (const item of await tx.list<HostCredential>("credential", device.id))
+        if (Date.parse(item.expiresAt) <= this.clock()) await tx.remove("credential", item.id);
+      if ((await tx.list("credential", device.id)).length >= 8)
+        throw new ControlError("AUTHORIZATION_LIMIT");
+      const credential = crypto.randomUUID() + crypto.randomUUID();
+      const expiresAt = new Date(this.clock() + 30 * 86_400_000).toISOString();
+      await tx.put<HostCredential>("credential", {
+        id: await hash(credential),
+        userId: auth.user.id,
+        deviceId: device.id,
+        epoch: device.epoch,
+        expiresAt,
+      });
+      return {
+        accountId: auth.user.id,
+        deviceId: device.id,
+        epoch: device.epoch,
+        credential,
+        expiresAt,
+      };
+    });
+  }
+  async hostGrant(token: string) {
+    const id = await hash(token),
+      owner = await this.repository.findCredential(id);
+    if (!owner) throw new ControlError("AUTH_REQUIRED");
+    return this.repository.transaction(owner.userId, async (tx) => {
+      const credential = await tx.get<HostCredential>("credential", id);
+      if (!credential || Date.parse(credential.expiresAt) <= this.clock())
+        throw new ControlError("AUTH_REQUIRED");
+      const device = required(await tx.get<Device>("device", credential.deviceId));
+      if (device.revoked || device.epoch !== credential.epoch)
+        throw new ControlError("DEVICE_REVOKED");
+      const value = crypto.randomUUID() + crypto.randomUUID(),
+        expiresAt = new Date(
+          Math.min(this.clock() + 600_000, Date.parse(credential.expiresAt)),
+        ).toISOString();
+      for (const grant of await tx.list<Grant>("grant", device.id))
+        if (Date.parse(grant.expiresAt) <= this.clock()) await tx.remove("grant", grant.id);
+      await tx.put<Grant>("grant", {
+        id: await hash(value),
+        deviceId: device.id,
+        userId: owner.userId,
+        sessionId: "",
+        credentialId: credential.id,
+        epoch: device.epoch,
+        expiresAt,
+        parentExpiresAt: credential.expiresAt,
+        role: "device",
+      });
+      return {
+        accountId: owner.userId,
+        grant: { deviceId: device.id, epoch: device.epoch, token: value, expiresAt },
+      };
+    });
+  }
+  async revokeHost(token: string) {
+    const id = await hash(token),
+      owner = await this.repository.findCredential(id);
+    if (owner)
+      await this.repository.transaction(owner.userId, async (tx) => {
+        const credential = await tx.get<HostCredential>("credential", id);
+        if (!credential) return;
+        for (const item of await tx.list<HostCredential>("credential", credential.deviceId))
+          await tx.remove("credential", item.id);
+        for (const grant of await tx.list<Grant>("grant", credential.deviceId))
+          await tx.remove("grant", grant.id);
+        const device = await tx.get<Device>("device", credential.deviceId);
+        if (device) {
+          device.lastSeenAt = null;
+          device.connectionId = null;
+          await tx.put("device", device);
+        }
+        for (const request of await tx.list<ObservedRequest>(
+          "observed_request",
+          credential.deviceId,
+        ))
+          if (request.status === "pending")
+            await tx.put("observed_request", {
+              ...request,
+              status: "cancelled",
+              revision: request.revision + 1,
+            });
+      });
+    return { revoked: true as const };
+  }
+  private async authorized(tx: ControlReader, sessionId: string, credentialId?: string) {
+    if (!credentialId) return tx.sessionActive(sessionId, new Date(this.clock()));
+    const credential = await tx.get<HostCredential>("credential", credentialId);
+    return Boolean(credential && Date.parse(credential.expiresAt) > this.clock());
+  }
   async authenticate(
     role: RelayActor["role"],
     token: string,
@@ -216,7 +330,7 @@ export class ControlService {
         !grant ||
         grant.role !== role ||
         Date.parse(grant.expiresAt) <= this.clock() ||
-        !(await tx.sessionActive(grant.sessionId, new Date(this.clock())))
+        !(await this.authorized(tx, grant.sessionId, grant.credentialId))
       )
         throw new ControlError("AUTH_REQUIRED");
       if (role === "device") {
@@ -233,13 +347,14 @@ export class ControlService {
         grantId,
         expiresAt: role === "viewer" ? grant.parentExpiresAt : grant.expiresAt,
         connectionId,
+        ...(grant.credentialId ? { credentialId: grant.credentialId } : {}),
       };
     });
   }
   private async check(tx: ControlReader, actor: RelayActor) {
     if (
       Date.parse(actor.expiresAt) <= this.clock() ||
-      !(await tx.sessionActive(actor.sessionId, new Date(this.clock())))
+      !(await this.authorized(tx, actor.sessionId, actor.credentialId))
     )
       throw new ControlError("AUTH_REQUIRED");
     if (actor.role === "device") {
@@ -476,7 +591,20 @@ export class ControlService {
   route(userId: string, id: string, request: RelayRequest): Promise<RelayCommand> {
     return this.repository.transaction(userId, async (tx) => {
       let deviceId: string;
-      if (request.method === "tasks.create") deviceId = request.input.deviceId;
+      if (request.method === "observed.decide") {
+        const pending = required(
+          await tx.get<ObservedRequest>("observed_request", request.input.id),
+        );
+        if (
+          pending.status !== "pending" ||
+          Date.parse(pending.expiresAt) <= this.clock() ||
+          pending.epoch !== request.input.epoch ||
+          pending.revision !== request.input.revision
+        )
+          throw new ControlError("STALE_REQUEST");
+        if (id !== request.input.receiptId) throw new ControlError("IDEMPOTENCY_CONFLICT");
+        deviceId = pending.deviceId;
+      } else if (request.method === "tasks.create") deviceId = request.input.deviceId;
       else if (request.method === "approvals.decide")
         deviceId = required(await tx.get<StoredRequest>("request", request.input.id)).deviceId;
       else
@@ -537,6 +665,15 @@ export class ControlService {
       await tx.put("device", device);
       for (const grant of await tx.list<Grant>("grant", device.id))
         await tx.remove("grant", grant.id);
+      for (const credential of await tx.list<HostCredential>("credential", device.id))
+        await tx.remove("credential", credential.id);
+      for (const request of await tx.list<ObservedRequest>("observed_request", device.id))
+        if (request.status === "pending")
+          await tx.put("observed_request", {
+            ...request,
+            status: "cancelled",
+            revision: request.revision + 1,
+          });
       return { revoked: true as const };
     });
   }
@@ -583,6 +720,126 @@ export class ControlService {
     return this.repository.read(userId, (tx) =>
       tx.list<StoredRequest>("request", undefined, { pendingApprovals: true, limit: 100 }),
     );
+  }
+  async observed(actor: RelayActor, frame: Extract<RelayClientFrame, { type: "observed" }>) {
+    await this.device(actor, async (tx, device) => {
+      const state = device as Device & { observedEpoch?: string; observedRevision?: number };
+      if (state.observedEpoch === frame.epoch && (state.observedRevision ?? 0) >= frame.revision)
+        return;
+      if (state.observedEpoch !== frame.epoch) {
+        for (const request of await tx.list<ObservedRequest>("observed_request", device.id))
+          if (request.status === "pending")
+            await tx.put("observed_request", {
+              ...request,
+              status: "cancelled",
+              revision: request.revision + 1,
+            });
+        state.observedEpoch = frame.epoch;
+        state.observedRevision = 0;
+      }
+      for (const session of frame.sessions) {
+        const old = await tx.get<ObservedSession>("observed_session", session.id);
+        if (old && old.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
+        if (
+          old &&
+          (old.provider !== session.provider ||
+            old.providerSessionId !== session.providerSessionId ||
+            old.projectId !== session.projectId)
+        )
+          throw new ControlError("EVENT_CONFLICT");
+        await tx.put("observed_session", { ...session, deviceId: actor.deviceId });
+      }
+      for (const request of frame.requests) {
+        const session = required(
+          await tx.get<ObservedSession>("observed_session", request.sessionId),
+        );
+        if (
+          session.deviceId !== actor.deviceId ||
+          session.provider !== request.provider ||
+          (request.status === "pending" && request.epoch !== frame.epoch)
+        )
+          throw new ControlError("INVALID_EVENT");
+        const old = await tx.get<ObservedRequest>("observed_request", request.id);
+        if (old && (old.deviceId !== actor.deviceId || old.sessionId !== request.sessionId))
+          throw new ControlError("NOT_FOUND");
+        if (old?.revision === request.revision) {
+          const { deviceId: _deviceId, ...projection } = old;
+          if (canonical(projection) !== canonical(request))
+            throw new ControlError("EVENT_CONFLICT");
+        }
+        if (!old || old.revision < request.revision)
+          await tx.put("observed_request", { ...request, deviceId: actor.deviceId });
+      }
+      const history = await tx.list<ObservedRequest>("observed_request", device.id, {
+        limit: 1000,
+      });
+      if (
+        history.filter(
+          (request) => request.status === "pending" && Date.parse(request.expiresAt) > this.clock(),
+        ).length > 64
+      )
+        throw new ControlError("TOO_MANY_REQUESTS");
+      const ended = history
+        .filter(
+          (request) =>
+            request.status !== "pending" || Date.parse(request.expiresAt) <= this.clock(),
+        )
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      for (const request of ended.slice(192)) await tx.remove("observed_request", request.id);
+      const retained = new Set(
+        history
+          .filter(
+            (request) =>
+              request.status === "pending" && Date.parse(request.expiresAt) > this.clock(),
+          )
+          .concat(ended.slice(0, 192))
+          .map((request) => request.sessionId),
+      );
+      for (const session of await tx.list<ObservedSession>("observed_session", device.id, {
+        limit: 1000,
+      }))
+        if (!retained.has(session.id)) await tx.remove("observed_session", session.id);
+      state.observedRevision = frame.revision;
+    });
+  }
+  listObserved(userId: string): Promise<ObservedProjection> {
+    return this.repository.read(userId, async (tx) => {
+      const devices = new Map(
+        (await tx.list<Device>("device"))
+          .filter((value) => !value.revoked)
+          .map((value) => [value.id, value]),
+      );
+      const requests = (
+        await tx.list<TerminalRequestSummary & ControlRecord>("observed_request", undefined, {
+          limit: 100,
+          observedAt: this.now(),
+          summary: true,
+        })
+      )
+        .filter((value) => devices.has(value.deviceId))
+        .map((value) =>
+          value.status === "pending" && Date.parse(value.expiresAt) <= this.clock()
+            ? { ...value, status: "expired" as const }
+            : value,
+        );
+      const ids = new Set(requests.map((value) => value.sessionId));
+      const sessions = (
+        await tx.list<ObservedSession>("observed_session", undefined, { ids: [...ids], limit: 100 })
+      )
+        .filter((value) => devices.has(value.deviceId))
+        .map((value) => ({ ...value, deviceName: devices.get(value.deviceId)!.name }));
+      return { sessions, requests };
+    });
+  }
+  getObserved(userId: string, id: string) {
+    return this.repository.read(userId, async (tx) => {
+      const request = required(await tx.get<ObservedRequest>("observed_request", id)),
+        device = required(await tx.get<Device>("device", request.deviceId));
+      if (device.revoked) throw new ControlError("NOT_FOUND");
+      return request.status === "pending" && Date.parse(request.expiresAt) <= this.clock()
+        ? { ...request, status: "expired" as const }
+        : request;
+    });
   }
   replay(
     userId: string,

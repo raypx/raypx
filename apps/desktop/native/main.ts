@@ -5,6 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import type { LocalEvent, RootGrant } from "@raypx/contracts/local";
 import { messages } from "@raypx/i18n/messages";
 import { RemoteControl } from "./control";
+import { DaemonControlProxy } from "./daemon-control";
 import { createApiClient } from "@raypx/client";
 import { LocalEngine } from "./engine";
 import { createPreferenceStore } from "./preferences";
@@ -124,6 +125,7 @@ const cliBinary = resolve(dirname(process.execPath), "../Resources/app/bin", exe
 const engineArgs = smokeDirectory
   ? ["--profile", "native-smoke", "--data-dir", smokeDirectory]
   : [];
+const daemonEngine = process.platform === "darwin";
 const preferences = createPreferenceStore(smokeDirectory ?? Utils.paths.userData);
 const partition =
   connectionConfig.partition +
@@ -167,7 +169,9 @@ const cookies = await (async () => {
 export const desktopApi = createDesktopApi(apiOrigin, cookies);
 const nativeApiClient = createApiClient({ baseUrl: apiOrigin, fetch: desktopApi.fetch });
 let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
-function notifyPending() {
+let pendingScope: "local" | "remote" | undefined;
+function notifyPending(scope: "local" | "remote" = "remote") {
+  pendingScope = scope;
   Utils.showNotification({
     title: "Raypx",
     body: messages[
@@ -183,33 +187,39 @@ export const engine = new LocalEngine(
   cliBinary,
   manifest.version,
   (event) => {
-    if (event.event === "agent.changed") {
+    if (event.event === "agent.changed" || event.event === "observed.changed") {
       if (event.data.local !== true) void control.wake();
       // Local approvals never reach the relay, so the engine flags them directly.
-      if (typeof event.data.pendingRequest === "string") notifyPending();
+      if (typeof event.data.pendingRequest === "string")
+        notifyPending(
+          event.event === "observed.changed" || event.data.local === true ? "local" : "remote",
+        );
     }
     return emitLocalEvent(event);
   },
   engineArgs,
+  daemonEngine,
 );
-export const control = new RemoteControl(
-  serverDirectory,
-  engine,
-  notifyPending,
-  () => {
-    void emitLocalEvent({ version: 1, event: "sync.grantRequired", data: {} });
-  },
-  {
-    renewGrant: async (accountId, binding) => {
-      const account = await nativeApiClient.account.get({});
-      if (account.id !== accountId)
-        throw Object.assign(new Error("AUTH_REQUIRED"), { code: "UNAUTHORIZED" });
-      return nativeApiClient.devices.refreshGrant(binding);
-    },
-  },
-);
+export const control = daemonEngine
+  ? new DaemonControlProxy(engine, apiOrigin, nativeApiClient)
+  : new RemoteControl(
+      serverDirectory,
+      engine,
+      () => notifyPending("remote"),
+      () => {
+        void emitLocalEvent({ version: 1, event: "sync.grantRequired", data: {} });
+      },
+      {
+        renewGrant: async (accountId, binding) => {
+          const account = await nativeApiClient.account.get({});
+          if (account.id !== accountId)
+            throw Object.assign(new Error("AUTH_REQUIRED"), { code: "UNAUTHORIZED" });
+          return nativeApiClient.devices.refreshGrant(binding);
+        },
+      },
+    );
 const rpc = BrowserView.defineRPC<DesktopRpc>({
-  maxRequestTime: 5000,
+  maxRequestTime: 30_000,
   handlers: {
     requests: {
       openExternal: (input) => {
@@ -219,11 +229,13 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
       apiCancel: ({ id }) => desktopApi.cancel(id),
       apiFetch: (input) => desktopApi.request(input),
       controlInfo: ({ accountId }) => control.info(accountId),
+      controlSession: ({ accountId }) =>
+        control instanceof DaemonControlProxy ? control.session(accountId) : true,
       controlEnable: ({ accountId, enabled }) => control.enable(accountId, enabled),
       controlRevoked: ({ accountId }) => control.revoked(accountId),
       controlAttach: ({ accountId, apiUrl, grant }) => {
         if (parseApiOrigin(apiUrl) !== apiOrigin) throw new Error("Unexpected remote API origin");
-        return control.attach(accountId, apiUrl, grant);
+        return control.attach(accountId, apiOrigin, grant);
       },
       controlDetach: async () => {
         await control.detach();
@@ -236,13 +248,17 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
         engine: engine.status,
       }),
       localRequest: ({ method, params }) => {
+        if (method.startsWith("host.") || method === "observed.remote")
+          throw new Error("Use the native account coordination bridge");
         if (method === "roots.register")
           throw new Error("Use the native directory picker to authorize a directory");
         return engine.request(
           method,
-          method.startsWith("agents.local.")
-            ? scopeLocalAccount(connectionConfig.scope, params)
-            : params,
+          method.startsWith("observed.") && params && typeof params === "object"
+            ? { ...params, apiUrl: apiOrigin }
+            : method.startsWith("agents.local.")
+              ? scopeLocalAccount(connectionConfig.scope, params)
+              : params,
         );
       },
       pickDirectory: async () => {
@@ -270,7 +286,10 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
 export const view = new BrowserView({
   windowId: mainWindow.id,
   url,
-  preload: connectionConfig.preload + preferences.preload(),
+  preload:
+    connectionConfig.preload +
+    `Object.defineProperty(window,"__raypxDaemon",{value:${daemonEngine}});` +
+    preferences.preload(),
   partition,
   frame: { x: 0, y: 0, width: 1120, height: 720 },
   navigationRules: JSON.stringify([
@@ -291,7 +310,7 @@ export async function quitDesktop(code = 0) {
   const approval = Utils.requestQuitApproval();
   if (!approval) return;
   try {
-    await control.detach();
+    if (!daemonEngine) await control.detach();
     await engine.stop();
     // Let WebKit complete a normal page unload before graceful native shutdown.
     // A missing/failed view must never leave a reserved quit approval hanging.
@@ -340,14 +359,24 @@ export const windowActions = wireWindow(
     void quitDesktop();
   },
 );
-ElectrobunEvents.on("reopen", () => windowActions.show());
+function openPending() {
+  windowActions.show();
+  void emitLocalEvent({
+    version: 1,
+    event: "approval.open",
+    data: { scope: pendingScope ?? "local" },
+  });
+}
+ElectrobunEvents.on("reopen", () => (pendingScope ? openPending() : windowActions.show()));
 tray.setMenu([
   { type: "normal", label: "Show Raypx", action: "show" },
+  { type: "normal", label: "Review requests / 处理请求", action: "pending" },
   { type: "normal", label: "Hide window", action: "hide" },
   { type: "separator" },
   { type: "normal", label: "Quit Raypx", action: "quit" },
 ]);
 export function handleTrayAction(action: unknown) {
+  if (action === "pending") openPending();
   if (action === "show") windowActions.show();
   if (action === "hide") windowActions.hide();
   if (action === "quit") void quitDesktop();

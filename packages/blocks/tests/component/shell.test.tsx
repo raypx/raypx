@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { AppShell, type ShellLinkProps } from "../../src/components/shell";
@@ -70,5 +70,46 @@ describe("AppShell", () => {
     renderShell("window");
     expect(screen.getByRole("main").className).toContain("overflow-auto");
     expect(screen.getByRole("banner").className).toContain("[-webkit-app-region:drag]");
+  });
+
+  it("toggles the sidebar without removing navigation names, selection or badges", () => {
+    renderShell();
+    const collapse = screen.getByRole("button", { name: "Collapse sidebar" });
+    expect(collapse.getAttribute("aria-expanded")).toBe("true");
+    expect(document.getElementById(collapse.getAttribute("aria-controls")!)).toBeTruthy();
+    fireEvent.click(collapse);
+    const expand = screen.getByRole("button", { name: "Expand sidebar" });
+    expect(expand.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.getByRole("link", { name: /Tasks/ }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByText("3")).toBeTruthy();
+    fireEvent.click(expand);
+    expect(
+      screen.getByRole("button", { name: "Collapse sidebar" }).getAttribute("aria-expanded"),
+    ).toBe("true");
+  });
+  it("supports the sidebar shortcut without intercepting text editing", () => {
+    renderShell();
+    fireEvent.keyDown(window, { key: "b", metaKey: true });
+    expect(
+      screen.getByRole("button", { name: "Expand sidebar" }).getAttribute("aria-expanded"),
+    ).toBe("false");
+    const editor = document.createElement("textarea");
+    document.body.append(editor);
+    fireEvent.keyDown(editor, { key: "b", ctrlKey: true });
+    expect(
+      screen.getByRole("button", { name: "Expand sidebar" }).getAttribute("aria-expanded"),
+    ).toBe("false");
+    editor.remove();
+  });
+  it("restores the collapsed preference after remount and follows changes from another window", () => {
+    const view = renderShell();
+    fireEvent.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(localStorage.getItem("raypx_sidebar_open")).toBe("false");
+    view.unmount();
+    renderShell();
+    expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeTruthy();
+    localStorage.setItem("raypx_sidebar_open", "true");
+    fireEvent(window, new StorageEvent("storage", { key: "raypx_sidebar_open" }));
+    expect(screen.getByRole("button", { name: "Collapse sidebar" })).toBeTruthy();
   });
 });

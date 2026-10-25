@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { SESSION_KEY_SERVICE, sessionKeyName } from "../../../native/cookies";
+import assert from "node:assert/strict";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),
@@ -105,6 +106,25 @@ try {
   if (!api) throw new Error("HTTPS native acceptance requires RAYPX_NATIVE_SMOKE_API");
   await configure(api);
   await run(phase, directory);
+  if (process.platform === "darwin" && phase === "shell") {
+    const status = Bun.spawn(
+      [
+        resolve(import.meta.dirname, "../../../.hutch/bin/raypx"),
+        "daemon",
+        "status",
+        "--profile",
+        "native-smoke",
+        "--data-dir",
+        directory,
+        "--json",
+      ],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+    const result = JSON.parse(await new Response(status.stdout).text());
+    assert.equal(await status.exited, 0);
+    assert.equal(result.running, true, "GUI Quit terminated its independent execution owner");
+    console.info("Native smoke daemon preserved after actual GUI Quit");
+  }
   if (phase === "shell") {
     let other = await loopbackOrigin();
     while (other === api) other = await loopbackOrigin();
@@ -116,6 +136,29 @@ try {
   if (phase === "write") await run("read", directory);
   if (phase === "beta") await run("beta-restore", directory);
 } finally {
+  if (process.platform === "darwin") {
+    // GUI Quit deliberately preserves its independent owner, including smoke profiles.
+    const stop = Bun.spawn(
+      [
+        process.execPath,
+        "run",
+        "src/main.ts",
+        "daemon",
+        "stop",
+        "--profile",
+        "native-smoke",
+        "--data-dir",
+        directory,
+      ],
+      {
+        cwd: resolve(import.meta.dirname, "../../../../cli"),
+        stdin: "ignore",
+        stdout: "ignore",
+        stderr: "ignore",
+      },
+    );
+    await stop.exited;
+  }
   if (!phase.startsWith("beta")) {
     if (process.platform === "win32") {
       const servers = join(directory, "servers");

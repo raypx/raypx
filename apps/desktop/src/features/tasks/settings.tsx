@@ -3,9 +3,10 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import type { AgentCapability, DeviceProject } from "@raypx/contracts/tasks";
 import type { RootGrant } from "@raypx/contracts/local";
-import type { ControlInfo } from "../../../native/control";
+import type { ControlInfo } from "@raypx/contracts/terminal";
 import { getBridge, isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
 import { authClient } from "../auth/client";
+import { TerminalSettings } from "./terminal-settings";
 
 export function AgentSettings() {
   const t = useTranslations("tasks");
@@ -72,6 +73,9 @@ export function AgentSettings() {
       <h2 className="text-base">{t("agentSettings")}</h2>
       <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("localSetupHint")}</p>
       <p className="mt-3 text-xs text-muted-foreground">{t("cliHint")}</p>
+      {info?.daemon && (
+        <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">{t("daemonHint")}</p>
+      )}
       <ul className="mt-3 space-y-2">
         {capabilities.map((capability) => (
           <li key={capability.provider} className="flex flex-wrap gap-3 text-sm">
@@ -180,6 +184,9 @@ export function AgentSettings() {
           </p>
         )}
       </div>
+      {info?.daemon && (
+        <TerminalSettings key={accountId} accountId={accountId} info={info} projects={projects} />
+      )}
     </section>
   );
 }

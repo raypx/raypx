@@ -57,7 +57,9 @@
       "dependencies": {
         "@raypx-kit/logger": "catalog:",
         "@raypx/ai": "workspace:*",
+        "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/host": "workspace:*",
         "citty": "catalog:",
         "croner": "catalog:",
         "zod": "catalog:",
@@ -79,6 +81,7 @@
         "@raypx/blocks": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/host": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
@@ -156,6 +159,7 @@
       },
       "devDependencies": {
         "@raypx-kit/tsconfig": "catalog:dev",
+        "@raypx/contracts": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@tailwindcss/vite": "catalog:dev",
         "@testing-library/jest-dom": "catalog:dev",
@@ -337,6 +341,18 @@
         "@types/react": "catalog:dev",
         "vite": "catalog:dev",
         "vite-plus": "catalog:dev",
+      },
+    },
+    "packages/host": {
+      "name": "@raypx/host",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/client": "workspace:*",
+        "@raypx/contracts": "workspace:*",
+      },
+      "devDependencies": {
+        "@raypx-kit/tsconfig": "catalog:dev",
+        "@types/bun": "catalog:dev",
       },
     },
     "packages/i18n": {
@@ -1095,6 +1111,8 @@
     "@raypx/e2e": ["@raypx/e2e@workspace:e2e"],
 
     "@raypx/email": ["@raypx/email@workspace:packages/email"],
+
+    "@raypx/host": ["@raypx/host@workspace:packages/host"],
 
     "@raypx/i18n": ["@raypx/i18n@workspace:packages/i18n"],
 

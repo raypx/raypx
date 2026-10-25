@@ -1,10 +1,14 @@
 import { z } from "zod";
 import { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
+import {
+  terminalDecisionSchema,
+  terminalRequestSchema,
+  terminalSessionSchema,
+} from "./terminal.js";
 export { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
-export { taskActivityPage, applyActivityEvent } from "./activity.js";
 export { taskText, normalizeTaskJson } from "./task-text.js";
-
-export const RELAY_VERSION = 2;
+export { taskActivityPage, applyActivityEvent } from "./activity.js";
+export const RELAY_VERSION = 3;
 
 export const taskModeSchema = z.enum(["run", "plan"]);
 export const taskStatusSchema = z.enum([
@@ -217,6 +221,7 @@ export function validDecision(
 }
 
 export const relayRequestSchema = z.discriminatedUnion("method", [
+  z.object({ method: z.literal("observed.decide"), input: terminalDecisionSchema }),
   z.object({ method: z.literal("tasks.input"), input: taskInputSchema }),
   z.object({ method: z.literal("tasks.create"), input: taskCreateSchema }),
   z.object({
@@ -256,13 +261,20 @@ export const relayCursorSchema = z.object({
 export const relayClientSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("auth"),
-    protocolVersion: z.literal(RELAY_VERSION),
+    protocolVersion: z.union([z.literal(2), z.literal(RELAY_VERSION)]),
     role: z.enum(["device", "viewer"]),
     token: z.string().min(32).max(200),
     cursors: z.array(relayCursorSchema).max(200).optional(),
   }),
   z.object({ type: z.literal("ping") }),
   z.object({ type: z.literal("available") }),
+  z.object({
+    type: z.literal("observed"),
+    epoch: z.string().uuid(),
+    revision: z.number().int().positive(),
+    sessions: z.array(terminalSessionSchema).max(20),
+    requests: z.array(terminalRequestSchema).max(5),
+  }),
   z.object({
     type: z.literal("announce"),
     streamId: z.string().uuid(),
@@ -296,10 +308,16 @@ export const relayClientSchema = z.discriminatedUnion("type", [
 export const relayServerSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ready"),
-    protocolVersion: z.literal(RELAY_VERSION),
+    protocolVersion: z.union([z.literal(2), z.literal(RELAY_VERSION)]),
     role: z.enum(["device", "viewer"]),
   }),
   z.object({ type: z.literal("pong") }),
+  z.object({
+    type: z.literal("observed_ack"),
+    epoch: z.string().uuid(),
+    revision: z.number().int().positive(),
+  }),
+  z.object({ type: z.literal("observed_changed"), deviceId: z.string().uuid() }),
   z.object({
     type: z.literal("resume"),
     streamId: z.string().uuid(),

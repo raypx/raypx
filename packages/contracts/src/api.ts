@@ -11,6 +11,12 @@ import {
 export * from "./tasks.js";
 export * from "./configuration.js";
 import { configurationContract } from "./configuration.js";
+import {
+  hostAuthorizationSchema,
+  observedProjectionSchema,
+  terminalRequestSchema,
+} from "./terminal.js";
+export * from "./terminal.js";
 
 export const accountProfileSchema = z.object({
   id: z.string().min(1),
@@ -33,6 +39,21 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  hosts: {
+    authorize: oc
+      .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int().positive() }))
+      .output(hostAuthorizationSchema),
+    grant: oc
+      .input(z.object({ credential: z.string().min(64).max(200) }))
+      .output(z.object({ accountId: z.string(), grant: deviceGrantSchema })),
+    revoke: oc
+      .input(z.object({ credential: z.string().min(64).max(200) }))
+      .output(z.object({ revoked: z.literal(true) })),
+  },
+  observed: {
+    list: oc.input(z.object({})).output(observedProjectionSchema),
+    get: oc.input(z.object({ id: z.string().uuid() })).output(terminalRequestSchema),
+  },
   configuration: configurationContract,
   devices: {
     register: oc

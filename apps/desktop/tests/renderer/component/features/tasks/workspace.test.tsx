@@ -13,13 +13,21 @@ import type { AgentTask, HumanRequest, SyncDevice, TaskActivity } from "@raypx/c
 import { DesktopTaskWorkspace } from "../../../../../src/features/tasks/workspace";
 import { localTaskClient } from "../../../../../src/features/tasks/local-client";
 
+// Register matchers with the active Vite+ test runtime.
+// oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
+import type {} from "@testing-library/jest-dom/vitest";
+import * as matchers from "@testing-library/jest-dom/matchers";
+expect.extend(matchers);
+
 const mocks = vi.hoisted(() => ({ request: vi.fn(), remote: vi.fn() }));
 vi.mock("../../../../../src/lib/desktop", () => ({
   isDesktop: () => true,
+  isDaemonDesktop: () => false,
   localRequest: mocks.request,
   onLocalEvent: () => () => {},
 }));
 vi.mock("../../../../../src/features/auth/client", () => ({
+  apiUrl: "https://api.example.test",
   authClient: { useSession: () => ({ data: { user: { id: "account-a" } }, isPending: false }) },
 }));
 vi.mock("../../../../../src/features/tasks/client", () => ({
@@ -135,7 +143,7 @@ async function page() {
   const routeTree = createRootRoute({ component: () => <DesktopTaskWorkspace view="tasks" /> });
   const router = createRouter({ routeTree, history });
   await router.load();
-  render(
+  return render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
@@ -339,4 +347,83 @@ it("keeps long task lists virtualized while keyboard navigation can reach every 
   fireEvent.keyDown(first, { key: "ArrowDown" });
   const second = await within(list).findByRole("button", { name: /^Virtual task 2(?!\d)/ });
   await waitFor(() => expect(document.activeElement).toBe(second));
+});
+
+it("saves and restores local drafts without sending a task, and preserves unsaved text on cancel", async () => {
+  const first = await page();
+  const editor = await screen.findByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(editor, { target: { value: "Investigate local reconnects" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await screen.findByText("Draft saved on this device.");
+  expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
+    false,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "New draft" }));
+  expect(editor).toHaveValue("");
+  fireEvent.change(editor, { target: { value: "Unsaved investigation" } });
+  fireEvent.click(screen.getByRole("button", { name: /^Investigate local reconnects/ }));
+  const dialog = await screen.findByRole("alertdialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(editor).toHaveValue("Unsaved investigation");
+  first.unmount();
+  await page();
+  fireEvent.click(await screen.findByRole("button", { name: /^Investigate local reconnects/ }));
+  expect(screen.getByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
+    "Investigate local reconnects",
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Delete draft: Investigate local reconnects" }),
+  );
+  expect(screen.queryByRole("region", { name: "Drafts" })).toBeNull();
+  expect(screen.getByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
+    "Investigate local reconnects",
+  );
+});
+
+it("keeps draft text when device storage refuses a write", async () => {
+  await page();
+  const editor = await screen.findByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(editor, { target: { value: "Keep this text" } });
+  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new Error("Quota exceeded");
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await screen.findByText(
+    "Unable to read or save drafts on this device. Your current text is still in the editor.",
+  );
+  expect(editor).toHaveValue("Keep this text");
+  expect(screen.queryByRole("region", { name: "Drafts" })).toBeNull();
+});
+
+it("removes a sent draft only after the task is accepted", async () => {
+  await page();
+  const editor = await screen.findByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(editor, { target: { value: "Validate this saved draft" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await screen.findByRole("region", { name: "Drafts" });
+  fireEvent.click(screen.getByRole("button", { name: "Send task" }));
+  await screen.findByText("Run local tests");
+  expect(editor).toHaveValue("");
+  expect(screen.queryByRole("region", { name: "Drafts" })).toBeNull();
+});
+
+it("keeps local drafts separate from drafts for connected computers", async () => {
+  mocks.remote.mockResolvedValue([]);
+  await page();
+  const localEditor = await screen.findByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(localEditor, { target: { value: "Private local draft" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await screen.findByRole("button", { name: /^Private local draft/ });
+  fireEvent.click(screen.getByRole("tab", { name: "Connected computers" }));
+  const remoteEditor = await screen.findByRole("textbox", { name: "What should the agent do?" });
+  expect(screen.queryByRole("region", { name: "Drafts" })).toBeNull();
+  fireEvent.change(remoteEditor, { target: { value: "Connected computer draft" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await screen.findByRole("button", { name: /^Connected computer draft/ });
+  fireEvent.click(screen.getByRole("tab", { name: "This computer" }));
+  await screen.findByRole("button", { name: /^Private local draft/ });
+  expect(screen.queryByRole("button", { name: /^Connected computer draft/ })).toBeNull();
+  expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
+    false,
+  );
 });

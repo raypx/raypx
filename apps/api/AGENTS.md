@@ -113,6 +113,12 @@ and bounded incremental replay; a missing revision requests a snapshot. Keep the
 activity projection until explicit history removal. Missing entries in partial snapshots
 never authorize deleting conversation history. Read projections through the repository's
 read-only transaction without the owner write lock; constrain task history in SQL.
+Task pagination and pending-approval filtering/limits also belong in SQL. Normalize
+JSON strings at the repository boundary, including old malformed surrogate/NUL input.
+Internal storage failures close relay with SERVER_UNAVAILABLE/1011; malformed frames
+remain INVALID_FRAME. Persist the latest activity projection, not raw delta replay
+rows. Delta-only batches do not prune the replay window; gaps trigger authoritative
+reset. Materialize the window once before deletion, even with stale device statistics.
 
 ## Administrator configuration
 
@@ -145,3 +151,14 @@ Run the migration before deploying: signup fails closed without the table. Jobs 
 stored cleanup switch with deployment `JOBS_ENABLED`; disabled deployments do not
 query configuration on schedule. No secrets or arbitrary env keys enter the API.
 See `docs/development/configuration.md`.
+
+## Independent host and terminal projections
+
+Host bootstrap requires the current account session and a device/epoch binding.
+Only hashed, expiring, device-scoped credentials are stored. They renew device grants
+without retaining browser sessions; revoke invalidates all credentials for that device.
+Never accept a host credential as a viewer ticket. Relay v3 stores observed requests
+separately from managed tasks, validates connection/epoch/revision and ACKs only after
+commit. Summary reads omit bodies/questions/answers; fetch one body only on expansion.
+Private local host/router methods are never public HTTP methods. Terminal content is
+explicitly plain private testing data; E2EE is a later public-release gate.

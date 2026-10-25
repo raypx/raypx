@@ -4,7 +4,10 @@ import type { TaskClient } from "@raypx/client";
 import type { AgentEvent, TaskActivity, TaskChange } from "@raypx/contracts/tasks";
 import { failureCode } from "./failure.js";
 
-export type TaskWorkspaceClient = Pick<TaskClient, "tasks" | "approvals" | "subscribe"> & {
+export type TaskWorkspaceClient = Pick<
+  TaskClient,
+  "tasks" | "approvals" | "subscribe" | "observed"
+> & {
   devices: Pick<TaskClient["devices"], "list">;
 };
 const scopes = new WeakMap<object, number>();
@@ -77,10 +80,11 @@ export function useRemoteQuery<T>(
         refresh();
     };
     let unsubscribe: (() => void) | undefined;
-    const visible = () => {
+    const visible = (event?: Event) => {
       unsubscribe?.();
       unsubscribe = document.hidden ? undefined : client.subscribe?.(notify);
-      if (!document.hidden) refresh();
+      // useQuery performs the mount read; only becoming visible needs invalidation.
+      if (!document.hidden && event) refresh();
     };
     document.addEventListener("visibilitychange", visible);
     visible();

@@ -301,6 +301,9 @@ export class AgentRuntime {
     this.changed();
     return { configured: true };
   }
+  projectProviders(rootId: string) {
+    return this.store.projects().find((project) => project.id === rootId)?.providers ?? [];
+  }
   async projects(): Promise<DeviceProject[]> {
     const roots = this.state.roots();
     const result: DeviceProject[] = [];
@@ -403,6 +406,8 @@ export class AgentRuntime {
   }
   async remote(binding: string, command: RelayCommand) {
     try {
+      if (command.request.method === "observed.decide")
+        throw new LocalError("INVALID_METHOD", "Observed approvals belong to the terminal broker");
       const old = this.store.reserve(binding, command);
       if (old) return old;
       const pending = this.remoteCommands.get(command.id);
@@ -438,6 +443,8 @@ export class AgentRuntime {
       return local;
     };
     const request = command.request;
+    if (request.method === "observed.decide")
+      throw new LocalError("INVALID_METHOD", "Observed approvals belong to the terminal broker");
     if (
       (request.method === "tasks.create" ||
         request.method === "tasks.followUp" ||

@@ -1,3 +1,9 @@
+import { SlidersHorizontal } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@raypx/ui/components/ui/collapsible";
 import { useId } from "react";
 import type { AgentTask, SyncDevice } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -9,7 +15,7 @@ import { isTaskActive } from "../index.js";
 
 export interface TaskFilters {
   query: string;
-  status: "all" | "active" | "attention" | "finished" | "errors";
+  status: "all" | "active" | "working" | "attention" | "finished" | "errors";
   device: string;
   provider: string;
 }
@@ -27,6 +33,8 @@ export function filterTasks(tasks: AgentTask[], devices: SyncDevice[], filters: 
     if (filters.device && task.deviceId !== filters.device) return false;
     if (filters.provider && task.provider !== filters.provider) return false;
     if (filters.status === "active" && !isTaskActive(task)) return false;
+    if (filters.status === "working" && (!isTaskActive(task) || task.status === "waiting"))
+      return false;
     if (filters.status === "attention" && task.status !== "waiting") return false;
     if (filters.status === "finished" && isTaskActive(task)) return false;
     if (
@@ -66,62 +74,74 @@ export function TaskFilterBar({
     filters.provider !== "";
   return (
     <div className="@container mb-5 space-y-3">
-      <div className="grid grid-cols-2 gap-3 @min-[48rem]:grid-cols-4">
-        <Field className="col-span-2 @min-[48rem]:col-span-1">
-          <FieldLabel htmlFor={`${id}-search`}>{t("searchTasks")}</FieldLabel>
-          <Input
-            id={`${id}-search`}
-            type="search"
-            value={filters.query}
-            maxLength={500}
-            placeholder={t("searchPlaceholder")}
-            onChange={(event) => onChange({ ...filters, query: event.target.value })}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-status`}>{c("status")}</FieldLabel>
-          <SelectField<TaskFilters["status"]>
-            id={`${id}-status`}
-            className="w-full"
-            value={filters.status}
-            onValueChange={(status) => onChange({ ...filters, status })}
-            options={[
-              { value: "all", label: t("allStatuses") },
-              { value: "active", label: t("activeTasks") },
-              { value: "attention", label: t("waiting") },
-              { value: "finished", label: t("finishedTasks") },
-              { value: "errors", label: t("taskErrors") },
-            ]}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
-          <SelectField
-            id={`${id}-agent`}
-            className="w-full"
-            value={filters.provider}
-            onValueChange={(provider) => onChange({ ...filters, provider })}
-            options={[
-              { value: "", label: t("allAgents") },
-              { value: "claude", label: "Claude Code" },
-              { value: "codex", label: "Codex" },
-            ]}
-          />
-        </Field>
-        <Field className="col-span-2 @min-[48rem]:col-span-1">
-          <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
-          <SelectField
-            id={`${id}-device`}
-            className="w-full"
-            value={filters.device}
-            onValueChange={(device) => onChange({ ...filters, device })}
-            options={[
-              { value: "", label: t("allDevices") },
-              ...devices.map((device) => ({ value: device.id, label: device.name })),
-            ]}
-          />
-        </Field>
-      </div>
+      <Collapsible className="space-y-3">
+        <div className="flex items-end gap-2">
+          <Field className="min-w-0 flex-1">
+            <FieldLabel htmlFor={`${id}-search`}>{t("searchTasks")}</FieldLabel>
+            <Input
+              id={`${id}-search`}
+              type="search"
+              value={filters.query}
+              maxLength={500}
+              placeholder={t("searchPlaceholder")}
+              onChange={(event) => onChange({ ...filters, query: event.target.value })}
+            />
+          </Field>
+          <CollapsibleTrigger
+            render={
+              <Button type="button" variant="outline" size="icon" aria-label={t("filters")} />
+            }
+          >
+            <SlidersHorizontal aria-hidden="true" />
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="grid grid-cols-2 gap-3 @min-[48rem]:grid-cols-3">
+          <Field>
+            <FieldLabel htmlFor={`${id}-status`}>{c("status")}</FieldLabel>
+            <SelectField<TaskFilters["status"]>
+              id={`${id}-status`}
+              className="w-full"
+              value={filters.status}
+              onValueChange={(status) => onChange({ ...filters, status })}
+              options={[
+                { value: "all", label: t("allStatuses") },
+                { value: "active", label: t("activeTasks") },
+                { value: "working", label: t("workingTasks") },
+                { value: "attention", label: t("waiting") },
+                { value: "finished", label: t("finishedTasks") },
+                { value: "errors", label: t("taskErrors") },
+              ]}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-agent`}>{t("agent")}</FieldLabel>
+            <SelectField
+              id={`${id}-agent`}
+              className="w-full"
+              value={filters.provider}
+              onValueChange={(provider) => onChange({ ...filters, provider })}
+              options={[
+                { value: "", label: t("allAgents") },
+                { value: "claude", label: "Claude Code" },
+                { value: "codex", label: "Codex" },
+              ]}
+            />
+          </Field>
+          <Field className="col-span-2 @min-[48rem]:col-span-1">
+            <FieldLabel htmlFor={`${id}-device`}>{t("device")}</FieldLabel>
+            <SelectField
+              id={`${id}-device`}
+              className="w-full"
+              value={filters.device}
+              onValueChange={(device) => onChange({ ...filters, device })}
+              options={[
+                { value: "", label: t("allDevices") },
+                ...devices.map((device) => ({ value: device.id, label: device.name })),
+              ]}
+            />
+          </Field>
+        </CollapsibleContent>
+      </Collapsible>
       <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
         <p role="status" className="text-xs text-muted-foreground">
           {t("filteredCount", { count: String(count), total: String(total) })}

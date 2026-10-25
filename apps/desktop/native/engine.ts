@@ -24,6 +24,7 @@ export class LocalEngine {
     private readonly version: string,
     private readonly emit: (event: LocalEvent) => void | Promise<void>,
     private readonly args: string[] = [],
+    private readonly daemon = false,
   ) {}
   private setStatus(status: EngineStatus) {
     this.status = status;
@@ -43,11 +44,14 @@ export class LocalEngine {
     const generation = ++this.generation;
     this.setStatus({ status: "starting" });
     try {
-      const child = Bun.spawn([this.binary, "stdio", ...this.args], {
-        stdin: "pipe",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
+      const child = Bun.spawn(
+        [this.binary, ...(this.daemon ? ["daemon", "proxy"] : ["stdio"]), ...this.args],
+        {
+          stdin: "pipe",
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
       this.child = child;
       void this.read(child, generation);
       void (async () => {
@@ -63,8 +67,13 @@ export class LocalEngine {
       const info = (await this.request("runtime.info", {})) as {
         version: string;
         protocolVersion: number;
+        owner?: string;
       };
-      if (info.version !== this.version || info.protocolVersion !== 1)
+      if (
+        info.version !== this.version ||
+        info.protocolVersion !== 1 ||
+        (this.daemon && info.owner !== "daemon")
+      )
         throw new Error("Bundled CLI version does not match Desktop");
       this.setStatus({ status: "ready" });
       return true;
@@ -87,7 +96,10 @@ export class LocalEngine {
     let remaining = "";
     try {
       for await (const chunk of child.stdout as ReadableStream<Uint8Array>) {
-        if (generation !== this.generation) return;
+        // A retired engine still writes cancellation results while shutting down.
+        // Returning cancels the pipe reader and gives that child EPIPE. Drain it
+        // to EOF, but never deliver stale events into a new engine generation.
+        if (generation !== this.generation) continue;
         remaining += decoder.decode(chunk, { stream: true });
         if (remaining.length > 8 * 1024 * 1024)
           throw new Error("Local engine response exceeds the protocol limit");

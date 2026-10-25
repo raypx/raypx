@@ -226,7 +226,10 @@ for (const [surface, base] of [
     await page.goto(base + "/tasks");
     if (surface === "Desktop")
       await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
-    const agentFilter = page.getByRole("combobox", { name: "Agent", exact: true });
+    await page.getByRole("button", { name: "Filters", exact: true }).click();
+    const agentFilter = page
+      .getByRole("region", { name: "Task history", exact: true })
+      .getByRole("combobox", { name: "Agent", exact: true });
     await selectOption(page, agentFilter, "claude");
     await expect(
       page.getByRole("button", { name: /Improve task delivery reliability/ }),
@@ -797,6 +800,93 @@ for (const [surface, base] of [
   ["Web", web],
   ["Desktop", desktop],
 ] as const) {
+  test(`${surface} groups sidebar menus and keeps collapsed navigation accessible`, async ({
+    page,
+  }) => {
+    if (surface === "Web") await webShellFixture(page);
+    const user = await signedInDesktop(page);
+    await page.route("**/rpc/approvals/list", (route) =>
+      authResponse(route, {
+        json: [
+          {
+            id: crypto.randomUUID(),
+            taskId: crypto.randomUUID(),
+            kind: "permission",
+            title: "Check sidebar badge",
+            body: "",
+            questions: [],
+            status: "pending",
+            decision: null,
+            expiresAt: new Date(Date.now() + 600000).toISOString(),
+          } satisfies HumanRequest,
+        ],
+      }),
+    );
+    await page.goto(`${base}/settings`);
+    const sidebar = page.getByRole("complementary");
+    const workspace = sidebar.getByRole("group", { name: "Workspace", exact: true });
+    await expect(workspace.getByRole("link", { name: "Tasks", exact: true })).toBeVisible();
+    const waiting = workspace.getByRole("link", { name: /^Waiting/ });
+    await expect(waiting).toContainText("1");
+    if (surface === "Desktop") {
+      const local = sidebar.getByRole("group", { name: "Local tools", exact: true });
+      await expect(local.getByRole("link", { name: "Files", exact: true })).toBeVisible();
+      await expect(local.getByRole("link", { name: "Automations", exact: true })).toBeVisible();
+    }
+    await expect(sidebar.locator('[aria-current="page"]')).toHaveCount(1);
+    const expanded = (await sidebar.boundingBox())!;
+    await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
+    const expand = page.getByRole("button", { name: "Expand sidebar", exact: true });
+    await expect(expand).toHaveAttribute("aria-expanded", "false");
+    expect((await sidebar.boundingBox())!.width).toBe(64);
+    expect(expanded.width).toBeGreaterThan(190);
+    await expect(waiting.getByText("1", { exact: true })).toBeInViewport();
+    const tasks = workspace.getByRole("link", { name: "Tasks", exact: true });
+    await tasks.focus();
+    // Tooltips follow visible keyboard focus rather than focus moved by a pointer action.
+    await page.keyboard.press("Shift+Tab");
+    await page.keyboard.press("Tab");
+    await expect(tasks).toBeFocused();
+    // Base UI tooltips are visual labels; the link itself retains its accessible name.
+    const hint = page.locator('[data-slot="tooltip-content"]').filter({ hasText: /^Tasks$/ });
+    await expect(hint).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(hint).not.toBeVisible();
+    await page.reload();
+    await expect(expand).toHaveAttribute("aria-expanded", "false");
+    expect((await sidebar.boundingBox())!.width).toBe(64);
+    await page.setViewportSize({ width: 760, height: 900 });
+    await tasks.hover();
+    await expect(hint).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const account = sidebar.getByRole("button", { name: "Account menu", exact: true });
+    await expect(account.getByText(user.email, { exact: true })).toBeHidden();
+    await account.click();
+    const menu = page.getByRole("menu", { name: "Account menu", exact: true });
+    await expect(menu.getByRole("menuitem", { name: "Settings", exact: true })).toBeVisible();
+    const menuBox = (await menu.boundingBox())!;
+    expect(menuBox.x).toBeGreaterThanOrEqual(0);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+    await page.screenshot({
+      path: test.info().outputPath("sidebar-collapsed-menu.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
+    await page.keyboard.press("Escape");
+    await expect(account).toBeFocused();
+    await expand.click();
+    await expect(
+      page.getByRole("button", { name: "Collapse sidebar", exact: true }),
+    ).toHaveAttribute("aria-expanded", "true");
+    expect((await sidebar.boundingBox())!.width).toBe(expanded.width);
+    await page.screenshot({
+      path: test.info().outputPath("sidebar-expanded.png"),
+      fullPage: true,
+      animations: "disabled",
+    });
+  });
+
   test(`${surface} opens the sidebar account menu with keyboard and keeps the popup inside the viewport`, async ({
     page,
   }) => {
@@ -1026,5 +1116,142 @@ for (const [surface, base] of [
       path: test.info().outputPath("analytics-settings.png"),
       fullPage: true,
     });
+  });
+}
+
+for (const [surface, base] of [
+  ["Web", web],
+  ["Desktop", desktop],
+] as const) {
+  test(`${surface} restores device-only task drafts and filters the real page overview`, async ({
+    page,
+  }) => {
+    if (surface === "Web") await webShellFixture(page);
+    await signedInDesktop(page);
+    const deviceId = crypto.randomUUID(),
+      projectId = crypto.randomUUID();
+    const tasks: AgentTask[] = (["waiting", "running", "succeeded"] as const).map(
+      (status, index) => ({
+        id: crypto.randomUUID(),
+        deviceId,
+        projectId,
+        provider: "codex",
+        mode: "run",
+        prompt: [
+          "Approve the migration",
+          "Validate reconnect behavior",
+          "Review completed changes",
+        ][index]!,
+        summary: status === "succeeded" ? "All changes validated." : "",
+        status,
+        parentTaskId: null,
+        createdAt: new Date(Date.now() - index * 1000).toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+    await page.route("**/rpc/tasks/list", (route) => {
+      if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
+      const { json } = route.request().postDataJSON() as { json: { before?: string } };
+      return authResponse(route, { json: json.before ? [] : tasks });
+    });
+    await page.route("**/rpc/tasks/get", (route) => {
+      if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
+      const { json } = route.request().postDataJSON() as { json: { id: string } };
+      return authResponse(route, {
+        json: { task: tasks.find((task) => task.id === json.id), events: [], requests: [] },
+      });
+    });
+    await page.route("**/rpc/devices/list", (route) =>
+      authResponse(route, {
+        json: [
+          {
+            id: deviceId,
+            name: "Development Mac",
+            online: true,
+            revoked: false,
+            platform: "darwin",
+            appVersion: "0.1.0",
+            epoch: 1,
+            lastSeenAt: null,
+            projects: [{ id: projectId, name: "Raypx", providers: ["codex"], dirty: false }],
+            capabilities: [
+              {
+                provider: "codex",
+                available: true,
+                version: "0.163.0",
+                reason: "ready",
+                inputModes: ["queue", "steer"],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    await page.goto(base + "/tasks");
+    if (surface === "Desktop")
+      await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+    const overview = page.getByRole("group", { name: "Tasks on this page", exact: true });
+    await expect(overview.getByRole("button", { name: /^Needs you/ })).toContainText("1");
+    await overview.getByRole("button", { name: /^In progress/ }).click();
+    const list = page.getByRole("list", { name: "Agent tasks", exact: true });
+    await expect(list.getByRole("button", { name: /Validate reconnect behavior/ })).toBeVisible();
+    await expect(list.getByRole("button", { name: /Approve the migration/ })).toHaveCount(0);
+    await overview.getByRole("button", { name: /^All/ }).click();
+    await page.getByRole("button", { name: "New task", exact: true }).click();
+    const form = page.getByRole("form", { name: "New task", exact: true });
+    const editor = form.getByRole("textbox", { name: "What should the agent do?", exact: true });
+    await editor.fill("Investigate wake and reconnect behavior");
+    await selectOption(
+      page,
+      form.getByRole("combobox", { name: "Computer", exact: true }),
+      deviceId,
+    );
+    await selectOption(
+      page,
+      form.getByRole("combobox", { name: "Project", exact: true }),
+      projectId,
+    );
+    await selectOption(page, form.getByRole("combobox", { name: "Agent", exact: true }), "codex");
+    await form.getByRole("button", { name: "Save draft", exact: true }).click();
+    await expect(form.getByText("Draft saved on this device.", { exact: true })).toBeVisible();
+    await page.reload();
+    if (surface === "Desktop")
+      await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
+    const drafts = page.getByRole("region", { name: "Drafts", exact: true });
+    await drafts.getByRole("button", { name: /^Investigate wake and reconnect behavior/ }).click();
+    await expect(editor).toHaveValue("Investigate wake and reconnect behavior");
+    await expect(form.getByRole("combobox", { name: "Project", exact: true })).toContainText(
+      "Raypx",
+    );
+    await form.getByRole("button", { name: "New draft", exact: true }).click();
+    await expect(editor).toHaveValue("");
+    await form.getByRole("button", { name: /^Task options/ }).click();
+    await list.getByRole("button", { name: /Approve the migration/ }).click();
+    await page.getByRole("main").evaluate((element) => element.scrollTo(0, 0));
+    expect(
+      await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
+    ).toBe(true);
+    await page.screenshot({
+      path: test.info().outputPath(`${surface.toLowerCase()}-task-workspace.png`),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
+    await list.getByRole("button", { name: /Validate reconnect behavior/ }).click();
+    await expect(page.getByRole("region", { name: "Task details", exact: true })).toBeFocused();
+    await expect(
+      page.getByRole("heading", { name: "Validate reconnect behavior", exact: true }),
+    ).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    );
+    await page.screenshot({
+      path: test.info().outputPath(`${surface.toLowerCase()}-task-workspace-mobile.png`),
+      fullPage: true,
+    });
+    await page.getByRole("button", { name: "Back to tasks", exact: true }).click();
+    await expect(list.getByRole("button", { name: /Validate reconnect behavior/ })).toBeFocused();
+    await expect(
+      list.getByRole("button", { name: /Validate reconnect behavior/ }),
+    ).toBeInViewport();
   });
 }

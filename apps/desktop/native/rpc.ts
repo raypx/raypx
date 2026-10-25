@@ -2,7 +2,7 @@ import type { AnalyticsConsent } from "@raypx/analytics";
 import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
 import type { RPCSchema } from "electrobun/rpc";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
-import type { ControlInfo } from "./control";
+import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DevicePreferences } from "../preferences";
 import type { DesktopApiRequest, DesktopApiResponse } from "../api";
 export type { DevicePreferences } from "../preferences";
@@ -24,6 +24,7 @@ export type DesktopRpc = {
       apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
       apiCancel: { params: { id: string }; response: boolean };
       controlInfo: { params: { accountId: string }; response: ControlInfo };
+      controlSession: { params: { accountId: string | null }; response: boolean };
       controlEnable: { params: { accountId: string; enabled: boolean }; response: ControlInfo };
       controlRevoked: { params: { accountId: string }; response: ControlInfo };
       controlAttach: {

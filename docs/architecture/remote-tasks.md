@@ -1,13 +1,15 @@
 # Remote Agent relay and replay
 
-Web and Desktop connect to an authenticated WebSocket relay. Desktop is the
-execution authority: its bundled CLI creates tasks, owns Agent sessions, resolves
-approvals and decides final status. API stores account-scoped read projections and
+Web and Desktop connect to an authenticated WebSocket relay. On macOS the independent
+CLI daemon is the execution authority; Desktop is its private IPC client. Windows
+retains the foreground bundled CLI. The owner creates tasks, owns Agent sessions,
+resolves approvals and decides final status. API stores account-scoped read projections and
 routes commands; a server clock cannot declare a local execution finished.
 
 ## Communication
 
-Web / Desktop UI ↔ API relay ↔ Desktop native ↔ bundled CLI ↔ Claude Code / Codex.
+Web / Desktop UI ↔ API relay ↔ CLI daemon ↔ Claude Code / Codex (macOS).
+Desktop native ↔ private daemon proxy for local views; Windows keeps native ↔ stdio.
 All remote connections are outbound HTTPS/WSS. Native exposes no public port.
 The local engine uses version-matched NDJSON over stdio. Codex uses its local
 stdio app-server; Claude uses persistent stream-JSON input/output and authenticated session hooks on
@@ -17,7 +19,7 @@ HTTP RPC serves account/device management, task/request projections and one-time
 viewer tickets. Remote task creation, in-flight instructions, follow-up, cancellation and approval decisions travel
 through the relay. Visible pages subscribe to change events and refresh projections;
 hidden pages suspend those subscriptions. There is no two-second task polling loop.
-Native wakes on local engine events, retains the connection when the window hides,
+The execution owner wakes on local engine events, retains the connection when the window hides or macOS GUI quits,
 and sends heartbeats to detect broken connections. Reconnect uses bounded backoff.
 
 ## Desktop local tasks
@@ -46,18 +48,22 @@ Agent settings authorizes local projects independently of the remote access togg
 
 ## Authentication and routing
 
-The account session issues a device grant valid for at most ten minutes. Native
-keeps it only in memory. WebView renews grants through the existing account session;
-renewing the same binding reconnects without cancelling execution. Browser viewers
+The account session bootstraps a restricted macOS host credential stored in Keychain.
+The daemon uses it to renew device grants valid for at most ten minutes independently
+of browser sessions. Native never exports this credential to the renderer. Windows
+continues cookie-backed Native renewal. Renewing the same binding reconnects without
+cancelling execution. See [P1 host authorization](../development/terminal-host-p1.md). Browser viewers
 receive single-use tickets valid for thirty seconds. Authentication is the first
 WebSocket frame; tokens are never query parameters. The account query parameter
 selects a room and grants no access. Known browser origins are checked at upgrade.
 
-Every relay message revalidates its actor and parent session. Device epochs fence
+Every relay message revalidates its actor and parent browser session or restricted
+host credential. Device epochs fence
 revoked connections; connection identities fence stale sockets. A revoke closes
-connected devices, whose native host cancels the binding. Heartbeats also detect
+connected devices, whose execution owner cancels the binding. Heartbeats also detect
 session revocation and credential expiry. Account changes, logout, disabling remote
-access and Quit cancel managed tasks; transient network loss does not.
+access cancel affected managed tasks; transient network loss does not. macOS GUI
+Quit preserves tasks, while explicit daemon stop and Windows GUI Quit cancel them.
 
 Node uses Nitro's WebSocket adapter and one relay process. Its first release
 requires a single API instance for relay connections. Cloudflare uses one Durable
@@ -92,7 +98,7 @@ checkpointed only after API acknowledges durable projection updates. A retained
 journal keeps at most 4,096 events and 8 MiB per remote binding, including acknowledged events,
 so reconnect can continue after the server's cursor without re-executing commands.
 
-When a cursor falls behind journal retention, native sends a frozen, paged snapshot
+When a cursor falls behind journal retention, the owner sends a frozen, paged snapshot
 and continues with events after its watermark. The snapshot contains recent tasks,
 all active tasks and their request states. Its pages describe the same captured
 state even while live execution advances. API acknowledges only the complete
@@ -142,11 +148,13 @@ terminal streams and Agent credentials remain local. Agent Markdown never execut
 Diagnostics exclude tokens, prompts, bodies,
 paths and results. Relay frames are bounded to 1 MiB, batches to 50 events and
 assembled snapshots to 32 MiB. Slow connections are disconnected and recover by
-cursor. Unsupported or oversized approvals fail closed.
+cursor. Unsupported or oversized managed-task approvals fail closed. External
+terminal hooks instead return to the Agent's native permission flow.
 
 The normalized relay protocol leaves space for another local adapter such as Pi.
-Pi, existing arbitrary terminal sessions and full terminal control are not part of
-this release.
+Pi Agent execution, arbitrary terminal transcript synchronization and full terminal
+control are not part of this release. Explicitly installed macOS Claude/Codex Bash
+hooks are covered separately below.
 
 ## Verification
 
@@ -168,9 +176,10 @@ separately. Packaged native GUI behavior, hidden-window credential renewal,
 notifications, Windows process cleanup and live provider inference still require
 explicit platform acceptance; browser tests do not imply those checks passed.
 
-## Relay v2 and read isolation
+## Managed activity compatibility and read isolation
 
-Both auth and ready frames declare protocol version 2. Messages begin with a full
+Auth and ready negotiate version 2 or 3; v3 adds observed requests while retaining
+the managed activity format introduced in v2. Messages begin with a full
 activity checkpoint, then carry append-only deltas with base/new revisions;
 replacements and terminal updates are full checkpoints. A missing base requires
 snapshot recovery. Outbox rows reference journal events rather than copy text.
@@ -187,3 +196,11 @@ An absent task in a partial snapshot is never evidence that its history was dele
 Typed change notifications patch the open conversation. Activity-only updates do
 not invalidate workspace/device/approval lists. Incomplete snapshots and gaps
 after suspension are labelled; contiguous history can be loaded deliberately.
+
+## Observed terminal sessions
+
+macOS relay v3 also synchronizes explicitly opted-in Claude/Codex Bash permission
+hooks through a separate RequestBroker and observed projection. Away waiting is
+bounded and fails back to the terminal. Tool outputs and full terminal streams
+remain local. Content is plaintext private testing data, pending E2EE. See the
+[P1 guide](../development/terminal-host-p1.md) for capability, lifetime and test limits.

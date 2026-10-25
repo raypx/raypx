@@ -74,7 +74,7 @@ it("merges live activity without refreshing workspace queries and recovers a mis
   );
   fireEvent.click(await screen.findByRole("button", { name: /Stream task/ }));
   await screen.findByText("Hello");
-  await waitFor(() => expect(get.mock.calls.length).toBeGreaterThanOrEqual(2));
+  expect(get).toHaveBeenCalledTimes(1);
   const counts = {
     list: list.mock.calls.length,
     get: get.mock.calls.length,
@@ -138,7 +138,34 @@ it("merges live activity without refreshing workspace queries and recovers a mis
   const gap = await screen.findByRole("button", {
     name: "Some messages are missing here. Load the missing history.",
   });
-  fireEvent.click(gap);
+  expect(gap).toBeTruthy();
+  const newest = { ...latest, id: crypto.randomUUID(), order: 129, text: "Second hidden period" };
+  const secondMissing = {
+    ...missing,
+    id: crypto.randomUUID(),
+    order: 66,
+    text: "Second middle history",
+  };
+  get.mockImplementation(async (input) => ({
+    task,
+    events: [],
+    requests: [],
+    activity:
+      input.beforeActivity === 65
+        ? [missing]
+        : input.beforeActivity === 129
+          ? [secondMissing]
+          : [newest],
+    ...(input.beforeActivity ? {} : { activityBefore: 129 }),
+  }));
+  fireEvent(document, new Event("visibilitychange"));
+  await screen.findByText("Second hidden period");
+  const gapName = "Some messages are missing here. Load the missing history.";
+  expect(screen.getAllByRole("button", { name: gapName })).toHaveLength(2);
+  fireEvent.click(screen.getAllByRole("button", { name: gapName })[1]!);
+  await screen.findByText("Second middle history");
+  await waitFor(() => expect(screen.getAllByRole("button", { name: gapName })).toHaveLength(1));
+  fireEvent.click(screen.getByRole("button", { name: gapName }));
   await screen.findByText("Recovered middle history");
   await waitFor(() =>
     expect(

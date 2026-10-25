@@ -10,7 +10,7 @@ const rawContentClassName =
   "max-h-112 overflow-auto rounded-md bg-muted p-4 font-mono text-xs leading-[1.7] whitespace-pre-wrap wrap-anywhere";
 const lineNumberClassName = "min-w-[3em] px-[0.5em] text-right text-muted-foreground select-none";
 
-export function ApprovalBody({ request }: { request: HumanRequest }) {
+export function ApprovalBody({ request }: { request: Pick<HumanRequest, "kind" | "body"> }) {
   const t = useTranslations("tasks");
   const files = useMemo(() => approvalChanges(request.body), [request.body]);
   if (request.kind === "plan") return <TaskMarkdown>{request.body}</TaskMarkdown>;
@@ -29,6 +29,11 @@ export function ApprovalBody({ request }: { request: HumanRequest }) {
             className="overflow-hidden rounded-md border border-border"
           >
             <h4 className="break-all border-b border-border bg-muted/40 px-3 py-2 font-mono text-xs">
+              {file.previousPath && (
+                <span className="mb-1 block text-muted-foreground">
+                  {t("renamedFrom", { path: file.previousPath })}
+                </span>
+              )}
               {file.path}
             </h4>
             {file.originalUnknown && (

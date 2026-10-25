@@ -1,6 +1,6 @@
 # Raypx 多 Agent 宿主与移动 App 架构方案
 
-> 状态：方向已采用，P0 原型已实现，P1 待集成。核实日期：2026-10-25。代码基线：canary `9954a03` 及当前工作区修复。
+> 状态：方向已采用，P0、P1 macOS 私有内测已实现。核实日期：2026-10-25。代码基线：canary `9954a03` 及当前工作区修复。
 > 当前实现与未通过门禁见 [P0 协议验证记录](../development/terminal-protocol-p0.md)。现行 Desktop 生命周期仍以 workspace AGENTS.md 为准，不把原型列为已发布能力。
 
 Raypx 的核心闭环应覆盖两种入口：用户在 Raypx 发起的任务，以及用户在终端自行启动的 Agent 会话。两者共享待办和审批界面，但执行所有权不同：常驻宿主负责自己启动的任务；对外部终端会话，只提供协议明确支持的观察和审批。关闭 Desktop 窗口或退出界面，不应终止常驻宿主。
@@ -273,6 +273,6 @@ PWA/Web Push 是可选增强。本机 Web 和完整服务器产品放在 P4；Do
 2. **首版生命周期**：建议保证 GUI Quit 后继续；daemon/OS 重启后的进程恢复单独交付。
 3. **托管内容策略**：先做逐项目授权的明文私有内测，P0 固定 envelope；公开托管终端同步以前完成 E2EE 与恢复。
 4. **平台与推送发布**：先 macOS，再接入 iOS 前台 App；Linux/Android 后移，推送不在关键路径。
-5. **当前实施范围**：P0 已有真实协议录制；下一步接入 P1 daemon 与 Web/Desktop。尚未修改个人 hook、注册个人系统服务或发布 App。
+5. **当前实施范围**：P0 已有真实协议录制；P1 macOS daemon、Claude/Codex 终端审批与 Web/Desktop 界面已实现，验收边界见 [P1 指南](../development/terminal-host-p1.md)。尚未修改个人 hook、注册个人系统服务或发布 App。
 
 现行 [远程任务架构](../architecture/remote-tasks.md) 继续描述已实现产品；旧 [CLI 执行方案](cli-desktop-runtime.md) 对常驻服务的排除条款在本提议采用后才相应调整。[Web 手机方案](web-mobile-capabilities.md) 的“排除原生 App、手机只读”不再是后续产品方向，其中尚未实施的上传与引导流程不因本文而自动进入范围。实施时同步更新契约版本、workspace 约束和用户可见生命周期文案。

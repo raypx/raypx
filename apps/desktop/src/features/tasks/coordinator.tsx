@@ -1,31 +1,48 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { apiUrl, authClient } from "../auth/client";
 import { taskClient } from "./client";
-import { getBridge, isDesktop, onLocalEvent, localRequest } from "../../lib/desktop";
+import {
+  getBridge,
+  isDesktop,
+  isDaemonDesktop,
+  onLocalEvent,
+  localRequest,
+} from "../../lib/desktop";
 import { localTaskClient } from "./local-client";
 
 export function RemoteCoordinator() {
   const session = authClient.useSession();
   const accountId = session.data?.user.id;
+  const previousAccount = useRef<string | null>(null);
   useEffect(() => {
     taskClient.setAccount?.(accountId ?? null);
     localTaskClient.setAccount(accountId ?? null);
     return () => {
       taskClient.setAccount?.(null);
       localTaskClient.setAccount(null);
-      if (accountId && isDesktop())
-        void localRequest("agents.local.detach", { accountId }).catch(() => {});
     };
   }, [accountId]);
   useEffect(() => {
     if (!isDesktop() || session.isPending) return;
+    // A missing/expired browser session is not an explicit daemon logout.
+    if (isDaemonDesktop() && !accountId) return;
+    const previous = previousAccount.current;
+    previousAccount.current = accountId ?? null;
+    if (previous && previous !== accountId)
+      void localRequest("agents.local.detach", { accountId: previous }).catch(() => {});
     let active = true;
     let refreshing = false;
     const attach = async () => {
-      if (!accountId || refreshing) return;
+      if (refreshing) return;
       refreshing = true;
       try {
         const bridge = await getBridge();
+        await bridge.request.controlSession({ accountId: accountId ?? null });
+        if (!active) return;
+        if (!accountId) {
+          await bridge.request.controlDetach({});
+          return;
+        }
         let info = await bridge.request.controlInfo({ accountId });
         if (info.pendingRevoke) {
           await taskClient.devices.revoke(info.pendingRevoke, {
@@ -34,6 +51,7 @@ export function RemoteCoordinator() {
           info = await bridge.request.controlRevoked({ accountId });
         }
         if (!info.enabled || !active) return;
+        if (info.daemon && info.authorized) return;
         await bridge.request.controlEnable({ accountId, enabled: true });
         const grant = info.binding
           ? await taskClient.devices.refreshGrant(info.binding, {
@@ -69,10 +87,7 @@ export function RemoteCoordinator() {
         refreshing = false;
       }
     };
-    void getBridge()
-      .then((bridge) => bridge.request.controlDetach({}))
-      .then(attach)
-      .catch(() => {});
+    void attach();
     const stop = onLocalEvent((event) => {
       if (event.event === "sync.grantRequired") void attach();
     });
@@ -85,9 +100,6 @@ export function RemoteCoordinator() {
       stop();
       window.removeEventListener("online", retry);
       window.removeEventListener("raypx:remote-change", retry);
-      void getBridge()
-        .then((bridge) => bridge.request.controlDetach({}))
-        .catch(() => {});
     };
   }, [accountId, session.isPending]);
   return null;

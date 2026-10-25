@@ -45,7 +45,10 @@ const rpcPaths = new Set([
   "/rpc/tasks/get",
   "/rpc/approvals/list",
   "/rpc/relay/ticket",
+  "/rpc/observed/list",
+  "/rpc/observed/get",
 ]);
+const nativeRpcPaths = new Set(["/rpc/hosts/authorize", "/rpc/hosts/revoke"]);
 const requestHeaders = new Set(["accept", "accept-language", "content-type"]);
 const responseHeaders = new Set(["content-type", "retry-after", "x-request-id"]);
 
@@ -55,6 +58,7 @@ export function createDesktopApi(
   cookies: NativeCookies,
   send: (input: string, init: RequestInit) => Promise<Response> = fetch,
 ) {
+  const nativePermission = Symbol("native-api-permission");
   const origin = parseServerOrigin(rawOrigin);
   const base = new URL(origin);
   let poisoned = false;
@@ -181,6 +185,7 @@ export function createDesktopApi(
       this: void,
       input: DesktopApiRequest,
       callerSignal?: AbortSignal,
+      permission?: symbol,
     ): Promise<DesktopApiResponse> {
       if (poisoned) throw new Error("Native session storage unavailable; restart required");
       if (
@@ -207,10 +212,15 @@ export function createDesktopApi(
       if (
         url.origin !== origin ||
         url.hash ||
-        (!authPaths.has(url.pathname) && !rpcPaths.has(url.pathname))
+        (!authPaths.has(url.pathname) &&
+          !rpcPaths.has(url.pathname) &&
+          !(permission === nativePermission && nativeRpcPaths.has(url.pathname)))
       )
         throw new Error("API path is not permitted");
-      if (rpcPaths.has(url.pathname) && input.method !== "POST")
+      if (
+        (rpcPaths.has(url.pathname) || nativeRpcPaths.has(url.pathname)) &&
+        input.method !== "POST"
+      )
         throw new Error("Invalid RPC method");
       const headers = new Headers(input.headers);
       headers.set("origin", "views://main");
@@ -297,6 +307,7 @@ export function createDesktopApi(
           ...(request.body === null ? {} : { body: await request.text() }),
         },
         request.signal,
+        nativePermission,
       );
       return new Response([204, 205, 304].includes(result.status) ? null : result.body, {
         status: result.status,

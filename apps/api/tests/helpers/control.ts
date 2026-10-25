@@ -14,6 +14,10 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
   let queue = Promise.resolve();
   const transaction = (draft: Map<string, ControlRecord>, userId: string): ControlTransaction => {
     const key = (kind: RecordKind, id: string) => `${userId}:${kind}:${id}`;
+    const revoked = (id: string) => {
+      const device = draft.get(key("device", id));
+      return device && "revoked" in device && device.revoked === true;
+    };
     return {
       sessionActive: async () => repository.validSession,
       async get<R extends ControlRecord>(kind: RecordKind, id: string) {
@@ -45,6 +49,8 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
           .filter(
             (item) =>
               (!query.beforeTask || `${item.createdAt}:${item.id}` < query.beforeTask) &&
+              (query.ids === undefined || query.ids.includes(item.id)) &&
+              (query.observedAt === undefined || !revoked(item.deviceId)) &&
               (!query.pendingApprovals ||
                 (["pending", "decided"].includes(item.status ?? "") &&
                   ["pending", "running", "waiting", "cancelling"].includes(
@@ -78,7 +84,23 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
               ((query.activity ? b.event?.entry?.order : b.cursor) ?? 0),
           );
         if (query.descending) rows.reverse();
-        return query.limit === undefined ? rows : rows.slice(0, query.limit);
+        if (query.observedAt !== undefined)
+          rows.sort(
+            (a, b) =>
+              Number(b.status === "pending" && (b.expiresAt ?? "") > query.observedAt!) -
+                Number(a.status === "pending" && (a.expiresAt ?? "") > query.observedAt!) ||
+              (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
+          );
+        const result = query.limit === undefined ? rows : rows.slice(0, query.limit);
+        if (!query.summary) return result;
+        return result.map(
+          (item) =>
+            Object.fromEntries(
+              Object.entries(item).filter(
+                ([field]) => !["body", "questions", "decision"].includes(field),
+              ),
+            ) as R,
+        );
       },
       async put(kind, item) {
         const normalized = normalizeTaskJson(item);
@@ -119,7 +141,12 @@ export function memoryControlRepository(): ControlRepository & { validSession: b
           return { userId: (value as ControlRecord & { userId: string }).userId };
       return undefined;
     },
-
+    async findCredential(hash) {
+      for (const [key, value] of data)
+        if (key.endsWith(`:credential:${hash}`))
+          return { userId: (value as ControlRecord & { userId: string }).userId };
+      return undefined;
+    },
     read: (userId, run) => run(transaction(structuredClone(data), userId)),
     transaction<T>(userId: string, run: (tx: ControlTransaction) => Promise<T>): Promise<T> {
       const result = queue.then(async () => {

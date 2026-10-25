@@ -45,6 +45,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../../../src/lib/desktop", () => ({
   isDesktop: mocks.isDesktop,
+  isDaemonDesktop: () => false,
   localRequest: mocks.localRequest,
   onLocalEvent: (listener: (event: LocalEvent) => void) => {
     mocks.listeners.add(listener);

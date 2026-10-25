@@ -31,3 +31,17 @@ Markdown must skip raw HTML and remote images. Recognized edit approvals have a
 bounded Diff plus the complete original request. In-flight controls depend on the
 host's advertised inputModes; explain Claude interrupt versus Codex current-turn
 steer. Recover lost input receipts by authoritative entry ID without resending.
+
+Task workspace keeps the composer/drafts and paged virtual task list in the left
+column, with the selected task in the right column when space allows. Stacked
+layouts focus/scroll to the opened detail. Overview counts describe the loaded
+page; running/queued excludes tasks waiting for an answer. Drafts are explicitly
+saved to device storage, scoped by injected server identity, account and local/remote
+task location. Validate and bound stored drafts (20 drafts, 32,000 characters each);
+preserve editor text on storage/delivery failures. Drafts never execute until Send.
+
+Optional `client.observed` adds a separate terminal-request section. List summaries
+omit tool bodies; expansion loads one request. Render capabilities, revision/epoch
+and expiry before enabling actions; preserve the exact receipt after uncertain
+delivery. Delivered is distinct from applied. Include observed pending counts
+without counting a locally mirrored remote request twice.

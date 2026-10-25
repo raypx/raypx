@@ -1,0 +1,25 @@
+{
+  "name": "@raypx/host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run --passWithNoTests"
+  },
+  "dependencies": {
+    "@raypx/client": "workspace:*",
+    "@raypx/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@types/bun": "catalog:dev"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "bun"
+  }
+}

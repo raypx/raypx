@@ -16,7 +16,9 @@ actions and interactive terminals through the bundled Raypx CLI.
 - Desktop opens its login page before showing the workspace; Web remains accessible without login.
 - Local runtime state and device preferences survive account logout.
 - Show real execution, permission failures and retry state. Never fabricate data.
-- Closing the window keeps tray scheduling; explicit Quit stops managed processes.
+- macOS Desktop Quit leaves the independent CLI daemon and Agent tasks running.
+  Explicit logout/revoke or daemon stop cancels affected work; Windows retains its
+  foreground owner. Host/OS restart recovery remains a separate capability.
 - Use stable package interfaces and add shared packages when real consumers need them.
 - Keep the original brand mark and neutral light/dark visual system.
 
@@ -26,7 +28,10 @@ Email/password accounts, verification/reset, theme, English/Chinese, local files
 Cron automations and terminals. No old projects, tasks, research, AI providers,
 cloud file delivery or general role management. Verified administrators can manage
 site identity, registration and background cleanup in Web. Remote Agent tasks and approvals synchronize
-between Web and opted-in Desktop devices; existing terminal sessions and full
-terminal streams are outside this release. Desktop also runs private local Agent
+between Web and opted-in hosts. macOS adds explicitly installed Claude/Codex
+terminal hooks: per-project Away mode forwards validated Bash approvals to Web or
+Desktop, and timeout/unavailability returns control to the terminal. Terminal
+outputs and full session streams are not synchronized. This is a plaintext private
+test feature until content protection is complete. Desktop also runs private local Agent
 tasks directly through its bundled CLI. These tasks never upload to the account,
 even when remote access is enabled; the Desktop login requirement remains.

@@ -33,6 +33,23 @@ const get = (path = "/api/auth/get-session"): DesktopApiRequest => ({
   method: "GET",
   headers: {},
 });
+it("keeps host credentials behind Native while allowing observed request reads", async () => {
+  const f = fixture();
+  for (const path of ["/rpc/hosts/authorize", "/rpc/hosts/revoke"])
+    await expect(f.api.request({ path, method: "POST", headers: {}, body: "{}" })).rejects.toThrow(
+      "API path is not permitted",
+    );
+  expect(f.send).not.toHaveBeenCalled();
+  const native = await f.api.fetch("https://api.example.test/rpc/hosts/authorize", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: "{}",
+  });
+  expect(native.ok).toBe(true);
+  for (const path of ["/rpc/observed/list", "/rpc/observed/get"])
+    await f.api.request({ path, method: "POST", headers: {}, body: "{}" });
+  expect(f.send).toHaveBeenCalledTimes(3);
+});
 it("validates all cookies before mutation and rolls back a partially failed SDK batch", async () => {
   const f = fixture();
   f.cookies.set({

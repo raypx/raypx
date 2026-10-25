@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronUp, CircleUserRound, LogIn, LogOut, Settings } from "lucide-react";
+import { ChevronsUpDown, CircleUserRound, LogIn, LogOut, Settings } from "lucide-react";
 import { Avatar } from "@raypx/ui/avatar";
 import {
   DropdownMenu,
@@ -41,7 +41,7 @@ export function AccountMenu({
         aria-label={c("accountMenu")}
         aria-busy={pending || busy}
         disabled={pending || busy}
-        className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-sidebar-accent motion-reduce:transition-none max-[760px]:justify-center max-[760px]:px-0"
+        className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-sidebar-accent motion-reduce:transition-none group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0 max-[760px]:justify-center max-[760px]:px-0"
       >
         {user ? (
           <Avatar
@@ -53,7 +53,7 @@ export function AccountMenu({
             <CircleUserRound size={20} aria-hidden="true" />
           </span>
         )}
-        <span className="min-w-0 flex-1 max-[760px]:hidden">
+        <span className="min-w-0 flex-1 group-data-[collapsible=icon]/sidebar:hidden max-[760px]:hidden">
           <span className="block truncate text-[13px] font-medium">
             {pending ? c("loading") : user?.name || c("signIn")}
           </span>
@@ -61,23 +61,35 @@ export function AccountMenu({
             <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
           )}
         </span>
-        <ChevronUp size={15} className="shrink-0 text-muted-foreground max-[760px]:hidden" />
+        <ChevronsUpDown
+          aria-hidden="true"
+          size={15}
+          className="shrink-0 text-muted-foreground group-data-[collapsible=icon]/sidebar:hidden max-[760px]:hidden"
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side="top"
         align="start"
         sideOffset={8}
         aria-label={c("accountMenu")}
-        className="w-64 max-w-[calc(100vw-1.5rem)] motion-reduce:animate-none"
+        className="w-72 max-w-[calc(100vw-1.5rem)] [&_[data-slot=dropdown-menu-item]>svg]:text-muted-foreground [&_[data-slot=dropdown-menu-item]>svg]:stroke-[1.75] motion-reduce:animate-none"
       >
         {user && (
           <>
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="px-2.5 py-2">
-                <span className="block truncate text-sm font-medium text-foreground">
-                  {user.name || user.email}
+              <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-3">
+                <span aria-hidden="true" className="shrink-0">
+                  <Avatar
+                    name={user.name || user.email}
+                    {...(user.image ? { imageUrl: user.image } : {})}
+                  />
                 </span>
-                <span className="mt-0.5 block truncate font-normal">{user.email}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-foreground">
+                    {user.name || user.email}
+                  </span>
+                  <span className="mt-0.5 block truncate font-normal">{user.email}</span>
+                </span>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

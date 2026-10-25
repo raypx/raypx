@@ -89,7 +89,7 @@ async function acceptance() {
     });
     assert.equal(JSON.parse(session.body)?.user?.id, credentials.userId);
     await waitFor(
-      () => control.info(credentials.userId).connected,
+      async () => (await control.info(credentials.userId)).connected,
       "native relay reconnect after process restart",
       60_000,
     );
@@ -111,7 +111,10 @@ async function acceptance() {
       async () => Boolean(await evaluate('return Boolean(document.querySelector("#auth-email"))')),
       "login page after real logout",
     );
-    await waitFor(() => !control.info(credentials.userId).connected, "relay detached after logout");
+    await waitFor(
+      async () => !(await control.info(credentials.userId)).connected,
+      "relay detached after logout",
+    );
     await Bun.write(
       join(directory, "native-restore-complete.json"),
       JSON.stringify({
@@ -172,7 +175,7 @@ async function acceptance() {
   await engine.request("agents.configure", { rootId: root.id, providers: ["claude", "codex"] });
   await evaluate('location.hash="/settings";return true;');
   const connect = messages.en.tasks.connect;
-  if (!control.info(credentials.userId).enabled) {
+  if (!(await control.info(credentials.userId)).enabled) {
     await waitFor(
       async () =>
         Boolean(
@@ -187,11 +190,11 @@ async function acceptance() {
     );
   }
   await waitFor(
-    () => control.info(credentials.userId).connected,
+    async () => (await control.info(credentials.userId)).connected,
     "HTTPS grant and native relay connection",
     60_000,
   );
-  const info = control.info(credentials.userId);
+  const info = await control.info(credentials.userId);
   await Bun.write(
     join(directory, "native-ready.json"),
     JSON.stringify({
@@ -214,7 +217,7 @@ async function acceptance() {
       if (!renewedDuringTask && (await Bun.file(join(directory, "renew-now.json")).exists())) {
         assert.equal(await control.refreshGrant(), true, "Hidden native grant renewal failed");
         await waitFor(
-          () => control.info(credentials.userId).connected,
+          async () => (await control.info(credentials.userId)).connected,
           "hidden relay reconnect after native renewal",
         );
         renewedDuringTask = true;

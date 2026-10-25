@@ -6,11 +6,13 @@ import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
+import { signOutDesktopHost } from "../features/tasks/host-session";
+import { TerminalRequestNotice } from "../features/tasks/request-notice";
 import { createPendingClient, localTaskClient } from "../features/tasks/local-client";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import {
-  Clock,
+  CalendarClock,
   FolderOpen,
   ListTodo,
   Inbox,
@@ -72,12 +74,17 @@ export function DesktopShell() {
     const stop = onLocalEvent((event) => {
       if (event.event === "engine.status" && typeof event.data.status === "string")
         setEngine(event.data.status);
+      if (event.event === "approval.open")
+        void router.navigate({
+          to: "/approvals",
+          search: { scope: event.data.scope === "remote" ? "remote" : "local" },
+        });
     });
     return () => {
       active = false;
       stop();
     };
-  }, []);
+  }, [router]);
   async function retry() {
     setRestarting(true);
     try {
@@ -95,20 +102,14 @@ export function DesktopShell() {
       <AppShell
         frame="window"
         brand={{ to: "/", label: "Raypx" }}
+        navigationLabels={[c("workspace"), c("localTools")]}
         navigation={[
           [
-            { to: "/", label: c("files"), icon: <FolderOpen size={19} />, exact: true },
-            { to: "/automations", label: c("jobs"), icon: <Clock size={19} /> },
-            { to: "/terminal", label: c("terminal"), icon: <SquareTerminal size={19} /> },
-          ],
-          [
-            { to: "/account", label: c("account"), icon: <CircleUserRound size={19} /> },
-            { to: "/settings", label: c("settings"), icon: <Settings size={19} /> },
-            { to: "/tasks", label: c("tasks"), icon: <ListTodo size={19} /> },
+            { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
             {
               to: "/approvals",
               label: c("approvals"),
-              icon: <Inbox size={19} />,
+              icon: <Inbox />,
               badge: (
                 <PendingCount
                   key={accountId ?? "signed-out"}
@@ -118,6 +119,15 @@ export function DesktopShell() {
               ),
             },
           ],
+          [
+            { to: "/", label: c("files"), icon: <FolderOpen />, exact: true },
+            { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
+            { to: "/terminal", label: c("terminal"), icon: <SquareTerminal /> },
+          ],
+        ]}
+        secondaryNavigation={[
+          { to: "/account", label: c("account"), icon: <CircleUserRound /> },
+          { to: "/settings", label: c("settings"), icon: <Settings /> },
         ]}
         breadcrumbs={[
           "Raypx",
@@ -126,26 +136,36 @@ export function DesktopShell() {
               ? "tasks"
               : path.startsWith("/approvals")
                 ? "approvals"
-                : "device",
+                : path.startsWith("/automations")
+                  ? "jobs"
+                  : path.startsWith("/terminal")
+                    ? "terminal"
+                    : path.startsWith("/account")
+                      ? "account"
+                      : path.startsWith("/settings")
+                        ? "settings"
+                        : "files",
           ),
         ]}
         LinkComponent={ShellLink}
         notice={
-          engine === "error" &&
-          isDesktop() && (
-            <div
-              className="flex items-center justify-between gap-5 bg-muted px-8 py-4"
-              role="alert"
-            >
-              <div>
-                <strong className="text-[13px] font-medium">{e("unavailable")}</strong>
-                <p className="text-xs text-muted-foreground">{e("hint")}</p>
+          <>
+            <TerminalRequestNotice accountId={accountId} />
+            {engine === "error" && isDesktop() && (
+              <div
+                className="flex items-center justify-between gap-5 bg-muted px-8 py-4"
+                role="alert"
+              >
+                <div>
+                  <strong className="text-[13px] font-medium">{e("unavailable")}</strong>
+                  <p className="text-xs text-muted-foreground">{e("hint")}</p>
+                </div>
+                <Button variant="outline" disabled={restarting} onClick={() => void retry()}>
+                  {e("retry")}
+                </Button>
               </div>
-              <Button variant="outline" disabled={restarting} onClick={() => void retry()}>
-                {e("retry")}
-              </Button>
-            </div>
-          )
+            )}
+          </>
         }
         account={
           <AccountMenu
@@ -157,6 +177,7 @@ export function DesktopShell() {
             onNavigate={(destination) => void router.navigate({ to: `/${destination}` })}
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
+                if (accountId) await signOutDesktopHost(accountId);
                 // Drop every account-scoped query before the next session reads.
                 analytics.reset();
                 queryClient.clear();

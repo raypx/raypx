@@ -8,6 +8,7 @@ import {
   type RelayRequest,
   type RelayCursor,
   type TaskChange,
+  terminalRequestSchema,
 } from "@raypx/contracts/api";
 
 type Input<M extends RelayRequest["method"]> = Extract<RelayRequest, { method: M }>["input"];
@@ -15,6 +16,12 @@ export interface TaskClient extends Pick<
   ApiClient,
   "account" | "devices" | "relay" | "tasks" | "approvals"
 > {
+  observed?: ApiClient["observed"] & {
+    decide(
+      input: Input<"observed.decide">,
+      options?: { signal?: AbortSignal },
+    ): Promise<ReturnType<typeof terminalRequestSchema.parse>>;
+  };
   tasks: ApiClient["tasks"] & {
     create(
       input: Input<"tasks.create">,
@@ -93,7 +100,7 @@ export function createTaskClient(
         if (account !== currentAccount) throw new Error("Account changed");
         return {
           type: "auth",
-          protocolVersion: 2,
+          protocolVersion: 3,
           role: "viewer",
           token: ticket.token,
           cursors: [...cursors.values()],
@@ -106,6 +113,7 @@ export function createTaskClient(
         changed();
       },
       message: (frame) => {
+        if (frame.type === "observed_changed") changed({ type: "reset", deviceId: frame.deviceId });
         if (frame.type === "changed") {
           cursors.set(frame.deviceId, {
             deviceId: frame.deviceId,
@@ -178,11 +186,13 @@ export function createTaskClient(
     }
     if (!connection) throw failure("NETWORK_UNAVAILABLE");
     const id =
-      value.method === "tasks.create" ||
-      value.method === "tasks.followUp" ||
-      value.method === "tasks.input"
-        ? value.input.id
-        : crypto.randomUUID();
+      value.method === "observed.decide"
+        ? value.input.receiptId
+        : value.method === "tasks.create" ||
+            value.method === "tasks.followUp" ||
+            value.method === "tasks.input"
+          ? value.input.id
+          : crypto.randomUUID();
     const key = JSON.stringify(value),
       old = inFlight.get(id);
     if (old) {
@@ -236,6 +246,14 @@ export function createTaskClient(
     account: api.account,
     devices: api.devices,
     relay: api.relay,
+    observed: {
+      list: (...args) => api.observed.list(...args),
+      get: (...args) => api.observed.get(...args),
+      decide: async (input, opts) =>
+        terminalRequestSchema.parse(
+          await request({ method: "observed.decide", input }, opts?.signal),
+        ),
+    },
     tasks: {
       list: (...args) =>
         terminalError ? Promise.reject(failure(terminalError)) : api.tasks.list(...args),

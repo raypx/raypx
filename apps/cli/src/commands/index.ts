@@ -6,6 +6,7 @@ import { LocalError } from "../runtime/errors";
 import type { RecordDiagnostic } from "../diagnostics";
 import { globalArgs, type CliArgs } from "./args";
 import { createAiCommands } from "./ai";
+import { createDaemonCommands, createConnectorCommands } from "./daemon";
 
 type PublicMethod = Exclude<LocalMethod, "runtime.info" | `terminal.${string}`>;
 type Operation = {
@@ -93,6 +94,8 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
     });
   }
   groups.set("ai", createAiCommands(invocation));
+  groups.set("daemon", createDaemonCommands(invocation, options));
+  groups.set("connectors", createConnectorCommands(invocation, options));
   const stdio = defineCliCommand({
     meta: { name: "stdio", description: "Private Desktop NDJSON transport", hidden: true },
     args: globalArgs,
@@ -150,7 +153,7 @@ export async function runCommand(invocation: CliArgs, defaults: RuntimeOptions) 
     }
     console.log(
       (await renderUsage(target, target === root ? undefined : root)) +
-        "\n\nJSON params remain supported. File deletion requires --yes or an interactive confirmation.\nJobs execute once; scheduling requires Desktop.",
+        "\n\nJSON params remain supported. File deletion requires --yes or an interactive confirmation.\nJobs execute once; scheduling requires Desktop or raypx daemon run.",
     );
     return;
   }

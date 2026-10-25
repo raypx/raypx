@@ -4,6 +4,8 @@ import { accountProfileSchema, apiContract } from "../src/api.js";
 describe("foundation contract", () => {
   it("exposes scoped coordination without publishing local execution methods", () => {
     expect(Object.keys(apiContract)).toEqual([
+      "hosts",
+      "observed",
       "configuration",
       "devices",
       "tasks",
@@ -15,6 +17,8 @@ describe("foundation contract", () => {
     expect(apiContract).not.toHaveProperty("files");
     expect(apiContract).not.toHaveProperty("agents");
     expect(Object.keys(apiContract.account)).toEqual(["get"]);
+    expect(Object.keys(apiContract.hosts)).toEqual(["authorize", "grant", "revoke"]);
+    expect(Object.keys(apiContract.observed)).toEqual(["list", "get"]);
   });
 
   it("uses Better Auth's name and strips private fields", () => {

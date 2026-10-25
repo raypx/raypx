@@ -9,7 +9,8 @@ import {
   type TaskChange,
 } from "@raypx/contracts/tasks";
 import type { TaskWorkspaceClient } from "@raypx/tasks/client";
-import { localRequest, onLocalEvent } from "../../lib/desktop";
+import { localRequest, onLocalEvent, isDaemonDesktop } from "../../lib/desktop";
+import { observedProjectionSchema, terminalRequestSchema } from "@raypx/contracts/terminal";
 
 function failure(code: string) {
   return Object.assign(new Error(code), { data: { error: { code } } });
@@ -69,6 +70,34 @@ export function createLocalTaskClient(
     return result.value;
   };
   return {
+    ...(isDaemonDesktop()
+      ? {
+          observed: {
+            list: (_input, options) =>
+              read(
+                async (accountId) =>
+                  observedProjectionSchema.parse(await request("observed.list", { accountId })),
+                options?.signal,
+              ),
+            get: (input, options) =>
+              read(
+                async (accountId) =>
+                  terminalRequestSchema.parse(
+                    await request("observed.get", { accountId, id: input.id }),
+                  ),
+                options?.signal,
+              ),
+            decide: (decision, options) =>
+              read(
+                async (accountId) =>
+                  terminalRequestSchema.parse(
+                    await request("observed.decide", { accountId, decision }),
+                  ),
+                options?.signal,
+              ),
+          },
+        }
+      : {}),
     devices: {
       list: (_input, options) =>
         read(
@@ -134,7 +163,7 @@ export function createLocalTaskClient(
           const change = taskChangeSchema.safeParse(event.data.change);
           if (!change.success || change.data.local !== false)
             changed(change.success ? change.data : undefined);
-        } else if (event.event === "engine.status") changed();
+        } else if (event.event === "engine.status" || event.event === "observed.changed") changed();
       });
       return () => {
         listeners.delete(listener);
@@ -153,6 +182,35 @@ export function createPendingClient(
 ): TaskWorkspaceClient {
   return {
     ...local,
+    ...(local.observed || remote.observed
+      ? {
+          observed: {
+            list: async (input, options) => {
+              const results = await Promise.allSettled([
+                local.observed?.list(input, options),
+                remote.observed?.list(input, options),
+              ]);
+              const values = results.flatMap((result) =>
+                result.status === "fulfilled" && result.value ? [result.value] : [],
+              );
+              return {
+                sessions: [
+                  ...new Map(
+                    values.flatMap((value) => value.sessions).map((value) => [value.id, value]),
+                  ).values(),
+                ],
+                requests: [
+                  ...new Map(
+                    values.flatMap((value) => value.requests).map((value) => [value.id, value]),
+                  ).values(),
+                ],
+              };
+            },
+            get: (input, options) => (remote.observed ?? local.observed)!.get(input, options),
+            decide: (input, options) => (remote.observed ?? local.observed)!.decide(input, options),
+          },
+        }
+      : {}),
     approvals: {
       ...local.approvals,
       list: async (input, options) => {

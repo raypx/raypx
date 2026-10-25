@@ -9,11 +9,22 @@ export function PendingCount({
   accountId: string | null;
 }) {
   const load = useCallback(
-    (signal: AbortSignal) => client.approvals.list({}, { signal }),
+    async (signal: AbortSignal) => {
+      const [managed, observed] = await Promise.all([
+        client.approvals.list({}, { signal }),
+        client.observed?.list({}, { signal }),
+      ]);
+      return (
+        managed.length +
+        (observed?.requests.filter(
+          (request) => request.status === "pending" && Date.parse(request.expiresAt) > Date.now(),
+        ).length ?? 0)
+      );
+    },
     [client],
   );
-  const { data } = useRemoteQuery(["approvals", accountId], load, Boolean(accountId), client);
-  return data?.length ? (
-    <span className="ml-auto rounded bg-muted px-1.5 text-xs tabular-nums">{data.length}</span>
+  const { data } = useRemoteQuery(["pending", accountId], load, Boolean(accountId), client);
+  return data ? (
+    <span className="ml-auto rounded bg-muted px-1.5 text-xs tabular-nums">{data}</span>
   ) : null;
 }

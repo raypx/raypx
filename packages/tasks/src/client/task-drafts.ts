@@ -1,0 +1,59 @@
+import type { AgentProvider } from "@raypx/contracts/tasks";
+
+export const MAX_TASK_DRAFTS = 20;
+export interface DraftInput {
+  deviceId: string;
+  projectId: string;
+  provider: AgentProvider;
+  prompt: string;
+  mode: "run" | "plan";
+}
+export interface TaskDraft extends DraftInput {
+  id: string;
+  updatedAt: string;
+}
+/** Bound untrusted device storage before it becomes editable form state. */
+export function readTaskDrafts(raw: string | null): TaskDraft[] {
+  if (!raw) return [];
+  if (raw.length > 2_000_000) throw new Error("Invalid draft storage");
+  const values: unknown = JSON.parse(raw);
+  if (!Array.isArray(values) || values.length > MAX_TASK_DRAFTS) throw new Error("Invalid drafts");
+  const ids = new Set<string>();
+  return values.map((value: unknown) => {
+    if (!value || typeof value !== "object") throw new Error("Invalid draft");
+    const draft = value as Record<string, unknown>;
+    for (const key of ["id", "deviceId", "projectId", "prompt", "updatedAt"]) {
+      if (typeof draft[key] !== "string" || draft[key].length > (key === "prompt" ? 32000 : 2000))
+        throw new Error("Invalid draft field");
+    }
+    if (
+      !draft.id ||
+      ids.has(draft.id as string) ||
+      !(draft.prompt as string).trim() ||
+      !Number.isFinite(Date.parse(draft.updatedAt as string)) ||
+      !["claude", "codex"].includes(String(draft.provider)) ||
+      !["run", "plan"].includes(String(draft.mode))
+    )
+      throw new Error("Invalid draft value");
+    ids.add(draft.id as string);
+    // Drop unknown fields, including any externally inserted executable content.
+    return {
+      id: draft.id,
+      deviceId: draft.deviceId,
+      projectId: draft.projectId,
+      prompt: draft.prompt,
+      updatedAt: draft.updatedAt,
+      provider: draft.provider,
+      mode: draft.mode,
+    } as TaskDraft;
+  });
+}
+export function sameDraft(a: DraftInput, b: DraftInput) {
+  return (
+    a.deviceId === b.deviceId &&
+    a.projectId === b.projectId &&
+    a.provider === b.provider &&
+    a.prompt === b.prompt &&
+    a.mode === b.mode
+  );
+}

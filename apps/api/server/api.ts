@@ -35,6 +35,7 @@ export interface ApiAppOptions {
 const rpcLimits = {
   "devices.register": { window: 60, max: 10 },
   "devices.refreshGrant": { window: 60, max: 30 },
+  "hosts.authorize": { window: 60, max: 5 },
   "relay.ticket": { window: 60, max: 60 },
   "configuration.update": { window: 60, max: 10 },
 } satisfies Record<string, RateRule>;
@@ -282,6 +283,44 @@ export function createApiApp(options: ApiAppOptions) {
     return auth;
   }
   const router = os.router({
+    hosts: {
+      authorize: os.hosts.authorize.handler(({ input, context }) => {
+        const origin = context.headers.get("origin");
+        if (!origin || !allowedOrigins.includes(origin))
+          throw new ORPCError("FORBIDDEN", {
+            data: { error: { code: "ORIGIN_REJECTED" }, requestId: context.requestId },
+          });
+        return controlCall(
+          context,
+          (control, auth) => control.authorizeHost(auth, input),
+          "hosts.authorize",
+        );
+      }),
+      grant: os.hosts.grant.handler(async ({ input, context }) => {
+        if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
+        try {
+          return await options.control.hostGrant(input.credential);
+        } catch (error) {
+          return controlFailure(error, context);
+        }
+      }),
+      revoke: os.hosts.revoke.handler(async ({ input, context }) => {
+        if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
+        try {
+          return await options.control.revokeHost(input.credential);
+        } catch (error) {
+          return controlFailure(error, context);
+        }
+      }),
+    },
+    observed: {
+      list: os.observed.list.handler(({ context }) =>
+        controlCall(context, (control, auth) => control.listObserved(auth.user.id)),
+      ),
+      get: os.observed.get.handler(({ input, context }) =>
+        controlCall(context, (control, auth) => control.getObserved(auth.user.id, input.id)),
+      ),
+    },
     configuration: {
       public: os.configuration.public.handler(({ context }) =>
         configurationCall(context, async (service) => {

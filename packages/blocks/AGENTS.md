@@ -19,6 +19,16 @@ Code outside `src/components/` stays private.
   `#main` with their router's scroll restoration/reset behavior.
   Applications pass a `LinkComponent` adapting their router to `ShellLinkProps`;
   it sets `aria-current="page"` on active entries when `markActive` is true.
+  Optional `navigationLabels` label the main groups; `secondaryNavigation` stays
+  above the account slot. Desktop-width users can toggle an icon rail, which narrow
+  screens use automatically. Rail links retain names, badges and shadcn tooltips.
+  The shell composes UI’s shadcn SidebarProvider, Sidebar, groups, menus and footer.
+  It uses the persistent icon rail on narrow screens. The account slot adapts to
+  `group/sidebar` and `data-collapsible="icon"`.
+  Blocks owns the local `raypx_sidebar_open` device preference and cross-window
+  storage subscription; the UI primitive owns no persistence. Missing/blocked
+  storage keeps the expanded default or current in-memory choice. Narrow layouts
+  still use the rail regardless of the stored desktop-width choice.
 - `settings`: `SettingsPage`, `SettingsSection` (heading-labelled row with a control),
   and the device preference sections `AppearanceSettings` (needs UI's ThemeProvider)
   and `LanguageSettings` (needs i18n's BrowserLanguageProvider). LanguageSettings

@@ -13,6 +13,11 @@ export function onLocalEvent(listener: (event: LocalEvent) => void) {
 export function isDesktop() {
   return typeof window !== "undefined" && "__electrobunWebviewId" in window;
 }
+export function isDaemonDesktop() {
+  return (
+    typeof window !== "undefined" && "__raypxDaemon" in window && window.__raypxDaemon === true
+  );
+}
 let bridge: ReturnType<typeof createBridge> | undefined;
 async function createBridge() {
   const { Electroview } = await import("electrobun/view");
@@ -53,7 +58,7 @@ export async function restartEngine() {
 }
 export async function localRequest<T, M extends LocalMethod = LocalMethod>(
   method: M,
-  params: LocalParams<M>,
+  params: M extends `observed.${string}` ? Omit<LocalParams<M>, "apiUrl"> : LocalParams<M>,
 ): Promise<T> {
   return (await (await getBridge()).request.localRequest({ method, params })) as T;
 }

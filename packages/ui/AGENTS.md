@@ -8,6 +8,10 @@ packages own page layout, forms, navigation and product behavior.
 ## Interface
 
 - `components/ui/*`: Base UI and shadcn primitives.
+- `components/ui/sidebar`: shadcn base-nova Sidebar composition and context.
+  SidebarProvider supports a persistent mobile rail via `mobileBehavior="rail"`;
+  the default is a Sheet. Callers supply translated trigger labels and own persistence.
+  The keyboard shortcut ignores text editors.
 - `themes`: all dark/light behavior in `src/themes`. Render `ThemeScript` in the
   document head (optional `initialThemeSource` expression for native snapshots),
   wrap the app in `ThemeProvider` (`initialTheme`, `storageKey`), read `useTheme`,

@@ -13,6 +13,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { useAuthActions } from "@raypx/auth/hooks";
 import { authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
+import { signOutDesktopHost } from "../features/tasks/host-session";
 
 export const Route = createFileRoute("/account")({
   ssr: false,
@@ -90,7 +91,8 @@ function AccountPage() {
           account={state.account}
           busy={busy}
           onSignOut={() =>
-            auth.signOut(() => {
+            auth.signOut(async () => {
+              await signOutDesktopHost(state.account.id);
               queryClient.clear();
               return refresh();
             })
