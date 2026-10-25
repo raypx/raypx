@@ -63,6 +63,9 @@ async function signedInDesktop(page: Page) {
     authResponse(route, { json: { id: user.id, name: user.name, email: user.email } }),
   );
   await page.route("**/rpc/approvals/list", (route) => authResponse(route, { json: [] }));
+  await page.route("**/rpc/observed/list", (route) =>
+    authResponse(route, { json: { sessions: [], requests: [] } }),
+  );
   await page.route("**/rpc/devices/list", (route) => authResponse(route, { json: [] }));
   return user;
 }

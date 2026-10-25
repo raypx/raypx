@@ -9,7 +9,14 @@ vi.mock("../../../server/runtime/cloudflare.js", () => ({
 }));
 beforeEach(() => vi.resetAllMocks());
 
-const result = { status: "completed", sessions: 1, verifications: 2, rateLimits: 3 };
+const result = {
+  status: "completed",
+  sessions: 1,
+  verifications: 2,
+  rateLimits: 3,
+  observedRequests: 0,
+  observedSessions: 0,
+};
 const event = (env: Record<string, string>) => ({
   name: "maintenance:cleanup",
   payload: {},

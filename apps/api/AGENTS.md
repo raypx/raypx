@@ -34,8 +34,8 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
 `maintenance:cleanup` runs every 15 minutes on Node and Cloudflare, gated by
 `JOBS_ENABLED` (false by default). Keep Nitro's schedule and Wrangler triggers aligned.
 Cleanup uses PostgreSQL transaction time, an advisory transaction lock and bounded
-row-locked batches. Only sessions/verification records expired over 24 hours ago
-and rate limits older than one hour are eligible. Failure rolls back and retries
+row-locked batches. Sessions/verification records expired over 24 hours ago,
+rate limits older than one hour and terminal projections of revoked devices are eligible. Failure rolls back and retries
 on the next schedule. Never add a production HTTP task runner or log driver errors.
 Node tasks reuse the API runtime; Worker tasks create and close an event-owned one.
 See `docs/development/server-jobs.md` for policy and verification.
@@ -56,7 +56,9 @@ See `docs/development/server-jobs.md` for policy and verification.
   by client IP. The Node entry overwrites `x-raypx-client-ip` with the socket address
   and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy;
   Workers use `cf-connecting-ip`. `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
-  Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon.
+  Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon. Host grants
+  have pre-lookup limits by platform-owned client address (120/min) and credential
+  digest (6/min); never use a caller-selected forwarding header or raw bearer key.
 - Optional `REDIS_URL` (Node only, `server/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
   stores `runtime.cache` values.
@@ -166,6 +168,10 @@ explicitly plain private testing data; E2EE is a later public-release gate.
 Host bootstrap requires a session created within ten minutes and after the last
 security revocation. Replace the prior device key atomically under the account
 write lock. Validate password fingerprint and `control_owner.security_epoch` on
-host grants/relay access. Auth security revocation advances the epoch before
-deleting browser sessions; ordinary expiry is independent. Server cancellation
+host grants/relay access. Legacy credentials without a bootstrap session must
+reauthorize; they cannot issue grants or retain relay access. Successful bulk auth
+revocation advances the epoch; a successful single-session revocation targets only
+its credentials. Ordinary expiry is independent. Device revocation deletes its
+observed sessions/requests transactionally, preserving managed history. Background
+cleanup drains old revoked-device projections in batches of 1000 per table. Server cancellation
 uses a projection marker and never increments host-owned request revisions.

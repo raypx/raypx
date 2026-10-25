@@ -1,6 +1,8 @@
 import {
   chmodSync,
   copyFileSync,
+  constants,
+  lstatSync,
   existsSync,
   mkdirSync,
   statSync,
@@ -126,8 +128,14 @@ export function stableCliStatus(binary = stableCliPath()) {
     if (!existsSync(binary)) return { error: "HOST_BINARY_MISSING", updateAvailable: false };
     if (!existsSync(metadata)) return { error: "INSTALLATION_CONFLICT", updateAvailable: false };
     const previous = JSON.parse(readFileSync(metadata, "utf8"));
-    if (!statSync(binary).isFile() || previous.digest !== digest(binary))
+    if (!lstatSync(binary).isFile())
       return { error: "INSTALLATION_CONFLICT", updateAvailable: false };
+    if (previous.digest !== digest(binary))
+      return {
+        error: "INSTALLATION_CONFLICT",
+        updateAvailable: false,
+        repairable: typeof previous.digest === "string" && /^[a-f0-9]{64}$/.test(previous.digest),
+      };
     const updateAvailable =
       previous.version !== cliBuild.version ||
       (cliBuild.builtAt > 0 && previous.builtAt !== cliBuild.builtAt);
@@ -158,8 +166,28 @@ export function refreshStableCli() {
 }
 const source = async (file: string) => (await readHookSettings(file))?.text ?? null;
 
+/** Only an explicitly confirmed, previously owned regular file can be replaced. */
+export function preserveModifiedCli(binary: string, confirmed = false) {
+  const ownership = join(dirname(binary), "installation.json");
+  if (!existsSync(ownership) || !lstatSync(binary).isFile())
+    throw new LocalError("INSTALLATION_CONFLICT", "Existing executable is not owned by Raypx");
+  const previous = JSON.parse(readFileSync(ownership, "utf8"));
+  if (typeof previous.digest !== "string" || !/^[a-f0-9]{64}$/.test(previous.digest))
+    throw new LocalError(
+      "INSTALLATION_CONFLICT",
+      "Installation ownership requires manual recovery",
+    );
+  if (previous.digest === digest(binary)) return;
+  if (!confirmed)
+    throw new LocalError("INSTALLATION_CONFLICT", "Installed executable changed outside Raypx");
+  const backup = `${binary}.backup-${crypto.randomUUID()}`;
+  copyFileSync(binary, backup, constants.COPYFILE_EXCL);
+  chmodSync(backup, 0o600);
+  return backup;
+}
+
 /** Copy only the compiled host to a stable, explicitly owned installation. */
-export function installStableCli() {
+export function installStableCli(recoverModified = false) {
   if (process.platform !== "darwin")
     throw new LocalError(
       "UNSUPPORTED_PLATFORM",
@@ -184,9 +212,12 @@ export function installStableCli() {
           "INSTALLATION_CONFLICT",
           "Existing executable is not owned by this Raypx installer",
         );
-      const old = JSON.parse(readFileSync(ownership, "utf8"));
-      if (old.digest !== digest(binary))
-        throw new LocalError("INSTALLATION_CONFLICT", "Installed executable changed outside Raypx");
+      if (recoverModified && binary === process.execPath)
+        throw new LocalError(
+          "HOST_UPDATE_REQUIRED",
+          "Use the trusted Desktop binary to repair this installation",
+        );
+      preserveModifiedCli(binary, recoverModified);
     }
     if (binary !== process.execPath) {
       const temporary = `${binary}.${crypto.randomUUID()}.tmp`;
@@ -222,6 +253,7 @@ export async function connectorStatus(directory: string, requested: ConnectorDir
           hookInstalled: plan.changed,
           updateAvailable: plan.changed && binary.updateAvailable,
           installed: plan.changed && !binary.error,
+          repairable: Boolean(plan.changed && binary.repairable),
           modified: plan.preservedModified,
           requiresTrust: provider === "codex",
           error: plan.changed ? binary.error : null,
@@ -243,6 +275,7 @@ export async function connectorAction(
   provider: AgentProvider,
   action: "install" | "uninstall",
   requested: ConnectorDirectories = {},
+  recoverModified = false,
 ) {
   const file = connectorSettingsFile(provider, directory, requested);
   mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
@@ -252,7 +285,7 @@ export async function connectorAction(
   try {
     const command = connectorCommand(directory, provider),
       plan = planConnectorSettings(provider, await source(file), command, action);
-    if (action === "install") installStableCli();
+    if (action === "install") installStableCli(recoverModified);
     const result = await applyHookSettings(file, plan);
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     const paths = savedDirectories(directory);
@@ -266,6 +299,18 @@ export async function connectorAction(
       requiresTrust: plan.requiresTrust,
       preservedModified: plan.preservedModified,
     };
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error.code === "EACCES" || error.code === "EPERM")
+    )
+      throw new LocalError(
+        error.code,
+        "Check permissions on the installation and Agent settings directories",
+      );
+    throw error;
   } finally {
     release();
   }

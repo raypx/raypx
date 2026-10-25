@@ -45,10 +45,11 @@ export interface ControlTransaction {
   put<T extends ControlRecord>(kind: RecordKind, value: T): Promise<T>;
   remove(kind: RecordKind, id: string): Promise<void>;
   pruneEvents(deviceId: string, streamId: string, orphans?: boolean): Promise<void>;
+  purgeObserved(deviceId: string): Promise<void>;
 }
 export type ControlReader = Omit<
   ControlTransaction,
-  "put" | "remove" | "pruneEvents" | "revokeHostSecurity"
+  "put" | "remove" | "pruneEvents" | "purgeObserved" | "revokeHostSecurity"
 >;
 export interface ControlRepository {
   read<T>(userId: string, run: (tx: ControlReader) => Promise<T>): Promise<T>;
@@ -87,6 +88,12 @@ export function createControlRepository(database: Database): ControlRepository {
           );
         }
         const tx: ControlTransaction = {
+          async purgeObserved(deviceId) {
+            for (const kind of ["observed_request", "observed_session"] as const)
+              await databaseTx.execute(
+                sql`delete from ${table(kind)} where user_id=${userId} and device_id=${deviceId}`,
+              );
+          },
           async sessionActive(id, now) {
             const rows = await databaseTx.execute(
               sql`select id from raypx_foundation.session where id = ${id} and user_id = ${userId} and expires_at > ${now.toISOString()}::timestamptz`,

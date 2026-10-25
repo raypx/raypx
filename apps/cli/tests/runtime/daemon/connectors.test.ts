@@ -9,10 +9,29 @@ import {
   assertStableUpgrade,
   connectorCommand,
   connectorStatus,
+  preserveModifiedCli,
 } from "../../../src/runtime/daemon/connectors";
 import { planHookSettings } from "../../../src/runtime/terminal/settings";
 import { cliBuild } from "../../../src/runtime/daemon/build";
 afterEach(() => vi.unstubAllEnvs());
+it("requires confirmation and preserves a modified owned executable before replacement", () => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-repair-backup-")),
+    binary = join(directory, "raypx");
+  try {
+    writeFileSync(binary, "custom modification");
+    expect(() => preserveModifiedCli(binary, true)).toThrow("not owned");
+    writeFileSync(
+      join(directory, "installation.json"),
+      JSON.stringify({ digest: createHash("sha256").update("original").digest("hex") }),
+    );
+    expect(() => preserveModifiedCli(binary)).toThrow("changed outside Raypx");
+    const backup = preserveModifiedCli(binary, true)!;
+    expect(readFileSync(backup, "utf8")).toBe("custom modification");
+    expect(readFileSync(binary, "utf8")).toBe("custom modification");
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 it("uses explicit TOML and persists installed destinations independently of launchd environment", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-connector-paths-"));
   vi.stubEnv("RAYPX_HOME", directory);

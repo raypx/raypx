@@ -45,3 +45,6 @@ omit tool bodies; expansion loads one request. Render capabilities, revision/epo
 and expiry before enabling actions; preserve the exact receipt after uncertain
 delivery. Delivered is distinct from applied. Include observed pending counts
 without counting a locally mirrored remote request twice.
+Pending counts isolate failed sources and label known partial totals; do not hide
+healthy approvals or present an unknown total as zero. Device-disconnect confirmation
+explains deletion of synced terminal approvals and preservation of managed history.

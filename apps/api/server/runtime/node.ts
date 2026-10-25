@@ -28,6 +28,7 @@ export async function createApiRuntime(
     {
       ...providers,
       logger,
+      clientIpHeader: CLIENT_IP_HEADER,
       onRevoke: (userId, deviceId) => nodeRelay.revoke(userId, deviceId),
       connect: () => connectDatabase(environment.DATABASE_URL),
       closeLogger: () => logger.close(),

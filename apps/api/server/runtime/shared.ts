@@ -32,6 +32,8 @@ export interface RuntimeProviders {
 
 export interface RuntimeResources extends RuntimeProviders {
   logger: ApiLogging;
+  /** Header owned by the platform entry, independently of configurable auth forwarding headers. */
+  clientIpHeader?: string;
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
@@ -87,6 +89,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         cleanup: createCleanupJob({ db, logger, configuration, enabled: environment.JOBS_ENABLED }),
       },
       app: createApiApp({
+        ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,
         jobsEnabled: environment.JOBS_ENABLED,
         control,

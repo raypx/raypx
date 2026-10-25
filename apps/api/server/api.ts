@@ -26,6 +26,8 @@ export interface ApiAppOptions {
   mailAvailable?: boolean;
   logger?: ApiLogging;
   rateLimit?: RateLimiter;
+  /** Platform-owned, sanitized client address header, never a fallback header supplied by callers. */
+  clientIpHeader?: string;
   /** Upper bound for producing one RPC response (default 15 s). */
   rpcTimeoutMs?: number;
   /** Named dependency probes for `/ready`; each resolves when the dependency answers. */
@@ -202,6 +204,17 @@ export function createApiApp(options: ApiAppOptions) {
       ]);
     });
   type Context = { headers: Headers; requestId: string };
+  async function enforceLimit(context: Context, key: string, rule: RateRule) {
+    if (options.rateLimit && !(await options.rateLimit(key, rule)))
+      throw new ORPCError("TOO_MANY_REQUESTS", {
+        data: { error: { code: "RATE_LIMITED" }, requestId: context.requestId },
+      });
+  }
+  const digest = async (value: string) =>
+    Array.from(
+      new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))),
+      (byte) => byte.toString(16).padStart(2, "0"),
+    ).join("");
   async function controlCall<T>(
     context: Context,
     run: (control: ControlService, auth: AuthSession) => Promise<T>,
@@ -298,6 +311,20 @@ export function createApiApp(options: ApiAppOptions) {
       }),
       grant: os.hosts.grant.handler(async ({ input, context }) => {
         if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
+        // Node replaces the private header from its socket; Workers supply the
+        // edge-owned CF header. Neither limit stores the bearer credential.
+        const peer =
+          (options.clientIpHeader ? context.headers.get(options.clientIpHeader) : null) ??
+          "unknown";
+        await enforceLimit(context, `rpc:hosts.grant:peer:${await digest(peer)}`, {
+          window: 60,
+          max: 120,
+        });
+        await enforceLimit(
+          context,
+          `rpc:hosts.grant:credential:${await digest(input.credential)}`,
+          { window: 60, max: 6 },
+        );
         try {
           return await options.control.hostGrant(input.credential);
         } catch (error) {

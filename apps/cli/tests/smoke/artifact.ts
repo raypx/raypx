@@ -83,6 +83,22 @@ try {
     assert.equal(status.installed, false);
     assert.equal(status.error, "HOST_BINARY_MISSING");
     await invoke(["connectors", "install", "claude"]);
+    const settingsBeforeRepair = await Bun.file(join(claude, "settings.json")).text();
+    await Bun.write(stable, "externally modified hook");
+    status = JSON.parse((await invoke(["connectors", "status"])).stdout)[0];
+    assert.equal(status.repairable, true);
+    assert.ok(
+      (await invoke(["connectors", "install", "claude"], false)).stderr.includes(
+        "INSTALLATION_CONFLICT",
+      ),
+    );
+    await invoke(["connectors", "repair", "claude"]);
+    const backups = await Array.fromAsync(
+      new Bun.Glob("raypx.backup-*").scan({ cwd: join(home, "bin"), absolute: true }),
+    );
+    assert.equal(backups.length, 1);
+    assert.equal(await Bun.file(backups[0]!).text(), "externally modified hook");
+    assert.equal(await Bun.file(join(claude, "settings.json")).text(), settingsBeforeRepair);
     await Bun.write(
       metadataFile,
       JSON.stringify({ ...metadata, builtAt: metadata.builtAt + 100000 }),

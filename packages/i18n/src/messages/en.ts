@@ -89,6 +89,26 @@ export default {
       "On macOS, tasks continue after quitting Desktop. Signing out or disconnecting stops this account's work.",
     daemonMemoryOnly:
       "Secure storage is unavailable. Authorize this computer again after restarting the host.",
+    pendingCount: "{count} pending approvals",
+    pendingCountPartial: "Pending approvals count is incomplete. At least {count} are known.",
+    terminalActionFailed: "Could not complete this action. Refresh the status before retrying.",
+    terminalInstallationBusy: "Another installation is running. Wait for it to finish, then retry.",
+    terminalInstallationPermission:
+      "Raypx cannot write the hook files. Check directory permissions, then retry.",
+    terminalInstallationDowngrade:
+      "A newer hook is installed. Use the newer Desktop version to update it.",
+    terminalInstallationUnsupported: "Hook installation currently requires the macOS desktop app.",
+    terminalBinaryConflict:
+      "The hook program was changed outside Raypx. Review the file before replacing it.",
+    terminalInstallationTimeout:
+      "The operation timed out and its outcome is unconfirmed. Refresh the status before retrying.",
+    terminalRefreshStatus: "Refresh status",
+    terminalRecoverBinary: "Back up and replace hook",
+    terminalRecoverBinaryHint:
+      "Raypx will preserve the changed program beside the installed file, then replace it with the trusted bundled version. Agent hook settings will be preserved.",
+    terminalRecoverBinaryConfirm: "Back up and replace",
+    terminalInstallationSource:
+      "Open the current Desktop version to repair this hook. The modified program cannot replace itself.",
     terminalSettings: "Terminal connections",
     terminalSettingsHint:
       "Connect new Claude and Codex sessions. Authorize each project separately; tool inputs are stored in plain text on your selected server during private testing.",
@@ -272,7 +292,7 @@ export default {
     revoked: "Disconnected",
     revoke: "Disconnect computer",
     revokeConfirm:
-      "Disconnect this computer and stop its remote tasks? Existing files and changes will be preserved.",
+      "Disconnect this computer and stop its remote tasks? Its synced terminal approvals will be deleted. Managed task history, local files and changes will be preserved.",
     connect: "Enable remote tasks",
     disconnect: "Disable remote tasks",
     remoteTitle: "Remote tasks on this computer",

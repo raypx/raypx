@@ -22,6 +22,11 @@ export function memoryControlRepository(): ControlRepository & {
       return device && "revoked" in device && device.revoked === true;
     };
     return {
+      async purgeObserved(deviceId) {
+        for (const kind of ["observed_request", "observed_session"] as const)
+          for (const item of await transaction(draft, userId).list(kind, deviceId))
+            draft.delete(key(kind, item.id));
+      },
       sessionActive: async () => repository.validSession,
       securityVersion: async () =>
         repository.securityVersion +

@@ -272,6 +272,7 @@ export class ControlService {
       const credential = await tx.get<HostCredential>("credential", id);
       if (
         !credential ||
+        !credential.bootstrapSessionId ||
         Date.parse(credential.expiresAt) <= this.clock() ||
         credential.securityVersion !== (await tx.securityVersion())
       )
@@ -358,6 +359,7 @@ export class ControlService {
     const credential = await tx.get<HostCredential>("credential", credentialId);
     return Boolean(
       credential &&
+      credential.bootstrapSessionId &&
       Date.parse(credential.expiresAt) > this.clock() &&
       credential.securityVersion === (await tx.securityVersion()),
     );
@@ -713,13 +715,7 @@ export class ControlService {
         await tx.remove("grant", grant.id);
       for (const credential of await tx.list<HostCredential>("credential", device.id))
         await tx.remove("credential", credential.id);
-      for (const request of await tx.list<ObservedRequest>("observed_request", device.id))
-        if (request.status === "pending")
-          await tx.put("observed_request", {
-            ...request,
-            status: "cancelled",
-            serverCancelled: true,
-          });
+      await tx.purgeObserved(device.id);
       return { revoked: true as const };
     });
   }

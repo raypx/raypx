@@ -1,8 +1,94 @@
-import { expect, it } from "vite-plus/test";
+import { expect, it, vi } from "vite-plus/test";
+import { createHash } from "node:crypto";
 import { ControlService } from "../../server/control/service.js";
 import { connected, controlAuth, memoryControlRepository } from "../helpers/control.js";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../server/api.js";
+
+it("limits host grants before credential lookup without retaining bearer secrets", async () => {
+  const hostGrant = vi.fn(),
+    rateLimit = vi.fn(async (_key: string, _rule: { window: number; max: number }) => false);
+  const app = createApiApp({
+    control: { hostGrant } as unknown as ControlService,
+    rateLimit,
+    clientIpHeader: "cf-connecting-ip",
+    allowedOrigins: [],
+    readSession: async () => null,
+    authHandler: async () => new Response(null),
+  });
+  const credential = "synthetic-host-secret-".repeat(3);
+  const api = createApiClient({
+    baseUrl: "https://api.example.test",
+    headers: { "cf-connecting-ip": "203.0.113.7", "x-raypx-client-ip": "forged" },
+    fetch: async (input, init) => app.fetch(new Request(input, init)),
+  });
+  await expect(api.hosts.grant({ credential })).rejects.toMatchObject({
+    code: "TOO_MANY_REQUESTS",
+    data: { error: { code: "RATE_LIMITED" } },
+  });
+  expect(hostGrant).not.toHaveBeenCalled();
+  expect(rateLimit).toHaveBeenCalledTimes(1);
+  expect(rateLimit).toHaveBeenNthCalledWith(
+    1,
+    `rpc:hosts.grant:peer:${createHash("sha256").update("203.0.113.7").digest("hex")}`,
+    { window: 60, max: 120 },
+  );
+  rateLimit.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+  await expect(api.hosts.grant({ credential })).rejects.toMatchObject({
+    code: "TOO_MANY_REQUESTS",
+  });
+  expect(rateLimit.mock.calls[2]?.[0]).toMatch(/^rpc:hosts.grant:credential:[a-f0-9]{64}$/);
+  expect(JSON.stringify(rateLimit.mock.calls)).not.toContain(credential);
+  expect(hostGrant).not.toHaveBeenCalled();
+});
+it("requires legacy credentials to be bootstrapped again before grants or relay access", async () => {
+  const repository = memoryControlRepository(),
+    service = new ControlService(repository),
+    host = await connected(service);
+  const key = await service.authorizeHost(host.auth, host.grant),
+    grant = await service.hostGrant(key.credential);
+  const actor = await service.authenticate("device", grant.grant.token, crypto.randomUUID());
+  await repository.transaction(host.auth.user.id, async (tx) => {
+    for (const row of await tx.list<{ id: string; deviceId: string; bootstrapSessionId?: string }>(
+      "credential",
+    )) {
+      delete row.bootstrapSessionId;
+      await tx.put("credential", row);
+    }
+  });
+  await expect(service.hostGrant(key.credential)).rejects.toThrow("AUTH_REQUIRED");
+  await expect(service.validate(actor)).rejects.toThrow("AUTH_REQUIRED");
+  const fresh = await service.authorizeHost(host.auth, host.grant);
+  await expect(service.hostGrant(fresh.credential)).resolves.toHaveProperty(
+    "accountId",
+    host.auth.user.id,
+  );
+});
+it("purges only the revoked device's terminal content and preserves managed history", async () => {
+  const repository = memoryControlRepository(),
+    service = new ControlService(repository),
+    first = await connected(service),
+    second = await connected(service, first.auth);
+  await repository.transaction(first.auth.user.id, async (tx) => {
+    for (const host of [first, second]) {
+      for (const kind of ["observed_session", "observed_request", "task"] as const)
+        await tx.put(kind, {
+          id: `${kind}:${host.grant.deviceId}`,
+          deviceId: host.grant.deviceId,
+          body: "private retained text",
+        });
+    }
+  });
+  await service.revoke(first.auth.user.id, first.grant);
+  await repository.read(first.auth.user.id, async (tx) => {
+    for (const kind of ["observed_session", "observed_request"] as const) {
+      expect(await tx.list(kind, first.grant.deviceId)).toEqual([]);
+      expect(await tx.list(kind, second.grant.deviceId)).toHaveLength(1);
+    }
+    expect(await tx.list("task")).toHaveLength(2);
+  });
+  await service.revoke(first.auth.user.id, first.grant);
+});
 
 it("requires a trusted origin before cookie-backed host authorization", async () => {
   const service = new ControlService(memoryControlRepository()),

@@ -8,7 +8,7 @@ The standalone Raypx local execution host. It runs without login, Node or a glob
 
 `raypx daemon start|run|status|stop|restart|install|uninstall` owns the macOS execution host;
 private `daemon proxy` connects Desktop over authenticated Unix IPC. Explicit
-`connectors install|uninstall claude|codex` manages owned terminal hooks.
+`connectors install|repair|uninstall claude|codex` manages owned terminal hooks.
 `raypx files`, `raypx jobs`, `raypx tools`, and private legacy `raypx stdio` share the runtime. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
 
 `raypx ai providers|models|complete` lazily loads `@raypx/ai` for Pi SDK model calls.
@@ -140,3 +140,8 @@ owned executable, repair/update retains ownership and refuses downgrades. Explic
 `[connectors]` paths and Native overrides survive launchd environment differences.
 Away policy changes update the existing broker, preserving unaffected waiters and
 epoch. Detect managed provider session IDs instead of inheritable environment flags.
+`connectors repair <provider>` explicitly backs up a modified, previously owned
+regular binary before replacing it. It preserves Agent settings and refuses unknown
+ownership, symlinks and downgrades. Invoke from the trusted current executable;
+the modified installed program cannot repair itself. Automatic startup never
+overwrites modified files.

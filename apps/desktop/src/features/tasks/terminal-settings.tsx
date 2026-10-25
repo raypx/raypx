@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useRef } from "react";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DeviceProject } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -6,6 +6,7 @@ import { Button } from "@raypx/ui/components/ui/button";
 import { Switch } from "@raypx/ui/components/ui/switch";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { SelectField } from "@raypx/ui/select-field";
+import { useConfirmation } from "@raypx/ui/confirmation";
 import { localRequest } from "../../lib/desktop";
 
 type Settings = { rootIds: string[]; away: boolean; waitSeconds: number };
@@ -18,7 +19,30 @@ type Connector = {
   modified: boolean;
   requiresTrust: boolean;
   error: string | null;
+  repairable?: boolean;
 };
+const errorKeys = {
+  INSTALLATION_BUSY: "terminalInstallationBusy",
+  EACCES: "terminalInstallationPermission",
+  EPERM: "terminalInstallationPermission",
+  HOST_DOWNGRADE: "terminalInstallationDowngrade",
+  UNSUPPORTED_PLATFORM: "terminalInstallationUnsupported",
+  COMPILED_CLI_REQUIRED: "terminalInstallationUnsupported",
+  INSTALLATION_CONFLICT: "terminalBinaryConflict",
+  HOST_UPDATE_REQUIRED: "terminalInstallationSource",
+  INSTALLATION_TIMEOUT: "terminalInstallationTimeout",
+} as const;
+function failureKey(error: unknown) {
+  const code =
+    error && typeof error === "object" && "code" in error && typeof error.code === "string"
+      ? error.code
+      : error instanceof Error
+        ? /^(?:Error: )?([A-Z_]+)(?::|$)/.exec(error.message)?.[1]
+        : undefined;
+  return code && Object.hasOwn(errorKeys, code)
+    ? errorKeys[code as keyof typeof errorKeys]
+    : "terminalActionFailed";
+}
 export function TerminalSettings({
   accountId,
   info,
@@ -35,8 +59,13 @@ export function TerminalSettings({
     [connectors, setConnectors] = useState<Connector[]>([]);
   const [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState(false),
+    [error, setError] = useState<ReturnType<typeof failureKey> | "terminalUnavailable" | null>(
+      null,
+    ),
     [saved, setSaved] = useState(false);
+  const { confirm, dialog } = useConfirmation();
+  const operation = useRef(false),
+    confirming = useRef(false);
   useEffect(() => {
     let active = true;
     void Promise.all([
@@ -51,7 +80,7 @@ export function TerminalSettings({
         }
       },
       () => {
-        if (active) setError(true);
+        if (active) setError("terminalUnavailable");
       },
     );
     return () => {
@@ -64,8 +93,10 @@ export function TerminalSettings({
     setSaved(false);
   };
   async function action(run: () => Promise<unknown>, save = false) {
+    if (operation.current) return;
+    operation.current = true;
     setBusy(true);
-    setError(false);
+    setError(null);
     setSaved(false);
     try {
       await run();
@@ -74,10 +105,34 @@ export function TerminalSettings({
         setDirty(false);
         setSaved(true);
       }
-    } catch {
-      setError(true);
+    } catch (caught) {
+      setError(failureKey(caught));
     } finally {
+      operation.current = false;
       setBusy(false);
+    }
+  }
+  async function recover(connector: Connector) {
+    if (operation.current || confirming.current) return;
+    confirming.current = true;
+    try {
+      if (
+        await confirm({
+          requestKey: `repair:${connector.provider}`,
+          title: t("terminalRecoverBinary"),
+          description: t("terminalRecoverBinaryHint"),
+          confirmLabel: t("terminalRecoverBinaryConfirm"),
+          cancelLabel: c("cancel"),
+        })
+      )
+        await action(() =>
+          localRequest("connectors.install", {
+            provider: connector.provider,
+            recoverModified: true,
+          }),
+        );
+    } finally {
+      confirming.current = false;
     }
   }
   const unavailable = !info.authorized || info.terminalSupported === false;
@@ -126,33 +181,39 @@ export function TerminalSettings({
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              {(!connector.installed || connector.updateAvailable) && (
-                <Button
-                  disabled={
-                    busy ||
-                    connector.modified ||
-                    Boolean(
-                      connector.error &&
-                      !["HOST_BINARY_MISSING", "HOST_BINARY_NOT_EXECUTABLE"].includes(
-                        connector.error,
-                      ),
-                    )
-                  }
-                  variant="outline"
-                  onClick={() =>
-                    void action(() =>
-                      localRequest("connectors.install", { provider: connector.provider }),
-                    )
-                  }
-                >
-                  {t(
-                    connector.updateAvailable
-                      ? "terminalUpdate"
-                      : connector.hookInstalled
-                        ? "terminalRepair"
-                        : "terminalInstall",
-                  )}
+              {connector.repairable && !connector.modified ? (
+                <Button variant="outline" disabled={busy} onClick={() => void recover(connector)}>
+                  {t("terminalRecoverBinary")}
                 </Button>
+              ) : (
+                (!connector.installed || connector.updateAvailable) && (
+                  <Button
+                    disabled={
+                      busy ||
+                      connector.modified ||
+                      Boolean(
+                        connector.error &&
+                        !["HOST_BINARY_MISSING", "HOST_BINARY_NOT_EXECUTABLE"].includes(
+                          connector.error,
+                        ),
+                      )
+                    }
+                    variant="outline"
+                    onClick={() =>
+                      void action(() =>
+                        localRequest("connectors.install", { provider: connector.provider }),
+                      )
+                    }
+                  >
+                    {t(
+                      connector.updateAvailable
+                        ? "terminalUpdate"
+                        : connector.hookInstalled
+                          ? "terminalRepair"
+                          : "terminalInstall",
+                    )}
+                  </Button>
+                )
               )}
               {(connector.hookInstalled ?? connector.installed) && (
                 <Button
@@ -262,10 +323,25 @@ export function TerminalSettings({
         </p>
       )}
       {error && (
-        <p role="alert" className="mt-3 text-sm text-destructive-text">
-          {t("terminalUnavailable")}
-        </p>
+        <div className="mt-3 space-y-2">
+          <p role="alert" className="text-sm text-destructive-text">
+            {t(error)}
+          </p>
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              void action(async () => {
+                const next = await localRequest<Settings>("observed.settings", { accountId });
+                if (!dirty) setSettings(next);
+              })
+            }
+          >
+            {t("terminalRefreshStatus")}
+          </Button>
+        </div>
       )}
+      {dialog}
     </section>
   );
 }

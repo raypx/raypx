@@ -3,6 +3,7 @@ import { globalArgs, type CliArgs } from "./args";
 import { LocalError } from "../runtime/errors";
 import { profilePath } from "../runtime/state";
 import { connectDaemon, stopDaemon, type ProfileOptions } from "../runtime/daemon/endpoint";
+import { localParams } from "@raypx/contracts/local";
 
 const command = (definition: CommandDef) => defineCommand(definition);
 function group(
@@ -92,6 +93,7 @@ export function createConnectorCommands(invocation: CliArgs, options: ProfileOpt
     {
       status: "Read installed terminal hooks",
       install: "Install a Claude or Codex hook",
+      repair: "Back up a modified owned hook binary and replace it with this CLI",
       uninstall: "Remove only the owned Agent hook",
       hook: "Private fail-open Agent hook",
     },
@@ -134,14 +136,23 @@ export function createConnectorCommands(invocation: CliArgs, options: ProfileOpt
         );
         return;
       }
-      if (inputs.length !== 1 || (provider !== "claude" && provider !== "codex"))
+      if (
+        (inputs.length !== 1 && !(action === "repair" && inputs.length === 2)) ||
+        (provider !== "claude" && provider !== "codex")
+      )
         throw new LocalError("INVALID_PROVIDER", "Select claude or codex");
+      const requested =
+        action === "repair" && inputs[1]
+          ? localParams["connectors.status"].parse(JSON.parse(inputs[1])).configDirs
+          : undefined;
       console.log(
         JSON.stringify(
           await connectorAction(
             profilePath(options),
             provider,
-            action === "install" ? "install" : "uninstall",
+            action === "uninstall" ? "uninstall" : "install",
+            requested,
+            action === "repair",
           ),
           null,
           invocation.json ? undefined : 2,

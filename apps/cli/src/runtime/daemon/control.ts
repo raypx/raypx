@@ -496,6 +496,8 @@ export class DaemonControl {
           localParams[method].parse(raw).provider,
           method === "connectors.install" ? "install" : "uninstall",
           localParams[method].parse(raw).configDirs,
+          method === "connectors.install" &&
+            localParams["connectors.install"].parse(raw).recoverModified,
         ),
       );
     if (method === "observed.remote") {

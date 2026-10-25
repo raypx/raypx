@@ -57,7 +57,15 @@ export function createApiLogging({
     fields: API_LOG_FIELDS,
     shapes: {
       rpc: ["system", "method"],
-      job: ["name", "status", "sessions", "verifications", "rateLimits"],
+      job: [
+        "name",
+        "status",
+        "sessions",
+        "verifications",
+        "rateLimits",
+        "observedRequests",
+        "observedSessions",
+      ],
     },
   });
   initLogger({

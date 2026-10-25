@@ -8,6 +8,7 @@ import { RemoteControl } from "./control";
 import { DaemonControlProxy } from "./daemon-control";
 import { createApiClient } from "@raypx/client";
 import { LocalEngine } from "./engine";
+import { repairConnector } from "./connectors";
 import { createPreferenceStore } from "./preferences";
 import { BuildConfig } from "electrobun/main/build-config";
 import { BrowserView } from "electrobun/main/browser-view";
@@ -200,6 +201,11 @@ export const engine = new LocalEngine(
   engineArgs,
   daemonEngine,
 );
+const connectorDirectories = {
+  ...(process.env.CLAUDE_CONFIG_DIR ? { claude: process.env.CLAUDE_CONFIG_DIR } : {}),
+  ...(process.env.CODEX_HOME ? { codex: process.env.CODEX_HOME } : {}),
+  ...connectionConfig.connectorDirectories,
+};
 export const control = daemonEngine
   ? new DaemonControlProxy(engine, apiOrigin, nativeApiClient)
   : new RemoteControl(
@@ -252,20 +258,20 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
           throw new Error("Use the native account coordination bridge");
         if (method === "roots.register")
           throw new Error("Use the native directory picker to authorize a directory");
+        if (
+          method === "connectors.install" &&
+          params &&
+          typeof params === "object" &&
+          "recoverModified" in params &&
+          params.recoverModified === true
+        )
+          return repairConnector(cliBinary, engineArgs, params, connectorDirectories);
         return engine.request(
           method,
           method.startsWith("connectors.") && params && typeof params === "object"
             ? {
                 ...params,
-                configDirs: {
-                  ...connectionConfig.connectorDirectories,
-                  ...(!connectionConfig.connectorDirectories.claude && process.env.CLAUDE_CONFIG_DIR
-                    ? { claude: process.env.CLAUDE_CONFIG_DIR }
-                    : {}),
-                  ...(!connectionConfig.connectorDirectories.codex && process.env.CODEX_HOME
-                    ? { codex: process.env.CODEX_HOME }
-                    : {}),
-                },
+                configDirs: connectorDirectories,
               }
             : method.startsWith("observed.") && params && typeof params === "object"
               ? { ...params, apiUrl: apiOrigin }

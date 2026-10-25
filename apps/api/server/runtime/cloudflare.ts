@@ -46,6 +46,7 @@ export async function createCloudflareRuntime(
     cache,
     ...providers,
     logger,
+    clientIpHeader: "cf-connecting-ip",
     ...(bindings.RAYPX_RELAY
       ? {
           onRevoke: async (userId: string, deviceId: string) => {

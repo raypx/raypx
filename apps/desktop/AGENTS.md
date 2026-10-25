@@ -8,11 +8,9 @@ Electrobun desktop composition root with a React/Vite renderer, persistent WebVi
 
 `native/main.ts` owns window, tray, trusted renderer RPC and local engine lifecycle. `native/rpc.ts` declares the renderer bridge. `native/engine.ts` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter` and provides a TanStack Query client (cleared on sign-out), `src/components/shell.tsx` fills the `@raypx/blocks/shell` window frame, and the build writes `dist/client` for `views://main`.
 
-`preferences.ts` shares pure device preference types/validation between the
-native store and renderer; `src/preferences.tsx` owns renderer initialization.
+`preferences.ts` shares pure preference types/validation between Native and renderer; `src/preferences.tsx` owns renderer initialization.
 
-Simple pages live directly in file-route modules. Keep complex page components,
-actions and state under `src/features/`, without a separate `src/pages/` forwarding layer.
+Simple pages live in file-route modules; complex components, actions and state belong under `src/features/`, without a `src/pages/` forwarding layer.
 
 `src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group,
 like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
@@ -182,6 +180,10 @@ configurable from one to ten. Hook failures return native terminal control; only
 recorded Bash permissions are enabled. Codex requires manual trust in `/hooks`.
 Observed requests remain separate from managed tasks and share shadcn approval UI.
 
+Connector failures show localized causes and status refresh. Modified owned binaries require explicit backup/replacement confirmation.
+Native runs the bundled CLI's finite repair command with its own directories; never execute the modified installation or accept a renderer-selected source.
+Timeout outcomes are uncertain; never retry automatically.
+
 ## Browser analytics
 
 `features/analytics` injects public build config and a device-local preference store
@@ -193,7 +195,5 @@ Restore analytics through getAnalyticsPreferences with a five-second RPC timeout
 keep capture disabled until the latest Native value arrives, never authorize from preload.
 Source-map upload is an explicit release step; ship those same injected assets.
 
-Engine mismatch recovery explicitly confirms cancellation before replacing the
-old daemon. Native forwards loaded `[connectors]` paths/environment to the daemon;
-settings show actual destinations and owned-binary repair/update. Older servers
-use browser-renewed managed-only grants, with terminal approvals disabled.
+Engine mismatch recovery confirms cancellation before replacing the old daemon. Native forwards loaded `[connectors]` paths/environment; settings show actual destinations and owned-binary repair/update.
+Older servers use browser-renewed managed-only grants, with terminal approvals disabled.

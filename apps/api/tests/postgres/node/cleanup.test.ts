@@ -1,6 +1,15 @@
 import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
-import { rateLimit, session, user, verification } from "@raypx/database/schema";
+import {
+  controlDevice,
+  controlObservedRequest,
+  controlObservedSession,
+  controlTask,
+  rateLimit,
+  session,
+  user,
+  verification,
+} from "@raypx/database/schema";
 import { eq, like, sql } from "drizzle-orm";
 import { cleanupExpired, cleanupLock } from "../../../server/jobs/cleanup.js";
 
@@ -75,6 +84,8 @@ it("deletes only expired records beyond the grace period and can run again", asy
     sessions: 0,
     verifications: 0,
     rateLimits: 0,
+    observedRequests: 0,
+    observedSessions: 0,
   });
 });
 
@@ -84,6 +95,47 @@ it("skips while another instance owns the transaction lock, then resumes", async
     expect((await cleanupExpired(connection.db)).status).toBe("skipped");
   });
   expect((await cleanupExpired(connection.db)).status).toBe("completed");
+});
+it("drains old revoked terminal data in bounded batches while preserving active and managed data", async () => {
+  const revoked = `${prefix}-revoked`,
+    active = `${prefix}-online`;
+  await connection.db.insert(controlDevice).values(
+    [revoked, active].map((id) => ({
+      id,
+      userId: prefix,
+      deviceId: id,
+      body: { revoked: id === revoked },
+    })),
+  );
+  for (const table of [controlObservedRequest, controlObservedSession, controlTask])
+    await connection.db.insert(table).values(
+      [revoked, active].map((deviceId) => ({
+        id: `${prefix}-${deviceId}`,
+        userId: prefix,
+        deviceId,
+        body: { body: "sensitive fixture" },
+      })),
+    );
+  await connection.db.insert(controlObservedRequest).values(
+    Array.from({ length: 1000 }, (_, index) => ({
+      id: `${prefix}-extra-${index}`,
+      userId: prefix,
+      deviceId: revoked,
+      body: { body: "retired request" },
+    })),
+  );
+  const first = await cleanupExpired(connection.db);
+  expect(first.observedRequests).toBe(1000);
+  expect(first.observedSessions).toBe(1);
+  expect((await cleanupExpired(connection.db)).observedRequests).toBe(1);
+  for (const table of [controlObservedRequest, controlObservedSession]) {
+    const rows = await connection.db.select().from(table).where(eq(table.userId, prefix));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.deviceId).toBe(active);
+  }
+  expect(
+    await connection.db.select().from(controlTask).where(eq(controlTask.userId, prefix)),
+  ).toHaveLength(2);
 });
 
 it("rolls back earlier deletions when a later table cannot be locked", async () => {

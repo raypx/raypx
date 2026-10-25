@@ -102,6 +102,7 @@ export const localParams = {
   }),
   "connectors.install": z.object({
     provider: agentProviderSchema,
+    recoverModified: z.boolean().default(false),
     configDirs: z
       .object({
         claude: z.string().min(1).max(4096).optional(),
