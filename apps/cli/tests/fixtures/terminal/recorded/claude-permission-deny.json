@@ -1,0 +1,52 @@
+{
+  "provenance": {
+    "provider": "claude",
+    "version": "2.1.302 (Claude Code)",
+    "transport": "private-unix-request-broker",
+    "cliMode": "terminal",
+    "scenario": "permission-deny",
+    "recordedAt": "2026-10-25T05:15:58.205Z",
+    "source": "real-cli",
+    "redaction": "Identity fields and local paths replaced; event structure/order and numeric usage retained"
+  },
+  "records": [
+    {
+      "input": {
+        "session_id": "recorded-id-1",
+        "transcript_path": "/fixture/transcript.jsonl",
+        "cwd": "/fixture/project",
+        "prompt_id": "recorded-id-2",
+        "permission_mode": "default",
+        "effort": {
+          "level": "medium"
+        },
+        "hook_event_name": "PermissionRequest",
+        "tool_name": "Bash",
+        "tool_input": {
+          "command": "printf RAYPX_TERMINAL_P0 > permission-marker.txt",
+          "description": "Write marker text to permission-marker.txt"
+        },
+        "permission_suggestions": [
+          {
+            "type": "addDirectories",
+            "directories": ["/private/fixture/project"],
+            "destination": "session"
+          }
+        ]
+      },
+      "receivedAt": "2026-10-25T05:15:53.066Z"
+    },
+    {
+      "output": {
+        "hookSpecificOutput": {
+          "hookEventName": "PermissionRequest",
+          "decision": {
+            "behavior": "deny",
+            "message": "P0 contract test declined this request"
+          }
+        }
+      },
+      "sentAt": "2026-10-25T05:15:53.094Z"
+    }
+  ]
+}

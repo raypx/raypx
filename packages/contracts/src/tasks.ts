@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
+export { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
 export { taskActivityPage, applyActivityEvent } from "./activity.js";
 export { taskText, normalizeTaskJson } from "./task-text.js";
 
 export const RELAY_VERSION = 2;
 
-export const agentProviderSchema = z.enum(["claude", "codex"]);
 export const taskModeSchema = z.enum(["run", "plan"]);
 export const taskStatusSchema = z.enum([
   "pending",
@@ -62,22 +63,6 @@ export const taskSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-export const questionSchema = z.object({
-  id: z.string().max(300),
-  text: z.string().max(8000),
-  multiSelect: z.boolean(),
-  options: z
-    .array(z.object({ label: z.string().max(1000), description: z.string().max(8000) }))
-    .max(20),
-});
-export const decisionSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("allow") }),
-  z.object({ type: z.literal("deny"), note: z.string().max(8000).default("") }),
-  z.object({
-    type: z.literal("answer"),
-    answers: z.record(z.string(), z.array(z.string().max(8000)).max(20)),
-  }),
-]);
 export const humanRequestSchema = z.object({
   id: z.string().uuid(),
   taskId: z.string().uuid(),
@@ -214,7 +199,10 @@ export type AgentEvent = z.infer<typeof agentEventSchema>;
 export type DeviceCommand = z.infer<typeof deviceCommandSchema>;
 export type DeviceGrant = z.infer<typeof deviceGrantSchema>;
 
-export function validDecision(request: HumanRequest, decision: HumanDecision) {
+export function validDecision(
+  request: Pick<HumanRequest, "kind" | "questions">,
+  decision: HumanDecision,
+) {
   if (!decisionSchema.safeParse(decision).success) return false;
   if (request.kind !== "question") return decision.type !== "answer";
   if (decision.type === "deny") return true;

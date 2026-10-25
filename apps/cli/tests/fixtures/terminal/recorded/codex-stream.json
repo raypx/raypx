@@ -1,0 +1,226 @@
+{
+  "provenance": {
+    "provider": "codex",
+    "version": "codex-cli 0.163.0-alpha.11.2",
+    "transport": "app-server",
+    "cliMode": "app-server",
+    "scenario": "stream-and-usage",
+    "recordedAt": "2026-10-25T04:58:05.902Z",
+    "source": "real-cli",
+    "redaction": "Identity fields and local paths replaced; event structure/order and numeric usage retained"
+  },
+  "records": [
+    {
+      "method": "turn/started",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turn": {
+          "id": "recorded-id-2",
+          "rootTurnId": "recorded-id-2",
+          "items": [],
+          "itemsView": "notLoaded",
+          "status": "inProgress",
+          "error": null,
+          "startedAt": 1792904280,
+          "completedAt": null,
+          "durationMs": null
+        }
+      },
+      "emittedAtMs": 1792904280709
+    },
+    {
+      "method": "item/started",
+      "params": {
+        "item": {
+          "type": "userMessage",
+          "id": "recorded-id-3",
+          "clientId": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "Reply exactly RAYPX_STREAM_P0. Do not call any tools.",
+              "text_elements": []
+            }
+          ]
+        },
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "startedAtMs": 1792904284028
+      },
+      "emittedAtMs": 1792904284028
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "userMessage",
+          "id": "recorded-id-3",
+          "clientId": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "Reply exactly RAYPX_STREAM_P0. Do not call any tools.",
+              "text_elements": []
+            }
+          ]
+        },
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "completedAtMs": 1792904284028
+      },
+      "emittedAtMs": 1792904284028
+    },
+    {
+      "method": "item/started",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "recorded-id-4",
+          "text": "",
+          "phase": "final_answer",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "startedAtMs": 1792904285758
+      },
+      "emittedAtMs": 1792904285758
+    },
+    {
+      "method": "item/agentMessage/delta",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "itemId": "recorded-id-4",
+        "delta": "R"
+      },
+      "emittedAtMs": 1792904285760
+    },
+    {
+      "method": "item/agentMessage/delta",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "itemId": "recorded-id-4",
+        "delta": "AY"
+      },
+      "emittedAtMs": 1792904285760
+    },
+    {
+      "method": "item/agentMessage/delta",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "itemId": "recorded-id-4",
+        "delta": "PX"
+      },
+      "emittedAtMs": 1792904285760
+    },
+    {
+      "method": "item/agentMessage/delta",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "itemId": "recorded-id-4",
+        "delta": "_STREAM"
+      },
+      "emittedAtMs": 1792904285760
+    },
+    {
+      "method": "item/agentMessage/delta",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "itemId": "recorded-id-4",
+        "delta": "_P"
+      },
+      "emittedAtMs": 1792904285760
+    },
+    {
+      "method": "item/agentMessage/delta",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "itemId": "recorded-id-4",
+        "delta": "0"
+      },
+      "emittedAtMs": 1792904285760
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "recorded-id-4",
+          "text": "RAYPX_STREAM_P0",
+          "phase": "final_answer",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "completedAtMs": 1792904285855
+      },
+      "emittedAtMs": 1792904285856
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turnId": "recorded-id-2",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 16340,
+            "inputTokens": 16330,
+            "cachedInputTokens": 12288,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10,
+            "reasoningOutputTokens": 0
+          },
+          "last": {
+            "totalTokens": 16340,
+            "inputTokens": 16330,
+            "cachedInputTokens": 12288,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10,
+            "reasoningOutputTokens": 0
+          },
+          "modelContextWindow": 475000
+        }
+      },
+      "emittedAtMs": 1792904285865
+    },
+    {
+      "method": "turn/completed",
+      "params": {
+        "threadId": "recorded-id-1",
+        "turn": {
+          "id": "recorded-id-2",
+          "rootTurnId": "recorded-id-2",
+          "items": [
+            {
+              "type": "agentMessage",
+              "id": "recorded-id-4",
+              "text": "RAYPX_STREAM_P0",
+              "phase": "final_answer",
+              "memoryCitation": null,
+              "delivery": null,
+              "questions": null
+            }
+          ],
+          "itemsView": "summary",
+          "status": "completed",
+          "error": null,
+          "startedAt": 1792904280,
+          "completedAt": 1792904285,
+          "durationMs": 5169
+        }
+      },
+      "emittedAtMs": 1792904285865
+    }
+  ],
+  "expectedMessage": "RAYPX_STREAM_P0"
+}

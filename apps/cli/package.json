@@ -12,14 +12,17 @@
     "test": "bun --bun vp test --run",
     "build": "bun --bun vp pack",
     "smoke": "bun run tests/smoke/artifact.ts",
-    "smoke:tui": "bun run tests/smoke/tui.ts"
+    "smoke:tui": "bun run tests/smoke/tui.ts",
+    "smoke:terminal": "bun run tests/smoke/terminal-hooks.ts",
+    "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts"
   },
   "dependencies": {
     "@raypx-kit/logger": "catalog:",
     "@raypx/ai": "workspace:*",
     "@raypx/contracts": "workspace:*",
     "citty": "catalog:",
-    "croner": "catalog:"
+    "croner": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",

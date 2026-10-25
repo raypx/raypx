@@ -9,7 +9,8 @@
     "./api": "./src/api.ts",
     "./local": "./src/local.ts",
     "./tasks": "./src/tasks.ts",
-    "./task-text": "./src/task-text.ts"
+    "./task-text": "./src/task-text.ts",
+    "./terminal": "./src/terminal.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

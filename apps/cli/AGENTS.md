@@ -67,6 +67,15 @@ their child processes live in `tests/fixtures/agents/` and run from temporary pr
 signals, descendant cleanup and coexistence with a Desktop scheduler. It is not a
 runtime dependency or part of the cross-platform default verify gate.
 
+`runtime/terminal` supplies the observed-session RequestBroker, private authenticated
+Unix hook socket, bounded plain-content envelopes and safe hook settings plans.
+Hook failure returns no decision, unlike the managed Agent's blocking hook policy.
+`smoke:terminal claude|codex` and `smoke:terminal-stream` require
+`RAYPX_LIVE_AGENTS=1`, use isolated synthetic projects, and consume provider usage.
+Codex runs in a real PTY; exec's never-approval policy is not a hook acceptance gate.
+Reviewed, redacted recordings are under `tests/fixtures/terminal/recorded` and replay
+without credentials in the default suite. Never commit the private raw captures.
+
 `bun run --cwd apps/cli check`, `bun run --cwd apps/cli test`, `bun run --cwd apps/cli build`, then `bun run --cwd apps/cli smoke`.
 
 ## Agent host

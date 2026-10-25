@@ -60,6 +60,7 @@
         "@raypx/contracts": "workspace:*",
         "citty": "catalog:",
         "croner": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@raypx-kit/tsconfig": "catalog:dev",

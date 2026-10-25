@@ -26,6 +26,9 @@ bun run --cwd packages/contracts test
 `/tasks` exports pure normalized task, device, decision and event schemas. `/api`
 adds scoped remote coordination; `/local` exposes private Agent-host methods.
 Provider protocol envelopes never enter these public projections.
+`/tasks` also exports code-point-safe text clipping and JSON normalization.
+`/terminal` separates observed sessions, bounded plain request envelopes and
+revision/epoch-fenced decision receipts from managed tasks.
 Relay schemas normalize commands, sequenced events, snapshots and cursor recovery.
 Relay v2 authenticates with an explicit protocolVersion. Full activity events are
 authoritative checkpoints; activity_delta appends require an entry ID and adjacent
