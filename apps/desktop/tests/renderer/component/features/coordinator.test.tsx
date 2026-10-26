@@ -15,7 +15,7 @@ vi.mock("../../../../src/features/auth/client", () => ({
 }));
 vi.mock("../../../../src/features/tasks/client", () => ({ taskClient: { setAccount: vi.fn() } }));
 vi.mock("../../../../src/features/tasks/local-client", () => ({
-  localTaskClient: { setAccount: vi.fn() },
+  accountLocalTaskClient: { setAccount: vi.fn() },
 }));
 vi.mock("../../../../src/lib/desktop", () => ({
   isDesktop: () => true,

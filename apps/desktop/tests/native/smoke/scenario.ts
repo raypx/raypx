@@ -91,10 +91,10 @@ async function localSessionFixture() {
     async () =>
       Boolean(
         await evaluate(
-          'document.dispatchEvent(new Event("visibilitychange"));return Boolean(document.querySelector("#auth-email"))',
+          'document.dispatchEvent(new Event("visibilitychange"));return Boolean(document.querySelector("[data-slot=dropdown-menu-trigger]")) && !document.querySelector("#auth-email")',
         ),
       ),
-    "Signed-out Desktop did not show the login page",
+    "Signed-out Desktop did not open the local workspace",
   );
   const createdAt = new Date().toISOString();
   const user = {
@@ -269,7 +269,7 @@ try {
     );
     await evaluate('localStorage.setItem("raypx-server-acceptance","saved");return true');
     await control.enable("config-isolation", true);
-    stage = "standalone login and local session fixture";
+    stage = "signed-out local workspace and isolated session fixture";
     await localSessionFixture();
     handleTrayAction("pending");
     await waitFor(
@@ -501,8 +501,12 @@ try {
       await reloadRenderer();
       await waitFor(
         async () =>
-          Boolean(await evaluate('return Boolean(document.querySelector("#auth-email"))')),
-        "Logout did not return to the login page",
+          Boolean(
+            await evaluate(
+              'return Boolean(document.querySelector("[data-slot=dropdown-menu-trigger]")) && !document.querySelector("#auth-email")',
+            ),
+          ),
+        "Logout did not preserve access to the local workspace",
       );
     }
   } else throw new Error("Unknown native smoke phase");

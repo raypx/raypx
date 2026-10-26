@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
+import { useSyncExternalStore } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -10,8 +11,12 @@ import {
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AgentTask, HumanRequest, SyncDevice, TaskActivity } from "@raypx/contracts/tasks";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { DesktopTaskWorkspace } from "../../../../../src/features/tasks/workspace";
-import { localTaskClient } from "../../../../../src/features/tasks/local-client";
+import {
+  localTaskClient,
+  accountLocalTaskClient,
+} from "../../../../../src/features/tasks/local-client";
 
 // Register matchers with the active Vite+ test runtime.
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
@@ -19,7 +24,12 @@ import type {} from "@testing-library/jest-dom/vitest";
 import * as matchers from "@testing-library/jest-dom/matchers";
 expect.extend(matchers);
 
-const mocks = vi.hoisted(() => ({ request: vi.fn(), remote: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  request: vi.fn(),
+  remote: vi.fn(),
+  user: { id: "account-a" } as { id: string } | null,
+  listeners: new Set<() => void>(),
+}));
 vi.mock("../../../../../src/lib/desktop", () => ({
   isDesktop: () => true,
   isDaemonDesktop: () => false,
@@ -28,7 +38,20 @@ vi.mock("../../../../../src/lib/desktop", () => ({
 }));
 vi.mock("../../../../../src/features/auth/client", () => ({
   apiUrl: "https://api.example.test",
-  authClient: { useSession: () => ({ data: { user: { id: "account-a" } }, isPending: false }) },
+  authClient: {
+    useSession: () => {
+      const user = useSyncExternalStore(
+        (listener) => {
+          mocks.listeners.add(listener);
+          return () => {
+            mocks.listeners.delete(listener);
+          };
+        },
+        () => mocks.user,
+      );
+      return { data: user ? { user } : null, isPending: false, error: null };
+    },
+  },
 }));
 vi.mock("../../../../../src/features/tasks/client", () => ({
   taskClient: {
@@ -70,6 +93,8 @@ beforeEach(() => {
   });
   vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(480);
   vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(96);
+  mocks.user = { id: "account-a" };
+  accountLocalTaskClient.setAccount("account-a");
   tasks = [];
   activity = [];
   request = undefined;
@@ -137,8 +162,8 @@ afterEach(() => {
   localTaskClient.setAccount(null);
   for (const history of histories.splice(0)) history.destroy();
 });
-async function page() {
-  const history = createMemoryHistory({ initialEntries: ["/"] });
+async function page(url = "/") {
+  const history = createMemoryHistory({ initialEntries: [url] });
   histories.push(history);
   const routeTree = createRootRoute({ component: () => <DesktopTaskWorkspace view="tasks" /> });
   const router = createRouter({ routeTree, history });
@@ -255,7 +280,8 @@ it("recovers an accepted queued input after a lost receipt without sending it ag
   expect(document.body.textContent).not.toContain("private transport detail");
   expect(screen.queryByRole("alert")).toBeNull();
 });
-it("defaults to local tasks and completes an approval while the cloud API is unavailable", async () => {
+it("runs and approves local tasks without signing in or reaching the cloud", async () => {
+  mocks.user = null;
   await page();
   fireEvent.click(await screen.findByRole("button", { name: "New task" }));
   fireEvent.change(screen.getByRole("textbox", { name: "What should the agent do?" }), {
@@ -270,7 +296,8 @@ it("defaults to local tasks and completes an approval while the cloud API is una
     mocks.request.mock.calls.every(([method]) => String(method).startsWith("agents.local.")),
   ).toBe(true);
   fireEvent.click(screen.getByRole("tab", { name: "Connected computers" }));
-  await waitFor(() => expect(mocks.remote).toHaveBeenCalled());
+  await screen.findByRole("heading", { name: "Sign in for remote access" });
+  expect(mocks.remote).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("tab", { name: "This computer" }));
   await screen.findByRole("button", { name: /Keep this task local/ });
 });
@@ -367,7 +394,13 @@ it("saves and restores local drafts without sending a task, and preserves unsave
   expect(editor).toHaveValue("Unsaved investigation");
   first.unmount();
   await page();
+  expect(await screen.findByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
+    "Unsaved investigation",
+  );
   fireEvent.click(await screen.findByRole("button", { name: /^Investigate local reconnects/ }));
+  const discard = await screen.findByRole("alertdialog");
+  fireEvent.click(within(discard).getByRole("button", { name: "Discard changes" }));
+  await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
   expect(screen.getByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
     "Investigate local reconnects",
   );
@@ -426,4 +459,73 @@ it("keeps local drafts separate from drafts for connected computers", async () =
   expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
     false,
   );
+});
+it("preserves the local editor and owner through login, account switches, logout and remount", async () => {
+  mocks.user = null;
+  const first = await page();
+  const editor = await screen.findByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(editor, { target: { value: "Device-owned unsent work" } });
+  for (const user of [{ id: "account-a" }, { id: "account-b" }, null]) {
+    await act(async () => {
+      mocks.user = user;
+      for (const listener of mocks.listeners) listener();
+    });
+    expect(screen.getByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
+      "Device-owned unsent work",
+    );
+  }
+  first.unmount();
+  await page();
+  expect(await screen.findByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
+    "Device-owned unsent work",
+  );
+  expect(
+    mocks.request.mock.calls.every(([, params]) => params.accountId === LOCAL_WORKSPACE_ID),
+  ).toBe(true);
+  expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
+    false,
+  );
+  expect(mocks.remote).not.toHaveBeenCalled();
+});
+it("keeps earlier account-owned drafts isolated instead of adopting them into the device workspace", async () => {
+  const key = JSON.stringify([
+    "raypx.task-drafts.v1",
+    "https://api.example.test",
+    "account-a",
+    true,
+  ]);
+  localStorage.setItem(
+    key,
+    JSON.stringify([
+      {
+        id: "legacy-a",
+        deviceId: device.id,
+        projectId: device.projects[0]!.id,
+        provider: "codex",
+        mode: "run",
+        prompt: "Account A private draft",
+        updatedAt: new Date().toISOString(),
+      },
+    ]),
+  );
+  await page("/tasks?scope=local&history=account");
+  await screen.findByRole("button", { name: /^Account A private draft/ });
+  await act(async () => {
+    accountLocalTaskClient.setAccount("account-b");
+    mocks.user = { id: "account-b" };
+    for (const listener of mocks.listeners) listener();
+  });
+  await waitFor(() =>
+    expect(screen.queryByRole("button", { name: /^Account A private draft/ })).toBeNull(),
+  );
+  expect(await screen.findByRole("textbox", { name: "What should the agent do?" })).toHaveValue("");
+  await act(async () => {
+    accountLocalTaskClient.setAccount(null);
+    mocks.user = null;
+    for (const listener of mocks.listeners) listener();
+  });
+  await screen.findByRole("heading", { name: "Sign in for remote access" });
+  expect(screen.queryByRole("textbox", { name: "What should the agent do?" })).toBeNull();
+  expect(JSON.parse(localStorage.getItem(key)!)[0].prompt).toBe("Account A private draft");
+  expect(mocks.remote).not.toHaveBeenCalled();
 });

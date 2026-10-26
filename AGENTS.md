@@ -18,7 +18,8 @@ The accepted foundation design supersedes documents in docs/history.
 - Auth receives its database adapter, configuration and mail interface from API.
 - Remote contracts and local device contracts have separate public entries.
 - Desktop launches the bundled CLI by absolute path. Do not import CLI source.
-- Desktop's renderer requires account login; the local CLI runtime remains independent of authentication.
+- Desktop local tools and its device-profile workspace require no account. Gate remote
+  data and host authorization on login; keep legacy account-owned local data isolated.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 - Add packages when their responsibility and actual consumers are established.
 

@@ -4,7 +4,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { onLocalEvent } from "../../lib/desktop";
-import { localTaskClient } from "./local-client";
+import { accountLocalTaskClient } from "./local-client";
 
 export function TerminalRequestNotice({ accountId }: { accountId: string | null }) {
   const t = useTranslations("tasks"),
@@ -12,9 +12,9 @@ export function TerminalRequestNotice({ accountId }: { accountId: string | null 
     queries = useQueryClient();
   const { data } = useQuery({
     queryKey: ["terminal-request-notice", accountId],
-    enabled: Boolean(accountId && localTaskClient.observed),
+    enabled: Boolean(accountId && accountLocalTaskClient.observed),
     queryFn: async ({ signal }) =>
-      (await localTaskClient.observed!.list({}, { signal })).requests.filter(
+      (await accountLocalTaskClient.observed!.list({}, { signal })).requests.filter(
         (request) => request.status === "pending" && Date.parse(request.expiresAt) > Date.now(),
       ).length,
     refetchInterval: 5000,
@@ -37,7 +37,9 @@ export function TerminalRequestNotice({ accountId }: { accountId: string | null 
       <p className="text-sm">{t("terminalPendingNotice", { count: data })}</p>
       <Button
         size="sm"
-        onClick={() => void router.navigate({ to: "/approvals", search: { scope: "local" } })}
+        onClick={() =>
+          void router.navigate({ to: "/approvals", search: { scope: "local", history: "account" } })
+        }
       >
         {t("reviewRequests")}
       </Button>

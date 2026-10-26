@@ -1,4 +1,32 @@
 export default {
+  localWorkspace: {
+    localMode: "本机工作区",
+    welcome: "从这台电脑开始",
+    welcomeHint: "无需 Raypx 账号即可运行本地任务。先配置项目和 Agent，再编写第一个任务。",
+    ownershipHint:
+      "本地任务和草稿属于这台电脑的工作区。登录、切换账号或退出登录都不会迁移、上传或停止它们。",
+    source: "本地数据",
+    deviceSource: "这台电脑的工作区",
+    legacySource: "旧版按账号保存的本地数据",
+    legacyHint:
+      "这些旧任务和草稿仍属于当前服务上的登录账号，不会合并到本机工作区；退出登录会停止其中仍在执行的任务。",
+    remoteSignIn: "登录以使用远程功能",
+    remoteSignInHint: "连接电脑、查看同步历史和处理远程审批需要账号。本地工具无需登录即可使用。",
+    backToLocal: "返回本地工具",
+    getStarted: "打开入门引导",
+    chooseProject: "授权项目文件夹",
+    chooseAnotherProject: "授权其他文件夹",
+    authorizing: "正在授权…",
+    projectHint: "选择用于本地 Agent 任务的文件夹。此操作仅授权本机目录，不会开启远程访问。",
+    checkAgent: "检查 Claude Code 或 Codex",
+    agentHint: "安装并登录至少一个 Agent CLI 后，重新检查。Agent 的服务账号与 Raypx 账号相互独立。",
+    checkAgain: "重新检查 Agent",
+    firstTask: "准备第一个任务",
+    firstTaskHint: "选择项目和 Agent，描述工作内容，确认后再发送。引导不会自动启动任务。",
+    writeTask: "编写本地任务",
+    exploreLocal: "先体验本地终端",
+    remoteLater: "稍后配置远程访问",
+  },
   guest: {
     visitor: "访客模式",
     title: "远程任务与审批",

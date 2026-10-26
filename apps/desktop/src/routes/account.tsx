@@ -18,7 +18,21 @@ import { signOutDesktopHost } from "../features/tasks/host-session";
 export const Route = createFileRoute("/account")({
   ssr: false,
   preload: false,
-  loader: ({ abortController }) => readAccount(taskClient, { signal: abortController.signal }),
+  loader: async ({ abortController }) => {
+    try {
+      const session = await authClient.getSession({
+        fetchOptions: {
+          signal: AbortSignal.any([abortController.signal, AbortSignal.timeout(10_000)]),
+        },
+      });
+      if (session.error) return { status: "unavailable" } as const;
+      return session.data
+        ? readAccount(taskClient, { signal: abortController.signal })
+        : ({ status: "signed-out" } as const);
+    } catch {
+      return { status: "unavailable" } as const;
+    }
+  },
   pendingComponent: AccountPending,
   component: AccountPage,
 });
@@ -93,7 +107,9 @@ function AccountPage() {
           onSignOut={() =>
             auth.signOut(async () => {
               await signOutDesktopHost(state.account.id);
-              queryClient.clear();
+              queryClient.removeQueries({
+                predicate: (query) => query.queryKey.includes(state.account.id),
+              });
               return refresh();
             })
           }
@@ -117,7 +133,7 @@ function AccountPage() {
 
 function AccountLink({ to, className, children }: AccountLinkProps) {
   return (
-    <Link to={`/${to}`} className={className}>
+    <Link to={`/${to}`} search={{ returnTo: "/account" }} className={className}>
       {children}
     </Link>
   );

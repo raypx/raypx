@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   listener: undefined as ((event: LocalEvent) => void) | undefined,
 }));
 vi.mock("../../../../src/features/tasks/local-client", () => ({
-  localTaskClient: { observed: { list: mocks.list } },
+  accountLocalTaskClient: { observed: { list: mocks.list } },
 }));
 vi.mock("@tanstack/react-router", () => ({ useRouter: () => ({ navigate: mocks.navigate }) }));
 vi.mock("../../../../src/lib/desktop", () => ({
@@ -41,7 +41,10 @@ it("opens this computer's approval page without deciding, and removes a stale no
   );
   const button = await screen.findByRole("button", { name: "Review requests" });
   fireEvent.click(button);
-  expect(mocks.navigate).toHaveBeenCalledWith({ to: "/approvals", search: { scope: "local" } });
+  expect(mocks.navigate).toHaveBeenCalledWith({
+    to: "/approvals",
+    search: { scope: "local", history: "account" },
+  });
   expiresAt = new Date(Date.now() - 1000).toISOString();
   mocks.listener?.({ version: 1, event: "observed.changed", data: {} });
   await waitFor(() => expect(screen.queryByRole("button", { name: "Review requests" })).toBeNull());

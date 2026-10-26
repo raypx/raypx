@@ -42,6 +42,8 @@ host-authorization schemas. `/api` exposes account-scoped observed summaries/det
 and host bootstrap/grant/revoke. `/local` keeps host and connector methods private. Plain content is explicitly encoded;
 request revision/epoch and decision receipts fence stale or duplicate answers.
 Private `agents.local.*` methods scope Desktop task reads and commands by account.
+The reserved `LOCAL_WORKSPACE_ID` scopes device-profile work independently of login;
+Native preserves this ID while legacy accounts retain deployment-hashed namespaces.
 They reuse normalized task/decision DTOs without publishing a local HTTP endpoint.
 
 `/api` also exports configuration DTOs and administrator RPC contracts. Public

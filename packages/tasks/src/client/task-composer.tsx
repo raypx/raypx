@@ -27,12 +27,14 @@ import { useTaskDrafts } from "./use-task-drafts.js";
 import {
   MAX_TASK_DRAFTS,
   readTaskDrafts,
+  createTaskDraft,
   sameDraft,
   type TaskDraft,
   type DraftInput,
 } from "./task-drafts.js";
 
-export type TaskComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode">;
+export type TaskComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode"> &
+  Partial<Pick<DraftInput, "deviceId" | "projectId">>;
 
 export function TaskComposer({
   client,
@@ -47,7 +49,9 @@ export function TaskComposer({
   guest,
   initialDraft,
   onDraftRestored,
+  onEditorChange,
 }: {
+  onEditorChange?: (draft: DraftInput) => void;
   guest?: {
     signIn(draft: TaskComposerDraft): void | Promise<void>;
     changed?(draft: TaskComposerDraft): void;
@@ -68,9 +72,10 @@ export function TaskComposer({
   const c = useTranslations("common");
   const fieldId = useId();
   const localDevice = local ? devices[0] : undefined;
-  const [deviceId, setDeviceId] = useState(localDevice?.id ?? "");
+  const [deviceId, setDeviceId] = useState(initialDraft?.deviceId ?? localDevice?.id ?? "");
   const [projectId, setProjectId] = useState(
-    localDevice?.projects.length === 1 ? localDevice.projects[0]!.id : "",
+    initialDraft?.projectId ??
+      (localDevice?.projects.length === 1 ? localDevice.projects[0]!.id : ""),
   );
   const [provider, setProvider] = useState<AgentProvider>(
     initialDraft?.provider ??
@@ -108,14 +113,19 @@ export function TaskComposer({
   useEffect(() => {
     if (initialDraft) onDraftRestored?.();
   }, [initialDraft, onDraftRestored]);
-  function changed(next: Partial<TaskComposerDraft>) {
+  function changed(next: Partial<DraftInput>) {
     try {
       guest?.changed?.({ prompt, provider, mode, ...next });
+      onEditorChange?.({ ...snapshot, ...next });
+      return true;
     } catch {
       setDraftStatus("draftSaveFailed");
+      return false;
     }
   }
-  const savedDraft = drafts.find((draft) => draft.id === draftId);
+  const savedDraft =
+    drafts.find((draft) => draft.id === draftId) ??
+    drafts.find((draft) => sameDraft(draft, snapshot));
   const dirty = Boolean(prompt.trim()) && (!savedDraft || !sameDraft(savedDraft, snapshot));
   function persist(next: TaskDraft[]) {
     try {
@@ -133,11 +143,8 @@ export function TaskComposer({
         setDraftStatus("draftLimit");
         return;
       }
-      const id = draftId ?? crypto.randomUUID();
-      const next = [
-        { ...snapshot, id, updatedAt: new Date().toISOString() },
-        ...latest.filter((draft) => draft.id !== id),
-      ];
+      const id = draftId ?? savedDraft?.id ?? crypto.randomUUID();
+      const next = [createTaskDraft(snapshot, id), ...latest.filter((draft) => draft.id !== id)];
       if (persist(next)) {
         setDraftId(id);
         setDraftStatus("draftSaved");
@@ -217,6 +224,7 @@ export function TaskComposer({
     }
     if (receipt?.key === JSON.stringify(snapshot)) {
       setPrompt("");
+      if (!changed({ prompt: "" })) cleaned = false;
       setDraftId(null);
       onOptionsOpenChange(false);
     }
@@ -265,7 +273,12 @@ export function TaskComposer({
     submitting.current = true;
     const key = JSON.stringify({ deviceId, projectId, provider, prompt, mode });
     if (submission.current?.key !== key)
-      submission.current = { key, id: crypto.randomUUID(), input: snapshot, draftId };
+      submission.current = {
+        key,
+        id: crypto.randomUUID(),
+        input: snapshot,
+        draftId: draftId ?? savedDraft?.id ?? null,
+      };
     setBusy(true);
     setError(undefined);
     try {
@@ -366,6 +379,7 @@ export function TaskComposer({
                   onValueChange={(value) => {
                     setDeviceId(value);
                     setProjectId("");
+                    changed({ deviceId: value, projectId: "" });
                   }}
                   options={devices
                     .filter((d) => !d.revoked)
@@ -385,7 +399,10 @@ export function TaskComposer({
                   required={!guest}
                   value={projectId || null}
                   placeholder={t("chooseProject")}
-                  onValueChange={setProjectId}
+                  onValueChange={(value) => {
+                    setProjectId(value);
+                    changed({ projectId: value });
+                  }}
                   options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
                 />
               </Field>

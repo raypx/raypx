@@ -12,6 +12,10 @@ export interface TaskDraft extends DraftInput {
   id: string;
   updatedAt: string;
 }
+/** Called only by editor/save events, never while rendering a component. */
+export function createTaskDraft(input: DraftInput, id: string): TaskDraft {
+  return { ...input, id, updatedAt: new Date().toISOString() };
+}
 /** Bound untrusted device storage before it becomes editable form state. */
 export function readTaskDrafts(raw: string | null): TaskDraft[] {
   if (!raw) return [];

@@ -8,18 +8,18 @@ import {
   onLocalEvent,
   localRequest,
 } from "../../lib/desktop";
-import { localTaskClient } from "./local-client";
+import { accountLocalTaskClient } from "./local-client";
 
 export function RemoteCoordinator() {
   const session = authClient.useSession();
-  const accountId = session.data?.user.id;
+  const accountId = session.error ? undefined : session.data?.user.id;
   const previousAccount = useRef<string | null>(null);
   useEffect(() => {
     taskClient.setAccount?.(accountId ?? null);
-    localTaskClient.setAccount(accountId ?? null);
+    accountLocalTaskClient.setAccount(accountId ?? null);
     return () => {
       taskClient.setAccount?.(null);
-      localTaskClient.setAccount(null);
+      accountLocalTaskClient.setAccount(null);
     };
   }, [accountId]);
   useEffect(() => {

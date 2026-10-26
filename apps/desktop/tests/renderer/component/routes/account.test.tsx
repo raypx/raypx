@@ -38,6 +38,7 @@ type SessionSnapshot = {
 };
 const mocks = vi.hoisted(() => ({
   account: vi.fn(),
+  getSession: vi.fn(),
   signIn: vi.fn(),
   signOut: vi.fn(),
   session: { data: null, isPending: false, error: null } as SessionSnapshot,
@@ -46,6 +47,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
   authClient: {
+    getSession: mocks.getSession,
     signIn: { email: mocks.signIn },
     signUp: { email: vi.fn() },
     sendVerificationEmail: vi.fn(),
@@ -76,6 +78,7 @@ const unauthorized = { code: "UNAUTHORIZED", message: "private session diagnosti
 
 function setSession(user: AccountProfile | null, isPending = false) {
   mocks.session = { data: user ? { user } : null, isPending, error: null };
+  if (!isPending) mocks.getSession.mockResolvedValue({ data: mocks.session.data, error: null });
   const listeners = Array.from(mocks.listeners);
   for (const listener of listeners) listener();
 }
@@ -174,7 +177,7 @@ describe("Desktop account route", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText(unauthorized.message)).toBeNull();
     expect(router.state.location.pathname).toBe("/account");
-    expect(mocks.account).toHaveBeenCalledTimes(1);
+    expect(mocks.account).not.toHaveBeenCalled();
   });
 
   it("reads an authenticated profile through hash history with an abort signal", async () => {
@@ -261,7 +264,7 @@ describe("Desktop account route", () => {
     expect(await screen.findByRole("heading", { name: "You’re not signed in" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: ada.name })).toBeNull();
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
-    expect(mocks.account).toHaveBeenCalledTimes(2);
+    expect(mocks.account).toHaveBeenCalledTimes(1);
   });
 
   it.each(["auth", "network"])(
@@ -295,7 +298,7 @@ describe("Desktop account route", () => {
     expect(await screen.findByRole("heading", { name: "You’re not signed in" })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: ada.name })).toBeNull();
     expect(screen.queryByRole("status")).toBeNull();
-    expect(mocks.account).toHaveBeenCalledTimes(2);
+    expect(mocks.account).toHaveBeenCalledTimes(1);
   });
 
   it("hides a previous identity while a session change refreshes the route", async () => {
@@ -317,12 +320,12 @@ describe("Desktop account route", () => {
     await act(async () => setSession(null));
     expect(await screen.findByRole("heading", { name: "You’re not signed in" })).toBeTruthy();
     expect(screen.queryByText(ada.email)).toBeNull();
-    expect(mocks.account).toHaveBeenCalledTimes(2);
+    expect(mocks.account).toHaveBeenCalledTimes(1);
     const accountListeners = new Set(mocks.listeners);
     await act(async () => router.navigate({ to: "/settings" }));
     for (const listener of accountListeners) expect(mocks.listeners.has(listener)).toBe(false);
     await act(async () => setSession(grace));
-    expect(mocks.account).toHaveBeenCalledTimes(2);
+    expect(mocks.account).toHaveBeenCalledTimes(1);
   });
 
   it("keeps a previous identity hidden when refreshing for a new session fails", async () => {
@@ -356,7 +359,7 @@ describe("Desktop account route", () => {
   );
 
   it("waits for authentication invalidation before navigating to the account route", async () => {
-    const router = await page("/login");
+    const router = await page("/login?returnTo=%2Faccount");
     const refresh = deferred<void>();
     const invalidate = vi.spyOn(router, "invalidate").mockReturnValue(refresh.promise);
     const navigate = vi.spyOn(router, "navigate");

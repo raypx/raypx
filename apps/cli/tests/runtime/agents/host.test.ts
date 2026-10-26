@@ -6,6 +6,7 @@ import { StateStore } from "../../../src/runtime/state";
 import { AgentRuntime, bounded } from "../../../src/runtime/agents";
 import { AgentStore } from "../../../src/runtime/agents/store";
 import type { AgentTask, AgentProvider } from "@raypx/contracts/tasks";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
@@ -402,6 +403,27 @@ it("runs local tasks and approvals without a grant, isolates accounts, and keeps
   expect(runtime.localTasks(accountId, 100)).toEqual([]);
   expect(() => runtime.localTask(accountId, input.id, 0)).toThrow("Task unavailable");
   expect(runtime.localApprovals(accountId)).toEqual([]);
+});
+it("keeps device-owned work running when an old account binding is detached", async () => {
+  const { runtime, task } = await host("codex", "codex");
+  const device = await runtime.localDevice(LOCAL_WORKSPACE_ID);
+  const input = {
+    id: task.id,
+    deviceId: device.id,
+    projectId: task.projectId,
+    provider: "codex" as const,
+    mode: "run" as const,
+    prompt: "Device-owned work",
+  };
+  expect(
+    (await runtime.localExecute(LOCAL_WORKSPACE_ID, input.id, { method: "tasks.create", input }))
+      .ok,
+  ).toBe(true);
+  await expect.poll(() => runtime.localApprovals(LOCAL_WORKSPACE_ID).length).toBe(1);
+  await runtime.localDetach("server:origin:old-account");
+  expect(runtime.localTask(LOCAL_WORKSPACE_ID, input.id, 0).task.status).toBe("waiting");
+  expect(runtime.localTasks("server:origin:old-account", 100)).toEqual([]);
+  expect(runtime.events(`desktop:${LOCAL_WORKSPACE_ID}`).events).toEqual([]);
 });
 it("keeps current project directories mutually exclusive and cancels waiting children", async () => {
   const { runtime, task } = await host("codex", "codex");

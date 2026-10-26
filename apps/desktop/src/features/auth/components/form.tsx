@@ -6,11 +6,18 @@ import {
   type AuthMode,
 } from "@raypx/auth/client";
 import { authClient, webUrl } from "../client";
+import { desktopReturnTo } from "../return-to";
+import { useTranslations } from "@raypx/i18n/browser";
 
 function AuthLink({ to, children, className }: AuthFormLinkProps) {
-  if (to === "account") return null;
+  const search = useLocation({ select: (location) => location.searchStr });
+  const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
   return (
-    <Link to={`/${to}`} className={className}>
+    <Link
+      to={to === "account" ? returnTo : `/${to}`}
+      {...(to === "account" || returnTo === "/" ? {} : { search: { returnTo } })}
+      className={className}
+    >
       {children}
     </Link>
   );
@@ -21,10 +28,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
   const session = authClient.useSession();
   const navigate = useNavigate();
   const search = useLocation({ select: (location) => location.searchStr });
+  const returnTo = desktopReturnTo(new URLSearchParams(search).get("returnTo"));
+  const t = useTranslations("localWorkspace");
   return (
     <SharedAuthForm
       key={mode}
       mode={mode}
+      backLabel={t("backToLocal")}
       client={authClient}
       webUrl={webUrl}
       search={search}
@@ -32,7 +42,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         analytics.capture("sign_in_succeeded");
         await session.refetch();
         await router.invalidate();
-        await navigate({ to: "/account" });
+        await navigate({ to: returnTo });
       }}
       LinkComponent={AuthLink}
     />

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import {
   CONNECTION_KEY,
   DEFAULT_CONNECTION,
@@ -145,6 +146,7 @@ export function scopeLocalAccount(scope: string, params: unknown): unknown {
     params.accountId.length > 200
   )
     return params; // The CLI remains responsible for rejecting malformed protocol input.
+  if (params.accountId === LOCAL_WORKSPACE_ID) return params;
   const account = createHash("sha256").update(params.accountId).digest("hex").slice(0, 32);
   return { ...params, accountId: `server:${scope}:${account}` };
 }

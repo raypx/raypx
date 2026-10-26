@@ -1,13 +1,17 @@
 import { instrumentTaskClient } from "@raypx/analytics/browser";
 import { analytics } from "../analytics/client";
-import { Link, useRouter } from "@tanstack/react-router";
+import { Link, useRouter, useLocation } from "@tanstack/react-router";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { useTranslations } from "@raypx/i18n/browser";
 import { apiUrl, authClient } from "../auth/client";
 import { taskClient } from "./client";
 import { isDesktop } from "../../lib/desktop";
-import { localTaskClient } from "./local-client";
+import { localTaskClient, accountLocalTaskClient } from "./local-client";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
+import { RemoteBoundary } from "../auth/components/remote-boundary";
+import { SelectField } from "@raypx/ui/select-field";
+import { useId } from "react";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
 const remote = instrumentTaskClient(taskClient, analytics, "remote");
@@ -19,19 +23,32 @@ export function DesktopTaskWorkspace({
   initialScope?: "local" | "remote";
 }) {
   const router = useRouter();
+  const selectedScope = useLocation({
+    select: (location) => new URLSearchParams(location.searchStr).get("scope"),
+  });
   const session = authClient.useSession(),
     t = useTranslations("tasks"),
     c = useTranslations("common");
-  const accountId = session.data?.user.id ?? null;
+  const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
+  const text = useTranslations("localWorkspace");
+  const legacy = useLocation({
+    select: (location) => new URLSearchParams(location.searchStr).get("history") === "account",
+  });
+  const owner = legacy && accountId ? accountId : LOCAL_WORKSPACE_ID;
+  const sourceId = useId();
   return (
     <Tabs
-      key={`${accountId ?? "signed-out"}:${initialScope}`}
-      defaultValue={initialScope}
+      value={
+        selectedScope === "remote" ? "remote" : selectedScope === "local" ? "local" : initialScope
+      }
       className="gap-0"
       onValueChange={(value) => {
         const next = value === "remote" ? "remote" : "local";
-        if (view === "approvals")
-          void router.navigate({ to: "/approvals", search: { scope: next }, replace: true });
+        void router.navigate({
+          to: view === "approvals" ? "/approvals" : "/tasks",
+          search: { scope: next },
+          replace: true,
+        });
         analytics.capture("task_scope_changed", { scope: next });
       }}
     >
@@ -48,13 +65,51 @@ export function DesktopTaskWorkspace({
         </Link>
       </div>
       <TabsContent value="local">
-        {isDesktop() ? (
+        <div className="mx-auto w-full max-w-[1600px] space-y-3 px-8 pt-5 max-[760px]:px-5">
+          <p className="max-w-[75ch] text-sm text-muted-foreground">
+            {text(legacy ? "legacyHint" : "ownershipHint")}
+          </p>
+          {accountId && (
+            <div className="flex flex-wrap items-center gap-3">
+              <label htmlFor={sourceId} className="text-sm">
+                {text("source")}
+              </label>
+              <SelectField
+                id={sourceId}
+                value={legacy ? "account" : "device"}
+                onValueChange={(value) =>
+                  void router.navigate({
+                    to: view === "approvals" ? "/approvals" : "/tasks",
+                    search: {
+                      scope: "local",
+                      ...(value === "account" ? { history: "account" as const } : {}),
+                    },
+                    replace: true,
+                  })
+                }
+                options={[
+                  { value: "device", label: text("deviceSource") },
+                  { value: "account", label: text("legacySource") },
+                ]}
+              />
+            </div>
+          )}
+          <Link to="/welcome" className="text-sm underline underline-offset-4">
+            {text("getStarted")}
+          </Link>
+        </div>
+        {legacy && !accountId ? (
+          <div className="px-8">
+            <RemoteBoundary>{() => null}</RemoteBoundary>
+          </div>
+        ) : isDesktop() ? (
           <TaskWorkspace
+            key={owner}
             local
+            persistEditor
             draftNamespace={apiUrl}
-            client={local}
-            accountId={accountId}
-            pending={session.isPending}
+            client={legacy ? accountLocalTaskClient : local}
+            accountId={owner}
             view={view}
           />
         ) : (
@@ -65,13 +120,19 @@ export function DesktopTaskWorkspace({
         )}
       </TabsContent>
       <TabsContent value="remote">
-        <TaskWorkspace
-          draftNamespace={apiUrl}
-          client={remote}
-          accountId={accountId}
-          pending={session.isPending}
-          view={view}
-        />
+        <div className="mx-auto w-full max-w-[1600px] px-8 max-[760px]:px-5">
+          <RemoteBoundary>
+            {(remoteAccount) => (
+              <TaskWorkspace
+                persistEditor
+                draftNamespace={apiUrl}
+                client={remote}
+                accountId={remoteAccount}
+                view={view}
+              />
+            )}
+          </RemoteBoundary>
+        </div>
       </TabsContent>
     </Tabs>
   );

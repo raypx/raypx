@@ -1,4 +1,4 @@
-import type { LocalEvent } from "@raypx/contracts/local";
+import { LOCAL_WORKSPACE_ID, type LocalEvent } from "@raypx/contracts/local";
 import {
   taskSchema,
   humanRequestSchema,
@@ -18,8 +18,9 @@ function failure(code: string) {
 export function createLocalTaskClient(
   request: typeof localRequest = localRequest,
   events: (listener: (event: LocalEvent) => void) => () => void = onLocalEvent,
+  configuration: { owner?: string; observed?: boolean } = {},
 ): TaskWorkspaceClient & { setAccount(accountId: string | null): void } {
-  let account: string | null = null;
+  let account: string | null = configuration.owner ?? null;
   const listeners = new Set<(change?: TaskChange) => void>();
   let stopEvents: (() => void) | undefined;
   const changed = (change?: TaskChange) => {
@@ -70,7 +71,7 @@ export function createLocalTaskClient(
     return result.value;
   };
   return {
-    ...(isDaemonDesktop()
+    ...(configuration.observed && isDaemonDesktop()
       ? {
           observed: {
             list: (_input, options) =>
@@ -151,6 +152,7 @@ export function createLocalTaskClient(
         ),
     },
     setAccount(id) {
+      if (configuration.owner) return;
       if (account !== id) {
         account = id;
         changed();
@@ -231,4 +233,10 @@ export function createPendingClient(
     },
   };
 }
-export const localTaskClient = createLocalTaskClient();
+export const localTaskClient = createLocalTaskClient(undefined, undefined, {
+  owner: LOCAL_WORKSPACE_ID,
+});
+/** Legacy account-owned history and account-authorized terminal requests stay isolated. */
+export const accountLocalTaskClient = createLocalTaskClient(undefined, undefined, {
+  observed: true,
+});

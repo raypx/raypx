@@ -7,7 +7,9 @@ Express feature styles and responsive states with Tailwind utilities in componen
 CSS entry points register sources and shared styles; avoid feature-specific selectors.
 
 Web has a quiet account/settings shell. Desktop adds Files, Automations and
-Terminal navigation behind the Desktop login page. Task views default to This
+Terminal navigation available before login. The local setup guide uses three inline
+steps: project authorization, agent readiness and opening the task editor. Remote
+actions offer contextual sign-in and return to the requested page. Task views default to This
 computer, with a separate Connected computers tab for remote tasks. Web layouts also serve phone browsers;
 the planned Expo iOS app is a separate delivery phase.
 

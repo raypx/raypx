@@ -40,3 +40,9 @@ when no tasks match. It does not download the entire history or change task data
 Name creation and updates trim whitespace and enforce 1–80 UTF-16 characters on
 the server. Profile and session-revocation mutations require an exact trusted
 Origin, including the native `views://main` origin; missing/external origins fail.
+
+Desktop local tools do not require an account. Remote pages request contextual login
+and preserve an allowlisted return path. New local tasks use the device-profile owner;
+legacy local history and remote drafts retain server/account ownership. Logout revokes
+remote authorization and stops legacy account work while device-owned tasks continue.
+Local drafts are not uploaded or reassigned when signing in or changing accounts.

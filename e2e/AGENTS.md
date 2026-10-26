@@ -23,7 +23,8 @@ verification, password reset and session revocation. Theme/locale screenshots ar
 written under ignored test-results for visual inspection.
 Guest Web acceptance asserts no private list/subscription requests before login,
 preserves the original page and draft choices through sign-in, and checks restoration
-does not send a task. Desktop retains its initial login requirement.
+does not send a task. Desktop local pages stay available before login and during session
+errors; remote views require confirmed login and preserve their return destination.
 
 ## Verification
 

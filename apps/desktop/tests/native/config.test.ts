@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 import { CONNECTION_KEY, DEFAULT_CONNECTION } from "../../config";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import {
   DEFAULT_CONFIG,
   loadDesktopConfig,
@@ -136,6 +137,9 @@ it("isolates cookies, remote binding paths and local account namespaces by norma
     expect(scopeLocalAccount(restored.scope, input)).toEqual(scopeLocalAccount(first.scope, input));
     expect(input.accountId).toBe("same-user-id");
     expect(scopeLocalAccount(first.scope, { accountId: 42 })).toEqual({ accountId: 42 });
+    const deviceInput = { accountId: LOCAL_WORKSPACE_ID, limit: 50 };
+    expect(scopeLocalAccount(first.scope, deviceInput)).toEqual(deviceInput);
+    expect(scopeLocalAccount(second.scope, deviceInput)).toEqual(deviceInput);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

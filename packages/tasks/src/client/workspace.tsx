@@ -1,3 +1,4 @@
+import { PersistentTaskComposer } from "./persistent-task-composer.js";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import type { TaskClient } from "@raypx/client";
 import { applyActivityEvent } from "@raypx/contracts/tasks";
@@ -43,6 +44,7 @@ interface Props {
   client: TaskWorkspaceClient;
   accountId: string | null;
   pending?: boolean;
+  persistEditor?: boolean;
   initialDraft?: TaskComposerDraft | undefined;
   onDraftRestored?: (() => void) | undefined;
   local?: boolean;
@@ -81,9 +83,11 @@ function Workspace({
   draftNamespace = "default",
   initialDraft,
   onDraftRestored,
+  persistEditor = false,
 }: Props & { view?: "tasks" | "approvals"; accountId: string }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
+  const Composer = persistEditor ? PersistentTaskComposer : TaskComposer;
   const [pages, setPages] = useState<string[]>([]);
   const before = pages.at(-1);
   const load = useCallback(
@@ -188,7 +192,7 @@ function Workspace({
           ) : (
             <div className="grid items-start grid-cols-1 gap-7 @min-[58rem]:grid-cols-[minmax(21rem,0.9fr)_minmax(0,1.3fr)] @min-[58rem]:gap-8">
               <div className="min-w-0 space-y-6">
-                <TaskComposer
+                <Composer
                   key={JSON.stringify([draftNamespace, accountId, local])}
                   client={client}
                   initialDraft={initialDraft}

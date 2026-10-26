@@ -18,6 +18,7 @@ import { FilesToolbar } from "../../features/files/components/toolbar";
 import { FileTable, type FileListingResult } from "../../features/files/components/table";
 import { FileOperationForm } from "../../features/files/components/operation-form";
 import { FileEditor } from "../../features/files/components/editor";
+import { LocalWelcome } from "../../features/onboarding/welcome";
 
 const localRoute = getRouteApi("/(local)");
 
@@ -123,6 +124,7 @@ function FilesPage() {
       if (router.state.matches.some((match) => match.routeId === Route.id)) await refresh();
     });
   }
+  if (desktopAvailable && roots?.length === 0 && !data.rootId) return <LocalWelcome />;
   return (
     <section className="mx-auto max-w-[1320px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
       <header className="mb-10 flex items-start justify-between gap-6 max-[1100px]:flex-col max-[1100px]:gap-5">

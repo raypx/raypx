@@ -10,6 +10,8 @@ import {
 import { hostAuthorizationSchema, terminalDecisionSchema } from "./terminal.js";
 
 export const LOCAL_PROTOCOL_VERSION = 1 as const;
+/** Private device-profile owner, independent of any remote account or deployment. */
+export const LOCAL_WORKSPACE_ID = "device:local-workspace:v1";
 export const MAX_TEXT_BYTES = 1024 * 1024;
 const pathRef = { rootId: z.string().min(1), path: z.string().default("") };
 const agentAccount = { accountId: z.string().min(1).max(200) };

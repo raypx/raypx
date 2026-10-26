@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import type { AgentTask } from "@raypx/contracts/tasks";
-import type { LocalEvent, LocalMethod } from "@raypx/contracts/local";
+import { LOCAL_WORKSPACE_ID, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 import {
   createLocalTaskClient,
   createPendingClient,
@@ -21,6 +21,21 @@ const task: AgentTask = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
+it("keeps the device owner stable across login, account switches and logout", async () => {
+  const request = vi.fn(async () => [task]);
+  const client = createLocalTaskClient(request as typeof localRequest, () => () => {}, {
+    owner: LOCAL_WORKSPACE_ID,
+  });
+  for (const account of [null, "account-a", "account-b", null]) {
+    client.setAccount(account);
+    await client.tasks.list({ limit: 100 });
+  }
+  expect(request.mock.calls).toHaveLength(4);
+  expect(request).toHaveBeenCalledWith("agents.local.list", {
+    accountId: LOCAL_WORKSPACE_ID,
+    limit: 100,
+  });
+});
 it("uses only scoped IPC for queries and mutations even when network access fails", async () => {
   const network = vi.fn(() => {
     throw new Error("Network unavailable");

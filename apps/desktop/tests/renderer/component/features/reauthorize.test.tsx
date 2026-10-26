@@ -31,7 +31,7 @@ vi.mock("../../../../src/features/tasks/client", () => ({
   taskClient: { setAccount: vi.fn(), devices: { refreshGrant: mocks.refreshGrant } },
 }));
 vi.mock("../../../../src/features/tasks/local-client", () => ({
-  localTaskClient: { setAccount: vi.fn() },
+  accountLocalTaskClient: { setAccount: vi.fn() },
 }));
 vi.mock("../../../../src/features/tasks/terminal-settings", () => ({
   TerminalSettings: () => null,
@@ -58,6 +58,12 @@ vi.mock("../../../../src/lib/desktop", () => ({
     },
   }),
 }));
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from "@tanstack/react-router";
 import { AgentSettings } from "../../../../src/features/tasks/settings";
 import { RemoteCoordinator } from "../../../../src/features/tasks/coordinator";
 
@@ -79,10 +85,20 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 function mount() {
+  const router = createRouter({
+    routeTree: createRootRoute({
+      component: () => (
+        <>
+          <AgentSettings />
+          <RemoteCoordinator />
+        </>
+      ),
+    }),
+    history: createMemoryHistory({ initialEntries: ["/"] }),
+  });
   return render(
     <BrowserLanguageProvider>
-      <RemoteCoordinator />
-      <AgentSettings />
+      <RouterProvider router={router} />
     </BrowserLanguageProvider>,
   );
 }

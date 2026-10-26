@@ -43,6 +43,9 @@ page; running/queued excludes tasks waiting for an answer. Drafts are explicitly
 saved to device storage, scoped by injected server identity, account and local/remote
 task location. Validate and bound stored drafts (20 drafts, 32,000 characters each);
 preserve editor text on storage/delivery failures. Drafts never execute until Send.
+Desktop opts into `persistEditor` for a separately bounded current-editor slot, restored
+before the composer mounts. Keep its owner/namespace identical to the named draft list.
+The device owner persists across account changes; legacy and remote slots remain account-scoped.
 
 Optional `client.observed` adds a separate terminal-request section. List summaries
 omit tool bodies; expansion loads one request. Render capabilities, revision/epoch

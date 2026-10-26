@@ -48,6 +48,7 @@ vi.mock("../../../../../src/features/auth/client", () => ({
     resetPassword: mocks.resetPassword,
     signOut: mocks.signOut,
     useSession: mocks.session,
+    getSession: async () => mocks.session(),
   },
 }));
 vi.mock("../../../../../src/features/tasks/client", () => ({
@@ -137,7 +138,7 @@ describe("Desktop authentication routes", () => {
       isPending: false,
       refetch: async () => {},
     });
-    const router = await page("/login");
+    const router = await page("/login?returnTo=%2Faccount");
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "ada@example.test" },
     });

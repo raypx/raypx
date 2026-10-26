@@ -653,43 +653,49 @@ test("Desktop preview states local unavailability after sign-in", async ({ page 
   await preferencesPersist(page, desktop);
 });
 
-test("Desktop redirects signed-out workspace routes to a standalone login page", async ({
+test("Desktop keeps local tools public and asks for login only for remote features", async ({
   page,
 }) => {
-  for (const path of ["/", "/settings", "/tasks", "/terminal", "/account"]) {
+  const privateReads: string[] = [];
+  await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
+  page.on("request", (request) => {
+    if (/\/rpc\/(tasks|devices|account|approvals|observed|relay)\//.test(request.url()))
+      privateReads.push(request.url());
+  });
+  for (const path of ["/", "/settings", "/tasks", "/terminal", "/automations", "/account"]) {
     await page.goto(desktop + path);
-    await expect(page).toHaveURL(desktop + "/login");
-    await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL(desktop + path);
+    await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
   }
-  await page.getByRole("link", { name: "Create account", exact: true }).click();
-  await expect(page).toHaveURL(desktop + "/signup");
-  await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toBeVisible();
-  await page.goto(desktop + "/forgot-password?email=desktop%40example.test");
-  await expect(page.getByRole("textbox", { name: "Email address", exact: true })).toHaveValue(
-    "desktop@example.test",
-  );
-  await page.goto(desktop + "/reset-password?token=fixture-reset");
-  await expect(page).toHaveURL(desktop + "/reset-password?token=fixture-reset");
-  await expect(page.getByRole("button", { name: "Reset password", exact: true })).toBeEnabled();
-  await page.goto(desktop + "/verify-email?verified=1");
+  expect(privateReads).toEqual([]);
+  await page.goto(desktop + "/tasks");
+  await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
   await expect(
-    page.getByText("Your email is verified. You can sign in now.", { exact: true }),
+    page.getByRole("heading", { name: "Sign in for remote access", exact: true }),
   ).toBeVisible();
-  await page.goto(desktop + "/login");
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?returnTo=%2Ftasks%3Fscope%3Dremote/);
+  await page.getByRole("link", { name: "Create account", exact: true }).click();
+  await expect(page).toHaveURL(/\/signup\?returnTo=/);
+  await expect(page.getByRole("textbox", { name: "Your name", exact: true })).toBeVisible();
+  await page.goto(desktop + "/welcome");
+  await expect(
+    page.getByRole("heading", { name: "Start on this computer", exact: true }),
+  ).toBeVisible();
   await page.screenshot({
-    path: test.info().outputPath("desktop-login.png"),
+    path: test.info().outputPath("desktop-local-welcome.png"),
     fullPage: true,
     animations: "disabled",
   });
 });
 
-test("Desktop opens the workspace after login and returns to login after logout", async ({
+test("Desktop returns to the requested remote page after login and keeps local tools after logout", async ({
   page,
 }) => {
-  await page.goto(desktop + "/tasks");
-  await expect(page).toHaveURL(desktop + "/login");
+  await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
+  await page.goto(desktop + "/tasks?scope=remote");
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
   await page.route("**/api/auth/sign-in/email", async (route) => {
     const user = await signedInDesktop(page);
     return authResponse(route, { user, token: "browser-fixture-only" });
@@ -699,17 +705,20 @@ test("Desktop opens the workspace after login and returns to login after logout"
     .fill("desktop@example.test");
   await page.getByLabel("Password", { exact: true }).fill("browser-fixture-password");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(desktop + "/account");
-  await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Desktop User", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(desktop + "/tasks?scope=remote");
+  await expect(page.getByRole("tab", { name: "Connected computers", exact: true })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   await page.route("**/api/auth/sign-out", async (route) => {
     await page.route("**/api/auth/get-session**", (session) => authResponse(session, null));
     return authResponse(route, { success: true });
   });
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await expect(page).toHaveURL(desktop + "/login");
-  await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Account menu", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
+  await expect(page).toHaveURL(desktop + "/");
+  await expect(page.getByRole("heading", { name: "Your local files", exact: true })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
 });
 
 test("Desktop distinguishes an unavailable session check from being signed out", async ({
@@ -733,8 +742,11 @@ test("Desktop distinguishes an unavailable session check from being signed out",
   await expect(page.getByText("private session diagnostic")).toHaveCount(0);
   available = true;
   await page.getByRole("button", { name: "Try again", exact: true }).click();
-  await expect(page).toHaveURL(desktop + "/login");
-  await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(desktop + "/settings");
+  await expect(
+    page.getByRole("heading", { name: "Sign in for remote access", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Language", exact: true })).toBeVisible();
 });
 
 test("Desktop defaults to local tasks and opens remote tasks through an accessible scope switch", async ({
@@ -1143,14 +1155,14 @@ for (const [surface, base] of [
     );
     await expect(menu.getByText("private diagnostic")).toHaveCount(0);
     await menu.getByRole("menuitem", { name: "Sign out", exact: true }).click();
-    await expect(page).toHaveURL(base + (surface === "Web" ? "/" : "/login"));
+    await expect(page).toHaveURL(base + "/");
     await expect(
       page.getByRole("heading", {
-        name: surface === "Web" ? "Remote tasks and approvals" : "Welcome back",
+        name: surface === "Web" ? "Remote tasks and approvals" : "Your local files",
         exact: true,
       }),
     ).toBeVisible();
-    if (surface === "Desktop") await expect(trigger).toHaveCount(0);
+    if (surface === "Desktop") await expect(trigger).toBeVisible();
     expect(attempts).toBe(2);
   });
 }

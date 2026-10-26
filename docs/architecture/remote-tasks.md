@@ -28,23 +28,31 @@ Desktop opens This computer by default. Its renderer calls Native and the bundle
 CLI through private `agents.local.*` stdio methods for creation, reads, approvals,
 follow-ups and cancellation. Local execution requires an authorized project and
 an installed provider; it does not require remote access, a relay grant or a Web
-deployment. The account login gate is retained, so this is not an anonymous or
-fully offline sign-in mode. Email verification and password reset still use their
-existing Web callbacks.
+deployment or Raypx login. Remote views and host authorization require a confirmed
+account session. Local pages remain usable during session errors. Email verification
+and password reset still use their existing Web callbacks.
 
-Local tasks have an account-scoped `desktop:` binding and a stable local device ID.
+New local tasks use the reserved device-profile `LOCAL_WORKSPACE_ID`, a `desktop:`
+binding and a stable local device ID. Native does not prefix this owner by server.
+Legacy account-owned tasks retain their deployment/account namespace and are available
+only through an explicit signed-in history source; no automatic migration or upload occurs.
 Their tasks, answers and event journal stay in SQLite. They never enter the cloud
 outbox, including after remote access is enabled, and remote snapshots/replay cannot
 read them. The same CLI execution host owns process locks, session continuation,
 idempotency and first-answer approval arbitration for both transports. Native change
-events refresh local views without network polling. Logout/account changes cancel
-local work while preserving its history, and a restart marks uncertain runs interrupted.
+events refresh local views without network polling. Login/account switches/logout leave
+device work running. Logout cancels remote and legacy account work while preserving history;
+a host restart marks uncertain runs interrupted.
 Local activity is durable and exempt from relay journal compaction. Task lists use
 creation-time/ID cursors with newer/older navigation, including when a response's
 byte budget produces a short page.
 
 Connected computers retains the remote task flow and account-scoped projections.
-Agent settings authorizes local projects independently of the remote access toggle.
+Agent settings authorizes local projects independently of login and the remote toggle.
+The setup guide authorizes one project, checks installed providers and opens an editor
+without starting work. Desktop autosaves a bounded editor slot alongside named drafts.
+Device slots retain the same owner across accounts; legacy/remote slots remain scoped
+by server/account. WebView partitions still isolate browser storage between deployments.
 
 ## Authentication and routing
 

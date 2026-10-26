@@ -8,7 +8,13 @@ import { authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
 import { signOutDesktopHost } from "../features/tasks/host-session";
 import { TerminalRequestNotice } from "../features/tasks/request-notice";
-import { createPendingClient, localTaskClient } from "../features/tasks/local-client";
+import {
+  createPendingClient,
+  localTaskClient,
+  accountLocalTaskClient,
+} from "../features/tasks/local-client";
+import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
+import { desktopReturnTo } from "../features/auth/return-to";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import {
@@ -25,7 +31,10 @@ import { EngineNotice } from "../features/engine/notice";
 import { useTranslations } from "@raypx/i18n/browser";
 import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "../lib/desktop";
 
-const pendingClient = createPendingClient(localTaskClient, taskClient);
+const pendingClient = createPendingClient(
+  createPendingClient(localTaskClient, accountLocalTaskClient),
+  taskClient,
+);
 
 type DesktopPath =
   | "/"
@@ -58,6 +67,7 @@ export function DesktopShell() {
   const queryClient = useQueryClient();
   const auth = useAuthActions({ client: authClient, webUrl });
   const path = useRouterState({ select: (state) => state.location.pathname });
+  const href = useRouterState({ select: (state) => state.location.href });
   const c = useTranslations("common");
   const [engine, setEngine] = useState("starting");
   const [engineCode, setEngineCode] = useState<string>();
@@ -89,7 +99,7 @@ export function DesktopShell() {
       stop();
     };
   }, [router]);
-  const accountId = session.data?.user.id ?? null;
+  const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
   return (
     <>
       <AnalyticsIdentity client={analytics} accountId={accountId} />
@@ -107,8 +117,8 @@ export function DesktopShell() {
               badge: (
                 <PendingCount
                   key={accountId ?? "signed-out"}
-                  client={pendingClient}
-                  accountId={accountId}
+                  client={accountId ? pendingClient : localTaskClient}
+                  accountId={accountId ?? LOCAL_WORKSPACE_ID}
                 />
               ),
             },
@@ -160,19 +170,28 @@ export function DesktopShell() {
         account={
           <AccountMenu
             key={accountId ?? "signed-out"}
-            user={session.data?.user ?? null}
+            user={accountId ? (session.data?.user ?? null) : null}
             pending={session.isPending}
             busy={auth.busy}
             error={Boolean(auth.error)}
-            onNavigate={(destination) => void router.navigate({ to: `/${destination}` })}
+            onNavigate={(destination) =>
+              destination === "login"
+                ? void router.navigate({
+                    to: "/login",
+                    search: { returnTo: desktopReturnTo(href) },
+                  })
+                : void router.navigate({ to: `/${destination}` })
+            }
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
                 if (accountId) await signOutDesktopHost(accountId);
                 // Drop every account-scoped query before the next session reads.
                 analytics.reset();
-                queryClient.clear();
+                queryClient.removeQueries({
+                  predicate: (query) => query.queryKey.includes(accountId),
+                });
                 await router.invalidate();
-                await router.navigate({ to: "/login", replace: true });
+                await router.navigate({ to: "/", replace: true });
               });
               return result.status === "success";
             }}

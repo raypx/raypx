@@ -1,4 +1,5 @@
 /** @vitest-environment jsdom */
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
   createHashHistory,
@@ -156,9 +157,13 @@ function testRouter(
 function mount(router: ReturnType<typeof testRouter>) {
   return render(
     <ThemeProvider>
-      <BrowserLanguageProvider>
-        <RouterProvider router={router} />
-      </BrowserLanguageProvider>
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <BrowserLanguageProvider>
+          <RouterProvider router={router} />
+        </BrowserLanguageProvider>
+      </QueryClientProvider>
     </ThemeProvider>,
   );
 }
@@ -283,7 +288,7 @@ describe("Desktop local file routes", () => {
       await act(async () => {
         mount(router);
       });
-      expect(await screen.findByRole("heading", { name: "Start with a folder" })).toBeTruthy();
+      expect(await screen.findByRole("heading", { name: "Start on this computer" })).toBeTruthy();
       const rootReads = () =>
         mocks.localRequest.mock.calls.filter(([method]) => method === "roots.list").length;
       expect(rootReads()).toBe(1);

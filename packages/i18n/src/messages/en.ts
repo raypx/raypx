@@ -1,4 +1,37 @@
 export default {
+  localWorkspace: {
+    localMode: "Local workspace",
+    welcome: "Start on this computer",
+    welcomeHint:
+      "Run local tasks without a Raypx account. Set up a project and an agent, then write your first task.",
+    ownershipHint:
+      "Local tasks and drafts belong to this computer's workspace. Signing in, switching accounts or signing out does not move, upload or stop them.",
+    source: "Local data",
+    deviceSource: "This computer's workspace",
+    legacySource: "Earlier account-owned local data",
+    legacyHint:
+      "These older tasks and drafts remain private to the signed-in account on this server. They are not merged into this computer's workspace; signing out stops their active tasks.",
+    remoteSignIn: "Sign in for remote access",
+    remoteSignInHint:
+      "Use an account to connect computers, read synced history and handle remote approvals. Local tools remain available without signing in.",
+    backToLocal: "Back to local tools",
+    getStarted: "Open setup guide",
+    chooseProject: "Authorize a project folder",
+    chooseAnotherProject: "Authorize another folder",
+    authorizing: "Authorizing…",
+    projectHint:
+      "Choose a folder for local agent tasks. This grants access on this computer and does not enable remote access.",
+    checkAgent: "Check Claude Code or Codex",
+    agentHint:
+      "Install and sign in to at least one agent CLI, then check again. Its provider account is separate from your Raypx account.",
+    checkAgain: "Check agents again",
+    firstTask: "Prepare your first task",
+    firstTaskHint:
+      "Choose the project and agent, describe the work, then send when ready. Setup never starts a task automatically.",
+    writeTask: "Write a local task",
+    exploreLocal: "Explore the local terminal",
+    remoteLater: "Set up remote access later",
+  },
   guest: {
     visitor: "Guest",
     title: "Remote tasks and approvals",

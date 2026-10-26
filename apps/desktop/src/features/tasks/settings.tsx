@@ -2,18 +2,25 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import type { AgentCapability, DeviceProject } from "@raypx/contracts/tasks";
-import type { RootGrant } from "@raypx/contracts/local";
+import { LOCAL_WORKSPACE_ID, type RootGrant } from "@raypx/contracts/local";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 import { getBridge, isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
 import { authClient } from "../auth/client";
 import { TerminalSettings } from "./terminal-settings";
 import { ReauthorizeHost } from "./reauthorize";
+import { RemoteBoundary } from "../auth/components/remote-boundary";
+import { Link } from "@tanstack/react-router";
 
 export function AgentSettings() {
   const t = useTranslations("tasks");
   const session = authClient.useSession();
-  const accountId = session.data?.user.id;
-  const [info, setInfo] = useState<ControlInfo>();
+  const accountId = session.isPending || session.error ? undefined : session.data?.user.id;
+  const localText = useTranslations("localWorkspace");
+  const [remoteInfo, setRemoteInfo] = useState<{
+    account: string | undefined;
+    value: ControlInfo | undefined;
+  }>();
+  const info = remoteInfo?.account === accountId ? remoteInfo?.value : undefined;
   const [roots, setRoots] = useState<RootGrant[]>([]);
   const [projects, setProjects] = useState<DeviceProject[]>([]);
   const [capabilities, setCapabilities] = useState<AgentCapability[]>([]);
@@ -22,15 +29,15 @@ export function AgentSettings() {
   const [error, setError] = useState<"unavailable" | "local" | "remote" | false>(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const refresh = useCallback(async () => {
-    if (!accountId || !isDesktop()) return;
+    if (!isDesktop()) return;
     const bridge = await getBridge();
     const [next, folders, configured, agents] = await Promise.all([
-      bridge.request.controlInfo({ accountId }),
+      accountId ? bridge.request.controlInfo({ accountId }) : Promise.resolve(undefined),
       localRequest<RootGrant[]>("roots.list", {}),
       localRequest<DeviceProject[]>("agents.projects", {}),
       localRequest<AgentCapability[]>("agents.capabilities", {}),
     ]);
-    setInfo(next);
+    setRemoteInfo({ account: accountId, value: next });
     setRoots(folders);
     setProjects(configured);
     setCapabilities(agents);
@@ -68,12 +75,18 @@ export function AgentSettings() {
       setBusy(false);
     }
   }
-  if (!accountId || !isDesktop()) return null;
+  if (!isDesktop()) return null;
   return (
     <section data-tasks className="mt-8 border-t border-border pt-7">
       <h2 className="text-base">{t("agentSettings")}</h2>
       <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("localSetupHint")}</p>
       <p className="mt-3 text-xs text-muted-foreground">{t("cliHint")}</p>
+      <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">
+        {localText("ownershipHint")}
+      </p>
+      <Link to="/welcome" className="mt-3 inline-block text-sm underline underline-offset-4">
+        {localText("getStarted")}
+      </Link>
       {info?.daemon && (
         <p className="mt-3 max-w-[65ch] text-sm text-muted-foreground">{t("daemonHint")}</p>
       )}
@@ -147,7 +160,9 @@ export function AgentSettings() {
           onClick={() => {
             if (!confirmClear) return setConfirmClear(true);
             setConfirmClear(false);
-            void change(() => localRequest("agents.local.clear", { accountId }));
+            void change(() =>
+              localRequest("agents.local.clear", { accountId: LOCAL_WORKSPACE_ID }),
+            );
           }}
         >
           {t(confirmClear ? "confirmClearHistory" : "clearHistory")}
@@ -159,44 +174,60 @@ export function AgentSettings() {
         </p>
       )}
       <div className="mt-8 border-t border-border pt-7">
-        <h3 className="text-base">{t("remoteTitle")}</h3>
-        <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("remoteHint")}</p>
-        <div className="my-5 flex flex-wrap items-center gap-4">
-          <Button
-            disabled={busy || !info}
-            variant={info?.enabled ? "outline" : "default"}
-            onClick={() =>
-              void change(
-                async () =>
-                  (await getBridge()).request.controlEnable({ accountId, enabled: !info?.enabled }),
-                "remote",
-              )
-            }
-          >
-            {t(info?.enabled ? "disconnect" : "connect")}
-          </Button>
-          <span className="text-xs text-muted-foreground">
-            {t(info?.connected ? "online" : "offline")}
-          </span>
-        </div>
-        {(error === "remote" || info?.error) && (
-          <p role="alert" className="mt-3 text-sm text-destructive">
-            {t(
-              info?.error === "AUTH_REQUIRED" || info?.error === "UNAUTHORIZED"
-                ? "daemonAuthorizationRequired"
-                : "NETWORK_UNAVAILABLE",
-            )}
-          </p>
-        )}
-        {info?.daemon &&
-          (info.error === "AUTH_REQUIRED" || info.error === "UNAUTHORIZED") &&
-          session.data?.user.email && (
-            <ReauthorizeHost key={accountId} email={session.data.user.email} />
-          )}
+        <RemoteBoundary>
+          {() =>
+            accountId && (
+              <>
+                <h3 className="text-base">{t("remoteTitle")}</h3>
+                <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{t("remoteHint")}</p>
+                <div className="my-5 flex flex-wrap items-center gap-4">
+                  <Button
+                    disabled={busy || !info}
+                    variant={info?.enabled ? "outline" : "default"}
+                    onClick={() =>
+                      void change(
+                        async () =>
+                          (await getBridge()).request.controlEnable({
+                            accountId,
+                            enabled: !info?.enabled,
+                          }),
+                        "remote",
+                      )
+                    }
+                  >
+                    {t(info?.enabled ? "disconnect" : "connect")}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    {t(info?.connected ? "online" : "offline")}
+                  </span>
+                </div>
+                {(error === "remote" || info?.error) && (
+                  <p role="alert" className="mt-3 text-sm text-destructive">
+                    {t(
+                      info?.error === "AUTH_REQUIRED" || info?.error === "UNAUTHORIZED"
+                        ? "daemonAuthorizationRequired"
+                        : "NETWORK_UNAVAILABLE",
+                    )}
+                  </p>
+                )}
+                {info?.daemon &&
+                  (info.error === "AUTH_REQUIRED" || info.error === "UNAUTHORIZED") &&
+                  session.data?.user.email && (
+                    <ReauthorizeHost key={accountId} email={session.data.user.email} />
+                  )}
+                {info?.daemon && (
+                  <TerminalSettings
+                    key={accountId}
+                    accountId={accountId}
+                    info={info}
+                    projects={projects}
+                  />
+                )}
+              </>
+            )
+          }
+        </RemoteBoundary>
       </div>
-      {info?.daemon && (
-        <TerminalSettings key={accountId} accountId={accountId} info={info} projects={projects} />
-      )}
     </section>
   );
 }

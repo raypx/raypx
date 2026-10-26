@@ -1,4 +1,5 @@
 /** @vitest-environment jsdom */
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
   createHashHistory,
@@ -163,9 +164,13 @@ function testRouter(
 function mount(router: ReturnType<typeof testRouter>) {
   return render(
     <ThemeProvider>
-      <BrowserLanguageProvider>
-        <RouterProvider router={router} />
-      </BrowserLanguageProvider>
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <BrowserLanguageProvider>
+          <RouterProvider router={router} />
+        </BrowserLanguageProvider>
+      </QueryClientProvider>
     </ThemeProvider>,
   );
 }
