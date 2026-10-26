@@ -29,7 +29,7 @@ export async function webShellFixture(page: Page) {
   ]);
 }
 
-export async function signedInDesktop(page: Page) {
+export async function signedInAccount(page: Page) {
   const user = {
     id: "desktop-fixture",
     name: "Desktop User",

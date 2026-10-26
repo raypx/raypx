@@ -1,12 +1,13 @@
 import { capture } from "./helpers/capture.js";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./helpers/browser-fixture.js";
 import type {
   ContextDocument,
   ContextDocumentInput,
   ContextVersion,
 } from "@raypx/contracts/memory";
 import type { AgentTask, RelayClientFrame } from "@raypx/contracts/tasks";
-import { authResponse, signedInDesktop, webShellFixture } from "./helpers/account-fixture.js";
+import { authResponse, signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 import { selectOption } from "./helpers/select.js";
 
 for (const [surface, base] of [
@@ -16,29 +17,11 @@ for (const [surface, base] of [
   const memoryPath = surface === "Desktop" ? "/memory?scope=account" : "/memory";
   const tasksPath = surface === "Desktop" ? "/tasks?scope=remote" : "/tasks";
   test(
-    `${surface} gates account references without reading them before login`,
-    { tag: `@${surface.toLowerCase()}` },
-    async ({ page }) => {
-      await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
-      const reads: string[] = [];
-      page.on("request", (request) => {
-        if (/\/rpc\/memory\//.test(request.url())) reads.push(request.url());
-      });
-      await page.goto(base + memoryPath);
-      await expect(page.getByRole("link", { name: "Sign in", exact: true }).last()).toBeVisible();
-      expect(reads).toEqual([]);
-      await page.getByRole("link", { name: "Sign in", exact: true }).last().click();
-      await expect(page).toHaveURL(/\/login\?returnTo=/);
-      expect(new URL(page.url()).searchParams.get("returnTo")).toBe(memoryPath);
-    },
-  );
-
-  test(
     `${surface} versions a template and preserves its captured task context`,
     { tag: [`@${surface.toLowerCase()}`, "@smoke"] },
     async ({ page }) => {
       if (surface === "Web") await webShellFixture(page);
-      await signedInDesktop(page);
+      await signedInAccount(page);
       const deviceId = crypto.randomUUID(),
         projectId = crypto.randomUUID(),
         time = new Date().toISOString();

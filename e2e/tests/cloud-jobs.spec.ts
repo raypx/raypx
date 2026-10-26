@@ -1,7 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./helpers/browser-fixture.js";
 import type { AgentTask } from "@raypx/contracts/tasks";
 import type { CloudJob, CloudJobCreateInput, CloudJobRun } from "@raypx/contracts/jobs";
-import { authResponse, signedInDesktop, webShellFixture } from "./helpers/account-fixture.js";
+import { authResponse, signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 import { selectOption } from "./helpers/select.js";
 
 for (const [surface, base] of [
@@ -10,41 +11,11 @@ for (const [surface, base] of [
 ] as const) {
   const path = surface === "Desktop" ? "/automations?scope=cloud" : "/automations";
   test(
-    `${surface} requires login for cloud schedules without reading private jobs`,
-    { tag: `@${surface.toLowerCase()}` },
-    async ({ page }) => {
-      const privateReads: string[] = [];
-      await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
-      page.on("request", (request) => {
-        if (/\/rpc\/(jobs|devices)\//.test(request.url())) privateReads.push(request.url());
-      });
-      await page.goto(base + path);
-      await expect(page.getByRole("link", { name: "Sign in", exact: true }).last()).toBeVisible();
-      expect(privateReads).toEqual([]);
-      if (surface === "Desktop") {
-        await expect(page.getByRole("tab", { name: "Cloud", exact: true })).toHaveAttribute(
-          "aria-selected",
-          "true",
-        );
-        await page.getByRole("tab", { name: "This computer", exact: true }).click();
-        await expect(
-          page.getByRole("heading", { name: "Keep things moving", exact: true }),
-        ).toBeVisible();
-        await page.getByRole("tab", { name: "Cloud", exact: true }).click();
-      }
-      await page.getByRole("link", { name: "Sign in", exact: true }).last().click();
-      await expect(page).toHaveURL(/\/login\?returnTo=/);
-      expect(new URL(page.url()).searchParams.get("returnTo")).toBe(path);
-      expect(privateReads).toEqual([]);
-    },
-  );
-
-  test(
     `${surface} saves an account schedule and opens its related task outside the loaded list`,
     { tag: `@${surface.toLowerCase()}` },
     async ({ page }) => {
       if (surface === "Web") await webShellFixture(page);
-      await signedInDesktop(page);
+      await signedInAccount(page);
       const deviceId = crypto.randomUUID(),
         projectId = crypto.randomUUID();
       const time = new Date().toISOString();

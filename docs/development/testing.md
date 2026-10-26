@@ -59,6 +59,10 @@ CLI runtime suites are split by capability under `tests/runtime/`; standalone
 artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
 live in their own `tests/helpers/` and own temporary resource cleanup.
 E2E server launch helpers live in `e2e/tests/helpers/`.
+Ordinary browser cases are grouped by access, auth, settings, navigation, analytics
+and feature journeys; task conversation/history/drafts live under `e2e/tests/tasks/`.
+See [case ownership and consolidation](test-cases.md) for the coverage map and rules
+for combining cases without replacing independent safety or platform checks.
 i18n separates `tests/node/` from `tests/browser/` to preserve independent React
 renderer environments, with provider components under `tests/browser/component/`.
 The shared Bun/jsdom preload lives in `packages/tooling/tests/setup/`.
@@ -98,7 +102,7 @@ bun run test:e2e:web
 bun run test:e2e:desktop
 bun run test:e2e:smoke
 bun run test:e2e:web -- --grep template
-bun run test:e2e:desktop -- memory.spec.ts
+bun run test:e2e:desktop -- 'access|memory'
 bun run raypx-dev e2e --web --smoke -- --list
 ```
 
