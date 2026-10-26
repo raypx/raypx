@@ -1,0 +1,51 @@
+docs/development/testing.md
+  s_c99f3390b62e01::t_95fe8d8e44598c 62-65,105
+e2e/AGENTS.md
+  s_c99f3390b62e01::t_95fe8d8e44598c 21-27
+docs/development/test-cases.md
+  s_c99f3390b62e01::t_95fe8d8e44598c 1-97
+docs/README.md
+  s_c99f3390b62e01::t_95fe8d8e44598c 14
+e2e/tests/access.spec.ts
+  s_c99f3390b62e01::t_bfae4d4a62ef0e 1-3,5,8-36,61-63,98,206-208,237,249
+e2e/tests/analytics.spec.ts
+  s_c99f3390b62e01::t_68caac1ac58422 1-104
+e2e/tests/auth.spec.ts
+  s_c99f3390b62e01::t_ad9a074e7cd634 1-74
+e2e/tests/cloud-jobs.spec.ts
+  s_c99f3390b62e01::t_c72988e9946020 1-2,5,18
+e2e/tests/helpers/account-fixture.ts
+  s_c99f3390b62e01::t_2cc4d3b5735b01 32
+e2e/tests/helpers/browser-fixture.ts
+  s_c99f3390b62e01::t_af8e8b93a15cc1 1-44
+e2e/tests/helpers/surfaces.ts
+  s_c99f3390b62e01::t_bc440e2cf44360 1-6
+e2e/tests/memory.spec.ts
+  s_c99f3390b62e01::t_382d40449e9910 2-3,10,24
+e2e/tests/navigation.spec.ts
+  s_c99f3390b62e01::t_2b4e43e9db3537 1-230
+e2e/tests/settings.spec.ts
+  s_c99f3390b62e01::t_bf9d4e730b3d21 1-89
+e2e/tests/tasks/conversation.spec.ts
+  s_c99f3390b62e01::t_bf31ae3135a76c 1-287
+e2e/tests/tasks/drafts.spec.ts
+  s_c99f3390b62e01::t_a73d6b1da2cf20 1-147
+e2e/tests/tasks/history.spec.ts
+  s_c99f3390b62e01::t_a4a2481a7baf32 1-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fec227b3524f53a22f1081476e43375b724a2f69",
+  "prompts": {},
+  "sessions": {
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
