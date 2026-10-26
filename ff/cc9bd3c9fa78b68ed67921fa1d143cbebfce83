@@ -1,0 +1,731 @@
+packages/contracts/src/memory.ts
+  s_c99f3390b62e01::t_bb1a6e158035ba 1-30
+  s_c99f3390b62e01::t_fae2803cc07544 31-39
+apps/api/tests/integration/memory.test.ts
+  s_c99f3390b62e01::t_a23ae2b7f064a4 16,19
+  s_c99f3390b62e01::t_ec47a49ffdb2da 1-15,17-18,20-80
+  s_c99f3390b62e01::t_060dd90d106870 81-159
+packages/jobs/src/client/errors.ts
+  s_c99f3390b62e01::t_f8a78a51b7ac41 39-43
+  s_c99f3390b62e01::t_62ac35e838ca41 1,44,46-47,52-55
+  s_c99f3390b62e01::t_d282acef213845 2-38,45,48-51
+packages/tasks/src/client/task-composer.tsx
+  s_c99f3390b62e01::t_df0dea47832e5c 80
+  s_c99f3390b62e01::t_0e04c4339ccbd5 11-12,36,39,57,60,113
+  s_c99f3390b62e01::t_90134914d16c80 114-115,141-148,204-205,230,266-267,314,327,446-447,469-470,516-531
+apps/api/tests/postgres/node/jobs.test.ts
+  s_c99f3390b62e01::t_61545d06f225fa 1-8,11-14,17,37-38,44-45,51-53,55-56,65-66,70,77-78,88-90,92,97-98,104-105,114-115,178,187-190,195,200-203,209,214-220,222,229-230,245-248,250,276-280,282-283,291-293,296-297
+  s_c99f3390b62e01::t_ca35215cee147f 54,91,106-107,116,119-123,125,143,147-150,154,157,168,172-177,179,204,221,249,281
+  s_c99f3390b62e01::t_a8ceebe1517b88 57-58,71-76
+  s_c99f3390b62e01::t_29d0829567eed7 9-10,15-16,18-36,39-43,46-50,59-64,67-69,79-87,93-96,99-103,108-113,117-118,124,126-142,144-146,151-153,155-156,158-167,169-171,180-186,191-194,196-199,205-208,210-213,223-228,231-244,251-275,284-290,294-295
+apps/desktop/src/routes/memory.tsx
+  s_c99f3390b62e01::t_d2844bf8e1ca10 1-12
+  s_c99f3390b62e01::t_29fd98a8a45189 13-66
+apps/web/src/styles.css
+  s_c99f3390b62e01::t_7c81b0a6fd6d53 3
+  s_c99f3390b62e01::t_d2844bf8e1ca10 4
+packages/jobs/tests/schedule.test.ts
+  s_c99f3390b62e01::t_8116798e5e929a 23-29
+  s_c99f3390b62e01::t_1f72104e1abc26 1-22,30-36
+  s_c99f3390b62e01::t_ea6c4368472631 37-67
+apps/cli/tests/runtime/memory.test.ts
+  s_c99f3390b62e01::t_d83b490ebaab10 1-11,14-15,17-18,25,33,71-72,87-88,103-104,106,150,160
+  s_c99f3390b62e01::t_b4ad3ce368254a 12-13,16,19-24,26-32,34-70,73-86,89-102,105,107-149,151-159
+packages/jobs/src/server.ts
+  s_c99f3390b62e01::t_11a1159cc3489b 1-2
+apps/web/tests/component/features/task-context.test.tsx
+  s_c99f3390b62e01::t_36e1fca171e1cc 1-2,4,8-9,12-96,98-110,112-120,122-126
+  s_c99f3390b62e01::t_455126de33ad2b 3,5-7,10-11,97,111,121
+apps/api/tests/postgres/node/memory.test.ts
+  s_c99f3390b62e01::t_879877c488700d 1-140
+  s_c99f3390b62e01::t_9e6d2e38e5dd96 141-247
+apps/web/tests/component/routes/memory.test.tsx
+  s_c99f3390b62e01::t_40afe4d008d989 1-12
+  s_c99f3390b62e01::t_be32654ae69a7a 13-76
+docs/README.md
+  s_c99f3390b62e01::t_78e8096159442e 21
+packages/jobs/tsconfig.json
+  s_c99f3390b62e01::t_11a1159cc3489b 1-8
+packages/memory/src/client/form.tsx
+  s_c99f3390b62e01::t_29342c2803b5a6 1-46
+  s_c99f3390b62e01::t_f64e6b3546502b 47-143
+apps/desktop/src/features/auth/return-to.ts
+  s_c99f3390b62e01::t_d2844bf8e1ca10 8
+packages/core/AGENTS.md
+  s_c99f3390b62e01::t_68d430be513fd9 1-30
+packages/tasks/src/model/port.ts
+  s_c99f3390b62e01::t_da52a0cc9e64b0 9,15-16,30,33,35,44,48
+  s_c99f3390b62e01::t_839d76295138db 1-8,10-14,17-22,27,29,31-32,34,36-43,45-47,49-53,55-61
+  s_c99f3390b62e01::t_17928ece44b6b8 23-26,28,54
+  s_c99f3390b62e01::t_0392aecf44045c 62-70
+packages/tasks/src/model/scope.ts
+  s_c99f3390b62e01::t_839d76295138db 1-27
+apps/api/tests/unit/jobs/tick.test.ts
+  s_c99f3390b62e01::t_b02bb8285a113a 1-23,25-32
+  s_c99f3390b62e01::t_a94a718ac77b6e 24
+  s_c99f3390b62e01::t_5f7c3884f71a72 33-47
+packages/contracts/src/local.ts
+  s_c99f3390b62e01::t_9f0ce76a6123cb 11-18,43-54,56-57
+  s_c99f3390b62e01::t_a302079f056a75 58-67
+apps/web/src/routes/(app)/automations.tsx
+  s_c99f3390b62e01::t_7c81b0a6fd6d53 1-5,7-10,34
+  s_c99f3390b62e01::t_e23da04230a65f 6,11-33
+apps/desktop/src/components/shell.tsx
+  s_c99f3390b62e01::t_d2844bf8e1ca10 22
+  s_c99f3390b62e01::t_796891c19bfa41 23-30,44,75,130,156-172
+packages/database/AGENTS.md
+  s_c99f3390b62e01::t_059b0f467c4bb9 55-59
+  s_c99f3390b62e01::t_de210f805e562b 48-54
+docs/development/ai.md
+  s_c99f3390b62e01::t_20e8bd5827069c 123-135,138,154-159,165-166,177
+  s_c99f3390b62e01::t_aa860a35eaf6b4 144-146
+  s_c99f3390b62e01::t_c7bc604739b01e 136-137,139-143,147-153,160-164
+packages/tooling/src/smoke/cloudflare.ts
+  s_c99f3390b62e01::t_147d550a96f053 10,29-34,57,61-62,207
+  s_c99f3390b62e01::t_5d0a9939b83843 212-213,215-216,237-240
+packages/jobs/src/index.ts
+  s_c99f3390b62e01::t_11a1159cc3489b 1-2
+apps/web/src/routes/(app)/tasks.tsx
+  s_c99f3390b62e01::t_e23da04230a65f 12,46
+  s_c99f3390b62e01::t_227db65fbb6673 14-16,23-25,34,48,52
+  s_c99f3390b62e01::t_a40bdaa3f4d1e6 17-22
+apps/api/server/runtime/cloudflare.ts
+  s_c99f3390b62e01::t_30d4394d141606 9-10,55
+  s_c99f3390b62e01::t_599d9c5906e331 14-17
+  s_c99f3390b62e01::t_fe5909107f6226 56
+apps/desktop/src/features/memory/client.ts
+  s_c99f3390b62e01::t_d2844bf8e1ca10 1-41
+  s_c99f3390b62e01::t_f2a4eedad2a910 42-72
+apps/desktop/native/api.ts
+  s_c99f3390b62e01::t_5495b7b340fec4 50-55
+  s_c99f3390b62e01::t_9f0ce76a6123cb 56-63
+packages/jobs/src/client/cloud-jobs.tsx
+  s_c99f3390b62e01::t_74af772d1558e2 72,86,93,111-112,116,124-125,135,142,147,220,235,238
+  s_c99f3390b62e01::t_e2e7d7448cabcc 5-9,22,34-35,37-39,42-44,47-51,54,56-57,59,62-70,81-83,90-91,113-115,126-134,136-141,143-146,150-160,164-167,175-176,182-191,196-206,210-213,225-227,229,233,236,239-247,251-262,271-275,277-307,310,315-462
+  s_c99f3390b62e01::t_e6256b3e3e2add 13,16,23,36,41
+  s_c99f3390b62e01::t_362e1cd941a44f 53,168-173,263-270,276,311-314
+  s_c99f3390b62e01::t_fb974a651bcdac 308-309
+  s_c99f3390b62e01::t_f6b06e559e2aec 1-4,10-12,14-15,17-21,24-33,40,45-46,52,55,58,60-61,71,73-80,84-85,87-88,92,148-149,161-163,174,177-181,192-195,207-209,214-219,221-224,228,230-232,234,237,248-250,463
+  s_c99f3390b62e01::t_f0b4f48fdba120 89,94-110,117-123
+  s_c99f3390b62e01::t_14d5e18bfdb3d2 464-474
+apps/web/src/features/memory/client.ts
+  s_c99f3390b62e01::t_d2844bf8e1ca10 1-18
+  s_c99f3390b62e01::t_64e8da17ec3e4a 19-28
+apps/cli/src/runtime/agents/index.ts
+  s_c99f3390b62e01::t_c5cf8a089d6e73 29,595
+  s_c99f3390b62e01::t_53c6f4cc40c10e 84-87,408-413,427-432,473,480-485,502,504
+  s_c99f3390b62e01::t_a3d9535e32bc5a 21,60,518-519,528,557,585,587,635,637,654-670,672-674,676-678,680-687,713,731,743,783,790
+  s_c99f3390b62e01::t_9f0ce76a6123cb 22-24,32-33,476-479,486,488-489,496
+apps/web/src/routes/(app)/memory.tsx
+  s_c99f3390b62e01::t_d2844bf8e1ca10 1-10
+  s_c99f3390b62e01::t_1729b623213d3e 11-27
+packages/i18n/src/messages/en.ts
+  s_c99f3390b62e01::t_e8c6b264807ad8 562,646,678-679,737-740,742-743,749-750
+  s_c99f3390b62e01::t_5e189943bd6f32 410-411,564-645,723-724
+  s_c99f3390b62e01::t_7fc0dce5bdf87d 563
+  s_c99f3390b62e01::t_d282acef213845 647-677,680-722,729-736,741,744-748,751-752,754-755
+  s_c99f3390b62e01::t_6511773e631aa5 407-409,412,725-728
+  s_c99f3390b62e01::t_3ce51b554d3283 756
+e2e/tests/memory.spec.ts
+  s_c99f3390b62e01::t_6e58111882ca1f 1,7-10,15-16,27,29-32,36-37,88,94,98,106,114,169,205,230,233-234,248-249,258-259
+  s_c99f3390b62e01::t_8b91b4e9faffdf 2-6,11-14,17-26,28,33-35,38-87,89-93,95-97,99-105,107-113,115-129,138-168,170-199,201-204,206-229,231-232,235-247,250-257
+  s_c99f3390b62e01::t_8acd679bd7d6e4 130-137,200
+apps/api/server/api.ts
+  s_c99f3390b62e01::t_35484bec073013 17-18,27,50-55,319-325,330-331,336-342,353-354,372,384-385,401,422-451
+  s_c99f3390b62e01::t_bb1a6e158035ba 19-21,28,56-63,326-329,332-335,343-352,355-371,373-383,387-396,398-400,402-421
+  s_c99f3390b62e01::t_8ecb1867b2a109 386,452-463
+docs/development/task-context.md
+  s_c99f3390b62e01::t_376e9ca33d5f9f 65-67
+  s_c99f3390b62e01::t_78e8096159442e 1-64,68-89
+packages/tasks/AGENTS.md
+  s_c99f3390b62e01::t_5e189943bd6f32 20-26
+  s_c99f3390b62e01::t_ca41679ec0c96a 36-39
+  s_c99f3390b62e01::t_21424464bb2095 34-35,40-43
+  s_c99f3390b62e01::t_17928ece44b6b8 4-7,19,27-33
+apps/web/src/features/automations/client.ts
+  s_c99f3390b62e01::t_7c81b0a6fd6d53 1-9
+  s_c99f3390b62e01::t_00607bae065310 10-19
+PRODUCT.md
+  s_c99f3390b62e01::t_78e8096159442e 31-32
+packages/ai/AGENTS.md
+  s_c99f3390b62e01::t_20e8bd5827069c 9-12
+packages/client/tests/relay.test.ts
+  s_c99f3390b62e01::t_be61b1ca0f8cad 92-132
+  s_c99f3390b62e01::t_9c6d477c7adb99 133-191
+packages/memory/AGENTS.md
+  s_c99f3390b62e01::t_49950a31ff9775 1-25,29-31,34-37
+  s_c99f3390b62e01::t_059b0f467c4bb9 26-28,32-33
+packages/jobs/package.json
+  s_c99f3390b62e01::t_11a1159cc3489b 1-53
+packages/tasks/src/client/failure.ts
+  s_c99f3390b62e01::t_e23da04230a65f 2-6
+apps/api/tests/integration/jobs.test.ts
+  s_c99f3390b62e01::t_b02bb8285a113a 1-2,4-11,13-21,23-32,34-39,41-46,48-50,52-58,60-67,69-72,75-85,87-90
+  s_c99f3390b62e01::t_3d54b96d7de901 22
+  s_c99f3390b62e01::t_ca35215cee147f 3,12,33,40,47,51,59,68,73-74,86
+  s_c99f3390b62e01::t_406dd43865f36b 91-166
+packages/jobs/tests/service.test.ts
+  s_c99f3390b62e01::t_376e9ca33d5f9f 3-8,15-20,23-34,37-48,51-56,61-66,78-82,88-92,102-104,112-119,122-127,129-131,139-151,154-163,193-199,211-214,223-225,229-232,236-243,260-262,265-267,279-281
+  s_c99f3390b62e01::t_51b51e4b05c9ac 59
+  s_c99f3390b62e01::t_7ce8ad3925a23e 247
+  s_c99f3390b62e01::t_a8ceebe1517b88 136-138,152-153,164-166
+  s_c99f3390b62e01::t_1f72104e1abc26 1-2,9-14,21-22,35-36,49-50,57-58,60,67-77,83-87,93-101,105-111,121,128,132-135,167-192,200-210,215-222,226-228,233-235,244-246,248-259,263-264,268-278,282
+  s_c99f3390b62e01::t_5495b7b340fec4 120
+  s_c99f3390b62e01::t_17d853483e793e 283-285
+packages/contracts/AGENTS.md
+  s_c99f3390b62e01::t_5a8bebb77c0113 5-6,27-29,31-33,36,40
+  s_c99f3390b62e01::t_68d430be513fd9 54-63
+  s_c99f3390b62e01::t_059b0f467c4bb9 64-67
+packages/memory/src/model.ts
+  s_c99f3390b62e01::t_47e15831bf5a8c 1-32
+  s_c99f3390b62e01::t_03cce22b33433c 33-60
+apps/web/src/features/auth/return-to.ts
+  s_c99f3390b62e01::t_d2844bf8e1ca10 1-9
+apps/web/AGENTS.md
+  s_c99f3390b62e01::t_5690f860a76673 60-65
+  s_c99f3390b62e01::t_5e189943bd6f32 119-124
+apps/cli/src/runtime/index.ts
+  s_c99f3390b62e01::t_61ce6c81c5b5d6 3
+  s_c99f3390b62e01::t_9f0ce76a6123cb 1-2,24,100-122,135
+  s_c99f3390b62e01::t_eec9ccec839afa 99
+  s_c99f3390b62e01::t_ce194e2314e4cc 4-8,19-23,25-26,63,72-73,123-134,317
+packages/tasks/src/client/use-task-conversation.ts
+  s_c99f3390b62e01::t_da52a0cc9e64b0 106
+  s_c99f3390b62e01::t_a1ea028b66f37d 109
+  s_c99f3390b62e01::t_3bd923b842d535 2-4,6-8,30-32,34-35,54-55,62,68,78,84,88,92-93,96,101-104,108,111-114
+  s_c99f3390b62e01::t_0d66054431d3d0 5,33,36,70-75,77
+  s_c99f3390b62e01::t_5447d4f6347b93 11-14
+  s_c99f3390b62e01::t_1974302236e1ab 1,9-10,15-29,37-53,56-61,63-67,79-83,85-87,89-91,94-95,97-100,105,107,110
+  s_c99f3390b62e01::t_63be2d006e4232 69,76
+packages/tasks/src/client/remote-query.ts
+  s_c99f3390b62e01::t_3bd923b842d535 7-8
+  s_c99f3390b62e01::t_17928ece44b6b8 5,22
+  s_c99f3390b62e01::t_63be2d006e4232 24,49,72,83-85,98
+packages/contracts/tests/api.test.ts
+  s_c99f3390b62e01::t_f5846d69c70812 7
+  s_c99f3390b62e01::t_fbd08d1c65e46a 8
+packages/core/src/tasks.ts
+  s_c99f3390b62e01::t_4b312e779333d0 4
+  s_c99f3390b62e01::t_7e83c7e5a552fd 1-3,5-165
+  s_c99f3390b62e01::t_ff59643610a243 166-175
+packages/contracts/package.json
+  s_c99f3390b62e01::t_49950a31ff9775 13-15,27-29
+packages/tasks/src/model/drafts.ts
+  s_c99f3390b62e01::t_0e04c4339ccbd5 1,10,44,54,64-65
+  s_c99f3390b62e01::t_1974302236e1ab 2-9,11-43,45-53,55-63,66-67
+  s_c99f3390b62e01::t_a5b55e46117ce3 71-73
+packages/tasks/tests/approval-changes.test.ts
+  s_c99f3390b62e01::t_8df673e57cd23d 158-165,173-199,211-213,221-234,243-263
+  s_c99f3390b62e01::t_4afb7200c9f060 142-153,264
+  s_c99f3390b62e01::t_fc047922410d08 3,154-157,166-172,200-210,214-220,235-242
+  s_c99f3390b62e01::t_bf72aad5343bd3 265
+AGENTS.md
+  s_c99f3390b62e01::t_20e8bd5827069c 25-28
+apps/web/tests/component/features/tasks.test.tsx
+  s_c99f3390b62e01::t_a1ea028b66f37d 39-52,55-56,58-63,65,71,78,81,140-143,310-313,363-366,447-451
+  s_c99f3390b62e01::t_5447d4f6347b93 213-217,224-226
+  s_c99f3390b62e01::t_ca41679ec0c96a 209-211,218-223
+  s_c99f3390b62e01::t_c8674ac6a8500d 7,21-38,53-54,57,64,66-70,72-77,79-80,82-88
+  s_c99f3390b62e01::t_7bd39e8ae9510f 469-528
+packages/tasks/src/client/workspace.tsx
+  s_c99f3390b62e01::t_da52a0cc9e64b0 36-44,48,74,80,84,93,96-97,250,257,436-438,440-441,844,902
+  s_c99f3390b62e01::t_227db65fbb6673 5,55,91,125,132-139,624-632,836-840
+  s_c99f3390b62e01::t_0d66054431d3d0 120,394,419,425,430,439
+  s_c99f3390b62e01::t_df0dea47832e5c 2,56,92,249,542
+packages/tasks/src/index.ts
+  s_c99f3390b62e01::t_4a8367a5314f09 1-3,5
+apps/desktop/tests/native/control.test.ts
+  s_c99f3390b62e01::t_68d430be513fd9 75-76,78,534-665
+apps/desktop/src/features/tasks/workspace.tsx
+  s_c99f3390b62e01::t_227db65fbb6673 124-128,131,158,160
+  s_c99f3390b62e01::t_e23da04230a65f 15,41-49,120,155
+packages/jobs/src/client/job-form.tsx
+  s_c99f3390b62e01::t_e6256b3e3e2add 257-264
+  s_c99f3390b62e01::t_8b1002f9e139bf 10,12-13,16-31,33-37,40-48,50-60,62-64,66-78,88-105,107-110,114-117,119-256,265-300
+  s_c99f3390b62e01::t_62ac35e838ca41 1-9,11,14-15,32,38-39,49,61,65,79-87,106,111-113,118,301
+  s_c99f3390b62e01::t_aedb331b911bdb 302-305
+apps/web/src/components/shell.tsx
+  s_c99f3390b62e01::t_d2844bf8e1ca10 16-24,28
+  s_c99f3390b62e01::t_a6339350d0faaa 29-35,69,74-75,105-121
+apps/web/tests/component/features/task-history-lifecycle.test.tsx
+  s_c99f3390b62e01::t_c813c648646f5d 8,23-33,36-52,56-57,63-72,74-80,91-102,113,129-130,149,153,155-159,162,164-166,169-220
+  s_c99f3390b62e01::t_5447d4f6347b93 1-7,9-22,34-35,53-55,58-62,73,81-90,103-112,114-128,131-148,150-152,154,160-161,163,167-168
+  s_c99f3390b62e01::t_ca3f6db5924faa 221-263
+apps/api/tests/unit/context-routing.test.ts
+  s_c99f3390b62e01::t_a16790e2396c99 12-22,31-35,38-41,46-58,66-80,86-96,99-152,154-155
+  s_c99f3390b62e01::t_f8a78a51b7ac41 1-5,8-11,23-30,36-37,42-45,59-65,81-85
+  s_c99f3390b62e01::t_f5846d69c70812 6-7,97-98,153
+  s_c99f3390b62e01::t_8185e9d6913e1e 156-159
+apps/api/wrangler.jsonc
+  s_c99f3390b62e01::t_c5dd3c82d1d66c 19
+packages/core/tests/task-context.test.ts
+  s_c99f3390b62e01::t_76f3bf456327cd 2-6,9-15,19-35,46-48
+  s_c99f3390b62e01::t_7abd78b7be272b 1,7-8,16-18,36-45,49-50
+  s_c99f3390b62e01::t_dfb746a8b5bd3c 51-55
+packages/contracts/tests/task-context.test.ts
+  s_c99f3390b62e01::t_76f3bf456327cd 6-31,34-42,45-62
+  s_c99f3390b62e01::t_68d430be513fd9 1-5,32-33,43-44,63
+packages/client/AGENTS.md
+  s_c99f3390b62e01::t_be61b1ca0f8cad 19-20
+apps/cli/tests/runtime/agents/pi.test.ts
+  s_c99f3390b62e01::t_06d3cc6534c0f8 1,19-23,25-177,225-226,756-763,774-776,786-788,793-795,814-820
+  s_c99f3390b62e01::t_643e073e58ca1c 227-328
+  s_c99f3390b62e01::t_033b0c91cb0d07 24,178-224
+  s_c99f3390b62e01::t_3922251b3a4cc1 447,453,480,492,534,592,597,599-600,613,631,667,729-755,765,767,769-773,777-785,789-792,796-813,821-822
+  s_c99f3390b62e01::t_0ec42bc851a98e 582-589,594-596,603-609,618-619,621-630,632-642,654-655,657-666,668-678,682-684,694-706,715-728,764,766,768
+  s_c99f3390b62e01::t_93131dc460185a 2,7-16,330-331,334-351,353-356,366-373,375-386,395-396,398-403,405-419,423-425,441-446,449,454-458,462-468,472-474,485-486,488-491,493-511,515-521,527-528,530-533,535-547,554-559,562-571,577-581,590-591,593,598,601-602,610-612,614-617,620,643-653,656,679-681,685-693,707-714
+  s_c99f3390b62e01::t_466f74972f8239 3-6,17-18,329,332-333,352,357-365,374,387-394,397,404,420-422,426-440,448,450-452,459-461,469-471,475-479,481-484,487,512-514,522-526,529,548-553,560-561,572-576,823
+apps/api/server/jobs/tick.ts
+  s_c99f3390b62e01::t_c5dd3c82d1d66c 1-8,10-18
+  s_c99f3390b62e01::t_a94a718ac77b6e 9
+  s_c99f3390b62e01::t_e9de36435717fc 19-33
+apps/api/server/runtime/cloudflare-jobs.ts
+  s_c99f3390b62e01::t_30d4394d141606 1-25,27-44
+  s_c99f3390b62e01::t_599d9c5906e331 26
+  s_c99f3390b62e01::t_b3f428c9465165 45-82
+apps/api/server/runtime/node.ts
+  s_c99f3390b62e01::t_30d4394d141606 10,34
+packages/host/AGENTS.md
+  s_c99f3390b62e01::t_68d430be513fd9 33-41
+packages/tasks/src/client.ts
+  s_c99f3390b62e01::t_3bd923b842d535 4
+apps/api/tests/postgres/cloudflare/auth.test.ts
+  s_c99f3390b62e01::t_f6262efeb52de9 202,237-272,299
+  s_c99f3390b62e01::t_d26b57e278eb86 273-298,300-340
+packages/tasks/tests/conversation-state.test.ts
+  s_c99f3390b62e01::t_21424464bb2095 32-38,55-56,60-68,84-114
+  s_c99f3390b62e01::t_9102db561aca08 1-31,39-54,57-59,69-83,115-116,148-159
+  s_c99f3390b62e01::t_ca41679ec0c96a 117-147
+  s_c99f3390b62e01::t_a5e90809186102 160-168
+apps/api/AGENTS.md
+  s_c99f3390b62e01::t_de210f805e562b 43-53
+  s_c99f3390b62e01::t_059b0f467c4bb9 54-59
+packages/jobs/src/schedule.ts
+  s_c99f3390b62e01::t_11a1159cc3489b 1-28
+  s_c99f3390b62e01::t_d6a5e29da3cc0d 29-38
+packages/jobs/src/server/service.ts
+  s_c99f3390b62e01::t_8116798e5e929a 64
+  s_c99f3390b62e01::t_7ce8ad3925a23e 204,220-223,231
+  s_c99f3390b62e01::t_5495b7b340fec4 4-5,90,92-95,97
+  s_c99f3390b62e01::t_51b51e4b05c9ac 6,49,61-63,102-105
+  s_c99f3390b62e01::t_5457ff14f60e6d 15-29,37-46,50-60,85-88,126-127,145-152,158-159,167-171,178-179,181-192,207-212,224-228,233-234
+  s_c99f3390b62e01::t_aa0c220f7e94c9 1-3,7-14,35-36,47-48,65-84,89,91,96,98-101,106-125,128-144,153-157,160-166,172,174-177,180,193-203,205-206,213-219,229-230,232,235-237
+  s_c99f3390b62e01::t_b0a1045e74334a 30-34,173
+  s_c99f3390b62e01::t_d33c3dd640ee62 238-247
+apps/desktop/AGENTS.md
+  s_c99f3390b62e01::t_5e189943bd6f32 155
+  s_c99f3390b62e01::t_fec14d547a97e1 24-25
+  s_c99f3390b62e01::t_28e4c85a320912 11
+  s_c99f3390b62e01::t_f68081e0fe105f 12,15-23,44-47,60-62,149,153-154,156-157,195
+packages/client/src/relay.ts
+  s_c99f3390b62e01::t_754fbe046c2324 31-32
+  s_c99f3390b62e01::t_1c6d6fb0bd569e 33-34,59,100,119,156-162,176
+apps/cli/src/runtime/jobs/index.ts
+  s_c99f3390b62e01::t_64966d06caaf46 2,28-29,32
+packages/memory/src/server.ts
+  s_c99f3390b62e01::t_e7739df312db1a 1-2
+packages/memory/src/server/types.ts
+  s_c99f3390b62e01::t_e7739df312db1a 1-28
+  s_c99f3390b62e01::t_4a3a6ef3d2ac9a 29-50
+packages/contracts/src/jobs.ts
+  s_c99f3390b62e01::t_5495b7b340fec4 3,5-6,11
+  s_c99f3390b62e01::t_0a2aeb37f52615 1-2,4,7-10,12-16
+  s_c99f3390b62e01::t_1544364bf619d0 17-47
+apps/api/tests/unit/cloudflare/jobs.test.ts
+  s_c99f3390b62e01::t_3d54b96d7de901 1-45
+  s_c99f3390b62e01::t_1477ff1fc4afe8 46-102
+docs/architecture/README.md
+  s_c99f3390b62e01::t_988bcdcad4f239 133-138
+  s_c99f3390b62e01::t_bce413fb83659b 13-18,34-45
+  s_c99f3390b62e01::t_8a0e13be4b43fa 46
+apps/desktop/src/features/automations/client.ts
+  s_c99f3390b62e01::t_7c81b0a6fd6d53 1-9
+  s_c99f3390b62e01::t_cf7ad9173c9153 10-19
+docs/development/server-jobs.md
+  s_c99f3390b62e01::t_448d384b3214a2 9-70
+apps/desktop/src/routes/(local)/automations.tsx
+  s_c99f3390b62e01::t_e23da04230a65f 1-5,7-10,15-19,32,38-44,46-94,97,99-100
+apps/desktop/src/styles.css
+  s_c99f3390b62e01::t_d2844bf8e1ca10 4
+  s_c99f3390b62e01::t_7c81b0a6fd6d53 3
+packages/memory/src/client/snapshot.tsx
+  s_c99f3390b62e01::t_161a5e1e125398 1-22
+  s_c99f3390b62e01::t_6a633cc6829322 23-47
+packages/tasks/tests/workspace-scope.test.ts
+  s_c99f3390b62e01::t_9102db561aca08 1-34
+  s_c99f3390b62e01::t_b78cc1efc64cd3 35-42
+apps/desktop/tests/renderer/component/features/tasks/workspace.test.tsx
+  s_c99f3390b62e01::t_63f5890b6176de 301
+  s_c99f3390b62e01::t_acc51e1a9ae072 113
+  s_c99f3390b62e01::t_90370743622a67 302-304,496-500
+packages/memory/tests/component/client.test.tsx
+  s_c99f3390b62e01::t_b6404ae4c60d9d 157,273
+  s_c99f3390b62e01::t_de273ed08f1c38 1-11,18-19,36,40-41,62-64,86,93-94,96,101-102,107-110,114,121,125-126,130-131,153,159-160,163,167-168,203,245-246,275-276,293
+  s_c99f3390b62e01::t_0893582e1c8c08 132-146
+  s_c99f3390b62e01::t_36e1fca171e1cc 12-17,20-35,37-39,42-61,65-85,87-92,95,97-100,103-106,111-113,115-120,122-124,127-129,147-152,154-156,158,161-162,164-166,169-202,204-244,247-272,274,277-292
+  s_c99f3390b62e01::t_e894ce123cd7b6 294-297
+apps/desktop/tests/renderer/component/routes/memory.test.tsx
+  s_c99f3390b62e01::t_40afe4d008d989 1-19
+  s_c99f3390b62e01::t_3165d1f22cd420 20-92
+packages/memory/src/client/port.ts
+  s_c99f3390b62e01::t_161a5e1e125398 1-17
+  s_c99f3390b62e01::t_bc19a87881a1a7 18-35
+apps/cli/tests/runtime/agents/providers.test.ts
+  s_c99f3390b62e01::t_b4ad3ce368254a 1-83
+  s_c99f3390b62e01::t_217d2d88ff6598 84-113
+packages/memory/src/client/request.ts
+  s_c99f3390b62e01::t_161a5e1e125398 1-10,13-15,21,23-30,32,34-36,41,44,61,71-72
+  s_c99f3390b62e01::t_36e1fca171e1cc 11-12,16-20,22,31,33,37-40,42-43,45-53,55-60,62-66
+  s_c99f3390b62e01::t_5e189943bd6f32 54,67-70
+packages/contracts/tests/core-compatibility.test.ts
+  s_c99f3390b62e01::t_68d430be513fd9 7-29,31,44-50
+  s_c99f3390b62e01::t_5a8bebb77c0113 1-6,30,32-43,51-52
+packages/memory/src/index.ts
+  s_c99f3390b62e01::t_47e15831bf5a8c 1-8
+packages/client/src/tasks.ts
+  s_c99f3390b62e01::t_754fbe046c2324 195-200
+package.json
+  s_c99f3390b62e01::t_fa07cee4ee8e3d 54-56
+packages/jobs/src/client.ts
+  s_c99f3390b62e01::t_62ac35e838ca41 1-2
+  s_c99f3390b62e01::t_87b2635aded025 3
+packages/memory/src/client.ts
+  s_c99f3390b62e01::t_161a5e1e125398 1-4
+apps/cli/tests/helpers/pi.ts
+  s_c99f3390b62e01::t_466f74972f8239 1-49,51
+  s_c99f3390b62e01::t_d893d0df7ef318 50,52-100
+apps/api/server/logging.ts
+  s_c99f3390b62e01::t_c5dd3c82d1d66c 68-70
+apps/api/server/runtime/shared.ts
+  s_c99f3390b62e01::t_c5dd3c82d1d66c 25-27,34,50,87-89,93-95
+  s_c99f3390b62e01::t_393ac0ff50b78e 20-24,28-29,35,77-86,90-92
+  s_c99f3390b62e01::t_ff2ce7d11c2b52 96-98,121-122,126,133-134
+packages/jobs/src/server/types.ts
+  s_c99f3390b62e01::t_5495b7b340fec4 15
+  s_c99f3390b62e01::t_11a1159cc3489b 1-13,16-42
+  s_c99f3390b62e01::t_51b51e4b05c9ac 14
+  s_c99f3390b62e01::t_832117add948d0 43-58
+packages/jobs/src/client/styles.css
+  s_c99f3390b62e01::t_62ac35e838ca41 1
+apps/web/tests/component/routes/automations.test.tsx
+  s_c99f3390b62e01::t_3f364c579d7ae6 1-40
+  s_c99f3390b62e01::t_2d46a11a2154aa 41-80
+docs/development/workspaces.md
+  s_c99f3390b62e01::t_448d384b3214a2 101-104,107-110
+  s_c99f3390b62e01::t_31740ad88b8ec8 66-70,89-91
+  s_c99f3390b62e01::t_793d422e09d488 105-106
+  s_c99f3390b62e01::t_bce413fb83659b 54-65,71,84-88
+  s_c99f3390b62e01::t_988bcdcad4f239 92-98
+  s_c99f3390b62e01::t_68bf4609e2b794 72-83,99-100
+packages/jobs/src/model.ts
+  s_c99f3390b62e01::t_5457ff14f60e6d 2,13-17,28-30,34-37,39-40,50-54,56,67-71,75-83,85-88,90-96,99-100
+  s_c99f3390b62e01::t_5495b7b340fec4 73,106
+  s_c99f3390b62e01::t_11a1159cc3489b 1,3-12,18-27,31-33,38,41-49,55,57-66,72,74,84,89,97-98,101-105,107-109
+apps/desktop/tests/native/local-request.test.ts
+  s_c99f3390b62e01::t_d83b490ebaab10 1-3,24
+  s_c99f3390b62e01::t_b3e340d54a3417 4-23
+apps/cli/package.json
+  s_c99f3390b62e01::t_fa07cee4ee8e3d 22
+  s_c99f3390b62e01::t_f36f12fa8ad3bb 18-19,27,29-30
+apps/api/server/jobs/repository.ts
+  s_c99f3390b62e01::t_51b51e4b05c9ac 22-26,28-63,65-67,74-77,81-90,94-101,103-108,110-111,113-114,119-122,129-137,142-147,149-156,170-172,175-177,179-188,202-211,224-226,229-236,250-251,258-259,261-273,284-287,297,316-322,325-334,339-341,345-347,351-371
+  s_c99f3390b62e01::t_4de47621c7c548 1-9,11-20,64,68-73,78-80,91-93,102,109,112,115-118,123-128,138-141,148,157,197-201,212-223,227-228,237-241,243-249,252-257,260,274-283,288-296,298-309,336-338,342-344,348-350,372-376
+  s_c99f3390b62e01::t_a94a718ac77b6e 158-169,173-174,178,189-196,242
+  s_c99f3390b62e01::t_16f10e4479e122 310-315,323-324,335
+  s_c99f3390b62e01::t_2c7d458445d8ec 10,21,27
+  s_c99f3390b62e01::t_f162acb6501a70 377-379
+apps/cli/src/runtime/agents/store.ts
+  s_c99f3390b62e01::t_a3d9535e32bc5a 410
+  s_c99f3390b62e01::t_c42169d6a0c9ce 411-414
+apps/cli/tests/smoke/pi-runner.ts
+  s_c99f3390b62e01::t_a6c9dcd187dfda 1-4,8-10,32,40,46,78,84,96,98,173-174
+  s_c99f3390b62e01::t_bc1d5ac06a28b2 5-7,11-31,33-39,41-45,47-77,79-83,85-95,97,99-172,175-178
+apps/api/vite.config.ts
+  s_c99f3390b62e01::t_c5dd3c82d1d66c 26-30
+  s_c99f3390b62e01::t_a04dba868535c6 31-37
+apps/api/tests/unit/jobs/tick-runtime.test.ts
+  s_c99f3390b62e01::t_b02bb8285a113a 1-27
+  s_c99f3390b62e01::t_fafd1c90d8ee31 28-36
+apps/api/server/jobs/runtime/tick-cloudflare.ts
+  s_c99f3390b62e01::t_c5dd3c82d1d66c 1-20
+apps/cli/src/runtime/agents/harness/execution.ts
+  s_c99f3390b62e01::t_9d3b83f733bda2 17,19,28-29
+  s_c99f3390b62e01::t_a3d9535e32bc5a 1-2,4-16,30-264,266-305,307-341,343-515
+  s_c99f3390b62e01::t_b4ad3ce368254a 18,20-21
+  s_c99f3390b62e01::t_b3e340d54a3417 22-27,265,306,342
+  s_c99f3390b62e01::t_66e7c70552d271 3
+apps/api/server/jobs/runtime/tick-node.ts
+  s_c99f3390b62e01::t_c5dd3c82d1d66c 1-13
+packages/memory/src/client/picker.tsx
+  s_c99f3390b62e01::t_0893582e1c8c08 1,7-11,24-29,31-34,39-40,42,44-65,67,69-95,97-238
+  s_c99f3390b62e01::t_161a5e1e125398 2-6,12-23,30,35-38,41,43,66,68,96,239
+apps/desktop/src/routes/tasks.tsx
+  s_c99f3390b62e01::t_227db65fbb6673 6
+  s_c99f3390b62e01::t_771532896ac1f2 12-15
+packages/tasks/src/model/diff.ts
+  s_c99f3390b62e01::t_412a1e22d4dcc9 1,20-25,29-33,43-44,54-57,65-66
+  s_c99f3390b62e01::t_aa7c7b0ec9f07d 26,28,34-42,45-53
+  s_c99f3390b62e01::t_41f03d1436a5cf 27
+  s_c99f3390b62e01::t_0063f4497f87ef 2-19,58-64,67-140
+packages/ai/src/index.ts
+  s_c99f3390b62e01::t_ee6543f196cf3f 14
+packages/contracts/src/api.ts
+  s_c99f3390b62e01::t_bb1a6e158035ba 16-17,46
+  s_c99f3390b62e01::t_0a2aeb37f52615 14-15,47
+packages/tasks/src/model/conversation.ts
+  s_c99f3390b62e01::t_1974302236e1ab 18-20,64-65,68,72
+  s_c99f3390b62e01::t_3d85e01915a04a 76-82
+  s_c99f3390b62e01::t_839d76295138db 1-17,25-37,43-59,61-63,70,83-108,110-115,117-118,122-127
+  s_c99f3390b62e01::t_63be2d006e4232 21-24,38-42,60,66-67,69,71,73-75,109,116,119-121
+packages/tasks/tests/diff.test.ts
+  s_c99f3390b62e01::t_6244b0e7f79c23 43-48,50,52-54,58-61,64-65,69-70
+  s_c99f3390b62e01::t_4afb7200c9f060 1-42
+  s_c99f3390b62e01::t_e4a9e3e41c21de 55
+  s_c99f3390b62e01::t_6b51a63b2a16e8 49,51,56-57,62-63,66-68
+apps/cli/src/runtime/agents/harness/providers/pi.ts
+  s_c99f3390b62e01::t_ee6543f196cf3f 1,9-18,21-50,56-57,64,68-85,91-102,104,124-138,144-146,151,159-167,177,179-184,195,197-202,209-220,222-223,233-240,255-261,268-279,282,294-299,308-309,317-326,329-334,340-342,348-349,353,366-369,377-379,386-388
+  s_c99f3390b62e01::t_20a7b17a7cb54c 2-8,59-63,65-67,86-90,152-158,173-174,176,190-194,203-208,221,226-232,241-245,289-293,310-316,335-339,350-352,354-357,370-376,381,383-385
+  s_c99f3390b62e01::t_0252b79121389c 115,185-189
+  s_c99f3390b62e01::t_466f74972f8239 58,283-288,327-328
+  s_c99f3390b62e01::t_98d386b4c1d0ba 246-249,253-254,262-267
+  s_c99f3390b62e01::t_e96a9292fe959d 280-281
+  s_c99f3390b62e01::t_ce27a577facf64 19-20,51-55,103,105-114,116-123,139-143,147-150,196,250-252,300-307,344-346,358-365,380,382
+  s_c99f3390b62e01::t_195174a8a1ad94 168-172,175,178,224-225,343,347
+apps/cli/AGENTS.md
+  s_c99f3390b62e01::t_c7bc604739b01e 114-118
+  s_c99f3390b62e01::t_68bf4609e2b794 102-113,119
+  s_c99f3390b62e01::t_68d430be513fd9 93-101
+apps/desktop/tests/native/smoke/scenario.ts
+  s_c99f3390b62e01::t_2626b79cb1aa86 256-298
+  s_c99f3390b62e01::t_4aa38f893adf19 6,306-320
+  s_c99f3390b62e01::t_501b0ee2114c7d 321-344
+packages/jobs/AGENTS.md
+  s_c99f3390b62e01::t_448d384b3214a2 27-34
+  s_c99f3390b62e01::t_11a1159cc3489b 1-10,13-26,35-39
+  s_c99f3390b62e01::t_8116798e5e929a 11-12
+packages/tasks/tests/task-drafts.test.ts
+  s_c99f3390b62e01::t_455126de33ad2b 46,68
+  s_c99f3390b62e01::t_21424464bb2095 2,21-26
+  s_c99f3390b62e01::t_a16790e2396c99 47-64
+  s_c99f3390b62e01::t_3800d3caad488c 65-67
+packages/database/src/schema.ts
+  s_c99f3390b62e01::t_16f10e4479e122 211,225
+  s_c99f3390b62e01::t_a28f6e3ad2cc96 174-177,181-191,195-200,207-210,212-224,226,258-260,264-265
+  s_c99f3390b62e01::t_d75f00e45fb94f 178-180,192-194,201-206,227-257,262-263
+  s_c99f3390b62e01::t_9b42ba29e188cd 261,266,268-271
+apps/api/tests/unit/relay-jobs.test.ts
+  s_c99f3390b62e01::t_bdf8e0e0af0c50 1-340,344-363,365-377,382-415
+  s_c99f3390b62e01::t_51b51e4b05c9ac 341-343,364,378-381
+packages/contracts/tests/jobs-compatibility.test.ts
+  s_c99f3390b62e01::t_8116798e5e929a 1-19
+  s_c99f3390b62e01::t_97b84538ac5a61 20-29
+packages/host/src/control.ts
+  s_c99f3390b62e01::t_7e83c7e5a552fd 43,234,262,418-419,422-432,525-526,552,563,591
+packages/contracts/src/tasks.ts
+  s_c99f3390b62e01::t_7e83c7e5a552fd 3-14,20-38,42-55,83,135,174-175,180,220
+  s_c99f3390b62e01::t_4b312e779333d0 39-41
+  s_c99f3390b62e01::t_881445b1faa7da 206
+  s_c99f3390b62e01::t_9e3e356a4ec358 2
+packages/tasks/src/client/approval-changes.ts
+  s_c99f3390b62e01::t_55639a017cf8c1 36,41
+  s_c99f3390b62e01::t_929400269a4503 15-26,28,43-48,50,73,79,98-104
+  s_c99f3390b62e01::t_4afb7200c9f060 1-8,14,29-31,33-35,42,49,52
+  s_c99f3390b62e01::t_059a10081c8df5 37-40,54-70,96-97,150-151
+  s_c99f3390b62e01::t_3b20a93b45d92e 71-72,74-75,105-107,110,120,134,142,149,153,156-157,160,186
+apps/api/tests/postgres/cloudflare/jobs.test.ts
+  s_c99f3390b62e01::t_147d550a96f053 1-61,65
+  s_c99f3390b62e01::t_448d384b3214a2 62-64
+  s_c99f3390b62e01::t_c38bf33a029978 66-109
+apps/cli/src/runtime/memory/repository.ts
+  s_c99f3390b62e01::t_71f36ad9b7d3ed 3-10,15-20,24-27,34-35,37-39,46-48,54-56,63-65,68-69,72-77,81-86,89-119,122-149,151-192,194-201,203-208,213-215,217-225,227-228
+  s_c99f3390b62e01::t_5bae2f17b0bf73 1-2,11-13,21-23,29,32-33,36,40,42-45,49-53,57-62,66-67,70-71,78-80,87-88,120-121,193,202,216,226,229-230
+  s_c99f3390b62e01::t_b4ad3ce368254a 14,150
+  s_c99f3390b62e01::t_61ce6c81c5b5d6 28,30-31,41
+  s_c99f3390b62e01::t_c68b83b74f63ea 209-212
+  s_c99f3390b62e01::t_74ffcd909d112e 231-234
+apps/web/tests/unit/return-to.test.ts
+  s_c99f3390b62e01::t_3f364c579d7ae6 19
+apps/api/server/control/service.ts
+  s_c99f3390b62e01::t_8b38b6fbca66d2 683
+  s_c99f3390b62e01::t_bc064e2f767375 1-9,84-92,139,658-682,684-738,744,749,810
+  s_c99f3390b62e01::t_f74cc4815458df 739-743,745-748,750-751,753-766,804-809,811-816
+apps/cli/src/runtime/errors.ts
+  s_c99f3390b62e01::t_71f36ad9b7d3ed 1-3,14-25
+packages/memory/src/server/service.ts
+  s_c99f3390b62e01::t_e7739df312db1a 1-128,130
+  s_c99f3390b62e01::t_f4cb26ec622969 129,131-169
+packages/memory/src/client/library.tsx
+  s_c99f3390b62e01::t_29342c2803b5a6 1-7,13,20-29,40,63-64,79,84,97,99-100,109,111,125-126,149,151,163-164,166-167,191-192,195,217,404
+  s_c99f3390b62e01::t_f8a0faf7d770a1 8-12,14-19,30-39,41-62,65-78,80-83,85-96,98,101-108,110,112-124,127-148,150,152-162,165,168-190,193-194,196-216,218-403
+packages/tasks/package.json
+  s_c99f3390b62e01::t_3bd923b842d535 8
+  s_c99f3390b62e01::t_81f2b4a173a563 23,25,28
+apps/desktop/native/main.ts
+  s_c99f3390b62e01::t_61ce6c81c5b5d6 258
+  s_c99f3390b62e01::t_eec9ccec839afa 11
+apps/desktop/tests/native/api.test.ts
+  s_c99f3390b62e01::t_d83b490ebaab10 36-42,44
+  s_c99f3390b62e01::t_f9b710fe1df3b5 43,45-53
+packages/i18n/src/messages/zh.ts
+  s_c99f3390b62e01::t_5e189943bd6f32 512-581
+  s_c99f3390b62e01::t_e8c6b264807ad8 510,582
+  s_c99f3390b62e01::t_6511773e631aa5 361-365,650-654
+  s_c99f3390b62e01::t_7fc0dce5bdf87d 511
+  s_c99f3390b62e01::t_d282acef213845 583-649,655-659,672,674-676
+  s_c99f3390b62e01::t_9b591fe9cdee18 660-671
+packages/memory/src/client/styles.css
+  s_c99f3390b62e01::t_161a5e1e125398 1
+apps/cli/tests/runtime/agents/host.test.ts
+  s_c99f3390b62e01::t_71f36ad9b7d3ed 8-14,30-33,54,866-880,882-936,939-942,944,946-954,956-962,964-980
+  s_c99f3390b62e01::t_53c6f4cc40c10e 943,945,955
+  s_c99f3390b62e01::t_ae8a44dde61db0 698,865,881,937-938,963,981
+  s_c99f3390b62e01::t_aeb05d2c1fb62f 644-697
+apps/api/server/relay/hub.ts
+  s_c99f3390b62e01::t_0fd6332fa148e9 37,206,256,421
+  s_c99f3390b62e01::t_41787d40c96032 47
+  s_c99f3390b62e01::t_bdf8e0e0af0c50 1-2,34,36,39-46,48,54-63,69,73,75-77,150,165-166,168,210,220,255,270,273-277,301-309,341-344,364-414,416-420,422-519,528,531-534,543-544,569-573
+  s_c99f3390b62e01::t_754fbe046c2324 173,415
+e2e/tests/cloud-jobs.spec.ts
+  s_c99f3390b62e01::t_b08fada43f870e 12-14,24-27,29-31,40-42,45-46,50-51,56-57,62-99,104-111,114-116,119-132,140-150,155-157,162-171,173-179,181-184,189-191
+  s_c99f3390b62e01::t_6b4681947c7829 1-11,15-23,28,32-39,43-44,47-49,52-55,58-61,100-103,112-113,117-118,133-139,151-154,158-161,172,180,185-188,192-196
+packages/tasks/src/model.ts
+  s_c99f3390b62e01::t_69cbd23930c313 9-23
+  s_c99f3390b62e01::t_17928ece44b6b8 26
+  s_c99f3390b62e01::t_839d76295138db 1-8,24-25,27-30
+apps/cli/src/runtime/memory/index.ts
+  s_c99f3390b62e01::t_9f0ce76a6123cb 1-31
+  s_c99f3390b62e01::t_2eb78843a023cb 32-41
+apps/desktop/native/local-request.ts
+  s_c99f3390b62e01::t_61ce6c81c5b5d6 1-12
+  s_c99f3390b62e01::t_67320ad283a553 13-15
+apps/api/server/memory/repository.ts
+  s_c99f3390b62e01::t_d75f00e45fb94f 1-81,85-162
+  s_c99f3390b62e01::t_bb1a6e158035ba 82-84
+  s_c99f3390b62e01::t_174e64a2cdd560 163-284
+packages/memory/tests/service.test.ts
+  s_c99f3390b62e01::t_ec47a49ffdb2da 1-101
+  s_c99f3390b62e01::t_66572c5a70b932 102-197
+packages/core/src/task-context.ts
+  s_c99f3390b62e01::t_7e83c7e5a552fd 1-3,9-13,27-31,36-37,42-45,50-53,55-56
+  s_c99f3390b62e01::t_b3e340d54a3417 4
+  s_c99f3390b62e01::t_4b312e779333d0 6-8,54
+  s_c99f3390b62e01::t_b4ad3ce368254a 5,14-26,32-35,38-41,46-49
+packages/jobs/tests/component/cloud-jobs.test.tsx
+  s_c99f3390b62e01::t_70b95e341c1def 1-4,7-8,10-12,17,30-31,54-58,64-67,80-83,89-90,95-96,102-104,106-107,123,125-127,166-172,176-177,191-195,200-207,213-222,226-227,252-265,270-273,298,300-303,308-311
+  s_c99f3390b62e01::t_24a0b895374287 5-6,9,13-16,18-29,32-53,59-63,68-79,84-88,91-94,97-101,105,108-122,124,173-175,178-190,196-199,208-212,223-225,228-245,249-251,266-269,304
+  s_c99f3390b62e01::t_2bc90b58d1e260 135,162
+  s_c99f3390b62e01::t_26a80e5649022c 145-146,299,305-307
+  s_c99f3390b62e01::t_837f9a4eea7e23 152
+  s_c99f3390b62e01::t_ac1116d8b3c348 128-134,136-144,147-151,153-161,163-165,246-248,274-297
+  s_c99f3390b62e01::t_aeac569f7c6b15 312
+apps/api/package.json
+  s_c99f3390b62e01::t_f2efcc08683231 32,35-36
+apps/api/server/relay/cloudflare.ts
+  s_c99f3390b62e01::t_6b1dd636d82577 1,8-12,14-33,36-74
+apps/api/server/relay/jobs.ts
+  s_c99f3390b62e01::t_36cf12ead2402a 1-49
+apps/api/tests/integration/jobs-relay.test.ts
+  s_c99f3390b62e01::t_7ffacce67d6ca9 1-116
+apps/api/tests/unit/relay-cloudflare-jobs.test.ts
+  s_c99f3390b62e01::t_8cbfa55dbced1f 1-113
+apps/cli/src/runtime/agents/harness/context/schema.ts
+  s_c99f3390b62e01::t_566aab96f4083c 1-155
+apps/cli/src/runtime/agents/harness/context/sqlite.ts
+  s_c99f3390b62e01::t_3b137912cfe0f6 1-150
+apps/cli/src/runtime/agents/harness/providers/claude.ts
+  s_c99f3390b62e01::t_370e23055c7902 1-77
+apps/cli/src/runtime/agents/harness/providers/codex.ts
+  s_c99f3390b62e01::t_35ba2cc3b7215d 1-182
+apps/cli/src/runtime/agents/harness/providers/process.ts
+  s_c99f3390b62e01::t_55a3992eeaf084 1-30
+apps/cli/tests/fixtures/agents/claude-headless-plan.mjs
+  s_c99f3390b62e01::t_c75442f8b620fc 1,29-35
+apps/cli/tests/runtime/agents/pi-store.test.ts
+  s_c99f3390b62e01::t_b0e457a8849d8b 1-317
+apps/desktop/package.json
+  s_c99f3390b62e01::t_93d27534bdedf2 36,39-40
+apps/desktop/src/features/automations/local.tsx
+  s_c99f3390b62e01::t_f8b419fc341851 1-438
+apps/desktop/src/routeTree.gen.ts
+  s_c99f3390b62e01::t_0efb8b0e47485e 16,47-51,111,127,146,164,180,198,217,254-260,380
+apps/desktop/tests/renderer/component/routes/local.test.tsx
+  s_c99f3390b62e01::t_1b92adb0f35d83 559-583
+apps/web/package.json
+  s_c99f3390b62e01::t_50c0b875cb1864 27,29-30
+apps/web/src/routeTree.gen.ts
+  s_c99f3390b62e01::t_667fe4845a3f03 17-18,51-60,105-106,120-121,138-139,155-156,170-171,187-188,243-256,318-319,328-329
+apps/web/src/routes/(app)/approvals.tsx
+  s_c99f3390b62e01::t_9d3ebb21d8b803 8,22-26
+apps/web/tests/component/features/observed.test.tsx
+  s_c99f3390b62e01::t_3a8736b2f53eb4 72-76
+apps/web/tests/component/features/task-filters.test.tsx
+  s_c99f3390b62e01::t_b5a71553c449c5 83-86
+apps/web/tests/component/features/task-submission.test.tsx
+  s_c99f3390b62e01::t_5e69a02efe59c2 87-90
+bun.lock
+  s_c99f3390b62e01::t_bf45429488fa5e 30,33-34,61,66,68-69,91,94-95,158,160-161,319-332,406-455,473,475,478,560,585,786-787,1192-1193,1204-1207
+e2e/tests/foundation.spec.ts
+  s_c99f3390b62e01::t_ff857908d709c7 2-3
+e2e/tests/helpers/account-fixture.ts
+  s_c99f3390b62e01::t_505aa22cf8a7a8 1-61
+packages/contracts/src/task-text.ts
+  s_c99f3390b62e01::t_3d801a9bc37f81 1
+packages/contracts/src/terminal.ts
+  s_c99f3390b62e01::t_bf175fe0fefbc7 2-3
+packages/core/package.json
+  s_c99f3390b62e01::t_74bc5e9915be6f 1-30
+packages/core/src/index.ts
+  s_c99f3390b62e01::t_b3f05a98858ec9 1-3
+packages/core/src/task-text.ts
+  s_c99f3390b62e01::t_f98465bb2d651d 1-22
+packages/core/tests/activity.test.ts
+  s_c99f3390b62e01::t_3a86730942062e 7
+packages/core/tests/task-text.test.ts
+  s_c99f3390b62e01::t_e14b198ffc1ac2 2
+packages/core/tsconfig.json
+  s_c99f3390b62e01::t_7069bff2cb7160 1-4
+packages/core/vitest.config.ts
+  s_c99f3390b62e01::t_cef10e849091df 1-3
+packages/database/drizzle-foundation/20261026075921_mushy_kylun/migration.sql
+  s_c99f3390b62e01::t_9c96a44d6f6c1c 1-38
+packages/database/drizzle-foundation/20261026075921_mushy_kylun/snapshot.json
+  s_c99f3390b62e01::t_68539de34614d0 1-2898
+packages/database/drizzle-foundation/20261026080557_late_wendell_rand/migration.sql
+  s_c99f3390b62e01::t_958d236bf4aa02 1-3
+packages/database/drizzle-foundation/20261026080557_late_wendell_rand/snapshot.json
+  s_c99f3390b62e01::t_1068ce143e0ea6 1-2911
+packages/database/drizzle-foundation/20261026093043_common_doctor_octopus/migration.sql
+  s_c99f3390b62e01::t_ad5438b843ba8c 1-27
+packages/database/drizzle-foundation/20261026093043_common_doctor_octopus/snapshot.json
+  s_c99f3390b62e01::t_56615e02ea9e11 1-3260
+packages/jobs/src/client/ports.ts
+  s_c99f3390b62e01::t_1864de729a5062 1-34
+packages/jobs/vitest.config.ts
+  s_c99f3390b62e01::t_678d91c51c07bb 1-3
+packages/memory/package.json
+  s_c99f3390b62e01::t_65eccf32ab6acd 1-51
+packages/memory/tsconfig.json
+  s_c99f3390b62e01::t_4f440797e3b961 1-8
+packages/memory/vitest.config.ts
+  s_c99f3390b62e01::t_001178f2aca433 1-3
+packages/tasks/src/client/persistent-task-composer.tsx
+  s_c99f3390b62e01::t_d1b7620bff193f 6
+packages/tasks/src/client/use-task-drafts.ts
+  s_c99f3390b62e01::t_48d8967abe4e3e 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ffcc9bd3c9fa78b68ed67921fa1d143cbebfce83",
+  "prompts": {},
+  "sessions": {
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
