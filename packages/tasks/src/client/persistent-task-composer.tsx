@@ -3,7 +3,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "./task-composer.js";
 import { useTaskDrafts } from "./use-task-drafts.js";
-import { createTaskDraft } from "./task-drafts.js";
+import { createTaskDraft } from "../model/drafts.js";
 
 /** Applications opt into an editor slot distinct from explicitly saved drafts. */
 export function PersistentTaskComposer(props: ComponentProps<typeof TaskComposer>) {

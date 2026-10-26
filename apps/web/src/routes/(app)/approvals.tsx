@@ -5,6 +5,7 @@ import { TaskWorkspace } from "@raypx/tasks/client";
 import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary";
 import { useTranslations } from "@raypx/i18n/browser";
 import { taskClient } from "../../features/tasks/client";
+import { apiUrl } from "../../features/auth/client";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");
 export const Route = createFileRoute("/(app)/approvals")({ component: Page });
 function Page() {
@@ -18,7 +19,11 @@ function Page() {
       }
     >
       {(accountId) => (
-        <TaskWorkspace client={reportedClient} accountId={accountId} view="approvals" />
+        <TaskWorkspace
+          client={reportedClient}
+          scope={{ kind: "remote", namespace: apiUrl, accountId }}
+          view="approvals"
+        />
       )}
     </SessionBoundary>
   );

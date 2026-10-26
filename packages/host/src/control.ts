@@ -40,6 +40,7 @@ export class RemoteControl {
   private cursor = 0;
   private streamId = "";
   private snapshotNeeded = false;
+  private readonly snapshotRequests = new Set<string>();
   private syncing: Promise<void> | undefined;
   private dirty = false;
   private detaching = false;
@@ -230,6 +231,7 @@ export class RemoteControl {
     this.connection = undefined;
     this.connected = false;
     this.ready = false;
+    this.snapshotRequests.clear();
     this.acknowledgement?.reject();
   }
   private connect(apiUrl: string) {
@@ -257,6 +259,7 @@ export class RemoteControl {
           this.ready = false;
           this.connected = false;
           this.error = code ?? "NETWORK_UNAVAILABLE";
+          this.snapshotRequests.clear();
           this.acknowledgement?.reject();
           if (code === "DEVICE_REVOKED" && this.accountId)
             void this.loseAuthorization(this.accountId, code).catch(() => {
@@ -412,12 +415,21 @@ export class RemoteControl {
         instanceId: info.instanceId,
         projects,
         capabilities,
+        syncSupported: true,
+        contextSupported: true,
       });
     } else if (frame.type === "resume") {
-      this.cursor = frame.sequence;
-      this.streamId = frame.streamId;
-      this.snapshotNeeded ||= frame.snapshot;
-      this.ready = true;
+      if (frame.syncId) {
+        if (!this.ready || frame.streamId !== this.streamId || !frame.snapshot) return;
+        if (!this.snapshotRequests.has(frame.syncId) && this.snapshotRequests.size >= 64)
+          throw new Error("Snapshot request limit");
+        this.snapshotRequests.add(frame.syncId);
+      } else {
+        this.cursor = frame.sequence;
+        this.streamId = frame.streamId;
+        this.snapshotNeeded ||= frame.snapshot;
+        this.ready = true;
+      }
       await this.wake();
     } else if (frame.type === "ack") {
       const pending = this.acknowledgement;
@@ -510,7 +522,8 @@ export class RemoteControl {
     const binding = this.binding!;
     while (this.ready && generation === this.generation) {
       this.dirty = false;
-      if (this.snapshotNeeded) {
+      const syncId = this.snapshotRequests.values().next().value;
+      if (this.snapshotNeeded || syncId) {
         let id: string | undefined,
           offset = 0,
           ack: Promise<void> | undefined;
@@ -536,6 +549,7 @@ export class RemoteControl {
           this.connection?.send({
             type: "snapshot",
             id: page.id,
+            ...(syncId ? { syncId } : {}),
             streamId: page.streamId,
             sequence: page.sequence,
             records: page.records,
@@ -546,6 +560,7 @@ export class RemoteControl {
             await ack;
             this.cursor = page.sequence;
             this.snapshotNeeded = false;
+            if (syncId) this.snapshotRequests.delete(syncId);
             break;
           }
         }
@@ -573,7 +588,7 @@ export class RemoteControl {
         this.error = null;
         if (this.protocolVersion === 3)
           await this.options.syncObserved?.((frame) => this.connection!.send(frame));
-        if (!this.dirty) return;
+        if (!this.dirty && !this.snapshotRequests.size) return;
         continue;
       }
       const last = replay.events.at(-1)!;

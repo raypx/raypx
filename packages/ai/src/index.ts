@@ -11,7 +11,7 @@ export {
   defaultProviders,
   type CompatibleProviderOptions,
 } from "./providers.js";
-export { Type } from "@earendil-works/pi-ai";
+export { Type, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 export type {
   Api,
   AssistantMessage,

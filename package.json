@@ -51,7 +51,9 @@
       "zod": "^4.6.7",
       "zustand": "^5.0.16",
       "@raypx-kit/analytics": "0.0.0-alpha.1",
-      "@earendil-works/pi-ai": "1.4.0"
+      "@earendil-works/pi-ai": "1.4.0",
+      "@earendil-works/pi-agent-core": "1.4.0",
+      "diff": "9.0.0"
     },
     "catalogs": {
       "dev": {

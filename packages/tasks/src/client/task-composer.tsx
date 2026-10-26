@@ -8,6 +8,8 @@ import {
   type RefObject,
 } from "react";
 import type { AgentTask, AgentProvider, SyncDevice } from "@raypx/contracts/tasks";
+import type { TaskContextSelection } from "@raypx/core/tasks";
+import { ContextPicker, type MemoryClientPort } from "@raypx/memory/client";
 import type { TaskWorkspaceClient } from "./remote-query.js";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -31,10 +33,10 @@ import {
   sameDraft,
   type TaskDraft,
   type DraftInput,
-} from "./task-drafts.js";
+} from "../model/drafts.js";
 
 export type TaskComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode"> &
-  Partial<Pick<DraftInput, "deviceId" | "projectId">>;
+  Partial<Pick<DraftInput, "deviceId" | "projectId" | "contextSelection">>;
 
 export function TaskComposer({
   client,
@@ -52,8 +54,10 @@ export function TaskComposer({
   onEditorChange,
   editorOpen,
   onEditorOpenChange,
+  contextLibrary,
 }: {
   editorOpen?: boolean;
+  contextLibrary?: MemoryClientPort | undefined;
   onEditorOpenChange?: (open: boolean) => void;
   onEditorChange?: (draft: DraftInput) => void;
   guest?: {
@@ -73,6 +77,7 @@ export function TaskComposer({
   promptRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const t = useTranslations("tasks");
+  const memoryText = useTranslations("memory");
   const c = useTranslations("common");
   const fieldId = useId();
   const [internalOpen, setInternalOpen] = useState(true);
@@ -105,6 +110,9 @@ export function TaskComposer({
   );
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
   const [mode, setMode] = useState<"run" | "plan">(initialDraft?.mode ?? "run");
+  const [contextSelection, setContextSelection] = useState<TaskContextSelection | undefined>(
+    guest ? undefined : initialDraft?.contextSelection,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ReturnType<typeof failureCode>>();
   const submission = useRef<{
@@ -130,7 +138,14 @@ export function TaskComposer({
     | null
   >(null);
   const { confirm, dialog } = useConfirmation();
-  const snapshot = { deviceId, projectId, provider, prompt, mode };
+  const snapshot: DraftInput = {
+    deviceId,
+    projectId,
+    provider,
+    prompt,
+    mode,
+    ...(contextSelection ? { contextSelection } : {}),
+  };
   useEffect(() => {
     if (initialDraft) onDraftRestored?.();
   }, [initialDraft, onDraftRestored]);
@@ -186,7 +201,8 @@ export function TaskComposer({
     )
       return;
     setPrompt("");
-    changed({ prompt: "" });
+    setContextSelection(undefined);
+    changed({ prompt: "", contextSelection: undefined });
     setDraftId(null);
     setDraftStatus(null);
     setError(undefined);
@@ -211,6 +227,7 @@ export function TaskComposer({
     setProvider(draft.provider);
     setMode(draft.mode);
     setPrompt(draft.prompt);
+    setContextSelection(draft.contextSelection);
     changed(draft);
     setDraftId(draft.id);
     setDraftStatus(null);
@@ -246,7 +263,8 @@ export function TaskComposer({
     }
     if (receipt?.key === JSON.stringify(snapshot)) {
       setPrompt("");
-      if (!changed({ prompt: "" })) cleaned = false;
+      setContextSelection(undefined);
+      if (!changed({ prompt: "", contextSelection: undefined })) cleaned = false;
       setDraftId(null);
       onOptionsOpenChange(false);
     }
@@ -293,7 +311,7 @@ export function TaskComposer({
     }
     if (!available || occupied) return;
     submitting.current = true;
-    const key = JSON.stringify({ deviceId, projectId, provider, prompt, mode });
+    const key = JSON.stringify(snapshot);
     if (submission.current?.key !== key)
       submission.current = {
         key,
@@ -306,7 +324,7 @@ export function TaskComposer({
     try {
       accepted(
         await client.tasks.create(
-          { id: submission.current.id, deviceId, projectId, provider, prompt, mode },
+          { id: submission.current.id, ...snapshot },
           { signal: AbortSignal.timeout(15_000) },
         ),
       );
@@ -425,7 +443,8 @@ export function TaskComposer({
                       onValueChange={(value) => {
                         setDeviceId(value);
                         setProjectId("");
-                        changed({ deviceId: value, projectId: "" });
+                        setContextSelection(undefined);
+                        changed({ deviceId: value, projectId: "", contextSelection: undefined });
                       }}
                       options={devices
                         .filter((d) => !d.revoked)
@@ -447,7 +466,8 @@ export function TaskComposer({
                       placeholder={t("chooseProject")}
                       onValueChange={(value) => {
                         setProjectId(value);
-                        changed({ projectId: value });
+                        setContextSelection(undefined);
+                        changed({ projectId: value, contextSelection: undefined });
                       }}
                       options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
                     />
@@ -493,6 +513,22 @@ export function TaskComposer({
                 <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
               </CollapsibleContent>
             </Collapsible>
+            {!guest && contextLibrary && deviceId && projectId && (
+              <>
+                <ContextPicker
+                  client={contextLibrary}
+                  ownerKey={draftKey}
+                  target={{ deviceId, projectId }}
+                  value={contextSelection ?? { sources: [] }}
+                  disabled={busy}
+                  onChange={(selection) => {
+                    setContextSelection(selection);
+                    changed({ contextSelection: selection });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">{memoryText("selectionReset")}</p>
+              </>
+            )}
             {occupied && prompt.trim() && (
               <p role="status" className="text-sm">
                 {t("PROJECT_BUSY")}

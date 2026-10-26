@@ -1,4 +1,11 @@
-import { localParams, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
+import {
+  localParams,
+  LOCAL_WORKSPACE_ID,
+  type LocalEvent,
+  type LocalMethod,
+} from "@raypx/contracts/local";
+import { MemoryRuntime } from "./memory";
+import { ContextError } from "@raypx/memory";
 import { AgentRuntime } from "./agents";
 import { FileRuntime } from "./files";
 import { JobRuntime } from "./jobs";
@@ -8,6 +15,14 @@ import { LocalError } from "./errors";
 import manifest from "../../package.json";
 import type { AgentProvider } from "@raypx/contracts/tasks";
 import type { RecordDiagnostic } from "../diagnostics";
+
+const contextParams = <T>(schema: { parse(input: unknown): T }, input: unknown): T => {
+  try {
+    return schema.parse(input);
+  } catch {
+    throw new ContextError("INVALID_CONTEXT");
+  }
+};
 
 export function createRuntime(
   options: {
@@ -45,6 +60,7 @@ export function createRuntime(
           },
         }),
       {
+        resolveContext: (selection, target) => getMemory().resolve(selection, target),
         ...(options.agentExecutables ? { executables: options.agentExecutables } : {}),
         ...(options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {}),
       },
@@ -53,6 +69,8 @@ export function createRuntime(
   const files = new FileRuntime(state);
   const processes = new ProcessRuntime(emit);
   const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
+  let memory: MemoryRuntime | undefined;
+  const getMemory = () => (memory ??= new MemoryRuntime(state.directory, getAgents));
   let closing = false;
   let closingPromise: Promise<void> | undefined;
   const pending = new Set<Promise<unknown>>();
@@ -78,6 +96,43 @@ export function createRuntime(
       const operation = (async () => {
         // Narrow each schema independently to preserve method-specific types.
         switch (method) {
+          case "memory.list":
+            contextParams(localParams[method], raw);
+            return getMemory().service.list(LOCAL_WORKSPACE_ID);
+          case "memory.get":
+            return getMemory().service.get(
+              LOCAL_WORKSPACE_ID,
+              contextParams(localParams[method], raw),
+            );
+          case "memory.create":
+            return getMemory().service.create(
+              LOCAL_WORKSPACE_ID,
+              contextParams(localParams[method], raw),
+            );
+          case "memory.update":
+            return getMemory().service.update(
+              LOCAL_WORKSPACE_ID,
+              contextParams(localParams[method], raw),
+            );
+          case "memory.archive":
+            return getMemory().service.archive(
+              LOCAL_WORKSPACE_ID,
+              contextParams(localParams[method], raw),
+            );
+          case "memory.history":
+            return getMemory().service.history(
+              LOCAL_WORKSPACE_ID,
+              contextParams(localParams[method], raw),
+            );
+          case "memory.restore":
+            return getMemory().service.restore(
+              LOCAL_WORKSPACE_ID,
+              contextParams(localParams[method], raw),
+            );
+          case "memory.resolve": {
+            const p = contextParams(localParams[method], raw);
+            return getMemory().resolve(p.selection, p.target, p.prompt);
+          }
           case "host.legacy":
           case "host.authorize":
           case "host.detach":
@@ -259,6 +314,7 @@ export function createRuntime(
           ...(agentHost ? [agentHost.close()] : []),
         ]);
         await Promise.allSettled(pending);
+        memory?.close();
         state.close();
         releaseOwner?.();
       })();

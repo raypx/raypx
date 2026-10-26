@@ -7,6 +7,7 @@ import { stageArtifact } from "@raypx-kit/devkit/artifact";
 const root = resolve(process.argv[2] ?? ".");
 const serveApi = process.argv.includes("--serve-api");
 const runCleanup = process.argv.includes("--run-api-cleanup");
+const runSchedules = process.argv.includes("--run-api-schedules");
 const workerProbeHeader = "x-raypx-worker-probe";
 
 async function start(app: "api" | "web") {
@@ -25,8 +26,12 @@ async function start(app: "api" | "web") {
     });
     // No development dotenv files or live service bindings enter an artifact probe.
     const { env: _env, build: _build, hyperdrive: _hyperdrive, ...config } = rawConfig;
-    const database = serveApi || runCleanup ? process.env.TEST_DATABASE_URL : undefined;
-    if ((serveApi || runCleanup) && (!database || !new URL(database).pathname.endsWith("_test")))
+    const database =
+      serveApi || runCleanup || runSchedules ? process.env.TEST_DATABASE_URL : undefined;
+    if (
+      (serveApi || runCleanup || runSchedules) &&
+      (!database || !new URL(database).pathname.endsWith("_test"))
+    )
       throw new Error("TEST_DATABASE_URL must name an isolated *_test database");
     server = createTestHarness({
       root: stage,
@@ -49,11 +54,12 @@ async function start(app: "api" | "web") {
                     ALLOWED_ORIGINS: "http://localhost:3000",
                     RESEND_API_KEY: "",
                     MAIL_FROM: "",
-                    JOBS_ENABLED: runCleanup ? "true" : "false",
+                    JOBS_ENABLED: runCleanup || runSchedules ? "true" : "false",
                   },
                 }
               : { vars: { NODE_ENV: "production", WORKER_PROBE_HEADER: workerProbeHeader } }),
-            ...((serveApi || runCleanup) && process.env.TEST_DATABASE_MODE === "hyperdrive"
+            ...((serveApi || runCleanup || runSchedules) &&
+            process.env.TEST_DATABASE_MODE === "hyperdrive"
               ? {
                   hyperdrive: [
                     {
@@ -198,16 +204,16 @@ function probeFetch(url: string, init?: RequestInit): Promise<Response> {
   return fetch(url, { ...init, signal: AbortSignal.timeout(10000) });
 }
 
-if (runCleanup) {
+if (runCleanup || runSchedules) {
   const worker = await start("api");
   try {
     const result = await worker.server
       .getWorker()
-      .scheduled({ cron: "*/15 * * * *", scheduledTime: new Date() });
-    if (result.outcome !== "ok") throw new Error("Worker cleanup scheduled event failed");
+      .scheduled({ cron: runSchedules ? "* * * * *" : "*/15 * * * *", scheduledTime: new Date() });
+    if (result.outcome !== "ok") throw new Error("Worker scheduled event failed");
     if (worker.server.getLogs().some((log) => log.level === "error"))
-      throw new Error("Worker cleanup reported a runtime error");
-    console.log("Cloudflare cleanup scheduled event passed");
+      throw new Error("Worker scheduled event reported a runtime error");
+    console.log(`Cloudflare ${runSchedules ? "schedules" : "cleanup"} scheduled event passed`);
   } finally {
     await worker.close();
   }
@@ -228,6 +234,10 @@ if (runCleanup) {
           .getWorker()
           .scheduled({ cron: "*/15 * * * *", scheduledTime: new Date() });
         if (scheduled.outcome !== "ok") throw new Error("Worker disabled cleanup task failed");
+        const jobs = await worker.server
+          .getWorker()
+          .scheduled({ cron: "* * * * *", scheduledTime: new Date() });
+        if (jobs.outcome !== "ok") throw new Error("Worker disabled business jobs task failed");
       }
       if (worker.server.getLogs().some((log) => log.level === "error"))
         throw new Error(`Worker ${app} reported a runtime error`);

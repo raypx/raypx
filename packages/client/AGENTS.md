@@ -16,6 +16,8 @@ After an accepted connection drops, retry the preferred protocol before falling
 back again. Explicit restart also resets negotiation; a rolling upgrade must not
 leave a client permanently on v2. Only plain HTTP 404 indicates a missing router;
 typed RPC NOT_FOUND remains a domain error.
+Contextual tasks require an explicit `ready.contextSupported` on every connection.
+Absence rejects before sending with `UPGRADE_REQUIRED`; ordinary tasks remain compatible.
 
 ## Ownership
 

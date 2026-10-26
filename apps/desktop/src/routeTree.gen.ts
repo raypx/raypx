@@ -13,6 +13,7 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as localRouteRouteImport } from './routes/(local)/route'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TerminalRouteImport } from './routes/terminal'
@@ -41,6 +42,11 @@ const AccountRoute = AccountRouteImport.update({
 const ApprovalsRoute = ApprovalsRouteImport.update({
   id: '/approvals',
   path: '/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MemoryRoute = MemoryRouteImport.update({
+  id: '/memory',
+  path: '/memory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -102,6 +108,7 @@ const localAutomationsRoute = localAutomationsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
+  '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
+  '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/(local)': typeof localRouteRouteWithChildren
   '/account': typeof AccountRoute
   '/approvals': typeof ApprovalsRoute
+  '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/tasks': typeof TasksRoute
   '/terminal': typeof TerminalRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/account'
     | '/approvals'
+    | '/memory'
     | '/settings'
     | '/tasks'
     | '/terminal'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
   to:
     | '/account'
     | '/approvals'
+    | '/memory'
     | '/settings'
     | '/tasks'
     | '/terminal'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/(local)'
     | '/account'
     | '/approvals'
+    | '/memory'
     | '/settings'
     | '/tasks'
     | '/terminal'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   localRouteRoute: typeof localRouteRouteWithChildren
   AccountRoute: typeof AccountRoute
   ApprovalsRoute: typeof ApprovalsRoute
+  MemoryRoute: typeof MemoryRoute
   SettingsRoute: typeof SettingsRoute
   TasksRoute: typeof TasksRoute
   TerminalRoute: typeof TerminalRoute
@@ -236,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/approvals'
       fullPath: '/approvals'
       preLoaderRoute: typeof ApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/memory': {
+      id: '/memory'
+      path: '/memory'
+      fullPath: '/memory'
+      preLoaderRoute: typeof MemoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -357,6 +377,7 @@ const rootRouteChildren: RootRouteChildren = {
   localRouteRoute: localRouteRouteWithChildren,
   AccountRoute: AccountRoute,
   ApprovalsRoute: ApprovalsRoute,
+  MemoryRoute: MemoryRoute,
   SettingsRoute: SettingsRoute,
   TasksRoute: TasksRoute,
   TerminalRoute: TerminalRoute,

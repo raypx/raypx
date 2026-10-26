@@ -407,7 +407,11 @@ export class AgentStore {
     binding: string,
     command: RelayCommand,
   ): { ok: true; value: unknown } | { ok: false; code: string } | null {
-    const payload = JSON.stringify({ binding, request: command.request });
+    const payload = JSON.stringify({
+      binding,
+      request: command.request,
+      ...(command.context ? { context: command.context } : {}),
+    });
     const old = this.database
       .query("SELECT payload,result FROM commands WHERE id=?")
       .get(command.id) as { payload: string; result: string | null } | null;

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { JobDefinition, JobRun, RootGrant } from "@raypx/contracts/local";
+import type { ContextDocument, ContextDocumentSummary } from "@raypx/memory";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
 import { CONNECTION_KEY } from "../../../config";
 import {
@@ -247,21 +248,54 @@ try {
       await evaluate(`return window[${JSON.stringify(CONNECTION_KEY)}]?.apiUrl`),
       apiOrigin,
     );
-    // Echo the cookie presence for this exact request. A global "last request"
-    // observation races the renderer's concurrent startup session checks.
-    await waitFor(async () => {
-      const response = await desktopApi.request({
-        path: "/api/auth/list-sessions",
-        method: "GET",
-        headers: {},
-      });
-      return JSON.parse(response.body).sessionCookiePresent === restoredServer;
-    }, "Session cookie crossed servers or did not restore when returning to its server");
     assert.equal(
       await evaluate('return localStorage.getItem("raypx-server-acceptance")'),
       restoredServer ? "saved" : null,
       "WebView storage crossed server partitions",
     );
+    // Echo the cookie presence for this exact request. A global "last request"
+    // observation races the renderer's concurrent startup session checks.
+    const probe: {
+      attempts: number;
+      responses: number;
+      expectedCookie: boolean;
+      status?: number;
+      cookiePresent?: boolean;
+      errorName?: string;
+    } = { attempts: 0, responses: 0, expectedCookie: restoredServer };
+    try {
+      await waitFor(async () => {
+        probe.attempts++;
+        try {
+          const response = await desktopApi.request({
+            path: "/api/auth/list-sessions",
+            method: "GET",
+            headers: {},
+          });
+          probe.status = response.status;
+          const result: unknown = JSON.parse(response.body);
+          const present =
+            result && typeof result === "object" && "sessionCookiePresent" in result
+              ? result.sessionCookiePresent
+              : undefined;
+          if (typeof present !== "boolean") throw new Error("Invalid smoke response");
+          probe.cookiePresent = present;
+          probe.responses++;
+          return present === restoredServer;
+        } catch (error) {
+          probe.errorName =
+            error instanceof DOMException && error.name === "TimeoutError"
+              ? "TimeoutError"
+              : error instanceof SyntaxError
+                ? "InvalidJson"
+                : "NativeApiError";
+          throw error;
+        }
+      }, "Native session restore probe failed; inspect the safe cookie probe diagnostic");
+    } finally {
+      // Synthetic acceptance data only. Never print cookie values or response bodies.
+      console.info(`Native smoke cookie probe: ${JSON.stringify(probe)}`);
+    }
     assert.equal(
       (await control.info("config-isolation")).enabled,
       restoredServer,
@@ -269,6 +303,45 @@ try {
     );
     await evaluate('localStorage.setItem("raypx-server-acceptance","saved");return true');
     await control.enable("config-isolation", true);
+    stage = "device memory before login and across server changes";
+    if (phase === "shell") {
+      const document = {
+        kind: "memory",
+        name: "Native smoke memory",
+        category: "Acceptance",
+        content: "Device-owned reference survives sign-in and restart.",
+        project: null,
+      };
+      const created = (await engine.request("memory.create", {
+        requestId: crypto.randomUUID(),
+        document,
+      })) as ContextDocument;
+      await engine.request("memory.update", {
+        id: created.id,
+        revision: 1,
+        document: { ...document, content: "Temporary newer version." },
+      });
+      const restored = (await engine.request("memory.restore", {
+        id: created.id,
+        revision: 2,
+        version: 1,
+      })) as ContextDocument;
+      assert.equal(restored.revision, 3);
+      assert.equal(restored.content, document.content);
+    }
+    const references = (await engine.request("memory.list", {})) as ContextDocumentSummary[];
+    assert.equal(references.length, 1, "Device references did not survive restart/server change");
+    assert.equal(references[0]?.revision, 3);
+    await evaluate('location.hash="/memory";return true');
+    await waitFor(
+      async () =>
+        Boolean(
+          await evaluate(
+            'return [...document.querySelectorAll("article h2")].some(node=>node.textContent==="Native smoke memory")',
+          ),
+        ),
+      "Signed-out renderer did not load device-owned memory through Native IPC",
+    );
     stage = "signed-out local workspace and isolated session fixture";
     await localSessionFixture();
     handleTrayAction("pending");

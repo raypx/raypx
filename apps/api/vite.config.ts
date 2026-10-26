@@ -23,8 +23,19 @@ export default defineConfig(({ mode }) => {
               ),
             ),
           },
+          "schedules:tick": {
+            handler: fileURLToPath(
+              new URL(
+                `./server/jobs/runtime/tick-${cloudflare ? "cloudflare" : "node"}.ts`,
+                import.meta.url,
+              ),
+            ),
+          },
         },
-        scheduledTasks: { "*/15 * * * *": ["maintenance:cleanup"] },
+        scheduledTasks: {
+          "*/15 * * * *": ["maintenance:cleanup"],
+          "* * * * *": ["schedules:tick"],
+        },
         ...(!cloudflare ? { plugins: ["./server/runtime/plugin.ts"] } : {}),
         routes: {
           ...(!cloudflare

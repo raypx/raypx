@@ -1,8 +1,10 @@
 # @raypx/tasks
 
 Shared Agent task and approval views for Web and Desktop.
-The root exports pure state helpers; /client exports DOM components, the minimal
-TaskWorkspaceClient interface and visibility-aware subscriptions. /client/pending-count
+The root exports pure task helpers; /model owns the independent TaskWorkspacePort,
+WorkspaceScope, deterministic ConversationState, bounded draft parsing and pure diff
+previews. /client exports DOM components and visibility-aware subscriptions;
+TaskWorkspaceClient remains a compatibility name for the independent port. /client/pending-count
 exports only the approval badge for always-mounted shells, without the workspace or virtualizer.
 `/client/task-composer` exposes the standalone composer and its plain draft type.
 Applications can inject a restored draft and a guest sign-in/persistence adapter;
@@ -14,6 +16,31 @@ relay client; Desktop can inject an IPC adapter and local copy. DeviceSettings
 continues to require the remote device management client. No native, database,
 authentication or CLI implementation imports. Never display raw exception messages or render
 agent content as HTML. User mutation retries retain their idempotency ID.
+Domain schemas and revisions come from Core; contracts owns transport envelopes.
+Optional React `contextLibrary` props inject `@raypx/memory/client` references into
+the composer, without a browser dependency in TaskWorkspacePort. Drafts persist
+only validated source IDs/revisions, never raw context snapshots. Target changes
+clear the selection; guest handoff and account/scope changes never migrate it.
+Creation sends `contextSelection`; only the runtime supplies the immutable
+`task.context` snapshot rendered in task details. Templates remain reference text
+and do not grant tools or execute on selection.
+WorkspaceScope distinguishes device, account-local and remote ownership, derives
+cache identities and preserves the existing draft storage keys. Applications provide
+the confirmed scope; a guest editor never creates a private workspace or executes
+a restored draft. ConversationState owns cursors, revision merges and history gaps;
+React hooks supply reads and subscriptions. A rejected delta batch leaves its prior
+projection intact until a checkpoint arrives. Diff uses jsdiff's strict parsing;
+provider adapters retain the complete original approval when parsing is uncertain.
+Checkpoint coverage is separate from live-entry order: global SQLite row IDs are
+sparse within a task. A newer live entry cannot hide an unfilled checkpoint gap.
+Call beginRecovery before visibility/source resets or missing-baseline recovery
+to freeze proven live coverage. Continuous live coverage resumes only once an
+authoritative page catches the observed live watermark; pure models without
+these lifecycle signals retain conservative checkpoint-only coverage.
+History pagination aborts on unmount or scope/task changes; late adapter results
+cannot merge history, report failures or refresh the old owner. Timeouts release
+the paging control even when a transport ignores its signal. Draft enums require
+literal values; coerced arrays/objects are invalid stored inputs.
 Task lists navigate by creation-time/ID cursors. Probe the next cursor even after
 a short page: a local response may reach its byte limit before its record limit.
 TanStack Virtual renders the visible task rows with measured heights and stable

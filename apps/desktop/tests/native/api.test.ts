@@ -33,6 +33,24 @@ const get = (path = "/api/auth/get-session"): DesktopApiRequest => ({
   method: "GET",
   headers: {},
 });
+it("allows the explicit memory RPC methods only at the configured API origin", async () => {
+  const f = fixture();
+  for (const method of [
+    "list",
+    "get",
+    "create",
+    "update",
+    "archive",
+    "history",
+    "restore",
+    "resolve",
+  ])
+    await f.api.request({ path: `/rpc/memory/${method}`, method: "POST", headers: {}, body: "{}" });
+  expect(f.send).toHaveBeenCalledTimes(8);
+  await expect(
+    f.api.request({ path: "/rpc/memory/internal", method: "POST", headers: {}, body: "{}" }),
+  ).rejects.toThrow("not permitted");
+});
 it("keeps host credentials behind Native while allowing observed request reads", async () => {
   const f = fixture();
   for (const path of ["/rpc/hosts/authorize", "/rpc/hosts/revoke"])

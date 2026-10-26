@@ -5,6 +5,7 @@ const paths = new Set([
   "/account",
   "/settings",
   "/automations",
+  "/memory",
   "/terminal",
   "/welcome",
 ]);

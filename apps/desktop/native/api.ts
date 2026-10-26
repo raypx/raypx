@@ -47,6 +47,20 @@ const rpcPaths = new Set([
   "/rpc/relay/ticket",
   "/rpc/observed/list",
   "/rpc/observed/get",
+  "/rpc/jobs/list",
+  "/rpc/jobs/create",
+  "/rpc/jobs/update",
+  "/rpc/jobs/remove",
+  "/rpc/jobs/run",
+  "/rpc/jobs/history",
+  "/rpc/memory/list",
+  "/rpc/memory/get",
+  "/rpc/memory/create",
+  "/rpc/memory/update",
+  "/rpc/memory/archive",
+  "/rpc/memory/history",
+  "/rpc/memory/restore",
+  "/rpc/memory/resolve",
 ]);
 const nativeRpcPaths = new Set(["/rpc/hosts/authorize", "/rpc/hosts/revoke"]);
 const requestHeaders = new Set(["accept", "accept-language", "content-type"]);

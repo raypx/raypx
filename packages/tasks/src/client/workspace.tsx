@@ -1,16 +1,8 @@
 import { PersistentTaskComposer } from "./persistent-task-composer.js";
+import { ContextSnapshot, type MemoryClientPort } from "@raypx/memory/client";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
-import type { TaskClient } from "@raypx/client";
-import { applyActivityEvent } from "@raypx/contracts/tasks";
 import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
-import type {
-  AgentTask,
-  SyncDevice,
-  HumanRequest,
-  HumanDecision,
-  AgentEvent,
-  TaskActivity,
-} from "@raypx/contracts/tasks";
+import type { AgentTask, SyncDevice, HumanRequest, HumanDecision } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
@@ -41,19 +33,27 @@ import { ApprovalBody } from "./approval-body.js";
 import { ObservedApprovals } from "./observed.js";
 import { TaskPanels } from "./task-panels.js";
 import { TaskMarkdown } from "./markdown.js";
+import { useTaskConversation } from "./use-task-conversation.js";
+import {
+  isLocalWorkspace,
+  workspaceDraftKey,
+  workspaceOwner,
+  workspaceScopeKey,
+  type WorkspaceScope,
+} from "../model/scope.js";
+import type { DeviceManagementPort } from "../model/port.js";
 
 interface Props {
   client: TaskWorkspaceClient;
-  accountId: string | null;
+  scope: WorkspaceScope | null;
   pending?: boolean;
   persistEditor?: boolean;
   initialDraft?: TaskComposerDraft | undefined;
   onDraftRestored?: (() => void) | undefined;
-  local?: boolean;
-  /** Server identity for account-scoped device-only drafts. */
-  draftNamespace?: string;
   projectId?: string;
   onProjectChange?: (project: string) => void;
+  initialTaskId?: string | undefined;
+  contextLibrary?: MemoryClientPort | undefined;
 }
 function Gate({ pending }: { pending?: boolean }) {
   const t = useTranslations("tasks");
@@ -71,28 +71,30 @@ function Gate({ pending }: { pending?: boolean }) {
   );
 }
 export function TaskWorkspace(props: Props & { view?: "tasks" | "approvals" }) {
-  if (!props.accountId || props.pending)
+  if (!props.scope || props.pending)
     return (
       <section className="mx-auto max-w-5xl p-8">
         <Gate {...(props.pending === undefined ? {} : { pending: props.pending })} />
       </section>
     );
-  return <Workspace key={props.accountId} {...props} accountId={props.accountId} />;
+  return <Workspace key={workspaceScopeKey(props.scope)} {...props} scope={props.scope} />;
 }
 function Workspace({
   client,
-  accountId,
+  scope,
   view = "tasks",
-  local = false,
-  draftNamespace = "default",
   initialDraft,
   onDraftRestored,
   persistEditor = false,
   projectId,
   onProjectChange,
-}: Props & { view?: "tasks" | "approvals"; accountId: string }) {
+  initialTaskId,
+  contextLibrary,
+}: Props & { view?: "tasks" | "approvals"; scope: WorkspaceScope }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
+  const accountId = workspaceOwner(scope);
+  const local = isLocalWorkspace(scope);
   const Composer = persistEditor ? PersistentTaskComposer : TaskComposer;
   const [pages, setPages] = useState<string[]>([]);
   const before = pages.at(-1);
@@ -115,19 +117,26 @@ function Workspace({
     [client, before, view],
   );
   const { data, error, errorCode, refresh, refreshing } = useRemoteQuery(
-    ["workspace", accountId, view, before ?? null],
+    ["workspace", accountId, workspaceScopeKey(scope), view, before ?? null],
     load,
     true,
     client,
   );
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(initialTaskId ?? null);
   const composer = useRef<HTMLTextAreaElement>(null);
   const detail = useRef<HTMLDivElement>(null);
   const taskHistory = useRef<HTMLElement>(null);
   const revealPage = useRef(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState<boolean>();
-  const [detailVisible, setDetailVisible] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(Boolean(initialTaskId));
+  const linkedTask = useRef(initialTaskId);
+  useEffect(() => {
+    if (linkedTask.current === initialTaskId) return;
+    linkedTask.current = initialTaskId;
+    setSelected(initialTaskId ?? null);
+    setDetailVisible(Boolean(initialTaskId));
+  }, [initialTaskId]);
   const [returnToList, setReturnToList] = useState(0);
   const previousProject = useRef(projectId);
   useEffect(() => {
@@ -237,19 +246,15 @@ function Workspace({
               list={
                 <>
                   <Composer
-                    key={JSON.stringify([draftNamespace, accountId, local])}
+                    contextLibrary={contextLibrary}
+                    key={workspaceScopeKey(scope)}
                     client={client}
                     initialDraft={initialDraft}
                     onDraftRestored={onDraftRestored}
                     devices={data.devices}
                     tasks={data.tasks}
                     local={local}
-                    draftKey={JSON.stringify([
-                      "raypx.task-drafts.v1",
-                      draftNamespace,
-                      accountId,
-                      local,
-                    ])}
+                    draftKey={workspaceDraftKey(scope)}
                     optionsOpen={optionsOpen}
                     onOptionsOpenChange={setOptionsOpen}
                     editorOpen={editorOpen ?? data.tasks.length === 0}
@@ -386,7 +391,7 @@ function Workspace({
                       key={selected}
                       client={client}
                       id={selected}
-                      local={local}
+                      scope={scope}
                       devices={data.devices}
                       onChanged={refresh}
                     />
@@ -411,142 +416,29 @@ function TaskDetail({
   client,
   id,
   onChanged,
-  local,
+  scope,
 }: {
   client: TaskWorkspaceClient;
   id: string;
   devices: SyncDevice[];
   onChanged: () => void;
-  local: boolean;
+  scope: WorkspaceScope;
 }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
   const followField = useId();
-  const cursor = useRef(0);
-  const history = useRef(new Map<number, AgentEvent>());
-  const activity = useRef(new Map<string, TaskActivity>());
-  const olderBefore = useRef<number | undefined>(undefined);
-  const initialized = useRef(false);
-  const gaps = useRef<{ id: number; before: number; after: number }[]>([]);
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const mergeActivity = useCallback((entries: TaskActivity[]) => {
-    for (const entry of entries) {
-      const previous = activity.current.get(entry.id);
-      if (!previous || entry.revision > previous.revision) activity.current.set(entry.id, entry);
-    }
-  }, []);
-  const load = useCallback(
-    async (signal: AbortSignal) => {
-      const result = await client.tasks.get({ id, after: cursor.current }, { signal });
-      const latestOrder = Math.max(
-        0,
-        ...[...activity.current.values()].map((entry) => entry.order),
-      );
-      if (!initialized.current) {
-        olderBefore.current = result.activityBefore;
-        initialized.current = true;
-      } else if (
-        result.activity?.[0] &&
-        latestOrder &&
-        result.activityBefore !== undefined &&
-        result.activityBefore > latestOrder
-      ) {
-        const next = {
-          id: result.activityBefore,
-          before: result.activityBefore,
-          after: latestOrder,
-        };
-        const overlapping = gaps.current.filter(
-          (gap) => gap.after < next.before && gap.before > next.after,
-        );
-        gaps.current = gaps.current.filter((gap) => !overlapping.includes(gap));
-        for (const gap of overlapping) {
-          next.before = Math.max(next.before, gap.before);
-          next.after = Math.min(next.after, gap.after);
-        }
-        gaps.current.push(next);
-      }
-      mergeActivity(result.activity ?? []);
-      for (const item of result.events) {
-        history.current.set(item.cursor, item.event);
-        cursor.current = Math.max(cursor.current, item.cursor);
-      }
-      return {
-        ...result,
-        activityBefore: olderBefore.current,
-        activityGaps: [...gaps.current],
-        activity: [...activity.current.values()].sort((a, b) => a.order - b.order),
-        events: [...history.current.entries()].map(([position, event]) => ({
-          cursor: position,
-          event,
-        })),
-      };
-    },
-    [client, id, mergeActivity],
-  );
-  const mergeEvents = useCallback((events: AgentEvent[]) => {
-    for (const event of events) {
-      if (event.kind !== "activity" && event.kind !== "activity_delta") return undefined;
-      const entryId = event.kind === "activity" ? event.entry.id : event.entryId;
-      const entry = applyActivityEvent(activity.current.get(entryId), event);
-      if (!entry) return undefined;
-      activity.current.set(entryId, entry);
-    }
-    return [...activity.current.values()].sort((a, b) => a.order - b.order);
-  }, []);
-  const { data, error, errorCode, refresh } = useRemoteQuery(
-    ["task", id],
-    load,
-    true,
-    client,
-    mergeEvents,
-  );
+  const local = isLocalWorkspace(scope);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<ReturnType<typeof failureCode>>();
   const [prompt, setPrompt] = useState("");
   const followId = useRef<{ prompt: string; id: string } | null>(null);
   const active = useRef(false);
-  async function loadGap(gapId: number) {
-    const boundary = gaps.current.find((gap) => gap.id === gapId);
-    if (!boundary || loadingOlder) return;
-    setLoadingOlder(true);
-    try {
-      const result = await client.tasks.get(
-        { id, beforeActivity: boundary.before },
-        { signal: AbortSignal.timeout(15_000) },
-      );
-      mergeActivity(result.activity ?? []);
-      gaps.current = gaps.current.flatMap((gap) =>
-        gap.id !== boundary.id
-          ? [gap]
-          : result.activityBefore !== undefined && result.activityBefore > gap.after
-            ? [{ ...gap, before: result.activityBefore }]
-            : [],
-      );
-      refresh();
-    } catch (caught) {
-      setFailure(failureCode(caught));
-    } finally {
-      setLoadingOlder(false);
-    }
-  }
-  async function loadOlder() {
-    if (loadingOlder || olderBefore.current === undefined) return;
-    setLoadingOlder(true);
-    try {
-      const result = await client.tasks.get(
-        { id, beforeActivity: olderBefore.current },
-        { signal: AbortSignal.timeout(15_000) },
-      );
-      mergeActivity(result.activity ?? []);
-      olderBefore.current = result.activityBefore;
-      refresh();
-    } catch (caught) {
-      setFailure(failureCode(caught));
-    } finally {
-      setLoadingOlder(false);
-    }
-  }
+  const { data, error, errorCode, refresh, loadingOlder, loadGap, loadOlder } = useTaskConversation(
+    client,
+    id,
+    scope,
+    setFailure,
+  );
   async function cancel() {
     if (active.current) return;
     active.current = true;
@@ -647,6 +539,7 @@ function TaskDetail({
         </span>
         <time dateTime={data.task.updatedAt}>{new Date(data.task.updatedAt).toLocaleString()}</time>
       </div>
+      {data.task.context && <ContextSnapshot snapshot={data.task.context} />}
       {data.requests.map((request) => (
         <Approval
           key={request.id}
@@ -728,17 +621,15 @@ function TaskDetail({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <ol className="mt-3 space-y-2 text-xs text-muted-foreground">
-            {data.events.map(
-              ({ cursor: eventCursor, event }: { cursor: number; event: AgentEvent }) => (
-                <li key={eventCursor}>
-                  {event.kind === "status"
-                    ? t(event.status)
-                    : event.kind === "request"
-                      ? event.request.title
-                      : t("applied")}
-                </li>
-              ),
-            )}
+            {data.events.map(({ cursor: eventCursor, event }) => (
+              <li key={eventCursor}>
+                {event.kind === "status"
+                  ? t(event.status)
+                  : event.kind === "request"
+                    ? event.request.title
+                    : t("applied")}
+              </li>
+            ))}
           </ol>
         </CollapsibleContent>
       </Collapsible>
@@ -942,11 +833,15 @@ export function DeviceSettings({
   client,
   accountId,
   pending,
-}: Omit<Props, "client"> & { client: TaskClient }) {
+}: {
+  client: DeviceManagementPort;
+  accountId: string | null;
+  pending?: boolean;
+}) {
   if (!accountId || pending) return <Gate {...(pending === undefined ? {} : { pending })} />;
   return <Devices key={accountId} accountId={accountId} client={client} />;
 }
-function Devices({ client, accountId }: { client: TaskClient; accountId: string }) {
+function Devices({ client, accountId }: { client: DeviceManagementPort; accountId: string }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
@@ -1004,7 +899,7 @@ function DisconnectComputer({
   device,
   onChanged,
 }: {
-  client: TaskClient;
+  client: DeviceManagementPort;
   device: SyncDevice;
   onChanged: () => void;
 }) {

@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./model": "./src/model.ts",
     "./client": "./src/client.ts",
     "./client/pending-count": "./src/client/pending-count.tsx",
     "./client/styles.css": "./src/client/styles.css",
@@ -18,11 +19,13 @@
     "test:component": "bun --bun vp test --run --passWithNoTests component/"
   },
   "dependencies": {
-    "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
+    "@raypx/memory": "workspace:*",
     "@raypx/ui": "workspace:*",
     "@tanstack/react-virtual": "catalog:",
+    "diff": "catalog:",
     "lucide-react": "catalog:",
     "react-markdown": "catalog:",
     "remark-gfm": "catalog:"

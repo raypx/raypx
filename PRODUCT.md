@@ -28,6 +28,8 @@ actions and interactive terminals through the bundled Raypx CLI.
   device-owned tasks. Daemon stop cancels owned work; Windows retains its
   foreground owner. Host/OS restart recovery remains a separate capability.
 - Use stable package interfaces and add shared packages when real consumers need them.
+- Memory and task templates have explicit device/account ownership and immutable versions.
+  Tasks use only user-selected references and keep their captured context after later edits.
 - Keep the original brand mark and neutral light/dark visual system.
 
 ## Scope

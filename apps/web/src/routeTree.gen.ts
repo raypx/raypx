@@ -14,6 +14,8 @@ import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as HealthRouteImport } from './routes/health'
 import { Route as appIndexRouteImport } from './routes/(app)/index'
 import { Route as appApprovalsRouteImport } from './routes/(app)/approvals'
+import { Route as appAutomationsRouteImport } from './routes/(app)/automations'
+import { Route as appMemoryRouteImport } from './routes/(app)/memory'
 import { Route as appSettingsRouteImport } from './routes/(app)/settings'
 import { Route as appTasksRouteImport } from './routes/(app)/tasks'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
@@ -44,6 +46,16 @@ const appIndexRoute = appIndexRouteImport.update({
 const appApprovalsRoute = appApprovalsRouteImport.update({
   id: '/approvals',
   path: '/approvals',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appAutomationsRoute = appAutomationsRouteImport.update({
+  id: '/automations',
+  path: '/automations',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appMemoryRoute = appMemoryRouteImport.update({
+  id: '/memory',
+  path: '/memory',
   getParentRoute: () => appRouteRoute,
 } as any)
 const appSettingsRoute = appSettingsRouteImport.update({
@@ -90,6 +102,8 @@ const appAdminSettingsRoute = appAdminSettingsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
   '/approvals': typeof appApprovalsRoute
+  '/automations': typeof appAutomationsRoute
+  '/memory': typeof appMemoryRoute
   '/settings': typeof appSettingsRoute
   '/tasks': typeof appTasksRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -103,6 +117,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/health': typeof HealthRoute
   '/approvals': typeof appApprovalsRoute
+  '/automations': typeof appAutomationsRoute
+  '/memory': typeof appMemoryRoute
   '/settings': typeof appSettingsRoute
   '/tasks': typeof appTasksRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -119,6 +135,8 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/health': typeof HealthRoute
   '/(app)/approvals': typeof appApprovalsRoute
+  '/(app)/automations': typeof appAutomationsRoute
+  '/(app)/memory': typeof appMemoryRoute
   '/(app)/settings': typeof appSettingsRoute
   '/(app)/tasks': typeof appTasksRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
@@ -134,6 +152,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/health'
     | '/approvals'
+    | '/automations'
+    | '/memory'
     | '/settings'
     | '/tasks'
     | '/forgot-password'
@@ -147,6 +167,8 @@ export interface FileRouteTypes {
   to:
     | '/health'
     | '/approvals'
+    | '/automations'
+    | '/memory'
     | '/settings'
     | '/tasks'
     | '/forgot-password'
@@ -162,6 +184,8 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/health'
     | '/(app)/approvals'
+    | '/(app)/automations'
+    | '/(app)/memory'
     | '/(app)/settings'
     | '/(app)/tasks'
     | '/(auth)/forgot-password'
@@ -214,6 +238,20 @@ declare module '@tanstack/react-router' {
       path: '/approvals'
       fullPath: '/approvals'
       preLoaderRoute: typeof appApprovalsRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/automations': {
+      id: '/(app)/automations'
+      path: '/automations'
+      fullPath: '/automations'
+      preLoaderRoute: typeof appAutomationsRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/memory': {
+      id: '/(app)/memory'
+      path: '/memory'
+      fullPath: '/memory'
+      preLoaderRoute: typeof appMemoryRouteImport
       parentRoute: typeof appRouteRoute
     }
     '/(app)/settings': {
@@ -277,6 +315,8 @@ declare module '@tanstack/react-router' {
 
 interface appRouteRouteChildren {
   appApprovalsRoute: typeof appApprovalsRoute
+  appAutomationsRoute: typeof appAutomationsRoute
+  appMemoryRoute: typeof appMemoryRoute
   appSettingsRoute: typeof appSettingsRoute
   appTasksRoute: typeof appTasksRoute
   appIndexRoute: typeof appIndexRoute
@@ -285,6 +325,8 @@ interface appRouteRouteChildren {
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appApprovalsRoute: appApprovalsRoute,
+  appAutomationsRoute: appAutomationsRoute,
+  appMemoryRoute: appMemoryRoute,
   appSettingsRoute: appSettingsRoute,
   appTasksRoute: appTasksRoute,
   appIndexRoute: appIndexRoute,

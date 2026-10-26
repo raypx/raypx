@@ -1,4 +1,4 @@
-import { appendFileSync } from "node:fs";
+import { appendFileSync, existsSync } from "node:fs";
 import { exitForVersion } from "./version.mjs";
 
 exitForVersion("claude");
@@ -26,3 +26,10 @@ console.log(
         : "Implemented approved plan",
   }),
 );
+
+// A duplicate result may already be queued while the first waits for plan approval.
+if (mode === "plan" && !resume && existsSync("duplicate-plan-result"))
+  console.log(JSON.stringify({ type: "result", is_error: false, result: "Stale duplicate plan" }));
+
+// The old process may fail while its completed plan is already awaiting a decision.
+if (existsSync("malformed-after-result")) console.log("{");

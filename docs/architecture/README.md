@@ -10,10 +10,12 @@ Web is a TanStack Start SSR application on Nitro node-server. Desktop uses the s
 an Electrobun WebView, with a native bridge to its version-matched bundled CLI.
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
-Desktop resolves the account session before mounting its workspace. Signed-out
-sessions open a standalone login page; signup, verification and password recovery
-remain accessible. Web keeps its existing public navigation. The CLI engine and
-persisted local state remain independent of this renderer gate.
+Desktop mounts its device-local workspace independently of account resolution.
+Remote data and host authorization use a contextual login boundary; legacy
+account-owned local history remains isolated from device-owned work. Web supports
+guest browsing and restores an explicitly submitted guest draft after login,
+without automatically sending it. The CLI engine and persisted local state remain
+independent of browser sessions.
 Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
 capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
 on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.4.
@@ -28,6 +30,19 @@ Its server must receive the session cookie: share one origin, or set AUTH_DOMAIN
 to the parent domain of sibling Web/API hosts.
 
 ## Libraries
+
+Core owns the normalized task, activity, input and human-decision schemas and
+their pure rules. It has no transport, React, filesystem or database dependency.
+Contracts imports those schemas to assemble HTTP, relay and local IPC messages;
+its existing task exports remain compatibility re-exports of the same definitions.
+There is one domain schema source and the dependency direction is contracts → core.
+
+Tasks separates its pure `/model` entry from its browser `/client` entry. The model
+owns explicit workspace scopes, compatible draft identities, conversation history
+and the small ports required by the views. Web and Desktop inject their remote or
+private-IPC adapters. React hooks own subscriptions and query state; views consume
+the model instead of implementing cursor, revision and history-gap recovery.
+The domain's activity reducer remains shared with the API projection writer.
 
 Auth exports server/client/hooks/types. Its platform-neutral React hooks
 share authentication actions and request state across Web and Desktop.
@@ -115,6 +130,12 @@ JSON-parameter commands and scoped help. Global options are validated before
 dispatch; operands after `--` stay positional. Raypx owns errors, output and
 shutdown instead of citty's `runMain`. Help/version do not open a profile;
 they retain the executable's diagnostic completion lifecycle.
+The private Agent harness stays inside CLI. `AgentRuntime` owns task lookup,
+command receipts, replay and the active execution registry. `ManagedExecution`
+owns each run's turns, input queue, approvals, cancellation and lock release after
+process draining. Claude and Codex adapters translate their private protocols
+through a narrow process port. The shared host package owns remote connection and
+synchronization; it does not own provider execution policy.
 `raypx tui` adds a lazy line-oriented task browser with a session-owned in-process
 runtime and scheduling disabled. It shares the local request boundary, confirms
 manual execution, and closes its own runtime on quit/EOF/signals. Both input and

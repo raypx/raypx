@@ -65,6 +65,9 @@ export function createApiLogging({
         "rateLimits",
         "observedRequests",
         "observedSessions",
+        "claimed",
+        "reconciled",
+        "failed",
       ],
     },
   });

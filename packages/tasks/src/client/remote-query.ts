@@ -1,15 +1,11 @@
 import { useEffect } from "react";
 import { type QueryKey, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { TaskClient } from "@raypx/client";
 import type { AgentEvent, TaskActivity, TaskChange } from "@raypx/contracts/tasks";
 import { failureCode } from "./failure.js";
+import type { TaskChangeSource, TaskWorkspacePort } from "../model/port.js";
 
-export type TaskWorkspaceClient = Pick<
-  TaskClient,
-  "tasks" | "approvals" | "subscribe" | "observed"
-> & {
-  devices: Pick<TaskClient["devices"], "list">;
-};
+/** Compatibility name for existing platform adapters. */
+export type TaskWorkspaceClient = TaskWorkspacePort;
 const scopes = new WeakMap<object, number>();
 let nextScope = 0;
 // Web, the Desktop IPC adapter and the composite pending client share one QueryClient.
@@ -23,8 +19,9 @@ export function useRemoteQuery<T>(
   key: QueryKey,
   load: (signal: AbortSignal) => Promise<T>,
   enabled: boolean,
-  client: TaskWorkspaceClient,
+  client: TaskChangeSource,
   mergeEvents?: (events: AgentEvent[]) => TaskActivity[] | undefined,
+  onRecovery?: () => void,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["tasks", clientScope(client), ...key];
@@ -49,6 +46,7 @@ export function useRemoteQuery<T>(
     };
     const notify = (change?: TaskChange) => {
       if (!change || change.type === "reset") {
+        onRecovery?.();
         refresh();
         return;
       }
@@ -71,6 +69,7 @@ export function useRemoteQuery<T>(
             );
             return;
           }
+          onRecovery?.();
         }
         refresh();
       } else if (
@@ -81,6 +80,9 @@ export function useRemoteQuery<T>(
     };
     let unsubscribe: (() => void) | undefined;
     const visible = (event?: Event) => {
+      // Freeze coverage before dropping or reattaching the source: newly resumed
+      // live entries may arrive ahead of the authoritative checkpoint read.
+      onRecovery?.();
       unsubscribe?.();
       unsubscribe = document.hidden ? undefined : client.subscribe?.(notify);
       // useQuery performs the mount read; only becoming visible needs invalidation.
@@ -93,7 +95,7 @@ export function useRemoteQuery<T>(
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", visible);
     };
-  }, [queryClient, serializedKey, enabled, client, mergeEvents]);
+  }, [queryClient, serializedKey, enabled, client, mergeEvents, onRecovery]);
   return {
     data: enabled ? query.data : undefined,
     error: query.isError,

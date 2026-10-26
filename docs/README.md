@@ -18,6 +18,7 @@
 - [Server caching](development/caching.md)
 - [Object storage](development/object-storage.md)
 - [Server jobs and expired-record cleanup](development/server-jobs.md)
+- [Memory, templates and task context](development/task-context.md)
 - [Raypx Kit library changes](development/intl-release.md)
 - [Foundation acceptance results](development/foundation-acceptance.md)
 - [Review remediation, 2026-10-25](development/review-remediation-2026-10-25.md)

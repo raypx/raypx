@@ -199,6 +199,7 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
       instanceId: crypto.randomUUID(),
       projects: [{ id: projectId, name: "Fixture", providers: ["codex"], dirty: false }],
       capabilities: [{ provider: "codex", available: true, version: "0.163.0", reason: "ready" }],
+      contextSupported: true,
     });
     await native.take("resume");
     native.send({
@@ -232,6 +233,110 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
     expect((await client.tasks.get({ id: task.id, after: 0 })).task.summary).toBe(
       "Worker relay result",
     );
+
+    const references = createApiClient({
+      baseUrl: base,
+      headers: { cookie, origin: "http://localhost:3000" },
+    });
+    const reference = await references.memory.create({
+      requestId: crypto.randomUUID(),
+      document: {
+        kind: "template",
+        name: "Worker project checks",
+        category: "Verification",
+        content: "Preserve the selected project conventions.",
+        project: { deviceId: grant.deviceId, projectId },
+      },
+    });
+    await references.memory.update({
+      id: reference.id,
+      revision: 1,
+      document: {
+        kind: reference.kind,
+        name: reference.name,
+        category: reference.category,
+        project: reference.project,
+        content: "A newer version for future tasks.",
+      },
+    });
+    const restored = await references.memory.restore({ id: reference.id, revision: 2, version: 1 });
+    expect(restored).toMatchObject({ revision: 3, content: reference.content });
+    expect(
+      (await references.memory.history({ id: reference.id, limit: 20 })).map(
+        (version) => version.revision,
+      ),
+    ).toEqual([3, 2, 1]);
+    const selection = { sources: [{ id: reference.id, revision: 3 }] };
+    const ticket = await client.relay.ticket({});
+    const viewer = await relaySocket(base, (await client.account.get({})).id, {
+      type: "auth",
+      protocolVersion: 2,
+      role: "viewer",
+      token: ticket.token,
+    });
+    try {
+      await viewer.take("ready");
+      const id = crypto.randomUUID();
+      viewer.send({
+        type: "request",
+        id,
+        request: {
+          method: "tasks.create",
+          input: {
+            id,
+            deviceId: grant.deviceId,
+            projectId,
+            provider: "codex",
+            mode: "run",
+            prompt: "Use the selected project checks.",
+            contextSelection: selection,
+          },
+        },
+      });
+      const command = await native.take("command");
+      expect(command.command.context?.sources).toMatchObject([
+        { id: reference.id, revision: 3, content: reference.content, scope: "account" },
+      ]);
+      const accepted = {
+        ...task,
+        id,
+        prompt: "Use the selected project checks.",
+        context: command.command.context,
+      };
+      native.send({
+        type: "events",
+        streamId,
+        events: [
+          {
+            sequence: 2,
+            event: {
+              id: crypto.randomUUID(),
+              taskId: id,
+              kind: "status",
+              status: accepted.status,
+              summary: accepted.summary,
+              task: accepted,
+            },
+          },
+        ],
+      });
+      await native.take("ack");
+      native.send({
+        type: "result",
+        routeId: command.routeId,
+        result: { ok: true, value: accepted },
+      });
+      expect((await viewer.take("result")).result.ok).toBe(true);
+      await references.memory.archive({ id: reference.id, revision: 3, archived: true });
+      expect((await client.tasks.get({ id, after: 0 })).task.context).toEqual(
+        command.command.context,
+      );
+      await expect(
+        references.memory.resolve({ selection, target: { deviceId: grant.deviceId, projectId } }),
+      ).rejects.toMatchObject({ data: { error: { code: "CONTEXT_ARCHIVED" } } });
+    } finally {
+      viewer.socket.close();
+    }
 
     expect(
       (

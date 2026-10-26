@@ -8,6 +8,14 @@ import {
   relayRequestSchema,
 } from "./tasks.js";
 import { hostAuthorizationSchema, terminalDecisionSchema } from "./terminal.js";
+import {
+  contextCreateSchema,
+  contextUpdateSchema,
+  contextArchiveSchema,
+  contextHistorySchema,
+  contextRestoreSchema,
+} from "@raypx/memory";
+import { taskContextSelectionSchema, taskContextTargetSchema } from "@raypx/core/tasks";
 
 export const LOCAL_PROTOCOL_VERSION = 1 as const;
 /** Private device-profile owner, independent of any remote account or deployment. */
@@ -32,43 +40,31 @@ export const fileEntrySchema = z.object({
   version: z.string(),
 });
 export type FileEntry = z.infer<typeof fileEntrySchema>;
-export const commandSchema = z.object({
-  executable: z.string().min(1),
-  args: z.array(z.string()).default([]),
-  cwd: z.string().min(1),
-  timeoutMs: z.number().int().min(100).max(86_400_000).default(600_000),
-});
-export type CommandSpec = z.infer<typeof commandSchema>;
-export const jobActionSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("directory.scan"), ...pathRef }),
-  z.object({ type: z.literal("command.run"), command: commandSchema }),
-]);
-export const jobInputSchema = z.object({
-  name: z.string().min(1).max(120),
-  cron: z.string().min(1),
-  timezone: z.string().min(1),
-  enabled: z.boolean().default(true),
-  action: jobActionSchema,
-});
-export type JobInput = z.infer<typeof jobInputSchema>;
-export const jobDefinitionSchema = jobInputSchema.extend({
-  id: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  nextRuns: z.array(z.string()).default([]),
-});
-export type JobDefinition = z.infer<typeof jobDefinitionSchema>;
-export const jobRunSchema = z.object({
-  id: z.string(),
-  jobId: z.string(),
-  startedAt: z.string(),
-  finishedAt: z.string().nullable(),
-  status: z.enum(["running", "success", "failed", "cancelled", "interrupted", "skipped"]),
-  output: z.string(),
-  exitCode: z.number().nullable(),
-});
-export type JobRun = z.infer<typeof jobRunSchema>;
+export {
+  commandSchema,
+  jobActionSchema,
+  jobInputSchema,
+  jobDefinitionSchema,
+  jobRunSchema,
+  type CommandSpec,
+  type JobInput,
+  type JobDefinition,
+  type JobRun,
+} from "@raypx/jobs";
+import { commandSchema, jobInputSchema } from "@raypx/jobs";
 export const localParams = {
+  "memory.list": z.strictObject({}),
+  "memory.get": z.strictObject({ id: z.uuid() }),
+  "memory.create": contextCreateSchema,
+  "memory.update": contextUpdateSchema,
+  "memory.archive": contextArchiveSchema,
+  "memory.history": contextHistorySchema,
+  "memory.restore": contextRestoreSchema,
+  "memory.resolve": z.strictObject({
+    selection: taskContextSelectionSchema,
+    target: taskContextTargetSchema,
+    prompt: z.string().min(1).max(32_000).optional(),
+  }),
   "host.session": z.object({
     accountId: z.string().min(1).max(200).nullable(),
     apiUrl: z.string().max(2048),

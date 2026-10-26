@@ -27,8 +27,11 @@
         "@raypx/account": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/database": "workspace:*",
         "@raypx/email": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/storage": "workspace:*",
         "drizzle-orm": "catalog:",
         "evlog": "catalog:",
@@ -55,11 +58,15 @@
         "raypx": "./src/main.ts",
       },
       "dependencies": {
+        "@earendil-works/pi-agent-core": "catalog:",
         "@raypx-kit/logger": "catalog:",
         "@raypx/ai": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/host": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "citty": "catalog:",
         "croner": "catalog:",
         "zod": "catalog:",
@@ -81,8 +88,11 @@
         "@raypx/blocks": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/host": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-query": "catalog:",
@@ -145,7 +155,10 @@
         "@raypx/auth": "workspace:*",
         "@raypx/blocks": "workspace:*",
         "@raypx/client": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/tasks": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-query": "catalog:",
@@ -303,6 +316,20 @@
       "version": "0.0.0",
       "dependencies": {
         "@orpc/contract": "catalog:",
+        "@raypx/core": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx-kit/tsconfig": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+      },
+    },
+    "packages/core": {
+      "name": "@raypx/core",
+      "version": "0.0.0",
+      "dependencies": {
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -376,6 +403,56 @@
         "react": "^19.3.0",
       },
     },
+    "packages/jobs": {
+      "name": "@raypx/jobs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/i18n": "workspace:*",
+        "@raypx/memory": "workspace:*",
+        "@raypx/ui": "workspace:*",
+        "croner": "catalog:",
+        "lucide-react": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx-kit/tsconfig": "catalog:dev",
+        "@testing-library/jest-dom": "catalog:dev",
+        "@testing-library/react": "catalog:dev",
+        "@testing-library/user-event": "catalog:dev",
+        "@types/react": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "jsdom": "catalog:dev",
+        "react": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19.3.0",
+      },
+    },
+    "packages/memory": {
+      "name": "@raypx/memory",
+      "version": "0.0.0",
+      "dependencies": {
+        "@raypx/core": "workspace:*",
+        "@raypx/i18n": "workspace:*",
+        "@raypx/ui": "workspace:*",
+        "lucide-react": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx-kit/tsconfig": "catalog:dev",
+        "@testing-library/jest-dom": "catalog:dev",
+        "@testing-library/react": "catalog:dev",
+        "@testing-library/user-event": "catalog:dev",
+        "@types/react": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+        "jsdom": "catalog:dev",
+        "react": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19.3.0",
+      },
+    },
     "packages/storage": {
       "name": "@raypx/storage",
       "version": "0.0.0",
@@ -392,11 +469,13 @@
       "name": "@raypx/tasks",
       "version": "0.0.0",
       "dependencies": {
-        "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/ui": "workspace:*",
         "@tanstack/react-virtual": "catalog:",
+        "diff": "catalog:",
         "lucide-react": "catalog:",
         "react-markdown": "catalog:",
         "remark-gfm": "catalog:",
@@ -478,6 +557,7 @@
   "catalog": {
     "@base-ui/react": "^1.9.0",
     "@better-auth/drizzle-adapter": "^1.7.12",
+    "@earendil-works/pi-agent-core": "1.4.0",
     "@earendil-works/pi-ai": "1.4.0",
     "@orpc/client": "2.0.0-beta.44",
     "@orpc/contract": "2.0.0-beta.44",
@@ -502,6 +582,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "croner": "^10.0.1",
+    "diff": "9.0.0",
     "drizzle-orm": "1.0.0-rc.5-5935859",
     "electrobun": "2.0.4",
     "evlog": "^2.33.1",
@@ -701,6 +782,8 @@
     "@dotenvx/tooling": ["@dotenvx/tooling@1.0.6", "", {}, "sha512-d1AhKqlprzjR7+/7YTYbf9lTjeIUxr2WN+gYL5jf9O25wymlVWzuwOujq9IWJOt33sGWcLjr1eswSOmqm4SRMg=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.12.1", "", {}, "sha512-yHwomvolVafvUXhy5TdiJVkuNCxXn+bKOs2aWiWEQh/5YaV97Oa/abJz3dmx7lxgIUsUlS1Jl4mEfvJPo3YsVw=="],
+
+    "@earendil-works/pi-agent-core": ["@earendil-works/pi-agent-core@1.4.0", "", { "dependencies": { "@earendil-works/pi-ai": "1.4.0", "typebox": "1.3.27" } }, "sha512-PoKY84SKUwnt7S5QBZaGUqfNO1kjP3KHpHUA9QpFTj4cOjaVWMYIcBPJ6FDRCdE8Zen9OSECQUd0uUfVgtSmgA=="],
 
     "@earendil-works/pi-ai": ["@earendil-works/pi-ai@1.4.0", "", { "dependencies": { "@anthropic-ai/sdk": "0.129.0", "@aws-sdk/client-bedrock-runtime": "3.1127.0", "@earendil-works/pi-telemetry": "1.4.0", "@google/genai": "2.21.0", "@smithy/node-http-handler": "4.12.1", "http-proxy-agent": "9.1.0", "https-proxy-agent": "9.1.0", "openai": "7.19.0", "partial-json": "0.1.7", "typebox": "1.3.27" }, "bin": { "pi-ai": "dist/cli.js" } }, "sha512-hQM/C4+1w8rHYACzDDf+0vQMnEnpzIop1tptIERVgR3ZeT/hHSzBNG8PaWPgxWQjqSeKCyBZSyp8uTT6eKK1pQ=="],
 
@@ -1106,6 +1189,8 @@
 
     "@raypx/contracts": ["@raypx/contracts@workspace:packages/contracts"],
 
+    "@raypx/core": ["@raypx/core@workspace:packages/core"],
+
     "@raypx/database": ["@raypx/database@workspace:packages/database"],
 
     "@raypx/e2e": ["@raypx/e2e@workspace:e2e"],
@@ -1115,6 +1200,10 @@
     "@raypx/host": ["@raypx/host@workspace:packages/host"],
 
     "@raypx/i18n": ["@raypx/i18n@workspace:packages/i18n"],
+
+    "@raypx/jobs": ["@raypx/jobs@workspace:packages/jobs"],
+
+    "@raypx/memory": ["@raypx/memory@workspace:packages/memory"],
 
     "@raypx/storage": ["@raypx/storage@workspace:packages/storage"],
 

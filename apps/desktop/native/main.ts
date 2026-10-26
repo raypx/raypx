@@ -8,6 +8,7 @@ import { RemoteControl } from "./control";
 import { DaemonControlProxy } from "./daemon-control";
 import { createApiClient } from "@raypx/client";
 import { LocalEngine } from "./engine";
+import { assertRendererLocalMethod } from "./local-request";
 import { repairConnector } from "./connectors";
 import { createPreferenceStore } from "./preferences";
 import { BuildConfig } from "electrobun/main/build-config";
@@ -254,10 +255,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
         engine: engine.status,
       }),
       localRequest: ({ method, params }) => {
-        if (method.startsWith("host.") || method === "observed.remote")
-          throw new Error("Use the native account coordination bridge");
-        if (method === "roots.register")
-          throw new Error("Use the native directory picker to authorize a directory");
+        assertRendererLocalMethod(method);
         if (
           method === "connectors.install" &&
           params &&

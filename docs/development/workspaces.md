@@ -51,3 +51,60 @@ register i18n's browser controls as a Tailwind source.
 Extract @raypx/testing when generic fixtures repeat across consumers; it must not
 import packages under test. Extract runtime only when another execution host
 directly consumes CLI internals. Do not create packages before those consumers exist.
+
+## Agent domain and page boundaries
+
+`@raypx/core` is the universal source of task-domain schemas, inferred types and
+pure activity/decision rules. `@raypx/contracts` adds protocol envelopes and keeps
+compatible exports while consumers migrate. Never define a second copy of a domain
+interface or introduce a core dependency on contracts, React or host implementations.
+
+`@raypx/tasks/model` exposes workspace scopes, draft identities, conversation state
+and task-view ports. Its browser entry adds hooks and DOM views. Applications inject
+remote SDK or local IPC adapters; the page feature does not derive its interface from
+the concrete SDK. Keep route navigation and account-session resolution in the app.
+Conversation coverage distinguishes authoritative pages from live projections.
+The browser adapter reports subscription interruptions before resuming, and aborts
+pending history reads on workspace/task changes; late responses cannot refresh
+another owner. Activity order values are opaque global row IDs, not consecutive
+per-task counters.
+
+```mermaid
+flowchart TD
+  Apps[Web / Desktop composition] --> Views[tasks/client: React views and hooks]
+  Apps --> Adapters[Remote SDK / local IPC adapters]
+  Views --> Model[tasks/model: state and view ports]
+  Model --> Contracts[contracts: wire messages]
+  Model --> Core[core: domain schemas and rules]
+  Adapters --> Contracts
+  CLI[CLI: private execution harness] --> Contracts
+  Contracts --> Core
+```
+
+Unified diff parsing uses the external `diff` library behind a bounded pure model.
+Provider-specific approval payloads remain in the feature adapter, including Codex's
+unnumbered snippets and Claude writes with unknown original content. Invalid or
+unsupported patches retain the complete original request instead of presenting a
+partially understood change as complete.
+The full request shares a 1200-line, 20-file preview budget. Truncated files remain
+labelled; unknown structures retain the original request rather than disappearing
+behind a partially parsed preview.
+
+The execution harness currently lives in `apps/cli/src/runtime/agents/harness`.
+Its coordinator owns one task lifecycle; provider adapters own private wire formats;
+SQLite and process implementations remain at their existing CLI boundaries. Keep
+page queries, drafts and authentication navigation in tasks/apps. A separate
+`@raypx/harness` workspace is justified when another execution host consumes this
+boundary directly, rather than creating a second owner inside Desktop.
+The private PiRunner is an offline-tested SDK experiment, not a new selectable
+provider; see [Pi Agent loop and acceptance](ai.md#experimental-agent-loop).
+
+## Scheduled jobs
+
+`@raypx/jobs` now has actual consumers in CLI, API, Web and Desktop. Its root owns
+job schemas, inferred types and calendar rules. `/server` contains injected scheduling
+use cases, and `/client` contains shared browser views and their injected ports. Contracts
+depends on the root; jobs must not depend on contracts or a concrete API SDK.
+API supplies SQL/relay adapters, while CLI supplies local scheduling and execution.
+Local IPC job exports remain compatible re-exports. New cloud schedules do not
+claim local plans or move them between accounts. See [server jobs](server-jobs.md).

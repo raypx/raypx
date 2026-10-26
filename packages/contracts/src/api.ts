@@ -11,6 +11,10 @@ import {
 export * from "./tasks.js";
 export * from "./configuration.js";
 import { configurationContract } from "./configuration.js";
+import { jobsContract } from "./jobs.js";
+export * from "./jobs.js";
+import { memoryContract } from "./memory.js";
+export * from "./memory.js";
 import {
   hostAuthorizationSchema,
   observedProjectionSchema,
@@ -39,6 +43,8 @@ export type ApiErrorData = z.infer<typeof apiErrorDataSchema>;
 
 /** Local execution is deliberately absent from the public HTTP router. */
 export const apiContract = {
+  memory: memoryContract,
+  jobs: jobsContract,
   hosts: {
     authorize: oc
       .input(z.object({ deviceId: z.string().uuid(), epoch: z.number().int().positive() }))

@@ -19,7 +19,15 @@ import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopReturnTo } from "../features/auth/return-to";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
-import { CalendarClock, FolderOpen, ListTodo, Inbox, Settings, SquareTerminal } from "lucide-react";
+import {
+  CalendarClock,
+  FolderOpen,
+  ListTodo,
+  Inbox,
+  Settings,
+  SquareTerminal,
+  BookOpen,
+} from "lucide-react";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { EngineNotice } from "../features/engine/notice";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -33,6 +41,7 @@ const pendingClient = createPendingClient(
 type DesktopPath =
   | "/"
   | "/automations"
+  | "/memory"
   | "/terminal"
   | "/account"
   | "/settings"
@@ -63,6 +72,7 @@ export function DesktopShell() {
   const path = useRouterState({ select: (state) => state.location.pathname });
   const href = useRouterState({ select: (state) => state.location.href });
   const c = useTranslations("common");
+  const memory = useTranslations("memory");
   const [engine, setEngine] = useState("starting");
   const [engineCode, setEngineCode] = useState<string>();
   useEffect(() => {
@@ -117,6 +127,7 @@ export function DesktopShell() {
               ),
             },
             { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
+            { to: "/memory", label: memory("title"), icon: <BookOpen /> },
           ],
           [
             { to: "/", label: c("files"), icon: <FolderOpen />, exact: true },
@@ -142,21 +153,23 @@ export function DesktopShell() {
         }
         breadcrumbs={[
           "Raypx",
-          c(
-            path.startsWith("/tasks")
-              ? "tasks"
-              : path.startsWith("/approvals")
-                ? "approvals"
-                : path.startsWith("/automations")
-                  ? "jobs"
-                  : path.startsWith("/terminal")
-                    ? "terminal"
-                    : path.startsWith("/account")
-                      ? "account"
-                      : path.startsWith("/settings")
-                        ? "settings"
-                        : "files",
-          ),
+          path.startsWith("/memory")
+            ? memory("title")
+            : c(
+                path.startsWith("/tasks")
+                  ? "tasks"
+                  : path.startsWith("/approvals")
+                    ? "approvals"
+                    : path.startsWith("/automations")
+                      ? "jobs"
+                      : path.startsWith("/terminal")
+                        ? "terminal"
+                        : path.startsWith("/account")
+                          ? "account"
+                          : path.startsWith("/settings")
+                            ? "settings"
+                            : "files",
+              ),
         ]}
         LinkComponent={ShellLink}
         notice={

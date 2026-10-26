@@ -22,6 +22,10 @@ The accepted foundation design supersedes documents in docs/history.
   data and host authorization on login; keep legacy account-owned local data isolated.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 - Add packages when their responsibility and actual consumers are established.
+- Core owns task domain schemas and pure rules; contracts composes wire schemas and
+  retains compatible re-exports. Tasks/model owns page state and injected view ports;
+  Tasks/client adapts those models to React. Keep execution in CLI's private harness
+  until a second execution consumer establishes a shared package boundary.
 
 ## Toolchain
 

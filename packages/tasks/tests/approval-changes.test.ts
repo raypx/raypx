@@ -1,5 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import { approvalChanges } from "../src/client/approval-changes.js";
+import { MAX_DIFF_LINES } from "../src/model/diff.js";
 
 it("renders Claude replacements with common context and text-safe content", () => {
   const [file] = approvalChanges(
@@ -137,4 +138,128 @@ it("shows Codex move_path as a rename", () => {
       }),
     )[0],
   ).toMatchObject({ path: "new.ts", previousPath: "old.ts" });
+});
+
+it("keeps the whole original request when one file has an invalid unified patch", () => {
+  expect(
+    approvalChanges(
+      JSON.stringify({
+        changes: [
+          { path: "known", kind: { type: "add" }, diff: "hello" },
+          { path: "broken", kind: { type: "update" }, diff: "@@ -1,2 +1,2 @@\n-old\n+new" },
+        ],
+      }),
+    ),
+  ).toEqual([]);
+});
+
+it("requires both strings for a single Claude Edit, including a deliberate empty replacement", () => {
+  for (const new_string of [undefined, null, 42, {}, []])
+    expect(
+      approvalChanges(JSON.stringify({ file_path: "file", old_string: "important", new_string })),
+    ).toEqual([]);
+  expect(
+    approvalChanges(
+      JSON.stringify({ file_path: "file", old_string: "important", new_string: "" }),
+    )[0]?.lines,
+  ).toEqual([{ kind: "remove", text: "important", old: 1 }]);
+});
+
+it("uses one request-wide display budget for each supported provider format", () => {
+  const contents = Array(800).fill("line").join("\n");
+  const inputs = [
+    JSON.stringify({ file_path: "file", old_string: "", new_string: contents + "\n" + contents }),
+    JSON.stringify({ file_path: "file", content: contents + "\n" + contents }),
+    JSON.stringify({
+      file_path: "file",
+      edits: [
+        { old_string: "", new_string: contents },
+        { old_string: "", new_string: contents },
+      ],
+    }),
+    JSON.stringify({
+      changes: [
+        { path: "added", kind: { type: "add" }, diff: contents },
+        { path: "deleted", kind: { type: "delete" }, diff: contents },
+      ],
+    }),
+    JSON.stringify({
+      changes: [
+        {
+          path: "unified",
+          kind: { type: "update" },
+          diff: `@@ -0,0 +1,800 @@\n${Array(800).fill("+line").join("\n")}`,
+        },
+        {
+          path: "snippet",
+          kind: { type: "update" },
+          diff: `@@\n${Array(800).fill("+line").join("\n")}`,
+        },
+      ],
+    }),
+    `*** Begin Patch\n*** Add File: one\n${Array(800).fill("+line").join("\n")}\n*** Add File: two\n${Array(800).fill("+line").join("\n")}\n*** End Patch`,
+  ];
+  for (const input of inputs) {
+    const files = approvalChanges(input);
+    expect(files.reduce((count, file) => count + file.lines.length, 0)).toBe(MAX_DIFF_LINES);
+    expect(files.some((file) => file.truncated)).toBe(true);
+  }
+});
+
+it("keeps omitted filenames visible and validates files beyond the presentation limit", () => {
+  const changes = Array.from({ length: 20 }, (_, index) => ({
+    path: `file-${index}`,
+    kind: { type: "update" },
+    diff: `@@\n${Array(1199).fill("+x").join("\n")}`,
+  }));
+  const body = JSON.stringify({ changes });
+  expect(body.length).toBeLessThan(128_000);
+  const files = approvalChanges(body);
+  expect(files).toHaveLength(20);
+  expect(files.reduce((count, file) => count + file.lines.length, 0)).toBe(MAX_DIFF_LINES);
+  expect(files.slice(1).every((file) => !file.lines.length && file.truncated)).toBe(true);
+  expect(
+    approvalChanges(
+      JSON.stringify({
+        changes: [
+          ...changes,
+          {
+            path: "unsupported",
+            kind: { type: "update" },
+            diff: "@@ -1 +1 @@\n-old\n+new\nUNKNOWN CHANGES\n-hide\n+hidden",
+          },
+        ],
+      }),
+    ),
+  ).toEqual([]);
+});
+
+it("falls back to the complete raw request for unsupported snippet metadata or trailing content", () => {
+  const unknown = [
+    "UNKNOWN METADATA\n@@\n-old\n+new",
+    `@@\n${Array(1200).fill("+line").join("\n")}\nUNKNOWN TRAILING EDIT`,
+  ];
+  for (const diff of unknown)
+    expect(
+      approvalChanges(
+        JSON.stringify({
+          changes: [
+            { path: "known", kind: { type: "add" }, diff: "hello" },
+            { path: "unknown", kind: { type: "update" }, diff },
+          ],
+        }),
+      ),
+    ).toEqual([]);
+});
+
+it("keeps unsupported or incomplete apply_patch envelopes raw beyond the display budget too", () => {
+  const prefix = `*** Begin Patch\n*** Add File: known\n${Array(1201).fill("+line").join("\n")}`;
+  for (const patch of [
+    `${prefix}\nUNKNOWN TRAILING EDIT\n*** End Patch`,
+    `${prefix}\n*** Delete File: omitted\n*** End Patch`,
+    `${prefix}\n*** Update File: old\n*** Move to: new\n@@\n-old\n+new\n*** End Patch`,
+    prefix,
+    "*** Begin Patch\n*** Add File: file\n+new\n*** End Patch\nunknown tail",
+  ])
+    expect(approvalChanges(patch)).toEqual([]);
 });

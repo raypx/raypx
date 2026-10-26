@@ -1,136 +1,82 @@
-export type DiffLine = {
-  kind: "add" | "remove" | "context" | "hunk";
-  text: string;
-  old?: number;
-  next?: number;
-};
-export type DiffFile = {
-  path: string;
-  previousPath?: string;
-  lines: DiffLine[];
-  truncated: boolean;
-  originalUnknown?: boolean;
-};
+import {
+  MAX_DIFF_LINES as limit,
+  replacementDiff as replacement,
+  unifiedDiff,
+  type DiffFile,
+} from "../model/diff.js";
+export type { DiffFile, DiffLine } from "../model/diff.js";
+
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 const string = (value: unknown) => (typeof value === "string" ? value : "");
-const limit = 1200;
-function unified(path: string, diff: string): DiffFile {
-  let old = 0,
-    next = 0;
-  let inHunk = false;
-  const lines: DiffLine[] = [];
-  const source = diff.split("\n");
-  for (const text of source.slice(0, limit)) {
-    const hunk = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(text);
-    if (text.startsWith("@@")) {
-      inHunk = true;
-      old = hunk ? Number(hunk[1]) : 0;
-      next = hunk ? Number(hunk[2]) : 0;
-      lines.push({ kind: "hunk", text });
-    } else if (
-      !inHunk &&
-      (text.startsWith("--- ") ||
-        text.startsWith("+++ ") ||
-        text.startsWith("diff ") ||
-        text.startsWith("index "))
-    )
-      continue;
-    else if (text.startsWith("+"))
-      lines.push({ kind: "add", text: text.slice(1), ...(next ? { next: next++ } : {}) });
-    else if (text.startsWith("-"))
-      lines.push({ kind: "remove", text: text.slice(1), ...(old ? { old: old++ } : {}) });
-    else if (text.startsWith(" "))
-      lines.push({
-        kind: "context",
-        text: text.slice(1),
-        ...(old ? { old: old++ } : {}),
-        ...(next ? { next: next++ } : {}),
-      });
-    else if (text.trim()) lines.push({ kind: "hunk", text });
-  }
-  return { path, lines, truncated: source.length > limit };
+
+/** One budget covers the complete request, including independent provider edits. */
+function preview(files: DiffFile[]): DiffFile[] {
+  let remaining = limit;
+  return files.slice(0, 20).map((file) => {
+    const lines = file.lines.slice(0, remaining);
+    remaining -= lines.length;
+    return {
+      ...file,
+      lines,
+      truncated: file.truncated || lines.length < file.lines.length || files.length > 20,
+    };
+  });
 }
-/** Split file sections only outside a counted hunk. Header-looking source lines
- * inside a hunk remain actual additions/removals. */
-function unifiedFiles(path: string, diff: string): DiffFile[] {
+
+/** Codex also emits unnumbered snippet hunks. They have no source line numbers
+ * and are not unified patches; keep this provider extension out of the parser. */
+function codexDiff(path: string, diff: string): DiffFile[] {
   const rows = diff.split("\n"),
-    files: DiffFile[] = [];
-  let section: string[] = [],
-    currentPath = path,
-    oldRemaining = 0,
-    newRemaining = 0,
-    hunk = false;
-  const flush = () => {
-    if (section.length) files.push(unified(currentPath, section.join("\n")));
-    section = [];
-  };
-  const headerPath = (value: string) => value.replace(/^[ab]\//, "").split("\t")[0]!;
-  for (let index = 0; index < Math.min(rows.length, limit); index++) {
-    const row = rows[index]!;
-    if (row.startsWith("diff --git ")) {
-      flush();
-      hunk = false;
-      oldRemaining = 0;
-      newRemaining = 0;
-      currentPath = / b\/(.+)$/.exec(row)?.[1] ?? path;
-    }
-    if (
-      row.startsWith("--- ") &&
-      rows[index + 1]?.startsWith("+++ ") &&
-      (!hunk || (!oldRemaining && !newRemaining))
-    ) {
-      if (section.some((line) => line.startsWith("@@"))) flush();
-      const nextPath = headerPath(rows[index + 1]!.slice(4));
-      currentPath = nextPath === "/dev/null" ? headerPath(row.slice(4)) : nextPath;
-      hunk = false;
-    }
-    const counts = /^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@/.exec(row);
-    if (row.startsWith("@@")) {
-      hunk = true;
-      oldRemaining = counts ? Number(counts[1] ?? 1) : Infinity;
-      newRemaining = counts ? Number(counts[2] ?? 1) : Infinity;
-    } else if (hunk) {
-      if (row.startsWith("-") || row.startsWith(" ")) oldRemaining--;
-      if (row.startsWith("+") || row.startsWith(" ")) newRemaining--;
-    }
-    section.push(row);
-  }
-  flush();
-  for (const file of files) file.truncated ||= rows.length > limit;
-  return files;
-}
-function replacement(path: string, before: string, after: string): DiffFile {
-  const a = before ? before.split("\n") : [],
-    b = after ? after.split("\n") : [];
-  let head = 0,
-    tail = 0;
-  while (head < Math.min(a.length, b.length) && a[head] === b[head]) head++;
-  while (
-    tail < Math.min(a.length, b.length) - head &&
-    a[a.length - tail - 1] === b[b.length - tail - 1]
+    start = rows.findIndex((line) => line === "@@");
+  if (start < 0) return unifiedDiff(path, diff);
+  if (rows.some((line) => /^@@ -\d/.test(line) || line.startsWith("diff --git "))) return [];
+  const prefix = rows.slice(0, start).filter((line) => line.length);
+  if (
+    prefix.length &&
+    (prefix.length !== 2 || !prefix[0]?.startsWith("--- ") || !prefix[1]?.startsWith("+++ "))
   )
-    tail++;
-  const lines: DiffLine[] = [];
-  for (let i = Math.max(0, head - 3); i < head && lines.length < limit; i++)
-    lines.push({ kind: "context", text: a[i]!, old: i + 1, next: i + 1 });
-  for (let i = head; i < a.length - tail && lines.length < limit; i++)
-    lines.push({ kind: "remove", text: a[i]!, old: i + 1 });
-  for (let i = head; i < b.length - tail && lines.length < limit; i++)
-    lines.push({ kind: "add", text: b[i]!, next: i + 1 });
-  for (let i = 0; i < Math.min(tail, 3) && lines.length < limit; i++)
-    lines.push({
-      kind: "context",
-      text: a[a.length - tail + i]!,
-      old: a.length - tail + i + 1,
-      next: b.length - tail + i + 1,
-    });
-  return { path, lines, truncated: a.length + b.length - head * 2 - tail * 2 > limit - 6 };
+    return [];
+  const lines: DiffFile["lines"] = [];
+  for (const row of rows.slice(start)) {
+    let line: DiffFile["lines"][number] | undefined;
+    if (row === "@@") line = { kind: "hunk", text: row };
+    else if (row.startsWith("+")) line = { kind: "add", text: row.slice(1) };
+    else if (row.startsWith("-")) line = { kind: "remove", text: row.slice(1) };
+    else if (row.startsWith(" ")) line = { kind: "context", text: row.slice(1) };
+    else if (row.trim()) return [];
+    if (line && lines.length < limit) lines.push(line);
+  }
+  return [{ path, lines, truncated: rows.length - start > limit }];
+}
+
+/** Recognize only the apply_patch subset this preview can represent. Validate
+ * the whole envelope before bounding it; other operations keep the original. */
+function applyPatchRows(patch: string) {
+  const rows = patch.split("\n");
+  while (rows.at(-1) === "") rows.pop();
+  if (rows[0] !== "*** Begin Patch" || rows.at(-1) !== "*** End Patch") return undefined;
+  let kind: string | undefined;
+  for (const row of rows.slice(1, -1)) {
+    const header = /^\*\*\* (Add|Update) File: (.+)$/.exec(row);
+    if (header) kind = header[1];
+    else if (
+      !kind ||
+      (!row.startsWith("+") &&
+        !(
+          kind === "Update" &&
+          (/^[ -]/.test(row) || /^@@(?: |$)/.test(row) || row === "*** End of File")
+        ))
+    )
+      return undefined;
+  }
+  return rows;
 }
 /** Only recognized provider edit formats become a Diff. Unknown requests retain the raw view. */
 export function approvalChanges(body: string): DiffFile[] {
+  if (body.length > 128_000) return [];
   let value: Record<string, unknown>;
   try {
     value = object(JSON.parse(body));
@@ -147,17 +93,21 @@ export function approvalChanges(body: string): DiffFile[] {
       })
     )
       return [];
-    return edits.slice(0, 20).map((edit) => {
-      const item = object(edit);
-      const file = replacement(path, string(item.old_string), string(item.new_string));
-      file.truncated ||= edits.length > 20;
-      return file;
-    });
+    return preview(
+      edits.slice(0, 20).map((edit) => {
+        const item = object(edit);
+        const file = replacement(path, string(item.old_string), string(item.new_string));
+        file.truncated ||= edits.length > 20;
+        return file;
+      }),
+    );
   }
-  if (path && typeof value.old_string === "string")
-    return [replacement(path, value.old_string, string(value.new_string))];
+  if (path && ("old_string" in value || "new_string" in value)) {
+    if (typeof value.old_string !== "string" || typeof value.new_string !== "string") return [];
+    return preview([replacement(path, value.old_string, value.new_string)]);
+  }
   if (path && typeof value.content === "string")
-    return [
+    return preview([
       {
         path,
         originalUnknown: true,
@@ -167,7 +117,7 @@ export function approvalChanges(body: string): DiffFile[] {
           .slice(0, limit)
           .map((text) => ({ kind: "context" as const, text })),
       },
-    ];
+    ]);
   if (Array.isArray(value.changes)) {
     const changes = value.changes;
     if (
@@ -181,7 +131,7 @@ export function approvalChanges(body: string): DiffFile[] {
       })
     )
       return [];
-    const files = changes.slice(0, 20).flatMap((change) => {
+    const parsed = changes.map((change) => {
       const item = object(change),
         kind = object(item.kind);
       const output =
@@ -189,21 +139,25 @@ export function approvalChanges(body: string): DiffFile[] {
           ? [replacement(string(item.path), "", string(item.diff))]
           : kind.type === "delete"
             ? [replacement(string(item.path), string(item.diff), "")]
-            : unifiedFiles(string(item.path), string(item.diff));
+            : codexDiff(string(item.path), string(item.diff));
       if (typeof kind.move_path === "string" && kind.move_path && output[0]) {
         output[0].previousPath = string(item.path);
         output[0].path = kind.move_path;
       }
       return output;
     });
+    // A partially understood request must not hide its unparsed files behind a Diff tab.
+    if (parsed.some((files) => !files.length)) return [];
+    const files = parsed.flat();
     for (const file of files) file.truncated ||= changes.length > 20 || files.length > 20;
-    return files.slice(0, 20);
+    return preview(files);
   }
   const patch = string(value.patch ?? value.input) || body;
-  if (!patch.includes("*** Begin Patch")) return [];
+  const rows = applyPatchRows(patch);
+  if (!rows) return [];
   const files: DiffFile[] = [];
   let current: DiffFile | undefined;
-  for (const line of patch.split("\n")) {
+  for (const line of rows) {
     const header = /^\*\*\* (?:Add|Update|Delete) File: (.+)$/.exec(line);
     if (header) {
       if (files.length === 20) {
@@ -229,5 +183,5 @@ export function approvalChanges(body: string): DiffFile[] {
       });
     }
   }
-  return files;
+  return preview(files);
 }

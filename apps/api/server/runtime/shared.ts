@@ -17,10 +17,22 @@ import type { RedisResources } from "./redis.js";
 import type { ApiEnvironment } from "../env.js";
 import { createAdapters, createAuthConfig } from "./adapters.js";
 import { createLifecycle } from "./lifecycle.js";
+import {
+  CloudJobsService,
+  type CloudJobExecutor,
+  type CloudJobsRepository,
+} from "@raypx/jobs/server";
+import { JobError } from "@raypx/jobs";
+import { createCloudJobsRepository } from "../jobs/repository.js";
+import { createScheduleTick } from "../jobs/tick.js";
+import { ContextLibraryService, type ContextLibraryRepository } from "@raypx/memory/server";
+import { createContextRepository } from "../memory/repository.js";
 
 export interface RuntimeProviders {
   /** Called once per runtime with its owned connection; defaults to PostgreSQL. */
   createConfigurationRepository?: (db: Database) => ConfigurationRepository;
+  createJobsRepository?: (db: Database) => CloudJobsRepository;
+  createContextRepository?: (db: Database) => ContextLibraryRepository;
   /**
    * Application cache that should outlive per-request runtimes. Defaults to Redis when
    * configured, otherwise to memory owned by this runtime.
@@ -35,6 +47,7 @@ export interface RuntimeResources extends RuntimeProviders {
   /** Header owned by the platform entry, independently of configurable auth forwarding headers. */
   clientIpHeader?: string;
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
+  createJobExecutor?: (control: ControlService) => CloudJobExecutor;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
   /** Owned by the runtime: sessions, rate limits and cache values; PostgreSQL is used without it. */
@@ -61,7 +74,28 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       adminEmails: environment.ADMIN_EMAILS,
       cache,
     });
-    const control = new ControlService(createControlRepository(db));
+    const control = new ControlService(
+      createControlRepository(db),
+      Date.now,
+      (owner, selection, target) => memory.resolve(owner, selection, target),
+    );
+    const memory = new ContextLibraryService({
+      repository: (resources.createContextRepository ?? createContextRepository)(db),
+      scope: "account",
+      validateProject: (owner, target) => control.validateContextProject(owner, target),
+    });
+    const unavailable = async (): Promise<never> => {
+      throw new JobError("CONTROL_UNAVAILABLE");
+    };
+    const cloudJobs = new CloudJobsService({
+      repository: (resources.createJobsRepository ?? createCloudJobsRepository)(db),
+      executor: resources.createJobExecutor?.(control) ?? {
+        validate: unavailable,
+        execute: unavailable,
+        task: unavailable,
+      },
+      enabled: environment.JOBS_ENABLED,
+    });
     const auth = createAuth({
       revokeHostAuthorizations: (userId, sessionId) =>
         control.revokeHostAuthorizations(userId, sessionId),
@@ -84,15 +118,20 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       storage,
       control,
       configuration,
+      cloudJobs,
+      memory,
       readSession,
       jobs: {
         cleanup: createCleanupJob({ db, logger, configuration, enabled: environment.JOBS_ENABLED }),
+        tick: createScheduleTick(cloudJobs, logger, environment.JOBS_ENABLED),
       },
       app: createApiApp({
         ...(resources.clientIpHeader ? { clientIpHeader: resources.clientIpHeader } : {}),
         configuration,
         jobsEnabled: environment.JOBS_ENABLED,
         control,
+        cloudJobs,
+        memory,
         ...(resources.onRevoke ? { onRevoke: resources.onRevoke } : {}),
         authHandler: (request) => auth.handler(request),
         readSession,

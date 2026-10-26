@@ -5,7 +5,13 @@ import { join } from "node:path";
 import { StateStore } from "../../../src/runtime/state";
 import { AgentRuntime, bounded } from "../../../src/runtime/agents";
 import { AgentStore } from "../../../src/runtime/agents/store";
-import type { AgentTask, AgentProvider } from "@raypx/contracts/tasks";
+import type {
+  AgentTask,
+  AgentProvider,
+  TaskContextSnapshot,
+  TaskContextSelection,
+  TaskContextTarget,
+} from "@raypx/contracts/tasks";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 const cleanups: (() => Promise<void>)[] = [];
 afterEach(async () => {
@@ -21,6 +27,10 @@ async function host(
     | "claude-question"
     | "claude-plan"
     | "claude-headless-plan",
+  resolveContext?: (
+    selection: TaskContextSelection,
+    target: TaskContextTarget,
+  ) => Promise<TaskContextSnapshot>,
 ) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-agent-"));
   const file = join(directory, provider);
@@ -41,7 +51,7 @@ async function host(
     (request) => {
       if (request) pending.push(request);
     },
-    { executables: { [provider]: file } },
+    { executables: { [provider]: file }, ...(resolveContext ? { resolveContext } : {}) },
   );
   runtime.configure(rootId, [provider]);
   await runtime.capabilities();
@@ -631,6 +641,61 @@ it("holds headless Claude plans for approval, resumes revisions, and executes on
   expect(starts().map((item) => item.mode)).toEqual(["plan", "plan", "manual"]);
   expect(starts()[2]).toMatchObject({ resume: "headless-plan-session" });
 });
+it("does not apply a queued old Claude result to the newly approved execution", async () => {
+  const { runtime, task, directory } = await host("claude", "claude-headless-plan");
+  writeFileSync(join(directory, "duplicate-plan-result"), "");
+  const account = "queued-result",
+    device = await runtime.localDevice(account);
+  const input = {
+    id: task.id,
+    deviceId: device.id,
+    projectId: task.projectId,
+    provider: task.provider,
+    mode: "plan" as const,
+    prompt: task.prompt,
+  };
+  await runtime.localExecute(account, input.id, { method: "tasks.create", input });
+  await expect.poll(() => runtime.localApprovals(account).length).toBe(1);
+  const request = runtime.localApprovals(account)[0]!;
+  expect(
+    await runtime.localExecute(account, crypto.randomUUID(), {
+      method: "approvals.decide",
+      input: { id: request.id, decision: { type: "allow" } },
+    }),
+  ).toMatchObject({ ok: true });
+  await expect.poll(() => runtime.localTask(account, input.id, 0).task.status).toBe("succeeded");
+  expect(runtime.localTask(account, input.id, 0).task.summary).toBe("Implemented approved plan");
+  const starts = readFileSync(join(directory, "starts"), "utf8")
+    .trim()
+    .split("\n")
+    .map((line) => JSON.parse(line));
+  expect(starts.map((entry) => entry.mode)).toEqual(["plan", "manual"]);
+  expect(runtime.localApprovals(account)).toEqual([]);
+});
+it("keeps a Claude plan pending when the drained old process rejects", async () => {
+  const { runtime, task, directory } = await host("claude", "claude-headless-plan");
+  writeFileSync(join(directory, "malformed-after-result"), "");
+  const account = "old-process",
+    device = await runtime.localDevice(account);
+  const input = {
+    id: task.id,
+    deviceId: device.id,
+    projectId: task.projectId,
+    provider: task.provider,
+    mode: "plan" as const,
+    prompt: task.prompt,
+  };
+  await runtime.localExecute(account, input.id, { method: "tasks.create", input });
+  await expect.poll(() => runtime.localApprovals(account).length).toBe(1);
+  expect(runtime.localTask(account, input.id, 0).task.status).toBe("waiting");
+  const approval = runtime.localApprovals(account)[0]!;
+  const result = await runtime.localExecute(account, crypto.randomUUID(), {
+    method: "approvals.decide",
+    input: { id: approval.id, decision: { type: "allow" } },
+  });
+  expect(result.ok).toBe(true);
+  await expect.poll(() => runtime.localTask(account, input.id, 0).task.status).toBe("succeeded");
+});
 it("cancels a headless Claude plan without spawning an implementation process", async () => {
   const { runtime, task, directory } = await host("claude", "claude-headless-plan");
   await runtime.start(
@@ -796,4 +861,121 @@ it("keeps oversized local records from stalling replay or hiding approvals", () 
   expect(bounded([large, "next"])).toEqual([large]);
   expect(bounded(["small", large, "after"])).toEqual(["small"]);
   expect(bounded(["small", large, "after"], true)).toEqual(["small", "after"]);
+});
+
+function contextSnapshot(scope: "device" | "account" = "device"): TaskContextSnapshot {
+  return {
+    capturedAt: new Date().toISOString(),
+    sources: [
+      {
+        id: crypto.randomUUID(),
+        revision: 1,
+        kind: "memory",
+        name: "Selected conventions",
+        content: "Pinned reference content",
+        scope,
+        project: null,
+      },
+    ],
+  };
+}
+it.each(["claude", "codex"] as const)(
+  "injects frozen context into %s and preserves it across retry and follow-up",
+  async (provider) => {
+    const context = contextSnapshot();
+    let resolutions = 0;
+    const f = await host(provider, `${provider}-interactive`, async () => {
+      if (resolutions++) throw new Error("Source was archived after delivery");
+      return context;
+    });
+    const device = await f.runtime.localDevice(LOCAL_WORKSPACE_ID);
+    const input = {
+      id: f.task.id,
+      deviceId: device.id,
+      projectId: f.task.projectId,
+      provider,
+      mode: "run" as const,
+      prompt: "Original task",
+      contextSelection: { sources: context.sources.map(({ id, revision }) => ({ id, revision })) },
+    };
+    const request = { method: "tasks.create" as const, input };
+    expect(await f.runtime.localExecute(LOCAL_WORKSPACE_ID, input.id, request)).toMatchObject({
+      ok: true,
+      value: { context },
+    });
+    await expect.poll(() => existsSync(join(f.directory, "delivered"))).toBe(true);
+    expect(readFileSync(join(f.directory, "delivered"), "utf8")).toContain(
+      "Pinned reference content",
+    );
+    expect(f.runtime.localTask(LOCAL_WORKSPACE_ID, input.id, 0).task).not.toHaveProperty(
+      "contextSelection",
+    );
+    expect(await f.runtime.localExecute(LOCAL_WORKSPACE_ID, input.id, request)).toMatchObject({
+      ok: true,
+      value: { context },
+    });
+    expect(resolutions).toBe(1);
+    writeFileSync(join(f.directory, "complete"), "");
+    await expect
+      .poll(() => f.runtime.localTask(LOCAL_WORKSPACE_ID, input.id, 0).task.status)
+      .toBe("succeeded");
+    const next = crypto.randomUUID();
+    expect(
+      await f.runtime.localExecute(LOCAL_WORKSPACE_ID, next, {
+        method: "tasks.followUp",
+        input: { id: next, parentTaskId: input.id, prompt: "Follow-up task" },
+      }),
+    ).toMatchObject({ ok: true, value: { context } });
+    await expect
+      .poll(() => readFileSync(join(f.directory, "delivered"), "utf8").includes("Follow-up task"))
+      .toBe(true);
+    const lines = readFileSync(join(f.directory, "delivered"), "utf8").trim().split("\n");
+    expect(lines.at(-1)).toContain("Pinned reference content");
+    expect(resolutions).toBe(1);
+  },
+);
+
+it("uses only the authoritative remote snapshot and rejects excess context before launching", async () => {
+  const f = await host("codex", "codex-interactive", async () => {
+    throw new Error("Device memory must not be consulted");
+  });
+  const context = contextSnapshot("account"),
+    taskId = crypto.randomUUID();
+  const input = {
+    id: taskId,
+    deviceId: f.task.deviceId,
+    projectId: f.task.projectId,
+    provider: "codex" as const,
+    mode: "run" as const,
+    prompt: "Remote task",
+    contextSelection: { sources: context.sources.map(({ id, revision }) => ({ id, revision })) },
+  };
+  expect(
+    await f.runtime.remote("remote-binding", {
+      id: taskId,
+      deviceId: input.deviceId,
+      expiresAt: new Date(Date.now() + 15000).toISOString(),
+      request: { method: "tasks.create", input },
+      context,
+    }),
+  ).toMatchObject({ ok: true, value: { context } });
+  await expect.poll(() => existsSync(join(f.directory, "delivered"))).toBe(true);
+  await f.runtime.detach("remote-binding");
+  const oversized = contextSnapshot("account");
+  oversized.sources = Array.from({ length: 5 }, () => ({
+    ...oversized.sources[0]!,
+    id: crypto.randomUUID(),
+    content: "x".repeat(8000),
+  }));
+  const next = crypto.randomUUID();
+  expect(
+    await f.runtime.remote("remote-binding", {
+      id: next,
+      deviceId: input.deviceId,
+      expiresAt: new Date(Date.now() + 15000).toISOString(),
+      request: { method: "tasks.create", input: { ...input, id: next } },
+      context: oversized,
+    }),
+  ).toMatchObject({ ok: false, code: "CONTEXT_TOO_LARGE" });
+  expect(readFileSync(join(f.directory, "delivered"), "utf8").trim().split("\n")).toHaveLength(1);
 });

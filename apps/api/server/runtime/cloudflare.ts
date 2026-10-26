@@ -6,10 +6,15 @@ import { errorReports } from "../error-reports.js";
 import { createRuntime, type RuntimeProviders } from "./shared.js";
 import { createCache } from "../cache/cache.js";
 import { createMemoryStore } from "../cache/memory.js";
+import { createRelayJobExecutor } from "../relay/jobs.js";
+import { createCloudflareJobTransport } from "./cloudflare-jobs.js";
 
 export interface CloudflareBindings {
   [key: string]: unknown;
-  RAYPX_RELAY?: { getByName(name: string): { fetch(request: Request): Promise<Response> } };
+  RAYPX_RELAY?: {
+    getByName(name: string): { fetch(request: Request): Promise<Response> };
+    idFromName?(name: string): { toString(): string };
+  };
   HYPERDRIVE?: { connectionString: string };
 }
 
@@ -47,6 +52,8 @@ export async function createCloudflareRuntime(
     ...providers,
     logger,
     clientIpHeader: "cf-connecting-ip",
+    createJobExecutor: (control) =>
+      createRelayJobExecutor(control, createCloudflareJobTransport(bindings)),
     ...(bindings.RAYPX_RELAY
       ? {
           onRevoke: async (userId: string, deviceId: string) => {

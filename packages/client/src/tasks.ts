@@ -192,6 +192,12 @@ export function createTaskClient(
       });
     }
     if (!connection) throw failure("NETWORK_UNAVAILABLE");
+    if (
+      value.method === "tasks.create" &&
+      value.input.contextSelection?.sources.length &&
+      !connection.contextSupported
+    )
+      throw failure("UPGRADE_REQUIRED");
     if (value.method === "observed.decide" && protocolVersion === 2)
       throw failure("UPGRADE_REQUIRED");
     const id =

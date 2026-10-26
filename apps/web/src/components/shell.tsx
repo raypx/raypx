@@ -13,11 +13,26 @@ import { apiUrl, authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
-import { ListTodo, Inbox, Settings, CircleUserRound, SlidersHorizontal } from "lucide-react";
+import {
+  ListTodo,
+  Inbox,
+  Settings,
+  CircleUserRound,
+  SlidersHorizontal,
+  CalendarClock,
+  BookOpen,
+} from "lucide-react";
 import { AppShell, type ShellLinkProps, type ShellNavItem } from "@raypx/blocks/shell";
 import { useTranslations } from "@raypx/i18n/browser";
 
-type WebPath = "/" | "/settings" | "/tasks" | "/approvals" | "/admin/settings";
+type WebPath =
+  | "/"
+  | "/settings"
+  | "/tasks"
+  | "/approvals"
+  | "/automations"
+  | "/memory"
+  | "/admin/settings";
 
 function ShellLink({ to, markActive, exact, ...props }: ShellLinkProps<WebPath>) {
   return (
@@ -51,10 +66,13 @@ export function WebShell() {
   const auth = useAuthActions({ client: authClient, webUrl });
   const c = useTranslations("common");
   const g = useTranslations("guest");
+  const memory = useTranslations("memory");
   const href = useRouterState({ select: (state) => state.location.href });
   const path = useRouterState({ select: (state) => state.location.pathname });
   const navigation: ShellNavItem<WebPath>[] = [
     { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
+    { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
+    { to: "/memory", label: memory("title"), icon: <BookOpen /> },
     {
       to: "/approvals",
       label: c("approvals"),
@@ -84,19 +102,23 @@ export function WebShell() {
         secondaryNavigation={secondaryNavigation}
         breadcrumbs={[
           siteName,
-          c(
-            path.startsWith("/admin/")
-              ? "adminSettings"
-              : path.startsWith("/tasks")
-                ? "tasks"
-                : path.startsWith("/approvals")
-                  ? "approvals"
-                  : path === "/settings"
-                    ? "settings"
-                    : accountId
-                      ? "account"
-                      : "home",
-          ),
+          path.startsWith("/memory")
+            ? memory("title")
+            : c(
+                path.startsWith("/admin/")
+                  ? "adminSettings"
+                  : path.startsWith("/tasks")
+                    ? "tasks"
+                    : path.startsWith("/automations")
+                      ? "jobs"
+                      : path.startsWith("/approvals")
+                        ? "approvals"
+                        : path === "/settings"
+                          ? "settings"
+                          : accountId
+                            ? "account"
+                            : "home",
+              ),
         ]}
         LinkComponent={ShellLink}
         notice={

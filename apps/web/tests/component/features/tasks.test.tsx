@@ -4,6 +4,7 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import type { TaskClient, TaskChange } from "@raypx/client";
+import type { TaskHistoryPage } from "@raypx/tasks/model";
 
 beforeEach(() => {
   // jsdom has no layout; provide dimensions for the real virtualizer.
@@ -17,6 +18,74 @@ beforeEach(() => {
   localStorage.setItem("raypx_locale", "en");
 });
 afterEach(() => vi.restoreAllMocks());
+it("does not reuse another account's conversation while the next account loads", async () => {
+  const task = {
+    id: crypto.randomUUID(),
+    deviceId: crypto.randomUUID(),
+    projectId: crypto.randomUUID(),
+    provider: "codex" as const,
+    mode: "run" as const,
+    prompt: "Shared task identifier",
+    status: "running" as const,
+    summary: "",
+    parentTaskId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  const page = (text: string): TaskHistoryPage => ({
+    task,
+    requests: [],
+    events: [],
+    activity: [
+      {
+        id: crypto.randomUUID(),
+        taskId: task.id,
+        kind: "message",
+        order: 1,
+        revision: 1,
+        text,
+        status: "complete",
+        truncated: false,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+      },
+    ],
+  });
+  let finish: (page: TaskHistoryPage) => void = () => {};
+  const get = vi
+    .fn()
+    .mockResolvedValueOnce(page("Account A private reply"))
+    .mockImplementationOnce(
+      () =>
+        new Promise<TaskHistoryPage>((resolve) => {
+          finish = resolve;
+        }),
+    );
+  const client = {
+    tasks: { list: async (input: { limit?: number }) => (input.limit === 1 ? [] : [task]), get },
+    devices: { list: async () => [] },
+    approvals: { list: async () => [] },
+    subscribe: () => () => {},
+  } as unknown as TaskClient;
+  const queries = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const accountWorkspace = (accountId: string) => (
+    <QueryClientProvider client={queries}>
+      <BrowserLanguageProvider>
+        <TaskWorkspace client={client} scope={{ kind: "remote", namespace: "server", accountId }} />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>
+  );
+  const view = render(accountWorkspace("account-a"));
+  fireEvent.click(await screen.findByRole("button", { name: /Shared task identifier/ }));
+  await screen.findByText("Account A private reply");
+  view.rerender(accountWorkspace("account-b"));
+  fireEvent.click(await screen.findByRole("button", { name: /Shared task identifier/ }));
+  await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+  expect(screen.queryByText("Account A private reply")).not.toBeInTheDocument();
+  await act(async () => finish(page("Account B reply")));
+  await screen.findByText("Account B reply");
+});
+
 it("merges live activity without refreshing workspace queries and recovers a missing delta base", async () => {
   const task = {
     id: crypto.randomUUID(),
@@ -68,7 +137,10 @@ it("merges live activity without refreshing workspace queries and recovers a mis
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
       <BrowserLanguageProvider>
-        <TaskWorkspace client={client} accountId="stream-account" />
+        <TaskWorkspace
+          client={client}
+          scope={{ kind: "remote", namespace: "default", accountId: "stream-account" }}
+        />
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
@@ -134,7 +206,24 @@ it("merges live activity without refreshing workspace queries and recovers a mis
     activity: input.beforeActivity ? [missing] : [latest],
     ...(input.beforeActivity ? {} : { activityBefore: 65 }),
   }));
+  vi.spyOn(document, "hidden", "get").mockReturnValue(true);
   fireEvent(document, new Event("visibilitychange"));
+  vi.spyOn(document, "hidden", "get").mockReturnValue(false);
+  fireEvent(document, new Event("visibilitychange"));
+  // The live socket can resume before the bounded HTTP checkpoint returns.
+  act(() => {
+    for (const listener of listeners)
+      listener({
+        type: "events",
+        events: [
+          {
+            sequence: 3,
+            event: { kind: "activity", id: crypto.randomUUID(), taskId: task.id, entry: latest },
+          },
+        ],
+      });
+  });
+  await screen.findByText("Newest after hidden period");
   const gap = await screen.findByRole("button", {
     name: "Some messages are missing here. Load the missing history.",
   });
@@ -218,7 +307,10 @@ it.each(["pending", "cancelling", "running"] as const)(
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
       >
         <BrowserLanguageProvider>
-          <TaskWorkspace client={client} accountId="input-guard" />
+          <TaskWorkspace
+            client={client}
+            scope={{ kind: "remote", namespace: "default", accountId: "input-guard" }}
+          />
         </BrowserLanguageProvider>
       </QueryClientProvider>,
     );
@@ -268,7 +360,10 @@ async function workspace() {
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
       <BrowserLanguageProvider>
-        <TaskWorkspace client={client} accountId="account" />
+        <TaskWorkspace
+          client={client}
+          scope={{ kind: "remote", namespace: "default", accountId: "account" }}
+        />
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
@@ -349,7 +444,11 @@ it("answers single and multiple choice questions with labelled shadcn controls",
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
       <BrowserLanguageProvider>
-        <TaskWorkspace client={client} accountId="account" view="approvals" />
+        <TaskWorkspace
+          client={client}
+          scope={{ kind: "remote", namespace: "default", accountId: "account" }}
+          view="approvals"
+        />
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );
@@ -366,4 +465,64 @@ it("answers single and multiple choice questions with labelled shadcn controls",
       expect.anything(),
     ),
   );
+});
+
+it("opens a linked task outside the loaded list without creating or resending work", async () => {
+  const task = {
+    id: crypto.randomUUID(),
+    deviceId: crypto.randomUUID(),
+    projectId: crypto.randomUUID(),
+    provider: "codex" as const,
+    mode: "run" as const,
+    prompt: "Linked task outside this page",
+    status: "running" as const,
+    summary: "",
+    parentTaskId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  const create = vi.fn(),
+    followUp = vi.fn();
+  const get = vi.fn(async () => ({
+    task,
+    events: [],
+    requests: [],
+    activity: [
+      {
+        id: crypto.randomUUID(),
+        taskId: task.id,
+        order: 1,
+        revision: 1,
+        kind: "message" as const,
+        text: "Linked task reply",
+        status: "complete" as const,
+        truncated: false,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+      },
+    ],
+  }));
+  const client = {
+    tasks: { list: async () => [], get, create, followUp },
+    devices: { list: async () => [] },
+    approvals: { list: async () => [] },
+    subscribe: () => () => {},
+  } as unknown as TaskClient;
+  render(
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <BrowserLanguageProvider>
+        <TaskWorkspace
+          client={client}
+          scope={{ kind: "remote", namespace: "default", accountId: "account" }}
+          initialTaskId={task.id}
+        />
+      </BrowserLanguageProvider>
+    </QueryClientProvider>,
+  );
+  expect(await screen.findByText("Linked task reply")).toBeTruthy();
+  expect(get).toHaveBeenCalledWith({ id: task.id, after: 0 }, expect.anything());
+  expect(create).not.toHaveBeenCalled();
+  expect(followUp).not.toHaveBeenCalled();
 });

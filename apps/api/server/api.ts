@@ -14,11 +14,18 @@ import { createAccountService } from "@raypx/account/server";
 import type { RequestLogger } from "@raypx-kit/logger";
 import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logging.js";
 import type { RateLimiter, RateRule } from "./rate-limit.js";
+import type { CloudJobsService } from "@raypx/jobs/server";
+import { JobError } from "@raypx/jobs";
+import { ContextError } from "@raypx/memory";
+import type { ContextLibraryService } from "@raypx/memory/server";
+import { taskExecutionPrompt } from "@raypx/core/tasks";
 
 export interface ApiAppOptions {
   configuration?: ConfigurationService;
   jobsEnabled?: boolean;
   control?: ControlService;
+  cloudJobs?: CloudJobsService;
+  memory?: ContextLibraryService;
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   authHandler(request: Request): Promise<Response>;
   readSession(headers: Headers): Promise<AuthSession | null>;
@@ -40,6 +47,20 @@ const rpcLimits = {
   "hosts.authorize": { window: 60, max: 5 },
   "relay.ticket": { window: 60, max: 60 },
   "configuration.update": { window: 60, max: 10 },
+  "jobs.list": { window: 60, max: 60 },
+  "jobs.history": { window: 60, max: 60 },
+  "jobs.create": { window: 60, max: 10 },
+  "jobs.update": { window: 60, max: 20 },
+  "jobs.remove": { window: 60, max: 10 },
+  "jobs.run": { window: 60, max: 10 },
+  "memory.list": { window: 60, max: 60 },
+  "memory.get": { window: 60, max: 60 },
+  "memory.history": { window: 60, max: 60 },
+  "memory.resolve": { window: 60, max: 30 },
+  "memory.create": { window: 60, max: 20 },
+  "memory.update": { window: 60, max: 30 },
+  "memory.archive": { window: 60, max: 20 },
+  "memory.restore": { window: 60, max: 20 },
 } satisfies Record<string, RateRule>;
 /** True when decoded input carries keys that merge or path-set helpers could abuse. */
 export function hasPollutingKey(value: unknown): boolean {
@@ -295,7 +316,151 @@ export function createApiApp(options: ApiAppOptions) {
       });
     return auth;
   }
+  async function jobsCall<T>(
+    context: Context,
+    procedure: keyof typeof rpcLimits,
+    write: boolean,
+    run: (service: CloudJobsService, userId: string) => Promise<T>,
+  ) {
+    const auth = await options.readSession(context.headers);
+    if (!auth)
+      throw new ORPCError("UNAUTHORIZED", {
+        data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
+      });
+    if (write) {
+      const origin = context.headers.get("origin");
+      if (!origin || !allowedOrigins.includes(origin))
+        throw new ORPCError("FORBIDDEN", {
+          data: { error: { code: "ORIGIN_REJECTED" }, requestId: context.requestId },
+        });
+    }
+    await enforceLimit(context, `rpc:${auth.user.id}:${procedure}`, rpcLimits[procedure]);
+    if (!options.cloudJobs) throw new ORPCError("SERVICE_UNAVAILABLE");
+    try {
+      return await run(options.cloudJobs, auth.user.id);
+    } catch (error) {
+      if (!(error instanceof JobError)) throw error;
+      const code =
+        error.code === "NOT_FOUND"
+          ? "NOT_FOUND"
+          : ["INVALID_JOB", "INVALID_CRON", "INVALID_INPUT"].includes(error.code)
+            ? "BAD_REQUEST"
+            : error.code === "AUTH_REQUIRED"
+              ? "UNAUTHORIZED"
+              : ["CONTROL_UNAVAILABLE", "JOBS_DISABLED"].includes(error.code)
+                ? "SERVICE_UNAVAILABLE"
+                : "CONFLICT";
+      throw new ORPCError(code, {
+        data: { error: { code: error.code }, requestId: context.requestId },
+      });
+    }
+  }
+  async function memoryCall<T>(
+    context: Context,
+    procedure: keyof typeof rpcLimits,
+    write: boolean,
+    run: (service: ContextLibraryService, owner: string) => Promise<T>,
+  ) {
+    const auth = await options.readSession(context.headers);
+    if (!auth)
+      throw new ORPCError("UNAUTHORIZED", {
+        data: { error: { code: "AUTH_REQUIRED" }, requestId: context.requestId },
+      });
+    if (write) {
+      const origin = context.headers.get("origin");
+      if (!origin || !allowedOrigins.includes(origin))
+        throw new ORPCError("FORBIDDEN", {
+          data: { error: { code: "ORIGIN_REJECTED" }, requestId: context.requestId },
+        });
+    }
+    await enforceLimit(context, `rpc:${auth.user.id}:${procedure}`, rpcLimits[procedure]);
+    if (!options.memory) throw new ORPCError("SERVICE_UNAVAILABLE");
+    try {
+      return await run(options.memory, auth.user.id);
+    } catch (error) {
+      if (!(error instanceof ContextError)) throw error;
+      const code =
+        error.code === "CONTEXT_NOT_FOUND"
+          ? "NOT_FOUND"
+          : ["INVALID_CONTEXT", "CONTEXT_TOO_LARGE"].includes(error.code)
+            ? "BAD_REQUEST"
+            : error.code === "AUTH_REQUIRED"
+              ? "UNAUTHORIZED"
+              : error.code === "CONTEXT_UNAVAILABLE"
+                ? "SERVICE_UNAVAILABLE"
+                : "CONFLICT";
+      throw new ORPCError(code, {
+        data: { error: { code: error.code }, requestId: context.requestId },
+      });
+    }
+  }
   const router = os.router({
+    memory: {
+      list: os.memory.list.handler(({ context }) =>
+        memoryCall(context, "memory.list", false, (service, owner) => service.list(owner)),
+      ),
+      get: os.memory.get.handler(({ context, input }) =>
+        memoryCall(context, "memory.get", false, (service, owner) => service.get(owner, input)),
+      ),
+      create: os.memory.create.handler(({ context, input }) =>
+        memoryCall(context, "memory.create", true, (service, owner) =>
+          service.create(owner, input),
+        ),
+      ),
+      update: os.memory.update.handler(({ context, input }) =>
+        memoryCall(context, "memory.update", true, (service, owner) =>
+          service.update(owner, input),
+        ),
+      ),
+      archive: os.memory.archive.handler(({ context, input }) =>
+        memoryCall(context, "memory.archive", true, (service, owner) =>
+          service.archive(owner, input),
+        ),
+      ),
+      history: os.memory.history.handler(({ context, input }) =>
+        memoryCall(context, "memory.history", false, (service, owner) =>
+          service.history(owner, input),
+        ),
+      ),
+      restore: os.memory.restore.handler(({ context, input }) =>
+        memoryCall(context, "memory.restore", true, (service, owner) =>
+          service.restore(owner, input),
+        ),
+      ),
+      resolve: os.memory.resolve.handler(({ context, input }) =>
+        memoryCall(context, "memory.resolve", false, async (service, owner) => {
+          const snapshot = await service.resolve(owner, input.selection, input.target);
+          try {
+            taskExecutionPrompt({ prompt: input.prompt ?? " ", context: snapshot });
+          } catch {
+            throw new ContextError("CONTEXT_TOO_LARGE");
+          }
+          return snapshot;
+        }),
+      ),
+    },
+    jobs: {
+      list: os.jobs.list.handler(({ context }) =>
+        jobsCall(context, "jobs.list", false, (service, userId) => service.list(userId)),
+      ),
+      history: os.jobs.history.handler(({ context, input }) =>
+        jobsCall(context, "jobs.history", false, (service, userId) =>
+          service.history(userId, input),
+        ),
+      ),
+      create: os.jobs.create.handler(({ context, input }) =>
+        jobsCall(context, "jobs.create", true, (service, userId) => service.create(userId, input)),
+      ),
+      update: os.jobs.update.handler(({ context, input }) =>
+        jobsCall(context, "jobs.update", true, (service, userId) => service.update(userId, input)),
+      ),
+      remove: os.jobs.remove.handler(({ context, input }) =>
+        jobsCall(context, "jobs.remove", true, (service, userId) => service.remove(userId, input)),
+      ),
+      run: os.jobs.run.handler(({ context, input }) =>
+        jobsCall(context, "jobs.run", true, (service, userId) => service.run(userId, input)),
+      ),
+    },
     hosts: {
       authorize: os.hosts.authorize.handler(({ input, context }) => {
         const origin = context.headers.get("origin");

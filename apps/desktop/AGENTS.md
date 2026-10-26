@@ -8,24 +8,21 @@ Electrobun desktop composition root with a React/Vite renderer, persistent WebVi
 
 `native/main.ts` owns window, tray, trusted renderer RPC and local engine lifecycle. `native/rpc.ts` declares the renderer bridge. `native/engine.ts` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter` and provides a TanStack Query client (account caches removed on sign-out), `src/components/shell.tsx` fills the `@raypx/blocks/shell` window frame, and the build writes `dist/client` for `views://main`.
 
-`preferences.ts` shares pure preference types/validation between Native and renderer; `src/preferences.tsx` owns renderer initialization.
-Simple pages live in file-route modules; complex components, actions and state belong under `src/features/`, without a `src/pages/` forwarding layer.
-`features/tasks/project-navigation.tsx` loads device-owned authorized projects for
-sidebar shortcuts, keeps a bounded device-local recent selection and opens
-`/tasks?scope=local&project=...`. This filters the loaded task page, never creates
+`preferences.ts` shares preference types/validation; `src/preferences.tsx` owns renderer initialization. Complex page logic lives under `src/features/`; simple pages stay in route modules. `features/tasks/project-navigation.tsx` loads device-owned authorized projects for
+sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...`. This filters the loaded task page, never creates
 work or reads remote/account-owned projects. Account and settings share the footer.
 
-`src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group,
-like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
-SSR for native route lifecycles, provides the desktop capability in `beforeLoad`
-and shares root grants between Files and Jobs. Refresh grants when entering this
-branch (`shouldReload` with cause enter), and reuse them between its child pages.
-Explicit invalidation still refreshes the cache. Engine-ready events invalidate
-the local branch; job-finished events refresh only the active Jobs route. These tools
-are available without login; the CLI engine remains independent of account sessions.
+`src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group, like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
+SSR for native route lifecycles, provides the desktop capability in `beforeLoad` and shares root grants between Files and Jobs. Refresh grants when entering this
+branch (`shouldReload` with cause enter), and reuse them between its child pages. Explicit invalidation still refreshes the cache. Engine-ready events invalidate
+the local branch; job-finished events refresh only the active Jobs route. These tools are available without login; the CLI engine remains independent of account sessions.
 
-Jobs reads belong to its route loader; mutations invalidate that route. Keep
-auxiliary root errors silent and retain successful lists during failed reloads.
+`/automations` defaults to device schedules; `scope=cloud` mounts the account-gated
+`@raypx/jobs/client` view. Preserve local form/history state across tabs and account
+changes. Local reads use the route loader; mutations invalidate it. Keep root errors
+silent and successful lists during reload failure. Cloud state is account/client-keyed,
+aborts on identity change and never loads before login. Validated
+`/tasks?scope=remote&taskId=...` links read projections without executing tasks.
 Files keeps rootId/path/offset in validated route search. Directory navigation
 pushes history; pagination replaces it. The loader defers its listing promise to
 the table so the editor and toolbar stay mounted during reloads. Features/files
@@ -44,12 +41,10 @@ for Desktop account URLs, auth client and router search. Shared forms own fields
 translated feedback and submission state; the renderer owns navigation. Keep
 renderer tests under `tests/renderer/unit/` and `tests/renderer/component/`,
 then mirror feature and route directories.
-Keep native tests under `tests/native/` with their Bun type configuration.
-The packaged smoke runner and scenario live under `tests/native/smoke/`; Electrobun
-selects the scenario only with `RAYPX_NATIVE_SMOKE=1`.
-Development and packaging scripts live in `scripts/native/`; their tests live
-in `tests/scripts/native/`. Both use the Bun type configuration, independently of the renderer.
-All tests stay outside `src/routes/` file-route discovery.
+Native tests use `tests/native/` with Bun types; `tests/native/smoke/` contains the
+packaged scenario, selected by Electrobun only with `RAYPX_NATIVE_SMOKE=1`.
+Native scripts/tests live in `scripts/native/` and `tests/scripts/native/` with Bun types.
+All tests stay outside `src/routes/` discovery and the renderer configuration.
 Use short feature-local filenames such as `form.tsx` and `routes.test.tsx`;
 exported symbols retain feature context. Test scripts select `component/` and
 `integration/` directories; `test:unit` excludes those directories. File extensions
@@ -61,6 +56,9 @@ invalidation signals rather than a second account-query state machine.
 Local tools render during session/network checks. Auth routes use a standalone layout; `RemoteBoundary` gates private views and returns to an allowlisted destination. Logout returns to local tools. Keep the coordinator mounted.
 
 ## Constraints
+
+- Device `memory.*` IPC works before login without account namespaces. Renderer
+  tasks use `agents.local.*`; internal relay/start/snapshot methods stay Native-owned.
 
 - Start is used only for its SPA build. There is no server at runtime: no server functions, server routes or server-only loaders.
 - The root shell is prerendered at build time without device preferences or native APIs. Keep it text-free; translated UI and providers start inside `ClientOnly`. Packaged views use hash history.
@@ -148,9 +146,14 @@ process cancellation. It is opt-in and outside default verification.
 `native:beta` plus E2E `e2e:live` use a separately provisioned test account and
 isolated native data directory against an actual HTTPS deployment. The beta native
 phases cover packaged form login, hidden relay execution, process restart and
-logout. See the explicit gates in docs/development/testing.md.
+logout. See docs/development/testing.md.
 
 ## Remote tasks
+
+`/memory` defaults to device-owned references; the account tab uses RemoteBoundary.
+Keep the local form across tab/account changes without uploading or migrating it.
+Inject only the matching library; legacy account-local editors stay isolated.
+Cloud schedules use account references; task snapshots survive source changes.
 
 Tasks and approvals default to This computer. `features/tasks/local-client.ts`
 adapts private `agents.local.*` IPC to the shared task view interface and subscribes
@@ -189,7 +192,7 @@ frames. Statistics and errors default off independently; identify internal IDs o
 with statistics consent, reset on logout and never capture raw task parameters.
 Restore analytics through getAnalyticsPreferences with a five-second RPC timeout;
 keep capture disabled until the latest Native value arrives, never authorize from preload.
-Source-map upload is an explicit release step; ship those same injected assets.
+Source-map upload is an explicit release step using those same assets.
 Engine mismatch recovery confirms cancellation before replacing the old daemon. Native forwards loaded `[connectors]` paths/environment; settings show actual destinations and owned-binary repair/update.
 Older servers use browser-renewed managed-only grants, with terminal approvals disabled.
 

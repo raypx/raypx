@@ -6,8 +6,10 @@ Pi AI model transport for Node and the bundled Bun CLI.
 
 ## Interface
 
-The root exports createAiClient, provider factories, Pi context/tool types and
-stable AiError codes. The actual consumer is CLI's explicit ai command group.
+The root exports createAiClient, provider factories, Pi context/tool types,
+createAssistantMessageEventStream and stable AiError codes. Consumers are CLI's
+explicit ai command group and its private experimental PiRunner. Agent execution,
+tool approval and durable context remain outside this transport package.
 Default providers are Anthropic, OpenAI, Google and OpenRouter; callers may supply
 their own Pi providers or createCompatibleProvider for a selected endpoint.
 

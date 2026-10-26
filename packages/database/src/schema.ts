@@ -171,7 +171,104 @@ export const controlCredential = controlRecord("control_credential");
 export const controlObservedSession = controlRecord("control_observed_session");
 export const controlObservedRequest = controlRecord("control_observed_request");
 
+export const cloudJob = foundation.table(
+  "cloud_job",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    cron: text("cron").notNull(),
+    timezone: text("timezone").notNull(),
+    enabled: boolean("enabled").notNull(),
+    action: jsonb("action").notNull(),
+    revision: integer("revision").notNull(),
+    nextRunAt: date("next_run_at"),
+    ...timestamps(),
+  },
+  (table) => [
+    index("cloud_job_owner_idx").on(table.userId, table.createdAt, table.id),
+    index("cloud_job_due_idx")
+      .on(table.nextRunAt, table.id)
+      .where(sql`${table.enabled}=true`),
+  ],
+);
+export const cloudJobRun = foundation.table(
+  "cloud_job_run",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    jobId: text("job_id")
+      .notNull()
+      .references(() => cloudJob.id, { onDelete: "cascade" }),
+    jobRevision: integer("job_revision").notNull(),
+    trigger: text("trigger").notNull(),
+    scheduledFor: date("scheduled_for").notNull(),
+    startedAt: date("started_at").notNull(),
+    checkedAt: date("checked_at").notNull().defaultNow(),
+    finishedAt: date("finished_at"),
+    status: text("status").notNull(),
+    action: jsonb("action").notNull(),
+    taskId: text("task_id"),
+    code: text("code"),
+    sync: jsonb("sync"),
+  },
+  (table) => [
+    uniqueIndex("cloud_job_run_schedule_idx")
+      .on(table.jobId, table.scheduledFor)
+      .where(sql`${table.trigger}='schedule'`),
+    index("cloud_job_run_history_idx").on(table.userId, table.jobId, table.startedAt, table.id),
+    index("cloud_job_run_active_idx")
+      .on(table.checkedAt, table.id)
+      .where(sql`${table.status} in ('dispatching','running','waiting','unknown')`),
+  ],
+);
+
+// Account context libraries retain immutable revisions; archiving never deletes history.
+export const contextDocument = foundation.table(
+  "context_document",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    content: text("content").notNull(),
+    project: jsonb("project"),
+    revision: integer("revision").notNull(),
+    archived: boolean("archived").notNull().default(false),
+    ...timestamps(),
+  },
+  (table) => [index("context_document_owner_idx").on(table.userId, table.updatedAt, table.id)],
+);
+export const contextVersion = foundation.table(
+  "context_version",
+  {
+    documentId: text("document_id")
+      .notNull()
+      .references(() => contextDocument.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    revision: integer("revision").notNull(),
+    body: jsonb("body").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.documentId, table.revision] }),
+    index("context_version_owner_idx").on(table.userId, table.documentId, table.revision),
+  ],
+);
+
 export const schema = {
+  contextDocument,
+  contextVersion,
+  cloudJob,
+  cloudJobRun,
   systemConfiguration,
   user,
   session,

@@ -6,6 +6,68 @@ the named task registry and platform scheduling. `maintenance:cleanup` runs on
 cleanup implementation. This is independent of device-local CLI schedules and
 Agent execution.
 
+## Account cloud automations
+
+`@raypx/jobs` owns the shared local/cloud job models, pure Cron calendar rules,
+injected cloud use cases and shared browser views. Contracts composes those same
+schemas into local IPC and account RPC. API owns PostgreSQL and relay adapters;
+CLI owns device-local timers and execution. This keeps one schedule model without
+making HTTP or the browser an execution host.
+
+Web `/automations` manages account-owned cloud schedules. Desktop's automation
+page separates **This computer** from **Cloud**. Local schedules remain available
+without login and survive account changes; cloud reads and writes require login.
+Scheduling does not install or enable a device host automatically.
+
+The first cloud actions are:
+
+| Action        | Behavior                                                                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `device.sync` | Request a fresh, correlated device snapshot and finish only after it commits to the remote projection. Unrelated local tasks/files are not included.       |
+| `agent.run`   | Create a task in an authorized device project, preserving normal Claude/Codex approvals and project locks. A delivery receipt is not execution completion. |
+
+Each plan captures the selected device epoch. Revocation or an epoch change
+requires the user to choose its current connection explicitly. Every execution
+rechecks account ownership, epoch, connection, project and provider availability.
+The backend never stores a browser cookie or runs a local shell action.
+
+`schedules:tick` runs every minute on both Node and Workers, controlled by
+`JOBS_ENABLED` independently of the administrator's maintenance-cleanup switch.
+The existing fifteen-minute cleanup task keeps its own policy. When scheduling is
+disabled, tick performs no business queries; plans can still be saved and edited.
+Apply the generated job/run migrations before deploying the new API.
+
+PostgreSQL owns occurrence time, row claims, schedule revisions, history and a
+unique scheduled occurrence key. A tick claims up to 25 occurrences and dispatches
+at most five concurrently; active runs are reconciled in bounded, rotating batches.
+Occurrences missed by more than one minute are recorded as skipped and advanced
+to the next future time. There is no catch-up inference. Offline devices and active
+prior runs produce explicit skipped records.
+
+Schedule creation uses a client UUID as the plan ID. A retry with the same content
+returns the saved plan; changed content under that ID conflicts. Manual runs also
+retain their request UUID. For Agent actions, the run, task and command IDs match,
+so the host can reuse durable command receipts instead of starting new reasoning.
+
+Agent runs remain active while their task is pending, running, waiting or cancelling.
+Each tick reconciles the authoritative task projection before claiming more work.
+An expired/lost acknowledgement or a generic host error after sending is **unknown**,
+not proof that execution never started. The plan is paused and that occurrence is
+never resent. A process restart first checks the persisted task ID; a dispatch still
+unconfirmed after two minutes becomes unknown. A completed projection can resolve
+the run later, but does not automatically re-enable the paused plan.
+
+Projection sync requires the host's optional `syncSupported` capability and a
+matching `syncId`. Older hosts return `UPGRADE_REQUIRED`. New sync requests are
+queued during an in-progress flush without disconnecting active commands.
+
+Cloud mutations require a trusted Origin, a current account session and rate limits;
+updates/deletion use revision checks. Deleting a plan removes its execution records
+and stops future occurrences, while already-created Agent tasks remain in task
+history. The browser uses explicit links to inspect those tasks and preserves
+creation/run IDs across uncertain HTTP responses. Only visible, idle cloud views
+refresh their private lists; account/client changes discard that view's state.
+
 ## Enable cleanup
 
 1. Apply the foundation database migrations using the normal deployment procedure.

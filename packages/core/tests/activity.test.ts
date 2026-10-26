@@ -4,7 +4,7 @@ import {
   taskActivityPage,
   taskActivitySchema,
   type TaskActivity,
-} from "../src/tasks.js";
+} from "../src/index.js";
 const base = {
   id: "11111111-1111-4111-8111-111111111111",
   taskId: "22222222-2222-4222-8222-222222222222",

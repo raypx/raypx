@@ -69,7 +69,11 @@ function fixture() {
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
       >
         <BrowserLanguageProvider>
-          <TaskWorkspace client={client} accountId="observed-account" view="approvals" />
+          <TaskWorkspace
+            client={client}
+            scope={{ kind: "remote", namespace: "default", accountId: "observed-account" }}
+            view="approvals"
+          />
         </BrowserLanguageProvider>
       </QueryClientProvider>,
     );

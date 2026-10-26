@@ -90,6 +90,33 @@ without credentials in the default suite. Never commit the private raw captures.
 
 ## Agent host
 
+`runtime/memory` owns the device-profile `memory.sqlite` and injects the shared
+context-library service. Private `memory.*` IPC needs no account and never migrates
+on login/logout. Validate project targets against this device and granted Agent
+projects. Immutable history and current documents commit atomically with revision
+checks; archived entries remain in the 100-document quota. Local tasks resolve
+explicit revisions after receipt lookup, while remote tasks use only command
+snapshots. Persist context metadata on follow-ups and inject reference text into
+the first provider prompt, rejecting excess total size before launching execution.
+
+`runtime/agents/index.ts` is the local/replay/receipt facade. Its private
+`harness/execution.ts` owns each task's turn queue, approvals, cancellation and
+project-lock release through process draining. `harness/providers/codex.ts` and
+`claude.ts` adapt provider protocols through a narrow process port; they never
+own task storage or account/relay transport. Keep protocol callbacks fenced to
+the current process. The coordinator uses an explicit persistence subset and
+lifecycle effects; do not pass the entire AgentRuntime as an adapter context.
+
+`harness/providers/pi.ts` is a private SDK experiment, not a registered provider.
+Callers supply tools, approval, model streaming and a revision-checked context store.
+Persist tool intent before execution and result before further inference; never
+replay uncertain effects. `smoke:pi` verifies an isolated compiled offline fixture.
+Repeated tool IDs are fenced by committed history. Runs accept caller cancellation
+and a bounded deadline, then drain active effects before settling. The private
+`harness/context/sqlite.ts` store owns validated, size-bounded local contexts with
+atomic revision checks. Keep its database and lifecycle caller-owned; reopening
+never clears unresolved intents or authorizes replay.
+
 Private `agents.*` methods own external CLI subprocesses, project authorization,
 canonical-directory locks, host-owned approvals and a durable SQLite replay journal. The Agent host is lazy so
 ordinary local commands never repair or cancel another host's task records. Never

@@ -57,6 +57,12 @@ application is an independent composition root and is never imported by another 
   Public URLs stay flat, and changing routes remounts the form so inputs and
   request feedback reset.
 - `/health` is a server route for process liveness; it never calls the API.
+- `/automations` composes `@raypx/jobs/client` with API adapters. Guests see a
+  contextual sign-in gate with return navigation; only a confirmed account mounts
+  schedule, device and history reads. Keep private state in account/client-keyed
+  component memory and cancel old requests on either change. Run-history links
+  open a validated `/tasks?taskId=...` projection, including tasks outside the
+  current list page; navigation never creates or resumes execution.
 - `vite.config.ts` adds security headers to every Nitro response (Node and Workers):
   framing, plugin, base and form-target CSP directives, HSTS, nosniff, Referrer and
   Permissions policies. Inline hydration and theme scripts mean script-src needs nonces
@@ -109,6 +115,12 @@ bun run build:web:cloudflare
 ```
 
 ## Remote tasks
+
+`/memory` composes `@raypx/memory/client` through browser API adapters. Mount
+account documents and project reads only after SessionBoundary confirms login.
+The task composer and cloud schedules receive the same account library as an
+explicit React prop. Guest draft handoff never carries private source references.
+Task details show the immutable creation snapshot without reading current documents.
 
 Task and approval routes use `@raypx/tasks/client`; the shell imports only
 `@raypx/tasks/client/pending-count`. Both use account-keyed state and

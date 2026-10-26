@@ -1,4 +1,12 @@
-const destinations = new Set(["/", "/tasks", "/approvals", "/settings", "/admin/settings"]);
+const destinations = new Set([
+  "/",
+  "/tasks",
+  "/approvals",
+  "/automations",
+  "/memory",
+  "/settings",
+  "/admin/settings",
+]);
 
 /** Only application pages may be resumed after authentication. Never execute an intent here. */
 export function safeReturnTo(value: unknown): string {

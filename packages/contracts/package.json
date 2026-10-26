@@ -10,7 +10,9 @@
     "./local": "./src/local.ts",
     "./tasks": "./src/tasks.ts",
     "./task-text": "./src/task-text.ts",
-    "./terminal": "./src/terminal.ts"
+    "./terminal": "./src/terminal.ts",
+    "./jobs": "./src/jobs.ts",
+    "./memory": "./src/memory.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -22,6 +24,9 @@
   },
   "dependencies": {
     "@orpc/contract": "catalog:",
+    "@raypx/core": "workspace:*",
+    "@raypx/jobs": "workspace:*",
+    "@raypx/memory": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

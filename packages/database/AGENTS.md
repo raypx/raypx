@@ -45,3 +45,15 @@ are generated with the foundation schema and never applied to a retired database
 
 `control_owner.security_epoch/security_revoked_at` fence host credentials and stale
 bootstrap cookies during security revocation. Auth/API own their transition policy.
+
+`cloud_job` stores account-owned plans with CAS revisions and captured device epochs.
+Its UUID is the create request ID. `cloud_job_run` snapshots each immutable action;
+its primary key is also the managed task/command ID, with a separate unique scheduled
+occurrence index. Internal checked-at timestamps support fair active reconciliation
+and are absent from public DTOs. API owns claiming, overlap and uncertainty policy.
+Deleting a plan cascades its run log only; managed control tasks are separate.
+
+`context_document` stores current account-owned memory/templates; `context_version`
+stores complete immutable revisions. API owns CAS, quota, idempotency and restore
+policy. Read resolution joins current eligibility with selected revisions in one
+MVCC snapshot without the account write lock. Archive never deletes either table.

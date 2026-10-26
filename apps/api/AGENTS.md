@@ -40,6 +40,23 @@ on the next schedule. Never add a production HTTP task runner or log driver erro
 Node tasks reuse the API runtime; Worker tasks create and close an event-owned one.
 See `docs/development/server-jobs.md` for policy and verification.
 
+`schedules:tick` runs every minute on both platforms with the same deployment gate.
+`@raypx/jobs/server` owns scheduling use cases; API supplies PostgreSQL persistence
+and the private relay executor. `jobs.*` RPC resolves an account on every call;
+writes additionally require a trusted Origin, revision checks and account limits.
+Create request IDs are durable plan IDs; retries are checked before the 100-plan quota.
+Due claims use DB time, row locks and unique schedule slots, skip missed occurrences
+and advance only into the future. Active/unknown runs prevent overlap until an
+authoritative task terminal projection; uncertainty pauses the plan without resending.
+Internal checked-at ordering rotates reconciliation fairly across bounded batches.
+Deleting a plan removes its run log, while existing managed tasks remain unchanged.
+
+`memory.*` requires an account session on every read and write; mutations also require
+trusted Origin, CAS and account limits. `@raypx/memory/server` owns shared use cases;
+`server/memory/repository.ts` atomically stores current documents and immutable
+versions. Resolve joins current eligibility with selected revisions without account
+write locking. Sources are frozen on task creation and obey core's full prompt budget.
+
 ## Constraints
 
 - Dev and build run vp under Node (`bun vp`, never `bun --bun vp`); start

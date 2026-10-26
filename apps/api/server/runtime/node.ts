@@ -7,6 +7,7 @@ import { errorReports } from "../error-reports.js";
 import { createRuntime, type ApiRuntime, type RuntimeProviders } from "./shared.js";
 import { connectRedis } from "./redis.js";
 import { createClientIpReader } from "../app/client-ip.js";
+import { createRelayJobExecutor } from "../relay/jobs.js";
 
 export type { ApiRuntime } from "./shared.js";
 
@@ -30,6 +31,7 @@ export async function createApiRuntime(
       logger,
       clientIpHeader: CLIENT_IP_HEADER,
       onRevoke: (userId, deviceId) => nodeRelay.revoke(userId, deviceId),
+      createJobExecutor: (control) => createRelayJobExecutor(control, nodeRelay),
       connect: () => connectDatabase(environment.DATABASE_URL),
       closeLogger: () => logger.close(),
       ...(environment.REDIS_URL ? { redis: connectRedis(environment.REDIS_URL) } : {}),

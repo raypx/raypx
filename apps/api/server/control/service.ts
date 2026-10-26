@@ -1,3 +1,12 @@
+import type { CloudJobAction } from "@raypx/jobs";
+import { ContextError } from "@raypx/memory";
+import {
+  taskExecutionPrompt,
+  TaskContextError,
+  type TaskContextSelection,
+  type TaskContextSnapshot,
+  type TaskContextTarget,
+} from "@raypx/core/tasks";
 import type { AuthSession } from "@raypx/auth/types";
 import type {
   HostAuthorization,
@@ -72,6 +81,15 @@ type ObservedRequest = TerminalRequest & ControlRecord & { serverCancelled?: tru
 interface Task extends AgentTask {
   epoch: number;
 }
+interface ContextCommand extends ControlRecord {
+  request: RelayRequest;
+  context: TaskContextSnapshot;
+}
+export type ResolveTaskContext = (
+  userId: string,
+  selection: TaskContextSelection,
+  target: TaskContextTarget,
+) => Promise<TaskContextSnapshot>;
 interface Project extends ControlRecord {
   projectId: string;
   name: string;
@@ -118,6 +136,7 @@ export class ControlService {
   constructor(
     private readonly repository: ControlRepository,
     private readonly clock: () => number = Date.now,
+    private readonly resolveContext?: ResolveTaskContext,
   ) {}
   private now() {
     return new Date(this.clock()).toISOString();
@@ -636,8 +655,115 @@ export class ControlService {
     });
     return cursor;
   }
-  route(userId: string, id: string, request: RelayRequest): Promise<RelayCommand> {
+  private async jobTarget(tx: ControlReader, action: CloudJobAction) {
+    const device = required(await tx.get<Device>("device", action.deviceId));
+    if (device.revoked || device.epoch !== action.epoch) throw new ControlError("DEVICE_REVOKED");
+    if (action.type === "agent.run") {
+      const project = required(
+        await tx.get<Project>("project", `${device.id}:${action.projectId}`),
+      );
+      if (!project.providers.includes(action.provider))
+        throw new ControlError("PROVIDER_UNAVAILABLE");
+      if (
+        !device.capabilities.some(
+          (capability) => capability.provider === action.provider && capability.available,
+        )
+      )
+        throw new ControlError("PROVIDER_UNAVAILABLE");
+    }
+    return device;
+  }
+  async validateJobTarget(userId: string, action: CloudJobAction) {
+    await this.repository.read(userId, async (tx) => {
+      await this.jobTarget(tx, action);
+    });
+    if (action.type === "agent.run" && action.contextSelection?.sources.length)
+      await this.contextFor(userId, action.contextSelection, action, action.prompt);
+  }
+  validateContextProject(userId: string, target: TaskContextTarget) {
+    return this.repository.read(userId, async (tx) => {
+      const device = required(await tx.get<Device>("device", target.deviceId));
+      if (device.revoked) throw new ControlError("DEVICE_REVOKED");
+      required(await tx.get<Project>("project", `${device.id}:${target.projectId}`));
+    });
+  }
+  private async contextFor(
+    userId: string,
+    selection: TaskContextSelection,
+    target: TaskContextTarget,
+    prompt: string,
+  ) {
+    if (!this.resolveContext) throw new ControlError("CONTEXT_UNAVAILABLE");
+    try {
+      const snapshot = await this.resolveContext(userId, selection, {
+        deviceId: target.deviceId,
+        projectId: target.projectId,
+      });
+      taskExecutionPrompt({ prompt, context: snapshot });
+      return snapshot;
+    } catch (error) {
+      if (error instanceof ContextError || error instanceof TaskContextError)
+        throw new ControlError(error.code);
+      throw error;
+    }
+  }
+  validateJobPeer(actor: RelayActor, action: CloudJobAction) {
+    return this.repository.read(actor.userId, async (tx) => {
+      if (
+        actor.role !== "device" ||
+        actor.deviceId !== action.deviceId ||
+        actor.epoch !== action.epoch
+      )
+        throw new ControlError("DEVICE_REPLACED");
+      await this.check(tx, actor);
+      const device = await this.jobTarget(tx, action);
+      if (device.connectionId !== actor.connectionId) throw new ControlError("DEVICE_REPLACED");
+    });
+  }
+  jobTask(userId: string, taskId: string) {
+    return this.repository.read(userId, async (tx) => {
+      const task = await tx.get<Task>("task", taskId);
+      return task ? { status: task.status } : null;
+    });
+  }
+  async route(
+    userId: string,
+    id: string,
+    request: RelayRequest,
+    job?: CloudJobAction,
+  ): Promise<RelayCommand> {
+    let context: TaskContextSnapshot | undefined;
+    if (request.method === "tasks.create" && request.input.contextSelection?.sources.length) {
+      const previous = await this.repository.read(userId, (tx) =>
+        tx.get<ContextCommand>("command", id),
+      );
+      if (previous) {
+        if (canonical(previous.request) !== canonical(request))
+          throw new ControlError("IDEMPOTENCY_CONFLICT");
+        context = previous.context;
+      } else
+        context = await this.contextFor(
+          userId,
+          request.input.contextSelection,
+          request.input,
+          request.input.prompt,
+        );
+    }
     return this.repository.transaction(userId, async (tx) => {
+      if (job) {
+        await this.jobTarget(tx, job);
+        if (
+          job.type !== "agent.run" ||
+          request.method !== "tasks.create" ||
+          request.input.deviceId !== job.deviceId ||
+          request.input.projectId !== job.projectId ||
+          request.input.provider !== job.provider ||
+          request.input.mode !== job.mode ||
+          request.input.prompt !== job.prompt ||
+          canonical(request.input.contextSelection) !== canonical(job.contextSelection)
+        )
+          throw new ControlError("IDEMPOTENCY_CONFLICT");
+      }
       let deviceId: string;
       if (request.method === "observed.decide") {
         const pending = required(
@@ -675,7 +801,19 @@ export class ControlService {
         id !== request.input.id
       )
         throw new ControlError("IDEMPOTENCY_CONFLICT");
-      return { id, deviceId, expiresAt: new Date(this.clock() + 15_000).toISOString(), request };
+      const previous = await tx.get<ContextCommand>("command", id);
+      if (previous) {
+        if (canonical(previous.request) !== canonical(request) || previous.deviceId !== deviceId)
+          throw new ControlError("IDEMPOTENCY_CONFLICT");
+        context = previous.context;
+      } else if (context) await tx.put("command", { id, deviceId, request, context });
+      return {
+        id,
+        deviceId,
+        expiresAt: new Date(this.clock() + 15_000).toISOString(),
+        request,
+        ...(context ? { context } : {}),
+      };
     });
   }
   listDevices(userId: string) {

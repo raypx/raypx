@@ -84,7 +84,10 @@ async function submission() {
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
       <BrowserLanguageProvider>
-        <TaskWorkspace client={client} accountId="account" />
+        <TaskWorkspace
+          client={client}
+          scope={{ kind: "remote", namespace: "default", accountId: "account" }}
+        />
       </BrowserLanguageProvider>
     </QueryClientProvider>,
   );

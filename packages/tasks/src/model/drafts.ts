@@ -1,4 +1,8 @@
-import type { AgentProvider } from "@raypx/contracts/tasks";
+import {
+  taskContextSelectionSchema,
+  type AgentProvider,
+  type TaskContextSelection,
+} from "@raypx/core/tasks";
 
 export const MAX_TASK_DRAFTS = 20;
 export interface DraftInput {
@@ -7,6 +11,7 @@ export interface DraftInput {
   provider: AgentProvider;
   prompt: string;
   mode: "run" | "plan";
+  contextSelection?: TaskContextSelection | undefined;
 }
 export interface TaskDraft extends DraftInput {
   id: string;
@@ -35,11 +40,15 @@ export function readTaskDrafts(raw: string | null): TaskDraft[] {
       ids.has(draft.id as string) ||
       !(draft.prompt as string).trim() ||
       !Number.isFinite(Date.parse(draft.updatedAt as string)) ||
-      !["claude", "codex"].includes(String(draft.provider)) ||
-      !["run", "plan"].includes(String(draft.mode))
+      (draft.provider !== "claude" && draft.provider !== "codex") ||
+      (draft.mode !== "run" && draft.mode !== "plan")
     )
       throw new Error("Invalid draft value");
     ids.add(draft.id as string);
+    const contextSelection =
+      draft.contextSelection === undefined
+        ? undefined
+        : taskContextSelectionSchema.parse(draft.contextSelection);
     // Drop unknown fields, including any externally inserted executable content.
     return {
       id: draft.id,
@@ -49,6 +58,7 @@ export function readTaskDrafts(raw: string | null): TaskDraft[] {
       updatedAt: draft.updatedAt,
       provider: draft.provider,
       mode: draft.mode,
+      ...(contextSelection ? { contextSelection } : {}),
     } as TaskDraft;
   });
 }
@@ -58,6 +68,8 @@ export function sameDraft(a: DraftInput, b: DraftInput) {
     a.projectId === b.projectId &&
     a.provider === b.provider &&
     a.prompt === b.prompt &&
-    a.mode === b.mode
+    a.mode === b.mode &&
+    JSON.stringify(a.contextSelection?.sources ?? []) ===
+      JSON.stringify(b.contextSelection?.sources ?? [])
   );
 }

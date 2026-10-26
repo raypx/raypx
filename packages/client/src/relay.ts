@@ -28,6 +28,10 @@ export class RelayConnection {
   private fallbackVersion: 2 | undefined;
   private attemptedVersion: 2 | 3 = 2;
   private accepted = false;
+  private contextAvailable = false;
+  get contextSupported() {
+    return this.contextAvailable;
+  }
   constructor(
     private readonly options: {
       url: string;
@@ -52,6 +56,7 @@ export class RelayConnection {
     if (!this.enabled) return;
     const generation = ++this.generation;
     this.accepted = false;
+    this.contextAvailable = false;
     try {
       const socket = (this.options.socket ?? ((url) => new WebSocket(url)))(this.options.url);
       this.socket = socket;
@@ -92,6 +97,7 @@ export class RelayConnection {
           this.lastMessage = Date.now();
           if (frame.type === "ready") {
             this.accepted = true;
+            this.contextAvailable = frame.contextSupported === true;
             this.options.protocolChanged?.(frame.protocolVersion);
             this.options.status(true);
             this.heartbeat = setInterval(() => {
@@ -110,6 +116,7 @@ export class RelayConnection {
         if (this.heartbeat) clearInterval(this.heartbeat);
         this.heartbeat = undefined;
         this.socket = undefined;
+        this.contextAvailable = false;
         const fallback =
           event.code === 4006 &&
           !this.accepted &&
@@ -146,6 +153,13 @@ export class RelayConnection {
     }
   }
   send(frame: RelayClientFrame) {
+    if (
+      frame.type === "request" &&
+      frame.request.method === "tasks.create" &&
+      frame.request.input.contextSelection?.sources.length &&
+      !this.contextAvailable
+    )
+      throw new Error("UPGRADE_REQUIRED");
     const value = JSON.stringify(frame);
     if (new TextEncoder().encode(value).byteLength > MAX_RELAY_BYTES)
       throw new Error("RELAY_FRAME_LIMIT");
@@ -159,6 +173,7 @@ export class RelayConnection {
   }
   stop() {
     this.enabled = false;
+    this.contextAvailable = false;
     this.generation++;
     if (this.retry) clearTimeout(this.retry);
     if (this.heartbeat) clearInterval(this.heartbeat);

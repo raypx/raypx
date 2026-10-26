@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { agentProviderSchema, decisionSchema, questionSchema } from "./human.js";
-import { normalizeTaskJson } from "./task-text.js";
+import { agentProviderSchema, decisionSchema, questionSchema } from "@raypx/core/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
 
 export const TERMINAL_PROTOCOL_VERSION = 1 as const;
 export const TERMINAL_DEFAULT_WAIT_SECONDS = 300;

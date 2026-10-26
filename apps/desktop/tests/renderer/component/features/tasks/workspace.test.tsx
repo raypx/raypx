@@ -110,6 +110,7 @@ beforeEach(() => {
         params: { request?: { method: string; input: AgentTask }; before?: string; id?: string },
       ) => {
         if (method === "agents.local.device") return device;
+        if (method === "memory.list") return [];
         if (method === "agents.local.list")
           return tasks.filter(
             (task) => !params.before || `${task.createdAt}:${task.id}` < params.before,
@@ -297,7 +298,10 @@ it("runs and approves local tasks without signing in or reaching the cloud", asy
   await screen.findByText("Private local result");
   expect(mocks.remote).not.toHaveBeenCalled();
   expect(
-    mocks.request.mock.calls.every(([method]) => String(method).startsWith("agents.local.")),
+    mocks.request.mock.calls.every(
+      ([method]) =>
+        String(method).startsWith("agents.local.") || String(method).startsWith("memory."),
+    ),
   ).toBe(true);
   fireEvent.click(screen.getByRole("tab", { name: "Connected computers" }));
   await screen.findByRole("heading", { name: "Sign in for remote access" });
@@ -489,7 +493,11 @@ it("preserves the local editor and owner through login, account switches, logout
     "Device-owned unsent work",
   );
   expect(
-    mocks.request.mock.calls.every(([, params]) => params.accountId === LOCAL_WORKSPACE_ID),
+    mocks.request.mock.calls.every(([method, params]) =>
+      String(method).startsWith("memory.")
+        ? params.accountId === undefined
+        : params.accountId === LOCAL_WORKSPACE_ID,
+    ),
   ).toBe(true);
   expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
     false,

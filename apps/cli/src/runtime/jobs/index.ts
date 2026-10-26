@@ -1,4 +1,5 @@
 import { Cron } from "croner";
+import { nextJobRuns } from "@raypx/jobs";
 import type { JobDefinition, JobInput, JobRun, LocalEvent } from "@raypx/contracts/local";
 import { LocalError } from "../errors";
 import type { FileRuntime } from "../files";
@@ -23,19 +24,12 @@ export class JobRuntime {
     private readonly record?: RecordDiagnostic,
   ) {}
   validate(input: JobInput) {
-    if (input.cron.trim().split(/\s+/).length !== 5)
-      throw new LocalError("INVALID_CRON", "Use a five-field Cron expression");
     try {
-      new Intl.DateTimeFormat("en", { timeZone: input.timezone }).resolvedOptions();
-      const cron = new Cron(input.cron, { timezone: input.timezone, paused: true });
-      const dates = cron.nextRuns(5);
-      cron.stop();
-      if (dates.length === 0) throw new Error("No future execution");
-      return dates.map((date) => date.toISOString());
-    } catch (error) {
+      return nextJobRuns(input);
+    } catch {
       throw new LocalError(
         "INVALID_CRON",
-        error instanceof Error ? error.message : "Invalid Cron expression or time zone",
+        "Use a valid five-field Cron expression and IANA time zone",
       );
     }
   }

@@ -12,6 +12,7 @@ import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { RemoteBoundary } from "../auth/components/remote-boundary";
 import { SelectField } from "@raypx/ui/select-field";
 import { useId } from "react";
+import { accountMemory, localMemory } from "../memory/client";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
 const remote = instrumentTaskClient(taskClient, analytics, "remote");
@@ -36,6 +37,15 @@ export function DesktopTaskWorkspace({
   });
   const projectId = useLocation({
     select: (location) => new URLSearchParams(location.searchStr).get("project") ?? "",
+  });
+  const taskId = useLocation({
+    select: (location) => {
+      const value = new URLSearchParams(location.searchStr).get("taskId");
+      return value &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+        ? value
+        : undefined;
+    },
   });
   const owner = legacy && accountId ? accountId : LOCAL_WORKSPACE_ID;
   const sourceId = useId();
@@ -107,14 +117,18 @@ export function DesktopTaskWorkspace({
           </div>
         ) : isDesktop() ? (
           <TaskWorkspace
+            contextLibrary={legacy ? undefined : localMemory}
             key={owner}
-            local
             persistEditor
-            draftNamespace={apiUrl}
             client={legacy ? accountLocalTaskClient : local}
-            accountId={owner}
+            scope={
+              legacy && accountId
+                ? { kind: "account-local", namespace: apiUrl, accountId }
+                : { kind: "device", namespace: apiUrl, workspaceId: LOCAL_WORKSPACE_ID }
+            }
             view={view}
             projectId={projectId}
+            initialTaskId={taskId}
             onProjectChange={(project) =>
               void router.navigate({
                 to: "/tasks",
@@ -138,11 +152,12 @@ export function DesktopTaskWorkspace({
           <RemoteBoundary>
             {(remoteAccount) => (
               <TaskWorkspace
+                contextLibrary={accountMemory}
                 persistEditor
-                draftNamespace={apiUrl}
                 client={remote}
-                accountId={remoteAccount}
+                scope={{ kind: "remote", namespace: apiUrl, accountId: remoteAccount }}
                 view={view}
+                initialTaskId={taskId}
               />
             )}
           </RemoteBoundary>
