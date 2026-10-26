@@ -28,8 +28,24 @@ setInterval(() => {
 for await (const line of createInterface({ input: process.stdin })) {
   const message = JSON.parse(line);
   if (message.method === "initialize") send({ id: message.id, result: {} });
-  if (["thread/start", "thread/resume"].includes(message.method))
-    send({ id: message.id, result: { thread: { id: "interactive" } } });
+  if (["thread/start", "thread/resume"].includes(message.method)) {
+    appendFileSync("sessions", JSON.stringify(message) + "\n");
+    if (message.method === "thread/resume" && existsSync("resume-failed")) {
+      send({ id: message.id, error: { code: -1, message: "Session unavailable" } });
+      continue;
+    }
+    send({
+      id: message.id,
+      result: {
+        thread: {
+          id:
+            message.method === "thread/resume" && existsSync("resume-new-session")
+              ? "replacement"
+              : "interactive",
+        },
+      },
+    });
+  }
   if (message.method === "turn/start") {
     if (active) process.exit(11);
     turn++;

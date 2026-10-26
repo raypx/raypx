@@ -43,7 +43,7 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
   Ordinary foreground commands never install a daemon or system service. Desktop may start
   an independent owner on demand; `daemon install` alone registers launchd.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
-- The executable configures `@raypx-kit/logger` (evlog) once with an explicit field policy and a
+- The executable configures `@raypx/logger` (evlog) once with an explicit field policy and a
   stderr stream drain, and closes it after runtime shutdown.
   Runtime diagnostics are injected; imports and unit tests never initialize a global logger.
   NDJSON diagnostics use stderr in every mode, including `--json`. Keep command results and

@@ -10,14 +10,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { Archive, ChevronRight, History, Pencil, Plus } from "lucide-react";
+import { Archive, ChevronRight, History, Pencil, Plus, Trash2 } from "lucide-react";
 import type {
   ContextDocument,
   ContextDocumentInput,
   ContextDocumentSummary,
   ContextVersion,
 } from "../model.js";
-import type { MemoryClientPort, MemoryProjectsPort } from "./port.js";
+import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "./port.js";
 import { memoryClientKey, memoryFailure, useMemoryRequests } from "./request.js";
 import { DocumentForm } from "./form.js";
 interface Props {
@@ -25,6 +25,7 @@ interface Props {
   ownerKey: string;
   scope: "device" | "account";
   projects?: MemoryProjectsPort;
+  usage?: MemoryUsagePort;
 }
 export function MemoryLibraryPage(props: Props) {
   return (
@@ -33,12 +34,13 @@ export function MemoryLibraryPage(props: Props) {
         props.ownerKey,
         memoryClientKey(props.client),
         props.projects && memoryClientKey(props.projects),
+        props.usage && memoryClientKey(props.usage),
       ])}
       {...props}
     />
   );
 }
-function Library({ client, projects: projectPort, scope }: Props) {
+function Library({ client, projects: projectPort, usage, scope }: Props) {
   const t = useTranslations("memory"),
     c = useTranslations("common"),
     { confirm, dialog } = useConfirmation();
@@ -50,6 +52,7 @@ function Library({ client, projects: projectPort, scope }: Props) {
     [busy, setBusy] = useState(false),
     locked = useRef(false);
   const generation = useRef(0),
+    archiveGeneration = useRef(0),
     viewGeneration = useRef(0),
     creation = useRef<string | undefined>(undefined);
   const [editing, setEditing] = useState<ContextDocument | null | false>(false);
@@ -95,6 +98,29 @@ function Library({ client, projects: projectPort, scope }: Props) {
       if (isActive()) setBusy(false);
     }
   }
+  async function remove(document: ContextDocumentSummary) {
+    await mutate(async () => {
+      if (
+        !(await confirm({
+          requestKey: `memory-delete:${document.id}:${document.revision}`,
+          title: t("deleteNamed", { name: document.name }),
+          description: t("deleteHint"),
+          confirmLabel: t("deletePermanently"),
+          cancelLabel: c("cancel"),
+        })) ||
+        !isActive()
+      )
+        return;
+      await request((options) =>
+        client.delete({ id: document.id, revision: document.revision }, options),
+      );
+      if (!isActive()) return;
+      viewGeneration.current++;
+      if (editing && editing.id === document.id) setEditing(false);
+      if (timeline?.document.id === document.id) setTimeline(undefined);
+      await load();
+    });
+  }
   async function edit(document: ContextDocumentSummary) {
     const current = ++viewGeneration.current;
     try {
@@ -125,19 +151,52 @@ function Library({ client, projects: projectPort, scope }: Props) {
     });
   }
   async function archive(document: ContextDocumentSummary) {
-    if (
-      !document.archived &&
-      !(await confirm({
-        requestKey: `memory-archive:${document.id}`,
-        title: t("archiveNamed", { name: document.name }),
-        description: t("archiveHint"),
-        confirmLabel: t("archive"),
-        cancelLabel: c("cancel"),
-      }))
-    )
-      return;
-    if (!isActive()) return;
+    if (locked.current || !isActive()) return;
+    const current = ++archiveGeneration.current;
     await mutate(async () => {
+      if (!document.archived) {
+        let description = t(scope === "account" ? "archiveHint" : "localArchiveHint");
+        if (scope === "account") {
+          let plans: Awaited<ReturnType<MemoryUsagePort["scheduledPlans"]>> | undefined;
+          try {
+            if (usage)
+              plans = await request((options) =>
+                usage.scheduledPlans({ id: document.id }, options),
+              );
+          } catch {
+            // Unknown is distinct from zero; the reversible action still requires confirmation.
+          }
+          if (!isActive() || current !== archiveGeneration.current) return;
+          if (plans) {
+            const preview = plans.slice(0, 3).map((plan) => {
+              const characters = Array.from(plan.name.replace(/\s+/gu, " ").trim());
+              const name =
+                characters.length > 40
+                  ? `${characters.slice(0, 39).join("")}…`
+                  : characters.join("");
+              return t("scheduledPlanPreview", {
+                name,
+                status: t(plan.enabled ? "planEnabled" : "planPaused"),
+              });
+            });
+            description += ` ${t("scheduledPlansCount", { count: String(plans.length) })}`;
+            if (preview.length) description += ` ${preview.join("; ")}.`;
+            if (plans.length > 3)
+              description += ` ${t("scheduledPlansMore", { count: String(plans.length - 3) })}`;
+          } else description += ` ${t("scheduledPlansUnknown")}`;
+        }
+        if (
+          !(await confirm({
+            requestKey: `memory-archive:${document.id}`,
+            title: t("archiveNamed", { name: document.name }),
+            description,
+            confirmLabel: t("archive"),
+            cancelLabel: c("cancel"),
+          }))
+        )
+          return;
+      }
+      if (!isActive() || current !== archiveGeneration.current) return;
       await request((options) =>
         client.archive(
           { id: document.id, revision: document.revision, archived: !document.archived },
@@ -253,6 +312,7 @@ function Library({ client, projects: projectPort, scope }: Props) {
         </div>
       </header>
       <p className="mb-6 max-w-[75ch] text-xs text-muted-foreground">{t("referenceHint")}</p>
+      <p className="mb-5 max-w-[75ch] text-xs text-muted-foreground">{t("quotaHint")}</p>
       {error && (
         <p role="alert" className="mb-5 text-sm text-destructive-text">
           {t(error)}
@@ -336,6 +396,18 @@ function Library({ client, projects: projectPort, scope }: Props) {
               <Archive aria-hidden="true" />
               {t(document.archived ? "unarchive" : "archive")}
             </Button>
+            {document.archived && (
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void remove(document)}
+                className="text-destructive-text"
+                aria-label={t("deleteNamed", { name: document.name })}
+              >
+                <Trash2 aria-hidden="true" />
+                {t("deletePermanently")}
+              </Button>
+            )}
           </div>
         </article>
       ))}
@@ -368,7 +440,12 @@ function Library({ client, projects: projectPort, scope }: Props) {
                 <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
                 {t("revision", { revision: String(version.revision) })}{" "}
                 <span className="text-xs text-muted-foreground">
-                  {t(version.reason)} · {new Date(version.updatedAt).toLocaleString()}
+                  {t(
+                    version.reason === "restored" && version.restoredFrom === undefined
+                      ? "unarchived"
+                      : version.reason,
+                  )}{" "}
+                  · {new Date(version.updatedAt).toLocaleString()}
                 </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-3 pb-4">

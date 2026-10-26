@@ -334,6 +334,18 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
       await expect(
         references.memory.resolve({ selection, target: { deviceId: grant.deviceId, projectId } }),
       ).rejects.toMatchObject({ data: { error: { code: "CONTEXT_ARCHIVED" } } });
+      expect(await references.memory.delete({ id: reference.id, revision: 4 })).toEqual({
+        deleted: true,
+      });
+      expect(await references.memory.delete({ id: reference.id, revision: 4 })).toEqual({
+        deleted: true,
+      });
+      await expect(references.memory.get({ id: reference.id })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+      expect((await client.tasks.get({ id, after: 0 })).task.context).toEqual(
+        command.command.context,
+      );
     } finally {
       viewer.socket.close();
     }

@@ -41,6 +41,7 @@ export const jobErrorCodes = [
   "CONTEXT_PROJECT_MISMATCH",
   "CONTEXT_TOO_LARGE",
   "CONTEXT_UNAVAILABLE",
+  "CONTEXT_REQUEST_EXPIRED",
 ] as const;
 export function jobFailure(error: unknown): (typeof jobErrorCodes)[number] {
   if (!error || typeof error !== "object") return "NETWORK_UNAVAILABLE";

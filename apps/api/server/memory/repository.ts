@@ -1,6 +1,11 @@
 import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
-import { contextDocument, contextVersion, controlOwner } from "@raypx/database/schema";
+import {
+  contextDocument,
+  contextVersion,
+  contextDeletion,
+  controlOwner,
+} from "@raypx/database/schema";
 import {
   ContextError,
   contextDocumentSchema,
@@ -57,15 +62,24 @@ const summaryView = (row: Omit<DocumentRow, "userId" | "content">) =>
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   });
-async function lockedDocument(tx: Transaction, owner: string, id: string) {
-  const rows = await tx.execute(sql`select id from ${contextDocument}
-    where user_id=${owner} and id=${id} for update`);
-  if (!rows.length) throw new ContextError("CONTEXT_NOT_FOUND");
-  const [row] = await tx
+const versionView = (body: unknown, physicalId: string, revision: number) => {
+  const version = contextVersionSchema.parse(body);
+  if (version.id !== physicalId.toLowerCase() || version.revision !== revision)
+    throw new ContextError("CONTEXT_UNAVAILABLE");
+  return version;
+};
+async function documentRow(tx: Database | Transaction, owner: string, id: string, lock = false) {
+  const query = tx
     .select()
     .from(contextDocument)
-    .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id)));
-  return row!;
+    .where(
+      and(eq(contextDocument.userId, owner), sql`lower(${contextDocument.id})=${id.toLowerCase()}`),
+    )
+    .limit(2);
+  const rows = await (lock ? query.for("update") : query);
+  if (!rows.length) throw new ContextError("CONTEXT_NOT_FOUND");
+  if (rows.length > 1) throw new ContextError("CONTEXT_CONFLICT");
+  return rows[0]!;
 }
 async function selectedVersion(
   tx: Database | Transaction,
@@ -84,18 +98,19 @@ async function selectedVersion(
       ),
     );
   if (!row) throw new ContextError("CONTEXT_NOT_FOUND");
-  return contextVersionSchema.parse(row.body);
+  return versionView(row.body, id, revision);
 }
 async function recordVersion(
   tx: Transaction,
   owner: string,
+  physicalId: string,
   document: ContextDocument,
   reason: ContextVersion["reason"],
   restoredFrom?: number,
 ) {
   await tx.insert(contextVersion).values({
     userId: owner,
-    documentId: document.id,
+    documentId: physicalId,
     revision: document.revision,
     body: { ...document, reason, ...(restoredFrom === undefined ? {} : { restoredFrom }) },
   });
@@ -109,10 +124,42 @@ const uniqueViolation = (error: unknown): boolean =>
       ("cause" in error && uniqueViolation(error.cause))),
   );
 
+async function findCreation(
+  tx: Database | Transaction,
+  owner: string,
+  requestId: string,
+  input: ContextDocumentInput,
+) {
+  const [deleted] = await tx
+    .select({ id: contextDeletion.id })
+    .from(contextDeletion)
+    .where(eq(contextDeletion.id, requestId.toLowerCase()))
+    .limit(1);
+  if (deleted) throw new ContextError("IDEMPOTENCY_CONFLICT");
+  const rows = await tx
+    .select()
+    .from(contextDocument)
+    .where(sql`lower(${contextDocument.id})=${requestId.toLowerCase()}`)
+    .limit(2);
+  if (rows.length > 1) throw new ContextError("IDEMPOTENCY_CONFLICT");
+  const row = rows[0];
+  if (!row) return null;
+  if (row.userId !== owner) throw new ContextError("IDEMPOTENCY_CONFLICT");
+  const original = await selectedVersion(tx, owner, row.id, 1);
+  if (canonical(definition(original)) !== canonical(definition(input)))
+    throw new ContextError("IDEMPOTENCY_CONFLICT");
+  return documentView(row);
+}
+async function lockIdentity(tx: Transaction, id: string) {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtextextended(${`memory:${id.toLowerCase()}`},0))`,
+  );
+}
+
 export function createContextRepository(db: Database): ContextLibraryRepository {
   return {
     async list(owner) {
-      return (
+      const rows = (
         await db
           .select(summaryColumns)
           .from(contextDocument)
@@ -120,37 +167,27 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
           .orderBy(desc(contextDocument.updatedAt), desc(contextDocument.id))
           .limit(100)
       ).map(summaryView);
+      if (new Set(rows.map((row) => row.id)).size !== rows.length)
+        throw new ContextError("CONTEXT_CONFLICT");
+      return rows;
     },
     async get(owner, id) {
-      const [row] = await db
-        .select()
-        .from(contextDocument)
-        .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id)));
-      if (!row) throw new ContextError("CONTEXT_NOT_FOUND");
-      return documentView(row);
+      return documentView(await documentRow(db, owner, id));
     },
-    version: (owner, id, revision) => selectedVersion(db, owner, id, revision),
+    async version(owner, id, revision) {
+      return selectedVersion(db, owner, (await documentRow(db, owner, id)).id, revision);
+    },
+    findCreation: (owner, requestId, input) => findCreation(db, owner, requestId, input),
     async create(owner, requestId, input) {
-      const existing = async (tx: Database | Transaction) => {
-        const [row] = await tx
-          .select()
-          .from(contextDocument)
-          .where(eq(contextDocument.id, requestId));
-        if (!row) return null;
-        const saved = documentView(row);
-        if (row.userId !== owner) throw new ContextError("IDEMPOTENCY_CONFLICT");
-        const original = await selectedVersion(tx, owner, requestId, 1);
-        if (canonical(definition(original)) !== canonical(definition(input)))
-          throw new ContextError("IDEMPOTENCY_CONFLICT");
-        return saved;
-      };
+      requestId = requestId.toLowerCase();
       try {
         return await db.transaction(async (tx) => {
+          await lockIdentity(tx, requestId);
           await tx.insert(controlOwner).values({ userId: owner }).onConflictDoNothing();
           await tx.execute(
             sql`select user_id from ${controlOwner} where user_id=${owner} for update`,
           );
-          const previous = await existing(tx);
+          const previous = await findCreation(tx, owner, requestId, input);
           if (previous) return previous;
           const [count] = await tx.execute<{ count: number }>(sql`select count(*)::integer as count
             from ${contextDocument} where user_id=${owner}`);
@@ -165,19 +202,21 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
               archived: false,
             })
             .returning();
-          return recordVersion(tx, owner, documentView(row!), "created");
+          return recordVersion(tx, owner, row!.id, documentView(row!), "created");
         });
       } catch (error) {
         if (!uniqueViolation(error)) throw error;
-        const previous = await existing(db);
+        const previous = await findCreation(db, owner, requestId, input);
         if (!previous) throw error;
         return previous;
       }
     },
     update(owner, id, revision, input) {
       return db.transaction(async (tx) => {
-        const current = await lockedDocument(tx, owner, id);
+        const current = await documentRow(tx, owner, id, true);
         if (current.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
+        if (canonical(definition(documentView(current))) === canonical(definition(input)))
+          return documentView(current);
         const [row] = await tx
           .update(contextDocument)
           .set({
@@ -185,14 +224,14 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
             revision: revision + 1,
             updatedAt: sql`now()`,
           })
-          .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id)))
+          .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, current.id)))
           .returning();
-        return recordVersion(tx, owner, documentView(row!), "updated");
+        return recordVersion(tx, owner, current.id, documentView(row!), "updated");
       });
     },
     archive(owner, id, revision, archived) {
       return db.transaction(async (tx) => {
-        const current = await lockedDocument(tx, owner, id);
+        const current = await documentRow(tx, owner, id, true);
         if (current.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
         if (current.archived === archived) return documentView(current);
         const [row] = await tx
@@ -202,83 +241,117 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
             revision: revision + 1,
             updatedAt: sql`now()`,
           })
-          .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id)))
+          .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, current.id)))
           .returning();
-        return recordVersion(tx, owner, documentView(row!), archived ? "archived" : "restored");
+        return recordVersion(
+          tx,
+          owner,
+          current.id,
+          documentView(row!),
+          archived ? "archived" : "unarchived",
+        );
+      });
+    },
+    delete(owner, id, revision) {
+      return db.transaction(async (tx) => {
+        await lockIdentity(tx, id);
+        const [deleted] = await tx
+          .select()
+          .from(contextDeletion)
+          .where(and(eq(contextDeletion.id, id.toLowerCase()), eq(contextDeletion.userId, owner)));
+        if (deleted) {
+          if (deleted.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
+          return { deleted: true as const };
+        }
+        const current = await documentRow(tx, owner, id, true);
+        if (current.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
+        if (!current.archived) throw new ContextError("CONTEXT_NOT_ARCHIVED");
+        await tx.insert(contextDeletion).values({ id: id.toLowerCase(), userId: owner, revision });
+        await tx
+          .delete(contextDocument)
+          .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, current.id)));
+        return { deleted: true as const };
       });
     },
     async history(owner, id, before, limit) {
-      const [owned] = await db
-        .select({ id: contextDocument.id })
-        .from(contextDocument)
-        .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id)));
-      if (!owned) throw new ContextError("CONTEXT_NOT_FOUND");
+      const owned = await documentRow(db, owner, id);
       return (
         await db
-          .select({ body: contextVersion.body })
+          .select({ body: contextVersion.body, revision: contextVersion.revision })
           .from(contextVersion)
           .where(
             and(
               eq(contextVersion.userId, owner),
-              eq(contextVersion.documentId, id),
+              eq(contextVersion.documentId, owned.id),
               ...(before === undefined ? [] : [lt(contextVersion.revision, before)]),
             ),
           )
           .orderBy(desc(contextVersion.revision))
           .limit(Math.max(1, Math.min(limit, 20)))
-      ).map((row) => contextVersionSchema.parse(row.body));
+      ).map((row) => versionView(row.body, owned.id, row.revision));
     },
     restore(owner, id, revision, version) {
       return db.transaction(async (tx) => {
-        const current = await lockedDocument(tx, owner, id);
+        const current = await documentRow(tx, owner, id, true);
         if (current.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
-        const previous = await selectedVersion(tx, owner, id, version);
+        const previous = await selectedVersion(tx, owner, current.id, version);
         const [row] = await tx
           .update(contextDocument)
           .set({
             ...definition(previous),
-            archived: previous.archived,
             revision: revision + 1,
             updatedAt: sql`now()`,
           })
-          .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id)))
+          .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, current.id)))
           .returning();
-        return recordVersion(tx, owner, documentView(row!), "restored", version);
+        return recordVersion(tx, owner, current.id, documentView(row!), "restored", version);
       });
     },
     async readSources(owner, sources) {
       if (!sources.length) return [];
       // One statement sees current eligibility and immutable revisions in one MVCC snapshot.
       const rows = await db
-        .select({ current: summaryColumns, version: contextVersion.body })
+        .select({
+          current: summaryColumns,
+          version: contextVersion.body,
+          versionRevision: contextVersion.revision,
+          duplicates: sql<number>`(count(*) over (partition by lower(${contextDocument.id})))::integer`,
+        })
         .from(contextDocument)
-        .innerJoin(
+        .leftJoin(
           contextVersion,
           and(
             eq(contextVersion.documentId, contextDocument.id),
             eq(contextVersion.userId, contextDocument.userId),
+            sql`(${sql.join(
+              sources.map(
+                (source) =>
+                  sql`(lower(${contextDocument.id})=${source.id.toLowerCase()} and ${contextVersion.revision}=${source.revision})`,
+              ),
+              sql` or `,
+            )})`,
           ),
         )
         .where(
           and(
             eq(contextDocument.userId, owner),
             inArray(
-              contextDocument.id,
-              sources.map((source) => source.id),
+              sql`lower(${contextDocument.id})`,
+              sources.map((source) => source.id.toLowerCase()),
             ),
-            sql`(${sql.join(
-              sources.map(
-                (source) =>
-                  sql`(${contextVersion.documentId}=${source.id} and ${contextVersion.revision}=${source.revision})`,
-              ),
-              sql` or `,
-            )})`,
           ),
         );
-      return rows.map((row) => ({
-        current: summaryView(row.current),
-        version: contextVersionSchema.parse(row.version),
-      }));
+      if (rows.some((row) => row.duplicates > 1)) throw new ContextError("CONTEXT_CONFLICT");
+      return rows.flatMap((row) =>
+        row.version === null || row.versionRevision === null
+          ? []
+          : [
+              {
+                current: summaryView(row.current),
+                version: versionView(row.version, row.current.id, row.versionRevision),
+              },
+            ],
+      );
     },
   };
 }

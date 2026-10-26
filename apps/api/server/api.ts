@@ -11,14 +11,13 @@ import { apiContract } from "@raypx/contracts/api";
 import type { AuthSession } from "@raypx/auth/types";
 import { normalizeTrustedOrigins } from "@raypx/auth/origins";
 import { createAccountService } from "@raypx/account/server";
-import type { RequestLogger } from "@raypx-kit/logger";
+import type { ApiEventLogger } from "./logging.js";
 import { createRpcLoggingPlugin, diagnosticRoute, type ApiLogging } from "./logging.js";
 import type { RateLimiter, RateRule } from "./rate-limit.js";
 import type { CloudJobsService } from "@raypx/jobs/server";
 import { JobError } from "@raypx/jobs";
 import { ContextError } from "@raypx/memory";
 import type { ContextLibraryService } from "@raypx/memory/server";
-import { taskExecutionPrompt } from "@raypx/core/tasks";
 
 export interface ApiAppOptions {
   configuration?: ConfigurationService;
@@ -60,6 +59,7 @@ const rpcLimits = {
   "memory.create": { window: 60, max: 20 },
   "memory.update": { window: 60, max: 30 },
   "memory.archive": { window: 60, max: 20 },
+  "memory.delete": { window: 60, max: 20 },
   "memory.restore": { window: 60, max: 20 },
 } satisfies Record<string, RateRule>;
 /** True when decoded input carries keys that merge or path-set helpers could abuse. */
@@ -94,7 +94,11 @@ export function createApiApp(options: ApiAppOptions) {
     readSession: (headers) => options.readSession(headers),
   });
   const app = new Hono<{
-    Variables: { requestId: string; requestLog?: RequestLogger; rpcLogged: boolean };
+    Variables: {
+      requestId: string;
+      requestLog?: ApiEventLogger<"http.request">;
+      rpcLogged: boolean;
+    };
   }>();
   app.use("*", async (c, next) => {
     const requestId = newRequestId();
@@ -422,21 +426,20 @@ export function createApiApp(options: ApiAppOptions) {
           service.history(owner, input),
         ),
       ),
+      delete: os.memory.delete.handler(({ context, input }) =>
+        memoryCall(context, "memory.delete", true, (service, owner) =>
+          service.delete(owner, input),
+        ),
+      ),
       restore: os.memory.restore.handler(({ context, input }) =>
         memoryCall(context, "memory.restore", true, (service, owner) =>
           service.restore(owner, input),
         ),
       ),
       resolve: os.memory.resolve.handler(({ context, input }) =>
-        memoryCall(context, "memory.resolve", false, async (service, owner) => {
-          const snapshot = await service.resolve(owner, input.selection, input.target);
-          try {
-            taskExecutionPrompt({ prompt: input.prompt ?? " ", context: snapshot });
-          } catch {
-            throw new ContextError("CONTEXT_TOO_LARGE");
-          }
-          return snapshot;
-        }),
+        memoryCall(context, "memory.resolve", false, (service, owner) =>
+          service.resolve(owner, input.selection, input.target, input.prompt ?? " "),
+        ),
       ),
     },
     jobs: {

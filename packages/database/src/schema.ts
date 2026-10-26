@@ -131,6 +131,24 @@ const controlRecord = (name: string) =>
       ...(name === "control_request"
         ? [index("control_request_task_idx").on(table.userId, sql`(${table.body}->>'taskId')`)]
         : []),
+      ...(name === "control_command"
+        ? [
+            index("control_command_context_owner_idx")
+              .on(
+                table.userId,
+                sql`coalesce(${table.body}->>'capturedAt',${table.body}->'context'->>'capturedAt','')`,
+                table.id,
+              )
+              .where(sql`jsonb_typeof(${table.body}->'context')='object'`),
+            index("control_command_context_expiry_idx")
+              .on(
+                sql`coalesce(${table.body}->>'capturedAt',${table.body}->'context'->>'capturedAt','')`,
+                table.userId,
+                table.id,
+              )
+              .where(sql`jsonb_typeof(${table.body}->'context')='object'`),
+          ]
+        : []),
       ...(name === "control_event"
         ? [
             index("control_event_activity_idx")
@@ -244,7 +262,23 @@ export const contextDocument = foundation.table(
     archived: boolean("archived").notNull().default(false),
     ...timestamps(),
   },
-  (table) => [index("context_document_owner_idx").on(table.userId, table.updatedAt, table.id)],
+  (table) => [
+    index("context_document_owner_idx").on(table.userId, table.updatedAt, table.id),
+    uniqueIndex("context_document_canonical_id_idx").on(sql`lower(${table.id})`),
+  ],
+);
+// Body-free deletion receipts reserve IDs so pinned references can never change identity.
+export const contextDeletion = foundation.table(
+  "context_deletion",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    revision: integer("revision").notNull(),
+    deletedAt: timestamp("deleted_at").notNull().defaultNow(),
+  },
+  (table) => [index("context_deletion_owner_idx").on(table.userId)],
 );
 export const contextVersion = foundation.table(
   "context_version",
@@ -266,6 +300,7 @@ export const contextVersion = foundation.table(
 
 export const schema = {
   contextDocument,
+  contextDeletion,
   contextVersion,
   cloudJob,
   cloudJobRun,

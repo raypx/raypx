@@ -21,7 +21,6 @@
       "@tanstack/react-virtual": "^3.14.21",
       "@raypx-kit/env": "0.0.0-alpha.1",
       "@raypx-kit/intl": "0.0.0-alpha.1",
-      "@raypx-kit/logger": "0.0.0-alpha.2",
       "@react-email/components": "^1.0.12",
       "@react-email/render": "^2.1.1",
       "@xterm/addon-fit": "^0.11.0",
@@ -120,7 +119,7 @@
     "verify": "raypx-dev verify",
     "verify:quick": "raypx-dev verify:quick",
     "smoke": "raypx-dev smoke",
-    "test:e2e": "raypx-dev tasks e2e",
+    "test:e2e": "raypx-dev e2e",
     "test:postgres": "raypx-dev tasks test:postgres --filter api",
     "test:redis": "raypx-dev tasks test:redis --filter api",
     "package:desktop": "raypx-dev desktop build",
@@ -137,7 +136,11 @@
     "deploy:api:cloudflare": "bun run --cwd apps/api deploy:cloudflare",
     "smoke:cloudflare": "raypx-dev smoke:cloudflare",
     "test:postgres:cloudflare": "raypx-dev tasks test:postgres:cloudflare --filter api",
-    "analytics:sourcemaps": "raypx-dev analytics sourcemaps"
+    "analytics:sourcemaps": "raypx-dev analytics sourcemaps",
+    "test:e2e:web": "raypx-dev e2e --web",
+    "test:e2e:desktop": "raypx-dev e2e --desktop",
+    "test:e2e:smoke": "raypx-dev e2e --smoke",
+    "test:e2e:visual": "raypx-dev e2e --visual"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",

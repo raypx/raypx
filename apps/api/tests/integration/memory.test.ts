@@ -43,6 +43,7 @@ function fixture() {
   };
   const service = {
     list: vi.fn(async () => [summary]),
+    delete: vi.fn(async () => ({ deleted: true as const })),
     get: vi.fn(async () => saved),
     create: vi.fn(async () => saved),
     update: vi.fn(async () => saved),
@@ -91,12 +92,19 @@ it("authenticates each library RPC and derives the owner exclusively from the se
   await f.client().create({ requestId: f.saved.id, document: f.document });
   await f.client().update({ id: f.saved.id, revision: 1, document: f.document });
   await f.client().archive({ id: f.saved.id, revision: 1, archived: true });
+  await f.client().delete({ id: f.saved.id, revision: 1 });
   await f.client().history({ id: f.saved.id });
   await f.client().restore({ id: f.saved.id, revision: 1, version: 1 });
   await f.client().resolve({ selection: f.selection, target: f.target, prompt: "Inspect code" });
-  expect(f.readSession).toHaveBeenCalledTimes(8);
+  expect(f.readSession).toHaveBeenCalledTimes(9);
+  expect(f.service.delete).toHaveBeenCalledWith(f.auth.user.id, { id: f.saved.id, revision: 1 });
   expect(f.service.history).toHaveBeenCalledWith(f.auth.user.id, { id: f.saved.id, limit: 20 });
-  expect(f.service.resolve).toHaveBeenCalledWith(f.auth.user.id, f.selection, f.target);
+  expect(f.service.resolve).toHaveBeenCalledWith(
+    f.auth.user.id,
+    f.selection,
+    f.target,
+    "Inspect code",
+  );
   f.signOut();
   await expect(f.client().list({})).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   await expect(
@@ -107,6 +115,9 @@ it("authenticates each library RPC and derives the owner exclusively from the se
 it("requires an explicit trusted Origin for every mutation and permits the trusted Desktop Origin", async () => {
   const f = fixture();
   for (const origin of ["", "https://untrusted.example.test"]) {
+    await expect(f.client(origin).delete({ id: f.saved.id, revision: 1 })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
     await expect(
       f.client(origin).create({ requestId: f.saved.id, document: f.document }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -121,6 +132,7 @@ it("requires an explicit trusted Origin for every mutation and permits the trust
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
   }
   expect(f.service.create).not.toHaveBeenCalled();
+  expect(f.service.delete).not.toHaveBeenCalled();
   expect(
     await f.client("views://main").create({ requestId: f.saved.id, document: f.document }),
   ).toEqual(f.saved);
@@ -133,6 +145,9 @@ it("rejects owner injection and rate limits reads, writes and snapshot resolutio
   ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   expect(f.service.create).not.toHaveBeenCalled();
   f.limit.mockResolvedValue(false);
+  await expect(f.client().delete({ id: f.saved.id, revision: 1 })).rejects.toMatchObject({
+    code: "TOO_MANY_REQUESTS",
+  });
   await expect(f.client().list({})).rejects.toMatchObject({ code: "TOO_MANY_REQUESTS" });
   await expect(
     f.client().create({ requestId: f.saved.id, document: f.document }),
@@ -153,7 +168,14 @@ it("maps stale revisions and infrastructure failures safely and checks the actua
   await expect(f.client().get({ id: f.saved.id })).rejects.toMatchObject({
     code: "SERVICE_UNAVAILABLE",
   });
+  f.service.resolve.mockRejectedValueOnce(new ContextError("CONTEXT_TOO_LARGE"));
   await expect(
     f.client().resolve({ selection: f.selection, target: f.target, prompt: "x".repeat(32_000) }),
   ).rejects.toMatchObject({ code: "BAD_REQUEST", data: { error: { code: "CONTEXT_TOO_LARGE" } } });
+  expect(f.service.resolve).toHaveBeenLastCalledWith(
+    f.auth.user.id,
+    f.selection,
+    f.target,
+    "x".repeat(32_000),
+  );
 });

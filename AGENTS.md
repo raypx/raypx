@@ -44,6 +44,7 @@ The accepted foundation design supersedes documents in docs/history.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
   Keep external versions there and use workspace:* for internal dependencies.
 - @raypx-kit packages remain independently released external dependencies.
+- Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.

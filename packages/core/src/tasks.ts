@@ -2,10 +2,12 @@ import { z } from "zod";
 import { agentProviderSchema, questionSchema, decisionSchema } from "./human.js";
 import { taskContextSnapshotSchema } from "./task-context.js";
 export {
+  taskContextIdSchema,
   taskContextTargetSchema,
   taskContextSelectionSchema,
   taskContextSnapshotSchema,
   taskExecutionPrompt,
+  taskExecutionBudget,
   TaskContextError,
   MAX_TASK_EXECUTION_PROMPT,
   type TaskContextTarget,

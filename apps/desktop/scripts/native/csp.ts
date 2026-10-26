@@ -19,7 +19,9 @@ export function secureHtml(html: string): string {
 }
 
 if (import.meta.main) {
-  const directory = resolve(import.meta.dirname, "../../dist/client");
+  const directory = process.argv[2]
+    ? resolve(process.cwd(), process.argv[2])
+    : resolve(import.meta.dirname, "../../dist/client");
   let count = 0;
   for await (const file of new Bun.Glob("**/*.html").scan({ cwd: directory, absolute: true })) {
     await writeFile(file, secureHtml(await readFile(file, "utf8")));

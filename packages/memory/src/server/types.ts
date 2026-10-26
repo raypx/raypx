@@ -3,6 +3,7 @@ import type {
   ContextDocument,
   ContextDocumentInput,
   ContextDocumentSummary,
+  ContextDeleteResult,
   ContextVersion,
 } from "../model.js";
 
@@ -16,6 +17,12 @@ export interface ContextLibraryRepository {
   list(owner: string): Promise<ContextDocumentSummary[]>;
   get(owner: string, id: string): Promise<ContextDocument>;
   version(owner: string, id: string, revision: number): Promise<ContextVersion>;
+  /** Compare immutable creation input and recover the current entity before revalidating a target. */
+  findCreation(
+    owner: string,
+    requestId: string,
+    document: ContextDocumentInput,
+  ): Promise<ContextDocument | null>;
   create(
     owner: string,
     requestId: string,
@@ -28,6 +35,7 @@ export interface ContextLibraryRepository {
     document: ContextDocumentInput,
   ): Promise<ContextDocument>;
   archive(owner: string, id: string, revision: number, archived: boolean): Promise<ContextDocument>;
+  delete(owner: string, id: string, revision: number): Promise<ContextDeleteResult>;
   history(
     owner: string,
     id: string,

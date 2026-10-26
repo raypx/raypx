@@ -60,7 +60,8 @@ export function createRuntime(
           },
         }),
       {
-        resolveContext: (selection, target) => getMemory().resolve(selection, target),
+        resolveContext: (selection, target, prompt) =>
+          getMemory().resolve(selection, target, prompt),
         ...(options.agentExecutables ? { executables: options.agentExecutables } : {}),
         ...(options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {}),
       },
@@ -121,6 +122,11 @@ export function createRuntime(
             );
           case "memory.history":
             return getMemory().service.history(
+              LOCAL_WORKSPACE_ID,
+              contextParams(localParams[method], raw),
+            );
+          case "memory.delete":
+            return getMemory().service.delete(
               LOCAL_WORKSPACE_ID,
               contextParams(localParams[method], raw),
             );

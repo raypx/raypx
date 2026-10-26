@@ -52,6 +52,12 @@ Extract @raypx/testing when generic fixtures repeat across consumers; it must no
 import packages under test. Extract runtime only when another execution host
 directly consumes CLI internals. Do not create packages before those consumers exist.
 
+`@raypx/logger` is a private source workspace consumed by API and CLI. It owns
+evlog adapters, safe projection and managed delivery; applications own event
+schemas, privacy policies and destinations. Its safe/managed entries are universal,
+while context and stream entries remain Node/Bun-only. Keep it local while the
+product workflow settles; no Kit release or archive is required.
+
 ## Agent domain and page boundaries
 
 `@raypx/core` is the universal source of task-domain schemas, inferred types and

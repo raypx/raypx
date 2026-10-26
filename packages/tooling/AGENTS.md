@@ -10,6 +10,7 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 ## Interface
 
 - raypx-dev tasks <task> [Turbo flags]
+- raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev policy | verify | verify:quick | doctor | clean
 - `verify:quick` checks source and tests; `verify` additionally builds and probes artifacts.
@@ -39,6 +40,8 @@ Worker probes use temporary roots and fixture bindings, never development dotenv
 `./cloudflare` is the Node-executed probe runner; `./repository` exposes pinned-runtime
 helpers to explicit integration tests. Node selection uses `NODE_BINARY` and
 validates the version in `.nvmrc`. These config/test entries never enter product runtime code.
+`./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
+select pinned Node and synthetic analytics for every mode; live acceptance stays separate.
 Smoke orchestration, Node probes and the Node-executed Worker harness live in
 `src/smoke/`. Unit and integration tests live in `tests/unit/` and `tests/integration/`.
 Keep scaffold and locale policy suites separate; shared temporary workspace fixtures

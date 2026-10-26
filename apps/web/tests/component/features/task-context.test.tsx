@@ -5,7 +5,7 @@ import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { TaskComposer } from "@raypx/tasks/client/task-composer";
 import type { TaskWorkspaceClient } from "@raypx/tasks/client";
-import type { TaskContextSelection } from "@raypx/core/tasks";
+import { taskExecutionBudget, type TaskContextSelection } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { MemoryClientPort } from "@raypx/memory/client";
 import { selectOption } from "../../helpers/select";
@@ -33,21 +33,21 @@ beforeEach(() => {
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
 });
-function fixture(guest = false) {
-  const list = vi.fn<MemoryClientPort["list"]>(async () => [
-    {
-      id: sourceId,
-      revision: 3,
-      kind: "template",
-      name: "Review template",
-      category: "Review",
-      project: null,
-      archived: false,
-      createdAt: "2026-10-26T00:00:00Z",
-      updatedAt: "2026-10-26T00:00:00Z",
-    },
-  ]);
-  const library = { list } as unknown as MemoryClientPort;
+function fixture(guest = false, content = "Selected reference content") {
+  const reference = {
+    id: sourceId,
+    revision: 3,
+    kind: "template" as const,
+    name: "Review template",
+    category: "Review",
+    project: null,
+    archived: false,
+    createdAt: "2026-10-26T00:00:00Z",
+    updatedAt: "2026-10-26T00:00:00Z",
+  };
+  const list = vi.fn<MemoryClientPort["list"]>(async () => [reference]);
+  const get = vi.fn<MemoryClientPort["get"]>(async () => ({ ...reference, content }));
+  const library = { list, get } as unknown as MemoryClientPort;
   const create = vi.fn<TaskWorkspaceClient["tasks"]["create"]>(async (input) => ({
     ...input,
     summary: "",
@@ -90,11 +90,11 @@ function fixture(guest = false) {
       <Composer />
     </BrowserLanguageProvider>,
   );
-  return { list, create, signIn };
+  return { list, get, create, signIn };
 }
 it("saves source revisions in a draft and sends only the selection when creating a task", async () => {
-  const { list, create } = fixture();
-  await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+  const { create } = fixture();
+  await waitFor(() => expect(screen.getByRole("button", { name: "Send task" })).toBeEnabled());
   fireEvent.click(await screen.findByRole("button", { name: "Save draft" }));
   expect(JSON.parse(localStorage.getItem("device-context-draft")!)[0].contextSelection).toEqual(
     selection,
@@ -123,4 +123,31 @@ it("does not read private references or carry saved source IDs through a guest s
   expect(create).not.toHaveBeenCalled();
   expect(signIn).toHaveBeenCalledTimes(1);
   expect(signIn.mock.calls[0]?.[0]).not.toHaveProperty("contextSelection");
+});
+
+it("blocks an oversized combined prompt through both the button and form, then permits a smaller draft", async () => {
+  const { create, get } = fixture(false, "r".repeat(8000));
+  const prompt = screen.getByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(prompt, { target: { value: "x".repeat(25_000) } });
+  await screen.findByText(/Over the limit/);
+  expect(screen.getByRole("button", { name: "Send task" })).toBeDisabled();
+  fireEvent.submit(prompt.closest("form")!);
+  fireEvent.keyDown(prompt, { key: "Enter", ctrlKey: true });
+  expect(create).not.toHaveBeenCalled();
+  fireEvent.change(prompt, { target: { value: "  Shorter task\n " } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Send task" })).toBeEnabled());
+  const expected = taskExecutionBudget({
+    prompt: "Shorter task",
+    context: {
+      sources: [
+        { name: "Review template", kind: "template", revision: 3, content: "r".repeat(8000) },
+      ],
+    },
+  });
+  expect(screen.getByLabelText("Reference and task budget")).toHaveTextContent(
+    `${expected.characters} / 32000`,
+  );
+  fireEvent.submit(prompt.closest("form")!);
+  await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+  expect(get).toHaveBeenCalledTimes(1);
 });

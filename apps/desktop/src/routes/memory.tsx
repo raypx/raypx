@@ -6,6 +6,7 @@ import { RemoteBoundary } from "../features/auth/components/remote-boundary";
 import {
   accountMemory,
   memoryProjects,
+  memoryUsage,
   localMemory,
   localMemoryProjects,
 } from "../features/memory/client";
@@ -55,6 +56,7 @@ function Page() {
             <MemoryLibraryPage
               client={accountMemory}
               projects={memoryProjects}
+              usage={memoryUsage}
               ownerKey={accountId}
               scope="account"
             />

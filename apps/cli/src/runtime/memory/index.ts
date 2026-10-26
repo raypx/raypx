@@ -2,11 +2,7 @@ import { join } from "node:path";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { ContextError } from "@raypx/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import {
-  taskExecutionPrompt,
-  type TaskContextSelection,
-  type TaskContextTarget,
-} from "@raypx/contracts/tasks";
+import { type TaskContextSelection, type TaskContextTarget } from "@raypx/contracts/tasks";
 import type { AgentRuntime } from "../agents";
 import { SqliteContextRepository } from "./repository";
 
@@ -31,9 +27,7 @@ export class MemoryRuntime {
     });
   }
   async resolve(selection: TaskContextSelection, target: TaskContextTarget, prompt = " ") {
-    const context = await this.service.resolve(LOCAL_WORKSPACE_ID, selection, target);
-    taskExecutionPrompt({ prompt, context });
-    return context;
+    return this.service.resolve(LOCAL_WORKSPACE_ID, selection, target, prompt);
   }
   close() {
     this.repository.close();

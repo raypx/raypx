@@ -10,8 +10,13 @@ production-origin cookie persistence require separate packaged platform checks.
 Run bun run test:e2e after installing Chromium with bun --bun playwright install chromium.
 The root launcher selects the pinned Node before Turbo modifies PATH. `tests/helpers/serve-web.ts`
 starts the compiled Web artifact with that absolute executable; Desktop uses Vite
-preview. Do not run the Node Web output through Bun's node shim.
+preview of `artifacts/browser`, built with `build:renderer` and no Native SDK/CLI preparation.
+Do not run the Node Web output through Bun's node shim.
 Turbo's loose environment mode passes `NODE_BINARY` from the root launcher to this helper.
+Root `test:e2e:web`, `test:e2e:desktop`, `test:e2e:smoke` and `test:e2e:visual`
+provide focused entry points. Combine modes with `raypx-dev e2e`; pass Playwright
+flags after `--`. Surface/smoke filters intersect with user grep. Full `test:e2e`
+retains all cases and two workers; focused runs do not replace full acceptance.
 
 ## Constraints
 
@@ -19,8 +24,10 @@ No default test script. Do not import application source or seed operator databa
 Use accessible roles and real UI state. Browser preview does not simulate native IPC.
 HTTP fixtures isolate signed-out and form response rendering; they do not establish
 server authentication correctness. The API PostgreSQL gate exercises real signup,
-verification, password reset and session revocation. Theme/locale screenshots are
-written under ignored test-results for visual inspection.
+verification, password reset and session revocation. Manual screenshots require
+`--visual`; failure screenshots remain enabled. Local traces are off by default;
+CI records the first retry. Use `--trace on` for explicit local diagnosis.
+Visual artifacts are written under ignored test-results for inspection.
 Guest Web acceptance asserts no private list/subscription requests before login,
 preserves the original page and draft choices through sign-in, and checks restoration
 does not send a task. Desktop local pages stay available before login and during session

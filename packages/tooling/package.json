@@ -10,7 +10,8 @@
     "./cloudflare": "./src/smoke/cloudflare.ts",
     "./repository": "./src/repository.ts",
     "./build/nitro": "./src/build/nitro.ts",
-    "./build/analytics": "./src/build/analytics.ts"
+    "./build/analytics": "./src/build/analytics.ts",
+    "./browser-tests": "./src/browser-tests.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

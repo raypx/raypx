@@ -12,6 +12,7 @@ import {
   contextCreateSchema,
   contextUpdateSchema,
   contextArchiveSchema,
+  contextDeleteSchema,
   contextHistorySchema,
   contextRestoreSchema,
 } from "@raypx/memory";
@@ -58,6 +59,7 @@ export const localParams = {
   "memory.create": contextCreateSchema,
   "memory.update": contextUpdateSchema,
   "memory.archive": contextArchiveSchema,
+  "memory.delete": contextDeleteSchema,
   "memory.history": contextHistorySchema,
   "memory.restore": contextRestoreSchema,
   "memory.resolve": z.strictObject({

@@ -1,10 +1,11 @@
 import { normalizeTaskJson } from "@raypx/contracts/tasks";
 import type { AuthSession } from "@raypx/auth/types";
-import type {
-  ControlRecord,
-  ControlRepository,
-  ControlTransaction,
-  RecordKind,
+import {
+  CONTEXT_COMMAND_TTL_MS,
+  type ControlRecord,
+  type ControlRepository,
+  type ControlTransaction,
+  type RecordKind,
 } from "../../server/control/repository.js";
 import type { ControlService } from "../../server/control/service.js";
 import type { AgentTask, HumanRequest } from "@raypx/contracts/tasks";
@@ -139,6 +140,46 @@ export function memoryControlRepository(): ControlRepository & {
       },
       async remove(kind, id) {
         draft.delete(key(kind, id));
+      },
+      async pruneCommands(now) {
+        const commands = await transaction(draft, userId).list<
+          ControlRecord & {
+            requestHash?: string;
+            capturedAt?: string;
+            context?: { capturedAt: string };
+          }
+        >("command");
+        const time = (item: (typeof commands)[number]) =>
+          item.capturedAt ?? item.context?.capturedAt ?? "";
+        let bytes = 0,
+          position = 0;
+        const candidates: typeof commands = [];
+        for (const item of commands
+          .filter((candidate) => candidate.context && typeof candidate.context === "object")
+          .sort((a, b) => time(b).localeCompare(time(a)) || b.id.localeCompare(a.id))) {
+          bytes += new TextEncoder().encode(JSON.stringify(item)).byteLength;
+          position++;
+          if (
+            time(item) > new Date(now.getTime() - CONTEXT_COMMAND_TTL_MS).toISOString() &&
+            position <= 4096 &&
+            bytes <= 8_388_608
+          )
+            continue;
+          candidates.push(item);
+        }
+        for (const item of candidates
+          .sort((a, b) => time(a).localeCompare(time(b)) || a.id.localeCompare(b.id))
+          .slice(0, 1000)) {
+          draft.set(key("command", item.id), {
+            id: item.id,
+            deviceId: item.deviceId,
+            capturedAt: time(item),
+            compacted: true,
+            ...(item.requestHash && /^[0-9a-f]{64}$/.test(item.requestHash)
+              ? { requestHash: item.requestHash }
+              : {}),
+          } as ControlRecord);
+        }
       },
       async pruneEvents(deviceId, streamId, orphans = false) {
         const rows = await transaction(draft, userId).list<

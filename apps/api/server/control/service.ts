@@ -39,6 +39,7 @@ import type {
   ControlTransaction,
   ControlReader,
 } from "./repository.js";
+import { CONTEXT_COMMAND_TTL_MS } from "./repository.js";
 
 export class ControlError extends Error {
   constructor(readonly code: string) {
@@ -82,13 +83,18 @@ interface Task extends AgentTask {
   epoch: number;
 }
 interface ContextCommand extends ControlRecord {
-  request: RelayRequest;
-  context: TaskContextSnapshot;
+  request?: RelayRequest;
+  context?: TaskContextSnapshot;
+  requestHash?: string;
+  capturedAt?: string;
+  compacted?: true;
 }
+type RoutedCommand = RelayCommand & { recoveredTask?: AgentTask };
 export type ResolveTaskContext = (
   userId: string,
   selection: TaskContextSelection,
   target: TaskContextTarget,
+  prompt: string,
 ) => Promise<TaskContextSnapshot>;
 interface Project extends ControlRecord {
   projectId: string;
@@ -505,6 +511,7 @@ export class ControlService {
           : {}),
         epoch: actor.epoch,
       });
+      await this.releaseContextCommand(tx, record.task);
     } else if (record.kind === "activity") {
       await this.activity(
         tx,
@@ -695,12 +702,15 @@ export class ControlService {
   ) {
     if (!this.resolveContext) throw new ControlError("CONTEXT_UNAVAILABLE");
     try {
-      const snapshot = await this.resolveContext(userId, selection, {
-        deviceId: target.deviceId,
-        projectId: target.projectId,
-      });
-      taskExecutionPrompt({ prompt, context: snapshot });
-      return snapshot;
+      return await this.resolveContext(
+        userId,
+        selection,
+        {
+          deviceId: target.deviceId,
+          projectId: target.projectId,
+        },
+        prompt,
+      );
     } catch (error) {
       if (error instanceof ContextError || error instanceof TaskContextError)
         throw new ControlError(error.code);
@@ -726,21 +736,108 @@ export class ControlService {
       return task ? { status: task.status } : null;
     });
   }
+  private recoveredTask(
+    task: AgentTask,
+    id: string,
+    request: Extract<RelayRequest, { method: "tasks.create" }>,
+  ): RoutedCommand {
+    const input = request.input;
+    const expected = input.contextSelection?.sources ?? [];
+    const actual = task.context?.sources ?? [];
+    if (
+      id !== input.id ||
+      task.parentTaskId !== null ||
+      (["id", "deviceId", "projectId", "provider", "mode", "prompt"] as const).some(
+        (key) => canonical(task[key]) !== canonical(input[key]),
+      ) ||
+      !expected.length ||
+      expected.length !== actual.length ||
+      expected.some(
+        (source, index) =>
+          source.id.toLowerCase() !== actual[index]?.id.toLowerCase() ||
+          source.revision !== actual[index]?.revision,
+      )
+    )
+      throw new ControlError("IDEMPOTENCY_CONFLICT");
+    return {
+      id,
+      deviceId: task.deviceId,
+      request,
+      expiresAt: this.now(),
+      context: task.context!,
+      recoveredTask: task,
+    };
+  }
+  private commandContext(
+    previous: ContextCommand,
+    request: RelayRequest,
+    requestHash: string,
+  ): TaskContextSnapshot {
+    if (previous.requestHash && previous.requestHash !== requestHash)
+      throw new ControlError("IDEMPOTENCY_CONFLICT");
+    if (previous.compacted || !previous.context) throw new ControlError("CONTEXT_REQUEST_EXPIRED");
+    if (canonical(previous.request) !== canonical(request))
+      throw new ControlError("IDEMPOTENCY_CONFLICT");
+    const acceptedAt = Date.parse(previous.capturedAt ?? previous.context.capturedAt);
+    if (!Number.isFinite(acceptedAt) || this.clock() - acceptedAt >= CONTEXT_COMMAND_TTL_MS)
+      throw new ControlError("CONTEXT_REQUEST_EXPIRED");
+    if (request.method === "tasks.create") {
+      try {
+        taskExecutionPrompt({ prompt: request.input.prompt, context: previous.context });
+      } catch {
+        throw new ControlError("CONTEXT_TOO_LARGE");
+      }
+    }
+    return previous.context;
+  }
+  private async releaseContextCommand(tx: ControlTransaction, task: AgentTask) {
+    if (task.parentTaskId !== null || !task.context?.sources.length) return;
+    const previous = await tx.get<ContextCommand>("command", task.id);
+    if (!previous || previous.deviceId !== task.deviceId) return;
+    const request: RelayRequest = {
+      method: "tasks.create",
+      input: {
+        id: task.id,
+        deviceId: task.deviceId,
+        projectId: task.projectId,
+        provider: task.provider,
+        mode: task.mode,
+        prompt: task.prompt,
+        contextSelection: {
+          sources: task.context.sources.map(({ id, revision }) => ({ id, revision })),
+        },
+      },
+    };
+    if (
+      (previous.context &&
+        previous.request &&
+        canonical(previous.context) === canonical(task.context) &&
+        canonical(previous.request) === canonical(request)) ||
+      (previous.compacted &&
+        previous.requestHash &&
+        previous.requestHash === (await hash(canonical(request) ?? "")))
+    )
+      await tx.remove("command", task.id);
+  }
   async route(
     userId: string,
     id: string,
     request: RelayRequest,
     job?: CloudJobAction,
-  ): Promise<RelayCommand> {
+  ): Promise<RoutedCommand> {
     let context: TaskContextSnapshot | undefined;
+    const requestHash =
+      request.method === "tasks.create" && request.input.contextSelection?.sources.length
+        ? await hash(canonical(request) ?? "")
+        : "";
     if (request.method === "tasks.create" && request.input.contextSelection?.sources.length) {
-      const previous = await this.repository.read(userId, (tx) =>
-        tx.get<ContextCommand>("command", id),
+      if (id !== request.input.id) throw new ControlError("IDEMPOTENCY_CONFLICT");
+      const [previous, task] = await this.repository.read(userId, (tx) =>
+        Promise.all([tx.get<ContextCommand>("command", id), tx.get<Task>("task", id)]),
       );
+      if (task) return this.recoveredTask(task, id, request);
       if (previous) {
-        if (canonical(previous.request) !== canonical(request))
-          throw new ControlError("IDEMPOTENCY_CONFLICT");
-        context = previous.context;
+        context = this.commandContext(previous, request, requestHash);
       } else
         context = await this.contextFor(
           userId,
@@ -750,6 +847,10 @@ export class ControlService {
         );
     }
     return this.repository.transaction(userId, async (tx) => {
+      if (context && request.method === "tasks.create") {
+        const task = await tx.get<Task>("task", id);
+        if (task) return this.recoveredTask(task, id, request);
+      }
       if (job) {
         await this.jobTarget(tx, job);
         if (
@@ -803,10 +904,19 @@ export class ControlService {
         throw new ControlError("IDEMPOTENCY_CONFLICT");
       const previous = await tx.get<ContextCommand>("command", id);
       if (previous) {
-        if (canonical(previous.request) !== canonical(request) || previous.deviceId !== deviceId)
-          throw new ControlError("IDEMPOTENCY_CONFLICT");
-        context = previous.context;
-      } else if (context) await tx.put("command", { id, deviceId, request, context });
+        if (previous.deviceId !== deviceId) throw new ControlError("IDEMPOTENCY_CONFLICT");
+        context = this.commandContext(previous, request, requestHash);
+      } else if (context) {
+        await tx.put("command", {
+          id,
+          deviceId,
+          request,
+          context,
+          requestHash,
+          capturedAt: this.now(),
+        });
+        await tx.pruneCommands(new Date(this.clock()));
+      }
       return {
         id,
         deviceId,

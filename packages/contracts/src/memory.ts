@@ -9,6 +9,8 @@ import {
   contextCreateSchema,
   contextUpdateSchema,
   contextArchiveSchema,
+  contextDeleteSchema,
+  contextDeleteResultSchema,
   contextHistorySchema,
   contextRestoreSchema,
   contextDocumentSummarySchema,
@@ -25,6 +27,7 @@ export const memoryContract = {
   create: oc.input(contextCreateSchema).output(contextDocumentSchema),
   update: oc.input(contextUpdateSchema).output(contextDocumentSchema),
   archive: oc.input(contextArchiveSchema).output(contextDocumentSchema),
+  delete: oc.input(contextDeleteSchema).output(contextDeleteResultSchema),
   history: oc.input(contextHistorySchema).output(z.array(contextVersionSchema).max(20)),
   restore: oc.input(contextRestoreSchema).output(contextDocumentSchema),
   resolve: oc

@@ -24,7 +24,8 @@
     "native:csp": "bun scripts/native/csp.ts",
     "native:smoke": "bun run native:cli && bun run tests/native/smoke/run.ts",
     "native:agents": "bun run native:cli && bun run tests/native/smoke/agents.ts",
-    "native:beta": "bun run native:cli && bun run tests/native/smoke/run.ts beta"
+    "native:beta": "bun run native:cli && bun run tests/native/smoke/run.ts beta",
+    "build:renderer": "bun run scripts/native/task.ts build:renderer"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",

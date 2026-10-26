@@ -88,6 +88,45 @@ The existing script names select the mode; the default test command never connec
   WebKit/Windows CEF against HTTPS auth, bundled CLI resolution/version, picker grants,
   tray scheduling, restart, EOF/quit cleanup and PTY resize/cancellation.
 
+### Faster browser feedback
+
+The complete browser gate remains `bun run test:e2e`, with two workers and all
+ordinary assertions. During development, select a surface or a smaller smoke set:
+
+```sh
+bun run test:e2e:web
+bun run test:e2e:desktop
+bun run test:e2e:smoke
+bun run test:e2e:web -- --grep template
+bun run test:e2e:desktop -- memory.spec.ts
+bun run raypx-dev e2e --web --smoke -- --list
+```
+
+The smoke set covers guest boundaries/draft restoration, shared task/approval
+interaction and both memory flows. Surface, smoke and user grep filters intersect;
+they do not replace one another. Pass Playwright flags or filenames after `--`.
+Use `bun run raypx-dev e2e --web --dry-run` to inspect the Turbo graph.
+Focused runs are feedback tools; run complete acceptance before release.
+
+Successful runs skip manual full-page screenshots and local traces. Failure
+screenshots remain enabled; CI records traces on the first retry. Capture the
+existing theme, locale and feature screenshots explicitly, or record a local trace:
+
+```sh
+bun run test:e2e:visual
+bun run raypx-dev e2e --desktop --visual -- --grep template
+bun run test:e2e:web -- --grep template --trace on
+```
+
+Each mode builds only its required surfaces, using synthetic analytics settings
+and the pinned Node executable. Desktop browser acceptance builds `artifacts/browser` in
+Vite mode `e2e`; it excludes Native SDK preparation, CLI compilation and Native
+checks. Its Native bridge fails with `DESKTOP_REQUIRED`, so this output cannot
+simulate successful IPC. Normal Desktop builds and packaging still use the real
+SDK and `dist`, and `bun run verify` retains strict Native checking and artifact
+probes. The browser-only output is ignored, cached separately and removed by
+`bun run clean`. Live backend/inference acceptance keeps its separate opt-in config.
+
 ### Live AI and Beta-to-Desktop acceptance
 
 These opt-in checks invoke the configured real Claude Code and Codex CLIs and consume

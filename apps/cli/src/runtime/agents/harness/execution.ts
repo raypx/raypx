@@ -14,9 +14,13 @@ import { CodexProvider } from "./providers/codex";
 import { ClaudeProvider } from "./providers/claude";
 import type { ProviderProcess } from "./providers/process";
 
-export function initialExecutionPrompt(task: AgentTask, continuationPrompt?: string) {
+export function initialExecutionPrompt(
+  task: AgentTask,
+  continuationPrompt?: string,
+  resumed = false,
+) {
   const prompt = taskExecutionPrompt({
-    ...(continuationPrompt ? {} : task),
+    ...(resumed ? {} : task),
     prompt: continuationPrompt ?? task.prompt,
   });
   return (
@@ -25,6 +29,23 @@ export function initialExecutionPrompt(task: AgentTask, continuationPrompt?: str
       ? "\nInspect the project and propose an implementation plan. Do not modify files before the plan is approved."
       : "\nModify and validate only. Do not commit, merge, or push unless separately instructed by the user.")
   );
+}
+
+/** A parent id alone never proves the provider conversation can be continued. */
+export function executionSession(
+  local: LocalAgentTask,
+  parent?: LocalAgentTask,
+): string | undefined {
+  if (local.sessionId) return local.sessionId;
+  if (
+    parent?.sessionId &&
+    local.task.parentTaskId === parent.task.id &&
+    parent.binding === local.binding &&
+    parent.task.projectId === local.task.projectId &&
+    parent.task.provider === local.task.provider
+  )
+    return parent.sessionId;
+  return undefined;
 }
 
 /** One execution uses persistence without owning SQLite or its lifecycle. */
@@ -262,11 +283,12 @@ export class ManagedExecution {
   }
   async run(executable: string, directory: string, continuationPrompt?: string) {
     const task = this.local.task;
-    const initialPrompt = initialExecutionPrompt(task, continuationPrompt);
     const parent = task.parentTaskId ? this.store.get(task.parentTaskId) : undefined;
+    const sessionId = executionSession(this.local, parent);
     if (
       task.parentTaskId &&
-      (!parent?.sessionId ||
+      (!sessionId ||
+        !parent ||
         parent.binding !== this.local.binding ||
         parent.task.projectId !== task.projectId ||
         parent.task.provider !== task.provider)
@@ -286,12 +308,17 @@ export class ManagedExecution {
       this.provider = provider;
       this.process = provider.process;
       this.watch(provider.process, false);
-      this.local.sessionId = await provider.initialize(task.mode, parent?.sessionId ?? undefined);
+      const initializedSession = await provider.initialize(task.mode, sessionId);
+      if (sessionId && initializedSession !== sessionId)
+        throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
+      this.local.sessionId = initializedSession;
+      const resumed = Boolean(sessionId);
+      const initialPrompt = initialExecutionPrompt(task, continuationPrompt, resumed);
       this.store.put(this.local);
       this.conversation.setTokenBaseline(
         this.store.tokenUsage(this.local.sessionId) ??
           this.local.tokenUsage ??
-          (parent
+          (resumed && parent
             ? parent.tokenUsage
             : { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, cacheWriteInputTokens: 0 }),
       );
@@ -309,7 +336,7 @@ export class ManagedExecution {
     } else {
       this.planRequestHandled = false;
       const hook = this.effects.hook();
-      const sessionId = this.local.sessionId ?? parent?.sessionId;
+      const initialPrompt = initialExecutionPrompt(task, continuationPrompt, Boolean(sessionId));
       const provider = new ClaudeProvider(
         executable,
         directory,
@@ -323,6 +350,10 @@ export class ManagedExecution {
           current: () => !this.finished && this.process === provider.process,
           record: (message) => this.conversation.claude(message),
           session: (id) => {
+            if (sessionId && id !== sessionId) {
+              this.finish("failed", "SESSION_UNAVAILABLE");
+              return;
+            }
             this.local.sessionId = id;
             this.store.put(this.local);
           },

@@ -86,6 +86,7 @@ it("deletes only expired records beyond the grace period and can run again", asy
     rateLimits: 0,
     observedRequests: 0,
     observedSessions: 0,
+    contextCommands: 0,
   });
 });
 

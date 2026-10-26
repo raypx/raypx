@@ -56,6 +56,10 @@ trusted Origin, CAS and account limits. `@raypx/memory/server` owns shared use c
 `server/memory/repository.ts` atomically stores current documents and immutable
 versions. Resolve joins current eligibility with selected revisions without account
 write locking. Sources are frozen on task creation and obey core's full prompt budget.
+Context command replay bodies expire after 24 hours and are limited to 4096 rows/8 MiB
+per account on acceptance. Bounded compaction retains unknown-delivery digest receipts;
+only a matching authoritative task projection allows receipt deletion. Cleanup uses the
+same compactor for expired bodies; partial indexes exclude already compacted receipts.
 
 ## Constraints
 
@@ -101,8 +105,9 @@ write locking. Sources are frozen on task creation and obey core's full prompt b
 - Unconfigured mail actions return MAIL_NOT_CONFIGURED before Better Auth dispatch;
   startup, liveness and existing sign-in remain available.
 - Never import another app. Local CLI execution stays outside the HTTP API.
-- Runtime configures `@raypx-kit/logger` (evlog) once through `server/logging.ts`: events pass the
-  explicit `API_LOG_FIELDS` policy and a bounded pipeline, and are flushed on Nitro shutdown.
+- Runtime configures `@raypx/logger` (evlog) once through `server/logging.ts`; typed application events pass `logging/policy.ts` and the shared bounded managed drain, flushed on Nitro shutdown.
+  PostHog has separate 16-event/four-request bounds, two-second deadlines and loss statistics.
+  Managed close bounds waiting to ten seconds. Log cleanup context counts as `contextReceipts` (command names are sensitive).
   Hono owns non-RPC events; the matching `@orpc/evlog` plugin owns RPC events.
   Preserve the server-generated request ID in responses, errors and diagnostics.
   Log route templates and safe error summaries, never request/response bodies,

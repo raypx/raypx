@@ -84,14 +84,15 @@ source-map publication. This does not replace API/CLI structured logging.
 
 ## Logging
 
-API and CLI use `@raypx-kit/logger`, which exposes evlog directly. Each
+API and CLI use the private `@raypx/logger` source workspace, which exposes evlog directly. Each
 composition root calls `initLogger` once per process (once per isolate on Workers)
 and creates event loggers with `createLogger`; event data is added through `set`
 and `error`, then completed with `emit`. Every drained event first passes
-`withEventPolicy` from `@raypx-kit/logger/safe`: only the app's listed fields
+`withEventPolicy` from `@raypx/logger/safe`: only the app's listed fields
 (`API_LOG_FIELDS`, the CLI field list) and the fixed envelope leave the process,
-sensitive values are replaced and errors keep only a name and code. API buffers
-events in a bounded drain pipeline; the CLI and Node API write JSON lines to
+sensitive values are replaced and errors keep only a name and code. API and CLI use
+the workspace's `/managed` drain for safe buffering, statistics and idempotent shutdown;
+the CLI and Node API write JSON lines to
 stderr, and Workers write them to the console. Applications own environment
 parsing, permitted fields, output and shutdown.
 
@@ -107,14 +108,23 @@ support correlation without exposing request payloads or changing safe API
 error responses. The runtime drain enqueues events without waiting for the sink,
 so a slow diagnostic destination does not delay an RPC response. Explicit
 `flush` and `close` wait for queued delivery; Nitro owns draining pending log
-writes during shutdown.
+writes during shutdown. API's event types and runtime field policy remain local;
+The logger workspace owns no application routes or event categories. Managed admission includes
+queued and in-flight events (1024 maximum); overflow drops new events, failures
+do not retry, and close bounds waiting to ten seconds. Sinks own cancellation.
+PostHog error reporting has an independent capacity of 16 and concurrency of four,
+with two-second HTTP deadlines. Report loss and non-2xx responses are counted;
+best-effort reporting never changes primary log delivery or the HTTP result.
 
-CLI diagnostics use the logger's `/node` stderr drain; stdout remains reserved
+CLI diagnostics use the logger's `/stream` stderr drain; stdout remains reserved
 for human command results or the Desktop NDJSON protocol. CLI shutdown flushes
 pending diagnostics without adding records to protocol output. Runtime and
 packaged-platform acceptance remain separate verification gates.
 
-An unpublished library archive may be tracked under `vendor/` for a reproducible
+Logger is maintained inside Raypx while the workflow settles. It needs no Kit
+publication or preview archive. See the [workspace guide](../../packages/logger/README.md).
+
+Other unpublished Kit library archives may be tracked under `vendor/` for a reproducible
 review branch, with source provenance, an archive checksum and the lockfile.
 Provenance records either a clean source commit or the base commit, explicit
 uncommitted state and per-file source checksums. The archive must be replaced by

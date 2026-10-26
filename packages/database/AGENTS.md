@@ -57,3 +57,11 @@ Deleting a plan cascades its run log only; managed control tasks are separate.
 stores complete immutable revisions. API owns CAS, quota, idempotency and restore
 policy. Read resolution joins current eligibility with selected revisions in one
 MVCC snapshot without the account write lock. Archive never deletes either table.
+The global `lower(id)` unique index enforces canonical document identity and supports
+case-insensitive creation retries without scanning other owners' documents.
+
+Partial context-command owner/window and expiry indexes cover only full context bodies;
+compacted unknown-delivery receipts remain outside replay/body maintenance scans.
+
+`context_deletion` stores body-free owner/revision receipts. API deletion removes the
+source and cascades its versions atomically; the reserved canonical ID prevents reuse.

@@ -9,7 +9,13 @@ import {
 } from "react";
 import type { AgentTask, AgentProvider, SyncDevice } from "@raypx/contracts/tasks";
 import type { TaskContextSelection } from "@raypx/core/tasks";
-import { ContextPicker, type MemoryClientPort } from "@raypx/memory/client";
+import {
+  ContextPicker,
+  ContextBudget,
+  contextBudgetKey,
+  type ContextBudgetState,
+  type MemoryClientPort,
+} from "@raypx/memory/client";
 import type { TaskWorkspaceClient } from "./remote-query.js";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -114,6 +120,22 @@ export function TaskComposer({
     guest ? undefined : initialDraft?.contextSelection,
   );
   const [busy, setBusy] = useState(false);
+  const [contextBudget, setContextBudget] = useState<ContextBudgetState>();
+  const budgetProps =
+    !guest && contextLibrary && deviceId && projectId
+      ? {
+          client: contextLibrary,
+          ownerKey: draftKey,
+          target: { deviceId, projectId },
+          value: contextSelection ?? { sources: [] },
+          prompt: prompt.trim(),
+        }
+      : undefined;
+  const budgetReady =
+    !budgetProps ||
+    (contextBudget?.key === contextBudgetKey(budgetProps) &&
+      contextBudget.status === "ready" &&
+      !contextBudget.exceeded);
   const [error, setError] = useState<ReturnType<typeof failureCode>>();
   const submission = useRef<{
     key: string;
@@ -309,7 +331,7 @@ export function TaskComposer({
       }
       return;
     }
-    if (!available || occupied) return;
+    if (!available || occupied || !budgetReady) return;
     submitting.current = true;
     const key = JSON.stringify(snapshot);
     if (submission.current?.key !== key)
@@ -396,7 +418,7 @@ export function TaskComposer({
               <Textarea
                 ref={promptRef}
                 id={`${fieldId}-prompt`}
-                className="min-h-24 resize-y bg-background"
+                className="max-h-80 min-h-24 resize-y overflow-y-auto bg-background"
                 required
                 maxLength={32000}
                 value={prompt}
@@ -534,6 +556,7 @@ export function TaskComposer({
                 {t("PROJECT_BUSY")}
               </p>
             )}
+            {budgetProps && <ContextBudget {...budgetProps} onChange={setContextBudget} />}
             {!available && !guest && (
               <p className="text-sm text-muted-foreground">{t("availabilityHint")}</p>
             )}
@@ -547,7 +570,9 @@ export function TaskComposer({
               <p className="text-xs text-muted-foreground">{t("draftDeviceOnly")}</p>
               <Button
                 type="submit"
-                disabled={(!guest && (!available || occupied)) || busy || !prompt.trim()}
+                disabled={
+                  (!guest && (!available || occupied)) || busy || !prompt.trim() || !budgetReady
+                }
               >
                 <Send aria-hidden="true" />
                 {t(busy ? "sending" : guest ? "signInToSend" : "send")}

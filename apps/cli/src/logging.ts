@@ -1,6 +1,6 @@
-import { createLogger, initLogger } from "@raypx-kit/logger";
-import { withEventPolicy } from "@raypx-kit/logger/safe";
-import { createStreamDrain } from "@raypx-kit/logger/stream";
+import { createLogger, initLogger } from "@raypx/logger";
+import { createManagedDrain } from "@raypx/logger/managed";
+import { createStreamDrain } from "@raypx/logger/stream";
 import type { RecordDiagnostic } from "./diagnostics";
 
 /** The only top-level fields a CLI diagnostic may carry; everything else is dropped. */
@@ -22,12 +22,13 @@ const CLI_LOG_FIELDS = [
 /** Called once by the executable, never by an imported runtime or a unit test. */
 export async function createCliLogging() {
   const output = createStreamDrain();
+  const drain = createManagedDrain({ sink: output, policy: { fields: CLI_LOG_FIELDS } });
   initLogger({
     env: { service: "raypx-cli", environment: "production" },
     silent: true,
     pretty: false,
     redact: true,
-    drain: withEventPolicy(output, { fields: CLI_LOG_FIELDS }),
+    drain,
   });
   const record: RecordDiagnostic = (event) => {
     const log = createLogger({ ...event });
@@ -42,5 +43,5 @@ export async function createCliLogging() {
     }
     log.emit();
   };
-  return { record, close: () => output.close() };
+  return { record, close: () => drain.close() };
 }

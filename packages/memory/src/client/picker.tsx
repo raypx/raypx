@@ -34,7 +34,8 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
   const { isActive, request } = useMemoryRequests();
   const [documents, setDocuments] = useState<ContextDocumentSummary[]>();
   const [preview, setPreview] = useState<ContextDocument>();
-  const [error, setError] = useState<ReturnType<typeof memoryFailure>>();
+  const [listError, setListError] = useState<ReturnType<typeof memoryFailure>>();
+  const [previewError, setPreviewError] = useState<ReturnType<typeof memoryFailure>>();
   const [loading, setLoading] = useState(true);
   const previewGeneration = useRef(0);
   const loadGeneration = useRef(0);
@@ -52,10 +53,10 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
                   document.project.projectId === target.projectId)),
           ),
         );
-        setError(undefined);
+        setListError(undefined);
       }
     } catch (failure) {
-      if (isActive() && generation === loadGeneration.current) setError(memoryFailure(failure));
+      if (isActive() && generation === loadGeneration.current) setListError(memoryFailure(failure));
     } finally {
       if (isActive() && generation === loadGeneration.current) setLoading(false);
     }
@@ -63,6 +64,11 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
   useEffect(() => {
     void Promise.resolve().then(load);
   }, [load]);
+  function closePreview() {
+    previewGeneration.current++;
+    setPreview(undefined);
+    setPreviewError(undefined);
+  }
   async function show(document: ContextDocumentSummary) {
     const generation = ++previewGeneration.current;
     try {
@@ -86,19 +92,29 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
             result.project.projectId !== target.projectId))
       ) {
         if (isActive() && generation === previewGeneration.current)
-          setError("CONTEXT_REVISION_CONFLICT");
+          setPreviewError("CONTEXT_REVISION_CONFLICT");
         return;
       }
-      if (isActive() && generation === previewGeneration.current) setPreview(result);
+      if (isActive() && generation === previewGeneration.current) {
+        setPreview(result);
+        setPreviewError(undefined);
+      }
     } catch (failure) {
-      if (isActive()) setError(memoryFailure(failure));
+      if (isActive() && generation === previewGeneration.current)
+        setPreviewError(memoryFailure(failure));
     }
   }
   const missing = value.sources.filter(
     (source) => !documents?.some((document) => document.id === source.id),
   );
+  const error = previewError ?? listError;
   return (
-    <Collapsible className="space-y-2">
+    <Collapsible
+      className="space-y-2"
+      onOpenChange={(open) => {
+        if (!open) closePreview();
+      }}
+    >
       <CollapsibleTrigger
         render={<Button type="button" variant="ghost" size="sm" className="group gap-2 px-0" />}
       >
@@ -123,6 +139,7 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
           size="sm"
           disabled={loading || disabled}
           onClick={() => {
+            closePreview();
             setLoading(true);
             void load();
           }}
@@ -220,15 +237,7 @@ function Picker({ client, target, value, onChange, disabled }: Props) {
             <pre className="max-h-64 overflow-auto rounded bg-muted p-3 text-xs whitespace-pre-wrap wrap-anywhere">
               {preview.content}
             </pre>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                previewGeneration.current++;
-                setPreview(undefined);
-              }}
-            >
+            <Button type="button" size="sm" variant="ghost" onClick={closePreview}>
               {c("close")}
             </Button>
           </section>

@@ -1,5 +1,10 @@
 import { createApiClient } from "@raypx/client";
-import type { MemoryClientPort, MemoryProjectsPort, MemoryReadOptions } from "@raypx/memory/client";
+import type {
+  MemoryClientPort,
+  MemoryProjectsPort,
+  MemoryReadOptions,
+  MemoryUsagePort,
+} from "@raypx/memory/client";
 import type { ContextDocument, ContextDocumentSummary, ContextVersion } from "@raypx/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import type { SyncDevice } from "@raypx/contracts/tasks";
@@ -13,6 +18,7 @@ export const accountMemory: MemoryClientPort = {
   create: (input, options) => client().memory.create(input, options),
   update: (input, options) => client().memory.update(input, options),
   archive: (input, options) => client().memory.archive(input, options),
+  delete: (input, options) => client().memory.delete(input, options),
   history: (input, options) =>
     client().memory.history({ ...input, limit: input.limit ?? 20 }, options),
   restore: (input, options) => client().memory.restore(input, options),
@@ -30,6 +36,18 @@ export const memoryProjects: MemoryProjectsPort = {
         })),
       ),
 };
+export const memoryUsage: MemoryUsagePort = {
+  scheduledPlans: async ({ id }, options) =>
+    (await client().jobs.list({}, options)).jobs
+      .filter(
+        (job) =>
+          job.action.type === "agent.run" &&
+          job.action.contextSelection?.sources.some(
+            (source) => source.id.toLowerCase() === id.toLowerCase(),
+          ),
+      )
+      .map((job) => ({ id: job.id, name: job.name, enabled: job.enabled })),
+};
 async function localRead<T>(read: () => Promise<T>, options?: MemoryReadOptions) {
   options?.signal?.throwIfAborted();
   const value = await read();
@@ -37,6 +55,8 @@ async function localRead<T>(read: () => Promise<T>, options?: MemoryReadOptions)
   return value;
 }
 export const localMemory: MemoryClientPort = {
+  delete: (input, options) =>
+    localRead(() => localRequest<{ deleted: true }>("memory.delete", input), options),
   list: (input = {}, options) =>
     localRead(() => localRequest<ContextDocumentSummary[]>("memory.list", input), options),
   get: (input, options) =>

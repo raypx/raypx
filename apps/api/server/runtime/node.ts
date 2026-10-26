@@ -1,6 +1,6 @@
 import { RelayHub } from "../relay/hub.js";
 import { connectDatabase } from "@raypx/database/connection";
-import { createStreamDrain } from "@raypx-kit/logger/stream";
+import { createStreamDrain } from "@raypx/logger/stream";
 import { getApiEnvironment, type ApiEnvironment } from "../env.js";
 import { createApiLogging } from "../logging.js";
 import { errorReports } from "../error-reports.js";

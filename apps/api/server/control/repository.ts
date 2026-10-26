@@ -1,5 +1,5 @@
 import { normalizeTaskJson } from "@raypx/contracts/tasks";
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import type { Database } from "@raypx/database/connection";
 
 export type RecordKind =
@@ -45,11 +45,12 @@ export interface ControlTransaction {
   put<T extends ControlRecord>(kind: RecordKind, value: T): Promise<T>;
   remove(kind: RecordKind, id: string): Promise<void>;
   pruneEvents(deviceId: string, streamId: string, orphans?: boolean): Promise<void>;
+  pruneCommands(now: Date): Promise<void>;
   purgeObserved(deviceId: string): Promise<void>;
 }
 export type ControlReader = Omit<
   ControlTransaction,
-  "put" | "remove" | "pruneEvents" | "purgeObserved" | "revokeHostSecurity"
+  "put" | "remove" | "pruneEvents" | "pruneCommands" | "purgeObserved" | "revokeHostSecurity"
 >;
 export interface ControlRepository {
   read<T>(userId: string, run: (tx: ControlReader) => Promise<T>): Promise<T>;
@@ -59,6 +60,7 @@ export interface ControlRepository {
 }
 const table = (kind: RecordKind) =>
   sql`${sql.identifier("raypx_foundation")}.${sql.identifier(`control_${kind}`)}`;
+export const CONTEXT_COMMAND_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** Shared by production execution and the real-PostgreSQL EXPLAIN gate. */
 export function eventWindowPrune(userId: string, deviceId: string, streamId: string) {
@@ -69,6 +71,36 @@ export function eventWindowPrune(userId: string, deviceId: string, streamId: str
           from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and body->'event'->>'kind' NOT IN ('activity','activity_delta'))
           delete from raypx_foundation.control_event e using replay r where e.user_id=${userId} and e.device_id=${deviceId} and e.ctid=r.pointer
           and (r.stream_id != ${streamId} or r.position>4096 or r.bytes>8388608)`;
+}
+
+/** Remove private replay bodies, retaining compact receipts so unknown delivery cannot replay. */
+export function contextCommandPrune(now: Date | SQL, userId?: string) {
+  const time = now instanceof Date ? sql`${now.toISOString()}::timestamptz` : now;
+  const captured = sql`coalesce(c.body->>'capturedAt',c.body->'context'->>'capturedAt','')`;
+  const cutoff = sql`to_char((${time} - ${CONTEXT_COMMAND_TTL_MS} * interval '1 millisecond') at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`;
+  const candidates =
+    userId === undefined
+      ? sql`select c.ctid as pointer,c.user_id,c.id from raypx_foundation.control_command c
+        where jsonb_typeof(c.body->'context')='object' and ${captured}<=${cutoff}
+        order by ${captured},c.user_id,c.id limit 1000 for update of c skip locked`
+      : sql`with replay as materialized (
+        select c.ctid as pointer,c.user_id,c.id,${captured} as captured_at,
+          row_number() over (order by ${captured} desc,c.id desc) as position,
+          sum(octet_length(c.body::text)) over (order by ${captured} desc,c.id desc) as bytes
+        from raypx_foundation.control_command c
+        where c.user_id=${userId} and jsonb_typeof(c.body->'context')='object')
+      select c.ctid as pointer,c.user_id,c.id from raypx_foundation.control_command c
+        inner join replay r on c.ctid=r.pointer and c.user_id=r.user_id
+        where c.user_id=${userId} and jsonb_typeof(c.body->'context')='object'
+          and (r.captured_at<=${cutoff} or r.position>4096 or r.bytes>8388608)
+        order by r.captured_at,c.id limit 1000 for update of c skip locked`;
+  return sql`with candidates as materialized (${candidates}), compacted as (
+      update raypx_foundation.control_command c set body=jsonb_strip_nulls(jsonb_build_object(
+        'id',c.id,'deviceId',c.device_id,'capturedAt',${captured},'compacted',true,
+        'requestHash',case when c.body->>'requestHash' ~ '^[0-9a-f]{64}$' then c.body->>'requestHash' else null end))
+      from candidates p where c.ctid=p.pointer and c.user_id=p.user_id and c.id=p.id
+        ${userId === undefined ? sql`` : sql`and c.user_id=${userId}`} returning 1
+    ) select count(*)::integer as count from compacted`;
 }
 
 export function createControlRepository(database: Database): ControlRepository {
@@ -170,6 +202,9 @@ export function createControlRepository(database: Database): ControlRepository {
             await databaseTx.execute(
               sql`delete from ${table(kind)} where user_id = ${userId} and id = ${id}`,
             );
+          },
+          async pruneCommands(now) {
+            await databaseTx.execute(contextCommandPrune(now, userId));
           },
           async pruneEvents(deviceId, streamId, orphans = false) {
             await databaseTx.execute(eventWindowPrune(userId, deviceId, streamId));

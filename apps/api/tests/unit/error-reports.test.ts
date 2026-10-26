@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vite-plus/test";
-import type { SafeEvent } from "@raypx-kit/logger/safe";
+import { describe, expect, it, vi } from "vite-plus/test";
+import type { SafeEvent } from "@raypx/logger/safe";
 import { withErrorReports } from "../../server/error-reports.js";
 import { newRequestId } from "../../server/api.js";
 
@@ -65,5 +65,74 @@ describe("API error reports", () => {
     const id = newRequestId();
     expect(id).toMatch(/^req_[a-z]{24}$/);
     expect(newRequestId()).not.toBe(id);
+  });
+
+  it("bounds active and queued reports while preserving every primary log", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const logged: SafeEvent[] = [];
+    const send = vi.fn(async () => {
+      await gate;
+      return new Response(null);
+    });
+    const sink = withErrorReports(
+      ({ event }) => {
+        logged.push(event);
+      },
+      {
+        token: "phc_test",
+        host: "https://posthog.example.test",
+        environment: "test",
+        fetch: send,
+        maxPending: 3,
+        concurrency: 2,
+      },
+    );
+    await Promise.all(
+      Array.from({ length: 6 }, async (_, index) =>
+        sink({
+          event: logEvent({
+            operation: "rpc.request",
+            status: 500,
+            requestId: `req_${index}`,
+            body: "private-report-body",
+            error: { name: "TypeError", message: "private-error" },
+          }),
+        }),
+      ),
+    );
+    expect(logged).toHaveLength(6);
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(sink.reportStats()).toMatchObject({ pending: 3, dropped: 3 });
+    release();
+    await sink.flush?.();
+    expect(send).toHaveBeenCalledTimes(3);
+    expect(sink.reportStats()).toMatchObject({ delivered: 3, pending: 0 });
+    expect(JSON.stringify(send.mock.calls)).not.toContain("private-report-body");
+    await sink.close?.();
+  });
+
+  it("records HTTP failures without retrying or failing the primary sink", async () => {
+    const send = vi.fn(async () => new Response(null, { status: 503 }));
+    const close = vi.fn(async () => {});
+    const sink = withErrorReports(
+      Object.assign(() => {}, { close }),
+      {
+        token: "phc_test",
+        host: "https://posthog.example.test",
+        environment: "test",
+        fetch: send,
+      },
+    );
+    await sink({ event: logEvent({ status: 500 }) });
+    await sink.flush?.();
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(sink.reportStats()).toMatchObject({ failed: 1, pending: 0 });
+    const closing = sink.close?.();
+    expect(sink.close?.()).toBe(closing);
+    await closing;
+    expect(close).toHaveBeenCalledTimes(1);
   });
 });

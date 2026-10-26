@@ -5,15 +5,20 @@ const bun = process.execPath;
 const cwd = resolve(import.meta.dirname, "../..");
 let commands: string[][];
 
-if (task !== "check" && task !== "build" && task !== "dev")
-  throw new Error("Usage: scripts/native/task.ts <check|build|dev>");
+if (task !== "check" && task !== "build" && task !== "build:renderer" && task !== "dev")
+  throw new Error("Usage: scripts/native/task.ts <check|build|build:renderer|dev>");
 
-const argumentKey = `RAYPX_DESKTOP_${task.toUpperCase()}_ARGS`;
+const argumentKey = `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`;
 const inTurbo = Boolean(process.env.TURBO_HASH);
 const forwarded = inTurbo ? process.env[argumentKey] : undefined;
 const args: unknown = forwarded && directArgs.length === 0 ? JSON.parse(forwarded) : directArgs;
 if (!Array.isArray(args) || args.some((value) => typeof value !== "string"))
   throw new Error("Desktop task arguments must be a string array");
+if (
+  task === "build:renderer" &&
+  args.some((value) => /^(?:--(?:mode|outDir|config)(?:=|$)|-c$)/.test(value))
+)
+  throw new Error("Renderer acceptance owns its mode and output directory");
 // Turbo's passthrough arguments also reach dependency tasks with the same name.
 // A per-task, hashed environment field keeps Desktop flags out of the CLI build.
 const env = { ...process.env };
@@ -36,6 +41,11 @@ if (!inTurbo) {
   commands = [
     [bun, "run", "raypx-dev", "env", "--", bun, "--bun", "vp", "build", ...args],
     [bun, "run", "native:csp"],
+  ];
+} else if (task === "build:renderer") {
+  commands = [
+    [bun, "run", "raypx-dev", "env", "--", bun, "--bun", "vp", "build", ...args, "--mode", "e2e"],
+    [bun, "run", "native:csp", "artifacts/browser/client"],
   ];
 } else {
   commands = [

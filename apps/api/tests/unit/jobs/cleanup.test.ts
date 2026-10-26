@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import type { Database } from "@raypx/database/connection";
-import type { SafeEvent } from "@raypx-kit/logger/safe";
+import type { SafeEvent } from "@raypx/logger/safe";
 import { createCleanupJob, runCleanupJob } from "../../../server/jobs/cleanup.js";
 import { configurationDefaults } from "@raypx/contracts/api";
 import { createApiLogging, type ApiLogging } from "../../../server/logging.js";
@@ -35,6 +35,7 @@ it("does not query the database while disabled", async () => {
     rateLimits: 0,
     observedRequests: 0,
     observedSessions: 0,
+    contextCommands: 0,
   });
   expect(transaction).not.toHaveBeenCalled();
   await logger.flush();

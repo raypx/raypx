@@ -23,7 +23,6 @@
         "@orpc/evlog": "catalog:",
         "@orpc/server": "catalog:",
         "@raypx-kit/env": "catalog:",
-        "@raypx-kit/logger": "catalog:",
         "@raypx/account": "workspace:*",
         "@raypx/auth": "workspace:*",
         "@raypx/contracts": "workspace:*",
@@ -31,6 +30,7 @@
         "@raypx/database": "workspace:*",
         "@raypx/email": "workspace:*",
         "@raypx/jobs": "workspace:*",
+        "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
         "@raypx/storage": "workspace:*",
         "drizzle-orm": "catalog:",
@@ -59,13 +59,13 @@
       },
       "dependencies": {
         "@earendil-works/pi-agent-core": "catalog:",
-        "@raypx-kit/logger": "catalog:",
         "@raypx/ai": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
         "@raypx/core": "workspace:*",
         "@raypx/host": "workspace:*",
         "@raypx/jobs": "workspace:*",
+        "@raypx/logger": "workspace:*",
         "@raypx/memory": "workspace:*",
         "citty": "catalog:",
         "croner": "catalog:",
@@ -198,6 +198,7 @@
         "@raypx-kit/tsconfig": "catalog:dev",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/tooling": "workspace:*",
         "@types/bun": "catalog:dev",
       },
     },
@@ -429,6 +430,18 @@
         "react": "^19.3.0",
       },
     },
+    "packages/logger": {
+      "name": "@raypx/logger",
+      "version": "0.0.0",
+      "dependencies": {
+        "evlog": "catalog:",
+      },
+      "devDependencies": {
+        "@raypx-kit/tsconfig": "catalog:dev",
+        "@types/node": "catalog:dev",
+        "@vitest/coverage-v8": "catalog:dev",
+      },
+    },
     "packages/memory": {
       "name": "@raypx/memory",
       "version": "0.0.0",
@@ -566,7 +579,6 @@
     "@raypx-kit/analytics": "0.0.0-alpha.1",
     "@raypx-kit/env": "0.0.0-alpha.1",
     "@raypx-kit/intl": "0.0.0-alpha.1",
-    "@raypx-kit/logger": "0.0.0-alpha.2",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.1",
     "@tanstack/react-query": "^5.104.5",
@@ -1171,8 +1183,6 @@
 
     "@raypx-kit/intl": ["@raypx-kit/intl@0.0.0-alpha.1", "", { "peerDependencies": { "react": "^19.0.0" } }, "sha512-kWdS0+pdg9CYVUxw+El+rSfGQO6fokE0erEoxqhRJ9UvkDNJlzI+3M5NS7GdBpMXcqjMT9tFaDBCAXRwsnQsTg=="],
 
-    "@raypx-kit/logger": ["@raypx-kit/logger@0.0.0-alpha.2", "", { "dependencies": { "evlog": "^2.33.1" } }, "sha512-SFgOWcvkSKw+s2Hzx1J0S6v4oWKpSnU952NO1cVAx1l2cKToL4UeGYBktraGX7OpDl2JSEtU5fUYTVzHUR3Rwg=="],
-
     "@raypx-kit/tsconfig": ["@raypx-kit/tsconfig@0.0.0-alpha.1", "", {}, "sha512-RYxQRTVIhcDO85clEcIaJZFZnPoSAYQgYl5/Jk+8DaK2kkJ4XAeN7CEMQkTJx0MH5cHwKQwL1Gwn+jR4lsfj6Q=="],
 
     "@raypx/account": ["@raypx/account@workspace:packages/account"],
@@ -1202,6 +1212,8 @@
     "@raypx/i18n": ["@raypx/i18n@workspace:packages/i18n"],
 
     "@raypx/jobs": ["@raypx/jobs@workspace:packages/jobs"],
+
+    "@raypx/logger": ["@raypx/logger@workspace:packages/logger"],
 
     "@raypx/memory": ["@raypx/memory@workspace:packages/memory"],
 

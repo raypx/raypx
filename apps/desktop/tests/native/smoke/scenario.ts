@@ -328,6 +328,21 @@ try {
       })) as ContextDocument;
       assert.equal(restored.revision, 3);
       assert.equal(restored.content, document.content);
+      const disposable = (await engine.request("memory.create", {
+        requestId: crypto.randomUUID(),
+        document: { ...document, name: "Disposable smoke reference" },
+      })) as ContextDocument;
+      await engine.request("memory.archive", { id: disposable.id, revision: 1, archived: true });
+      assert.deepEqual(await engine.request("memory.delete", { id: disposable.id, revision: 2 }), {
+        deleted: true,
+      });
+      assert.deepEqual(await engine.request("memory.delete", { id: disposable.id, revision: 2 }), {
+        deleted: true,
+      });
+      await assert.rejects(
+        engine.request("memory.get", { id: disposable.id }),
+        /CONTEXT_NOT_FOUND/,
+      );
     }
     const references = (await engine.request("memory.list", {})) as ContextDocumentSummary[];
     assert.equal(references.length, 1, "Device references did not survive restart/server change");

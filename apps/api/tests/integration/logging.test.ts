@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { createApiClient } from "@raypx/client";
 import type { AuthSession } from "@raypx/auth/types";
-import type { SafeEvent } from "@raypx-kit/logger/safe";
+import type { SafeEvent } from "@raypx/logger/safe";
 import { createApiApp, type ApiAppOptions } from "../../server/api.js";
 import { createApiLogging, type ApiLogging } from "../../server/logging.js";
 
@@ -126,6 +126,23 @@ async function expectCompletion(
 }
 
 describe("API diagnostic events", () => {
+  it("retains aggregate job fields but drops unknown nested fields at the runtime boundary", async () => {
+    runtime().drain({
+      event: {
+        timestamp: new Date().toISOString(),
+        level: "info",
+        service: "raypx-api-test",
+        environment: "test",
+        operation: "job.cleanup",
+        body: secret.body,
+        job: { name: "maintenance:cleanup", contextReceipts: "2", prompt: secret.body },
+      },
+    });
+    await runtime().flush();
+    expect(events[0]?.job).toEqual({ name: "maintenance:cleanup", contextReceipts: "2" });
+    expect(runtime().stats()).toMatchObject({ delivered: 1, pending: 0, failed: 0 });
+    expectPrivateDataAbsent();
+  });
   it("logs health once with a server-owned ID and no request credentials or query", async () => {
     const response = await app().request(`/health?token=${secret.query}`, {
       headers: sensitiveHeaders,

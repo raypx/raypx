@@ -65,3 +65,6 @@ account ID, and uses the same version/CAS inputs as the account library.
 `/api` composes `memory.*` from the same `@raypx/memory` document/version schemas.
 Resolve accepts explicit revision references and a task target, with an optional
 prompt for complete budget validation; the server derives the account from session.
+
+`memory.delete` uses an expected revision and is available only for archived references.
+Its acknowledgement is idempotent; accepted task snapshots remain separate.

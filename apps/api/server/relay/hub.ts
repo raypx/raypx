@@ -195,6 +195,14 @@ export class RelayHub {
         const command = await this.use((control) =>
           control.route(actor.userId, frame.id, frame.request),
         );
+        if (command.recoveredTask) {
+          this.send(client, {
+            type: "result",
+            id: frame.id,
+            result: { ok: true, value: command.recoveredTask },
+          });
+          return;
+        }
         const device = [...this.peers.values()].find(
           (peer) =>
             peer.ready &&
@@ -418,6 +426,12 @@ export class RelayHub {
           action,
         ),
       );
+      if (command.recoveredTask)
+        return {
+          type: "task",
+          taskId: command.recoveredTask.id,
+          status: command.recoveredTask.status,
+        };
       if (command.context && !device.contextSupported) throw new ControlError("UPGRADE_REQUIRED");
       await this.use((control) => control.validateJobPeer(device.actor!, run.action));
     } catch (error) {

@@ -16,6 +16,7 @@ const result = {
   rateLimits: 3,
   observedRequests: 0,
   observedSessions: 0,
+  contextCommands: 0,
 };
 const event = (env: Record<string, string>) => ({
   name: "maintenance:cleanup",

@@ -26,7 +26,7 @@ import {
 import { type StateStore, acquireLock } from "../state";
 import { LocalError } from "../errors";
 import { AgentStore, desktopBinding, isDesktopBinding, type LocalAgentTask } from "./store";
-import { ManagedExecution, initialExecutionPrompt } from "./harness/execution";
+import { ManagedExecution, initialExecutionPrompt, executionSession } from "./harness/execution";
 import { ConversationRecorder } from "./activity";
 import manifest from "../../../package.json";
 import { ContextError } from "@raypx/memory";
@@ -84,6 +84,7 @@ export class AgentRuntime {
       resolveContext?: (
         selection: TaskContextSelection,
         target: TaskContextTarget,
+        prompt: string,
       ) => Promise<TaskContextSnapshot>;
     } = {},
   ) {
@@ -479,10 +480,14 @@ export class AgentRuntime {
         if (!context && contextSelection?.sources.length) {
           if (binding !== desktopBinding(LOCAL_WORKSPACE_ID) || !this.options.resolveContext)
             throw new ContextError("CONTEXT_UNAVAILABLE");
-          context = await this.options.resolveContext(contextSelection, {
-            deviceId: input.deviceId,
-            projectId: input.projectId,
-          });
+          context = await this.options.resolveContext(
+            contextSelection,
+            {
+              deviceId: input.deviceId,
+              projectId: input.projectId,
+            },
+            input.prompt,
+          );
         }
         task = {
           ...input,
@@ -592,9 +597,10 @@ export class AgentRuntime {
   async start(binding: string, commandId: string, task: AgentTask, deadline: string) {
     if (this.store.seen(commandId)) return { accepted: true };
     if (this.closing) throw new LocalError("CLOSING", "Agent host is closing");
-    initialExecutionPrompt(task);
     const version = this.bindingVersions.get(binding) ?? 0;
     const local: LocalAgentTask = { task: { ...task }, binding, sessionId: null };
+    const parent = task.parentTaskId ? this.store.get(task.parentTaskId) : undefined;
+    initialExecutionPrompt(task, undefined, Boolean(executionSession(local, parent)));
     // Persist the receipt before spawning. An ambiguous crash is interrupted, never replayed.
     this.store.accept(local, commandId);
     if (!Number.isFinite(Date.parse(deadline)) || Date.parse(deadline) <= Date.now()) {
@@ -683,7 +689,15 @@ export class AgentRuntime {
     this.status(local, "running");
     void execution
       .run(executable, directory)
-      .catch(() => execution.finish("failed", "AGENT_PROTOCOL_FAILED"));
+      .catch((error: unknown) =>
+        execution.finish(
+          "failed",
+          error instanceof TaskContextError ||
+            (error instanceof LocalError && error.code === "SESSION_UNAVAILABLE")
+            ? error.code
+            : "AGENT_PROTOCOL_FAILED",
+        ),
+      );
     return { accepted: true };
   }
   private ensureHookServer() {

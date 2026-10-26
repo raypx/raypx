@@ -58,6 +58,7 @@ const rpcPaths = new Set([
   "/rpc/memory/create",
   "/rpc/memory/update",
   "/rpc/memory/archive",
+  "/rpc/memory/delete",
   "/rpc/memory/history",
   "/rpc/memory/restore",
   "/rpc/memory/resolve",

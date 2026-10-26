@@ -89,17 +89,24 @@ every-15-minute expression does not depend on the Node host's time zone.
 
 Only the following `raypx_foundation` records are eligible:
 
-| Records             | Eligibility                         | Maximum per invocation |
-| ------------------- | ----------------------------------- | ---------------------- |
-| Sessions            | Expired more than 24 hours ago      | 1,000                  |
-| Verification tokens | Expired more than 24 hours ago      | 1,000                  |
-| Rate limits         | Last request more than one hour ago | 1,000                  |
-| Terminal requests   | Device has been revoked             | 1,000                  |
-| Terminal sessions   | Device has been revoked             | 1,000                  |
+| Records                | Eligibility                         | Maximum per invocation |
+| ---------------------- | ----------------------------------- | ---------------------- |
+| Sessions               | Expired more than 24 hours ago      | 1,000                  |
+| Verification tokens    | Expired more than 24 hours ago      | 1,000                  |
+| Rate limits            | Last request more than one hour ago | 1,000                  |
+| Terminal requests      | Device has been revoked             | 1,000                  |
+| Terminal sessions      | Device has been revoked             | 1,000                  |
+| Context command bodies | Accepted at least 24 hours ago      | 1,000 compacted        |
 
 All comparisons use PostgreSQL time. The grace periods preserve recently expired
 records and exceed the shared maximum 60-second rate-limit window. Users, accounts,
 devices, managed Agent tasks, replay history and local profiles have no cleanup policy here. Device revocation now deletes its terminal projections immediately; this job drains records retained by older versions. It preserves projections for active devices. Old-data cleanup requires both enablement switches above, while new revocations do not depend on the schedule.
+
+Context command cleanup removes private request/reference bodies while retaining
+compact digest receipts for unknown delivery. Matching authoritative task
+projections release duplicate commands immediately. New contextual commands also
+enforce the per-account 4,096-body / 8 MiB replay window independently of cleanup
+switches. See [task context](task-context.md) for recovery and retention semantics.
 
 One transaction owns a PostgreSQL advisory lock across API instances and platforms.
 Another concurrent invocation returns `skipped`. Candidate rows use `FOR UPDATE

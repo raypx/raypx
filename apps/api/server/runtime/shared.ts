@@ -77,7 +77,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
     const control = new ControlService(
       createControlRepository(db),
       Date.now,
-      (owner, selection, target) => memory.resolve(owner, selection, target),
+      (owner, selection, target, prompt) => memory.resolve(owner, selection, target, prompt),
     );
     const memory = new ContextLibraryService({
       repository: (resources.createContextRepository ?? createContextRepository)(db),

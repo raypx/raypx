@@ -9,7 +9,13 @@ import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { cloudJobInputSchema, type CloudJob, type CloudJobInput } from "../model.js";
 import type { JobDevice } from "./ports.js";
 import { nextJobRuns } from "../schedule.js";
-import { ContextPicker, type MemoryClientPort } from "@raypx/memory/client";
+import {
+  ContextPicker,
+  ContextBudget,
+  contextBudgetKey,
+  type ContextBudgetState,
+  type MemoryClientPort,
+} from "@raypx/memory/client";
 import type { TaskContextSelection } from "@raypx/core/tasks";
 
 const deviceKey = (device: { id: string; epoch: number }) => `${device.id}:${device.epoch}`;
@@ -65,6 +71,22 @@ export function JobForm({
       : { sources: [] },
   );
   const [invalid, setInvalid] = useState(false);
+  const [budget, setBudget] = useState<ContextBudgetState>();
+  const budgetProps =
+    action === "agent.run" && contextLibrary && device && project
+      ? {
+          client: contextLibrary,
+          ownerKey,
+          target: { deviceId: device.id, projectId: project },
+          value: contextSelection,
+          prompt: prompt.trim(),
+        }
+      : undefined;
+  const budgetReady =
+    !budgetProps ||
+    (budget?.key === contextBudgetKey(budgetProps) &&
+      budget.status === "ready" &&
+      !budget.exceeded);
   const preview = useMemo(() => {
     try {
       return nextJobRuns({ cron, timezone });
@@ -86,7 +108,7 @@ export function JobForm({
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !device) return;
+    if (busy || !device || !budgetReady) return;
     const result = cloudJobInputSchema.safeParse({
       name,
       cron,
@@ -253,7 +275,7 @@ export function JobForm({
                 maxLength={32_000}
                 required
                 disabled={busy}
-                className="min-h-32"
+                className="max-h-80 min-h-32 overflow-y-auto"
               />
             </Field>
             {contextLibrary && device && project && (
@@ -268,6 +290,7 @@ export function JobForm({
             )}
           </>
         )}
+        {budgetProps && <ContextBudget {...budgetProps} onChange={setBudget} />}
         <section className="space-y-2 text-xs text-muted-foreground">
           <h3 className="font-medium text-foreground">{j("preview")}</h3>
           {preview.length ? (
@@ -292,7 +315,7 @@ export function JobForm({
           </p>
         )}
         <div className="flex gap-3">
-          <Button type="submit" disabled={busy || !available || !preview.length}>
+          <Button type="submit" disabled={busy || !available || !preview.length || !budgetReady}>
             {c(busy ? "working" : "save")}
           </Button>
           <Button type="button" variant="ghost" disabled={busy} onClick={onCancel}>

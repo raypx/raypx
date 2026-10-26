@@ -89,3 +89,6 @@ without counting a locally mirrored remote request twice.
 Pending counts isolate failed sources and label known partial totals; do not hide
 healthy approvals or present an unknown total as zero. Device-disconnect confirmation
 explains deletion of synced terminal approvals and preservation of managed history.
+
+The injected memory budget view shares Core's exact formatter and gates submission
+until selected revisions are measured. Never persist fetched reference bodies in drafts.

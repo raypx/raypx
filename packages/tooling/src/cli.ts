@@ -11,6 +11,7 @@ import { checkLocales, policy } from "./policy.js";
 import { discover, pinnedNode, turbo } from "./repository.js";
 import { scaffold } from "./scaffold.js";
 import { smoke, smokeCloudflare } from "./smoke/index.js";
+import { planBrowserTests } from "./browser-tests.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -26,6 +27,11 @@ function option(name: string, fallback: string) {
 
 async function main() {
   switch (command) {
+    case "e2e": {
+      const planned = planBrowserTests(args);
+      await turbo(root, planned.task, planned.args, planned.env);
+      break;
+    }
     case "tasks": {
       if (!args[0]) throw new Error("Usage: raypx-dev tasks <task> [Turbo flags]");
       await turbo(root, args[0], args.slice(1));
@@ -139,7 +145,7 @@ async function main() {
     case undefined:
     default:
       console.log(
-        "raypx-dev: tasks | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | doctor",
+        "raypx-dev: tasks | e2e | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | doctor",
       );
   }
 }

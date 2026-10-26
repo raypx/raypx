@@ -5,8 +5,16 @@ exitForVersion("claude");
 const send = (value) => process.stdout.write(JSON.stringify(value) + "\n");
 let turn = 0,
   active = false;
+const resume = process.argv.includes("--resume")
+  ? process.argv[process.argv.indexOf("--resume") + 1]
+  : null;
+appendFileSync("sessions", JSON.stringify({ resume }) + "\n");
+if (resume && existsSync("resume-failed")) process.exit(12);
 send({ type: "stream_event", event: { type: "message_stop" } });
-send({ type: "system", session_id: "interactive" });
+send({
+  type: "system",
+  session_id: resume && existsSync("resume-new-session") ? "fresh-interactive" : "interactive",
+});
 setInterval(() => {
   if (!active || !existsSync("complete")) return;
   unlinkSync("complete");

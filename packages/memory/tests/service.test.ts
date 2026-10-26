@@ -29,8 +29,10 @@ function fixture(scope: "account" | "device" = "account") {
   };
   const repository = {
     list: vi.fn(async () => [document]),
+    delete: vi.fn<ContextLibraryRepository["delete"]>(async () => ({ deleted: true })),
     get: vi.fn(async () => document),
     version: vi.fn(async () => version),
+    findCreation: vi.fn<ContextLibraryRepository["findCreation"]>(async () => null),
     create: vi.fn(async () => document),
     update: vi.fn(async () => document),
     archive: vi.fn(async () => document),
@@ -85,15 +87,77 @@ it("validates project ownership before writes and restore before committing its 
   await f.service.restore("owner", { id, revision: 2, version: 1 });
   expect(f.repository.restore).toHaveBeenCalledWith("owner", id, 2, 1);
   f.validateProject.mockRejectedValueOnce({ code: "NOT_FOUND" });
+  f.version.project = { ...target, projectId: crypto.randomUUID() };
   await expect(
     f.service.restore("stranger", { id, revision: 2, version: 1 }),
   ).rejects.toMatchObject({ code: "CONTEXT_PROJECT_MISMATCH" });
   expect(f.repository.restore).toHaveBeenCalledTimes(1);
 });
 
+it("recovers a matching create before checking an expired project and keeps new/conflicting creates protected", async () => {
+  const f = fixture();
+  const document = {
+    kind: f.document.kind,
+    name: f.document.name,
+    category: f.document.category,
+    content: f.document.content,
+    project: target,
+  };
+  f.document.archived = true;
+  f.repository.findCreation.mockResolvedValueOnce(f.document);
+  f.validateProject.mockRejectedValue({ code: "NOT_FOUND" });
+  expect(await f.service.create("owner", { requestId: id, document })).toBe(f.document);
+  expect(f.validateProject).not.toHaveBeenCalled();
+  expect(f.repository.create).not.toHaveBeenCalled();
+  await expect(
+    f.service.create("owner", { requestId: crypto.randomUUID(), document }),
+  ).rejects.toMatchObject({ code: "CONTEXT_PROJECT_MISMATCH" });
+  f.repository.findCreation.mockRejectedValueOnce(new ContextError("IDEMPOTENCY_CONFLICT"));
+  await expect(f.service.create("stranger", { requestId: id, document })).rejects.toMatchObject({
+    code: "IDEMPOTENCY_CONFLICT",
+  });
+  expect(f.repository.create).not.toHaveBeenCalled();
+});
+
+it("allows content edits and same-project restores after project removal but validates new ownership", async () => {
+  const f = fixture();
+  const document = {
+    kind: f.document.kind,
+    name: f.document.name,
+    category: f.document.category,
+    content: "Edited offline",
+    project: { ...target },
+  };
+  f.validateProject.mockRejectedValue({ code: "DEVICE_REVOKED" });
+  await f.service.update("owner", { id, revision: 2, document });
+  await f.service.restore("owner", { id, revision: 2, version: 1 });
+  expect(f.validateProject).not.toHaveBeenCalled();
+  expect(f.repository.update).toHaveBeenCalledTimes(1);
+  expect(f.repository.restore).toHaveBeenCalledTimes(1);
+  await expect(
+    f.service.update("owner", {
+      id,
+      revision: 2,
+      document: { ...document, project: { ...target, projectId: crypto.randomUUID() } },
+    }),
+  ).rejects.toMatchObject({ code: "CONTEXT_PROJECT_MISMATCH" });
+  f.version.project = { ...target, deviceId: crypto.randomUUID() };
+  await expect(f.service.restore("owner", { id, revision: 2, version: 1 })).rejects.toMatchObject({
+    code: "CONTEXT_PROJECT_MISMATCH",
+  });
+  await expect(f.service.update("owner", { id, revision: 1, document })).rejects.toMatchObject({
+    code: "CONTEXT_CONFLICT",
+  });
+  await expect(f.service.restore("owner", { id, revision: 1, version: 1 })).rejects.toMatchObject({
+    code: "CONTEXT_CONFLICT",
+  });
+  expect(f.repository.update).toHaveBeenCalledTimes(1);
+  expect(f.repository.restore).toHaveBeenCalledTimes(1);
+});
+
 it("resolves explicitly selected historical revisions and snapshots them independently of later edits", async () => {
   const f = fixture("device");
-  const snapshot = await f.service.resolve("device-owner", f.selection, target);
+  const snapshot = await f.service.resolve("device-owner", f.selection, target, "Task");
   expect(f.repository.readSources).toHaveBeenCalledWith("device-owner", f.selection.sources);
   expect(snapshot).toEqual({
     capturedAt: now,
@@ -118,17 +182,17 @@ it("resolves explicitly selected historical revisions and snapshots them indepen
 it("rejects archived or moved current documents even when the requested revision was eligible", async () => {
   const f = fixture();
   f.document.archived = true;
-  await expect(f.service.resolve("owner", f.selection, target)).rejects.toMatchObject({
+  await expect(f.service.resolve("owner", f.selection, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_ARCHIVED",
   });
   f.document.archived = false;
   f.document.project = { ...target, projectId: crypto.randomUUID() };
-  await expect(f.service.resolve("owner", f.selection, target)).rejects.toMatchObject({
+  await expect(f.service.resolve("owner", f.selection, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_PROJECT_MISMATCH",
   });
   f.document.project = null;
   f.version.project = { ...target, deviceId: crypto.randomUUID() };
-  await expect(f.service.resolve("owner", f.selection, target)).rejects.toMatchObject({
+  await expect(f.service.resolve("owner", f.selection, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_PROJECT_MISMATCH",
   });
 });
@@ -136,11 +200,11 @@ it("rejects archived or moved current documents even when the requested revision
 it("does not substitute latest or other owners' revisions and rejects duplicate references", async () => {
   const f = fixture();
   f.repository.readSources.mockResolvedValueOnce([]);
-  await expect(f.service.resolve("stranger", f.selection, target)).rejects.toMatchObject({
+  await expect(f.service.resolve("stranger", f.selection, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_NOT_FOUND",
   });
   f.version.revision = 2;
-  await expect(f.service.resolve("owner", f.selection, target)).rejects.toMatchObject({
+  await expect(f.service.resolve("owner", f.selection, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_NOT_FOUND",
   });
   await expect(
@@ -148,6 +212,7 @@ it("does not substitute latest or other owners' revisions and rejects duplicate 
       "owner",
       { sources: [f.selection.sources[0]!, f.selection.sources[0]!] },
       target,
+      "Task",
     ),
   ).rejects.toMatchObject({ code: "INVALID_CONTEXT" });
 });
@@ -160,15 +225,32 @@ it("enforces the combined context budget without clipping a selected document", 
     version: { ...f.version, id: source.id, content: "x".repeat(8000) },
   }));
   f.repository.readSources.mockResolvedValue(resolved);
-  await expect(f.service.resolve("owner", { sources }, target)).rejects.toMatchObject({
+  await expect(f.service.resolve("owner", { sources }, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_TOO_LARGE",
   });
   f.repository.readSources.mockResolvedValue(resolved.slice(0, 3));
   expect(
-    (await f.service.resolve("owner", { sources: sources.slice(0, 3) }, target)).sources.map(
-      (source) => source.content.length,
-    ),
+    (
+      await f.service.resolve("owner", { sources: sources.slice(0, 3) }, target, "Task")
+    ).sources.map((source) => source.content.length),
   ).toEqual([8000, 8000, 8000]);
+  await expect(
+    f.service.resolve("owner", { sources: sources.slice(0, 3) }, target, "x".repeat(9000)),
+  ).rejects.toMatchObject({ code: "CONTEXT_TOO_LARGE" });
+});
+
+it("normalizes context UUIDs before lookup and project validation", async () => {
+  const f = fixture();
+  const selected = {
+    sources: f.selection.sources.map((source) => ({ ...source, id: source.id.toUpperCase() })),
+  };
+  const upperTarget = {
+    deviceId: target.deviceId.toUpperCase(),
+    projectId: target.projectId.toUpperCase(),
+  };
+  const snapshot = await f.service.resolve("owner", selected, upperTarget, "Task");
+  expect(snapshot.sources[0]!.id).toBe(f.selection.sources[0]!.id.toLowerCase());
+  expect(f.repository.readSources).toHaveBeenCalledWith("owner", f.selection.sources);
 });
 
 it("sanitizes persistence text and hides infrastructure errors without hiding domain errors", async () => {
@@ -194,4 +276,12 @@ it("sanitizes persistence text and hides infrastructure errors without hiding do
   });
   f.repository.get.mockRejectedValueOnce(new ContextError("CONTEXT_NOT_FOUND"));
   await expect(f.service.get("owner", { id })).rejects.toMatchObject({ code: "CONTEXT_NOT_FOUND" });
+});
+
+it("validates permanent deletion and passes ownership/revision to the atomic repository", async () => {
+  const f = fixture();
+  expect(await f.service.delete("owner", { id, revision: 2 })).toEqual({ deleted: true });
+  expect(f.repository.delete).toHaveBeenCalledWith("owner", id, 2);
+  expect(() => f.service.delete("", { id, revision: 2 })).toThrow("AUTH_REQUIRED");
+  expect(() => f.service.delete("owner", { id, revision: 0 })).toThrow("INVALID_CONTEXT");
 });

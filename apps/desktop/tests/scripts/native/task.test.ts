@@ -1,5 +1,13 @@
 import { spawnSync } from "node:child_process";
-import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
@@ -48,11 +56,13 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
       "RAYPX_DESKTOP_CHECK_ARGS",
       "RAYPX_DESKTOP_BUILD_ARGS",
       "RAYPX_DESKTOP_DEV_ARGS",
+      "RAYPX_DESKTOP_RENDERER_ARGS",
     ])
       delete env[key];
     if (options.turbo) env.TURBO_HASH = "fixture-task-hash";
     if (options.forwarded)
-      env[`RAYPX_DESKTOP_${task.toUpperCase()}_ARGS`] = JSON.stringify(options.forwarded);
+      env[`RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`] =
+        JSON.stringify(options.forwarded);
     const result = spawnSync(
       process.execPath,
       ["run", join(root, "scripts/native/task.ts"), task, ...(options.args ?? [])],
@@ -63,10 +73,12 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
         timeout: 15_000,
       },
     );
-    const events = readFileSync(join(root, "events.jsonl"), "utf8")
-      .trim()
-      .split("\n")
-      .map((line) => JSON.parse(line) as { name: string; args: string[] });
+    const events = existsSync(join(root, "events.jsonl"))
+      ? readFileSync(join(root, "events.jsonl"), "utf8")
+          .trim()
+          .split("\n")
+          .map((line) => JSON.parse(line) as { name: string; args: string[] })
+      : [];
     return { ...result, events };
   };
 }
@@ -84,19 +96,23 @@ describe("Desktop task graph entry", () => {
     ]);
   });
 
-  it.each(["check", "build", "dev"])("routes direct %s through the repository graph", (task) => {
-    const result = fixture()(task, { args: ["--example", "value with spaces"] });
-    expect(result.status).toBe(0);
-    expect(result.events).toEqual([
-      {
-        name: "raypx-dev",
-        args: ["tasks", `desktop#${task}`],
-        forwarded: {
-          [`RAYPX_DESKTOP_${task.toUpperCase()}_ARGS`]: '["--example","value with spaces"]',
+  it.each(["check", "build", "dev", "build:renderer"])(
+    "routes direct %s through the repository graph",
+    (task) => {
+      const result = fixture()(task, { args: ["--example", "value with spaces"] });
+      expect(result.status).toBe(0);
+      expect(result.events).toEqual([
+        {
+          name: "raypx-dev",
+          args: ["tasks", `desktop#${task}`],
+          forwarded: {
+            [`RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`]:
+              '["--example","value with spaces"]',
+          },
         },
-      },
-    ]);
-  });
+      ]);
+    },
+  );
 
   it("runs checks in order inside Turbo without preparing a second time", () => {
     const result = fixture()("check", { turbo: true });
@@ -153,5 +169,23 @@ describe("Desktop task graph entry", () => {
       "--mode",
       "value with spaces",
     ]);
+  });
+  it("builds the separate browser renderer with CSP, without staging the CLI or SDK", () => {
+    const result = fixture()("build:renderer", { turbo: true });
+    expect(result.status).toBe(0);
+    expect(result.events).toEqual([
+      {
+        name: "raypx-dev",
+        args: ["env", "--", process.execPath, "--bun", "vp", "build", "--mode", "e2e"],
+        forwarded: {},
+      },
+      { name: "native:csp", args: ["artifacts/browser/client"], forwarded: {} },
+    ]);
+  });
+  it("refuses to turn the browser-only build into a native artifact", () => {
+    const result = fixture()("build:renderer", { turbo: true, args: ["--mode", "production"] });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("owns its mode");
+    expect(result.events).toEqual([]);
   });
 });

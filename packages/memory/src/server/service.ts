@@ -2,6 +2,7 @@ import { z } from "zod";
 import { normalizeTaskJson } from "@raypx/core/task-text";
 import {
   taskContextSelectionSchema,
+  taskContextIdSchema,
   taskContextTargetSchema,
   taskContextSnapshotSchema,
   taskExecutionPrompt,
@@ -14,17 +15,19 @@ import {
   contextCreateSchema,
   contextUpdateSchema,
   contextArchiveSchema,
+  contextDeleteSchema,
   contextHistorySchema,
   contextRestoreSchema,
   type ContextCreateInput,
   type ContextUpdateInput,
   type ContextArchiveInput,
+  type ContextDeleteInput,
   type ContextHistoryInput,
   type ContextRestoreInput,
 } from "../model.js";
 import type { ContextLibraryServiceOptions } from "./types.js";
 
-const getSchema = z.strictObject({ id: z.uuid() });
+const getSchema = z.strictObject({ id: taskContextIdSchema });
 const parse = <T>(schema: z.ZodType<T>, input: unknown): T => {
   const parsed = schema.safeParse(normalizeTaskJson(input));
   if (!parsed.success) throw new ContextError("INVALID_CONTEXT");
@@ -32,6 +35,9 @@ const parse = <T>(schema: z.ZodType<T>, input: unknown): T => {
 };
 const matches = (project: TaskContextTarget | null, target: TaskContextTarget) =>
   !project || (project.deviceId === target.deviceId && project.projectId === target.projectId);
+const sameProject = (left: TaskContextTarget | null, right: TaskContextTarget | null) =>
+  left === right ||
+  Boolean(left && right && left.deviceId === right.deviceId && left.projectId === right.projectId);
 
 /** Shared account/device library use cases; persistence, identity and clocks are injected. */
 export class ContextLibraryService {
@@ -81,6 +87,10 @@ export class ContextLibraryService {
   async create(owner: string, value: ContextCreateInput) {
     this.owner(owner);
     const input = parse(contextCreateSchema, value);
+    const previous = await this.stored(() =>
+      this.options.repository.findCreation(owner, input.requestId, input.document),
+    );
+    if (previous) return previous;
     await this.project(owner, input.document.project);
     return this.stored(() =>
       this.options.repository.create(owner, input.requestId, input.document),
@@ -89,7 +99,10 @@ export class ContextLibraryService {
   async update(owner: string, value: ContextUpdateInput) {
     this.owner(owner);
     const input = parse(contextUpdateSchema, value);
-    await this.project(owner, input.document.project);
+    const current = await this.stored(() => this.options.repository.get(owner, input.id));
+    if (current.revision !== input.revision) throw new ContextError("CONTEXT_CONFLICT");
+    if (!sameProject(current.project, input.document.project))
+      await this.project(owner, input.document.project);
     return this.stored(() =>
       this.options.repository.update(owner, input.id, input.revision, input.document),
     );
@@ -108,13 +121,20 @@ export class ContextLibraryService {
       this.options.repository.history(owner, input.id, input.before, input.limit),
     );
   }
+  delete(owner: string, value: ContextDeleteInput) {
+    this.owner(owner);
+    const input = parse(contextDeleteSchema, value);
+    return this.stored(() => this.options.repository.delete(owner, input.id, input.revision));
+  }
   async restore(owner: string, value: ContextRestoreInput) {
     this.owner(owner);
     const input = parse(contextRestoreSchema, value);
+    const current = await this.stored(() => this.options.repository.get(owner, input.id));
+    if (current.revision !== input.revision) throw new ContextError("CONTEXT_CONFLICT");
     const version = await this.stored(() =>
       this.options.repository.version(owner, input.id, input.version),
     );
-    await this.project(owner, version.project);
+    if (!sameProject(current.project, version.project)) await this.project(owner, version.project);
     return this.stored(() =>
       this.options.repository.restore(owner, input.id, input.revision, input.version),
     );
@@ -123,6 +143,7 @@ export class ContextLibraryService {
     owner: string,
     selection: TaskContextSelection,
     target: TaskContextTarget,
+    prompt: string,
   ): Promise<TaskContextSnapshot> {
     this.owner(owner);
     const requested = parse(taskContextSelectionSchema, selection);
@@ -160,7 +181,7 @@ export class ContextLibraryService {
       }),
     });
     try {
-      taskExecutionPrompt({ prompt: " ", context: snapshot });
+      taskExecutionPrompt({ prompt, context: snapshot });
     } catch {
       throw new ContextError("CONTEXT_TOO_LARGE");
     }

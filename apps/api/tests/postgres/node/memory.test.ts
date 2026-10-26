@@ -86,7 +86,7 @@ it("atomically compares revisions across connections and never changes immutable
   expect((await repository.get(owner, document.id)).content).toBe(history[0]!.content);
 });
 
-it("restores the complete selected historical state as a new version and keeps archival history", async () => {
+it("restores historical content as a new version while preserving the current archival state", async () => {
   const document = await repository.create(owner, crypto.randomUUID(), input());
   const archived = await repository.archive(owner, document.id, 1, true);
   expect(archived.revision).toBe(2);
@@ -101,7 +101,7 @@ it("restores the complete selected historical state as a new version and keeps a
   const restored = await repository.restore(owner, document.id, 3, 1);
   expect(restored).toMatchObject({
     revision: 4,
-    archived: false,
+    archived: true,
     kind: "memory",
     content: document.content,
     project: target,
@@ -122,6 +122,82 @@ it("restores the complete selected historical state as a new version and keeps a
     code: "CONTEXT_NOT_FOUND",
   });
   expect((await repository.get(owner, document.id)).revision).toBe(4);
+  await repository.archive(owner, document.id, 4, false);
+  expect((await repository.history(owner, document.id, undefined, 20))[0]).toMatchObject({
+    reason: "unarchived",
+    archived: false,
+  });
+  expect(await repository.restore(owner, document.id, 5, 2)).toMatchObject({
+    revision: 6,
+    archived: false,
+    content: document.content,
+  });
+});
+
+it("returns unchanged updates without another revision but refuses stale no-op requests", async () => {
+  const original = input(),
+    id = crypto.randomUUID();
+  const saved = await repository.create(owner, id, original);
+  const reordered = {
+    ...original,
+    project: { projectId: target.projectId, deviceId: target.deviceId },
+  };
+  expect(await repository.update(owner, id, 1, reordered)).toEqual(saved);
+  expect(await repository.history(owner, id, undefined, 20)).toHaveLength(1);
+  const updated = await repository.update(owner, id, 1, { ...original, content: "Changed" });
+  await expect(
+    repository.update(owner, id, 1, { ...original, content: "Changed" }),
+  ).rejects.toMatchObject({ code: "CONTEXT_CONFLICT" });
+  expect(await repository.update(owner, id, 2, { ...original, content: "Changed" })).toEqual(
+    updated,
+  );
+  expect(await repository.history(owner, id, undefined, 20)).toHaveLength(2);
+});
+
+it("recovers creation before project revalidation and saves unchanged-project content after removal", async () => {
+  let available = true;
+  const service = new ContextLibraryService({
+    repository,
+    scope: "account",
+    validateProject: async () => {
+      if (!available) throw { code: "NOT_FOUND" };
+    },
+  });
+  const original = input(),
+    id = crypto.randomUUID();
+  await service.create(owner, { requestId: id, document: original });
+  available = false;
+  await service.update(owner, {
+    id,
+    revision: 1,
+    document: { ...original, content: "Edited after removal" },
+  });
+  const current = await service.archive(owner, { id, revision: 2, archived: true });
+  expect(await service.create(owner, { requestId: id, document: original })).toEqual(current);
+  await expect(
+    service.create(owner, {
+      requestId: id,
+      document: { ...original, content: "Different create" },
+    }),
+  ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+  await expect(
+    service.create(stranger, { requestId: id, document: original }),
+  ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+  await expect(
+    service.create(owner, { requestId: crypto.randomUUID(), document: original }),
+  ).rejects.toMatchObject({ code: "CONTEXT_PROJECT_MISMATCH" });
+  await expect(
+    service.update(owner, {
+      id,
+      revision: 3,
+      document: { ...original, project: { ...target, projectId: crypto.randomUUID() } },
+    }),
+  ).rejects.toMatchObject({ code: "CONTEXT_PROJECT_MISMATCH" });
+  expect(await service.restore(owner, { id, revision: 3, version: 1 })).toMatchObject({
+    revision: 4,
+    archived: true,
+    content: original.content,
+  });
 });
 
 it("replays creation against revision one after edits/archival and rejects payload or owner reuse", async () => {
@@ -166,6 +242,9 @@ it("counts archived documents toward the quota but allows an existing create ret
   await expect(repository.create(quotaOwner, crypto.randomUUID(), original)).rejects.toMatchObject({
     code: "CONTEXT_LIMIT",
   });
+  expect(await repository.delete(quotaOwner, id, 2)).toEqual({ deleted: true });
+  await repository.create(quotaOwner, crypto.randomUUID(), original);
+  expect(await repository.list(quotaOwner)).toHaveLength(100);
 });
 
 it("paginates immutable versions newest-first with an exclusive revision cursor", async () => {
@@ -222,9 +301,9 @@ it("reads historical snapshots without waiting for an account write lock and inv
   }
   const service = new ContextLibraryService({ repository, scope: "account" });
   const selection = { sources: [{ id: document.id, revision: 1 }] };
-  const snapshot = await service.resolve(owner, selection, target);
+  const snapshot = await service.resolve(owner, selection, target, "Task");
   await repository.update(owner, document.id, 1, { ...input(), content: "Changed text" });
-  expect((await service.resolve(owner, selection, target)).sources[0]!.content).toBe(
+  expect((await service.resolve(owner, selection, target, "Task")).sources[0]!.content).toBe(
     "Original rules",
   );
   expect(snapshot.sources[0]!.content).toBe("Original rules");
@@ -232,11 +311,11 @@ it("reads historical snapshots without waiting for an account write lock and inv
     ...input(),
     project: { ...target, projectId: crypto.randomUUID() },
   });
-  await expect(service.resolve(owner, selection, target)).rejects.toMatchObject({
+  await expect(service.resolve(owner, selection, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_PROJECT_MISMATCH",
   });
   await repository.archive(owner, document.id, 3, true);
-  await expect(service.resolve(owner, selection, target)).rejects.toMatchObject({
+  await expect(service.resolve(owner, selection, target, "Task")).rejects.toMatchObject({
     code: "CONTEXT_ARCHIVED",
   });
   const rows = await connection.db
@@ -244,4 +323,162 @@ it("reads historical snapshots without waiting for an account write lock and inv
     .from(contextVersion)
     .where(and(eq(contextVersion.userId, owner), eq(contextVersion.documentId, document.id)));
   expect(rows).toHaveLength(4);
+});
+
+it("keeps legacy uppercase document keys linked to immutable versions while canonicalizing DTOs", async () => {
+  const id = `abcdefab-${crypto.randomUUID().slice(9)}`,
+    physicalId = id.toUpperCase();
+  const original = input(),
+    stamp = new Date();
+  const legacy = {
+    ...original,
+    id: physicalId,
+    project: { deviceId: target.deviceId.toUpperCase(), projectId: target.projectId.toUpperCase() },
+    revision: 1,
+    archived: false,
+    createdAt: stamp.toISOString(),
+    updatedAt: stamp.toISOString(),
+  };
+  await connection.db
+    .insert(contextDocument)
+    .values({ ...legacy, userId: owner, createdAt: stamp, updatedAt: stamp });
+  await connection.db.insert(contextVersion).values({
+    documentId: physicalId,
+    userId: owner,
+    revision: 1,
+    body: { ...legacy, reason: "created" },
+  });
+  const service = new ContextLibraryService({ repository, scope: "account" });
+  expect(await service.get(owner, { id })).toMatchObject({ id, revision: 1, project: target });
+  expect(await service.create(owner, { requestId: id, document: original })).toMatchObject({
+    id,
+    revision: 1,
+  });
+  await service.update(owner, { id, revision: 1, document: { ...original, content: "New text" } });
+  expect((await service.history(owner, { id })).map((version) => version.revision)).toEqual([2, 1]);
+  expect(
+    (await service.resolve(owner, { sources: [{ id, revision: 1 }] }, target, "Task")).sources[0],
+  ).toMatchObject({ id, content: original.content, project: target });
+  await service.archive(owner, { id, revision: 2, archived: true });
+  expect(await service.restore(owner, { id, revision: 3, version: 1 })).toMatchObject({
+    id,
+    revision: 4,
+    archived: true,
+  });
+  expect((await repository.version(owner, id, 1)).id).toBe(id);
+  const physicalVersions = await connection.db
+    .select({ id: contextVersion.documentId })
+    .from(contextVersion)
+    .where(eq(contextVersion.documentId, physicalId));
+  expect(physicalVersions).toEqual(Array.from({ length: 4 }, () => ({ id: physicalId })));
+});
+
+it("prevents canonical document collisions in the database across owners", async () => {
+  const collisionOwner = `memory-collision-${crypto.randomUUID()}`,
+    id = `abcdefab-${crypto.randomUUID().slice(9)}`,
+    physicalId = id.toUpperCase(),
+    stamp = new Date();
+  await connection.db.insert(user).values({
+    id: collisionOwner,
+    name: "Collision fixture",
+    email: `${collisionOwner}@example.test`,
+  });
+  try {
+    const saved = {
+      ...input(),
+      id: physicalId,
+      revision: 1,
+      archived: false,
+      createdAt: stamp.toISOString(),
+      updatedAt: stamp.toISOString(),
+    };
+    await connection.db.insert(contextDocument).values({
+      ...input(),
+      id: physicalId,
+      userId: collisionOwner,
+      revision: 1,
+      archived: false,
+    });
+    await connection.db.insert(contextVersion).values({
+      documentId: physicalId,
+      userId: collisionOwner,
+      revision: 1,
+      body: { ...saved, reason: "created" },
+    });
+    for (const userId of [collisionOwner, stranger])
+      await expect(
+        connection.db.insert(contextDocument).values({
+          ...input(),
+          id,
+          userId,
+          revision: 1,
+          archived: false,
+        }),
+      ).rejects.toMatchObject({ cause: { code: "23505" } });
+    expect(await repository.create(collisionOwner, id, input())).toMatchObject({ id });
+    await expect(repository.findCreation(stranger, id, input())).rejects.toMatchObject({
+      code: "IDEMPOTENCY_CONFLICT",
+    });
+  } finally {
+    await connection.db.delete(user).where(eq(user.id, collisionOwner));
+  }
+});
+
+it("uses the canonical unique index for existing and missing create IDs amid unrelated documents", async () => {
+  const noiseOwner = `memory-query-${crypto.randomUUID()}`;
+  await connection.db.insert(user).values({
+    id: noiseOwner,
+    name: "Query fixture",
+    email: `${noiseOwner}@example.test`,
+  });
+  try {
+    await connection.db.execute(sql`insert into ${contextDocument}
+      (id,user_id,kind,name,category,content,project,revision,archived)
+      select md5('memory-query-'||n),${noiseOwner},'memory','Unrelated','','Body',null,1,false
+      from generate_series(1,6000)n`);
+    const id = crypto.randomUUID();
+    await repository.create(owner, id, input());
+    await connection.db.execute(sql`analyze ${contextDocument}`);
+    for (const requestId of [id, crypto.randomUUID()]) {
+      const [row] = await connection.db.execute(
+        sql`explain (analyze,format json) select * from ${contextDocument}
+          where lower(id)=${requestId} limit 2`,
+      );
+      const plan = JSON.stringify(row?.["QUERY PLAN"]);
+      expect(plan).toContain("context_document_canonical_id_idx");
+      expect(plan).not.toContain('"Node Type":"Seq Scan"');
+    }
+    expect(await repository.findCreation(owner, id, input())).toMatchObject({ id });
+    expect(await repository.findCreation(owner, crypto.randomUUID(), input())).toBeNull();
+  } finally {
+    await connection.db.delete(user).where(eq(user.id, noiseOwner));
+  }
+});
+
+it("permanently deletes archived data with CAS while preserving frozen task context and identity", async () => {
+  const id = crypto.randomUUID(),
+    original = input();
+  await repository.create(owner, id, original);
+  const service = new ContextLibraryService({ repository, scope: "account" });
+  const frozen = await service.resolve(owner, { sources: [{ id, revision: 1 }] }, target, "Task");
+  await expect(repository.delete(owner, id, 1)).rejects.toMatchObject({
+    code: "CONTEXT_NOT_ARCHIVED",
+  });
+  await expect(repository.delete(stranger, id, 1)).rejects.toMatchObject({
+    code: "CONTEXT_NOT_FOUND",
+  });
+  await repository.archive(owner, id, 1, true);
+  await expect(repository.delete(owner, id, 1)).rejects.toMatchObject({ code: "CONTEXT_CONFLICT" });
+  expect(await repository.delete(owner, id, 2)).toEqual({ deleted: true });
+  expect(await other.delete(owner, id, 2)).toEqual({ deleted: true });
+  await expect(repository.get(owner, id)).rejects.toMatchObject({ code: "CONTEXT_NOT_FOUND" });
+  expect(await repository.readSources(owner, [{ id, revision: 1 }])).toEqual([]);
+  expect(frozen.sources[0]?.content).toBe(original.content);
+  expect(
+    await connection.db.select().from(contextVersion).where(eq(contextVersion.documentId, id)),
+  ).toEqual([]);
+  for (const account of [owner, stranger])
+    await expect(other.create(account, id.toUpperCase(), original)).rejects.toMatchObject({
+      code: "IDEMPOTENCY_CONFLICT",
+    });
 });

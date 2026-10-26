@@ -12,7 +12,9 @@ execution hosts and product views. Schemas are the single source of inferred typ
   inferred types, provider capabilities, active statuses and decision validation.
   Task contexts freeze up to eight explicit source revisions. `taskExecutionPrompt`
   marks references separately and rejects combined prompts above 32,000 characters;
-  never truncate or silently omit a selected source.
+  preserve raw bodies with deterministic collision-checked boundaries; never truncate
+  or silently omit a selected source.
+  `taskExecutionBudget` measures that same format without throwing above the limit.
 - `/activity` applies activity checkpoints/deltas and bounds activity pages.
 - `/task-text` clips UTF-16 budgets without splitting code points and normalizes
   JSON strings for persistence.

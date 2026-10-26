@@ -410,6 +410,8 @@ export default {
     CONTEXT_TOO_LARGE:
       "The task and selected references exceed the context limit. Shorten the task or remove a reference.",
     CONTEXT_UNAVAILABLE: "The reference library is unavailable. Your task draft is still here.",
+    CONTEXT_REQUEST_EXPIRED:
+      "The delivery recovery window has expired. Check the original task status before taking another action; no execution was resent.",
   },
   common: {
     deviceWorkspace: "Local workspace",
@@ -560,10 +562,27 @@ export default {
     deleteConfirm: "Delete this file or empty folder? This cannot be undone.",
   },
   memory: {
+    CONTEXT_NOT_ARCHIVED: "Archive this reference before permanently deleting it.",
+    deletePermanently: "Delete permanently",
+    deleteNamed: "Permanently delete {name}",
+    deleteHint:
+      "Permanently delete this reference and all its versions. This cannot be undone. Existing task snapshots stay available; schedules using this reference must choose another reference.",
+    quotaHint:
+      "Keep up to 100 references, including archived references. Permanently delete archived references to free space.",
+    promptBudget: "Reference and task budget",
+    budgetCount: "References and task: {used} / {limit} characters",
+    budgetLoading: "Calculating the selected reference budget…",
+    budgetExceeded: "Over the limit by {count} characters. Shorten the task or remove references.",
+    budgetNear: "Near the limit: {count} characters remaining.",
+    budgetUnavailable:
+      "The selected reference budget is unavailable. Complete this check before sending.",
+    budgetRetry: "Recalculate budget",
     CONTEXT_LIMIT:
-      "This library has reached the 100-reference limit, including archived references. You can edit existing references.",
+      "This library has reached the 100-reference limit, including archived references. Permanently delete archived references to create a new one.",
     INVALID_CONTEXT: "The reference fields or revision are invalid.",
     CONTEXT_UNAVAILABLE: "The reference library is unavailable. Refresh and try again.",
+    CONTEXT_REQUEST_EXPIRED:
+      "The delivery recovery window has expired. Check the original task status before taking another action; no execution was resent.",
     title: "Memory and templates",
     create: "New reference",
     edit: "Edit reference",
@@ -601,15 +620,25 @@ export default {
     unarchiveNamed: "Unarchive: {name}",
     editNamed: "Edit: {name}",
     archiveHint:
+      "Archived references cannot be selected for new tasks. Future runs of schedules that reference this item will fail and pause the schedule. Existing task snapshots and version history are preserved.",
+    localArchiveHint:
       "Archived references cannot be selected for new tasks. Existing task snapshots and version history are preserved.",
+    scheduledPlansCount: "Cloud schedules referencing this item: {count}.",
+    scheduledPlanPreview: "{name} ({status})",
+    scheduledPlansMore: "{count} more; review them in Cloud automations.",
+    scheduledPlansUnknown:
+      "Unable to confirm references. Review Cloud automations before archiving. You can still choose Archive; this can be undone.",
+    planEnabled: "Enabled",
+    planPaused: "Paused",
     created: "Created",
     updated: "Updated",
     restored: "Restored",
+    unarchived: "Unarchived",
     restoredFrom: "Restored from revision {revision}",
     restore: "Restore version",
     restoreRevision: "Restore revision {revision}",
     restoreHint:
-      "This creates a new current revision from the selected version. Later versions remain in the timeline.",
+      "This creates a new current revision from the selected version’s content and fields, preserving the reference’s current archived state. Later versions remain in the timeline.",
     olderVersions: "Load older versions",
     chooseContext: "Memory and templates",
     pickerHint:
@@ -727,6 +756,8 @@ export default {
     CONTEXT_PROJECT_MISMATCH: "A selected reference does not belong to this project.",
     CONTEXT_TOO_LARGE: "The task and selected references exceed the context limit.",
     CONTEXT_UNAVAILABLE: "The reference library is unavailable. Check the run before trying again.",
+    CONTEXT_REQUEST_EXPIRED:
+      "The delivery recovery window has expired. Check the original task status before taking another action; no execution was resent.",
     DELIVERY_EXPIRED: "Delivery timed out. Check the run before trying again.",
     DELIVERY_UNCERTAIN: "Delivery is uncertain. No automatic retry will be made.",
     JOB_FAILED: "This run could not complete.",

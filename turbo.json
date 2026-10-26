@@ -71,7 +71,7 @@
       "outputs": []
     },
     "e2e": {
-      "dependsOn": ["web#build", "desktop#build"],
+      "dependsOn": ["web#build", "desktop#build:renderer"],
       "cache": false,
       "outputs": []
     },
@@ -129,6 +129,31 @@
     },
     "test:postgres:cloudflare": {
       "dependsOn": ["transit", "build:cloudflare"],
+      "cache": false,
+      "outputs": []
+    },
+    "desktop#build:renderer": {
+      "dependsOn": ["^build", "transit"],
+      "outputs": ["artifacts/browser/**"],
+      "env": ["VITE_*", "NODE_ENV", "RAYPX_DESKTOP_RENDERER_ARGS", "RAYPX_SOURCEMAPS"]
+    },
+    "e2e:web": {
+      "dependsOn": ["web#build"],
+      "cache": false,
+      "outputs": []
+    },
+    "e2e:desktop": {
+      "dependsOn": ["desktop#build:renderer"],
+      "cache": false,
+      "outputs": []
+    },
+    "e2e:smoke": {
+      "dependsOn": ["web#build", "desktop#build:renderer"],
+      "cache": false,
+      "outputs": []
+    },
+    "e2e:visual": {
+      "dependsOn": ["web#build", "desktop#build:renderer"],
       "cache": false,
       "outputs": []
     }

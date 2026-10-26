@@ -10,6 +10,7 @@ import {
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
 import type { ConfigurationReader } from "../configuration/types.js";
+import { contextCommandPrune } from "../control/repository.js";
 
 export function createCleanupJob({
   db,
@@ -34,6 +35,7 @@ export interface CleanupResult {
   rateLimits: number;
   observedRequests: number;
   observedSessions: number;
+  contextCommands: number;
 }
 
 /** Repeated runs are safe; every transaction removes at most 1,000 rows per table. */
@@ -51,6 +53,7 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
       rateLimits: 0,
       observedRequests: 0,
       observedSessions: 0,
+      contextCommands: 0,
     };
     if (!lock?.acquired) return result;
 
@@ -106,6 +109,10 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
         ) select count(*)::integer as count from removed`);
       result[key] = row!.count;
     }
+    const [commands] = await tx.execute<{ count: number }>(
+      contextCommandPrune(sql`transaction_timestamp()`),
+    );
+    result.contextCommands = commands!.count;
     return result;
   });
 }
@@ -129,8 +136,21 @@ export async function runCleanupJob(
           rateLimits: 0,
           observedRequests: 0,
           observedSessions: 0,
+          contextCommands: 0,
         };
-    event.emit({ status: 200, job: { name: "maintenance:cleanup", ...result } });
+    event.emit({
+      status: 200,
+      job: {
+        name: "maintenance:cleanup",
+        status: result.status,
+        sessions: String(result.sessions),
+        verifications: String(result.verifications),
+        rateLimits: String(result.rateLimits),
+        observedRequests: String(result.observedRequests),
+        observedSessions: String(result.observedSessions),
+        contextReceipts: String(result.contextCommands),
+      },
+    });
     return result;
   } catch {
     // Nitro also logs task failures. Never propagate driver errors or SQL parameters.

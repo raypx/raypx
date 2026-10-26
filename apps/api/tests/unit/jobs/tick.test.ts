@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import type { CloudJobsService } from "@raypx/jobs/server";
-import type { SafeEvent } from "@raypx-kit/logger/safe";
+import type { SafeEvent } from "@raypx/logger/safe";
 import { createScheduleTick } from "../../../server/jobs/tick.js";
 import { createApiLogging, type ApiLogging } from "../../../server/logging.js";
 

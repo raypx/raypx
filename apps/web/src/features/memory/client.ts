@@ -1,5 +1,5 @@
 import { createApiClient } from "@raypx/client";
-import type { MemoryClientPort, MemoryProjectsPort } from "@raypx/memory/client";
+import type { MemoryClientPort, MemoryProjectsPort, MemoryUsagePort } from "@raypx/memory/client";
 import { apiUrl } from "../auth/client";
 let api: ReturnType<typeof createApiClient> | undefined;
 const client = () => (api ??= createApiClient({ baseUrl: apiUrl }));
@@ -9,6 +9,7 @@ export const accountMemory: MemoryClientPort = {
   create: (input, options) => client().memory.create(input, options),
   update: (input, options) => client().memory.update(input, options),
   archive: (input, options) => client().memory.archive(input, options),
+  delete: (input, options) => client().memory.delete(input, options),
   history: (input, options) =>
     client().memory.history({ ...input, limit: input.limit ?? 20 }, options),
   restore: (input, options) => client().memory.restore(input, options),
@@ -25,4 +26,16 @@ export const memoryProjects: MemoryProjectsPort = {
           name: `${device.name} · ${project.name}`,
         })),
       ),
+};
+export const memoryUsage: MemoryUsagePort = {
+  scheduledPlans: async ({ id }, options) =>
+    (await client().jobs.list({}, options)).jobs
+      .filter(
+        (job) =>
+          job.action.type === "agent.run" &&
+          job.action.contextSelection?.sources.some(
+            (source) => source.id.toLowerCase() === id.toLowerCase(),
+          ),
+      )
+      .map((job) => ({ id: job.id, name: job.name, enabled: job.enabled })),
 };

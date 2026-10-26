@@ -6,13 +6,18 @@
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
     "e2e": "bun --bun playwright test",
-    "e2e:live": "bun --bun playwright test --config playwright.live.config.ts"
+    "e2e:live": "bun --bun playwright test --config playwright.live.config.ts",
+    "e2e:web": "bun --bun playwright test",
+    "e2e:desktop": "bun --bun playwright test",
+    "e2e:smoke": "bun --bun playwright test",
+    "e2e:visual": "bun --bun playwright test"
   },
   "devDependencies": {
     "@playwright/test": "catalog:dev",
     "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
+    "@raypx/tooling": "workspace:*",
     "@types/bun": "catalog:dev"
   },
   "raypx": {

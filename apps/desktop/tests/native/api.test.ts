@@ -41,12 +41,13 @@ it("allows the explicit memory RPC methods only at the configured API origin", a
     "create",
     "update",
     "archive",
+    "delete",
     "history",
     "restore",
     "resolve",
   ])
     await f.api.request({ path: `/rpc/memory/${method}`, method: "POST", headers: {}, body: "{}" });
-  expect(f.send).toHaveBeenCalledTimes(8);
+  expect(f.send).toHaveBeenCalledTimes(9);
   await expect(
     f.api.request({ path: "/rpc/memory/internal", method: "POST", headers: {}, body: "{}" }),
   ).rejects.toThrow("not permitted");

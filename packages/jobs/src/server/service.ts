@@ -32,6 +32,7 @@ const knownFailures = new Set([
   "CONTEXT_PROJECT_MISMATCH",
   "CONTEXT_TOO_LARGE",
   "CONTEXT_UNAVAILABLE",
+  "CONTEXT_REQUEST_EXPIRED",
 ]);
 const skipFailures = new Set([
   "DEVICE_OFFLINE",

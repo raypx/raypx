@@ -80,9 +80,9 @@ the same branch rather than through compatibility layers.
 directly. A separate `use-intl` or `next-intl` install would create a second,
 unconnected IntlProvider context.
 
-`@raypx-kit/logger` keeps evlog unbundled. API and CLI own their configuration,
-allowed event fields and drain lifecycle, and the package reads no environment
-variables. Its `/safe` and `/stream` entries are checked through the archive
-consumer and Raypx's artifact gates. Report any unavailable runtime or
-packaged-platform checks separately; archive installation alone does not establish
-platform acceptance.
+Logging currently lives in Raypx's private `@raypx/logger` source workspace. API
+and CLI use `workspace:*` and keep evlog in the external runtime catalog. Logger
+needs no Kit release or preview archive while its product workflow settles.
+Future extraction follows the release steps above. Its safe/managed/stream
+behavior is checked by workspace tests and Raypx's Node, Worker and standalone
+CLI artifact gates; packaged-platform acceptance remains separate.
