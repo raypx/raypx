@@ -1,4 +1,29 @@
 export default {
+  guest: {
+    visitor: "访客模式",
+    title: "远程任务与审批",
+    intro: "可以先写任务草稿。登录后连接电脑、发送任务，并查看和处理审批。",
+    writeDraft: "编写任务草稿",
+    connect: "登录并连接电脑",
+    draft: "任务草稿",
+    draftHint: "先在本机编写和保存草稿，登录后再选择电脑并发送。",
+    approvals: "审批",
+    approvalsHint: "登录后查看私有请求，进行允许、拒绝或回答操作。",
+    preferences: "外观与语言",
+    preferencesHint: "无需账号即可选择主题和语言，设置保存在当前设备上。",
+    computers: "已连接的电脑",
+    computersHint: "登录后查看你的电脑，在 Desktop 中授权电脑及其项目。",
+    privateTitle: "登录后继续",
+    privateHint: "登录后才能查看你的账户数据。",
+    visitorNotice: "当前为访客模式，访问电脑、任务和审批数据时需要登录。",
+    tasksHint: "可以先准备任务内容。文字保存在当前设备，登录并选择电脑后再由你发送。",
+    history: "你的任务历史",
+    historyHint: "登录后查看私有任务与对话。",
+    viewTasks: "登录查看任务",
+    restoring: "正在恢复草稿",
+    restoreFailed: "暂时无法恢复登录前的草稿，尚未发送任何任务。",
+    back: "返回浏览",
+  },
   configuration: {
     registrationUnavailable: "注册服务暂不可用，请稍后重试。",
     checkingRegistration: "正在检查注册状态…",
@@ -47,6 +72,10 @@ export default {
     viewError: "无法打开此页面，请重新加载应用后重试。",
   },
   tasks: {
+    signInToSend: "登录后发送",
+    guestSendHint: "登录后选择电脑和项目，登录本身不会发送任务。",
+    signInDraftFailed: "暂时无法继续登录，文字仍在编辑器中，请重试。",
+
     terminalSettingsSymlink:
       "Hook 设置由 dotfiles 符号链接管理。请手动把 Raypx hook 加到链接目标文件；原链接会保留。",
     reviewRequests: "处理请求",
@@ -286,6 +315,7 @@ export default {
     NETWORK_UNAVAILABLE: "无法连接，请检查网络后重试。",
   },
   common: {
+    home: "首页",
     adminSettings: "站点设置",
     tasks: "任务",
     approvals: "待处理",

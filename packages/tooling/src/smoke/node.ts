@@ -88,10 +88,12 @@ export async function probeWeb(root: string): Promise<void> {
     "web",
     () => ({ NODE_ENV: "production" }),
     async (base) => {
-      // Signed-out requests carry no session cookie, so the guard redirects without calling the API.
+      // Guests receive public HTML without a session cookie or private account data.
       const home = await fetch(base, { headers: { accept: "text/html" }, redirect: "manual" });
-      if (!isSignInRedirect(home))
-        throw new Error("Web did not redirect a signed-out visitor to sign-in");
+      if (!home.ok || !(await home.text()).includes("Remote tasks and approvals"))
+        throw new Error("Web did not render its public guest page");
+      const admin = await fetch(`${base}/admin/settings`, { redirect: "manual" });
+      if (!isSignInRedirect(admin)) throw new Error("Administrator pages must require sign-in");
       const login = await fetch(`${base}/login`, {
         headers: { accept: "text/html", "accept-language": "zh" },
       });
@@ -116,7 +118,7 @@ export async function probeWeb(root: string): Promise<void> {
   console.log("Node Web artifact probe passed (relocated output, SSR locale, assets, 404s)");
 }
 
-/** The signed-in surface answers signed-out visitors with a redirect to /login. */
+/** Administrator pages send signed-out visitors to the standalone login page. */
 function isSignInRedirect(response: Response): boolean {
   const location = response.headers.get("location") ?? "";
   return response.status >= 300 && response.status < 400 && /\/login(?:$|\?)/.test(location);

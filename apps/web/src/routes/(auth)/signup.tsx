@@ -10,6 +10,7 @@ export const Route = createFileRoute("/(auth)/signup")({
 });
 
 function SignupPage() {
+  const search = Route.useSearch();
   const query = useQuery(publicConfigurationQuery());
   const t = useTranslations("configuration");
   if (query.data?.registrationEnabled) return <AuthForm mode="signup" />;
@@ -30,7 +31,7 @@ function SignupPage() {
           <p className="text-muted-foreground">{t("closedHint")}</p>
         </>
       )}
-      <Link to="/login" className="inline-block underline underline-offset-4">
+      <Link to="/login" search={search} className="inline-block underline underline-offset-4">
         {t("signIn")}
       </Link>
     </section>

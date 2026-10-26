@@ -1,4 +1,34 @@
 export default {
+  guest: {
+    visitor: "Guest",
+    title: "Remote tasks and approvals",
+    intro:
+      "Write a draft before signing in. Sign in to connect your computer, send tasks and review approvals.",
+    writeDraft: "Write a task draft",
+    connect: "Sign in to connect a computer",
+    draft: "Task drafts",
+    draftHint:
+      "Write and save drafts on this device. Choose a computer and send when you are signed in.",
+    approvals: "Approvals",
+    approvalsHint: "Sign in to view private requests and allow, deny or answer them.",
+    preferences: "Appearance and language",
+    preferencesHint:
+      "Choose your theme and language without an account. These preferences stay on this device.",
+    computers: "Connected computers",
+    computersHint:
+      "Sign in to view your computers. Use Desktop to authorize a computer and its projects.",
+    privateTitle: "Sign in to continue",
+    privateHint: "Your account data is available after you sign in.",
+    visitorNotice: "Browsing as a guest. Sign in to access your computers, tasks and approvals.",
+    tasksHint:
+      "Prepare a task here. Your text stays on this device until you sign in, select a computer and send.",
+    history: "Your task history",
+    historyHint: "Sign in to view your private tasks and conversations.",
+    viewTasks: "Sign in to view tasks",
+    restoring: "Restoring your draft",
+    restoreFailed: "The temporary draft could not be restored. No task has been sent.",
+    back: "Back to browsing",
+  },
   configuration: {
     registrationUnavailable: "Registration is temporarily unavailable. Please try again later.",
     checkingRegistration: "Checking registration availability…",
@@ -56,6 +86,11 @@ export default {
     viewError: "Unable to open this view. Reload the app and try again.",
   },
   tasks: {
+    signInToSend: "Sign in to send",
+    guestSendHint: "Sign in to choose a computer and project. Signing in will not send this task.",
+    signInDraftFailed:
+      "Could not continue to sign-in. Your text is still in the editor. Try again.",
+
     terminalSettingsSymlink:
       "Your hook settings are managed by dotfiles. Add the Raypx hook to the symlink target manually; the link is preserved.",
     reviewRequests: "Review requests",
@@ -321,6 +356,7 @@ export default {
     NETWORK_UNAVAILABLE: "Unable to connect. Check your connection and try again.",
   },
   common: {
+    home: "Home",
     adminSettings: "Site settings",
     tasks: "Tasks",
     approvals: "Waiting",

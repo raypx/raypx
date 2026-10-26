@@ -4,6 +4,10 @@ Shared Agent task and approval views for Web and Desktop.
 The root exports pure state helpers; /client exports DOM components, the minimal
 TaskWorkspaceClient interface and visibility-aware subscriptions. /client/pending-count
 exports only the approval badge for always-mounted shells, without the workspace or virtualizer.
+`/client/task-composer` exposes the standalone composer and its plain draft type.
+Applications can inject a restored draft and a guest sign-in/persistence adapter;
+guest submissions call that adapter without invoking task creation. The application
+owns authentication and handoff storage. Restored text always waits for an explicit Send.
 Remote reads use TanStack Query (a peer) and require a QueryClientProvider; keys are scoped by
 client instance and account, and relay notifications invalidate them while the page is visible. Web injects its
 relay client; Desktop can inject an IPC adapter and local copy. DeviceSettings

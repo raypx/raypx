@@ -21,6 +21,9 @@ HTTP fixtures isolate signed-out and form response rendering; they do not establ
 server authentication correctness. The API PostgreSQL gate exercises real signup,
 verification, password reset and session revocation. Theme/locale screenshots are
 written under ignored test-results for visual inspection.
+Guest Web acceptance asserts no private list/subscription requests before login,
+preserves the original page and draft choices through sign-in, and checks restoration
+does not send a task. Desktop retains its initial login requirement.
 
 ## Verification
 

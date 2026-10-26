@@ -1,3 +1,5 @@
+import { GuestHome } from "../../features/auth/components/guest-home";
+import { LoadingState } from "@raypx/ui/loading-state";
 import { AccountDetails } from "@raypx/account/client";
 import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -33,13 +35,24 @@ function AccountPage() {
       setRefreshing(false);
     }
   }
+  if (
+    state.status === "signed-out" ||
+    (state.status === "signed-in" && !session.isPending && !session.error && !session.data)
+  )
+    return <GuestHome />;
+  if (
+    state.status === "signed-in" &&
+    !session.error &&
+    (session.isPending || session.data?.user.id !== state.account.id)
+  )
+    return <LoadingState label={c("loading")} />;
   return (
     <section className="mx-auto max-w-[900px] px-14 pt-13 pb-20 max-[760px]:px-6 max-[760px]:pt-8.5 max-[760px]:pb-14 max-[420px]:px-5">
       <header className="mb-10">
         <h1>{t("accountTitle")}</h1>
         <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>
       </header>
-      {state.status === "unavailable" ? (
+      {state.status === "unavailable" || session.error ? (
         <div className="flex flex-wrap items-center gap-4 py-9">
           <p role="alert">{c("networkError")}</p>
           <Button variant="outline" disabled={busy} onClick={() => void reload()}>

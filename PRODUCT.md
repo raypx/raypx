@@ -14,6 +14,9 @@ actions and interactive terminals through the bundled Raypx CLI.
 ## Principles
 
 - Desktop opens its login page before showing the workspace; Web remains accessible without login.
+- Web guests can browse the interface, change preferences and prepare task drafts.
+  Private history, computer connections, task execution and approval actions require
+  login. Return to the original page afterward and restore drafts without sending them.
 - Local runtime state and device preferences survive account logout.
 - Show real execution, permission failures and retry state. Never fabricate data.
 - macOS Desktop Quit leaves the independent CLI daemon and Agent tasks running.

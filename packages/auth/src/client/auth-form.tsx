@@ -15,10 +15,12 @@ export interface AuthFormLinkProps {
 
 export interface AuthFormProps {
   mode: AuthMode;
+  backLabel?: string | undefined;
   client: AuthActionClient;
   webUrl: string;
   search: string;
   onSignedIn: AuthActionSuccess;
+  callbackURLs?: { verify: string; reset: string } | undefined;
   LinkComponent: ComponentType<AuthFormLinkProps>;
 }
 
@@ -29,16 +31,23 @@ function formText(data: FormData, key: string): string {
 
 export function AuthForm({
   mode,
+  backLabel,
   client,
   webUrl,
   search,
   onSignedIn,
+  callbackURLs,
   LinkComponent,
 }: AuthFormProps) {
   const t = useTranslations("auth");
   const c = useTranslations("common");
   const locale = useLocale();
-  const auth = useAuthActions({ client, locale, webUrl });
+  const auth = useAuthActions({
+    client,
+    locale,
+    webUrl,
+    ...(callbackURLs ? { callbackURLs } : {}),
+  });
   const { busy } = auth;
   const error = !auth.error
     ? ""
@@ -106,7 +115,7 @@ export function AuthForm({
           className="mb-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground"
         >
           <ArrowLeft size={16} />
-          {c("account")}
+          {backLabel ?? c("account")}
         </LinkComponent>
         <h2 className="mb-5 text-[23px]">{title}</h2>
         {mode === "forgot-password" && (

@@ -19,7 +19,7 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { ArrowLeft, ChevronRight, ListTodo, Plus } from "lucide-react";
 import { Badge } from "@raypx/ui/components/ui/badge";
-import { TaskComposer } from "./task-composer.js";
+import { TaskComposer, type TaskComposerDraft } from "./task-composer.js";
 import { TaskOverview } from "./task-overview.js";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -43,6 +43,8 @@ interface Props {
   client: TaskWorkspaceClient;
   accountId: string | null;
   pending?: boolean;
+  initialDraft?: TaskComposerDraft | undefined;
+  onDraftRestored?: (() => void) | undefined;
   local?: boolean;
   /** Server identity for account-scoped device-only drafts. */
   draftNamespace?: string;
@@ -77,6 +79,8 @@ function Workspace({
   view = "tasks",
   local = false,
   draftNamespace = "default",
+  initialDraft,
+  onDraftRestored,
 }: Props & { view?: "tasks" | "approvals"; accountId: string }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
@@ -187,6 +191,8 @@ function Workspace({
                 <TaskComposer
                   key={JSON.stringify([draftNamespace, accountId, local])}
                   client={client}
+                  initialDraft={initialDraft}
+                  onDraftRestored={onDraftRestored}
                   devices={data.devices}
                   tasks={data.tasks}
                   local={local}

@@ -24,9 +24,10 @@ application is an independent composition root and is never imported by another 
   Import heavy client modules only from the layout or route that needs them.
 - `src/router.tsx` creates one TanStack QueryClient per router (per request on the
   server), passes it as route context and connects SSR dehydration through `@tanstack/react-router-ssr-query`.
-- `(app)/route.tsx` guards the signed-in surface in `beforeLoad` with
-  `queryClient.fetchQuery(accountQuery())`: signed-out visitors are redirected to `/login`,
-  an unavailable API still renders the page so it can show the network error. Only a
+- `(app)/route.tsx` resolves account context with `queryClient.fetchQuery(accountQuery())`
+  while keeping the application shell public. Guests can browse home, tasks, approvals
+  and preferences; `SessionBoundary` mounts private views only after a confirmed session.
+  An unavailable API renders retryable feedback rather than a signed-out state. Only a
   signed-in result stays fresh; sign-out handlers call `queryClient.clear()` before
   `router.invalidate()`. The account page reads the result from route context.
 - `src/preferences.ts` reads theme/locale cookies and the full weighted Accept-Language list on the server.
@@ -50,7 +51,9 @@ application is an independent composition root and is never imported by another 
 - `src/routes/(auth)/` holds the authentication routes under the logo-only layout.
   Each route renders the thin `src/features/auth/components/auth-form.tsx` adapter
   with its mode. The adapter injects the client, router query and navigation into
-  the shared form, including the `/` account destination.
+  the shared form. The auth layout validates an application-page `returnTo` allowlist;
+  login, signup and email callbacks preserve it. Login restores editing state, never
+  an execution or approval intent. `/admin/settings` still redirects guests to login.
   Public URLs stay flat, and changing routes remounts the form so inputs and
   request feedback reset.
 - `/health` is a server route for process liveness; it never calls the API.
@@ -71,7 +74,10 @@ behavior by client/contracts.
 - Remote behavior goes through the API over HTTP. Never import API, auth server,
   DB or mail code, and do not duplicate API behavior in server functions.
 - Server rendering forwards only Better Auth cookies to the API, never other inbound
-  headers. Without a session cookie it redirects to sign-in without calling the API.
+  headers. Without a session cookie it returns signed-out context without an account RPC.
+- Guest task editor handoff uses bounded, expiring sessionStorage scoped to the API
+  origin, browser tab and (after login) account. URLs carry only a nonce. Keep failed
+  login/storage attempts recoverable and never send a restored draft automatically.
 - Render-time code must not touch `window`/`document`; read the URL through the router.
 - `VITE_API_URL` is baked at build time for browser and server. The server must
   receive the session cookie: one shared origin, or API AUTH_DOMAIN on sibling hosts.

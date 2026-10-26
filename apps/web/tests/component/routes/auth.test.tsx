@@ -23,6 +23,17 @@ import { routeTree } from "../../../src/routeTree.gen";
 
 const mocks = vi.hoisted(() => ({
   registrationEnabled: true,
+  sessionError: false,
+  sessionPending: false,
+  refetch: vi.fn(),
+  session: null as null | {
+    user: { id: string; name: string; email: string };
+    session: { id: string };
+  },
+  tasks: vi.fn(async () => []),
+  devices: vi.fn(async () => []),
+  approvals: vi.fn(async () => []),
+  create: vi.fn(),
   signIn: vi.fn(),
   signUp: vi.fn(),
   resend: vi.fn(),
@@ -33,9 +44,16 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../src/features/auth/client", () => ({
   webUrl: "https://raypx.example",
+  apiUrl: "https://api.raypx.example",
   loadAccount: async () => ({ status: "signed-out" }),
   authClient: {
-    useSession: () => ({ data: null, isPending: false }),
+    useSession: () => ({
+      data: mocks.session,
+      isPending: mocks.sessionPending,
+      error: mocks.sessionError ? new Error("offline") : null,
+      refetch: mocks.refetch,
+    }),
+    getSession: async () => ({ data: mocks.session, error: null }),
     signIn: { email: mocks.signIn },
     signUp: { email: mocks.signUp },
     sendVerificationEmail: mocks.resend,
@@ -57,7 +75,14 @@ vi.mock("../../../src/features/configuration/client", () => ({
     enabled: false,
   }),
 }));
-vi.mock("../../../src/features/tasks/client", () => ({ taskClient: {} }));
+vi.mock("../../../src/features/tasks/client", () => ({
+  taskClient: {
+    tasks: { list: mocks.tasks, create: mocks.create },
+    devices: { list: mocks.devices },
+    approvals: { list: mocks.approvals },
+    subscribe: () => () => {},
+  },
+}));
 vi.mock("../../../src/features/auth/account", () => ({
   loadAccount: mocks.loadAccount,
 }));
@@ -83,6 +108,13 @@ afterEach(() => {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.registrationEnabled = true;
+  mocks.sessionError = false;
+  mocks.sessionPending = false;
+  mocks.session = null;
+  mocks.tasks.mockResolvedValue([]);
+  mocks.devices.mockResolvedValue([]);
+  mocks.approvals.mockResolvedValue([]);
+  sessionStorage.clear();
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");
@@ -154,10 +186,13 @@ describe("authentication routes", () => {
     expect(screen.getByRole("link", { name: "Resend verification email" })).toBeTruthy();
   });
 
-  it("redirects signed-out visitors from application routes to sign-in", async () => {
+  it("lets guests compose without reading private data", async () => {
     const router = await page("/tasks");
-    expect(router.state.location.pathname).toBe("/login");
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeTruthy();
+    expect(router.state.location.pathname).toBe("/tasks");
+    expect(await screen.findByRole("button", { name: "Sign in to send" })).toBeTruthy();
+    expect(mocks.tasks).not.toHaveBeenCalled();
+    expect(mocks.devices).not.toHaveBeenCalled();
+    expect(mocks.approvals).not.toHaveBeenCalled();
   });
 
   it("keeps application routes when the API is unavailable", async () => {
@@ -165,6 +200,45 @@ describe("authentication routes", () => {
     const router = await page("/");
     expect(router.state.location.pathname).toBe("/");
     expect(await screen.findByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+
+  it.each(["/tasks", "/approvals", "/settings"])(
+    "keeps session failures retryable on %s without private reads",
+    async (path) => {
+      mocks.sessionError = true;
+      await page(path);
+      fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
+      expect(mocks.refetch).toHaveBeenCalledTimes(1);
+      expect(mocks.tasks).not.toHaveBeenCalled();
+      expect(mocks.devices).not.toHaveBeenCalled();
+      expect(mocks.approvals).not.toHaveBeenCalled();
+      expect(screen.queryByRole("button", { name: "Sign in to send" })).toBeNull();
+    },
+  );
+
+  it("waits for session resolution before mounting private task queries", async () => {
+    mocks.sessionPending = true;
+    await page("/tasks");
+    expect(mocks.tasks).not.toHaveBeenCalled();
+    expect(mocks.devices).not.toHaveBeenCalled();
+    expect(mocks.approvals).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Sign in to send" })).toBeNull();
+  });
+
+  it("returns to the guest editor with the draft after cancelling login", async () => {
+    const router = await page("/tasks?from=cancel");
+    fireEvent.change(await screen.findByLabelText("What should the agent do?"), {
+      target: { value: "Do not lose this draft" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to send" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
+    fireEvent.click(screen.getByRole("link", { name: "Back to browsing" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("What should the agent do?")).toHaveValue(
+        "Do not lose this draft",
+      ),
+    );
+    expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it("returns to the account route after successful sign-in", async () => {
@@ -183,6 +257,86 @@ describe("authentication routes", () => {
     fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
     await waitFor(() => expect(screen.queryByLabelText("Password")).toBeNull());
+  });
+
+  it("restores a guest draft after failed then successful sign-in without sending", async () => {
+    const router = await page("/tasks?from=guest");
+    const prompt = "Guest draft 中😀";
+    fireEvent.change(await screen.findByLabelText("What should the agent do?"), {
+      target: { value: prompt },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to send" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
+    expect(router.state.location.searchStr).not.toContain(encodeURIComponent(prompt));
+    mocks.signIn.mockResolvedValueOnce({ error: { code: "INVALID_EMAIL_OR_PASSWORD" } });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "ada@example.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "incorrect" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The email or password is incorrect.",
+    );
+    mocks.signIn.mockImplementationOnce(async () => {
+      mocks.session = {
+        user: { id: "user-1", name: "Ada", email: "ada@example.test" },
+        session: { id: "session-1" },
+      };
+      mocks.loadAccount.mockResolvedValue({ status: "signed-in", account: mocks.session.user });
+      return { data: {}, error: null };
+    });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Sign in" }).closest("form")!);
+    await waitFor(() => expect(router.state.location.pathname).toBe("/tasks"));
+    await waitFor(() =>
+      expect(screen.getByLabelText("What should the agent do?")).toHaveValue(prompt),
+    );
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(router.state.location.search).toMatchObject({ from: "guest" });
+  });
+
+  it("preserves the page through registration and password recovery links", async () => {
+    const router = await page("/login?returnTo=%2Fapprovals");
+    fireEvent.click(screen.getByRole("link", { name: "Create account" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/signup"));
+    expect(router.state.location.search).toMatchObject({ returnTo: "/approvals" });
+    fireEvent.click(screen.getByRole("link", { name: "Sign in" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/login"));
+    fireEvent.click(screen.getByRole("link", { name: "Forgot password?" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/forgot-password"));
+    expect(router.state.location.search).toMatchObject({ returnTo: "/approvals" });
+  });
+
+  it("preserves the destination in verification and reset emails", async () => {
+    mocks.signUp.mockResolvedValue({ data: {}, error: null });
+    const router = await page("/signup?returnTo=%2Ftasks%3Ffrom%3Dguest");
+    fireEvent.change(screen.getByLabelText("Your name"), { target: { value: "Ada" } });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "ada@example.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Create account" }).closest("form")!);
+    await waitFor(() =>
+      expect(mocks.signUp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          callbackURL:
+            "https://raypx.example/verify-email?verified=1&returnTo=%2Ftasks%3Ffrom%3Dguest",
+        }),
+      ),
+    );
+    await router.navigate({ to: "/forgot-password", search: { returnTo: "/tasks?from=guest" } });
+    mocks.requestPasswordReset.mockResolvedValue({ data: {}, error: null });
+    fireEvent.change(await screen.findByLabelText("Email address"), {
+      target: { value: "ada@example.test" },
+    });
+    fireEvent.submit(screen.getByRole("button", { name: "Send reset link" }).closest("form")!);
+    await waitFor(() =>
+      expect(mocks.requestPasswordReset).toHaveBeenCalledWith(
+        expect.objectContaining({
+          redirectTo: "https://raypx.example/reset-password?returnTo=%2Ftasks%3Ffrom%3Dguest",
+        }),
+      ),
+    );
   });
 
   it("submits the reset-link token and replacement password without an email field", async () => {

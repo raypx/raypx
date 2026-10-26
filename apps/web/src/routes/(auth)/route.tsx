@@ -1,9 +1,14 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { safeReturnTo } from "../../features/auth/return-to";
 import { Logo } from "@raypx/ui/logo";
 import { useQuery } from "@tanstack/react-query";
 import { publicConfigurationQuery } from "../../features/configuration/client";
 
-export const Route = createFileRoute("/(auth)")({ component: AuthLayout });
+export const Route = createFileRoute("/(auth)")({
+  validateSearch: (search: Record<string, unknown>): { returnTo?: string } =>
+    typeof search.returnTo === "string" ? { returnTo: safeReturnTo(search.returnTo) } : {},
+  component: AuthLayout,
+});
 
 function AuthLayout() {
   const siteName = useQuery(publicConfigurationQuery()).data?.siteName ?? "Raypx";

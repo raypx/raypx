@@ -12,6 +12,19 @@ import type {
 const web = "http://127.0.0.1:4173";
 const desktop = "http://127.0.0.1:4174";
 
+async function expectGuestShell(page: Page) {
+  await expect(page.getByRole("main")).toBeVisible();
+  await expect(page.getByRole("complementary")).toBeInViewport();
+  await expect(page.getByRole("banner")).toBeInViewport();
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth <= innerWidth + 1 &&
+        document.documentElement.scrollHeight <= innerHeight + 1,
+    ),
+  ).toBe(true);
+}
+
 async function authResponse(route: Route, body: unknown, status = 200) {
   await route.fulfill({
     status,
@@ -395,14 +408,137 @@ async function preferencesPersist(page: Page, base: string) {
   });
 }
 
-test("Web redirects signed-out account routes to a standalone login page", async ({ page }) => {
-  for (const path of ["/", "/settings", "/tasks", "/approvals", "/admin/settings"]) {
+test("Web lets guests browse without reading private data and protects administrator pages", async ({
+  page,
+}) => {
+  const privateReads: string[] = [];
+  await page.route("**/api/auth/get-session**", (route) => authResponse(route, null));
+  await page.route("**/rpc/configuration/public", (route) =>
+    authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
+  );
+  page.on("request", (request) => {
+    if (/\/rpc\/(tasks|approvals|devices|observed|account|relay)\//.test(request.url()))
+      privateReads.push(request.url());
+  });
+  for (const path of ["/", "/settings", "/tasks", "/approvals"]) {
     await page.goto(web + path);
-    await expect(page).toHaveURL(web + "/login");
-    await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL(web + path);
+    await expect(page.getByRole("navigation", { name: "Raypx", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Account menu", exact: true })).toBeVisible();
+    if (path === "/") {
+      await expectGuestShell(page);
+      await page.screenshot({
+        path: test.info().outputPath("web-guest-home.png"),
+        fullPage: true,
+        animations: "disabled",
+      });
+    }
+    if (path === "/tasks") {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ colorScheme: "dark" });
+      await expectGuestShell(page);
+      await page.screenshot({
+        path: test.info().outputPath("web-guest-tasks-mobile-dark.png"),
+        fullPage: true,
+        animations: "disabled",
+      });
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await page.emulateMedia({ colorScheme: "light" });
+    }
   }
+  expect(privateReads).toEqual([]);
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?returnTo=%2Fapprovals/);
+  await page.goto(web + "/admin/settings");
+  await expect(page).toHaveURL(/\/login\?returnTo=%2Fadmin%2Fsettings/);
+  await expect(page.getByRole("heading", { name: "Welcome back", exact: true })).toBeVisible();
+});
+
+test("Web resumes a guest draft after sign-in without sending a task", async ({ page }) => {
+  let signedIn = false,
+    submitted = 0;
+  const privateReads: string[] = [];
+  const user = {
+    id: "guest-resume-user",
+    name: "Guest User",
+    email: "guest@example.test",
+    emailVerified: true,
+  };
+  const session = {
+    id: "guest-resume-session",
+    userId: user.id,
+    token: "synthetic-browser-fixture",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+  };
+  await page.route("**/api/auth/get-session**", (route) =>
+    authResponse(route, signedIn ? { user, session } : null),
+  );
+  await page.route("**/api/auth/sign-in/email", (route) => {
+    signedIn = true;
+    return authResponse(route, { user, token: "synthetic-browser-fixture" });
+  });
+  await page.route("**/rpc/configuration/public", (route) =>
+    authResponse(route, { json: { siteName: "Raypx", registrationEnabled: true } }),
+  );
+  await page.route("**/rpc/configuration/access", (route) =>
+    authResponse(route, { json: { allowed: false } }),
+  );
+  await page.route("**/rpc/account/get", (route) => authResponse(route, { json: user }));
+  for (const path of ["tasks/list", "devices/list", "approvals/list"])
+    await page.route("**/rpc/" + path, (route) => authResponse(route, { json: [] }));
+  await page.route("**/rpc/observed/list", (route) =>
+    authResponse(route, { json: { sessions: [], requests: [] } }),
+  );
+  await page.route("**/rpc/relay/ticket", (route) =>
+    authResponse(route, { json: { token: "a".repeat(64) } }),
+  );
+  await page.routeWebSocket("**/relay**", (socket) =>
+    socket.onMessage((raw) => {
+      const frame = JSON.parse(String(raw));
+      if (frame.type === "auth")
+        socket.send(JSON.stringify({ type: "ready", role: "viewer", protocolVersion: 3 }));
+      if (frame.type === "request") submitted++;
+    }),
+  );
+  page.on("request", (request) => {
+    if (
+      !signedIn &&
+      /\/rpc\/(tasks|devices|approvals|observed|account|relay)\//.test(request.url())
+    )
+      privateReads.push(request.url());
+  });
+  await page.goto(web + "/tasks?from=guest");
+  const content = "Review this guest draft 中😀 without executing it";
+  await page.getByRole("textbox", { name: "What should the agent do?", exact: true }).fill(content);
+  await page.getByRole("button", { name: "Task options", exact: false }).click();
+  await selectOption(page, page.getByRole("combobox", { name: "Agent", exact: true }), "codex");
+  await selectOption(page, page.getByRole("combobox", { name: "Execution", exact: true }), "plan");
+  await page.getByRole("button", { name: "Sign in to send", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?returnTo=/);
+  expect(page.url()).not.toContain(encodeURIComponent(content));
+  await page.getByLabel("Email address", { exact: true }).fill(user.email);
+  await page.getByLabel("Password", { exact: true }).fill("synthetic-password");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(web + "/tasks?from=guest");
+  await expect(
+    page.getByRole("textbox", { name: "What should the agent do?", exact: true }),
+  ).toHaveValue(content);
+  await page.getByRole("button", { name: "Task options", exact: false }).click();
+  await expect(page.getByRole("combobox", { name: "Agent", exact: true })).toContainText("Codex");
+  await expect(page.getByRole("combobox", { name: "Execution", exact: true })).toContainText(
+    "Analyze, then ask before implementing",
+  );
+  expect(privateReads).toEqual([]);
+  expect(submitted).toBe(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectGuestShell(page);
+  await page.screenshot({
+    path: test.info().outputPath("web-guest-resumed-mobile.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
 });
 
 test("Web preserves local appearance and language preferences with an account fixture", async ({
@@ -1007,14 +1143,14 @@ for (const [surface, base] of [
     );
     await expect(menu.getByText("private diagnostic")).toHaveCount(0);
     await menu.getByRole("menuitem", { name: "Sign out", exact: true }).click();
-    await expect(page).toHaveURL(base + "/login");
+    await expect(page).toHaveURL(base + (surface === "Web" ? "/" : "/login"));
     await expect(
       page.getByRole("heading", {
-        name: "Welcome back",
+        name: surface === "Web" ? "Remote tasks and approvals" : "Welcome back",
         exact: true,
       }),
     ).toBeVisible();
-    await expect(trigger).toHaveCount(0);
+    if (surface === "Desktop") await expect(trigger).toHaveCount(0);
     expect(attempts).toBe(2);
   });
 }
@@ -1038,10 +1174,6 @@ for (const [surface, base] of [
       });
     });
     const user = await signedInDesktop(page);
-    async function openWebSettings() {
-      await page.getByRole("link", { name: "Account", exact: true }).click();
-      await page.getByRole("link", { name: "Settings", exact: true }).click();
-    }
 
     const events: { event: string; properties: Record<string, unknown> }[] = [];
     await page.route("https://analytics.example.test/**", async (route) => {
@@ -1055,13 +1187,7 @@ for (const [surface, base] of [
       }
       return authResponse(route, {});
     });
-    if (surface === "Web") {
-      await page.goto(`${base}/login`);
-      await openWebSettings();
-      await page.evaluate(() =>
-        history.replaceState(history.state, "", "/settings?token=secret-reset-token"),
-      );
-    } else await page.goto(`${base}/settings?token=secret-reset-token`);
+    await page.goto(`${base}/settings?token=secret-reset-token`);
     const usage = page.getByRole("switch", { name: "Usage statistics", exact: true }),
       errors = page.getByRole("switch", { name: "Error reports", exact: true });
     await expect(usage).toBeEnabled();
@@ -1097,7 +1223,6 @@ for (const [surface, base] of [
       events.filter((event) => event.event === "$exception").at(-1)!.properties.distinct_id,
     ).not.toBe(user.id);
     await page.reload();
-    if (surface === "Web") await openWebSettings();
     await expect(usage).not.toBeChecked();
     await expect(errors).toBeChecked();
     await errors.uncheck();
@@ -1107,7 +1232,6 @@ for (const [surface, base] of [
     expect(events).toHaveLength(count);
     // A fresh SDK must honor a new opt-in even after its previous instance persisted opt-out.
     await page.reload();
-    if (surface === "Web") await openWebSettings();
     await expect(usage).not.toBeChecked();
     await expect(errors).not.toBeChecked();
     await errors.check();

@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./client/pending-count": "./src/client/pending-count.tsx",
-    "./client/styles.css": "./src/client/styles.css"
+    "./client/styles.css": "./src/client/styles.css",
+    "./client/task-composer": "./src/client/task-composer.tsx"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -43,7 +44,8 @@
     "entryTargets": {
       "./client": "browser",
       "./client/pending-count": "browser",
-      "./client/styles.css": "browser"
+      "./client/styles.css": "browser",
+      "./client/task-composer": "browser"
     },
     "sourceTargets": {
       "src/client.ts": "browser",

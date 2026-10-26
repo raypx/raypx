@@ -4,11 +4,12 @@ import {
 } from "../features/configuration/client";
 import { analytics } from "../features/analytics/client";
 import { AnalyticsIdentity } from "@raypx/analytics/client";
-import { useEffect } from "react";
+import { guestReturnTo } from "../features/tasks/guest-draft";
+import { useEffect, useRef } from "react";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
 import { AccountMenu } from "@raypx/account/client";
 import { useAuthActions } from "@raypx/auth/hooks";
-import { authClient, webUrl } from "../features/auth/client";
+import { apiUrl, authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
@@ -33,16 +34,24 @@ export function WebShell() {
   const session = authClient.useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const accountId = session.data?.user.id ?? null;
+  const accountId = session.error ? null : (session.data?.user.id ?? null);
+  const previousAccount = useRef(accountId);
   const access = useQuery(configurationAccessQuery(accountId));
-  const site = useQuery({ ...publicConfigurationQuery(), enabled: Boolean(accountId) });
+  const site = useQuery(publicConfigurationQuery());
   const siteName = site.data?.siteName ?? "Raypx";
   useEffect(() => {
     taskClient.setAccount?.(accountId);
+    if (previousAccount.current !== accountId) {
+      previousAccount.current = accountId;
+      queryClient.removeQueries({ queryKey: ["account"] });
+      void router.invalidate();
+    }
     return () => taskClient.setAccount?.(null);
-  }, [accountId]);
+  }, [accountId, queryClient, router]);
   const auth = useAuthActions({ client: authClient, webUrl });
   const c = useTranslations("common");
+  const g = useTranslations("guest");
+  const href = useRouterState({ select: (state) => state.location.href });
   const path = useRouterState({ select: (state) => state.location.pathname });
   const navigation: ShellNavItem<WebPath>[] = [
     { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
@@ -50,13 +59,13 @@ export function WebShell() {
       to: "/approvals",
       label: c("approvals"),
       icon: <Inbox />,
-      badge: (
+      badge: accountId ? (
         <PendingCount key={accountId ?? "signed-out"} client={taskClient} accountId={accountId} />
-      ),
+      ) : undefined,
     },
   ];
   const secondaryNavigation: ShellNavItem<WebPath>[] = [
-    { to: "/", label: c("account"), icon: <CircleUserRound />, exact: true },
+    { to: "/", label: c(accountId ? "account" : "home"), icon: <CircleUserRound />, exact: true },
     { to: "/settings", label: c("settings"), icon: <Settings /> },
   ];
   if (access.data?.allowed)
@@ -84,20 +93,36 @@ export function WebShell() {
                   ? "approvals"
                   : path === "/settings"
                     ? "settings"
-                    : "account",
+                    : accountId
+                      ? "account"
+                      : "home",
           ),
         ]}
         LinkComponent={ShellLink}
+        notice={
+          !session.isPending && !session.error && !accountId ? (
+            <p className="shrink-0 border-b border-border bg-sidebar px-6 py-2.5 text-xs leading-relaxed text-muted-foreground max-[760px]:px-5">
+              {g("visitorNotice")}
+            </p>
+          ) : undefined
+        }
         account={
           <AccountMenu
             key={accountId ?? "signed-out"}
-            user={session.data?.user ?? null}
+            user={accountId ? (session.data?.user ?? null) : null}
             pending={session.isPending}
             busy={auth.busy}
             error={Boolean(auth.error)}
-            onNavigate={(destination) =>
-              void router.navigate({ to: destination === "account" ? "/" : `/${destination}` })
-            }
+            onNavigate={(destination) => {
+              if (destination === "login" || (destination === "account" && !accountId))
+                void router.navigate({
+                  to: "/login",
+                  search: {
+                    returnTo: guestReturnTo(apiUrl, destination === "account" ? "/" : href),
+                  },
+                });
+              else void router.navigate({ to: destination === "account" ? "/" : "/settings" });
+            }}
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
                 analytics.reset();

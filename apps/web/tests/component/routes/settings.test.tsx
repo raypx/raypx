@@ -1,8 +1,18 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
+import {
+  createRootRoute,
+  createRouter,
+  createMemoryHistory,
+  RouterProvider,
+} from "@tanstack/react-router";
+vi.mock("../../../src/features/auth/client", () => ({
+  apiUrl: "https://api.example.test",
+  authClient: { useSession: () => ({ data: null, isPending: false, error: null }) },
+}));
 import { Route } from "../../../src/routes/(app)/settings";
 
 const SettingsPage = Route.options.component!;
@@ -14,10 +24,15 @@ beforeEach(() => {
 });
 describe("device settings", () => {
   it("persists appearance and language independently of any account", async () => {
+    const router = createRouter({
+      routeTree: createRootRoute({ component: SettingsPage }),
+      history: createMemoryHistory({ initialEntries: ["/"] }),
+    });
+    await router.load();
     render(
       <ThemeProvider>
         <BrowserLanguageProvider>
-          <SettingsPage />
+          <RouterProvider router={router} />
         </BrowserLanguageProvider>
       </ThemeProvider>,
     );

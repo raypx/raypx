@@ -4,6 +4,18 @@ The Web account page supports editing the display name and reviewing active
 sign-in sessions. These use the existing Better Auth endpoints; no schema change
 or additional service is required.
 
+Web's shell, guest task editor and device preferences are public. Private account,
+task, computer and approval components mount only after session resolution;
+administrator pages send guests to login. API authentication and authorization remain
+authoritative for every private request. Session/network failures show retry feedback.
+
+Login accepts only allowlisted relative application destinations. Auth links and
+verification/reset callbacks preserve that destination. A guest task's text, provider
+and mode stay in bounded, expiring sessionStorage for that API origin and tab; the URL
+contains only a random handoff ID. Successful login binds the handoff to the account.
+Restoration never executes a task or repeats an approval action, and failed login
+retains the draft. Explicitly saved drafts retain their existing local storage behavior.
+
 - Name saves trim whitespace, retain drafts on failure and refresh the cached
   account projection after success.
 - The current session is identified explicitly and cannot be revoked from its

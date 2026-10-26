@@ -2,7 +2,7 @@ import { createApiClient } from "@raypx/client";
 import { readAccount, type AccountState } from "@raypx/account";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { apiUrl } from "./client";
+import { apiUrl, authClient } from "./client";
 
 const browserClient = createApiClient({ baseUrl: apiUrl });
 
@@ -22,4 +22,15 @@ export const loadAccount = createIsomorphicFn()
     if (!cookie) return Promise.resolve({ status: "signed-out" });
     return readAccount(createApiClient({ baseUrl: apiUrl, headers: { cookie } }));
   })
-  .client(() => readAccount(browserClient));
+  .client(async () => {
+    try {
+      const session = await authClient.getSession({
+        fetchOptions: { signal: AbortSignal.timeout(10_000) },
+      });
+      if (session.error) return { status: "unavailable" } as const;
+      if (!session.data) return { status: "signed-out" } as const;
+      return readAccount(browserClient);
+    } catch {
+      return { status: "unavailable" } as const;
+    }
+  });

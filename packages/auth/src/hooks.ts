@@ -71,10 +71,12 @@ export function useAuthActions({
   client,
   webUrl,
   locale,
+  callbackURLs,
 }: {
   client: AuthActionClient;
   webUrl: string;
   locale?: string;
+  callbackURLs?: { verify: string; reset: string };
 }) {
   const active = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -120,7 +122,7 @@ export function useAuthActions({
   const fetchOptions: RequestOptions["fetchOptions"] = {
     headers: locale ? { "Accept-Language": locale } : {},
   };
-  const callbackURL = `${webUrl}/verify-email?verified=1`;
+  const callbackURL = callbackURLs?.verify ?? `${webUrl}/verify-email?verified=1`;
 
   return {
     busy,
@@ -155,7 +157,7 @@ export function useAuthActions({
         () =>
           client.requestPasswordReset({
             email: input.email.trim(),
-            redirectTo: `${webUrl}/reset-password`,
+            redirectTo: callbackURLs?.reset ?? `${webUrl}/reset-password`,
             fetchOptions,
           }),
         onSuccess,

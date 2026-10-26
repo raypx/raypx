@@ -1,6 +1,6 @@
 import { AnalyticsSettings } from "@raypx/analytics/client/settings";
 import { DeviceSettings } from "@raypx/tasks/client";
-import { authClient } from "../../features/auth/client";
+import { SessionBoundary, SignInGate } from "../../features/auth/components/session-boundary";
 import { taskClient } from "../../features/tasks/client";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppearanceSettings, LanguageSettings, SettingsPage } from "@raypx/blocks/settings";
@@ -10,17 +10,23 @@ export const Route = createFileRoute("/(app)/settings")({ component: SettingsRou
 
 function SettingsRoute() {
   const t = useTranslations("settings");
-  const session = authClient.useSession();
+  const g = useTranslations("guest");
   return (
     <SettingsPage title={t("title")} description={t("intro")} footnote={t("localHint")}>
       <AppearanceSettings />
       <LanguageSettings />
       <AnalyticsSettings />
-      <DeviceSettings
-        client={taskClient}
-        accountId={session.data?.user.id ?? null}
-        pending={session.isPending}
-      />
+      <section aria-label={g("computers")}>
+        <SessionBoundary
+          guest={
+            <div className="mt-8 border-t border-border">
+              <SignInGate title={g("computers")} description={g("computersHint")} />
+            </div>
+          }
+        >
+          {(accountId) => <DeviceSettings client={taskClient} accountId={accountId} />}
+        </SessionBoundary>
+      </section>
     </SettingsPage>
   );
 }

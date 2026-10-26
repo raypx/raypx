@@ -127,8 +127,14 @@ async function probeApi(base: string) {
 
 async function probeWeb(base: string) {
   const home = await probeFetch(base, { redirect: "manual" });
-  if (home.headers.get(workerProbeHeader) !== "1" || !isSignInRedirect(home))
-    throw new Error("Worker Web sign-in redirect failed");
+  if (
+    home.headers.get(workerProbeHeader) !== "1" ||
+    !home.ok ||
+    !(await home.text()).includes("Remote tasks and approvals")
+  )
+    throw new Error("Worker Web guest page failed");
+  const admin = await probeFetch(`${base}/admin/settings`, { redirect: "manual" });
+  if (!isSignInRedirect(admin)) throw new Error("Worker administrator pages must require sign-in");
   const login = await probeFetch(`${base}/login`, { headers: { "accept-language": "zh" } });
   const html = await login.text();
   if (
@@ -182,7 +188,7 @@ async function probeWeb(base: string) {
   }
 }
 
-/** The signed-in surface answers signed-out visitors with a redirect to /login. */
+/** Administrator pages send signed-out visitors to the standalone login page. */
 function isSignInRedirect(response: Response): boolean {
   const location = response.headers.get("location") ?? "";
   return response.status >= 300 && response.status < 400 && /\/login(?:$|\?)/.test(location);

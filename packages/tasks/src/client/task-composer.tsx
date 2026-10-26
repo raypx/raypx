@@ -32,6 +32,8 @@ import {
   type DraftInput,
 } from "./task-drafts.js";
 
+export type TaskComposerDraft = Pick<DraftInput, "prompt" | "provider" | "mode">;
+
 export function TaskComposer({
   client,
   devices,
@@ -42,7 +44,16 @@ export function TaskComposer({
   promptRef,
   optionsOpen,
   onOptionsOpenChange,
+  guest,
+  initialDraft,
+  onDraftRestored,
 }: {
+  guest?: {
+    signIn(draft: TaskComposerDraft): void | Promise<void>;
+    changed?(draft: TaskComposerDraft): void;
+  };
+  initialDraft?: TaskComposerDraft | undefined;
+  onDraftRestored?: (() => void) | undefined;
   client: TaskWorkspaceClient;
   devices: SyncDevice[];
   tasks: AgentTask[];
@@ -62,10 +73,12 @@ export function TaskComposer({
     localDevice?.projects.length === 1 ? localDevice.projects[0]!.id : "",
   );
   const [provider, setProvider] = useState<AgentProvider>(
-    localDevice?.capabilities.find((capability) => capability.available)?.provider ?? "claude",
+    initialDraft?.provider ??
+      localDevice?.capabilities.find((capability) => capability.available)?.provider ??
+      "claude",
   );
-  const [prompt, setPrompt] = useState("");
-  const [mode, setMode] = useState<"run" | "plan">("run");
+  const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
+  const [mode, setMode] = useState<"run" | "plan">(initialDraft?.mode ?? "run");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ReturnType<typeof failureCode>>();
   const submission = useRef<{
@@ -83,10 +96,25 @@ export function TaskComposer({
   } = useTaskDrafts(draftKey);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<
-    "draftSaved" | "draftSaveFailed" | "draftCleanupFailed" | "draftLimit" | null
+    | "draftSaved"
+    | "draftSaveFailed"
+    | "draftCleanupFailed"
+    | "draftLimit"
+    | "signInDraftFailed"
+    | null
   >(null);
   const { confirm, dialog } = useConfirmation();
   const snapshot = { deviceId, projectId, provider, prompt, mode };
+  useEffect(() => {
+    if (initialDraft) onDraftRestored?.();
+  }, [initialDraft, onDraftRestored]);
+  function changed(next: Partial<TaskComposerDraft>) {
+    try {
+      guest?.changed?.({ prompt, provider, mode, ...next });
+    } catch {
+      setDraftStatus("draftSaveFailed");
+    }
+  }
   const savedDraft = drafts.find((draft) => draft.id === draftId);
   const dirty = Boolean(prompt.trim()) && (!savedDraft || !sameDraft(savedDraft, snapshot));
   function persist(next: TaskDraft[]) {
@@ -130,6 +158,7 @@ export function TaskComposer({
     )
       return;
     setPrompt("");
+    changed({ prompt: "" });
     setDraftId(null);
     setDraftStatus(null);
     setError(undefined);
@@ -153,6 +182,7 @@ export function TaskComposer({
     setProvider(draft.provider);
     setMode(draft.mode);
     setPrompt(draft.prompt);
+    changed(draft);
     setDraftId(draft.id);
     setDraftStatus(null);
     setError(undefined);
@@ -217,7 +247,21 @@ export function TaskComposer({
   );
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!available || submitting.current || occupied || !prompt.trim()) return;
+    if (submitting.current || !prompt.trim()) return;
+    if (guest) {
+      submitting.current = true;
+      setBusy(true);
+      try {
+        await guest.signIn(snapshot);
+      } catch {
+        setDraftStatus("signInDraftFailed");
+      } finally {
+        submitting.current = false;
+        setBusy(false);
+      }
+      return;
+    }
+    if (!available || occupied) return;
     submitting.current = true;
     const key = JSON.stringify({ deviceId, projectId, provider, prompt, mode });
     if (submission.current?.key !== key)
@@ -287,6 +331,7 @@ export function TaskComposer({
             onChange={(event) => {
               setPrompt(event.target.value);
               setDraftStatus(null);
+              changed({ prompt: event.target.value });
             }}
           />
         </Field>
@@ -314,8 +359,8 @@ export function TaskComposer({
                 <SelectField
                   id={`${fieldId}-device`}
                   className="w-full"
-                  disabled={busy}
-                  required
+                  disabled={busy || Boolean(guest)}
+                  required={!guest}
                   value={deviceId || null}
                   placeholder={t("chooseDevice")}
                   onValueChange={(value) => {
@@ -336,8 +381,8 @@ export function TaskComposer({
                 <SelectField
                   id={`${fieldId}-project`}
                   className="w-full"
-                  disabled={busy}
-                  required
+                  disabled={busy || Boolean(guest)}
+                  required={!guest}
                   value={projectId || null}
                   placeholder={t("chooseProject")}
                   onValueChange={setProjectId}
@@ -354,7 +399,10 @@ export function TaskComposer({
                   className="w-full"
                   disabled={busy}
                   value={provider}
-                  onValueChange={setProvider}
+                  onValueChange={(value) => {
+                    setProvider(value);
+                    changed({ provider: value });
+                  }}
                   options={[
                     { value: "claude", label: "Claude Code" },
                     { value: "codex", label: "Codex" },
@@ -368,7 +416,10 @@ export function TaskComposer({
                   className="w-full"
                   disabled={busy}
                   value={mode}
-                  onValueChange={setMode}
+                  onValueChange={(value) => {
+                    setMode(value);
+                    changed({ mode: value });
+                  }}
                   options={[
                     { value: "run", label: t("runMode") },
                     { value: "plan", label: t("planMode") },
@@ -384,7 +435,10 @@ export function TaskComposer({
             {t("PROJECT_BUSY")}
           </p>
         )}
-        {!available && <p className="text-sm text-muted-foreground">{t("availabilityHint")}</p>}
+        {!available && !guest && (
+          <p className="text-sm text-muted-foreground">{t("availabilityHint")}</p>
+        )}
+        {guest && <p className="text-sm text-muted-foreground">{t("guestSendHint")}</p>}
         {error && (
           <p role="alert" className="text-sm text-destructive">
             {t(error)}
@@ -392,9 +446,12 @@ export function TaskComposer({
         )}
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
           <p className="text-xs text-muted-foreground">{t("draftDeviceOnly")}</p>
-          <Button type="submit" disabled={!available || occupied || busy || !prompt.trim()}>
+          <Button
+            type="submit"
+            disabled={(!guest && (!available || occupied)) || busy || !prompt.trim()}
+          >
             <Send aria-hidden="true" />
-            {t(busy ? "sending" : "send")}
+            {t(busy ? "sending" : guest ? "signInToSend" : "send")}
           </Button>
         </div>
         {(draftStatus || draftLoadFailed) && (
