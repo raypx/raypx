@@ -42,6 +42,12 @@ helpers to explicit integration tests. Node selection uses `NODE_BINARY` and
 validates the version in `.nvmrc`. These config/test entries never enter product runtime code.
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
 select pinned Node and synthetic analytics for every mode; live acceptance stays separate.
+Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,
+never Turbo passthrough: test flags must not invalidate build/check dependencies.
+The config caps local defaults at four workers only with 8+ CPUs and 16+ GiB;
+smaller hosts use one or two, and CI defaults to two. Explicit Playwright flags win.
+`./browser-server` serves only compiled Desktop client assets on loopback with
+HTML deep-link fallback; never run Vite configuration or simulate backend/Native IPC there.
 Smoke orchestration, Node probes and the Node-executed Worker harness live in
 `src/smoke/`. Unit and integration tests live in `tests/unit/` and `tests/integration/`.
 Keep scaffold and locale policy suites separate; shared temporary workspace fixtures

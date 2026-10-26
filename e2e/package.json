@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
-    "e2e": "bun --bun playwright test",
+    "e2e": "raypx-dev browser:run",
     "e2e:live": "bun --bun playwright test --config playwright.live.config.ts",
-    "e2e:web": "bun --bun playwright test",
-    "e2e:desktop": "bun --bun playwright test",
-    "e2e:smoke": "bun --bun playwright test",
-    "e2e:visual": "bun --bun playwright test"
+    "e2e:web": "raypx-dev browser:run",
+    "e2e:desktop": "raypx-dev browser:run",
+    "e2e:smoke": "raypx-dev browser:run",
+    "e2e:visual": "raypx-dev browser:run"
   },
   "devDependencies": {
     "@playwright/test": "catalog:dev",

@@ -8,7 +8,7 @@ import { defineConfig } from "vite-plus";
 
 const analytics = analyticsBuild();
 export default defineConfig(async ({ mode }) => {
-  const preview = mode === "e2e";
+  const preview = mode === "e2e" || process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1";
   // Keep the optional native SDK outside the browser-acceptance config bundle.
   const alias = preview
     ? [

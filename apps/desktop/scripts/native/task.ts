@@ -43,6 +43,8 @@ if (!inTurbo) {
     [bun, "run", "native:csp"],
   ];
 } else if (task === "build:renderer") {
+  // Start's prerender preview reloads Vite config without forwarding --mode.
+  env.RAYPX_DESKTOP_BROWSER_BUILD = "1";
   commands = [
     [bun, "run", "raypx-dev", "env", "--", bun, "--bun", "vp", "build", ...args, "--mode", "e2e"],
     [bun, "run", "native:csp", "artifacts/browser/client"],

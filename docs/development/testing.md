@@ -94,13 +94,16 @@ The existing script names select the mode; the default test command never connec
 
 ### Faster browser feedback
 
-The complete browser gate remains `bun run test:e2e`, with two workers and all
-ordinary assertions. During development, select a surface or a smaller smoke set:
+The complete browser gate remains `bun run test:e2e`, with all ordinary assertions.
+CI defaults to two workers. Local hosts with at least eight available CPUs and
+16 GiB of total memory default to four; smaller hosts use one or two. Explicit
+Playwright flags override the default. Select a surface or a smaller smoke set:
 
 ```sh
 bun run test:e2e:web
 bun run test:e2e:desktop
 bun run test:e2e:smoke
+bun run test:e2e -- --workers=2
 bun run test:e2e:web -- --grep template
 bun run test:e2e:desktop -- 'access|memory'
 bun run raypx-dev e2e --web --smoke -- --list
@@ -111,6 +114,12 @@ interaction and both memory flows. Surface, smoke and user grep filters intersec
 they do not replace one another. Pass Playwright flags or filenames after `--`.
 Use `bun run raypx-dev e2e --web --dry-run` to inspect the Turbo graph.
 Focused runs are feedback tools; run complete acceptance before release.
+
+Playwright filenames, workers, trace and reporter arguments travel through a scoped
+JSON environment field to the uncached browser leaf. They are not Turbo passthrough
+arguments: changing a test selection must not invalidate Web/Desktop builds or
+their type checks. Application source, build variables and runtime pins still
+participate in the normal build hashes. See the [case timing record](test-cases.md).
 
 Successful runs skip manual full-page screenshots and local traces. Failure
 screenshots remain enabled; CI records traces on the first retry. Capture the
@@ -130,6 +139,11 @@ simulate successful IPC. Normal Desktop builds and packaging still use the real
 SDK and `dist`, and `bun run verify` retains strict Native checking and artifact
 probes. The browser-only output is ignored, cached separately and removed by
 `bun run clean`. Live backend/inference acceptance keeps its separate opt-in config.
+The Desktop acceptance server reads that compiled client directory directly;
+startup no longer loads Vite plugins or application configuration. It retains
+HTML/CSP and asset bytes, supports SPA deep links and rejects backend paths,
+missing assets and files outside the client directory. Web still runs its real
+compiled SSR server under the pinned Node executable.
 
 ### Live AI and Beta-to-Desktop acceptance
 

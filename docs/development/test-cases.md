@@ -22,8 +22,9 @@ an HTTP fixture does not establish real authentication or database isolation.
 ## Ordinary browser inventory
 
 There are 28 ordinary cases and two opt-in environment cases. Web and Desktop
-each retain 14 ordinary cases. The two-worker default, real interactions and
-seven-case smoke selection are unchanged.
+each retain 14 ordinary cases. Real interactions and the seven-case smoke selection
+are unchanged. CI defaults to two workers; local defaults adapt to host capacity
+as described in the [testing guide](testing.md#faster-browser-feedback).
 
 | Suite                                                           | Ordinary cases | Responsibility                                                                |
 | --------------------------------------------------------------- | -------------: | ----------------------------------------------------------------------------- |
@@ -95,3 +96,48 @@ durations were 43.3/44.3 seconds. The first-case preparation gap varied from
 This establishes consolidation and coverage continuity, not a speedup. Measure
 server startup, discovery and worker preparation separately before attributing
 total-time changes to case execution. Reports remain under ignored `.artifacts`.
+
+## Cache and concurrency follow-up, 2026-10-27
+
+Turbo includes CLI passthrough arguments in dependency task hashes, even when it
+does not append those arguments to the dependency command. Previously, changing
+`--workers`, filename filters or the reporter could rebuild both applications.
+Browser arguments now travel through `RAYPX_E2E_ARGS` as JSON and are decoded only
+by the uncached `browser:run` leaf. Grep still intersects the surface/smoke filter.
+An actual Turbo dry-run regression compares dependency hashes across selections.
+
+The initial same-host comparison passed all 28 cases with two existing environment
+skips: two workers took 25.8 seconds in Playwright; four workers took 16.3 and 18.3
+seconds in two consecutive runs. One four-worker run still took 50.3 seconds end
+to end because its new flags caused builds; repeating identical flags took 18.9
+seconds with 17 dependency tasks cached. This identified the cache invalidation
+separately from browser execution cost.
+
+Local defaults now use four workers only with at least eight available CPUs and
+16 GiB total memory, otherwise one or two. CI retains its two-worker default.
+Use `-- --workers=2` to reduce local load; explicit CLI choices take precedence.
+These measurements establish a local improvement, not a guarantee for every host.
+No cases, assertions, real animations or browser isolation were removed.
+
+A later cached four-worker run took 34.7 seconds, but its execution window was
+still 13.9 seconds: readiness logs located 19 seconds in Desktop's Vite preview
+startup. Desktop acceptance now serves the same compiled client assets directly
+from loopback. Deep-link fallback, asset MIME/HEAD metadata, unchanged HTML/CSP,
+missing resources and path/symlink containment have dedicated tests. Web retains
+its real Node SSR process, and packaged Native acceptance remains separate.
+
+Static acceptance also exposed a browser-build defect: Start's nested prerender
+preview did not forward `--mode e2e`, so HTML referenced the normal Desktop
+build's assets. The renderer leaf now carries its browser-build scope through
+the nested config load; HTML and assets come from the same output. Task-wrapper
+tests check that scope, and full browser acceptance exercises the actual CSP and
+resource graph. The viewport helper waits for the responsive sidebar state before
+recording geometry after a resize; real responsive behavior remains enabled.
+
+After these fixes, two consecutive full runs passed all 28 ordinary cases with no
+retries; the two external gates remained skipped. Playwright took 15.7 and 13.8
+seconds, with first-case preparation at 1.1 and 0.8 seconds. The warmed run changed
+the worker flag and retained all 17 dependency cache hits, completing the root
+Turbo graph in 14.4 seconds. Compared with this host's two-worker 25.8/26.6-second
+samples, full Playwright time fell by roughly 39–48%. These are local samples,
+not a CI or cross-platform performance guarantee.

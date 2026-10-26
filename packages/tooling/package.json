@@ -11,7 +11,8 @@
     "./repository": "./src/repository.ts",
     "./build/nitro": "./src/build/nitro.ts",
     "./build/analytics": "./src/build/analytics.ts",
-    "./browser-tests": "./src/browser-tests.ts"
+    "./browser-tests": "./src/browser-tests.ts",
+    "./browser-server": "./src/browser-server.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

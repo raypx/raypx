@@ -43,7 +43,7 @@ function fixture() {
     `import { appendFileSync } from "node:fs";
 const [name, ...args] = process.argv.slice(2);
 const forwarded = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^RAYPX_DESKTOP_.*_ARGS$/.test(key)));
-appendFileSync("events.jsonl", JSON.stringify({ name, args, forwarded }) + "\\n");
+appendFileSync("events.jsonl", JSON.stringify({ name, args, forwarded, ...(process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1" ? { browserBuild: true } : {}) }) + "\\n");
 if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
   );
   return (
@@ -52,6 +52,7 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
   ) => {
     const env: NodeJS.ProcessEnv = { ...process.env, TASK_TEST_FAIL: options.fail };
     delete env.TURBO_HASH;
+    delete env.RAYPX_DESKTOP_BROWSER_BUILD;
     for (const key of [
       "RAYPX_DESKTOP_CHECK_ARGS",
       "RAYPX_DESKTOP_BUILD_ARGS",
@@ -178,8 +179,9 @@ describe("Desktop task graph entry", () => {
         name: "raypx-dev",
         args: ["env", "--", process.execPath, "--bun", "vp", "build", "--mode", "e2e"],
         forwarded: {},
+        browserBuild: true,
       },
-      { name: "native:csp", args: ["artifacts/browser/client"], forwarded: {} },
+      { name: "native:csp", args: ["artifacts/browser/client"], forwarded: {}, browserBuild: true },
     ]);
   });
   it("refuses to turn the browser-only build into a native artifact", () => {

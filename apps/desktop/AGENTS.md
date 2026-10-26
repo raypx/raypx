@@ -113,7 +113,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
   Direct script arguments use per-task `RAYPX_DESKTOP_*_ARGS` fields; cached tasks
   include these fields in their hashes, keeping renderer flags out of dependency builds. No arguments
   leaves the field unset so direct and root commands share cache entries.
-- `build:renderer` uses Vite mode `e2e`, separate `artifacts/browser` output and a Native bridge that throws `DESKTOP_REQUIRED`. It skips SDK/CLI preparation; normal `build`, checks, packaging and `dist` retain the real SDK. Never package the browser-only output.
+- `build:renderer` uses Vite mode `e2e`, separate `artifacts/browser` output and a Native bridge that throws `DESKTOP_REQUIRED`. The leaf also sets `RAYPX_DESKTOP_BROWSER_BUILD` so Start's nested prerender preview keeps this output/alias when it reloads config without the mode. It skips SDK/CLI preparation; normal `build`, checks, packaging and `dist` retain the real SDK. Never package the browser-only output.
 - Keep `native:prepare` uncached: Electrobun's bootstrap and SDK projection also
   depend on external Hutch state and configurable release sources. After it
   completes, `desktop#check` hashes the projected SDK and declarations with JIT

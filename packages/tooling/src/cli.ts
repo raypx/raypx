@@ -11,7 +11,7 @@ import { checkLocales, policy } from "./policy.js";
 import { discover, pinnedNode, turbo } from "./repository.js";
 import { scaffold } from "./scaffold.js";
 import { smoke, smokeCloudflare } from "./smoke/index.js";
-import { planBrowserTests } from "./browser-tests.js";
+import { browserTestArguments, planBrowserTests } from "./browser-tests.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -32,6 +32,13 @@ async function main() {
       await turbo(root, planned.task, planned.args, planned.env);
       break;
     }
+    case "browser:run":
+      await run(
+        process.execPath,
+        ["--bun", "playwright", "test", ...browserTestArguments(args, process.env)],
+        process.cwd(),
+      );
+      break;
     case "tasks": {
       if (!args[0]) throw new Error("Usage: raypx-dev tasks <task> [Turbo flags]");
       await turbo(root, args[0], args.slice(1));

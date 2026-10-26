@@ -7,6 +7,9 @@ export async function expectViewportShell(page: Page) {
   const banner = page.getByRole("banner");
   await main.evaluate((element) => element.scrollTo({ top: 0, behavior: "instant" }));
   const viewport = page.viewportSize()!;
+  // Wait for the responsive rail before recording geometry after a resize.
+  if (viewport.width <= 760)
+    await expect(page.locator('[data-slot="sidebar"]')).toHaveAttribute("data-state", "collapsed");
   const sidebarBefore = await sidebar.boundingBox();
   const bannerBefore = await banner.boundingBox();
   const mainBefore = await main.boundingBox();
