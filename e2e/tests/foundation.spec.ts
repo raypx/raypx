@@ -646,7 +646,8 @@ test("Desktop preview states local unavailability after sign-in", async ({ page 
     page.getByText("Open the desktop app to use local tools.", { exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "New automation", exact: true })).toBeDisabled();
-  await page.getByRole("link", { name: "Account", exact: true }).click();
+  await page.getByRole("button", { name: "Account menu", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Account", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your account", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: user.name, exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Settings", exact: true }).click();
@@ -1357,6 +1358,7 @@ for (const [surface, base] of [
     if (surface === "Desktop")
       await page.getByRole("tab", { name: "Connected computers", exact: true }).click();
     const drafts = page.getByRole("region", { name: "Drafts", exact: true });
+    await drafts.getByRole("button", { name: "Drafts", exact: true }).click();
     await drafts.getByRole("button", { name: /^Investigate wake and reconnect behavior/ }).click();
     await expect(editor).toHaveValue("Investigate wake and reconnect behavior");
     await expect(form.getByRole("combobox", { name: "Project", exact: true })).toContainText(
@@ -1375,6 +1377,7 @@ for (const [surface, base] of [
       fullPage: true,
     });
     await page.setViewportSize({ width: surface === "Web" ? 390 : 800, height: 844 });
+    await page.getByRole("button", { name: "Back to tasks", exact: true }).click();
     await list.getByRole("button", { name: /Validate reconnect behavior/ }).click();
     await expect(page.getByRole("region", { name: "Task details", exact: true })).toBeFocused();
     await expect(
