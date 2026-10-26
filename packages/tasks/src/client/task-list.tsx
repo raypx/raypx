@@ -77,8 +77,24 @@ export function TaskList({
     const id = focusRequest.current;
     const button = id ? buttons.current.get(id) : undefined;
     if (button) {
-      if (returning.current) button.scrollIntoView?.({ block: "nearest", behavior: "instant" });
-      returning.current = false;
+      if (returning.current) {
+        // Hidden rows regain their measured heights before the restored target is revealed.
+        let reveal: number | undefined;
+        const measure = requestAnimationFrame(() => {
+          reveal = requestAnimationFrame(() => {
+            const target = id ? buttons.current.get(id) : undefined;
+            if (!target?.isConnected) return;
+            target.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+            target.focus({ preventScroll: true });
+            returning.current = false;
+            focusRequest.current = null;
+          });
+        });
+        return () => {
+          cancelAnimationFrame(measure);
+          if (reveal !== undefined) cancelAnimationFrame(reveal);
+        };
+      }
       button.focus({ preventScroll: true });
       focusRequest.current = null;
     }
