@@ -1,0 +1,44 @@
+apps/desktop/scripts/native/smoke-artifacts.ts
+  s_c99f3390b62e01::t_c75fc3fd32126f 1-37
+  s_c99f3390b62e01::t_0c44a96f22bc43 38-48
+packages/tooling/tests/unit/clean-async.test.ts
+  s_6f0d4c076ce788::t_0cba66f210085d 29
+apps/desktop/electrobun.config.ts
+  s_c99f3390b62e01::t_c75fc3fd32126f 9,14-17
+packages/tooling/tests/unit/clean.test.ts
+  s_c99f3390b62e01::t_2d10236a459b75 20-21
+apps/desktop/tests/native/smoke/run.ts
+  s_c99f3390b62e01::t_c75fc3fd32126f 6
+  s_c99f3390b62e01::t_ac31f7e9ca7b69 140-173,175,177-178
+apps/desktop/.gitignore
+  s_c99f3390b62e01::t_9d7c581058fce3 8-9
+apps/desktop/tests/scripts/native/smoke-artifacts.test.ts
+  s_c99f3390b62e01::t_a21165e85338ee 1-55
+  s_c99f3390b62e01::t_e90ec70c1a147e 56-65
+packages/tooling/src/clean.ts
+  s_c99f3390b62e01::t_2d10236a459b75 16-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8306e010e8d7ea54d42036bff70f3b35cd51a618",
+  "prompts": {},
+  "sessions": {
+    "s_6f0d4c076ce788": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17382-15b0-7f40-a1ff-43cfc7c7f896",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
