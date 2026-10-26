@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
-import { ArrowLeft, ChevronRight, ListTodo, Plus } from "lucide-react";
+import { ArrowLeft, ChevronRight, ListTodo, Plus, X } from "lucide-react";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { TaskComposer, type TaskComposerDraft } from "./task-composer.js";
 import { TaskOverview } from "./task-overview.js";
@@ -39,6 +39,8 @@ import { Conversation } from "./conversation.js";
 import { TaskInputComposer } from "./task-input.js";
 import { ApprovalBody } from "./approval-body.js";
 import { ObservedApprovals } from "./observed.js";
+import { TaskPanels } from "./task-panels.js";
+import { TaskMarkdown } from "./markdown.js";
 
 interface Props {
   client: TaskWorkspaceClient;
@@ -50,6 +52,8 @@ interface Props {
   local?: boolean;
   /** Server identity for account-scoped device-only drafts. */
   draftNamespace?: string;
+  projectId?: string;
+  onProjectChange?: (project: string) => void;
 }
 function Gate({ pending }: { pending?: boolean }) {
   const t = useTranslations("tasks");
@@ -84,6 +88,8 @@ function Workspace({
   initialDraft,
   onDraftRestored,
   persistEditor = false,
+  projectId,
+  onProjectChange,
 }: Props & { view?: "tasks" | "approvals"; accountId: string }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
@@ -120,6 +126,17 @@ function Workspace({
   const taskHistory = useRef<HTMLElement>(null);
   const revealPage = useRef(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState<boolean>();
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [returnToList, setReturnToList] = useState(0);
+  const previousProject = useRef(projectId);
+  useEffect(() => {
+    if (previousProject.current === projectId) return;
+    previousProject.current = projectId;
+    setPages([]);
+    setSelected(null);
+    setDetailVisible(false);
+  }, [projectId]);
   useEffect(() => {
     if (!data || !revealPage.current) return;
     revealPage.current = false;
@@ -128,15 +145,38 @@ function Workspace({
     list?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
   }, [data]);
   const [filters, setFilters] = useState(emptyTaskFilters);
-  const filtered = filterTasks(data?.tasks ?? [], data?.devices ?? [], filters);
+  const activeFilters = { ...filters, project: projectId ?? filters.project };
+  function changeFilters(next: typeof filters) {
+    setFilters(next);
+    if (next.project !== activeFilters.project) onProjectChange?.(next.project);
+  }
+  const filtered = filterTasks(data?.tasks ?? [], data?.devices ?? [], activeFilters);
+  const selectedProject = data?.devices
+    .flatMap((device) => device.projects)
+    .find((project) => project.id === activeFilters.project);
   return (
     <section
       data-tasks
-      className="@container mx-auto max-w-[1600px] px-8 py-7 max-[760px]:px-5 max-[760px]:py-6"
+      className="@container mx-auto w-full max-w-[1600px] px-6 py-5 max-[760px]:px-5"
     >
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1>{t(view === "approvals" ? "inbox" : "title")}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1>{t(view === "approvals" ? "inbox" : "title")}</h1>
+            {activeFilters.project && (
+              <Button
+                variant="secondary"
+                size="sm"
+                aria-label={t("clearProjectFilter")}
+                onClick={() => changeFilters({ ...activeFilters, project: "" })}
+              >
+                <span className="max-w-48 truncate">
+                  {selectedProject?.name ?? t("projectUnavailable")}
+                </span>
+                <X aria-hidden="true" />
+              </Button>
+            )}
+          </div>
           <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">
             {t(local ? "localHint" : view === "approvals" ? "inboxHint" : "intro")}
           </p>
@@ -149,7 +189,9 @@ function Workspace({
             <Button
               onClick={() => {
                 setOptionsOpen(true);
-                composer.current?.focus();
+                setEditorOpen(true);
+                setDetailVisible(false);
+                requestAnimationFrame(() => composer.current?.focus());
               }}
             >
               <Plus aria-hidden="true" />
@@ -190,156 +232,174 @@ function Workspace({
               )}
             </div>
           ) : (
-            <div className="grid items-start grid-cols-1 gap-7 @min-[58rem]:grid-cols-[minmax(21rem,0.9fr)_minmax(0,1.3fr)] @min-[58rem]:gap-8">
-              <div className="min-w-0 space-y-6">
-                <Composer
-                  key={JSON.stringify([draftNamespace, accountId, local])}
-                  client={client}
-                  initialDraft={initialDraft}
-                  onDraftRestored={onDraftRestored}
-                  devices={data.devices}
-                  tasks={data.tasks}
-                  local={local}
-                  draftKey={JSON.stringify([
-                    "raypx.task-drafts.v1",
-                    draftNamespace,
-                    accountId,
-                    local,
-                  ])}
-                  optionsOpen={optionsOpen}
-                  onOptionsOpenChange={setOptionsOpen}
-                  promptRef={composer}
-                  onCreated={(task) => {
-                    setSelected(task.id);
-                    setPages([]);
-                    refresh();
-                  }}
-                />
-                <section ref={taskHistory} aria-label={t("taskHistory")}>
-                  {data.tasks.length > 0 && (
-                    <TaskOverview tasks={data.tasks} filters={filters} onChange={setFilters} />
-                  )}
-                  {data.tasks.length > 0 && (
-                    <TaskFilterBar
-                      filters={filters}
-                      devices={data.devices}
-                      count={filtered.length}
-                      total={data.tasks.length}
-                      onChange={setFilters}
-                    />
-                  )}
-                  {data.tasks.length === 0 ? (
-                    <div className="py-10">
-                      <h2>{t("empty")}</h2>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {t(local ? "localEmptyHint" : "emptyHint")}
-                      </p>
-                    </div>
-                  ) : filtered.length === 0 ? (
-                    <EmptyState
-                      title={t("noMatches")}
-                      description={t("noMatchesHint")}
-                      action={
-                        <Button variant="outline" onClick={() => setFilters(emptyTaskFilters)}>
-                          {t("clearFilters")}
+            <TaskPanels
+              detailVisible={detailVisible}
+              list={
+                <>
+                  <Composer
+                    key={JSON.stringify([draftNamespace, accountId, local])}
+                    client={client}
+                    initialDraft={initialDraft}
+                    onDraftRestored={onDraftRestored}
+                    devices={data.devices}
+                    tasks={data.tasks}
+                    local={local}
+                    draftKey={JSON.stringify([
+                      "raypx.task-drafts.v1",
+                      draftNamespace,
+                      accountId,
+                      local,
+                    ])}
+                    optionsOpen={optionsOpen}
+                    onOptionsOpenChange={setOptionsOpen}
+                    editorOpen={editorOpen ?? data.tasks.length === 0}
+                    onEditorOpenChange={setEditorOpen}
+                    promptRef={composer}
+                    onCreated={(task) => {
+                      setSelected(task.id);
+                      setDetailVisible(true);
+                      setPages([]);
+                      refresh();
+                    }}
+                  />
+                  <section
+                    ref={taskHistory}
+                    aria-label={t("taskHistory")}
+                    className="@min-[58rem]:flex @min-[58rem]:min-h-0 @min-[58rem]:flex-1 @min-[58rem]:flex-col"
+                  >
+                    {data.tasks.length > 0 && (
+                      <TaskOverview
+                        tasks={data.tasks}
+                        filters={activeFilters}
+                        onChange={changeFilters}
+                      />
+                    )}
+                    {data.tasks.length > 0 && (
+                      <TaskFilterBar
+                        filters={activeFilters}
+                        devices={data.devices}
+                        count={filtered.length}
+                        total={data.tasks.length}
+                        onChange={changeFilters}
+                      />
+                    )}
+                    {data.tasks.length === 0 ? (
+                      <div className="py-10">
+                        <h2>{t("empty")}</h2>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {t(local ? "localEmptyHint" : "emptyHint")}
+                        </p>
+                      </div>
+                    ) : filtered.length === 0 ? (
+                      <EmptyState
+                        title={t("noMatches")}
+                        description={t("noMatchesHint")}
+                        action={
+                          <Button variant="outline" onClick={() => changeFilters(emptyTaskFilters)}>
+                            {t("clearFilters")}
+                          </Button>
+                        }
+                      />
+                    ) : (
+                      <TaskList
+                        fill
+                        restoreFocus={returnToList}
+                        key={JSON.stringify([data.before, activeFilters])}
+                        tasks={filtered}
+                        devices={data.devices}
+                        selected={selected}
+                        onSelect={(id) => {
+                          setSelected(id);
+                          setDetailVisible(true);
+                          // Stacked layouts move focus to details instead of leaving them below the fold.
+                          if (
+                            detail.current &&
+                            getComputedStyle(
+                              detail.current.closest("[data-task-panels]")!,
+                            ).gridTemplateColumns.split(" ").length === 1
+                          ) {
+                            requestAnimationFrame(() => {
+                              detail.current?.scrollIntoView?.({
+                                block: "start",
+                                behavior: "instant",
+                              });
+                              detail.current?.focus({ preventScroll: true });
+                            });
+                          }
+                        }}
+                      />
+                    )}
+                    {(pages.length > 0 || data.next) && (
+                      <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          disabled={!pages.length}
+                          onClick={() => {
+                            revealPage.current = true;
+                            setPages((previous) => previous.slice(0, -1));
+                            setSelected(null);
+                          }}
+                        >
+                          {t("newerTasks")}
                         </Button>
-                      }
+                        <Button
+                          variant="outline"
+                          disabled={!data.next || data.before !== before}
+                          onClick={() => {
+                            revealPage.current = true;
+                            if (data.next) setPages((previous) => [...previous, data.next!]);
+                            setSelected(null);
+                          }}
+                        >
+                          {t("olderTasks")}
+                        </Button>
+                      </nav>
+                    )}
+                  </section>
+                </>
+              }
+              detail={
+                <div
+                  ref={detail}
+                  tabIndex={-1}
+                  aria-label={t("taskDetails")}
+                  role="region"
+                  className="min-w-0 scroll-mt-5 outline-none"
+                >
+                  {selected && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mb-4 @min-[58rem]:hidden"
+                      onClick={() => {
+                        setDetailVisible(false);
+                        setReturnToList((value) => value + 1);
+                      }}
+                    >
+                      <ArrowLeft aria-hidden="true" />
+                      {t("backToTasks")}
+                    </Button>
+                  )}
+                  {selected ? (
+                    <TaskDetail
+                      key={selected}
+                      client={client}
+                      id={selected}
+                      local={local}
+                      devices={data.devices}
+                      onChanged={refresh}
                     />
                   ) : (
-                    <TaskList
-                      key={JSON.stringify([data.before, filters])}
-                      tasks={filtered}
-                      devices={data.devices}
-                      selected={selected}
-                      onSelect={(id) => {
-                        setSelected(id);
-                        // Stacked layouts move focus to details instead of leaving them below the fold.
-                        if (
-                          detail.current &&
-                          getComputedStyle(detail.current.parentElement!).gridTemplateColumns.split(
-                            " ",
-                          ).length === 1
-                        ) {
-                          detail.current.scrollIntoView?.({ block: "start", behavior: "instant" });
-                          detail.current.focus({ preventScroll: true });
-                        }
-                      }}
-                    />
+                    <div className="flex min-h-72 flex-col items-center justify-center gap-3 px-5 text-center">
+                      <ListTodo aria-hidden="true" className="size-8 text-muted-foreground" />
+                      <h2 className="text-base">{t("taskDetails")}</h2>
+                      <p className="max-w-72 text-sm text-muted-foreground">{t("selectTask")}</p>
+                    </div>
                   )}
-                  {(pages.length > 0 || data.next) && (
-                    <nav aria-label={t("taskPages")} className="mt-4 flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        disabled={!pages.length}
-                        onClick={() => {
-                          revealPage.current = true;
-                          setPages((previous) => previous.slice(0, -1));
-                          setSelected(null);
-                        }}
-                      >
-                        {t("newerTasks")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        disabled={!data.next || data.before !== before}
-                        onClick={() => {
-                          revealPage.current = true;
-                          if (data.next) setPages((previous) => [...previous, data.next!]);
-                          setSelected(null);
-                        }}
-                      >
-                        {t("olderTasks")}
-                      </Button>
-                    </nav>
-                  )}
-                </section>
-              </div>
-              <div
-                ref={detail}
-                tabIndex={-1}
-                aria-label={t("taskDetails")}
-                role="region"
-                className="min-w-0 scroll-mt-5 border-t border-border pt-6 outline-none @min-[58rem]:border-t-0 @min-[58rem]:border-l @min-[58rem]:pl-8 @min-[58rem]:pt-0"
-              >
-                {selected && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="mb-4 @min-[58rem]:hidden"
-                    onClick={() => {
-                      const row = taskHistory.current?.querySelector<HTMLButtonElement>(
-                        '[data-task-list] [aria-pressed="true"]',
-                      );
-                      (row ?? taskHistory.current)?.scrollIntoView?.({
-                        block: "start",
-                        behavior: "instant",
-                      });
-                      row?.focus({ preventScroll: true });
-                    }}
-                  >
-                    <ArrowLeft aria-hidden="true" />
-                    {t("backToTasks")}
-                  </Button>
-                )}
-                {selected ? (
-                  <TaskDetail
-                    key={selected}
-                    client={client}
-                    id={selected}
-                    local={local}
-                    devices={data.devices}
-                    onChanged={refresh}
-                  />
-                ) : (
-                  <div className="flex min-h-72 flex-col items-center justify-center gap-3 px-5 text-center">
-                    <ListTodo aria-hidden="true" className="size-8 text-muted-foreground" />
-                    <h2 className="text-base">{t("taskDetails")}</h2>
-                    <p className="max-w-72 text-sm text-muted-foreground">{t("selectTask")}</p>
-                  </div>
-                )}
-              </div>
-            </div>
+                </div>
+              }
+            />
           )}
         </>
       )}
@@ -603,15 +663,49 @@ function TaskDetail({
           {t("snapshotIncomplete")}
         </p>
       )}
-      <Conversation
-        task={data.task}
-        entries={data.activity}
-        gaps={data.activityGaps}
-        loadGap={loadGap}
-        more={data.activityBefore !== undefined}
-        loading={loadingOlder}
-        loadOlder={loadOlder}
-      />
+      {!isTaskActive(data.task) && (
+        <section aria-label={t("taskResult")} className="space-y-3 border-b border-border pb-5">
+          <h3 className="text-sm font-semibold">
+            {t(data.task.status === "succeeded" ? "taskResult" : "failureDetails")}
+          </h3>
+          {data.task.summary ? (
+            <TaskMarkdown>{data.task.summary}</TaskMarkdown>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t("noTaskResult")}</p>
+          )}
+        </section>
+      )}
+      {isTaskActive(data.task) ? (
+        <Conversation
+          task={data.task}
+          entries={data.activity}
+          gaps={data.activityGaps}
+          loadGap={loadGap}
+          more={data.activityBefore !== undefined}
+          loading={loadingOlder}
+          loadOlder={loadOlder}
+        />
+      ) : (
+        <Collapsible>
+          <CollapsibleTrigger
+            render={<Button type="button" variant="ghost" size="sm" className="group" />}
+          >
+            <ChevronRight aria-hidden="true" className="group-data-panel-open:rotate-90" />
+            {t("viewConversation")}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3">
+            <Conversation
+              task={data.task}
+              entries={data.activity}
+              gaps={data.activityGaps}
+              loadGap={loadGap}
+              more={data.activityBefore !== undefined}
+              loading={loadingOlder}
+              loadOlder={loadOlder}
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
       {isTaskActive(data.task) && (
         <TaskInputComposer
           client={client}

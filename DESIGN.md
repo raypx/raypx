@@ -16,6 +16,9 @@ the planned Expo iOS app is a separate delivery phase.
 Sidebar task navigation comes first, with local tools in a separate Desktop group.
 Account and settings stay at the bottom. Use consistent 20px Lucide icons, visible
 keyboard focus and labelled tooltips in the collapsed rail; keep pending counts visible.
+Desktop places bounded recent authorized-project shortcuts between primary tasks
+and local tools, with searchable expansion and a clear project filter in Tasks.
+The account menu and settings shortcut share one fixed footer row.
 
 Forms have visible labels and errors, keyboard focus, sensible autocomplete and
 pending-state controls. Empty and unavailable states explain real capabilities.

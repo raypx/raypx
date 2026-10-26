@@ -50,7 +50,11 @@ export function TaskComposer({
   initialDraft,
   onDraftRestored,
   onEditorChange,
+  editorOpen,
+  onEditorOpenChange,
 }: {
+  editorOpen?: boolean;
+  onEditorOpenChange?: (open: boolean) => void;
   onEditorChange?: (draft: DraftInput) => void;
   guest?: {
     signIn(draft: TaskComposerDraft): void | Promise<void>;
@@ -71,6 +75,23 @@ export function TaskComposer({
   const t = useTranslations("tasks");
   const c = useTranslations("common");
   const fieldId = useId();
+  const [internalOpen, setInternalOpen] = useState(true);
+  const [dismissedRestore, setDismissedRestore] = useState(false);
+  const expanded =
+    (editorOpen ?? internalOpen) || (Boolean(initialDraft?.prompt) && !dismissedRestore);
+  const wasExpanded = useRef(expanded);
+  function expandEditor(open: boolean) {
+    setInternalOpen(open);
+    setDismissedRestore(!open);
+    onEditorOpenChange?.(open);
+  }
+  useEffect(() => {
+    const revealed = expanded && !wasExpanded.current;
+    wasExpanded.current = expanded;
+    if (!revealed) return;
+    const frame = requestAnimationFrame(() => promptRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [expanded, promptRef]);
   const localDevice = local ? devices[0] : undefined;
   const [deviceId, setDeviceId] = useState(initialDraft?.deviceId ?? localDevice?.id ?? "");
   const [projectId, setProjectId] = useState(
@@ -183,6 +204,7 @@ export function TaskComposer({
       }))
     )
       return;
+    expandEditor(true);
     onOptionsOpenChange(true);
     setDeviceId(draft.deviceId);
     setProjectId(draft.projectId);
@@ -296,237 +318,277 @@ export function TaskComposer({
     }
   }
   return (
-    <div className="space-y-4">
-      <form
-        aria-label={t("create")}
-        onSubmit={(event) => void submit(event)}
-        className="@container space-y-4 rounded-xl border border-border bg-sidebar p-4"
+    <div data-task-composer className="space-y-4">
+      <Collapsible
+        open={expanded}
+        onOpenChange={expandEditor}
+        className="rounded-xl border border-border bg-sidebar"
       >
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-base">
-            <Send aria-hidden="true" className="size-4 text-muted-foreground" />
-            {t("create")}
-          </h2>
-          <div className="flex items-center gap-1">
+        <CollapsibleTrigger
+          aria-label={t(expanded ? "collapseComposer" : "openComposer")}
+          render={
             <Button
-              size="icon-sm"
               type="button"
               variant="ghost"
-              aria-label={t("newDraft")}
-              disabled={busy || (!prompt && !draftId)}
-              onClick={() => void newDraft()}
-            >
-              <Plus aria-hidden="true" />
-            </Button>
-            <Button
-              size="sm"
-              type="button"
-              variant="ghost"
-              disabled={busy || !draftReady || !prompt.trim()}
-              onClick={saveDraft}
-            >
-              <Save aria-hidden="true" />
-              {t("saveDraft")}
-            </Button>
-          </div>
-        </div>
-        <Field>
-          <FieldLabel htmlFor={`${fieldId}-prompt`}>{t("prompt")}</FieldLabel>
-          <Textarea
-            ref={promptRef}
-            id={`${fieldId}-prompt`}
-            className="min-h-24 resize-y bg-background"
-            required
-            maxLength={32000}
-            value={prompt}
-            placeholder={t("promptPlaceholder")}
-            disabled={busy}
-            onChange={(event) => {
-              setPrompt(event.target.value);
-              setDraftStatus(null);
-              changed({ prompt: event.target.value });
-            }}
+              className="group h-auto min-h-12 w-full justify-start gap-3 rounded-xl px-4 py-3 text-left"
+            />
+          }
+        >
+          <Send aria-hidden="true" className="shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate text-sm">
+            {expanded ? t("create") : prompt.trim() || t("composerPreview")}
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className="shrink-0 text-muted-foreground group-data-panel-open:rotate-180"
           />
-        </Field>
-        <Collapsible open={optionsOpen} onOpenChange={onOptionsOpenChange}>
+        </CollapsibleTrigger>
+        <CollapsibleContent keepMounted>
+          <form
+            aria-label={t("create")}
+            onSubmit={(event) => void submit(event)}
+            className="@container space-y-4 border-t border-border p-4"
+          >
+            <div className="flex items-center justify-end gap-3">
+              <div className="flex items-center gap-1">
+                <Button
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                  aria-label={t("newDraft")}
+                  disabled={busy || (!prompt && !draftId)}
+                  onClick={() => void newDraft()}
+                >
+                  <Plus aria-hidden="true" />
+                </Button>
+                <Button
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                  disabled={busy || !draftReady || !prompt.trim()}
+                  onClick={saveDraft}
+                >
+                  <Save aria-hidden="true" />
+                  {t("saveDraft")}
+                </Button>
+              </div>
+            </div>
+            <Field>
+              <FieldLabel htmlFor={`${fieldId}-prompt`}>{t("prompt")}</FieldLabel>
+              <Textarea
+                ref={promptRef}
+                id={`${fieldId}-prompt`}
+                className="min-h-24 resize-y bg-background"
+                required
+                maxLength={32000}
+                value={prompt}
+                placeholder={t("promptPlaceholder")}
+                disabled={busy}
+                onChange={(event) => {
+                  setPrompt(event.target.value);
+                  setDraftStatus(null);
+                  changed({ prompt: event.target.value });
+                }}
+              />
+            </Field>
+            <Collapsible open={optionsOpen} onOpenChange={onOptionsOpenChange}>
+              <CollapsibleTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="group max-w-full justify-start gap-2 px-0"
+                  />
+                }
+              >
+                <ChevronDown
+                  aria-hidden="true"
+                  className="shrink-0 group-data-panel-open:rotate-180"
+                />
+                {t("taskOptions")}
+                <span className="truncate font-normal text-muted-foreground">
+                  {project?.name ?? device?.name}
+                </span>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-3">
+                <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor={`${fieldId}-device`}>{t("device")}</FieldLabel>
+                    <SelectField
+                      id={`${fieldId}-device`}
+                      className="w-full"
+                      disabled={busy || Boolean(guest)}
+                      required={!guest}
+                      value={deviceId || null}
+                      placeholder={t("chooseDevice")}
+                      onValueChange={(value) => {
+                        setDeviceId(value);
+                        setProjectId("");
+                        changed({ deviceId: value, projectId: "" });
+                      }}
+                      options={devices
+                        .filter((d) => !d.revoked)
+                        .map((d) => ({
+                          value: d.id,
+                          label: `${d.name} · ${t(d.online ? "online" : "offline")}`,
+                          disabled: !d.online,
+                        }))}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor={`${fieldId}-project`}>{t("project")}</FieldLabel>
+                    <SelectField
+                      id={`${fieldId}-project`}
+                      className="w-full"
+                      disabled={busy || Boolean(guest)}
+                      required={!guest}
+                      value={projectId || null}
+                      placeholder={t("chooseProject")}
+                      onValueChange={(value) => {
+                        setProjectId(value);
+                        changed({ projectId: value });
+                      }}
+                      options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
+                    />
+                  </Field>
+                </div>
+                {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
+                <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor={`${fieldId}-agent`}>{t("agent")}</FieldLabel>
+                    <SelectField<AgentProvider>
+                      id={`${fieldId}-agent`}
+                      className="w-full"
+                      disabled={busy}
+                      value={provider}
+                      onValueChange={(value) => {
+                        setProvider(value);
+                        changed({ provider: value });
+                      }}
+                      options={[
+                        { value: "claude", label: "Claude Code" },
+                        { value: "codex", label: "Codex" },
+                      ]}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor={`${fieldId}-mode`}>{t("mode")}</FieldLabel>
+                    <SelectField<"run" | "plan">
+                      id={`${fieldId}-mode`}
+                      className="w-full"
+                      disabled={busy}
+                      value={mode}
+                      onValueChange={(value) => {
+                        setMode(value);
+                        changed({ mode: value });
+                      }}
+                      options={[
+                        { value: "run", label: t("runMode") },
+                        { value: "plan", label: t("planMode") },
+                      ]}
+                    />
+                  </Field>
+                </div>
+                <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
+              </CollapsibleContent>
+            </Collapsible>
+            {occupied && prompt.trim() && (
+              <p role="status" className="text-sm">
+                {t("PROJECT_BUSY")}
+              </p>
+            )}
+            {!available && !guest && (
+              <p className="text-sm text-muted-foreground">{t("availabilityHint")}</p>
+            )}
+            {guest && <p className="text-sm text-muted-foreground">{t("guestSendHint")}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {t(error)}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+              <p className="text-xs text-muted-foreground">{t("draftDeviceOnly")}</p>
+              <Button
+                type="submit"
+                disabled={(!guest && (!available || occupied)) || busy || !prompt.trim()}
+              >
+                <Send aria-hidden="true" />
+                {t(busy ? "sending" : guest ? "signInToSend" : "send")}
+              </Button>
+            </div>
+            {(draftStatus || draftLoadFailed) && (
+              <p
+                role={draftStatus === "draftSaved" ? "status" : "alert"}
+                className={
+                  draftStatus === "draftSaved"
+                    ? "text-xs text-muted-foreground"
+                    : "text-xs text-destructive-text"
+                }
+              >
+                {t(draftStatus ?? "draftSaveFailed")}
+              </p>
+            )}
+          </form>
+        </CollapsibleContent>
+      </Collapsible>
+      {drafts.length > 0 && (
+        <Collapsible render={<section aria-label={t("drafts")} />}>
           <CollapsibleTrigger
+            aria-label={t("drafts")}
             render={
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="group max-w-full justify-start gap-2 px-0"
+                className="group mb-2 w-full justify-start gap-2 text-muted-foreground"
               />
             }
           >
-            <ChevronDown aria-hidden="true" className="shrink-0 group-data-panel-open:rotate-180" />
-            {t("taskOptions")}
-            <span className="truncate font-normal text-muted-foreground">
-              {project?.name ?? device?.name}
-            </span>
+            <FilePenLine aria-hidden="true" />
+            {t("drafts")}
+            <span className="text-xs tabular-nums">{drafts.length}</span>
+            <ChevronDown aria-hidden="true" className="ml-auto group-data-panel-open:rotate-180" />
           </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-3 pt-3">
-            <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor={`${fieldId}-device`}>{t("device")}</FieldLabel>
-                <SelectField
-                  id={`${fieldId}-device`}
-                  className="w-full"
-                  disabled={busy || Boolean(guest)}
-                  required={!guest}
-                  value={deviceId || null}
-                  placeholder={t("chooseDevice")}
-                  onValueChange={(value) => {
-                    setDeviceId(value);
-                    setProjectId("");
-                    changed({ deviceId: value, projectId: "" });
-                  }}
-                  options={devices
-                    .filter((d) => !d.revoked)
-                    .map((d) => ({
-                      value: d.id,
-                      label: `${d.name} · ${t(d.online ? "online" : "offline")}`,
-                      disabled: !d.online,
-                    }))}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`${fieldId}-project`}>{t("project")}</FieldLabel>
-                <SelectField
-                  id={`${fieldId}-project`}
-                  className="w-full"
-                  disabled={busy || Boolean(guest)}
-                  required={!guest}
-                  value={projectId || null}
-                  placeholder={t("chooseProject")}
-                  onValueChange={(value) => {
-                    setProjectId(value);
-                    changed({ projectId: value });
-                  }}
-                  options={device?.projects.map((p) => ({ value: p.id, label: p.name })) ?? []}
-                />
-              </Field>
-            </div>
-            {project?.dirty && <p className="text-sm text-muted-foreground">{t("dirty")}</p>}
-            <div className="grid grid-cols-1 gap-3 @min-[20rem]:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor={`${fieldId}-agent`}>{t("agent")}</FieldLabel>
-                <SelectField<AgentProvider>
-                  id={`${fieldId}-agent`}
-                  className="w-full"
-                  disabled={busy}
-                  value={provider}
-                  onValueChange={(value) => {
-                    setProvider(value);
-                    changed({ provider: value });
-                  }}
-                  options={[
-                    { value: "claude", label: "Claude Code" },
-                    { value: "codex", label: "Codex" },
-                  ]}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor={`${fieldId}-mode`}>{t("mode")}</FieldLabel>
-                <SelectField<"run" | "plan">
-                  id={`${fieldId}-mode`}
-                  className="w-full"
-                  disabled={busy}
-                  value={mode}
-                  onValueChange={(value) => {
-                    setMode(value);
-                    changed({ mode: value });
-                  }}
-                  options={[
-                    { value: "run", label: t("runMode") },
-                    { value: "plan", label: t("planMode") },
-                  ]}
-                />
-              </Field>
-            </div>
-            <p className="text-xs text-muted-foreground">{t("executionHint")}</p>
+          <CollapsibleContent>
+            <ul className="divide-y divide-border rounded-lg border border-border">
+              {drafts.map((draft) => (
+                <li key={draft.id} className="flex items-center gap-1 px-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    aria-pressed={draft.id === draftId}
+                    className="h-auto min-h-12 min-w-0 flex-1 justify-start gap-2.5 px-2 py-2 text-left whitespace-normal"
+                    disabled={busy}
+                    onClick={() => void openDraft(draft)}
+                  >
+                    <FilePenLine aria-hidden="true" className="shrink-0 text-muted-foreground" />
+                    <span className="min-w-0">
+                      <span className="line-clamp-1 text-sm">{draft.prompt}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {devices
+                          .find((item) => item.id === draft.deviceId)
+                          ?.projects.find((item) => item.id === draft.projectId)?.name ??
+                          t("chooseProject")}{" "}
+                        · {draft.provider === "claude" ? "Claude Code" : "Codex"}
+                      </span>
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("deleteDraft", { name: draft.prompt.slice(0, 80) })}
+                    disabled={busy}
+                    onClick={() => deleteDraft(draft.id)}
+                  >
+                    <Trash2 aria-hidden="true" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
           </CollapsibleContent>
         </Collapsible>
-        {occupied && prompt.trim() && (
-          <p role="status" className="text-sm">
-            {t("PROJECT_BUSY")}
-          </p>
-        )}
-        {!available && !guest && (
-          <p className="text-sm text-muted-foreground">{t("availabilityHint")}</p>
-        )}
-        {guest && <p className="text-sm text-muted-foreground">{t("guestSendHint")}</p>}
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {t(error)}
-          </p>
-        )}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-          <p className="text-xs text-muted-foreground">{t("draftDeviceOnly")}</p>
-          <Button
-            type="submit"
-            disabled={(!guest && (!available || occupied)) || busy || !prompt.trim()}
-          >
-            <Send aria-hidden="true" />
-            {t(busy ? "sending" : guest ? "signInToSend" : "send")}
-          </Button>
-        </div>
-        {(draftStatus || draftLoadFailed) && (
-          <p
-            role={draftStatus === "draftSaved" ? "status" : "alert"}
-            className={
-              draftStatus === "draftSaved"
-                ? "text-xs text-muted-foreground"
-                : "text-xs text-destructive-text"
-            }
-          >
-            {t(draftStatus ?? "draftSaveFailed")}
-          </p>
-        )}
-      </form>
-      {drafts.length > 0 && (
-        <section aria-label={t("drafts")}>
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
-            {t("drafts")}
-            <span className="text-xs text-muted-foreground">{drafts.length}</span>
-          </h3>
-          <ul className="divide-y divide-border rounded-lg border border-border">
-            {drafts.map((draft) => (
-              <li key={draft.id} className="flex items-center gap-1 px-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  aria-pressed={draft.id === draftId}
-                  className="h-auto min-h-12 min-w-0 flex-1 justify-start gap-2.5 px-2 py-2 text-left whitespace-normal"
-                  disabled={busy}
-                  onClick={() => void openDraft(draft)}
-                >
-                  <FilePenLine aria-hidden="true" className="shrink-0 text-muted-foreground" />
-                  <span className="min-w-0">
-                    <span className="line-clamp-1 text-sm">{draft.prompt}</span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {devices
-                        .find((item) => item.id === draft.deviceId)
-                        ?.projects.find((item) => item.id === draft.projectId)?.name ??
-                        t("chooseProject")}{" "}
-                      · {draft.provider === "claude" ? "Claude Code" : "Codex"}
-                    </span>
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("deleteDraft", { name: draft.prompt.slice(0, 80) })}
-                  disabled={busy}
-                  onClick={() => deleteDraft(draft.id)}
-                >
-                  <Trash2 aria-hidden="true" />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </section>
       )}
       {dialog}
     </div>

@@ -10,6 +10,10 @@ Electrobun desktop composition root with a React/Vite renderer, persistent WebVi
 
 `preferences.ts` shares pure preference types/validation between Native and renderer; `src/preferences.tsx` owns renderer initialization.
 Simple pages live in file-route modules; complex components, actions and state belong under `src/features/`, without a `src/pages/` forwarding layer.
+`features/tasks/project-navigation.tsx` loads device-owned authorized projects for
+sidebar shortcuts, keeps a bounded device-local recent selection and opens
+`/tasks?scope=local&project=...`. This filters the loaded task page, never creates
+work or reads remote/account-owned projects. Account and settings share the footer.
 
 `src/routes/(local)/route.tsx` is the pathless native-tools boundary (route group,
 like Web's `(app)`); sign-in pages live in the `(auth)` group. It disables
@@ -133,7 +137,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 `bun run --cwd apps/desktop check`, `bun run --cwd apps/desktop test`, `bun run build:desktop`, then `bun run package:desktop`.
 
-`bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile.
+`bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile. Smoke bundles are named `Raypx Test`, built under `.smoke-build.noindex`, and unregistered/removed at exit; release bundles remain `Raypx`.
 Shell/restore assert signed-out local access, then use an isolated loopback session fixture. The runner switches runtime TOML servers to check cookie/storage and remote opt-in isolation. These phases do not validate authentication; runtime code contains no fixture. Real HTTPS uses the separate beta phases.
 
 `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents` runs real Claude and

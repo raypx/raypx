@@ -18,12 +18,14 @@ export interface TaskFilters {
   status: "all" | "active" | "working" | "attention" | "finished" | "errors";
   device: string;
   provider: string;
+  project: string;
 }
 export const emptyTaskFilters: TaskFilters = {
   query: "",
   status: "all",
   device: "",
   provider: "",
+  project: "",
 };
 
 export function filterTasks(tasks: AgentTask[], devices: SyncDevice[], filters: TaskFilters) {
@@ -32,6 +34,7 @@ export function filterTasks(tasks: AgentTask[], devices: SyncDevice[], filters: 
   return tasks.filter((task) => {
     if (filters.device && task.deviceId !== filters.device) return false;
     if (filters.provider && task.provider !== filters.provider) return false;
+    if (filters.project && task.projectId !== filters.project) return false;
     if (filters.status === "active" && !isTaskActive(task)) return false;
     if (filters.status === "working" && (!isTaskActive(task) || task.status === "waiting"))
       return false;
@@ -71,7 +74,8 @@ export function TaskFilterBar({
     filters.query !== "" ||
     filters.status !== "all" ||
     filters.device !== "" ||
-    filters.provider !== "";
+    filters.provider !== "" ||
+    filters.project !== "";
   return (
     <div className="@container mb-5 space-y-3">
       <Collapsible className="space-y-3">
@@ -95,7 +99,7 @@ export function TaskFilterBar({
             <SlidersHorizontal aria-hidden="true" />
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent className="grid grid-cols-2 gap-3 @min-[48rem]:grid-cols-3">
+        <CollapsibleContent className="grid grid-cols-2 gap-3">
           <Field>
             <FieldLabel htmlFor={`${id}-status`}>{c("status")}</FieldLabel>
             <SelectField<TaskFilters["status"]>
@@ -137,6 +141,24 @@ export function TaskFilterBar({
               options={[
                 { value: "", label: t("allDevices") },
                 ...devices.map((device) => ({ value: device.id, label: device.name })),
+              ]}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-project`}>{t("project")}</FieldLabel>
+            <SelectField
+              id={`${id}-project`}
+              className="w-full"
+              value={filters.project}
+              onValueChange={(project) => onChange({ ...filters, project })}
+              options={[
+                { value: "", label: t("allProjects") },
+                ...devices.flatMap((device) =>
+                  device.projects.map((project) => ({
+                    value: project.id,
+                    label: devices.length > 1 ? `${project.name} · ${device.name}` : project.name,
+                  })),
+                ),
               ]}
             />
           </Field>

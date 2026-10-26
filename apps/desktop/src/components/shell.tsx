@@ -8,6 +8,8 @@ import { authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
 import { signOutDesktopHost } from "../features/tasks/host-session";
 import { TerminalRequestNotice } from "../features/tasks/request-notice";
+import { ProjectNavigation } from "../features/tasks/project-navigation";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
 import {
   createPendingClient,
   localTaskClient,
@@ -17,15 +19,7 @@ import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopReturnTo } from "../features/auth/return-to";
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
-import {
-  CalendarClock,
-  FolderOpen,
-  ListTodo,
-  Inbox,
-  Settings,
-  SquareTerminal,
-  CircleUserRound,
-} from "lucide-react";
+import { CalendarClock, FolderOpen, ListTodo, Inbox, Settings, SquareTerminal } from "lucide-react";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { EngineNotice } from "../features/engine/notice";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -105,11 +99,11 @@ export function DesktopShell() {
       <AnalyticsIdentity client={analytics} accountId={accountId} />
       <AppShell
         frame="window"
-        brand={{ to: "/", label: "Raypx" }}
+        brand={{ to: "/", label: "Raypx", description: c("deviceWorkspace") }}
+        contextNavigation={<ProjectNavigation />}
         navigationLabels={[c("workspace"), c("localTools")]}
         navigation={[
           [
-            { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
             {
               to: "/approvals",
               label: c("approvals"),
@@ -122,6 +116,7 @@ export function DesktopShell() {
                 />
               ),
             },
+            { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
           ],
           [
             { to: "/", label: c("files"), icon: <FolderOpen />, exact: true },
@@ -129,10 +124,22 @@ export function DesktopShell() {
             { to: "/terminal", label: c("terminal"), icon: <SquareTerminal /> },
           ],
         ]}
-        secondaryNavigation={[
-          { to: "/account", label: c("account"), icon: <CircleUserRound /> },
-          { to: "/settings", label: c("settings"), icon: <Settings /> },
-        ]}
+        accountAction={
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  to="/settings"
+                  aria-label={c("settings")}
+                  className="grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-sidebar-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                />
+              }
+            >
+              <Settings aria-hidden="true" className="size-5 stroke-[1.75]" />
+            </TooltipTrigger>
+            <TooltipContent side="top">{c("settings")}</TooltipContent>
+          </Tooltip>
+        }
         breadcrumbs={[
           "Raypx",
           c(

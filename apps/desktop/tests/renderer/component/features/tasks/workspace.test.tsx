@@ -178,6 +178,10 @@ async function page(url = "/") {
     </QueryClientProvider>,
   );
 }
+async function showDrafts() {
+  const trigger = await screen.findByRole("button", { name: "Drafts" });
+  if (trigger.getAttribute("aria-expanded") !== "true") fireEvent.click(trigger);
+}
 function runningTask() {
   const task: AgentTask = {
     id: crypto.randomUUID(),
@@ -388,6 +392,7 @@ it("saves and restores local drafts without sending a task, and preserves unsave
   fireEvent.click(screen.getByRole("button", { name: "New draft" }));
   expect(editor).toHaveValue("");
   fireEvent.change(editor, { target: { value: "Unsaved investigation" } });
+  await showDrafts();
   fireEvent.click(screen.getByRole("button", { name: /^Investigate local reconnects/ }));
   const dialog = await screen.findByRole("alertdialog");
   fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
@@ -397,6 +402,7 @@ it("saves and restores local drafts without sending a task, and preserves unsave
   expect(await screen.findByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
     "Unsaved investigation",
   );
+  await showDrafts();
   fireEvent.click(await screen.findByRole("button", { name: /^Investigate local reconnects/ }));
   const discard = await screen.findByRole("alertdialog");
   fireEvent.click(within(discard).getByRole("button", { name: "Discard changes" }));
@@ -446,14 +452,17 @@ it("keeps local drafts separate from drafts for connected computers", async () =
   const localEditor = await screen.findByRole("textbox", { name: "What should the agent do?" });
   fireEvent.change(localEditor, { target: { value: "Private local draft" } });
   fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await showDrafts();
   await screen.findByRole("button", { name: /^Private local draft/ });
   fireEvent.click(screen.getByRole("tab", { name: "Connected computers" }));
   const remoteEditor = await screen.findByRole("textbox", { name: "What should the agent do?" });
   expect(screen.queryByRole("region", { name: "Drafts" })).toBeNull();
   fireEvent.change(remoteEditor, { target: { value: "Connected computer draft" } });
   fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await showDrafts();
   await screen.findByRole("button", { name: /^Connected computer draft/ });
   fireEvent.click(screen.getByRole("tab", { name: "This computer" }));
+  await showDrafts();
   await screen.findByRole("button", { name: /^Private local draft/ });
   expect(screen.queryByRole("button", { name: /^Connected computer draft/ })).toBeNull();
   expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
@@ -509,6 +518,7 @@ it("keeps earlier account-owned drafts isolated instead of adopting them into th
     ]),
   );
   await page("/tasks?scope=local&history=account");
+  await showDrafts();
   await screen.findByRole("button", { name: /^Account A private draft/ });
   await act(async () => {
     accountLocalTaskClient.setAccount("account-b");
@@ -528,4 +538,75 @@ it("keeps earlier account-owned drafts isolated instead of adopting them into th
   expect(screen.queryByRole("textbox", { name: "What should the agent do?" })).toBeNull();
   expect(JSON.parse(localStorage.getItem(key)!)[0].prompt).toBe("Account A private draft");
   expect(mocks.remote).not.toHaveBeenCalled();
+});
+
+it("collapses an unsent editor without losing its text or creating a task", async () => {
+  runningTask();
+  await page();
+  fireEvent.click(await screen.findByRole("button", { name: "Write a task" }));
+  const editor = await screen.findByRole("textbox", { name: "What should the agent do?" });
+  fireEvent.change(editor, { target: { value: "Keep this unsent investigation" } });
+  fireEvent.click(screen.getByRole("button", { name: "Collapse task editor" }));
+  expect(screen.queryByRole("textbox", { name: "What should the agent do?" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Write a task" }));
+  expect(await screen.findByRole("textbox", { name: "What should the agent do?" })).toHaveValue(
+    "Keep this unsent investigation",
+  );
+  expect(mocks.request.mock.calls.some(([method]) => method === "agents.local.execute")).toBe(
+    false,
+  );
+});
+
+it("filters a project deep link and lets the user return to all projects", async () => {
+  const first = runningTask();
+  const second = {
+    ...first,
+    id: crypto.randomUUID(),
+    projectId: crypto.randomUUID(),
+    prompt: "Other project task",
+  };
+  tasks = [first, second];
+  await page(`/tasks?scope=local&project=${first.projectId}`);
+  await screen.findByRole("button", { name: /Improve the current project/ });
+  expect(screen.queryByRole("button", { name: /Other project task/ })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Show all projects" }));
+  await screen.findByRole("button", { name: /Other project task/ });
+  expect(mocks.remote).not.toHaveBeenCalled();
+});
+
+it("puts a completed result before the collapsed transcript and keeps full history available", async () => {
+  const task = runningTask();
+  tasks = [{ ...task, status: "succeeded", summary: "Validated the reconnect fix" }];
+  const now = new Date().toISOString();
+  activity = [
+    {
+      id: crypto.randomUUID(),
+      taskId: task.id,
+      kind: "message",
+      order: 1,
+      revision: 1,
+      createdAt: now,
+      updatedAt: now,
+      status: "complete",
+      truncated: false,
+      text: "Detailed execution transcript",
+    },
+  ];
+  await page();
+  fireEvent.click(await screen.findByRole("button", { name: /Improve the current project/ }));
+  await screen.findByText("Validated the reconnect fix");
+  expect(screen.queryByRole("region", { name: "Conversation" })).toBeNull();
+  expect(screen.queryByText("Detailed execution transcript")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "View full conversation" }));
+  await screen.findByText("Detailed execution transcript");
+});
+
+it("restores keyboard focus to the selected task when returning from details", async () => {
+  runningTask();
+  await page();
+  const row = await screen.findByRole("button", { name: /Improve the current project/ });
+  fireEvent.click(row);
+  fireEvent.click(await screen.findByRole("button", { name: "Back to tasks" }));
+  await waitFor(() => expect(document.activeElement).toBe(row));
+  expect(row).toHaveAttribute("aria-pressed", "true");
 });

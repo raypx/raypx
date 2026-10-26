@@ -34,6 +34,9 @@ export function DesktopTaskWorkspace({
   const legacy = useLocation({
     select: (location) => new URLSearchParams(location.searchStr).get("history") === "account",
   });
+  const projectId = useLocation({
+    select: (location) => new URLSearchParams(location.searchStr).get("project") ?? "",
+  });
   const owner = legacy && accountId ? accountId : LOCAL_WORKSPACE_ID;
   const sourceId = useId();
   return (
@@ -111,6 +114,17 @@ export function DesktopTaskWorkspace({
             client={legacy ? accountLocalTaskClient : local}
             accountId={owner}
             view={view}
+            projectId={projectId}
+            onProjectChange={(project) =>
+              void router.navigate({
+                to: "/tasks",
+                search: {
+                  scope: "local",
+                  ...(legacy ? { history: "account" as const } : {}),
+                  ...(project ? { project } : {}),
+                },
+              })
+            }
           />
         ) : (
           <section className="mx-auto w-full max-w-[1600px] px-10 py-10">

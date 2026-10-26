@@ -29,6 +29,9 @@ Code outside `src/components/` stays private.
   storage subscription; the UI primitive owns no persistence. Missing/blocked
   storage keeps the expanded default or current in-memory choice. Narrow layouts
   still use the rail regardless of the stored desktop-width choice.
+  `brand.description` adds a compact workspace subtitle. Applications can insert
+  `contextNavigation` after the primary group and an `accountAction` beside the
+  account menu; Blocks never loads project or account data itself.
 - `settings`: `SettingsPage`, `SettingsSection` (heading-labelled row with a control),
   and the device preference sections `AppearanceSettings` (needs UI's ThemeProvider)
   and `LanguageSettings` (needs i18n's BrowserLanguageProvider). LanguageSettings

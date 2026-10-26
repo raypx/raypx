@@ -196,3 +196,37 @@ it("ends the loading state after a read failure and recovers with refresh", asyn
   await screen.findByRole("button", { name: /Investigate build/ });
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
+
+it("filters the loaded page by project without creating or refetching tasks", async () => {
+  const first = task("Project A work"),
+    second = task("Project B work");
+  mac.projects = [
+    { id: first.projectId, name: "Project A", providers: ["codex"], dirty: false },
+    { id: second.projectId, name: "Project B", providers: ["codex"], dirty: false },
+  ];
+  try {
+    const { list } = workspace([first, second]);
+    fireEvent.click(await screen.findByRole("button", { name: "Filters" }));
+    const previous = list.mock.calls.length;
+    await selectOption("Project", first.projectId);
+    await waitFor(() => expect(visiblePrompts()).toEqual(["Project A work"]));
+    expect(list).toHaveBeenCalledTimes(previous);
+    fireEvent.click(screen.getByRole("button", { name: "Show all projects" }));
+    await waitFor(() => expect(visiblePrompts()).toEqual(["Project A work", "Project B work"]));
+  } finally {
+    mac.projects = [];
+  }
+});
+
+it("resizes the split view with the keyboard, clamps its width and saves the device preference", async () => {
+  workspace();
+  const separator = await screen.findByRole("separator", { name: "Resize task list and details" });
+  fireEvent.keyDown(separator, { key: "End" });
+  expect(separator).toHaveAttribute("aria-valuenow", "50");
+  fireEvent.keyDown(separator, { key: "ArrowRight" });
+  expect(separator).toHaveAttribute("aria-valuenow", "50");
+  fireEvent.keyDown(separator, { key: "Home" });
+  fireEvent.keyDown(separator, { key: "ArrowRight" });
+  expect(separator).toHaveAttribute("aria-valuenow", "32");
+  expect(localStorage.getItem("raypx.task-list-width.v1")).toBe("32");
+});

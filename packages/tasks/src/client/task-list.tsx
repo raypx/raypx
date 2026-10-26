@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/react-virtual";
 import type { AgentTask, SyncDevice } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -11,11 +19,15 @@ export function TaskList({
   devices,
   selected,
   onSelect,
+  fill = false,
+  restoreFocus = 0,
 }: {
   tasks: AgentTask[];
   devices: SyncDevice[];
   selected: string | null;
   onSelect: (id: string) => void;
+  fill?: boolean;
+  restoreFocus?: number;
 }) {
   "use no memo"; // TanStack Virtual exposes a mutable instance that must be read each render.
   const t = useTranslations("tasks");
@@ -23,6 +35,8 @@ export function TaskList({
   const viewport = useRef<HTMLDivElement>(null);
   const buttons = useRef(new Map<string, HTMLElement>());
   const focusRequest = useRef<string | null>(null);
+  const restored = useRef(restoreFocus);
+  const returning = useRef(false);
   const [focused, setFocused] = useState<string | null>(null);
   const activeIndex = Math.max(
     0,
@@ -48,14 +62,27 @@ export function TaskList({
     rangeExtractor,
     useFlushSync: false,
   });
+  useLayoutEffect(() => {
+    if (restored.current === restoreFocus) return;
+    restored.current = restoreFocus;
+    if (!selected) return;
+    focusRequest.current = selected;
+    returning.current = true;
+    setFocused(selected);
+    const index = tasks.findIndex((task) => task.id === selected);
+    if (index >= 0) virtualizer.scrollToIndex(index, { align: "auto" });
+  }, [restoreFocus, selected, tasks, virtualizer]);
+  // A previously hidden virtual viewport can render its selected row after ResizeObserver fires.
   useEffect(() => {
     const id = focusRequest.current;
     const button = id ? buttons.current.get(id) : undefined;
     if (button) {
+      if (returning.current) button.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+      returning.current = false;
       button.focus({ preventScroll: true });
       focusRequest.current = null;
     }
-  }, [focused]);
+  });
   function navigate(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     let next: number;
     switch (event.key) {
@@ -83,7 +110,7 @@ export function TaskList({
     <div
       ref={viewport}
       data-task-list
-      className="relative overflow-auto overscroll-contain"
+      className={`relative overflow-auto overscroll-contain ${fill ? "min-h-48 flex-1" : ""}`}
       style={{ maxHeight: "min(60dvh, 40rem)" }}
     >
       <span id={helpId} className="sr-only">

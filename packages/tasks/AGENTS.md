@@ -38,7 +38,14 @@ steer. Recover lost input receipts by authoritative entry ID without resending.
 
 Task workspace keeps the composer/drafts and paged virtual task list in the left
 column, with the selected task in the right column when space allows. Stacked
-layouts focus/scroll to the opened detail. Overview counts describe the loaded
+layouts switch between list and detail, preserving the selected row and filters.
+The wide split can be resized by pointer or keyboard and stores only its width
+as a device preference. Existing-task views start with a compact editor; opening
+and closing it preserves unsent text. Saved drafts expand on demand. Finished
+tasks show their outcome before the expandable full conversation.
+Optional project selection filters the loaded page and can be controlled by an
+application URL through `projectId`/`onProjectChange`; never imply a global search.
+Overview counts describe the loaded
 page; running/queued excludes tasks waiting for an answer. Drafts are explicitly
 saved to device storage, scoped by injected server identity, account and local/remote
 task location. Validate and bound stored drafts (20 drafts, 32,000 characters each);

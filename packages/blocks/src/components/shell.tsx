@@ -58,13 +58,16 @@ export interface ShellNavItem<To extends string> {
 export interface AppShellProps<To extends string> {
   /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
   frame?: "document" | "window";
-  brand: { to: To; label: string };
+  brand: { to: To; label: string; description?: string };
   /** Main navigation groups, with optional captions supplied by navigationLabels. */
   navigation: readonly (readonly ShellNavItem<To>[])[];
   navigationLabels?: readonly string[];
+  /** Application-owned context, between primary navigation and auxiliary tools. */
+  contextNavigation?: ReactNode;
   /** Account and preferences stay above the account menu, separate from task navigation. */
   secondaryNavigation?: readonly ShellNavItem<To>[];
   account?: ReactNode;
+  accountAction?: ReactNode;
   breadcrumbs: readonly string[];
   /** Shown between the top bar and main content, such as a service alert. */
   notice?: ReactNode;
@@ -83,7 +86,7 @@ export function AppShell<To extends string>(props: AppShellProps<To>) {
         mobileBehavior="rail"
         style={
           {
-            "--sidebar-width": "var(--app-sidebar-width, 14rem)",
+            "--sidebar-width": "var(--app-sidebar-width, 15rem)",
             "--sidebar-width-icon": "var(--app-rail-width, 4rem)",
           } as CSSProperties
         }
@@ -103,8 +106,10 @@ function ShellContents<To extends string>({
   brand,
   navigation,
   navigationLabels,
+  contextNavigation,
   secondaryNavigation,
   account,
+  accountAction,
   breadcrumbs,
   notice,
   LinkComponent,
@@ -163,7 +168,7 @@ function ShellContents<To extends string>({
           windowed ? "pt-11" : "pt-6 max-[760px]:pt-5",
         )}
       >
-        <SidebarHeader className="mb-7 shrink-0 p-0">
+        <SidebarHeader className="mb-6 shrink-0 p-0">
           <LinkComponent
             to={brand.to}
             markActive={false}
@@ -172,28 +177,31 @@ function ShellContents<To extends string>({
           >
             <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
           </LinkComponent>
+          {brand.description && (
+            <p className="mt-2 truncate px-3 text-xs text-muted-foreground group-data-[collapsible=icon]/sidebar:hidden">
+              {brand.description}
+            </p>
+          )}
         </SidebarHeader>
         <nav aria-label={brand.label} className="flex min-h-0 flex-1 flex-col">
           <SidebarContent className="gap-5">
             {navigation.map((group, index) => (
-              <SidebarGroup
-                key={index}
-                role="group"
-                aria-label={navigationLabels?.[index]}
-                className="p-0"
-              >
-                {navigationLabels?.[index] && (
-                  <SidebarGroupLabel
-                    aria-hidden="true"
-                    className="mb-2 h-auto px-3 text-muted-foreground"
-                  >
-                    {navigationLabels[index]}
-                  </SidebarGroupLabel>
-                )}
-                <SidebarGroupContent>
-                  <SidebarMenu className="gap-1">{group.map(renderItem)}</SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
+              <Fragment key={index}>
+                <SidebarGroup role="group" aria-label={navigationLabels?.[index]} className="p-0">
+                  {navigationLabels?.[index] && (
+                    <SidebarGroupLabel
+                      aria-hidden="true"
+                      className="mb-2 h-auto px-3 text-muted-foreground"
+                    >
+                      {navigationLabels[index]}
+                    </SidebarGroupLabel>
+                  )}
+                  <SidebarGroupContent>
+                    <SidebarMenu className="gap-1">{group.map(renderItem)}</SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+                {index === 0 && contextNavigation}
+              </Fragment>
             ))}
           </SidebarContent>
           {secondaryNavigation && secondaryNavigation.length > 0 && (
@@ -203,8 +211,11 @@ function ShellContents<To extends string>({
           )}
         </nav>
         {account !== undefined && (
-          <SidebarFooter className="mt-2 shrink-0 border-t border-border px-0 pt-2 pb-0">
-            {account}
+          <SidebarFooter className="mt-2 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 group-data-[collapsible=icon]/sidebar:flex-col">
+            <div className="min-w-0 flex-1 group-data-[collapsible=icon]/sidebar:w-full">
+              {account}
+            </div>
+            {accountAction}
           </SidebarFooter>
         )}
       </Sidebar>
