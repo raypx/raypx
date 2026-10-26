@@ -17,6 +17,8 @@ it("cleans generated files while preserving source, dependencies and local data 
     ".artifacts/probe/cache/task.tar.zst",
     "apps/desktop/build/stable-macos-arm64/Raypx.app/Contents/MacOS/launcher",
     "apps/desktop/artifacts/raypx.tar.zst",
+    "apps/desktop/.smoke-build.noindex/dev-macos-arm64/Raypx Test-dev.app/Contents/MacOS/launcher",
+    "apps/desktop/.smoke-artifacts.noindex/raypx-test.tar.zst",
     "apps/desktop/.hutch/bin/raypx",
     "apps/desktop/.cottontail-tmp/unpacked/bun",
     "e2e/test-results/screenshot.png",

@@ -5,3 +5,5 @@
 /.cottontail-tmp
 /build
 /artifacts
+/.smoke-build.noindex
+/.smoke-artifacts.noindex

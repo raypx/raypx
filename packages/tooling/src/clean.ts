@@ -13,6 +13,8 @@ export async function clean(root: string): Promise<void> {
     ".artifacts",
     "apps/desktop/build",
     "apps/desktop/artifacts",
+    "apps/desktop/.smoke-build.noindex",
+    "apps/desktop/.smoke-artifacts.noindex",
     "apps/desktop/.hutch",
     "apps/desktop/.cottontail-tmp",
     "e2e/test-results",

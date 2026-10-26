@@ -26,7 +26,7 @@ it("bounds parallel removals and waits for every batch", async () => {
 
   release();
   await completed;
-  expect(mocks.rm).toHaveBeenCalledTimes(14);
+  expect(mocks.rm).toHaveBeenCalledTimes(16);
   expect(complete).toBe(true);
 });
 

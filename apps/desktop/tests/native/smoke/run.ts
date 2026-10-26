@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { SESSION_KEY_SERVICE, sessionKeyName } from "../../../native/cookies";
 import assert from "node:assert/strict";
+import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),
@@ -136,40 +137,44 @@ try {
   if (phase === "write") await run("read", directory);
   if (phase === "beta") await run("beta-restore", directory);
 } finally {
-  if (process.platform === "darwin") {
-    // GUI Quit deliberately preserves its independent owner, including smoke profiles.
-    const stop = Bun.spawn(
-      [
-        process.execPath,
-        "run",
-        "src/main.ts",
-        "daemon",
-        "stop",
-        "--profile",
-        "native-smoke",
-        "--data-dir",
-        directory,
-      ],
-      {
-        cwd: resolve(import.meta.dirname, "../../../../cli"),
-        stdin: "ignore",
-        stdout: "ignore",
-        stderr: "ignore",
-      },
-    );
-    await stop.exited;
-  }
-  if (!phase.startsWith("beta")) {
-    if (process.platform === "win32") {
-      const servers = join(directory, "servers");
-      for (const entry of await readdir(servers, { withFileTypes: true }).catch(() => [])) {
-        if (entry.isDirectory())
-          await Bun.secrets.delete({
-            service: SESSION_KEY_SERVICE,
-            name: sessionKeyName(join(servers, entry.name)),
-          });
-      }
+  try {
+    if (process.platform === "darwin") {
+      // GUI Quit deliberately preserves its independent owner, including smoke profiles.
+      const stop = Bun.spawn(
+        [
+          process.execPath,
+          "run",
+          "src/main.ts",
+          "daemon",
+          "stop",
+          "--profile",
+          "native-smoke",
+          "--data-dir",
+          directory,
+        ],
+        {
+          cwd: resolve(import.meta.dirname, "../../../../cli"),
+          stdin: "ignore",
+          stdout: "ignore",
+          stderr: "ignore",
+        },
+      );
+      await stop.exited;
     }
-    await rm(directory, { recursive: true, force: true });
+    if (!phase.startsWith("beta")) {
+      if (process.platform === "win32") {
+        const servers = join(directory, "servers");
+        for (const entry of await readdir(servers, { withFileTypes: true }).catch(() => [])) {
+          if (entry.isDirectory())
+            await Bun.secrets.delete({
+              service: SESSION_KEY_SERVICE,
+              name: sessionKeyName(join(servers, entry.name)),
+            });
+        }
+      }
+      await rm(directory, { recursive: true, force: true });
+    }
+  } finally {
+    await cleanupSmokeBundles(resolve(import.meta.dirname, "../../.."));
   }
 }

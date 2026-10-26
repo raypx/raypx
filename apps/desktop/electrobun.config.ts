@@ -6,11 +6,15 @@ const nativeSmoke = process.env.RAYPX_NATIVE_SMOKE === "1";
 
 export default {
   app: {
-    name: nativeSmoke ? "Raypx Native Smoke" : "Raypx",
+    name: nativeSmoke ? "Raypx Test" : "Raypx",
     identifier: nativeSmoke ? "com.raypx.desktop.native-smoke" : "com.raypx.desktop",
     version: "0.1.0",
   },
   build: {
+    // Test bundles are temporary and must not look like another installed release.
+    buildFolder: nativeSmoke ? ".smoke-build.noindex" : "build",
+    artifactFolder: nativeSmoke ? ".smoke-artifacts.noindex" : "artifacts",
+    watchIgnore: [".smoke-build.noindex/**", ".smoke-artifacts.noindex/**"],
     mainProcess: "bun",
     bun: {
       entrypoint: nativeSmoke
