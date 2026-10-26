@@ -1,0 +1,94 @@
+packages/tasks/src/client/task-composer.tsx
+  s_6f0d4c076ce788::t_72fbf3b7ac72bd 79-80,84
+  s_6f0d4c076ce788::t_592d15305f3dae 81,88-90,321-324,328-329,333-343,345-535,544,553-588
+  s_6f0d4c076ce788::t_944daae8bbb369 53-54,56-57,78,82-83,85-87,91-93,327,549-550
+  s_6f0d4c076ce788::t_10b41e398a5924 94,207,325,536,538,548,551,589
+packages/blocks/AGENTS.md
+  s_6f0d4c076ce788::t_2f3b74a88549c6 32-34
+packages/tasks/src/client/task-panels.tsx
+  s_6f0d4c076ce788::t_72fbf3b7ac72bd 5,13-16,20-21,25-27,41-43
+  s_6f0d4c076ce788::t_0cba66f210085d 17-19,22-24,105
+  s_6f0d4c076ce788::t_076eaa4725f6b2 1-4,6-8,30-37,48-49,51-52,55-58,61-65,68-70,72-80,82,85-92,94,96-98,102,104,106-108,110-119,121-129,131,133-134
+  s_6f0d4c076ce788::t_65a52bb5a3aab0 95,132
+  s_6f0d4c076ce788::t_2444ed963c47f1 9-12,28-29,38-40,44-47,50,53-54,59-60,66-67,71,83-84,93,99-101,103,109,120,130,135-139
+  s_6f0d4c076ce788::t_f5be93ccc087b7 81
+apps/desktop/src/routes/tasks.tsx
+  s_6f0d4c076ce788::t_eeac344741006a 9-10
+  s_6f0d4c076ce788::t_9f2ac1ef6686bf 6,11
+packages/tasks/src/client/task-list.tsx
+  s_6f0d4c076ce788::t_be116c0112d0a1 1-9,22-23,29-30,38-39,65-73
+  s_6f0d4c076ce788::t_8a91019fb7e7fd 74-75,80-81,85,113
+apps/desktop/src/features/tasks/workspace.tsx
+  s_6f0d4c076ce788::t_eeac344741006a 37-39,117-120
+  s_6f0d4c076ce788::t_2928b06ebb22e4 121-127
+packages/tasks/src/client/task-filters.tsx
+  s_6f0d4c076ce788::t_22baf0654547b1 21,28,37,77-78,102,147
+  s_c99f3390b62e01::t_f6bac633c09023 148-164
+packages/tasks/AGENTS.md
+  s_6f0d4c076ce788::t_2f3b74a88549c6 41-45
+  s_6f0d4c076ce788::t_5ff22d8193885d 46-48
+packages/i18n/src/messages/zh.ts
+  s_6f0d4c076ce788::t_22baf0654547b1 103-119,363
+apps/desktop/tests/renderer/component/features/tasks/workspace.test.tsx
+  s_6f0d4c076ce788::t_7141e93de69984 181-184,395,405,455,462,465,521,542-551,558-561,568-580,595-601
+  s_6f0d4c076ce788::t_be116c0112d0a1 552-557,562-567,581-594,602-612
+packages/blocks/src/components/shell.tsx
+  s_6f0d4c076ce788::t_f025d66f3e19c6 61,65-66,70,89,109,112,171,180-184,189-204,214-216
+  s_c99f3390b62e01::t_1c3b9c3756b1dc 217-218
+apps/desktop/tests/renderer/component/features/tasks/project-navigation.test.tsx
+  s_6f0d4c076ce788::t_35012e0e88ce7e 3-10,17-23,26-41,46-54,59-69,72,76-78,88-101
+  s_6f0d4c076ce788::t_b0e1b4d852cc51 1-2,11-16,24-25,42-45,55-58,70-71,73-75,79-87,102
+  s_6f0d4c076ce788::t_1e82f2d0c187ee 103-110
+apps/desktop/AGENTS.md
+  s_6f0d4c076ce788::t_2f3b74a88549c6 13-16,140
+DESIGN.md
+  s_6f0d4c076ce788::t_2f3b74a88549c6 19-21
+apps/web/tests/component/features/task-filters.test.tsx
+  s_6f0d4c076ce788::t_7141e93de69984 199-229
+  s_6f0d4c076ce788::t_e88ccd69b050eb 230-232
+apps/desktop/src/components/shell.tsx
+  s_6f0d4c076ce788::t_eeac344741006a 11-12,103,119,127-128,138-142
+  s_6f0d4c076ce788::t_afef51779aafcd 22,129-137
+  s_6f0d4c076ce788::t_011df600519172 102
+apps/desktop/src/features/tasks/project-navigation.tsx
+  s_6f0d4c076ce788::t_52c26b2fc58c0c 9-14,17-19,23,32-34,43-48,51,60-61,63-65,68,71-74,77-81,87-91,94-116,118-120,123-126,129-131,133-137,140-153,155-191
+  s_6f0d4c076ce788::t_72fbf3b7ac72bd 49,66-67
+  s_6f0d4c076ce788::t_afef51779aafcd 132
+  s_6f0d4c076ce788::t_eeac344741006a 1-8,15-16,20-22,24-31,35-42,50,52-59,62,69-70,75-76,82-86,92-93,117,122,127-128,138-139,192-195
+  s_6f0d4c076ce788::t_35012e0e88ce7e 121,154
+e2e/tests/helpers/layout.ts
+  s_6f0d4c076ce788::t_4f3d1b22c7dbf4 18-27,40-42
+  s_6f0d4c076ce788::t_c282ca4f960837 43-46,49,54
+packages/i18n/src/messages/en.ts
+  s_6f0d4c076ce788::t_22baf0654547b1 122-138,409
+packages/tasks/src/client/workspace.tsx
+  s_6f0d4c076ce788::t_a52f5d64e38e86 666-667,676-678,688-689,695-696,706-708
+  s_6f0d4c076ce788::t_be116c0112d0a1 131,265-269,305-306,377
+  s_6f0d4c076ce788::t_076eaa4725f6b2 255
+  s_6f0d4c076ce788::t_592d15305f3dae 129,154-156,166-178,235-254,256-264,270-304,307-376,378-382,384-389,391,394-398,400-402,668-675,679-687,690-694,697-705
+  s_6f0d4c076ce788::t_2444ed963c47f1 21,42-43,55-56,91-92,130,132-139,148-153,160,164-165,179,192-194
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b47fd1683a868e5442b2457385d180e23d1dfe84",
+  "prompts": {},
+  "sessions": {
+    "s_6f0d4c076ce788": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17382-15b0-7f40-a1ff-43cfc7c7f896",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
