@@ -1,0 +1,19 @@
+packages/tasks/src/client/task-list.tsx
+  s_6f0d4c076ce788::t_5cf23a588dc6e2 80-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9914c1f6b8cbdebeee41a3f815ea7045a56c63cf",
+  "prompts": {},
+  "sessions": {
+    "s_6f0d4c076ce788": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17382-15b0-7f40-a1ff-43cfc7c7f896",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
