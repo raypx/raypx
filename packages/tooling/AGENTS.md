@@ -46,8 +46,11 @@ PATH or explicit binary settings, and stops children before deleting their data.
 Read i18n's public static `./config` through workspace discovery for locale policy;
 do not add the i18n runtime to root tooling's dependency closure.
 Preserve the shared happy-dom setup and independent workspace test runners.
-The shared setup lives in `tests/setup/dom.ts`. Scaffolded test workspaces include
-`tests/` in strict checking and use the root runner defaults.
+The shared setup lives in `tests/setup/dom.ts`. Root `test.config.ts` is a plain
+Vitest defaults object; workspace configs use native `defineConfig`/`mergeConfig`
+and own their include patterns, projects and overrides. Do not wrap Vitest options
+in another factory or restricted interface. Scaffolded test workspaces include
+`tests/` in strict checking and merge these defaults in their own config.
 `./tasks` exposes Node-compatible, lightweight task configuration. Its model derives
 all members and scripts from manifests, registers private `task:*` definitions and
 explicit dependencies; VP alone schedules them. Leaf scripts stay available for
@@ -58,6 +61,9 @@ independent cached VP runners, so it must run without an enclosing filesystem tr
 `test:unit` remains cached and `test:integration` always executes.
 Platform/toolchain identity is also part of each command. Native SDK preparation
 is uncached; native checks fingerprint SDK files after that dependency completes.
+Type checks explicitly fingerprint source/config files in the transitive workspace
+dependency closure, retaining dependency declarations under build outputs; Bun's
+native typechecker reads are not fully covered by automatic tracing on Linux.
 Verification builds the API/Web outputs and probes them under the running Bun using temporary
 roots and fixture environments. `src/validation/toolchain.ts` reads the single Bun pin from
 `packageManager` and rejects Node pins. These config/test entries never enter product runtime code.

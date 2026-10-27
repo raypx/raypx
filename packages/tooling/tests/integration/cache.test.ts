@@ -11,7 +11,7 @@ const repository = resolve(import.meta.dirname, "../../../..");
 const configUrl = pathToFileURL(join(repository, "packages/tooling/src/tasks/config.ts")).href;
 const vp = join(repository, "node_modules/vite-plus/bin/vp");
 
-function project() {
+function project(automaticInputs = true) {
   const root = fixture();
   writeFileSync(
     join(root, "package.json"),
@@ -25,6 +25,7 @@ function project() {
   );
   writeFileSync(join(root, "bun.lock"), "{}\n");
   writeFileSync(join(root, "bunfig.toml"), "\n");
+  writeFileSync(join(root, "automatic-inputs.json"), JSON.stringify(automaticInputs));
   mkdirSync(join(root, "node_modules/.vite/task-cache"), { recursive: true });
   mkdirSync(join(root, "node_modules/.vite-temp"), { recursive: true });
   mkdirSync(join(root, "packages/tooling/src/tasks"), { recursive: true });
@@ -66,7 +67,15 @@ function checked(
   mkdirSync(join(root, folder, "node_modules/.vite"), { recursive: true });
   writeFileSync(
     join(root, folder, "vite.config.ts"),
-    `import { workspaceTaskConfig } from ${JSON.stringify(configUrl)}; export default workspaceTaskConfig(import.meta.url);`,
+    `import { readFileSync } from "node:fs";
+import { workspaceTaskConfig } from ${JSON.stringify(configUrl)};
+const config = workspaceTaskConfig(import.meta.url);
+if (!JSON.parse(readFileSync(new URL("../../automatic-inputs.json", import.meta.url), "utf8"))) {
+  for (const task of Object.values(config.run.tasks)) {
+    if (task.cache) task.cache.input = task.cache.input.filter(input => typeof input !== "object" || !("auto" in input));
+  }
+}
+export default config;`,
   );
   writeFileSync(
     join(root, folder, "tsconfig.json"),
@@ -146,32 +155,38 @@ it("runs a delegated package runner once with literal arguments scoped to the pu
   );
   const calls = readFileSync(join(directory, "calls.jsonl"), "utf8").trim().split("\n");
   expect(calls.map((line) => JSON.parse(line))).toEqual([argv]);
-});
-
-it("uses actual typecheck inputs to invalidate consumers while retaining unrelated VP hits", () => {
-  const root = project();
-  const tokens = checked(root, "tokens");
-  const consumer = checked(root, "consumer", { "@raypx/tokens": "workspace:*" });
-  checked(root, "independent");
-  writeFileSync(join(tokens, "src/index.ts"), "export const value: number = 1;\n");
-  writeFileSync(
-    join(consumer, "src/index.ts"),
-    'import { value } from "@raypx/tokens"; export const result: number = value;\n',
-  );
-  pass(execute(root, "check"));
-  const warm = execute(root, "check");
-  expect(warm.code).toBe(0);
-  expect(warm.log).toContain("3 cache hits");
-  writeFileSync(join(tokens, "src/index.ts"), "export const value: number = 2;\n");
-  const changed = execute(root, "check");
-  expect(changed.code).toBe(0);
-  expect(changed.log).toContain("1 cache hit");
-  expect(changed.log).toContain("2 cache misses");
-  writeFileSync(join(tokens, "src/index.ts"), 'export const value: string = "changed";\n');
-  const invalid = execute(root, "check");
-  expect(invalid.code).not.toBe(0);
-  expect(invalid.log).toContain("not assignable to type 'number'");
 }, 30000);
+
+it.each([true, false])(
+  "invalidates typecheck consumers and retains unrelated hits (automatic inputs: %s)",
+  (automaticInputs) => {
+    const root = project(automaticInputs);
+    const tokens = checked(root, "tokens");
+    const bridge = checked(root, "bridge", { "@raypx/tokens": "workspace:*" });
+    const consumer = checked(root, "consumer", { "@raypx/bridge": "workspace:*" });
+    checked(root, "independent");
+    writeFileSync(join(tokens, "src/index.ts"), "export const value: number = 1;\n");
+    writeFileSync(join(bridge, "src/index.ts"), 'export { value } from "@raypx/tokens";\n');
+    writeFileSync(
+      join(consumer, "src/index.ts"),
+      'import { value } from "../../bridge/src/index"; export const result: number = value;\n',
+    );
+    pass(execute(root, "check"));
+    const warm = execute(root, "check");
+    expect(warm.code).toBe(0);
+    expect(warm.log).toContain("4 cache hits");
+    writeFileSync(join(tokens, "src/index.ts"), "export const value: number = 2;\n");
+    const changed = execute(root, "check");
+    expect(changed.code).toBe(0);
+    expect(changed.log).toContain("1 cache hit");
+    expect(changed.log).toContain("3 cache misses");
+    writeFileSync(join(tokens, "src/index.ts"), 'export const value: string = "changed";\n');
+    const invalid = execute(root, "check");
+    expect(invalid.code).not.toBe(0);
+    expect(invalid.log).toContain("not assignable to type 'number'");
+  },
+  30000,
+);
 
 it("restores cached build outputs and scopes literal argv and public build environment", () => {
   const root = project();
@@ -205,24 +220,31 @@ it("restores cached build outputs and scopes literal argv and public build envir
   expect(JSON.parse(readFileSync(file, "utf8"))).toEqual(["two", literal]);
 }, 30000);
 
-it("keeps dependency artifacts in consumer fingerprints while excluding only owned outputs", () => {
-  const root = project();
-  const tokens = checked(root, "tokens");
-  const consumer = checked(root, "consumer", { "@raypx/tokens": "workspace:*" });
-  mkdirSync(join(tokens, "dist"));
-  writeFileSync(join(tokens, "dist/value.d.ts"), "export declare const value: number;");
-  writeFileSync(
-    join(consumer, "src/index.ts"),
-    'import { value } from "../../tokens/dist/value"; export const result: number = value;',
-  );
-  const selector = "@raypx/consumer#task:check";
-  pass(execute(root, "check", {}, selector));
-  expect(execute(root, "check", {}, selector).log).toContain("cache hit");
-  writeFileSync(join(tokens, "dist/value.d.ts"), "export declare const value: string;");
-  const changed = execute(root, "check", {}, selector);
-  expect(changed.code).not.toBe(0);
-  expect(changed.log).toContain("not assignable to type 'number'");
-}, 30000);
+it.each([true, false])(
+  "tracks dependency declarations while excluding owned outputs (automatic inputs: %s)",
+  (automaticInputs) => {
+    const root = project(automaticInputs);
+    const tokens = checked(root, "tokens");
+    const consumer = checked(root, "consumer", { "@raypx/tokens": "workspace:*" });
+    mkdirSync(join(tokens, "dist"));
+    writeFileSync(join(tokens, "dist/value.d.ts"), "export declare const value: number;");
+    writeFileSync(
+      join(consumer, "src/index.ts"),
+      'import { value } from "../../tokens/dist/value"; export const result: number = value;',
+    );
+    const selector = "@raypx/consumer#task:check";
+    pass(execute(root, "check", {}, selector));
+    expect(execute(root, "check", {}, selector).log).toContain("cache hit");
+    mkdirSync(join(consumer, "dist"));
+    writeFileSync(join(consumer, "dist/owned.d.ts"), "export declare const owned: string;");
+    expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
+    writeFileSync(join(tokens, "dist/value.d.ts"), "export declare const value: string;");
+    const changed = execute(root, "check", {}, selector);
+    expect(changed.code).not.toBe(0);
+    expect(changed.log).toContain("not assignable to type 'number'");
+  },
+  30000,
+);
 
 it("prepares ignored SDK inputs before deciding whether a native check is reusable", () => {
   const root = project();

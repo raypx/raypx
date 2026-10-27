@@ -59,7 +59,30 @@ function leafCommand(root: string, member: TaskMember, name: string) {
   return `bun ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))}`;
 }
 
-function cachedTask(member: TaskMember, name: string): TaskCache | false {
+function checkInputs(member: TaskMember, members: TaskMember[]): TaskCache["input"] {
+  const inputs = new Set<TaskMember>();
+  const byName = new Map(members.map((candidate) => [candidate.name, candidate]));
+  function visit(candidate: TaskMember) {
+    if (inputs.has(candidate)) return;
+    inputs.add(candidate);
+    for (const name of candidate.dependencies) {
+      const dependency = byName.get(name);
+      if (dependency) visit(dependency);
+    }
+  }
+  visit(member);
+  // Bun's native typechecker reads are not fully traced on Linux. Include the
+  // workspace dependency closure explicitly, including dependency declarations.
+  return [
+    { pattern: "tsconfig*.json", base: "workspace" },
+    ...[...inputs].map((candidate) => ({
+      pattern: `${candidate.path}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json,jsonc}`,
+      base: "workspace" as const,
+    })),
+  ];
+}
+
+function cachedTask(member: TaskMember, name: string, members: TaskMember[]): TaskCache | false {
   if (member.uncachedTasks.includes(name)) return false;
   const build = name === "build" || name === "build:renderer";
   if (!build && !["check", "test", "test:unit", "test:component"].includes(name)) return false;
@@ -72,6 +95,7 @@ function cachedTask(member: TaskMember, name: string): TaskCache | false {
   ];
   const input: TaskCache["input"] = [
     { auto: true },
+    ...(name === "check" ? checkInputs(member, members) : []),
     ...exclusions
       .flatMap((pattern) => [pattern.slice(0, -3), pattern])
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
@@ -166,7 +190,7 @@ export function taskModel(root: string): TaskModel {
       definitions.set(taskRef(member.name, name), {
         command: leafCommand(root, member, name),
         dependsOn: prerequisites(member, name, members),
-        cache: cachedTask(member, name),
+        cache: cachedTask(member, name, members),
       });
     }
   }

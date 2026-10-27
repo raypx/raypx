@@ -11,8 +11,8 @@
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run --passWithNoTests",
-    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'"
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run tests"
   },
   "dependencies": {
     "@raypx/client": "workspace:*",

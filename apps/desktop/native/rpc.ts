@@ -5,7 +5,6 @@ import type { DeviceGrant } from "@raypx/contracts/tasks";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DevicePreferences } from "../preferences";
 import type { DesktopApiRequest, DesktopApiResponse } from "../api";
-export type { DevicePreferences } from "../preferences";
 
 export interface EngineStatus {
   status: "starting" | "ready" | "error";

@@ -26,11 +26,13 @@ discover supported layers instead of maintaining a package-name list.
 
 Use `bun run verify:quick` for policy, formatting, lint, types and workspace tests.
 `bun run verify` additionally builds both runtime targets and probes their artifacts.
-Both gates include Rust formatting, Clippy, checks and tests. `verify` also builds
-the Cargo workspace. Use `bun run rust:verify` for Rust-only feedback; see the
+Rust formatting, Clippy, checks, tests and builds are a separate explicit gate.
+Use `bun run rust:verify` for Rust-only feedback; see the
 [Rust workspace guide](rust.md).
-The root launcher defaults to two workspace tasks; each Vitest runner retains one
-worker and per-file isolation. Override task concurrency with `--concurrency-limit=1`
+The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
+worker and per-file isolation; larger suites set their worker count locally.
+CLI, Desktop and Tooling also own their subprocess test timeouts locally.
+Override task concurrency with `--concurrency-limit=1`
 or `VP_RUN_CONCURRENCY_LIMIT`. A single direct runner can still use
 `bun run --cwd packages/ui test --maxWorkers=2`.
 
@@ -99,8 +101,15 @@ i18n separates `tests/node/` from `tests/browser/` to preserve independent React
 renderer environments, with provider components under `tests/browser/component/`.
 DOM tests run in happy-dom. The shared setup in `packages/tooling/tests/setup/dom.ts`
 disables Base UI animation waits and keeps Web Storage methods on `Storage.prototype`
-so existing spies behave as in a browser. Web's pure unit project does not initialize DOM setup. Web and i18n use
-the shared `workspaceTestProjects` helper to keep project defaults consistent.
+so existing spies behave as in a browser. Web, Tasks and i18n declare native Vitest
+`projects` with `extends: true`, keeping their pure and DOM environments separate.
+
+Root `test.config.ts` exports a plain config with runtime defaults, shared setup and
+coverage reporters. Each workspace owns its test includes and combines local options
+with native `mergeConfig` and `defineConfig`. Add aliases, timeouts, plugins, setup
+or coverage settings directly in that workspace's `vitest.config.ts`; no shared
+factory or custom option interface needs to change. Native config merging also
+preserves shared React deduplication when a workspace adds aliases.
 
 API tests use `apps/api/tests/unit/` and `tests/integration/` for the default gate.
 `test:unit` and `test:integration` select these directories. Database suites live
@@ -108,6 +117,18 @@ under `tests/postgres/node/`, selected only by the `postgres` mode in
 `vitest.config.ts`.
 The existing script names select the mode; the default test command never connects to a database.
 Database seeding and behavior assertions stay in each suite.
+
+## Unused code checks
+
+Run `bun run knip` for the full report. `knip.json` declares Vite app configs,
+spawned fixtures, native smoke entries, type assertions and command-loaded tools
+as entries. Drizzle config is analyzed statically, without loading database
+credentials. The Vitest scaffold is a static `.template` file copied into each new
+workspace, so its workspace-relative imports need no Knip resolution exception.
+Keep unused-export findings visible for review. Knip currently misses Bun's
+`overrides` catalog references for `esbuild`, `jiti` and `lightningcss`; preserve
+those entries. Workspaces inheriting the shared coverage configuration declare
+`@vitest/coverage-v8` directly, including those forwarding `--coverage` to `test`.
 
 ## Explicit gates
 

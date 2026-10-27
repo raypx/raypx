@@ -10,8 +10,9 @@ Theme is part of UI; local implementation remains inside CLI runtime. Source
 exports and explicit per-entry platform metadata allow future package extraction.
 
 Replace name allowlists and exhaustive documentation inventories with manifest
-discovery. Keep one Turbo graph and Bun catalogs. Nix locks the development shell
-only. Node runs production API; compiled CLI and Electrobun include their runtimes.
+discovery. The initial foundation used one Turbo graph and Bun catalogs, a Nix
+development shell and a Node production API. The amendments below supersede those
+toolchain and runtime choices; compiled CLI and Electrobun include their runtimes.
 
 The account database and migration history are new and independent. Old SQL is
 historical and must not be applied by the foundation commands. No old user data
@@ -23,9 +24,10 @@ root task catalog or CI package-name matrix.
 
 Amendment (2026-10-15), approved by the user: the Nix development shell was removed.
 Windows needed native installs anyway and every runtime upgrade required per-platform
-hashes; `.nvmrc` and the root `packageManager` now pin Node and Bun for version managers
-and CI, and `raypx-dev policy` keeps the remaining literal pins in sync. Web became a
-separate TanStack Start SSR service on Node/Nitro beside API; Desktop uses Start SPA mode.
+hashes. At that stage, `.nvmrc` and the root `packageManager` pinned Node and Bun for
+version managers and CI. The 2026-10-27 Bun amendment below supersedes the Node pin.
+Web became a separate TanStack Start SSR service on Node/Nitro beside API;
+Desktop uses Start SPA mode.
 
 Amendment (2026-10-15): Web and Desktop now share their DOM authentication form
 through auth's browser client entry. Each application keeps its own file routes,
@@ -37,5 +39,10 @@ task runner, prioritizing incremental file-based invalidation. Public Bun script
 remain compatible. Lightweight workspace task configs declare dependencies and
 cache policy through Tooling; app plugins live in separate Vite app configs.
 Native SDK preparation stays uncached, with generated files checked after it runs.
-Node remains the Web/API runtime. This migration is developed on an isolated branch
-and is not merged into canary until separately approved.
+The migration is now active on canary.
+
+Amendment (2026-10-27), approved by the user: Bun is the only JavaScript runtime,
+including the Web/API Nitro services and deployment images. Root `packageManager`
+is the single Bun version pin; `.nvmrc`, `engines.node` and Node setup in CI were
+removed. `raypx-dev policy` checks runtime consistency and rejects reintroduced
+Node pins. This supersedes the earlier Node production and version-manager choices.

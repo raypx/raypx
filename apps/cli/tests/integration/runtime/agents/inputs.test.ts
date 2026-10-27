@@ -23,7 +23,12 @@ async function inputRace(
     prompt: "First",
   };
   await f.runtime.localExecute(account, input.id, { method: "tasks.create", input });
-  await expect.poll(() => existsSync(join(f.directory, "delivered"))).toBe(true);
+  // Wait until the host consumes the startup response, not just the child's file write.
+  await expect
+    .poll(() =>
+      f.runtime.localTask(account, input.id, 0).activity.some((entry) => entry.kind === "message"),
+    )
+    .toBe(true);
   const marker =
     scenario === "claude-timeout"
       ? "interrupt-without-result"

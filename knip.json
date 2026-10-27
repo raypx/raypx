@@ -11,35 +11,54 @@
     "**/artifacts/**"
   ],
   "workspaces": {
+    ".": {
+      "entry": ["deploy/manifests.ts"]
+    },
     "apps/api": {
-      "entry": ["server/app/*.ts", "server/runtime/plugin.ts", "server/jobs/runtime/*.ts"]
+      "entry": [
+        "server/app/*.ts",
+        "server/runtime/plugin.ts",
+        "server/jobs/runtime/*.ts",
+        "vite.app.config.ts",
+        "tests/helpers/control-server.ts",
+        "tests/types/*.ts"
+      ]
     },
     "apps/desktop": {
       "entry": [
         "src/routes/**/*.tsx",
         "native/main.ts",
-        "tests/native/smoke/scenario.ts",
+        "tests/native/smoke/*.ts",
         "electrobun.config.ts",
+        "hutch.config.ts",
+        "vite.app.config.ts",
         "scripts/native/*.ts"
       ]
     },
     "apps/web": {
-      "entry": ["src/routes/**/*.{ts,tsx}"]
+      "entry": ["src/routes/**/*.{ts,tsx}", "vite.app.config.ts"]
     },
     "apps/cli": {
-      "entry": ["src/main.ts", "tests/smoke/*.ts"]
+      "entry": ["src/main.ts", "tests/smoke/*.ts", "tests/fixtures/**/*.{ts,mjs}"]
     },
     "apps/storybook": {
       "entry": [".storybook/*.{ts,tsx}", "src/**/*.stories.tsx"]
     },
     "packages/tooling": {
-      "entry": ["src/cli.ts"]
+      "entry": ["src/cli.ts", "src/tasks/leaf.ts"]
+    },
+    "packages/email": {
+      "entry": ["vite.app.config.ts"]
+    },
+    "packages/logger": {
+      "entry": ["tests/types/*.ts"]
     },
     "packages/database": {
-      "entry": ["src/index.ts", "src/commands.ts", "drizzle.config.ts"]
+      "entry": ["src/index.ts", "src/commands.ts", "drizzle.config.ts"],
+      "drizzle": false
     },
     "e2e": {
-      "entry": ["tests/**/*.ts", "playwright.config.ts"]
+      "entry": ["tests/**/*.ts", "playwright.config.ts", "playwright.live.config.ts"]
     }
   }
 }

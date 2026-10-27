@@ -11,7 +11,6 @@ import {
   type PreferenceSnapshot,
 } from "../preferences";
 
-export { parsePreferences } from "../preferences";
 export function createPreferenceStore(directory: string) {
   const file = join(directory, "preferences.json");
   let current: DevicePreferences = { ...DEFAULT_DEVICE_PREFERENCES };

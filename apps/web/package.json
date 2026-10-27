@@ -9,10 +9,10 @@
     "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run --passWithNoTests",
-    "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
-    "test:component": "bun --bun vp test --run --passWithNoTests component/",
-    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --project unit",
+    "test:component": "bun --bun vp test --run --project component",
+    "test:coverage": "bun --bun vp test --run --coverage"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -20,7 +20,6 @@
     "@raypx/auth": "workspace:*",
     "@raypx/blocks": "workspace:*",
     "@raypx/client": "workspace:*",
-    "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",
@@ -37,7 +36,6 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
-    "@raypx/contracts": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",

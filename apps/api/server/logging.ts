@@ -3,7 +3,6 @@ import { createLogger, initLogger, type DrainContext } from "@raypx/logger";
 import { createManagedDrain, type ManagedSink, type DrainStats } from "@raypx/logger/managed";
 import { apiEventPolicy } from "./logging/policy.js";
 import type { CreateApiEvent, DiagnosticRoute } from "./logging/events.js";
-export { API_LOG_FIELDS } from "./logging/policy.js";
 export type { ApiEventLogger } from "./logging/events.js";
 
 export interface ApiLogging {

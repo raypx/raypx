@@ -10,8 +10,8 @@
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run --passWithNoTests",
-    "test:component": "bun --bun vp test --run --passWithNoTests component/"
+    "test": "bun --bun vp test --run",
+    "test:component": "bun --bun vp test --run tests/component"
   },
   "dependencies": {
     "@raypx/i18n": "workspace:*",

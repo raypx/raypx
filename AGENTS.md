@@ -56,7 +56,10 @@ The accepted foundation design supersedes documents in docs/history.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.
   `test --package` and package-local scripts must select the same suites and prerequisites.
 - Put test suites and test-only setup/fixtures in each workspace's `tests/` directory.
-  Shared runner defaults live in root test.config.ts; application Vite plugins must not enter the test runner.
+  Root test.config.ts exports runner defaults as a plain Vitest config. Each workspace
+  owns include patterns, projects and overrides using native defineConfig/mergeConfig;
+  do not introduce custom config factories or option schemas. Application Vite plugins
+  must not enter the test runner.
 - Reusable repository validation belongs in Tooling's `src/validation/`. `.artifacts/`
   holds generated evidence only; never store authored scripts there. `clean:artifacts`
   removes that evidence and test reports without removing builds or user data.

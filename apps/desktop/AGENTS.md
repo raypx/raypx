@@ -45,7 +45,8 @@ packaged scenario, selected by Electrobun only with `RAYPX_NATIVE_SMOKE=1`.
 Native scripts/tests live in `scripts/native/` and `tests/scripts/native/` with Bun types.
 All tests stay outside `src/routes/` discovery and the renderer configuration.
 Use short feature-local filenames such as `form.tsx` and `routes.test.tsx`; exported symbols retain feature context. Test scripts select `component/` and
-`integration/` directories; `test:unit` excludes those directories. File extensions
+`integration/` directories; `test:unit` explicitly selects renderer unit, native and
+script cases while excluding native integration. File extensions
 describe source syntax, and each suite declares its required test environment.
 
 The account route reads its remote projection in a client-only loader; auth

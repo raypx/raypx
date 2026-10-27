@@ -46,9 +46,15 @@ bun run test '--filter=...@raypx/ui'
 Use `--package` when forwarding runner arguments to one package. Existing VP
 filters remain available for graph selections; do not combine them with `--package`.
 VP options go before `--`; filenames, reporters and other runner arguments go after.
-Package-local scripts accept runner arguments directly, as before.
-The package wrapper reserves `--dry-run` and `--no-cache` for its VP graph;
-put a literal runner option with either name after an explicit `--`.
+Package-local scripts call Vitest directly and accept runner arguments directly.
+Use the root entry with `--package` for VP controls such as `--dry-run` and `--no-cache`.
+
+Each workspace's `vitest.config.ts` merges the plain defaults from `test.config.ts`
+with native `defineConfig`/`mergeConfig`. Test selection and customization stay local;
+multi-environment packages declare native `projects` and select them with `--project`.
+Focused scripts name their actual test directories or projects and fail when empty.
+Coverage scripts use `--coverage`; reporters default to text, JSON and LCOV and can
+be customized in the owning workspace without changing a shared option schema.
 
 ## Browser and repository workflows
 
@@ -94,7 +100,7 @@ Build/check/dev, Native smoke and database administration retain their existing 
 ## Historical verification record, 2026-10-27
 
 This snapshot predates removal of the Worker target and separation of optional Rust gates.
-Current commands above use Node only.
+Current commands above use Bun; Rust has a separate explicit gate.
 
 Root and package-local Tasks unit entries each passed the same 32 case identities.
 Routing, graph/delegation and cache regressions passed 18 cases. Tooling's package-local

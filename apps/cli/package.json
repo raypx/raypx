@@ -25,7 +25,6 @@
     "@raypx/ai": "workspace:*",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
-    "@raypx/core": "workspace:*",
     "@raypx/host": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/logger": "workspace:*",
@@ -39,6 +38,7 @@
     "@raypx/tooling": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"
   },
   "raypx": {

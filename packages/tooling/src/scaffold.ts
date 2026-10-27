@@ -77,7 +77,10 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
       'import { workspaceTaskConfig } from "@raypx/tooling/tasks";\n\nexport default workspaceTaskConfig(import.meta.url);\n',
     ...(options.tests
       ? {
-          "vitest.config.ts": new URL("./templates/workspace/vitest.mjs", import.meta.url),
+          "vitest.config.ts": new URL(
+            "./templates/workspace/vitest.config.ts.template",
+            import.meta.url,
+          ),
         }
       : {}),
   };

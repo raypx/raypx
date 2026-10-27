@@ -42,9 +42,9 @@
   },
   "scripts": {
     "check": "bun run scripts/generate-theme.ts --check && bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run --passWithNoTests",
-    "test:component": "bun --bun vp test --run --passWithNoTests component/",
-    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
+    "test": "bun --bun vp test --run",
+    "test:component": "bun --bun vp test --run tests/component",
+    "test:coverage": "bun --bun vp test --run --coverage",
     "generate:theme": "bun run scripts/generate-theme.ts"
   },
   "dependencies": {
