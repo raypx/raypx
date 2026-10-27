@@ -1,0 +1,163 @@
+[
+  {
+    "input": {
+      "path": "/api/auth/get-session",
+      "method": "GET",
+      "headers": {}
+    },
+    "allowed": true,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/rpc/memory/create",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": true,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/rpc/memory/internal",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/rpc/hosts/authorize",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/rpc/hosts/authorize",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": true,
+    "native": true
+  },
+  {
+    "input": {
+      "path": "/rpc/hosts/revoke",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": true,
+    "native": true
+  },
+  {
+    "input": {
+      "path": "/rpc/tasks/list",
+      "method": "GET",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "//evil.test/api/auth/get-session",
+      "method": "GET",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/\\evil.test/api/auth/get-session",
+      "method": "GET",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/../admin",
+      "method": "GET",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/get-session#fragment",
+      "method": "GET",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/get-session?x=1",
+      "method": "GET",
+      "headers": {}
+    },
+    "allowed": true,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/get-session",
+      "method": "GET",
+      "headers": {
+        "Cookie": "private"
+      }
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/get-session",
+      "method": "GET",
+      "headers": {
+        "Authorization": "private"
+      }
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/get-session",
+      "method": "GET",
+      "headers": {
+        "Origin": "private"
+      }
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/get-session",
+      "method": "GET",
+      "headers": {},
+      "id": null
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/api/auth/get-session",
+      "method": "GET",
+      "headers": {},
+      "body": null
+    },
+    "allowed": false,
+    "native": false
+  }
+]

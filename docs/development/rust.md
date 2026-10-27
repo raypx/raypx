@@ -1,9 +1,14 @@
 # Rust workspace
 
-Rust libraries live under `crates/*`, discovered by the root `Cargo.toml`. The
+Rust libraries live under `crates/*`, discovered by the root `Cargo.toml`.
+The Tauri application crate is `apps/desktop/src-tauri` (`raypx-desktop`); it owns
+transport and native policy, with no task execution or duplicated business schemas. The
 initial [raypx-core](../../crates/raypx-core/README.md) library provides `Error`
 and `Result<T>`, integration tests, a compiled documentation example and a runnable
 `basic` example. It has no external dependencies or application runtime.
+The [raypx](../../crates/raypx/README.md) crate is the public Rust entry point,
+initially re-exporting the core error types. These two libraries opt in to
+crates.io publication; the workspace default keeps other crates private.
 
 The structure follows the library-under-crates approach in
 [rovai-core](https://github.com/murray17/rovai-ai/tree/main/crates/rovai-core).
@@ -28,24 +33,26 @@ minimum Rust version, license, repository, publication policy and lints. Keep it
 settings. Unsafe code is forbidden by the workspace lint policy.
 
 Rust is managed by rustup; mise continues reading only the existing Node/Bun pins.
-`bun run doctor` checks Node and Bun; `rustup show` reports the Rust toolchain.
+`bun run doctor` checks Bun and reports the Rust/WebView platform prerequisites; `rustup show` reports the Rust toolchain.
 
 ## Commands and verification
 
-| Command                             | Runs                                       |
-| ----------------------------------- | ------------------------------------------ |
-| `bun run rust:check`                | Cargo check for all workspace targets      |
-| `bun run rust:test`                 | Cargo tests, including documentation tests |
-| `bun run rust:build`                | Cargo build for all workspace targets      |
-| `bun run rust:lint`                 | Clippy for all targets, denying warnings   |
-| `bun run rust:format`               | rustfmt check                              |
-| `bun run rust:verify`               | All five Rust gates through VP             |
-| `cargo fmt --all`                   | Apply Rust formatting                      |
-| `cargo test -p raypx-core --locked` | Test only the initial library              |
+| Command                             | Runs                                                          |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `bun run rust:check`                | Cargo check for workspace targets (Desktop excluded on Linux) |
+| `bun run rust:test`                 | Cargo tests (Desktop excluded on Linux)                       |
+| `bun run rust:build`                | Cargo build for workspace targets (Desktop excluded on Linux) |
+| `bun run rust:lint`                 | Clippy for all targets, denying warnings                      |
+| `bun run rust:format`               | rustfmt check                                                 |
+| `bun run rust:verify`               | All five Rust gates through VP                                |
+| `cargo fmt --all`                   | Apply Rust formatting                                         |
+| `cargo test -p raypx-core --locked` | Test only the initial library                                 |
 
-Rust is optional. Root `check`, `test`, `build`, `lint`, `format`, `verify:quick`
+Rust is required to develop/package the Tauri Desktop host, and remains optional
+for renderer, API, Web and CLI work. Root `check`, `test`, `build`, `lint`, `format`, `verify:quick`
 and `verify` do not invoke Cargo or rustup. The independent `rust.yml` workflow
-runs only for Rust/toolchain/task-model changes (or manual dispatch). Explicit
+runs for Rust/toolchain/task-model changes (or manual dispatch), excluding Desktop
+on Ubuntu. The Desktop CI matrix runs its fmt/Clippy/tests on macOS and Windows. Explicit
 `bun run rust:verify` schedules all five gates serially to avoid competing for
 Cargo's shared `target/` lock. Filtered Bun commands retain their selected scope.
 
@@ -59,3 +66,44 @@ Crates are Cargo members, not Bun workspaces, and need no `package.json`. Add
 Rust dependencies in Cargo manifests. Introduce shared `[workspace.dependencies]`
 when dependencies are actually needed; the initial library uses only `std`.
 Keep crate-owned tests in `tests/` and runnable usage in `examples/`.
+
+## Library publication
+
+The initial `raypx-core` and `raypx` releases use `0.0.0-alpha.0`. Their library
+release versions are declared in each crate, independently of the Desktop
+application's workspace version.
+`raypx` declares both a local path and a registry version for `raypx-core`, so
+local development uses the workspace and published consumers use crates.io.
+Publish `raypx-core` first, then verify and publish `raypx`:
+
+```sh
+cargo publish -p raypx-core --registry crates-io --locked --dry-run
+cargo publish -p raypx-core --registry crates-io --locked
+cargo publish -p raypx --registry crates-io --locked --dry-run
+cargo publish -p raypx --registry crates-io --locked
+```
+
+Inspect package contents with `cargo package -p <name> --list`. When publishing
+from an intentionally uncommitted checkout, inspect the selected files first
+and add `--allow-dirty` to Cargo's package/publish commands.
+
+## Desktop crate
+
+Stage generated TS vocabulary, translated notification copy and the matching CLI
+before checking the Desktop application:
+
+```sh
+bun run build:cli
+bun run --cwd apps/desktop tauri:generate
+bun run --cwd apps/desktop tauri:cli
+cargo check -p raypx-desktop --locked --all-features
+cargo test -p raypx-desktop --locked --all-features
+bun run package:desktop
+```
+
+Cargo tests retain the migration JSON policy fixtures and check the generated TS
+command vocabulary. Preference preload tests also execute the actual JS and TS
+validator through Bun. The `native-smoke` Cargo
+feature adds a token-authenticated private socket for release WebView acceptance;
+normal builds cannot evaluate renderer scripts through a debug interface.
+See [ADR 0036](../architecture/0036-tauri-desktop-host.md) for migration gates.

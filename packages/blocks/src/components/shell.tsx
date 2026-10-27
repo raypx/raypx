@@ -56,6 +56,7 @@ export interface ShellNavItem<To extends string> {
 }
 
 export interface AppShellProps<To extends string> {
+  storageKey?: string;
   /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
   frame?: "document" | "window";
   brand: { to: To; label: string; description?: string };
@@ -76,7 +77,7 @@ export interface AppShellProps<To extends string> {
 }
 
 export function AppShell<To extends string>(props: AppShellProps<To>) {
-  const preference = useMemo(() => sidebarPreference(), []);
+  const preference = useMemo(() => sidebarPreference(props.storageKey), [props.storageKey]);
   const open = useSyncExternalStore(preference.subscribe, preference.snapshot, () => true);
   return (
     <TooltipProvider delay={300}>

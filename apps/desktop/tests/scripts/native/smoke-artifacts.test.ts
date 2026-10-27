@@ -6,10 +6,12 @@ import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 
 const roots: string[] = [];
 function fixture() {
-  const project = mkdtempSync(join(tmpdir(), "raypx-smoke-cleanup-"));
-  roots.push(project);
-  const output = join(project, ".smoke-build.noindex/dev-macos-arm64");
-  const testApp = join(output, "Raypx Test-dev.app"),
+  const directory = mkdtempSync(join(tmpdir(), "raypx-smoke-cleanup-"));
+  roots.push(directory);
+  const project = join(directory, "apps/desktop");
+  mkdirSync(project, { recursive: true });
+  const output = join(directory, "target/native-smoke/release/bundle/macos");
+  const testApp = join(output, "Raypx Test.app"),
     releaseApp = join(output, "Raypx.app");
   for (const app of [testApp, releaseApp]) {
     mkdirSync(join(app, "Contents"), { recursive: true });
@@ -25,7 +27,7 @@ it("unregisters a verified test bundle before removing it and preserves release 
   const f = fixture();
   const run = vi.fn(async (command: string, args: string[]) => {
     if (command === "/usr/bin/plutil")
-      return args.at(-1)!.includes("Raypx Test-dev.app")
+      return args.at(-1)!.includes("Raypx Test.app")
         ? "com.raypx.desktop.native-smoke\n"
         : "com.raypx.desktop\n";
     expect(args).toEqual(["-u", f.testApp]);
@@ -50,7 +52,7 @@ it("retains the bundle when unregistering fails rather than leaving an undetecta
 });
 it("rejects a substituted output symlink without touching the target application", async () => {
   const f = fixture();
-  const root = join(f.project, ".smoke-build.noindex");
+  const root = f.output;
   const outside = join(f.project, "outside");
   mkdirSync(outside);
   writeFileSync(join(outside, "keep.txt"), "preserve");

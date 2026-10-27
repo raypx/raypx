@@ -39,12 +39,9 @@ export async function clean(root: string): Promise<void> {
     "node_modules/.vite",
     "node_modules/.vite-temp",
     "node_modules/.vitest-cache",
-    "apps/desktop/build",
     "apps/desktop/artifacts",
-    "apps/desktop/.smoke-build.noindex",
-    "apps/desktop/.smoke-artifacts.noindex",
-    "apps/desktop/.hutch",
-    "apps/desktop/.cottontail-tmp",
+    "apps/desktop/src-tauri/binaries",
+    "apps/desktop/src-tauri/gen",
   ]);
 }
 

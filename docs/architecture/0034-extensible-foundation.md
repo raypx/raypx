@@ -12,7 +12,9 @@ exports and explicit per-entry platform metadata allow future package extraction
 Replace name allowlists and exhaustive documentation inventories with manifest
 discovery. The initial foundation used one Turbo graph and Bun catalogs, a Nix
 development shell and a Node production API. The amendments below supersede those
-toolchain and runtime choices; compiled CLI and Electrobun include their runtimes.
+toolchain and runtime choices. The compiled CLI includes Bun;
+[ADR 0036](0036-tauri-desktop-host.md) replaces the Desktop host with Tauri Rust
+and system WKWebView/WebView2.
 
 The account database and migration history are new and independent. Old SQL is
 historical and must not be applied by the foundation commands. No old user data

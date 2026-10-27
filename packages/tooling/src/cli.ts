@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { uploadAnalyticsMaps } from "./analytics.js";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
@@ -95,7 +95,7 @@ async function main() {
       findings(checkLocales(root), "Locale catalogs");
       findings(policy(root), "Repository policy");
       await run(process.execPath, ["--bun", "vp", "fmt", "--check"], root);
-      // One VP graph shares native preparation across lint, checks and builds.
+      // One VP graph shares checks and builds; native packaging remains explicit.
       await runTasks(root, command);
       if (command === "verify") await smoke(root);
       break;
@@ -131,17 +131,15 @@ async function main() {
       break;
     case "desktop":
       if (args[0] !== "build") throw new Error("Usage: raypx-dev desktop build");
-      await runTasks(root, "desktop#build");
-      await run(
-        process.execPath,
-        ["run", "native:build"],
-        join(root, "apps/desktop"),
-        developmentEnvironment(root),
+      await runTasks(
+        root,
+        "desktop#native:build",
+        args[1] === "--" ? args.slice(1) : ["--", ...args.slice(1)],
       );
       break;
     case "clean": {
       await clean(root);
-      console.log("Build outputs, native SDK and test artifacts removed");
+      console.log("Build outputs, staged sidecars and test artifacts removed");
       break;
     }
     case "clean:artifacts":
@@ -153,7 +151,7 @@ async function main() {
       if (Bun.version !== bun) throw new Error(`Expected Bun ${bun}, got ${Bun.version}`);
       console.log(`Bun ${Bun.version}; ${process.platform}/${process.arch}`);
       console.log(
-        `Native SDK prepared: ${existsSync(join(root, "apps/desktop/.hutch"))}; optional native toolchains require separate checks`,
+        `Desktop: Tauri; Cargo ${Bun.which("cargo") ? "available" : "unavailable"} (required for native packaging); Rust checks run separately with bun run rust:verify`,
       );
       break;
     }

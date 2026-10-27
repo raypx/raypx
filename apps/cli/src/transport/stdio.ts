@@ -1,5 +1,6 @@
 import { localRequestSchema } from "@raypx/contracts/local";
 import { createRuntime } from "../runtime";
+import { createForegroundHost } from "../runtime/foreground";
 import { errorPayload, LocalError } from "../runtime/errors";
 import { recordDiagnostic, type RecordDiagnostic } from "../diagnostics";
 
@@ -41,7 +42,10 @@ export async function serveStdio(options: {
       flush();
     });
   }
-  const runtime = createRuntime({ ...options, scheduler: true, emit: output });
+  const runtime =
+    process.platform === "win32"
+      ? createForegroundHost({ ...options, emit: output })
+      : createRuntime({ ...options, scheduler: true, emit: output });
   closeRuntime = () => runtime.close();
   output({ version: 1, event: "engine.status", data: { status: "ready" } });
   const active = new Set<Promise<void>>();

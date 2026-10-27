@@ -1,6 +1,6 @@
 # Raypx
 
-A TypeScript foundation for Web and Electrobun Desktop, with shared
+A foundation for Web and Tauri Desktop, with shared
 accounts, device-local appearance/language settings, and a standalone local CLI.
 The previous cloud product is retired; historical decisions remain in docs/history.
 
@@ -10,7 +10,7 @@ Bun 1.4.4 and an isolated PostgreSQL database for account flows. Bun is the only
 JavaScript runtime; `packageManager` pins it. With [mise](https://mise.jdx.dev),
 run `mise trust && mise install` once; direct installs also work.
 `bun run doctor` confirms it.
-Rust development uses rustup and the pinned `rust-toolchain.toml`; see the
+Native Desktop development and packaging require Rust through rustup and the pinned `rust-toolchain.toml`; see the
 [Rust workspace guide](docs/development/rust.md).
 Desktop includes its own native host and compiled CLI; users do not install Bun.
 
@@ -29,7 +29,9 @@ Bun services: `bun apps/web/.output/server/index.mjs` and
 Its server rendering needs the session cookie: serve both from one origin, or set
 `AUTH_DOMAIN` to the parent domain of sibling hosts such as app/api.example.com.
 Local desktop files, automations and terminals do not require login. Close-to-tray
-keeps scheduling; Quit stops execution. External tools run with the user's OS permissions.
+keeps scheduling. On macOS, Quit disconnects the window while the independent
+CLI daemon keeps working; Windows Quit cancels its foreground owner.
+External tools run with the user's OS permissions.
 
 ## Commands
 

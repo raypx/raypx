@@ -18,12 +18,8 @@ import { isDesktop, saveDesktopPreferences } from "./lib/desktop";
 
 export function restoreDevicePreferences(snapshot: unknown): PreferenceSnapshot {
   if (snapshot && typeof snapshot === "object" && "status" in snapshot) {
-    if (
-      snapshot.status === "valid" &&
-      "preferences" in snapshot &&
-      isDevicePreferences(snapshot.preferences)
-    )
-      return { status: "valid", preferences: { ...snapshot.preferences } };
+    if (snapshot.status === "read" && "raw" in snapshot && isDevicePreferences(snapshot.raw))
+      return { status: "valid", preferences: { ...snapshot.raw } };
     if (snapshot.status === "missing") {
       // A first native launch migrates WebView values; unreadable storage falls back.
       const theme = readStoredTheme(DEFAULT_DEVICE_PREFERENCES.theme);
@@ -91,5 +87,6 @@ export function DesktopPreferencesProvider({ children }: { children: ReactNode }
 export const desktopInitialThemeSource = `(function () {
   var snapshot = window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}];
   if (!snapshot || snapshot.status === "missing") return undefined;
-  return snapshot.status === "valid" ? snapshot.preferences.theme : "system";
+  var raw = snapshot.raw;
+  return snapshot.status === "read" && raw && ["light", "dark", "system"].includes(raw.theme) ? raw.theme : "system";
 })()`;

@@ -1,3 +1,3 @@
 {
-  "extends": "../tsconfig.native.json"
+  "extends": "../tsconfig.node.json"
 }

@@ -1,6 +1,9 @@
-# Start output is embedded as the Electrobun view.
+# Start output is embedded in the Tauri WebView.
 /dist
-# Electrobun projects its pinned SDK and emits native bundles locally.
+/src-tauri/binaries/
+/src-tauri/gen/
+/src-tauri/permissions/desktop.toml
+# Ignore generated outputs left in existing checkouts by the retired shell.
 /.hutch
 /.cottontail-tmp
 /build

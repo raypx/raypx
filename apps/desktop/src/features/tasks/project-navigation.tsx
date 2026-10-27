@@ -21,11 +21,12 @@ import {
 import { isDesktop, onLocalEvent } from "../../lib/desktop";
 import { localTaskClient } from "./local-client";
 import { taskChangeSchema } from "@raypx/contracts/tasks";
+import { desktopStorageKey } from "../../lib/storage";
 
 const recentKey = "raypx.recent-projects.v1";
 function readRecent(): string[] {
   try {
-    const value: unknown = JSON.parse(localStorage.getItem(recentKey) ?? "[]");
+    const value: unknown = JSON.parse(localStorage.getItem(desktopStorageKey(recentKey)) ?? "[]");
     return Array.isArray(value)
       ? value.filter((id): id is string => typeof id === "string" && id.length <= 256).slice(0, 20)
       : [];
@@ -85,7 +86,7 @@ export function ProjectNavigation() {
     const next = [id, ...readRecent().filter((value) => value !== id)].slice(0, 20);
     setRecent(next);
     try {
-      localStorage.setItem(recentKey, JSON.stringify(next));
+      localStorage.setItem(desktopStorageKey(recentKey), JSON.stringify(next));
     } catch {
       /* In-memory navigation still works. */
     }

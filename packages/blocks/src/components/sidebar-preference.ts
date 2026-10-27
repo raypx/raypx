@@ -1,7 +1,5 @@
-const key = "raypx_sidebar_open";
-
 /** Caller-owned device preference; the shared shadcn primitive stays stateless. */
-export function sidebarPreference() {
+export function sidebarPreference(key = "raypx_sidebar_open") {
   let open = true;
   let initialized = false;
   const listeners = new Set<() => void>();

@@ -170,7 +170,7 @@ next-forge 的 apps 对应关系：`app`、`web`、`api` 对应 raypx 的 web �
 
 ## 不在本方案内
 
-- raypx 里还在变化的本地运行时代码（文件授权、任务调度、进程管理、stdio RPC、Electrobun
+- raypx 里还在变化的本地运行时代码（文件授权、任务调度、进程管理、stdio RPC、Tauri
   宿主工具）暂不迁入，等它们稳定后另起方案。
 - raypx 的本地开发工具 `apps/devtools`（服务状态、环境变量检查、邮件预览、翻译对比）在
   raypx 仓库里单独规划。

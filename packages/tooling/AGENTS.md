@@ -21,15 +21,20 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - `raypx.taskScripts` delegates a public package script to a terminal runner inside
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
-  preserving builds, SDKs, dependencies and source. `clean` includes these paths.
+  preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
 - `verify:quick` checks source and tests; `verify` additionally builds and probes artifacts.
 - Optional root `rust:*` tasks run Cargo uncached, separately from default Bun gates.
   Cargo owns incremental compilation under `target/`.
-- `clean` removes workspace outputs, native SDK/bundles and local test artifacts;
+- `clean` removes workspace outputs, staged Tauri binaries/generated schemas and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
 - `clean` also removes root Cargo `target/`; `clean:artifacts` preserves it.
-- raypx-dev env -- <command>, db <operation>, desktop build
+- raypx-dev env -- <command>, db <operation>, desktop build [Tauri build arguments]
+- Desktop's default build/check only verifies the renderer and scripts. Explicit
+  `native:build` and native smoke/beta/agents tasks are uncached, depend on the
+  renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
+  before starting Vite and Tauri. Direct Desktop scripts enter the same VP graph.
+  Linux root `rust:*` excludes `raypx-desktop`; platform CI checks that crate.
 - `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
 
 ## Constraints
@@ -59,8 +64,8 @@ while outcome-affecting fields and per-task argument keys participate in fingerp
 `raypx.uncachedTasks` opts specific scripts out. Tooling's complete test suite starts
 independent cached VP runners, so it must run without an enclosing filesystem tracer;
 `test:unit` remains cached and `test:integration` always executes.
-Platform/toolchain identity is also part of each command. Native SDK preparation
-is uncached; native checks fingerprint SDK files after that dependency completes.
+Platform/toolchain identity is also part of each command. Native packaging stays
+outside VP's filesystem tracer; Cargo owns its incremental state.
 Type checks explicitly fingerprint source/config files in the transitive workspace
 dependency closure, retaining dependency declarations under build outputs; Bun's
 native typechecker reads are not fully covered by automatic tracing on Linux.

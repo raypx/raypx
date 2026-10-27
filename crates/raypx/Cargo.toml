@@ -1,0 +1,17 @@
+[package]
+name = "raypx"
+description = "The Rust entry point for Raypx"
+version = "0.0.0-alpha.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = ["crates-io"]
+readme = "README.md"
+include = ["src/**", "README.md", "LICENSE"]
+
+[dependencies]
+raypx-core = { version = "0.0.0-alpha.0", path = "../raypx-core" }
+
+[lints]
+workspace = true

@@ -57,13 +57,16 @@ try {
     await Bun.sleep(100);
   }
   if (!stopping) {
-    const native = Bun.spawn([process.execPath, "--bun", "electrobun", "dev"], {
-      cwd,
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin: "ignore",
-      detached: process.platform !== "win32",
-    });
+    const native = Bun.spawn(
+      [process.execPath, "run", "scripts/native/tauri.ts", "dev", ...process.argv.slice(2)],
+      {
+        cwd,
+        stdout: "inherit",
+        stderr: "inherit",
+        stdin: "ignore",
+        detached: process.platform !== "win32",
+      },
+    );
     children.push(native);
     process.exitCode = await Promise.race(children.map((child) => child.exited));
   }

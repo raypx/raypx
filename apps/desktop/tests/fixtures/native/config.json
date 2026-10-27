@@ -1,0 +1,126 @@
+[
+  {
+    "name": "defaults",
+    "source": "",
+    "expected": {
+      "apiUrl": "https://raypx.pro",
+      "webUrl": "https://raypx.pro"
+    }
+  },
+  {
+    "name": "normalized API",
+    "source": "base_url=\"https://EXAMPLE.test:443/\"",
+    "expected": {
+      "apiUrl": "https://example.test",
+      "webUrl": "https://example.test"
+    }
+  },
+  {
+    "name": "loopback",
+    "source": "base_url=\"http://127.0.0.1:3002\"",
+    "expected": {
+      "apiUrl": "http://127.0.0.1:3002",
+      "webUrl": "http://127.0.0.1:3002"
+    }
+  },
+  {
+    "name": "IPv6 loopback",
+    "source": "base_url=\"http://[::1]:3002\"",
+    "expected": {
+      "apiUrl": "http://[::1]:3002",
+      "webUrl": "http://[::1]:3002"
+    }
+  },
+  {
+    "name": "selected API drops inherited web",
+    "source": "base_url=\"https://prod.test\"\nweb_url=\"https://web.prod.test\"\nprofile=\"own\"\n[profiles.own]\nbase_url=\"https://own.test\"",
+    "expected": {
+      "apiUrl": "https://own.test",
+      "webUrl": "https://own.test"
+    }
+  },
+  {
+    "name": "selected web inherits API",
+    "source": "base_url=\"https://api.test\"\nprofile=\"own\"\n[profiles.own]\nweb_url=\"https://web.test\"",
+    "expected": {
+      "apiUrl": "https://api.test",
+      "webUrl": "https://web.test"
+    }
+  },
+  {
+    "name": "CLI AI table opaque",
+    "source": "[ai]\nprovider=\"test\"\nmodel=\"test\"",
+    "expected": {
+      "apiUrl": "https://raypx.pro",
+      "webUrl": "https://raypx.pro"
+    }
+  },
+  {
+    "name": "credentials",
+    "source": "base_url=\"https://user:private-password@api.test\"",
+    "invalid": true
+  },
+  {
+    "name": "remote HTTP",
+    "source": "base_url=\"http://api.test\"",
+    "invalid": true
+  },
+  {
+    "name": "path",
+    "source": "base_url=\"https://api.test/path\"",
+    "invalid": true
+  },
+  {
+    "name": "query",
+    "source": "base_url=\"https://api.test/?secret=private-password\"",
+    "invalid": true
+  },
+  {
+    "name": "fragment",
+    "source": "base_url=\"https://api.test/#fragment\"",
+    "invalid": true
+  },
+  {
+    "name": "unknown",
+    "source": "base_ur1=\"https://api.test\"",
+    "invalid": true
+  },
+  {
+    "name": "missing profile",
+    "source": "profile=\"missing\"",
+    "invalid": true
+  },
+  {
+    "name": "AI scalar",
+    "source": "ai=4",
+    "invalid": true
+  },
+  {
+    "name": "profile unknown field",
+    "source": "[profiles.own]\napi_key=\"private-password\"",
+    "invalid": true
+  },
+  {
+    "name": "relative connector",
+    "source": "[connectors]\ncodex_home=\"relative\"",
+    "invalid": true
+  },
+  {
+    "name": "invalid syntax",
+    "source": "base_url=\"private-password",
+    "invalid": true
+  },
+  {
+    "name": "noncanonical URL",
+    "source": "base_url=\"https:api.test\"",
+    "invalid": true
+  },
+  {
+    "name": "Unicode domain normalization",
+    "source": "base_url=\"https://例子.测试\"",
+    "expected": {
+      "apiUrl": "https://xn--fsqu00a.xn--0zwm56d",
+      "webUrl": "https://xn--fsqu00a.xn--0zwm56d"
+    }
+  }
+]

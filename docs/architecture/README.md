@@ -7,7 +7,8 @@ of runtime dependency graphs. Manifests are the only workspace inventory.
 ## Applications
 
 Web is a TanStack Start SSR application on Nitro's Bun server preset. Desktop uses the same DOM components in
-an Electrobun WebView, with a native bridge to its version-matched bundled CLI.
+a Tauri WKWebView/WebView2 shell, with Rust transport and policy bridging its
+version-matched bundled CLI.
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
 Desktop mounts its device-local workspace independently of account resolution.
@@ -189,5 +190,5 @@ with a durable sequenced journal for reconnect replay and snapshot recovery.
 [ADR 0035](0035-local-owner-host.md) defines the current local-first ownership,
 cloud opt-in, terminal approval leases and migration boundary. Each profile owns
 one Bun/TypeScript execution Host. Local tasks, connectors and approvals require
-no account; cloud recovery does not block readiness. Rust remains an optional
-experiment with independent commands and CI.
+no account; cloud recovery does not block readiness. Rust provides the native Desktop host; execution stays in the CLI. See
+[ADR 0036](0036-tauri-desktop-host.md). Rust gates remain explicit in local workflows.

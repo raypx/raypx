@@ -53,11 +53,10 @@ it("package-local browser commands include their build prerequisites", () => {
   expect(browser).toContain("web#build");
   expect(browser).not.toContain("desktop#build:renderer");
 });
-it("browser-only acceptance excludes the native SDK, CLI and full Desktop checks", () => {
+it("browser-only acceptance excludes CLI builds and full Desktop checks", () => {
   const tasks = graph(["tasks", "e2e"]).tasks.map((task) => task.taskId);
   expect(tasks).toContain("web#build");
   expect(tasks).toContain("desktop#build:renderer");
-  expect(tasks).not.toContain("desktop#native:prepare");
   expect(tasks).not.toContain("desktop#check");
   expect(tasks).not.toContain("cli#build");
 });
@@ -71,18 +70,32 @@ it.each(["web", "desktop"])("the %s entry builds only its selected surface", (su
   expect(tasks.includes("web#build")).toBe(surface === "web");
   expect(tasks.includes("desktop#build:renderer")).toBe(surface === "desktop");
 });
-it("normal Desktop builds preserve CLI packaging and strict native checks", () => {
+it("normal Desktop builds render the app without staging a CLI", () => {
   const plan = graph(["tasks", "desktop#build"]).tasks;
   const tasks = plan.map((task) => task.taskId);
-  expect(tasks).toContain("cli#build");
+  expect(tasks).not.toContain("cli#build");
   expect(tasks).toContain("desktop#check");
-  expect(tasks).toContain("desktop#native:prepare");
   expect(tasks).not.toContain("desktop#build:renderer");
-  for (const taskId of ["desktop#check", "desktop#build"])
-    expect(plan.find((task) => task.taskId === taskId)?.cache).toMatchObject({
-      input: expect.arrayContaining([".hutch/devkit/**", ".hutch/types/**"]),
-    });
 });
+
+it("packages Desktop explicitly with the matching CLI and without caching Cargo", () => {
+  const plan = graph(["tasks", "desktop#native:build"]).tasks;
+  const tasks = plan.map((task) => task.taskId);
+  expect(tasks).toContain("desktop#build");
+  expect(tasks).toContain("cli#build");
+  expect(plan.find((task) => task.taskId === "desktop#native:build")?.cache).toBe(false);
+});
+
+it.each(["native:smoke", "native:smoke:interactive", "native:beta", "native:agents"])(
+  "%s builds the matching CLI and renderer before native verification",
+  (name) => {
+    const plan = graph(["tasks", `desktop#${name}`]).tasks;
+    expect(plan.map((task) => task.taskId)).toEqual(
+      expect.arrayContaining(["desktop#build", "cli#build"]),
+    );
+    expect(plan.find((task) => task.taskId === `desktop#${name}`)?.cache).toBe(false);
+  },
+);
 
 it("changing browser selectors or workers preserves dependency task definitions", () => {
   const plain = graph(["tasks", "e2e"]);

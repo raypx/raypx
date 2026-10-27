@@ -35,7 +35,7 @@ The accepted foundation design supersedes documents in docs/history.
   and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
 - Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
   the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
-  Desktop uses Electrobun's pinned host.
+  Desktop uses the Tauri Rust host; its bundled CLI retains the pinned Bun runtime.
 - VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
   `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
   `vite.app.config.ts`. Cache actual file inputs, explicit build outputs and
@@ -47,7 +47,8 @@ The accepted foundation design supersedes documents in docs/history.
 - @raypx-kit packages remain independently released external dependencies.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
-- Rust libraries live in the root Cargo workspace under `crates/*`, independently
+- Rust libraries live under `crates/*`; the Desktop application crate lives under
+  `apps/desktop/src-tauri`. They share the root Cargo workspace, independently
   of Bun workspace discovery. Inherit shared Cargo package/lint settings and commit
   root Cargo.lock. rust-toolchain.toml pins Rust; VP runs Cargo tasks uncached while
   Cargo owns incremental compilation. See crates/AGENTS.md and docs/development/rust.md.
@@ -104,7 +105,7 @@ Opted-in remote Agent tasks use explicit API projections and device-scoped grant
 On macOS the independent CLI daemon owns execution, approval arbitration, the
 durable replay journal, the outbound WebSocket and restricted device credentials.
 Desktop connects over authenticated private IPC; GUI Quit does not stop daemon tasks.
-Windows retains its foreground Desktop owner. API relays messages and stores read
+Windows uses its foreground CLI owner, composed with the same host control. API relays messages and stores read
 projections. Native handles initial opt-in without exporting cookies or host secrets
 to the renderer. Explicit logout/account changes revoke the affected binding. Never publish the
 local method router or provider credentials. Desktop connection settings are

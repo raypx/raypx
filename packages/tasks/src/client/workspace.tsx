@@ -48,6 +48,7 @@ interface Props {
   scope: WorkspaceScope | null;
   pending?: boolean;
   persistEditor?: boolean;
+  storageNamespace?: string;
   initialDraft?: TaskComposerDraft | undefined;
   onDraftRestored?: (() => void) | undefined;
   projectId?: string;
@@ -86,6 +87,7 @@ function Workspace({
   initialDraft,
   onDraftRestored,
   persistEditor = false,
+  storageNamespace,
   projectId,
   onProjectChange,
   initialTaskId,
@@ -242,6 +244,11 @@ function Workspace({
             </div>
           ) : (
             <TaskPanels
+              storageKey={
+                storageNamespace
+                  ? JSON.stringify(["raypx.task-list-width.v1", storageNamespace])
+                  : undefined
+              }
               detailVisible={detailVisible}
               list={
                 <>

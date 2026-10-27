@@ -1,0 +1,57 @@
+[
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "same-user-id",
+      "limit": 50
+    },
+    "expected": {
+      "accountId": "server:test-scope:d30cbf43eb36ef628555a3f0c39f90ff",
+      "limit": 50
+    }
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "device:local-workspace:v1",
+      "limit": 50
+    },
+    "expected": {
+      "accountId": "device:local-workspace:v1",
+      "limit": 50
+    }
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "",
+      "limit": 50
+    },
+    "expected": {
+      "accountId": "",
+      "limit": 50
+    }
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": 42,
+      "limit": 50
+    },
+    "expected": {
+      "accountId": 42,
+      "limit": 50
+    }
+  },
+  {
+    "scope": "test-scope",
+    "input": {
+      "accountId": "用户",
+      "limit": 50
+    },
+    "expected": {
+      "accountId": "server:test-scope:0d0e1a86b3aa787709b00329fcd32b5b",
+      "limit": 50
+    }
+  }
+]

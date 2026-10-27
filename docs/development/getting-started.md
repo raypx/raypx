@@ -116,7 +116,7 @@ and browser reports while preserving builds and SDKs. See
 and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
 `bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
-Desktop's `build`, `artifacts`, `.hutch` and `.cottontail-tmp` directories, root
+Desktop's renderer artifacts and Cargo sidecar staging directories, root
 `.artifacts`, Cargo's root `target`, and browser test results/reports. It awaits asynchronous deletion in
 batches of up to eight directories. It keeps dependencies, lockfiles,
 Git history, environment files, user profiles and database volumes. The next

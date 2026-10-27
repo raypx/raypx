@@ -1,4 +1,4 @@
-import { createEvaluator } from "./evaluate";
+import type { DesktopApiRequest } from "../../../api";
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -13,7 +13,8 @@ import {
   mainWindow,
   quitDesktop,
   view,
-} from "../../../native/main";
+  cleanupSessionKeys,
+} from "./tauri-host";
 
 const suppliedDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 const api = process.env.RAYPX_NATIVE_SMOKE_API;
@@ -40,7 +41,7 @@ const credentials = (await Bun.file(credentialsPath).json()) as {
   userId: string;
 };
 assert.match(credentials.email, /@raypx\.example\.test$/, "Use a dedicated acceptance account");
-const evaluate = createEvaluator(view);
+const evaluate = view.evaluate;
 async function waitFor(check: () => Promise<boolean> | boolean, label: string, timeout = 30_000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -57,7 +58,7 @@ let stage = "native startup";
 const restoring = process.env.RAYPX_NATIVE_SMOKE_PHASE === "beta-restore";
 const apiTrace: { path: string; status: number }[] = [];
 const originalApiRequest = desktopApi.request;
-desktopApi.request = async (input) => {
+desktopApi.request = async (input: DesktopApiRequest) => {
   const result = await originalApiRequest(input);
   apiTrace.push({ path: input.path.split("?")[0]!, status: result.status });
   return result;
@@ -74,7 +75,10 @@ async function acceptance() {
       ),
     "real session gate",
   );
-  assert.equal(await evaluate("return location.protocol"), "views:");
+  assert.equal(
+    await evaluate("return location.protocol"),
+    process.platform === "win32" ? "http:" : "tauri:",
+  );
   if (restoring) {
     stage = "native process restart persistence and logout";
     assert.equal(
@@ -106,7 +110,7 @@ async function acceptance() {
       headers: {},
     });
     assert.equal(JSON.parse(signedOut.body)?.user?.id ?? null, null);
-    view.loadURL("views://main/index.html");
+    view.reload();
     await waitFor(
       async () => Boolean(await evaluate('return Boolean(document.querySelector("#auth-email"))')),
       "login page after real logout",
@@ -127,6 +131,7 @@ async function acceptance() {
     console.info(
       "Native smoke beta-restore passed: real HTTPS session survives process restart, relay reconnects, logout clears session and detaches.",
     );
+    await cleanupSessionKeys();
     handleTrayAction("quit");
     return;
   }
@@ -148,7 +153,7 @@ async function acceptance() {
       ),
     "native form sign in",
   );
-  view.loadURL("views://main/index.html");
+  view.reload();
   await waitFor(
     async () =>
       Boolean(
@@ -202,11 +207,11 @@ async function acceptance() {
       deviceId: info.binding?.deviceId,
       projectId: root.id,
       project,
-      origin: "views://main",
+      origin: await evaluate("return location.origin"),
       connected: true,
     }),
   );
-  mainWindow.hide();
+  await mainWindow.hide();
   console.info(
     "Beta native acceptance ready: real HTTPS session, project and relay connected; window hidden.",
   );
@@ -268,7 +273,7 @@ async function acceptance() {
     join(directory, "native-complete.json"),
     JSON.stringify({
       status: "passed",
-      origin: "views://main",
+      origin: await evaluate("return location.origin"),
       realHttpsSession: true,
       nativeRelay: true,
       hiddenExecution: true,
@@ -280,6 +285,7 @@ async function acceptance() {
   console.info(
     "Native smoke beta passed: Web → HTTPS relay → packaged Desktop → standalone CLI → real Claude/Codex → Web and native renderer.",
   );
+  await cleanupSessionKeys();
   handleTrayAction("quit");
 }
 try {
@@ -303,6 +309,6 @@ try {
   }
   console.error(`Beta native acceptance failed at ${stage}:`, error);
   await Bun.write(join(directory, "native-failure.json"), JSON.stringify({ stage, failed: true }));
-  await quitDesktop();
+  await quitDesktop(1);
   process.exitCode = 1;
 }

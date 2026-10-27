@@ -30,10 +30,9 @@ function fixture() {
           "raypx-dev",
           "typecheck",
           "typecheck:node",
-          "typecheck:native",
-          "native:cli",
+          "tauri:generate",
+          "tauri:cli",
           "native:csp",
-          "native:prepare",
         ].map((name) => [name, `bun record.ts ${name}`]),
       ),
     }),
@@ -46,6 +45,12 @@ const forwarded = Object.fromEntries(Object.entries(process.env).filter(([key]) 
 appendFileSync("events.jsonl", JSON.stringify({ name, args, forwarded, ...(process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1" ? { browserBuild: true } : {}) }) + "\\n");
 if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
   );
+  mkdirSync(join(root, "tests/native/smoke"), { recursive: true });
+  for (const file of ["run", "agents-run"])
+    writeFileSync(
+      join(root, `tests/native/smoke/${file}.ts`),
+      `process.argv.splice(2, 0, "smoke-${file}"); await import("../../../record.ts");`,
+    );
   return (
     task: string,
     options: { leaf?: boolean; args?: string[]; forwarded?: string[]; fail?: string } = {},
@@ -58,11 +63,16 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
       "RAYPX_DESKTOP_BUILD_ARGS",
       "RAYPX_DESKTOP_DEV_ARGS",
       "RAYPX_DESKTOP_RENDERER_ARGS",
+      "RAYPX_DESKTOP_NATIVE_SMOKE_ARGS",
+      "RAYPX_DESKTOP_NATIVE_SMOKE_INTERACTIVE_ARGS",
+      "RAYPX_DESKTOP_NATIVE_BETA_ARGS",
+      "RAYPX_DESKTOP_NATIVE_AGENTS_ARGS",
     ])
       delete env[key];
     if (options.forwarded)
-      env[`RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`] =
-        JSON.stringify(options.forwarded);
+      env[
+        `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`
+      ] = JSON.stringify(options.forwarded);
     const result = spawnSync(
       process.execPath,
       [
@@ -102,32 +112,34 @@ describe("Desktop task graph entry", () => {
     ]);
   });
 
-  it.each(["check", "build", "dev", "build:renderer"])(
-    "routes direct %s through the repository graph",
-    (task) => {
-      const result = fixture()(task, { args: ["--example", "value with spaces"] });
-      expect(result.status).toBe(0);
-      expect(result.events).toEqual([
-        {
-          name: "raypx-dev",
-          args: ["tasks", `desktop#${task}`],
-          forwarded: {
-            [`RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`]:
-              '["--example","value with spaces"]',
-          },
+  it.each([
+    "check",
+    "build",
+    "dev",
+    "build:renderer",
+    "native:smoke",
+    "native:smoke:interactive",
+    "native:beta",
+    "native:agents",
+  ])("routes direct %s through the repository graph", (task) => {
+    const result = fixture()(task, { args: ["--example", "value with spaces"] });
+    expect(result.status).toBe(0);
+    expect(result.events).toEqual([
+      {
+        name: "raypx-dev",
+        args: ["tasks", `desktop#${task}`],
+        forwarded: {
+          [`RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`]:
+            '["--example","value with spaces"]',
         },
-      ]);
-    },
-  );
+      },
+    ]);
+  });
 
-  it("runs checks in order inside VP without preparing a second time", () => {
+  it("checks renderer and scripts inside VP without a native compiler", () => {
     const result = fixture()("check", { leaf: true });
     expect(result.status).toBe(0);
-    expect(result.events.map(({ name }) => name)).toEqual([
-      "typecheck",
-      "typecheck:node",
-      "typecheck:native",
-    ]);
+    expect(result.events.map(({ name }) => name)).toEqual(["typecheck", "typecheck:node"]);
   });
 
   it("preserves a failed check's exit status and skips remaining checks", () => {
@@ -164,12 +176,28 @@ describe("Desktop task graph entry", () => {
     const result = fixture()("dev", { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
-      { name: "native:cli", args: [], forwarded: {} },
+      { name: "tauri:generate", args: [], forwarded: {} },
+      { name: "tauri:cli", args: [], forwarded: {} },
       {
         name: "raypx-dev",
         args: ["env", "--", process.execPath, "run", "scripts/native/dev.ts"],
         forwarded: {},
       },
+    ]);
+  });
+
+  it.each([
+    ["native:smoke", "smoke-run", []],
+    ["native:smoke:interactive", "smoke-run", ["--interactive"]],
+    ["native:beta", "smoke-run", ["beta"]],
+    ["native:agents", "smoke-agents-run", []],
+  ] as const)("runs the staged Tauri %s gate inside VP", (task, name, args) => {
+    const result = fixture()(task, { leaf: true });
+    expect(result.status).toBe(0);
+    expect(result.events).toEqual([
+      { name: "tauri:generate", args: [], forwarded: {} },
+      { name: "tauri:cli", args: [], forwarded: {} },
+      { name, args, forwarded: {} },
     ]);
   });
 
@@ -189,7 +217,7 @@ describe("Desktop task graph entry", () => {
       "value with spaces",
     ]);
   });
-  it("builds the separate browser renderer with CSP, without staging the CLI or SDK", () => {
+  it("builds the separate browser renderer with CSP, without staging the CLI", () => {
     const result = fixture()("build:renderer", { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([

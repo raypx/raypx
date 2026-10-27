@@ -1,0 +1,21 @@
+{
+  "openExternal": "open_external",
+  "apiFetch": "api_fetch",
+  "apiCancel": "api_cancel",
+  "controlInfo": "control_info",
+  "terminalSettings": "terminal_settings",
+  "terminalConfigure": "terminal_configure",
+  "controlSession": "control_session",
+  "controlEnable": "control_enable",
+  "controlRevoked": "control_revoked",
+  "controlAttach": "control_attach",
+  "controlDetach": "control_detach",
+  "getRuntime": "get_runtime",
+  "hideWindow": "hide_window",
+  "pickDirectory": "pick_directory",
+  "localRequest": "local_request",
+  "restartEngine": "restart_engine",
+  "getAnalyticsPreferences": "get_analytics_preferences",
+  "saveAnalyticsPreferences": "save_analytics_preferences",
+  "savePreferences": "save_preferences"
+}

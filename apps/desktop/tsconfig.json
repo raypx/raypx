@@ -1,11 +1,7 @@
 {
   "extends": "@raypx-kit/tsconfig/browser.json",
   "compilerOptions": {
-    "resolveJsonModule": true,
-    "paths": {
-      "electrobun/view": ["./.hutch/devkit/api/browser/index.ts"],
-      "electrobun/rpc": ["./.hutch/devkit/api/sdks/main/entries/rpc.ts"]
-    }
+    "resolveJsonModule": true
   },
   "include": [
     "src/**/*.ts",

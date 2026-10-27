@@ -32,7 +32,6 @@
       "cn": "^0.5.0",
       "croner": "^11.0.0",
       "drizzle-orm": "1.0.0-rc.5",
-      "electrobun": "2.0.5",
       "evlog": "^2.34.0",
       "hono": "^4.13.14",
       "ioredis": "^6.0.0",
@@ -52,7 +51,8 @@
       "@raypx-kit/analytics": "0.0.0-alpha.1",
       "@earendil-works/pi-ai": "1.4.0",
       "@earendil-works/pi-agent-core": "1.4.0",
-      "diff": "9.0.0"
+      "diff": "9.0.0",
+      "@tauri-apps/api": "2.12.4"
     },
     "catalogs": {
       "dev": {
@@ -83,7 +83,8 @@
         "@storybook/addon-a11y": "^10.6.4",
         "@storybook/addon-docs": "^10.6.4",
         "@storybook/react-vite": "^10.6.4",
-        "storybook": "^10.6.4"
+        "storybook": "^10.6.4",
+        "@tauri-apps/cli": "2.12.4"
       }
     }
   },

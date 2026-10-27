@@ -120,6 +120,7 @@ export function DesktopTaskWorkspace({
             contextLibrary={legacy ? undefined : localMemory}
             key={owner}
             persistEditor
+            storageNamespace={apiUrl}
             client={legacy ? accountLocalTaskClient : local}
             scope={
               legacy && accountId
@@ -154,6 +155,7 @@ export function DesktopTaskWorkspace({
               <TaskWorkspace
                 contextLibrary={accountMemory}
                 persistEditor
+                storageNamespace={apiUrl}
                 client={remote}
                 scope={{ kind: "remote", namespace: apiUrl, accountId: remoteAccount }}
                 view={view}

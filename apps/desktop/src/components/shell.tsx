@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { AppShell, type ShellLinkProps } from "@raypx/blocks/shell";
 import { EngineNotice } from "../features/engine/notice";
+import { desktopStorageKey } from "../lib/storage";
 import { useTranslations } from "@raypx/i18n/browser";
 import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "../lib/desktop";
 
@@ -108,6 +109,7 @@ export function DesktopShell() {
     <>
       <AnalyticsIdentity client={analytics} accountId={accountId} />
       <AppShell
+        storageKey={desktopStorageKey("raypx_sidebar_open")}
         frame="window"
         brand={{ to: "/", label: "Raypx", description: c("deviceWorkspace") }}
         contextNavigation={<ProjectNavigation />}

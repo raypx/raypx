@@ -1,6 +1,6 @@
 ---
 name: raypx
-description: Working knowledge for the Raypx monorepo — a multi-platform account foundation (TanStack Start Web, Hono/oRPC API, Electrobun Desktop, Bun CLI) with device-local Agent tasks. Use for questions or changes about Raypx setup, workspace boundaries, packages, routes, RPC contracts, auth, i18n, analytics, remote tasks, verification, Bun deployment and Raypx Kit libraries.
+description: Working knowledge for the Raypx monorepo — a multi-platform account foundation (TanStack Start Web, Hono/oRPC API, Tauri Desktop, Bun CLI) with device-local Agent tasks. Use for questions or changes about Raypx setup, workspace boundaries, packages, routes, RPC contracts, auth, i18n, analytics, remote tasks, verification, Bun deployment and Raypx Kit libraries.
 ---
 
 # Raypx
@@ -33,7 +33,7 @@ Details: [setup](references/setup.md).
 | -------------------- | ------------- | --------------------------------------------------------------------- |
 | `apps/web`           | app / browser | TanStack Start SSR on Nitro; account, settings, tasks, approvals      |
 | `apps/api`           | app / node    | Nitro + Hono: `/api/auth/*` (Better Auth), `/rpc/*` (oRPC), `/health` |
-| `apps/desktop`       | app / browser | Electrobun WebView, Start SPA renderer, bundled CLI, tray             |
+| `apps/desktop`       | app / browser | Tauri WKWebView/WebView2, Start SPA renderer, bundled CLI, tray       |
 | `apps/cli`           | app / bun     | Standalone local execution host; works without login                  |
 | `apps/storybook`     | app / browser | Storybook (`ui-storybook`) for `@raypx/ui` with a11y checks           |
 | `packages/contracts` | universal     | oRPC (`/api`) and local device (`/local`) schemas                     |

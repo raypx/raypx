@@ -4,11 +4,18 @@
 
 The root Cargo workspace owns Rust libraries under `crates/*`. `raypx-core` is
 the initial library experiment, with a small shared error surface and no runtime host.
+`raypx` is the public entry point and re-exports the core error types. Both are
+published to crates.io; publish `raypx-core` first. Other crates remain private
+unless explicitly opted in through their package manifests.
+`apps/desktop/src-tauri` is the Tauri application composition root, never a dependency
+of another crate. It owns native transport and policy; CLI owns execution and TS owns
+business schemas. Its platform verification runs in the Desktop CI matrix.
 
 ## Boundaries
 
 - Cargo.toml owns Rust workspace membership and shared package/lint settings.
-  Inherit those settings in each crate; keep one committed root Cargo.lock.
+  Inherit those settings in each crate; publishable libraries declare their
+  release versions independently of Desktop. Keep one committed root Cargo.lock.
 - rust-toolchain.toml pins Rust and enables rustfmt and Clippy. Do not add
   Rust versions to mise.toml or package.json.
 - Crates are not Bun workspaces. Use Cargo dependencies for Rust libraries.
@@ -21,5 +28,7 @@ the initial library experiment, with a small shared error surface and no runtime
 ## Verification
 
 Run `bun run rust:verify` for formatting, Clippy, checks, tests and builds.
-`bun run check`, `test`, `build` and `verify` include their Rust gates.
+Default Bun verification keeps Rust explicit. Linux Rust tasks exclude the Desktop
+crate to avoid requiring WebKit/GTK development libraries; Desktop CI checks it on
+macOS and Windows after staging the CLI sidecar.
 Use direct Cargo commands to select one crate or run an example.

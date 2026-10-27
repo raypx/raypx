@@ -51,9 +51,11 @@ tasks directly through its bundled CLI. These tasks never upload to the account,
 even when remote access is enabled. The local setup guide authorizes a project,
 checks installed agent capabilities and opens the task editor without starting work.
 
-The implementation is Bun + TypeScript. Rust is an optional independent experiment;
-ordinary development and verification require no Rust installation. macOS is the
-product acceptance target. Windows keeps its foreground owner; Linux keeps the
-existing CLI implementation without a claim of complete product acceptance.
+The CLI, application features and shared contracts use Bun + TypeScript. Desktop
+uses a Tauri Rust policy host and system WKWebView/WebView2; native packaging
+requires Rust. Ordinary TypeScript development and verification require no Rust
+installation. macOS and Windows Desktop builds are checked in CI; Windows keeps
+its foreground owner. Linux keeps the existing CLI implementation without a claim
+of complete Desktop product acceptance.
 Configuration sync, local Web, standalone Server, native mobile, team ownership and
 additional providers remain separate deliveries. Signing in enables none of them.

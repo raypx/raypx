@@ -1,4 +1,3 @@
-import { createEvaluator } from "./evaluate";
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -7,7 +6,7 @@ import type { ContextDocument, ContextDocumentSummary } from "@raypx/memory";
 import type { ObservedProjection } from "@raypx/contracts/terminal";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
 import { CONNECTION_KEY } from "../../../config";
-import { nativePresentation } from "../../../native/window";
+import { nativePresentation } from "../../../scripts/native/presentation";
 import {
   engine,
   handleTrayAction,
@@ -19,9 +18,11 @@ import {
   tray,
   view,
   windowActions,
-} from "../../../native/main";
+  cleanupSessionKeys,
+  measureNativeCors,
+} from "./tauri-host";
 
-const evaluateNative = createEvaluator(view);
+const evaluateNative = view.evaluate;
 const presentation = nativePresentation(process.env);
 let focused = false;
 mainWindow.on("focus", () => {
@@ -151,8 +152,7 @@ async function localSessionFixture() {
 
 async function reloadRenderer() {
   const previousOrigin = await evaluate("return performance.timeOrigin");
-  // CEF may treat loadURL(currentURL) as an unchanged navigation. Ask the page
-  // to reload after returning this bridge response so every renderer reloads.
+  // Start reloading after returning this bridge response so evaluation can settle.
   await evaluate("setTimeout(()=>location.reload(),0);return true;");
   await waitFor(
     async () =>
@@ -206,7 +206,7 @@ try {
   console.info(
     "Native smoke renderer status:",
     await evaluate(
-      'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.__electrobunWebviewId });',
+      'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.__TAURI_INTERNALS__ });',
     ),
   );
   await waitFor(
@@ -228,12 +228,33 @@ try {
   assert.equal(info.protocolVersion, 1);
   assert.equal(info.scheduler, true);
   assert.equal(`bun@${info.runtime}`, process.env.RAYPX_NATIVE_SMOKE_BUN);
+  if (fixturePhase === "shell") {
+    stage = "native Channel throughput";
+    const runtime = (await evaluate(
+      "return await window.__TAURI_INTERNALS__.invoke('get_runtime',{input:{}})",
+    )) as { compiledFeatures: string[] };
+    assert.deepEqual(runtime.compiledFeatures, ["native-smoke"]);
+    const { measureNativeStream } = await import("./tauri-host");
+    const stream = await measureNativeStream();
+    console.info(`Native smoke Channel: ${JSON.stringify(stream)}`);
+    assert.equal(stream.renderer.ordered, true, "Native Channel reordered terminal packets");
+    assert.equal(stream.renderer.intact, true, "Native Channel corrupted terminal bytes");
+    assert.equal(stream.renderer.count, stream.packets, "Native Channel lost terminal packets");
+    assert.equal(stream.renderer.bytes, stream.bytes, "Native Channel changed terminal bytes");
+    assert.equal(stream.outstandingBytes, 0, "Native Channel did not drain acknowledgements");
+    assert.ok(
+      stream.maxOutstandingBytes <= stream.creditBytes,
+      "Native Channel exceeded its credit bound",
+    );
+    stage = "native WebView cross-origin security";
+    console.info("Native smoke WebView CORS:", await measureNativeCors());
+  }
   if (presentation.activate) {
     stage = "close and restore";
     mainWindow.requestClose();
     await waitFor(() => !mainWindow.isVisible(), "Native close did not hide the window");
     focused = false;
-    windowActions.show();
+    await windowActions.show();
     await waitFor(() => focused, "Interactive smoke did not focus the native window");
     assert.equal(mainWindow.isVisible(), true);
     stage = "native resize";
@@ -263,7 +284,9 @@ try {
       apiOrigin,
     );
     assert.equal(
-      await evaluate('return localStorage.getItem("raypx-server-acceptance")'),
+      await evaluate(
+        'return localStorage.getItem(JSON.stringify(["raypx.desktop",window.__raypxConnection.apiUrl,"raypx-server-acceptance"]))',
+      ),
       restoredServer ? "saved" : null,
       "WebView storage crossed server partitions",
     );
@@ -315,7 +338,9 @@ try {
       restoredServer,
       "Remote opt-in state crossed server settings",
     );
-    await evaluate('localStorage.setItem("raypx-server-acceptance","saved");return true');
+    await evaluate(
+      'localStorage.setItem(JSON.stringify(["raypx.desktop",window.__raypxConnection.apiUrl,"raypx-server-acceptance"]),"saved");return true',
+    );
     await control.enable("config-isolation", true);
     stage = "device memory before login and across server changes";
     if (phase === "shell") {
@@ -418,11 +443,10 @@ try {
         async () => Boolean(await pending()),
         "Visible Native did not maintain its approval lease",
       );
-      windowActions.hide();
+      await windowActions.hide();
       assert.deepEqual(await first, { fallback: true });
       assert.deepEqual(await hook(), { fallback: true });
-      windowActions.show();
-      await Bun.sleep(500);
+      await windowActions.show();
       const second = hook();
       await waitFor(
         async () => Boolean(await pending()),
@@ -462,7 +486,10 @@ try {
     await evaluate('location.hash="/";return true');
   }
   if (phase === "shell") {
-    assert.equal(await evaluate("return location.protocol"), "views:");
+    assert.equal(
+      await evaluate("return location.protocol"),
+      process.platform === "win32" ? "http:" : "tauri:",
+    );
     stage = "local renderer file bridge";
     const directory = join(dataDir, "authorized");
     await mkdir(directory, { recursive: true });
@@ -651,9 +678,9 @@ try {
       stage = "restart persistence";
       assert.equal(
         await evaluate(
-          `const snapshot=window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}];return snapshot.status+":"+snapshot.preferences.theme+":"+snapshot.preferences.locale`,
+          `const snapshot=window[${JSON.stringify(DEVICE_PREFERENCES_KEY)}];return snapshot.status+":"+snapshot.raw.theme+":"+snapshot.raw.locale`,
         ),
-        "valid:dark:zh",
+        "read:dark:zh",
       );
       const session = await desktopApi.request({
         path: "/api/auth/get-session",
@@ -699,6 +726,7 @@ try {
     `Native smoke ${phase} passed: packaged renderer, version-matched CLI, ${presentation.activate ? "tray and window lifecycle" : "quiet window visibility (foreground GUI checks skipped)"}.`,
   );
   await fixtureServer?.stop(true);
+  await cleanupSessionKeys();
   handleTrayAction("quit");
 } catch (error) {
   try {
@@ -717,5 +745,7 @@ try {
     `Native smoke failed at ${stage}: ${error instanceof Error ? error.message : "Unknown failure"}`,
   );
   if (process.env.CI) console.error(`::error title=Native smoke stage::${stage}`);
-  void quitDesktop(1);
+  await fixtureServer?.stop(true);
+  await quitDesktop(1);
+  process.exitCode = 1;
 }

@@ -121,9 +121,8 @@ to the hook, not proof of the Agent applying it. Actual application is verified
 separately by the live acceptance marker. Desktop system notifications work while
 a GUI client is connected; full GUI Quit cannot deliver Desktop notifications.
 While Away is waiting, Desktop exposes a persistent request banner and a tray
-"Review requests" entry that opens local approvals. The pinned Electrobun SDK
-does not expose notification click/action callbacks; notification action buttons
-are not part of this acceptance.
+"Review requests" entry that opens local approvals. The Tauri native host owns
+notifications; notification action buttons are not part of this acceptance.
 
 Only new requests qualified for the explicitly enabled cloud project scope are
 uploaded. Local-only requests and historical local records are not uploaded.

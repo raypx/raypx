@@ -80,7 +80,9 @@ are rejected by Tooling's inventory test. A new scaffold with test support fails
 until actual cases are written. The inventory check also rejects committed `.only`.
 Desktop separates `tests/renderer/`, `tests/native/` and `tests/scripts/` and checks
 each against its platform types. Renderer suites use `unit/` and `component/`
-subdirectories; native subprocess/OS-lock tests use `tests/native/integration/`.
+subdirectories. Native policy, subprocess and OS-lock tests now live in
+`apps/desktop/src-tauri/tests/` and run with Cargo; the deleted Bun native
+integration layer has no placeholder `test:integration` script.
 Scripts select directories independently of the `.ts`/`.tsx` extension.
 Development and packaging scripts live under `apps/desktop/scripts/native/`.
 The packaged smoke runner and scenario live in `tests/native/smoke/` outside the default suite.
@@ -281,3 +283,26 @@ the HTTPS Beta gate rather than replacing it. Default tests cover private IPC,
 GUI-client disconnect, retention and Native authorization fences. `native:smoke`
 also probes the daemon after actual GUI Quit and explicitly stops its isolated
 owner at cleanup. Production service installation and iOS are separate gates.
+
+## Tauri Desktop migration gates
+
+`native:smoke` builds a separate release application with the `native-smoke`
+Cargo feature, then drives the existing TS assertions through a token-authenticated
+Unix socket or Windows named pipe. `native:smoke:interactive` additionally exercises
+foreground close/focus/minimum-size behavior. The normal release has no smoke
+listener or eval commands; the post-package gate matches the actual binary to its
+Cargo fingerprint and checks that no native-smoke socket marker is present.
+Rust retains the shared config/Cookie/API/local-method JSON fixtures. Renderer
+tests verify the TS contract and preference validation, including the raw preload
+regression executed by Rust through a Bun fixture.
+Native application tests run separately in the macOS/Windows CI matrix. Default
+Bun verification builds renderer assets without preparing a native SDK. Local
+automation stays quiet; foreground close/focus/minimum-size checks run on isolated
+GitHub runners. Windows CI silently installs the smoke NSIS package into an owned
+temporary directory, runs its actual installed main executable and CLI through
+every phase, then uninstalls and verifies cleanup.
+
+Release signing and real HTTPS/live-agent acceptance require their explicit CI
+secrets or isolated acceptance environment. A successful unsigned local bundle does
+not establish notarization, Windows WebView2 behavior or live-provider acceptance.
+See [ADR 0036](../architecture/0036-tauri-desktop-host.md).

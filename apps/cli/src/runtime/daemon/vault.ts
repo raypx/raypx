@@ -20,7 +20,15 @@ export interface HostVault {
   remove(binding: HostBinding): Promise<void>;
 }
 /** Secrets are never written to TOML, JSON, logs or the desktop bridge. */
-export function createHostVault(): HostVault {
+export function createHostVault(
+  options: {
+    platform?: NodeJS.Platform;
+    secrets?: Pick<typeof Bun.secrets, "get" | "set" | "delete">;
+  } = {},
+): HostVault {
+  const platform = options.platform ?? process.platform;
+  const secrets = options.secrets ?? Bun.secrets;
+  const persistent = platform === "darwin" || platform === "win32";
   const memory = new Map<string, HostAuthorization>();
   const name = (binding: HostBinding) =>
     `${bindingKey(binding.apiUrl, binding.accountId)}:${binding.deviceId}:${binding.epoch}`;
@@ -30,9 +38,9 @@ export function createHostVault(): HostVault {
       const key = name(binding),
         cached = memory.get(key);
       if (cached) return structuredClone(cached);
-      if (process.platform !== "darwin") return;
+      if (!persistent) return;
       try {
-        const raw = await Bun.secrets.get({ service, name: key });
+        const raw = await secrets.get({ service, name: key });
         if (!raw) return;
         const parsed = hostAuthorizationSchema.parse(JSON.parse(raw));
         if (
@@ -50,9 +58,9 @@ export function createHostVault(): HostVault {
     async set(binding, value) {
       const key = name(binding);
       memory.set(key, structuredClone(value));
-      if (process.platform !== "darwin") return false;
+      if (!persistent) return false;
       try {
-        await Bun.secrets.set({ service, name: key, value: JSON.stringify(value) });
+        await secrets.set({ service, name: key, value: JSON.stringify(value), persist: "local" });
         return true;
       } catch {
         return false;
@@ -61,9 +69,9 @@ export function createHostVault(): HostVault {
     async remove(binding) {
       const key = name(binding);
       memory.delete(key);
-      if (process.platform === "darwin") {
+      if (persistent) {
         try {
-          await Bun.secrets.delete({ service, name: key });
+          await secrets.delete({ service, name: key });
         } catch {
           /* A stale key grants no access after server revocation. */
         }

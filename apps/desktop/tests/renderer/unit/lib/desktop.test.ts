@@ -1,28 +1,28 @@
 /** @vitest-environment happy-dom */
 import { waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import { saveDesktopPreferences } from "../../../../src/lib/desktop";
 
 const mocks = vi.hoisted(() => ({ save: vi.fn() }));
-vi.mock("electrobun/view", () => ({
-  // oxlint-disable-next-line typescript/no-extraneous-class -- Mirrors Electrobun's static Electroview API.
-  Electroview: class {
-    static defineRPC() {
-      return { request: { savePreferences: mocks.save } };
-    }
+vi.mock("@tauri-apps/api/core", () => ({
+  Channel: class {
+    onmessage = (_input: unknown) => {};
   },
+  invoke: (method: string, payload: { input?: unknown }) =>
+    method === "save_preferences" ? mocks.save(payload.input) : Promise.resolve(true),
 }));
 
 beforeEach(() => {
-  Object.defineProperty(window, "__electrobunWebviewId", { value: 1, configurable: true });
+  vi.resetModules();
+  Object.defineProperty(window, "__TAURI_INTERNALS__", { value: {}, configurable: true });
   mocks.save.mockReset();
 });
 afterEach(() => {
-  Reflect.deleteProperty(window, "__electrobunWebviewId");
+  Reflect.deleteProperty(window, "__TAURI_INTERNALS__");
 });
 
 describe("Desktop preference bridge", () => {
   it("serializes complete snapshots and continues after a failed write", async () => {
+    const { saveDesktopPreferences } = await import("../../../../src/lib/desktop");
     let reject!: (error: Error) => void;
     const pending = new Promise<boolean>((_resolve, fail) => {
       reject = fail;
@@ -41,7 +41,8 @@ describe("Desktop preference bridge", () => {
   });
 
   it("keeps browser preview independent of native persistence", async () => {
-    Reflect.deleteProperty(window, "__electrobunWebviewId");
+    const { saveDesktopPreferences } = await import("../../../../src/lib/desktop");
+    Reflect.deleteProperty(window, "__TAURI_INTERNALS__");
     await expect(saveDesktopPreferences({ theme: "dark", locale: "zh" })).resolves.toBe(false);
     expect(mocks.save).not.toHaveBeenCalled();
   });

@@ -9,7 +9,7 @@ The standalone Raypx local execution host. It runs without login, Node or a glob
 `raypx daemon start|run|status|stop|restart|install|uninstall` owns the macOS execution host;
 private `daemon proxy` connects Desktop over authenticated Unix IPC. Explicit
 `connectors install|repair|uninstall claude|codex` manages owned terminal hooks.
-`raypx files`, `raypx jobs`, `raypx tools`, and private legacy `raypx stdio` share the runtime. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
+`raypx files`, `raypx jobs`, `raypx tools`, and private `raypx stdio` share the runtime. On Windows, stdio composes the foreground owner with restricted host credentials and relay renewal; EOF cancels its work. `--json` is finite machine output. Desktop bundles a version-matched binary and talks NDJSON over stdio.
 
 `raypx ai providers|models|complete` lazily loads `@raypx/ai` for Pi SDK model calls.
 CLI owns `[ai]` in `~/.raypx/config.toml` (`RAYPX_HOME` may select an absolute
@@ -39,7 +39,7 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
 ## Constraints
 
 - Never import another application or authentication code.
-- The explicit daemon owns scheduling on macOS. Legacy Desktop stdio owns it on Windows.
+- The explicit daemon owns scheduling on macOS. The CLI stdio foreground owner owns it on Windows.
   Ordinary foreground commands never install a daemon or system service. Desktop may start
   an independent owner on demand; `daemon install` alone registers launchd.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
@@ -81,7 +81,9 @@ runtime dependency or part of the cross-platform default verify gate.
 `runtime/terminal` supplies the observed-session RequestBroker, private authenticated
 Unix hook socket, bounded plain-content envelopes and safe hook settings plans.
 `runtime/daemon` owns relay v3, project-specific Away opt-in, host authorization
-in Keychain and connector/service installation. Host credentials never enter JSON
+in Keychain or Windows Credential Manager and connector/service installation.
+`runtime/foreground.ts` reuses its control and terminal routing for Windows stdio,
+with lifecycle shutdown owned by that foreground process. Host credentials never enter JSON
 settings or Desktop renderer responses. See docs/development/terminal-host-p1.md.
 Hook failure returns no decision, unlike the managed Agent's blocking hook policy.
 `smoke:terminal claude|codex` and `smoke:terminal-stream` require

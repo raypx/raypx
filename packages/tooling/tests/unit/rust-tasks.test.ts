@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, it } from "vite-plus/test";
 import { taskModel, taskPlan, taskRef } from "../../src/tasks/model.js";
@@ -39,4 +39,28 @@ it("keeps repositories without a Cargo manifest independent of Rust", () => {
   const plan = taskPlan(model, [taskRef("fixture", "verify")]);
   expect(plan.some((task) => task.taskId.includes("rust:"))).toBe(false);
   expect(model.definitions.has(taskRef("fixture", "rust:verify"))).toBe(false);
+});
+
+it("leaves Desktop compilation to platform CI when Linux runs library Cargo gates", () => {
+  const model = repository(true);
+  mkdirSync(join(model.root, "apps/desktop/src-tauri"), { recursive: true });
+  writeFileSync(
+    join(model.root, "apps/desktop/package.json"),
+    JSON.stringify({
+      name: "desktop",
+      private: true,
+      raypx: { kind: "app", target: "browser" },
+    }),
+  );
+  writeFileSync(
+    join(model.root, "apps/desktop/src-tauri/Cargo.toml"),
+    '[package]\nname = "raypx-desktop"\n',
+  );
+  const plan = taskPlan(taskModel(model.root), [taskRef("fixture", "rust:verify")]);
+  for (const task of plan.filter((entry) => entry.command.startsWith("cargo "))) {
+    expect(task.cache).toBe(false);
+    expect(task.command.includes("--exclude raypx-desktop")).toBe(
+      process.platform === "linux" && !task.command.startsWith("cargo fmt"),
+    );
+  }
 });

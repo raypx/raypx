@@ -12,6 +12,11 @@ export interface PreferenceSnapshot {
   status: "valid" | "missing" | "error";
   preferences: DevicePreferences;
 }
+/** The host reports storage state; only the renderer validates preference values. */
+export interface NativePreferenceSnapshot {
+  status: "read" | "missing" | "unreadable";
+  raw: unknown;
+}
 
 export const DEVICE_PREFERENCES_KEY = "__raypxDevicePreferences";
 export const DEFAULT_DEVICE_PREFERENCES: Readonly<DevicePreferences> = Object.freeze({

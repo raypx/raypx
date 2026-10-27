@@ -29,8 +29,6 @@ export default defineConfig({
       "**/node_modules/**",
       "docs/history/**",
       "**/*.gen.ts",
-      "apps/desktop/.hutch/**",
-      "apps/desktop/build/**",
     ],
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     options: {

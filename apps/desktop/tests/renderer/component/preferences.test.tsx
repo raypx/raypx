@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import { useLocale, useLanguagePreference } from "@raypx/i18n/browser";
 import { useTheme } from "@raypx/ui/themes";
 import { useEffect, type ReactNode } from "react";
-import { DEVICE_PREFERENCES_KEY, type PreferenceSnapshot } from "../../../preferences";
+import { DEVICE_PREFERENCES_KEY, type NativePreferenceSnapshot } from "../../../preferences";
 import { DesktopPreferencesProvider } from "../../../src/preferences";
 
 const mocks = vi.hoisted(() => ({ isDesktop: vi.fn(), save: vi.fn() }));
@@ -27,7 +27,7 @@ function Probe() {
   );
 }
 
-function snapshot(value: PreferenceSnapshot) {
+function snapshot(value: NativePreferenceSnapshot) {
   Object.defineProperty(window, DEVICE_PREFERENCES_KEY, { value, configurable: true });
 }
 function mount(children: ReactNode = <Probe />) {
@@ -51,7 +51,7 @@ describe("Desktop preference initialization", () => {
   it("uses the native snapshot when stale WebView values disagree", async () => {
     localStorage.setItem("theme", "light");
     localStorage.setItem("raypx_locale", "en");
-    snapshot({ status: "valid", preferences: { theme: "dark", locale: "zh" } });
+    snapshot({ status: "read", raw: { theme: "dark", locale: "zh" } });
     mount();
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("dark:zh:zh:true"));
     expect(mocks.save).not.toHaveBeenCalled();
@@ -60,7 +60,7 @@ describe("Desktop preference initialization", () => {
   });
 
   it("restores directly when both WebView reads and writes throw", async () => {
-    snapshot({ status: "valid", preferences: { theme: "dark", locale: "zh" } });
+    snapshot({ status: "read", raw: { theme: "dark", locale: "zh" } });
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("unavailable");
     });
@@ -74,7 +74,7 @@ describe("Desktop preference initialization", () => {
   });
 
   it("migrates historical storage only when the native file is missing", async () => {
-    snapshot({ status: "missing", preferences: { theme: "system", locale: "system" } });
+    snapshot({ status: "missing", raw: null });
     localStorage.setItem("theme", "dark");
     localStorage.setItem("voidmix_locale", "zh");
     const phases: { hydrated: boolean; writes: number }[] = [];
@@ -94,14 +94,14 @@ describe("Desktop preference initialization", () => {
       expect(mocks.save).toHaveBeenLastCalledWith({ theme: "dark", locale: "system" }),
     );
     unmount();
-    snapshot({ status: "valid", preferences: { theme: "dark", locale: "system" } });
+    snapshot({ status: "read", raw: { theme: "dark", locale: "system" } });
     localStorage.setItem("voidmix_locale", "zh");
     mount();
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("dark:system:en:true"));
   });
 
   it("uses every system language candidate on the first translated render", () => {
-    snapshot({ status: "valid", preferences: { theme: "dark", locale: "system" } });
+    snapshot({ status: "read", raw: { theme: "dark", locale: "system" } });
     Object.defineProperty(navigator, "languages", {
       value: ["fr-FR", "zh-CN", "en-US"],
       configurable: true,
@@ -116,7 +116,7 @@ describe("Desktop preference initialization", () => {
   });
 
   it("uses safe defaults on a native read error without rewriting the file", async () => {
-    snapshot({ status: "error", preferences: { theme: "system", locale: "system" } });
+    snapshot({ status: "unreadable", raw: null });
     localStorage.setItem("theme", "dark");
     localStorage.setItem("raypx_locale", "zh");
     mount();

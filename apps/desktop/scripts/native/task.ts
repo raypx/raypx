@@ -7,10 +7,21 @@ const bun = process.execPath;
 const cwd = resolve(import.meta.dirname, "../..");
 let commands: string[][];
 
-if (task !== "check" && task !== "build" && task !== "build:renderer" && task !== "dev")
-  throw new Error("Usage: scripts/native/task.ts <check|build|build:renderer|dev>");
+const nativeGate =
+  task &&
+  ["native:smoke", "native:smoke:interactive", "native:beta", "native:agents"].includes(task);
+if (
+  task !== "check" &&
+  task !== "build" &&
+  task !== "build:renderer" &&
+  task !== "dev" &&
+  !nativeGate
+)
+  throw new Error(
+    "Usage: scripts/native/task.ts <check|build|build:renderer|dev|native:smoke|native:smoke:interactive|native:beta|native:agents>",
+  );
 
-const argumentKey = `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`;
+const argumentKey = `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`;
 const forwarded = leaf ? process.env[argumentKey] : undefined;
 const args: unknown = forwarded && directArgs.length === 0 ? JSON.parse(forwarded) : directArgs;
 if (!Array.isArray(args) || args.some((value) => typeof value !== "string"))
@@ -19,9 +30,10 @@ if (
   task === "build:renderer" &&
   args.some((value) => /^(?:--(?:mode|outDir|config)(?:=|$)|-c$)/.test(value))
 )
-  throw new Error("Renderer acceptance owns its mode and output directory");
+  throw new Error("The selected renderer task owns its mode and output directory");
 // Scope Desktop arguments to its selected VP task, including dependency builds.
 const env = { ...process.env };
+if (task !== "build:renderer") delete env.RAYPX_DESKTOP_BROWSER_BUILD;
 if (!leaf) {
   if (args.length) env[argumentKey] = JSON.stringify(args);
   else delete env[argumentKey];
@@ -33,8 +45,7 @@ if (!leaf) {
 } else if (task === "check") {
   commands = [
     [bun, "run", "typecheck"],
-    [bun, "run", "typecheck:node"],
-    [bun, "run", "typecheck:native", ...args],
+    [bun, "run", "typecheck:node", ...args],
   ];
 } else if (task === "build") {
   commands = [
@@ -76,9 +87,23 @@ if (!leaf) {
     ],
     [bun, "run", "native:csp", "artifacts/browser/client"],
   ];
+} else if (nativeGate) {
+  const scenario = task === "native:agents" ? "agents-run.ts" : "run.ts";
+  const mode =
+    task === "native:beta"
+      ? ["beta"]
+      : task === "native:smoke:interactive"
+        ? ["--interactive"]
+        : [];
+  commands = [
+    [bun, "run", "tauri:generate"],
+    [bun, "run", "tauri:cli"],
+    [bun, "run", `tests/native/smoke/${scenario}`, ...mode, ...args],
+  ];
 } else {
   commands = [
-    [bun, "run", "native:cli"],
+    [bun, "run", "tauri:generate"],
+    [bun, "run", "tauri:cli"],
     [bun, "run", "raypx-dev", "env", "--", bun, "run", "scripts/native/dev.ts", ...args],
   ];
 }

@@ -1,5 +1,6 @@
 import {
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -10,20 +11,24 @@ import { useTranslations } from "@raypx/i18n/browser";
 
 const widthKey = "raypx.task-list-width.v1";
 const clamp = (value: number) => Math.max(30, Math.min(50, value));
-function readWidth() {
-  try {
-    const value = Number(localStorage.getItem(widthKey));
-    return value >= 30 && value <= 50 ? value : 38;
-  } catch {
-    return 38;
-  }
-}
-function subscribeWidth(listener: () => void) {
-  const changed = (event: StorageEvent) => {
-    if (event.key === widthKey || event.key === null) listener();
+function widthStore(key: string) {
+  return {
+    read: () => {
+      try {
+        const value = Number(localStorage.getItem(key));
+        return value >= 30 && value <= 50 ? value : 38;
+      } catch {
+        return 38;
+      }
+    },
+    subscribe: (listener: () => void) => {
+      const changed = (event: StorageEvent) => {
+        if (event.key === key || event.key === null) listener();
+      };
+      window.addEventListener("storage", changed);
+      return () => window.removeEventListener("storage", changed);
+    },
   };
-  window.addEventListener("storage", changed);
-  return () => window.removeEventListener("storage", changed);
 }
 
 /** A bounded split view on desktop, and a list/detail navigation on small windows. */
@@ -31,14 +36,17 @@ export function TaskPanels({
   list,
   detail,
   detailVisible,
+  storageKey = widthKey,
 }: {
   list: ReactNode;
   detail: ReactNode;
   detailVisible: boolean;
+  storageKey?: string | undefined;
 }) {
   const t = useTranslations("tasks");
   const root = useRef<HTMLDivElement>(null);
-  const savedWidth = useSyncExternalStore(subscribeWidth, readWidth, () => 38);
+  const storage = useMemo(() => widthStore(storageKey), [storageKey]);
+  const savedWidth = useSyncExternalStore(storage.subscribe, storage.read, () => 38);
   const [changedWidth, setWidth] = useState<number>();
   const width = changedWidth ?? savedWidth;
   const [height, setHeight] = useState<number>();
@@ -59,7 +67,7 @@ export function TaskPanels({
   }, []);
   function persist(value: number) {
     try {
-      localStorage.setItem(widthKey, String(value));
+      localStorage.setItem(storageKey, String(value));
     } catch {
       /* Keep the current in-memory width. */
     }

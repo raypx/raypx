@@ -3,17 +3,15 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "types": ["bun", "vite/client"],
-    "paths": {
-      "electrobun": ["./.hutch/devkit/api/config/ElectrobunConfig.ts"]
-    },
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
-    "electrobun.config.ts",
-    "hutch.config.ts",
-    "vite.app.config.ts"
+    "vite.app.config.ts",
+    "scripts/**/*.ts",
+    "tests/scripts/**/*.ts",
+    "tests/native/**/*.ts"
   ]
 }

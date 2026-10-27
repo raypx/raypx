@@ -21,12 +21,10 @@ it("cleans generated files while preserving source, dependencies and local data 
     `${library}/node_modules/.cache/raypx-tests/run.json`,
     "node_modules/.cache/raypx-tests/run.json",
     ".artifacts/probe/cache/task.tar.zst",
-    "apps/desktop/build/stable-macos-arm64/Raypx.app/Contents/MacOS/launcher",
-    "apps/desktop/artifacts/raypx.tar.zst",
-    "apps/desktop/.smoke-build.noindex/dev-macos-arm64/Raypx Test-dev.app/Contents/MacOS/launcher",
-    "apps/desktop/.smoke-artifacts.noindex/raypx-test.tar.zst",
-    "apps/desktop/.hutch/bin/raypx",
-    "apps/desktop/.cottontail-tmp/unpacked/bun",
+    "target/release/bundle/macos/Raypx.app/Contents/MacOS/Raypx",
+    "apps/desktop/artifacts/browser/client/index.html",
+    "apps/desktop/src-tauri/binaries/raypx-aarch64-apple-darwin",
+    "apps/desktop/src-tauri/gen/schemas/desktop-schema.json",
     "e2e/test-results/screenshot.png",
     "e2e/playwright-report/index.html",
   ];
@@ -44,7 +42,9 @@ it("cleans generated files while preserving source, dependencies and local data 
     ".git/config",
     ".env.local",
     "data/profile.sqlite",
-    "apps/desktop/native/main.ts",
+    "apps/desktop/src-tauri/src/main.rs",
+    "apps/desktop/src-tauri/tauri.conf.json",
+    "apps/desktop/src-tauri/icons/icon.png",
     "packages/tooling/src/validation/inventory.ts",
     "compose.yaml",
   ];
@@ -60,7 +60,7 @@ it("cleans generated files while preserving source, dependencies and local data 
   for (const path of preserved) expect(readFileSync(join(root, path), "utf8")).toBe(path);
 });
 
-it("cleans reports independently while preserving built applications, SDKs and validation tools", async () => {
+it("cleans reports independently while preserving built applications, sidecars and validation tools", async () => {
   const root = fixture();
   const library = member(root, "feature");
   const outputs = [
@@ -75,8 +75,8 @@ it("cleans reports independently while preserving built applications, SDKs and v
   const preserved = [
     `${library}/dist/index.js`,
     `${library}/node_modules/.vite/task-cache/task.json`,
-    "apps/desktop/.hutch/sdk.ts",
-    "apps/desktop/artifacts/package.dmg",
+    "apps/desktop/src-tauri/binaries/raypx-aarch64-apple-darwin",
+    "target/release/bundle/dmg/Raypx.dmg",
     "packages/tooling/src/validation/inventory.ts",
     "data/profile.sqlite",
     "bun.lock",

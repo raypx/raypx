@@ -108,8 +108,12 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
       `!${directory}/**`,
     ]),
   ];
-  if (member.native && (name === "check" || name === "build"))
-    input.push(".hutch/devkit/**", ".hutch/types/**");
+  if (member.native && name === "check")
+    for (const directory of ["artifacts/browser"])
+      input.push(
+        { pattern: `!${member.path}/${directory}`, base: "workspace" },
+        { pattern: `!${member.path}/${directory}/**`, base: "workspace" },
+      );
   const env = [
     "NODE_ENV",
     "CI",
@@ -120,9 +124,11 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
   ];
   if (build) env.push("VITE_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS");
   if (member.native && ["check", "build", "build:renderer"].includes(name)) {
-    const category = name === "build:renderer" ? "RENDERER" : name.toUpperCase();
+    const category =
+      name === "build:renderer" ? "RENDERER" : name.toUpperCase().replaceAll(":", "_");
     env.push(`RAYPX_DESKTOP_${category}_ARGS`);
   }
+  if (member.native && build) env.push("RAYPX_DESKTOP_BROWSER_BUILD");
   return {
     env,
     // Match the existing environment contract; explicitly tracked patterns win.
@@ -141,16 +147,28 @@ function dependencyBuilds(member: TaskMember, members: TaskMember[]) {
 
 function prerequisites(member: TaskMember, name: string, members: TaskMember[]) {
   const result: string[] = [];
-  if (name === "check" && member.native) result.push(taskRef(member.name, "native:prepare"));
   if (name === "build" || name === "build:renderer" || name === "dev") {
     result.push(...dependencyBuilds(member, members));
     if (name !== "dev" && name !== "build:renderer" && member.scripts.check)
       result.push(taskRef(member.name, "check"));
-    if (member.native && name !== "build:renderer") {
-      if (name === "dev") result.push(taskRef(member.name, "native:prepare"));
+    if (member.native && name === "dev") {
       if (members.some((candidate) => candidate.name === "cli" && candidate.scripts.build))
         result.push(taskRef("cli", "build"));
     }
+  }
+  if (
+    member.native &&
+    [
+      "native:build",
+      "native:smoke",
+      "native:smoke:interactive",
+      "native:beta",
+      "native:agents",
+    ].includes(name)
+  ) {
+    if (member.scripts.build) result.push(taskRef(member.name, "build"));
+    if (members.some((candidate) => candidate.name === "cli" && candidate.scripts.build))
+      result.push(taskRef("cli", "build"));
   }
   if (["e2e", "e2e:web", "e2e:desktop", "e2e:smoke", "e2e:visual"].includes(name)) {
     if (name !== "e2e:desktop") result.push(taskRef("web", "build"));
@@ -175,8 +193,7 @@ export function taskModel(root: string): TaskModel {
       ]),
     ],
     native: Boolean(
-      workspace.manifest.scripts?.["native:prepare"] &&
-      workspace.manifest.scripts?.["typecheck:native"],
+      workspace.manifest.scripts?.["native:build"] && workspace.manifest.scripts?.["tauri:cli"],
     ),
     uncachedTasks:
       (workspace.manifest.raypx as { uncachedTasks?: string[] } | undefined)?.uncachedTasks ?? [],
@@ -203,11 +220,17 @@ export function taskModel(root: string): TaskModel {
   // Cargo owns Rust's incremental state. Keep it outside VP's filesystem tracer.
   const rust = existsSync(join(root, "Cargo.toml"));
   if (rust) {
+    // Linux library CI has no WebKitGTK development packages. The Desktop
+    // application has its own macOS/Windows checks and packaged smoke gates.
+    const exclude =
+      process.platform === "linux" && existsSync(join(root, "apps/desktop/src-tauri/Cargo.toml"))
+        ? " --exclude raypx-desktop"
+        : "";
     const commands = {
-      build: "cargo build --workspace --all-targets --locked",
-      check: "cargo check --workspace --all-targets --locked",
-      test: "cargo test --workspace --locked",
-      lint: "cargo clippy --workspace --all-targets --locked -- -D warnings",
+      build: `cargo build --workspace${exclude} --all-targets --locked`,
+      check: `cargo check --workspace${exclude} --all-targets --locked`,
+      test: `cargo test --workspace${exclude} --locked`,
+      lint: `cargo clippy --workspace${exclude} --all-targets --locked -- -D warnings`,
       format: "cargo fmt --all -- --check",
     };
     for (const [name, command] of Object.entries(commands))
@@ -227,10 +250,9 @@ export function taskModel(root: string): TaskModel {
       name,
       members.filter((member) => member.scripts[name]).map((member) => taskRef(member.name, name)),
     );
-  const native = members.find((member) => member.native);
   definitions.set(taskRef(manifest.name, "lint"), {
     command: "bun --bun vp lint",
-    dependsOn: native ? [taskRef(native.name, "native:prepare")] : [],
+    dependsOn: [],
     cache: false,
   });
   for (const name of ["verify", "verify:quick"])

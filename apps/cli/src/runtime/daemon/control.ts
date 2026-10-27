@@ -59,6 +59,7 @@ export class DaemonControl {
     private readonly emit: (event: LocalEvent) => void,
     private readonly terminal: LocalTerminalControl,
     vault?: HostVault,
+    private readonly independent = true,
   ) {
     this.vault = vault ?? createHostVault();
     this.terminal.onCloudChange(() => {
@@ -264,7 +265,7 @@ export class DaemonControl {
   info(scope: Scope): ControlInfo {
     return {
       ...this.control(scope).info(scope.accountId),
-      daemon: true,
+      daemon: this.independent,
       persistent: this.isCurrent(scope) && this.persistent,
       authorized: this.isCurrent(scope) && !this.legacy,
       legacy: this.isCurrent(scope) && this.legacy,
@@ -483,7 +484,7 @@ export class DaemonControl {
         if (!input.enabled && this.isCurrent(scope)) await this.detachCurrent();
         return {
           ...(await this.control(scope).enable(scope.accountId, input.enabled)),
-          daemon: true,
+          daemon: this.independent,
           persistent: this.isCurrent(scope) && this.persistent,
         };
       });
@@ -496,7 +497,11 @@ export class DaemonControl {
       }
       return this.serial(async () => {
         if (this.isCurrent(scope)) await this.detachCurrent();
-        return { ...this.control(scope).revoked(scope.accountId), daemon: true, persistent: false };
+        return {
+          ...this.control(scope).revoked(scope.accountId),
+          daemon: this.independent,
+          persistent: false,
+        };
       });
     }
     if (method === "host.legacy") {

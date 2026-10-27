@@ -1,13 +1,7 @@
 import { useEffect, useRef } from "react";
 import { apiUrl, authClient } from "../auth/client";
 import { taskClient } from "./client";
-import {
-  getBridge,
-  isDesktop,
-  isDaemonDesktop,
-  onLocalEvent,
-  localRequest,
-} from "../../lib/desktop";
+import { getBridge, isDesktop, onLocalEvent, localRequest } from "../../lib/desktop";
 import { accountLocalTaskClient } from "./local-client";
 
 export function RemoteCoordinator() {
@@ -24,8 +18,9 @@ export function RemoteCoordinator() {
   }, [accountId]);
   useEffect(() => {
     if (!isDesktop() || session.isPending) return;
-    // A missing/expired browser session is not an explicit daemon logout.
-    if (isDaemonDesktop() && !accountId) return;
+    // Restricted host credentials outlive browser sessions on both platforms.
+    // Explicit sign-out uses controlSession(null) through host-session.ts.
+    if (!accountId) return;
     const previous = previousAccount.current;
     previousAccount.current = accountId ?? null;
     if (previous && previous !== accountId)
@@ -51,7 +46,7 @@ export function RemoteCoordinator() {
           info = await bridge.request.controlRevoked({ accountId });
         }
         if (!info.enabled || !active) return;
-        if (info.daemon && info.authorized) return;
+        if (info.authorized) return;
         await bridge.request.controlEnable({ accountId, enabled: true });
         const grant = info.binding
           ? await taskClient.devices.refreshGrant(info.binding, {
@@ -73,15 +68,6 @@ export function RemoteCoordinator() {
           error && typeof error === "object" && "data" in error
             ? (error as { data?: { error?: { code?: string } } }).data?.error?.code
             : undefined;
-        if (
-          error &&
-          typeof error === "object" &&
-          "code" in error &&
-          error.code === "UNAUTHORIZED" &&
-          !isDaemonDesktop() &&
-          active
-        )
-          await (await getBridge()).request.controlDetach({});
         if (code === "DEVICE_REVOKED" && accountId && active)
           await (await getBridge()).request.controlEnable({ accountId, enabled: false });
       } finally {

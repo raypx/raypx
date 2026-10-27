@@ -69,7 +69,7 @@ test(
     await expect(
       page.getByRole("heading", { name: "Start with a folder", exact: true }),
     ).toBeVisible();
-    expect(await page.evaluate(() => "__electrobunWebviewId" in window)).toBe(false);
+    expect(await page.evaluate(() => "__TAURI_INTERNALS__" in window)).toBe(false);
     await page.getByRole("link", { name: "Automations", exact: true }).click();
     await expect(page).toHaveURL(`${desktop}/automations`);
     await expect(

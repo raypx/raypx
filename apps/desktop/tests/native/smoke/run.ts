@@ -1,10 +1,13 @@
-import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { SESSION_KEY_SERVICE, sessionKeyName } from "../../../native/cookies";
+import { existsSync } from "node:fs";
 import assert from "node:assert/strict";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import { nativeSmokeOptions } from "../../../scripts/native/smoke-options";
+import { buildSmoke, runTauriSmoke } from "./launch";
+import type { SmokeInstallation } from "../../../scripts/native/windows-smoke-install";
+import { prepareSmokeDirectory } from "./session";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),
@@ -12,73 +15,23 @@ const { packageManager } = await Bun.file(
 const { phase, ui } = nativeSmokeOptions(process.argv.slice(2), process.env);
 
 async function run(smokePhase: string, directory: string, restoredServer = false) {
-  const child = Bun.spawn([process.execPath, "--bun", "electrobun", "dev"], {
-    cwd: resolve(import.meta.dirname, "../../.."),
-    env: {
-      ...process.env,
-      RAYPX_HOME: join(directory, "raypx"),
-      CLAUDE_CONFIG_DIR: join(directory, "claude"),
-      CODEX_HOME: join(directory, "codex"),
-      RAYPX_NATIVE_SMOKE: "1",
-      RAYPX_NATIVE_SMOKE_UI: ui,
-      RAYPX_NATIVE_SMOKE_PHASE: smokePhase,
-      RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
-      RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
-      // The packaged smoke cannot read the repository; it checks the CLI runtime against this pin.
-      RAYPX_NATIVE_SMOKE_BUN: packageManager,
-    },
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
-    detached: process.platform !== "win32",
+  const final =
+    !["shell", "write", "beta"].includes(smokePhase) &&
+    (smokePhase !== "restore" || phase !== "shell" || restoredServer);
+  if (!installation) throw new Error("Native smoke installation is unavailable");
+  return runTauriSmoke(installation, smokePhase, directory, {
+    ...process.env,
+    RAYPX_HOME: join(directory, "config"),
+    CLAUDE_CONFIG_DIR: join(directory, "claude"),
+    CODEX_HOME: join(directory, "codex"),
+    RAYPX_NATIVE_SMOKE: "1",
+    RAYPX_NATIVE_SMOKE_UI: ui,
+    RAYPX_NATIVE_SMOKE_PHASE: smokePhase,
+    RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
+    RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
+    RAYPX_NATIVE_SMOKE_BUN: packageManager,
+    RAYPX_NATIVE_SMOKE_CLEANUP_SESSIONS: String(final),
   });
-  let output = "";
-  let timedOut = false;
-  const drain = async (stream: ReadableStream<Uint8Array>, destination: NodeJS.WriteStream) => {
-    const decoder = new TextDecoder();
-    for await (const chunk of stream) {
-      const text = decoder.decode(chunk, { stream: true });
-      output = (output + text).slice(-65536);
-      destination.write(text);
-    }
-  };
-  const readers = [drain(child.stdout, process.stdout), drain(child.stderr, process.stderr)];
-  const timeout = setTimeout(
-    () => {
-      timedOut = true;
-      console.error("Native smoke exceeded its deadline");
-      if (process.platform === "win32") {
-        void Bun.spawn(
-          [
-            join(process.env.SystemRoot ?? "C:\\Windows", "System32", "taskkill.exe"),
-            "/PID",
-            String(child.pid),
-            "/T",
-            "/F",
-          ],
-          {
-            stdout: "ignore",
-            stderr: "ignore",
-          },
-        ).exited;
-      } else {
-        try {
-          process.kill(-child.pid, "SIGTERM");
-        } catch {
-          /* Already exited. */
-        }
-      }
-    },
-    smokePhase === "beta" ? 720_000 : 90_000,
-  );
-  try {
-    const code = await child.exited;
-    await Promise.all(readers);
-    if (code !== 0 || timedOut || !output.includes(`Native smoke ${smokePhase} passed:`))
-      throw new Error(`Native smoke ${smokePhase} did not report successful completion`);
-  } finally {
-    clearTimeout(timeout);
-  }
 }
 if (
   phase.startsWith("beta") &&
@@ -104,7 +57,12 @@ async function configure(origin: string) {
     { mode: 0o600 },
   );
 }
+let directoryPrepared = false;
+let installation: SmokeInstallation | undefined;
 try {
+  await prepareSmokeDirectory(directory);
+  directoryPrepared = true;
+  installation = await buildSmoke();
   const api =
     phase === "shell" || phase === "restore"
       ? await loopbackOrigin()
@@ -115,7 +73,7 @@ try {
   if (process.platform === "darwin" && phase === "shell") {
     const status = Bun.spawn(
       [
-        resolve(import.meta.dirname, "../../../.hutch/bin/raypx"),
+        resolve(import.meta.dirname, "../../../../cli/dist/raypx"),
         "daemon",
         "status",
         "--profile",
@@ -142,44 +100,52 @@ try {
   if (phase === "write") await run("read", directory);
   if (phase === "beta") await run("beta-restore", directory);
 } finally {
-  try {
-    if (process.platform === "darwin") {
-      // GUI Quit deliberately preserves its independent owner, including smoke profiles.
-      const stop = Bun.spawn(
-        [
-          process.execPath,
-          "run",
-          "src/main.ts",
-          "daemon",
-          "stop",
-          "--profile",
-          "native-smoke",
-          "--data-dir",
-          directory,
-        ],
-        {
-          cwd: resolve(import.meta.dirname, "../../../../cli"),
-          stdin: "ignore",
-          stdout: "ignore",
-          stderr: "ignore",
-        },
-      );
-      await stop.exited;
-    }
-    if (!phase.startsWith("beta")) {
-      if (process.platform === "win32") {
-        const servers = join(directory, "servers");
-        for (const entry of await readdir(servers, { withFileTypes: true }).catch(() => [])) {
-          if (entry.isDirectory())
-            await Bun.secrets.delete({
-              service: SESSION_KEY_SERVICE,
-              name: sessionKeyName(join(servers, entry.name)),
-            });
+  if (directoryPrepared) {
+    let ownerStopped = process.platform !== "darwin";
+    try {
+      if (process.platform === "darwin") {
+        // GUI Quit deliberately preserves its independent owner, including smoke profiles.
+        const stop = Bun.spawn(
+          [
+            resolve(import.meta.dirname, "../../../../cli/dist/raypx"),
+            "daemon",
+            "stop",
+            "--profile",
+            "native-smoke",
+            "--data-dir",
+            directory,
+          ],
+          {
+            stdin: "ignore",
+            stdout: "ignore",
+            stderr: "ignore",
+          },
+        );
+        const deadline = setTimeout(() => stop.kill(), 30_000);
+        try {
+          ownerStopped = (await stop.exited) === 0;
+        } finally {
+          clearTimeout(deadline);
         }
       }
-      await rm(directory, { recursive: true, force: true });
+      if (!phase.startsWith("beta")) {
+        if (
+          ownerStopped &&
+          (!existsSync(join(directory, "servers")) ||
+            existsSync(join(directory, ".native-smoke-sessions-cleaned")))
+        )
+          await rm(directory, { recursive: true, force: true });
+        else {
+          console.error(`Native smoke teardown incomplete; retained ${directory}`);
+          process.exitCode = 1;
+        }
+      }
+    } finally {
+      try {
+        await installation?.dispose();
+      } finally {
+        await cleanupSmokeBundles(resolve(import.meta.dirname, "../../.."));
+      }
     }
-  } finally {
-    await cleanupSmokeBundles(resolve(import.meta.dirname, "../../.."));
   }
 }

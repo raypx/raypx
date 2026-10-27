@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { LocalEngine } from "../../../native/engine";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import type {
   AgentProvider,
   AgentTask,
@@ -10,24 +8,15 @@ import type {
   RelayRequest,
   SyncDevice,
 } from "@raypx/contracts/tasks";
-import manifest from "../../../package.json";
 
 // Explicit gate: existing provider credentials/configuration are used and inference is billed.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
   throw new Error("Set RAYPX_LIVE_AGENTS=1 to run real Claude and Codex inference");
-const directory = await mkdtemp(join(tmpdir(), "raypx-live-agents-"));
+const smokeDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
+if (!smokeDirectory) throw new Error("Live Agent smoke requires an isolated native data directory");
+const directory = smokeDirectory;
+const { engine, quitDesktop } = await import("./tauri-host");
 const accountId = "live-agent-acceptance";
-const binary = resolve(
-  import.meta.dirname,
-  "../../../.hutch/bin",
-  process.platform === "win32" ? "raypx.exe" : "raypx",
-);
-const engine = new LocalEngine(binary, manifest.version, () => {}, [
-  "--data-dir",
-  directory,
-  "--profile",
-  "live-agents",
-]);
 const results: { provider: AgentProvider; checks: string[] }[] = [];
 const activeStatuses = ["pending", "running", "waiting", "cancelling"];
 let stage = "engine startup";
@@ -101,6 +90,14 @@ async function runAcceptanceTests(project: string, count: number) {
   assert.match(output, new RegExp(`\\b${count} pass\\b`));
 }
 
+async function ownerEpoch() {
+  const endpoint = JSON.parse(
+    await readFile(join(directory, "profiles/native-smoke/daemon.json"), "utf8"),
+  ) as { epoch?: unknown };
+  assert.equal(typeof endpoint.epoch, "string", "Daemon owner epoch is missing");
+  return endpoint.epoch;
+}
+
 try {
   assert.equal(await engine.start(), true);
   for (const provider of ["claude", "codex"] as const) {
@@ -161,8 +158,16 @@ try {
     checks.push("approve-plan", "write-and-test");
 
     stage = `${provider}: process restart and session resume`;
+    const previousOwner = process.platform === "darwin" ? await ownerEpoch() : undefined;
     await engine.stop();
-    assert.equal(await engine.start(), true);
+    if (process.platform === "darwin") {
+      assert.equal(await engine.replaceOwner(), true, "Independent owner restart failed");
+      assert.notEqual(
+        await ownerEpoch(),
+        previousOwner,
+        "Restart only reconnected the daemon proxy",
+      );
+    } else assert.equal(await engine.start(), true);
     assert.equal((await readTask(planned)).task.status, "succeeded");
     const follow = crypto.randomUUID();
     await execute({
@@ -209,8 +214,10 @@ try {
   console.error(`Live Agent acceptance failed at ${stage}`);
   throw error;
 } finally {
-  await engine.stop();
-  if (process.env.RAYPX_LIVE_KEEP === "1") console.info(`Live Agent acceptance data: ${directory}`);
-  else await rm(directory, { recursive: true, force: true });
+  try {
+    await engine.stop();
+  } finally {
+    await quitDesktop();
+  }
 }
 console.info(JSON.stringify({ status: "passed", results }));

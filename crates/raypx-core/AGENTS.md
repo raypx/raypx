@@ -14,3 +14,9 @@ Grow it only when concrete Rust consumers establish the next responsibility.
 Run `cargo test -p raypx-core --locked` and
 `cargo run -p raypx-core --locked --example basic`.
 Integration tests belong in `tests/`; runnable usage belongs in `examples/`.
+
+## Publication
+
+Publish this crate to crates.io before `raypx`, which depends on its published
+library release version. Package source, tests, examples, the README and license
+only.

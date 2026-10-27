@@ -2,7 +2,7 @@ import { dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { repositoryRoot, taskModel } from "./model.js";
 
-/** Lightweight task metadata; never imports app plugins or the Native SDK. */
+/** Lightweight task metadata; never imports app plugins or a native runtime. */
 export function workspaceTaskConfig(configUrl: string) {
   const directory = dirname(fileURLToPath(configUrl));
   const root = repositoryRoot(directory);

@@ -16,7 +16,7 @@ Raypx 的核心闭环应覆盖两种入口：用户在 Raypx 发起的任务，�
 | 事项     | 方向                                                                                                                                               |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 手机入口 | 已确定：自有 Expo App；不接飞书、钉钉或 Telegram。Web 保留移动访问，PWA 不作为核心闭环前置。                                                       |
-| 执行宿主 | 提议：CLI daemon；Electrobun Desktop 是客户端。继续保留现有 Web、账户和自部署能力。                                                                |
+| 执行宿主 | 提议：CLI daemon；Tauri Desktop 是客户端。继续保留现有 Web、账户和自部署能力。                                                                     |
 | 内容保护 | 已确定：先做明确披露的明文私有内测，P0 固定内容 envelope；公开托管终端同步以前完成 E2EE、配对与恢复。                                              |
 | 平台顺序 | 建议先验收 macOS 宿主与 iOS App，再验收 Linux 宿主与 Android App；Expo 同时保留两端代码入口。                                                      |
 | 界面体系 | Web/Desktop 保持 shadcn/Base UI 和 Tailwind。Mobile 使用原生组件及 RN 适用的工具类方案，共享语义设计 token、文案和交互；不把 DOM 组件直接导入 RN。 |
@@ -27,15 +27,15 @@ Happier 的 Codex 能力矩阵提供了另一条值得验证的路线：由共�
 
 ## 当前缺口核实
 
-| 范围          | 核实结果                                                                                                                              | 依据                                                                                                                                          |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 外部终端会话  | 当前只管理 Raypx 创建的进程。Claude hook 随受管进程注入；Codex 使用受管 app-server，未提供全局 connector。                            | [AgentRuntime](../../apps/cli/src/runtime/agents/index.ts)、[现行远程任务架构](../architecture/remote-tasks.md)                               |
-| 独立宿主      | macOS 的 relay、续期和终端 broker 位于独立 CLI daemon；Desktop Quit 不停止受管任务。本机 Host 与可选云渠道的现行边界见 ADR 0035。     | [Native main](../../apps/desktop/native/main.ts)、[RemoteControl](../../apps/desktop/native/control.ts)、[CLI 约束](../../apps/cli/AGENTS.md) |
-| 手机闭环      | Web 已有响应式任务和审批视图；`apps/web/public` 只有 favicon，源码未发现 PWA manifest、service worker、Push Subscription 或发送实现。 | [Web public](../../apps/web/public)、[Web 源码](../../apps/web/src)、[API 源码](../../apps/api/server)                                        |
-| Pi            | 已接入的是 `@earendil-works/pi-ai` 模型传输；尚无 Pi 编程 Agent 的进程、会话与工具审批适配。                                          | [AI 包](../../packages/ai/AGENTS.md)、[依赖](../../packages/ai/package.json)                                                                  |
-| Provider 扩展 | contracts 仍是 Claude/Codex 枚举，项目 providers 最多两个；CLI 和任务 UI 均有名称分支。                                               | [任务契约](../../packages/contracts/src/tasks.ts)、[任务 UI](../../packages/tasks/src/client)                                                 |
-| 云端正文      | control 表把领域投影写入 JSONB；当前没有内容级密文 envelope。TLS、Windows 本地 cookie 加密与代码对话的端到端加密是不同边界。          | [数据库 schema](../../packages/database/src/schema.ts)、[repository](../../apps/api/server/control/repository.ts)                             |
-| 非核心范围    | 文件、jobs、终端、analytics、存储及双部署目标真实存在；冻结新增功能可减少工作分散，移除默认回归则会削弱已有产品的交付保证。           | [现行架构](../architecture/0034-extensible-foundation.md)、[测试门禁](../development/testing.md)                                              |
+| 范围          | 核实结果                                                                                                                              | 依据                                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 外部终端会话  | 当前只管理 Raypx 创建的进程。Claude hook 随受管进程注入；Codex 使用受管 app-server，未提供全局 connector。                            | [AgentRuntime](../../apps/cli/src/runtime/agents/index.ts)、[现行远程任务架构](../architecture/remote-tasks.md)                                             |
+| 独立宿主      | macOS 的 relay、续期和终端 broker 位于独立 CLI daemon；Desktop Quit 不停止受管任务。本机 Host 与可选云渠道的现行边界见 ADR 0035。     | [Native host](../../apps/desktop/src-tauri/src/lib.rs)、[RemoteControl](../../apps/cli/src/runtime/daemon/control.ts)、[CLI 约束](../../apps/cli/AGENTS.md) |
+| 手机闭环      | Web 已有响应式任务和审批视图；`apps/web/public` 只有 favicon，源码未发现 PWA manifest、service worker、Push Subscription 或发送实现。 | [Web public](../../apps/web/public)、[Web 源码](../../apps/web/src)、[API 源码](../../apps/api/server)                                                      |
+| Pi            | 已接入的是 `@earendil-works/pi-ai` 模型传输；尚无 Pi 编程 Agent 的进程、会话与工具审批适配。                                          | [AI 包](../../packages/ai/AGENTS.md)、[依赖](../../packages/ai/package.json)                                                                                |
+| Provider 扩展 | contracts 仍是 Claude/Codex 枚举，项目 providers 最多两个；CLI 和任务 UI 均有名称分支。                                               | [任务契约](../../packages/contracts/src/tasks.ts)、[任务 UI](../../packages/tasks/src/client)                                                               |
+| 云端正文      | control 表把领域投影写入 JSONB；当前没有内容级密文 envelope。TLS、Windows 本地 cookie 加密与代码对话的端到端加密是不同边界。          | [数据库 schema](../../packages/database/src/schema.ts)、[repository](../../apps/api/server/control/repository.ts)                                           |
+| 非核心范围    | 文件、jobs、终端、analytics、存储及双部署目标真实存在；冻结新增功能可减少工作分散，移除默认回归则会削弱已有产品的交付保证。           | [现行架构](../architecture/0034-extensible-foundation.md)、[测试门禁](../development/testing.md)                                                            |
 
 ## 需要修正和保留的判断
 

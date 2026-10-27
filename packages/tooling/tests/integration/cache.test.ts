@@ -246,17 +246,17 @@ it.each([true, false])(
   30000,
 );
 
-it("prepares ignored SDK inputs before deciding whether a native check is reusable", () => {
+it("checks a native app without staging sidecars or invoking Cargo", () => {
   const root = project();
   const folder = checked(
     root,
     "native",
     {},
     {
-      "native:prepare": "bun prepare.ts",
+      "native:build": "bun package.ts",
+      "tauri:cli": "bun stage.ts",
       typecheck: "bun --check --tsconfig-override tsconfig.json",
       "typecheck:node": "bun --check --tsconfig-override tsconfig.json",
-      "typecheck:native": "bun --check --tsconfig-override tsconfig.json",
     },
   );
   mkdirSync(join(folder, "scripts/native"), { recursive: true });
@@ -264,22 +264,17 @@ it("prepares ignored SDK inputs before deciding whether a native check is reusab
     join(repository, "apps/desktop/scripts/native/task.ts"),
     join(folder, "scripts/native/task.ts"),
   );
-  writeFileSync(join(root, ".gitignore"), ".hutch/\nnode_modules/\n");
-  writeFileSync(join(folder, "seed.txt"), "number");
   writeFileSync(
-    join(folder, "prepare.ts"),
-    'import { mkdirSync, readFileSync, writeFileSync } from "node:fs"; mkdirSync(".hutch/types",{recursive:true}); writeFileSync(".hutch/types/runtime.d.ts",`export declare const value: ${readFileSync("seed.txt","utf8")};`); console.log("prepared-sdk");',
+    join(folder, "package.ts"),
+    'throw new Error("Native packaging must be explicit");',
   );
-  writeFileSync(
-    join(folder, "src/index.ts"),
-    'import { value } from "../.hutch/types/runtime"; export const result: number = value;',
-  );
+  writeFileSync(join(folder, "stage.ts"), 'throw new Error("Sidecar staging must be explicit");');
   const selector = "@raypx/native#task:check";
   pass(execute(root, "check", {}, selector));
   const warm = execute(root, "check", {}, selector);
   expect(warm.code).toBe(0);
-  expect(warm.log).toContain("prepared-sdk");
-  writeFileSync(join(folder, "seed.txt"), "string");
+  expect(warm.log).toContain("cache hit");
+  writeFileSync(join(folder, "src/index.ts"), 'export const result: number = "changed";');
   const changed = execute(root, "check", {}, selector);
   expect(changed.code).not.toBe(0);
   expect(changed.log).toContain("not assignable to type 'number'");

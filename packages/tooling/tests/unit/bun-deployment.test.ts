@@ -78,8 +78,8 @@ it("caches Rust CI without repeating clippy's check or test's build", () => {
   expect(steps).not.toMatch(/cargo (check|build)\b/);
   for (const command of [
     "cargo fmt --all -- --check",
-    "cargo clippy --workspace --all-targets --locked -- -D warnings",
-    "cargo test --workspace --locked",
+    "cargo clippy --workspace --exclude raypx-desktop --all-targets --locked -- -D warnings",
+    "cargo test --workspace --exclude raypx-desktop --locked",
   ])
     expect(steps).toContain(command);
   // The cache restores after the toolchain is selected and before any cargo command.

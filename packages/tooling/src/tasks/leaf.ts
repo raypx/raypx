@@ -9,11 +9,21 @@ if (!name) throw new Error("A workspace task name is required");
 const manifest = JSON.parse(readFileSync(resolve("package.json"), "utf8"));
 if (!manifest.scripts?.[name]) throw new Error(`Unknown workspace script: ${name}`);
 const args = taskArguments(`${manifest.name}#${name}`, process.env);
-const native = manifest.scripts["native:prepare"] && manifest.scripts["typecheck:native"];
+const native = manifest.scripts["native:build"] && manifest.scripts["tauri:cli"];
 const delegated = taskScripts(manifest)[name];
 const command = delegated
   ? [process.execPath, "run", delegated, ...args]
-  : native && ["check", "build", "build:renderer", "dev"].includes(name)
+  : native &&
+      [
+        "check",
+        "build",
+        "build:renderer",
+        "dev",
+        "native:smoke",
+        "native:smoke:interactive",
+        "native:beta",
+        "native:agents",
+      ].includes(name)
     ? [process.execPath, "run", "scripts/native/task.ts", "--leaf", name, ...args]
     : [process.execPath, "run", name, ...args];
 const child = Bun.spawn(command, { stdin: "inherit", stdout: "inherit", stderr: "inherit" });
