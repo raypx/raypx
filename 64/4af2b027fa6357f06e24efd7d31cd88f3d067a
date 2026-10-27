@@ -1,0 +1,18 @@
+apps/cli/vitest.config.ts
+  h_f0766e80fd3864 3
+apps/desktop/vitest.config.ts
+  h_f0766e80fd3864 5
+packages/i18n/tests/browser/component/provider.test.tsx
+  h_f0766e80fd3864 2,94,106-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "644af2b027fa6357f06e24efd7d31cd88f3d067a",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
