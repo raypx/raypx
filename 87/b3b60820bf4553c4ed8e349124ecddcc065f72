@@ -1,0 +1,19 @@
+bunfig.toml
+  s_bcff09b404c4ba::t_b0588bf591c727 4-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "87b3b60820bf4553c4ed8e349124ecddcc065f72",
+  "prompts": {},
+  "sessions": {
+    "s_bcff09b404c4ba": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17ca7-a701-7890-b155-a3d5b9b3f7ab",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
