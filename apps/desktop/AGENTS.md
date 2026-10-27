@@ -40,7 +40,7 @@ Own native directory authorization and local UX. Runtime implementations live ex
 for Desktop account URLs, auth client and router search. Shared forms own fields,
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
 `tests/renderer/unit/` and `tests/renderer/component/`, mirroring feature and route directories.
-Native tests use Bun types; real subprocess/OS-lock cases live in `tests/native/integration/`. `tests/native/smoke/` contains the
+Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay tests live in Host. Native tests use Bun types; real subprocess/OS-lock cases live in `tests/native/integration/`. `tests/native/smoke/` contains the
 packaged scenario, selected by Electrobun only with `RAYPX_NATIVE_SMOKE=1`.
 Native scripts/tests live in `scripts/native/` and `tests/scripts/native/` with Bun types.
 All tests stay outside `src/routes/` discovery and the renderer configuration.

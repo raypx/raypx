@@ -67,6 +67,7 @@ Tests live under `tests/unit/` and `tests/integration/`, then mirror runtime,
 commands and TUI. Pure parsers, injected provider ports and SDK loops stay in unit;
 filesystem/SQLite, real HTTP, subprocess and daemon boundaries stay in integration.
 Agent integration suites separate lifecycle/approvals, inputs and context/resume.
+Injected Pi suites separate lifecycle, tool durability and authoritative completion.
 Temporary profiles and execution hosts are owned by `tests/helpers/runtime.ts` and
 `tests/helpers/agents.ts`; each case still receives a fresh runtime and directory.
 `tests/smoke/artifact.ts` validates the built executable separately from the unit tests.

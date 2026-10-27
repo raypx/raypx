@@ -1,15 +1,12 @@
-import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { verification } from "@raypx/database/schema";
-import { pinnedNode } from "@raypx/tooling/repository";
+import { runWorkerSchedule } from "../../helpers/worker.js";
 import { like } from "drizzle-orm";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("An isolated *_test database is required");
-const root = fileURLToPath(new URL("../../../../../", import.meta.url));
 const connection = connectDatabase(url, { max: 1 });
 const prefix = `worker-cleanup-${crypto.randomUUID()}`;
 beforeAll(() => migrateDatabase(url));
@@ -38,33 +35,7 @@ describe.each(["direct", "hyperdrive"])("Worker cleanup (%s)", (mode) => {
         expiresAt: new Date(Date.now() + 86400_000),
       },
     ]);
-    const child = spawn(
-      pinnedNode(root),
-      [fileURLToPath(import.meta.resolve("@raypx/tooling/cloudflare")), root, "--run-api-cleanup"],
-      {
-        cwd: root,
-        env: { ...process.env, TEST_DATABASE_URL: url, TEST_DATABASE_MODE: mode },
-        stdio: ["ignore", "ignore", "pipe"],
-      },
-    );
-    await new Promise<void>((resolve, reject) => {
-      let diagnostic = "";
-      child.stderr.on("data", (chunk: Buffer) => {
-        diagnostic = (diagnostic + chunk.toString())
-          .replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[DATABASE_URL]")
-          .slice(-2000);
-      });
-      const timeout = setTimeout(() => child.kill("SIGKILL"), 60000);
-      child.once("error", (error) => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-      child.once("exit", (code) => {
-        clearTimeout(timeout);
-        if (code === 0) resolve();
-        else reject(new Error(`Worker cleanup fixture exited ${code}: ${diagnostic}`));
-      });
-    });
+    await runWorkerSchedule(url, mode, "cleanup");
     const rows = await connection.db
       .select({ id: verification.id })
       .from(verification)

@@ -98,3 +98,15 @@ export function piScript(responses: AssistantMessage[]) {
     },
   };
 }
+
+export const piToolCall = () =>
+  piMessage(
+    [{ type: "toolCall", id: "call-1", name: "fixture_tool", arguments: { value: "one" } }],
+    "toolUse",
+  );
+export const piFinal = () =>
+  piMessage([
+    { type: "text", text: "First block" },
+    { type: "text", text: "Second block" },
+  ]);
+export const piAllow = async () => "allow" as const;

@@ -5,7 +5,7 @@ import {
   workspaceOwner,
   workspaceScopeKey,
   type WorkspaceScope,
-} from "../src/model.js";
+} from "../../src/model.js";
 
 it("retains the existing device, account-local and remote draft ownership", () => {
   const namespace = "https://api.example.test";

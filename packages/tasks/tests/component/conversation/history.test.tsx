@@ -1,3 +1,4 @@
+import { mockTaskLayout } from "../../helpers/layout.js";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,9 +9,7 @@ import type { TaskHistoryPage, TaskWorkspacePort } from "@raypx/tasks/model";
 import type { TaskChange } from "@raypx/contracts/tasks";
 
 beforeEach(() => {
-  vi.spyOn(Element.prototype, "clientHeight", "get").mockReturnValue(480);
-  vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(480);
-  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(96);
+  mockTaskLayout("all");
   vi.spyOn(document, "hidden", "get").mockReturnValue(false);
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");

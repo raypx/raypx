@@ -1,6 +1,6 @@
 import { expect, it } from "vite-plus/test";
 import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
-import { ConversationState } from "../src/model.js";
+import { ConversationState } from "../../src/model.js";
 
 const message = (order: number, revision = 1): Extract<TaskActivity, { kind: "message" }> => ({
   id: `message-${order}`,

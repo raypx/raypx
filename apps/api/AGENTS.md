@@ -14,7 +14,7 @@ All API tests live in `tests/`; keep `server/` for runtime modules. `unit/` and
 `integration/` form the default database-free gate. `postgres/node/` and
 `postgres/cloudflare/` use the `postgres` and `cloudflare-postgres` modes of
 `vitest.config.ts` for real-database tests.
-Use directories for test kind and runtime; filenames describe the behavior under test.
+Use directories for test kind and runtime; filenames describe the behavior under test. Worker PostgreSQL suites share `tests/helpers/worker.ts` for subprocess lifecycle and bounded redacted diagnostics; each suite owns its database setup and assertions.
 
 ## Ownership
 

@@ -54,7 +54,10 @@ Style components with Tailwind utilities. The client CSS entry only registers
 the shared source directory for both application builds.
 If a create receipt is lost, recover the same submitted task from its authoritative
 read projection instead of blocking its approval behind the creation form.
-Run this workspace check/test and the repository verification gate.
+Tests live in `tests/unit/` for pure rules and `tests/component/` for shared views,
+grouped by composer, conversation, observed requests and workspace management.
+Run this workspace's check/test, focused `test:unit`/`test:component`, then repository verify.
+Application auth, routing and IPC adapter tests remain with Web/Desktop.
 
 Task details merge normalized conversation entries by ID/revision, load older
 pages on demand and follow streaming output only when the reader is near the end.

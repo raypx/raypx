@@ -21,8 +21,10 @@ Validate remote origins and keep secrets out of disk settings and diagnostics.
 
 ## Verification
 
-Run `bun run --cwd packages/host check`; transport regression tests currently live
-in Desktop's `tests/native/control.test.ts` and daemon integration tests in CLI.
+Run this workspace's `check`, `test` and `test:integration` commands. Transport
+regressions live in `tests/integration/`, grouped by renewal, replay and snapshots;
+`tests/helpers/control.ts` owns a fresh loopback relay and temporary state per case.
+CLI retains daemon integration tests for its application-specific lifecycle.
 
 A rejected v3 handshake negotiates managed-only v2 once. Do not send observed
 frames or advertise terminal support on that connection. Terminal renewal failures

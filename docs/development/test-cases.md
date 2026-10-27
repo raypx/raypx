@@ -190,3 +190,25 @@ all 191 ordinary files and preserves every original case identity. Focused gates
 now contain 569 unit, 287 component and 234 integration cases with no overlapping
 files. It also records real PostgreSQL/Redis, Workers and browser relay acceptance;
 external inference and unavailable platforms remain separate gates.
+
+## Ownership follow-up, 2026-10-27
+
+Shared task-view cases now live in `packages/tasks/tests/component/`, grouped by
+composer, conversation, observed requests and workspace. Web keeps auth, routes and
+guest handoff tests; Desktop keeps its local IPC adapter, drafts and account/device
+ownership tests. Pure Tasks rules live in `tests/unit/`. This lets a Tasks change
+run its own UI regressions without requiring an application test command.
+
+Host's renewal, replay and snapshot suites now live in `packages/host/tests/integration/`.
+They exercise real loopback WebSockets and temporary storage, including real renewal
+deadlines; CLI keeps the daemon-specific boundary tests. The shared helper registers
+cleanup per case rather than reusing connections between cases.
+
+Pi's injected SDK suite separates lifecycle, tool durability and authoritative
+completion. Desktop's workspace suite separates conversation, history and drafts,
+with the same reset/cleanup per case. Worker PostgreSQL auth, cleanup and schedule
+suites share process startup and shutdown, while retaining independent data and
+assertions for direct PostgreSQL and Hyperdrive.
+
+No cases were combined or removed in this follow-up. Execution evidence and the
+updated ownership counts are recorded in the [inventory audit](test-audit-2026-10-27.md).

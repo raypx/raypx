@@ -1,90 +1,16 @@
 import { relaySocket } from "../../helpers/relay.js";
-import { spawn, type ChildProcess } from "node:child_process";
-import { once } from "node:events";
-import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { createAuth, type AuthMailInput } from "@raypx/auth/server";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { schema, user } from "@raypx/database/schema";
 import { createApiClient } from "@raypx/client";
-import { pinnedNode } from "@raypx/tooling/repository";
+import { startWorker } from "../../helpers/worker.js";
 import { eq } from "drizzle-orm";
 
 const databaseURL = process.env.TEST_DATABASE_URL;
 if (!databaseURL || !new URL(databaseURL).pathname.endsWith("_test"))
   throw new Error("TEST_DATABASE_URL must name an isolated *_test database");
-const root = fileURLToPath(new URL("../../../../../", import.meta.url));
-
-async function worker(mode: string) {
-  const child = spawn(
-    pinnedNode(root),
-    [fileURLToPath(import.meta.resolve("@raypx/tooling/cloudflare")), root, "--serve-api"],
-    {
-      cwd: root,
-      env: { ...process.env, TEST_DATABASE_URL: databaseURL, TEST_DATABASE_MODE: mode },
-      stdio: ["ignore", "pipe", "pipe"],
-    },
-  );
-  try {
-    const base = await new Promise<string>((resolve, reject) => {
-      let pending = "";
-      let errors = "";
-      const timer = setTimeout(
-        () => reject(new Error("Worker PostgreSQL fixture startup timed out")),
-        60000,
-      );
-      const cleanup = () => clearTimeout(timer);
-      child.stderr.on("data", (chunk: Buffer) => {
-        errors = (errors + chunk.toString())
-          .replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[DATABASE_URL]")
-          .slice(-2000);
-      });
-      child.stdout.on("data", (chunk: Buffer) => {
-        pending += chunk.toString();
-        let offset: number;
-        while ((offset = pending.indexOf("\n")) >= 0) {
-          const line = pending.slice(0, offset);
-          pending = pending.slice(offset + 1);
-          try {
-            const message = JSON.parse(line) as { type?: string; url?: string };
-            if (message.type === "raypx-worker-ready" && message.url) {
-              cleanup();
-              resolve(message.url);
-            }
-          } catch {
-            /* Wrangler may also print diagnostic lines. */
-          }
-        }
-      });
-      child.once("error", (error) => {
-        cleanup();
-        reject(error);
-      });
-      child.once("exit", (code) => {
-        cleanup();
-        reject(new Error(`Worker fixture exited ${code}: ${errors}`));
-      });
-    });
-    return { child, base };
-  } catch (error) {
-    await stop(child);
-    throw error;
-  }
-}
-
-async function stop(child: ChildProcess) {
-  if (!child.pid || child.exitCode !== null || child.signalCode !== null) return;
-  const closed = once(child, "exit");
-  child.kill("SIGTERM");
-  const timer = setTimeout(() => child.kill("SIGKILL"), 5000);
-  try {
-    await closed;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) => {
   const connection = connectDatabase(databaseURL);
   const email = `worker-${crypto.randomUUID()}@example.test`;
@@ -108,7 +34,7 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
       production: false,
     },
   });
-  let fixture: Awaited<ReturnType<typeof worker>> | undefined;
+  let fixture: Awaited<ReturnType<typeof startWorker>> | undefined;
 
   beforeAll(async () => {
     await migrateDatabase(databaseURL);
@@ -129,11 +55,11 @@ describe.each(["direct", "hyperdrive"])("Cloudflare account API (%s)", (mode) =>
     const verified = await auth.handler(new Request(verification.url));
     if (verified.status !== 200 && verified.status !== 302)
       throw new Error("Worker fixture account could not be verified");
-    fixture = await worker(mode);
+    fixture = await startWorker(databaseURL, mode);
   }, 90000);
 
   afterAll(async () => {
-    if (fixture) await stop(fixture.child);
+    if (fixture) await fixture.close();
     try {
       await connection.db.delete(user).where(eq(user.email, email));
     } finally {

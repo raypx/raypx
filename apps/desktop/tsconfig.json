@@ -7,5 +7,12 @@
       "electrobun/rpc": ["./.hutch/devkit/api/sdks/main/entries/rpc.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "tests/renderer/**/*.ts", "tests/renderer/**/*.tsx"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/renderer/**/*.ts",
+    "tests/renderer/**/*.tsx",
+    "tests/helpers/**/*.ts",
+    "tests/helpers/**/*.tsx"
+  ]
 }

@@ -513,11 +513,18 @@
       },
       "devDependencies": {
         "@raypx-kit/tsconfig": "catalog:dev",
+        "@raypx/client": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@tanstack/react-query": "catalog:",
+        "@testing-library/jest-dom": "catalog:dev",
+        "@testing-library/react": "catalog:dev",
+        "@testing-library/user-event": "catalog:dev",
         "@types/react": "catalog:dev",
+        "@types/react-dom": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
+        "jsdom": "catalog:dev",
         "react": "catalog:",
+        "react-dom": "catalog:",
       },
       "peerDependencies": {
         "@tanstack/react-query": "^5.104.5",

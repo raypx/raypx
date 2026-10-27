@@ -1,16 +1,13 @@
-import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
 import { cloudJob, controlDevice, user } from "@raypx/database/schema";
-import { pinnedNode } from "@raypx/tooling/repository";
+import { runWorkerSchedule } from "../../helpers/worker.js";
 import { eq, sql } from "drizzle-orm";
 import { createCloudJobsRepository } from "../../../server/jobs/repository.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("An isolated *_test database is required");
-const root = fileURLToPath(new URL("../../../../../", import.meta.url));
 const connection = connectDatabase(url, { max: 1 });
 const repository = createCloudJobsRepository(connection.db);
 const owner = `worker-jobs-${crypto.randomUUID()}`;
@@ -27,36 +24,6 @@ afterAll(async () => {
     await connection.close();
   }
 });
-
-async function scheduled(mode: string) {
-  const child = spawn(
-    pinnedNode(root),
-    [fileURLToPath(import.meta.resolve("@raypx/tooling/cloudflare")), root, "--run-api-schedules"],
-    {
-      cwd: root,
-      env: { ...process.env, TEST_DATABASE_URL: url!, TEST_DATABASE_MODE: mode },
-      stdio: ["ignore", "ignore", "pipe"],
-    },
-  );
-  await new Promise<void>((resolve, reject) => {
-    let diagnostic = "";
-    child.stderr.on("data", (chunk: Buffer) => {
-      diagnostic = (diagnostic + chunk.toString())
-        .replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[DATABASE_URL]")
-        .slice(-2000);
-    });
-    const timeout = setTimeout(() => child.kill("SIGKILL"), 60_000);
-    child.once("error", (error) => {
-      clearTimeout(timeout);
-      reject(error);
-    });
-    child.once("exit", (code) => {
-      clearTimeout(timeout);
-      if (code === 0) resolve();
-      else reject(new Error(`Worker jobs fixture exited ${code}: ${diagnostic}`));
-    });
-  });
-}
 
 describe.each(["direct", "hyperdrive"])("Worker cloud jobs (%s)", (mode) => {
   it("claims a persisted occurrence, reaches the account room and records an offline skip once", async () => {
@@ -99,7 +66,7 @@ describe.each(["direct", "hyperdrive"])("Worker cloud jobs (%s)", (mode) => {
       .update(cloudJob)
       .set({ nextRunAt: sql`now()` })
       .where(eq(cloudJob.id, job.id));
-    await scheduled(mode);
+    await runWorkerSchedule(url, mode, "schedules");
     const runs = await repository.history(owner, job.id, 50);
     expect(runs).toHaveLength(1);
     expect(runs[0]).toMatchObject({ status: "skipped", code: "DEVICE_OFFLINE", taskId: null });

@@ -56,6 +56,10 @@ and compilation dependencies complete before the long-running dev commands start
 Every workspace keeps test suites, test-only setup and fixtures under `tests/`.
 Use directories for test kind: Web has `tests/unit/` and `tests/component/`,
 UI has `tests/component/`, and Tooling has `tests/unit/` and `tests/integration/`.
+Tasks owns its pure `tests/unit/` and shared `tests/component/` views (composer,
+conversation, observed requests, workspace). Web/Desktop retain application auth,
+routes and IPC adapters. Host owns loopback relay `tests/integration/` for renewal,
+replay and snapshots, with fresh transport/storage resources per case.
 Keep filenames focused on the subject (`auth.test.tsx`, `cache.test.ts`).
 The `test:unit`, `test:component` and `test:integration` scripts select these directories.
 Declare a focused command when that layer has real suites; empty placeholder gates
@@ -70,6 +74,7 @@ The packaged smoke runner and scenario live in `tests/native/smoke/` outside the
 CLI suites separate `tests/unit/` and `tests/integration/`, then group by capability.
 Agent lifecycle/approvals, input races and context/resume have separate suites sharing
 per-case host fixtures. Their real ten-second deadline tests remain in integration;
+injected Pi cases separate lifecycle, tool durability and completion in unit.
 standalone artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
 live in their own `tests/helpers/` and own temporary resource cleanup.
 E2E server launch helpers live in `e2e/tests/helpers/`.
@@ -90,6 +95,8 @@ API tests use `apps/api/tests/unit/` and `tests/integration/` for the default ga
 under `tests/postgres/node/` and `tests/postgres/cloudflare/`, selected only by
 the `postgres` and `cloudflare-postgres` modes in one `vitest.config.ts`.
 The existing script names select the mode; the default test command never connects to a database.
+Worker suites share `tests/helpers/worker.ts` for process launch, readiness, redacted
+diagnostics and shutdown. Database seeding and behavior assertions stay in each suite.
 
 ## Explicit gates
 
