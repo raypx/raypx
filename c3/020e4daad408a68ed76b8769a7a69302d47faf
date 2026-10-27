@@ -1,0 +1,164 @@
+crates/raypx-core/AGENTS.md
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-16
+docs/README.md
+  s_2bb225eda98491::t_4312c4fa2108e1 9
+  s_c99f3390b62e01::t_d402672006e1e7 15
+docs/development/test-commands.md
+  s_c99f3390b62e01::t_d402672006e1e7 1-50,53-85,93-95
+  s_c99f3390b62e01::t_4e0f0ee66ae116 104-107
+  s_c99f3390b62e01::t_b5c2cf0b8eb647 96-103,108
+  s_c99f3390b62e01::t_88df4719d50642 51-52,86-92
+packages/tooling/AGENTS.md
+  s_2bb225eda98491::t_4312c4fa2108e1 26-27,31
+  s_c99f3390b62e01::t_95517fdd4a0ef2 13-15,21-22
+packages/tooling/src/tasks/delegation.ts
+  s_c99f3390b62e01::t_21dc33713eb09e 1-15
+  s_c99f3390b62e01::t_a5a398d603d672 16
+docs/development/validation-artifacts.md
+  s_c99f3390b62e01::t_042c91ac3a051a 10-12,16-18,48-51
+crates/raypx-core/src/lib.rs
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-22
+crates/raypx-core/tests/error.rs
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-30
+  s_2bb225eda98491::t_52758b0b5e4e8c 31-33
+docs/development/testing.md
+  s_c99f3390b62e01::t_042c91ac3a051a 65
+  s_2bb225eda98491::t_4312c4fa2108e1 30-32
+  s_c99f3390b62e01::t_d402672006e1e7 23-27,116,118,123,125,134,140-145,166,168
+docs/development/rust.md
+  s_2bb225eda98491::t_4312c4fa2108e1 1-62
+packages/tooling/src/validation/tests.ts
+  s_c99f3390b62e01::t_21dc33713eb09e 7,19
+  s_c99f3390b62e01::t_dd5c6f4932aaf3 22
+crates/raypx-core/examples/basic.rs
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-15
+.github/workflows/ci.yml
+  s_2bb225eda98491::t_77f52f37aaa7a1 70-71
+  s_c99f3390b62e01::t_8214b0c0490af6 73,77,81,87
+packages/tooling/src/tasks/leaf.ts
+  s_c99f3390b62e01::t_21dc33713eb09e 4,13-15
+  s_c99f3390b62e01::t_76b25e88ae4719 16
+packages/tooling/src/clean.ts
+  s_2bb225eda98491::t_77f52f37aaa7a1 39
+Cargo.toml
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-17
+apps/cli/tests/integration/runtime/agents/inputs.test.ts
+  s_c99f3390b62e01::t_88df4719d50642 190
+  s_c99f3390b62e01::t_cb0d17959f0e22 143-147,192
+  s_c99f3390b62e01::t_9069954ae52fe6 148-149,191
+apps/api/AGENTS.md
+  s_c99f3390b62e01::t_042c91ac3a051a 17,124
+packages/tooling/tests/unit/clean.test.ts
+  s_2bb225eda98491::t_77f52f37aaa7a1 17,40-43,83-84
+docs/development/getting-started.md
+  s_2bb225eda98491::t_4312c4fa2108e1 19-23,121
+rust-toolchain.toml
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-4
+AGENTS.md
+  s_2bb225eda98491::t_4312c4fa2108e1 51-54
+  s_c99f3390b62e01::t_95517fdd4a0ef2 57-58
+packages/tooling/src/tasks/model.ts
+  s_c99f3390b62e01::t_21dc33713eb09e 5,174
+  s_2bb225eda98491::t_77f52f37aaa7a1 191-206,208-209,211-221,225-228,234-240
+docs/development/workspaces.md
+  s_c99f3390b62e01::t_c014aecb49a9bd 37-39
+  s_2bb225eda98491::t_4312c4fa2108e1 3-6
+README.md
+  s_c99f3390b62e01::t_c014aecb49a9bd 42-44,55-56
+  s_2bb225eda98491::t_4312c4fa2108e1 13-14,47-48,52,57
+packages/tooling/tests/integration/browser-graph.test.ts
+  s_c99f3390b62e01::t_d402672006e1e7 31-44,52,57
+  s_c99f3390b62e01::t_ae85d205c283c6 23-30
+  s_c99f3390b62e01::t_43c2b2586632a9 45-51,53-56,58-59
+packages/tooling/src/repository.ts
+  s_c99f3390b62e01::t_21dc33713eb09e 19-22
+packages/tooling/src/cli.ts
+  s_c99f3390b62e01::t_42bb980f2a59ce 14,31-32,36,38,42,46,167
+  s_c99f3390b62e01::t_122d3c07269973 15,33-35
+crates/raypx-core/Cargo.toml
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-12
+packages/tooling/tests/unit/rust-tasks.test.ts
+  s_2bb225eda98491::t_4312c4fa2108e1 1-28,30-50
+  s_c99f3390b62e01::t_ae73c51b14d121 29
+e2e/AGENTS.md
+  s_c99f3390b62e01::t_042c91ac3a051a 10,17-20,50
+crates/AGENTS.md
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-25
+.gitignore
+  s_2bb225eda98491::t_77f52f37aaa7a1 78-80
+crates/raypx-core/src/error.rs
+  s_2bb225eda98491::t_77f52f37aaa7a1 1-45
+packages/tooling/src/validation/backends.ts
+  s_c99f3390b62e01::t_dd5c6f4932aaf3 59
+package.json
+  s_2bb225eda98491::t_77f52f37aaa7a1 109-114
+  s_c99f3390b62e01::t_a946dc3e462c00 116,137
+packages/tooling/src/test-command.ts
+  s_c99f3390b62e01::t_42bb980f2a59ce 1,88
+  s_c99f3390b62e01::t_122d3c07269973 23-28,35-36
+  s_c99f3390b62e01::t_337d8df5509f46 37,40-42
+  s_c99f3390b62e01::t_69421a66703178 72
+  s_c99f3390b62e01::t_5ec803b6ee5029 10-22,29-34,44-49,61-62,67-71,73-79,81-85,92-97,99-100,104-105,107-112,116-121,125-129,132-142,144-149
+  s_c99f3390b62e01::t_21dc33713eb09e 2-9,43,50-60,63-66,80,86-87,89-91,98,101-103,106,113-115,122-124,130-131,143,150-158
+  s_c99f3390b62e01::t_95517fdd4a0ef2 38-39
+packages/tooling/tests/integration/cache.test.ts
+  s_c99f3390b62e01::t_d402672006e1e7 124-136,138
+  s_c99f3390b62e01::t_42bb980f2a59ce 41
+  s_c99f3390b62e01::t_aa5218065c1429 137,139-151
+packages/tooling/tests/unit/test-command.test.ts
+  s_c99f3390b62e01::t_122d3c07269973 2,12-17
+  s_c99f3390b62e01::t_ae85d205c283c6 1,3-11,18-53
+  s_c99f3390b62e01::t_0bf43d920f9fc1 54-108
+crates/raypx-core/README.md
+  s_2bb225eda98491::t_4312c4fa2108e1 1-30
+Cargo.lock
+  s_2bb225eda98491::t_33b19fe2381ad4 1-7
+apps/api/package.json
+  s_c99f3390b62e01::t_c7b5392caa859f 19-21,60-62
+docs/architecture/remote-tasks.md
+  s_c99f3390b62e01::t_2875a6bce414d7 174-175
+docs/development/cloudflare.md
+  s_c99f3390b62e01::t_f5e72f1d426ddc 118-119
+docs/development/configuration.md
+  s_c99f3390b62e01::t_6ef2dc67f4153f 168
+docs/development/memory-review-ffcc9bd.md
+  s_c99f3390b62e01::t_28c2cead33f633 33
+docs/development/review-remediation-2026-10-24.md
+  s_c99f3390b62e01::t_fed0763691529b 65
+docs/development/server-jobs.md
+  s_c99f3390b62e01::t_87741beae74583 141,143
+docs/development/test-audit-2026-10-27.md
+  s_c99f3390b62e01::t_066dce059595ca 88-90
+docs/development/test-cases.md
+  s_c99f3390b62e01::t_fe18f6bb606f74 79-81,88
+docs/plans/web-mobile-capabilities.md
+  s_c99f3390b62e01::t_9dfba0f6717b27 66-67
+e2e/package.json
+  s_c99f3390b62e01::t_d6d641cdcef549 8,10-14,26-33
+packages/tooling/package.json
+  s_c99f3390b62e01::t_df7cce2ea3d7a3 22-24,54-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c3020e4daad408a68ed76b8769a7a69302d47faf",
+  "prompts": {},
+  "sessions": {
+    "s_2bb225eda98491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17b75-eeb1-73d0-9634-ac9931139225",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
