@@ -1,0 +1,22 @@
+apps/desktop/tests/scripts/native/smoke-launch.test.ts
+  s_88b6a82345bd6d::t_a6b1f1e6930bd8 1-27
+  s_88b6a82345bd6d::t_282a33896f18d2 28-30
+apps/desktop/tests/native/smoke/launch.ts
+  s_88b6a82345bd6d::t_a6b1f1e6930bd8 14-25,53-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "54bfaf367a66dc66984bc9fa3474cc55fae0136f",
+  "prompts": {},
+  "sessions": {
+    "s_88b6a82345bd6d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d0e-7dcb-7f03-ac3f-258224dacade",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
