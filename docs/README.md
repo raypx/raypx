@@ -11,6 +11,7 @@
 - [Desktop connection configuration](development/desktop-configuration.md)
 - [Pi AI model calls](development/ai.md)
 - [Testing and release gates](development/testing.md)
+- [Validation scripts, evidence and cleanup](development/validation-artifacts.md)
 - [Test case ownership and consolidation](development/test-cases.md)
 - [Full test inventory and restructuring, 2026-10-27](development/test-audit-2026-10-27.md)
 - [Node and Cloudflare deployments](development/cloudflare.md)

@@ -13,6 +13,10 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev policy | verify | verify:quick | doctor | clean
+- raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
+- raypx-dev test:backends [--workers-only | --with-e2e [-- Playwright flags]]
+- `clean:artifacts` removes reports, coverage, test-report caches and browser results,
+  preserving builds, SDKs, dependencies and source. `clean` includes these paths.
 - `verify:quick` checks source and tests; `verify` additionally builds and probes artifacts.
 - `clean` removes workspace outputs, native SDK/bundles and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
@@ -28,6 +32,10 @@ client implementations; delegate database commands to database's scripts. Derive
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.
+Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
+evidence only. Inventory compares case multiplicity and checks exact file selection.
+Backend validation provisions only owned temporary services, resolves binaries from
+PATH or explicit binary settings, and stops children before deleting their data.
 Read i18n's public static `./config` through workspace discovery for locale policy;
 do not add the i18n runtime to root tooling's dependency closure.
 Preserve the Bun/jsdom preload and independent workspace test runners.

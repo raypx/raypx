@@ -73,4 +73,5 @@ apps/*/.output-cloudflare/
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
+# Generated validation evidence only; reusable scripts belong in packages/tooling.
 .artifacts/

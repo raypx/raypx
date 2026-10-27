@@ -53,6 +53,10 @@ and compilation dependencies complete before the long-running dev commands start
 
 ## Test locations
 
+Reusable validation and evidence cleanup are documented in
+[validation artifacts](validation-artifacts.md): `test:inventory`, `test:backends`
+and `clean:artifacts`. Scripts belong in Tooling; `.artifacts/` holds generated output only.
+
 Every workspace keeps test suites, test-only setup and fixtures under `tests/`.
 Use directories for test kind: Web has `tests/unit/` and `tests/component/`,
 UI has `tests/component/`, and Tooling has `tests/unit/` and `tests/integration/`.

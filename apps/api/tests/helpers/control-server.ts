@@ -12,7 +12,7 @@ import { createControlRepository } from "../../server/control/repository.js";
 const url = process.env.TEST_DATABASE_URL;
 const port = Number(process.env.CONTROL_E2E_PORT);
 if (
-  process.env.NODE_ENV !== "test" ||
+  process.env.RAYPX_VALIDATION !== "1" ||
   !url ||
   !new URL(url).pathname.endsWith("_test") ||
   !Number.isInteger(port) ||
@@ -34,7 +34,28 @@ const auth = createAuth({
   mailer: { async sendVerification() {}, async sendPasswordReset() {} },
 });
 const control = new ControlService(createControlRepository(connection.db));
-const hub = new RelayHub(async (run) => run(control));
+const hub = new RelayHub(async (run) => {
+  try {
+    return await run(control);
+  } catch (error) {
+    // Fixture diagnostics must not include SQL, task bodies or credentials.
+    let failure: unknown = error,
+      code = "UNAVAILABLE";
+    for (let depth = 0; depth < 4 && failure && typeof failure === "object"; depth++) {
+      if (
+        "code" in failure &&
+        typeof failure.code === "string" &&
+        /^[A-Z0-9_]{1,60}$/.test(failure.code)
+      ) {
+        code = failure.code;
+        break;
+      }
+      failure = "cause" in failure ? failure.cause : undefined;
+    }
+    console.error(`Control fixture operation failed: ${code}`);
+    throw error;
+  }
+});
 const app = createApiApp({
   authHandler: (request) => auth.handler(request),
   readSession: (headers) => readAuthSession(auth, headers),

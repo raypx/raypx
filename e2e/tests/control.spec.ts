@@ -47,7 +47,11 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     closed = event.code;
   });
   const take = async <T extends RelayServerFrame["type"]>(type: T) => {
-    await expect.poll(() => messages.some((frame) => frame.type === type)).toBe(true);
+    await expect
+      .poll(() =>
+        messages.map((frame) => (frame.type === "error" ? `error:${frame.code}` : frame.type)),
+      )
+      .toContain(type);
     return messages.splice(
       messages.findIndex((frame) => frame.type === type),
       1,

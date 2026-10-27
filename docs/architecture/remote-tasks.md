@@ -178,7 +178,9 @@ require an explicit isolated `*_test` database; never use an operator database.
 
 The browser relay gate uses `apps/api/tests/helpers/control-server.ts`, an isolated
 database, `CONTROL_E2E_API_URL`, and Web/Desktop builds pointing `VITE_API_URL` at
-that fixture. It drives real login and two renderers with a simulated device.
+that fixture. Starting the fixture requires server-only `RAYPX_VALIDATION=1`;
+it does not use `NODE_ENV` as its authorization switch. It drives real login and
+two renderers with a simulated device.
 Native transport tests and CLI subprocess fixtures cover their boundaries
 separately. Packaged native GUI behavior, hidden-window credential renewal,
 notifications, Windows process cleanup and live provider inference still require

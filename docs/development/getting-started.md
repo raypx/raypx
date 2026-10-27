@@ -106,6 +106,11 @@ live output and cross-owner controls remain proposed in the
 
 ## Build caches
 
+`bun run clean:artifacts` removes validation evidence, coverage, test-report caches
+and browser reports while preserving builds and SDKs. See
+[validation scripts and cleanup](validation-artifacts.md) for the maintained checks
+and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
+
 `bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
 Desktop's `build`, `artifacts`, `.hutch` and `.cottontail-tmp` directories, root
 `.artifacts`, and browser test results/reports. It awaits asynchronous deletion in

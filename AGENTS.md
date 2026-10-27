@@ -52,6 +52,9 @@ The accepted foundation design supersedes documents in docs/history.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Put test suites and test-only setup/fixtures in each workspace's `tests/` directory.
   Shared runner defaults live in root test.config.ts; application Vite plugins must not enter the test runner.
+- Reusable repository validation belongs in Tooling's `src/validation/`. `.artifacts/`
+  holds generated evidence only; never store authored scripts there. `clean:artifacts`
+  removes that evidence and test reports without removing builds or user data.
 
 ## Code and data
 

@@ -48,8 +48,9 @@ errors; remote views require confirmed login and preserve their return destinati
 
 Run bun run --cwd e2e check; bun run test:e2e is an explicit browser gate.
 
-The control browser test is an explicit real-backend gate. Set CONTROL_E2E_API_URL
-and build both surfaces against its isolated fixture API. The default browser
+The control browser test is an explicit real-backend gate. Launch the isolated API
+with `RAYPX_VALIDATION=1` (never a client flag), set CONTROL_E2E_API_URL and build
+both surfaces against that fixture API. The default browser
 suite skips this gate when the fixture is absent; it must not be reported as passed.
 For an HTTP loopback fixture, set `VITE_API_URL` to that exact API origin when
 building both surfaces. The dedicated Desktop browser output includes only that

@@ -84,27 +84,36 @@ it.skipIf(process.platform === "win32")(
       ],
       { stdout: "ignore", stderr: "pipe" },
     );
+    let output = "";
+    const reading = (async () => {
+      for await (const chunk of child.stderr) output += new TextDecoder().decode(chunk);
+    })();
     try {
       await expect
-        .poll(() => {
-          try {
-            return readDaemon(profilePath({ dataDir }));
-          } catch {
-            return undefined;
-          }
-        })
+        .poll(
+          () => {
+            try {
+              return readDaemon(profilePath({ dataDir }));
+            } catch {
+              return undefined;
+            }
+          },
+          { timeout: 10_000 },
+        )
         .toBeDefined();
-      await Bun.sleep(300);
+      await expect.poll(() => output.includes("UNHANDLED_REJECTION")).toBe(true);
       expect((await connectDaemon({ dataDir }, false)).epoch).toBeDefined();
       await stopDaemon({ dataDir });
       expect(await child.exited).toBe(0);
-      const output = await new Response(child.stderr).text();
+      await reading;
       expect(output).toContain("UNHANDLED_REJECTION");
       expect(output).not.toContain("private injected content");
     } finally {
       child.kill();
       await child.exited;
+      await reading;
       rmSync(dataDir, { recursive: true, force: true });
     }
   },
+  30_000,
 );

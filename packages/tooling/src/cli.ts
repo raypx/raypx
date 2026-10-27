@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import { readToolchain } from "@raypx-kit/devkit/toolchain";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
-import { clean } from "./clean.js";
+import { clean, cleanArtifacts } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
 import { discover, pinnedNode, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
@@ -27,6 +27,16 @@ function option(name: string, fallback: string) {
 
 async function main() {
   switch (command) {
+    case "test:inventory": {
+      const { auditTests } = await import("./validation/tests.js");
+      await auditTests(root, args);
+      break;
+    }
+    case "test:backends": {
+      const { validateBackends } = await import("./validation/backends.js");
+      await validateBackends(root, args);
+      break;
+    }
     case "e2e": {
       const planned = planBrowserTests(args);
       await runTasks(root, planned.task, planned.args, planned.env);
@@ -133,6 +143,10 @@ async function main() {
       console.log("Build outputs, native SDK and test artifacts removed");
       break;
     }
+    case "clean:artifacts":
+      await cleanArtifacts(root);
+      console.log("Validation reports and test artifacts removed");
+      break;
     case "doctor": {
       const pins = readToolchain(root);
       if (Bun.version !== pins.bun) throw new Error(`Expected Bun ${pins.bun}, got ${Bun.version}`);
@@ -146,7 +160,7 @@ async function main() {
     case undefined:
     default:
       console.log(
-        "raypx-dev: tasks | e2e | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | doctor",
+        "raypx-dev: tasks | e2e | test:inventory | test:backends | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | clean:artifacts | doctor",
       );
   }
 }
