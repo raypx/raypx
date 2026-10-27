@@ -1,0 +1,27 @@
+apps/desktop/scripts/native/windows-smoke-install.ts
+  s_88b6a82345bd6d::t_f8b0a75cc9e276 3,140,143,146-166,206-208,210-211,221-229,306-313,318,320,322
+  s_88b6a82345bd6d::t_9c242198e8d0eb 209,314-317,319
+  s_88b6a82345bd6d::t_46227c3cc54ab1 5,212-220
+apps/desktop/tests/scripts/native/windows-smoke-install.test.ts
+  s_88b6a82345bd6d::t_46227c3cc54ab1 24-25,28-29,37,39-40,44-46,48,70-78,112-113,115,134-137,315
+  s_88b6a82345bd6d::t_1695b569b758d2 259-309,311,316-317,319-320
+  s_88b6a82345bd6d::t_910b20d59ebaf9 310,312-314,318,321-323
+docs/plans/tauri-desktop-migration.md
+  s_88b6a82345bd6d::t_b4dd0c9e849cd0 25,35,47-53,56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "02e5f33a9390c3f0b0f975b6164b2b9f9cb6cda4",
+  "prompts": {},
+  "sessions": {
+    "s_88b6a82345bd6d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d0e-7dcb-7f03-ac3f-258224dacade",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
