@@ -1,0 +1,119 @@
+.github/workflows/ci.yml
+  s_4b3ba4911a2d9b::t_a41e3ca14a7d2a 62,64,127,129
+AGENTS.md
+  s_4b3ba4911a2d9b::t_6450d37246984d 33-37,44
+README.md
+  s_4b3ba4911a2d9b::t_0f08a2fd060aa2 9-12,15,27-28
+apps/api/AGENTS.md
+  s_4b3ba4911a2d9b::t_3d2ea41b787763 26,63-64
+apps/api/Dockerfile
+  s_4b3ba4911a2d9b::t_6f89a659d320f0 12,39,42-43,45
+apps/api/package.json
+  s_4b3ba4911a2d9b::t_92c706545d6d0f 7-8,14
+apps/api/server/api.ts
+  s_4b3ba4911a2d9b::t_8c3eed43508e3a 482
+apps/api/server/app/server.ts
+  s_4b3ba4911a2d9b::t_83b247cc4535f7 1,11
+apps/api/server/jobs/cleanup.ts
+  s_4b3ba4911a2d9b::t_69fd807503bb0d 29
+apps/api/server/jobs/runtime/cleanup.ts
+  s_4b3ba4911a2d9b::t_544ceeb9a9fca8 2
+apps/api/server/jobs/runtime/tick.ts
+  s_4b3ba4911a2d9b::t_87d36945c63cd6 2
+apps/api/server/relay/server.ts
+  s_4b3ba4911a2d9b::t_613375d2c16c8e 2,14-15
+apps/api/server/runtime/plugin.ts
+  s_4b3ba4911a2d9b::t_644aaff611cf80 2
+apps/api/server/runtime/redis.ts
+  s_4b3ba4911a2d9b::t_398fd46632c1f1 15
+apps/api/server/runtime/server.ts
+  s_4b3ba4911a2d9b::t_a78798f50842c2 14,16,21,26,33-34,46-48,52
+apps/api/server/runtime/shared.ts
+  s_4b3ba4911a2d9b::t_ade36fd942f434 114
+apps/api/tests/integration/runtime-providers.test.ts
+  s_4b3ba4911a2d9b::t_8836da37583b29 6,21,68
+apps/api/tests/unit/jobs/runtime.test.ts
+  s_4b3ba4911a2d9b::t_b220f66310c166 2,4-5,17,19-20
+apps/api/tests/unit/jobs/tick-runtime.test.ts
+  s_4b3ba4911a2d9b::t_561a1eed4f6d5b 2-4,7,9-10
+apps/api/vite.app.config.ts
+  s_4b3ba4911a2d9b::t_7e80b1b0f15ceb 6,16,19,28
+apps/desktop/tests/native/smoke/agents.ts
+  s_4b3ba4911a2d9b::t_39116e975b03fc 91-93,98-99,101,113,153,160,179,184
+apps/web/AGENTS.md
+  s_4b3ba4911a2d9b::t_64b416a4e9a3ff 96-97
+apps/web/Dockerfile
+  s_4b3ba4911a2d9b::t_c4a1e97409de17 12,28,31-32,34
+apps/web/package.json
+  s_4b3ba4911a2d9b::t_dbb5e12cc2e78e 7-10
+deploy/AGENTS.md
+  s_4b3ba4911a2d9b::t_e6894686dafdaa 3,15
+deploy/compose.yaml
+  s_4b3ba4911a2d9b::t_242508ffc73b2b 65,95
+docs/architecture/README.md
+  s_4b3ba4911a2d9b::t_71f686a286aba6 9,21,23
+docs/development/deployment.md
+  s_4b3ba4911a2d9b::t_c1d3a235b475c1 65
+docs/development/getting-started.md
+  s_4b3ba4911a2d9b::t_c95f7907a75874 3-4,7,56-58
+docs/development/review-remediation-2026-10-24.md
+  s_4b3ba4911a2d9b::t_8de1b5e7fd2b34 4
+docs/development/testing.md
+  s_4b3ba4911a2d9b::t_332c842deb006b 5,7,13,166,177,187
+e2e/AGENTS.md
+  s_4b3ba4911a2d9b::t_cd8d55cc8cc992 11-12
+e2e/tests/helpers/serve-web.ts
+  s_4b3ba4911a2d9b::t_baaff1b6b4d466 4
+mise.toml
+  s_4b3ba4911a2d9b::t_b78eb08b85d332 1,4
+packages/email/package.json
+  s_4b3ba4911a2d9b::t_b0491859247570 11
+packages/tooling/AGENTS.md
+  s_4b3ba4911a2d9b::t_58376c71ea1f37 33,61-63,65,72
+packages/tooling/src/build/nitro.ts
+  s_4b3ba4911a2d9b::t_6c785c4b32db7a 3,6
+packages/tooling/src/cli.ts
+  s_4b3ba4911a2d9b::t_7c59eb39848d98 10,13,152-154
+packages/tooling/src/policy.ts
+  s_4b3ba4911a2d9b::t_32efaeaa54ff1c 9,35-39,41-44
+packages/tooling/src/repository.ts
+  s_4b3ba4911a2d9b::t_9a474788ea4d9f 63
+packages/tooling/src/smoke/artifacts.ts
+  s_4b3ba4911a2d9b::t_bd28b3dc057fac 4,14-15,66,72,77,82,118
+packages/tooling/src/smoke/index.ts
+  s_4b3ba4911a2d9b::t_821f109c4056a8 4
+packages/tooling/src/tasks/model.ts
+  s_4b3ba4911a2d9b::t_89b5a2bd53d779 51,78
+packages/tooling/src/validation/toolchain.ts
+  s_4b3ba4911a2d9b::t_1226a172ce5d52 1-142
+packages/tooling/tests/unit/backend-environment.test.ts
+  s_4b3ba4911a2d9b::t_72156d4931fc41 11,18
+packages/tooling/tests/unit/toolchain.test.ts
+  s_4b3ba4911a2d9b::t_8393f35a1360ec 1-65
+skills/raypx/SKILL.md
+  s_4b3ba4911a2d9b::t_5894b76d3d3307 3,17,75
+skills/raypx/references/architecture.md
+  s_4b3ba4911a2d9b::t_b7e69b489bf9f6 11
+skills/raypx/references/deployment.md
+  s_4b3ba4911a2d9b::t_2fe1686718b1f2 3,5-6
+skills/raypx/references/setup.md
+  s_4b3ba4911a2d9b::t_be7a97e67b5788 7,9-10,25
+skills/raypx/references/verification.md
+  s_4b3ba4911a2d9b::t_b985173f2310ae 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2fa5ebcc182d5bcd080d31fc0616dcf3adc7e9f5",
+  "prompts": {},
+  "sessions": {
+    "s_4b3ba4911a2d9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14cc4b72-00cc-4077-b7a1-98e1c8cb46b1",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
