@@ -61,6 +61,10 @@ Smoke orchestration, Node probes and the Node-executed Worker harness live in
 `src/smoke/`. Unit and integration tests live in `tests/unit/` and `tests/integration/`.
 Keep scaffold and locale policy suites separate; shared temporary workspace fixtures
 live in `tests/helpers/workspace.ts` and register cleanup for each suite.
+The inventory regression requires a focused command for each active test layer,
+rejects empty layer commands and `.only`, and keeps PostgreSQL/Redis and Playwright
+outside ordinary Vitest layers. Scaffolding with tests creates a strict default
+runner; add focused commands when their first real suites exist.
 Workspace scaffolding copies static configuration from `src/templates/workspace/`
 into generated TypeScript paths. Every scaffold registers a lightweight task config.
 Its `agents.ts` renders workspace instructions;

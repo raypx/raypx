@@ -58,22 +58,32 @@ Use directories for test kind: Web has `tests/unit/` and `tests/component/`,
 UI has `tests/component/`, and Tooling has `tests/unit/` and `tests/integration/`.
 Keep filenames focused on the subject (`auth.test.tsx`, `cache.test.ts`).
 The `test:unit`, `test:component` and `test:integration` scripts select these directories.
+Declare a focused command when that layer has real suites; empty placeholder gates
+are rejected by Tooling's inventory test. A new scaffold with test support fails
+until actual cases are written. The inventory check also rejects committed `.only`.
 Desktop separates `tests/renderer/`, `tests/native/` and `tests/scripts/` and checks
 each against its platform types. Renderer suites use `unit/` and `component/`
-subdirectories; scripts select directories independently of the `.ts`/`.tsx` extension.
+subdirectories; native subprocess/OS-lock tests use `tests/native/integration/`.
+Scripts select directories independently of the `.ts`/`.tsx` extension.
 Development and packaging scripts live under `apps/desktop/scripts/native/`.
 The packaged smoke runner and scenario live in `tests/native/smoke/` outside the default suite.
-CLI runtime suites are split by capability under `tests/runtime/`; standalone
-artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
+CLI suites separate `tests/unit/` and `tests/integration/`, then group by capability.
+Agent lifecycle/approvals, input races and context/resume have separate suites sharing
+per-case host fixtures. Their real ten-second deadline tests remain in integration;
+standalone artifact and PTY smoke gates live in `tests/smoke/`. CLI and Tooling shared fixtures
 live in their own `tests/helpers/` and own temporary resource cleanup.
 E2E server launch helpers live in `e2e/tests/helpers/`.
 Ordinary browser cases are grouped by access, auth, settings, navigation, analytics
 and feature journeys; task conversation/history/drafts live under `e2e/tests/tasks/`.
 See [case ownership and consolidation](test-cases.md) for the coverage map and rules
 for combining cases without replacing independent safety or platform checks.
+The [2026-10-27 inventory audit](test-audit-2026-10-27.md) records the complete
+focused selection, preserved case identities and explicit backend acceptance.
 i18n separates `tests/node/` from `tests/browser/` to preserve independent React
 renderer environments, with provider components under `tests/browser/component/`.
 The shared Bun/jsdom preload lives in `packages/tooling/tests/setup/`.
+Web's pure unit project does not initialize jsdom or DOM setup. Web and i18n use
+the shared `workspaceTestProjects` helper to keep project defaults consistent.
 
 API tests use `apps/api/tests/unit/` and `tests/integration/` for the default gate.
 `test:unit` and `test:integration` select these directories. Database suites live

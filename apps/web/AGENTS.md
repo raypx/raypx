@@ -15,6 +15,8 @@ application is an independent composition root and is never imported by another 
 - Tests live under `tests/`, alongside shared test setup; keep test files
   outside `src/routes/` so route discovery needs no test-specific exclusions.
   Use `tests/unit/` and `tests/component/` for test kind, then feature directories.
+  Independent unit/component projects use the `node` environment for pure cases and load jsdom,
+  DOM matchers and motion setup only for component cases.
 - `src/router.tsx` exports `getRouter`. `src/routes/__root.tsx` renders only the document,
   theme script and preference providers; keep layout and feature dependencies out of it.
 - Route-group layouts (`route.tsx` inside a `(group)` directory, no URL segment) isolate

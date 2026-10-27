@@ -38,15 +38,13 @@ Own native directory authorization and local UX. Runtime implementations live ex
 
 `src/features/auth/components/form.tsx` adapts the shared `@raypx/auth/client` form
 for Desktop account URLs, auth client and router search. Shared forms own fields,
-translated feedback and submission state; the renderer owns navigation. Keep
-renderer tests under `tests/renderer/unit/` and `tests/renderer/component/`,
-then mirror feature and route directories.
-Native tests use `tests/native/` with Bun types; `tests/native/smoke/` contains the
+translated feedback and submission state; the renderer owns navigation. Renderer tests use
+`tests/renderer/unit/` and `tests/renderer/component/`, mirroring feature and route directories.
+Native tests use Bun types; real subprocess/OS-lock cases live in `tests/native/integration/`. `tests/native/smoke/` contains the
 packaged scenario, selected by Electrobun only with `RAYPX_NATIVE_SMOKE=1`.
 Native scripts/tests live in `scripts/native/` and `tests/scripts/native/` with Bun types.
 All tests stay outside `src/routes/` discovery and the renderer configuration.
-Use short feature-local filenames such as `form.tsx` and `routes.test.tsx`;
-exported symbols retain feature context. Test scripts select `component/` and
+Use short feature-local filenames such as `form.tsx` and `routes.test.tsx`; exported symbols retain feature context. Test scripts select `component/` and
 `integration/` directories; `test:unit` excludes those directories. File extensions
 describe source syntax, and each suite declares its required test environment.
 
@@ -102,6 +100,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
 - Packaged HTML uses hashed startup scripts and a restrictive CSP. Validate HTTP(S)
   external links in Native before opening the system browser. Keep IPC, theme and terminal
   checks in the packaged smoke after CSP changes.
+- For canonical `artifacts/browser/client` only, `native:csp` permits the exact validated HTTP loopback `VITE_API_URL`; normal packaged HTML keeps its default policy.
 - Only bundled views and loopback development content receive native RPC. Renderer cannot register arbitrary directory grants; use native picker.
 - Local file authorization does not sandbox external commands. Commands run with normal OS user permissions.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.

@@ -182,3 +182,11 @@ this macOS host; its unit-only entry remains cached. This is distinct from the e
 all-hit benchmark. Creating output directories after clean also caused one-time
 directory-listing invalidations despite file exclusions; the first post-build test
 repeat took 87.12 seconds. These samples do not establish a CI speedup.
+
+## Complete suite audit, 2026-10-27
+
+The [full inventory and restructuring record](test-audit-2026-10-27.md) reconciles
+all 191 ordinary files and preserves every original case identity. Focused gates
+now contain 569 unit, 287 component and 234 integration cases with no overlapping
+files. It also records real PostgreSQL/Redis, Workers and browser relay acceptance;
+external inference and unavailable platforms remain separate gates.

@@ -13,8 +13,6 @@
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
-    "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
-    "test:component": "bun --bun vp test --run --passWithNoTests component/",
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
     "generate": "bun --bun drizzle-kit generate --config drizzle.config.ts",
     "migrate": "bun src/commands.ts migrate",

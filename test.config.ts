@@ -2,15 +2,15 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus/test/config";
 
 /** Runner-only defaults; application Vite plugins never enter the test process. */
-export function workspaceTests(
-  options: {
-    environment?: "node" | "jsdom";
-    include?: string[];
-    env?: Record<string, string>;
-    setupFiles?: string[];
-    fileParallelism?: boolean;
-  } = {},
-) {
+interface WorkspaceTestOptions {
+  environment?: "node" | "jsdom";
+  include?: string[];
+  env?: Record<string, string>;
+  setupFiles?: string[];
+  fileParallelism?: boolean;
+}
+
+export function workspaceTests(options: WorkspaceTestOptions = {}) {
   return defineConfig({
     // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
     resolve: { dedupe: ["react", "react-dom"] },
@@ -28,6 +28,21 @@ export function workspaceTests(
       include: ["tests/**/*.{test,spec}.{ts,tsx}"],
       coverage: { reporter: ["text", "json", "lcov"] },
       ...options,
+    },
+  });
+}
+
+/** Keep pure and DOM cases in separate environments within one workspace runner. */
+export function workspaceTestProjects(
+  projects: (WorkspaceTestOptions & { name: string; include: string[] })[],
+) {
+  const shared = workspaceTests();
+  return defineConfig({
+    ...shared,
+    test: {
+      ...shared.test,
+      include: [],
+      projects: projects.map((project) => ({ test: { ...shared.test, ...project } })),
     },
   });
 }

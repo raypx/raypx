@@ -12,6 +12,7 @@
 - [Pi AI model calls](development/ai.md)
 - [Testing and release gates](development/testing.md)
 - [Test case ownership and consolidation](development/test-cases.md)
+- [Full test inventory and restructuring, 2026-10-27](development/test-audit-2026-10-27.md)
 - [Node and Cloudflare deployments](development/cloudflare.md)
 - [Shared deployment per project](development/deployment.md)
 - [Existing beta environment](development/beta.md)

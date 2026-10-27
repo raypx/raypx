@@ -7,8 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check": "bun --check --tsconfig-override tsconfig.json",
-    "test": "bun --bun vp test --run --passWithNoTests"
+    "check": "bun --check --tsconfig-override tsconfig.json"
   },
   "dependencies": {
     "@raypx/client": "workspace:*",

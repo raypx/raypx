@@ -28,11 +28,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
   };
   if (options.tests)
     Object.assign(scripts, {
-      test: "bun --bun vp test --run --passWithNoTests",
-      "test:unit":
-        "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
-      "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
-      "test:component": "bun --bun vp test --run --passWithNoTests component/",
+      test: "bun --bun vp test --run",
     });
   const manifest = {
     name: packageName,

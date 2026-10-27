@@ -38,6 +38,9 @@ current eligibility and exact selected revisions in one consistent repository sn
 ## Verification
 
 Run bun run --cwd packages/memory check and test.
+Component suites separate library mutations/history, picker/snapshot and prompt
+budgets. `tests/helpers/client.tsx` owns fresh port fixtures and per-case DOM cleanup;
+do not share pending requests or mutable clients between cases.
 
 Archived references can be permanently deleted with an expected revision. Deletion
 atomically removes the source and all its versions and frees a document slot;

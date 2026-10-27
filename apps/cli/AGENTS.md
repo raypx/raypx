@@ -63,9 +63,12 @@ Own authorized directory operations, device-local SQLite state, Cron scheduling,
 
 ## Verification
 
-Tests live under `tests/`, with subdirectories mirroring the runtime, commands and TUI.
-Runtime suites are split by files, jobs, process and state under `tests/runtime/`,
-with temporary profile creation and cleanup in `tests/helpers/runtime.ts`.
+Tests live under `tests/unit/` and `tests/integration/`, then mirror runtime,
+commands and TUI. Pure parsers, injected provider ports and SDK loops stay in unit;
+filesystem/SQLite, real HTTP, subprocess and daemon boundaries stay in integration.
+Agent integration suites separate lifecycle/approvals, inputs and context/resume.
+Temporary profiles and execution hosts are owned by `tests/helpers/runtime.ts` and
+`tests/helpers/agents.ts`; each case still receives a fresh runtime and directory.
 `tests/smoke/artifact.ts` validates the built executable separately from the unit tests.
 `tests/smoke/tui.ts` owns the explicit PTY smoke gate.
 Its Python driver lives in `tests/fixtures/tui/`; simulated Agent executables and

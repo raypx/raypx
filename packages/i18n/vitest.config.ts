@@ -1,30 +1,10 @@
-import { workspaceTests } from "../../test.config.js";
-import { defineConfig } from "vite-plus/test/config";
+import { workspaceTestProjects } from "../../test.config.js";
 
-const shared = workspaceTests();
-
-export default defineConfig({
-  ...shared,
-  test: {
-    ...shared.test,
-    include: [],
-    projects: [
-      {
-        test: {
-          ...shared.test,
-          name: "server",
-          environment: "node",
-          include: ["tests/node/**/*.{test,spec}.{ts,tsx}"],
-        },
-      },
-      {
-        test: {
-          ...shared.test,
-          name: "browser",
-          environment: "jsdom",
-          include: ["tests/browser/**/*.{test,spec}.{ts,tsx}"],
-        },
-      },
-    ],
+export default workspaceTestProjects([
+  { name: "server", include: ["tests/node/**/*.{test,spec}.{ts,tsx}"] },
+  {
+    name: "browser",
+    environment: "jsdom",
+    include: ["tests/browser/**/*.{test,spec}.{ts,tsx}"],
   },
-});
+]);
