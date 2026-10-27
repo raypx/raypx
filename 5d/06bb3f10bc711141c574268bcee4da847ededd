@@ -1,0 +1,279 @@
+.github/workflows/ci.yml
+  s_88b6a82345bd6d::t_27fe1a96a73bb9 97,100-112,115-119,148-254,257-290
+.github/workflows/rust.yml
+  s_88b6a82345bd6d::t_3615d88d0daa3c 1,36-37
+AGENTS.md
+  s_88b6a82345bd6d::t_58abc583d60591 38,50-51,108
+Cargo.lock
+  s_88b6a82345bd6d::t_f5f88beeeafb85 5-3404,3408-6286
+Cargo.toml
+  s_88b6a82345bd6d::t_07e482c0e07e08 2
+README.md
+  s_88b6a82345bd6d::t_e8198fd66fa16b 3,13,32-34
+apps/cli/AGENTS.md
+  s_88b6a82345bd6d::t_2d27119dc53843 12,42,84-86
+apps/cli/src/runtime/daemon/control.ts
+  s_88b6a82345bd6d::t_766dd678dde42e 62,268,487,500-504
+apps/cli/src/runtime/daemon/vault.ts
+  s_88b6a82345bd6d::t_dcdcd51fa08e3a 23-31,41,43,61,63,72,74
+apps/cli/src/runtime/foreground.ts
+  s_88b6a82345bd6d::t_890c3225d226e8 1-87
+apps/cli/src/transport/stdio.ts
+  s_88b6a82345bd6d::t_071412dfde486d 3,45-48
+apps/cli/tests/integration/runtime/foreground.test.ts
+  s_88b6a82345bd6d::t_02e9e8126c3a58 1-204
+apps/cli/tests/unit/runtime/daemon/vault.test.ts
+  s_88b6a82345bd6d::t_7afcc872167378 1-76
+apps/desktop/.gitignore
+  s_88b6a82345bd6d::t_7f80f8e7b97ee2 3-5
+apps/desktop/AGENTS.md
+  s_88b6a82345bd6d::t_46c72a3cb3aa2a 5,9,44,59-102,108,139,144
+apps/desktop/bridge.ts
+  s_88b6a82345bd6d::t_9be2580aba8d87 1-90
+apps/desktop/electrobun.config.ts
+  s_88b6a82345bd6d::t_452c06ea969239 38
+apps/desktop/native/daemon-control.ts
+  s_88b6a82345bd6d::t_ae327832341b22 1
+apps/desktop/native/main.ts
+  s_88b6a82345bd6d::t_8669865a5bdc1f 228,239,244
+apps/desktop/native/preferences.ts
+  s_88b6a82345bd6d::t_bfbfa42d000ae2 9,15,18,20-21,23,28,31-35,37-40,44,47,60,63
+apps/desktop/native/rpc.ts
+  s_88b6a82345bd6d::t_f3e8c790f9405a 1
+apps/desktop/native/tsconfig.json
+  s_88b6a82345bd6d::t_13ea85d69c250c 2-4
+apps/desktop/native/window.ts
+  s_88b6a82345bd6d::t_df0a3ad5b77454 1,5-13
+apps/desktop/package.json
+  s_88b6a82345bd6d::t_7608c4ba987496 18-19,25-37,54,64,68,94-95
+apps/desktop/preferences.ts
+  s_88b6a82345bd6d::t_10c37c9d742e1e 15-19
+apps/desktop/scripts/native/csp.ts
+  s_88b6a82345bd6d::t_98361167d76717 20
+apps/desktop/scripts/native/dev.ts
+  s_88b6a82345bd6d::t_a98d1510f3515f 60-75
+apps/desktop/scripts/native/generate.ts
+  s_88b6a82345bd6d::t_941dcea11c7572 1-22
+apps/desktop/scripts/native/prepare-cli.ts
+  s_88b6a82345bd6d::t_92c15327997725 5-17,32-37,39-40
+apps/desktop/scripts/native/presentation.ts
+  s_88b6a82345bd6d::t_22c8c12a84ee4f 1-6
+apps/desktop/scripts/native/task.ts
+  s_88b6a82345bd6d::t_a8b0e04404f14a 10-27,29,35,38,41-45,57-58,60,76-81,105-124,127-128
+apps/desktop/scripts/native/update-manifest.ts
+  s_88b6a82345bd6d::t_6b2e0609bccda9 1-192
+apps/desktop/scripts/tsconfig.json
+  s_88b6a82345bd6d::t_dadb7133ca9cd0 2
+apps/desktop/src-tauri/.gitignore
+  s_88b6a82345bd6d::t_d830cfef96015e 1-3
+apps/desktop/src-tauri/Cargo.toml
+  s_88b6a82345bd6d::t_32933fdefe9477 1-60
+apps/desktop/src-tauri/Entitlements.plist
+  s_88b6a82345bd6d::t_8ba22b74ade533 1-6
+apps/desktop/src-tauri/build.rs
+  s_88b6a82345bd6d::t_a0b4753375ec10 1-55
+apps/desktop/src-tauri/capabilities/main.json
+  s_88b6a82345bd6d::t_5ec4dd808e6826 1-8
+apps/desktop/src-tauri/generated/desktop-methods.json
+  s_88b6a82345bd6d::t_790e9f5aed3f7f 1-21
+apps/desktop/src-tauri/generated/local-methods.json
+  s_88b6a82345bd6d::t_fce0ef1a9d961f 1-73
+apps/desktop/src-tauri/generated/notifications.json
+  s_88b6a82345bd6d::t_56c8edee9c0668 1-4
+apps/desktop/src-tauri/src/api.rs
+  s_88b6a82345bd6d::t_02e582f35d6853 1-336
+apps/desktop/src-tauri/src/config.rs
+  s_88b6a82345bd6d::t_d570f3230dd33b 1-244
+apps/desktop/src-tauri/src/connectors.rs
+  s_88b6a82345bd6d::t_64a7143f263c3c 1-92
+apps/desktop/src-tauri/src/control.rs
+  s_88b6a82345bd6d::t_a3e56b83aac29e 1-175
+apps/desktop/src-tauri/src/cookies.rs
+  s_88b6a82345bd6d::t_46d66d44cd528f 1-498
+apps/desktop/src-tauri/src/engine.rs
+  s_88b6a82345bd6d::t_e94521bfb7840c 1-479
+apps/desktop/src-tauri/src/external.rs
+  s_88b6a82345bd6d::t_2401ef13e59462 1-10
+apps/desktop/src-tauri/src/lease.rs
+  s_88b6a82345bd6d::t_714a35b9306775 1-56
+apps/desktop/src-tauri/src/lib.rs
+  s_88b6a82345bd6d::t_c90e36d5fdf4cc 1-675
+apps/desktop/src-tauri/src/local_request.rs
+  s_88b6a82345bd6d::t_c59b7e7b86fc65 1-86
+apps/desktop/src-tauri/src/lock.rs
+  s_88b6a82345bd6d::t_0333bcb7ded2ac 1-28
+apps/desktop/src-tauri/src/main.rs
+  s_88b6a82345bd6d::t_5b4ef35078edff 1-4
+apps/desktop/src-tauri/src/orpc_client.rs
+  s_88b6a82345bd6d::t_e0d0575fa0e381 1-143
+apps/desktop/src-tauri/src/prefs.rs
+  s_88b6a82345bd6d::t_6a1cd0ab8af310 1-89
+apps/desktop/src-tauri/src/smoke.rs
+  s_88b6a82345bd6d::t_998e1f7d03a8bf 1-388
+apps/desktop/src-tauri/src/update.rs
+  s_88b6a82345bd6d::t_fe9803b8547d50 1-126
+apps/desktop/src-tauri/tauri.conf.json
+  s_88b6a82345bd6d::t_96fe37b5d79d84 1-43
+apps/desktop/src-tauri/tauri.smoke.conf.json
+  s_88b6a82345bd6d::t_7c400d9e1f8ccc 1-5
+apps/desktop/src-tauri/tauri.windows.conf.json
+  s_88b6a82345bd6d::t_4af720ad883504 1-3
+apps/desktop/src-tauri/tests/orpc_cloud.rs
+  s_88b6a82345bd6d::t_3f4f40fec323fd 1-166
+apps/desktop/src-tauri/tests/policy.rs
+  s_88b6a82345bd6d::t_3cab0bfb758e34 1-550
+apps/desktop/src-tauri/tests/runtime.rs
+  s_88b6a82345bd6d::t_25946444414554 1-236
+apps/desktop/src/components/shell.tsx
+  s_88b6a82345bd6d::t_2c0d3fc33f6ad4 33,112
+apps/desktop/src/features/tasks/coordinator.tsx
+  s_88b6a82345bd6d::t_bed33d072d7827 4,21-23,49
+apps/desktop/src/features/tasks/project-navigation.tsx
+  s_88b6a82345bd6d::t_f82f181b5c7797 24,29,89
+apps/desktop/src/features/tasks/workspace.tsx
+  s_88b6a82345bd6d::t_9dcfa1b5788ae5 123,158
+apps/desktop/src/lib/desktop.ts
+  s_88b6a82345bd6d::t_6cdefad0bd1e37 1-13,16,25-28,35-73,75,80
+apps/desktop/src/lib/storage.ts
+  s_88b6a82345bd6d::t_76f420c8fd30a8 1-11
+apps/desktop/src/lib/unavailable-view.ts
+  s_88b6a82345bd6d::t_6560383a114103 1-2,5,8-11
+apps/desktop/src/preferences.tsx
+  s_88b6a82345bd6d::t_9a2f81ee3206c1 21-22,90-91
+apps/desktop/src/router.tsx
+  s_88b6a82345bd6d::t_1ce8149dfbc628 21-24
+apps/desktop/tests/fixtures/native/account-scopes.json
+  s_88b6a82345bd6d::t_9056b58a7ea81e 1-57
+apps/desktop/tests/fixtures/native/api-paths.json
+  s_88b6a82345bd6d::t_e0be2cad1eefdb 1-163
+apps/desktop/tests/fixtures/native/config.json
+  s_88b6a82345bd6d::t_ecc1bdf21cf112 1-126
+apps/desktop/tests/fixtures/native/cookies.json
+  s_88b6a82345bd6d::t_dd6375a6ac1937 1-64
+apps/desktop/tests/fixtures/native/local-methods.json
+  s_88b6a82345bd6d::t_d9f33924b5a0bf 1-82
+apps/desktop/tests/native/fixtures/orpc-server.ts
+  s_88b6a82345bd6d::t_d1af7e24764311 1-83
+apps/desktop/tests/native/preferences.test.ts
+  s_88b6a82345bd6d::t_e15fcbd322a4d2 18,21-24,40-41,83,86-87
+apps/desktop/tests/native/shared-fixtures.test.ts
+  s_88b6a82345bd6d::t_8d0be9999abb98 1-99
+apps/desktop/tests/native/smoke/agents-run.ts
+  s_88b6a82345bd6d::t_36b18af9e0228d 1-60
+apps/desktop/tests/native/smoke/agents.ts
+  s_88b6a82345bd6d::t_4ffe581924584b 2-3,15-18,93-100,161,163-170,217-221
+apps/desktop/tests/native/smoke/beta.ts
+  s_88b6a82345bd6d::t_b77bdaa6bd0181 2,17,61,78-85
+apps/desktop/tests/native/smoke/driver.ts
+  s_88b6a82345bd6d::t_db968a62549c7f 1-84
+apps/desktop/tests/native/smoke/evaluate.ts
+  s_88b6a82345bd6d::t_54dcded105e5fd 2-7
+apps/desktop/tests/native/smoke/host.ts
+  s_88b6a82345bd6d::t_24b0ecc8a7c3d3 1-22
+apps/desktop/tests/native/smoke/launch.ts
+  s_88b6a82345bd6d::t_6772eeaf1cf023 1-103
+apps/desktop/tests/native/smoke/run.ts
+  s_88b6a82345bd6d::t_b7298e6052a418 8,16-28,122,133
+apps/desktop/tests/native/smoke/scenario.ts
+  s_88b6a82345bd6d::t_b34cc88d156c7d 10,22,231-249,285-287,339-341,488-495,684,686,750-752
+apps/desktop/tests/native/smoke/tauri-host.ts
+  s_88b6a82345bd6d::t_c3028dafcb7e5d 1-146
+apps/desktop/tests/native/tsconfig.json
+  s_88b6a82345bd6d::t_88ff27533f9815 2-3
+apps/desktop/tests/renderer/component/preferences.test.tsx
+  s_88b6a82345bd6d::t_9a13c4ce7cde44 7,30,54,63,77,97,104,119
+apps/desktop/tests/renderer/unit/lib/storage.test.ts
+  s_88b6a82345bd6d::t_8c99d15bf1f881 1-25
+apps/desktop/tests/renderer/unit/lib/tauri.test.ts
+  s_88b6a82345bd6d::t_349e7803d9781f 1-56
+apps/desktop/tests/scripts/native/task.test.ts
+  s_88b6a82345bd6d::t_f6c54d2810d780 34-35,47,50-55,63,69-72,76-78,118-136,138-140,142,186-187,196-249
+apps/desktop/tests/scripts/native/update-manifest.test.ts
+  s_88b6a82345bd6d::t_a5536293be4116 1-197
+apps/desktop/tests/scripts/tsconfig.json
+  s_88b6a82345bd6d::t_c76ccdc21780c6 2
+apps/desktop/tsconfig.json
+  s_88b6a82345bd6d::t_ec04afb4ab9781 6
+apps/desktop/tsconfig.legacy.json
+  s_88b6a82345bd6d::t_728777c48d3676 1-21
+apps/desktop/tsconfig.native.json
+  s_88b6a82345bd6d::t_5aab0a22744484 7,9-10
+apps/desktop/tsconfig.node.json
+  s_88b6a82345bd6d::t_79386d76e714fb 12-15
+apps/desktop/vite.app.config.ts
+  s_88b6a82345bd6d::t_fd176262b3eebe 12,14,25-27,31-35,39
+bun.lock
+  s_88b6a82345bd6d::t_deb815209d5937 98,108,112,617,657,1362-1387
+crates/AGENTS.md
+  s_88b6a82345bd6d::t_a65cf72871c276 7-9,27-29
+docs/README.md
+  s_88b6a82345bd6d::t_3638554c2b0dd4 9,11,15-16
+docs/architecture/0036-tauri-desktop-host.md
+  s_88b6a82345bd6d::t_d1b073d215b90d 1-54
+docs/architecture/README.md
+  s_88b6a82345bd6d::t_a6d29eb05d6046 192-193
+docs/development/desktop-orpc.md
+  s_88b6a82345bd6d::t_e6e674c51d406e 1-78
+docs/development/desktop-release.md
+  s_88b6a82345bd6d::t_6e93396ecea400 1-112
+docs/development/rust.md
+  s_88b6a82345bd6d::t_ee26f8af16321c 3-5,33,37-49,51-52,66-84
+docs/development/testing.md
+  s_88b6a82345bd6d::t_06d0e0f46a1671 284-299
+docs/plans/tauri-desktop-migration.md
+  s_88b6a82345bd6d::t_9c61253a0e7f72 1-331
+docs/plans/terminal-session-host.md
+  s_88b6a82345bd6d::t_b11a3d67a14ac5 30-38
+package.json
+  s_88b6a82345bd6d::t_441729ed670708 55-56,87-88
+packages/blocks/src/components/shell.tsx
+  s_88b6a82345bd6d::t_be1fee4b2aa13a 59,80
+packages/blocks/src/components/sidebar-preference.ts
+  s_88b6a82345bd6d::t_4782803425e4d8 2
+packages/tasks/src/client/task-panels.tsx
+  s_88b6a82345bd6d::t_0875c063ae773d 3,14-30,39,44,48-49,70
+packages/tasks/src/client/workspace.tsx
+  s_88b6a82345bd6d::t_4fbf3df41b73bc 51,90,247-251
+packages/tooling/AGENTS.md
+  s_88b6a82345bd6d::t_96dd76a0585af6 24,28,32-42,72-73
+packages/tooling/src/clean.ts
+  s_88b6a82345bd6d::t_a022939df659d0 43-44
+packages/tooling/src/cli.ts
+  s_88b6a82345bd6d::t_b7f9e506706b0c 3,98,134-137,142,154
+packages/tooling/src/repository.ts
+  s_88b6a82345bd6d::t_961a0f7ba3b790 52-54
+packages/tooling/src/tasks/leaf.ts
+  s_88b6a82345bd6d::t_47ffde33887129 12,16-29
+packages/tooling/src/tasks/model.ts
+  s_88b6a82345bd6d::t_20a330b9bb05c6 87,106-108,110-116,127-129,132,139-145,157-162,166,170-199,224,251-256,258-261,283
+packages/tooling/tests/integration/browser-graph.test.ts
+  s_88b6a82345bd6d::t_aa034476e24030 74,77,79,83-121
+packages/tooling/tests/integration/cache.test.ts
+  s_88b6a82345bd6d::t_ae7cf4f0e926fd 249,256-257,269-270,272,277-278
+packages/tooling/tests/unit/bun-deployment.test.ts
+  s_88b6a82345bd6d::t_28c83b385a9a83 81-82
+packages/tooling/tests/unit/clean.test.ts
+  s_88b6a82345bd6d::t_68f4007a8249a7 24-27,45-47,63,78-79
+packages/tooling/tests/unit/rust-tasks.test.ts
+  s_88b6a82345bd6d::t_57982b47d107fa 1,43-66
+skills/raypx/SKILL.md
+  s_88b6a82345bd6d::t_9b6b01cd0cb42e 3,36
+vite.config.ts
+  s_88b6a82345bd6d::t_a1d6d3775e47f0 34-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5d06bb3f10bc711141c574268bcee4da847ededd",
+  "prompts": {},
+  "sessions": {
+    "s_88b6a82345bd6d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d0e-7dcb-7f03-ac3f-258224dacade",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
