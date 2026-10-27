@@ -1,0 +1,21 @@
+apps/api/tests/postgres/node/control.test.ts
+  s_2bb225eda98491::t_bfdbb10afdcc3e 3-9,35-39,63-74,93-104,110-114,132-182,272-276,293-305,327-337,339-350,355-359
+apps/api/server/control/repository.ts
+  s_2bb225eda98491::t_9c283bf83af8a9 2-3,5-16,74-86,89-152,225,228,242,252,258,291,295,298,301
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3a04e6028411b3c90ce3d2f372f9f41bb45f8b63",
+  "prompts": {},
+  "sessions": {
+    "s_2bb225eda98491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17b75-eeb1-73d0-9634-ac9931139225",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
