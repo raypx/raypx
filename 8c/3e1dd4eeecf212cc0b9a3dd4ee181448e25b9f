@@ -1,0 +1,19 @@
+.github/workflows/rust.yml
+  s_4b3ba4911a2d9b::t_6080e37ae09347 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8c3e1dd4eeecf212cc0b9a3dd4ee181448e25b9f",
+  "prompts": {},
+  "sessions": {
+    "s_4b3ba4911a2d9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14cc4b72-00cc-4077-b7a1-98e1c8cb46b1",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
