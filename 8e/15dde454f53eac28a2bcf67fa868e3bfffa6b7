@@ -1,0 +1,77 @@
+crates/raypx-terminal/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_a2fadbd3f21568 1-20
+crates/raypx-terminal/tests/protocol.rs
+  s_a4f4f0ce2ca2a6::t_2673bf19b13888 1-74
+  s_a4f4f0ce2ca2a6::t_7a1413216db95d 75-121
+apps/cli/tests/smoke/rust-terminal.ts
+  s_a4f4f0ce2ca2a6::t_4763c48059adbe 1-37
+  s_a4f4f0ce2ca2a6::t_f7062e83327728 38-50
+crates/raypx-terminal/Cargo.toml
+  s_a4f4f0ce2ca2a6::t_a2fadbd3f21568 1-29
+apps/cli/tests/fixtures/process/terminal-host.ts
+  s_a4f4f0ce2ca2a6::t_2673bf19b13888 1-22
+  s_a4f4f0ce2ca2a6::t_0bbbb248f7426b 23-34
+crates/raypx-terminal/src/main.rs
+  s_a4f4f0ce2ca2a6::t_4077e2b44f23fc 3-6,13-37,41-42,47-48,54-55,60-63,72,76-77,88-99,101-109,113-128,163-175,183-188,193-195,199,201-203,205,209-210,214-216,226-228
+  s_a4f4f0ce2ca2a6::t_4763c48059adbe 1-2,7-12,38-40,43-46,49-53,56-59,64-71,73-75,78-87,110-112,129-154,157-162,176-182,189-192,196-198,206-208,211-213,217-219,223-225
+  s_a4f4f0ce2ca2a6::t_fa07eef401f7bd 100,200,204,220-222
+  s_a4f4f0ce2ca2a6::t_2cf5119239ea52 155-156
+crates/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_3379fe1d2dc149 14-18
+crates/raypx-terminal/tests/sessions.rs
+  s_a4f4f0ce2ca2a6::t_c18463d6577a2b 80-94,240-241
+  s_a4f4f0ce2ca2a6::t_075dfe1b2967a9 228-234,246-251
+  s_a4f4f0ce2ca2a6::t_4763c48059adbe 2-6,12-20,31-38,45-47,56-62,65-70,72-77,100-109,113-114,126-135,159-164,171-187,195-201,204-208,212-215,217-227,235-239,242-245,252-253
+  s_a4f4f0ce2ca2a6::t_e2d7188267d550 1,7-11,21-30,39-44,48-55,63-64,71,78-79,95-99,110-112,115-125,136-158,165-170,188-194,202-203,209-211,216,254
+apps/cli/package.json
+  s_a4f4f0ce2ca2a6::t_4763c48059adbe 18
+apps/cli/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_4f2d5eb4d100e2 44
+  s_a4f4f0ce2ca2a6::t_bec5ef6527bbc1 40-43
+crates/raypx-terminal/src/session.rs
+  s_a4f4f0ce2ca2a6::t_cd19a4ef2d8e6c 6-9,46-50,58-61,66-69,81-82,88-91,116,123,126-128,133-136,140-147,150-154,159-166,168-174,179,181-186,192-202,205-209,211-213,217-231,236-242,245-250,255-260,263-273,278-280,282-290,299-302,304-309,312-322,324-326,328-329,334-337,341-346,348-353,356-363,365,368-373,379,395-411,413,416-417,422-429
+  s_a4f4f0ce2ca2a6::t_a2fadbd3f21568 1-5,10-45,51-57,62-65,70-80,83-87,92-115,117-122,124-125,129-132,137-139,148-149,155-158,167,175-178,180,187-191,203-204,210,214-216,232-235,243-244,251-254,261-262,274-277,281,291-298,303,310-311,323,327,330-333,338-340,347,354-355,364,374-378,380-394,412,414-415,418-421,430-431
+  s_a4f4f0ce2ca2a6::t_e2d7188267d550 366-367
+  s_a4f4f0ce2ca2a6::t_7b807408b69abe 432-444
+crates/raypx-terminal/README.md
+  s_a4f4f0ce2ca2a6::t_4077e2b44f23fc 1-44,46-49
+  s_a4f4f0ce2ca2a6::t_4763c48059adbe 45
+docs/development/rust.md
+  s_a4f4f0ce2ca2a6::t_3379fe1d2dc149 35-59
+  s_a4f4f0ce2ca2a6::t_2cf5119239ea52 60
+apps/cli/src/runtime/process/index.ts
+  s_a4f4f0ce2ca2a6::t_fa07eef401f7bd 5,16-20,131-134,179-181,186,193,202
+crates/raypx-terminal/src/lib.rs
+  s_a4f4f0ce2ca2a6::t_a2fadbd3f21568 1-188
+  s_a4f4f0ce2ca2a6::t_337ed3ad7fde24 189-199
+apps/cli/src/runtime/process/rust-terminal.ts
+  s_a4f4f0ce2ca2a6::t_fa07eef401f7bd 1-13,16-21,23-28,34-39,41-50,55,61,65,68-84,86-88,92-93,96-97,105-133,135-159,167-179,181-185,191-197,206-207,219-252,256,258,271-279
+  s_a4f4f0ce2ca2a6::t_4f2d5eb4d100e2 62,64,85
+  s_a4f4f0ce2ca2a6::t_2673bf19b13888 40,63,66-67
+  s_a4f4f0ce2ca2a6::t_075dfe1b2967a9 14-15,22,29-33,51-54,56-60,134,160-166,186-190,198-205,208-218,253-255,257,259-270
+  s_a4f4f0ce2ca2a6::t_5b6bb8f4d57639 89-91,94-95,98-104
+  s_a4f4f0ce2ca2a6::t_2d2bca2fdcb5df 180
+apps/cli/tests/integration/runtime/rust-terminal.test.ts
+  s_a4f4f0ce2ca2a6::t_5b6bb8f4d57639 18-23,26-28,34-51,58-59,61-63,68-71,74-76,78-80,86-89,91-96
+  s_a4f4f0ce2ca2a6::t_2673bf19b13888 1-17,24-25,29-33,52-57,60,64-67,72-73,77,81-85,90,97-98
+.github/workflows/ci.yml
+  s_a4f4f0ce2ca2a6::t_c18463d6577a2b 156,160-161
+Cargo.lock
+  s_a4f4f0ce2ca2a6::t_262bbb3a7bfda8 513-518,943-948,996,1130-1140,2265-2270,2546-2569,3183-3203,3318,3359,3522-3534,4146-4156,4199-4214,6085-6093
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8e15dde454f53eac28a2bcf67fa868e3bfffa6b7",
+  "prompts": {},
+  "sessions": {
+    "s_a4f4f0ce2ca2a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1762e-b82b-7e63-9074-02137a943dc8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
