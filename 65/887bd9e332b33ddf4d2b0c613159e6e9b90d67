@@ -1,0 +1,110 @@
+apps/desktop/tests/helpers/tasks/workspace.tsx
+  s_c99f3390b62e01::t_607b00cd45089a 1-163,165-202
+  s_c99f3390b62e01::t_81b87e86ed5e90 164
+  s_c99f3390b62e01::t_49c721a159b0e7 203-205
+packages/tasks/AGENTS.md
+  s_c99f3390b62e01::t_b3a7225ddc8896 57-60
+apps/api/tests/helpers/worker.ts
+  s_c99f3390b62e01::t_c0e6dfc67c26e3 1-96
+  s_c99f3390b62e01::t_0028a908f61747 97-103
+packages/host/AGENTS.md
+  s_c99f3390b62e01::t_b3a7225ddc8896 24-27
+docs/development/testing.md
+  s_c99f3390b62e01::t_b3a7225ddc8896 59-62,77,98-99
+apps/cli/AGENTS.md
+  s_c99f3390b62e01::t_b3a7225ddc8896 70
+apps/desktop/AGENTS.md
+  s_c99f3390b62e01::t_b3a7225ddc8896 43
+docs/development/test-cases.md
+  s_c99f3390b62e01::t_16b37086812e45 193-214
+docs/development/test-audit-2026-10-27.md
+  s_c99f3390b62e01::t_ca80a28e2595bf 111-112,123-124,129-134,138-140
+  s_c99f3390b62e01::t_7116b3b3f9ea04 103-110,113-122,125-128,135-137,141-143
+apps/api/AGENTS.md
+  s_c99f3390b62e01::t_ad1a07350db59e 17
+apps/desktop/tsconfig.json
+  s_c99f3390b62e01::t_1f20adc163afe3 10-17
+packages/tasks/vitest.config.ts
+  s_c99f3390b62e01::t_4cea6a1e49e863 1-11
+apps/desktop/tests/renderer/component/features/tasks/drafts.test.tsx
+  s_c99f3390b62e01::t_94a2aff6bbaed5 2-3,7-12,14,105,137
+  s_c99f3390b62e01::t_81b87e86ed5e90 6
+apps/api/tests/postgres/cloudflare/auth.test.ts
+  s_c99f3390b62e01::t_4ac4f0554b76c6 8,37,58,62
+apps/api/tests/postgres/cloudflare/cleanup.test.ts
+  s_c99f3390b62e01::t_3e6e4c43254a6c 4,38
+apps/api/tests/postgres/cloudflare/jobs.test.ts
+  s_c99f3390b62e01::t_5e7904df3cc0db 4,69
+apps/cli/tests/helpers/pi.ts
+  s_c99f3390b62e01::t_a2af60752c84da 101-112
+apps/cli/tests/unit/runtime/agents/pi/completion.test.ts
+  s_c99f3390b62e01::t_058ec9103061fe 1-146
+apps/cli/tests/unit/runtime/agents/pi/lifecycle.test.ts
+  s_c99f3390b62e01::t_8aa44da0cd3e28 4-13
+apps/cli/tests/unit/runtime/agents/pi/tools.test.ts
+  s_c99f3390b62e01::t_7a02c30376fe8b 1-267
+apps/desktop/tests/renderer/component/features/tasks/conversation.test.tsx
+  s_c99f3390b62e01::t_58703ed102d021 1-160
+apps/desktop/tests/renderer/component/features/tasks/history.test.tsx
+  s_c99f3390b62e01::t_d59caedcd83afd 1-108
+bun.lock
+  s_c99f3390b62e01::t_0ce73a72f1a013 516,519-521,523,525,527
+packages/host/package.json
+  s_c99f3390b62e01::t_2daf7701d524f0 10-12
+packages/host/tests/helpers/control.ts
+  s_c99f3390b62e01::t_f3a81263eac035 1-157
+packages/host/tests/integration/renewal.test.ts
+  s_c99f3390b62e01::t_8fbb3ce94f6a7e 1-4,34,97,142,159,186
+packages/host/tests/integration/replay.test.ts
+  s_c99f3390b62e01::t_b97f4e24942612 1-90
+packages/host/tests/integration/snapshot.test.ts
+  s_c99f3390b62e01::t_8a848d1d7f77cb 1-169
+packages/host/tsconfig.json
+  s_c99f3390b62e01::t_88d89a271cbc93 6
+packages/tasks/package.json
+  s_c99f3390b62e01::t_beee0a5fa05e9b 16-18,34,37-39,41,43-45
+packages/tasks/tests/component/composer/submission.test.tsx
+  s_c99f3390b62e01::t_56e89c19b59b19 1,12
+packages/tasks/tests/component/conversation/history.test.tsx
+  s_c99f3390b62e01::t_a882e628e979fa 1,12
+packages/tasks/tests/component/conversation/interactions.test.tsx
+  s_c99f3390b62e01::t_c88b33f8f050a6 1-217
+packages/tasks/tests/component/conversation/state.test.tsx
+  s_c99f3390b62e01::t_12ce2409114e3f 1,12,18
+packages/tasks/tests/component/workspace/filters.test.tsx
+  s_c99f3390b62e01::t_440cdf9a1c3c1a 1,13
+packages/tasks/tests/helpers/layout.ts
+  s_c99f3390b62e01::t_7c7df26ada2a12 1-10
+packages/tasks/tests/helpers/select.ts
+  s_c99f3390b62e01::t_e0fc3aedc4b067 1-27
+packages/tasks/tests/setup.ts
+  s_c99f3390b62e01::t_5ba772f446dafd 1-14
+packages/tasks/tests/unit/approval-changes.test.ts
+  s_c99f3390b62e01::t_1a3cc5900d522a 2-3
+packages/tasks/tests/unit/conversation-state.test.ts
+  s_c99f3390b62e01::t_139d8a9af906c9 3
+packages/tasks/tests/unit/diff.test.ts
+  s_c99f3390b62e01::t_164b6b37cf7a7c 2
+packages/tasks/tests/unit/state.test.ts
+  s_c99f3390b62e01::t_2b2a359a7baf47 2
+packages/tasks/tests/unit/task-drafts.test.ts
+  s_c99f3390b62e01::t_40fa4b5aaf3478 2
+packages/tasks/tests/unit/workspace-scope.test.ts
+  s_c99f3390b62e01::t_d04f6f8ba71d6d 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "65887bd9e332b33ddf4d2b0c613159e6e9b90d67",
+  "prompts": {},
+  "sessions": {
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
