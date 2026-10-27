@@ -1,0 +1,302 @@
+apps/desktop/native/approval-lease.ts
+  s_2bb225eda98491::t_c2fc85fedf4042 1-15
+  s_2bb225eda98491::t_9abd80156eaa4f 16-21
+apps/desktop/tests/scripts/native/smoke-options.test.ts
+  s_52722a7e240ff2::t_0120883f1cfcb2 1-20
+  s_52722a7e240ff2::t_b385a354718afa 21-30
+.github/workflows/rust.yml
+  s_2bb225eda98491::t_100c2983f6c40e 1-36
+  s_2bb225eda98491::t_ac7b2043e4caa2 37-38
+apps/cli/src/runtime/daemon/terminal-control.ts
+  s_2bb225eda98491::t_57b1978650452a 1-253
+  s_2bb225eda98491::t_591dbe74277600 254-256,258-313,315-427
+apps/desktop/native/window.ts
+  s_52722a7e240ff2::t_106cfd92344558 5-11,14,17-23,25-30,37,43,57-63
+packages/contracts/tests/local-approvals.test.ts
+  s_2bb225eda98491::t_b4c63ba9b5a447 1-11
+  s_2bb225eda98491::t_cdd8820003ffc4 12-19
+apps/cli/src/runtime/agents/harness/registry.ts
+  s_2bb225eda98491::t_2ce1abdc4a2187 1-99
+  s_2bb225eda98491::t_2c075a8110c58a 100-121,124-185
+packages/tooling/src/tasks/model.ts
+  s_2bb225eda98491::t_77f52f37aaa7a1 205-206
+  s_2bb225eda98491::t_9c10fcb20dbbda 65,83-86,109,122,203-204,210,216
+apps/desktop/tests/native/window.test.ts
+  s_52722a7e240ff2::t_1e297da012372c 2,10,20-42,49-50
+  s_52722a7e240ff2::t_f897b654251f62 43-48
+apps/desktop/native/main.ts
+  s_52722a7e240ff2::t_1e297da012372c 1,12,24,30,33,54-61,116,181,210-223,257-264,283,297,316,345,350-351,367,401-404
+  s_52722a7e240ff2::t_27fa6aa36ff53c 434
+apps/desktop/tests/native/smoke/scenario.ts
+  s_52722a7e240ff2::t_d772e82857f6d5 27-29,235,237,245-248,696-697
+  s_2bb225eda98491::t_9a40e1f62ad800 7,374-378,380,414-416,421-426,431,441,454
+  s_52722a7e240ff2::t_0120883f1cfcb2 10,25-26,231-234,236,238-244,379,381-413,417-420,427-430,432-440,442-453,699
+e2e/playwright.live.config.ts
+  s_52722a7e240ff2::t_1e297da012372c 18
+apps/cli/src/runtime/daemon/control.ts
+  s_2bb225eda98491::t_8e4397285bd492 2,7,11,21,40-53,60,64-66,71-82,120-123,126,151-156,158-166,182,193,195,208-212,219,222,276,286,301-302,311,326-327,363-371,379-390,398-400,414-415,419-429,431-438,448-449,455-461,466,468,478-481,493-500,526-527,531-534,540-542
+  s_2bb225eda98491::t_02d23cee16febb 543-548,556-557
+packages/tooling/tests/integration/browser-graph.test.ts
+  s_2bb225eda98491::t_40db2d183b2625 38-39,103-108
+  s_2bb225eda98491::t_0d98d64fa29cf3 109
+apps/desktop/scripts/native/smoke-options.ts
+  s_52722a7e240ff2::t_0120883f1cfcb2 1-18
+apps/desktop/tests/native/approval-lease.test.ts
+  s_2bb225eda98491::t_a5512c98934437 1-16
+  s_2bb225eda98491::t_823d4acb0dab14 17-24
+docs/development/server-jobs.md
+  s_2bb225eda98491::t_6dfd3e6337f4d5 5,33,80-81,118,140,146,150-152
+apps/cli/tests/integration/runtime/daemon/local-terminal.test.ts
+  s_2bb225eda98491::t_6293a3dddd3d12 1-91
+  s_2bb225eda98491::t_29929aeb136232 92-181,183-186,188-193,195,197-198
+docs/architecture/0035-local-owner-host.md
+  s_2bb225eda98491::t_e6692334d58c53 1-128
+e2e/playwright.config.ts
+  s_52722a7e240ff2::t_1e297da012372c 21
+apps/desktop/package.json
+  s_52722a7e240ff2::t_0120883f1cfcb2 26
+apps/cli/tests/helpers/terminal-smoke.ts
+  s_2bb225eda98491::t_fec1cf0ccf0a25 1-63
+  s_2bb225eda98491::t_72ed73f4ee220e 64-69,71-72,74-105
+apps/cli/src/runtime/daemon/terminal-settings.ts
+  s_2bb225eda98491::t_57b1978650452a 1-66
+  s_2bb225eda98491::t_29d41eb0c95a91 68,70-72
+apps/desktop/src/features/tasks/cloud-terminal-settings.tsx
+  s_2bb225eda98491::t_c2fc85fedf4042 1-34
+  s_2bb225eda98491::t_b18438b4501b82 36-37,40-141
+apps/cli/tests/integration/runtime/daemon/terminal-settings.test.ts
+  s_2bb225eda98491::t_cea4a69a485308 1-74
+  s_2bb225eda98491::t_b529a5518492b7 75-77,79-100,102,104-131,134-146,150-156,158-159,162-165,167-169,171-173,175-199
+apps/desktop/tests/renderer/unit/features/tasks/local-client.test.ts
+  s_2bb225eda98491::t_9a71f5f3147aa3 167-183
+  s_2bb225eda98491::t_9c399c754f82dd 184-198
+apps/cli/tests/integration/runtime/daemon/local-routing.test.ts
+  s_2bb225eda98491::t_b4c63ba9b5a447 1-19
+  s_2bb225eda98491::t_ef2d7bba523f3c 20-27,29-30
+apps/desktop/tests/native/smoke/run.ts
+  s_52722a7e240ff2::t_0120883f1cfcb2 7,12,19-21,23
+  s_52722a7e240ff2::t_d772e82857f6d5 14,24,72,77-78
+apps/cli/tests/integration/runtime/daemon/control.test.ts
+  s_2bb225eda98491::t_e842fd07283d53 22-25,65-66,74,84-94,99,149-152,168-176,197-207
+  s_2bb225eda98491::t_dad278111a4b5d 6,208-210,226-228,250,283,295-364
+.env.example
+  s_2bb225eda98491::t_e331d376bb5ce8 15,21,23
+.gitignore
+  s_2bb225eda98491::t_8a339a4c6d6922 70
+PRODUCT.md
+  s_2bb225eda98491::t_9c7f1c0ef73558 6,38-39,42-47,53-59
+apps/api/AGENTS.md
+  s_2bb225eda98491::t_42b9528eeb1fd2 5,14-16,31-32,37,40,71,78,94,122,141,145,153,159
+apps/api/package.json
+  s_2bb225eda98491::t_66aa009f04201a 16,47
+apps/api/tests/integration/runtime-providers.test.ts
+  s_2bb225eda98491::t_1b2d5b67ff6262 21-35,37-42,44-71,73-76,78-93
+apps/api/tests/unit/env.test.ts
+  s_2bb225eda98491::t_69a1cd92ccc0fd 16,22
+apps/api/tests/unit/jobs/runtime.test.ts
+  s_2bb225eda98491::t_c9c0ff760b167b 4
+apps/api/tests/unit/jobs/tick-runtime.test.ts
+  s_2bb225eda98491::t_b292e61bf4cb8f 3
+apps/api/tests/unit/observed.test.ts
+  s_2bb225eda98491::t_d38060a20af11a 103
+apps/api/vite.app.config.ts
+  s_2bb225eda98491::t_b8d90906f71878 6-16,18-19,21-36
+apps/cli/AGENTS.md
+  s_2bb225eda98491::t_d94e390ff3891e 179-188
+apps/cli/src/runtime/agents/harness/execution.ts
+  s_2bb225eda98491::t_d7bd044fce41bb 13,72-73,150,295-316,319-325,331,333,338-353,355-356,368,380,386,414,455
+apps/cli/src/runtime/agents/harness/providers/codex.ts
+  s_2bb225eda98491::t_2559aec68a372b 175-180
+apps/cli/src/runtime/agents/index.ts
+  s_2bb225eda98491::t_6cb5a4822a84ca 1,4,235-237
+apps/cli/src/runtime/daemon/connectors.ts
+  s_2bb225eda98491::t_37a64acf511109 151,196
+apps/cli/src/runtime/daemon/server.ts
+  s_2bb225eda98491::t_d698515068e279 9,53,60,70,104,112-116,137-138,216-220,222-227,229,249-263,269-270
+apps/cli/src/runtime/index.ts
+  s_2bb225eda98491::t_45e0219753f225 150-157,233
+apps/cli/src/runtime/terminal/broker.ts
+  s_2bb225eda98491::t_894745a4cc9784 92-98,169
+apps/cli/src/runtime/terminal/host.ts
+  s_2bb225eda98491::t_da5e48db234fd2 48-51,74,133-137,140-145,162,205-206,262
+apps/cli/tests/fixtures/terminal/driver.py
+  s_2bb225eda98491::t_a1493fd1629826 2-3,46-49
+apps/cli/tests/integration/runtime/agents/inputs.test.ts
+  s_2bb225eda98491::t_38ba4a2b365173 58,115,117,119
+apps/cli/tests/integration/runtime/terminal/hook.test.ts
+  s_2bb225eda98491::t_0642d0d1c7332e 32
+apps/cli/tests/integration/runtime/terminal/host.test.ts
+  s_2bb225eda98491::t_b0a022ad206832 160,227,231
+apps/cli/tests/smoke/daemon-agents.ts
+  s_2bb225eda98491::t_5f8827646537ef 185,190-195,215-220
+apps/cli/tests/smoke/terminal-hooks.ts
+  s_2bb225eda98491::t_22a88e406a04ad 14,37-43,56-67,71,76,78,104,108,232,244,281
+apps/desktop/AGENTS.md
+  s_52722a7e240ff2::t_51b8079a974ce1 137,175-179,194-197
+apps/desktop/native/daemon-control.ts
+  s_2bb225eda98491::t_7727e5638d91c6 107-121
+apps/desktop/native/engine.ts
+  s_2bb225eda98491::t_bf798603b91f39 11,73,81,202
+apps/desktop/native/local-request.ts
+  s_2bb225eda98491::t_f36870e84c9203 1,6-10,21-33
+apps/desktop/native/rpc.ts
+  s_2bb225eda98491::t_0629745292f3e7 20,29-36
+apps/desktop/src/features/tasks/local-client.ts
+  s_2bb225eda98491::t_e54bb4c8193eb5 79-80,85,87,93,95,185-190,201-212,221-223,228-241,269-270
+apps/desktop/src/features/tasks/request-notice.tsx
+  s_2bb225eda98491::t_a177284d088fd1 7,15,17,40
+apps/desktop/src/features/tasks/settings.tsx
+  s_2bb225eda98491::t_d584700149b832 7-13,15,183,227-228
+apps/desktop/src/features/tasks/terminal-settings.tsx
+  s_2bb225eda98491::t_77b843917d8074 11-16,50,68,85,103,135,233-235,297-299,327
+apps/desktop/src/lib/desktop.ts
+  s_2bb225eda98491::t_3f2694aae23fe1 61
+apps/desktop/tests/native/local-request.test.ts
+  s_2bb225eda98491::t_15faeaa953ceb5 2,12,21-22,28-33
+apps/desktop/tests/renderer/component/features/request-notice.test.tsx
+  s_2bb225eda98491::t_5c111bfba82b24 13,46
+apps/desktop/tests/renderer/component/features/terminal-settings.test.tsx
+  s_2bb225eda98491::t_18daf4118a5844 14-15,42
+apps/web/AGENTS.md
+  s_2bb225eda98491::t_c97c9a5520f316 68
+apps/web/package.json
+  s_2bb225eda98491::t_b8aaad918d8e23 15,54
+apps/web/vite.app.config.ts
+  s_2bb225eda98491::t_898c744d243ae0 21,27,30
+docs/README.md
+  s_2bb225eda98491::t_dcf7014fcea29e 9-10
+docs/architecture/README.md
+  s_2bb225eda98491::t_e44abed4d40d8e 23-25,89,97,186-193
+docs/architecture/analytics.md
+  s_2bb225eda98491::t_92923b76f85b1b 64,68
+docs/architecture/remote-tasks.md
+  s_2bb225eda98491::t_69a3ff0f14f7d3 77,168,171,212-219
+docs/development/caching.md
+  s_2bb225eda98491::t_fe7d0a7472f628 3,8-11,14
+docs/development/configuration.md
+  s_2bb225eda98491::t_b3e83cdde2bec3 4,14,48,100,147
+docs/development/deployment.md
+  s_2bb225eda98491::t_3abb526e236951 80-81
+docs/development/getting-started.md
+  s_2bb225eda98491::t_ba2d635dece91d 31
+docs/development/object-storage.md
+  s_2bb225eda98491::t_b9ae6db814e3e7 5,12-18
+docs/development/review-remediation-2026-10-24.md
+  s_2bb225eda98491::t_04ed7f24b076a8 3-5
+docs/development/review-remediation-2026-10-25.md
+  s_2bb225eda98491::t_3fc8a0f87ee99b 3-5
+docs/development/rust.md
+  s_2bb225eda98491::t_0e5707d7179843 46-50
+docs/development/task-context.md
+  s_2bb225eda98491::t_4b7e4ca7afc86b 113
+docs/development/terminal-host-p1-review.md
+  s_2bb225eda98491::t_398cfaa4287ccd 3-5
+docs/development/terminal-host-p1.md
+  s_2bb225eda98491::t_abcde8df47f8cd 5-7,29,34-36,93-98,128-132,162,175
+docs/development/terminal-protocol-p0.md
+  s_2bb225eda98491::t_0730452dcdc604 3-5
+docs/development/test-audit-2026-10-27.md
+  s_2bb225eda98491::t_58459d7d083e1b 3-5
+docs/development/test-cases.md
+  s_2bb225eda98491::t_457917ec3433cb 3-5
+docs/development/test-commands.md
+  s_2bb225eda98491::t_aecde53c4cd7e7 50,64,69,83-89,94-97
+docs/development/testing.md
+  s_2bb225eda98491::t_7b9a450dc4fc65 5,107-108,110,204,222-242
+docs/development/validation-artifacts.md
+  s_2bb225eda98491::t_df731b08c17dc2 60
+docs/plans/raypx-kit.md
+  s_2bb225eda98491::t_5c076bef9b7056 27,98
+docs/plans/terminal-session-host.md
+  s_2bb225eda98491::t_15b7cc92204293 1-4,33,108,270
+docs/plans/web-mobile-capabilities.md
+  s_2bb225eda98491::t_21c5ea284b290f 190,193,276
+e2e/AGENTS.md
+  s_52722a7e240ff2::t_113b28c0642030 64
+package.json
+  s_2bb225eda98491::t_354fdb92d69a7e 113
+packages/contracts/AGENTS.md
+  s_2bb225eda98491::t_a97a1fea8458fe 71-75
+packages/contracts/src/local.ts
+  s_2bb225eda98491::t_f0691e461bb69a 81-83,87-96
+packages/database/AGENTS.md
+  s_2bb225eda98491::t_f6cefd40153373 20-21
+packages/host/AGENTS.md
+  s_2bb225eda98491::t_77c5ecd8bb4d37 10-12
+packages/host/src/control.ts
+  s_2bb225eda98491::t_e692659092b600 1,19,94-95,102-104,189,218,353,388,547
+packages/host/src/index.ts
+  s_2bb225eda98491::t_e075aca03ce8b8 3
+packages/host/src/settings.ts
+  s_2bb225eda98491::t_1d12ab52abdc92 1-55
+packages/i18n/src/messages/en.ts
+  s_2bb225eda98491::t_d3a2d7c0a034ad 197-201,207
+packages/i18n/src/messages/zh.ts
+  s_2bb225eda98491::t_9fcd6c41120f20 167-169,174-175
+packages/jobs/AGENTS.md
+  s_2bb225eda98491::t_d56c461fa11151 39
+packages/storage/AGENTS.md
+  s_2bb225eda98491::t_9ed232c92da2f0 12,21
+packages/storage/src/s3.ts
+  s_2bb225eda98491::t_58b8a802a2c96c 7,9,17-18,29
+packages/tooling/AGENTS.md
+  s_2bb225eda98491::t_4785cdd1354275 20,26-27,33,62-63,73,90
+packages/tooling/package.json
+  s_2bb225eda98491::t_715e9291973a7b 28
+packages/tooling/src/analytics.ts
+  s_2bb225eda98491::t_93e5dd8348b17d 12
+packages/tooling/src/build/nitro.ts
+  s_2bb225eda98491::t_bb81040a54d823 3-4,6
+packages/tooling/src/cli.ts
+  s_2bb225eda98491::t_a502326542455c 13,129
+packages/tooling/src/test-command.ts
+  s_2bb225eda98491::t_0100b1d28cdccf 134,137
+packages/tooling/src/validation/backends.ts
+  s_2bb225eda98491::t_f8cf9c969d828b 55,58,65-66,162
+packages/tooling/tests/unit/rust-tasks.test.ts
+  s_2bb225eda98491::t_29d6e09eb5f133 24,26,28-29
+packages/tooling/tests/unit/test-command.test.ts
+  s_2bb225eda98491::t_82bc7a713073d0 15,25-33,87-89
+skills/raypx/SKILL.md
+  s_2bb225eda98491::t_127a7106779c08 3,26,75
+skills/raypx/references/analytics.md
+  s_2bb225eda98491::t_6d02aff764e991 16
+skills/raypx/references/api.md
+  s_2bb225eda98491::t_f37f2ff9f430b1 20
+skills/raypx/references/architecture.md
+  s_2bb225eda98491::t_8534c894b66c1a 11
+skills/raypx/references/caching.md
+  s_2bb225eda98491::t_9629de605bb00f 3,7,9
+skills/raypx/references/database.md
+  s_2bb225eda98491::t_e4b9f2822a775c 6,12
+skills/raypx/references/deployment.md
+  s_2bb225eda98491::t_8fab38558573bc 3,5-6
+skills/raypx/references/storage.md
+  s_2bb225eda98491::t_a89adc9148e09b 8,17
+skills/raypx/references/verification.md
+  s_2bb225eda98491::t_65cf2493330d4a 8,11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "02a8d94394bdd577e5095040c5f092aa100f16b6",
+  "prompts": {},
+  "sessions": {
+    "s_2bb225eda98491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17b75-eeb1-73d0-9634-ac9931139225",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_52722a7e240ff2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17c10-f4f3-7212-9b2d-e66738df0905",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
