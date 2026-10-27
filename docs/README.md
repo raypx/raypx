@@ -6,6 +6,7 @@
 - [Internationalization and device preferences](architecture/internationalization.md)
 - [Account settings and session management](development/account-security.md)
 - [Adding and extracting packages](development/workspaces.md)
+- [Windows daemon decision](architecture/0037-windows-daemon.md)
 - [Tauri Desktop host decision](architecture/0036-tauri-desktop-host.md)
 - [Local Owner Host decision](architecture/0035-local-owner-host.md)
 - [Rust workspace and Tauri Desktop host](development/rust.md)

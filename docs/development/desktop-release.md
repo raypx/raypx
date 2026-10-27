@@ -98,7 +98,7 @@ bun apps/desktop/scripts/native/update-manifest.ts \
 - Windows 用户需要重新确认远程控制授权。旧 Desktop 的远程 opt-in 文件不会静默授权新的 CLI owner；之后的受限设备凭据由 CLI 保管和续期。
 - 旧 WebView localStorage 中未发送的草稿、面板宽度和最近选择不迁移。升级前处理需要保留的草稿。
 - 设备偏好文件和实例锁沿用应用本地数据目录下的 `com.raypx.desktop/stable`；CLI profile、目录授权、任务、Cron 和记忆继续保留。
-- macOS daemon 使用安装后的稳定 CLI 路径。升级时核对实际服务注册的可执行文件；不要仅按旧计划假定的 bundle 路径自动重装 launchd。macOS GUI Quit 保留 daemon 工作，Windows foreground owner 的 Quit/EOF 会取消前台工作。
+- macOS daemon 使用安装后的稳定 CLI 路径。升级时核对实际服务注册的可执行文件；不要仅按旧计划假定的 bundle 路径自动重装 launchd。GUI Quit 在 macOS 和 Windows 上都保留 daemon 工作。Windows daemon 从 `%LOCALAPPDATA%\Raypx\bin` 下按构建区分的副本运行，避免锁住安装目录里的 CLI。
 
 发布记录需分别填写 macOS、Windows 打包态、真实 HTTPS、真实 Agent、签名、公证、更新安装及包体积的证据。没有执行的检查保留“未验证”；Linux Desktop 继续明确标记为未验证。
 

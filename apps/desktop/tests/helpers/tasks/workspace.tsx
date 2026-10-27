@@ -27,7 +27,7 @@ const mocks = vi.hoisted(() => ({
 export { mocks };
 vi.mock("../../../src/lib/desktop", () => ({
   isDesktop: () => true,
-  isDaemonDesktop: () => false,
+  hasTerminalHooks: () => false,
   localRequest: mocks.request,
   onLocalEvent: () => () => {},
 }));

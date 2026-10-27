@@ -13,6 +13,7 @@ import type { AgentProvider } from "@raypx/contracts/tasks";
 import { cliBuild } from "./build";
 import { refreshStableCli } from "./connectors";
 import { privateSocketDirectory } from "../terminal/socket";
+import { foreignLoopbackRequest, loopbackTransport, type LocalAddress } from "../local-http";
 
 type Client = {
   stream: ReadableStreamDefaultController<Uint8Array>;
@@ -26,28 +27,33 @@ export async function startDaemon(
     agentExecutables?: Partial<Record<AgentProvider, string>>;
   } = {},
 ) {
-  if (process.platform === "win32")
-    throw new LocalError("UNSUPPORTED_PLATFORM", "Daemon requires a Unix socket");
   const directory = profilePath(options);
   mkdirSync(directory, { recursive: true, mode: 0o700 });
   chmodSync(directory, 0o700);
   const unlock = acquireLock(directory, "daemon-owner");
   if (!unlock) throw new LocalError("HOST_RUNNING", "A daemon already owns this profile");
+  const loopback = loopbackTransport();
   let previous: string | undefined;
   try {
     previous = readDaemon(directory).socket;
   } catch {
     /* First startup. */
   }
-  const socketDirectory = privateSocketDirectory(directory, "host", previous);
-  const endpoint: DaemonEndpoint = {
-    protocol: 1,
+  const socketDirectory = loopback
+    ? undefined
+    : privateSocketDirectory(directory, "host", previous);
+  const identity = {
+    protocol: 1 as const,
     version: manifest.version,
     builtAt: cliBuild.builtAt,
     epoch: crypto.randomUUID(),
-    socket: join(socketDirectory, "host.sock"),
     token: crypto.randomUUID() + crypto.randomUUID(),
   };
+  // A loopback port is known only after binding; the endpoint is published afterwards.
+  let address: LocalAddress = socketDirectory
+    ? { socket: join(socketDirectory, "host.sock") }
+    : { port: 1 };
+  let endpoint: DaemonEndpoint = { ...identity, ...address };
   const clients = new Map<string, Client>(),
     encoder = new TextEncoder();
   let terminal: LocalTerminalControl | undefined;
@@ -125,7 +131,7 @@ export async function startDaemon(
         } catch {
           /* Not our metadata. */
         }
-        rmSync(socketDirectory, { recursive: true, force: true });
+        if (socketDirectory) rmSync(socketDirectory, { recursive: true, force: true });
         unlock();
         resolveStopped();
       }
@@ -137,10 +143,13 @@ export async function startDaemon(
     terminal = new LocalTerminalControl(directory, runtime, emit);
     control = new DaemonControl(directory, runtime, emit, terminal, options.vault);
     server = Bun.serve({
-      unix: endpoint.socket,
+      ...(address.socket === undefined
+        ? { hostname: "127.0.0.1", port: 0 }
+        : { unix: address.socket }),
       maxRequestBodySize: 8 * 1024 * 1024,
       fetch: async (request, transport) => {
         transport.timeout(request, 0);
+        if (foreignLoopbackRequest(request, address)) return new Response(null, { status: 403 });
         if (request.headers.get("authorization") !== `Bearer ${endpoint.token}`)
           return new Response(null, { status: 403 });
         const url = new URL(request.url);
@@ -261,7 +270,10 @@ export async function startDaemon(
       }
     }, 5000);
     heartbeat.unref();
-    chmodSync(endpoint.socket, 0o600);
+    if (address.socket === undefined) {
+      address = { port: server.port! };
+      endpoint = { ...identity, ...address };
+    } else chmodSync(address.socket, 0o600);
     const file = endpointFile(directory),
       temporary = `${file}.${endpoint.epoch}.tmp`;
     writeFileSync(temporary, JSON.stringify(endpoint), { flag: "wx", mode: 0o600 });

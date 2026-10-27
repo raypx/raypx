@@ -23,10 +23,10 @@ actions and interactive terminals through the bundled Raypx CLI.
   login, account switches and logout. Legacy account-owned local data keeps its original
   server/account scope. Neither workspace is uploaded or merged automatically.
 - Show real execution, permission failures and retry state. Never fabricate data.
-- macOS Desktop Quit leaves the independent CLI daemon and Agent tasks running.
+- macOS and Windows Desktop Quit leaves the independent CLI daemon and Agent tasks running.
   Explicit logout/revoke cancels affected remote and legacy account work, preserving
-  device-owned tasks. Daemon stop cancels owned work; Windows retains its
-  foreground owner. Host/OS restart recovery remains a separate capability.
+  device-owned tasks. Daemon stop cancels owned work. Host/OS restart recovery
+  remains a separate capability.
 - Use stable package interfaces and add shared packages when real consumers need them.
 - Memory and task templates have explicit device/account ownership and immutable versions.
   Tasks use only user-selected references and keep their captured context after later edits.
@@ -54,8 +54,8 @@ checks installed agent capabilities and opens the task editor without starting w
 The CLI, application features and shared contracts use Bun + TypeScript. Desktop
 uses a Tauri Rust policy host and system WKWebView/WebView2; native packaging
 requires Rust. Ordinary TypeScript development and verification require no Rust
-installation. macOS and Windows Desktop builds are checked in CI; Windows keeps
-its foreground owner. Linux keeps the existing CLI implementation without a claim
+installation. macOS and Windows Desktop builds are checked in CI; Windows terminal
+hooks await a packaged acceptance run. Linux keeps the existing CLI implementation without a claim
 of complete Desktop product acceptance.
 Configuration sync, local Web, standalone Server, native mobile, team ownership and
 additional providers remain separate deliveries. Signing in enables none of them.

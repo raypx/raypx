@@ -9,7 +9,7 @@ import {
   type TaskChange,
 } from "@raypx/contracts/tasks";
 import type { TaskWorkspaceClient } from "@raypx/tasks/client";
-import { localRequest, onLocalEvent, isDaemonDesktop } from "../../lib/desktop";
+import { localRequest, onLocalEvent, hasTerminalHooks } from "../../lib/desktop";
 import { observedProjectionSchema, terminalRequestSchema } from "@raypx/contracts/terminal";
 
 function failure(code: string) {
@@ -71,7 +71,7 @@ export function createLocalTaskClient(
     return result.value;
   };
   return {
-    ...(configuration.observed && isDaemonDesktop()
+    ...(configuration.observed && hasTerminalHooks()
       ? {
           observed: {
             list: (_input, options) =>

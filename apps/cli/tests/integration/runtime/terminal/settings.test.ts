@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { applyHookSettings, planHookSettings } from "../../../../src/runtime/terminal/settings";
 
-const command = "'/installed/raypx' terminal hook codex";
+const command = { command: "'/installed/raypx' terminal hook codex" };
 it.skipIf(process.platform === "win32")(
   "preserves file mode, indentation and newlines and gives a dotfiles-specific error",
   async () => {

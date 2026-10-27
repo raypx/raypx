@@ -84,33 +84,31 @@ export class LocalTerminalControl {
       };
       this.unavailable = true;
     }
-    if (process.platform !== "win32") {
-      try {
-        this.terminal = startTerminalHost({
-          directory: join(profile, "terminal"),
-          discoveryDirectory: profile,
-          lockDirectory: profile,
-          ...this.configuration(),
-          ignoreSession: (provider, id) => this.runtime.agents.managesSession(provider, id),
-          reachable: (request, session) => this.reachable(request, session),
-          admitted: (request, session) => {
-            const channel = this.eligibleCloud(session);
-            if (channel)
-              this.exposures.set(request.id, {
-                binding: channel.binding,
-                scope: bindingKey(channel.apiUrl, channel.accountId),
-                rootId: session.projectId,
-                active: true,
-                sentRevision: 0,
-                sentPending: false,
-              });
-          },
-          setAway: (away) => this.configure({ ...this.settings.local, away }),
-          changed: (request) => this.changed(request),
-        });
-      } catch {
-        this.unavailable = true;
-      }
+    try {
+      this.terminal = startTerminalHost({
+        directory: join(profile, "terminal"),
+        discoveryDirectory: profile,
+        lockDirectory: profile,
+        ...this.configuration(),
+        ignoreSession: (provider, id) => this.runtime.agents.managesSession(provider, id),
+        reachable: (request, session) => this.reachable(request, session),
+        admitted: (request, session) => {
+          const channel = this.eligibleCloud(session);
+          if (channel)
+            this.exposures.set(request.id, {
+              binding: channel.binding,
+              scope: bindingKey(channel.apiUrl, channel.accountId),
+              rootId: session.projectId,
+              active: true,
+              sentRevision: 0,
+              sentPending: false,
+            });
+        },
+        setAway: (away) => this.configure({ ...this.settings.local, away }),
+        changed: (request) => this.changed(request),
+      });
+    } catch {
+      this.unavailable = true;
     }
   }
   get supported() {

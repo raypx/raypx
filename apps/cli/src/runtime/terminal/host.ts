@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
-import { basename, isAbsolute, join, relative } from "node:path";
+import { basename, isAbsolute, join, relative, sep } from "node:path";
 import { z } from "zod";
 import { taskText, type AgentProvider } from "@raypx/contracts/tasks";
 import {
@@ -23,14 +23,22 @@ import { hookDecision, parseHookInvocation, terminalCapabilities } from "./proto
 import { acquireLock } from "../state";
 import { LocalError } from "../errors";
 import { privateSocketDirectory } from "./socket";
+import {
+  foreignLoopbackRequest,
+  localAddressSchema,
+  localFetch,
+  loopbackTransport,
+  type LocalAddress,
+} from "../local-http";
 
-export const terminalEndpointSchema = z.object({
-  version: z.literal(1),
-  epoch: z.string().uuid(),
-  socket: z.string().min(1),
-  ownerToken: z.string().min(64),
-  hookToken: z.string().min(64),
-});
+export const terminalEndpointSchema = z
+  .object({
+    version: z.literal(1),
+    epoch: z.string().uuid(),
+    ownerToken: z.string().min(64),
+    hookToken: z.string().min(64),
+  })
+  .and(localAddressSchema);
 export type TerminalEndpoint = z.infer<typeof terminalEndpointSchema>;
 export function readTerminalEndpoint(directory: string): TerminalEndpoint {
   return terminalEndpointSchema.parse(
@@ -56,8 +64,6 @@ type TerminalOptions = {
   changed?: (request: TerminalRequest) => void;
 };
 export function startTerminalHost(options: TerminalOptions) {
-  if (process.platform === "win32")
-    throw new LocalError("UNSUPPORTED_PLATFORM", "Terminal host requires a POSIX Unix socket");
   if (
     options.waitSeconds !== undefined &&
     (!Number.isInteger(options.waitSeconds) ||
@@ -86,21 +92,29 @@ export function startTerminalHost(options: TerminalOptions) {
     } catch {
       /* First startup. */
     }
-    socketDirectory = privateSocketDirectory(options.directory, "terminal", previous);
-    const endpoint: TerminalEndpoint = {
-      version: 1,
+    if (!loopbackTransport())
+      socketDirectory = privateSocketDirectory(options.directory, "terminal", previous);
+    const identity = {
+      version: 1 as const,
       epoch: broker.epoch,
-      socket: join(socketDirectory, "host.sock"),
       ownerToken: crypto.randomUUID() + crypto.randomUUID(),
       hookToken: crypto.randomUUID() + crypto.randomUUID(),
     };
+    // A loopback port is known only after binding; endpoints are published afterwards.
+    let address: LocalAddress = socketDirectory
+      ? { socket: join(socketDirectory, "host.sock") }
+      : { port: 1 };
+    let endpoint: TerminalEndpoint = { ...identity, ...address };
     let away = options.away ?? false,
       viewerUntil = 0;
     server = Bun.serve({
-      unix: endpoint.socket,
+      ...(address.socket === undefined
+        ? { hostname: "127.0.0.1", port: 0 }
+        : { unix: address.socket }),
       maxRequestBodySize: 256 * 1024,
       fetch: async (request, transport) => {
         transport.timeout(request, 0);
+        if (foreignLoopbackRequest(request, address)) return new Response(null, { status: 403 });
         const path = new URL(request.url).pathname;
         const owner = request.headers.get("authorization") === `Bearer ${endpoint.ownerToken}`;
         const hook = request.headers.get("authorization") === `Bearer ${endpoint.hookToken}`;
@@ -165,7 +179,7 @@ export function startTerminalHost(options: TerminalOptions) {
               const subpath = relative(root, directory);
               return (
                 subpath === "" ||
-                (subpath !== ".." && !subpath.startsWith("../") && !isAbsolute(subpath))
+                (subpath !== ".." && !subpath.startsWith(`..${sep}`) && !isAbsolute(subpath))
               );
             });
             if (!project) return Response.json({ fallback: true });
@@ -237,7 +251,10 @@ export function startTerminalHost(options: TerminalOptions) {
         }
       },
     });
-    chmodSync(endpoint.socket, 0o600);
+    if (address.socket === undefined) {
+      address = { port: server.port! };
+      endpoint = { ...identity, ...address };
+    } else chmodSync(address.socket, 0o600);
     const file = join(options.directory, "terminal-host.json");
     const temporary = `${file}.${broker.epoch}.tmp`;
     writeFileSync(temporary, JSON.stringify(endpoint), { flag: "wx", mode: 0o600 });
@@ -251,7 +268,7 @@ export function startTerminalHost(options: TerminalOptions) {
       JSON.stringify({
         version: 1,
         epoch: endpoint.epoch,
-        socket: endpoint.socket,
+        ...address,
         token: endpoint.hookToken,
       }),
       { flag: "wx", mode: 0o600 },
@@ -325,7 +342,7 @@ export function startTerminalHost(options: TerminalOptions) {
           } catch {
             /* Another startup or removed metadata is not ours to delete. */
           }
-          rmSync(socketDirectory!, { recursive: true, force: true });
+          if (socketDirectory) rmSync(socketDirectory, { recursive: true, force: true });
           unlock();
         }
       },
@@ -346,9 +363,7 @@ export async function terminalFetch(
   body?: unknown,
   signal?: AbortSignal,
 ) {
-  return fetch(`http://localhost${path}`, {
-    unix: endpoint.socket,
-    redirect: "error",
+  return localFetch(endpoint, path, {
     headers: {
       authorization: `Bearer ${role === "owner" ? endpoint.ownerToken : endpoint.hookToken}`,
       "content-type": "application/json",

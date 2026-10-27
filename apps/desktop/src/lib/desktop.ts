@@ -24,9 +24,12 @@ export function onLocalEvent(listener: (event: LocalEvent) => void) {
 export function isDesktop() {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
-export function isDaemonDesktop() {
+/** Local terminal approvals need the independent daemon's hook host. */
+export function hasTerminalHooks() {
   return (
-    typeof window !== "undefined" && "__raypxDaemon" in window && window.__raypxDaemon === true
+    typeof window !== "undefined" &&
+    "__raypxTerminalHooks" in window &&
+    window.__raypxTerminalHooks === true
   );
 }
 function dispatchLocalEvent(value: unknown) {

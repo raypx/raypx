@@ -38,7 +38,7 @@ vi.mock("../../../../src/features/tasks/terminal-settings", () => ({
 }));
 vi.mock("../../../../src/lib/desktop", () => ({
   isDesktop: () => true,
-  isDaemonDesktop: () => true,
+  hasTerminalHooks: () => true,
   onLocalEvent: () => () => {},
   localRequest: mocks.local,
   getBridge: async () => ({

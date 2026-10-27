@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startDaemon } from "../../../../src/runtime/daemon/server";
 import { daemonFetch } from "../../../../src/runtime/daemon/endpoint";
+import { localFetch } from "../../../../src/runtime/local-http";
 import { createRuntime } from "../../../../src/runtime";
 import type { AgentTask } from "@raypx/contracts/tasks";
 
@@ -70,10 +71,9 @@ it.skipIf(process.platform === "win32")(
       };
     };
     try {
-      expect(statSync(host.endpoint.socket).mode & 0o777).toBe(0o600);
-      expect((await fetch("http://localhost/info", { unix: host.endpoint.socket })).status).toBe(
-        403,
-      );
+      const { socket } = host.endpoint;
+      expect(socket === undefined || (statSync(socket).mode & 0o777) === 0o600).toBe(true);
+      expect((await localFetch(host.endpoint, "/info")).status).toBe(403);
       const first = await connect();
       const root = (await first.request("roots.register", { path: project })) as { id: string };
       await first.request("agents.configure", { rootId: root.id, providers: ["codex"] });

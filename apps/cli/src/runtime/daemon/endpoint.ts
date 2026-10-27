@@ -1,20 +1,31 @@
-import { chmodSync, mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import {
+  chmodSync,
+  copyFileSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+} from "node:fs";
+import { dirname, join } from "node:path";
 import { z } from "zod";
 import manifest from "../../../package.json";
 import { cliBuild } from "./build";
 import { profilePath, acquireLock } from "../state";
 import { LocalError } from "../errors";
+import { localAddressSchema, localFetch } from "../local-http";
 
 export type ProfileOptions = { dataDir?: string; profile?: string };
-export const daemonEndpointSchema = z.object({
-  protocol: z.literal(1),
-  version: z.string(),
-  builtAt: z.number().nonnegative().optional(),
-  epoch: z.string().uuid(),
-  socket: z.string().min(1).max(104),
-  token: z.string().min(64).max(200),
-});
+export const daemonEndpointSchema = z
+  .object({
+    protocol: z.literal(1),
+    version: z.string(),
+    builtAt: z.number().nonnegative().optional(),
+    epoch: z.string().uuid(),
+    token: z.string().min(64).max(200),
+  })
+  .and(localAddressSchema);
 export type DaemonEndpoint = z.infer<typeof daemonEndpointSchema>;
 export const endpointFile = (directory: string) => join(directory, "daemon.json");
 export function readDaemon(directory: string) {
@@ -26,9 +37,7 @@ export function daemonFetch(
   body?: unknown,
   signal?: AbortSignal,
 ) {
-  return fetch(`http://localhost${path}`, {
-    unix: endpoint.socket,
-    redirect: "error",
+  return localFetch(endpoint, path, {
     headers: { authorization: `Bearer ${endpoint.token}`, "content-type": "application/json" },
     ...(body === undefined ? {} : { method: "POST", body: JSON.stringify(body) }),
     ...(signal ? { signal } : {}),
@@ -74,13 +83,47 @@ export function cliLaunch() {
     ? [process.execPath, Bun.main]
     : [process.execPath];
 }
+/**
+ * Windows locks a running executable, so a long-lived owner must not run from the
+ * Desktop bundle the updater replaces. Each build runs from its own private copy.
+ */
+export function daemonLaunch(
+  directory: string,
+  launch = cliLaunch(),
+  platform: NodeJS.Platform = process.platform,
+) {
+  const [executable] = launch;
+  if (platform !== "win32" || launch.length > 1 || !executable) return launch;
+  const bin = join(dirname(dirname(directory)), "bin"),
+    name = `raypx-${manifest.version}-${cliBuild.builtAt}.exe`,
+    target = join(bin, name);
+  let current = false;
+  try {
+    current = statSync(target).size === statSync(executable).size;
+  } catch {
+    /* Install this build below. */
+  }
+  if (!current) {
+    mkdirSync(bin, { recursive: true });
+    const temporary = `${target}.${crypto.randomUUID()}.tmp`;
+    copyFileSync(executable, temporary);
+    renameSync(temporary, target);
+  }
+  // A restarted owner may still hold its copy briefly; a later launch removes it.
+  for (const entry of readdirSync(bin))
+    if (entry !== name && /^raypx-.+\.exe(?:\..+\.tmp)?$/.test(entry))
+      try {
+        rmSync(join(bin, entry), { force: true });
+      } catch {
+        /* A running owner keeps its copy locked until it exits. */
+      }
+  return [target];
+}
 export async function connectDaemon(
   options: ProfileOptions,
   start = true,
   compatibility: "match" | "any" = "match",
 ) {
-  if (process.platform === "win32")
-    throw new LocalError("UNSUPPORTED_PLATFORM", "Daemon IPC requires a Unix socket");
   const directory = profilePath(options);
   const current = await probe(directory, compatibility);
   if (current) return current;
@@ -105,7 +148,7 @@ export async function connectDaemon(
       }
       const child = Bun.spawn(
         [
-          ...cliLaunch(),
+          ...daemonLaunch(directory),
           "daemon",
           "run",
           "--profile",
@@ -117,6 +160,7 @@ export async function connectDaemon(
           stdin: "ignore",
           stdout: "ignore",
           stderr: "ignore",
+          windowsHide: true,
         },
       );
       child.unref();

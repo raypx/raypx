@@ -8,8 +8,8 @@ routes commands; a server clock cannot declare a local execution finished.
 
 ## Communication
 
-Web / Desktop UI ↔ API relay ↔ CLI daemon ↔ Claude Code / Codex (macOS).
-Desktop native ↔ private daemon proxy for local views; Windows keeps native ↔ stdio.
+Web / Desktop UI ↔ API relay ↔ CLI daemon ↔ Claude Code / Codex (macOS, Windows).
+Desktop native ↔ private daemon proxy for local views on both platforms.
 All remote connections are outbound HTTPS/WSS. Native exposes no public port.
 The local engine uses version-matched NDJSON over stdio. Codex uses its local
 stdio app-server; Claude uses persistent stream-JSON input/output and authenticated session hooks on

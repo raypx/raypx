@@ -4,13 +4,15 @@ import { z } from "zod";
 import { decisionSchema, type AgentProvider } from "@raypx/contracts/tasks";
 import { TERMINAL_HOOK_TIMEOUT_SECONDS } from "@raypx/contracts/terminal";
 import { hookDecision, parseHookInvocation } from "./protocol";
+import { localAddressSchema, localFetch } from "../local-http";
 
-const endpointSchema = z.object({
-  version: z.literal(1),
-  epoch: z.string().uuid(),
-  socket: z.string().min(1),
-  token: z.string().min(64),
-});
+const endpointSchema = z
+  .object({
+    version: z.literal(1),
+    epoch: z.string().uuid(),
+    token: z.string().min(64),
+  })
+  .and(localAddressSchema);
 const responseSchema = z.object({
   id: z.string().uuid(),
   epoch: z.string().uuid(),
@@ -30,9 +32,7 @@ export async function forwardTerminalHook(
       JSON.parse(readFileSync(join(directory, "terminal-hook.json"), "utf8")),
     );
     const send = (path: string, body: unknown, timeout: number) =>
-      fetch(`http://localhost${path}`, {
-        unix: endpoint.socket,
-        redirect: "error",
+      localFetch(endpoint, path, {
         signal: AbortSignal.timeout(timeout),
         headers: { authorization: `Bearer ${endpoint.token}`, "content-type": "application/json" },
         ...(body === undefined ? {} : { method: "POST", body: JSON.stringify(body) }),

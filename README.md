@@ -29,8 +29,8 @@ Bun services: `bun apps/web/.output/server/index.mjs` and
 Its server rendering needs the session cookie: serve both from one origin, or set
 `AUTH_DOMAIN` to the parent domain of sibling hosts such as app/api.example.com.
 Local desktop files, automations and terminals do not require login. Close-to-tray
-keeps scheduling. On macOS, Quit disconnects the window while the independent
-CLI daemon keeps working; Windows Quit cancels its foreground owner.
+keeps scheduling. On macOS and Windows, Quit disconnects the window while the
+independent CLI daemon keeps working.
 External tools run with the user's OS permissions.
 
 ## Commands

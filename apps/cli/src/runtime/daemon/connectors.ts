@@ -5,16 +5,23 @@ import {
   lstatSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   statSync,
   readFileSync,
   renameSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
 import type { AgentProvider } from "@raypx/contracts/tasks";
-import { applyHookSettings, planHookSettings, readHookSettings } from "../terminal/settings";
+import {
+  applyHookSettings,
+  planHookSettings,
+  readHookSettings,
+  type HookCommand,
+} from "../terminal/settings";
 import { LocalError } from "../errors";
 import { acquireLock } from "../state";
 import { cliBuild } from "./build";
@@ -25,11 +32,29 @@ export function raypxHome() {
     throw new LocalError("INVALID_CONFIG_PATH", "RAYPX_HOME must be absolute");
   return directory;
 }
-export const stableCliPath = () => join(raypxHome(), "bin", "raypx");
+export const stableCliPath = (platform: NodeJS.Platform = process.platform) =>
+  join(raypxHome(), "bin", platform === "win32" ? "raypx.exe" : "raypx");
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
-export function connectorCommand(directory: string, provider: AgentProvider) {
-  return [
-    stableCliPath(),
+/** Codex runs Windows hooks as `cmd /C "<command>"`; `%` and `"` cannot be quoted there. */
+const cmdQuote = (value: string) => {
+  if (/["%\r\n]/.test(value))
+    throw new LocalError(
+      "INVALID_HOOK_COMMAND",
+      "Raypx paths cannot contain quotes or percent signs",
+    );
+  return `"${value}"`;
+};
+/**
+ * POSIX uses one quoted shell line. On Windows, Claude Code spawns exec-form hooks without a
+ * shell (Git Bash would consume backslashes), while Codex's cmd.exe needs double quotes.
+ */
+export function connectorCommand(
+  directory: string,
+  provider: AgentProvider,
+  platform: NodeJS.Platform = process.platform,
+): HookCommand {
+  const [binary, ...args] = [
+    stableCliPath(platform),
     "connectors",
     "hook",
     provider,
@@ -37,26 +62,34 @@ export function connectorCommand(directory: string, provider: AgentProvider) {
     dirname(dirname(directory)),
     "--profile",
     basename(directory),
-  ]
-    .map(quote)
-    .join(" ");
+  ];
+  if (platform !== "win32") return { command: [binary, ...args].map(quote).join(" ") };
+  if (provider === "claude") return { command: binary, args };
+  return { command: [binary, ...args].map(cmdQuote).join(" ") };
 }
+const raypxHook = (handler: Record<string, unknown>) =>
+  typeof handler.command === "string" &&
+  (/(?:^|\/)raypx' 'connectors' 'hook' /.test(handler.command) ||
+    /raypx\.exe" "connectors" "hook" /i.test(handler.command) ||
+    (/(?:^|[\\/])raypx\.exe$/i.test(handler.command) &&
+      Array.isArray(handler.args) &&
+      handler.args[0] === "connectors" &&
+      handler.args[1] === "hook"));
 export function planConnectorSettings(
   provider: AgentProvider,
   text: string | null,
-  command: string,
+  command: HookCommand,
   action: "install" | "uninstall",
 ) {
   const plan = planHookSettings(provider, text, command, action);
+  const same = (handler: Record<string, unknown>) =>
+    handler.command === command.command &&
+    JSON.stringify(handler.args ?? null) === JSON.stringify(command.args ?? null);
   if (action === "install" && text) {
     const groups = JSON.parse(text).hooks?.PermissionRequest ?? [];
     for (const group of groups)
       for (const handler of group.hooks) {
-        if (
-          typeof handler.command === "string" &&
-          handler.command !== command &&
-          /(?:^|\/)raypx' 'connectors' 'hook' /.test(handler.command)
-        )
+        if (!same(handler) && raypxHook(handler))
           throw new LocalError(
             "HOOK_OTHER_PROFILE",
             "Remove the other Raypx profile's hook before connecting this profile",
@@ -140,7 +173,11 @@ export function stableCliStatus(binary = stableCliPath()) {
       previous.version !== cliBuild.version ||
       (cliBuild.builtAt > 0 && previous.builtAt !== cliBuild.builtAt);
     return {
-      error: statSync(binary).mode & 0o111 ? null : "HOST_BINARY_NOT_EXECUTABLE",
+      // Windows has no execute bit; the .exe name is the contract there.
+      error:
+        process.platform === "win32" || statSync(binary).mode & 0o111
+          ? null
+          : "HOST_BINARY_NOT_EXECUTABLE",
       updateAvailable,
     };
   } catch {
@@ -188,10 +225,10 @@ export function preserveModifiedCli(binary: string, confirmed = false) {
 
 /** Copy only the compiled host to a stable, explicitly owned installation. */
 export function installStableCli(recoverModified = false) {
-  if (process.platform !== "darwin")
+  if (process.platform !== "darwin" && process.platform !== "win32")
     throw new LocalError(
       "UNSUPPORTED_PLATFORM",
-      "Stable host installation currently supports macOS",
+      "Stable host installation currently supports macOS and Windows",
     );
   if (/(?:^|[/\\])bun(?:\.native)?(?:\.exe)?$/.test(process.execPath))
     throw new LocalError(
@@ -223,7 +260,17 @@ export function installStableCli(recoverModified = false) {
       const temporary = `${binary}.${crypto.randomUUID()}.tmp`;
       copyFileSync(process.execPath, temporary);
       chmodSync(temporary, 0o755);
+      // Windows cannot replace a running hook executable but can rename it aside.
+      if (process.platform === "win32" && existsSync(binary))
+        renameSync(binary, `${binary}.${crypto.randomUUID()}.old`);
       renameSync(temporary, binary);
+      for (const entry of readdirSync(directory))
+        if (entry.startsWith(`${basename(binary)}.`) && entry.endsWith(".old"))
+          try {
+            rmSync(join(directory, entry), { force: true });
+          } catch {
+            /* A hook still running an old build keeps it until a later install. */
+          }
     }
     const temporary = `${ownership}.tmp`;
     writeFileSync(temporary, JSON.stringify({ digest: digest(binary), ...cliBuild }), {

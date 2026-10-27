@@ -11,8 +11,9 @@ import {
 import { TerminalStore } from "../../../../src/runtime/terminal/store";
 import { terminalCapabilities } from "../../../../src/runtime/terminal/protocol";
 import { createHash } from "node:crypto";
+import { localFetch, loopbackTransport } from "../../../../src/runtime/local-http";
 import type { TerminalSession } from "@raypx/contracts/terminal";
-it.skipIf(process.platform === "win32")(
+it.skipIf(loopbackTransport())(
   "reclaims only its owned socket directory after a host crash",
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "raypx-terminal-crash-"));
@@ -36,7 +37,7 @@ it.skipIf(process.platform === "win32")(
           }
         })
         .toBeDefined();
-      const old = dirname(readTerminalEndpoint(directory).socket);
+      const old = dirname(readTerminalEndpoint(directory).socket!);
       child.kill("SIGKILL");
       await child.exited;
       expect(existsSync(old)).toBe(true);
@@ -153,8 +154,9 @@ it.skipIf(process.platform === "win32")(
       expect(() => startTerminalHost({ directory: dir, projects: [project] })).toThrow(
         /already owns/,
       );
-      expect((await stat(host.endpoint.socket)).mode & 0o777).toBe(0o600);
-      const noAuth = await fetch("http://localhost/state", { unix: host.endpoint.socket });
+      const { socket } = host.endpoint;
+      expect(socket === undefined || ((await stat(socket)).mode & 0o777) === 0o600).toBe(true);
+      const noAuth = await localFetch(host.endpoint, "/state");
       expect(noAuth.status).toBe(403);
       expect((await terminalFetch(host.endpoint, "hook", "/state")).status).toBe(404);
       await terminalFetch(host.endpoint, "owner", "/watch", { active: true });

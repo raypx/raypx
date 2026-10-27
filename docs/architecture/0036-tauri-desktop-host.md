@@ -17,9 +17,8 @@ manifests prevent policy drift. Renderer application calls retain their existing
 `getBridge().request.method(input)` shape. Native event delivery uses acknowledged
 Channel credit to bound outstanding terminal data.
 
-Windows uses DaemonControl inside its foreground CLI owner and OS Credential
-Manager; EOF/Quit cancels owned work. macOS keeps an independent daemon and OS
-Keychain. Browser session expiration does not revoke restricted host credentials;
+macOS and Windows use an independent daemon with OS Keychain or Credential
+Manager ([ADR 0037](0037-windows-daemon.md) replaced the Windows foreground owner). Browser session expiration does not revoke restricted host credentials;
 explicit sign-out/account changes revoke the affected binding.
 
 The chosen installation target is per-user NSIS. Existing Windows encrypted

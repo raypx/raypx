@@ -459,7 +459,7 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         cli_binary()?,
         env!("CARGO_PKG_VERSION").into(),
         args,
-        cfg!(target_os = "macos"),
+        cfg!(any(target_os = "macos", windows)),
         events.clone(),
     );
     let mut directories = config.connector_directories;
@@ -473,8 +473,9 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let preload = format!(
-        "{}Object.defineProperty(window,'__raypxDaemon',{{value:{}}});{}",
+        "{}Object.defineProperty(window,'__raypxTerminalHooks',{{value:{}}});{}",
         config.preload,
+        // Terminal hooks belong to the independent daemon (macOS and Windows).
         engine.daemon,
         preferences.preload()
     );

@@ -66,8 +66,9 @@ Local tools render during session/network checks. Auth routes use a standalone l
   The root remains text-free; translated providers initialize inside ClientOnly.
   Packaged native origins use hash history. Never edit generated route trees.
 - Launch only the absolute bundled CLI with a matching version/build identity.
-  macOS connects to an independent daemon; Windows stdio is a foreground owner.
-  Quit preserves macOS Agent work and cancels Windows foreground work.
+  macOS and Windows connect to an independent daemon; Quit preserves Agent work.
+  Spawn CLI children through `engine::cli_command` so Windows opens no console.
+  `__raypxTerminalHooks` (daemon hosts only) gates local terminal UI.
 - Renderer IPC cannot call host.*, approvals.local.watch, observed.remote or
   roots.register. Directory grants come only from Rust's native picker. Connector
   recovery runs only the bundled CLI with native-owned directories.
@@ -145,7 +146,6 @@ RPCs. Credentials go directly to private IPC and Keychain, never the renderer.
 The independent daemon renews short grants without browser cookies. Missing browser
 sessions and renderer unmount do not revoke authorization; explicit account sign-out
 uses `features/tasks/host-session.ts`, and account/origin changes detach the old binding. Host bootstrap needs recent sign-in; settings' shadcn password dialog refreshes it without logout or daemon detachment.
-Windows uses the same restricted credential model in its foreground CLI owner.
 
 Local terminal settings/connectors require no account. Hooks return native control
 on failure; only recorded Bash permissions are enabled, and Codex requires trust.

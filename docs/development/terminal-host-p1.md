@@ -25,7 +25,7 @@ fall back, and decided/delivered requests recover as outcome unknown.
 
 A profile has one execution owner enforced by SQLite's OS-backed write lock.
 A competing legacy host fails rather than repairing/cancelling the running owner.
-Windows retains the foreground stdio host and does not expose terminal settings.
+Windows runs the daemon and hook host over token-guarded loopback (ADR 0037).
 Linux retains existing CLI support without complete product acceptance.
 
 ## Authorization and server selection

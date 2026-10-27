@@ -7,7 +7,7 @@ import type { ControlInfo } from "@raypx/contracts/terminal";
 import {
   getBridge,
   isDesktop,
-  isDaemonDesktop,
+  hasTerminalHooks,
   localRequest,
   pickDirectory,
 } from "../../lib/desktop";
@@ -180,7 +180,7 @@ export function AgentSettings() {
           {t("LOCAL_UNAVAILABLE")}
         </p>
       )}
-      {isDaemonDesktop() && <TerminalSettings projects={projects} />}
+      {hasTerminalHooks() && <TerminalSettings projects={projects} />}
       <div className="mt-8 border-t border-border pt-7">
         <RemoteBoundary>
           {() =>

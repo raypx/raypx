@@ -102,10 +102,10 @@ docs/history is historical context and does not constrain the new foundation.
 ## Remote control
 
 Opted-in remote Agent tasks use explicit API projections and device-scoped grants.
-On macOS the independent CLI daemon owns execution, approval arbitration, the
+On macOS and Windows the independent CLI daemon owns execution, approval arbitration, the
 durable replay journal, the outbound WebSocket and restricted device credentials.
-Desktop connects over authenticated private IPC; GUI Quit does not stop daemon tasks.
-Windows uses its foreground CLI owner, composed with the same host control. API relays messages and stores read
+Desktop connects over authenticated private IPC (Unix socket, or token-guarded loopback
+on Windows; see ADR 0037); GUI Quit does not stop daemon tasks. API relays messages and stores read
 projections. Native handles initial opt-in without exporting cookies or host secrets
 to the renderer. Explicit logout/account changes revoke the affected binding. Never publish the
 local method router or provider credentials. Desktop connection settings are

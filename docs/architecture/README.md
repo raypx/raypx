@@ -191,4 +191,5 @@ with a durable sequenced journal for reconnect replay and snapshot recovery.
 cloud opt-in, terminal approval leases and migration boundary. Each profile owns
 one Bun/TypeScript execution Host. Local tasks, connectors and approvals require
 no account; cloud recovery does not block readiness. Rust provides the native Desktop host; execution stays in the CLI. See
-[ADR 0036](0036-tauri-desktop-host.md). Rust gates remain explicit in local workflows.
+[ADR 0036](0036-tauri-desktop-host.md). Windows also runs the independent daemon over
+token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Rust gates remain explicit in local workflows.

@@ -17,6 +17,15 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 
 pub const LINE_LIMIT: usize = 8 * 1024 * 1024;
+
+/// The GUI process has no console; without this flag Windows opens one per CLI child.
+pub fn cli_command(binary: &std::path::Path) -> Command {
+    #[cfg_attr(not(windows), allow(unused_mut))]
+    let mut command = Command::new(binary);
+    #[cfg(windows)]
+    command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    command
+}
 const CREDIT_BYTES: usize = 1024 * 1024;
 
 #[derive(Default)]
@@ -251,7 +260,7 @@ impl Engine {
             return Err("Bundled CLI path must be absolute".into());
         }
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
-        let mut child = Command::new(&self.binary)
+        let mut child = cli_command(&self.binary)
             .args(if self.daemon {
                 vec!["daemon", "proxy"]
             } else {
@@ -458,7 +467,7 @@ impl Engine {
     }
     async fn restart_owner(self: &Arc<Self>) -> bool {
         self.stop().await;
-        let status = Command::new(&self.binary)
+        let status = cli_command(&self.binary)
             .args(["daemon", "restart"])
             .args(&self.args)
             .stdin(std::process::Stdio::null())

@@ -1,6 +1,7 @@
+use crate::engine::cli_command;
 use serde_json::{Value, json};
 use std::{path::Path, time::Duration};
-use tokio::{io::AsyncReadExt, process::Command};
+use tokio::io::AsyncReadExt;
 
 async fn bounded(mut reader: impl tokio::io::AsyncRead + Unpin) -> Result<Vec<u8>, String> {
     let mut bytes = Vec::new();
@@ -27,7 +28,7 @@ pub async fn repair(
         .as_str()
         .filter(|provider| ["claude", "codex"].contains(provider))
         .ok_or("INSTALLATION_FAILED")?;
-    let mut child = Command::new(binary)
+    let mut child = cli_command(binary)
         .args([
             "connectors",
             "repair",

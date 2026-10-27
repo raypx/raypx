@@ -15,6 +15,8 @@ const hash = (value: string | null) =>
   createHash("sha256")
     .update(value ?? "<missing>")
     .digest("hex");
+/** Shell form (`command` only) or exec form (`command` executable plus `args`, no shell). */
+export type HookCommand = { command: string; args?: string[] };
 export type HookSettingsPlan = {
   provider: AgentProvider;
   before: string | null;
@@ -29,10 +31,15 @@ export type HookSettingsPlan = {
 export function planHookSettings(
   provider: AgentProvider,
   source: string | null,
-  command: string,
+  command: HookCommand,
   action: "install" | "uninstall",
 ): HookSettingsPlan {
-  if (!command.trim() || command.length > 8192 || /[\r\n\0]/.test(command))
+  const parts = [command.command, ...(command.args ?? [])];
+  if (
+    !command.command.trim() ||
+    parts.join(" ").length > 8192 ||
+    parts.some((part) => /[\r\n\0]/.test(part))
+  )
     throw new LocalError("INVALID_HOOK_COMMAND", "Hook command must be one bounded line");
   if (source !== null && Buffer.byteLength(source) > 1024 * 1024)
     throw new LocalError("TOO_LARGE", "Agent settings exceed 1 MiB");
@@ -56,11 +63,19 @@ export function planHookSettings(
     throw new LocalError("INVALID_HOOK_SETTINGS", "PermissionRequest matchers must be an array");
   // Broaden only when a real recorded contract enables the additional tool.
   const matcher = terminalPermissionMatcher(terminalCapabilities(provider));
-  const handler = { type: "command", command, timeout: TERMINAL_HOOK_TIMEOUT_SECONDS };
+  const handler = {
+    type: "command",
+    command: command.command,
+    ...(command.args ? { args: command.args } : {}),
+    timeout: TERMINAL_HOOK_TIMEOUT_SECONDS,
+  };
+  const sameCommand = (value: Record<string, unknown>) =>
+    value.command === command.command &&
+    JSON.stringify(value.args ?? null) === JSON.stringify(command.args ?? null);
   const sameHandler = (value: Record<string, unknown>) =>
-    Object.keys(value).length === 3 &&
+    Object.keys(value).length === Object.keys(handler).length &&
     value.type === handler.type &&
-    value.command === handler.command &&
+    sameCommand(value) &&
     value.timeout === handler.timeout;
   let found = false,
     preservedModified = false;
@@ -70,7 +85,7 @@ export function planHookSettings(
       throw new LocalError("INVALID_HOOK_SETTINGS", "Hook matcher has no handlers array");
     const remaining: unknown[] = [];
     for (const hook of value.hooks) {
-      if (!object(hook) || hook.command !== command) {
+      if (!object(hook) || !sameCommand(hook)) {
         remaining.push(hook);
         continue;
       }
