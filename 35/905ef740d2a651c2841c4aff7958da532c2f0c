@@ -1,0 +1,163 @@
+packages/memory/tests/component/budget.test.tsx
+  s_c99f3390b62e01::t_4a5a2135df40d5 1-89
+  s_c99f3390b62e01::t_553ec4f01be5b5 90-98
+docs/development/test-cases.md
+  s_c99f3390b62e01::t_dbe0c9d1cf7555 185-192
+apps/web/vitest.config.ts
+  s_c99f3390b62e01::t_728c49c16c7795 1,3-11
+packages/tooling/src/scaffold.ts
+  s_c99f3390b62e01::t_1a9b28ee3a999a 31
+docs/development/testing.md
+  s_c99f3390b62e01::t_1f59969a7554fd 73,80-81
+  s_c99f3390b62e01::t_b19d277032087f 61-63,66-67,70-72,85-86
+docs/development/test-audit-2026-10-27.md
+  s_c99f3390b62e01::t_dbe0c9d1cf7555 16-40,62-72
+  s_c99f3390b62e01::t_1f59969a7554fd 1-15,41-61,73-102
+apps/cli/tests/integration/runtime/agents/host.test.ts
+  s_c99f3390b62e01::t_44d3bdf43ad7c7 1-557
+packages/memory/AGENTS.md
+  s_c99f3390b62e01::t_b19d277032087f 41-43
+packages/tooling/tests/unit/scaffold.test.ts
+  s_c99f3390b62e01::t_b19d277032087f 18-23,33-38
+apps/cli/AGENTS.md
+  s_c99f3390b62e01::t_b19d277032087f 66-71
+apps/web/AGENTS.md
+  s_c99f3390b62e01::t_b19d277032087f 19
+  s_c99f3390b62e01::t_1f59969a7554fd 18
+apps/cli/package.json
+  s_c99f3390b62e01::t_a69fb7c70f1aa8 13-14
+test.config.ts
+  s_c99f3390b62e01::t_728c49c16c7795 5-13,34-45,48
+  s_c99f3390b62e01::t_1d920fa2b6b370 46-47
+packages/tooling/AGENTS.md
+  s_c99f3390b62e01::t_b19d277032087f 64-67
+docs/README.md
+  s_c99f3390b62e01::t_1f59969a7554fd 15
+e2e/AGENTS.md
+  s_c99f3390b62e01::t_1f59969a7554fd 54-56
+packages/tooling/tests/integration/test-inventory.test.ts
+  s_c99f3390b62e01::t_85ac4e2fa6c751 1-7,9-12,16-35
+  s_c99f3390b62e01::t_1a9b28ee3a999a 8,13-15
+apps/desktop/scripts/native/csp.ts
+  s_c99f3390b62e01::t_23616531057be1 4,7-14,20,33-36,39
+packages/analytics/package.json
+  s_c99f3390b62e01::t_9a4513247a9f84 16-18
+packages/memory/tests/component/picker.test.tsx
+  s_c99f3390b62e01::t_4a5a2135df40d5 1-202
+  s_c99f3390b62e01::t_891f860a3353f0 203-212
+apps/desktop/AGENTS.md
+  s_c99f3390b62e01::t_2b8fc6e701614b 41-42,47
+  s_c99f3390b62e01::t_01e103c15b2bdb 43,103
+packages/analytics/AGENTS.md
+  s_c99f3390b62e01::t_b19d277032087f 12-14
+apps/desktop/tests/scripts/native/csp.test.ts
+  s_c99f3390b62e01::t_23616531057be1 16-37
+packages/analytics/vitest.config.ts
+  s_c99f3390b62e01::t_9a4513247a9f84 2
+packages/i18n/vitest.config.ts
+  s_c99f3390b62e01::t_9a4513247a9f84 1,3-8,10
+apps/cli/tests/helpers/agents.ts
+  s_c99f3390b62e01::t_f5d3d44f5f32eb 1-79
+apps/cli/tests/integration/commands/ai.test.ts
+  s_c99f3390b62e01::t_3e78c411bb65e9 6-8
+apps/cli/tests/integration/commands/index.test.ts
+  s_c99f3390b62e01::t_2246b705ecf271 6-8
+apps/cli/tests/integration/runtime/agents/context.test.ts
+  s_c99f3390b62e01::t_8d8ac9c8774bf4 1-279
+apps/cli/tests/integration/runtime/agents/inputs.test.ts
+  s_c99f3390b62e01::t_872d7381c2fc7b 1-243
+apps/cli/tests/integration/runtime/agents/pi-store.test.ts
+  s_c99f3390b62e01::t_989c5fab216e23 11-13,84
+apps/cli/tests/integration/runtime/agents/store.test.ts
+  s_c99f3390b62e01::t_8dc941240d02b3 5-11
+apps/cli/tests/integration/runtime/daemon/configuration.test.ts
+  s_c99f3390b62e01::t_03c0e5af1034f4 2-4,8
+apps/cli/tests/integration/runtime/daemon/connectors.test.ts
+  s_c99f3390b62e01::t_bd4213a14f6bbd 13-15
+apps/cli/tests/integration/runtime/daemon/control.test.ts
+  s_c99f3390b62e01::t_110204a361c376 5-10
+apps/cli/tests/integration/runtime/daemon/host.test.ts
+  s_c99f3390b62e01::t_59044d81f6a91a 14-16,27
+apps/cli/tests/integration/runtime/daemon/lifecycle.test.ts
+  s_c99f3390b62e01::t_17ede69a470483 5,11-12,80-84
+apps/cli/tests/integration/runtime/daemon/proxy.test.ts
+  s_c99f3390b62e01::t_bd175a4042baef 5-7,79
+apps/cli/tests/integration/runtime/files.test.ts
+  s_c99f3390b62e01::t_9c4291ba9b87ad 4-5
+apps/cli/tests/integration/runtime/jobs.test.ts
+  s_c99f3390b62e01::t_b7d21a9cca5e78 2-6
+apps/cli/tests/integration/runtime/memory.test.ts
+  s_c99f3390b62e01::t_a18ec327cdaceb 6-7,11
+apps/cli/tests/integration/runtime/process.test.ts
+  s_c99f3390b62e01::t_37d9108092d546 2
+apps/cli/tests/integration/runtime/state.test.ts
+  s_c99f3390b62e01::t_5001de756d79e0 2-3
+apps/cli/tests/integration/runtime/terminal/broker.test.ts
+  s_c99f3390b62e01::t_815310b2397982 9-10
+apps/cli/tests/integration/runtime/terminal/hook.test.ts
+  s_c99f3390b62e01::t_56230079b96035 5-6
+apps/cli/tests/integration/runtime/terminal/host.test.ts
+  s_c99f3390b62e01::t_682c2707e6dcc2 10-12,23
+apps/cli/tests/integration/runtime/terminal/settings.test.ts
+  s_c99f3390b62e01::t_6ce35daf429515 5
+apps/cli/tests/unit/commands/args.test.ts
+  s_c99f3390b62e01::t_8a7b14b627b264 2
+apps/cli/tests/unit/diagnostics.test.ts
+  s_c99f3390b62e01::t_133bae3cad0bfe 2-3
+apps/cli/tests/unit/runtime/agents/activity.test.ts
+  s_c99f3390b62e01::t_309ce50f4236e0 1,3-4,224-230
+apps/cli/tests/unit/runtime/agents/pi.test.ts
+  s_c99f3390b62e01::t_d741252a5cd920 4-5
+apps/cli/tests/unit/runtime/agents/providers.test.ts
+  s_c99f3390b62e01::t_be251e8eab4989 2-4,8
+apps/cli/tests/unit/runtime/terminal/protocol.test.ts
+  s_c99f3390b62e01::t_5821775c68c997 6
+apps/cli/tests/unit/runtime/terminal/recorded.test.ts
+  s_c99f3390b62e01::t_9f869e63729f58 5-7,10
+apps/cli/tests/unit/tui/session.test.ts
+  s_c99f3390b62e01::t_a2c2508e7e7850 3-4
+apps/cli/tests/unit/tui/terminal.test.ts
+  s_c99f3390b62e01::t_2eda250cbe1ae1 3
+apps/cli/tests/unit/tui/text.test.ts
+  s_c99f3390b62e01::t_f78db340fe7030 2
+apps/desktop/tests/native/external.test.ts
+  s_c99f3390b62e01::t_6b9e9a7cbedeef 1-13
+apps/desktop/tests/native/integration/engine.test.ts
+  s_c99f3390b62e01::t_a594d06c072382 5
+apps/desktop/tests/native/integration/instance.test.ts
+  s_c99f3390b62e01::t_9a3a1ca62fd3f0 5,24,57
+packages/account/package.json
+  s_c99f3390b62e01::t_64452e5ef7e5a6 15
+packages/ai/package.json
+  s_c99f3390b62e01::t_ecaa9bc14274a9 13
+packages/analytics/tests/component/preferences.test.tsx
+  s_c99f3390b62e01::t_78fdf84ad6995c 1,7-10,93-102
+packages/analytics/tests/unit/policy.test.ts
+  s_c99f3390b62e01::t_070dfb96c04656 4,9
+packages/host/package.json
+  s_c99f3390b62e01::t_84031bd2a3da3d 10
+packages/i18n/tests/browser/component/client.test.tsx
+  s_c99f3390b62e01::t_7d1695e437526c 4-7
+packages/memory/tests/component/library.test.tsx
+  s_c99f3390b62e01::t_2457bf5441df75 2,4-6,8-16
+packages/memory/tests/helpers/client.tsx
+  s_c99f3390b62e01::t_5d4d0ef26bf0a0 1-84
+packages/tasks/package.json
+  s_c99f3390b62e01::t_40e328ba076f88 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "35905ef740d2a651c2841c4aff7958da532c2f0c",
+  "prompts": {},
+  "sessions": {
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
