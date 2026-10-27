@@ -1,7 +1,9 @@
+import { workspaceTaskConfig } from "@raypx/tooling/tasks";
 import { resolve } from "node:path";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  ...workspaceTaskConfig(import.meta.url),
   pack: {
     entry: { main: "src/main.ts" },
     platform: "node",

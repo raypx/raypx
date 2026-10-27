@@ -8,7 +8,7 @@
     "./types": "./src/types.ts"
   },
   "scripts": {
-    "email:dev": "bun vp dev",
+    "email:dev": "bun vp dev --config vite.app.config.ts",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@raypx-kit/email-preview": "catalog:dev",
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
     "vite": "catalog:dev",
@@ -38,7 +39,8 @@
       "./types": "universal"
     },
     "sourceTargets": {
-      "src/types.ts": "universal"
+      "src/types.ts": "universal",
+      "vite.app.config.ts": "node"
     }
   }
 }

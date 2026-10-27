@@ -2,7 +2,7 @@ const tasks = ["e2e", "e2e:web", "e2e:desktop", "e2e:smoke", "e2e:visual"] as co
 export const isBrowserTestTask = (task: string) => tasks.some((value) => value === task);
 type Environment = Record<string, string | undefined>;
 
-/** CLI intent only; Turbo remains the sole build/run graph. */
+/** CLI intent only; VP owns the build/run graph. */
 export function planBrowserTests(argv: string[]) {
   let surface: "web" | "desktop" | undefined;
   let smoke = false,
@@ -26,7 +26,7 @@ export function planBrowserTests(argv: string[]) {
   }
   return {
     task: surface ? `e2e:${surface}` : smoke ? "e2e:smoke" : visual ? "e2e:visual" : "e2e",
-    args: [dry ? "--dry=json" : "--summarize", ...(forwarded.length ? ["--", ...forwarded] : [])],
+    args: [dry ? "--dry-run" : "--verbose", ...(forwarded.length ? ["--", ...forwarded] : [])],
     env: {
       RAYPX_E2E_SURFACE: surface ?? "all",
       RAYPX_E2E_SMOKE: smoke ? "1" : "0",
@@ -57,8 +57,7 @@ export function prepareBrowserTask(task: string, args: string[], environment: En
   }
   if (grep) grep = new RegExp(grep).source;
   return {
-    // Turbo hashes passthrough arguments into dependency tasks too. Keep browser
-    // flags out of every build/check hash; only the uncached E2E leaf consumes them.
+    // Keep browser flags scoped to the uncached leaf, outside build fingerprints.
     args: before,
     env: {
       RAYPX_E2E_SURFACE: task === "e2e:web" ? "web" : task === "e2e:desktop" ? "desktop" : "all",

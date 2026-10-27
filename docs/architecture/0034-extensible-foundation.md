@@ -31,3 +31,11 @@ Amendment (2026-10-15): Web and Desktop now share their DOM authentication form
 through auth's browser client entry. Each application keeps its own file routes,
 clients, query access and navigation adapters; universal auth hooks and UI
 primitives keep their existing boundaries.
+
+Amendment (2026-10-27), approved by the user: VP replaces Turbo as the single
+task runner, prioritizing incremental file-based invalidation. Public Bun scripts
+remain compatible. Lightweight workspace task configs declare dependencies and
+cache policy through Tooling; app plugins live in separate Vite app configs.
+Native SDK preparation stays uncached, with generated files checked after it runs.
+Node remains the Web/API runtime. This migration is developed on an isolated branch
+and is not merged into canary until separately approved.

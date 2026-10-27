@@ -27,7 +27,7 @@ it("combines surface, smoke and visual intent while forwarding normal Playwright
   const task = prepareBrowserTask(plan.task, plan.args, plan.env);
   const settings = browserTestSettings(task.env);
   expect(plan.task).toBe("e2e:web");
-  expect(task.args).toEqual(["--summarize"]);
+  expect(task.args).toEqual(["--verbose"]);
   expect(browserTestArguments([], task.env)).toEqual(["--workers", "2"]);
   expect(settings.screenshots).toBe(true);
   expect(settings.grep?.test("chromium memory.spec.ts Web versions a template @web @smoke")).toBe(

@@ -106,32 +106,32 @@ live output and cross-owner controls remain proposed in the
 
 ## Build caches
 
-`bun run clean` removes workspace build outputs, coverage, Turbo and TanStack caches,
+`bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
 Desktop's `build`, `artifacts`, `.hutch` and `.cottontail-tmp` directories, root
 `.artifacts`, and browser test results/reports. It awaits asynchronous deletion in
 batches of up to eight directories. It keeps dependencies, lockfiles,
 Git history, environment files, user profiles and database volumes. The next
 Desktop build/check/dev prepares the native SDK again.
 
-Turbo owns the task graph and caches declared build outputs; Vite+ runs the leaf
-commands. Use the root build/check/test commands to preserve dependency ordering.
-Language policy lives in i18n's public static `./config` export. Repository checks
-read that declaration without importing the i18n runtime, so translation edits do
-not invalidate unrelated tasks through root tooling.
+VP owns the task graph and its local cache at `node_modules/.vite/task-cache`.
+Use root build/check/test commands for dependency ordering, or `vp run` to invoke
+a private qualified task such as `vp run --filter @raypx/core task:test`.
+Public workspace scripts remain direct leaf/debug commands. `vite.config.ts`
+contains lightweight task metadata; application plugins live in `vite.app.config.ts`.
+Language policy lives in i18n's public static `./config` export; repository checks
+read it without importing the i18n runtime.
 
-GitHub CI restores Bun downloads before every frozen install. It restores
-`.turbo/cache` after installation, then saves successful task results at the end
-of the job, including when a later test fails. Bun caches use the lockfile hash
-with a compatible fallback; Turbo uses a fresh key per workflow attempt and lets
-its own input hashes select reusable tasks. OS, architecture and tool versions
-separate incompatible caches; Turbo archives are also separated by job.
+GitHub CI restores Bun downloads before every frozen install, then restores VP's
+task-cache directory. Only successful tasks become reusable entries, even if a
+later check fails. Cache archives use a fresh key per workflow attempt with a
+compatible fallback; OS, architecture, Node/Bun versions and job partition them.
+Task fingerprints choose reusable results. CI caches this task-cache subdirectory,
+not dependencies or the rest of `node_modules`.
 
-The workflow caches downloads and Turbo results, not `node_modules`. A cache miss
-still runs the normal install and tasks. Required release artifacts must be passed
-between jobs with artifacts rather than relying on an optional cache. This setup
-needs no remote-cache service; the existing trusted remote-cache opt-in remains a
-separate mechanism. To check local reuse, repeat a root build and inspect Turbo's
-hit counts. Include cache transfer time when measuring CI improvements.
+Required release artifacts move between jobs through artifacts rather than an
+optional cache. No external remote-cache service or Turbo credentials are used.
+Inspect reuse with `bun run test --verbose`, or `vp run --last-details` from root.
+Include transfer time when measuring CI gains. See the [testing guide](testing.md).
 
 ## Cloudflare deployment target
 

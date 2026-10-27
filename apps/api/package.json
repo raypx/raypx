@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun vp dev",
+    "dev": "bun vp dev --config vite.app.config.ts",
     "start": "node .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
@@ -12,9 +12,9 @@
     "test:integration": "bun --bun vp test --run --passWithNoTests tests/integration",
     "test:component": "bun --bun vp test --run --passWithNoTests component/",
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "build": "bun vp build",
+    "build": "bun vp build --config vite.app.config.ts",
     "test:postgres": "bun --bun vp test --run --mode postgres",
-    "build:cloudflare": "bun vp build --mode cloudflare",
+    "build:cloudflare": "bun vp build --config vite.app.config.ts --mode cloudflare",
     "preview:cloudflare": "wrangler dev --config wrangler.jsonc --local",
     "deploy:cloudflare": "wrangler deploy --config wrangler.jsonc",
     "test:postgres:cloudflare": "bun --bun vp test --run --mode cloudflare-postgres",
@@ -54,6 +54,9 @@
   },
   "raypx": {
     "kind": "app",
-    "target": "node"
+    "target": "node",
+    "sourceTargets": {
+      "vite.app.config.ts": "node"
+    }
   }
 }

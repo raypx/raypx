@@ -63,7 +63,7 @@ application is an independent composition root and is never imported by another 
   component memory and cancel old requests on either change. Run-history links
   open a validated `/tasks?taskId=...` projection, including tasks outside the
   current list page; navigation never creates or resumes execution.
-- `vite.config.ts` adds security headers to every Nitro response (Node and Workers):
+- `vite.app.config.ts` adds security headers to every Nitro response (Node and Workers):
   framing, plugin, base and form-target CSP directives, HSTS, nosniff, Referrer and
   Permissions policies. Inline hydration and theme scripts mean script-src needs nonces
   before it can be restricted.

@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
     "@testing-library/user-event": "catalog:dev",

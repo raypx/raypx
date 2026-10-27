@@ -141,3 +141,44 @@ the worker flag and retained all 17 dependency cache hits, completing the root
 Turbo graph in 14.4 seconds. Compared with this host's two-worker 25.8/26.6-second
 samples, full Playwright time fell by roughly 39–48%. These are local samples,
 not a CI or cross-platform performance guarantee.
+
+## VP task migration, 2026-10-27
+
+The earlier Turbo timings above describe the previous runner. The VP migration
+keeps the 28-case browser inventory, independent Vitest runners and existing test
+isolation. Root task entry points remain compatible; current commands and cache
+locations are in the [testing guide](testing.md).
+
+A separate two-slot workspace-test benchmark on `fddc2ad` passed the same 1083 tests.
+With empty task caches and warmed transform caches, Turbo took 107.6 seconds and
+adapted VP took 104.9 seconds; that single paired sample does not establish a stable
+full-execution improvement. Three all-hit samples had medians of 0.61/7.35 seconds.
+Changing one logger entry file took 58.0/14.0 seconds: VP invalidated logger and API
+from actual reads, while the prior package/transit graph also reran CLI. Incremental
+feedback is the reason for choosing VP; the runner change is not a general execution
+speed multiplier. An unsuccessful lock-race repeat and incomplete calibration runs
+were excluded, and the final compared full runs both passed.
+
+Task-runner regression coverage now executes real VP tasks against isolated files:
+upstream type changes invalidate consumers, dependency artifacts remain inputs,
+build outputs restore from cache, scoped literal argv/public build variables change
+only the relevant task, and an ignored SDK is prepared before check reuse is decided.
+The plan tests preserve renderer-only/browser build boundaries. Task configs are
+lightweight and do not import app plugins or require a prepared Native SDK.
+
+Migration acceptance passed `bun run verify`: 1087 workspace tests, policy, locales,
+format, lint, strict checks, Node/Workers builds and relocated artifact probes,
+plus the standalone CLI smoke. Full E2E passed 28 cases in 17.3 seconds; the two
+external backend/live-Agent gates remained skipped. macOS arm64 packaging produced
+the stable DMG; packaged Native shell/restore smoke passed, including the renderer,
+CLI version, tray, preferences, server isolation and daemon survival after GUI Quit.
+Windows, real HTTPS, PostgreSQL/Redis and CI runners were not verified in this
+migration run.
+
+After initial output directories existed, a root test repeat took 16.96 seconds:
+22 cacheable tasks hit, with no misses. Tooling's complete suite now always executes
+its independent VP fixtures because enclosing filesystem tracers cannot nest on
+this macOS host; its unit-only entry remains cached. This is distinct from the earlier
+all-hit benchmark. Creating output directories after clean also caused one-time
+directory-listing invalidations despite file exclusions; the first post-build test
+repeat took 87.12 seconds. These samples do not establish a CI speedup.

@@ -5,7 +5,8 @@
     "tests/**/*.ts",
     "nitro.config.ts",
     "vite.config.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "vite.app.config.ts"
   ],
   "compilerOptions": {
     "jsx": "react-jsx"

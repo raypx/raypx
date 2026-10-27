@@ -80,7 +80,7 @@ refresh their private lists; account/client changes discard that view's state.
 
 Node's Nitro server runs the schedule while the API process is alive. Cloudflare
 invokes its `scheduled` handler through the Cron Trigger in `apps/api/wrangler.jsonc`.
-Keep that expression aligned with `scheduledTasks` in `apps/api/vite.config.ts`.
+Keep that expression aligned with `scheduledTasks` in `apps/api/vite.app.config.ts`.
 This repository disables Nitro's generated deployment configuration, so Wrangler's
 checked-in trigger configuration is required. Cloudflare uses UTC. The current
 every-15-minute expression does not depend on the Node host's time zone.

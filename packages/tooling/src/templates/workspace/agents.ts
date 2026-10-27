@@ -21,7 +21,8 @@ ${target} ${kind}; describe its responsibility before adding behavior.
 
 ## Interface
 
-Public exports are declared in package.json.
+Public exports are declared in package.json. vite.config.ts registers lightweight
+VP task metadata; package scripts remain direct leaf commands.
 
 ## Constraints
 

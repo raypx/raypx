@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
     "@testing-library/react": "catalog:dev",
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",

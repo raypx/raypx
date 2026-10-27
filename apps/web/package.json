@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "raypx-dev env -- bun vp dev",
-    "build": "raypx-dev env -- bun vp build",
-    "preview": "raypx-dev env -- bun vp preview",
+    "dev": "raypx-dev env -- bun vp dev --config vite.app.config.ts",
+    "build": "raypx-dev env -- bun vp build --config vite.app.config.ts",
+    "preview": "raypx-dev env -- bun vp preview --config vite.app.config.ts",
     "start": "node .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run --passWithNoTests",
@@ -14,7 +14,7 @@
     "test:integration": "bun --bun vp test --run --passWithNoTests integration/",
     "test:component": "bun --bun vp test --run --passWithNoTests component/",
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "build:cloudflare": "raypx-dev env -- bun vp build --mode cloudflare",
+    "build:cloudflare": "raypx-dev env -- bun vp build --config vite.app.config.ts --mode cloudflare",
     "preview:cloudflare": "wrangler dev --config wrangler.jsonc --local",
     "deploy:cloudflare": "wrangler deploy --config wrangler.jsonc"
   },
@@ -60,6 +60,9 @@
   },
   "raypx": {
     "kind": "app",
-    "target": "browser"
+    "target": "browser",
+    "sourceTargets": {
+      "vite.app.config.ts": "node"
+    }
   }
 }

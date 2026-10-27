@@ -48,10 +48,10 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
   );
   return (
     task: string,
-    options: { turbo?: boolean; args?: string[]; forwarded?: string[]; fail?: string } = {},
+    options: { leaf?: boolean; args?: string[]; forwarded?: string[]; fail?: string } = {},
   ) => {
     const env: NodeJS.ProcessEnv = { ...process.env, TASK_TEST_FAIL: options.fail };
-    delete env.TURBO_HASH;
+
     delete env.RAYPX_DESKTOP_BROWSER_BUILD;
     for (const key of [
       "RAYPX_DESKTOP_CHECK_ARGS",
@@ -60,13 +60,18 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
       "RAYPX_DESKTOP_RENDERER_ARGS",
     ])
       delete env[key];
-    if (options.turbo) env.TURBO_HASH = "fixture-task-hash";
     if (options.forwarded)
       env[`RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`] =
         JSON.stringify(options.forwarded);
     const result = spawnSync(
       process.execPath,
-      ["run", join(root, "scripts/native/task.ts"), task, ...(options.args ?? [])],
+      [
+        "run",
+        join(root, "scripts/native/task.ts"),
+        ...(options.leaf ? ["--leaf"] : []),
+        task,
+        ...(options.args ?? []),
+      ],
       {
         cwd: root,
         env,
@@ -115,8 +120,8 @@ describe("Desktop task graph entry", () => {
     },
   );
 
-  it("runs checks in order inside Turbo without preparing a second time", () => {
-    const result = fixture()("check", { turbo: true });
+  it("runs checks in order inside VP without preparing a second time", () => {
+    const result = fixture()("check", { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events.map(({ name }) => name)).toEqual([
       "typecheck",
@@ -126,18 +131,29 @@ describe("Desktop task graph entry", () => {
   });
 
   it("preserves a failed check's exit status and skips remaining checks", () => {
-    const result = fixture()("check", { turbo: true, fail: "typecheck:node" });
+    const result = fixture()("check", { leaf: true, fail: "typecheck:node" });
     expect(result.status).toBe(7);
     expect(result.events.map(({ name }) => name)).toEqual(["typecheck", "typecheck:node"]);
   });
 
-  it("runs only the renderer build inside Turbo and forwards arguments", () => {
-    const result = fixture()("build", { turbo: true, args: ["--mode", "staging"] });
+  it("runs only the renderer build inside VP and forwards arguments", () => {
+    const result = fixture()("build", { leaf: true, args: ["--mode", "staging"] });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
         name: "raypx-dev",
-        args: ["env", "--", process.execPath, "--bun", "vp", "build", "--mode", "staging"],
+        args: [
+          "env",
+          "--",
+          process.execPath,
+          "--bun",
+          "vp",
+          "build",
+          "--config",
+          "vite.app.config.ts",
+          "--mode",
+          "staging",
+        ],
         forwarded: {},
       },
       { name: "native:csp", args: [], forwarded: {} },
@@ -145,7 +161,7 @@ describe("Desktop task graph entry", () => {
   });
 
   it("stages the already-built CLI before development without another preparation", () => {
-    const result = fixture()("dev", { turbo: true });
+    const result = fixture()("dev", { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       { name: "native:cli", args: [], forwarded: {} },
@@ -158,7 +174,7 @@ describe("Desktop task graph entry", () => {
   });
 
   it("restores direct build arguments only inside the selected Desktop task", () => {
-    const result = fixture()("build", { turbo: true, forwarded: ["--mode", "value with spaces"] });
+    const result = fixture()("build", { leaf: true, forwarded: ["--mode", "value with spaces"] });
     expect(result.status).toBe(0);
     expect(result.events[0]?.args).toEqual([
       "env",
@@ -167,17 +183,30 @@ describe("Desktop task graph entry", () => {
       "--bun",
       "vp",
       "build",
+      "--config",
+      "vite.app.config.ts",
       "--mode",
       "value with spaces",
     ]);
   });
   it("builds the separate browser renderer with CSP, without staging the CLI or SDK", () => {
-    const result = fixture()("build:renderer", { turbo: true });
+    const result = fixture()("build:renderer", { leaf: true });
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
         name: "raypx-dev",
-        args: ["env", "--", process.execPath, "--bun", "vp", "build", "--mode", "e2e"],
+        args: [
+          "env",
+          "--",
+          process.execPath,
+          "--bun",
+          "vp",
+          "build",
+          "--config",
+          "vite.app.config.ts",
+          "--mode",
+          "e2e",
+        ],
         forwarded: {},
         browserBuild: true,
       },
@@ -185,7 +214,7 @@ describe("Desktop task graph entry", () => {
     ]);
   });
   it("refuses to turn the browser-only build into a native artifact", () => {
-    const result = fixture()("build:renderer", { turbo: true, args: ["--mode", "production"] });
+    const result = fixture()("build:renderer", { leaf: true, args: ["--mode", "production"] });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("owns its mode");
     expect(result.events).toEqual([]);

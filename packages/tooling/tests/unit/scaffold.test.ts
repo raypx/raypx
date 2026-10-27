@@ -6,14 +6,15 @@ import { discover } from "../../src/repository.js";
 import { scaffold } from "../../src/scaffold.js";
 import { workspaceFixtures } from "../helpers/workspace.js";
 
-const { fixture } = workspaceFixtures();
+const { fixture, member } = workspaceFixtures();
 
 describe("workspace scaffolding", () => {
   it("discovers a scaffolded package without editing any central list and refuses overwrite", () => {
     const root = fixture();
+    member(root, "tooling", { metadata: { kind: "tooling", target: "bun" } });
     const preview = scaffold(root, "feature-kit", { kind: "library", target: "universal" });
     expect(preview).toContain("packages/feature-kit/src/index.ts");
-    expect(discover(root).workspaces).toHaveLength(0);
+    expect(discover(root).workspaces).toHaveLength(1);
     scaffold(root, "feature-kit", { kind: "library", target: "universal", write: true });
     expect(discover(root).byName.has("@raypx/feature-kit")).toBe(true);
     expect(checkArchitecture(discover(root))).toEqual([]);
@@ -23,7 +24,7 @@ describe("workspace scaffolding", () => {
     expect(
       JSON.parse(readFileSync(join(root, "packages/feature-kit/package.json"), "utf8"))
         .devDependencies,
-    ).toEqual({ "@raypx-kit/tsconfig": "catalog:dev" });
+    ).toEqual({ "@raypx-kit/tsconfig": "catalog:dev", "@raypx/tooling": "workspace:*" });
     expect(() =>
       scaffold(root, "feature-kit", { kind: "library", target: "universal", write: true }),
     ).toThrow("already exists");

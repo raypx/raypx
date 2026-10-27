@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
     "@types/bun": "catalog:dev"
   },
   "raypx": {

@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
     "@vitest/coverage-v8": "catalog:dev"
   },
   "raypx": {

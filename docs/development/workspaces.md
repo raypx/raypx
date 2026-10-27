@@ -28,9 +28,15 @@ so a pure export cannot conceal DOM/host imports behind private files.
 
 ## Tasks and extraction
 
-Turbo discovers scripts. transit propagates source changes; ^build tracks actual
-artifacts. Source-only libraries need no build. API explicitly depends on Web assets;
-Desktop explicitly depends on the compiled CLI. Shared runner defaults stay at root.
+VP discovers lightweight `vite.config.ts` files. `@raypx/tooling/tasks` derives
+private `task:*` definitions from the package scripts and declares build dependencies.
+Actual file reads determine incremental invalidation; source-only libraries need no
+build. Desktop packaging depends on the compiled CLI. Application Vite plugins stay
+in `vite.app.config.ts`, while independent Vitest configs keep test initialization
+separate. Scaffolding creates the task config and declares its Tooling dev dependency.
+Use `raypx.uncachedTasks` for scripts whose process side effects must always execute;
+entries must name existing scripts. Database/browser integration tasks are uncached
+by default.
 
 Auth's `@raypx/auth/client` entry exports both `createAuthClient` and the shared DOM
 `AuthForm` used by Web and Desktop. Applications keep their file routes and inject

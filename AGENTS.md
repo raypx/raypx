@@ -37,8 +37,10 @@ The accepted foundation design supersedes documents in docs/history.
   Explicit `build:cloudflare` tasks use Nitro's cloudflare_module preset and a separate
   `.output-cloudflare` directory. Runtime adapters share the same API and auth logic.
   Desktop uses Electrobun's pinned host.
-- Turbo owns the sole task graph/cache and uses loose environment mode. Keep variables
-  affecting cached outputs in `env`/`globalEnv`; other parent variables pass through automatically.
+- VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
+  `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
+  `vite.app.config.ts`. Cache actual file inputs, explicit build outputs and
+  outcome-affecting environment variables. Preserve inherited environment for leaf commands.
   mise is the recommended runtime manager; mise.toml
   only enables reading .nvmrc/package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.

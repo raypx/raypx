@@ -36,7 +36,6 @@ export function policy(root: string): string[] {
   findings.push(
     ...checkToolchain(root, {
       documents: documents.filter((file) => file !== "docs/development/foundation-acceptance.md"),
-      turboGlobalDependencies: [".nvmrc"],
     }),
   );
   return [...new Set(findings)];

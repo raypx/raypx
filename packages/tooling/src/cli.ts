@@ -8,7 +8,7 @@ import { readToolchain } from "@raypx-kit/devkit/toolchain";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
 import { clean } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
-import { discover, pinnedNode, turbo } from "./repository.js";
+import { discover, pinnedNode, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
 import { smoke, smokeCloudflare } from "./smoke/index.js";
 import { browserTestArguments, planBrowserTests } from "./browser-tests.js";
@@ -29,7 +29,7 @@ async function main() {
   switch (command) {
     case "e2e": {
       const planned = planBrowserTests(args);
-      await turbo(root, planned.task, planned.args, planned.env);
+      await runTasks(root, planned.task, planned.args, planned.env);
       break;
     }
     case "browser:run":
@@ -40,8 +40,8 @@ async function main() {
       );
       break;
     case "tasks": {
-      if (!args[0]) throw new Error("Usage: raypx-dev tasks <task> [Turbo flags]");
-      await turbo(root, args[0], args.slice(1));
+      if (!args[0]) throw new Error("Usage: raypx-dev tasks <task> [VP options]");
+      await runTasks(root, args[0], args.slice(1));
       break;
     }
     case "workspace": {
@@ -81,14 +81,8 @@ async function main() {
       findings(checkLocales(root), "Locale catalogs");
       findings(policy(root), "Repository policy");
       await run(process.execPath, ["--bun", "vp", "fmt", "--check"], root);
-      // One graph shares native preparation across lint, checks and builds.
-      // Start with check so verification never loads development dotenv into tests.
-      await turbo(root, "check", [
-        "test",
-        ...(command === "verify" ? ["build", "build:cloudflare"] : []),
-        "//#lint",
-        "--summarize",
-      ]);
+      // One VP graph shares native preparation across lint, checks and builds.
+      await runTasks(root, command);
       if (command === "verify") await smoke(root);
       break;
     case "smoke":
@@ -126,7 +120,7 @@ async function main() {
       break;
     case "desktop":
       if (args[0] !== "build") throw new Error("Usage: raypx-dev desktop build");
-      await turbo(root, "build", ["--filter", "desktop"]);
+      await runTasks(root, "desktop#build");
       await run(
         process.execPath,
         ["run", "native:build"],

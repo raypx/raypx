@@ -1,6 +1,8 @@
 import { resolve } from "node:path";
 
-const [task, ...directArgs] = process.argv.slice(2);
+const supplied = process.argv.slice(2);
+const leaf = supplied[0] === "--leaf";
+const [task, ...directArgs] = leaf ? supplied.slice(1) : supplied;
 const bun = process.execPath;
 const cwd = resolve(import.meta.dirname, "../..");
 let commands: string[][];
@@ -9,8 +11,7 @@ if (task !== "check" && task !== "build" && task !== "build:renderer" && task !=
   throw new Error("Usage: scripts/native/task.ts <check|build|build:renderer|dev>");
 
 const argumentKey = `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase()}_ARGS`;
-const inTurbo = Boolean(process.env.TURBO_HASH);
-const forwarded = inTurbo ? process.env[argumentKey] : undefined;
+const forwarded = leaf ? process.env[argumentKey] : undefined;
 const args: unknown = forwarded && directArgs.length === 0 ? JSON.parse(forwarded) : directArgs;
 if (!Array.isArray(args) || args.some((value) => typeof value !== "string"))
   throw new Error("Desktop task arguments must be a string array");
@@ -19,17 +20,15 @@ if (
   args.some((value) => /^(?:--(?:mode|outDir|config)(?:=|$)|-c$)/.test(value))
 )
   throw new Error("Renderer acceptance owns its mode and output directory");
-// Turbo's passthrough arguments also reach dependency tasks with the same name.
-// A per-task, hashed environment field keeps Desktop flags out of the CLI build.
+// Scope Desktop arguments to its selected VP task, including dependency builds.
 const env = { ...process.env };
-if (!inTurbo) {
+if (!leaf) {
   if (args.length) env[argumentKey] = JSON.stringify(args);
   else delete env[argumentKey];
 }
 
-// Turbo supplies TURBO_HASH only while executing a task. Direct workspace
-// scripts enter the same graph; tasks already in that graph run only their leaf.
-if (!inTurbo) {
+// Direct scripts enter VP; the private leaf invocation executes only this task.
+if (!leaf) {
   commands = [[bun, "run", "raypx-dev", "tasks", `desktop#${task}`]];
 } else if (task === "check") {
   commands = [
@@ -39,14 +38,42 @@ if (!inTurbo) {
   ];
 } else if (task === "build") {
   commands = [
-    [bun, "run", "raypx-dev", "env", "--", bun, "--bun", "vp", "build", ...args],
+    [
+      bun,
+      "run",
+      "raypx-dev",
+      "env",
+      "--",
+      bun,
+      "--bun",
+      "vp",
+      "build",
+      "--config",
+      "vite.app.config.ts",
+      ...args,
+    ],
     [bun, "run", "native:csp"],
   ];
 } else if (task === "build:renderer") {
   // Start's prerender preview reloads Vite config without forwarding --mode.
   env.RAYPX_DESKTOP_BROWSER_BUILD = "1";
   commands = [
-    [bun, "run", "raypx-dev", "env", "--", bun, "--bun", "vp", "build", ...args, "--mode", "e2e"],
+    [
+      bun,
+      "run",
+      "raypx-dev",
+      "env",
+      "--",
+      bun,
+      "--bun",
+      "vp",
+      "build",
+      "--config",
+      "vite.app.config.ts",
+      ...args,
+      "--mode",
+      "e2e",
+    ],
     [bun, "run", "native:csp", "artifacts/browser/client"],
   ];
 } else {

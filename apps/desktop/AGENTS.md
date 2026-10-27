@@ -105,19 +105,19 @@ Local tools render during session/network checks. Auth routes use a standalone l
 - Only bundled views and loopback development content receive native RPC. Renderer cannot register arbitrary directory grants; use native picker.
 - Local file authorization does not sandbox external commands. Commands run with normal OS user permissions.
 - Interactive terminals use xterm in renderer and Bun.Terminal in the separately compiled CLI. The Electrobun host keeps its pinned Bun version.
-- Bun/Turbo own tasks. Hutch only prepares the pinned Electrobun SDK and packages native binaries.
-- `check`, `build` and `dev` enter Turbo through `scripts/native/task.ts` when called
-  directly; browser-only `build:renderer` does too. Inside Turbo they run only leaf commands; never add inline
+- Bun/VP own tasks. Hutch only prepares the pinned Electrobun SDK and packages native binaries.
+- `check`, `build` and `dev` enter VP through `scripts/native/task.ts` when called
+  directly; browser-only `build:renderer` does too. VP invokes them with the private `--leaf` marker; never add inline
   `native:prepare` calls there. The task graph shares one preparation across the
   root verification's lint, checks and builds. Root `lint` alone remains a leaf.
-  Direct script arguments use per-task `RAYPX_DESKTOP_*_ARGS` fields; cached tasks
-  include these fields in their hashes, keeping renderer flags out of dependency builds. No arguments
+  Direct script arguments use per-task `RAYPX_DESKTOP_*_ARGS` fields; cached VP tasks
+  include these fields in their fingerprints, keeping renderer flags out of dependency builds. No arguments
   leaves the field unset so direct and root commands share cache entries.
 - `build:renderer` uses Vite mode `e2e`, separate `artifacts/browser` output and a Native bridge that throws `DESKTOP_REQUIRED`. The leaf also sets `RAYPX_DESKTOP_BROWSER_BUILD` so Start's nested prerender preview keeps this output/alias when it reloads config without the mode. It skips SDK/CLI preparation; normal `build`, checks, packaging and `dist` retain the real SDK. Never package the browser-only output.
 - Keep `native:prepare` uncached: Electrobun's bootstrap and SDK projection also
   depend on external Hutch state and configurable release sources. After it
-  completes, `desktop#check` hashes the projected SDK and declarations with JIT
-  inputs; downstream builds inherit that hash. Do not cache the whole `.hutch`
+  completes, `desktop#check` fingerprints the projected SDK and declarations as
+  explicit file inputs. Builds depend on that check. Do not cache the whole `.hutch`
   directory, which also holds platform binaries and native packaging state.
 - SDK code and generated declarations remain ignored. Native strict checking uses generated declarations without weakening source checks.
 - Theme/language are device preferences and survive logout. The host injects a

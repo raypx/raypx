@@ -28,13 +28,16 @@ function stop() {
 process.once("SIGINT", stop);
 process.once("SIGTERM", stop);
 try {
-  const vite = Bun.spawn([process.execPath, "--bun", "vp", "dev"], {
-    cwd,
-    stdout: "inherit",
-    stderr: "inherit",
-    stdin: "ignore",
-    detached: process.platform !== "win32",
-  });
+  const vite = Bun.spawn(
+    [process.execPath, "--bun", "vp", "dev", "--config", "vite.app.config.ts"],
+    {
+      cwd,
+      stdout: "inherit",
+      stderr: "inherit",
+      stdin: "ignore",
+      detached: process.platform !== "win32",
+    },
+  );
   children.push(vite);
   const deadline = Date.now() + 30_000;
   while (true) {

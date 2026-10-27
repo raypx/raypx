@@ -12,13 +12,14 @@
     "./build/nitro": "./src/build/nitro.ts",
     "./build/analytics": "./src/build/analytics.ts",
     "./browser-tests": "./src/browser-tests.ts",
-    "./browser-server": "./src/browser-server.ts"
+    "./browser-server": "./src/browser-server.ts",
+    "./tasks": "./src/tasks/config.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests tests/unit",
-    "test:integration": "bun --bun vp test --run --passWithNoTests integration/"
+    "test:integration": "bun --bun vp test --run --passWithNoTests tests/integration"
   },
   "dependencies": {
     "@posthog/cli": "catalog:dev",
@@ -34,14 +35,21 @@
   "raypx": {
     "kind": "tooling",
     "target": "bun",
+    "uncachedTasks": [
+      "test"
+    ],
     "entryTargets": {
       "./build/nitro": "node",
       "./cloudflare": "node",
-      "./build/analytics": "node"
+      "./build/analytics": "node",
+      "./tasks": "node"
     },
     "sourceTargets": {
       "src/build/**": "node",
-      "src/smoke/cloudflare.ts": "node"
+      "src/smoke/cloudflare.ts": "node",
+      "src/tasks/config.ts": "node",
+      "src/tasks/model.ts": "node",
+      "src/tasks/arguments.ts": "node"
     }
   }
 }

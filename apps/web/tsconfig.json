@@ -6,7 +6,8 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "vite.config.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "vite.app.config.ts"
   ],
   "compilerOptions": {
     "types": ["vite/client", "node"]

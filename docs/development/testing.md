@@ -6,42 +6,50 @@ builds, relocated Node API and Web SSR outputs, actual Cloudflare workerd output
 and the compiled CLI. It requires no database,
 GUI or mail provider. Node 24.15.0 must be selected (or use
 NODE_BINARY). Test runners share test.config.ts and remain plugin-independent.
-Verification schedules lint, checks, tests and builds in one Turbo graph. Desktop's
-SDK preparation runs once in that graph; generated SDK contents enter the desktop
-check hash after preparation. SDK preparation remains an uncached Turbo task. Root
-development dotenv files are not additionally loaded by verification. Turbo runs
-in `loose` environment mode, so tasks inherit the parent environment without
-`passThroughEnv` allowlists. `NODE_BINARY` still identifies the real pinned Node
-before Bun changes PATH. Variables affecting cached outputs remain declared in
-`env`/`globalEnv` so their values participate in cache keys.
+Verification schedules lint, checks, tests and builds in one VP graph. Desktop's
+SDK preparation runs once as an uncached dependency; checks fingerprint its generated
+files after preparation. Application task configs never load the SDK or Vite app
+plugins, so pure package tests work after clean. Outcome-affecting fields are declared
+in each task's `cache.env`; `untrackedEnv` preserves the inherited environment.
+The root launcher resolves `NODE_BINARY` before Bun can change PATH. Browser argument
+payloads are scoped to the uncached browser leaf. Build outputs are explicit, and
+Vitest/Vite temporary caches are excluded from task input/output tracking.
+Tooling's full suite includes independent VP cache fixtures and always executes:
+VP's filesystem tracer cannot be nested on macOS. `raypx.uncachedTasks: ["test"]`
+records this exception; its unit-only suite and other workspaces retain caching.
 
 ## Daily feedback and machine load
 
-Use `bun run verify:quick` during development. It checks locale catalogs, repository
-policy, formatting, lint, types and workspace tests, without application builds or
-artifact probes. Run `bun run verify` before release; CI retains the complete gate.
-
-Turbo runs at most two workspace tasks concurrently and each Vitest runner uses
-one worker. This avoids multiplying workspace and file concurrency, although a
-build or test may still start its own subprocesses. Tests retain per-file isolation.
-Use `bun run test --concurrency=1` on a busy machine. A single workspace can opt
-into more workers with `bun run --cwd packages/ui test --maxWorkers=2`.
-
-Start with the changed workspace, then include its consumers when needed:
+Use `bun run verify:quick` for policy, formatting, lint, types and workspace tests.
+`bun run verify` additionally builds both runtime targets and probes their artifacts.
+The root launcher defaults to two workspace tasks; each Vitest runner retains one
+worker and per-file isolation. Override task concurrency with `--concurrency-limit=1`
+or `VP_RUN_CONCURRENCY_LIMIT`. A single direct runner can still use
+`bun run --cwd packages/ui test --maxWorkers=2`.
 
 ```sh
 bun run test --filter=@raypx/ui
 bun run test '--filter=...@raypx/ui'
+bun run raypx-dev tasks @raypx/ui#test -- --testNamePattern keyboard
+bun run raypx-dev tasks desktop#build --dry-run
+bun run test --verbose
 ```
 
-Root `test`, `verify:quick` and `verify` write task timings and cache results to
-`.turbo/runs/` using `--summarize`. Cached tasks replay earlier logs; their printed
-test duration is not the elapsed time of the current run. Use the summary to find
-slow tasks and cache misses before changing timeouts. Keep `.turbo/cache` between
-runs; cleaning it forces work to run again.
+Qualified `package#task` references accept scoped arguments after `--`. When forwarding
+arguments with a filter, use a qualified reference to avoid changing dependency tasks.
+`--dry-run` prints a dependency plan without executing tasks. VP uses private `task:*`
+names so package scripts remain independently runnable without task/script conflicts.
+There is no second scheduler. `vp run --filter @raypx/ui task:test` is the equivalent
+native task entry; `vp run test` at root enters the normal root launcher.
 
-The root `dev` command reserves three task slots for its two persistent Web/API
-servers; Turbo requires a spare slot beyond the number of persistent tasks.
+VP records local results in `node_modules/.vite/task-cache`. Use `--verbose` or
+`vp run --last-details` for cache misses and task timings. Cached logs describe an
+earlier execution; their test durations are not the current command's elapsed time.
+Keep the cache between runs. `bun run clean` removes task/transform caches while
+preserving dependency packages, sources and local user data.
+
+The root `dev` entry selects Web and API and allows three task slots. Preparation
+and compilation dependencies complete before the long-running dev commands start.
 
 ## Test locations
 
@@ -112,11 +120,11 @@ bun run raypx-dev e2e --web --smoke -- --list
 The smoke set covers guest boundaries/draft restoration, shared task/approval
 interaction and both memory flows. Surface, smoke and user grep filters intersect;
 they do not replace one another. Pass Playwright flags or filenames after `--`.
-Use `bun run raypx-dev e2e --web --dry-run` to inspect the Turbo graph.
+Use `bun run raypx-dev e2e --web --dry-run` to inspect the VP dependency plan.
 Focused runs are feedback tools; run complete acceptance before release.
 
 Playwright filenames, workers, trace and reporter arguments travel through a scoped
-JSON environment field to the uncached browser leaf. They are not Turbo passthrough
+JSON environment field to the uncached browser leaf. They are not dependency passthrough
 arguments: changing a test selection must not invalidate Web/Desktop builds or
 their type checks. Application source, build variables and runtime pins still
 participate in the normal build hashes. See the [case timing record](test-cases.md).

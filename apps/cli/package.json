@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
     "@types/bun": "catalog:dev",
     "@types/node": "catalog:dev",
     "vite-plus": "catalog:dev"

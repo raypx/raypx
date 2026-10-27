@@ -2,14 +2,14 @@
 
 ## Purpose
 
-Private repository automation exposed as raypx-dev. Turbo owns task orchestration;
+Private repository automation exposed as raypx-dev. VP owns task orchestration;
 `@raypx-kit/devkit` owns workspace discovery, boundary and toolchain checks, the static
 catalog reader, process helpers and artifact staging. This package supplies Raypx
 conventions (`src/repository.ts`), policy, locale parity, scaffolding and product probes.
 
 ## Interface
 
-- raypx-dev tasks <task> [Turbo flags]
+- raypx-dev tasks <task> [VP options]
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev policy | verify | verify:quick | doctor | clean
@@ -33,8 +33,17 @@ do not add the i18n runtime to root tooling's dependency closure.
 Preserve the Bun/jsdom preload and independent workspace test runners.
 The shared preload lives in `tests/setup/`. Scaffolded test workspaces include
 `tests/` in strict checking and use the root runner defaults.
-Turbo uses loose environment mode to inherit parent variables without task allowlists.
-Keep variables affecting cached outputs in `env`/`globalEnv`.
+`./tasks` exposes Node-compatible, lightweight task configuration. Its model derives
+all members and scripts from manifests, registers private `task:*` definitions and
+explicit dependencies; VP alone schedules them. Leaf scripts stay available for
+direct debugging. Task definitions inherit the environment with `untrackedEnv`,
+while outcome-affecting fields and per-task argument keys participate in fingerprints.
+`raypx.uncachedTasks` opts specific scripts out. Tooling's complete test suite starts
+independent cached VP runners, so it must run without an enclosing filesystem tracer;
+`test:unit` remains cached and `test:integration` always executes.
+Platform/toolchain identity is also part of each command. Native SDK preparation
+is uncached; native checks fingerprint SDK files after that dependency completes.
+The runner resolves `NODE_BINARY` before launching VP or nested Bun scripts.
 Node and Cloudflare tasks cache different outputs. Verification builds both targets;
 Worker probes use temporary roots and fixture bindings, never development dotenv files.
 `./cloudflare` is the Node-executed probe runner; `./repository` exposes pinned-runtime
@@ -43,7 +52,7 @@ validates the version in `.nvmrc`. These config/test entries never enter product
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers
 select pinned Node and synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,
-never Turbo passthrough: test flags must not invalidate build/check dependencies.
+never dependency passthrough: test flags must not invalidate build/check dependencies.
 The config caps local defaults at four workers only with 8+ CPUs and 16+ GiB;
 smaller hosts use one or two, and CI defaults to two. Explicit Playwright flags win.
 `./browser-server` serves only compiled Desktop client assets on loopback with
@@ -53,7 +62,8 @@ Smoke orchestration, Node probes and the Node-executed Worker harness live in
 Keep scaffold and locale policy suites separate; shared temporary workspace fixtures
 live in `tests/helpers/workspace.ts` and register cleanup for each suite.
 Workspace scaffolding copies static configuration from `src/templates/workspace/`
-into generated TypeScript paths. Its `agents.ts` renders workspace instructions;
+into generated TypeScript paths. Every scaffold registers a lightweight task config.
+Its `agents.ts` renders workspace instructions;
 manifest and TypeScript configuration data use JSON serialization.
 
 ## Verification

@@ -18,7 +18,7 @@ Read `docs/development/deployment.md` before changing deployment behavior.
 - Build versioned images sequentially with a bounded container builder. Preserve
   previous image versions and persistent volumes for rollbacks.
 - Keep the migration image on database production dependencies; it must not
-  inherit the API build or development tools. Share Bun/Turbo BuildKit caches.
+  inherit the API build or development tools. Share Bun/VP BuildKit caches.
 - Credentials belong in protected host files or Dokploy environment settings;
   examples contain no credentials. Never print resolved Compose environment values.
 

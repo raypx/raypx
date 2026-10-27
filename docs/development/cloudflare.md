@@ -27,7 +27,7 @@ Vite's explicit `cloudflare` mode selects Nitro's `cloudflare_module` preset.
 API and Web share target options from `packages/tooling/src/build/nitro.ts`;
 each app keeps its own routes, runtime plugins and framework settings.
 Worker dependencies are bundled, and its build directory and output are separate
-from Node. Turbo gives `build` and `build:cloudflare` independent cache entries.
+from Node. VP gives `build` and `build:cloudflare` independent task definitions and output caches.
 The default verification graph builds both and probes their relocated artifacts.
 
 Web keeps page routes Worker-first, with `/assets/*` and `/favicon.png` excluded

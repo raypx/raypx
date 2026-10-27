@@ -59,14 +59,14 @@ jobs:
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
-      - name: Restore Turbo tasks
-        id: turbo-cache
+      - name: Restore VP tasks
+        id: vp-cache
         uses: actions/cache/restore@v6
         with:
-          path: .turbo/cache
-          key: turbo-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: node_modules/.vite/task-cache
+          key: vp-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            turbo-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-
+            vp-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-
       - run: bun run verify
       - run: bun run test:postgres
         env:
@@ -85,12 +85,12 @@ jobs:
       - run: bun run test:e2e
       - name: Generated sources remain reproducible
         run: git diff --exit-code
-      - name: Save successful Turbo tasks
+      - name: Save successful VP tasks
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         uses: actions/cache/save@v6
         with:
-          path: .turbo/cache
-          key: ${{ steps.turbo-cache.outputs.cache-primary-key }}
+          path: node_modules/.vite/task-cache
+          key: ${{ steps.vp-cache.outputs.cache-primary-key }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -133,20 +133,20 @@ jobs:
         with:
           path: ${{ env.BUN_INSTALL_CACHE_DIR }}
           key: ${{ steps.bun-cache.outputs.cache-primary-key }}
-      - name: Restore Turbo tasks
-        id: turbo-cache
+      - name: Restore VP tasks
+        id: vp-cache
         uses: actions/cache/restore@v6
         with:
-          path: .turbo/cache
-          key: turbo-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: node_modules/.vite/task-cache
+          key: vp-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            turbo-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-
+            vp-v1-${{ runner.os }}-${{ runner.arch }}-node${{ steps.node.outputs.node-version }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-
       - run: bun run package:desktop
       - name: Native release checks
         run: bun run --cwd apps/desktop native:smoke
-      - name: Save successful Turbo tasks
+      - name: Save successful VP tasks
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         uses: actions/cache/save@v6
         with:
-          path: .turbo/cache
-          key: ${{ steps.turbo-cache.outputs.cache-primary-key }}
+          path: node_modules/.vite/task-cache
+          key: ${{ steps.vp-cache.outputs.cache-primary-key }}

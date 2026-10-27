@@ -60,7 +60,7 @@ to two CPUs, 3 GiB memory and 4 GiB memory plus swap. `BUILD_MEMORY`,
 `BUILD_MEMORY_SWAP` and `BUILD_CPU_QUOTA` override creation settings; the fixed CPU
 period is 100000 microseconds, so quota 200000 means two CPUs. Change existing
 limits explicitly or choose a new builder name. A stopped builder starts on the
-next build. Reuse one bounded builder for the shared Bun download and Turbo cache.
+next build. Reuse one bounded builder for the shared Bun download and VP task cache.
 
 Build stages contain pinned Node and Bun; Node runs Web/API builds. The script
 supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`. Migration images

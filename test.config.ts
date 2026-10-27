@@ -16,7 +16,7 @@ export function workspaceTests(
     resolve: { dedupe: ["react", "react-dom"] },
     test: {
       environment: "node",
-      // Turbo owns workspace parallelism; avoid multiplying its task budget per runner.
+      // VP owns workspace parallelism; avoid multiplying its task budget per runner.
       maxWorkers: 1,
       // Keep jsdom's real DOM without Bun's unsupported VM WindowProxy brands.
       execArgv: [

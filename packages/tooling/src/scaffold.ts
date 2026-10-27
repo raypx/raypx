@@ -44,6 +44,7 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
     scripts,
     devDependencies: {
       "@raypx-kit/tsconfig": "catalog:dev",
+      "@raypx/tooling": "workspace:*",
       ...(options.target === "bun" ? { "@types/bun": "catalog:dev" } : {}),
     },
   };
@@ -76,6 +77,8 @@ export function scaffold(root: string, name: string, options: ScaffoldOptions): 
       target: options.target,
       tests: Boolean(options.tests),
     }),
+    "vite.config.ts":
+      'import { workspaceTaskConfig } from "@raypx/tooling/tasks";\n\nexport default workspaceTaskConfig(import.meta.url);\n',
     ...(options.tests
       ? {
           "vitest.config.ts": new URL("./templates/workspace/vitest.mjs", import.meta.url),

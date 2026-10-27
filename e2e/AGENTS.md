@@ -8,12 +8,12 @@ production-origin cookie persistence require separate packaged platform checks.
 ## Interface
 
 Run bun run test:e2e after installing Chromium with bun --bun playwright install chromium.
-The root launcher selects the pinned Node before Turbo modifies PATH. `tests/helpers/serve-web.ts`
+The root launcher selects the pinned Node before VP or nested Bun scripts modify PATH. `tests/helpers/serve-web.ts`
 starts the compiled Web artifact with that absolute executable; Desktop directly
 serves `artifacts/browser/client`, built with `build:renderer`, through the loopback
 static helper. It preserves compiled HTML/CSP and assets without loading Vite config.
 Do not run the Node Web output through Bun's node shim.
-Turbo's loose environment mode passes `NODE_BINARY` from the root launcher to this helper.
+VP task definitions pass `NODE_BINARY` from the root launcher to this helper.
 Root `test:e2e:web`, `test:e2e:desktop`, `test:e2e:smoke` and `test:e2e:visual`
 provide focused entry points. Combine modes with `raypx-dev e2e`; pass Playwright
 flags after `--`. Surface/smoke filters intersect with user grep. Full `test:e2e`

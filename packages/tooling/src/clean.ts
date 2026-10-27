@@ -5,11 +5,22 @@ import { discover } from "./repository.js";
 export async function clean(root: string): Promise<void> {
   const outputs = [
     ...discover(root).workspaces.flatMap((workspace) =>
-      ["dist", ".output", ".output-cloudflare", "coverage", ".turbo", ".tanstack"].map((output) =>
-        join(workspace.path, output),
-      ),
+      [
+        "dist",
+        ".output",
+        ".output-cloudflare",
+        "coverage",
+        ".turbo",
+        ".tanstack",
+        "node_modules/.vite",
+        "node_modules/.vite-temp",
+        "node_modules/.vitest-cache",
+      ].map((output) => join(workspace.path, output)),
     ),
     ".turbo",
+    "node_modules/.vite",
+    "node_modules/.vite-temp",
+    "node_modules/.vitest-cache",
     ".artifacts",
     "apps/desktop/build",
     "apps/desktop/artifacts",

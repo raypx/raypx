@@ -11,7 +11,7 @@ ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 ARG VITE_APP_RELEASE=unversioned
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
-RUN --mount=type=cache,id=raypx-turbo,target=/app/.turbo/cache,sharing=locked \
+RUN --mount=type=cache,id=raypx-vp,target=/app/node_modules/.vite/task-cache,sharing=locked \
     bun run build:web
 
 FROM node:24.15.0-bookworm-slim AS runtime

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun run scripts/native/task.ts dev",
     "build": "bun run scripts/native/task.ts build",
-    "preview": "raypx-dev env -- bun --bun vp preview",
+    "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
     "check": "bun run scripts/native/task.ts check",
     "typecheck": "bun --check --tsconfig-override tsconfig.json",
     "typecheck:node": "bun --check --tsconfig-override tsconfig.node.json",
@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
@@ -79,7 +80,8 @@
       "api.ts": "universal",
       "config.ts": "universal",
       "scripts/**": "bun",
-      "tests/scripts/**": "bun"
+      "tests/scripts/**": "bun",
+      "vite.app.config.ts": "node"
     }
   }
 }
