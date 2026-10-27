@@ -1,0 +1,24 @@
+apps/cli/src/runtime/agents/harness/execution.ts
+  h_f0766e80fd3864 95,176
+apps/cli/src/runtime/agents/index.ts
+  h_f0766e80fd3864 84-85,652
+apps/cli/tests/helpers/agents.ts
+  h_f0766e80fd3864 15,54-58
+apps/cli/tests/integration/runtime/agents/inputs.test.ts
+  h_f0766e80fd3864 6-8,47,94,110
+packages/host/src/control.ts
+  h_f0766e80fd3864 96-97,311
+packages/host/tests/integration/renewal.test.ts
+  h_f0766e80fd3864 98,106-108,136-137,143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fd0e19f1831f512b4bfac7ecf644ecf89a4c2bf0",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
