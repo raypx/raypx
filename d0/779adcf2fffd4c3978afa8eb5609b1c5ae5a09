@@ -1,0 +1,176 @@
+package.json
+  s_2bb225eda98491::t_1100c910f168b0 64
+  s_52722a7e240ff2::t_a3ebae7be6d832 76
+packages/i18n/tests/browser/component/provider.test.tsx
+  s_52722a7e240ff2::t_c539db10be3642 1
+apps/desktop/electrobun.config.ts
+  s_49f01f37f619d1::t_9aa35c12839dcf 1
+apps/desktop/package.json
+  s_49f01f37f619d1::t_4798bc68f8cfb0 69,85
+apps/desktop/tests/helpers/tasks/workspace.tsx
+  s_52722a7e240ff2::t_d92dd5c42c2360 89-92,95
+apps/desktop/tests/renderer/component/features/auth/routes.test.tsx
+  s_52722a7e240ff2::t_6a23fdbdfcaded 1,66
+apps/desktop/tests/renderer/component/features/coordinator.test.tsx
+  s_52722a7e240ff2::t_a7efe1072b3f1d 1
+apps/desktop/tests/renderer/component/features/engine-notice.test.tsx
+  s_52722a7e240ff2::t_02e142d732a7e3 1
+apps/desktop/tests/renderer/component/features/files/routes.test.tsx
+  s_52722a7e240ff2::t_0491b4e4eff802 1
+apps/desktop/tests/renderer/component/features/onboarding.test.tsx
+  s_52722a7e240ff2::t_d43153aa422657 1
+apps/desktop/tests/renderer/component/features/reauthorize.test.tsx
+  s_52722a7e240ff2::t_e6a855c97e8954 1
+apps/desktop/tests/renderer/component/features/request-notice.test.tsx
+  s_52722a7e240ff2::t_dbc5f046e19e40 1
+apps/desktop/tests/renderer/component/features/tasks/conversation.test.tsx
+  s_52722a7e240ff2::t_55e6765f937557 1
+apps/desktop/tests/renderer/component/features/tasks/drafts.test.tsx
+  s_52722a7e240ff2::t_106e689b918509 1
+apps/desktop/tests/renderer/component/features/tasks/history.test.tsx
+  s_52722a7e240ff2::t_9731985c13f2a6 1
+apps/desktop/tests/renderer/component/features/tasks/project-navigation.test.tsx
+  s_52722a7e240ff2::t_fd8a340b2dbed4 1
+apps/desktop/tests/renderer/component/features/terminal-settings.test.tsx
+  s_52722a7e240ff2::t_73f7f8befb7a58 1
+apps/desktop/tests/renderer/component/preferences.test.tsx
+  s_52722a7e240ff2::t_bf891c8b1484ff 1
+apps/desktop/tests/renderer/component/routes/account.test.tsx
+  s_52722a7e240ff2::t_8f786573eba30c 1
+apps/desktop/tests/renderer/component/routes/local.test.tsx
+  s_52722a7e240ff2::t_aee7d2f5974a0b 1,218-220
+apps/desktop/tests/renderer/component/routes/memory.test.tsx
+  s_52722a7e240ff2::t_0fa73d78f15ce2 1
+apps/desktop/tests/renderer/unit/external-links.test.ts
+  s_52722a7e240ff2::t_79e53b2f634344 1
+apps/desktop/tests/renderer/unit/features/analytics/store.test.ts
+  s_52722a7e240ff2::t_f4ea863e66636b 1
+apps/desktop/tests/renderer/unit/lib/api-fetch.test.ts
+  s_52722a7e240ff2::t_07ff99a3502d6c 1
+apps/desktop/tests/renderer/unit/lib/connection.test.ts
+  s_52722a7e240ff2::t_e091e680c4eef1 1
+apps/desktop/tests/renderer/unit/lib/desktop.test.ts
+  s_52722a7e240ff2::t_4dfce7a33d96d8 1
+apps/desktop/tsconfig.node.json
+  s_49f01f37f619d1::t_a507bfff7ef1ee 5
+apps/web/AGENTS.md
+  s_52722a7e240ff2::t_3ed8a5f18d8670 18
+apps/web/package.json
+  s_52722a7e240ff2::t_8b1ade70aa88b3 51
+apps/web/tests/component/features/configuration.test.tsx
+  s_52722a7e240ff2::t_286164793ccd6d 1
+apps/web/tests/component/features/guest-draft.test.ts
+  s_52722a7e240ff2::t_aa4d9257a6a675 1
+apps/web/tests/component/hooks/auth-actions.test.tsx
+  s_52722a7e240ff2::t_d34f401fdadf0c 1
+apps/web/tests/component/routes/auth.test.tsx
+  s_52722a7e240ff2::t_ca151194cad1db 1,97
+apps/web/tests/component/routes/settings.test.tsx
+  s_52722a7e240ff2::t_6efe8ad95a5438 1
+apps/web/vitest.config.ts
+  s_52722a7e240ff2::t_52731c98fc1f63 3-14
+bun.lock
+  s_52722a7e240ff2::t_1be63b4c7de441 121,187,253,298,410,439,477,523,569,655,663,1376,1412-1415,1582-1585,1700,1770-1771,1884,2228,2230,2278,2326-2327,2360-2363,2368-2369,2372
+docs/development/testing.md
+  s_52722a7e240ff2::t_d171d76ac88eee 101-103
+packages/analytics/AGENTS.md
+  s_52722a7e240ff2::t_5bc18c55bdb608 14
+packages/analytics/package.json
+  s_52722a7e240ff2::t_f1e77a31462e71 32
+packages/analytics/tests/component/preferences.test.tsx
+  s_52722a7e240ff2::t_1bb0b3db0a81e9 1
+packages/blocks/package.json
+  s_52722a7e240ff2::t_c55ead1bfc8cc3 28
+packages/blocks/vitest.config.ts
+  s_52722a7e240ff2::t_77a4a1c23e7b3d 3
+packages/i18n/AGENTS.md
+  s_52722a7e240ff2::t_61143ab6c6c386 51
+packages/i18n/package.json
+  s_52722a7e240ff2::t_062873fe9de6e1 35
+packages/i18n/vitest.config.ts
+  s_52722a7e240ff2::t_e6f583db1f6d8b 7
+packages/jobs/package.json
+  s_52722a7e240ff2::t_e19bbe5ea4bc2d 35
+packages/jobs/tests/component/cloud-jobs.test.tsx
+  s_52722a7e240ff2::t_17843d7abe5a24 1
+packages/memory/package.json
+  s_52722a7e240ff2::t_fb0f00bf55312a 33
+packages/memory/tests/component/budget.test.tsx
+  s_52722a7e240ff2::t_41ccb317ad8f7e 1
+packages/memory/tests/component/library.test.tsx
+  s_52722a7e240ff2::t_33c5da53ddcbd4 1
+packages/memory/tests/component/picker.test.tsx
+  s_52722a7e240ff2::t_2fb23942e19da0 1
+packages/tasks/package.json
+  s_52722a7e240ff2::t_b6df3a86ac9635 43
+packages/tasks/tests/component/conversation/interactions.test.tsx
+  s_52722a7e240ff2::t_a56a01c3a948f8 10
+packages/tasks/tests/component/conversation/state.test.tsx
+  s_52722a7e240ff2::t_42fe8a2ace4ec9 11
+packages/tasks/tests/component/workspace/filters.test.tsx
+  s_52722a7e240ff2::t_6ffc3f11a48345 12
+packages/tasks/tests/helpers/layout.ts
+  s_52722a7e240ff2::t_3c09c523746e17 3,5-7,10
+packages/tasks/vitest.config.ts
+  s_52722a7e240ff2::t_ff820daf1a39fe 3-14
+packages/tooling/AGENTS.md
+  s_52722a7e240ff2::t_304c3e8f442e5f 48-49
+packages/tooling/tests/setup/dom.ts
+  s_52722a7e240ff2::t_99ccaf3e73b0db 1-32
+packages/ui/package.json
+  s_52722a7e240ff2::t_ded48f3b564508 67
+packages/ui/tests/component/composition.test.tsx
+  s_52722a7e240ff2::t_2141d24eb939a1 1
+packages/ui/tests/component/confirmation.test.tsx
+  s_52722a7e240ff2::t_6a7959a556bcc0 1
+packages/ui/tests/component/modal.test.tsx
+  s_52722a7e240ff2::t_a553fb8553e487 1
+packages/ui/tests/component/primitives.test.tsx
+  s_52722a7e240ff2::t_faceaaf2fdc37a 1
+packages/ui/tests/component/select-field.test.tsx
+  s_52722a7e240ff2::t_3659e5e3b88967 1
+packages/ui/tests/component/themes/provider.test.tsx
+  s_52722a7e240ff2::t_87cfe4cdc9352a 1
+packages/ui/tests/component/themes/script.test.ts
+  s_52722a7e240ff2::t_9fb54c9e7c4b2f 1
+packages/ui/tests/component/toast/bridge.test.tsx
+  s_52722a7e240ff2::t_f599747f3cbf81 1
+packages/ui/tests/component/utility-controls.test.tsx
+  s_52722a7e240ff2::t_590a464c837076 1
+packages/ui/vitest.config.ts
+  s_52722a7e240ff2::t_d1305136b52e52 4,6
+test.config.ts
+  s_52722a7e240ff2::t_11fe8d5b53b7af 4-5,8,13-14,25,29,37,39,45-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d0779adcf2fffd4c3978afa8eb5609b1c5ae5a09",
+  "prompts": {},
+  "sessions": {
+    "s_2bb225eda98491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17b75-eeb1-73d0-9634-ac9931139225",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_49f01f37f619d1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1538b-0c9d-7351-bd78-3f13ed331ac0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_52722a7e240ff2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17c10-f4f3-7212-9b2d-e66738df0905",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
