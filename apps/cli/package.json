@@ -15,6 +15,7 @@
     "build": "bun --bun vp pack",
     "smoke": "bun run tests/smoke/artifact.ts",
     "smoke:tui": "bun run tests/smoke/tui.ts",
+    "smoke:rust-terminal": "bun run tests/smoke/rust-terminal.ts",
     "smoke:terminal": "bun run tests/smoke/terminal-hooks.ts",
     "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts",
     "smoke:daemon-agents": "bun run tests/smoke/daemon-agents.ts",

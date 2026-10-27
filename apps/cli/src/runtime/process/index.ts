@@ -2,6 +2,7 @@ import { isAbsolute, join } from "node:path";
 import { stat } from "node:fs/promises";
 import type { CommandSpec, LocalEvent, ToolResult } from "@raypx/contracts/local";
 import { LocalError } from "../errors";
+import { RustTerminalHost } from "./rust-terminal";
 
 const MAX_OUTPUT = 1024 * 1024;
 type Child = ReturnType<typeof Bun.spawn>;
@@ -12,7 +13,11 @@ export class ProcessRuntime {
   >();
   private readonly completions = new Set<Promise<unknown>>();
   private closing = false;
-  constructor(private readonly emit: (event: LocalEvent) => void) {}
+  private rust: RustTerminalHost | undefined;
+  constructor(
+    private readonly emit: (event: LocalEvent) => void,
+    private readonly terminalHost = process.env.RAYPX_TERMINAL_HOST,
+  ) {}
   async validate(command: CommandSpec) {
     if (!isAbsolute(command.executable) || !isAbsolute(command.cwd))
       throw new LocalError(
@@ -123,6 +128,10 @@ export class ProcessRuntime {
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
     await this.validate(command);
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
+    if (this.terminalHost) {
+      this.rust ??= new RustTerminalHost(this.terminalHost, this.emit);
+      return this.rust.open(command, cols, rows);
+    }
     const id = crypto.randomUUID();
     const terminal = new Bun.Terminal({
       cols,
@@ -165,20 +174,23 @@ export class ProcessRuntime {
     return { id };
   }
   input(id: string, data: string) {
-    const terminal = this.children.get(id)?.terminal;
-    if (!terminal) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
     if (Buffer.byteLength(data, "base64") > 64 * 1024)
       throw new LocalError("TOO_LARGE", "Terminal input is limited to 64 KiB");
+    if (this.rust?.has(id)) return this.rust.input(id, data);
+    const terminal = this.children.get(id)?.terminal;
+    if (!terminal) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
     terminal.write(Buffer.from(data, "base64"));
     return { accepted: true };
   }
   resize(id: string, cols: number, rows: number) {
+    if (this.rust?.has(id)) return this.rust.resize(id, cols, rows);
     const terminal = this.children.get(id)?.terminal;
     if (!terminal) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
     terminal.resize(cols, rows);
     return { accepted: true };
   }
   cancel(id: string) {
+    if (this.rust?.has(id)) return this.rust.cancel(id);
     const item = this.children.get(id);
     if (!item) return { cancelled: false };
     item.cancel();
@@ -187,6 +199,7 @@ export class ProcessRuntime {
   async close() {
     this.closing = true;
     for (const item of this.children.values()) item.cancel();
+    await this.rust?.close();
     await Promise.allSettled(this.completions);
   }
 }

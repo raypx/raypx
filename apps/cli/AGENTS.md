@@ -37,6 +37,11 @@ text; never rewrite persisted output. Cross-owner control and default no-arg TUI
 
 Own authorized directory operations, device-local SQLite state, Cron scheduling, external commands and interactive terminals. Shared wire schemas live in `@raypx/contracts/local`.
 
+`runtime/process/rust-terminal.ts` lazily delegates PTYs to absolute `RAYPX_TERMINAL_HOST`
+selected at startup. It checks protocol/app versions and rejects invalid hosts. Terminal IPC
+and client-owned cancellation stay unchanged; EOF closes PTYs. Replay, attachments and serial
+I/O are bounded. Default CLI builds/tests need no Rust. Never retry uncertain input or duplicate bytes.
+
 ## Constraints
 
 - Never import another application or authentication code.

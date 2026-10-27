@@ -32,7 +32,32 @@ minimum Rust version, license, repository, publication policy and lints. Keep it
 `rust-version` aligned when upgrading the toolchain. New crates inherit those
 settings. Unsafe code is forbidden by the workspace lint policy.
 
-Rust is managed by rustup; mise continues reading only the existing Node/Bun pins.
+## Optional Rust terminal host
+
+The private `crates/raypx-terminal` library and `raypx-terminal-host` executable
+provide GUI-independent PTY ownership. CLI's existing terminal methods can use it
+without moving Agent approvals or task persistence into Rust:
+
+```sh
+cargo build -p raypx-terminal --locked
+export RAYPX_TERMINAL_HOST="$PWD/target/debug/raypx-terminal-host"
+bun run dev:desktop
+```
+
+On Windows use the absolute `.exe` path. The setting is captured by the CLI owner
+at startup; an already-running daemon retains its previous backend. Restart it
+only after its owned work is finished. An explicitly configured companion must
+match the application and protocol versions. Default Bun commands still need no
+Rust, and Desktop distribution does not yet bundle this optional executable.
+
+The Rust host separates snapshots/replay from live PTYs, serializes input/resize,
+and keeps PTY readers independent of slow attachments. Detach preserves the
+process and a new attachment gets an atomic replay baseline. The current CLI
+adapter preserves client-owned terminal cancellation; managed Agent execution
+still belongs to the independent CLI daemon. Host restart is not crash recovery.
+See [the terminal host](../../crates/raypx-terminal/README.md).
+
+Rust is managed by rustup; mise continues reading the existing Bun pin.
 `bun run doctor` checks Bun and reports the Rust/WebView platform prerequisites; `rustup show` reports the Rust toolchain.
 
 ## Commands and verification
