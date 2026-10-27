@@ -1,0 +1,64 @@
+apps/desktop/src/features/automations/local.tsx
+  h_f0766e80fd3864 13,30,150
+apps/desktop/src/features/files/components/table.tsx
+  h_f0766e80fd3864 5,55,94,97,102
+apps/web/src/client.tsx
+  h_f0766e80fd3864 1-19
+apps/web/src/features/auth/components/account-sessions.tsx
+  h_f0766e80fd3864 3,55,143-145
+apps/web/vite.app.config.ts
+  h_f0766e80fd3864 1,34-35
+packages/i18n/AGENTS.md
+  h_f0766e80fd3864 17,32-33
+packages/i18n/README.md
+  h_f0766e80fd3864 13-15,20-31
+packages/i18n/package.json
+  h_f0766e80fd3864 7-9,18-19,51,56-57
+packages/i18n/src/browser.tsx
+  h_f0766e80fd3864 1-7,9,11-12,14-64
+packages/i18n/src/catalog-provider.tsx
+  h_f0766e80fd3864 1-40
+packages/i18n/src/catalog-store.ts
+  h_f0766e80fd3864 1-48
+packages/i18n/src/catalogs/lazy.ts
+  h_f0766e80fd3864 1-8
+packages/i18n/src/catalogs/static.ts
+  h_f0766e80fd3864 1-5
+packages/i18n/src/formats.ts
+  h_f0766e80fd3864 1-9
+packages/i18n/src/formatter.ts
+  h_f0766e80fd3864 3,10
+packages/i18n/src/react.ts
+  h_f0766e80fd3864 3,7
+packages/i18n/src/vite.ts
+  h_f0766e80fd3864 1-26
+packages/i18n/tests/browser/component/catalog-provider.test.tsx
+  h_f0766e80fd3864 1-81
+packages/i18n/tests/node/catalog-store.test.ts
+  h_f0766e80fd3864 1-37
+packages/jobs/src/client/cloud-jobs.tsx
+  h_f0766e80fd3864 3,56,262
+packages/jobs/src/client/job-form.tsx
+  h_f0766e80fd3864 2,42,300
+packages/memory/src/client/library.tsx
+  h_f0766e80fd3864 2,45,449
+packages/memory/src/client/snapshot.tsx
+  h_f0766e80fd3864 2,12,44
+packages/tasks/src/client/conversation.tsx
+  h_f0766e80fd3864 4,26,157-159
+packages/tasks/src/client/observed.tsx
+  h_f0766e80fd3864 8,172,246-248
+packages/tasks/src/client/workspace.tsx
+  h_f0766e80fd3864 6,429,541-543,850,884-886
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "58d711a5e38ad5c2e6dadc7c47c274d97b2e87ac",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
