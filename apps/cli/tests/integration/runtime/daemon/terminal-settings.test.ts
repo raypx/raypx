@@ -160,7 +160,9 @@ it.skipIf(process.platform === "win32")(
       );
       await expect(
         host.terminal.request("connectors.install", { provider: "claude", configDirs }),
-      ).rejects.toMatchObject({ code: "COMPILED_CLI_REQUIRED" });
+      ).rejects.toMatchObject({
+        code: process.platform === "darwin" ? "COMPILED_CLI_REQUIRED" : "UNSUPPORTED_PLATFORM",
+      });
       expect(Date.now() - before).toBeLessThan(3000);
       expect(grantAborted).toBe(false);
     } finally {
