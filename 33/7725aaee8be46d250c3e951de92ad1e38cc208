@@ -1,0 +1,242 @@
+packages/tooling/src/tasks/leaf.ts
+  s_c99f3390b62e01::t_a73260448e74a2 1-2,4-9,11-24
+  s_c99f3390b62e01::t_fca95eb360a089 3,10
+  s_c99f3390b62e01::t_0eff7783b13b9f 25-26
+packages/tooling/tests/unit/clean-async.test.ts
+  s_c99f3390b62e01::t_079837a0379d8e 29
+packages/tooling/package.json
+  s_c99f3390b62e01::t_7896a4b37354bb 15-16,22,38-40,44-45,49-50
+  s_c99f3390b62e01::t_beeb44d4739269 51-52
+docs/architecture/0034-extensible-foundation.md
+  s_c99f3390b62e01::t_d5a16b6e231a7f 34-41
+apps/desktop/AGENTS.md
+  s_c99f3390b62e01::t_8d7f3abc3353f6 108-110,113-114,119-120
+docs/development/test-cases.md
+  s_c99f3390b62e01::t_dff210bae34916 173-176
+  s_c99f3390b62e01::t_8d7f3abc3353f6 144-167
+  s_c99f3390b62e01::t_bc682c82966e2e 168-172,177-184
+packages/tooling/tests/unit/browser-tests.test.ts
+  s_c99f3390b62e01::t_079837a0379d8e 30
+docs/development/workspaces.md
+  s_c99f3390b62e01::t_5793a9700587ac 31-39
+packages/tooling/src/browser-tests.ts
+  s_c99f3390b62e01::t_f303ae09ecf46a 5,60
+  s_c99f3390b62e01::t_079837a0379d8e 29
+packages/tooling/src/scaffold.ts
+  s_c99f3390b62e01::t_358e4f2a9a7a9f 47,80
+  s_c99f3390b62e01::t_182981748e1e54 81
+packages/tooling/tests/integration/cache.test.ts
+  s_c99f3390b62e01::t_eae5f2c4b4f0de 119,121-123,134,158,229
+  s_c99f3390b62e01::t_a7e3a266e03c8d 181-186,191-199
+  s_c99f3390b62e01::t_7896a4b37354bb 106
+  s_c99f3390b62e01::t_bbec4b47a3142f 29-30,64-67
+  s_c99f3390b62e01::t_ab92ad5becd79b 16-25,32-40,42-45,49-63,68-86,92-104,109-112,115,130-133,152-155,167-175,187-190,202-212,214-217,220-227
+  s_c99f3390b62e01::t_6cf7f0b615c50d 1-3,6-7,9-15,26-28,31,41,46,88-91,117-118,124-129,135-151,156-157,159-166,176-180,200-201,213,218-219,228,230-236
+  s_c99f3390b62e01::t_27aa1fd86b5ce9 4,113-114,120
+test.config.ts
+  s_c99f3390b62e01::t_468fb0fab4501a 19
+packages/tooling/tests/integration/browser-graph.test.ts
+  s_c99f3390b62e01::t_7896a4b37354bb 31-35
+  s_c99f3390b62e01::t_eae5f2c4b4f0de 10-11,20,54,67
+  s_c99f3390b62e01::t_27aa1fd86b5ce9 18,42-43,48-51
+packages/tooling/AGENTS.md
+  s_c99f3390b62e01::t_7896a4b37354bb 5,12,36-46,55,65-66
+apps/desktop/scripts/native/task.ts
+  s_c99f3390b62e01::t_468fb0fab4501a 3-5,14,23,25,30-31,41-48
+  s_c99f3390b62e01::t_e3d08742fbb1af 49-54,61-76
+packages/tooling/src/repository.ts
+  s_c99f3390b62e01::t_f303ae09ecf46a 2,6,13,20-24,34-37,39-47,55-56,75,79-82
+  s_c99f3390b62e01::t_27aa1fd86b5ce9 25-33,38,51-52,57-58,60-65,67-68,70-74,76-78,83-93,95-97
+  s_c99f3390b62e01::t_703f7dba4fd370 48-50,53-54
+  s_c99f3390b62e01::t_ca356b86a035cb 59
+packages/tooling/src/tasks/model.ts
+  s_c99f3390b62e01::t_27aa1fd86b5ce9 86-87
+  s_c99f3390b62e01::t_a73260448e74a2 1-3,6-23,25-54,59-62,64-66,72-74,85,96,98-105,114-117,121-125,132-136,138-153,155-157,170-172,175-182,190,196-201,208-221,225-226
+  s_c99f3390b62e01::t_7896a4b37354bb 24,55-58,63,67-71,75-84,88-95,106-113,118-120,126-131,137,154,158-169,173-174,183-189,191-195,202-207,222-224
+  s_c99f3390b62e01::t_fca95eb360a089 4-5
+  s_c99f3390b62e01::t_a7e3a266e03c8d 97
+packages/tooling/src/tasks/config.ts
+  s_c99f3390b62e01::t_a73260448e74a2 1-12,14,16-21,23,25
+  s_c99f3390b62e01::t_ca356b86a035cb 13,15,22,24
+  s_c99f3390b62e01::t_1555a95ff247d5 26-40
+packages/tooling/tests/unit/clean.test.ts
+  s_c99f3390b62e01::t_358e4f2a9a7a9f 17-19
+docs/development/server-jobs.md
+  s_c99f3390b62e01::t_8d7f3abc3353f6 83
+apps/desktop/scripts/native/dev.ts
+  s_c99f3390b62e01::t_468fb0fab4501a 31
+  s_c99f3390b62e01::t_60996cdc79a81f 32-40
+packages/tooling/src/tasks/arguments.ts
+  s_c99f3390b62e01::t_fca95eb360a089 1-11
+  s_c99f3390b62e01::t_0ab8b44a96faf6 12-14
+packages/tooling/src/clean.ts
+  s_c99f3390b62e01::t_358e4f2a9a7a9f 8-16
+  s_c99f3390b62e01::t_0852bebe163def 17-18,21-23
+packages/tooling/tests/unit/scaffold.test.ts
+  s_c99f3390b62e01::t_8c54c6e3919bd5 9,14,17
+  s_c99f3390b62e01::t_358e4f2a9a7a9f 27
+packages/tooling/src/templates/workspace/agents.ts
+  s_c99f3390b62e01::t_f4062ed29500ad 24-25
+docs/development/testing.md
+  s_c99f3390b62e01::t_5793a9700587ac 9-19,23-28,33-35,38-49,51-52,123,127
+packages/tooling/src/cli.ts
+  s_c99f3390b62e01::t_f303ae09ecf46a 11,32,43-44,84-85,123
+.github/workflows/ci.yml
+  s_c99f3390b62e01::t_adb72ecb328da2 62-63,66-67,69,88,92-93,136-137,140-141,143,147,151-152
+AGENTS.md
+  s_c99f3390b62e01::t_32bba68b19e90a 40-43
+apps/api/Dockerfile
+  s_c99f3390b62e01::t_b804ee059df0f0 31
+apps/api/package.json
+  s_c99f3390b62e01::t_74e49eba8bf5a3 7,15,17,57-60
+apps/api/tsconfig.json
+  s_c99f3390b62e01::t_3ec3357ac85259 8-9
+apps/api/vite.app.config.ts
+  s_c99f3390b62e01::t_f04cb5bb4be72e 1-53
+apps/api/vite.config.ts
+  s_c99f3390b62e01::t_01769ce51116f6 1,3
+apps/cli/package.json
+  s_c99f3390b62e01::t_6b98916cc6ffe9 37
+apps/cli/vite.config.ts
+  s_c99f3390b62e01::t_76addd447a4f15 1,6
+apps/desktop/package.json
+  s_c99f3390b62e01::t_081d2e819d3487 9,57,83-84
+apps/desktop/tests/scripts/native/task.test.ts
+  s_c99f3390b62e01::t_cfd2663d3e9a36 51,54,68-74,123-124,134,139-140,145-156,164,177,186-187,193,198-209,217
+apps/desktop/tsconfig.node.json
+  s_c99f3390b62e01::t_06d0ef721d498a 12-18
+apps/desktop/vite.app.config.ts
+  s_c99f3390b62e01::t_5dbdeaafd52656 1-48
+apps/desktop/vite.config.ts
+  s_c99f3390b62e01::t_0018404842a627 1,3
+apps/storybook/package.json
+  s_c99f3390b62e01::t_35e6c835020320 19
+apps/storybook/vite.config.ts
+  s_c99f3390b62e01::t_fdb2e467c29094 1-3
+apps/web/AGENTS.md
+  s_c99f3390b62e01::t_33169fb2ca0603 66
+apps/web/Dockerfile
+  s_c99f3390b62e01::t_6b2cee2ba795ff 14
+apps/web/package.json
+  s_c99f3390b62e01::t_3ec45d66b69c92 7-9,17,63-66
+apps/web/tsconfig.json
+  s_c99f3390b62e01::t_db818ffc3e3394 9-10
+apps/web/vite.app.config.ts
+  s_c99f3390b62e01::t_2f64549a0cdbe5 1-51
+apps/web/vite.config.ts
+  s_c99f3390b62e01::t_683f3a1cf84fa7 1,3
+bun.lock
+  s_c99f3390b62e01::t_13caea932fd0a2 75,111,139,219,236,251,273,295,319,335,347,361,379,395,407,435,456,473,495,516,558
+deploy/AGENTS.md
+  s_c99f3390b62e01::t_70908c91179400 21
+docs/development/cloudflare.md
+  s_c99f3390b62e01::t_23bbfd5c7adc27 30
+docs/development/deployment.md
+  s_c99f3390b62e01::t_075a967381a716 63
+docs/development/getting-started.md
+  s_c99f3390b62e01::t_600abfd8e4ee4b 109,116-134
+e2e/AGENTS.md
+  s_c99f3390b62e01::t_e18128eb2197d7 11,16
+e2e/vite.config.ts
+  s_c99f3390b62e01::t_be80f7104de834 1-3
+package.json
+  s_c99f3390b62e01::t_f73c846c08aa29 100,110
+packages/account/package.json
+  s_c99f3390b62e01::t_f62f1669c7663a 28
+packages/account/vite.config.ts
+  s_c99f3390b62e01::t_151b84a57f819e 1-3
+packages/ai/package.json
+  s_c99f3390b62e01::t_95d5b83f6a80ef 22
+packages/ai/vite.config.ts
+  s_c99f3390b62e01::t_e6037ba837b656 1-3
+packages/analytics/package.json
+  s_c99f3390b62e01::t_5fd8d7b352fd7e 26
+packages/analytics/vite.config.ts
+  s_c99f3390b62e01::t_3f8139ac9ebd55 1-3
+packages/auth/package.json
+  s_c99f3390b62e01::t_f25142f5e52feb 30
+packages/auth/vite.config.ts
+  s_c99f3390b62e01::t_7ae12dad71405d 1-3
+packages/blocks/package.json
+  s_c99f3390b62e01::t_27f12658094011 25
+packages/blocks/vite.config.ts
+  s_c99f3390b62e01::t_d4ac27e8fba5bd 1-3
+packages/client/package.json
+  s_c99f3390b62e01::t_40e74cba904421 25
+packages/client/vite.config.ts
+  s_c99f3390b62e01::t_47adfd41e91f72 1-3
+packages/contracts/package.json
+  s_c99f3390b62e01::t_d0ca1c4ab7ea68 34
+packages/contracts/vite.config.ts
+  s_c99f3390b62e01::t_53f4c9bfc05474 1-3
+packages/core/package.json
+  s_c99f3390b62e01::t_2671fd125d6697 24
+packages/core/vite.config.ts
+  s_c99f3390b62e01::t_fb4c22225b2e72 1-3
+packages/database/package.json
+  s_c99f3390b62e01::t_b6b0bcdaee7605 30
+packages/database/vite.config.ts
+  s_c99f3390b62e01::t_bc3655893e007f 1-3
+packages/email/AGENTS.md
+  s_c99f3390b62e01::t_38064afb8b5257 23-24
+packages/email/package.json
+  s_c99f3390b62e01::t_f6d3bf1845eb90 11,29,42-43
+packages/email/tsconfig.json
+  s_c99f3390b62e01::t_3b55c57c9b9de9 7
+packages/email/vite.app.config.ts
+  s_c99f3390b62e01::t_a76abb461b258d 1-8
+packages/email/vite.config.ts
+  s_c99f3390b62e01::t_c2e188136ee3a3 1,3
+packages/host/package.json
+  s_c99f3390b62e01::t_c7261a479448b0 19
+packages/host/vite.config.ts
+  s_c99f3390b62e01::t_fdf223959799c7 1-3
+packages/i18n/package.json
+  s_c99f3390b62e01::t_5ab570ba97ac74 31
+packages/i18n/vite.config.ts
+  s_c99f3390b62e01::t_a58dfaaf546094 1-3
+packages/jobs/package.json
+  s_c99f3390b62e01::t_11cc507cdc46e2 30
+packages/jobs/vite.config.ts
+  s_c99f3390b62e01::t_0c41543228a342 1-3
+packages/logger/package.json
+  s_c99f3390b62e01::t_72aa8f120bef1a 26
+packages/logger/vite.config.ts
+  s_c99f3390b62e01::t_020b1fd548f249 1-3
+packages/memory/package.json
+  s_c99f3390b62e01::t_17c9c80109c03e 28
+packages/memory/vite.config.ts
+  s_c99f3390b62e01::t_b92abeae5d52c1 1-3
+packages/storage/package.json
+  s_c99f3390b62e01::t_9d180d0de9e0a2 25
+packages/storage/vite.config.ts
+  s_c99f3390b62e01::t_0d09c7f7d93a57 1-3
+packages/tasks/package.json
+  s_c99f3390b62e01::t_e90f56d5e1f29f 35
+packages/tasks/vite.config.ts
+  s_c99f3390b62e01::t_88578752145719 1-3
+packages/tooling/vite.config.ts
+  s_c99f3390b62e01::t_d3ecef07f4a1f0 1-3
+packages/ui/package.json
+  s_c99f3390b62e01::t_07b2876fda6105 62
+packages/ui/vite.config.ts
+  s_c99f3390b62e01::t_8f77f09ab54949 1-3
+vite.config.ts
+  s_c99f3390b62e01::t_f5fe90d897e79f 1,5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "337725aaee8be46d250c3e951de92ad1e38cc208",
+  "prompts": {},
+  "sessions": {
+    "s_c99f3390b62e01": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16e4e-12c7-7a80-bb2a-6959fb783270",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
