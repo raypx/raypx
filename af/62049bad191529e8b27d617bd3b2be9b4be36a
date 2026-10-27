@@ -1,0 +1,84 @@
+AGENTS.md
+  h_f0766e80fd3864 105,107-108
+PRODUCT.md
+  h_f0766e80fd3864 26,28-29,57-58
+README.md
+  h_f0766e80fd3864 32-33
+apps/cli/AGENTS.md
+  h_f0766e80fd3864 9-11,13,43-44,84,87,91
+apps/cli/src/runtime/daemon/connectors.ts
+  h_f0766e80fd3864 8,12,19-24,35-36,38-57,65-68,70-77,81,85-87,92,176-180,228,231,263-265,267-273
+apps/cli/src/runtime/daemon/endpoint.ts
+  h_f0766e80fd3864 1-11,17,20-28,40,86-121,151,163
+apps/cli/src/runtime/daemon/server.ts
+  h_f0766e80fd3864 16,35,42-46,52-56,134,146-148,152,273-276
+apps/cli/src/runtime/daemon/terminal-control.ts
+  h_f0766e80fd3864 87-111
+apps/cli/src/runtime/local-http.ts
+  h_f0766e80fd3864 1-35
+apps/cli/src/runtime/terminal/hook.ts
+  h_f0766e80fd3864 7,9-15,35
+apps/cli/src/runtime/terminal/host.ts
+  h_f0766e80fd3864 11,26-32,34-41,95-98,103-107,111-113,117,182,254-257,271,345,366
+apps/cli/src/runtime/terminal/settings.ts
+  h_f0766e80fd3864 18-19,34,37-42,66-74,76,78,88
+apps/cli/tests/integration/runtime/daemon/configuration.test.ts
+  h_f0766e80fd3864 59-89
+apps/cli/tests/integration/runtime/daemon/host.test.ts
+  h_f0766e80fd3864 16,74-76
+apps/cli/tests/integration/runtime/daemon/loopback.test.ts
+  h_f0766e80fd3864 1-76
+apps/cli/tests/integration/runtime/terminal/host.test.ts
+  h_f0766e80fd3864 14,16,40,157-159
+apps/cli/tests/integration/runtime/terminal/settings.test.ts
+  h_f0766e80fd3864 7
+apps/desktop/AGENTS.md
+  h_f0766e80fd3864 69-71
+apps/desktop/src-tauri/src/connectors.rs
+  h_f0766e80fd3864 1,4,31
+apps/desktop/src-tauri/src/engine.rs
+  h_f0766e80fd3864 20-28,263,470
+apps/desktop/src-tauri/src/lib.rs
+  h_f0766e80fd3864 462,476,478
+apps/desktop/src/features/tasks/local-client.ts
+  h_f0766e80fd3864 12,74
+apps/desktop/src/features/tasks/settings.tsx
+  h_f0766e80fd3864 10,183
+apps/desktop/src/lib/desktop.ts
+  h_f0766e80fd3864 27-28,30-32
+apps/desktop/tests/helpers/tasks/workspace.tsx
+  h_f0766e80fd3864 30
+apps/desktop/tests/renderer/component/features/coordinator.test.tsx
+  h_f0766e80fd3864 22
+apps/desktop/tests/renderer/component/features/files/routes.test.tsx
+  h_f0766e80fd3864 49
+apps/desktop/tests/renderer/component/features/reauthorize.test.tsx
+  h_f0766e80fd3864 41
+apps/desktop/tests/renderer/component/routes/local.test.tsx
+  h_f0766e80fd3864 42
+docs/README.md
+  h_f0766e80fd3864 9
+docs/architecture/0036-tauri-desktop-host.md
+  h_f0766e80fd3864 20-21
+docs/architecture/0037-windows-daemon.md
+  h_f0766e80fd3864 1-51
+docs/architecture/README.md
+  h_f0766e80fd3864 194-195
+docs/architecture/remote-tasks.md
+  h_f0766e80fd3864 11-12
+docs/development/desktop-release.md
+  h_f0766e80fd3864 101
+docs/development/terminal-host-p1.md
+  h_f0766e80fd3864 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "af62049bad191529e8b27d617bd3b2be9b4be36a",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
