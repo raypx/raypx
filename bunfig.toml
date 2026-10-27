@@ -1,3 +1,6 @@
 [install]
 # Each workspace resolves only what it declares; undeclared packages fail early.
 linker = "isolated"
+
+[run]
+bun = true
