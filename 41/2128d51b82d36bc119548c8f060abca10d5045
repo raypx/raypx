@@ -1,0 +1,31 @@
+apps/api/tests/unit/relay-socket.test.ts
+  s_2bb225eda98491::t_86f6e04296509c 1-81
+packages/tooling/tests/unit/artifact-probes.test.ts
+  s_52722a7e240ff2::t_82b771ffc1e67e 1-43
+packages/tooling/tests/unit/bun-deployment.test.ts
+  s_2bb225eda98491::t_564638ade70822 1-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "412128d51b82d36bc119548c8f060abca10d5045",
+  "prompts": {},
+  "sessions": {
+    "s_2bb225eda98491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17b75-eeb1-73d0-9634-ac9931139225",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_52722a7e240ff2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17c10-f4f3-7212-9b2d-e66738df0905",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
