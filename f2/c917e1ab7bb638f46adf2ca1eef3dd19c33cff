@@ -1,0 +1,29 @@
+apps/api/Dockerfile
+  s_4b3ba4911a2d9b::t_f1b7f8dd22b4ff 2-3,11-18,33
+apps/web/Dockerfile
+  s_4b3ba4911a2d9b::t_cd7b7e36eb902d 2-3,5-6,9-15,18-20
+deploy/build.sh
+  s_4b3ba4911a2d9b::t_f35edff6cfb223 33-34,44
+deploy/manifests.ts
+  s_4b3ba4911a2d9b::t_a753c1404269e8 3,21-30
+docs/development/deployment.md
+  s_4b3ba4911a2d9b::t_f60639962cbc8f 65-68,89,104
+packages/tooling/tests/integration/deployment.test.ts
+  s_4b3ba4911a2d9b::t_baa6c1feca17da 79,87-92,102-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f2c917e1ab7bb638f46adf2ca1eef3dd19c33cff",
+  "prompts": {},
+  "sessions": {
+    "s_4b3ba4911a2d9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14cc4b72-00cc-4077-b7a1-98e1c8cb46b1",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
