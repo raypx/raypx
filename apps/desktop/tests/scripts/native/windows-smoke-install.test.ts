@@ -21,9 +21,12 @@ async function fixture() {
   const script = join(target, "release/nsis/x64/installer.nsi");
   const installer = join(target, "release/bundle/nsis/Raypx Test_0.1.0_x64-setup.exe");
   const main = join(target, "release/raypx-desktop.exe");
-  const cli = join(root, "raypx.exe");
+  const cli = join(root, "apps/cli/dist/raypx.exe");
+  const stagedCli = join(root, "apps/desktop/src-tauri/binaries/raypx-x86_64-pc-windows-msvc.exe");
   await mkdir(dirname(script), { recursive: true });
   await mkdir(dirname(installer), { recursive: true });
+  await mkdir(dirname(cli), { recursive: true });
+  await mkdir(dirname(stagedCli), { recursive: true });
   const source = [
     '!define MANUFACTURER "raypx"',
     '!define PRODUCTNAME "Raypx Test"',
@@ -31,12 +34,18 @@ async function fixture() {
     '!define BUNDLEID "com.raypx.desktop.native-smoke"',
     '!define INSTALLMODE "currentUser"',
     '!define MAINBINARYNAME "raypx-desktop"',
+    `!define MAINBINARYSRCPATH "${main}"`,
     '!define ARCH "x64"',
+    'File "${MAINBINARYSRCPATH}"',
+    `File /a "/oname=raypx.exe" "${stagedCli}"`,
   ].join("\r\n");
   await writeFile(script, source);
   await writeFile(installer, "NSIS fixture");
-  await writeFile(main, "compiled release smoke main");
+  const mainContents =
+    "compiled release smoke main __TAURI_BUNDLE_TYPE_VAR_UNK another __TAURI_BUNDLE_TYPE_VAR_UNK";
+  await writeFile(main, mainContents);
   await writeFile(cli, "compiled bundled CLI");
+  await copyFile(cli, stagedCli);
   const calls: { file: string; arguments: string }[] = [];
   let entries: SmokeRegistration[] = [];
   let directory = "";
@@ -58,7 +67,15 @@ async function fixture() {
         directory = rawArguments.slice("/S /NS /D=".length);
         roots.push(dirname(directory));
         await mkdir(directory);
-        await copyFile(main, join(directory, "raypx-desktop.exe"));
+        // Tauri patches the first bundle-type token before NSIS captures the main
+        // payload, then restores the Cargo source once packaging completes.
+        await writeFile(
+          join(directory, "raypx-desktop.exe"),
+          (await readFile(main, "utf8")).replace(
+            "__TAURI_BUNDLE_TYPE_VAR_UNK",
+            "__TAURI_BUNDLE_TYPE_VAR_NSS",
+          ),
+        );
         await writeFile(
           join(directory, "raypx.exe"),
           corruptSidecar ? "stale CLI" : await readFile(cli),
@@ -92,7 +109,10 @@ async function fixture() {
   };
   return {
     target,
+    main,
+    mainContents,
     cli,
+    stagedCli,
     script,
     source,
     installer,
@@ -111,7 +131,10 @@ it("runs the installed main/sidecar and uninstalls the owned per-user package af
   const f = await fixture();
   const app = await installWindowsSmoke(f.target, f.cli, { arch: "x64", commands: f.commands });
   expect(app.binary).toBe(join(f.directory(), "raypx-desktop.exe"));
-  expect(await readFile(app.binary, "utf8")).toBe("compiled release smoke main");
+  expect(await readFile(app.binary, "utf8")).toBe(
+    f.mainContents.replace("__TAURI_BUNDLE_TYPE_VAR_UNK", "__TAURI_BUNDLE_TYPE_VAR_NSS"),
+  );
+  expect(await readFile(f.main, "utf8")).toBe(f.mainContents);
   expect(existsSync(join(f.directory(), "raypx.exe"))).toBe(true);
   expect(f.calls).toEqual([{ file: f.installer, arguments: `/S /NS /D=${f.directory()}` }]);
   expect(f.directory()).toContain("Raypx Test");
@@ -233,3 +256,68 @@ it("accepts a shared product key visible without the uninstall key in the other 
   expect(f.entries()).toEqual([]);
   expect(existsSync(dirname(f.directory()))).toBe(false);
 });
+
+it.each(["unpatched", "MSI", "all tokens", "other code"])(
+  "rejects an installed main executable with unexpected bytes: %s",
+  async (change) => {
+    const f = await fixture();
+    const execute = f.commands.execute.bind(f.commands);
+    f.commands.execute = async (file, args) => {
+      await execute(file, args);
+      if (file !== f.installer) return;
+      const path = join(f.directory(), "raypx-desktop.exe");
+      const installed = await readFile(path, "utf8");
+      const changed =
+        change === "unpatched"
+          ? installed.replace("__TAURI_BUNDLE_TYPE_VAR_NSS", "__TAURI_BUNDLE_TYPE_VAR_UNK")
+          : change === "MSI"
+            ? installed.replace("__TAURI_BUNDLE_TYPE_VAR_NSS", "__TAURI_BUNDLE_TYPE_VAR_MSI")
+            : change === "all tokens"
+              ? installed.replaceAll("__TAURI_BUNDLE_TYPE_VAR_UNK", "__TAURI_BUNDLE_TYPE_VAR_NSS")
+              : installed.replace("compiled release", "modified release");
+      await writeFile(path, changed);
+    };
+    await expect(
+      installWindowsSmoke(f.target, f.cli, { arch: "x64", commands: f.commands }),
+    ).rejects.toThrow(/differs from the packaged build: .*"main":.*"size":.*"sha256":/);
+    expect(f.calls).toHaveLength(2);
+    expect(existsSync(dirname(f.directory()))).toBe(false);
+    expect(await readFile(f.main, "utf8")).toBe(f.mainContents);
+  },
+);
+
+it.each(["missing", "NSS", "MSI"])(
+  "refuses a source main without the original Tauri bundle-type token: %s",
+  async (token) => {
+    const f = await fixture();
+    await writeFile(f.main, token === "missing" ? "no token" : `__TAURI_BUNDLE_TYPE_VAR_${token}`);
+    await expect(
+      installWindowsSmoke(f.target, f.cli, { arch: "x64", commands: f.commands }),
+    ).rejects.toThrow("Missing Tauri bundle-type token");
+    expect(f.calls).toEqual([]);
+  },
+);
+
+it("detects a stale staged CLI before installing, with payload/build hashes and paths", async () => {
+  const f = await fixture();
+  await writeFile(f.stagedCli, "stale staged CLI");
+  await expect(
+    installWindowsSmoke(f.target, f.cli, { arch: "x64", commands: f.commands }),
+  ).rejects.toThrow(/Staged NSIS CLI payload differs.*"payload":.*"path":.*"sha256":.*"build":/);
+  expect(f.calls).toEqual([]);
+});
+
+it.each(["main", "cli"])(
+  "rejects an NSIS script referring to an unintended payload: %s",
+  async (payload) => {
+    const f = await fixture();
+    await writeFile(
+      f.script,
+      payload === "main" ? f.source.replace(f.main, f.cli) : f.source.replace(f.stagedCli, f.cli),
+    );
+    await expect(
+      installWindowsSmoke(f.target, f.cli, { arch: "x64", commands: f.commands }),
+    ).rejects.toThrow(payload === "main" ? "NSIS main payload source" : "NSIS CLI payload source");
+    expect(f.calls).toEqual([]);
+  },
+);

@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { lstat, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, readdir, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, win32 } from "node:path";
+import { basename, dirname, join, resolve, win32 } from "node:path";
 import { tauriSigningEnvironment } from "./tauri";
 
 interface RegistryKeys {
@@ -137,12 +137,33 @@ foreach ($view in @('Registry32', 'Registry64')) {
 async function regularFile(path: string) {
   const stat = await lstat(path);
   if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`Unsafe smoke executable: ${path}`);
+  return stat;
 }
 async function digest(path: string) {
-  await regularFile(path);
+  const stat = await regularFile(path);
   const hash = createHash("sha256");
   for await (const chunk of createReadStream(path)) hash.update(chunk);
-  return hash.digest("hex");
+  return { path, size: stat.size, sha256: hash.digest("hex") };
+}
+
+async function nsisMainPayload(path: string) {
+  await regularFile(path);
+  const bytes = await readFile(path);
+  const sourceSha256 = createHash("sha256").update(bytes).digest("hex");
+  const token = Buffer.from("__TAURI_BUNDLE_TYPE_VAR_UNK");
+  const offset = bytes.indexOf(token);
+  if (offset < 0) throw new Error(`Missing Tauri bundle-type token in NSIS main source: ${path}`);
+  // tauri-bundler 2.10.4 bundle.rs patches only the first token before NSIS File
+  // captures the main binary, then restores the source after packaging. Reproduce
+  // that exact equal-length patch in memory; all installed bytes still must match.
+  Buffer.from("__TAURI_BUNDLE_TYPE_VAR_NSS").copy(bytes, offset);
+  return {
+    path,
+    size: bytes.length,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    sourceSha256,
+    bundleTypeOffset: offset,
+  };
 }
 const sameLocation = (left: string | null, right: string) =>
   left !== null &&
@@ -182,6 +203,30 @@ export async function installWindowsSmoke(
     throw new Error("Missing or ambiguous native-smoke NSIS installer");
   const installer = join(output, name);
   await regularFile(installer);
+  const mainSource = define("MAINBINARYSRCPATH").replace(/\$\$/g, "$");
+  if ((await realpath(mainSource)) !== (await realpath(join(target, "release/raypx-desktop.exe"))))
+    throw new Error("NSIS main payload source does not match the smoke build");
+  const sidecars = [...script.matchAll(/^\s*File \/a "\/oname=raypx\.exe" "([^"\r\n]+)"\s*$/gm)];
+  if (sidecars.length !== 1) throw new Error("Missing or ambiguous NSIS CLI payload source");
+  const cliSource = sidecars[0]![1]!;
+  const cliArchitecture = { x64: "x86_64", arm64: "aarch64", x86: "i686" }[arch];
+  if (
+    (await realpath(dirname(cliSource))) !==
+      (await realpath(resolve(dirname(cli), "../../desktop/src-tauri/binaries"))) ||
+    !new RegExp(`^raypx-${cliArchitecture}-pc-windows-(msvc|gnu|gnullvm)\\.exe$`).test(
+      basename(cliSource),
+    )
+  )
+    throw new Error(`NSIS CLI payload source does not match the staged sidecar: ${cliSource}`);
+  const [expectedMain, expectedCli, cliBuild] = await Promise.all([
+    nsisMainPayload(mainSource),
+    digest(cliSource),
+    digest(cli),
+  ]);
+  if (expectedCli.sha256 !== cliBuild.sha256)
+    throw new Error(
+      `Staged NSIS CLI payload differs from the CLI build: ${JSON.stringify({ payload: expectedCli, build: cliBuild })}`,
+    );
   const keys = {
     product: `Software\\${manufacturer}\\Raypx Test`,
     uninstall: "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Raypx Test",
@@ -258,12 +303,23 @@ export async function installWindowsSmoke(
       )
     )
       throw new Error("NSIS did not register the owned per-user smoke installation");
-    if (
-      (await digest(binary)) !== (await digest(join(target, "release/raypx-desktop.exe"))) ||
-      (await digest(join(directory, "raypx.exe"))) !== (await digest(cli))
-    )
-      throw new Error("Installed smoke main executable or CLI differs from the packaged build");
+    const [installedMain, installedCli] = await Promise.all([
+      digest(binary),
+      digest(join(directory, "raypx.exe")),
+    ]);
+    const payloads = {
+      main: { expected: expectedMain, installed: installedMain },
+      cli: { expected: expectedCli, installed: installedCli },
+    };
+    const differences: string[] = [];
+    if (installedMain.sha256 !== expectedMain.sha256) differences.push("main executable");
+    if (installedCli.sha256 !== expectedCli.sha256) differences.push("CLI");
+    if (differences.length)
+      throw new Error(
+        `Installed smoke ${differences.join(" and ")} differs from the packaged build: ${JSON.stringify(payloads)}`,
+      );
     await regularFile(uninstaller);
+    console.info(`Native smoke NSIS payload hashes verified: ${JSON.stringify(payloads)}`);
     console.info(`Native smoke installed actual NSIS package in ${directory}`);
     return { binary, dispose };
   } catch (error) {
