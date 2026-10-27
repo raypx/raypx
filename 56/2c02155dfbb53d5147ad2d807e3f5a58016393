@@ -1,0 +1,21 @@
+apps/desktop/scripts/native/windows-smoke-install.ts
+  s_88b6a82345bd6d::t_d1858d7bda5e51 3,5,140,143,146-166,206-229,306-320,322
+apps/desktop/tests/scripts/native/windows-smoke-install.test.ts
+  s_88b6a82345bd6d::t_8c470982c61080 24-25,28-29,37,39-40,44-46,48,70-78,112-113,115,134-137,259-323
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "562c02155dfbb53d5147ad2d807e3f5a58016393",
+  "prompts": {},
+  "sessions": {
+    "s_88b6a82345bd6d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d0e-7dcb-7f03-ac3f-258224dacade",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
