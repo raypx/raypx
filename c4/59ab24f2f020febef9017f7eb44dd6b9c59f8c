@@ -1,0 +1,171 @@
+apps/api/vitest.config.ts
+  s_bcff09b404c4ba::t_71a9bc6c6e1e53 1-2,8-11,15,17,21-25
+  s_bcff09b404c4ba::t_0cd1cfee92bbe8 7,12-14,18-20,27-28
+  s_bcff09b404c4ba::t_ed2b5ccb0a431a 29-37
+packages/tasks/vitest.config.ts
+  s_bcff09b404c4ba::t_71a9bc6c6e1e53 1-2,4-23,25
+apps/web/vitest.config.ts
+  s_bcff09b404c4ba::t_71a9bc6c6e1e53 1-2,4-23,25
+docs/architecture/0034-extensible-foundation.md
+  s_2bb225eda98491::t_40e7dec8c5454d 29-30
+  s_2bb225eda98491::t_5d029fce2f3a9d 13-15,27-28,42-48
+packages/tooling/src/templates/workspace/vitest.config.ts.template
+  s_bcff09b404c4ba::t_f84cc11b9302a9 1-9
+apps/cli/vitest.config.ts
+  s_bcff09b404c4ba::t_a69d2873b2025f 12
+  s_bcff09b404c4ba::t_b91afe5a3f86ec 1-2,4-11,13-15
+docs/development/test-commands.md
+  s_bcff09b404c4ba::t_b91afe5a3f86ec 103
+  s_bcff09b404c4ba::t_2877682ca7446a 49-57
+apps/desktop/vitest.config.ts
+  s_bcff09b404c4ba::t_b91afe5a3f86ec 14-15
+  s_bcff09b404c4ba::t_71a9bc6c6e1e53 2-3,5-13,16-18
+packages/i18n/package.json
+  s_2bb225eda98491::t_5d029fce2f3a9d 38
+  s_bcff09b404c4ba::t_6bee02402b036a 24-26
+packages/tooling/tests/integration/cache.test.ts
+  s_bcff09b404c4ba::t_1be93f3b576ac8 160-190,223-247
+  s_bcff09b404c4ba::t_fa66d28cb99a11 14,28,70-78
+apps/cli/package.json
+  s_2bb225eda98491::t_5d029fce2f3a9d 41
+apps/desktop/AGENTS.md
+  s_bcff09b404c4ba::t_2877682ca7446a 48-49
+packages/tooling/package.json
+  s_2bb225eda98491::t_5d029fce2f3a9d 33
+  s_bcff09b404c4ba::t_3de6b0f97bef06 20-21
+packages/tooling/src/scaffold.ts
+  s_bcff09b404c4ba::t_f84cc11b9302a9 80
+  s_bcff09b404c4ba::t_b249d995923b8b 81-83
+docs/development/testing.md
+  s_bcff09b404c4ba::t_b91afe5a3f86ec 29-30,32-35
+  s_bcff09b404c4ba::t_f84cc11b9302a9 126-127
+  s_2bb225eda98491::t_43219dc2821245 121-125,128-132
+  s_bcff09b404c4ba::t_2877682ca7446a 104-112
+packages/i18n/vitest.config.ts
+  s_bcff09b404c4ba::t_71a9bc6c6e1e53 1-2,4-24
+test.config.ts
+  s_bcff09b404c4ba::t_71a9bc6c6e1e53 6-18
+AGENTS.md
+  s_bcff09b404c4ba::t_2877682ca7446a 59-62
+packages/host/package.json
+  s_2bb225eda98491::t_5d029fce2f3a9d 21-22
+apps/cli/tests/integration/runtime/agents/inputs.test.ts
+  s_52722a7e240ff2::t_39ce5e785c71e7 26-31
+packages/tooling/vitest.config.ts
+  s_bcff09b404c4ba::t_b91afe5a3f86ec 1-2,4-13
+packages/tooling/AGENTS.md
+  s_bcff09b404c4ba::t_fa66d28cb99a11 64-66
+  s_bcff09b404c4ba::t_2877682ca7446a 49-53
+knip.json
+  s_2bb225eda98491::t_fa59396e9170bf 23
+  s_2bb225eda98491::t_5d029fce2f3a9d 18-22,24-25,31,33-34,39,42,49-54,57-58,61
+  s_bcff09b404c4ba::t_f84cc11b9302a9 48
+  s_2bb225eda98491::t_40e7dec8c5454d 14,16
+  s_2bb225eda98491::t_43219dc2821245 15
+packages/ai/package.json
+  s_2bb225eda98491::t_5d029fce2f3a9d 21-22
+  s_bcff09b404c4ba::t_4df8abf3eddd81 12-13
+packages/tooling/src/tasks/model.ts
+  s_bcff09b404c4ba::t_fa66d28cb99a11 62-85,98,193
+packages/email/package.json
+  s_2bb225eda98491::t_5d029fce2f3a9d 30
+  s_bcff09b404c4ba::t_5e5a91f56c21eb 14-15
+apps/api/package.json
+  s_bcff09b404c4ba::t_f0db11c84e41c5 11-13
+apps/desktop/package.json
+  s_bcff09b404c4ba::t_c9c4691cf724ed 14-17
+apps/web/package.json
+  s_bcff09b404c4ba::t_a72cc1d10e8f29 12-15
+bun.lock
+  s_2bb225eda98491::t_08f37863c36f26 76,233,378,394,410,547
+packages/account/package.json
+  s_bcff09b404c4ba::t_8f0f835d36543e 14-15
+packages/account/vitest.config.ts
+  s_bcff09b404c4ba::t_4f7323b0095d92 1-2,4-11
+packages/ai/vitest.config.ts
+  s_bcff09b404c4ba::t_d203f20a6dbf59 1-2,4-11
+packages/analytics/vitest.config.ts
+  s_bcff09b404c4ba::t_b40c91522f420f 1-11
+packages/auth/package.json
+  s_bcff09b404c4ba::t_da98a31d82b796 17-18
+packages/auth/vitest.config.ts
+  s_bcff09b404c4ba::t_0b91908254b937 1-2,4-11
+packages/blocks/package.json
+  s_bcff09b404c4ba::t_ec07eacd6f1218 13-14
+packages/blocks/vitest.config.ts
+  s_bcff09b404c4ba::t_74127825674514 1-2,4-12
+packages/client/package.json
+  s_bcff09b404c4ba::t_28144a174146b7 13-14
+packages/client/vitest.config.ts
+  s_bcff09b404c4ba::t_8a0dea018a1b9e 1-2,4-11
+packages/contracts/package.json
+  s_bcff09b404c4ba::t_8ec1efda419e7b 20-21
+packages/contracts/vitest.config.ts
+  s_bcff09b404c4ba::t_fb48328fd3ac36 1-2,4-11
+packages/core/package.json
+  s_bcff09b404c4ba::t_b3fff9a9ac6dfd 16-17
+packages/core/vitest.config.ts
+  s_bcff09b404c4ba::t_972ab475c4c515 1-2,4-11
+packages/database/package.json
+  s_bcff09b404c4ba::t_b7a52ca63e088e 15-16
+packages/database/vitest.config.ts
+  s_bcff09b404c4ba::t_c398eaca49db86 1-2,4-11
+packages/email/vitest.config.ts
+  s_bcff09b404c4ba::t_7806c022d1d0be 1-2,4-11
+packages/host/vitest.config.ts
+  s_bcff09b404c4ba::t_535cbffb4e4879 1-11
+packages/jobs/package.json
+  s_bcff09b404c4ba::t_ad00b3e1d8c691 14-16
+packages/jobs/vitest.config.ts
+  s_bcff09b404c4ba::t_0c0fb47ef86efc 1-2,4-11
+packages/logger/package.json
+  s_bcff09b404c4ba::t_e245bdc307d77d 19
+packages/logger/vitest.config.ts
+  s_bcff09b404c4ba::t_eaa7063565e4f5 1-2,4-11
+packages/memory/package.json
+  s_bcff09b404c4ba::t_764d44f79167b4 14-16
+packages/memory/vitest.config.ts
+  s_bcff09b404c4ba::t_15f79b84acd1b4 1-2,4-11
+packages/storage/package.json
+  s_bcff09b404c4ba::t_5c2551cdb3f663 14-15
+packages/storage/vitest.config.ts
+  s_bcff09b404c4ba::t_91f1eae98e2e1b 1-2,4-11
+packages/tasks/package.json
+  s_bcff09b404c4ba::t_31d280887b55f2 17-18
+packages/ui/package.json
+  s_bcff09b404c4ba::t_f36923ad2e5ef0 45-47
+packages/ui/vitest.config.ts
+  s_bcff09b404c4ba::t_62cac20203bd82 1-2,4-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c459ab24f2f020febef9017f7eb44dd6b9c59f8c",
+  "prompts": {},
+  "sessions": {
+    "s_2bb225eda98491": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17b75-eeb1-73d0-9634-ac9931139225",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_52722a7e240ff2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17c10-f4f3-7212-9b2d-e66738df0905",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_bcff09b404c4ba": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17ca7-a701-7890-b155-a3d5b9b3f7ab",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
