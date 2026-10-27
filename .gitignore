@@ -75,3 +75,6 @@ apps/*/.output-cloudflare/
 !.dev.vars.example
 # Generated validation evidence only; reusable scripts belong in packages/tooling.
 .artifacts/
+
+# Cargo owns incremental Rust build outputs; Cargo.lock stays committed.
+/target/

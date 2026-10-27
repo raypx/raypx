@@ -7,16 +7,17 @@ production-origin cookie persistence require separate packaged platform checks.
 
 ## Interface
 
-Run bun run test:e2e after installing Chromium with bun --bun playwright install chromium.
+Run bun run test e2e after installing Chromium with bun --bun playwright install chromium.
 The root launcher selects the pinned Node before VP or nested Bun scripts modify PATH. `tests/helpers/serve-web.ts`
 starts the compiled Web artifact with that absolute executable; Desktop directly
 serves `artifacts/browser/client`, built with `build:renderer`, through the loopback
 static helper. It preserves compiled HTML/CSP and assets without loading Vite config.
 Do not run the Node Web output through Bun's node shim.
 VP task definitions pass `NODE_BINARY` from the root launcher to this helper.
-Root `test:e2e:web`, `test:e2e:desktop`, `test:e2e:smoke` and `test:e2e:visual`
-provide focused entry points. Combine modes with `raypx-dev e2e`; pass Playwright
-flags after `--`. Surface/smoke filters intersect with user grep. Full `test:e2e`
+Root `test e2e --web`, `--desktop`, `--smoke` and `--visual` provide focused entry
+points. Package-local `e2e` and `e2e:*` commands use the same build graph through
+`raypx.taskScripts`; `_e2e` is VP's private runner. Pass Playwright flags after `--`.
+Surface/smoke filters intersect with user grep. Full `test e2e`
 retains all cases; focused runs do not replace full acceptance. CI defaults to two
 workers; local 8+ CPU/16+ GiB hosts use four, smaller hosts one or two. Override
 with `-- --workers=2` on a busy machine. Test argv is decoded only by `browser:run`
@@ -46,7 +47,7 @@ errors; remote views require confirmed login and preserve their return destinati
 
 ## Verification
 
-Run bun run --cwd e2e check; bun run test:e2e is an explicit browser gate.
+Run bun run --cwd e2e check; bun run test e2e is an explicit browser gate.
 
 The control browser test is an explicit real-backend gate. Launch the isolated API
 with `RAYPX_VALIDATION=1` (never a client flag), set CONTROL_E2E_API_URL and build

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { taskArguments } from "./arguments.js";
+import { taskScripts } from "./delegation.js";
 
 const [name] = process.argv.slice(2);
 if (name === "--aggregate") process.exit(0);
@@ -9,8 +10,10 @@ const manifest = JSON.parse(readFileSync(resolve("package.json"), "utf8"));
 if (!manifest.scripts?.[name]) throw new Error(`Unknown workspace script: ${name}`);
 const args = taskArguments(`${manifest.name}#${name}`, process.env);
 const native = manifest.scripts["native:prepare"] && manifest.scripts["typecheck:native"];
-const command =
-  native && ["check", "build", "build:renderer", "dev"].includes(name)
+const delegated = taskScripts(manifest)[name];
+const command = delegated
+  ? [process.execPath, "run", delegated, ...args]
+  : native && ["check", "build", "build:renderer", "dev"].includes(name)
     ? [process.execPath, "run", "scripts/native/task.ts", "--leaf", name, ...args]
     : [process.execPath, "run", name, ...args];
 const child = Bun.spawn(command, { stdin: "inherit", stdout: "inherit", stderr: "inherit" });

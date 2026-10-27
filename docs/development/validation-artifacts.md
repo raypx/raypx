@@ -7,12 +7,15 @@ disposable output: logs, reports, screenshots, traces and generated comparisons.
 Do not author or maintain scripts there. One-time migrations are removed after
 verification; their generated evidence may remain until cleanup.
 
+Root commands aggregate through `bun run test <suite>`; Tooling owns independent
+`test:inventory` and `test:backends` scripts. See [test command ownership](test-commands.md).
+
 ## Test inventory and preservation
 
 ```sh
-bun run test:inventory
-bun run test:inventory --layers
-bun run test:inventory --baseline .artifacts/tests/<previous-run>/inventory.json
+bun run test inventory
+bun run test inventory --layers
+bun run test inventory --baseline .artifacts/tests/<previous-run>/inventory.json
 ```
 
 Each invocation executes fresh tests with the pinned runtimes, then writes a new
@@ -42,10 +45,10 @@ establish line coverage or platform acceptance.
 ## Owned PostgreSQL, Redis and browser backend gates
 
 ```sh
-bun run test:backends
-bun run test:backends --workers-only
-bun run test:backends --with-e2e
-bun run test:backends --with-e2e -- --workers=1
+bun run test backends
+bun run test backends --workers-only
+bun run test backends --with-e2e
+bun run test backends --with-e2e -- --workers=1
 ```
 
 This explicit POSIX gate promotes the earlier local backend-validation scripts.

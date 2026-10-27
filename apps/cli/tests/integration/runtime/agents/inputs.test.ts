@@ -140,6 +140,13 @@ it.each(["codex", "claude"] as const)(
             .map((line) => JSON.parse(line))
         : [];
     await expect.poll(() => delivered().length).toBe(1);
+    // The child records stdin before replying to turn/start. Wait for the host's
+    // first conversation projection before exercising input delivery.
+    await expect
+      .poll(() =>
+        runtime.localTask(account, task.id, 0).activity.some((entry) => entry.kind === "message"),
+      )
+      .toBe(true);
     const input = (mode: "steer" | "queue", prompt: string) => ({
       id: crypto.randomUUID(),
       taskId: task.id,
@@ -180,7 +187,9 @@ it.each(["codex", "claude"] as const)(
             { type: "control_request", request: { subtype: "interrupt" } },
             { type: "user", session_id: "interactive", message: { content: "Adjust now" } },
           ];
-    expect(delivered().slice(1, 1 + expectedProtocol.length)).toMatchObject(expectedProtocol);
+    await expect
+      .poll(() => delivered().slice(1, 1 + expectedProtocol.length))
+      .toMatchObject(expectedProtocol);
     writeFileSync(join(directory, "complete"), "");
     await expect
       .poll(

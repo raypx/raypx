@@ -38,7 +38,7 @@ function project() {
       raypx: { kind: "tooling", target: "bun" },
     }),
   );
-  for (const name of ["leaf", "arguments"])
+  for (const name of ["leaf", "arguments", "delegation"])
     copyFileSync(
       join(repository, `packages/tooling/src/tasks/${name}.ts`),
       join(root, `packages/tooling/src/tasks/${name}.ts`),
@@ -120,6 +120,34 @@ function pass(result: ReturnType<typeof execute>) {
   if (result.code !== 0) throw new Error(result.log);
   return result;
 }
+
+it("runs a delegated package runner once with literal arguments scoped to the public task", () => {
+  const root = project();
+  const directory = checked(
+    root,
+    "feature",
+    {},
+    { test: "bun missing-public-entry.ts", _test: "bun runner.ts" },
+  );
+  const manifest = JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
+  manifest.raypx.taskScripts = { test: "_test" };
+  writeFileSync(join(directory, "package.json"), JSON.stringify(manifest));
+  writeFileSync(
+    join(directory, "runner.ts"),
+    'import {appendFileSync} from "node:fs"; appendFileSync("calls.jsonl", JSON.stringify(process.argv.slice(2))+"\\n");',
+  );
+  const argv = ["two words", "literal-$VALUE", "--reporter=json"];
+  pass(
+    execute(
+      root,
+      "test",
+      { [argumentKey("@raypx/feature#test")]: JSON.stringify(argv) },
+      "@raypx/feature#task:test",
+    ),
+  );
+  const calls = readFileSync(join(directory, "calls.jsonl"), "utf8").trim().split("\n");
+  expect(calls.map((line) => JSON.parse(line))).toEqual([argv]);
+});
 
 it("uses actual typecheck inputs to invalidate consumers while retaining unrelated VP hits", () => {
   const root = project();

@@ -4,7 +4,7 @@ import { discover } from "../repository.js";
 import { Evidence } from "./evidence.js";
 import { baselineCases, collectInventory, compareCases, ownerMap } from "./inventory.js";
 
-export async function auditTests(root: string, args: string[]) {
+export async function auditTests(root: string, args: string[], cwd = root) {
   let layers = false,
     baseline: string | undefined,
     owners: string | undefined;
@@ -16,10 +16,10 @@ export async function auditTests(root: string, args: string[]) {
       args[index + 1] &&
       !args[index + 1]!.startsWith("--")
     ) {
-      const value = resolve(root, args[++index]!);
+      const value = resolve(cwd, args[++index]!);
       if (arg === "--baseline") baseline = value;
       else owners = value;
-    } else throw new Error("Usage: test:inventory [--layers] [--baseline file] [--owners file]");
+    } else throw new Error("Usage: test inventory [--layers] [--baseline file] [--owners file]");
   }
   if (owners && !baseline) throw new Error("--owners requires --baseline");
   // Load comparison inputs before starting a new run. Never mutate a baseline.

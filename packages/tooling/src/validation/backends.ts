@@ -56,7 +56,7 @@ export async function validateBackends(root: string, args: string[]) {
     (flags.includes("--workers-only") && flags.includes("--with-e2e")) ||
     (browserArgs.length > 0 && !flags.includes("--with-e2e"))
   )
-    throw new Error("Usage: test:backends [--workers-only | --with-e2e [-- Playwright flags]]");
+    throw new Error("Usage: test backends [--workers-only | --with-e2e [-- Playwright flags]]");
   const workersOnly = flags.includes("--workers-only");
   const pg = Object.fromEntries(
     ["initdb", "postgres", "pg_isready", "createdb"].map((name) => [

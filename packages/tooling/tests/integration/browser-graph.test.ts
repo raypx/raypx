@@ -20,6 +20,43 @@ function graph(args: string[]) {
     tasks: { taskId: string; command: string; dependsOn: string[]; cache: unknown }[];
   };
 }
+it("routes root and package-local test commands to the same qualified task graph", () => {
+  const tasks = graph(["test", "unit", "--package", "tasks"]).tasks.map((task) => task.taskId);
+  expect(tasks).toEqual(["@raypx/tasks#test:unit"]);
+  const browser = graph([
+    "test",
+    "e2e",
+    "--package",
+    "e2e",
+    "--web",
+    "--",
+    "--workers=1",
+  ]).tasks.map((task) => task.taskId);
+  expect(browser).toContain("@raypx/e2e#e2e:web");
+  expect(browser).toContain("web#build");
+  expect(browser).not.toContain("desktop#build:renderer");
+});
+it("package-local browser and Worker commands include their build prerequisites", () => {
+  const plan = (directory: string, script: string) => {
+    const child = spawnSync(process.execPath, ["run", script, "--dry-run"], {
+      cwd: resolve(root, directory),
+      env: process.env,
+      encoding: "utf8",
+      timeout: 30_000,
+    });
+    if (child.status !== 0) throw new Error(child.stderr || child.stdout);
+    return (JSON.parse(child.stdout) as { tasks: { taskId: string }[] }).tasks.map(
+      (task) => task.taskId,
+    );
+  };
+  const browser = plan("e2e", "e2e:web");
+  expect(browser).toContain("web#build");
+  expect(browser).not.toContain("desktop#build:renderer");
+  const worker = plan("apps/api", "test:postgres:cloudflare");
+  expect(worker).toContain("api#build:cloudflare");
+  expect(worker).toContain("api#check");
+  expect(worker).toContain("api#test:postgres:cloudflare");
+});
 it("browser-only acceptance excludes the native SDK, CLI and full Desktop checks", () => {
   const tasks = graph(["tasks", "e2e"]).tasks.map((task) => task.taskId);
   expect(tasks).toContain("web#build");

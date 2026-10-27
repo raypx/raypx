@@ -85,9 +85,9 @@ Hyperdrive 首轮拒绝无密码测试 URL，修正临时环境后重新执行�
 
 ```sh
 bun run test --no-cache
-bun run test:unit --no-cache
-bun run test:component --no-cache
-bun run test:integration --no-cache
+bun run test unit --no-cache
+bun run test component --no-cache
+bun run test integration --no-cache
 bun run verify
 ```
 

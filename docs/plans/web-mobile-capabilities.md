@@ -63,8 +63,8 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 | 门禁                                                             | 适用范围                       | 完成依据                                                |
 | ---------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------- |
 | 窄范围单测/组件/集成测试，再 `bun run verify`                    | 每个实现阶段                   | 实际命令与结果；verify 不包含下列显式门禁               |
-| `NODE_ENV=test TEST_DATABASE_URL=<隔离库> bun run test:postgres` | 2、4a、5，以及其他改 DB 的阶段 | 真实 PostgreSQL 鉴权、事务、竞态和迁移检查              |
-| `bun run test:e2e` 或报告中注明的筛选命令                        | 1、3、4a、5                    | 编译产物上的浏览器验收；新增用例必须真正执行            |
+| `NODE_ENV=test TEST_DATABASE_URL=<隔离库> bun run test postgres` | 2、4a、5，以及其他改 DB 的阶段 | 真实 PostgreSQL 鉴权、事务、竞态和迁移检查              |
+| `bun run test e2e` 或报告中注明的筛选命令                        | 1、3、4a、5                    | 编译产物上的浏览器验收；新增用例必须真正执行            |
 | Desktop 构建、`native:smoke` 与打包态检查                        | 2、4b                          | macOS/Windows 的真实原生桥接、HTTPS 会话和文件/托盘行为 |
 | 手机安装和 R2 实测                                               | 1、4a                          | 真机/隔离桶的实测记录，不能由模拟视口或 fs 结果替代     |
 

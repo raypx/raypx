@@ -10,6 +10,8 @@ Bun 1.4.4, Node 24.15.0 and an isolated PostgreSQL database for account flows.
 `.nvmrc` pins Node and `packageManager` pins Bun. With [mise](https://mise.jdx.dev),
 run `mise trust && mise install` once; nvm or direct installs also work.
 `bun run doctor` confirms both.
+Rust development uses rustup and the pinned `rust-toolchain.toml`; see the
+[Rust workspace guide](docs/development/rust.md).
 Desktop includes its own native host and compiled CLI; users do not install Node/Bun.
 
 ```sh
@@ -37,14 +39,22 @@ bun run workspace:new example --target universal         # preview
 bun run workspace:new example --target universal --write # create
 bun run check
 bun run test
+bun run test unit
+bun run test --package tasks
+bun run --cwd packages/tasks test
 bun run build
 bun run verify
+bun run rust:verify
+cargo run -p raypx-core --locked --example basic
 bun run package:desktop
 ```
 
-Turbo discovers tasks from workspace manifests. Engineering commands are exposed
+VP discovers tasks from workspace manifests. Engineering commands are exposed
 as `raypx-dev`; the product executable is `raypx`. Workspaces under apps and packages
 are discovered automatically, without editing a central name list.
+Use `bun run test --help` or the [test command guide](docs/development/test-commands.md)
+for root suites, package-local commands and optional backend/browser gates.
+Rust libraries live in `crates/`, with Cargo workspace membership and a shared lockfile.
 
 See [documentation](docs/README.md), [architecture](docs/architecture/README.md),
 [workspace extension](docs/development/workspaces.md) and [verification](docs/development/testing.md).

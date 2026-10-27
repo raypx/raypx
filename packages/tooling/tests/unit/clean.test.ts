@@ -14,6 +14,7 @@ it("cleans generated files while preserving source, dependencies and local data 
     `${library}/coverage/lcov.info`,
     `${library}/.turbo/check.log`,
     ".turbo/cache/task.tar.zst",
+    "target/debug/libraypx_core.rlib",
     "node_modules/.vite/task-cache/task.json",
     "node_modules/.vitest-cache/module.bin",
     `${library}/node_modules/.vite/vitest/results.json`,
@@ -36,6 +37,10 @@ it("cleans generated files while preserving source, dependencies and local data 
     `${library}/node_modules/dependency/index.js`,
     "node_modules/.bun/package/index.js",
     "bun.lock",
+    "Cargo.lock",
+    "Cargo.toml",
+    "rust-toolchain.toml",
+    "crates/raypx-core/src/lib.rs",
     ".git/config",
     ".env.local",
     "data/profile.sqlite",
@@ -75,6 +80,8 @@ it("cleans reports independently while preserving built applications, SDKs and v
     "packages/tooling/src/validation/inventory.ts",
     "data/profile.sqlite",
     "bun.lock",
+    "target/debug/libraypx_core.rlib",
+    "Cargo.lock",
   ];
   for (const path of [...outputs, ...preserved]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });

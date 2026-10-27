@@ -16,6 +16,11 @@ nvm (`nvm use`), fnm or direct installs also work. `bun run doctor` confirms the
 runtimes. PostgreSQL client tools come from the compose container:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
+Rust libraries live under `crates/`. Install rustup and run `rustup show` to prepare
+the version and components in `rust-toolchain.toml`. `bun run rust:verify` checks
+the Rust workspace; root checks, tests, builds and verification include its gates.
+See the [Rust guide](rust.md) for commands and the initial `raypx-core` library.
+
 `bun install` runs the root `prepare` script, which installs the Vite+ Git hook
 dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp staged`:
 oxfmt and oxlint fixes on staged files only. Check it with `bun --bun vp hooks status`;
@@ -113,7 +118,7 @@ and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
 `bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
 Desktop's `build`, `artifacts`, `.hutch` and `.cottontail-tmp` directories, root
-`.artifacts`, and browser test results/reports. It awaits asynchronous deletion in
+`.artifacts`, Cargo's root `target`, and browser test results/reports. It awaits asynchronous deletion in
 batches of up to eight directories. It keeps dependencies, lockfiles,
 Git history, environment files, user profiles and database volumes. The next
 Desktop build/check/dev prepares the native SDK again.

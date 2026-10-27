@@ -76,16 +76,16 @@ browser responses and never establishes real server authentication or Native IPC
 When a feature's access boundary changes, run access coverage with its main flow:
 
 ```sh
-bun run test:e2e:web -- 'access|memory'
-bun run test:e2e:desktop -- 'access|cloud-jobs'
-bun run test:e2e -- 'tasks/history|tasks/drafts'
+bun run test e2e --web -- 'access|memory'
+bun run test e2e --desktop -- 'access|cloud-jobs'
+bun run test e2e -- 'tasks/history|tasks/drafts'
 ```
 
 Record the same worker count and capture mode before comparing timings. An
 optional Playwright JSON report exposes case durations and start times:
 
 ```sh
-PLAYWRIGHT_JSON_OUTPUT_FILE=/absolute/path/cases.json bun run test:e2e -- --reporter=list,json
+PLAYWRIGHT_JSON_OUTPUT_FILE=/absolute/path/cases.json bun run test e2e -- --reporter=list,json
 ```
 
 The initial local before/after sample passed 34/28 ordinary cases respectively,

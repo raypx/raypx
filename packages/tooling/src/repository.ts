@@ -16,7 +16,10 @@ export async function runTasks(
   args: string[] = [],
   environment: Record<string, string> = {},
 ): Promise<void> {
-  const browser = isBrowserTestTask(task) ? prepareBrowserTask(task, args, environment) : undefined;
+  const separator = task.lastIndexOf("#");
+  const owner = separator < 0 ? undefined : task.slice(0, separator);
+  const name = separator < 0 ? task : task.slice(separator + 1);
+  const browser = isBrowserTestTask(name) ? prepareBrowserTask(name, args, environment) : undefined;
   const values = browser?.args ?? args;
   const split = values.indexOf("--");
   const flags = split < 0 ? values : values.slice(0, split);
@@ -32,9 +35,6 @@ export async function runTasks(
           : value.replace(/^--concurrency=/, "--concurrency-limit="),
     );
   const model = taskModel(root);
-  const separator = task.lastIndexOf("#");
-  const owner = separator < 0 ? undefined : task.slice(0, separator);
-  const name = separator < 0 ? task : task.slice(separator + 1);
   const filtered = options.some((value) => value === "--filter" || value.startsWith("--filter="));
   if (owner && filtered) throw new Error("Use either a qualified task or workspace filters");
   if (filtered && forwarded.length)

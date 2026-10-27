@@ -19,7 +19,9 @@
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests tests/unit",
-    "test:integration": "bun --bun vp test --run --passWithNoTests tests/integration"
+    "test:integration": "bun --bun vp test --run --passWithNoTests tests/integration",
+    "test:inventory": "bun src/cli.ts test inventory",
+    "test:backends": "bun src/cli.ts test backends"
   },
   "dependencies": {
     "@posthog/cli": "catalog:dev",
@@ -49,7 +51,8 @@
       "src/smoke/cloudflare.ts": "node",
       "src/tasks/config.ts": "node",
       "src/tasks/model.ts": "node",
-      "src/tasks/arguments.ts": "node"
+      "src/tasks/arguments.ts": "node",
+      "src/tasks/delegation.ts": "node"
     }
   }
 }

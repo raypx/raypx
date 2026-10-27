@@ -1,5 +1,9 @@
 # Extending workspaces
 
+Bun workspaces below cover TypeScript applications and libraries. Rust libraries
+live separately under `crates/*` in the root Cargo workspace; see the
+[Rust workspace guide](rust.md).
+
 ```sh
 bun run workspace:list
 bun run workspace:new feature-kit --kind library --target universal
@@ -30,6 +34,9 @@ so a pure export cannot conceal DOM/host imports behind private files.
 
 VP discovers lightweight `vite.config.ts` files. `@raypx/tooling/tasks` derives
 private `task:*` definitions from the package scripts and declares build dependencies.
+Root `test [suite]` aggregates declared package commands; `test --package` selects
+one owner. Public commands with build prerequisites can use `raypx.taskScripts`
+to select a private runner inside VP's leaf; see [test commands](test-commands.md).
 Actual file reads determine incremental invalidation; source-only libraries need no
 build. Desktop packaging depends on the compiled CLI. Application Vite plugins stay
 in `vite.app.config.ts`, while independent Vitest configs keep test initialization

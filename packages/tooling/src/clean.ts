@@ -36,6 +36,7 @@ export async function clean(root: string): Promise<void> {
       ].map((output) => join(workspace.path, output)),
     ),
     ".turbo",
+    "target",
     "node_modules/.vite",
     "node_modules/.vite-temp",
     "node_modules/.vitest-cache",

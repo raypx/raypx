@@ -10,17 +10,25 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 ## Interface
 
 - raypx-dev tasks <task> [VP options]
+- raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
+  Root owns this aggregate; package scripts own actual suites. `test list` discovers
+  capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
 - raypx-dev policy | verify | verify:quick | doctor | clean
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--workers-only | --with-e2e [-- Playwright flags]]
+- `raypx.taskScripts` delegates a public package script to a terminal runner inside
+  VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, SDKs, dependencies and source. `clean` includes these paths.
 - `verify:quick` checks source and tests; `verify` additionally builds and probes artifacts.
+- Root `rust:*` tasks run Cargo uncached. Cargo.toml enables Rust gates in root
+  check/test/build/verify; Cargo owns incremental compilation under `target/`.
 - `clean` removes workspace outputs, native SDK/bundles and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
+- `clean` also removes root Cargo `target/`; `clean:artifacts` preserves it.
 - raypx-dev smoke:cloudflare runs relocated Worker outputs under Node and Wrangler/workerd.
 - raypx-dev env -- <command>, db <operation>, desktop build
 - `./build/nitro` supplies shared Node/Workers build options to API and Web configs.

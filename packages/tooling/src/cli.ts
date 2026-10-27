@@ -11,7 +11,8 @@ import { checkLocales, policy } from "./policy.js";
 import { discover, pinnedNode, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
 import { smoke, smokeCloudflare } from "./smoke/index.js";
-import { browserTestArguments, planBrowserTests } from "./browser-tests.js";
+import { browserTestArguments } from "./browser-tests.js";
+import { packageTestArguments, runTests } from "./test-command.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -27,19 +28,22 @@ function option(name: string, fallback: string) {
 
 async function main() {
   switch (command) {
+    case "test":
+      await runTests(root, process.cwd(), args);
+      break;
+    case "package-test":
+      await runTests(root, process.cwd(), packageTestArguments(args));
+      break;
     case "test:inventory": {
-      const { auditTests } = await import("./validation/tests.js");
-      await auditTests(root, args);
+      await runTests(root, process.cwd(), ["inventory", ...args]);
       break;
     }
     case "test:backends": {
-      const { validateBackends } = await import("./validation/backends.js");
-      await validateBackends(root, args);
+      await runTests(root, process.cwd(), ["backends", ...args]);
       break;
     }
     case "e2e": {
-      const planned = planBrowserTests(args);
-      await runTasks(root, planned.task, planned.args, planned.env);
+      await runTests(root, process.cwd(), ["e2e", ...args]);
       break;
     }
     case "browser:run":
@@ -160,7 +164,7 @@ async function main() {
     case undefined:
     default:
       console.log(
-        "raypx-dev: tasks | e2e | test:inventory | test:backends | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | clean:artifacts | doctor",
       );
   }
 }

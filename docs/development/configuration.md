@@ -165,7 +165,7 @@ importing another application's source.
 bun run --cwd apps/api test -- tests/integration/configuration.test.ts
 bun run --cwd apps/api test -- tests/unit/configuration tests/integration/configuration-runtime.test.ts tests/integration/runtime-providers.test.ts tests/unit/jobs
 bun run --cwd apps/web test -- tests/component/features/configuration.test.tsx
-NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_configuration_test bun run test:postgres
+NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_configuration_test bun run test postgres
 bun run verify
 ```
 

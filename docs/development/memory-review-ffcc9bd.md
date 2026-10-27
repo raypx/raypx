@@ -30,7 +30,7 @@ administrator switches; admission also enforces the per-account body window.
   checks, builds and relocated Node/Worker/standalone CLI artifact probes.
 - Isolated PostgreSQL Node suite: 44 passed. Worker PostgreSQL suite: 6 passed.
   Both applied the generated foundation migration to the temporary test database.
-- `bun run test:e2e`: 34 passed, 2 skipped. The skipped cases require configured
+- `bun run test e2e`: 34 passed, 2 skipped. The skipped cases require configured
   live relay/native/provider environments; they are not accepted as passed.
 - macOS `native:smoke`: packaged shell and both restart/restore phases passed,
   including local state and server-origin isolation. Test bundles were removed.

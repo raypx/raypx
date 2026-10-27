@@ -20,8 +20,16 @@ records this exception; its unit-only suite and other workspaces retain caching.
 
 ## Daily feedback and machine load
 
+The root test entry is `bun run test [suite]`; each package keeps independent
+scripts. See [test commands](test-commands.md) for package selection, local entry
+points and the migration from root `test:*` aliases. Use `bun run test list` to
+discover supported layers instead of maintaining a package-name list.
+
 Use `bun run verify:quick` for policy, formatting, lint, types and workspace tests.
 `bun run verify` additionally builds both runtime targets and probes their artifacts.
+Both gates include Rust formatting, Clippy, checks and tests. `verify` also builds
+the Cargo workspace. Use `bun run rust:verify` for Rust-only feedback; see the
+[Rust workspace guide](rust.md).
 The root launcher defaults to two workspace tasks; each Vitest runner retains one
 worker and per-file isolation. Override task concurrency with `--concurrency-limit=1`
 or `VP_RUN_CONCURRENCY_LIMIT`. A single direct runner can still use
@@ -54,7 +62,7 @@ and compilation dependencies complete before the long-running dev commands start
 ## Test locations
 
 Reusable validation and evidence cleanup are documented in
-[validation artifacts](validation-artifacts.md): `test:inventory`, `test:backends`
+[validation artifacts](validation-artifacts.md): `test inventory`, `test backends`
 and `clean:artifacts`. Scripts belong in Tooling; `.artifacts/` holds generated output only.
 
 Every workspace keeps test suites, test-only setup and fixtures under `tests/`.
@@ -105,16 +113,16 @@ diagnostics and shutdown. Database seeding and behavior assertions stay in each 
 ## Explicit gates
 
 - TEST_DATABASE_URL pointing to an isolated *_test database, NODE_ENV=test:
-  bun run test:postgres validates full verification/login/reset/session revocation.
+  bun run test postgres validates full verification/login/reset/session revocation.
   CI uses PostgreSQL 17; an older local server is reported separately.
-- The same isolated database with `bun run test:postgres:cloudflare` validates the
+- The same isolated database with `bun run test postgres:cloudflare` validates the
   built Worker against direct PostgreSQL and local Hyperdrive bindings, including
   password hashing, concurrent account reads and session revocation. See
   [deployment verification](cloudflare.md#verification-and-limits) for fixture scope.
 - `TEST_REDIS_URL` pointing to a disposable Redis or Valkey (`docker compose up -d valkey`
-  serves `redis://localhost:6380`): `bun run test:redis` checks the session cache,
+  serves `redis://localhost:6380`): `bun run test redis` checks the session cache,
   fixed-window counters and concurrent RPC limits. Keys use a unique, expiring prefix.
-- bun run test:e2e runs real Chromium Web/Desktop-renderer acceptance. Install
+- bun run test e2e runs real Chromium Web/Desktop-renderer acceptance. Install
   Chromium first. Browser preview cannot validate native process access or cookies.
 - bun run package:desktop on macOS and Windows checks the actual native package.
   Release acceptance additionally verifies views://main session persistence on macOS
@@ -123,18 +131,18 @@ diagnostics and shutdown. Database seeding and behavior assertions stay in each 
 
 ### Faster browser feedback
 
-The complete browser gate remains `bun run test:e2e`, with all ordinary assertions.
+The complete browser gate remains `bun run test e2e`, with all ordinary assertions.
 CI defaults to two workers. Local hosts with at least eight available CPUs and
 16 GiB of total memory default to four; smaller hosts use one or two. Explicit
 Playwright flags override the default. Select a surface or a smaller smoke set:
 
 ```sh
-bun run test:e2e:web
-bun run test:e2e:desktop
-bun run test:e2e:smoke
-bun run test:e2e -- --workers=2
-bun run test:e2e:web -- --grep template
-bun run test:e2e:desktop -- 'access|memory'
+bun run test e2e --web
+bun run test e2e --desktop
+bun run test e2e --smoke
+bun run test e2e -- --workers=2
+bun run test e2e --web -- --grep template
+bun run test e2e --desktop -- 'access|memory'
 bun run raypx-dev e2e --web --smoke -- --list
 ```
 
@@ -155,9 +163,9 @@ screenshots remain enabled; CI records traces on the first retry. Capture the
 existing theme, locale and feature screenshots explicitly, or record a local trace:
 
 ```sh
-bun run test:e2e:visual
+bun run test e2e --visual
 bun run raypx-dev e2e --desktop --visual -- --grep template
-bun run test:e2e:web -- --grep template --trace on
+bun run test e2e --web -- --grep template --trace on
 ```
 
 Each mode builds only its required surfaces, using synthetic analytics settings

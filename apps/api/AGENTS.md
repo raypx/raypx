@@ -14,7 +14,7 @@ All API tests live in `tests/`; keep `server/` for runtime modules. `unit/` and
 `integration/` form the default database-free gate. `postgres/node/` and
 `postgres/cloudflare/` use the `postgres` and `cloudflare-postgres` modes of
 `vitest.config.ts` for real-database tests.
-Use directories for test kind and runtime; filenames describe the behavior under test. Worker PostgreSQL suites share `tests/helpers/worker.ts` for subprocess lifecycle and bounded redacted diagnostics; each suite owns its database setup and assertions.
+Use directories for test kind and runtime; filenames describe the behavior under test. Worker PostgreSQL suites share `tests/helpers/worker.ts` for subprocess lifecycle and bounded redacted diagnostics; each suite owns its database setup and assertions. Public `test:postgres:cloudflare` enters VP and builds first; `_test:postgres:cloudflare` is its private runner, selected through `raypx.taskScripts`.
 
 ## Ownership
 
@@ -121,7 +121,7 @@ bun run --cwd apps/api test
 bun run build:api
 bun run build:api:cloudflare
 TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/api test:postgres
-TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test:postgres:cloudflare
+TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test postgres:cloudflare
 ```
 
 ## Remote tasks

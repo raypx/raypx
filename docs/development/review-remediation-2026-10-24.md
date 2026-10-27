@@ -62,7 +62,7 @@
 | `bun run --cwd apps/api test:postgres`                | 13/13 通过；包含独立写锁读取、6000 条无关正文索引检查及增加式迁移。                                                                                                              |
 | `bun run --cwd apps/api test:redis`                   | 通过，隔离实例。                                                                                                                                                                 |
 | `bun run --cwd apps/api test:postgres:cloudflare`     | 4/4 通过，直接 Postgres 与本地 Hyperdrive/workerd 两种模式。不是 Cloudflare 线上验收。                                                                                           |
-| `bun run test:e2e`                                    | 21 通过、2 跳过。跳过真实后端 relay 场景及真实推理 beta 场景；前者未提供 CONTROL_E2E_API_URL，后者未提供专用 HTTPS 账户和 native 环境。                                          |
+| `bun run test e2e`                                    | 21 通过、2 跳过。跳过真实后端 relay 场景及真实推理 beta 场景；前者未提供 CONTROL_E2E_API_URL，后者未提供专用 HTTPS 账户和 native 环境。                                          |
 | `bun run --cwd apps/desktop native:smoke`             | macOS arm64 shell、切换服务器后 restore、切回原服务器 restore 三阶段通过；验证实际打包资源、IPC、终端、托盘、CLI 及主题/语言恢复。使用本地 synthetic fixture，不计真实认证通过。 |
 | Windows CEF / Credential Manager                      | 未验证；没有 Windows 打包运行环境。假密钥服务单测不计平台通过。                                                                                                                  |
 | Compose config / 镜像构建 / Traefik 容器代理          | 未验证；本机 Docker 可执行链接失效，没有可用 daemon。仅模拟 Docker 顺序、shell 语法及本地 IP 解析测试通过。                                                                      |

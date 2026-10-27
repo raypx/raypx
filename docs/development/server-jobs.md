@@ -138,9 +138,9 @@ curl -X POST http://localhost:3002/_nitro/tasks/maintenance:cleanup
 
 ```sh
 bun run --cwd apps/api test -- tests/unit/jobs
-NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test:postgres
+NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test postgres
 bun run build:api:cloudflare
-NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test:postgres:cloudflare
+NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test postgres:cloudflare
 bun run verify
 ```
 

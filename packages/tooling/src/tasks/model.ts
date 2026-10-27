@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { discover } from "@raypx-kit/devkit/workspaces";
 import { argumentKey } from "./arguments.js";
+import { taskScripts } from "./delegation.js";
 export { argumentKey } from "./arguments.js";
 
 export interface TaskCache {
@@ -170,6 +171,7 @@ export function taskModel(root: string): TaskModel {
   }));
   const definitions = new Map<string, TaskDefinition>();
   for (const member of members) {
+    taskScripts(index.byName.get(member.name)!.manifest);
     if (member.uncachedTasks.some((name) => !member.scripts[name]))
       throw new Error(`${member.name}: uncachedTasks must name existing scripts`);
     for (const name of Object.keys(member.scripts)) {
@@ -186,22 +188,56 @@ export function taskModel(root: string): TaskModel {
       dependsOn,
       cache: false,
     });
+  // Cargo owns Rust's incremental state. Keep it outside VP's filesystem tracer.
+  const rust = existsSync(join(root, "Cargo.toml"));
+  if (rust) {
+    const commands = {
+      build: "cargo build --workspace --all-targets --locked",
+      check: "cargo check --workspace --all-targets --locked",
+      test: "cargo test --workspace --locked",
+      lint: "cargo clippy --workspace --all-targets --locked -- -D warnings",
+      format: "cargo fmt --all -- --check",
+    };
+    for (const [name, command] of Object.entries(commands))
+      definitions.set(taskRef(manifest.name, `rust:${name}`), {
+        command,
+        dependsOn: [],
+        cache: false,
+      });
+    aggregate(
+      "rust:verify",
+      Object.keys(commands).map((name) => taskRef(manifest.name, `rust:${name}`)),
+    );
+  }
   const names = new Set(members.flatMap((member) => Object.keys(member.scripts)));
   for (const name of names)
-    aggregate(
-      name,
-      members.filter((member) => member.scripts[name]).map((member) => taskRef(member.name, name)),
-    );
+    aggregate(name, [
+      ...members
+        .filter((member) => member.scripts[name])
+        .map((member) => taskRef(member.name, name)),
+      ...(rust && ["build", "check", "test"].includes(name)
+        ? [taskRef(manifest.name, `rust:${name}`)]
+        : []),
+    ]);
   const native = members.find((member) => member.native);
   definitions.set(taskRef(manifest.name, "lint"), {
     command: "bun --bun vp lint",
-    dependsOn: native ? [taskRef(native.name, "native:prepare")] : [],
+    dependsOn: [
+      ...(native ? [taskRef(native.name, "native:prepare")] : []),
+      ...(rust ? [taskRef(manifest.name, "rust:lint")] : []),
+    ],
     cache: false,
   });
   for (const name of ["verify", "verify:quick"])
     aggregate(
       name,
-      ["check", "test", ...(name === "verify" ? ["build", "build:cloudflare"] : []), "lint"]
+      [
+        "check",
+        "test",
+        ...(name === "verify" ? ["build", "build:cloudflare"] : []),
+        "lint",
+        ...(rust ? ["rust:format"] : []),
+      ]
         .filter((task) => definitions.has(taskRef(manifest.name, task)))
         .map((task) => taskRef(manifest.name, task)),
     );
