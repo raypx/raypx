@@ -1,0 +1,29 @@
+docs/architecture/0034-extensible-foundation.md
+  s_88b6a82345bd6d::t_595bade5a9d170 15-17
+docs/architecture/README.md
+  s_88b6a82345bd6d::t_4a76378477272a 10-11
+docs/development/rust.md
+  s_88b6a82345bd6d::t_1a99a70b5b1d99 81-83
+docs/development/terminal-host-p1.md
+  s_88b6a82345bd6d::t_3a331bf39765fe 124-125
+docs/development/testing.md
+  s_88b6a82345bd6d::t_0270721f12de33 83-85,293-297,299-303
+docs/plans/raypx-kit.md
+  s_88b6a82345bd6d::t_c062d0400da840 173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "48b9bc79b2c22d3bb6b6e468085c3c11843229ab",
+  "prompts": {},
+  "sessions": {
+    "s_88b6a82345bd6d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17d0e-7dcb-7f03-ac3f-258224dacade",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
