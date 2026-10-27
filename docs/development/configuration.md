@@ -1,7 +1,7 @@
 # Administrator configuration
 
 Web exposes `/admin/settings` to verified administrators. It uses the existing API
-and PostgreSQL foundation on both Node and Cloudflare; there is no second admin
+and PostgreSQL foundation on Node; there is no second admin
 server or configuration package.
 
 ## First setup
@@ -11,8 +11,7 @@ server or configuration package.
 2. Run `bun run db:migrate` against that database. This creates all foundation
    tables, including `system_configuration`; the migration does not create a database.
 3. Set `ADMIN_EMAILS=owner@example.com` in the API runtime environment (comma-separated
-   for multiple administrators), then deploy/restart the API. On Workers use a
-   runtime variable, not a build variable. An empty list grants nobody access.
+   for multiple administrators), then deploy/restart the API. Use a runtime variable. An empty list grants nobody access.
 4. Register that account, verify its email and sign in to Web. Open **Site settings**
    in the sidebar. Membership is checked from the current server session on every
    admin request, including writes. No first-user takeover or client-supplied role exists.
@@ -46,7 +45,7 @@ row. Missing tables or failed queries return a safe unavailable error.
 
 The public projection, the sign-up pre-check and mail site names read through a
 5-second [server cache](caching.md): Redis when configured, otherwise memory per Node
-process or Worker isolate, so other replicas apply a change within that window.
+process, so other replicas apply a change within that window.
 Failed reads are never cached, and a save refreshes the cache it uses (every Node
 process within a second with Redis, otherwise only the instance that handled it). Admin reads, saves, cleanup runs and the
 Better Auth user-create hook always read the database. That hook is the
@@ -98,8 +97,7 @@ const allowed = await registrationAllowed();
 The cleanup job is an actual reader consumer via `createCleanupJob`. HTTP and jobs
 receive the same service within a runtime. Each `read()` goes back to storage rather
 than capturing values at construction time. Pass `cache` in `RuntimeProviders` to
-share `readCached()` across short-lived runtimes; the Cloudflare entry does this per
-isolate.
+share `readCached()` across explicitly composed runtimes.
 
 Direct writes use the same validation, administrator policy, audit editor and revision
 checks as the GUI. Resolve the session from the server's authentication adapter for
@@ -141,20 +139,12 @@ const runtime = await createApiRuntime(environment, {
 });
 ```
 
-```ts
-// Cloudflare: create inside the request/event, then close in finally or waitUntil.
-const runtime = await createCloudflareRuntime(bindings, {
-  createConfigurationRepository: (db) => repositoryFor(db),
-});
-```
-
 Alternatively, pass the factory in `createRuntime`'s resources when composing all
 dependencies yourself. The default is PostgreSQL. The factory runs once per
 runtime, receives its database connection and must not capture another runtime's
 connection. Runtime close owns that connection; custom repositories should not
 allocate independent resources without arranging their cleanup. Node keeps its
-process runtime; Workers create a new one for each request or scheduled event and
-close it afterward. Consumers must not retain a service past that lifecycle.
+process runtime, closed on shutdown. Consumers must not retain a service past that lifecycle.
 
 These interfaces are API-internal. Other apps use the typed RPC client rather than
 importing another application's source.

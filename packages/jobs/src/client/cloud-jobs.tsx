@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { CalendarClock, ChevronRight, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -53,7 +53,7 @@ function CloudJobs({
   const t = useTranslations("cloudJobs"),
     j = useTranslations("jobs"),
     c = useTranslations("common");
-  const locale = useLocale();
+  const format = useFormatter();
   const { confirm, dialog } = useConfirmation();
   const alive = useRef(true),
     requests = useRef(new Set<AbortController>()),
@@ -259,10 +259,7 @@ function CloudJobs({
       await load();
     });
   }
-  const date = (value: string) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(
-      new Date(value),
-    );
+  const date = (value: string) => format.dateTime(new Date(value), "timestamp");
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-7 sm:px-8">
       <header className="mb-7 flex flex-wrap items-start justify-between gap-4">

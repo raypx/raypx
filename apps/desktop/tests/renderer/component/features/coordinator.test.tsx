@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 

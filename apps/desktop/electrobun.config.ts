@@ -1,4 +1,4 @@
-/// <reference types="node" />
+/// <reference types="bun" />
 
 import type { ElectrobunConfig } from "./.hutch/devkit/api/config/ElectrobunConfig";
 

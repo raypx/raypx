@@ -45,7 +45,10 @@ type TerminalOptions = {
   projects: string[];
   projectIds?: ReadonlyMap<string, string>;
   discoveryDirectory?: string;
-  reachable?: () => boolean;
+  reachable?: (request?: TerminalRequest, session?: TerminalSession) => boolean;
+  admitted?: (request: TerminalRequest, session: TerminalSession) => void;
+  setAway?: (enabled: boolean) => void;
+  lockDirectory?: string;
   authorizeProject?: (path: string, provider: AgentProvider) => boolean;
   ignoreSession?: (provider: AgentProvider, sessionId: string) => boolean;
   away?: boolean;
@@ -68,7 +71,7 @@ export function startTerminalHost(options: TerminalOptions) {
     return realpathSync(path);
   });
   mkdirSync(options.directory, { recursive: true, mode: 0o700 });
-  const unlock = acquireLock(options.directory, "terminal-host");
+  const unlock = acquireLock(options.lockDirectory ?? options.directory, "terminal-host");
   if (!unlock) throw new LocalError("HOST_RUNNING", "A terminal host already owns this profile");
   let store: TerminalStore | undefined;
   let socketDirectory: string | undefined;
@@ -106,7 +109,6 @@ export function startTerminalHost(options: TerminalOptions) {
           if (hook && path === "/ready" && request.method === "GET")
             return Response.json({ epoch: broker.epoch });
           if (owner && path === "/state" && request.method === "GET") {
-            viewerUntil = Date.now() + 10_000;
             const latest = new Map(
               [...broker.pendingRequests(), ...broker.list()].map((value) => [value.id, value]),
             );
@@ -128,10 +130,19 @@ export function startTerminalHost(options: TerminalOptions) {
           }
           if (owner && path === "/decision" && request.method === "POST")
             return Response.json(broker.decide(terminalDecisionSchema.parse(await request.json())));
+          if (owner && path === "/watch" && request.method === "POST" && !options.reachable) {
+            const input = z.object({ active: z.boolean() }).parse(await request.json());
+            viewerUntil = input.active ? Date.now() + 15_000 : 0;
+            return Response.json({ active: input.active });
+          }
           if (owner && path === "/away" && request.method === "POST") {
             const input = z.object({ enabled: z.boolean() }).parse(await request.json());
-            away = input.enabled;
-            if (!away) broker.withdraw("away_off");
+            if (!options.setAway)
+              throw new LocalError(
+                "INVALID_METHOD",
+                "Configure Away through the owning settings service",
+              );
+            options.setAway(input.enabled);
             return Response.json({ away });
           }
           if (hook && path === "/delivered" && request.method === "POST") {
@@ -148,8 +159,7 @@ export function startTerminalHost(options: TerminalOptions) {
               options.ignoreSession?.(invocation.provider, invocation.providerSessionId)
             )
               return Response.json({ fallback: true });
-            if (!away || !(options.reachable?.() ?? viewerUntil > Date.now()))
-              return Response.json({ fallback: true });
+            if (!away) return Response.json({ fallback: true });
             const directory = realpathSync(invocation.cwd);
             const project = projects.find((root) => {
               const subpath = relative(root, directory);
@@ -192,7 +202,8 @@ export function startTerminalHost(options: TerminalOptions) {
               },
               {
                 away,
-                reachable: options.reachable?.() ?? viewerUntil > Date.now(),
+                reachable: options.reachable?.(undefined, session) ?? viewerUntil > Date.now(),
+                admitted: (value) => options.admitted?.(value, session),
                 ...(options.waitSeconds === undefined ? {} : { waitSeconds: options.waitSeconds }),
                 signal: request.signal,
               },
@@ -247,8 +258,8 @@ export function startTerminalHost(options: TerminalOptions) {
     );
     renameSync(hookTemporary, hookFile);
     const watchdog = setInterval(() => {
-      if (options.reachable?.() ?? viewerUntil > Date.now()) return;
       for (const request of broker.pendingRequests()) {
+        if (options.reachable?.(request) ?? viewerUntil > Date.now()) continue;
         try {
           broker.cancel(request.id, "unavailable");
         } catch {

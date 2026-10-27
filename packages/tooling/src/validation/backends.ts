@@ -52,23 +52,18 @@ export async function validateBackends(root: string, args: string[]) {
   const flags = separator < 0 ? args : args.slice(0, separator);
   const browserArgs = separator < 0 ? [] : args.slice(separator + 1);
   if (
-    flags.some((arg) => !["--workers-only", "--with-e2e"].includes(arg)) ||
-    (flags.includes("--workers-only") && flags.includes("--with-e2e")) ||
+    flags.some((arg) => !["--with-e2e"].includes(arg)) ||
     (browserArgs.length > 0 && !flags.includes("--with-e2e"))
   )
-    throw new Error("Usage: test backends [--workers-only | --with-e2e [-- Playwright flags]]");
-  const workersOnly = flags.includes("--workers-only");
+    throw new Error("Usage: test backends [--with-e2e [-- Playwright flags]]");
   const pg = Object.fromEntries(
     ["initdb", "postgres", "pg_isready", "createdb"].map((name) => [
       name,
       executable(name, process.env.TEST_POSTGRES_BIN),
     ]),
   );
-  const redisBinary = workersOnly
-    ? undefined
-    : Bun.which(process.env.TEST_REDIS_BINARY ?? "redis-server");
-  if (!workersOnly && !redisBinary)
-    throw new Error("Missing redis-server; configure TEST_REDIS_BINARY or PATH");
+  const redisBinary = Bun.which(process.env.TEST_REDIS_BINARY ?? "redis-server");
+  if (!redisBinary) throw new Error("Missing redis-server; configure TEST_REDIS_BINARY or PATH");
   const evidence = new Evidence(root, "backends");
   await evidence.run(async () => {
     const directory = await mkdtemp(join(tmpdir(), "raypx-validation-"));
@@ -164,9 +159,7 @@ export async function validateBackends(root: string, args: string[]) {
       }
       const env = backendEnvironment(process.env, url, redisURL);
       const cli = join(root, "packages/tooling/src/cli.ts");
-      for (const task of workersOnly
-        ? ["test:postgres:cloudflare"]
-        : ["test:postgres", "test:redis", "test:postgres:cloudflare"]) {
+      for (const task of ["test:postgres", "test:redis"]) {
         const label = task.replaceAll(":", "-");
         const report = `backend-${evidence.id}-${label}.json`;
         await evidence.command(

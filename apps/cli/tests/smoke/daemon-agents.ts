@@ -182,12 +182,16 @@ try {
   });
   const root = await current.request<{ id: string }>("roots.register", { path: project });
   await current.request("agents.configure", { rootId: root.id, providers: ["claude", "codex"] });
-  await current.request("observed.configure", {
-    apiUrl: apiUrl.origin,
-    accountId: profile.id,
+  await current.request("approvals.local.configure", {
     rootIds: [root.id],
     away: true,
     waitSeconds: 300,
+  });
+  await current.request("host.terminal.configure", {
+    apiUrl: apiUrl.origin,
+    accountId: profile.id,
+    enabled: true,
+    rootIds: [root.id],
   });
   for (const provider of ["claude", "codex"] as const)
     await current.request("connectors.install", { provider });
@@ -208,6 +212,12 @@ try {
   viewer = createTaskClient(api, { baseUrl: apiUrl.origin });
   viewer.setAccount(profile.id);
   unsubscribe = viewer.subscribe(() => {});
+  await current.request("host.terminal.configure", {
+    apiUrl: apiUrl.origin,
+    accountId: profile.id,
+    enabled: true,
+    rootIds: [root.id],
+  });
   for (const provider of ["claude", "codex"] as const) {
     const marker = join(project, "permission-marker.txt");
     await rm(marker, { force: true });

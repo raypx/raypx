@@ -12,7 +12,7 @@ import type {
   TaskContextTarget,
 } from "@raypx/contracts/tasks";
 
-export function agentFixtures() {
+export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = {}) {
   const cleanups: (() => Promise<void>)[] = [];
   afterEach(async () => {
     for (const cleanup of cleanups.splice(0)) await cleanup();
@@ -51,7 +51,11 @@ export function agentFixtures() {
       (request) => {
         if (request) pending.push(request);
       },
-      { executables: { [provider]: file }, ...(resolveContext ? { resolveContext } : {}) },
+      {
+        ...runtimeOptions,
+        executables: { [provider]: file },
+        ...(resolveContext ? { resolveContext } : {}),
+      },
     );
     runtime.configure(rootId, [provider]);
     await runtime.capabilities();

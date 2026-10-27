@@ -3,7 +3,7 @@ import { ContextSnapshot, type MemoryClientPort } from "@raypx/memory/client";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
 import type { AgentTask, SyncDevice, HumanRequest, HumanDecision } from "@raypx/contracts/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -426,6 +426,7 @@ function TaskDetail({
 }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
+  const format = useFormatter();
   const followField = useId();
   const local = isLocalWorkspace(scope);
   const [busy, setBusy] = useState(false);
@@ -537,7 +538,9 @@ function TaskDetail({
               ?.projects.find((project) => project.id === data.task.projectId)?.name
           }
         </span>
-        <time dateTime={data.task.updatedAt}>{new Date(data.task.updatedAt).toLocaleString()}</time>
+        <time dateTime={data.task.updatedAt}>
+          {format.dateTime(new Date(data.task.updatedAt), "timestamp")}
+        </time>
       </div>
       {data.task.context && <ContextSnapshot snapshot={data.task.context} />}
       {data.requests.map((request) => (
@@ -844,6 +847,7 @@ export function DeviceSettings({
 function Devices({ client, accountId }: { client: DeviceManagementPort; accountId: string }) {
   const t = useTranslations("tasks");
   const c = useTranslations("common");
+  const format = useFormatter();
   const load = useCallback((signal: AbortSignal) => client.devices.list({}, { signal }), [client]);
   const { data, error, errorCode, refresh, refreshing } = useRemoteQuery(
     ["devices", accountId],
@@ -877,7 +881,9 @@ function Devices({ client, accountId }: { client: DeviceManagementPort; accountI
             <p className="mt-1 text-xs text-muted-foreground">
               {device.platform} ·{" "}
               {t(device.revoked ? "revoked" : device.online ? "online" : "offline")}
-              {device.lastSeenAt && <> · {new Date(device.lastSeenAt).toLocaleString()}</>}
+              {device.lastSeenAt && (
+                <> · {format.dateTime(new Date(device.lastSeenAt), "timestamp")}</>
+              )}
             </p>
           </div>
           {!device.revoked && (

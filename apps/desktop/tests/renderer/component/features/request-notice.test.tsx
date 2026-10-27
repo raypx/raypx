@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   listener: undefined as ((event: LocalEvent) => void) | undefined,
 }));
 vi.mock("../../../../src/features/tasks/local-client", () => ({
-  accountLocalTaskClient: { observed: { list: mocks.list } },
+  localTaskClient: { observed: { list: mocks.list } },
 }));
 vi.mock("@tanstack/react-router", () => ({ useRouter: () => ({ navigate: mocks.navigate }) }));
 vi.mock("../../../../src/lib/desktop", () => ({
@@ -43,7 +43,7 @@ it("opens this computer's approval page without deciding, and removes a stale no
   fireEvent.click(button);
   expect(mocks.navigate).toHaveBeenCalledWith({
     to: "/approvals",
-    search: { scope: "local", history: "account" },
+    search: { scope: "local" },
   });
   expiresAt = new Date(Date.now() - 1000).toISOString();
   mocks.listener?.({ version: 1, event: "observed.changed", data: {} });

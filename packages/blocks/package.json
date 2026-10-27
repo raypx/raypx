@@ -25,7 +25,7 @@
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "jsdom": "catalog:dev",
+    "happy-dom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:dev"

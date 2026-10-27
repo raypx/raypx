@@ -1,3 +1,4 @@
+import { ApprovalLease } from "./approval-lease";
 import { statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { parseAnalyticsConsent } from "@raypx/analytics";
@@ -8,7 +9,7 @@ import { RemoteControl } from "./control";
 import { DaemonControlProxy } from "./daemon-control";
 import { createApiClient } from "@raypx/client";
 import { LocalEngine } from "./engine";
-import { assertRendererLocalMethod } from "./local-request";
+import { assertRendererLocalMethod, rendererLocalParams } from "./local-request";
 import { repairConnector } from "./connectors";
 import { createPreferenceStore } from "./preferences";
 import { BuildConfig } from "electrobun/main/build-config";
@@ -20,15 +21,16 @@ import { Updater } from "electrobun/main/updater";
 import * as Utils from "electrobun/main/utils";
 import { Session } from "electrobun/main/native";
 import { createDesktopApi, parseApiOrigin } from "./api";
-import { loadDesktopConfig, scopeLocalAccount } from "./config";
+import { loadDesktopConfig } from "./config";
 import { createEncryptedCookies } from "./cookies";
 import { acquireDesktopInstance, desktopInstancePath } from "./instance";
 import { externalUrl } from "./external";
 import manifest from "../package.json";
 import type { DesktopRpc } from "./rpc";
-import { wireWindow } from "./window";
+import { nativePresentation, wireWindow } from "./window";
 
 const build = BuildConfig.getSync();
+const presentation = nativePresentation(process.env);
 if (process.platform === "win32") {
   const executableDirectory = dirname(process.execPath);
   const required = ["libcef.dll", "icudtl.dat"];
@@ -49,13 +51,14 @@ const smokeDirectory =
     : undefined;
 const releaseInstance = acquireDesktopInstance(smokeDirectory ?? Utils.paths.userData);
 if (!releaseInstance) {
-  await Utils.showMessageBox({
-    type: "info",
-    title: "Raypx",
-    message: "Raypx is already running / Raypx 已在运行",
-    detail: desktopInstancePath(smokeDirectory ?? Utils.paths.userData),
-    buttons: ["OK / 确定"],
-  });
+  if (presentation.dialogs)
+    await Utils.showMessageBox({
+      type: "info",
+      title: "Raypx",
+      message: "Raypx is already running / Raypx 已在运行",
+      detail: desktopInstancePath(smokeDirectory ?? Utils.paths.userData),
+      buttons: ["OK / 确定"],
+    });
   Utils.quit();
   throw new Error("Desktop instance already running");
 }
@@ -110,6 +113,7 @@ export const mainWindow = new BrowserWindow({
   title: "Raypx",
   url: null,
   hidden: true,
+  activate: presentation.activate,
   frame: { width: 1120, height: 720 },
 });
 mainWindow.webview.remove();
@@ -174,6 +178,7 @@ let emitLocalEvent: (event: LocalEvent) => void | Promise<void> = () => {};
 let pendingScope: "local" | "remote" | undefined;
 function notifyPending(scope: "local" | "remote" = "remote") {
   pendingScope = scope;
+  if (!presentation.notifications) return;
   Utils.showNotification({
     title: "Raypx",
     body: messages[
@@ -202,6 +207,20 @@ export const engine = new LocalEngine(
   engineArgs,
   daemonEngine,
 );
+const approvalLease = new ApprovalLease((active) =>
+  engine.request("approvals.local.watch", { active }),
+);
+const renewApprovalLease = () =>
+  approvalLease
+    .update(
+      engine.status.status === "ready" && engine.features.localTerminalApprovals,
+      mainWindow.isVisible(),
+      mainWindow.isMinimized(),
+    )
+    .catch(() => {});
+const approvalLeaseTimer = setInterval(() => {
+  void renewApprovalLease();
+}, 5000);
 const connectorDirectories = {
   ...(process.env.CLAUDE_CONFIG_DIR ? { claude: process.env.CLAUDE_CONFIG_DIR } : {}),
   ...(process.env.CODEX_HOME ? { codex: process.env.CODEX_HOME } : {}),
@@ -235,6 +254,14 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
       },
       apiCancel: ({ id }) => desktopApi.cancel(id),
       apiFetch: (input) => desktopApi.request(input),
+      terminalSettings: ({ accountId }) => {
+        if (!(control instanceof DaemonControlProxy)) throw new Error("UNSUPPORTED_PLATFORM");
+        return control.terminalSettings(accountId);
+      },
+      terminalConfigure: ({ accountId, ...value }) => {
+        if (!(control instanceof DaemonControlProxy)) throw new Error("UNSUPPORTED_PLATFORM");
+        return control.terminalConfigure(accountId, value);
+      },
       controlInfo: ({ accountId }) => control.info(accountId),
       controlSession: ({ accountId }) =>
         control instanceof DaemonControlProxy ? control.session(accountId) : true,
@@ -253,6 +280,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
         platform: process.platform,
         trayEnabled: tray.visible,
         engine: engine.status,
+        features: engine.features,
       }),
       localRequest: ({ method, params }) => {
         assertRendererLocalMethod(method);
@@ -266,16 +294,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
           return repairConnector(cliBinary, engineArgs, params, connectorDirectories);
         return engine.request(
           method,
-          method.startsWith("connectors.") && params && typeof params === "object"
-            ? {
-                ...params,
-                configDirs: connectorDirectories,
-              }
-            : method.startsWith("observed.") && params && typeof params === "object"
-              ? { ...params, apiUrl: apiOrigin }
-              : method.startsWith("agents.local.")
-                ? scopeLocalAccount(connectionConfig.scope, params)
-                : params,
+          rendererLocalParams(method, params, connectorDirectories, connectionConfig.scope),
         );
       },
       pickDirectory: async () => {
@@ -294,6 +313,7 @@ const rpc = BrowserView.defineRPC<DesktopRpc>({
       hideWindow: () => {
         if (!tray.visible) return false;
         mainWindow.hide();
+        void renewApprovalLease();
         return !mainWindow.isVisible();
       },
     },
@@ -322,11 +342,13 @@ mainWindow.webviewId = view.id;
 // transport to apply backpressure instead of accumulating unbounded PTY packets.
 emitLocalEvent = (event) =>
   view.queueHostMessageToWebview({ type: "message", id: "localEvent", payload: event });
-void engine.start();
+void engine.start().then(() => renewApprovalLease());
 export async function quitDesktop(code = 0) {
   const approval = Utils.requestQuitApproval();
   if (!approval) return;
   try {
+    clearInterval(approvalLeaseTimer);
+    await approvalLease.stop().catch(() => {});
     if (!daemonEngine) await control.detach();
     await engine.stop();
     // Let WebKit complete a normal page unload before graceful native shutdown.
@@ -342,6 +364,7 @@ export async function quitDesktop(code = 0) {
       const timeout = setTimeout(finish, 2000);
       try {
         mainWindow.hide();
+        void renewApprovalLease();
         view.on("dom-ready", (event) => {
           if (!event || typeof event !== "object" || !("data" in event)) return;
           const data = event.data;
@@ -375,6 +398,10 @@ export const windowActions = wireWindow(
   () => {
     void quitDesktop();
   },
+  () => {
+    void renewApprovalLease();
+  },
+  presentation,
 );
 function openPending() {
   windowActions.show();
@@ -404,4 +431,4 @@ tray.on("tray-clicked", (event) => {
   if (!data || typeof data !== "object" || !("action" in data)) return;
   handleTrayAction(data.action);
 });
-mainWindow.show();
+windowActions.show();

@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { expect, it } from "vite-plus/test";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import {

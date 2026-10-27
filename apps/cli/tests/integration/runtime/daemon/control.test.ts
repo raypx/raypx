@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startDaemon } from "../../../../src/runtime/daemon/server";
-import { bindingKey, type HostVault } from "../../../../src/runtime/daemon/vault";
+import type { HostVault } from "../../../../src/runtime/daemon/vault";
 import { profilePath } from "../../../../src/runtime/state";
 import { readTerminalEndpoint, terminalFetch } from "../../../../src/runtime/terminal/host";
 import { TerminalStore } from "../../../../src/runtime/terminal/store";
@@ -19,6 +19,10 @@ async function fixture(seed = false) {
   const dataDir = mkdtempSync(join(tmpdir(), "raypx-daemon-control-"));
   const accountId = "account",
     deviceId = crypto.randomUUID();
+  const frames: Extract<import("@raypx/contracts/tasks").RelayClientFrame, { type: "observed" }>[] =
+    [];
+  let autoAck = true;
+  let connection: { send(data: string): unknown; close(code?: number): unknown } | undefined;
   let denied = false,
     stored: HostAuthorization | undefined;
   const api = Bun.serve({
@@ -58,7 +62,8 @@ async function fixture(seed = false) {
     websocket: {
       message(socket, data) {
         const frame = relayClientSchema.parse(JSON.parse(String(data)));
-        if (frame.type === "auth")
+        if (frame.type === "auth") {
+          connection = socket;
           socket.send(
             JSON.stringify({
               type: "ready",
@@ -66,6 +71,7 @@ async function fixture(seed = false) {
               role: "device",
             }),
           );
+        }
         if (frame.type === "announce")
           socket.send(
             JSON.stringify({
@@ -75,19 +81,22 @@ async function fixture(seed = false) {
               snapshot: false,
             }),
           );
-        if (frame.type === "observed")
-          socket.send(
-            JSON.stringify({ type: "observed_ack", epoch: frame.epoch, revision: frame.revision }),
-          );
+        if (frame.type === "observed") {
+          frames.push(frame);
+          if (autoAck)
+            socket.send(
+              JSON.stringify({
+                type: "observed_ack",
+                epoch: frame.epoch,
+                revision: frame.revision,
+              }),
+            );
+        }
       },
     },
   });
   const scope = { accountId, apiUrl: api.url.origin },
-    terminalDirectory = join(
-      profilePath({ dataDir }),
-      "hosts",
-      bindingKey(scope.apiUrl, accountId),
-    );
+    terminalDirectory = join(profilePath({ dataDir }), "terminal");
   if (seed) {
     const store = new TerminalStore(terminalDirectory);
     const sessions: TerminalSession[] = [];
@@ -137,7 +146,10 @@ async function fixture(seed = false) {
     vault,
     agentExecutables: { claude: "/missing-raypx-test-claude", codex: "/missing-raypx-test-codex" },
   });
-  const request = host.control.request.bind(host.control);
+  const request: typeof host.control.request = (method, input) =>
+    method.startsWith("approvals.local.")
+      ? host.terminal.request(method, input, "test")
+      : host.control.request(method, input);
   await request("host.session", scope);
   await request("host.enable", { ...scope, enabled: true });
   await request("host.authorize", {
@@ -153,6 +165,15 @@ async function fixture(seed = false) {
   await expect.poll(() => host.control.info(scope).connected).toBe(true);
   return {
     host,
+    frames,
+    reconnect: () => {
+      autoAck = false;
+      connection?.close(1012);
+    },
+    ack: (frame: { epoch: string; revision: number }) =>
+      connection?.send(
+        JSON.stringify({ type: "observed_ack", epoch: frame.epoch, revision: frame.revision }),
+      ),
     scope,
     terminalDirectory,
     request,
@@ -173,6 +194,20 @@ it.skipIf(process.platform === "win32")(
   async () => {
     const f = await fixture();
     try {
+      await expect.poll(() => f.frames.length).toBeGreaterThan(0);
+      expect(f.frames[0]).toMatchObject({
+        sessions: [],
+        requests: [],
+        epoch: f.host.terminal.epoch,
+      });
+      await expect(
+        f.request("host.terminal.configure", {
+          ...f.scope,
+          accountId: "other-account",
+          enabled: true,
+          rootIds: [],
+        }),
+      ).rejects.toMatchObject({ code: "AUTH_REQUIRED" });
       const roots = [];
       for (const name of ["a", "b", "c"]) {
         const path = join(f.dataDir, name);
@@ -188,7 +223,9 @@ it.skipIf(process.platform === "win32")(
         roots.push(root);
       }
       const configure = (rootIds: string[], waitSeconds: number) =>
-        f.request("observed.configure", { ...f.scope, rootIds, waitSeconds, away: true });
+        f
+          .request("approvals.local.configure", { rootIds, waitSeconds, away: true })
+          .then(() => f.request("host.terminal.configure", { ...f.scope, enabled: true, rootIds }));
       await configure(
         roots.slice(0, 2).map((root) => root.id),
         300,
@@ -210,7 +247,7 @@ it.skipIf(process.platform === "win32")(
         );
       const first = hook(roots[0]!, "first"),
         second = hook(roots[1]!, "second");
-      const list = () => f.request("observed.list", f.scope) as Promise<ObservedProjection>;
+      const list = () => f.request("approvals.local.list", {}) as Promise<ObservedProjection>;
       await expect
         .poll(
           async () => (await list()).requests.filter((value) => value.status === "pending").length,
@@ -243,7 +280,7 @@ it.skipIf(process.platform === "win32")(
   async () => {
     const f = await fixture(true);
     try {
-      const projection = (await f.request("observed.list", f.scope)) as ObservedProjection;
+      const projection = (await f.request("approvals.local.list", {})) as ObservedProjection;
       const ids = new Set(projection.sessions.map((session) => session.id));
       expect(projection.requests).toHaveLength(100);
       expect(projection.requests.every((request) => ids.has(request.sessionId))).toBe(true);
@@ -252,6 +289,76 @@ it.skipIf(process.platform === "win32")(
       expect(projection.requests.at(-1)?.title).toBe("Bash 11");
     } finally {
       await f.close();
+    }
+  },
+);
+
+it.skipIf(process.platform === "win32")(
+  "requires the new connection's initialization ACK and ignores a repeated old ACK",
+  async () => {
+    const f = await fixture();
+    let pending: Promise<unknown> | undefined;
+    try {
+      await expect.poll(() => f.frames.length).toBe(1);
+      const old = f.frames[0]!;
+      const path = join(f.dataDir, "ack-project");
+      mkdirSync(path);
+      const root = (await f.host.runtime.request("roots.register", { path })) as {
+        id: string;
+        path: string;
+      };
+      await f.host.runtime.request("agents.configure", { rootId: root.id, providers: ["claude"] });
+      await f.request("approvals.local.configure", {
+        rootIds: [root.id],
+        away: true,
+        waitSeconds: 60,
+      });
+      await f.request("approvals.local.watch", { active: true });
+      await f.request("host.terminal.configure", { ...f.scope, enabled: true, rootIds: [root.id] });
+      f.reconnect();
+      await expect.poll(() => f.frames.length, { timeout: 10_000 }).toBe(2);
+      const initial = f.frames[1]!;
+      expect(initial).toMatchObject({ sessions: [], requests: [], epoch: old.epoch });
+      expect(initial.revision).toBeGreaterThan(old.revision);
+      pending = terminalFetch(readTerminalEndpoint(f.terminalDirectory), "hook", "/hook", {
+        provider: "claude",
+        input: {
+          hook_event_name: "PermissionRequest",
+          session_id: "ack-test",
+          cwd: root.path,
+          tool_name: "Bash",
+          tool_input: { command: "printf synthetic" },
+        },
+      })
+        .then((response) => response.json())
+        .catch(() => null);
+      await expect
+        .poll(
+          async () =>
+            ((await f.request("approvals.local.list", {})) as ObservedProjection).requests.length,
+        )
+        .toBe(1);
+      f.ack(old);
+      await Bun.sleep(100);
+      expect(f.frames).toHaveLength(2);
+      f.ack(initial);
+      await expect.poll(() => f.frames.length).toBe(3);
+      expect(f.frames[2]?.requests).toHaveLength(1);
+      // Disconnect with a projection still awaiting its ACK. Its rejected waiter
+      // must not tear down the replacement connection.
+      f.reconnect();
+      await expect.poll(() => f.frames.length, { timeout: 10_000 }).toBe(4);
+      const replacement = f.frames[3]!;
+      f.ack(f.frames[2]!);
+      await Bun.sleep(100);
+      expect(f.frames).toHaveLength(4);
+      f.ack(replacement);
+      await expect.poll(() => f.frames.length).toBe(5);
+      expect(f.frames[4]?.requests[0]?.id).toBe(f.frames[2]?.requests[0]?.id);
+      f.ack(f.frames[4]!);
+    } finally {
+      await f.close();
+      await pending;
     }
   },
 );

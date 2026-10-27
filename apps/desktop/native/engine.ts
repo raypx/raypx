@@ -8,6 +8,7 @@ import type { EngineStatus } from "./rpc";
 
 export class LocalEngine {
   status: EngineStatus = { status: "starting" };
+  features = { localTerminalApprovals: false };
   private child: ReturnType<typeof Bun.spawn> | undefined;
   private readonly pending = new Map<
     string,
@@ -69,6 +70,7 @@ export class LocalEngine {
         version: string;
         protocolVersion: number;
         owner?: string;
+        features?: { localTerminalApprovals?: boolean };
       };
       if (
         info.version !== this.version ||
@@ -76,6 +78,7 @@ export class LocalEngine {
         (this.daemon && info.owner !== "daemon")
       )
         throw new Error("Bundled CLI version does not match Desktop");
+      this.features.localTerminalApprovals = info.features?.localTerminalApprovals === true;
       this.setStatus({ status: "ready" });
       return true;
     } catch (error) {
@@ -196,6 +199,7 @@ export class LocalEngine {
     return this.start();
   }
   async stop() {
+    this.features.localTerminalApprovals = false;
     this.generation++;
     const child = this.child;
     this.child = undefined;

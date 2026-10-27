@@ -1,5 +1,8 @@
 # Terminal host P1 review remediation — 2026-10-25
 
+> Historical validation snapshot: the Worker deployment target and its gates have been removed.
+> Current deployment and verification use Node; commands below record the earlier state.
+
 Baseline: canary `3fede0a`, including the separately committed remediation and P0
 prototype. The review was recorded against their earlier uncommitted state. This
 record covers the P1 findings; it does not introduce Expo, E2EE or broader Agent

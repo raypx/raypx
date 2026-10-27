@@ -30,6 +30,8 @@ if ! docker buildx inspect "$builder" >/dev/null 2>&1; then
 fi
 
 # Run image builds sequentially; the container builder owns the CPU/memory budget.
+# The API and Web Dockerfiles share identical manifest and dependency stages, so
+# the later builds reuse the first install unless package manifests or bun.lock change.
 docker buildx build --builder "$builder" --load \
   --file apps/api/Dockerfile --target migrate \
   --build-arg "VITE_APP_RELEASE=$release" \
@@ -39,7 +41,7 @@ docker buildx build --builder "$builder" --load \
   --build-arg "VITE_APP_RELEASE=$release" \
   --tag "raypx/api:$release" .
 docker buildx build --builder "$builder" --load \
-  --file apps/web/Dockerfile \
+  --file apps/web/Dockerfile --target runtime \
   --build-arg "VITE_API_URL=https://$APP_HOST" \
   --build-arg "VITE_APP_RELEASE=$release" \
   --tag "raypx/web:$release" .

@@ -88,18 +88,17 @@ async function pendingPlan(id: string) {
     return request;
   }, "plan approval");
 }
-async function runNodeTests(project: string, count: number) {
-  const node = process.env.NODE_BINARY ?? Bun.which("node");
-  if (!node) throw new Error("Node is required for live Agent validation");
-  const test = Bun.spawn([node, "--test", "acceptance.test.mjs"], {
+async function runAcceptanceTests(project: string, count: number) {
+  // Bun's runner executes node:test suites and reports its summary on stderr.
+  const test = Bun.spawn([process.execPath, "test", "./acceptance.test.mjs"], {
     cwd: project,
     stdout: "pipe",
     stderr: "pipe",
   });
-  const output = await new Response(test.stdout).text();
-  await new Response(test.stderr).text();
+  await new Response(test.stdout).text();
+  const output = await new Response(test.stderr).text();
   assert.equal(await test.exited, 0, "Agent-generated tests failed");
-  assert.match(output, new RegExp(`pass ${count}`));
+  assert.match(output, new RegExp(`\\b${count} pass\\b`));
 }
 
 try {
@@ -111,7 +110,7 @@ try {
     await writeFile(join(project, "seed.txt"), "RAYPX_LIVE_7319\n");
     await writeFile(
       join(project, "AGENTS.md"),
-      "This is an isolated Raypx acceptance project. Work only here. Use Node built-in tools. Do not use network, skills, integrations, commit or push.\n",
+      "This is an isolated Raypx acceptance project. Work only here. Use Bun and its built-in modules. Do not use network, skills, integrations, commit or push.\n",
     );
     const root = (await engine.request("roots.register", { path: project })) as { id: string };
     await engine.request("agents.configure", { rootId: root.id, providers: [provider] });
@@ -151,14 +150,14 @@ try {
 
     stage = `${provider}: plan approval and implementation`;
     const planned = await create(
-      "Plan an implementation: acceptance.mjs exports add(a,b); acceptance.test.mjs uses node:test to verify add(2,3) === 5. Inspect this directory and present a plan for approval. Do not write either file until approved. After approval implement both and run node --test acceptance.test.mjs.",
+      "Plan an implementation: acceptance.mjs exports add(a,b); acceptance.test.mjs uses node:test to verify add(2,3) === 5. Inspect this directory and present a plan for approval. Do not write either file until approved. After approval implement both and run bun test ./acceptance.test.mjs.",
       "plan",
     );
     const plan = await pendingPlan(planned);
     assert.equal(await Bun.file(join(project, "acceptance.mjs")).exists(), false);
     await decide(plan, { type: "allow" });
     assert.equal((await completion(planned)).status, "succeeded");
-    await runNodeTests(project, 1);
+    await runAcceptanceTests(project, 1);
     checks.push("approve-plan", "write-and-test");
 
     stage = `${provider}: process restart and session resume`;
@@ -177,12 +176,12 @@ try {
     });
     assert.equal((await completion(follow)).status, "succeeded");
     assert.equal((await readTask(follow)).task.parentTaskId, planned);
-    await runNodeTests(project, 2);
+    await runAcceptanceTests(project, 2);
     checks.push("restart-history", "resume-session");
 
     stage = `${provider}: running process cancellation`;
     const command =
-      'node -e \'const fs=require("fs");fs.writeFileSync("started.txt",String(process.pid));setTimeout(()=>fs.writeFileSync("should-not-exist.txt","finished"),60000)\'';
+      'bun -e \'const fs=require("fs");fs.writeFileSync("started.txt",String(process.pid));setTimeout(()=>fs.writeFileSync("should-not-exist.txt","finished"),60000)\'';
     const cancelled = await create(
       `Use the shell tool to run exactly this command, then wait for it: ${command}. Do not run other commands or read files. This is a cancellation test in this temporary directory.`,
     );

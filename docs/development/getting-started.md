@@ -1,10 +1,10 @@
 # Development
 
-Use Bun 1.4.4 and Node 24.15.0. `.nvmrc` pins Node and package.json `packageManager`
-pins Bun; to upgrade, change those, then fix what `bun run policy` reports.
+Use Bun 1.4.4; it is the only JavaScript runtime. package.json `packageManager`
+pins it; to upgrade, change that, then fix what `bun run policy` reports.
 
 mise is the recommended version manager on macOS, Linux and Windows. The committed
-mise.toml only lets it read those two pins and must never list `[tools]`:
+mise.toml only lets it read that pin and must never list `[tools]`:
 
 ```sh
 mise trust && mise install          # once per clone
@@ -28,7 +28,7 @@ oxfmt and oxlint fixes on staged files only. Check it with `bun --bun vp hooks s
 
 Redis is optional. `docker compose up -d valkey` starts Valkey on 6380; set
 `REDIS_URL=redis://localhost:6380` to cache sessions and keep rate limits in Redis
-instead of PostgreSQL. Node API only; Workers keep using PostgreSQL.
+instead of PostgreSQL. Node API sessions remain persisted in PostgreSQL.
 
 Copy .env.example to .env; .env.local has priority, inherited shell values win.
 Only development/build/env commands load files; tests provide explicit environment.
@@ -53,10 +53,9 @@ Bun catalogs hold third-party versions: the default `catalog:` contains runtime
 libraries, and `catalog:dev` contains build, test and development tools. Shared
 libraries keep the same catalog even when a test workspace lists them under
 `devDependencies`. All workspaces share one exact React
-version. Raypx Kit stays external. Do not add another task runner. Web and API run under Node in dev, build, preview
-and production: scripts call `bun vp`, not `bun --bun vp`, and each output starts
-with Node .output/server/index.mjs. Their node-server output traces Node export
-conditions, which the Bun runtime does not resolve. Tests still run through Bun.
+version. Raypx Kit stays external. Do not add another task runner. Web and API run under Bun in dev, build, preview
+and production: scripts call `bun --bun vp`, and each output starts with
+`bun .output/server/index.mjs`. Nitro's `bun` preset traces Bun export conditions.
 
 Actual verification/reset emails require RESEND_API_KEY and MAIL_FROM. Without a
 configured mail transport those actions return MAIL_NOT_CONFIGURED instead of
@@ -142,9 +141,3 @@ Required release artifacts move between jobs through artifacts rather than an
 optional cache. No external remote-cache service or Turbo credentials are used.
 Inspect reuse with `bun run test --verbose`, or `vp run --last-details` from root.
 Include transfer time when measuring CI gains. See the [testing guide](testing.md).
-
-## Cloudflare deployment target
-
-Web and API also provide explicit Cloudflare Worker build, preview and deployment
-commands alongside their default Node outputs. See [Node and Cloudflare deployments](cloudflare.md)
-for runtime bindings, PostgreSQL/Hyperdrive and both artifact verification gates.

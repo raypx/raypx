@@ -1,13 +1,12 @@
 # Server cache
 
-`apps/api/server/cache/` is the API's one application cache, the same on Node and
-Cloudflare Workers. Full guide: `docs/development/caching.md`.
+`apps/api/server/cache/` is the API's one application cache, on Node. Full guide: `docs/development/caching.md`.
 
 - Store: Redis/Valkey when `REDIS_URL` is set (Node only, shared by processes) behind a
   one-second process-local copy (`cache/tiered.ts`); otherwise a bounded memory store
-  per Node process or per Worker isolate. No KV.
+  per Node process.
 - `createRuntime` builds it once and exposes `runtime.cache`; `RuntimeProviders.cache`
-  overrides it (the Cloudflare entry passes a per-isolate cache).
+  overrides it.
 - `cache.getOrLoad(key, { ttlMs, parse }, load)` serves a copy, shares concurrent loads,
   never stores failures. `set`/`delete` after writes supersede in-flight loads.
 - Values are JSON and re-validated by `parse`; bad entries and store outages are misses.

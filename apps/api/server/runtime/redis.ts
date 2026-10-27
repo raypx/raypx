@@ -12,7 +12,7 @@ export interface RedisResources {
 }
 
 /**
- * Optional Node cache for Better Auth sessions, rate limits and application values,
+ * Optional process cache for Better Auth sessions, rate limits and application values,
  * shared across processes. Workers never import
  * this module: they keep PostgreSQL as the shared store.
  */

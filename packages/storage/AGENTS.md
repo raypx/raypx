@@ -9,7 +9,7 @@ Object storage for server runtimes on top of unstorage, with S3 pre-signed URLs.
 `.`: `ObjectStorage` (put/get/getStream/has/delete/list/signedUrl), `createObjectStorage`
 over any raw-capable unstorage driver, `createMemoryStorage` for tests,
 `createUnavailableStorage` and `StorageError`. `/s3`: `createS3Storage` for AWS S3,
-Cloudflare R2 and MinIO through fetch and aws4fetch, so it runs on Node and Workers.
+other S3-compatible providers through fetch and aws4fetch on Node.
 
 ## Constraints
 
@@ -18,8 +18,7 @@ Cloudflare R2 and MinIO through fetch and aws4fetch, so it runs on Node and Work
 - Errors carry codes only (`STORAGE_NOT_CONFIGURED`, `STORAGE_UNAVAILABLE`,
   `STORAGE_SIGNING_UNSUPPORTED`, `INVALID_OBJECT_KEY`, `INVALID_INPUT`); never expose
   driver messages, bucket URLs, credentials or object content.
-- Pass aws4fetch to the unstorage S3 driver explicitly; Workers cannot resolve its
-  runtime import. Requests are path-style. Pre-signed URLs last 1 s to 7 days and
+- Pass aws4fetch to the unstorage S3 driver explicitly; this avoids relying on its dynamic runtime import. Requests are path-style. Pre-signed URLs last 1 s to 7 days and
   bind PUT Content-Type when given.
 - The unstorage S3 driver buffers whole objects, so `getStream` is not a true stream
   and `list` loads every key under the prefix. Use pre-signed URLs for large objects

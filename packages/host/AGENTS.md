@@ -7,7 +7,9 @@ legacy Desktop host. Domain schemas remain in contracts; execution stays in CLI.
 
 ## Interface
 
-Public exports are `RemoteControl`, `ControlInfo` and `serverOrigin`. Inject the
+Public exports are `RemoteControl`, `ControlInfo`, `serverOrigin` and the pure
+`readRemoteControlSettings` reader. The reader shares runtime parsing rules but
+must not create directories, IDs, files, controllers or network activity. Inject the
 local engine, credential renewal, notifications and optional observed-session
 projection/acknowledgement callbacks. Protocol 2 remains the managed-only fallback;
 protocol 3 adds terminal requests. Renderer code imports pure types from contracts.

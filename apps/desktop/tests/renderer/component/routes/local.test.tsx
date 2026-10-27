@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import {
@@ -215,7 +215,9 @@ describe("Desktop local file routes", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText("private roots diagnostic")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "New automation" }));
-    expect(screen.getByLabelText("Folder")).toHaveTextContent("Choose a folder in Files first");
+    expect(screen.getByRole("combobox", { name: "Folder" })).toHaveTextContent(
+      "Choose a folder in Files first",
+    );
   });
 
   it("shows pending UI until the initial jobs loader finishes", async () => {

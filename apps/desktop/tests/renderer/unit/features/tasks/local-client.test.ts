@@ -164,3 +164,35 @@ it("shares one command for identical in-flight cancels", async () => {
   await third;
   expect(request).toHaveBeenCalledTimes(2);
 });
+
+it("prefers the local epoch over a higher cloud revision and never retries uncertain decisions remotely", async () => {
+  const remoteDecide = vi.fn();
+  const request = { id: "request", epoch: "epoch", revision: 1 };
+  const local = {
+    observed: {
+      list: vi.fn(async () => ({ sessions: [], requests: [request] })),
+      get: vi.fn(async () => request),
+      decide: vi.fn(async () => {
+        throw new Error("uncertain");
+      }),
+    },
+    approvals: { list: vi.fn() },
+    subscribe: vi.fn(),
+  } as unknown as Parameters<typeof createPendingClient>[0];
+  const remote = {
+    observed: {
+      list: vi.fn(async () => ({ sessions: [], requests: [{ ...request, revision: 99 }] })),
+      get: vi.fn(),
+      decide: remoteDecide,
+    },
+    approvals: { list: vi.fn() },
+    subscribe: vi.fn(),
+  } as unknown as Parameters<typeof createPendingClient>[0];
+  const client = createPendingClient(local, remote);
+  expect((await client.observed!.list()).requests).toEqual([request]);
+  expect(await client.observed!.get({ id: request.id })).toEqual(request);
+  await expect(
+    client.observed!.decide({ ...request, receiptId: "receipt", decision: { type: "allow" } }),
+  ).rejects.toThrow("uncertain");
+  expect(remoteDecide).not.toHaveBeenCalled();
+});

@@ -1,14 +1,11 @@
 import { execFileSync } from "node:child_process";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
-import { pinnedNode as findPinnedNode, readToolchain } from "@raypx-kit/devkit/toolchain";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
 import { isBrowserTestTask, prepareBrowserTask } from "./browser-tests.js";
 import { argumentKey, taskModel, taskName, taskPlan, taskRef } from "./tasks/model.js";
 
 /** Raypx conventions for the shared @raypx-kit/devkit checks. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });
-
-export const pinnedNode = (root: string) => findPinnedNode(root, { nodeBinaryEnv: "NODE_BINARY" });
 
 export async function runTasks(
   root: string,
@@ -45,13 +42,6 @@ export async function runTasks(
     console.log(JSON.stringify({ runner: "vp", tasks: taskPlan(model, [reference]) }));
     return;
   }
-  // Resolve once before VP and nested Bun scripts can prepend their node shim.
-  const nodeEnvironment = {
-    NODE_BINARY: execFileSync(pinnedNode(root), ["-p", "process.execPath"], {
-      encoding: "utf8",
-      stdio: "pipe",
-    }).trim(),
-  };
   const verb = name.split(":")[0];
   const environmentBase = ["dev", "build"].includes(verb!)
     ? developmentEnvironment(root)
@@ -59,7 +49,6 @@ export async function runTasks(
   const env: NodeJS.ProcessEnv = {
     ...environmentBase,
     ...(browser?.env ?? environment),
-    ...nodeEnvironment,
     VP_RUN_CONCURRENCY_LIMIT: process.env.VP_RUN_CONCURRENCY_LIMIT ?? "2",
     // Browser acceptance always uses a synthetic ingestion host, never a developer project.
     ...(browser
@@ -71,7 +60,7 @@ export async function runTasks(
     VITE_APP_RELEASE:
       process.env.VITE_APP_RELEASE ||
       execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
-    RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}-node${readToolchain(root).node}`,
+    RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}`,
   };
   for (const member of model.members.filter(
     (candidate) => (!owner || candidate.name === owner) && candidate.scripts[name],

@@ -7,7 +7,6 @@
   },
   "type": "module",
   "exports": {
-    "./cloudflare": "./src/smoke/cloudflare.ts",
     "./repository": "./src/repository.ts",
     "./build/nitro": "./src/build/nitro.ts",
     "./build/analytics": "./src/build/analytics.ts",
@@ -26,8 +25,7 @@
   "dependencies": {
     "@posthog/cli": "catalog:dev",
     "@raypx-kit/devkit": "catalog:dev",
-    "@raypx-kit/intl": "catalog:",
-    "wrangler": "catalog:dev"
+    "@raypx-kit/intl": "catalog:"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
@@ -42,13 +40,11 @@
     ],
     "entryTargets": {
       "./build/nitro": "node",
-      "./cloudflare": "node",
       "./build/analytics": "node",
       "./tasks": "node"
     },
     "sourceTargets": {
       "src/build/**": "node",
-      "src/smoke/cloudflare.ts": "node",
       "src/tasks/config.ts": "node",
       "src/tasks/model.ts": "node",
       "src/tasks/arguments.ts": "node",

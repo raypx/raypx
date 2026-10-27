@@ -23,6 +23,7 @@
     "native:cli": "bun run scripts/native/prepare-cli.ts",
     "native:csp": "bun scripts/native/csp.ts",
     "native:smoke": "bun run native:cli && bun run tests/native/smoke/run.ts",
+    "native:smoke:interactive": "bun run native:cli && bun run tests/native/smoke/run.ts --interactive",
     "native:agents": "bun run native:cli && bun run tests/native/smoke/agents.ts",
     "native:beta": "bun run native:cli && bun run tests/native/smoke/run.ts beta",
     "build:renderer": "bun run scripts/native/task.ts build:renderer"
@@ -65,7 +66,7 @@
     "@types/react-dom": "catalog:dev",
     "@vitejs/plugin-react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "jsdom": "catalog:dev",
+    "happy-dom": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:dev",
     "vite-plus": "catalog:dev"
@@ -81,7 +82,7 @@
       "config.ts": "universal",
       "scripts/**": "bun",
       "tests/scripts/**": "bun",
-      "vite.app.config.ts": "node"
+      "vite.app.config.ts": "bun"
     }
   }
 }

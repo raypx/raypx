@@ -29,7 +29,7 @@ it.skipIf(process.platform === "win32")(
       project = await realpath(dir);
     const host = startTerminalHost({ directory: dir, projects: [project], away: true });
     try {
-      await terminalFetch(host.endpoint, "owner", "/state");
+      await terminalFetch(host.endpoint, "owner", "/watch", { active: true });
       const pending = forwardTerminalHook(dir, "claude", {
         session_id: "session",
         cwd: project,

@@ -40,12 +40,12 @@
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "jsdom": "catalog:dev",
+    "happy-dom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-query": "^5.105.0",
     "react": "^19.3.0"
   },
   "raypx": {

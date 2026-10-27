@@ -479,7 +479,7 @@ export function createApiApp(options: ApiAppOptions) {
       }),
       grant: os.hosts.grant.handler(async ({ input, context }) => {
         if (!options.control) throw new ORPCError("SERVICE_UNAVAILABLE");
-        // Node replaces the private header from its socket; Workers supply the
+        // The server entry replaces the private header from its socket; Workers supply the
         // edge-owned CF header. Neither limit stores the bearer credential.
         const peer =
           (options.clientIpHeader ? context.headers.get(options.clientIpHeader) : null) ??

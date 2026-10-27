@@ -74,11 +74,7 @@ access cancel affected managed tasks; transient network loss does not. macOS GUI
 Quit preserves tasks, while explicit daemon stop and Windows GUI Quit cancel them.
 
 Node uses Nitro's WebSocket adapter and one relay process. Its first release
-requires a single API instance for relay connections. Cloudflare uses one Durable
-Object per account, so connections on separate Worker instances share routing.
-`exports.cloudflare.ts` exports `RelayRoom`, and Wrangler declares its binding and
-migration. This release uses the standard Durable Object WebSocket API; connected
-rooms incur duration charges. Hibernation is not implemented.
+requires a single API instance for relay connections.
 
 ## Commands and host authority
 
@@ -169,11 +165,10 @@ hooks are covered separately below.
 The default gate covers real loopback WebSockets, account isolation, one-time
 tickets, reconnect/replay, event deduplication, snapshots, revocation, competing
 host approvals and protocol subprocess fixtures. `bun run verify` also builds
-Node/Worker artifacts and checks relocated outputs.
+Node artifacts and checks relocated outputs.
 
 `bun run test postgres` checks real migrations and projection persistence across
-API instances. `bun run test postgres:cloudflare` checks workerd WebSockets with
-Durable Objects against both direct PostgreSQL and Hyperdrive. These commands
+API instances. These commands
 require an explicit isolated `*_test` database; never use an operator database.
 
 The browser relay gate uses `apps/api/tests/helpers/control-server.ts`, an isolated
@@ -214,3 +209,11 @@ hooks through a separate RequestBroker and observed projection. Away waiting is
 bounded and fails back to the terminal. Tool outputs and full terminal streams
 remain local. Content is plaintext private testing data, pending E2EE. See the
 [P1 guide](../development/terminal-host-p1.md) for capability, lifetime and test limits.
+
+Local terminal approvals use `approvals.local.*` and a profile-owned broker in
+`<profile>/terminal/`. Native alone exposes cloud terminal preferences through
+`host.terminal.*`; the renderer cannot call `approvals.local.watch`. The old
+private `observed.settings/configure/list/get/decide` methods are removed. Public
+HTTP `observed.list/get`, relay `observed.decide` and private `observed.remote`
+remain. See [ADR 0035](0035-local-owner-host.md) for channel qualification,
+independent withdrawal revisions and upgrade rules.

@@ -15,7 +15,7 @@ export default defineConfig({
   outputDir: "test-results/live-agents",
   use: {
     ...devices["Desktop Chrome"],
-    headless: false,
+    headless: true,
     locale: "en-US",
     actionTimeout: 30_000,
     navigationTimeout: 30_000,

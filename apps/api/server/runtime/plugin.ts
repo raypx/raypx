@@ -1,5 +1,5 @@
 import { definePlugin } from "nitro";
-import { closeApiRuntime, getApiRuntime } from "./node.js";
+import { closeApiRuntime, getApiRuntime } from "./server.js";
 
 export default definePlugin(async (nitroApp) => {
   await getApiRuntime();

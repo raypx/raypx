@@ -6,7 +6,7 @@ of runtime dependency graphs. Manifests are the only workspace inventory.
 
 ## Applications
 
-Web is a TanStack Start SSR application on Nitro node-server. Desktop uses the same DOM components in
+Web is a TanStack Start SSR application on Nitro's Bun server preset. Desktop uses the same DOM components in
 an Electrobun WebView, with a native bridge to its version-matched bundled CLI.
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
@@ -18,10 +18,11 @@ without automatically sending it. The CLI engine and persisted local state remai
 independent of browser sessions.
 Phones use Web; the Expo mobile app was removed on 2026-10-18 until native
 capabilities such as reliable push or share targets are needed. API uses Vite + Nitro + Hono + oRPC, deployed
-on Node 24.15.0 with the node-server preset. CLI compiles with Bun 1.4.4.
+on Bun 1.4.4 with the bun preset. CLI compiles with Bun 1.4.4.
 
-Web and API are separate services. Their default Node outputs and optional
-Cloudflare Worker outputs run outside the repository. See [dual deployment targets](../development/cloudflare.md).
+Web and API are separate services with Bun as their only deployment target.
+Their outputs run outside the repository.
+See [deployment](../development/deployment.md).
 API Nitro owns one listener and shutdown. One Hono Fetch app mounts /api/auth/_,
 /rpc/_ and /health; everything else is a JSON 404. Web renders on the server with
 device preferences from cookies/Accept-Language and the account from account.get,
@@ -85,7 +86,7 @@ source-map publication. This does not replace API/CLI structured logging.
 ## Logging
 
 API and CLI use the private `@raypx/logger` source workspace, which exposes evlog directly. Each
-composition root calls `initLogger` once per process (once per isolate on Workers)
+composition root calls `initLogger` once per process
 and creates event loggers with `createLogger`; event data is added through `set`
 and `error`, then completed with `emit`. Every drained event first passes
 `withEventPolicy` from `@raypx/logger/safe`: only the app's listed fields
@@ -93,7 +94,7 @@ and `error`, then completed with `emit`. Every drained event first passes
 sensitive values are replaced and errors keep only a name and code. API and CLI use
 the workspace's `/managed` drain for safe buffering, statistics and idempotent shutdown;
 the CLI and Node API write JSON lines to
-stderr, and Workers write them to the console. Applications own environment
+stderr. Applications own environment
 parsing, permitted fields, output and shutdown.
 
 Only explicitly allowed fields and safe error summaries reach the drain.
@@ -182,3 +183,11 @@ account-scoped device grants and Relay + Replay synchronization over outbound
 WebSockets. The shared tasks feature owns browser views; API routes commands and
 stores read projections. Desktop/CLI owns execution, approvals and terminal state,
 with a durable sequenced journal for reconnect replay and snapshot recovery.
+
+## Local Owner Host
+
+[ADR 0035](0035-local-owner-host.md) defines the current local-first ownership,
+cloud opt-in, terminal approval leases and migration boundary. Each profile owns
+one Bun/TypeScript execution Host. Local tasks, connectors and approvals require
+no account; cloud recovery does not block readiness. Rust remains an optional
+experiment with independent commands and CI.

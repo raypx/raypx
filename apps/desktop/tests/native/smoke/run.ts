@@ -4,18 +4,24 @@ import { join, resolve } from "node:path";
 import { SESSION_KEY_SERVICE, sessionKeyName } from "../../../native/cookies";
 import assert from "node:assert/strict";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
+import { nativeSmokeOptions } from "../../../scripts/native/smoke-options";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),
 ).json();
+const { phase, ui } = nativeSmokeOptions(process.argv.slice(2), process.env);
 
-async function run(phase: string, directory: string, restoredServer = false) {
+async function run(smokePhase: string, directory: string, restoredServer = false) {
   const child = Bun.spawn([process.execPath, "--bun", "electrobun", "dev"], {
     cwd: resolve(import.meta.dirname, "../../.."),
     env: {
       ...process.env,
+      RAYPX_HOME: join(directory, "raypx"),
+      CLAUDE_CONFIG_DIR: join(directory, "claude"),
+      CODEX_HOME: join(directory, "codex"),
       RAYPX_NATIVE_SMOKE: "1",
-      RAYPX_NATIVE_SMOKE_PHASE: phase,
+      RAYPX_NATIVE_SMOKE_UI: ui,
+      RAYPX_NATIVE_SMOKE_PHASE: smokePhase,
       RAYPX_NATIVE_SMOKE_DATA_DIR: directory,
       RAYPX_NATIVE_SMOKE_RESTORED_SERVER: String(restoredServer),
       // The packaged smoke cannot read the repository; it checks the CLI runtime against this pin.
@@ -63,18 +69,17 @@ async function run(phase: string, directory: string, restoredServer = false) {
         }
       }
     },
-    phase === "beta" ? 720_000 : 90_000,
+    smokePhase === "beta" ? 720_000 : 90_000,
   );
   try {
     const code = await child.exited;
     await Promise.all(readers);
-    if (code !== 0 || timedOut || !output.includes(`Native smoke ${phase} passed:`))
-      throw new Error(`Native smoke ${phase} did not report successful completion`);
+    if (code !== 0 || timedOut || !output.includes(`Native smoke ${smokePhase} passed:`))
+      throw new Error(`Native smoke ${smokePhase} did not report successful completion`);
   } finally {
     clearTimeout(timeout);
   }
 }
-const phase = process.argv[2] ?? process.env.RAYPX_NATIVE_SMOKE_PHASE ?? "shell";
 if (
   phase.startsWith("beta") &&
   (!process.env.RAYPX_NATIVE_SMOKE_DATA_DIR || process.env.RAYPX_LIVE_AGENTS !== "1")

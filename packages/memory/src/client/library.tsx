@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Checkbox } from "@raypx/ui/components/ui/checkbox";
 import { SelectField } from "@raypx/ui/select-field";
@@ -42,6 +42,7 @@ export function MemoryLibraryPage(props: Props) {
 }
 function Library({ client, projects: projectPort, usage, scope }: Props) {
   const t = useTranslations("memory"),
+    format = useFormatter(),
     c = useTranslations("common"),
     { confirm, dialog } = useConfirmation();
   const { isActive, request } = useMemoryRequests();
@@ -445,7 +446,7 @@ function Library({ client, projects: projectPort, usage, scope }: Props) {
                       ? "unarchived"
                       : version.reason,
                   )}{" "}
-                  · {new Date(version.updatedAt).toLocaleString()}
+                  · {format.dateTime(new Date(version.updatedAt), "timestamp")}
                 </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-3 pb-4">

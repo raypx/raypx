@@ -1,8 +1,7 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { ControlInfo } from "@raypx/contracts/terminal";
 const mocks = vi.hoisted(() => ({ request: vi.fn(), installed: false, conflict: false }));
 vi.mock("../../../../src/lib/desktop", () => ({ localRequest: mocks.request }));
 import { TerminalSettings } from "../../../../src/features/tasks/terminal-settings";
@@ -12,7 +11,8 @@ beforeEach(() => {
   mocks.conflict = false;
   mocks.request.mockImplementation(
     async (method: string, params?: { recoverModified?: boolean }) => {
-      if (method === "observed.settings") return { rootIds: [], away: false, waitSeconds: 300 };
+      if (method === "approvals.local.settings")
+        return { rootIds: [], away: false, waitSeconds: 300 };
       if (method === "connectors.status")
         return [
           {
@@ -39,11 +39,7 @@ afterEach(() => {
 function mount() {
   return render(
     <BrowserLanguageProvider>
-      <TerminalSettings
-        accountId="account"
-        info={{ authorized: true, persistent: true, terminalSupported: true } as ControlInfo}
-        projects={[]}
-      />
+      <TerminalSettings projects={[]} />
     </BrowserLanguageProvider>,
   );
 }

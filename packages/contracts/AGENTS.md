@@ -68,3 +68,8 @@ prompt for complete budget validation; the server derives the account from sessi
 
 `memory.delete` uses an expected revision and is available only for archived references.
 Its acknowledgement is idempotent; accepted task snapshots remain separate.
+
+Local terminal IPC uses account-free strict `approvals.local.*` schemas. Private
+`observed.settings/configure/list/get/decide` no longer exist. Public cloud HTTP
+`observed.list/get`, relay `observed.decide`, and private `observed.remote` remain.
+`host.terminal.*` is Native-only; it scopes cloud opt-in to origin/account.

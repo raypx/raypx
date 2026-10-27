@@ -147,12 +147,15 @@ export function createRuntime(
           case "host.refresh":
           case "host.revoked":
           case "host.session":
-          case "observed.configure":
-          case "observed.decide":
-          case "observed.get":
-          case "observed.list":
+          case "host.terminal.settings":
+          case "host.terminal.configure":
+          case "approvals.local.settings":
+          case "approvals.local.configure":
+          case "approvals.local.list":
+          case "approvals.local.get":
+          case "approvals.local.decide":
+          case "approvals.local.watch":
           case "observed.remote":
-          case "observed.settings":
           case "connectors.install":
           case "connectors.status":
           case "connectors.uninstall":
@@ -227,6 +230,7 @@ export function createRuntime(
               profile: options.profile ?? "default",
               scheduler: Boolean(options.scheduler),
               runtime: Bun.version,
+              features: { localTerminalApprovals: false },
             };
           case "roots.list":
             return state.roots();

@@ -11,7 +11,7 @@ import {
 } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { startTerminalHost, terminalFetch } from "../../src/runtime/terminal/host";
+import { terminalSmokeHost } from "../helpers/terminal-smoke";
 
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
   throw new Error("Set RAYPX_LIVE_AGENTS=1 to record real hook contracts");
@@ -34,12 +34,13 @@ await mkdir(join(directory, "project"));
 const project = await realpath(join(directory, "project"));
 const capture = join(directory, "hooks.jsonl");
 const timers = new Set<ReturnType<typeof setTimeout>>();
-const host = startTerminalHost({
-  directory: join(directory, "host"),
-  projects: [project],
-  away: scenario !== "fallback",
-  ...(scenario === "expired" ? { waitSeconds: 60 } : {}),
-  changed(request) {
+const host = await terminalSmokeHost(
+  join(directory, "host"),
+  project,
+  provider,
+  scenario !== "fallback",
+  scenario === "expired" ? 60 : 300,
+  (request) => {
     if (request.status !== "pending") return;
     if (scenario === "disconnected") {
       clearInterval(heartbeat);
@@ -52,27 +53,29 @@ const host = startTerminalHost({
         request.kind === "permission" &&
         request.title === "Bash" &&
         JSON.parse(request.body).command === "printf RAYPX_TERMINAL_P0 > permission-marker.txt";
-      host.broker.decide({
-        id: request.id,
-        epoch: request.epoch,
-        revision: request.revision,
-        receiptId: crypto.randomUUID(),
-        decision:
-          scenario === "allow" && allowed
-            ? { type: "allow" }
-            : { type: "deny", note: "P0 contract test declined this request" },
-      });
+      void host
+        .decide({
+          id: request.id,
+          epoch: request.epoch,
+          revision: request.revision,
+          receiptId: crypto.randomUUID(),
+          decision:
+            scenario === "allow" && allowed
+              ? { type: "allow" }
+              : { type: "deny", note: "P0 contract test declined this request" },
+        })
+        .catch(() => {});
     }, delay);
     timers.add(timer);
   },
-});
+);
 let heartbeat: ReturnType<typeof setInterval> | undefined;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let running: ReturnType<typeof Bun.spawn> | undefined;
 try {
-  await terminalFetch(host.endpoint, "owner", "/state");
+  await host.watch();
   heartbeat = setInterval(() => {
-    void terminalFetch(host.endpoint, "owner", "/state").catch(() => {});
+    void host.watch().catch(() => {});
   }, 2000);
   const recorder = resolve(import.meta.dirname, "../fixtures/terminal/capture-hook.ts");
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
@@ -98,10 +101,11 @@ try {
   const env: Record<string, string | undefined> = {
     ...process.env,
     PYTHONDONTWRITEBYTECODE: "1",
+    RAYPX_HOME: join(directory, "raypx"),
     RAYPX_P0_PROVIDER: provider,
     RAYPX_P0_PROJECT: project,
     RAYPX_P0_CAPTURE: capture,
-    RAYPX_P0_HOST: join(directory, "host"),
+    RAYPX_P0_HOST: host.discoveryDirectory,
     RAYPX_P0_DECISION: scenario,
   };
   let args: string[];
@@ -225,10 +229,9 @@ try {
   for (const approvalTimer of timers) clearTimeout(approvalTimer);
   await writeFile(
     join(directory, "broker-state.json"),
-    JSON.stringify(host.broker.list(), null, 2),
+    JSON.stringify(await host.list(), null, 2),
     { mode: 0o600 },
   );
-  await host.close();
   if (provider === "codex") await rm(join(directory, "codex", "auth.json"), { force: true });
   await writeFile(join(directory, "session.jsonl"), stdout, { mode: 0o600 });
   await writeFile(join(directory, "stderr.txt"), stderr, { mode: 0o600 });
@@ -238,6 +241,7 @@ try {
     platform: process.platform,
     transport: "private-unix-request-broker",
     cliMode: useTerminal ? "terminal" : "print",
+    hostMode: process.env.RAYPX_P0_HOST_MODE === "daemon" ? "daemon" : "standalone",
     recordedAt: new Date().toISOString(),
     exitCode: code,
     directory,
@@ -274,7 +278,7 @@ try {
     );
   else assert.equal(await Bun.file(join(project, "permission-marker.txt")).exists(), false);
   if (scenario === "disconnected" || scenario === "expired")
-    assert.equal(host.broker.list()[0]?.status, scenario === "expired" ? "expired" : "cancelled");
+    assert.equal((await host.list())[0]?.status, scenario === "expired" ? "expired" : "cancelled");
   console.info(`Real ${provider} PermissionRequest ${env.RAYPX_P0_DECISION} contract passed`);
 } finally {
   clearTimeout(timer);

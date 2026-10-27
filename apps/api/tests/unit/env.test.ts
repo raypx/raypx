@@ -13,13 +13,13 @@ it("enables object storage only with a complete S3 configuration", () => {
   expect(
     getApiEnvironment({
       NODE_ENV: "test",
-      S3_ENDPOINT: "https://account.r2.cloudflarestorage.com",
+      S3_ENDPOINT: "https://s3.example.test",
       S3_BUCKET: "raypx",
       S3_ACCESS_KEY_ID: "id",
       S3_SECRET_ACCESS_KEY: "secret",
     }).s3,
   ).toEqual({
-    endpoint: "https://account.r2.cloudflarestorage.com",
+    endpoint: "https://s3.example.test",
     region: "auto",
     bucket: "raypx",
     accessKeyId: "id",

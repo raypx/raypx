@@ -26,7 +26,7 @@ export function createCleanupJob({
   return () => runCleanupJob(db, logger, enabled, configuration);
 }
 
-// Transaction-scoped namespace shared by all Node processes and Worker isolates.
+// Transaction-scoped namespace shared by all API processes and Worker isolates.
 export const cleanupLock = [0x72797078, 1] as const;
 export interface CleanupResult {
   status: "completed" | "skipped" | "disabled";

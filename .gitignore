@@ -67,8 +67,7 @@ apps/*/.tanstack/
 e2e/test-results/
 e2e/playwright-report/
 
-# Local Workers artifacts and secrets.
-apps/*/.output-cloudflare/
+# Retired deployment caches and local secrets stay private.
 .wrangler/
 .dev.vars
 .dev.vars.*

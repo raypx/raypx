@@ -4,9 +4,9 @@ import { createObjectStorage } from "./storage.js";
 import type { ObjectStorage } from "./types.js";
 
 export interface S3StorageConfig {
-  /** Service origin without the bucket, e.g. `https://<account>.r2.cloudflarestorage.com`. */
+  /** Service origin without the bucket, e.g. `https://s3.example.com`. */
   endpoint: string;
-  /** Bucket region; `auto` for Cloudflare R2. */
+  /** Bucket region; provider-specific; defaults to `auto`. */
   region: string;
   bucket: string;
   accessKeyId: string;
@@ -14,8 +14,8 @@ export interface S3StorageConfig {
 }
 
 /**
- * S3-compatible storage (AWS S3, Cloudflare R2, MinIO) through fetch, so the same code
- * runs on Node and Workers. Requests use path-style URLs: `<endpoint>/<bucket>/<key>`.
+ * S3-compatible storage (AWS S3 and compatible providers) through fetch, so the same code
+ * runs on Node. Requests use path-style URLs: `<endpoint>/<bucket>/<key>`.
  */
 export function createS3Storage(config: S3StorageConfig): ObjectStorage {
   const base = `${config.endpoint.replace(/\/$/, "")}/${encodeURIComponent(config.bucket)}`;
@@ -26,7 +26,7 @@ export function createS3Storage(config: S3StorageConfig): ObjectStorage {
     secretAccessKey: config.secretAccessKey,
   });
   return createObjectStorage({
-    // Passing the library avoids unstorage's runtime import, which Workers cannot resolve.
+    // Passing the library avoids unstorage's runtime import, instead of relying on its dynamic import.
     driver: s3Driver({ ...config, lib: aws4fetch }),
     async signer(key, { method, expiresIn, contentType }) {
       const url = new URL(`${base}/${key.split("/").map(encodeURIComponent).join("/")}`);

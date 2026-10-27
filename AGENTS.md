@@ -30,19 +30,18 @@ The accepted foundation design supersedes documents in docs/history.
 ## Toolchain
 
 - Bun 1.4.4 owns install, lockfile, scripts, tests and standalone CLI compilation.
-- `.nvmrc` pins Node and root `packageManager` pins Bun. Tooling reads them; `raypx-dev policy`
-  rejects drift in engines, Dockerfiles, CI and documented versions.
-- Node runs the Nitro Web and API services: scripts call `bun vp` (never `bun --bun vp`)
-  for dev/build/preview, and the default production target uses Node 24.15.0.
-  Explicit `build:cloudflare` tasks use Nitro's cloudflare_module preset and a separate
-  `.output-cloudflare` directory. Runtime adapters share the same API and auth logic.
+- Bun is the only JavaScript runtime. Root `packageManager` pins it; tooling reads that pin and
+  `raypx-dev policy` rejects drift in devEngines, Dockerfiles, CI and documented versions,
+  and any reintroduced Node pin (`.nvmrc`, `engines.node`, `actions/setup-node`, `node:` images).
+- Bun runs the Nitro Web and API services: scripts call `bun --bun vp` for dev/build/preview,
+  the Nitro `bun` preset builds them and `bun .output/server/index.mjs` starts them.
   Desktop uses Electrobun's pinned host.
 - VP owns the sole task graph/cache. Lightweight `vite.config.ts` files register
   `task:*` definitions through `@raypx/tooling/tasks`; application plugins live in
   `vite.app.config.ts`. Cache actual file inputs, explicit build outputs and
   outcome-affecting environment variables. Preserve inherited environment for leaf commands.
   mise is the recommended runtime manager; mise.toml
-  only enables reading .nvmrc/package.json and never pins `[tools]`. There is no Nix shell.
+  only enables reading package.json and never pins `[tools]`. There is no Nix shell.
 - Use the default Bun catalog for runtime libraries and catalog:dev for build/test tools.
   Keep external versions there and use workspace:* for internal dependencies.
 - @raypx-kit packages remain independently released external dependencies.

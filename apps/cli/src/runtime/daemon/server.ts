@@ -6,6 +6,7 @@ import { acquireLock, profilePath } from "../state";
 import { errorPayload, LocalError } from "../errors";
 import { endpointFile, readDaemon, type DaemonEndpoint, type ProfileOptions } from "./endpoint";
 import { DaemonControl } from "./control";
+import { LocalTerminalControl } from "./terminal-control";
 import type { HostVault } from "./vault";
 import manifest from "../../../package.json";
 import type { AgentProvider } from "@raypx/contracts/tasks";
@@ -49,12 +50,14 @@ export async function startDaemon(
   };
   const clients = new Map<string, Client>(),
     encoder = new TextEncoder();
+  let terminal: LocalTerminalControl | undefined;
   let runtime: LocalRuntime | undefined,
     control: DaemonControl | undefined,
     server: ReturnType<typeof Bun.serve> | undefined;
   let stopping = false;
   const backgroundFailure = () =>
     console.error(JSON.stringify({ operation: "daemon.background", code: "BACKGROUND_FAILED" }));
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
   let closing: Promise<void> | undefined,
     resolveStopped = () => {};
   const stopped = new Promise<void>((resolve) => {
@@ -64,6 +67,7 @@ export async function startDaemon(
     const client = clients.get(id);
     clients.delete(id);
     client?.abort.abort();
+    terminal?.releaseClient(id);
     for (const child of client?.children ?? []) runtime?.processes.cancel(child);
     try {
       client?.stream.close();
@@ -97,6 +101,7 @@ export async function startDaemon(
   };
   const close = () => {
     stopping = true;
+    clearInterval(heartbeat);
     return (closing ??= (async () => {
       try {
         for (const id of clients.keys()) releaseClient(id);
@@ -104,7 +109,11 @@ export async function startDaemon(
           await control?.close();
         } finally {
           try {
-            await runtime?.close();
+            try {
+              await terminal?.close();
+            } finally {
+              await runtime?.close();
+            }
           } finally {
             await server?.stop(true);
           }
@@ -125,7 +134,8 @@ export async function startDaemon(
   try {
     refreshStableCli();
     runtime = createRuntime({ ...options, scheduler: true, exclusiveOwner: true, emit });
-    control = new DaemonControl(directory, runtime, emit, options.vault);
+    terminal = new LocalTerminalControl(directory, runtime, emit);
+    control = new DaemonControl(directory, runtime, emit, terminal, options.vault);
     server = Bun.serve({
       unix: endpoint.socket,
       maxRequestBodySize: 8 * 1024 * 1024,
@@ -203,15 +213,20 @@ export async function startDaemon(
             return Response.json({ version: 1, id: requestId, result });
           }
           let result =
-            input.method.startsWith("host.") ||
-            input.method.startsWith("observed.") ||
-            input.method.startsWith("connectors.")
-              ? await control!.request(input.method, input.params)
-              : await runtime!.request(input.method, input.params);
+            input.method.startsWith("approvals.local.") || input.method.startsWith("connectors.")
+              ? await terminal!.request(input.method, input.params, id)
+              : input.method.startsWith("host.") || input.method === "observed.remote"
+                ? await control!.request(input.method, input.params)
+                : await runtime!.request(input.method, input.params);
           if (input.method === "runtime.info")
-            result = { ...(result as Record<string, unknown>), owner: "daemon", hostProtocol: 1 };
+            result = {
+              ...(result as Record<string, unknown>),
+              owner: "daemon",
+              hostProtocol: 1,
+              features: { localTerminalApprovals: terminal!.supported },
+            };
           if (input.method === "agents.configure" || input.method === "roots.remove")
-            await control!.projectsChanged();
+            terminal!.projectsChanged();
           if (
             input.method === "terminal.open" &&
             result &&
@@ -231,13 +246,28 @@ export async function startDaemon(
         }
       },
     });
+    // Keep idle event transports alive without granting or renewing approval leases.
+    heartbeat = setInterval(() => {
+      for (const [id, client] of clients) {
+        if ((client.stream.desiredSize ?? 0) < 0) {
+          releaseClient(id);
+          continue;
+        }
+        try {
+          client.stream.enqueue(encoder.encode("\n"));
+        } catch {
+          releaseClient(id);
+        }
+      }
+    }, 5000);
+    heartbeat.unref();
     chmodSync(endpoint.socket, 0o600);
     const file = endpointFile(directory),
       temporary = `${file}.${endpoint.epoch}.tmp`;
     writeFileSync(temporary, JSON.stringify(endpoint), { flag: "wx", mode: 0o600 });
     renameSync(temporary, file);
-    await control.restore();
-    return { endpoint, runtime, control, emit, close, stopped };
+    void control.restore().catch(backgroundFailure);
+    return { endpoint, runtime, control, terminal, emit, close, stopped };
   } catch (error) {
     await close();
     throw error;

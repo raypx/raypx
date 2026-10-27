@@ -157,7 +157,7 @@ it.skipIf(process.platform === "win32")(
       const noAuth = await fetch("http://localhost/state", { unix: host.endpoint.socket });
       expect(noAuth.status).toBe(403);
       expect((await terminalFetch(host.endpoint, "hook", "/state")).status).toBe(404);
-      await terminalFetch(host.endpoint, "owner", "/state");
+      await terminalFetch(host.endpoint, "owner", "/watch", { active: true });
       const pending = terminalFetch(host.endpoint, "hook", "/hook", {
         provider: "codex",
         input: {
@@ -224,11 +224,11 @@ it.skipIf(process.platform === "win32")(
       expect(await (await terminalFetch(host.endpoint, "hook", "/hook", input)).json()).toEqual({
         fallback: true,
       });
-      await terminalFetch(host.endpoint, "owner", "/away", { enabled: true });
+      host.configure({ projects: [project], away: true, waitSeconds: 300 });
       expect(await (await terminalFetch(host.endpoint, "hook", "/hook", input)).json()).toEqual({
         fallback: true,
       });
-      await terminalFetch(host.endpoint, "owner", "/state");
+      await terminalFetch(host.endpoint, "owner", "/watch", { active: true });
       expect(
         await (
           await terminalFetch(host.endpoint, "hook", "/hook", {

@@ -3,7 +3,7 @@
 ## Users
 
 People who need a consistent account and preferences across Web (including
-phone browsers) and Desktop, with local files, recurring tasks and external tools on their own desktop.
+phone browsers) and Desktop, with local files, recurring tasks and external tools on their own desktop. Each local profile has one Owner and one execution Host; cloud accounts are optional.
 
 ## Product purpose
 
@@ -35,14 +35,25 @@ actions and interactive terminals through the bundled Raypx CLI.
 ## Scope
 
 Email/password accounts, verification/reset, theme, English/Chinese, local files,
-Cron automations and terminals. No old projects, tasks, research, AI providers,
-cloud file delivery or general role management. Verified administrators can manage
+Cron automations, terminals and local/opted-in remote Claude/Codex tasks. Retired business
+projects, research, cloud file delivery and general role management stay outside this scope. Verified administrators can manage
 site identity, registration and background cleanup in Web. Remote Agent tasks and approvals synchronize
 between Web and opted-in hosts. macOS adds explicitly installed Claude/Codex
-terminal hooks: per-project Away mode forwards validated Bash approvals to Web or
-Desktop, and timeout/unavailability returns control to the terminal. Terminal
+terminal hooks: per-project Away mode forwards validated Bash approvals to the local
+Desktop without login. The visible, unminimized Desktop maintains a 15-second
+approval lease; hidden/minimized/Quit releases it. Cloud terminal sharing requires
+a separate explicit project scope within the local scope. A qualified cloud channel
+can continue while Desktop is closed. Timeout/unavailability returns control to
+the terminal. This release does not support simultaneous native-terminal answers. Terminal
 outputs and full session streams are not synchronized. This is a plaintext private
 test feature until content protection is complete. Desktop also runs private local Agent
 tasks directly through its bundled CLI. These tasks never upload to the account,
 even when remote access is enabled. The local setup guide authorizes a project,
 checks installed agent capabilities and opens the task editor without starting work.
+
+The implementation is Bun + TypeScript. Rust is an optional independent experiment;
+ordinary development and verification require no Rust installation. macOS is the
+product acceptance target. Windows keeps its foreground owner; Linux keeps the
+existing CLI implementation without a claim of complete product acceptance.
+Configuration sync, local Web, standalone Server, native mobile, team ownership and
+additional providers remain separate deliveries. Signing in enables none of them.

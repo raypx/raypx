@@ -4,10 +4,10 @@ Canonical source: [getting started](../../../docs/development/getting-started.md
 
 ## Toolchain
 
-Bun 1.4.4 (root `packageManager`) and Node 24.15.0 (`.nvmrc`). mise reads both pins;
+Bun 1.4.4 (root `packageManager`) is the only JavaScript runtime. mise reads that pin;
 `mise.toml` never lists `[tools]`. Without shell activation use `mise exec -- <cmd>`.
-`bun run doctor` confirms the runtimes. Node runs Web and API (`bun vp`, never
-`bun --bun vp`, for their dev/build/preview); tests run through Bun.
+`bun run doctor` confirms the runtime. Bun runs Web and API (`bun --bun vp` for their
+dev/build/preview, `bun .output/server/index.mjs` in production) and the tests.
 
 `bun install` runs the root `prepare` script, which installs the Vite+ pre-commit
 hook (`vp staged`: oxfmt and oxlint fixes on staged files). `VP_GIT_HOOKS=0` skips it.
@@ -22,7 +22,7 @@ win. Only development/build/env commands load these files; tests pass explicit v
 | `DATABASE_URL`                                                                      | API, migrations | Compose database on port 5433                             |
 | `AUTH_URL`, `AUTH_SECRET`, `ALLOWED_ORIGINS`                                        | API             | Better Auth origin and trust list                         |
 | `AUTH_DOMAIN`                                                                       | API             | Parent domain when Web and API are sibling hosts          |
-| `REDIS_URL`                                                                         | API (Node)      | Optional Redis/Valkey for sessions, rate limits, cache    |
+| `REDIS_URL`                                                                         | API             | Optional Redis/Valkey for sessions, rate limits, cache    |
 | `VITE_API_URL`                                                                      | Web, Desktop    | Baked at build time for browser and server                |
 | `VITE_WEB_URL`                                                                      | Desktop         | Web origin for verification and reset links               |
 | `RESEND_API_KEY`, `MAIL_FROM`                                                       | API             | Optional; without them mail returns `MAIL_NOT_CONFIGURED` |
@@ -40,9 +40,3 @@ win. Only development/build/env commands load these files; tests pass explicit v
 `bun run build:cli` produces `apps/cli/dist/raypx`; `bun run --cwd apps/cli dev --help`
 runs from source. `bun run dev:desktop` starts the renderer (1420) and native shell;
 `bun run package:desktop` packages Desktop with its version-matched CLI.
-
-## Cloudflare
-
-Optional Worker outputs: `bun run build:web:cloudflare` / `build:api:cloudflare`
-(written to `.output-cloudflare`), then the matching `preview:*` and `deploy:*`
-scripts. See [dual deployment targets](../../../docs/development/cloudflare.md).

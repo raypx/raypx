@@ -10,12 +10,25 @@ translation are `@raypx-kit/intl` features configured here.
 `IntlProvider` receives a supported `locale` and one current `messages` catalog.
 `useTranslations(namespace)` preserves catalog key and ICU argument types;
 `useLocale`, `useFormatter`, `useNow`, `useTimeZone` and `useMessages` read the mounted
-provider. The product default time zone is UTC. Applications may override it.
+provider. Server and hydration renders use UTC; after mount `BrowserLanguageProvider`
+switches formatting to the device time zone. Use the `timestamp` dateTime preset for
+absolute times instead of `toLocaleString()` or ad hoc `Intl` formatters.
 
 `useLanguagePreference()` is the only language mutation API. Its `preference` is
 `system`, `en` or `zh`; the active locale is derived from the full ordered system
 language list. Selecting a fixed language records that choice even if it is already
-the currently resolved language. Catalogs are static and switches require no loading.
+the currently resolved language.
+
+## Catalog delivery
+
+`/browser` imports catalogs through `#catalogs`, which bundles every language by
+default, so switches never load. The `i18nCatalogs({ catalogs: "lazy" })` Vite plugin
+from `/vite` switches only the client environment to the default catalog plus one
+chunk per other language; server environments stay static. While a newly selected
+language loads, the provider keeps rendering the previous catalog, and only a first
+render with no ready catalog suspends. Lazy web hydration first awaits
+`preloadCatalog(document.documentElement.lang)` so the client matches the HTML.
+Web uses lazy delivery; Desktop reads local files and stays static.
 
 ## Browser and desktop
 

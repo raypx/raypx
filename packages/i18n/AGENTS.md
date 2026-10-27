@@ -14,7 +14,7 @@ Translation and formatting use the independently released `@raypx-kit/intl` faca
 - `browser`: browser language provider, read-only Intl hooks and device persistence.
   Language controls belong to Blocks, composed from UI primitives and these hooks.
   This package does not depend on UI or an icon library.
-- `client`: controlled IntlProvider and browser language composition.
+- `vite`: build plugin choosing static or lazy browser catalog delivery.
 - `testing`: test-only catalog checks.
 
 ## Ownership
@@ -29,6 +29,8 @@ catalogs into them. Change that behavior in Raypx Kit, not here.
 
 - The root entry must never transitively import browser APIs, filesystems
   or catalog tooling. Use static imports, with no Vite-specific catalog discovery.
+- `#catalogs` resolves to the static catalogs unless the `/vite` plugin selects lazy
+  delivery for a client environment. Without the plugin every consumer stays static.
 - Device preference supports system/en/zh; absent or invalid values follow system.
 - Browser follows `languagechange` and cross-window storage events.
 - `useLanguagePreference` is the only language mutation entry. Effective locale is
@@ -48,7 +50,7 @@ See [foundation architecture](../../docs/architecture/0034-extensible-foundation
 ## Verification
 
 Pure helpers and streamed SSR live in `tests/node/` and use the Node test project;
-`tests/browser/` uses the separate jsdom project for browser/provider hydration
+`tests/browser/` uses the separate happy-dom project for browser/provider hydration
 so React renderers do not share module context. Provider component tests live
 under `tests/browser/component/` for directory-based task selection.
 

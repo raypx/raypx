@@ -148,7 +148,7 @@ export function stableCliStatus(binary = stableCliPath()) {
   }
 }
 export function refreshStableCli() {
-  if (/(?:^|[/\\])bun(?:\.exe)?$/.test(process.execPath)) return;
+  if (/(?:^|[/\\])bun(?:\.native)?(?:\.exe)?$/.test(process.execPath)) return;
   const metadata = join(dirname(stableCliPath()), "installation.json");
   if (!existsSync(metadata)) return;
   const status = stableCliStatus();
@@ -193,7 +193,7 @@ export function installStableCli(recoverModified = false) {
       "UNSUPPORTED_PLATFORM",
       "Stable host installation currently supports macOS",
     );
-  if (/(?:^|[/\\])bun(?:\.exe)?$/.test(process.execPath))
+  if (/(?:^|[/\\])bun(?:\.native)?(?:\.exe)?$/.test(process.execPath))
     throw new LocalError(
       "COMPILED_CLI_REQUIRED",
       "Build Raypx before installing terminal connectors",

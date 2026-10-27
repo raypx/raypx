@@ -4,7 +4,7 @@ export default workspaceTestProjects([
   { name: "server", include: ["tests/node/**/*.{test,spec}.{ts,tsx}"] },
   {
     name: "browser",
-    environment: "jsdom",
+    environment: "happy-dom",
     include: ["tests/browser/**/*.{test,spec}.{ts,tsx}"],
   },
 ]);

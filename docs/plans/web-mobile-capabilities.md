@@ -187,10 +187,10 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 
 ### 配置与浏览器跨域接入
 
-- 在 `env.ts` 声明 `STORAGE_DRIVER`（fs/s3，开发默认 fs）、`STORAGE_FS_ROOT`、`STORAGE_SIGNING_SECRET`（至少 32 字节）、`STORAGE_PUBLIC_BASE_URL`、S3 endpoint/bucket/region/access key/secret。fs 签名基址必须与挂载的 `/files/` 对应；生产要求 s3，默认按私有 Cloudflare R2 桶部署。
+- 在 `env.ts` 声明 `STORAGE_DRIVER`（fs/s3，开发默认 fs）、`STORAGE_FS_ROOT`、`STORAGE_SIGNING_SECRET`（至少 32 字节）、`STORAGE_PUBLIC_BASE_URL`、S3 endpoint/bucket/region/access key/secret。fs 签名基址必须与挂载的 `/files/` 对应；生产要求 s3，默认按私有 S3 兼容存储 桶部署。
 - runtime 创建 storage，单文件上限统一为 **20,000,000 字节（20 MB）**，允许图片、PDF、纯文本；签名 PUT/GET 默认有效期均为 5 分钟。
 - fs handler 接入现有 Hono app，精确允许 Web 来源及 PUT/GET/HEAD/OPTIONS 和实际签名请求头；现有 CORS 没有 PUT，必须一起修改。不要新增第二个 listener。
-- R2 文档给出桶 CORS：精确来源、PUT/GET/HEAD、Content-Type 和实际使用的签名头，需要读取 ETag 时显式 expose。生产 HTTPS，用户文件不设公共访问；预签名请求无需携带账户 cookie。依据：[R2 CORS 文档](https://developers.cloudflare.com/r2/buckets/cors/)。
+- 存储服务文档给出桶 CORS：精确来源、PUT/GET/HEAD、Content-Type 和实际使用的签名头，需要读取 ETag 时显式 expose。生产 HTTPS，用户文件不设公共访问；预签名请求无需携带账户 cookie。接口约束见[对象存储](../development/object-storage.md)。
 
 ### 对象状态、契约与配额
 
@@ -273,7 +273,7 @@ Expo 原生 App 已于 2026-10-18 移除（见 `docs/architecture/README.md`）�
 | 定义/历史同步  | 定义分块收齐后原子替换；运行分批幂等 upsert，每任务最近 20 条 |
 | 隐私字段       | 不上传 output、action、命令参数或文件路径                     |
 | 设备身份       | installationId 持久化；账户绑定独立，撤销后显式重新关联       |
-| 生产存储       | 私有 Cloudflare R2，staging 确认后复制到唯一 final 对象       |
+| 生产存储       | 私有 S3 兼容存储，staging 确认后复制到唯一 final 对象         |
 | 单文件上限     | 20 MB，即 20,000,000 字节，所有层一致                         |
 | 账户逻辑配额   | 1 GB、1,000 个文件/预留槽位、10 个未完成上传                  |
 | 文件类型       | 图片、PDF、纯文本                                             |

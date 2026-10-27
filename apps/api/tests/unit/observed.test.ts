@@ -100,7 +100,7 @@ it("cancels old pending requests when the host epoch changes and rejects revisio
     }),
   ).rejects.toThrow("EVENT_CONFLICT");
   const next = observed(host.input.projectId);
-  await service.observed(host.actor, next.frame);
+  await service.observed(host.actor, { ...next.frame, requests: [], sessions: [] });
   expect((await service.getObserved(host.auth.user.id, f.request.id)).status).toBe("cancelled");
   await service.revoke(host.auth.user.id, host.grant);
   expect((await service.listObserved(host.auth.user.id)).requests).toEqual([]);

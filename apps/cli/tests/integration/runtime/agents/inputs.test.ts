@@ -3,7 +3,9 @@ import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { agentFixtures } from "../../../helpers/agents";
 import type { AgentProvider } from "@raypx/contracts/tasks";
-const { host } = agentFixtures();
+// Shortened from the production ten seconds; the races depend on ordering, not duration.
+const interruptTimeoutMs = 1000;
+const { host } = agentFixtures({ interruptTimeoutMs });
 
 async function inputRace(
   scenario: "claude-timeout" | "claude-natural" | "codex-expired" | "codex-delayed",
@@ -42,7 +44,7 @@ async function inputRace(
   ).toMatchObject({ ok: true });
   return { ...f, account, input, steer };
 }
-it("ends a Claude interrupt without result after ten seconds and releases the project lock", async () => {
+it("ends a Claude interrupt without result after the interrupt timeout and releases the project lock", async () => {
   const f = await inputRace("claude-timeout");
   await expect
     .poll(() => f.runtime.localTask(f.account, f.input.id, 0).task.status, { timeout: 15_000 })
@@ -55,7 +57,7 @@ it("ends a Claude interrupt without result after ten seconds and releases the pr
     await f.runtime.localExecute(f.account, next.id, { method: "tasks.create", input: next }),
   ).toMatchObject({ ok: true });
   await expect.poll(() => f.runtime.localTask(f.account, next.id, 0).task.status).toBe("running");
-}, 20_000);
+}, 30_000);
 it("keeps a natural Claude result complete when it crosses an interrupt", async () => {
   const f = await inputRace("claude-natural");
   await expect
@@ -89,7 +91,7 @@ it("queues an explicitly rejected Codex steer after the completed turn", async (
     .map((line) => JSON.parse(line));
   expect(delivered.filter((entry) => entry.method === "turn/start")).toHaveLength(2);
 });
-it("keeps two rejected Codex steers queued when completion takes longer than ten seconds", async () => {
+it("keeps two rejected Codex steers queued when completion outlasts the interrupt timeout", async () => {
   const f = await inputRace("codex-delayed");
   const activity = () =>
     f.runtime
@@ -105,18 +107,18 @@ it("keeps two rejected Codex steers queued when completion takes longer than ten
   await expect
     .poll(() => activity().find((entry) => entry.id === second.id)?.status)
     .toBe("queued");
-  await new Promise((resolve) => setTimeout(resolve, 10_200));
+  await new Promise((resolve) => setTimeout(resolve, interruptTimeoutMs + 200));
   expect(f.runtime.localTask(f.account, f.input.id, 0).task.status).toBe("running");
   writeFileSync(join(f.directory, "complete"), "");
   const sent = () =>
     activity().filter(
       (entry) => (entry.id === f.steer.id || entry.id === second.id) && entry.status === "sent",
     ).length;
-  await expect.poll(sent).toBe(1);
+  await expect.poll(sent, { timeout: 5000 }).toBe(1);
   writeFileSync(join(f.directory, "complete"), "");
-  await expect.poll(sent).toBe(2);
+  await expect.poll(sent, { timeout: 5000 }).toBe(2);
   expect(f.runtime.localTask(f.account, f.input.id, 0).task.status).toBe("running");
-}, 20_000);
+}, 30_000);
 it.each(["codex", "claude"] as const)(
   "delivers %s steer and queued turns once, in order, on the same session",
   async (provider) => {

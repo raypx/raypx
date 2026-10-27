@@ -144,7 +144,7 @@ it("keeps at most 4096 recent full commands after ordinary acceptance", async ()
   const owner = await fixture(),
     sample = command();
   await connection.db.execute(sql`insert into ${controlCommand} (id,user_id,device_id,body)
-    select 'count-'||lpad(n::text,5,'0'),${owner},${deviceId},${JSON.stringify(sample)}::jsonb || jsonb_build_object('id','count-'||lpad(n::text,5,'0')) from generate_series(1,4097)n`);
+    select 'count-'||lpad(n::text,5,'0'),${owner},${deviceId},${sample}::jsonb || jsonb_build_object('id','count-'||lpad(n::text,5,'0')) from generate_series(1,4097)n`);
   await repository.transaction(owner, (tx) => tx.pruneCommands(now));
   expect((await window(owner)).count).toBe(4096);
   expect(await body(owner, "count-00001")).toMatchObject({ compacted: true, requestHash: hash });
@@ -157,7 +157,7 @@ it("bounds real UTF-8 JSONB replay bytes as well as row count", async () => {
   const owner = await fixture(),
     sample = command(now.toISOString(), "界".repeat(6000));
   await connection.db.execute(sql`insert into ${controlCommand} (id,user_id,device_id,body)
-    select 'bytes-'||n,${owner},${deviceId},${JSON.stringify(sample)}::jsonb || jsonb_build_object('id','bytes-'||n) from generate_series(1,500)n`);
+    select 'bytes-'||n,${owner},${deviceId},${sample}::jsonb || jsonb_build_object('id','bytes-'||n) from generate_series(1,500)n`);
   expect((await window(owner)).bytes).toBeGreaterThan(8_388_608);
   await repository.transaction(owner, (tx) => tx.pruneCommands(now));
   const retained = await window(owner);
@@ -169,7 +169,7 @@ it("drains legacy overflow in at most 1000 body changes per call, keeping each c
   const owner = await fixture(),
     sample = command(expired);
   await connection.db.execute(sql`insert into ${controlCommand} (id,user_id,device_id,body)
-    select 'legacy-'||n,${owner},${deviceId},${JSON.stringify(sample)}::jsonb || jsonb_build_object('id','legacy-'||n) from generate_series(1,1001)n`);
+    select 'legacy-'||n,${owner},${deviceId},${sample}::jsonb || jsonb_build_object('id','legacy-'||n) from generate_series(1,1001)n`);
   const [first] = await connection.db.execute<{ count: number }>(contextCommandPrune(now, owner));
   expect(first!.count).toBe(1000);
   expect((await window(owner)).count).toBe(1);
@@ -188,7 +188,7 @@ it("background cleanup counts only compacted old bodies and leaves active replay
     sample = command(expired),
     active = command();
   await connection.db.execute(sql`insert into ${controlCommand} (id,user_id,device_id,body)
-    select 'background-'||n,${owner},${deviceId},${JSON.stringify(sample)}::jsonb || jsonb_build_object('id','background-'||n) from generate_series(1,1001)n`);
+    select 'background-'||n,${owner},${deviceId},${sample}::jsonb || jsonb_build_object('id','background-'||n) from generate_series(1,1001)n`);
   await save(owner, active);
   expect((await cleanupExpired(connection.db)).contextCommands).toBe(1000);
   expect((await cleanupExpired(connection.db)).contextCommands).toBe(1);
@@ -207,7 +207,7 @@ it("uses partial indexes instead of scanning thousands of compact receipts", asy
   await connection.db.execute(sql`analyze ${controlCommand}`);
   const plan = JSON.stringify(
     (
-      await connection.db.execute(
+      await connection.db.execute<{ "QUERY PLAN": unknown }>(
         sql`explain (analyze,format json) ${contextCommandPrune(now, owner)}`,
       )
     )[0]?.["QUERY PLAN"],
@@ -218,7 +218,7 @@ it("uses partial indexes instead of scanning thousands of compact receipts", asy
   await connection.db.execute(sql`analyze ${controlCommand}`);
   const background = JSON.stringify(
     (
-      await connection.db.execute(
+      await connection.db.execute<{ "QUERY PLAN": unknown }>(
         sql`explain (analyze,format json) ${contextCommandPrune(sql`transaction_timestamp()`)}`,
       )
     )[0]?.["QUERY PLAN"],

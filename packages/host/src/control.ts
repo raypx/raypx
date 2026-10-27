@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { hostname } from "node:os";
 import { RelayConnection, relayUrl, type RelaySocketFactory } from "@raypx/client";
@@ -16,14 +16,7 @@ import { serverOrigin } from "./origin.js";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 export type { ControlInfo } from "@raypx/contracts/terminal";
 
-interface Binding {
-  deviceId: string;
-  epoch: number;
-}
-interface Settings {
-  installationId: string;
-  accounts: Record<string, { enabled: boolean; binding?: Binding; pendingRevoke?: Binding }>;
-}
+import { readRemoteControlSettings, type Settings, type Binding } from "./settings.js";
 export class RemoteControl {
   private readonly settings: Settings;
   private storageUnavailable = false;
@@ -98,53 +91,19 @@ export class RemoteControl {
         ) => void,
       ) => Promise<void>;
       observedAck?: (epoch: string, revision: number) => void;
+      observedReset?: () => void;
+      connected?: (connected: boolean) => void;
+      /** Upper bound on waiting for in-flight commands before a renewed grant reconnects. */
+      drainTimeoutMs?: number;
     } = {},
   ) {
     this.protocolVersion = options.protocolVersion ?? 2;
     this.settings = { installationId: crypto.randomUUID(), accounts: {} };
     try {
       mkdirSync(directory, { recursive: true });
-      const path = join(directory, "remote-control.json");
-      if (existsSync(path)) {
-        const raw = readFileSync(path, "utf8");
-        if (raw.length > 64 * 1024) throw new Error("Settings exceed limit");
-        const value: unknown = JSON.parse(raw);
-        if (!value || typeof value !== "object" || Array.isArray(value))
-          throw new Error("Invalid settings");
-        const data = value as Record<string, unknown>;
-        if (
-          typeof data.installationId !== "string" ||
-          !/^[a-f0-9-]{36}$/.test(data.installationId) ||
-          !data.accounts ||
-          typeof data.accounts !== "object" ||
-          Array.isArray(data.accounts)
-        )
-          throw new Error("Invalid settings");
-        const accounts: Settings["accounts"] = {};
-        for (const [id, rawAccount] of Object.entries(data.accounts)) {
-          if (!rawAccount || typeof rawAccount !== "object" || Array.isArray(rawAccount))
-            throw new Error("Invalid account settings");
-          const item = rawAccount as Record<string, unknown>;
-          if (typeof item.enabled !== "boolean") throw new Error("Invalid account settings");
-          const binding = (rawBinding: unknown): Binding => {
-            if (!rawBinding || typeof rawBinding !== "object") throw new Error("Invalid binding");
-            const candidate = rawBinding as Record<string, unknown>;
-            if (
-              typeof candidate.deviceId !== "string" ||
-              !Number.isSafeInteger(candidate.epoch) ||
-              Number(candidate.epoch) < 1
-            )
-              throw new Error("Invalid binding");
-            return { deviceId: candidate.deviceId, epoch: Number(candidate.epoch) };
-          };
-          accounts[id] = {
-            enabled: item.enabled,
-            ...(item.binding ? { binding: binding(item.binding) } : {}),
-            ...(item.pendingRevoke ? { pendingRevoke: binding(item.pendingRevoke) } : {}),
-          };
-        }
-        this.settings = { installationId: data.installationId, accounts };
-      } else this.save();
+      const saved = readRemoteControlSettings(directory);
+      if (saved) this.settings = saved;
+      else this.save();
     } catch {
       this.storageUnavailable = true;
     }
@@ -229,6 +188,7 @@ export class RemoteControl {
     this.generation++;
     this.connection?.stop();
     this.connection = undefined;
+    if (this.connected) this.options.connected?.(false);
     this.connected = false;
     this.ready = false;
     this.snapshotRequests.clear();
@@ -257,6 +217,7 @@ export class RemoteControl {
         if (generation !== this.generation) return;
         if (!connected) {
           this.ready = false;
+          if (this.connected) this.options.connected?.(false);
           this.connected = false;
           this.error = code ?? "NETWORK_UNAVAILABLE";
           this.snapshotRequests.clear();
@@ -347,7 +308,7 @@ export class RemoteControl {
           await Promise.race([
             Promise.allSettled(this.commands),
             new Promise<void>((resolve) => {
-              timeout = setTimeout(resolve, 10_000);
+              timeout = setTimeout(resolve, this.options.drainTimeoutMs ?? 10_000);
             }),
           ]);
         } finally {
@@ -391,6 +352,7 @@ export class RemoteControl {
     else await this.detach();
   }
   private async message(frame: RelayServerFrame, generation: number) {
+    if (generation !== this.generation) return;
     const binding = this.binding;
     if (!binding) return;
     if (frame.type === "observed_ack") {
@@ -425,6 +387,7 @@ export class RemoteControl {
           throw new Error("Snapshot request limit");
         this.snapshotRequests.add(frame.syncId);
       } else {
+        this.options.observedReset?.();
         this.cursor = frame.sequence;
         this.streamId = frame.streamId;
         this.snapshotNeeded ||= frame.snapshot;
@@ -583,6 +546,7 @@ export class RemoteControl {
         if (generation !== this.generation) return;
         this.connection?.send({ type: "available" });
         this.connected = true;
+        this.options.connected?.(true);
         this.renewalFailures = 0;
         this.renewAt = 0;
         this.error = null;

@@ -48,8 +48,7 @@ export function repositoryRoot(directory: string): string {
 
 function platform(root: string) {
   const { packageManager } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const node = readFileSync(join(root, ".nvmrc"), "utf8").trim().replace(/^v/, "");
-  return `${process.platform}-${process.arch}-${String(packageManager).replace("@", "")}-node${node}`;
+  return `${process.platform}-${process.arch}-${String(packageManager).replace("@", "")}`;
 }
 
 function leafCommand(root: string, member: TaskMember, name: string) {
@@ -62,7 +61,7 @@ function leafCommand(root: string, member: TaskMember, name: string) {
 
 function cachedTask(member: TaskMember, name: string): TaskCache | false {
   if (member.uncachedTasks.includes(name)) return false;
-  const build = name === "build" || name === "build:cloudflare" || name === "build:renderer";
+  const build = name === "build" || name === "build:renderer";
   if (!build && !["check", "test", "test:unit", "test:component"].includes(name)) return false;
   const exclusions = [
     "**/node_modules/.vitest-cache/**",
@@ -76,13 +75,14 @@ function cachedTask(member: TaskMember, name: string): TaskCache | false {
     ...exclusions
       .flatMap((pattern) => [pattern.slice(0, -3), pattern])
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
-    ...[".nvmrc", "bunfig.toml", "bun.lock"].map((pattern) => ({
+    ...["bunfig.toml", "bun.lock"].map((pattern) => ({
       pattern,
       base: "workspace" as const,
     })),
-    ...["dist", ".output", ".output-cloudflare", "artifacts/browser", "coverage"].flatMap(
-      (directory) => [`!${directory}`, `!${directory}/**`],
-    ),
+    ...["dist", ".output", "artifacts/browser", "coverage"].flatMap((directory) => [
+      `!${directory}`,
+      `!${directory}/**`,
+    ]),
   ];
   if (member.native && (name === "check" || name === "build"))
     input.push(".hutch/devkit/**", ".hutch/types/**");
@@ -105,13 +105,7 @@ function cachedTask(member: TaskMember, name: string): TaskCache | false {
     untrackedEnv: ["*"],
     input,
     output:
-      name === "build:renderer"
-        ? ["artifacts/browser/**"]
-        : name === "build:cloudflare"
-          ? [".output-cloudflare/**"]
-          : build
-            ? ["dist/**", ".output/**"]
-            : [],
+      name === "build:renderer" ? ["artifacts/browser/**"] : build ? ["dist/**", ".output/**"] : [],
   };
 }
 
@@ -124,12 +118,7 @@ function dependencyBuilds(member: TaskMember, members: TaskMember[]) {
 function prerequisites(member: TaskMember, name: string, members: TaskMember[]) {
   const result: string[] = [];
   if (name === "check" && member.native) result.push(taskRef(member.name, "native:prepare"));
-  if (
-    name === "build" ||
-    name === "build:cloudflare" ||
-    name === "build:renderer" ||
-    name === "dev"
-  ) {
+  if (name === "build" || name === "build:renderer" || name === "dev") {
     result.push(...dependencyBuilds(member, members));
     if (name !== "dev" && name !== "build:renderer" && member.scripts.check)
       result.push(taskRef(member.name, "check"));
@@ -143,7 +132,6 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
     if (name !== "e2e:desktop") result.push(taskRef("web", "build"));
     if (name !== "e2e:web") result.push(taskRef("desktop", "build:renderer"));
   }
-  if (name === "test:postgres:cloudflare") result.push(taskRef(member.name, "build:cloudflare"));
   return [...new Set(result)];
 }
 
@@ -211,33 +199,20 @@ export function taskModel(root: string): TaskModel {
   }
   const names = new Set(members.flatMap((member) => Object.keys(member.scripts)));
   for (const name of names)
-    aggregate(name, [
-      ...members
-        .filter((member) => member.scripts[name])
-        .map((member) => taskRef(member.name, name)),
-      ...(rust && ["build", "check", "test"].includes(name)
-        ? [taskRef(manifest.name, `rust:${name}`)]
-        : []),
-    ]);
+    aggregate(
+      name,
+      members.filter((member) => member.scripts[name]).map((member) => taskRef(member.name, name)),
+    );
   const native = members.find((member) => member.native);
   definitions.set(taskRef(manifest.name, "lint"), {
     command: "bun --bun vp lint",
-    dependsOn: [
-      ...(native ? [taskRef(native.name, "native:prepare")] : []),
-      ...(rust ? [taskRef(manifest.name, "rust:lint")] : []),
-    ],
+    dependsOn: native ? [taskRef(native.name, "native:prepare")] : [],
     cache: false,
   });
   for (const name of ["verify", "verify:quick"])
     aggregate(
       name,
-      [
-        "check",
-        "test",
-        ...(name === "verify" ? ["build", "build:cloudflare"] : []),
-        "lint",
-        ...(rust ? ["rust:format"] : []),
-      ]
+      ["check", "test", ...(name === "verify" ? ["build"] : []), "lint"]
         .filter((task) => definitions.has(taskRef(manifest.name, task)))
         .map((task) => taskRef(manifest.name, task)),
     );

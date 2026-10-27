@@ -86,11 +86,13 @@ export const device: SyncDevice = {
 const histories: ReturnType<typeof createMemoryHistory>[] = [];
 export function setupWorkspaceTests() {
   beforeEach(() => {
-    // jsdom has no layout; keep the real virtualizer and supply viewport/row dimensions.
-    vi.spyOn(Element.prototype, "clientHeight", "get").mockImplementation(function (this: Element) {
+    // happy-dom has no layout; keep the real virtualizer and supply viewport/row dimensions.
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(function (
+      this: HTMLElement,
+    ) {
       return this.hasAttribute("data-task-list") ? 480 : 0;
     });
-    vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(480);
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(480);
     vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(96);
     mocks.user = { id: "account-a" };
     accountLocalTaskClient.setAccount("account-a");

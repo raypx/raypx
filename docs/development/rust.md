@@ -43,12 +43,11 @@ Rust is managed by rustup; mise continues reading only the existing Node/Bun pin
 | `cargo fmt --all`                   | Apply Rust formatting                      |
 | `cargo test -p raypx-core --locked` | Test only the initial library              |
 
-Root `check`, `test` and `build` include the corresponding Cargo command. Both
-`verify:quick` and `verify` also check Clippy and Rust formatting. The existing
-foundation CI job prepares the pinned toolchain and runs these gates through
-`bun run verify`. Filtered Bun workspace commands keep their selected scope.
-Direct root `lint` and `format` remain the TypeScript/tooling commands; use their
-`rust:*` equivalents for Rust-only feedback.
+Rust is optional. Root `check`, `test`, `build`, `lint`, `format`, `verify:quick`
+and `verify` do not invoke Cargo or rustup. The independent `rust.yml` workflow
+runs only for Rust/toolchain/task-model changes (or manual dispatch). Explicit
+`bun run rust:verify` schedules all five gates serially to avoid competing for
+Cargo's shared `target/` lock. Filtered Bun commands retain their selected scope.
 
 VP owns repository task scheduling. Cargo tasks are uncached in VP; Cargo owns
 its own incremental state in root `target/`. This avoids tracing compiler and

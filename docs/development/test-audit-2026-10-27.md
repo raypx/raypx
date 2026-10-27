@@ -1,5 +1,8 @@
 # 测试用例全量检查与分层重构（2026-10-27）
 
+> Historical validation snapshot: the Worker deployment target and its gates have been removed.
+> Current deployment and verification use Node; commands below record the earlier state.
+
 基线为 `codex/vp-task-runner` 的 `337725a`，改动保留在该分支。
 先以 `--no-cache` 执行全部默认测试，1087 项通过，再进行结构调整。
 

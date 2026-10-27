@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import * as matchers from "@testing-library/jest-dom/matchers";
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers

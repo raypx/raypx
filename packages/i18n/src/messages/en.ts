@@ -172,8 +172,6 @@ export default {
       "Confirm the password for this account. Raypx will refresh your sign-in and retry host authorization. Running tasks will continue.",
     daemonHint:
       "On macOS, tasks continue after quitting Desktop. Signing out or disconnecting stops this account's work.",
-    daemonMemoryOnly:
-      "Secure storage is unavailable. Authorize this computer again after restarting the host.",
     pendingCount: "{count} pending approvals",
     pendingCountPartial: "Pending approvals count is incomplete. At least {count} are known.",
     terminalActionFailed: "Could not complete this action. Refresh the status before retrying.",
@@ -194,12 +192,17 @@ export default {
     terminalRecoverBinaryConfirm: "Back up and replace",
     terminalInstallationSource:
       "Open the current Desktop version to repair this hook. The modified program cannot replace itself.",
+    terminalCloud: "Sync terminal approvals to this account",
+    terminalCloudHint:
+      "Explicitly share new requests from selected local projects. Signing in does not upload local history or enable remote execution.",
+    terminalMigrationRequired:
+      "Previous terminal settings could not be safely adopted. Select your local projects again.",
     terminalSettings: "Terminal connections",
     terminalSettingsHint:
       "Connect new Claude and Codex sessions. Authorize each project separately; tool inputs are stored in plain text on your selected server during private testing.",
     terminalAway: "Away mode",
     terminalAwayHint:
-      "Wait for a remote answer. If disconnected or timed out, return to the terminal.",
+      "Terminal requests wait for Raypx while Away is on. This window must remain visible and not minimized, or an authorized cloud channel must be online. Disconnection or timeout returns control to the terminal.",
     terminalWait: "Wait before returning to terminal",
     terminalWaitMinutes: "{minutes, plural, one {# minute} other {# minutes}}",
     terminalSettingsConflict:
@@ -420,7 +423,6 @@ export default {
     tasks: "Tasks",
     approvals: "Waiting",
     device: "This device",
-    requiredFields: "Complete all required fields.",
     skipNavigation: "Skip navigation",
     account: "Account",
     accountMenu: "Account menu",
@@ -499,7 +501,6 @@ export default {
     create: "Create account",
     forgot: "Forgot password?",
     noAccount: "New to Raypx?",
-    hasAccount: "Already have an account?",
     reset: "Reset password",
     resetIntro: "Enter your email and we’ll send a reset link.",
     sendReset: "Send reset link",
@@ -523,9 +524,6 @@ export default {
     emailTaken: "An account with this email already exists.",
     passwordShort: "Use at least 8 characters for your password.",
     rateLimited: "Too many attempts. Please try again later.",
-    openWeb: "Open verification in your browser",
-    webLink:
-      "Verification and reset links finish in the web app. Return here to sign in afterward.",
   },
   settings: {
     title: "Make it yours",
@@ -808,7 +806,6 @@ export default {
     next: "Next run",
     duration: "Duration",
     exit: "Exit code",
-    lastRun: "Last run",
     noHistory: "No runs yet.",
     preview: "Next five runs",
     commandHint:

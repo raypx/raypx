@@ -36,4 +36,4 @@ forms retain edits on CAS errors and require explicit device epoch reselection.
 ## Verification
 
 Run package checks/tests and both application consumers. SQL persistence, actual
-relay round trips and Node/Worker scheduled events have separate integration gates.
+relay round trips and Node scheduled events have separate integration gates.

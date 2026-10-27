@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Node and Cloudflare Workers HTTP composition root for authentication and account RPC.
+The Node HTTP composition root for authentication and account RPC.
 
 ## Interface
 
@@ -11,10 +11,9 @@ contract. `/health` reports process liveness without querying PostgreSQL.
 Every other path is a JSON 404; Web is a separate service.
 
 All API tests live in `tests/`; keep `server/` for runtime modules. `unit/` and
-`integration/` form the default database-free gate. `postgres/node/` and
-`postgres/cloudflare/` use the `postgres` and `cloudflare-postgres` modes of
-`vitest.config.ts` for real-database tests.
-Use directories for test kind and runtime; filenames describe the behavior under test. Worker PostgreSQL suites share `tests/helpers/worker.ts` for subprocess lifecycle and bounded redacted diagnostics; each suite owns its database setup and assertions. Public `test:postgres:cloudflare` enters VP and builds first; `_test:postgres:cloudflare` is its private runner, selected through `raypx.taskScripts`.
+`integration/` form the default database-free gate. `postgres/node/` uses the
+`postgres` mode of `vitest.config.ts` for real-database tests.
+Use directories for test kind; filenames describe the behavior under test.
 
 ## Ownership
 
@@ -24,23 +23,21 @@ Platform entry modules live in `app/`; runtime composition and adapters live in 
 `runtime/adapters.ts` picks each adapter (override, then Redis/S3 when configured, then
 PostgreSQL/memory/unavailable) and builds the auth config; `runtime/lifecycle.ts` closes
 owned resources in reverse order, every one even after a failure, and only once.
-`runtime/node.ts` initializes one process runtime, closed by `runtime/plugin.ts` through Nitro's close hook.
-`app/cloudflare.ts` creates a request runtime from bindings, then schedules cleanup
-with `waitUntil`. Workers reuse the console logger, never a database client or auth context.
+`runtime/server.ts` initializes one process runtime, closed by `runtime/plugin.ts` through Nitro's close hook.
 Account RPC uses `@raypx/account/server` with an injected session reader. The
 service projects public fields; API owns HTTP and unauthorized/error mapping.
 
 `jobs/` owns server maintenance; `jobs/runtime/` contains the Nitro Task entries.
-`maintenance:cleanup` runs every 15 minutes on Node and Cloudflare, gated by
-`JOBS_ENABLED` (false by default). Keep Nitro's schedule and Wrangler triggers aligned.
+`maintenance:cleanup` runs every 15 minutes on Node, gated by
+`JOBS_ENABLED` (false by default). Nitro owns the schedule.
 Cleanup uses PostgreSQL transaction time, an advisory transaction lock and bounded
 row-locked batches. Sessions/verification records expired over 24 hours ago,
 rate limits older than one hour and terminal projections of revoked devices are eligible. Failure rolls back and retries
 on the next schedule. Never add a production HTTP task runner or log driver errors.
-Node tasks reuse the API runtime; Worker tasks create and close an event-owned one.
+Tasks reuse the API runtime.
 See `docs/development/server-jobs.md` for policy and verification.
 
-`schedules:tick` runs every minute on both platforms with the same deployment gate.
+`schedules:tick` runs every minute on Node with the same deployment gate.
 `@raypx/jobs/server` owns scheduling use cases; API supplies PostgreSQL persistence
 and the private relay executor. `jobs.*` RPC resolves an account on every call;
 writes additionally require a trusted Origin, revision checks and account limits.
@@ -63,27 +60,22 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 
 ## Constraints
 
-- Dev and build run vp under Node (`bun vp`, never `bun --bun vp`); start
-  `.output/server/index.mjs` on Node 24.15.0 with the default Nitro node-server preset.
-  `build:cloudflare` selects Vite's cloudflare mode and produces `.output-cloudflare`.
+- Dev and build run vp under Bun (`bun --bun vp`); start `.output/server/index.mjs`
+  with `bun`, built by the shared Nitro `bun` preset.
   Common target options come from `@raypx/tooling/build/nitro`; API owns routes and runtime plugins.
-  Keep Worker bindings inside the request lifecycle and migrations outside Worker imports.
-  Hyperdrive is optional; when present it supplies the connection string. Its auth
-  configuration must disable query caching so session revocation remains immediate.
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
   by client IP. The Node entry overwrites `x-raypx-client-ip` with the socket address
-  and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy;
-  Workers use `cf-connecting-ip`. `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
+  and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy. `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon. Host grants
   have pre-lookup limits by platform-owned client address (120/min) and credential
   digest (6/min); never use a caller-selected forwarding header or raw bearer key.
 - Optional `REDIS_URL` (Node only, `server/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
   stores `runtime.cache` values.
-  Sessions are still written to PostgreSQL; Workers never import Redis. Requires
+  Sessions are still written to PostgreSQL. Requires
   Redis 7+ or Valkey (`EXPIRE NX`, `GETDEL`).
   `tests/redis/` runs with `test:redis` and `TEST_REDIS_URL`.
 - `/ready` probes PostgreSQL (and Redis when configured) within three seconds and
@@ -99,8 +91,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
 - Production requires explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
-- Close Node's PostgreSQL pool idempotently through Nitro's close hook. Worker requests
-  close their own client and flush the shared logger without closing it for other requests.
+- Close the PostgreSQL pool idempotently through Nitro's close hook.
 - No old business endpoints, worker, local execution endpoints or second server.
 - Unconfigured mail actions return MAIL_NOT_CONFIGURED before Better Auth dispatch;
   startup, liveness and existing sign-in remain available.
@@ -119,9 +110,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 bun run --cwd apps/api check
 bun run --cwd apps/api test
 bun run build:api
-bun run build:api:cloudflare
 TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/api test:postgres
-TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun run test postgres:cloudflare
 ```
 
 ## Remote tasks
@@ -130,8 +119,7 @@ TEST_DATABASE_URL=postgres://user:password@localhost/raypx_foundation_test bun r
 `server/relay` authenticates and routes typed WebSocket messages; execution and
 first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
 and one-time viewer tickets. No HTTP task mutation or polling exchange remains.
-Node uses one relay process; Cloudflare uses an account-named Durable Object with
-connections fenced by identity. Keep credentials out of URLs and diagnostics.
+Node uses one relay process with connections fenced by identity. Keep credentials out of URLs and diagnostics.
 Relay v2 requires an explicit protocol version. Preserve full activity checkpoints
 and bounded incremental replay; a missing revision requests a snapshot. Keep the latest
 activity projection until explicit history removal. Missing entries in partial snapshots
@@ -150,11 +138,11 @@ reset. Materialize the window once before deletion, even with stale device stati
 `types.ts` defines the reader, service and repository ports. Inject `ConfigurationReader`
 into read-only consumers; `createRuntime` exposes `configuration` and accepts a
 `createConfigurationRepository(db)` factory scoped to its owned connection.
-Node/Worker constructors accept these typed providers as a second argument.
+The Node constructor accepts these typed providers as a second argument.
 `runtime.readSession(headers)` resolves through the same auth adapter as HTTP on
 each call; consumers must not retain that session between requests. Direct
 service writes require a freshly resolved administrator session and expected revision,
-just like HTTP writes. Never put the service in a global Worker container.
+just like HTTP writes. Keep the service in its owned runtime.
 `configuration.get/update` require a fresh verified session in `ADMIN_EMAILS`; writes
 also require a trusted Origin. Public projection exposes only site name and signup
 availability. Save with an expected revision; never overwrite concurrent edits.
@@ -162,13 +150,13 @@ Registration is enforced by the Better Auth user-create hook with a fresh read, 
 it covers every sign-in method; the email signup route only pre-checks the 5-second
 `readCached()` snapshot. Use `readCached()` only where that delay is acceptable.
 Optional `S3_*` variables (all of endpoint, bucket and keys, or none) give `runtime.storage`
-an S3-compatible `@raypx/storage` store on Node and Workers alike; otherwise it is the
+an S3-compatible `@raypx/storage` store on Node; otherwise it is the
 unavailable storage whose operations fail with `STORAGE_NOT_CONFIGURED`. `RuntimeProviders.storage`
 overrides it. No route exposes storage yet; consumers must validate ownership before
 issuing keys or pre-signed URLs. See `docs/development/object-storage.md`.
 `server/cache/` owns the runtime cache (`runtime.cache`, `RuntimeProviders.cache`):
 Redis behind a one-second process-local copy when configured, else memory per process
-or Worker isolate. Values are JSON
+with values JSON
 parsed by the caller's schema; store failures become misses. Cache only data that
 has a loader, and keep authoritative checks on the source. See `docs/development/caching.md`.
 Run the migration before deploying: signup fails closed without the table. Jobs combine the

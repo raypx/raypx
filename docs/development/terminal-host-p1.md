@@ -2,8 +2,9 @@
 
 Implemented after the [P0 protocol gate](terminal-protocol-p0.md), following the
 [accepted phased plan](../plans/terminal-session-host.md). Claude and Codex are both
-included. This phase delivers Web/Desktop terminal approvals without waiting for
-the Expo app or mobile push.
+included. [ADR 0035](../architecture/0035-local-owner-host.md) supersedes the
+original cloud-bound ownership: local Desktop terminal approvals need no account;
+Web delivery is a separately enabled cloud scope. Native mobile remains separate.
 
 ## Execution and lifetime
 
@@ -25,13 +26,14 @@ fall back, and decided/delivered requests recover as outcome unknown.
 A profile has one execution owner enforced by SQLite's OS-backed write lock.
 A competing legacy host fails rather than repairing/cancelling the running owner.
 Windows retains the foreground stdio host and does not expose terminal settings.
-Linux's product/service support remains a later phase.
+Linux retains existing CLI support without complete product acceptance.
 
 ## Authorization and server selection
 
 Continue selecting the server in `~/.raypx/config.toml`; do not compile separate
-beta/production clients. Origin and account hash together select host settings,
-remote bindings and terminal history. Provider keys remain on the computer.
+beta/production clients. Origin and account hash together select cloud host settings
+and remote bindings. Terminal settings/history belong to the local profile.
+Provider keys remain on the computer.
 
 For this first Desktop-assisted bootstrap, Native checks the current browser
 account, supplies a trusted Origin, and requests a restricted credential for the registered device/epoch.
@@ -88,7 +90,12 @@ Agent's normal terminal flow.
 Away defaults off. Users explicitly select already-authorized projects and enable
 Away; waiting defaults to five minutes, configurable from one to ten. The installed
 hook timeout is 630 seconds. Turning Away off, removing project/provider access,
-relay loss or timeout releases waiting hooks without approving or denying them.
+or timeout releases affected hooks without approving or denying them. Each request
+freezes its eligible local/cloud channels. A ready, visible, unminimized Desktop
+renews its authenticated local lease every five seconds (15-second expiry). Only
+a cloud binding that has connected before receives a 15-second disconnect grace.
+Losing one channel does not cancel requests reachable through another eligible
+channel. Logout/revoke/scope shrink withdraws cloud eligibility immediately.
 
 The recorded capability gate currently enables **Bash permission allow/deny with
 an optional rejection note** for both providers. Claude questions/plans and Codex
@@ -118,8 +125,11 @@ While Away is waiting, Desktop exposes a persistent request banner and a tray
 does not expose notification click/action callbacks; notification action buttons
 are not part of this acceptance.
 
-Only explicitly authorized tool names/inputs are uploaded, without transcripts
-or tool output. Project names and provider session identities are synchronized.
+Only new requests qualified for the explicitly enabled cloud project scope are
+uploaded. Local-only requests and historical local records are not uploaded.
+Projection withdrawal has its own revision and never invalidates a local decision.
+Transcripts and tool output are not synchronized. Qualified requests reference only their selected
+project names and provider session identities.
 Content envelopes are explicitly `plain` for private testing. E2EE, pairing,
 recovery and old-plaintext retention remain public-hosted-release gates.
 
@@ -149,7 +159,7 @@ The private config contains loopback `apiUrl`, synthetic `email`, `password` and
 terminal captures. Live tests consume provider usage. API PostgreSQL tests require
 an isolated `TEST_DATABASE_URL` ending in `_test`; packaged Native smoke remains
 an explicit GUI gate. Local HTTP does not verify HTTPS production cookies, Beta,
-Cloudflare relay deployment or mobile behavior.
+hosted relay deployment or mobile behavior.
 
 ## Remaining deliveries
 
@@ -162,7 +172,7 @@ phases. Model calls in `packages/ai` are not an installed Pi Agent runner.
 
 | Gate                          | Result                                                                                                                                                                            |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Full repository verify        | Passed: check/test/lint, Node and Cloudflare builds, relocated artifact probes and standalone CLI smoke                                                                           |
+| Full repository verify        | Passed: check/test/lint, Node builds, relocated artifact probes and standalone CLI smoke                                                                                          |
 | Application tests             | API 90, CLI 202, Desktop 144, Web 63 passed                                                                                                                                       |
 | Isolated PostgreSQL           | 15/15 passed, including actual replay-window SQL and EXPLAIN                                                                                                                      |
 | Real terminal + browser       | Claude 2.1.302 and Codex 0.163.0-alpha.11.2: isolated installed hooks → daemon → Node API/PostgreSQL/relay → Web button → real marker file; Desktop proxy disconnected throughout |

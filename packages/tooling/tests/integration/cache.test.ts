@@ -23,7 +23,6 @@ function project() {
       workspaces: ["packages/*"],
     }),
   );
-  writeFileSync(join(root, ".nvmrc"), "24.15.0\n");
   writeFileSync(join(root, "bun.lock"), "{}\n");
   writeFileSync(join(root, "bunfig.toml"), "\n");
   mkdirSync(join(root, "node_modules/.vite/task-cache"), { recursive: true });

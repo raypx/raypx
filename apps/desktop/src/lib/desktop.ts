@@ -58,7 +58,7 @@ export async function restartEngine(replaceOwner = false) {
 }
 export async function localRequest<T, M extends LocalMethod = LocalMethod>(
   method: M,
-  params: M extends `observed.${string}` ? Omit<LocalParams<M>, "apiUrl"> : LocalParams<M>,
+  params: LocalParams<M>,
 ): Promise<T> {
   return (await (await getBridge()).request.localRequest({ method, params })) as T;
 }

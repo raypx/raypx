@@ -1,6 +1,19 @@
 import { normalizeTaskJson } from "@raypx/contracts/tasks";
-import { sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { Database } from "@raypx/database/connection";
+import {
+  controlCommand,
+  controlCredential,
+  controlDevice,
+  controlEvent,
+  controlGrant,
+  controlObservedRequest,
+  controlObservedSession,
+  controlProject,
+  controlRequest,
+  controlTask,
+} from "@raypx/database/schema";
 
 export type RecordKind =
   | "device"
@@ -58,9 +71,84 @@ export interface ControlRepository {
   findGrant(hash: string): Promise<{ userId: string } | undefined>;
   findCredential(hash: string): Promise<{ userId: string } | undefined>;
 }
-const table = (kind: RecordKind) =>
-  sql`${sql.identifier("raypx_foundation")}.${sql.identifier(`control_${kind}`)}`;
+const tables = {
+  device: controlDevice,
+  project: controlProject,
+  task: controlTask,
+  request: controlRequest,
+  event: controlEvent,
+  command: controlCommand,
+  grant: controlGrant,
+  credential: controlCredential,
+  observed_session: controlObservedSession,
+  observed_request: controlObservedRequest,
+} satisfies Record<RecordKind, typeof controlEvent>;
+const table = (kind: RecordKind) => tables[kind];
 export const CONTEXT_COMMAND_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** Build the production projection query, also used by real-PostgreSQL EXPLAIN tests. */
+export function controlListQuery(
+  database: Pick<Database, "select">,
+  kind: RecordKind,
+  userId: string,
+  deviceId?: string,
+  query: ControlQuery = {},
+) {
+  const record = table(kind);
+  const device = alias(controlDevice, "d");
+  const task = alias(controlTask, "task");
+  const body = record.body;
+  const activityOrder = sql`((${body}->'event'->'entry'->>'order')::bigint)`;
+  const cursor = sql`((${body}->>'cursor')::bigint)`;
+  const createdAt = sql`${body}->>'createdAt'`;
+  const separator = query.beforeTask?.lastIndexOf(":") ?? -1;
+  const orderBy =
+    query.observedAt !== undefined
+      ? [
+          desc(sql`(${body}->>'status'='pending' and ${body}->>'expiresAt'>${query.observedAt})`),
+          desc(createdAt),
+          desc(record.id),
+        ]
+      : kind === "task"
+        ? [desc(createdAt), desc(record.id)]
+        : query.pendingApprovals
+          ? [asc(sql`${body}->>'expiresAt'`), asc(record.id)]
+          : kind === "event"
+            ? [(query.descending ? desc : asc)(query.activity ? activityOrder : cursor)]
+            : [];
+  const statement = database
+    .select({ body: query.summary ? sql`${body} - 'body' - 'questions' - 'decision'` : body })
+    .from(record)
+    .where(
+      and(
+        eq(record.userId, userId),
+        deviceId === undefined ? undefined : eq(record.deviceId, deviceId),
+        query.ids === undefined ? undefined : inArray(record.id, query.ids),
+        query.observedAt === undefined
+          ? undefined
+          : sql`exists (select 1 from ${controlDevice} d where ${device.userId}=${userId} and ${device.id}=${record.deviceId} and ${device.body}->>'revoked'='false')`,
+        query.beforeTask === undefined
+          ? undefined
+          : sql`(${createdAt},${record.id}) < (${query.beforeTask.slice(0, separator)},${query.beforeTask.slice(separator + 1)})`,
+        !query.pendingApprovals
+          ? undefined
+          : sql`${body}->>'status' in ('pending','decided') and exists (select 1 from ${controlTask} task where ${task.userId}=${userId} and ${task.id}=${body}->>'taskId' and ${task.body}->>'status' in ('pending','running','waiting','cancelling'))`,
+        query.taskId === undefined ? undefined : sql`${body}->>'taskId'=${query.taskId}`,
+        query.activity === undefined
+          ? undefined
+          : query.activity
+            ? sql`${body}->'event'->>'kind'='activity'`
+            : sql`${body}->'event'->>'kind' not in ('activity','activity_delta')`,
+        query.streamId === undefined ? undefined : sql`${body}->>'streamId'=${query.streamId}`,
+        query.after === undefined ? undefined : sql`${cursor}>${query.after}`,
+        query.beforeActivity === undefined
+          ? undefined
+          : sql`${activityOrder}<${query.beforeActivity}`,
+      ),
+    )
+    .orderBy(...orderBy);
+  return query.limit === undefined ? statement : statement.limit(query.limit);
+}
 
 /** Shared by production execution and the real-PostgreSQL EXPLAIN gate. */
 export function eventWindowPrune(userId: string, deviceId: string, streamId: string) {
@@ -134,10 +222,10 @@ export function createControlRepository(database: Database): ControlRepository {
           },
           async securityVersion() {
             // Password changes/reset invalidate host credentials even if cookie cleanup fails.
-            const rows = await databaseTx.execute(
+            const rows = await databaseTx.execute<{ version: string }>(
               sql`select md5(coalesce(string_agg(id || ':' || coalesce(password,''), ',' order by id),'') || ':' || coalesce((select security_epoch::text from raypx_foundation.control_owner where user_id=${userId}),'0')) as version from raypx_foundation.account where user_id=${userId}`,
             );
-            return String(rows[0]!.version);
+            return rows[0]!.version;
           },
           async hostSessionAllowed(createdAt) {
             const rows = await databaseTx.execute(
@@ -151,7 +239,7 @@ export function createControlRepository(database: Database): ControlRepository {
             );
           },
           async get<R extends ControlRecord>(kind: RecordKind, id: string) {
-            const rows = await databaseTx.execute(
+            const rows = await databaseTx.execute<{ body: unknown }>(
               sql`select body from ${table(kind)} where user_id = ${userId} and id = ${id}`,
             );
             return rows[0]?.body as R | undefined;
@@ -161,40 +249,13 @@ export function createControlRepository(database: Database): ControlRepository {
             deviceId?: string,
             query: ControlQuery = {},
           ) {
-            const activityOrder = sql`((body->'event'->'entry'->>'order')::bigint)`;
-            const cursor = sql`((body->>'cursor')::bigint)`;
-            const separator = query.beforeTask?.lastIndexOf(":") ?? -1;
-            const beforeDate = query.beforeTask?.slice(0, separator);
-            const beforeId = query.beforeTask?.slice(separator + 1);
-            const rows =
-              await databaseTx.execute(sql`select ${query.summary ? sql`body - 'body' - 'questions' - 'decision'` : sql`body`} as body from ${table(kind)} where user_id = ${userId}
-          ${deviceId === undefined ? sql`` : sql`and device_id = ${deviceId}`}
-          ${
-            query.ids === undefined
-              ? sql``
-              : query.ids.length
-                ? sql`and id in (${sql.join(
-                    query.ids.map((id) => sql`${id}`),
-                    sql`,`,
-                  )})`
-                : sql`and false`
-          }
-          ${query.observedAt === undefined ? sql`` : sql`and exists (select 1 from raypx_foundation.control_device d where d.user_id=${userId} and d.id=${table(kind)}.device_id and d.body->>'revoked'='false')`}
-          ${query.beforeTask === undefined ? sql`` : sql`and (body->>'createdAt',id) < (${beforeDate},${beforeId})`}
-          ${!query.pendingApprovals ? sql`` : sql`and body->>'status' in ('pending','decided') and exists (select 1 from raypx_foundation.control_task task where task.user_id=${userId} and task.id=${table(kind)}.body->>'taskId' and task.body->>'status' in ('pending','running','waiting','cancelling'))`}
-          ${query.taskId === undefined ? sql`` : sql`and body->>'taskId' = ${query.taskId}`}
-          ${query.activity === undefined ? sql`` : query.activity ? sql`and body->'event'->>'kind' = 'activity'` : sql`and body->'event'->>'kind' NOT IN ('activity','activity_delta')`}
-          ${query.streamId === undefined ? sql`` : sql`and body->>'streamId' = ${query.streamId}`}
-          ${query.after === undefined ? sql`` : sql`and ${cursor} > ${query.after}`}
-          ${query.beforeActivity === undefined ? sql`` : sql`and ${activityOrder} < ${query.beforeActivity}`}
-          ${query.observedAt !== undefined ? sql`order by (body->>'status'='pending' and body->>'expiresAt'>${query.observedAt}) desc,body->>'createdAt' desc,id desc` : kind === "task" ? sql`order by body->>'createdAt' desc,id desc` : query.pendingApprovals ? sql`order by body->>'expiresAt' asc,id asc` : kind === "event" ? sql`order by ${query.activity ? activityOrder : cursor} ${query.descending ? sql`desc` : sql`asc`}` : sql``}
-          ${query.limit === undefined ? sql`` : sql`limit ${query.limit}`}`);
+            const rows = await controlListQuery(databaseTx, kind, userId, deviceId, query);
             return rows.map((row) => row.body as R);
           },
           async put(kind, value) {
             value = normalizeTaskJson(value);
             await databaseTx.execute(
-              sql`insert into ${table(kind)} (id, user_id, device_id, body) values (${value.id}, ${userId}, ${value.deviceId}, ${JSON.stringify(value)}::jsonb) on conflict (user_id, id) do update set body = excluded.body, device_id = excluded.device_id`,
+              sql`insert into ${table(kind)} (id, user_id, device_id, body) values (${value.id}, ${userId}, ${value.deviceId}, ${value}::jsonb) on conflict (user_id, id) do update set body = excluded.body, device_id = excluded.device_id`,
             );
             return value;
           },
@@ -227,17 +288,17 @@ export function createControlRepository(database: Database): ControlRepository {
     read: (userId, run) => execute(userId, true, run),
     transaction: (userId, run) => execute(userId, false, run),
     async findGrant(hash) {
-      const rows = await database.execute(
+      const rows = await database.execute<{ user_id: string }>(
         sql`select user_id from raypx_foundation.control_grant where id = ${hash}`,
       );
       const row = rows[0];
-      return row ? { userId: String(row.user_id) } : undefined;
+      return row ? { userId: row.user_id } : undefined;
     },
     async findCredential(hash) {
-      const rows = await database.execute(
+      const rows = await database.execute<{ user_id: string }>(
         sql`select user_id from raypx_foundation.control_credential where id=${hash}`,
       );
-      return rows[0] ? { userId: String(rows[0].user_id) } : undefined;
+      return rows[0] ? { userId: rows[0].user_id } : undefined;
     },
   };
 }

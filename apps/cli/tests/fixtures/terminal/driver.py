@@ -1,4 +1,6 @@
 """Isolated real-CLI hook test. Never answers a native tool approval prompt."""
+import base64
+from datetime import datetime, timezone
 import fcntl
 import json
 import os
@@ -41,6 +43,10 @@ try:
             except OSError:
                 break
             screen.extend(chunk)
+            evidence = spec["screen"] + ".jsonl"
+            with open(evidence, "a") as output:
+                output.write(json.dumps({"at": datetime.now(timezone.utc).isoformat(), "bytes": base64.b64encode(chunk).decode("ascii")}) + "\n")
+            os.chmod(evidence, 0o600)
             with open(spec["screen"], "wb") as output:
                 output.write(screen)
             os.chmod(spec["screen"], 0o600)

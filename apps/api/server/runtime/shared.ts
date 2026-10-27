@@ -111,7 +111,7 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
       config: createAuthConfig(environment),
     });
     // Resolve from the same auth adapter for HTTP and direct server callers.
-    // Keep sessions request-owned even when Node reuses the runtime.
+    // Keep sessions request-owned even when the process reuses the runtime.
     const readSession = (headers: Headers) => readAuthSession(auth, headers);
     return {
       cache,

@@ -4,8 +4,15 @@ import { Button } from "@raypx/ui/components/ui/button";
 import type { AgentCapability, DeviceProject } from "@raypx/contracts/tasks";
 import { LOCAL_WORKSPACE_ID, type RootGrant } from "@raypx/contracts/local";
 import type { ControlInfo } from "@raypx/contracts/terminal";
-import { getBridge, isDesktop, localRequest, pickDirectory } from "../../lib/desktop";
+import {
+  getBridge,
+  isDesktop,
+  isDaemonDesktop,
+  localRequest,
+  pickDirectory,
+} from "../../lib/desktop";
 import { authClient } from "../auth/client";
+import { CloudTerminalSettings } from "./cloud-terminal-settings";
 import { TerminalSettings } from "./terminal-settings";
 import { ReauthorizeHost } from "./reauthorize";
 import { RemoteBoundary } from "../auth/components/remote-boundary";
@@ -173,6 +180,7 @@ export function AgentSettings() {
           {t("LOCAL_UNAVAILABLE")}
         </p>
       )}
+      {isDaemonDesktop() && <TerminalSettings projects={projects} />}
       <div className="mt-8 border-t border-border pt-7">
         <RemoteBoundary>
           {() =>
@@ -216,10 +224,10 @@ export function AgentSettings() {
                     <ReauthorizeHost key={accountId} email={session.data.user.email} />
                   )}
                 {info?.daemon && (
-                  <TerminalSettings
+                  <CloudTerminalSettings
+                    supported={info.terminalSupported !== false}
                     key={accountId}
                     accountId={accountId}
-                    info={info}
                     projects={projects}
                   />
                 )}

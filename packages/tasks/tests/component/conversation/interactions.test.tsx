@@ -7,7 +7,7 @@ import { TaskWorkspace } from "@raypx/tasks/client";
 import type { TaskClient } from "@raypx/client";
 
 beforeEach(() => {
-  // jsdom has no layout; provide dimensions for the real virtualizer.
+  // happy-dom has no layout; provide dimensions for the real virtualizer.
   mockTaskLayout("list");
   vi.spyOn(document, "hidden", "get").mockReturnValue(false);
   localStorage.clear();

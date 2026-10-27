@@ -12,7 +12,7 @@ const members = [
   {
     name: "api",
     path: "apps/api",
-    scripts: { test: "runner", "test:postgres:cloudflare": "public" },
+    scripts: { test: "runner", "test:postgres": "public" },
   },
   { name: "@raypx/e2e", path: "e2e", scripts: { e2e: "public", "e2e:web": "public" } },
   {
@@ -22,11 +22,15 @@ const members = [
   },
 ];
 it("preserves direct package runner flags and literal arguments while separating graph controls", () => {
-  expect(
-    packageTestArguments(["postgres:cloudflare", "--dry-run", "--reporter=json", "two words"]),
-  ).toEqual(["postgres:cloudflare", "--dry-run", "--", "--reporter=json", "two words"]);
-  expect(packageTestArguments(["postgres:cloudflare", "--", "--dry-run"])).toEqual([
-    "postgres:cloudflare",
+  expect(packageTestArguments(["postgres", "--dry-run", "--reporter=json", "two words"])).toEqual([
+    "postgres",
+    "--dry-run",
+    "--",
+    "--reporter=json",
+    "two words",
+  ]);
+  expect(packageTestArguments(["postgres", "--", "--dry-run"])).toEqual([
+    "postgres",
     "--",
     "--dry-run",
   ]);
@@ -80,6 +84,9 @@ it("routes E2E and repository workflows without silently turning them into a pac
 
 it("fails on unsupported suites, empty layers, unknown or ambiguous packages before running anything", () => {
   expect(() => planTests(root, root, members, ["typo"])).toThrow("Unknown test suite");
+  expect(() => planTests(root, root, members, ["postgres:cloudflare"])).toThrow(
+    "Unknown test suite",
+  );
   expect(() => planTests(root, root, members, ["integration", "-p", "tasks"])).toThrow("has no");
   expect(() => planTests(root, root, members, ["--package", "missing"])).toThrow(
     "Unknown workspace",

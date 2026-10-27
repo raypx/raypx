@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import type { ReactNode } from "react";
 import {
   createHashHistory,
@@ -63,7 +63,7 @@ const documentShell = rootOptions.shellComponent;
 const rootComponent = rootOptions.component;
 const histories: ReturnType<typeof createMemoryHistory>[] = [];
 beforeAll(() => {
-  // Exercise the real leaf routes inside jsdom without mounting the native shell.
+  // Exercise the real leaf routes inside happy-dom without mounting the native shell.
   rootOptions.shellComponent = ({ children }: { children: ReactNode }) => <>{children}</>;
   rootOptions.component = Outlet;
 });

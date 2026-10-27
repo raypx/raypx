@@ -1,5 +1,8 @@
 # Terminal protocol P0 implementation
 
+> Historical validation snapshot: the Worker deployment target and its gates have been removed.
+> Current deployment and verification use Node; commands below record the earlier state.
+
 Status: protocol prototype implemented; the production daemon/Desktop migration
 is not complete. This record does not establish the full P1 product loop.
 

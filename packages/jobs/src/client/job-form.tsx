@@ -1,5 +1,5 @@
 import { useId, useMemo, useState, type FormEvent } from "react";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Input } from "@raypx/ui/components/ui/input";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
@@ -39,7 +39,7 @@ export function JobForm({
   const t = useTranslations("cloudJobs"),
     c = useTranslations("common"),
     j = useTranslations("jobs");
-  const locale = useLocale(),
+  const format = useFormatter(),
     prefix = useId();
   const [name, setName] = useState(job?.name ?? "");
   const [cron, setCron] = useState(job?.cron ?? "0 9 * * 1-5");
@@ -297,11 +297,7 @@ export function JobForm({
             <ul className="space-y-1">
               {preview.map((date) => (
                 <li key={date}>
-                  {new Intl.DateTimeFormat(locale, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                    timeZone: timezone,
-                  }).format(new Date(date))}
+                  {format.dateTime(new Date(date), "timestamp", { timeZone: timezone })}
                 </li>
               ))}
             </ul>

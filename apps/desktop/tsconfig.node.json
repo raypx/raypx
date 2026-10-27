@@ -2,7 +2,7 @@
   "extends": "@raypx-kit/tsconfig/node.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "types": ["node", "vite/client"],
+    "types": ["bun", "vite/client"],
     "paths": {
       "electrobun": ["./.hutch/devkit/api/config/ElectrobunConfig.ts"]
     },

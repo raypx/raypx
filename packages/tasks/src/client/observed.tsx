@@ -5,7 +5,7 @@ import type {
   TerminalRequestSummary,
   TerminalSession,
 } from "@raypx/contracts/terminal";
-import { useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import {
@@ -169,6 +169,7 @@ function ObservedRequest({
   onChanged: (accepted?: boolean) => void;
 }) {
   const t = useTranslations("tasks"),
+    format = useFormatter(),
     c = useTranslations("common"),
     id = useId();
   const load = useCallback(
@@ -242,7 +243,9 @@ function ObservedRequest({
         <>
           <p className="text-xs text-muted-foreground">
             {t("terminalWaitingHint")} ·{" "}
-            {t("terminalExpires", { time: new Date(request.expiresAt).toLocaleTimeString() })}
+            {t("terminalExpires", {
+              time: format.dateTime(new Date(request.expiresAt), { timeStyle: "medium" }),
+            })}
           </p>
           <div className="max-w-2xl space-y-2">
             <label htmlFor={id} className="text-sm font-medium">

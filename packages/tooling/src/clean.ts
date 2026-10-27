@@ -27,7 +27,6 @@ export async function clean(root: string): Promise<void> {
       [
         "dist",
         ".output",
-        ".output-cloudflare",
         ".turbo",
         ".tanstack",
         "node_modules/.vite",

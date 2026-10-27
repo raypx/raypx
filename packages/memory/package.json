@@ -30,7 +30,7 @@
     "@testing-library/user-event": "catalog:dev",
     "@types/react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "jsdom": "catalog:dev",
+    "happy-dom": "catalog:dev",
     "react": "catalog:"
   },
   "peerDependencies": {

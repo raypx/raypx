@@ -8,7 +8,7 @@ Canonical sources: [architecture](../../../docs/architecture/README.md),
 
 ## Request paths
 
-- **Web** (TanStack Start SSR, Nitro node-server or Cloudflare Worker) renders with
+- **Web** (TanStack Start SSR, Nitro bun preset) renders with
   device preferences from cookies/Accept-Language and the account from `account.get`,
   forwarding only Better Auth cookies. Route groups split first-load JavaScript:
   `routes/(auth)` is a logo-only layout, `routes/(app)` renders the sidebar shell and

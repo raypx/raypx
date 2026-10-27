@@ -1,5 +1,4 @@
 import { useEffect, useId, useState, useRef } from "react";
-import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DeviceProject } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -9,7 +8,12 @@ import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { localRequest } from "../../lib/desktop";
 
-type Settings = { rootIds: string[]; away: boolean; waitSeconds: number };
+type Settings = {
+  rootIds: string[];
+  away: boolean;
+  waitSeconds: number;
+  migrationRequired?: boolean;
+};
 type Connector = {
   provider: "claude" | "codex";
   installed: boolean;
@@ -43,15 +47,7 @@ function failureKey(error: unknown) {
     ? errorKeys[code as keyof typeof errorKeys]
     : "terminalActionFailed";
 }
-export function TerminalSettings({
-  accountId,
-  info,
-  projects,
-}: {
-  accountId: string;
-  info: ControlInfo;
-  projects: DeviceProject[];
-}) {
+export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
   const t = useTranslations("tasks"),
     c = useTranslations("common"),
     id = useId();
@@ -69,7 +65,7 @@ export function TerminalSettings({
   useEffect(() => {
     let active = true;
     void Promise.all([
-      localRequest<Settings>("observed.settings", { accountId }),
+      localRequest<Settings>("approvals.local.settings", {}),
       localRequest<Connector[]>("connectors.status", {}),
     ]).then(
       ([value, hooks]) => {
@@ -86,7 +82,7 @@ export function TerminalSettings({
     return () => {
       active = false;
     };
-  }, [accountId, info.authorized]);
+  }, []);
   const update = (next: Partial<Settings>) => {
     setSettings((old) => (old ? { ...old, ...next } : old));
     setDirty(true);
@@ -104,6 +100,7 @@ export function TerminalSettings({
       if (save) {
         setDirty(false);
         setSaved(true);
+        window.dispatchEvent(new Event("raypx:terminal-settings"));
       }
     } catch (caught) {
       setError(failureKey(caught));
@@ -135,7 +132,7 @@ export function TerminalSettings({
       confirming.current = false;
     }
   }
-  const unavailable = !info.authorized || info.terminalSupported === false;
+  const unavailable = false;
   const durations = [
     ...new Set([
       ...Array.from({ length: 10 }, (_, index) => (index + 1) * 60),
@@ -233,9 +230,9 @@ export function TerminalSettings({
         ))}
       </ul>
       <p className="mt-3 max-w-[65ch] text-xs text-muted-foreground">{t("terminalTrust")}</p>
-      {info.terminalSupported === false && (
-        <p role="status" className="mt-3 max-w-[65ch] text-sm text-muted-foreground">
-          {t("terminalServerUpgrade")}
+      {settings?.migrationRequired && (
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
+          {t("terminalMigrationRequired")}
         </p>
       )}
       {settings && (
@@ -297,12 +294,12 @@ export function TerminalSettings({
             onClick={() =>
               void action(
                 () =>
-                  localRequest("observed.configure", {
-                    ...settings,
+                  localRequest("approvals.local.configure", {
+                    away: settings.away,
+                    waitSeconds: settings.waitSeconds,
                     rootIds: settings.rootIds.filter((root) =>
                       projects.some((project) => project.id === root),
                     ),
-                    accountId,
                   }),
                 true,
               )
@@ -311,11 +308,6 @@ export function TerminalSettings({
             {busy ? c("loading") : t("terminalSave")}
           </Button>
         </div>
-      )}
-      {info.authorized && !info.persistent && (
-        <p role="status" className="mt-3 max-w-[65ch] text-sm text-muted-foreground">
-          {t("daemonMemoryOnly")}
-        </p>
       )}
       {saved && (
         <p role="status" className="mt-3 text-sm">
@@ -332,7 +324,7 @@ export function TerminalSettings({
             disabled={busy}
             onClick={() =>
               void action(async () => {
-                const next = await localRequest<Settings>("observed.settings", { accountId });
+                const next = await localRequest<Settings>("approvals.local.settings", {});
                 if (!dirty) setSettings(next);
               })
             }

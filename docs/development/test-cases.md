@@ -1,5 +1,8 @@
 # Test case ownership and consolidation
 
+> Historical validation snapshot: the Worker deployment target and its gates have been removed.
+> Current deployment and verification use Node; commands below record the earlier state.
+
 Keep each layer responsible for the behavior it can establish. Combining cases
 should remove repeated preparation within one coherent journey. It must not
 replace independent failures, account boundaries or platform behavior with a

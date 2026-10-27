@@ -172,6 +172,12 @@ export class CodexProvider {
     this.currentTurnId = text(object(response.turn).id, 500) || this.currentTurnId;
     this.observer.turnId(this.currentTurnId);
   }
+  interrupt(sessionId: string | null) {
+    return this.process.request("turn/interrupt", {
+      threadId: sessionId,
+      turnId: this.currentTurnId,
+    });
+  }
   steer(prompt: string, sessionId: string | null) {
     return this.process.request("turn/steer", {
       threadId: sessionId,

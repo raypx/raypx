@@ -95,7 +95,7 @@ it("finishes an in-flight command before replacing its socket for proactive rene
   expect(f.frames.some((frame) => frame.type === "result" && frame.routeId === routeId)).toBe(true);
 });
 
-it("caps proactive renewal draining at ten seconds without cancelling the in-flight task", async () => {
+it("caps proactive renewal draining at its timeout without cancelling the in-flight task", async () => {
   const renewGrant = vi.fn(
     async (_account: string, binding: { deviceId: string; epoch: number }) => ({
       ...binding,
@@ -103,7 +103,9 @@ it("caps proactive renewal draining at ten seconds without cancelling the in-fli
       expiresAt: new Date(Date.now() + 600_000).toISOString(),
     }),
   );
-  const f = await control({ renewGrant }),
+  // Shortened from the production ten seconds; the cap matters, not its length.
+  const drainTimeoutMs = 1000;
+  const f = await control({ renewGrant, drainTimeoutMs }),
     original = f.request.getMockImplementation()!;
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -131,14 +133,14 @@ it("caps proactive renewal draining at ten seconds without cancelling the in-fli
   try {
     const started = Date.now();
     expect(await f.value.refreshGrant()).toBe(true);
-    expect(Date.now() - started).toBeGreaterThanOrEqual(9_900);
-    expect(Date.now() - started).toBeLessThan(13_000);
+    expect(Date.now() - started).toBeGreaterThanOrEqual(drainTimeoutMs - 100);
+    expect(Date.now() - started).toBeLessThan(drainTimeoutMs + 3_000);
     await expect.poll(() => f.frames.filter((frame) => frame.type === "auth").length).toBe(2);
     expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
   } finally {
     release();
   }
-}, 18_000);
+}, 8_000);
 
 it("renews a connection without cancelling tasks and disables execution after server revocation", async () => {
   const f = await control();

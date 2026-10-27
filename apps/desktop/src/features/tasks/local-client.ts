@@ -76,23 +76,23 @@ export function createLocalTaskClient(
           observed: {
             list: (_input, options) =>
               read(
-                async (accountId) =>
-                  observedProjectionSchema.parse(await request("observed.list", { accountId })),
+                async () =>
+                  observedProjectionSchema.parse(await request("approvals.local.list", {})),
                 options?.signal,
               ),
             get: (input, options) =>
               read(
-                async (accountId) =>
+                async () =>
                   terminalRequestSchema.parse(
-                    await request("observed.get", { accountId, id: input.id }),
+                    await request("approvals.local.get", { id: input.id }),
                   ),
                 options?.signal,
               ),
             decide: (decision, options) =>
               read(
-                async (accountId) =>
+                async () =>
                   terminalRequestSchema.parse(
-                    await request("observed.decide", { accountId, decision }),
+                    await request("approvals.local.decide", { decision }),
                   ),
                 options?.signal,
               ),
@@ -182,6 +182,12 @@ export function createPendingClient(
   local: TaskWorkspaceClient,
   remote: TaskWorkspaceClient,
 ): TaskWorkspaceClient {
+  let localRequests = new Map<string, string>();
+  const refreshLocal = async (options?: { signal?: AbortSignal | undefined }) => {
+    if (!local.observed) return;
+    const projection = await local.observed.list({}, options);
+    localRequests = new Map(projection.requests.map((request) => [request.id, request.epoch]));
+  };
   return {
     ...local,
     ...(local.observed || remote.observed
@@ -192,9 +198,18 @@ export function createPendingClient(
                 local.observed?.list(input, options),
                 remote.observed?.list(input, options),
               ]);
-              const values = results.flatMap((result) =>
-                result.status === "fulfilled" && result.value ? [result.value] : [],
-              );
+              if (results.every((result) => result.status === "rejected"))
+                throw (results[0] as PromiseRejectedResult).reason;
+              const own = results[0];
+              if (own?.status === "fulfilled" && own.value)
+                localRequests = new Map(
+                  own.value.requests.map((request) => [request.id, request.epoch]),
+                );
+              const values = [...results]
+                .reverse()
+                .flatMap((result) =>
+                  result.status === "fulfilled" && result.value ? [result.value] : [],
+                );
               return {
                 sessions: [
                   ...new Map(
@@ -203,13 +218,27 @@ export function createPendingClient(
                 ],
                 requests: [
                   ...new Map(
-                    values.flatMap((value) => value.requests).map((value) => [value.id, value]),
+                    values
+                      .flatMap((value) => value.requests)
+                      .map((value) => [`${value.id}:${value.epoch}`, value]),
                   ).values(),
                 ],
               };
             },
-            get: (input, options) => (remote.observed ?? local.observed)!.get(input, options),
-            decide: (input, options) => (remote.observed ?? local.observed)!.decide(input, options),
+            get: async (input, options) => {
+              await refreshLocal(options);
+              return (
+                localRequests.has(input.id) ? local.observed! : (remote.observed ?? local.observed!)
+              ).get(input, options);
+            },
+            decide: async (input, options) => {
+              await refreshLocal(options);
+              const target =
+                localRequests.get(input.id) === input.epoch
+                  ? local.observed!
+                  : (remote.observed ?? local.observed!);
+              return target.decide(input, options);
+            },
           },
         }
       : {}),
@@ -235,8 +264,7 @@ export function createPendingClient(
 }
 export const localTaskClient = createLocalTaskClient(undefined, undefined, {
   owner: LOCAL_WORKSPACE_ID,
-});
-/** Legacy account-owned history and account-authorized terminal requests stay isolated. */
-export const accountLocalTaskClient = createLocalTaskClient(undefined, undefined, {
   observed: true,
 });
+/** Legacy account-owned history and account-authorized terminal requests stay isolated. */
+export const accountLocalTaskClient = createLocalTaskClient();

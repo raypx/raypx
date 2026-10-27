@@ -148,7 +148,6 @@ export default {
     daemonReauthorizeHint:
       "确认当前账号的密码后，Raypx 会刷新登录并重试宿主授权。正在运行的任务会继续。",
     daemonHint: "macOS 上退出 Desktop 后任务继续运行。登出或断开连接会停止此账户的任务。",
-    daemonMemoryOnly: "安全存储不可用，宿主重启后需要重新授权这台电脑。",
     pendingCount: "{count} 项待处理审批",
     pendingCountPartial: "待办计数不完整，已确认至少 {count} 项。",
     terminalActionFailed: "未能完成此操作，请刷新状态后再重试。",
@@ -164,11 +163,15 @@ export default {
       "Raypx 会在安装目录旁保留已修改程序的备份，再用随应用附带的可信版本替换。Agent 的 hook 设置会保留。",
     terminalRecoverBinaryConfirm: "备份并替换",
     terminalInstallationSource: "请打开当前版本的 Desktop 修复 hook，已修改的程序不能替换自身。",
+    terminalCloud: "同步终端审批到此账户",
+    terminalCloudHint: "明确授权所选本机项目的新请求。登录不会上传本机历史或开启远程执行。",
+    terminalMigrationRequired: "无法安全采用原有终端设置，请重新选择本机项目。",
     terminalSettings: "终端连接",
     terminalSettingsHint:
       "连接新启动的 Claude 和 Codex 会话。逐个授权项目；私有内测期间，工具输入会以明文保存在你选择的服务端。",
     terminalAway: "离开模式",
-    terminalAwayHint: "等待远程回复；断连或超时后交还终端。",
+    terminalAwayHint:
+      "开启后终端请求会等待 Raypx 回复。需保持此窗口可见且未最小化，或有已授权的云渠道在线；断连或超时后交还终端。",
     terminalWait: "交还终端前等待",
     terminalWaitMinutes: "{minutes, number} 分钟",
     terminalSettingsConflict:
@@ -373,7 +376,6 @@ export default {
     tasks: "任务",
     approvals: "待处理",
     device: "当前设备",
-    requiredFields: "请填写所有必填信息。",
     skipNavigation: "跳过导航",
     account: "账号",
     accountMenu: "账号菜单",
@@ -450,7 +452,6 @@ export default {
     create: "创建账号",
     forgot: "忘记密码？",
     noAccount: "还没有账号？",
-    hasAccount: "已有账号？",
     reset: "重置密码",
     resetIntro: "输入邮箱，我们会向你发送重置链接。",
     sendReset: "发送重置链接",
@@ -472,8 +473,6 @@ export default {
     emailTaken: "该邮箱已注册。",
     passwordShort: "密码至少需要 8 个字符。",
     rateLimited: "尝试次数过多，请稍后重试。",
-    openWeb: "在浏览器中完成验证",
-    webLink: "验证和重置链接在网页端完成，完成后返回这里登录。",
   },
   settings: {
     title: "按你的习惯设置",
@@ -726,7 +725,6 @@ export default {
     next: "下次执行",
     duration: "耗时",
     exit: "退出码",
-    lastRun: "最近执行",
     noHistory: "尚无执行记录。",
     preview: "接下来五次执行",
     commandHint: "命令使用当前系统用户权限执行，请选择你信任的程序。",

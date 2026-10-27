@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import {
   saveGuestDraft,

@@ -4,21 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun vp dev --config vite.app.config.ts",
-    "start": "node .output/server/index.mjs",
+    "dev": "bun --bun vp dev --config vite.app.config.ts",
+    "start": "bun .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests tests/unit",
     "test:integration": "bun --bun vp test --run --passWithNoTests tests/integration",
     "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "build": "bun vp build --config vite.app.config.ts",
+    "build": "bun --bun vp build --config vite.app.config.ts",
     "test:postgres": "bun --bun vp test --run --mode postgres",
-    "build:cloudflare": "bun vp build --config vite.app.config.ts --mode cloudflare",
-    "preview:cloudflare": "wrangler dev --config wrangler.jsonc --local",
-    "deploy:cloudflare": "wrangler deploy --config wrangler.jsonc",
-    "test:postgres:cloudflare": "raypx-dev package-test postgres:cloudflare",
-    "test:redis": "bun --bun vp test --run --mode redis",
-    "_test:postgres:cloudflare": "bun --bun vp test --run --mode cloudflare-postgres"
+    "test:redis": "bun --bun vp test --run --mode redis"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",
@@ -49,17 +44,13 @@
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite": "catalog:dev",
-    "vite-plus": "catalog:dev",
-    "wrangler": "catalog:dev"
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "app",
     "target": "node",
     "sourceTargets": {
       "vite.app.config.ts": "node"
-    },
-    "taskScripts": {
-      "test:postgres:cloudflare": "_test:postgres:cloudflare"
     }
   }
 }

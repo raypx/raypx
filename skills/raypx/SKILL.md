@@ -1,6 +1,6 @@
 ---
 name: raypx
-description: Working knowledge for the Raypx monorepo — a multi-platform account foundation (TanStack Start Web, Hono/oRPC API, Electrobun Desktop, Bun CLI) with device-local Agent tasks. Use for questions or changes about Raypx setup, workspace boundaries, packages, routes, RPC contracts, auth, i18n, analytics, remote tasks, verification, Cloudflare/Node deployment and Raypx Kit libraries.
+description: Working knowledge for the Raypx monorepo — a multi-platform account foundation (TanStack Start Web, Hono/oRPC API, Electrobun Desktop, Bun CLI) with device-local Agent tasks. Use for questions or changes about Raypx setup, workspace boundaries, packages, routes, RPC contracts, auth, i18n, analytics, remote tasks, verification, Bun deployment and Raypx Kit libraries.
 ---
 
 # Raypx
@@ -14,7 +14,7 @@ computer through the CLI, and Web/Desktop can relay to it. Root and workspace
 ## Quick start
 
 ```sh
-mise trust && mise install            # Bun 1.4.4 (packageManager) + Node 24.15.0 (.nvmrc)
+mise trust && mise install            # Bun 1.4.4 (packageManager), the only runtime
 bun install                           # also installs the Vite+ pre-commit hook
 cp .env.example .env                  # .env.local wins; shell values win over both
 docker compose up -d postgres         # isolated database on port 5433
@@ -23,7 +23,7 @@ bun run dev                           # Web on 3000, API on 3002
 bun run dev:desktop                   # Desktop renderer on 1420 + native shell
 ```
 
-Mail, analytics and Cloudflare are optional: missing configuration returns explicit
+Mail and analytics are optional: missing configuration returns explicit
 codes such as `MAIL_NOT_CONFIGURED` or disables the control, never a false success.
 Details: [setup](references/setup.md).
 
@@ -72,7 +72,7 @@ How the pieces talk: [architecture](references/architecture.md).
 | Rate limiting and security headers | API and Web                                      | [security](references/security.md)                         |
 | Server cache                       | `apps/api/server/cache`: Redis or memory         | [caching](references/caching.md)                           |
 | Object storage                     | `@raypx/storage`, `runtime.storage` in API       | [storage](references/storage.md)                           |
-| Deployment                         | Node or Cloudflare Workers; Desktop packages     | [deployment](references/deployment.md)                     |
+| Deployment                         | Bun services; Desktop packages                   | [deployment](references/deployment.md)                     |
 | Environment and setup              | `@raypx-kit/env`, `.env`, toolchain              | [setup](references/setup.md)                               |
 
 Not present: payments, CMS, SEO tooling, feature flags, webhooks, push or in-app
@@ -105,7 +105,6 @@ bun run verify                        # default gate: no GUI, database or mail n
 bun run db:generate && bun run db:migrate   # after changing packages/database schema
 bun run i18n:check                    # catalog parity for en/zh
 bunx shadcn@latest add <component>    # run inside apps/web; writes into packages/ui
-bun run build:web:cloudflare          # optional Worker output in .output-cloudflare
 ```
 
 Generic recipes (new workspace, new route, Kit library changes):

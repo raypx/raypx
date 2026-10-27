@@ -2,8 +2,7 @@
 
 The API owns server-side jobs under `apps/api/server/jobs/`. Nitro Tasks supplies
 the named task registry and platform scheduling. `maintenance:cleanup` runs on
-`*/15 * * * *` (every 15 minutes). Its Node and Cloudflare handlers call the same
-cleanup implementation. This is independent of device-local CLI schedules and
+`*/15 * * * *` (every 15 minutes) through the Node handler. This is independent of device-local CLI schedules and
 Agent execution.
 
 ## Account cloud automations
@@ -31,7 +30,7 @@ requires the user to choose its current connection explicitly. Every execution
 rechecks account ownership, epoch, connection, project and provider availability.
 The backend never stores a browser cookie or runs a local shell action.
 
-`schedules:tick` runs every minute on both Node and Workers, controlled by
+`schedules:tick` runs every minute on Node, controlled by
 `JOBS_ENABLED` independently of the administrator's maintenance-cleanup switch.
 The existing fifteen-minute cleanup task keeps its own policy. When scheduling is
 disabled, tick performs no business queries; plans can still be saved and edited.
@@ -78,12 +77,8 @@ refresh their private lists; account/client changes discard that view's state.
    This persisted switch defaults to on and is read again before each enabled run.
 4. Build and deploy the API for the selected platform.
 
-Node's Nitro server runs the schedule while the API process is alive. Cloudflare
-invokes its `scheduled` handler through the Cron Trigger in `apps/api/wrangler.jsonc`.
-Keep that expression aligned with `scheduledTasks` in `apps/api/vite.app.config.ts`.
-This repository disables Nitro's generated deployment configuration, so Wrangler's
-checked-in trigger configuration is required. Cloudflare uses UTC. The current
-every-15-minute expression does not depend on the Node host's time zone.
+Node's Nitro server runs the schedule while the API process is alive, using
+`scheduledTasks` in `apps/api/vite.app.config.ts`.
 
 ## Cleanup policy
 
@@ -120,9 +115,7 @@ next scheduled run; a backlog drains in bounded batches. Logs include operation,
 status and deletion counts, with driver errors reduced to `JOB_FAILED`. They never
 include row identifiers, tokens, query parameters or connection strings.
 
-Node uses the API's process-owned pool. Each Worker scheduled event reads its own
-bindings, prefers Hyperdrive when configured, and closes its runtime before the
-event completes. Keep Hyperdrive caching disabled as required for authentication.
+Node tasks reuse the API's process-owned database pool.
 
 ## Development and verification
 
@@ -139,26 +132,21 @@ curl -X POST http://localhost:3002/_nitro/tasks/maintenance:cleanup
 ```sh
 bun run --cwd apps/api test -- tests/unit/jobs
 NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test postgres
-bun run build:api:cloudflare
-NODE_ENV=test TEST_DATABASE_URL=postgres://user:password@localhost/raypx_jobs_test bun run test postgres:cloudflare
 bun run verify
 ```
 
 PostgreSQL tests require an isolated database whose name ends in `_test`. They
 cover expiry boundaries, repeat runs, transaction locking, rollback and batch
-limits. Worker tests dispatch real scheduled events to the built artifact under
-workerd with both direct PostgreSQL and local Hyperdrive connections. The default
-artifact gate also invokes the disabled scheduled task without a database.
+limits. The default unit gate requires no database.
 
 ## Adding a task
 
 Keep business logic in `server/jobs/`, with thin platform entry modules in
 `server/jobs/runtime/`. Register the handler by absolute path in the API's Nitro
-configuration, and add a matching Wrangler Cron Trigger when scheduled. Specify
+configuration and its `scheduledTasks` registry. Specify
 the job's idempotency, concurrency and retry policy before enabling it; cleanup's
 transaction lock is specific to this task. Use separate locks for unrelated jobs.
 
-Nitro Tasks is experimental in the pinned Nitro version. Both deployment builds
-and the scheduled-event tests are required when upgrading it. See
-[Nitro Tasks](https://nitro.build/guide/tasks) and
-[Cloudflare Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/).
+Nitro Tasks is experimental in the pinned Nitro version. The Node deployment build
+and scheduled-event tests are required when upgrading it. See
+[Nitro Tasks](https://nitro.build/guide/tasks).

@@ -1,7 +1,7 @@
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Bounded read-only scroll regions need keyboard focus for scrolling. */
 import { Fragment, useLayoutEffect, useRef } from "react";
 import type { AgentTask, TaskActivity } from "@raypx/contracts/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { TaskMarkdown } from "./markdown.js";
 
@@ -23,6 +23,7 @@ export function Conversation({
   loadGap?: (id: number) => Promise<void>;
 }) {
   const t = useTranslations("tasks");
+  const format = useFormatter();
   const viewport = useRef<HTMLDivElement>(null),
     follow = useRef(true),
     olderHeight = useRef<number | undefined>(undefined);
@@ -153,9 +154,9 @@ export function Conversation({
         (usage.input > 0 || usage.output > 0) && (
           <p className="text-xs tabular-nums text-muted-foreground">
             {t("tokenUsage", {
-              input: usage.input.toLocaleString(),
-              output: usage.output.toLocaleString(),
-              cached: usage.cached.toLocaleString(),
+              input: format.number(usage.input),
+              output: format.number(usage.output),
+              cached: format.number(usage.cached),
             })}
           </p>
         )

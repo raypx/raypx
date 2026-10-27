@@ -2,21 +2,20 @@
 
 `@raypx/storage` stores files for server code. It wraps [unstorage](https://unstorage.unjs.io)
 drivers behind a small `ObjectStorage` interface and adds S3 pre-signed URLs with
-aws4fetch. The S3 adapter uses fetch only, so AWS S3, Cloudflare R2 and MinIO work the
-same way on the Node API and on Workers.
+aws4fetch. The S3 adapter uses fetch only, so AWS S3 and compatible providers work through the Node API.
 
 ## Configuration
 
 The API reads five optional variables. Set endpoint, bucket and both keys together, or
 none of them; a partial set stops startup.
 
-| Variable               | Example                                      |
-| ---------------------- | -------------------------------------------- |
-| `S3_ENDPOINT`          | `https://<account>.r2.cloudflarestorage.com` |
-| `S3_REGION`            | `auto` (default, R2) or e.g. `eu-central-1`  |
-| `S3_BUCKET`            | `raypx`                                      |
-| `S3_ACCESS_KEY_ID`     | access key with access to that bucket only   |
-| `S3_SECRET_ACCESS_KEY` | its secret (a Worker secret on Cloudflare)   |
+| Variable               | Example                                                      |
+| ---------------------- | ------------------------------------------------------------ |
+| `S3_ENDPOINT`          | `https://s3.example.com`                                     |
+| `S3_REGION`            | `auto` (default) or a provider region such as `eu-central-1` |
+| `S3_BUCKET`            | `raypx`                                                      |
+| `S3_ACCESS_KEY_ID`     | access key with access to that bucket only                   |
+| `S3_SECRET_ACCESS_KEY` | its runtime secret                                           |
 
 Requests are path-style (`<endpoint>/<bucket>/<key>`). Without configuration
 `runtime.storage.available` is false and every call fails with `STORAGE_NOT_CONFIGURED`;

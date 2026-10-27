@@ -1,7 +1,7 @@
+import { discoverProviders } from "./harness/registry";
 import type { RecordDiagnostic } from "../../diagnostics";
 import { existsSync, realpathSync } from "node:fs";
-import { homedir, hostname } from "node:os";
-import { join } from "node:path";
+import { hostname } from "node:os";
 import {
   taskText,
   activeTaskStatuses,
@@ -81,6 +81,8 @@ export class AgentRuntime {
     private readonly options: {
       executables?: Partial<Record<AgentProvider, string>>;
       recordDiagnostic?: RecordDiagnostic;
+      /** How long an interrupted turn may run before its pending input expires. */
+      interruptTimeoutMs?: number;
       resolveContext?: (
         selection: TaskContextSelection,
         target: TaskContextTarget,
@@ -232,46 +234,9 @@ export class AgentRuntime {
   }
   async capabilities(): Promise<AgentCapability[]> {
     if (this.capabilitiesCache) return this.capabilitiesCache;
-    this.capabilitiesCache = await Promise.all(
-      (["claude", "codex"] as const).map(async (provider) => {
-        const suffix = process.platform === "win32" ? ".exe" : "";
-        const candidates = [
-          this.options.executables?.[provider],
-          Bun.which(provider),
-          join(homedir(), ".local", "bin", provider + suffix),
-          join(homedir(), ".bun", "bin", provider + suffix),
-          join("/opt/homebrew/bin", provider),
-        ];
-        const executable = candidates.find((value) => value && existsSync(value));
-        if (!executable)
-          return { provider, available: false, version: "", reason: "missing" as const };
-        try {
-          const child = Bun.spawn([executable, "--version"], { stdout: "pipe", stderr: "ignore" });
-          const timeout = setTimeout(() => child.kill(), 3000);
-          const version = (await new Response(child.stdout).text()).trim().slice(0, 120);
-          const code = await child.exited;
-          clearTimeout(timeout);
-          const match = /(\d+)\.(\d+)\.(\d+)/.exec(version);
-          const supported =
-            code === 0 &&
-            match &&
-            (provider === "claude"
-              ? Number(match[1]) > 2 ||
-                (Number(match[1]) === 2 &&
-                  (Number(match[2]) > 1 || (Number(match[2]) === 1 && Number(match[3]) >= 302)))
-              : Number(match[1]) > 0 || Number(match[2]) >= 163);
-          if (supported) this.executables.set(provider, executable);
-          return {
-            provider,
-            available: Boolean(supported),
-            version,
-            reason: supported ? ("ready" as const) : ("unsupported" as const),
-            ...(supported ? { inputModes: ["steer", "queue"] as ("steer" | "queue")[] } : {}),
-          };
-        } catch {
-          return { provider, available: false, version: "", reason: "unsupported" as const };
-        }
-      }),
+    this.capabilitiesCache = await discoverProviders(
+      this.options.executables ?? {},
+      this.executables,
     );
     return this.capabilitiesCache;
   }
@@ -684,6 +649,7 @@ export class AgentRuntime {
           this.active.delete(task.id);
         },
       },
+      this.options.interruptTimeoutMs,
     );
     this.active.set(task.id, execution);
     this.status(local, "running");

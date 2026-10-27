@@ -104,6 +104,21 @@ export class DaemonControlProxy {
     if (this.accountId)
       await this.engine.request("host.detach", { accountId: this.accountId, apiUrl: this.apiUrl });
   }
+  async terminalSettings(accountId: string) {
+    await this.selecting;
+    return this.engine.request("host.terminal.settings", {
+      accountId,
+      apiUrl: this.apiUrl,
+    }) as Promise<{ enabled: boolean; rootIds: string[] }>;
+  }
+  async terminalConfigure(accountId: string, value: { enabled: boolean; rootIds: string[] }) {
+    await this.selecting;
+    return this.engine.request("host.terminal.configure", {
+      accountId,
+      apiUrl: this.apiUrl,
+      ...value,
+    }) as Promise<{ enabled: boolean; rootIds: string[] }>;
+  }
   wake() {
     return Promise.resolve();
   }

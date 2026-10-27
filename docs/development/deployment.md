@@ -62,7 +62,10 @@ period is 100000 microseconds, so quota 200000 means two CPUs. Change existing
 limits explicitly or choose a new builder name. A stopped builder starts on the
 next build. Reuse one bounded builder for the shared Bun download and VP task cache.
 
-Build stages contain pinned Node and Bun; Node runs Web/API builds. The script
+Build and runtime stages use the pinned `oven/bun` images; Bun is the only runtime.
+API and Web share identical manifest and dependency stages: `deploy/manifests.ts`
+extracts package manifests and `bun.lock`, so source edits reuse the installed
+dependencies and only manifest or lockfile changes reinstall. The script
 supplies `VITE_APP_RELEASE` because Docker contexts omit `.git`. Migration images
 install only database production dependencies and run as the `bun` user.
 
@@ -77,13 +80,13 @@ Point `APP_HOST` at the host. `TRAEFIK_NETWORK` defaults to `<COMPOSE_PROJECT_NA
 must already exist and contain only this project's Web/API containers and Traefik.
 Create a distinct network for each project and explicitly connect Traefik with a
 stable address. Do not attach application containers to the shared Dokploy network. Set the certificate account email before requesting TLS using
-`TRAEFIK_CERT_RESOLVER` (default `letsencrypt`). With Cloudflare, check public HTTPS
-and the origin certificate. Web and API share an origin for cookies and relay.
+`TRAEFIK_CERT_RESOLVER` (default `letsencrypt`). Check public HTTPS
+and the origin certificate when using a reverse proxy. Web and API share an origin for cookies and relay.
 
 Set Traefik entry-point `forwardedHeaders.trustedIPs` to trusted edge ranges.
 `AUTH_IP_HEADERS=x-forwarded-for` and `AUTH_TRUSTED_PROXIES` include those ranges
 plus Traefik's exact `/32` or `/128` address. Never trust an entire shared Docker
-subnet. The Node entry verifies the real socket peer before accepting forwarding
+subnet. The server entry verifies the real socket peer before accepting forwarding
 headers. Keep untrusted forwarding disabled.
 
 Validate without printing resolved secrets:
@@ -98,7 +101,7 @@ one; disable automatic image cleanup for this local-image strategy. Keep prior
 release tags and the migration image until explicitly retired.
 
 PostgreSQL becomes healthy, migration exits successfully, then API and Web start.
-Keep one API process because Node relay authority is process-local.
+Keep one API process because Relay authority is process-local.
 `POSTGRES_MEMORY`/`POSTGRES_CPUS`, `MIGRATE_MEMORY`/`MIGRATE_CPUS`,
 `API_MEMORY`/`API_CPUS` and `WEB_MEMORY`/`WEB_CPUS` configure runtime limits. Budget
 for all projects, Dokploy and builds on a shared host.

@@ -1,3 +1,7 @@
+> 2026-10-27 更新：本文件保留分阶段路线；本机优先、租约、接口、迁移和云投影规则以
+> [ADR 0035](../architecture/0035-local-owner-host.md) 为准。P1 已有独立 macOS daemon，
+> 不再由 Desktop Native 持有 relay 生命周期。
+
 # Raypx 多 Agent 宿主与移动 App 架构方案
 
 > 状态：方向已采用，P0、P1 macOS 私有内测已实现。核实日期：2026-10-25。代码基线：canary `9954a03` 及当前工作区修复。
@@ -26,7 +30,7 @@ Happier 的 Codex 能力矩阵提供了另一条值得验证的路线：由共�
 | 范围          | 核实结果                                                                                                                              | 依据                                                                                                                                          |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | 外部终端会话  | 当前只管理 Raypx 创建的进程。Claude hook 随受管进程注入；Codex 使用受管 app-server，未提供全局 connector。                            | [AgentRuntime](../../apps/cli/src/runtime/agents/index.ts)、[现行远程任务架构](../architecture/remote-tasks.md)                               |
-| 独立宿主      | relay 和续期位于 Desktop Native。Quit 会 detach 并停止 CLI；CLI 没有独立 relay daemon。                                               | [Native main](../../apps/desktop/native/main.ts)、[RemoteControl](../../apps/desktop/native/control.ts)、[CLI 约束](../../apps/cli/AGENTS.md) |
+| 独立宿主      | macOS 的 relay、续期和终端 broker 位于独立 CLI daemon；Desktop Quit 不停止受管任务。本机 Host 与可选云渠道的现行边界见 ADR 0035。     | [Native main](../../apps/desktop/native/main.ts)、[RemoteControl](../../apps/desktop/native/control.ts)、[CLI 约束](../../apps/cli/AGENTS.md) |
 | 手机闭环      | Web 已有响应式任务和审批视图；`apps/web/public` 只有 favicon，源码未发现 PWA manifest、service worker、Push Subscription 或发送实现。 | [Web public](../../apps/web/public)、[Web 源码](../../apps/web/src)、[API 源码](../../apps/api/server)                                        |
 | Pi            | 已接入的是 `@earendil-works/pi-ai` 模型传输；尚无 Pi 编程 Agent 的进程、会话与工具审批适配。                                          | [AI 包](../../packages/ai/AGENTS.md)、[依赖](../../packages/ai/package.json)                                                                  |
 | Provider 扩展 | contracts 仍是 Claude/Codex 枚举，项目 providers 最多两个；CLI 和任务 UI 均有名称分支。                                               | [任务契约](../../packages/contracts/src/tasks.ts)、[任务 UI](../../packages/tasks/src/client)                                                 |
@@ -101,7 +105,7 @@ POSIX 本地 IPC 使用私有目录和 Unix socket，配合仅本机可读的连
 
 Agent adapter 决定执行和审批能力，ChannelAdapter 决定事件送达与客户端连接，两者独立。云 relay 和本机直连复用同一 RequestBroker、请求 ID、revision 与 receipt；多渠道不会生成多个独立审批，更不能改变 Agent 的权限策略。首期只有 Raypx 自有客户端，不实现 IM adapter。
 
-CLI daemon 与 Desktop 窗口独立。无云账户的本机 Web 入口、私网直连和完整服务器产品放到 P4，不作为 P1 前置。届时默认只监听 loopback，并使用受鉴权的产品 API，不暴露整个本地 method router。当前 Desktop 登录限制的调整随该阶段实施，不能假设现有登录页已支持离线模式。
+CLI daemon 与 Desktop 窗口独立。无云账户的本机 Web 入口、私网直连和完整服务器产品放到 P4，不作为 P1 前置。届时默认只监听 loopback，并使用受鉴权的产品 API，不暴露整个本地 method router。Desktop 本机任务、connector 和终端审批已按 ADR 0035 提前解除登录依赖；本机 Web 和服务器产品仍属后续阶段。
 
 局域网、Tailscale 和自部署 API 都是显式连接选项。手机访问不到电脑的 localhost；跨网络直连需要真实可达地址、认证和受信任 TLS，不自动开放公网监听或假定 NAT 穿透。仅使用本机/私网客户端可不依赖 Raypx 云 relay；系统推送仍要由可用发送方调用 APNs/FCM，不能承诺“无任何服务也能锁屏推送”。
 
@@ -263,7 +267,7 @@ GitHub 凭据留在本机，云端不获取 `gh` token。分诊可只在本地�
 
 P0 先取得协议证据，不进行全仓重构。P1 就交付可用的 Claude/Codex 桌面闭环，P2 再增加自有 iOS App。内容 envelope 在 P0 定型，E2EE 不排到公开托管终端同步之后。P5 的进程恢复不阻塞 GUI Quit 后继续；最小 adapter 边界提前设计，完整迁移不阻塞第一版。
 
-冻结文件管理、jobs、analytics、对象存储等模块的新增产品功能，保留必要修复与既有默认门禁。日常迭代可筛选 CLI、contracts、client、tasks 和受影响应用的测试；交付仍跑完整 verify 及受影响平台门禁。Node/Cloudflare 继续共享协议和领域服务，不同时扩展两套不同的业务实现。
+冻结文件管理、jobs、analytics、对象存储等模块的新增产品功能，保留必要修复与既有默认门禁。日常迭代可筛选 CLI、contracts、client、tasks 和受影响应用的测试；交付仍跑完整 verify 及受影响平台门禁。服务端统一采用 Node，继续与本机 Host 共享协议和领域服务。
 
 PWA/Web Push 是可选增强。本机 Web 和完整服务器产品放在 P4；Docker Runner、托管 Runner、多 Agent 团队、办公助手及更多渠道不进入首个闭环。
 

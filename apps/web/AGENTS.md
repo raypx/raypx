@@ -15,7 +15,7 @@ application is an independent composition root and is never imported by another 
 - Tests live under `tests/`, alongside shared test setup; keep test files
   outside `src/routes/` so route discovery needs no test-specific exclusions.
   Use `tests/unit/` and `tests/component/` for test kind, then feature directories.
-  Independent unit/component projects use the `node` environment for pure cases and load jsdom,
+  Independent unit/component projects use the `node` environment for pure cases and load happy-dom,
   DOM matchers and motion setup only for component cases.
 - `src/router.tsx` exports `getRouter`. `src/routes/__root.tsx` renders only the document,
   theme script and preference providers; keep layout and feature dependencies out of it.
@@ -65,7 +65,7 @@ application is an independent composition root and is never imported by another 
   component memory and cancel old requests on either change. Run-history links
   open a validated `/tasks?taskId=...` projection, including tasks outside the
   current list page; navigation never creates or resumes execution.
-- `vite.app.config.ts` adds security headers to every Nitro response (Node and Workers):
+- `vite.app.config.ts` adds security headers to every Nitro response:
   framing, plugin, base and form-target CSP directives, HSTS, nosniff, Referrer and
   Permissions policies. Inline hydration and theme scripts mean script-src needs nonces
   before it can be restricted.
@@ -93,14 +93,9 @@ behavior by client/contracts.
 - Theme and language persist on this device as storage plus cookies, independently
   of account sessions, so the first server render already matches them.
 - Translate safe error codes. Never display arbitrary server diagnostic messages.
-- Dev, build, preview and production run under Node (`bun vp`, never `bun --bun vp`);
-  the default production target uses Node 24.15.0. The node-server output traces Node export conditions.
-  `build:cloudflare` uses Vite's cloudflare mode and Nitro cloudflare_module, bundles
-  server dependencies and writes `.output-cloudflare`. Keep the default Node output separate.
+- Dev, build, preview and production run under Bun (`bun --bun vp`); the Nitro `bun`
+  preset traces Bun export conditions, so start the output with `bun`.
   Common target options come from `@raypx/tooling/build/nitro`; Web owns its Start plugins and React tracing.
-  Wrangler keeps page routes Worker-first so account pages remain request-rendered.
-  `/assets/*` and `/favicon.png` use asset-first routing to avoid Worker invocations for static files.
-  Its public-fetch flag lets SSR call the public API even when it is another Worker in the same zone.
 - Do not edit `src/routeTree.gen.ts` or regenerate it with `tsr`.
 - Keep independent test configuration so application plugins stay outside tests.
 
@@ -113,7 +108,6 @@ and [verification](../../docs/development/testing.md).
 bun run --cwd apps/web check
 bun run --cwd apps/web test
 bun run build:web
-bun run build:web:cloudflare
 ```
 
 ## Remote tasks

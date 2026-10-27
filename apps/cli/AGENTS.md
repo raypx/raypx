@@ -176,3 +176,13 @@ regular binary before replacing it. It preserves Agent settings and refuses unkn
 ownership, symlinks and downgrades. Invoke from the trusted current executable;
 the modified installed program cannot repair itself. Automatic startup never
 overwrites modified files.
+
+Local terminal approvals belong to one profile-owned `terminal/` broker, with its
+owner lock at profile level and hook discovery at profile root. `approvals.local.*`
+and connectors bypass cloud restoration and serial work. Only authenticated client
+leases make the local approval channel reachable. Remote eligibility is frozen per
+request; independent projection withdrawal revisions never alter broker revisions.
+Cloud settings are explicit `host.terminal.*` Native RPCs. See ADR 0035.
+Registry/driver interfaces in `agents/harness` own provider construction and bounded
+probes; keep plan policy and persistence in ManagedExecution and raw record parsing
+in ConversationRecorder. Do not require a ProviderProcess in the lifecycle port.

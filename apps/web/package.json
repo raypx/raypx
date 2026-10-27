@@ -4,18 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "raypx-dev env -- bun vp dev --config vite.app.config.ts",
-    "build": "raypx-dev env -- bun vp build --config vite.app.config.ts",
-    "preview": "raypx-dev env -- bun vp preview --config vite.app.config.ts",
-    "start": "node .output/server/index.mjs",
+    "dev": "raypx-dev env -- bun --bun vp dev --config vite.app.config.ts",
+    "build": "raypx-dev env -- bun --bun vp build --config vite.app.config.ts",
+    "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
+    "start": "bun .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run --passWithNoTests",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",
     "test:component": "bun --bun vp test --run --passWithNoTests component/",
-    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov",
-    "build:cloudflare": "raypx-dev env -- bun vp build --config vite.app.config.ts --mode cloudflare",
-    "preview:cloudflare": "wrangler dev --config wrangler.jsonc --local",
-    "deploy:cloudflare": "wrangler deploy --config wrangler.jsonc"
+    "test:coverage": "bun --bun vp test --run --passWithNoTests --coverage --coverage.reporter=text --coverage.reporter=json --coverage.reporter=lcov"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -51,11 +48,10 @@
     "@types/react-dom": "catalog:dev",
     "@vitejs/plugin-react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
-    "jsdom": "catalog:dev",
+    "happy-dom": "catalog:dev",
     "typescript": "catalog:dev",
     "vite": "catalog:dev",
-    "vite-plus": "catalog:dev",
-    "wrangler": "catalog:dev"
+    "vite-plus": "catalog:dev"
   },
   "raypx": {
     "kind": "app",

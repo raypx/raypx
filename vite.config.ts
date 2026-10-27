@@ -26,7 +26,6 @@ export default defineConfig({
     ignorePatterns: [
       "**/dist/**",
       "**/.output/**",
-      "**/.output-cloudflare/**",
       "**/node_modules/**",
       "docs/history/**",
       "**/*.gen.ts",

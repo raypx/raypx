@@ -17,6 +17,7 @@ export interface DesktopRuntime {
   platform: string;
   trayEnabled: boolean;
   engine: EngineStatus;
+  features?: { localTerminalApprovals: boolean };
 }
 export type DesktopRpc = {
   bun: RPCSchema<{
@@ -25,6 +26,14 @@ export type DesktopRpc = {
       apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
       apiCancel: { params: { id: string }; response: boolean };
       controlInfo: { params: { accountId: string }; response: ControlInfo };
+      terminalSettings: {
+        params: { accountId: string };
+        response: { enabled: boolean; rootIds: string[] };
+      };
+      terminalConfigure: {
+        params: { accountId: string; enabled: boolean; rootIds: string[] };
+        response: { enabled: boolean; rootIds: string[] };
+      };
       controlSession: { params: { accountId: string | null }; response: boolean };
       controlEnable: { params: { accountId: string; enabled: boolean }; response: ControlInfo };
       controlRevoked: { params: { accountId: string }; response: ControlInfo };

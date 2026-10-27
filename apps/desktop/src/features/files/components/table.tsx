@@ -2,7 +2,7 @@ import type { FileEntry, FileListing } from "@raypx/contracts/local";
 import { Await } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, FileText, Folder, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { useFilesStore } from "../store";
 
 export type FileListingResult = { status: "success"; listing: FileListing } | { status: "error" };
@@ -52,7 +52,7 @@ function LoadedFileTable({
 }: FileTableProps & { listing: FileListing }) {
   const t = useTranslations("files");
   const c = useTranslations("common");
-  const locale = useLocale();
+  const format = useFormatter();
   const busy = useFilesStore((s) => s.busy);
   const setOperation = useFilesStore((s) => s.setOperation);
   return (
@@ -91,18 +91,15 @@ function LoadedFileTable({
                   </Button>
                 </td>
                 <td className="border-b border-border px-3 py-2 text-muted-foreground">
-                  {entry.kind === "directory"
-                    ? "—"
-                    : new Intl.NumberFormat(locale, { notation: "compact" }).format(entry.size) +
-                      " B"}
+                  {entry.kind === "directory" ? "—" : `${format.number(entry.size, "compact")} B`}
                 </td>
                 <td className="border-b border-border px-3 py-2 text-muted-foreground">
-                  {new Intl.DateTimeFormat(locale, {
+                  {format.dateTime(new Date(entry.modifiedAt), {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
-                  }).format(new Date(entry.modifiedAt))}
+                  })}
                 </td>
                 <td className="border-b border-border px-3 py-2 text-right whitespace-nowrap">
                   <Button

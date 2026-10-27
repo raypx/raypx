@@ -89,7 +89,13 @@ export class RequestBroker {
   }
   open(
     input: OpenRequest,
-    options: { away: boolean; reachable: boolean; waitSeconds?: number; signal?: AbortSignal },
+    options: {
+      away: boolean;
+      reachable: boolean;
+      waitSeconds?: number;
+      signal?: AbortSignal;
+      admitted?: (request: TerminalRequest) => void;
+    },
   ) {
     if (this.closed || !options.away || !options.reachable || options.signal?.aborted) {
       const reason: FallbackReason = this.closed
@@ -160,6 +166,7 @@ export class RequestBroker {
       options.signal?.addEventListener("abort", abort, { once: true });
       if (options.signal?.aborted) abort();
     }).finally(() => options.signal?.removeEventListener("abort", abort));
+    options.admitted?.(structuredClone(request));
     if (this.pending.has(request.id)) this.notify(request);
     return { request: structuredClone(request), outcome };
   }

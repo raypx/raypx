@@ -17,4 +17,4 @@ App: `apps/api` ([AGENTS](../../../apps/api/AGENTS.md)). Nitro + one Hono Fetch 
   are rejected before handlers run.
 - Web must not reimplement API behavior in TanStack Start server functions.
 - Runtime composition: `server/runtime/shared.ts` (database, logger, mailer, auth);
-  `node.ts` for the process runtime, `app/cloudflare.ts` per Worker request.
+  `node.ts` for the process runtime, closed through Nitro on shutdown.

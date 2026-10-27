@@ -10,7 +10,7 @@ import {
 import { Input } from "@raypx/ui/components/ui/input";
 import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import type { JobDefinition, JobInput, JobRun, RootGrant } from "@raypx/contracts/local";
 import { localRequest } from "../../lib/desktop";
 
@@ -27,7 +27,7 @@ export function LocalJobsPage({
 }) {
   const t = useTranslations("jobs");
   const c = useTranslations("common");
-  const locale = useLocale();
+  const format = useFormatter();
   const { confirm, dialog } = useConfirmation();
   const [jobs, setJobs] = useState(data.jobs);
   const [roots, setRoots] = useState<RootGrant[]>(local.roots ?? []);
@@ -147,10 +147,7 @@ export function LocalJobsPage({
       setBusy(false);
     }
   }
-  const date = (value: string) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(
-      new Date(value),
-    );
+  const date = (value: string) => format.dateTime(new Date(value), "timestamp");
   const command = editing && editing.action.type === "command.run" ? editing.action.command : null;
   return (
     <section className="mx-auto max-w-[1320px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">

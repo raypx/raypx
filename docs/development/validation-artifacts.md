@@ -46,7 +46,6 @@ establish line coverage or platform acceptance.
 
 ```sh
 bun run test backends
-bun run test backends --workers-only
 bun run test backends --with-e2e
 bun run test backends --with-e2e -- --workers=1
 ```
@@ -58,8 +57,7 @@ Provide PostgreSQL's `initdb`, `postgres`, `pg_isready` and `createdb` on PATH, 
 provisioning is not part of default verify. Run as an ordinary user, as required
 by `initdb`. Missing prerequisites fail before any service is started.
 
-The default runs API Node PostgreSQL, Redis and actual workerd/Hyperdrive tests.
-`--workers-only` needs only PostgreSQL. `--with-e2e` additionally starts the existing
+The default runs API Node PostgreSQL and Redis tests. `--with-e2e` additionally starts the existing
 isolated control API fixture and runs the complete browser suite against it; this
 requires installed Playwright Chromium. It does not authorize external inference
 or replace real HTTPS, packaged Native or Windows acceptance.

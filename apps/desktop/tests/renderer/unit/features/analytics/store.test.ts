@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { desktopAnalyticsStore } from "../../../../../src/features/analytics/store";
 const mocks = vi.hoisted(() => ({ save: vi.fn().mockResolvedValue(true), read: vi.fn() }));

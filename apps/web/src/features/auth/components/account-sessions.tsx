@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Monitor } from "lucide-react";
-import { useLocale, useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Badge } from "@raypx/ui/components/ui/badge";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -52,7 +52,7 @@ export function AccountSessions({
 }) {
   const t = useTranslations("auth");
   const c = useTranslations("common");
-  const locale = useLocale();
+  const format = useFormatter();
   const [sessions, setSessions] = useState<Session[]>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ReturnType<typeof sessionFailure> | null>(null);
@@ -90,7 +90,6 @@ export function AccountSessions({
     return () => controller.abort();
   }, [client, currentSessionId, revision]);
   const others = sessions?.filter((session) => session.id !== currentSessionId) ?? [];
-  const formatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
   return (
     <section
       className="mt-9 mb-7 border-t border-border pt-7"
@@ -141,7 +140,9 @@ export function AccountSessions({
                 )}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {t("sessionCreated", { date: formatter.format(new Date(session.createdAt)) })}
+                {t("sessionCreated", {
+                  date: format.dateTime(new Date(session.createdAt), "timestamp"),
+                })}
               </p>
               {session.ipAddress && (
                 <p className="mt-1 break-all text-xs text-muted-foreground">{session.ipAddress}</p>

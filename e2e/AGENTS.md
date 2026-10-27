@@ -8,12 +8,10 @@ production-origin cookie persistence require separate packaged platform checks.
 ## Interface
 
 Run bun run test e2e after installing Chromium with bun --bun playwright install chromium.
-The root launcher selects the pinned Node before VP or nested Bun scripts modify PATH. `tests/helpers/serve-web.ts`
-starts the compiled Web artifact with that absolute executable; Desktop directly
+`tests/helpers/serve-web.ts` starts the compiled Web artifact with the running Bun
+executable (`process.execPath`); Desktop directly
 serves `artifacts/browser/client`, built with `build:renderer`, through the loopback
 static helper. It preserves compiled HTML/CSP and assets without loading Vite config.
-Do not run the Node Web output through Bun's node shim.
-VP task definitions pass `NODE_BINARY` from the root launcher to this helper.
 Root `test e2e --web`, `--desktop`, `--smoke` and `--visual` provide focused entry
 points. Package-local `e2e` and `e2e:*` commands use the same build graph through
 `raypx.taskScripts`; `_e2e` is VP's private runner. Pass Playwright flags after `--`.
@@ -61,4 +59,4 @@ validated loopback Origin in connect-src; static serving preserves its HTML/CSP.
 It uses a dedicated test account, a running packaged native beta acceptance instance,
 real HTTPS/WebSocket traffic and real Claude/Codex inference. Never use a person's
 account. Keep tracing off to avoid recording login request bodies; the default E2E
-gate skips this live suite. Close the isolated browser after acceptance.
+gate skips this live suite. All browser gates default to headless; use `--headed` only for explicit interactive diagnosis. Close the isolated browser after acceptance.

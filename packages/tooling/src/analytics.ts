@@ -6,11 +6,10 @@ import { run } from "@raypx-kit/devkit/process";
 export async function uploadAnalyticsMaps(root: string, target: string | undefined) {
   const targets = {
     web: ["apps/web/.output/public/assets", "raypx-web"],
-    "web-cloudflare": ["apps/web/.output-cloudflare/public/assets", "raypx-web"],
     desktop: ["apps/desktop/dist/client/assets", "raypx-desktop"],
   } as const;
   if (!target || !(target in targets))
-    throw new Error("Usage: raypx-dev analytics sourcemaps <web|web-cloudflare|desktop>");
+    throw new Error("Usage: raypx-dev analytics sourcemaps <web|desktop>");
   if (
     ["POSTHOG_CLI_HOST", "POSTHOG_CLI_PROJECT_ID", "POSTHOG_CLI_API_KEY"].some(
       (key) => !process.env[key],

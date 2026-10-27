@@ -61,13 +61,11 @@ part of the build cache key. No upload credentials use a `VITE_` name.
 For example, build Web with `RAYPX_SOURCEMAPS=1 bun run build:web`, then run
 `bun run analytics:sourcemaps web` with `POSTHOG_CLI_HOST` (PostHog UI host),
 `POSTHOG_CLI_PROJECT_ID` and secret `POSTHOG_CLI_API_KEY` in the release environment.
-For Worker Web use `build:web:cloudflare` and the `web-cloudflare` target. For
-Desktop use `build:desktop` and the `desktop` target. The command injects release
+For Desktop use `build:desktop` and the `desktop` target. The command injects release
 and chunk metadata, uploads maps, and removes maps after success. It fails when
 credentials/maps are missing; ordinary builds and verification require neither.
 
-Publish those same injected outputs. Web's deploy command deploys the existing
-Worker build. For Desktop, run the workspace `native:build` after injection; do
+Publish those same injected outputs. For Desktop, run the workspace `native:build` after injection; do
 not run root `package:desktop`, which rebuilds the renderer. Do not publish outputs
 from a failed upload or serve hidden maps accidentally.
 

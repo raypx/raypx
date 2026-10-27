@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import type { ReactNode } from "react";
 import {
   createMemoryHistory,
@@ -94,7 +94,7 @@ const rootOptions = routeTree.options as typeof routeTree.options &
   Pick<RootRouteOptions, "shellComponent">;
 const documentShell = rootOptions.shellComponent;
 beforeAll(() => {
-  // Component tests mount into jsdom's existing document; keep the real route tree.
+  // Component tests mount into happy-dom's existing document; keep the real route tree.
   rootOptions.shellComponent = ({ children }: { children: ReactNode }) => <>{children}</>;
 });
 afterAll(() => {

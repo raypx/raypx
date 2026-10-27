@@ -3,10 +3,10 @@ import { join } from "node:path";
 import { checkArchitecture } from "@raypx-kit/devkit/architecture";
 import { readStaticCatalog, type CatalogTree } from "@raypx-kit/devkit/catalogs";
 import { checkDocumentLinks } from "@raypx-kit/devkit/docs";
-import { checkToolchain } from "@raypx-kit/devkit/toolchain";
 import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
 import { compareMessageCatalogs } from "@raypx-kit/intl/testing";
 import { discover } from "./repository.js";
+import { checkToolchain } from "./validation/toolchain.js";
 
 export function policy(root: string): string[] {
   const index = discover(root);
@@ -32,11 +32,16 @@ export function policy(root: string): string[] {
     { cwd: root, exclude: ["docs/history/**"] },
   );
   findings.push(...checkDocumentLinks(root, documents));
-  // Acceptance records describe the release they ran on and are not rewritten on upgrade.
+  // Acceptance and review records describe the release they ran on and are not rewritten on upgrade.
+  const records = new Set([
+    "docs/development/foundation-acceptance.md",
+    "docs/development/review-remediation-2026-10-24.md",
+  ]);
   findings.push(
-    ...checkToolchain(root, {
-      documents: documents.filter((file) => file !== "docs/development/foundation-acceptance.md"),
-    }),
+    ...checkToolchain(
+      root,
+      documents.filter((file) => !records.has(file)),
+    ),
   );
   return [...new Set(findings)];
 }

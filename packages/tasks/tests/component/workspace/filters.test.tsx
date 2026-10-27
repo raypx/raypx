@@ -9,7 +9,7 @@ import type { TaskClient } from "@raypx/client";
 import { selectOption } from "../../helpers/select.js";
 
 beforeEach(() => {
-  // Keep the real virtualizer while supplying jsdom's missing layout dimensions.
+  // Keep the real virtualizer while supplying happy-dom's missing layout dimensions.
   mockTaskLayout("list");
   localStorage.clear();
   localStorage.setItem("raypx_locale", "en");

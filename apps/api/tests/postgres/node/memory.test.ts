@@ -440,7 +440,7 @@ it("uses the canonical unique index for existing and missing create IDs amid unr
     await repository.create(owner, id, input());
     await connection.db.execute(sql`analyze ${contextDocument}`);
     for (const requestId of [id, crypto.randomUUID()]) {
-      const [row] = await connection.db.execute(
+      const [row] = await connection.db.execute<{ "QUERY PLAN": unknown }>(
         sql`explain (analyze,format json) select * from ${contextDocument}
           where lower(id)=${requestId} limit 2`,
       );

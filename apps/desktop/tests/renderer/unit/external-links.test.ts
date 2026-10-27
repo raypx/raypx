@@ -1,4 +1,4 @@
-/** @vitest-environment jsdom */
+/** @vitest-environment happy-dom */
 import { expect, it } from "vite-plus/test";
 import { externalLinkTarget } from "../../../src/lib/external-links";
 it("keeps dev-server router links inside Desktop and identifies only external HTTP links", () => {

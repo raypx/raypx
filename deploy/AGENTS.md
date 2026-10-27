@@ -1,6 +1,6 @@
 # Single-server deployment
 
-This directory owns the shared Node deployment managed by Dokploy Compose.
+This directory owns the shared Bun deployment managed by Dokploy Compose.
 Build from the repository root with `build.sh`; Dockerfiles remain with Web/API.
 Read `docs/development/deployment.md` before changing deployment behavior.
 
@@ -12,7 +12,7 @@ Read `docs/development/deployment.md` before changing deployment behavior.
   or reuse another project's volume automatically.
 - Only Traefik publishes application traffic. Database and application containers
   have no published host ports; the management panel stays behind SSH.
-- Keep one API process because Node relay routing has process-local authority.
+- Keep one API process because Relay routing has process-local authority.
 - Run additive, backward-compatible migrations against that environment's isolated database before replacing API. Use update.sh; migration failure must preserve the old API.
 - Require a digest-pinned PostgreSQL image and a project-private Traefik ingress network. Trust exact proxy addresses, never a shared container subnet.
 - Build versioned images sequentially with a bounded container builder. Preserve

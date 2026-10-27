@@ -35,8 +35,8 @@ it("routes root and package-local test commands to the same qualified task graph
   expect(browser).toContain("@raypx/e2e#e2e:web");
   expect(browser).toContain("web#build");
   expect(browser).not.toContain("desktop#build:renderer");
-});
-it("package-local browser and Worker commands include their build prerequisites", () => {
+}, 65_000); // Two cold child graphs each have a bounded 30-second process deadline.
+it("package-local browser commands include their build prerequisites", () => {
   const plan = (directory: string, script: string) => {
     const child = spawnSync(process.execPath, ["run", script, "--dry-run"], {
       cwd: resolve(root, directory),
@@ -52,10 +52,6 @@ it("package-local browser and Worker commands include their build prerequisites"
   const browser = plan("e2e", "e2e:web");
   expect(browser).toContain("web#build");
   expect(browser).not.toContain("desktop#build:renderer");
-  const worker = plan("apps/api", "test:postgres:cloudflare");
-  expect(worker).toContain("api#build:cloudflare");
-  expect(worker).toContain("api#check");
-  expect(worker).toContain("api#test:postgres:cloudflare");
 });
 it("browser-only acceptance excludes the native SDK, CLI and full Desktop checks", () => {
   const tasks = graph(["tasks", "e2e"]).tasks.map((task) => task.taskId);
@@ -103,4 +99,11 @@ it("changing browser selectors or workers preserves dependency task definitions"
     const dependency = selected.tasks.find((task) => task.taskId === taskId)!;
     expect(dependency).toEqual(plain.tasks.find((task) => task.taskId === taskId));
   }
+});
+
+it("default verification contains only the active Node deployment target", () => {
+  const tasks = graph(["tasks", "verify"]).tasks.map((task) => task.taskId);
+  expect(tasks).toContain("api#build");
+  expect(tasks).toContain("web#build");
+  expect(tasks.some((task) => /cloudflare|wrangler|workerd/.test(task))).toBe(false);
 });

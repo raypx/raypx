@@ -10,9 +10,7 @@ import {
 import { LocalError } from "../../errors";
 import type { AgentStore, LocalAgentTask } from "../store";
 import type { ConversationRecorder } from "../activity";
-import { CodexProvider } from "./providers/codex";
-import { ClaudeProvider } from "./providers/claude";
-import type { ProviderProcess } from "./providers/process";
+import { createDriver, type ExecutionDriver, type ExecutionHandle } from "./registry";
 
 export function initialExecutionPrompt(
   task: AgentTask,
@@ -71,8 +69,8 @@ const text = (value: unknown, max = 128_000) =>
 
 /** Single owner for turn/input/approval state and the project lock through process draining. */
 export class ManagedExecution {
-  private process: ProviderProcess | undefined;
-  private provider: CodexProvider | ClaudeProvider | undefined;
+  private process: ExecutionHandle | undefined;
+  private provider: ExecutionDriver | undefined;
   private readonly pending = new Map<string, Pending>();
   private cancelled = false;
   private finished = false;
@@ -94,6 +92,7 @@ export class ManagedExecution {
     private readonly unlock: () => void,
     private readonly store: ExecutionStore,
     private readonly effects: ExecutionEffects,
+    private readonly interruptTimeoutMs = 10_000,
   ) {}
   hasPending(id: string) {
     return this.pending.has(id);
@@ -149,7 +148,7 @@ export class ManagedExecution {
           return;
         }
         const provider = this.provider!;
-        if (provider instanceof CodexProvider) {
+        if (provider.input === "steer") {
           this.inputStatus(entry, "sending");
           try {
             await provider.steer(entry.text, this.local.sessionId);
@@ -174,7 +173,7 @@ export class ManagedExecution {
               const runner = this.process;
               this.interruptTimer = setTimeout(() => {
                 if (this.process === runner) this.expireInput(entry);
-              }, 10_000);
+              }, this.interruptTimeoutMs);
             }
           } catch {
             this.interrupting = false;
@@ -294,88 +293,68 @@ export class ManagedExecution {
         parent.task.provider !== task.provider)
     )
       throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
-    if (task.provider === "codex") {
-      const provider = new CodexProvider(executable, directory, {
-        current: () => !this.finished && this.process === provider.process,
-        record: (method, params) => this.conversation.codex(method, params),
-        ask: (...args) => this.ask(...args),
-        completed: (status, turnId) => this.codexCompleted(provider, status, turnId),
-        failed: () => {
-          if (this.process === provider.process) this.finish("failed", "AGENT_PROTOCOL_FAILED");
+    this.planRequestHandled = false;
+    const provider = createDriver(
+      task.provider,
+      { executable, directory, mode: task.mode, ...(sessionId ? { sessionId } : {}) },
+      {
+        approval: { ask: (...args) => this.ask(...args), hook: () => this.effects.hook() },
+        current: (handle) => !this.finished && this.process === handle,
+        codexRecord: (method, params) => this.conversation.codex(method, params),
+        claudeRecord: (message) => this.conversation.claude(message),
+        session: (id) => {
+          if (sessionId && id !== sessionId) {
+            this.finish("failed", "SESSION_UNAVAILABLE");
+            return;
+          }
+          this.local.sessionId = id;
+          this.store.put(this.local);
+        },
+        codexCompleted: (driver, status, turnId) => this.codexCompleted(driver, status, turnId),
+        claudeCompleted: (handle, message) =>
+          this.claudeCompleted(handle, message, executable, directory),
+        failed: (handle) => {
+          if (this.process === handle) this.finish("failed", "AGENT_PROTOCOL_FAILED");
         },
         turnId: (id) => this.conversation.setTurnId(id),
-      });
-      this.provider = provider;
-      this.process = provider.process;
-      this.watch(provider.process, false);
-      const initializedSession = await provider.initialize(task.mode, sessionId);
+      },
+    );
+    this.provider = provider;
+    this.process = provider.handle;
+    if (!provider.holdPlanOnExit) this.watch(provider.handle, false);
+    const initializedSession = await provider.initialize(task.mode, sessionId);
+    if (initializedSession) {
       if (sessionId && initializedSession !== sessionId)
         throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
       this.local.sessionId = initializedSession;
-      const resumed = Boolean(sessionId);
-      const initialPrompt = initialExecutionPrompt(task, continuationPrompt, resumed);
       this.store.put(this.local);
       this.conversation.setTokenBaseline(
-        this.store.tokenUsage(this.local.sessionId) ??
+        this.store.tokenUsage(initializedSession) ??
           this.local.tokenUsage ??
-          (resumed && parent
+          (sessionId && parent
             ? parent.tokenUsage
             : { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, cacheWriteInputTokens: 0 }),
       );
-      this.sendTurn = async (prompt) => {
-        this.turnVersion++;
-        this.turnActive = true;
-        this.summary = "";
-        this.conversation.startTurn();
-        await provider.sendTurn(prompt, this.local.sessionId, task.mode);
-      };
-      await this.serial(async () => {
-        await this.sendTurn!(initialPrompt);
-        this.ready = true;
-      });
-    } else {
-      this.planRequestHandled = false;
-      const hook = this.effects.hook();
-      const initialPrompt = initialExecutionPrompt(task, continuationPrompt, Boolean(sessionId));
-      const provider = new ClaudeProvider(
-        executable,
-        directory,
-        {
-          mode: task.mode,
-          ...(sessionId ? { sessionId } : {}),
-          hookUrl: hook.url,
-          hookToken: hook.token,
-        },
-        {
-          current: () => !this.finished && this.process === provider.process,
-          record: (message) => this.conversation.claude(message),
-          session: (id) => {
-            if (sessionId && id !== sessionId) {
-              this.finish("failed", "SESSION_UNAVAILABLE");
-              return;
-            }
-            this.local.sessionId = id;
-            this.store.put(this.local);
-          },
-          completed: (message) =>
-            this.claudeCompleted(provider.process, message, executable, directory),
-        },
-      );
-      this.provider = provider;
-      this.process = provider.process;
-      this.sendTurn = async (prompt) => {
-        this.turnVersion++;
-        this.turnActive = true;
-        this.summary = "";
-        this.conversation.startTurn();
-        await provider.sendTurn(prompt, this.local.sessionId);
-      };
-      await this.sendTurn(initialPrompt);
-      this.ready = true;
-      this.watch(provider.process, true);
     }
+    this.sendTurn = async (prompt) => {
+      this.turnVersion++;
+      this.turnActive = true;
+      this.summary = "";
+      this.conversation.startTurn();
+      await provider.sendTurn(prompt, this.local.sessionId, task.mode);
+    };
+    const start = async () => {
+      await this.sendTurn!(initialExecutionPrompt(task, continuationPrompt, Boolean(sessionId)));
+      this.ready = true;
+    };
+    // Claude plan approval may replace the driver while already in the serial queue.
+    if (provider.holdPlanOnExit) {
+      await start();
+      this.watch(provider.handle, true);
+    } else await this.serial(start);
   }
-  private watch(runner: ProviderProcess, holdPlanOnExit: boolean) {
+
+  private watch(runner: ExecutionHandle, holdPlanOnExit: boolean) {
     void runner.completed.then(
       () => {
         if (!this.finished && this.process === runner && (!holdPlanOnExit || !this.awaitingPlan))
@@ -387,7 +366,7 @@ export class ManagedExecution {
       },
     );
   }
-  private acceptResult(runner: ProviderProcess, turn: number) {
+  private acceptResult(runner: ExecutionHandle, turn: number) {
     if (
       this.finished ||
       this.process !== runner ||
@@ -399,13 +378,13 @@ export class ManagedExecution {
     this.completedTurn = turn;
     return true;
   }
-  private codexCompleted(provider: CodexProvider, status: unknown, turnId?: string) {
+  private codexCompleted(provider: ExecutionDriver, status: unknown, turnId?: string) {
     const turn = this.turnVersion;
     void this.serial(async () => {
       // Sending may still be awaiting the turn/start reply when completion arrives.
       // Check the authoritative id after that operation, before claiming this turn.
       if (turnId && provider.turnId && turnId !== provider.turnId) return;
-      if (!this.acceptResult(provider.process, turn)) return;
+      if (!this.acceptResult(provider.handle, turn)) return;
       clearTimeout(this.interruptTimer);
       this.interruptTimer = undefined;
       this.turnActive = false;
@@ -433,7 +412,7 @@ export class ManagedExecution {
     });
   }
   private claudeCompleted(
-    runner: ProviderProcess,
+    runner: ExecutionHandle,
     message: Record<string, unknown>,
     executable: string,
     directory: string,
@@ -474,7 +453,7 @@ export class ManagedExecution {
     });
   }
   private async continueClaudePlan(
-    runner: ProviderProcess,
+    runner: ExecutionHandle,
     executable: string,
     directory: string,
     plan: string,

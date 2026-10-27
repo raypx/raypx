@@ -4,13 +4,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
-import { readToolchain } from "@raypx-kit/devkit/toolchain";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
 import { clean, cleanArtifacts } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
-import { discover, pinnedNode, runTasks } from "./repository.js";
+import { discover, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
-import { smoke, smokeCloudflare } from "./smoke/index.js";
+import { smoke } from "./smoke/index.js";
+import { readBunPin } from "./validation/toolchain.js";
 import { browserTestArguments } from "./browser-tests.js";
 import { packageTestArguments, runTests } from "./test-command.js";
 
@@ -102,9 +102,6 @@ async function main() {
     case "smoke":
       await smoke(root);
       break;
-    case "smoke:cloudflare":
-      await smokeCloudflare(root);
-      break;
     case "env": {
       const values = args[0] === "--" ? args.slice(1) : args;
       if (!values[0] || /^(?:rpx|raypx-dev)(?:\.exe)?$/.test(values[0]))
@@ -129,7 +126,7 @@ async function main() {
     }
     case "analytics":
       if (args[0] !== "sourcemaps")
-        throw new Error("Usage: raypx-dev analytics sourcemaps <web|web-cloudflare|desktop>");
+        throw new Error("Usage: raypx-dev analytics sourcemaps <web|desktop>");
       await uploadAnalyticsMaps(root, args[1]);
       break;
     case "desktop":
@@ -152,10 +149,9 @@ async function main() {
       console.log("Validation reports and test artifacts removed");
       break;
     case "doctor": {
-      const pins = readToolchain(root);
-      if (Bun.version !== pins.bun) throw new Error(`Expected Bun ${pins.bun}, got ${Bun.version}`);
-      pinnedNode(root);
-      console.log(`Bun ${Bun.version}; Node ${pins.node}; ${process.platform}/${process.arch}`);
+      const bun = readBunPin(root);
+      if (Bun.version !== bun) throw new Error(`Expected Bun ${bun}, got ${Bun.version}`);
+      console.log(`Bun ${Bun.version}; ${process.platform}/${process.arch}`);
       console.log(
         `Native SDK prepared: ${existsSync(join(root, "apps/desktop/.hutch"))}; optional native toolchains require separate checks`,
       );

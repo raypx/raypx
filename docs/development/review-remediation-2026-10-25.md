@@ -1,5 +1,8 @@
 # Review remediation — 2026-10-25
 
+> Historical validation snapshot: the Worker deployment target and its gates have been removed.
+> Current deployment and verification use Node; commands below record the earlier state.
+
 Scope: the follow-up review of canary `9954a03`, plus the existing uncommitted
 shell/task-workspace changes. Generated migration SQL and raypx-kit are unchanged.
 This record describes source changes and checks, not a production deployment.

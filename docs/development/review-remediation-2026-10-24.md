@@ -1,5 +1,8 @@
 # 2026-10-24 审查治理记录
 
+> Historical validation snapshot: the Worker deployment target and its gates have been removed.
+> Current deployment and verification use Bun only; commands below record the earlier state.
+
 基线为 canary `c0fe578` 及实施开始时的工作区。保留全部既有暂存、未暂存改动；没有提交、推送或部署。`raypx-kit` 没有确认缺陷，本次不修改。
 
 ## 确定策略

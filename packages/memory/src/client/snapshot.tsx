@@ -1,5 +1,5 @@
 import type { TaskContextSnapshot } from "@raypx/core/tasks";
-import { useTranslations } from "@raypx/i18n/browser";
+import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import {
   Collapsible,
@@ -9,6 +9,7 @@ import {
 import { ChevronRight } from "lucide-react";
 export function ContextSnapshot({ snapshot }: { snapshot: TaskContextSnapshot }) {
   const t = useTranslations("memory");
+  const format = useFormatter();
   if (!snapshot.sources.length) return null;
   return (
     <section aria-label={t("snapshot")} className="space-y-3 border-b border-border pb-5">
@@ -40,7 +41,7 @@ export function ContextSnapshot({ snapshot }: { snapshot: TaskContextSnapshot })
         </Collapsible>
       ))}
       <time className="text-xs text-muted-foreground" dateTime={snapshot.capturedAt}>
-        {t("capturedAt", { date: new Date(snapshot.capturedAt).toLocaleString() })}
+        {t("capturedAt", { date: format.dateTime(new Date(snapshot.capturedAt), "timestamp") })}
       </time>
     </section>
   );

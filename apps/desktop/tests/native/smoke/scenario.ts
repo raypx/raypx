@@ -4,8 +4,10 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { JobDefinition, JobRun, RootGrant } from "@raypx/contracts/local";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/memory";
+import type { ObservedProjection } from "@raypx/contracts/terminal";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
 import { CONNECTION_KEY } from "../../../config";
+import { nativePresentation } from "../../../native/window";
 import {
   engine,
   handleTrayAction,
@@ -20,6 +22,11 @@ import {
 } from "../../../native/main";
 
 const evaluateNative = createEvaluator(view);
+const presentation = nativePresentation(process.env);
+let focused = false;
+mainWindow.on("focus", () => {
+  focused = true;
+});
 async function evaluate(script: string): Promise<unknown> {
   // Native WebView startup/activation can lose an early diagnostic request.
   // Smoke actions operate only on isolated acceptance data.
@@ -221,17 +228,24 @@ try {
   assert.equal(info.protocolVersion, 1);
   assert.equal(info.scheduler, true);
   assert.equal(`bun@${info.runtime}`, process.env.RAYPX_NATIVE_SMOKE_BUN);
-  stage = "close and restore";
-  mainWindow.requestClose();
-  await waitFor(() => !mainWindow.isVisible(), "Native close did not hide the window");
-  windowActions.show();
-  assert.equal(mainWindow.isVisible(), true);
-  stage = "native resize";
-  mainWindow.setSize(640, 480);
-  await waitFor(
-    () => mainWindow.getSize().width >= 800 && mainWindow.getSize().height >= 620,
-    "Native minimum dimensions were not restored",
-  );
+  if (presentation.activate) {
+    stage = "close and restore";
+    mainWindow.requestClose();
+    await waitFor(() => !mainWindow.isVisible(), "Native close did not hide the window");
+    focused = false;
+    windowActions.show();
+    await waitFor(() => focused, "Interactive smoke did not focus the native window");
+    assert.equal(mainWindow.isVisible(), true);
+    stage = "native resize";
+    mainWindow.setSize(640, 480);
+    await waitFor(
+      () => mainWindow.getSize().width >= 800 && mainWindow.getSize().height >= 620,
+      "Native minimum dimensions were not restored",
+    );
+  } else
+    console.info(
+      "Native smoke quiet: foreground activation, native close and resize checks skipped",
+    );
   let origin: unknown;
   await waitFor(async () => {
     origin = await evaluate("return location.origin");
@@ -357,6 +371,87 @@ try {
         ),
       "Signed-out renderer did not load device-owned memory through Native IPC",
     );
+    if (phase === "shell" && process.platform === "darwin") {
+      stage = "signed-out local terminal approvals and window lease";
+      assert.equal(engine.features.localTerminalApprovals, true);
+      const project = join(dataDir, "terminal-approvals");
+      await mkdir(project, { recursive: true });
+      const root = (await engine.request("roots.register", { path: project })) as RootGrant;
+      await engine.request("agents.configure", { rootId: root.id, providers: ["claude"] });
+      await engine.request("approvals.local.configure", {
+        rootIds: [root.id],
+        away: true,
+        waitSeconds: 60,
+      });
+      const endpoint = await Bun.file(
+        join(dataDir, "profiles/native-smoke/terminal-hook.json"),
+      ).json();
+      const hook = async () =>
+        (
+          await fetch("http://localhost/hook", {
+            unix: endpoint.socket,
+            method: "POST",
+            headers: {
+              authorization: `Bearer ${endpoint.token}`,
+              "content-type": "application/json",
+            },
+            body: JSON.stringify({
+              provider: "claude",
+              input: {
+                session_id: crypto.randomUUID(),
+                cwd: root.path,
+                hook_event_name: "PermissionRequest",
+                tool_name: "Bash",
+                tool_input: { command: "printf synthetic" },
+              },
+            }),
+          })
+        ).json();
+      const pending = async () =>
+        ((await engine.request("approvals.local.list", {})) as ObservedProjection).requests.find(
+          (request) => request.status === "pending",
+        );
+      // Native performs the lease renewal, rather than the smoke impersonating it.
+      await Bun.sleep(5500);
+      const first = hook();
+      await waitFor(
+        async () => Boolean(await pending()),
+        "Visible Native did not maintain its approval lease",
+      );
+      windowActions.hide();
+      assert.deepEqual(await first, { fallback: true });
+      assert.deepEqual(await hook(), { fallback: true });
+      windowActions.show();
+      await Bun.sleep(500);
+      const second = hook();
+      await waitFor(
+        async () => Boolean(await pending()),
+        "Restored Native did not renew its approval lease",
+      );
+      const request = (await pending())!;
+      await engine.request("approvals.local.decide", {
+        decision: {
+          id: request.id,
+          epoch: request.epoch,
+          revision: request.revision,
+          receiptId: crypto.randomUUID(),
+          decision: { type: "allow" },
+        },
+      });
+      assert.notDeepEqual(await second, { fallback: true });
+      await engine.request("approvals.local.configure", {
+        rootIds: [],
+        away: false,
+        waitSeconds: 300,
+      });
+      await engine.request("agents.configure", { rootId: root.id, providers: [] });
+      await engine.request("roots.remove", { id: root.id });
+      await Bun.sleep(16_000);
+      await engine.request("runtime.info", {});
+      console.info(
+        "Native smoke signed-out terminal approvals, visibility leases and idle IPC passed",
+      );
+    }
     stage = "signed-out local workspace and isolated session fixture";
     await localSessionFixture();
     handleTrayAction("pending");
@@ -598,8 +693,10 @@ try {
       );
     }
   } else throw new Error("Unknown native smoke phase");
+  if (!presentation.activate)
+    assert.equal(focused, false, "Quiet smoke activated the native window");
   console.info(
-    `Native smoke ${phase} passed: packaged renderer, version-matched CLI, tray and window lifecycle.`,
+    `Native smoke ${phase} passed: packaged renderer, version-matched CLI, ${presentation.activate ? "tray and window lifecycle" : "quiet window visibility (foreground GUI checks skipped)"}.`,
   );
   await fixtureServer?.stop(true);
   handleTrayAction("quit");

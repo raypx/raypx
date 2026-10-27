@@ -24,7 +24,7 @@ next-forge 的每个能力包直接绑定一家供应商（Clerk、Stripe、Sent
 2. **依赖注入**：不在导入时读取环境变量，不创建单例，不发起网络请求。配置全部由调用方传入。
 3. **自带内存或空驱动**：每个包都提供 `memory` 或 `noop` 驱动，用于测试和本地开发。
 4. **不含产品逻辑**：不出现 raypx 的文案、数据结构、路由和品牌。
-5. **能在 Cloudflare Workers 上运行**：raypx 的 api 已支持 Workers，除明确标为 Node 专用的
+5. **明确 Node / Bun / 浏览器运行时边界**：raypx 的 API 统一采用 Node，除明确标为 Node 专用的
    入口（如 `@raypx-kit/storage/fs`）外，不使用 `Buffer` 等 Node 专属 API；字节编码参考
    `packages/storage/src/internal/encoding.ts`。在 devkit.config.ts 里用 `entryTargets` 标出 Node 专用入口。
 6. 遵守现有仓库约定：ESM、exact 依赖版本、`exports` 指向 `dist`、`check-packages.ts` 的
@@ -95,7 +95,7 @@ next-forge 的 apps 对应关系：`app`、`web`、`api` 对应 raypx 的 web �
 ### `@raypx-kit/rate-limit`（占位，优先级最高）
 
 - 第一个驱动用 PostgreSQL（Node 和 Workers 都能用）；`memory` 驱动只用于测试，Workers 上
-  不同请求可能落在不同实例，内存计数起不到限流作用。也可评估 Cloudflare 的限流绑定。
+  不同请求可能落在不同实例，内存计数起不到限流作用。使用共享 Redis 或 PostgreSQL 计数。
 
 - `createRateLimiter(store, { limit, windowMs })` 返回 `consume(key): Promise<{ allowed, remaining, resetAt }>`。
 - 驱动：`memory`（固定窗口，测试可注入 `now`）。计划中的驱动：PostgreSQL、Redis。

@@ -1,5 +1,5 @@
-/** @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+/** @vitest-environment happy-dom */
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import {
@@ -91,7 +91,7 @@ describe("Raypx browser language wiring", () => {
     expect(localStorage.getItem("voidmix_locale")).toBe("zh");
   });
 
-  it("keeps native snapshots authoritative and reports hydration before persistence", () => {
+  it("keeps native snapshots authoritative and reports hydration before persistence", async () => {
     localStorage.setItem("raypx_locale", "zh");
     render(
       <BrowserLanguageProvider initialPreference="en" restorePreference={false}>
@@ -103,6 +103,7 @@ describe("Raypx browser language wiring", () => {
     expect(screen.getByTestId("state").textContent).toBe("en:en:true");
     fireEvent.click(screen.getByRole("button", { name: "System" }));
     expect(localStorage.getItem("raypx_locale")).toBe("system");
-    expect(document.cookie).not.toContain("locale=");
+    // The DOM runner expires Max-Age=0 cookies after the current clock tick.
+    await waitFor(() => expect(document.cookie).not.toContain("locale="));
   });
 });

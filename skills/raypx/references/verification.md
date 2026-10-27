@@ -5,11 +5,10 @@ Canonical source: [testing](../../../docs/development/testing.md).
 1. Run the narrow suite of each workspace you touched:
    `bun run --cwd <workspace> check` and `bun run --cwd <workspace> test`.
 2. Run `bun run verify`: catalog parity, workspace/platform policy, format, lint,
-   types, unit/component tests, builds, relocated Node Web/API outputs, Cloudflare
-   workerd outputs and the compiled CLI. It needs no GUI, database or mail provider.
+   types, unit/component tests, builds, relocated Web/API outputs started with Bun and the compiled CLI. It needs no GUI, database or mail provider.
 3. Run explicit gates only when the change needs them, and report any you could not
    run as unavailable, never as passed:
-   - `bun run test:postgres` / `test:postgres:cloudflare` with `TEST_DATABASE_URL`
+   - `bun run test postgres` with `TEST_DATABASE_URL`
      pointing at an isolated `*_test` database and `NODE_ENV=test`.
    - `bun run test:redis` with `TEST_REDIS_URL` (compose `valkey` on 6380).
    - `bun run test:e2e` for Chromium acceptance of Web and the Desktop renderer.

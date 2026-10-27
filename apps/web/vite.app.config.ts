@@ -1,3 +1,4 @@
+import { i18nCatalogs } from "@raypx/i18n/vite";
 import { analyticsBuild } from "@raypx/tooling/build/analytics";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
 import tailwindcss from "@tailwindcss/vite";
@@ -18,20 +19,20 @@ const securityHeaders = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
 };
 
-export default defineConfig(({ mode }) => {
-  const cloudflare = mode === "cloudflare";
+export default defineConfig(() => {
   const analytics = analyticsBuild();
   return {
     define: analytics.define,
-    ...(cloudflare ? { ssr: { noExternal: true as const } } : {}),
     plugins: [
       nitro({
-        ...nitroTarget(mode, import.meta.url),
+        ...nitroTarget(),
         routeRules: { "/**": { headers: securityHeaders } },
         // Trace React and React DOM together so both load the same NODE_ENV build.
-        ...(!cloudflare ? { traceDeps: ["react", "react-dom"] } : {}),
+        traceDeps: ["react", "react-dom"],
       }),
       tailwindcss(),
+      // Visitors download the default catalog plus their own language only.
+      i18nCatalogs({ catalogs: "lazy" }),
       tanstackStart(),
       react(),
     ],

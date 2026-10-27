@@ -76,7 +76,7 @@ it("rejects invalid release tags before invoking Docker", () => {
     expect(result.stderr).not.toContain("not found");
   }
 });
-it("discovers build manifests without copying application code or secrets", () => {
+it("discovers build manifests and bin placeholders without copying application code or secrets", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-metadata-"));
   try {
     const source = join(directory, "source"),
@@ -84,7 +84,12 @@ it("discovers build manifests without copying application code or secrets", () =
     mkdirSync(join(source, "modules/one"), { recursive: true });
     writeFileSync(join(source, "package.json"), JSON.stringify({ workspaces: ["modules/*"] }));
     writeFileSync(join(source, "bun.lock"), "fixture");
-    writeFileSync(join(source, "modules/one/package.json"), '{"name":"one"}');
+    writeFileSync(
+      join(source, "modules/one/package.json"),
+      '{"name":"one","bin":{"one":"./src/cli.ts"}}',
+    );
+    mkdirSync(join(source, "modules/one/src"));
+    writeFileSync(join(source, "modules/one/src/cli.ts"), "private cli");
     writeFileSync(join(source, "modules/one/source.ts"), "private source");
     const result = spawnSync(
       process.execPath,
@@ -94,6 +99,8 @@ it("discovers build manifests without copying application code or secrets", () =
     expect(result.status).toBe(0);
     expect(readFileSync(join(output, "modules/one/package.json"), "utf8")).toContain('"one"');
     expect(() => readFileSync(join(output, "modules/one/source.ts"))).toThrow(/ENOENT/);
+    // Bin targets exist so Bun links them, but carry no source.
+    expect(readFileSync(join(output, "modules/one/src/cli.ts"), "utf8")).toBe("");
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

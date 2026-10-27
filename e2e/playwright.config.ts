@@ -18,6 +18,7 @@ export default defineConfig({
   ...(settings.grep ? { grep: settings.grep } : {}),
   use: {
     ...devices["Desktop Chrome"],
+    headless: true,
     locale: "en-US",
     trace: settings.trace,
     screenshot: "only-on-failure",

@@ -13,7 +13,6 @@ function repository(rust: boolean) {
     join(root, "package.json"),
     JSON.stringify({ ...manifest, name: "fixture", packageManager: "bun@1.4.4" }),
   );
-  writeFileSync(join(root, ".nvmrc"), "24.15.0\n");
   if (rust) writeFileSync(join(root, "Cargo.toml"), '[workspace]\nmembers = ["crates/*"]\n');
   member(root, "library", {
     extra: { scripts: { check: "bun check.ts", test: "bun test.ts", build: "bun build.ts" } },
@@ -21,19 +20,12 @@ function repository(rust: boolean) {
   return taskModel(root);
 }
 
-it("includes uncached Cargo gates in repository verification while keeping Bun selection scoped", () => {
+it("keeps Cargo gates explicit and outside default repository verification", () => {
   const model = repository(true);
-  for (const name of ["verify", "verify:quick"]) {
+  for (const name of ["verify", "verify:quick", "build", "check", "test", "lint"]) {
     const plan = taskPlan(model, [taskRef("fixture", name)]);
-    for (const gate of ["check", "test", "lint", "format"]) {
-      const task = plan.find((candidate) => candidate.taskId === `fixture#rust:${gate}`);
-      expect(task?.command).toContain("cargo ");
-      expect(task?.cache).toBe(false);
-    }
-    expect(plan.some((task) => task.taskId === "fixture#rust:build")).toBe(name === "verify");
-    expect(plan.find((task) => task.taskId === "fixture#rust:test")?.command).toBe(
-      "cargo test --workspace --locked",
-    );
+    expect(plan.some((task) => task.taskId.includes("rust:"))).toBe(false);
+    expect(plan.some((task) => task.command.startsWith("cargo "))).toBe(false);
   }
   const rust = taskPlan(model, [taskRef("fixture", "rust:verify")]);
   expect(rust.filter((task) => task.command.startsWith("cargo "))).toHaveLength(5);

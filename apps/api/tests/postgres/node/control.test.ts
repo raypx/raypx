@@ -1,8 +1,12 @@
 import { afterAll, beforeAll, expect, it } from "vite-plus/test";
 import { connectDatabase, migrateDatabase } from "@raypx/database";
-import { user, session, account } from "@raypx/database/schema";
-import { eq, sql } from "drizzle-orm";
-import { createControlRepository } from "../../../server/control/repository.js";
+import { user, session, account, controlEvent, controlOwner } from "@raypx/database/schema";
+import { and, count, eq, sql } from "drizzle-orm";
+import {
+  controlListQuery,
+  createControlRepository,
+  eventWindowPrune,
+} from "../../../server/control/repository.js";
 import { ControlService } from "../../../server/control/service.js";
 import { connected, controlAuth, humanRequest, running } from "../../helpers/control.js";
 import { createApiApp } from "../../../server/api.js";
@@ -28,9 +32,11 @@ it("reads committed projections while a different connection holds the account w
     acquired = resolve;
   });
   const writer = otherConnection.db.transaction(async (tx) => {
-    await tx.execute(
-      sql`select user_id from raypx_foundation.control_owner where user_id=${auth.user.id} for update`,
-    );
+    await tx
+      .select({ userId: controlOwner.userId })
+      .from(controlOwner)
+      .where(eq(controlOwner.userId, auth.user.id))
+      .for("update");
     acquired();
     await held;
   });
@@ -54,13 +60,18 @@ it("reads committed projections while a different connection holds the account w
 it("uses bounded task indexes with thousands of unrelated conversation entries", async () => {
   const f = await connected(service, auth),
     task = await running(service, f);
-  await connection.db
-    .execute(sql`insert into raypx_foundation.control_event (id,user_id,device_id,body)
-    select 'history-' || ${f.grant.deviceId} || '-' || n, ${auth.user.id}, ${f.grant.deviceId},
-      jsonb_build_object('id', 'history-' || n, 'deviceId', ${f.grant.deviceId}::text, 'taskId', 'unrelated-' || n,
-        'streamId', ${f.announce.streamId}::text, 'cursor', n, 'event', jsonb_build_object('kind','activity',
-          'entry',jsonb_build_object('order',n,'text',repeat('x',1024))))
-    from generate_series(1,6000) n`);
+  await connection.db.insert(controlEvent).select(
+    connection.db
+      .select({
+        id: sql<string>`'history-' || ${f.grant.deviceId} || '-' || n`.as("id"),
+        userId: sql<string>`${auth.user.id}`.as("userId"),
+        deviceId: sql<string>`${f.grant.deviceId}`.as("deviceId"),
+        body: sql`jsonb_build_object('id', 'history-' || n, 'deviceId', ${f.grant.deviceId}::text, 'taskId', 'unrelated-' || n,
+            'streamId', ${f.announce.streamId}::text, 'cursor', n, 'event', jsonb_build_object('kind','activity',
+              'entry',jsonb_build_object('order',n,'text',repeat('x',1024))))`.as("body"),
+      })
+      .from(sql`generate_series(1,6000) n`),
+  );
   const now = new Date().toISOString();
   const entry = {
     id: crypto.randomUUID(),
@@ -79,19 +90,28 @@ it("uses bounded task indexes with thousands of unrelated conversation entries",
       { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
     ]);
     expect((await service.getTask(auth.user.id, task.id, 0)).activity).toEqual([entry]);
-    await connection.db.execute(sql`analyze raypx_foundation.control_event`);
-    const rows = await connection.db
-      .execute(sql`explain (analyze, format json) select body from raypx_foundation.control_event
-      where user_id=${auth.user.id} and device_id=${f.grant.deviceId} and body->>'taskId'=${task.id}
-      and body->'event'->>'kind'='activity' order by ((body->'event'->'entry'->>'order')::bigint) desc limit 65`);
+    expect((await service.getTask(auth.user.id, task.id, 0, 1)).activity).toEqual([]);
+    expect((await service.getTask(auth.user.id, task.id, 0, 2)).activity).toEqual([entry]);
+    await connection.db.execute(sql`analyze ${controlEvent}`);
+    const activity = controlListQuery(connection.db, "event", auth.user.id, f.grant.deviceId, {
+      taskId: task.id,
+      activity: true,
+      descending: true,
+      limit: 65,
+    });
+    const rows = await connection.db.execute<{
+      "QUERY PLAN": unknown;
+    }>(sql`explain (analyze, format json) ${activity.getSQL()}`);
     const plan = JSON.stringify(rows[0]?.["QUERY PLAN"]);
     expect(plan).toContain("control_event_activity_idx");
     expect(plan).toContain('"Actual Rows":1');
     expect(plan).not.toContain('"Node Type":"Seq Scan"');
   } finally {
-    await connection.db.execute(
-      sql`delete from raypx_foundation.control_event where user_id=${auth.user.id} and device_id=${f.grant.deviceId}`,
-    );
+    await connection.db
+      .delete(controlEvent)
+      .where(
+        and(eq(controlEvent.userId, auth.user.id), eq(controlEvent.deviceId, f.grant.deviceId)),
+      );
   }
 });
 beforeAll(async () => {
@@ -108,6 +128,57 @@ afterAll(async () => {
   await connection.db.delete(user).where(eq(user.id, auth.user.id));
   await connection.db.delete(user).where(eq(user.id, otherAuth.user.id));
   await connection.close();
+});
+it("scopes observed summaries, excludes revoked devices and honors empty ID filters", async () => {
+  const active = await connected(service, auth);
+  const revoked = await connected(service, auth);
+  const foreignDeviceId = crypto.randomUUID();
+  const pending = {
+    id: crypto.randomUUID(),
+    deviceId: active.grant.deviceId,
+    status: "pending",
+    createdAt: "2026-10-27T09:00:00.000Z",
+    expiresAt: "2026-10-27T11:00:00.000Z",
+    body: "Private tool body",
+    questions: [{ question: "Private question" }],
+    decision: { answer: "Private answer" },
+  };
+  const expired = {
+    ...pending,
+    id: crypto.randomUUID(),
+    createdAt: "2026-10-27T09:30:00.000Z",
+    expiresAt: "2026-10-27T09:45:00.000Z",
+  };
+  await repository.transaction(auth.user.id, async (tx) => {
+    const device = await tx.get("device", revoked.grant.deviceId);
+    await tx.put("device", { ...device!, revoked: true });
+    await tx.put("observed_request", pending);
+    await tx.put("observed_request", expired);
+    await tx.put("observed_request", {
+      ...pending,
+      id: crypto.randomUUID(),
+      deviceId: revoked.grant.deviceId,
+    });
+  });
+  await repository.transaction(otherAuth.user.id, async (tx) => {
+    await tx.put("device", { id: foreignDeviceId, deviceId: foreignDeviceId, revoked: false });
+    await tx.put("observed_request", { ...pending, deviceId: foreignDeviceId });
+  });
+  await repository.read(auth.user.id, async (tx) => {
+    const summaries = await tx.list("observed_request", undefined, {
+      observedAt: "2026-10-27T10:00:00.000Z",
+      summary: true,
+      limit: 2,
+    });
+    expect(summaries.map((row) => row.id)).toEqual([pending.id, expired.id]);
+    for (const row of summaries) {
+      expect(row).not.toHaveProperty("body");
+      expect(row).not.toHaveProperty("questions");
+      expect(row).not.toHaveProperty("decision");
+    }
+    expect(await tx.list("observed_request", undefined, { ids: [expired.id] })).toEqual([expired]);
+    expect(await tx.list("observed_request", undefined, { ids: [] })).toEqual([]);
+  });
 });
 it("persists host projections across API instances and invalidates the device session", async () => {
   const f = await connected(service, auth),
@@ -196,9 +267,13 @@ it("accepts malformed legacy Unicode at the repository boundary and continues ac
 });
 
 it("prunes the actual SQL replay window without evicting activity and pages tasks/approvals in SQL", async () => {
-  const { eventWindowPrune } = await import("../../../server/control/repository.js");
   const f = await connected(service, auth),
     task = await running(service, f);
+  const scope = and(
+    eq(controlEvent.userId, auth.user.id),
+    eq(controlEvent.deviceId, f.grant.deviceId),
+  );
+  const statusEvents = sql`${controlEvent.body}->'event'->>'kind'='status'`;
   const now = new Date().toISOString();
   const entry = {
     id: crypto.randomUUID(),
@@ -215,11 +290,19 @@ it("prunes the actual SQL replay window without evicting activity and pages task
   await service.events(f.actor, f.announce.streamId, [
     { sequence: 2, event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry } },
   ]);
-  await connection.db
-    .execute(sql`insert into raypx_foundation.control_event (id,user_id,device_id,body)
-    select 'review-window-' || ${f.grant.deviceId} || '-' || n, ${auth.user.id}, ${f.grant.deviceId},
-      jsonb_build_object('id','window-' || n,'deviceId',${f.grant.deviceId}::text,'taskId',${task.id}::text,'streamId',${f.announce.streamId}::text,'cursor',n,'event',jsonb_build_object('kind','status','summary',repeat('x',2048))) from generate_series(2,5002) n`);
-  const rows = await connection.db.execute(
+  await connection.db.insert(controlEvent).select(
+    connection.db
+      .select({
+        id: sql<string>`'review-window-' || ${f.grant.deviceId} || '-' || n`.as("id"),
+        userId: sql<string>`${auth.user.id}`.as("userId"),
+        deviceId: sql<string>`${f.grant.deviceId}`.as("deviceId"),
+        body: sql`jsonb_build_object('id','window-' || n,'deviceId',${f.grant.deviceId}::text,'taskId',${task.id}::text,'streamId',${f.announce.streamId}::text,'cursor',n,'event',jsonb_build_object('kind','status','summary',repeat('x',2048)))`.as(
+          "body",
+        ),
+      })
+      .from(sql`generate_series(2,5002) n`),
+  );
+  const rows = await connection.db.execute<{ "QUERY PLAN": unknown }>(
     sql`explain (analyze, buffers, format json) ${eventWindowPrune(auth.user.id, f.grant.deviceId, f.announce.streamId)}`,
   );
   expect(JSON.stringify(rows)).toContain("WindowAgg");
@@ -241,25 +324,39 @@ it("prunes the actual SQL replay window without evicting activity and pages task
       loops: windows[0]!["Actual Loops"],
     }),
   );
-  const remaining = await connection.db.execute(
-    sql`select count(*)::int as count,coalesce(sum(octet_length(body::text)),0)::int as bytes from raypx_foundation.control_event where user_id=${auth.user.id} and device_id=${f.grant.deviceId} and body->'event'->>'kind' not in ('activity','activity_delta')`,
-  );
-  expect(Number(remaining[0]!.count)).toBeLessThanOrEqual(4096);
-  expect(Number(remaining[0]!.bytes)).toBeLessThanOrEqual(8388608);
+  const [remaining] = await connection.db
+    .select({
+      count: count(),
+      bytes: sql`coalesce(sum(octet_length(${controlEvent.body}::text)),0)`.mapWith(Number),
+    })
+    .from(controlEvent)
+    .where(
+      and(scope, sql`${controlEvent.body}->'event'->>'kind' not in ('activity','activity_delta')`),
+    );
+  expect(remaining!.count).toBeLessThanOrEqual(4096);
+  expect(remaining!.bytes).toBeLessThanOrEqual(8388608);
   // Independently exercise the row bound with tiny replay events.
-  await connection.db.execute(
-    sql`delete from raypx_foundation.control_event where user_id=${auth.user.id} and device_id=${f.grant.deviceId} and body->'event'->>'kind'='status'`,
-  );
-  await connection.db.execute(
-    sql`insert into raypx_foundation.control_event (id,user_id,device_id,body) select 'row-window-' || ${f.grant.deviceId} || '-' || n,${auth.user.id},${f.grant.deviceId},jsonb_build_object('streamId',${f.announce.streamId}::text,'cursor',n,'event',jsonb_build_object('kind','status')) from generate_series(3,5003) n`,
+  await connection.db.delete(controlEvent).where(and(scope, statusEvents));
+  await connection.db.insert(controlEvent).select(
+    connection.db
+      .select({
+        id: sql<string>`'row-window-' || ${f.grant.deviceId} || '-' || n`.as("id"),
+        userId: sql<string>`${auth.user.id}`.as("userId"),
+        deviceId: sql<string>`${f.grant.deviceId}`.as("deviceId"),
+        body: sql`jsonb_build_object('streamId',${f.announce.streamId}::text,'cursor',n,'event',jsonb_build_object('kind','status'))`.as(
+          "body",
+        ),
+      })
+      .from(sql`generate_series(3,5003) n`),
   );
   await connection.db.execute(
     eventWindowPrune(auth.user.id, f.grant.deviceId, f.announce.streamId),
   );
-  const count = await connection.db.execute(
-    sql`select count(*)::int as count from raypx_foundation.control_event where user_id=${auth.user.id} and device_id=${f.grant.deviceId} and body->'event'->>'kind'='status'`,
-  );
-  expect(count[0]!.count).toBe(4096);
+  const [retained] = await connection.db
+    .select({ count: count() })
+    .from(controlEvent)
+    .where(and(scope, statusEvents));
+  expect(retained!.count).toBe(4096);
   expect((await service.getTask(auth.user.id, task.id, 5003)).activity).toEqual([entry]);
   const first = await service.listTasks(auth.user.id, { limit: 1 });
   expect(first).toHaveLength(1);

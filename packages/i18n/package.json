@@ -4,16 +4,19 @@
   "private": true,
   "type": "module",
   "sideEffects": false,
+  "imports": {
+    "#catalogs": "./src/catalogs/static.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./config": "./src/config.ts",
-    "./client": "./src/client.ts",
     "./server": "./src/server.ts",
     "./types": "./src/types-entry.ts",
     "./testing": "./src/testing.ts",
     "./messages": "./src/messages/index.ts",
     "./preferences": "./src/preferences.ts",
-    "./browser": "./src/browser.tsx"
+    "./browser": "./src/browser.tsx",
+    "./vite": "./src/vite.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -32,7 +35,7 @@
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",
-    "jsdom": "catalog:dev",
+    "happy-dom": "catalog:dev",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite-plus": "catalog:dev"
@@ -44,13 +47,14 @@
     "kind": "library",
     "target": "universal",
     "entryTargets": {
-      "./client": "browser",
       "./browser": "browser",
+      "./vite": "node",
       "./testing": "universal"
     },
     "sourceTargets": {
-      "src/client.ts": "browser",
       "src/browser.tsx": "browser",
+      "src/catalogs/lazy.ts": "browser",
+      "src/vite.ts": "node",
       "src/testing.ts": "universal"
     }
   }

@@ -134,7 +134,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 `bun run --cwd apps/desktop check`, `bun run --cwd apps/desktop test`, `bun run build:desktop`, then `bun run package:desktop`.
 
-`bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile. Smoke bundles are named `Raypx Test`, built under `.smoke-build.noindex`, and unregistered/removed at exit; release bundles remain `Raypx`.
+`bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. Default `quiet` presentation uses inactive windows and suppresses notifications/dialogs; native close/resize/focus acceptance is skipped. `native:smoke:interactive` explicitly enables those GUI checks. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile. Smoke bundles are named `Raypx Test`, built under `.smoke-build.noindex`, and unregistered/removed at exit; release bundles remain `Raypx`.
 Shell/restore assert signed-out local access, then use an isolated loopback session fixture. The runner switches runtime TOML servers to check cookie/storage and remote opt-in isolation. These phases do not validate authentication; runtime code contains no fixture. Real HTTPS uses the separate beta phases.
 
 `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents` runs real Claude and
@@ -172,15 +172,11 @@ sessions and renderer unmount do not revoke authorization; explicit account sign
 uses `features/tasks/host-session.ts`, and account/origin changes detach the old binding. Host bootstrap needs recent sign-in; settings' shadcn password dialog refreshes it without logout or daemon detachment.
 `native/control.ts` re-exports `@raypx/host` for Windows, retaining replay, connection fencing and renewal backoff.
 
-`features/tasks/terminal-settings.tsx` installs/removes explicitly owned Claude/Codex
-hooks and configures Away per authorized project. Default waiting is five minutes,
-configurable from one to ten. Hook failures return native terminal control; only
-recorded Bash permissions are enabled. Codex requires manual trust in `/hooks`.
-Observed requests remain separate from managed tasks and share shadcn approval UI.
-
-Connector failures show localized causes and status refresh. Modified owned binaries require explicit backup/replacement confirmation.
-Native runs the bundled CLI's finite repair command with its own directories; never execute the modified installation or accept a renderer-selected source.
-Timeout outcomes are uncertain; never retry automatically.
+Local terminal settings/connectors require no account. Hooks return native control
+on failure; only recorded Bash permissions are enabled, and Codex requires trust.
+Modified owned binaries need explicit backup/replacement confirmation. Repair uses
+the bundled CLI and Native directories, never a renderer-selected source.
+Timeouts are uncertain and never retried automatically.
 
 ## Browser analytics
 
@@ -194,5 +190,8 @@ keep capture disabled until the latest Native value arrives, never authorize fro
 Source-map upload is an explicit release step using those same assets.
 Engine mismatch recovery confirms cancellation before replacing the old daemon. Native forwards loaded `[connectors]` paths/environment; settings show actual destinations and owned-binary repair/update.
 Older servers use browser-renewed managed-only grants, with terminal approvals disabled.
-
 `features/onboarding/welcome.tsx` guides authorization, agent detection and opening the editor; empty Files, `/welcome` and Settings open it. Never auto-execute or enable remote. Local drafts use the device owner; legacy/remote slots retain server/account WebView scope.
+Local approvals require no account. Native leases `approvals.local.watch` only
+while ready/visible/unminimized; renderer cannot call watch/host.*. Local RPC never
+accepts origin/account. Cloud opt-in scopes are local subsets. Prefer local
+`(id, epoch)` over cloud revisions; uncertain decisions never switch channels.

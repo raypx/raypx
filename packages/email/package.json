@@ -8,7 +8,7 @@
     "./types": "./src/types.ts"
   },
   "scripts": {
-    "email:dev": "bun vp dev --config vite.app.config.ts",
+    "email:dev": "bun --bun vp dev --config vite.app.config.ts",
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --passWithNoTests --exclude '**/component/**' --exclude '**/integration/**'",

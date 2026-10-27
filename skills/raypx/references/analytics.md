@@ -13,4 +13,4 @@ Packages: `@raypx/analytics` ([AGENTS](../../../packages/analytics/AGENTS.md)) o
 - Configure `VITE_POSTHOG_PROJECT_TOKEN` and `VITE_POSTHOG_HOST`; without them the
   controls stay disabled. `VITE_APP_RELEASE` comes from the Git commit.
 - Readable stack traces: build with `RAYPX_SOURCEMAPS=1`, then
-  `bun run analytics:sourcemaps <web|web-cloudflare|desktop>` with `POSTHOG_CLI_*`.
+  `bun run analytics:sourcemaps <web|desktop>` with `POSTHOG_CLI_*`.

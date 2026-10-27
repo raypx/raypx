@@ -6,13 +6,13 @@ The previous cloud product is retired; historical decisions remain in docs/histo
 
 ## Requirements
 
-Bun 1.4.4, Node 24.15.0 and an isolated PostgreSQL database for account flows.
-`.nvmrc` pins Node and `packageManager` pins Bun. With [mise](https://mise.jdx.dev),
-run `mise trust && mise install` once; nvm or direct installs also work.
-`bun run doctor` confirms both.
+Bun 1.4.4 and an isolated PostgreSQL database for account flows. Bun is the only
+JavaScript runtime; `packageManager` pins it. With [mise](https://mise.jdx.dev),
+run `mise trust && mise install` once; direct installs also work.
+`bun run doctor` confirms it.
 Rust development uses rustup and the pinned `rust-toolchain.toml`; see the
 [Rust workspace guide](docs/development/rust.md).
-Desktop includes its own native host and compiled CLI; users do not install Node/Bun.
+Desktop includes its own native host and compiled CLI; users do not install Bun.
 
 ```sh
 bun install
@@ -24,8 +24,8 @@ bun run dev
 ```
 
 Web (TanStack Start SSR) runs on 3000 and API on 3002. They deploy as separate
-Node services: `node apps/web/.output/server/index.mjs` and
-`node apps/api/.output/server/index.mjs`. Web bakes `VITE_API_URL` at build time.
+Bun services: `bun apps/web/.output/server/index.mjs` and
+`bun apps/api/.output/server/index.mjs`. Web bakes `VITE_API_URL` at build time.
 Its server rendering needs the session cookie: serve both from one origin, or set
 `AUTH_DOMAIN` to the parent domain of sibling hosts such as app/api.example.com.
 Local desktop files, automations and terminals do not require login. Close-to-tray

@@ -62,7 +62,7 @@ services:
     healthcheck:
       test:
         - CMD
-        - node
+        - bun
         - -e
         - "fetch('http://127.0.0.1:3002/ready', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
       interval: 15s
@@ -92,7 +92,7 @@ services:
     healthcheck:
       test:
         - CMD
-        - node
+        - bun
         - -e
         - "fetch('http://127.0.0.1:3000/health', {signal: AbortSignal.timeout(3000)}).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
       interval: 15s
