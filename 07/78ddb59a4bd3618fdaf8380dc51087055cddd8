@@ -1,0 +1,84 @@
+crates/raypx-terminal/Cargo.toml
+  s_3a4b502e70ec90::t_eea01c34622615 19,23
+apps/desktop/src-tauri/src/cookies.rs
+  s_3a4b502e70ec90::t_eca60fedaf18c1 6,451,478
+  s_3a4b502e70ec90::t_402b8489e09f60 376,379,454
+packages/tooling/src/tasks/model.ts
+  s_3a4b502e70ec90::t_ee0c09851ddb54 242
+  s_3a4b502e70ec90::t_e68eb54d2975bc 173-178,235-241,243-244,255
+apps/desktop/tests/scripts/native/prepare-cli.test.ts
+  s_3a4b502e70ec90::t_8aa696b7cb8f05 20,24-29
+  s_3a4b502e70ec90::t_78615fd95f8a5d 1-19,21-23,30-52
+docs/development/rust.md
+  s_3a4b502e70ec90::t_78615fd95f8a5d 90-99,127-134
+docs/development/terminal-host-p1.md
+  s_3a4b502e70ec90::t_aa6e7665028f7c 3
+apps/desktop/src-tauri/Cargo.toml
+  s_3a4b502e70ec90::t_eea01c34622615 19,22-23,32,34-39
+apps/cli/tests/smoke/daemon-agents.ts
+  s_3a4b502e70ec90::t_1af4f8bd4e99c5 16,294
+docs/architecture/0036-tauri-desktop-host.md
+  s_3a4b502e70ec90::t_aa6e7665028f7c 3
+Cargo.toml
+  s_3a4b502e70ec90::t_e68eb54d2975bc 19-23
+apps/desktop/scripts/native/prepare-cli.ts
+  s_3a4b502e70ec90::t_ee0c09851ddb54 1-66
+packages/tooling/tests/unit/rust-tasks.test.ts
+  s_3a4b502e70ec90::t_78615fd95f8a5d 23-49,72-73,80-96,100-106
+  s_3a4b502e70ec90::t_8aa696b7cb8f05 97-99
+docs/development/test-cases.md
+  s_3a4b502e70ec90::t_aa6e7665028f7c 191,193,215
+apps/desktop/src-tauri/src/api.rs
+  s_3a4b502e70ec90::t_eca60fedaf18c1 166
+docs/development/getting-started.md
+  s_3a4b502e70ec90::t_aa6e7665028f7c 108
+apps/desktop/src-tauri/src/config.rs
+  s_3a4b502e70ec90::t_402b8489e09f60 220-223
+packages/tooling/AGENTS.md
+  s_3a4b502e70ec90::t_78615fd95f8a5d 27-29
+apps/desktop/src-tauri/tests/policy.rs
+  s_3a4b502e70ec90::t_2136948f2ce0da 22-32
+  s_3a4b502e70ec90::t_1cff264bd7c66f 21
+apps/desktop/src-tauri/src/prefs.rs
+  s_3a4b502e70ec90::t_eca60fedaf18c1 1,72
+Cargo.lock
+  s_3a4b502e70ec90::t_c6b501ec74c876 13,15,17-18,23,25,28-29,34,36,42,86-87,89,91-93,262-284,342-359,513-521,529-530,587,604,606,608-609,613-627,647-652,719-724,777-787,819,821,826-834,947-960,1333-1338,1567,1573,1575,1755,1757,1764,1766,1768,1795-1812,1868-1876,2146,2148,2150-2151,2336-2345,2391,2393-2405,2476,2478,2650,2705,2707,2729-2761,2768-2797,3360,3362,3364-3365,3529,3533,3589,3604,3629,3635-3636,3640,3660-3661,3800,3822,3824,3832,3838,3843,3862,3864,3871,3873,3918,3936,3964,3982,4076-4077,4079,4081-4091,4336-4347,4482,4484,4804,4846,4848,4888,4890,4894,4930,4932,4934,5441-5446,5484,5486,5488-5489,5934-5946,6037,6230,6267,6269,6333-6343,6441,6443,6446,6449-6451
+bun.lock
+  s_3a4b502e70ec90::t_56c9351df88a34 221,276,303,418,445,483,531,578,630,637,651-653,660,671,1080,1084,1086,1266,1268,1270,1276,1278,1280,1428,1596,1664,1672,1722,1754,1914,2094,2144,2166,2168,2192,2258,2350,2374
+package.json
+  s_3a4b502e70ec90::t_3b9779ca439c1d 38,45,65,83-86
+packages/account/package.json
+  s_3a4b502e70ec90::t_19395b8ac22db2 32
+packages/auth/package.json
+  s_3a4b502e70ec90::t_5bc7812cafd6b2 34
+packages/blocks/package.json
+  s_3a4b502e70ec90::t_5b861244b5c12f 34
+packages/i18n/package.json
+  s_3a4b502e70ec90::t_d98e6b99b28036 45
+packages/jobs/package.json
+  s_3a4b502e70ec90::t_47d69d753a8cce 39
+packages/memory/package.json
+  s_3a4b502e70ec90::t_08d35f88d2ec33 37
+packages/tasks/package.json
+  s_3a4b502e70ec90::t_acb48ac5eb645f 49
+packages/tooling/src/policy.ts
+  s_3a4b502e70ec90::t_60cd2b72b07d83 36
+packages/ui/package.json
+  s_3a4b502e70ec90::t_5ee5305e00afe8 73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0778ddb59a4bd3618fdaf8380dc51087055cddd8",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
