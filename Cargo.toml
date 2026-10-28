@@ -15,3 +15,7 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 all = "warn"
+
+[profile.release]
+# Shipped binaries drop the symbol table; release panic backtraces show addresses only.
+strip = true
