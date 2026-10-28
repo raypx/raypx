@@ -1,0 +1,111 @@
+apps/desktop/mygo.config.ts
+  s_a4f4f0ce2ca2a6::t_057d19adb6c17e 1-21
+packages/tooling/src/clean.ts
+  s_a4f4f0ce2ca2a6::t_10a6361ae466cd 45
+apps/desktop/tsconfig.node.json
+  s_a4f4f0ce2ca2a6::t_057d19adb6c17e 13
+apps/desktop/vite.app.config.ts
+  s_a4f4f0ce2ca2a6::t_057d19adb6c17e 28-40
+apps/desktop/tests/scripts/native/mygo.test.ts
+  s_a4f4f0ce2ca2a6::t_b7ceff5141afc8 1-74,84
+  s_a4f4f0ce2ca2a6::t_22821968df2da9 75-83,85-86
+apps/desktop/scripts/native/mygo.ts
+  s_a4f4f0ce2ca2a6::t_057d19adb6c17e 47,66,84-94,97,109-119,139,142,146-147
+  s_a4f4f0ce2ca2a6::t_2b74412f6c634a 148-151,159
+packages/tooling/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_10a6361ae466cd 37-40
+apps/desktop/package.json
+  s_a4f4f0ce2ca2a6::t_057d19adb6c17e 90
+AGENTS.md
+  s_a4f4f0ce2ca2a6::t_10a6361ae466cd 55
+.github/workflows/ci.yml
+  s_a4f4f0ce2ca2a6::t_10a6361ae466cd 319-320
+apps/desktop/.gitignore
+  s_a4f4f0ce2ca2a6::t_10a6361ae466cd 1,3-7
+apps/desktop/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_679ecee0873211 6-7,16-19,57,75-77
+apps/desktop/README.md
+  s_a4f4f0ce2ca2a6::t_088d68da7763c8 6-45,64-65,70-72,81,89-90
+apps/desktop/internal/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_b1f5e81d6b8fb6 4-5,15-17
+apps/desktop/internal/app/app.go
+  s_a4f4f0ce2ca2a6::t_7f2c413221c1e8 1,20,23-25,33,58,89,143,179
+apps/desktop/internal/app/bridge.go
+  s_a4f4f0ce2ca2a6::t_4916df5d3d06d5 1-105
+apps/desktop/internal/app/check.go
+  s_a4f4f0ce2ca2a6::t_f8b79d897de24e 1-57
+apps/desktop/internal/app/platform.go
+  s_a4f4f0ce2ca2a6::t_46ee02e4e9edb0 1-54
+apps/desktop/internal/app/updates.go
+  s_a4f4f0ce2ca2a6::t_4cd6a76b68ee62 1-38
+apps/desktop/internal/desktop/api.go
+  s_a4f4f0ce2ca2a6::t_1c82824d935cd4 1
+apps/desktop/internal/desktop/approvals.go
+  s_a4f4f0ce2ca2a6::t_96e66ea1451c6d 1-32
+apps/desktop/internal/desktop/config.go
+  s_a4f4f0ce2ca2a6::t_deca77c30a1be3 1
+apps/desktop/internal/desktop/connectors.go
+  s_a4f4f0ce2ca2a6::t_ec7c200330629f 1-57
+apps/desktop/internal/desktop/control.go
+  s_a4f4f0ce2ca2a6::t_0833ba3872bf3a 1-127
+apps/desktop/internal/desktop/cookies.go
+  s_a4f4f0ce2ca2a6::t_b2364e7f70bdf8 1
+apps/desktop/internal/desktop/desktop.go
+  s_a4f4f0ce2ca2a6::t_f7e5bd047812ef 1-75
+apps/desktop/internal/desktop/engine.go
+  s_a4f4f0ce2ca2a6::t_6ecf7efef885c0 1
+apps/desktop/internal/desktop/instance.go
+  s_a4f4f0ce2ca2a6::t_83e063e97f2f12 1-33
+apps/desktop/internal/desktop/lifecycle.go
+  s_a4f4f0ce2ca2a6::t_7de2f1c72e21ec 1-70
+apps/desktop/internal/desktop/platform.go
+  s_a4f4f0ce2ca2a6::t_457fc7d8b039ce 1
+apps/desktop/internal/desktop/process_unix.go
+  s_a4f4f0ce2ca2a6::t_7661c0a9e2ea78 3
+apps/desktop/internal/desktop/process_windows.go
+  s_a4f4f0ce2ca2a6::t_db9b9f15317122 1
+apps/desktop/internal/desktop/requests.go
+  s_a4f4f0ce2ca2a6::t_16a86eee42d4f6 1,33
+apps/desktop/main.go
+  s_a4f4f0ce2ca2a6::t_b1267c9e4e35ae 1-19
+apps/desktop/resources/Entitlements.plist
+  s_a4f4f0ce2ca2a6::t_abc294d370b50d 1-6
+apps/desktop/tests/native/host/fixtures_test.go
+  s_a4f4f0ce2ca2a6::t_914892a86e9dda 13,18,88
+apps/desktop/tests/native/host/host_test.go
+  s_a4f4f0ce2ca2a6::t_bce5bae7e8cac8 17
+apps/desktop/tests/native/host/page_origin_test.go
+  s_a4f4f0ce2ca2a6::t_9d3693d0dc5ca2 6
+apps/desktop/tests/native/host/regressions_test.go
+  s_a4f4f0ce2ca2a6::t_30a1b14a3659a0 17
+apps/desktop/tests/native/host/shutdown_test.go
+  s_a4f4f0ce2ca2a6::t_8d23f9dfe383e7 14
+docs/README.md
+  s_a4f4f0ce2ca2a6::t_e0dba75faf1a2c 12
+docs/architecture/0038-mygo-desktop-host.md
+  s_a4f4f0ce2ca2a6::t_52dd377699a2a8 12-23
+docs/development/desktop-release.md
+  s_a4f4f0ce2ca2a6::t_8a9d630afbe886 4
+docs/development/getting-started.md
+  s_a4f4f0ce2ca2a6::t_0c6cdb17e2fd9e 5
+packages/tooling/src/tasks/model.ts
+  s_a4f4f0ce2ca2a6::t_ee894141abc9e3 118
+packages/tooling/tests/unit/clean.test.ts
+  s_a4f4f0ce2ca2a6::t_53ae68c903c14b 28-33,54-63,96-97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0188c0f7e567defaf614acccf54e54a9c998207d",
+  "prompts": {},
+  "sessions": {
+    "s_a4f4f0ce2ca2a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1762e-b82b-7e63-9074-02137a943dc8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
