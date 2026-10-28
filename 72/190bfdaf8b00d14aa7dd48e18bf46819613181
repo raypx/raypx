@@ -1,0 +1,30 @@
+apps/desktop/tests/native/smoke/agents-run.ts
+  s_3a4b502e70ec90::t_c914b6aad226f4 9,17,41-42,56
+apps/desktop/scripts/native/windows-smoke-install.ts
+  s_3a4b502e70ec90::t_c914b6aad226f4 280
+apps/desktop/tests/native/smoke/owner.ts
+  s_3a4b502e70ec90::t_c914b6aad226f4 1-51
+  s_3a4b502e70ec90::t_17ffb2f37f0035 52-54
+apps/desktop/tests/native/smoke/run.ts
+  s_3a4b502e70ec90::t_c914b6aad226f4 10,73-74,89,91-92,99
+apps/desktop/tests/scripts/native/smoke-owner.test.ts
+  s_3a4b502e70ec90::t_c914b6aad226f4 1-7,11-15,17-35
+  s_3a4b502e70ec90::t_f2d2e2c95b974c 8-10,16
+  s_3a4b502e70ec90::t_6d70c22209ea93 36-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "72190bfdaf8b00d14aa7dd48e18bf46819613181",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
