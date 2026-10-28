@@ -16,6 +16,7 @@ it("bounds parallel removals and waits for every batch", async () => {
   mocks.rm.mockReturnValue(blocked);
 
   const pending = clean("/fixture");
+  await Promise.resolve();
   expect(mocks.rm).toHaveBeenCalledTimes(8);
   let complete = false;
   const completed = pending.then(() => {

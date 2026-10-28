@@ -1,10 +1,20 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { expect, it } from "vite-plus/test";
-import { clean, cleanArtifacts } from "../../src/clean.js";
+import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { clean, cleanArtifacts, cleanRust } from "../../src/clean.js";
 import { workspaceFixtures } from "../helpers/workspace.js";
 
 const { fixture, member } = workspaceFixtures();
+const mocks = vi.hoisted(() => ({ run: vi.fn() }));
+vi.mock("@raypx-kit/devkit/process", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@raypx-kit/devkit/process")>()),
+  run: mocks.run,
+}));
+beforeEach(() => vi.stubEnv("CARGO_TARGET_DIR", undefined));
+afterEach(() => {
+  vi.resetAllMocks();
+  vi.unstubAllEnvs();
+});
 
 it("cleans generated files while preserving source, dependencies and local data on repeated runs", async () => {
   const root = fixture();
@@ -14,14 +24,12 @@ it("cleans generated files while preserving source, dependencies and local data 
     `${library}/coverage/lcov.info`,
     `${library}/.turbo/check.log`,
     ".turbo/cache/task.tar.zst",
-    "target/debug/libraypx_core.rlib",
     "node_modules/.vite/task-cache/task.json",
     "node_modules/.vitest-cache/module.bin",
     `${library}/node_modules/.vite/vitest/results.json`,
     `${library}/node_modules/.cache/raypx-tests/run.json`,
     "node_modules/.cache/raypx-tests/run.json",
     ".artifacts/probe/cache/task.tar.zst",
-    "target/release/bundle/macos/Raypx.app/Contents/MacOS/Raypx",
     "apps/desktop/artifacts/browser/client/index.html",
     "apps/desktop/src-tauri/binaries/raypx-aarch64-apple-darwin",
     "apps/desktop/src-tauri/gen/schemas/desktop-schema.json",
@@ -38,6 +46,8 @@ it("cleans generated files while preserving source, dependencies and local data 
     "Cargo.lock",
     "Cargo.toml",
     "rust-toolchain.toml",
+    "target/debug/deps/libdependency.rlib",
+    "target/release/bundle/macos/Raypx.app/Contents/MacOS/Raypx",
     "crates/raypx-core/src/lib.rs",
     ".git/config",
     ".env.local",
@@ -58,6 +68,12 @@ it("cleans generated files while preserving source, dependencies and local data 
 
   for (const path of outputs) expect(existsSync(join(root, path))).toBe(false);
   for (const path of preserved) expect(readFileSync(join(root, path), "utf8")).toBe(path);
+  expect(mocks.run).toHaveBeenCalledTimes(2);
+  expect(mocks.run).toHaveBeenCalledWith(
+    "cargo",
+    ["clean", "--workspace", "--profile", "dev", "--locked", "--offline"],
+    root,
+  );
 });
 
 it("cleans reports independently while preserving built applications, sidecars and validation tools", async () => {
@@ -82,6 +98,7 @@ it("cleans reports independently while preserving built applications, sidecars a
     "bun.lock",
     "target/debug/libraypx_core.rlib",
     "Cargo.lock",
+    "Cargo.toml",
   ];
   for (const path of [...outputs, ...preserved]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -91,4 +108,42 @@ it("cleans reports independently while preserving built applications, sidecars a
   await cleanArtifacts(root);
   for (const path of outputs) expect(existsSync(join(root, path))).toBe(false);
   for (const path of preserved) expect(readFileSync(join(root, path), "utf8")).toBe(path);
+  expect(mocks.run).not.toHaveBeenCalled();
+});
+
+it("does not require Cargo before Rust artifacts exist or in a Bun-only repository", async () => {
+  const root = fixture();
+  writeFileSync(join(root, "Cargo.toml"), "manifest");
+  await cleanRust(root);
+  const bunOnly = fixture();
+  mkdirSync(join(bunOnly, "target"));
+  await cleanRust(bunOnly);
+  expect(mocks.run).not.toHaveBeenCalled();
+});
+
+it("honors CARGO_TARGET_DIR without cleaning JavaScript outputs", async () => {
+  const root = fixture();
+  const library = member(root, "feature");
+  writeFileSync(join(root, "Cargo.toml"), "manifest");
+  mkdirSync(join(root, "cargo-cache"));
+  mkdirSync(join(root, library, "dist"));
+  const output = join(root, library, "dist/index.js");
+  writeFileSync(output, "built JavaScript");
+  vi.stubEnv("CARGO_TARGET_DIR", "cargo-cache");
+  await cleanRust(root);
+  expect(mocks.run).toHaveBeenCalledOnce();
+  expect(readFileSync(output, "utf8")).toBe("built JavaScript");
+});
+
+it("propagates Cargo failures before removing application outputs", async () => {
+  const root = fixture();
+  const library = member(root, "feature");
+  writeFileSync(join(root, "Cargo.toml"), "manifest");
+  mkdirSync(join(root, "target"));
+  mkdirSync(join(root, library, "dist"));
+  const output = join(root, library, "dist/index.js");
+  writeFileSync(output, "built JavaScript");
+  mocks.run.mockRejectedValueOnce(new Error("Cargo unavailable"));
+  await expect(clean(root)).rejects.toThrow("Cargo unavailable");
+  expect(readFileSync(output, "utf8")).toBe("built JavaScript");
 });

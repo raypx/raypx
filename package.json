@@ -112,6 +112,7 @@
     "rust:lint": "raypx-dev tasks rust:lint",
     "rust:format": "raypx-dev tasks rust:format",
     "rust:verify": "raypx-dev tasks rust:verify --concurrency-limit=1",
+    "rust:clean": "raypx-dev clean:rust",
     "check": "raypx-dev tasks check",
     "test": "raypx-dev test",
     "lint": "bun --bun vp lint",

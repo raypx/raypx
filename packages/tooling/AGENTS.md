@@ -15,7 +15,7 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
-- raypx-dev policy | verify | verify:quick | doctor | clean
+- raypx-dev policy | verify | verify:quick | doctor | clean | clean:rust | clean:artifacts
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--with-e2e [-- Playwright flags]]
 - `raypx.taskScripts` delegates a public package script to a terminal runner inside
@@ -30,7 +30,10 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - `clean` removes workspace outputs, staged Tauri binaries/generated schemas and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
-- `clean` also removes root Cargo `target/`; `clean:artifacts` preserves it.
+- `clean` delegates Rust cleanup to `cargo clean --workspace --profile dev`, preserving
+  dependency caches and Release artifacts. `clean:rust` runs only that step, exposed
+  as root `rust:clean`; `clean:artifacts` preserves all Rust outputs. Cargo is skipped
+  without a Cargo manifest or target directory; `CARGO_TARGET_DIR` is respected.
 - raypx-dev env -- <command>, db <operation>, desktop build [Tauri build arguments]
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/beta/agents tasks are uncached, depend on the

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
-import { clean, cleanArtifacts } from "./clean.js";
+import { clean, cleanArtifacts, cleanRust } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
 import { discover, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
@@ -139,9 +139,17 @@ async function main() {
       break;
     case "clean": {
       await clean(root);
-      console.log("Build outputs, staged sidecars and test artifacts removed");
+      console.log(
+        "Build outputs, staged sidecars and test artifacts removed; Rust dependency caches and Release artifacts preserved",
+      );
       break;
     }
+    case "clean:rust":
+      await cleanRust(root);
+      console.log(
+        "Workspace Rust development artifacts cleaned; dependency caches and Release artifacts preserved",
+      );
+      break;
     case "clean:artifacts":
       await cleanArtifacts(root);
       console.log("Validation reports and test artifacts removed");
@@ -158,7 +166,7 @@ async function main() {
     case undefined:
     default:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | clean:rust | clean:artifacts | doctor",
       );
   }
 }

@@ -52,6 +52,9 @@ The accepted foundation design supersedes documents in docs/history.
   of Bun workspace discovery. Inherit shared Cargo package/lint settings and commit
   root Cargo.lock. rust-toolchain.toml pins Rust; VP runs Cargo tasks uncached while
   Cargo owns incremental compilation. See crates/AGENTS.md and docs/development/rust.md.
+- For routine Rust cleanup, use `bun run rust:clean` (`cargo clean --workspace --profile dev`)
+  to preserve dependency caches and Release artifacts. `bun run clean` uses the same
+  Rust policy alongside application cleanup. A full `target/` reset needs an explicit request.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.
 - Vite+ owns leaf build/test/lint/format. Keep independent Vitest configurations.
 - Root `test` aggregates suites; workspace package.json owns its actual test commands.

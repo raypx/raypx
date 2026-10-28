@@ -116,10 +116,13 @@ and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
 `bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
 Desktop's renderer artifacts and Cargo sidecar staging directories, root
-`.artifacts`, Cargo's root `target`, and browser test results/reports. It awaits asynchronous deletion in
-batches of up to eight directories. It keeps dependencies, lockfiles,
-Git history, environment files, user profiles and database volumes. The next
-Desktop build/check/dev prepares the native SDK again.
+`.artifacts`, and browser test results/reports. Rust cleanup runs
+`cargo clean --workspace --profile dev`, preserving dependency caches and Release
+artifacts. Use `bun run rust:clean` for only that Rust step. Cargo is skipped when no
+Rust target directory exists. Other removals run in batches of up to eight directories.
+It keeps dependencies, lockfiles,
+Git history, environment files, user profiles and database volumes. Native development,
+Rust compile gates and packaging prepare generated inputs and the matching CLI again.
 
 VP owns the task graph and its local cache at `node_modules/.vite/task-cache`.
 Use root build/check/test commands for dependency ordering, or `vp run` to invoke

@@ -62,16 +62,17 @@ Rust is managed by rustup; mise continues reading the existing Bun pin.
 
 ## Commands and verification
 
-| Command                             | Runs                                                          |
-| ----------------------------------- | ------------------------------------------------------------- |
-| `bun run rust:check`                | Cargo check for workspace targets (Desktop excluded on Linux) |
-| `bun run rust:test`                 | Cargo tests (Desktop excluded on Linux)                       |
-| `bun run rust:build`                | Cargo build for workspace targets (Desktop excluded on Linux) |
-| `bun run rust:lint`                 | Clippy for all targets, denying warnings                      |
-| `bun run rust:format`               | rustfmt check                                                 |
-| `bun run rust:verify`               | All five Rust gates through VP                                |
-| `cargo fmt --all`                   | Apply Rust formatting                                         |
-| `cargo test -p raypx-core --locked` | Test only the initial library                                 |
+| Command                             | Runs                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------- |
+| `bun run rust:check`                | Cargo check for workspace targets (Desktop excluded on Linux)             |
+| `bun run rust:test`                 | Cargo tests (Desktop excluded on Linux)                                   |
+| `bun run rust:build`                | Cargo build for workspace targets (Desktop excluded on Linux)             |
+| `bun run rust:lint`                 | Clippy for all targets, denying warnings                                  |
+| `bun run rust:format`               | rustfmt check                                                             |
+| `bun run rust:verify`               | All five Rust gates through VP                                            |
+| `bun run rust:clean`                | Clean workspace development artifacts, retaining dependencies and Release |
+| `cargo fmt --all`                   | Apply Rust formatting                                                     |
+| `cargo test -p raypx-core --locked` | Test only the initial library                                             |
 
 Rust is required to develop/package the Tauri Desktop host, and remains optional
 for renderer, API, Web and CLI work. Root `check`, `test`, `build`, `lint`, `format`, `verify:quick`
@@ -83,17 +84,31 @@ Cargo's shared `target/` lock. Filtered Bun commands retain their selected scope
 
 VP owns repository task scheduling. Cargo tasks are uncached in VP; Cargo owns
 its own incremental state in root `target/`. This avoids tracing compiler and
-toolchain state through VP. `bun run clean` removes `target/`, while
-`clean:artifacts` preserves Rust build outputs. The root `Cargo.lock` is committed
-and verification/build commands use `--locked`.
+toolchain state through VP. For routine Rust cleanup, use:
+
+```sh
+bun run rust:clean
+```
+
+This delegates to `cargo clean --workspace --profile dev --locked --offline`, removing
+workspace development/test artifacts while retaining dependency caches and Release
+artifacts. `bun run clean` includes the same Rust step alongside application cleanup;
+`clean:artifacts` preserves all Rust build outputs. Rust cleanup is skipped without a
+Cargo manifest or target directory and respects `CARGO_TARGET_DIR`. A full `target/`
+reset requires an explicit request. The root `Cargo.lock` is committed and
+verification/build commands use `--locked`.
 
 For repeated local verification, keep `target/` and use `clean:artifacts` when only
-reports need clearing. The development and test profiles use `debug = 1`, retaining
-backtrace locations without full type/variable debug data. Cargo's default local
-incremental compilation and CPU-based parallelism remain enabled; avoid routine
+reports need clearing. Workspace development and test builds use `debug = 1`, retaining
+backtrace locations without full type/variable debug data. Third-party dependencies
+use `debug = 0` through `[profile.dev.package."*"]`, inherited by the test profile.
+This reduces newly compiled dependency artifacts; existing cached variants remain
+until explicitly cleaned. Cargo's default local incremental compilation and
+CPU-based parallelism remain enabled; avoid routine
 `CARGO_INCREMENTAL=0` or a fixed `CARGO_BUILD_JOBS=2` unless memory pressure requires
-it. To inspect variables in a debugger, temporarily set `CARGO_PROFILE_DEV_DEBUG=2`
-and `CARGO_PROFILE_TEST_DEBUG=2`. Changing profiles or compiler flags can require a
+it. To inspect workspace variables in a debugger, temporarily set `CARGO_PROFILE_DEV_DEBUG=2`
+and `CARGO_PROFILE_TEST_DEBUG=2`. Debugging a dependency requires a temporary named
+package override with `debug = 2`. Changing profiles or compiler flags can require a
 rebuild. Release packaging has separate optimized outputs and remains an explicit
 gate; a warm development build cannot replace it.
 

@@ -21,6 +21,10 @@ all = "warn"
 # Tests inherit this profile; Cargo's default incremental compilation stays enabled.
 debug = 1
 
+[profile.dev.package."*"]
+# Dependencies omit debug data; workspace packages keep the setting above.
+debug = 0
+
 [profile.release]
 # Shipped binaries drop the symbol table; release panic backtraces show addresses only.
 strip = true
