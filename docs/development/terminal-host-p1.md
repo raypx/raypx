@@ -1,7 +1,6 @@
 # Terminal host P1 — macOS private testing
 
-Implemented after the [P0 protocol gate](terminal-protocol-p0.md), following the
-[accepted phased plan](../plans/terminal-session-host.md). Claude and Codex are both
+Implemented after the [P0 protocol gate](terminal-protocol-p0.md). Claude and Codex are both
 included. [ADR 0035](../architecture/0035-local-owner-host.md) supersedes the
 original cloud-bound ownership: local Desktop terminal approvals need no account;
 Web delivery is a separately enabled cloud scope. Native mobile remains separate.

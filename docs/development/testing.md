@@ -97,8 +97,6 @@ Ordinary browser cases are grouped by access, auth, settings, navigation, analyt
 and feature journeys; task conversation/history/drafts live under `e2e/tests/tasks/`.
 See [case ownership and consolidation](test-cases.md) for the coverage map and rules
 for combining cases without replacing independent safety or platform checks.
-The [2026-10-27 inventory audit](test-audit-2026-10-27.md) records the complete
-focused selection, preserved case identities and explicit backend acceptance.
 i18n separates `tests/node/` from `tests/browser/` to preserve independent React
 renderer environments, with provider components under `tests/browser/component/`.
 DOM tests run in happy-dom. The shared setup in `packages/tooling/tests/setup/dom.ts`

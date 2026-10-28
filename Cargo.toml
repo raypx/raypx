@@ -16,6 +16,11 @@ unsafe_code = "forbid"
 [workspace.lints.clippy]
 all = "warn"
 
+[profile.dev]
+# Keep backtrace locations without generating full type/variable debug data.
+# Tests inherit this profile; Cargo's default incremental compilation stays enabled.
+debug = 1
+
 [profile.release]
 # Shipped binaries drop the symbol table; release panic backtraces show addresses only.
 strip = true

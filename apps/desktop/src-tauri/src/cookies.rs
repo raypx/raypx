@@ -3,7 +3,7 @@ use aes_gcm::{
     aead::{Aead, Payload},
 };
 use base64::{Engine, engine::general_purpose::STANDARD};
-use rand::RngCore;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -373,9 +373,10 @@ impl CookieJar {
             return Err(());
         }
         let cipher = Aes256Gcm::new_from_slice(key).map_err(|_| ())?;
+        let nonce = Nonce::try_from(&bytes[1..13]).map_err(|_| ())?;
         let mut plain = cipher
             .decrypt(
-                Nonce::from_slice(&bytes[1..13]),
+                &nonce,
                 Payload {
                     msg: &bytes[13..],
                     aad: self.origin.origin().ascii_serialization().as_bytes(),
@@ -447,10 +448,10 @@ impl CookieJar {
                     return Err(());
                 }
                 let mut nonce = [0u8; 12];
-                rand::thread_rng().fill_bytes(&mut nonce);
+                rand::rng().fill_bytes(&mut nonce);
                 let cipher = Aes256Gcm::new_from_slice(key).map_err(|_| ())?;
                 let encrypted = cipher.encrypt(
-                    Nonce::from_slice(&nonce),
+                    &Nonce::from(nonce),
                     Payload {
                         msg: &plain,
                         aad: self.origin.origin().ascii_serialization().as_bytes(),
@@ -474,7 +475,7 @@ impl CookieJar {
 
 fn random_key() -> [u8; 32] {
     let mut key = [0u8; 32];
-    rand::thread_rng().fill_bytes(&mut key);
+    rand::rng().fill_bytes(&mut key);
     key
 }
 

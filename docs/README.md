@@ -13,14 +13,12 @@
 - [Shared logger workspace](../packages/logger/README.md)
 - [Development environment and commands](development/getting-started.md)
 - [Desktop connection configuration](development/desktop-configuration.md)
-- [Desktop signing and static update feeds](development/desktop-release.md)
 - [Rust cloud oRPC transport](development/desktop-orpc.md)
 - [Pi AI model calls](development/ai.md)
 - [Testing and release gates](development/testing.md)
 - [Root test command and package ownership](development/test-commands.md)
 - [Validation scripts, evidence and cleanup](development/validation-artifacts.md)
 - [Test case ownership and consolidation](development/test-cases.md)
-- [Full test inventory and restructuring, 2026-10-27](development/test-audit-2026-10-27.md)
 - [Shared deployment per project](development/deployment.md)
 - [Existing beta environment](development/beta.md)
 - [Production environment](development/production.md)
@@ -41,13 +39,3 @@
 
 Only the current documents above describe the active product. Earlier cloud,
 worker and business-layer designs are retained as historical context.
-
-## Proposed designs
-
-- [多 Agent 宿主与 Expo 移动 App](plans/terminal-session-host.md)
-- [CLI, terminal interaction and desktop execution](plans/cli-desktop-runtime.md)
-- [Web mobile capabilities](plans/web-mobile-capabilities.md)
-
-These plans describe proposed work and acceptance gates, not shipped capabilities.
-The multi-Agent host plan reflects the latest mobile direction: an Expo App and
-remote approvals replace the earlier Web-only, read-only mobile proposal.

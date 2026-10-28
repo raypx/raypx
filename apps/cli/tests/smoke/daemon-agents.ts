@@ -13,7 +13,7 @@ import { homedir, tmpdir } from "node:os";
 import { join, resolve as resolvePath } from "node:path";
 import { createApiClient, createTaskClient } from "@raypx/client";
 import { localResponseSchema, type LocalMethod } from "@raypx/contracts/local";
-import type { ControlInfo, TerminalDecision } from "@raypx/contracts/terminal";
+import type { ControlInfo, TerminalDecision, TerminalRequest } from "@raypx/contracts/terminal";
 import type { DeviceGrant } from "@raypx/contracts/tasks";
 
 assert.equal(
@@ -291,7 +291,7 @@ try {
               receiptId: crypto.randomUUID(),
               decision: { type: "allow" },
             };
-            const result = await viewer.observed!.decide(decision);
+            const result: TerminalRequest = await viewer.observed!.decide(decision);
             assert.ok(["decided", "delivered"].includes(result.status));
           }
           answered = true;

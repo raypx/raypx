@@ -105,8 +105,7 @@ without a TTY. Bare `raypx` still prints help.
 Run `bun run --cwd apps/cli smoke:tui` after building for the explicit POSIX PTY
 gate. It requires system Python 3 only for the test harness and uses temporary
 profiles, an empty PATH and a relocated single binary. The full host/owner protocol,
-live output and cross-owner controls remain proposed in the
-[CLI design](../plans/cli-desktop-runtime.md).
+live output and cross-owner controls remain proposed.
 
 ## Build caches
 

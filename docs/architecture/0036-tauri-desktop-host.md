@@ -1,7 +1,6 @@
 # ADR 0036: Tauri Desktop transport and native policy host
 
-Status: implemented, 2026-10-27. Validation evidence and deferred release checks
-are recorded in the [migration plan](../plans/tauri-desktop-migration.md).
+Status: implemented, 2026-10-27.
 
 The maintenance costs of the Electrobun SDK projection, transport workarounds and
 Windows CEF cookie implementation justify the migration. Tauri 2 replaces the

@@ -163,7 +163,7 @@ impl Api {
         let origin = Url::parse(&crate::config::parse_server_origin(origin)?)
             .map_err(|_| "Invalid API origin")?;
         let client = reqwest::Client::builder()
-            .use_rustls_tls()
+            .tls_backend_rustls()
             .redirect(reqwest::redirect::Policy::none())
             .timeout(Duration::from_secs(30))
             .build()

@@ -170,6 +170,12 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
     if (members.some((candidate) => candidate.name === "cli" && candidate.scripts.build))
       result.push(taskRef("cli", "build"));
   }
+  if (
+    member.native &&
+    name === "tauri:cli" &&
+    members.some((candidate) => candidate.name === "cli" && candidate.scripts.build)
+  )
+    result.push(taskRef("cli", "build"));
   if (["e2e", "e2e:web", "e2e:desktop", "e2e:smoke", "e2e:visual"].includes(name)) {
     if (name !== "e2e:desktop") result.push(taskRef("web", "build"));
     if (name !== "e2e:web") result.push(taskRef("desktop", "build:renderer"));
@@ -226,6 +232,16 @@ export function taskModel(root: string): TaskModel {
       process.platform === "linux" && existsSync(join(root, "apps/desktop/src-tauri/Cargo.toml"))
         ? " --exclude raypx-desktop"
         : "";
+    const desktop = members.find(
+      (member) =>
+        member.native &&
+        member.scripts["tauri:generate"] &&
+        existsSync(join(root, member.path, "src-tauri/Cargo.toml")),
+    );
+    const prepare =
+      desktop && process.platform !== "linux"
+        ? [taskRef(desktop.name, "tauri:generate"), taskRef(desktop.name, "tauri:cli")]
+        : [];
     const commands = {
       build: `cargo build --workspace${exclude} --all-targets --locked`,
       check: `cargo check --workspace${exclude} --all-targets --locked`,
@@ -236,7 +252,7 @@ export function taskModel(root: string): TaskModel {
     for (const [name, command] of Object.entries(commands))
       definitions.set(taskRef(manifest.name, `rust:${name}`), {
         command,
-        dependsOn: [],
+        dependsOn: name === "format" ? [] : prepare,
         cache: false,
       });
     aggregate(

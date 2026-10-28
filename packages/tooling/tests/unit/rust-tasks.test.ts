@@ -20,6 +20,33 @@ function repository(rust: boolean) {
   return taskModel(root);
 }
 
+function desktopRepository() {
+  const model = repository(true);
+  member(model.root, "cli", {
+    extra: { name: "cli", scripts: { build: "bun build.ts" } },
+  });
+  mkdirSync(join(model.root, "apps/desktop/src-tauri"), { recursive: true });
+  writeFileSync(
+    join(model.root, "apps/desktop/package.json"),
+    JSON.stringify({
+      name: "desktop",
+      private: true,
+      raypx: { kind: "app", target: "browser" },
+      scripts: {
+        build: "bun renderer.ts",
+        "native:build": "bun package.ts",
+        "tauri:generate": "bun generate.ts",
+        "tauri:cli": "bun stage.ts",
+      },
+    }),
+  );
+  writeFileSync(
+    join(model.root, "apps/desktop/src-tauri/Cargo.toml"),
+    '[package]\nname = "raypx-desktop"\n',
+  );
+  return taskModel(model.root);
+}
+
 it("keeps Cargo gates explicit and outside default repository verification", () => {
   const model = repository(true);
   for (const name of ["verify", "verify:quick", "build", "check", "test", "lint"]) {
@@ -42,25 +69,39 @@ it("keeps repositories without a Cargo manifest independent of Rust", () => {
 });
 
 it("leaves Desktop compilation to platform CI when Linux runs library Cargo gates", () => {
-  const model = repository(true);
-  mkdirSync(join(model.root, "apps/desktop/src-tauri"), { recursive: true });
-  writeFileSync(
-    join(model.root, "apps/desktop/package.json"),
-    JSON.stringify({
-      name: "desktop",
-      private: true,
-      raypx: { kind: "app", target: "browser" },
-    }),
-  );
-  writeFileSync(
-    join(model.root, "apps/desktop/src-tauri/Cargo.toml"),
-    '[package]\nname = "raypx-desktop"\n',
-  );
-  const plan = taskPlan(taskModel(model.root), [taskRef("fixture", "rust:verify")]);
+  const model = desktopRepository();
+  const plan = taskPlan(model, [taskRef("fixture", "rust:verify")]);
   for (const task of plan.filter((entry) => entry.command.startsWith("cargo "))) {
     expect(task.cache).toBe(false);
     expect(task.command.includes("--exclude raypx-desktop")).toBe(
       process.platform === "linux" && !task.command.startsWith("cargo fmt"),
     );
   }
+  expect(plan.some((task) => task.taskId === "desktop#tauri:cli")).toBe(
+    process.platform !== "linux",
+  );
+});
+
+it.each(["build", "check", "test", "lint"])(
+  "prepares the matching CLI and generated contracts before rust:%s without building the renderer",
+  (name) => {
+    const model = desktopRepository();
+    const plan = taskPlan(model, [taskRef("fixture", `rust:${name}`)]);
+    const cargo = plan.find((task) => task.taskId === `fixture#rust:${name}`)!;
+    const native = process.platform !== "linux";
+    expect(cargo.dependsOn).toEqual(
+      native ? [taskRef("desktop", "tauri:generate"), taskRef("desktop", "tauri:cli")] : [],
+    );
+    expect(plan.some((task) => task.taskId === "cli#build")).toBe(native);
+    expect(plan.some((task) => task.taskId === "desktop#build")).toBe(false);
+    expect(plan.find((task) => task.taskId === "desktop#tauri:cli")?.dependsOn ?? []).toEqual(
+      native ? [taskRef("cli", "build")] : [],
+    );
+  },
+);
+
+it("formats Rust without preparing binaries or building the CLI", () => {
+  const model = desktopRepository();
+  const plan = taskPlan(model, [taskRef("fixture", "rust:format")]);
+  expect(plan.map((task) => task.taskId)).toEqual(["fixture#rust:format"]);
 });

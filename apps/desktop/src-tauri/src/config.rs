@@ -217,7 +217,10 @@ pub fn load(directory: Option<PathBuf>) -> Result<DesktopConfig, String> {
 }
 
 pub fn digest(value: &str) -> String {
-    format!("{:x}", Sha256::digest(value.as_bytes()))
+    Sha256::digest(value.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 
 pub fn private_directory(path: &std::path::Path) -> std::io::Result<()> {

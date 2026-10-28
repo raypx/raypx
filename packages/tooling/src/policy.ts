@@ -33,10 +33,7 @@ export function policy(root: string): string[] {
   );
   findings.push(...checkDocumentLinks(root, documents));
   // Acceptance and review records describe the release they ran on and are not rewritten on upgrade.
-  const records = new Set([
-    "docs/development/foundation-acceptance.md",
-    "docs/development/review-remediation-2026-10-24.md",
-  ]);
+  const records = new Set(["docs/development/foundation-acceptance.md"]);
   findings.push(
     ...checkToolchain(
       root,

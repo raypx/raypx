@@ -1,4 +1,4 @@
-use rand::RngCore;
+use rand::Rng;
 use serde_json::{Value, json};
 use std::{
     fs,
@@ -69,7 +69,7 @@ pub fn atomic_write(file: &Path, bytes: &[u8]) -> std::io::Result<()> {
         .ok_or_else(|| std::io::Error::other("Missing parent directory"))?;
     crate::config::private_directory(directory)?;
     let mut random = [0u8; 16];
-    rand::thread_rng().fill_bytes(&mut random);
+    rand::rng().fill_bytes(&mut random);
     let suffix: String = random.iter().map(|v| format!("{v:02x}")).collect();
     let temporary = file.with_extension(format!("{suffix}.tmp"));
     let result = (|| {

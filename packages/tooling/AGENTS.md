@@ -24,7 +24,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
 - `verify:quick` checks source and tests; `verify` additionally builds and probes artifacts.
 - Optional root `rust:*` tasks run Cargo uncached, separately from default Bun gates.
-  Cargo owns incremental compilation under `target/`.
+  Cargo owns incremental compilation under `target/`. macOS/Windows compile gates
+  prepare generated Desktop contracts and the matching CLI through VP before Cargo;
+  formatting and Linux library gates skip native preparation.
 - `clean` removes workspace outputs, staged Tauri binaries/generated schemas and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.

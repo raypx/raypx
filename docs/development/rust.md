@@ -87,6 +87,16 @@ toolchain state through VP. `bun run clean` removes `target/`, while
 `clean:artifacts` preserves Rust build outputs. The root `Cargo.lock` is committed
 and verification/build commands use `--locked`.
 
+For repeated local verification, keep `target/` and use `clean:artifacts` when only
+reports need clearing. The development and test profiles use `debug = 1`, retaining
+backtrace locations without full type/variable debug data. Cargo's default local
+incremental compilation and CPU-based parallelism remain enabled; avoid routine
+`CARGO_INCREMENTAL=0` or a fixed `CARGO_BUILD_JOBS=2` unless memory pressure requires
+it. To inspect variables in a debugger, temporarily set `CARGO_PROFILE_DEV_DEBUG=2`
+and `CARGO_PROFILE_TEST_DEBUG=2`. Changing profiles or compiler flags can require a
+rebuild. Release packaging has separate optimized outputs and remains an explicit
+gate; a warm development build cannot replace it.
+
 Crates are Cargo members, not Bun workspaces, and need no `package.json`. Add
 Rust dependencies in Cargo manifests. Introduce shared `[workspace.dependencies]`
 when dependencies are actually needed; the initial library uses only `std`.
@@ -114,8 +124,14 @@ and add `--allow-dirty` to Cargo's package/publish commands.
 
 ## Desktop crate
 
-Stage generated TS vocabulary, translated notification copy and the matching CLI
-before checking the Desktop application:
+On macOS and Windows, root `rust:check`, `rust:lint`, `rust:test` and `rust:build`
+automatically build the matching CLI through VP and stage it together with generated
+TS vocabulary and translated notifications before invoking Cargo. Shared preparation
+runs once in `rust:verify`, without building the renderer. Formatting and Linux
+library verification need no sidecar. Staging identical CLI bytes preserves the
+sidecar's modification time so another package build can reuse Cargo outputs.
+
+Direct Cargo commands bypass VP. Prepare the inputs first when using them:
 
 ```sh
 bun run build:cli

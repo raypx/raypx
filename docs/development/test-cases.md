@@ -188,10 +188,9 @@ repeat took 87.12 seconds. These samples do not establish a CI speedup.
 
 ## Complete suite audit, 2026-10-27
 
-The [full inventory and restructuring record](test-audit-2026-10-27.md) reconciles
-all 191 ordinary files and preserves every original case identity. Focused gates
+The audit reconciled all 191 ordinary files and preserved every original case identity. Focused gates
 now contain 569 unit, 287 component and 234 integration cases with no overlapping
-files. It also records real PostgreSQL/Redis, Workers and browser relay acceptance;
+files. It also covered real PostgreSQL/Redis, Workers and browser relay acceptance;
 external inference and unavailable platforms remain separate gates.
 
 ## Ownership follow-up, 2026-10-27
@@ -213,5 +212,4 @@ with the same reset/cleanup per case. Worker PostgreSQL auth, cleanup and schedu
 suites share process startup and shutdown, while retaining independent data and
 assertions for direct PostgreSQL and Hyperdrive.
 
-No cases were combined or removed in this follow-up. Execution evidence and the
-updated ownership counts are recorded in the [inventory audit](test-audit-2026-10-27.md).
+No cases were combined or removed in this follow-up.
