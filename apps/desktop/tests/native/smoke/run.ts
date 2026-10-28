@@ -2,12 +2,12 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
-import assert from "node:assert/strict";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import { nativeSmokeOptions } from "../../../scripts/native/smoke-options";
 import { buildSmoke, runTauriSmoke } from "./launch";
 import type { SmokeInstallation } from "../../../scripts/native/windows-smoke-install";
 import { prepareSmokeDirectory } from "./session";
+import { assertSmokeOwnerRunning, stopSmokeOwner } from "./owner";
 
 const { packageManager } = await Bun.file(
   resolve(import.meta.dirname, "../../../../../package.json"),
@@ -70,23 +70,8 @@ try {
   if (!api) throw new Error("HTTPS native acceptance requires RAYPX_NATIVE_SMOKE_API");
   await configure(api);
   await run(phase, directory);
-  if (process.platform === "darwin" && phase === "shell") {
-    const status = Bun.spawn(
-      [
-        resolve(import.meta.dirname, "../../../../cli/dist/raypx"),
-        "daemon",
-        "status",
-        "--profile",
-        "native-smoke",
-        "--data-dir",
-        directory,
-        "--json",
-      ],
-      { stdout: "pipe", stderr: "pipe" },
-    );
-    const result = JSON.parse(await new Response(status.stdout).text());
-    assert.equal(await status.exited, 0);
-    assert.equal(result.running, true, "GUI Quit terminated its independent execution owner");
+  if (phase === "shell") {
+    await assertSmokeOwnerRunning(directory);
     console.info("Native smoke daemon preserved after actual GUI Quit");
   }
   if (phase === "shell") {
@@ -101,40 +86,17 @@ try {
   if (phase === "beta") await run("beta-restore", directory);
 } finally {
   if (directoryPrepared) {
-    let ownerStopped = process.platform !== "darwin";
+    let ownerStopped = false;
     try {
-      if (process.platform === "darwin") {
-        // GUI Quit deliberately preserves its independent owner, including smoke profiles.
-        const stop = Bun.spawn(
-          [
-            resolve(import.meta.dirname, "../../../../cli/dist/raypx"),
-            "daemon",
-            "stop",
-            "--profile",
-            "native-smoke",
-            "--data-dir",
-            directory,
-          ],
-          {
-            stdin: "ignore",
-            stdout: "ignore",
-            stderr: "ignore",
-          },
-        );
-        const deadline = setTimeout(() => stop.kill(), 30_000);
-        try {
-          ownerStopped = (await stop.exited) === 0;
-        } finally {
-          clearTimeout(deadline);
-        }
-      }
+      // GUI Quit preserves its independent owner on both macOS and Windows.
+      ownerStopped = await stopSmokeOwner(directory);
       if (!phase.startsWith("beta")) {
         if (
           ownerStopped &&
           (!existsSync(join(directory, "servers")) ||
             existsSync(join(directory, ".native-smoke-sessions-cleaned")))
         )
-          await rm(directory, { recursive: true, force: true });
+          await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
         else {
           console.error(`Native smoke teardown incomplete; retained ${directory}`);
           process.exitCode = 1;

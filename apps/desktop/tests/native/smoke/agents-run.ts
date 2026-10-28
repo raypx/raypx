@@ -6,6 +6,7 @@ import { buildSmoke, runTauriSmoke } from "./launch";
 import { prepareSmokeDirectory } from "./session";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import type { SmokeInstallation } from "../../../scripts/native/windows-smoke-install";
+import { stopSmokeOwner } from "./owner";
 
 // Building or importing the scenario must never start paid inference implicitly.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")
@@ -13,12 +14,7 @@ if (process.env.RAYPX_LIVE_AGENTS !== "1")
 
 const directory = await mkdtemp(join(tmpdir(), "raypx-live-agents-"));
 const config = join(directory, "config");
-const binary = resolve(
-  import.meta.dirname,
-  "../../../../cli/dist",
-  process.platform === "win32" ? "raypx.exe" : "raypx",
-);
-let cleanupSucceeded = process.platform !== "darwin";
+let cleanupSucceeded = false;
 let cleanupError: Error | undefined;
 let installation: SmokeInstallation | undefined;
 
@@ -42,20 +38,8 @@ try {
   });
 } finally {
   try {
-    if (process.platform === "darwin") {
-      // macOS GUI Quit preserves its owner; this isolated profile must be stopped explicitly.
-      const stop = Bun.spawn(
-        [binary, "daemon", "stop", "--profile", "native-smoke", "--data-dir", directory],
-        { stdin: "ignore", stdout: "ignore", stderr: "ignore" },
-      );
-      const deadline = setTimeout(() => stop.kill(), 30_000);
-      try {
-        cleanupSucceeded = (await stop.exited) === 0;
-        if (!cleanupSucceeded) cleanupError = new Error("Live Agent smoke owner cleanup failed");
-      } finally {
-        clearTimeout(deadline);
-      }
-    }
+    cleanupSucceeded = await stopSmokeOwner(directory);
+    if (!cleanupSucceeded) cleanupError = new Error("Live Agent smoke owner cleanup failed");
   } catch {
     cleanupError = new Error("Live Agent smoke owner cleanup failed");
   } finally {
@@ -69,7 +53,7 @@ try {
     try {
       if (process.env.RAYPX_LIVE_KEEP === "1" || !cleanupSucceeded || !sessionsCleaned)
         console.info(`Live Agent acceptance data: ${directory}`);
-      else await rm(directory, { recursive: true, force: true });
+      else await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
     } finally {
       try {
         await installation?.dispose();

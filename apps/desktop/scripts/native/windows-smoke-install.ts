@@ -277,7 +277,7 @@ export async function installWindowsSmoke(
     await run.clearProduct(keys, directory);
     if ((await registered()).some((entry) => entry.product || entry.uninstall))
       throw new Error(`Smoke installation registration remained; retained ${root}`);
-    await rm(root, { recursive: true });
+    await rm(root, { recursive: true, maxRetries: 10, retryDelay: 200 });
     disposed = true;
   }
   try {
