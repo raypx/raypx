@@ -138,7 +138,11 @@ impl Session {
         drop(pair.slave);
         let pid = child.process_id();
         let killer = child.clone_killer();
-        let crate::pty_io::Streams { reader, writer } = match crate::pty_io::open(&*pair.master) {
+        let crate::pty_io::Streams {
+            reader,
+            writer,
+            startup,
+        } = match crate::pty_io::open(&*pair.master) {
             Ok(streams) => streams,
             Err(error) => {
                 let _ = child.kill();
@@ -187,7 +191,7 @@ impl Session {
         let actor = thread::Builder::new()
             .name("raypx-pty-input".into())
             .spawn(move || {
-                run_input(actor_master, writer, rx, &actor_shared);
+                run_input(actor_master, writer, rx, &actor_shared, startup);
             });
         let Ok(actor) = actor else {
             session.cancel();
@@ -347,7 +351,29 @@ fn run_input(
     mut writer: Box<dyn Write + Send>,
     rx: Receiver<Input>,
     shared: &Shared,
+    startup: Option<Receiver<()>>,
 ) {
+    #[cfg(windows)]
+    if let Some(startup) = startup {
+        // ConPTY asks for the inherited cursor before it starts the child.
+        // Reserve the writer for this handshake so queued user input cannot
+        // overtake it. Cancellation also releases the startup wait.
+        while startup.recv_timeout(Duration::from_millis(10))
+            == Err(mpsc::RecvTimeoutError::Timeout)
+        {
+            if shared
+                .state
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .closing
+            {
+                break;
+            }
+        }
+        let _ = writer.write_all(crate::conpty::CURSOR_ORIGIN);
+    }
+    #[cfg(not(windows))]
+    let _ = startup;
     for input in rx {
         match input {
             Input::Write(bytes, reply) => {

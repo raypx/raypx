@@ -4,6 +4,8 @@
 //! bounded replay stay separate from the actor, child and OS handles. This
 //! architecture was informed by herdr; this implementation shares no source.
 
+#[cfg(any(windows, test))]
+mod conpty;
 mod pty_io;
 mod session;
 

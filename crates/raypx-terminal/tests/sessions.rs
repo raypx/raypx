@@ -49,6 +49,8 @@ fn fast_exit_is_retained_before_any_client_attaches() {
         .unwrap();
     eventually(|| host.snapshot(&session.id).unwrap().status == Status::Exited);
     assert!(text(&host, &session.id).contains("fast-terminal-output"));
+    #[cfg(windows)]
+    assert!(!text(&host, &session.id).contains("\x1b[6n"));
     assert_eq!(host.snapshot(&session.id).unwrap().exit_code, Some(0));
     host.close(&session.id).unwrap();
 }
@@ -118,6 +120,29 @@ fn detach_keeps_the_process_and_replays_output_on_reattach() {
     assert_eq!(host.snapshot(&session.id).unwrap().pid, session.pid);
     assert_eq!(host.snapshot(&session.id).unwrap().status, Status::Running);
     host.close(&session.id).unwrap();
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_startup_leaves_input_and_resize_usable() {
+    let directory = tempfile::tempdir().unwrap();
+    let host = TerminalHost::default();
+    let session = host
+        .open(
+            shell(
+                directory.path(),
+                "set /p answer=ready & set answer & ping -n 60 127.0.0.1 >nul",
+            ),
+            80,
+            24,
+        )
+        .unwrap();
+    eventually(|| text(&host, &session.id).contains("ready"));
+    host.resize(&session.id, 100, 40).unwrap();
+    host.write(&session.id, b"typed-value\r".to_vec()).unwrap();
+    eventually(|| text(&host, &session.id).contains("answer=typed-value"));
+    host.close(&session.id).unwrap();
+    assert_eq!(host.snapshot(&session.id).unwrap().status, Status::Exited);
 }
 
 #[cfg(unix)]

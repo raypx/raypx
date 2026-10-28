@@ -27,6 +27,10 @@ the old one, and its snapshot/replay and subscription are captured atomically.
 Slow attachments disconnect instead of blocking the terminal reader. Reattachment
 returns the bounded retained suffix and whether older output was truncated.
 
+On Windows the host answers ConPTY's initial cursor inheritance query at row 1,
+column 1 before forwarding user input. This startup query is excluded from replay;
+later application cursor queries remain unchanged for the terminal client.
+
 The companion accepts private version-1 NDJSON requests on stdin. Methods are
 `hello`, `open`, `list`, `attach`, `detach`, `input`, `resize`, and `close`.
 Request IDs correlate responses; byte payloads are base64. Output/exit events carry

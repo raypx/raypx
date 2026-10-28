@@ -1,19 +1,24 @@
 use crate::{Error, Result};
 use portable_pty::MasterPty;
 use std::io::{Read, Write};
+use std::sync::mpsc::Receiver;
 
 pub(crate) struct Streams {
     pub reader: Box<dyn Read + Send>,
     pub writer: Box<dyn Write + Send>,
+    pub startup: Option<Receiver<()>>,
 }
 
 #[cfg(windows)]
 pub(crate) fn open(master: &dyn MasterPty) -> Result<Streams> {
+    let reader = master
+        .try_clone_reader()
+        .map_err(|_| Error("PTY_OPEN_FAILED"))?;
+    let (reader, startup) = crate::conpty::reader(reader);
     Ok(Streams {
-        reader: master
-            .try_clone_reader()
-            .map_err(|_| Error("PTY_OPEN_FAILED"))?,
+        reader,
         writer: master.take_writer().map_err(|_| Error("PTY_OPEN_FAILED"))?,
+        startup: Some(startup),
     })
 }
 
@@ -44,6 +49,7 @@ pub(crate) fn open(master: &dyn MasterPty) -> Result<Streams> {
         // A plain descriptor also avoids portable-pty's blocking EOF write on
         // writer drop. Session shutdown kills and drains the child explicitly.
         writer: Box::new(writer),
+        startup: None,
     })
 }
 
