@@ -1,0 +1,35 @@
+crates/raypx-terminal/tests/unit/conpty.rs
+  s_3a4b502e70ec90::t_2a5a4e300ef2ab 1-42
+crates/raypx-terminal/src/conpty.rs
+  s_3a4b502e70ec90::t_2852b5cc3b0e4c 8
+  s_3a4b502e70ec90::t_b7018a8da4c32a 1-7,9-90,92
+  s_3a4b502e70ec90::t_2a5a4e300ef2ab 91
+crates/raypx-terminal/src/session.rs
+  s_3a4b502e70ec90::t_b7018a8da4c32a 141-145,194,354,356-365,370
+  s_3a4b502e70ec90::t_c5bcbe1f7e51b5 366-369,371-376
+crates/raypx-terminal/src/pty_io.rs
+  s_3a4b502e70ec90::t_b7018a8da4c32a 4,9,14-17,19,21,52
+crates/raypx-terminal/README.md
+  s_3a4b502e70ec90::t_3835cb7b8613df 30-33
+crates/raypx-terminal/tests/sessions.rs
+  s_3a4b502e70ec90::t_2852b5cc3b0e4c 52-53
+  s_3a4b502e70ec90::t_6a7f356221b34d 125-147
+crates/raypx-terminal/src/lib.rs
+  s_3a4b502e70ec90::t_6d7cd3844c5489 7-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f4a86f1b3f37d064be41cb90c3134e2db4f4f0e8",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
