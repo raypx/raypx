@@ -11,19 +11,30 @@ import { useTranslations } from "@raypx/i18n/browser";
 
 const widthKey = "raypx.task-list-width.v1";
 const clamp = (value: number) => Math.max(30, Math.min(50, value));
+const defaultWidth = { value: 38 };
 function widthStore(key: string) {
+  let raw: string | null | undefined;
+  let snapshot = defaultWidth;
   return {
     read: () => {
       try {
-        const value = Number(localStorage.getItem(key));
-        return value >= 30 && value <= 50 ? value : 38;
+        const next = localStorage.getItem(key);
+        if (next !== raw) {
+          raw = next;
+          const value = Number(next);
+          snapshot = { value: value >= 30 && value <= 50 ? value : 38 };
+        }
+        return snapshot;
       } catch {
-        return 38;
+        return snapshot;
       }
     },
     subscribe: (listener: () => void) => {
       const changed = (event: StorageEvent) => {
-        if (event.key === key || event.key === null) listener();
+        if (event.key === key || event.key === null) {
+          raw = undefined;
+          listener();
+        }
       };
       window.addEventListener("storage", changed);
       return () => window.removeEventListener("storage", changed);
@@ -46,9 +57,20 @@ export function TaskPanels({
   const t = useTranslations("tasks");
   const root = useRef<HTMLDivElement>(null);
   const storage = useMemo(() => widthStore(storageKey), [storageKey]);
-  const savedWidth = useSyncExternalStore(storage.subscribe, storage.read, () => 38);
-  const [changedWidth, setWidth] = useState<number>();
-  const width = changedWidth ?? savedWidth;
+  const savedWidth = useSyncExternalStore(storage.subscribe, storage.read, () => defaultWidth);
+  const [changedWidth, setWidth] = useState<{
+    storage: typeof storage;
+    snapshot: typeof savedWidth;
+    value: number;
+  }>();
+  // Transient sizing belongs to this namespace and this persisted snapshot only.
+  const width =
+    changedWidth?.storage === storage && changedWidth.snapshot === savedWidth
+      ? changedWidth.value
+      : savedWidth.value;
+  function resize(value: number) {
+    setWidth({ storage, snapshot: savedWidth, value });
+  }
   const [height, setHeight] = useState<number>();
   useLayoutEffect(() => {
     const node = root.current;
@@ -107,7 +129,7 @@ export function TaskPanels({
         onPointerMove={(event) => {
           if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
           const bounds = root.current!.getBoundingClientRect();
-          if (bounds.width) setWidth(clamp(((event.clientX - bounds.left) / bounds.width) * 100));
+          if (bounds.width) resize(clamp(((event.clientX - bounds.left) / bounds.width) * 100));
         }}
         onPointerUp={(event) => {
           if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
@@ -127,7 +149,7 @@ export function TaskPanels({
                     : undefined;
           if (value === undefined) return;
           event.preventDefault();
-          setWidth(value);
+          resize(value);
           persist(value);
         }}
       >

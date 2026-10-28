@@ -39,8 +39,10 @@ authoritative page catches the observed live watermark; pure models without
 these lifecycle signals retain conservative checkpoint-only coverage.
 History pagination aborts on unmount or scope/task changes; late adapter results
 cannot merge history, report failures or refresh the old owner. Timeouts release
-the paging control even when a transport ignores its signal. Draft enums require
-literal values; coerced arrays/objects are invalid stored inputs.
+both query loading and the paging control even when a transport ignores its signal.
+Transient split widths belong to their storage namespace and snapshot; subsequent
+storage changes supersede them, while failed writes retain only an in-memory width.
+Draft enums require literal values; coerced arrays/objects are invalid stored inputs.
 Task lists navigate by creation-time/ID cursors. Probe the next cursor even after
 a short page: a local response may reach its byte limit before its record limit.
 TanStack Virtual renders the visible task rows with measured heights and stable

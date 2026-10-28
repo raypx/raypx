@@ -5,27 +5,7 @@ import type { TaskWorkspacePort } from "../model/port.js";
 import { workspaceOwner, workspaceScopeKey, type WorkspaceScope } from "../model/scope.js";
 import { failureCode } from "./failure.js";
 import { useRemoteQuery } from "./remote-query.js";
-
-function waitForPage<T>(result: Promise<T>, signal: AbortSignal): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const aborted = () => {
-      signal.removeEventListener("abort", aborted);
-      reject(signal.reason);
-    };
-    signal.addEventListener("abort", aborted, { once: true });
-    if (signal.aborted) aborted();
-    result.then(
-      (value) => {
-        signal.removeEventListener("abort", aborted);
-        resolve(value);
-      },
-      (error) => {
-        signal.removeEventListener("abort", aborted);
-        reject(error);
-      },
-    );
-  });
-}
+import { waitForRead } from "./read.js";
 
 export function useTaskConversation(
   client: TaskWorkspacePort,
@@ -82,7 +62,7 @@ export function useTaskConversation(
     paging.current = operation;
     setLoadingFor(session);
     try {
-      const result = await waitForPage(
+      const result = await waitForRead(
         session.client.tasks.get({ id: session.id, beforeActivity: before }, { signal }),
         signal,
       );

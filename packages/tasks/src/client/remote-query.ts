@@ -3,6 +3,7 @@ import { type QueryKey, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AgentEvent, TaskActivity, TaskChange } from "@raypx/contracts/tasks";
 import { failureCode } from "./failure.js";
 import type { TaskChangeSource, TaskWorkspacePort } from "../model/port.js";
+import { waitForRead } from "./read.js";
 
 /** Compatibility name for existing platform adapters. */
 export type TaskWorkspaceClient = TaskWorkspacePort;
@@ -27,7 +28,11 @@ export function useRemoteQuery<T>(
   const queryKey = ["tasks", clientScope(client), ...key];
   const query = useQuery({
     queryKey,
-    queryFn: ({ signal }) => load(AbortSignal.any([signal, AbortSignal.timeout(10_000)])),
+    queryFn: ({ signal }) => {
+      const deadline = AbortSignal.any([signal, AbortSignal.timeout(10_000)]);
+      deadline.throwIfAborted();
+      return waitForRead(load(deadline), deadline);
+    },
     enabled,
     staleTime: 0,
     refetchOnWindowFocus: "always",

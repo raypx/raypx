@@ -1,5 +1,5 @@
 import { mockTaskLayout } from "../../helpers/layout.js";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -195,6 +195,34 @@ it("ends the loading state after a read failure and recovers with refresh", asyn
   fireEvent.click(refresh);
   await screen.findByRole("button", { name: /Investigate build/ });
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("ends a timed-out read even when the adapter ignores abort and discards its late result", async () => {
+  const deadline = new AbortController();
+  const timeout = AbortSignal.timeout.bind(AbortSignal);
+  let reads = 0;
+  vi.spyOn(AbortSignal, "timeout").mockImplementation((delay) =>
+    delay === 10_000 && reads++ === 0 ? deadline.signal : timeout(delay),
+  );
+  let finish!: (tasks: AgentTask[]) => void;
+  const stalled = new Promise<AgentTask[]>((resolve) => {
+    finish = resolve;
+  });
+  const list = vi
+    .fn(async (input: { limit?: number; before?: string }) =>
+      input.limit === 1 ? [] : sampleTasks,
+    )
+    .mockImplementationOnce(() => stalled);
+  workspace(sampleTasks, list);
+  await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+  expect(screen.getByRole("button", { name: "Loading…" })).toBeDisabled();
+  await act(async () => deadline.abort(new DOMException("Read deadline", "TimeoutError")));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+  await screen.findByRole("button", { name: /Investigate build/ });
+  await act(async () => finish([task("Discarded late task")]));
+  expect(screen.queryByRole("button", { name: /Discarded late task/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Investigate build/ })).toBeInTheDocument();
 });
 
 it("filters the loaded page by project without creating or refetching tasks", async () => {
