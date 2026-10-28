@@ -35,6 +35,8 @@ PowerShell 中先执行 `$env:RAYPX_LIVE_AGENTS = "1"`，再执行对应的 Bun 
 
 macOS/Windows Desktop CI 使用 `rust-toolchain.toml` 选择工具链，执行格式、Clippy、Cargo tests、打包和原生冒烟。Ubuntu 的库检查排除 `raypx-desktop`，这不构成 Linux Desktop 的验收。CI 安装包只上传为 artifact；没有自动发布到用户更新端点。
 
+macOS 睡眠唤醒检查在真实 Mac 上手动执行，CI runner 无法覆盖。使用打包态应用，主窗口可见和隐藏到托盘两种状态都要覆盖：通过苹果菜单「睡眠」或合盖，合计至少睡眠唤醒 5 次，其中至少一次睡眠超过 30 分钟。每次唤醒后确认窗口能重绘并响应键盘和点击，新的本地 IPC 请求（例如刷新文件或任务列表）能完成，运行中的终端继续输出，已登录时 API 请求能完成，隐藏状态下能从托盘重新显示窗口。WKWebView 曾有多次睡眠唤醒后 WebContent 与 Networking 进程通信中断、窗口永久无响应的报告（[Electrobun #550](https://github.com/blackboardsh/electrobun/issues/550)），Tauri 同样使用 WKWebView。出现卡死即判定失败，记录 macOS 版本、睡眠时长和睡眠前的界面状态；附带日志时不要包含凭据、Cookie 或私有文件内容。
+
 ## CI 签名配置
 
 在仓库 CI Secrets 中配置私密材料：
@@ -100,7 +102,7 @@ bun apps/desktop/scripts/native/update-manifest.ts \
 - 设备偏好文件和实例锁沿用应用本地数据目录下的 `com.raypx.desktop/stable`；CLI profile、目录授权、任务、Cron 和记忆继续保留。
 - macOS daemon 使用安装后的稳定 CLI 路径。升级时核对实际服务注册的可执行文件；不要仅按旧计划假定的 bundle 路径自动重装 launchd。GUI Quit 在 macOS 和 Windows 上都保留 daemon 工作。Windows daemon 从 `%LOCALAPPDATA%\Raypx\bin` 下按构建区分的副本运行，避免锁住安装目录里的 CLI。
 
-发布记录需分别填写 macOS、Windows 打包态、真实 HTTPS、真实 Agent、签名、公证、更新安装及包体积的证据。没有执行的检查保留“未验证”；Linux Desktop 继续明确标记为未验证。
+发布记录需分别填写 macOS、Windows 打包态、macOS 睡眠唤醒、真实 HTTPS、真实 Agent、签名、公证、更新安装及包体积的证据。没有执行的检查保留“未验证”；Linux Desktop 继续明确标记为未验证。
 
 官方参考：[macOS 签名](https://v2.tauri.app/distribute/sign/macos/)、[Windows 签名](https://v2.tauri.app/distribute/sign/windows/)、[Tauri updater 静态 JSON](https://v2.tauri.app/plugin/updater/#static-json-file)。
 

@@ -297,6 +297,9 @@ Tauri 适配器用 Proxy 把 `request.<method>(params)` 映射为 `invoke("<snak
 
 - macOS、Windows 打包态：未登录可用本地工具；文件、任务、终端、Cron、记忆的 IPC 正常；CLI 握手；
   托盘显示/隐藏/退出；关闭隐藏到托盘；完整重启后偏好和本地状态恢复。
+- macOS 睡眠唤醒：窗口可见和隐藏到托盘两种状态合计至少睡眠唤醒 5 次（至少一次超过 30 分钟）后，
+  窗口仍能重绘和响应输入，本地 IPC、终端输出、托盘显示和已登录时的 API 请求正常。
+  手动步骤见 [Desktop 构建、签名与升级](../development/desktop-release.md)。
 - 真实 HTTPS（beta）：表单登录、会话跨重启持久、登出；切换 `config.toml` 服务器后 Cookie 与
   存储隔离、远程 opt-in 隔离。
 - 安全：Cookie/Set-Cookie 不出现在任何桥接响应中；非白名单 API 路径被拒；渲染端调用 `host.*`、
