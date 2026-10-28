@@ -1,4 +1,6 @@
-use raypx_terminal::{Command, Limits, SessionEvent, Status, TerminalHost};
+#[cfg(unix)]
+use raypx_terminal::SessionEvent;
+use raypx_terminal::{Command, Limits, Status, TerminalHost};
 use std::{
     path::PathBuf,
     thread,
@@ -222,7 +224,62 @@ fn close_terminates_background_descendants_before_reporting_exit() {
 
 #[cfg(unix)]
 #[test]
+fn large_input_is_delivered_completely_to_a_reading_terminal() {
+    let directory = tempfile::tempdir().unwrap();
+    let host = TerminalHost::default();
+    let session = host
+        .open(
+            shell(
+                directory.path(),
+                "stty raw -echo; printf ready; head -c 65536 | wc -c; printf complete; read done",
+            ),
+            80,
+            24,
+        )
+        .unwrap();
+    eventually(|| text(&host, &session.id).contains("ready"));
+    host.write(&session.id, vec![b'x'; raypx_terminal::MAX_INPUT_BYTES])
+        .unwrap();
+    eventually(|| text(&host, &session.id).contains("complete"));
+    assert!(text(&host, &session.id).contains("65536"));
+    host.close(&session.id).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn timed_out_input_does_not_stall_later_resize() {
+    let directory = tempfile::tempdir().unwrap();
+    let host = std::sync::Arc::new(TerminalHost::default());
+    let session = host
+        .open(
+            shell(directory.path(), "stty raw -echo; printf waiting; sleep 10"),
+            80,
+            24,
+        )
+        .unwrap();
+    eventually(|| text(&host, &session.id).contains("waiting"));
+    let written = host.write(&session.id, vec![b'x'; raypx_terminal::MAX_INPUT_BYTES]);
+    let resized = host.resize(&session.id, 100, 40);
+    close_with_deadline(&host, &session.id, false);
+    assert_eq!(written.unwrap_err().0, "TERMINAL_IO_TIMEOUT");
+    resized.unwrap();
+    assert_eq!(host.snapshot(&session.id).unwrap().cols, 100);
+}
+
+#[cfg(unix)]
+#[test]
 fn cancellation_is_not_queued_behind_a_blocked_terminal_write() {
+    cancel_blocked_write(false);
+}
+
+#[cfg(unix)]
+#[test]
+fn shutdown_is_not_queued_behind_a_blocked_terminal_write() {
+    cancel_blocked_write(true);
+}
+
+#[cfg(unix)]
+fn cancel_blocked_write(shutdown: bool) {
     let directory = tempfile::tempdir().unwrap();
     let host = std::sync::Arc::new(TerminalHost::default());
     let session = host
@@ -242,7 +299,7 @@ fn cancellation_is_not_queued_behind_a_blocked_terminal_write() {
         done.send(result).unwrap();
     });
     assert!(received.recv_timeout(Duration::from_millis(50)).is_err());
-    host.close(&session.id).unwrap();
+    close_with_deadline(&host, &session.id, shutdown);
     assert!(
         received
             .recv_timeout(Duration::from_secs(3))
@@ -250,5 +307,30 @@ fn cancellation_is_not_queued_behind_a_blocked_terminal_write() {
             .is_err()
     );
     writer.join().unwrap();
-    assert_eq!(host.snapshot(&session.id).unwrap().status, Status::Exited);
+    if shutdown {
+        assert!(host.list().unwrap().is_empty());
+    } else {
+        assert_eq!(host.snapshot(&session.id).unwrap().status, Status::Exited);
+    }
+}
+
+#[cfg(unix)]
+fn close_with_deadline(host: &std::sync::Arc<TerminalHost>, id: &str, shutdown: bool) {
+    let closing_host = host.clone();
+    let id = id.to_owned();
+    let (closed, completion) = std::sync::mpsc::channel();
+    let closer = thread::spawn(move || {
+        let result = if shutdown {
+            closing_host.shutdown();
+            Ok(())
+        } else {
+            closing_host.close(&id)
+        };
+        closed.send(result).unwrap();
+    });
+    completion
+        .recv_timeout(Duration::from_secs(3))
+        .expect("cancellation must drain blocked PTY input within its deadline")
+        .unwrap();
+    closer.join().unwrap();
 }

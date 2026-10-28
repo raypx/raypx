@@ -8,7 +8,7 @@ use std::{
         mpsc::{self, Receiver, SyncSender, TrySendError},
     },
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 const INPUT_QUEUE: usize = 32;
@@ -40,6 +40,7 @@ struct State {
     next_attachment: u64,
     reader_done: bool,
     child_exit: Option<u32>,
+    closing: bool,
 }
 impl State {
     fn publish(&mut self, event: SessionEvent) {
@@ -137,20 +138,12 @@ impl Session {
         drop(pair.slave);
         let pid = child.process_id();
         let killer = child.clone_killer();
-        let reader = pair
-            .master
-            .try_clone_reader()
-            .map_err(|_| Error("PTY_OPEN_FAILED"));
-        let writer = pair
-            .master
-            .take_writer()
-            .map_err(|_| Error("PTY_OPEN_FAILED"));
-        let (reader, writer) = match (reader, writer) {
-            (Ok(reader), Ok(writer)) => (reader, writer),
-            _ => {
+        let crate::pty_io::Streams { reader, writer } = match crate::pty_io::open(&*pair.master) {
+            Ok(streams) => streams,
+            Err(error) => {
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err(Error("PTY_OPEN_FAILED"));
+                return Err(error);
             }
         };
         let shared = Arc::new(Shared {
@@ -172,6 +165,7 @@ impl Session {
                 next_attachment: 0,
                 reader_done: false,
                 child_exit: None,
+                closing: false,
             }),
             changed: Condvar::new(),
         });
@@ -286,8 +280,10 @@ impl Session {
                 TrySendError::Full(_) => Error("TERMINAL_BACKPRESSURE"),
                 TrySendError::Disconnected(_) => Error("TERMINAL_CLOSED"),
             })?;
-        rx.recv_timeout(IO_TIMEOUT)
-            .map_err(|_| Error("TERMINAL_IO_TIMEOUT"))?
+        rx.recv_timeout(IO_TIMEOUT).map_err(|error| match error {
+            mpsc::RecvTimeoutError::Timeout => Error("TERMINAL_IO_TIMEOUT"),
+            mpsc::RecvTimeoutError::Disconnected => Error("TERMINAL_CLOSED"),
+        })?
     }
     pub(crate) fn write(&self, bytes: Vec<u8>) -> Result<()> {
         self.send(|reply| Input::Write(bytes, reply))
@@ -296,6 +292,7 @@ impl Session {
         self.send(|reply| Input::Resize(cols, rows, reply))
     }
     pub(crate) fn cancel(&self) {
+        self.0.shared.update(|state| state.closing = true);
         if self.snapshot().status == Status::Exited {
             return;
         }
@@ -354,12 +351,7 @@ fn run_input(
     for input in rx {
         match input {
             Input::Write(bytes, reply) => {
-                let _ = reply.send(
-                    writer
-                        .write_all(&bytes)
-                        .and_then(|()| writer.flush())
-                        .map_err(|_| Error("TERMINAL_IO")),
-                );
+                let _ = reply.send(write_input(&mut *writer, &bytes, shared));
             }
             Input::Resize(cols, rows, reply) => {
                 let result = master
@@ -383,6 +375,38 @@ fn run_input(
         }
     }
     master.lock().unwrap_or_else(|e| e.into_inner()).take();
+}
+fn write_input(writer: &mut dyn Write, mut bytes: &[u8], shared: &Shared) -> Result<()> {
+    let deadline = Instant::now() + IO_TIMEOUT;
+    while !bytes.is_empty() {
+        let state = shared.state.lock().unwrap_or_else(|e| e.into_inner());
+        if state.closing || state.child_exit.is_some() {
+            return Err(Error("TERMINAL_CLOSED"));
+        }
+        drop(state);
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            return Err(Error("TERMINAL_IO_TIMEOUT"));
+        }
+        match writer.write(bytes) {
+            Ok(0) => return Err(Error("TERMINAL_IO")),
+            Ok(count) => bytes = &bytes[count..],
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                let state = shared.state.lock().unwrap_or_else(|e| e.into_inner());
+                // Cancellation wakes this wait immediately; a full PTY buffer
+                // must never pin the actor or its shutdown join in write_all.
+                let _ = shared
+                    .changed
+                    .wait_timeout_while(state, remaining.min(Duration::from_millis(10)), |state| {
+                        !state.closing && state.child_exit.is_none()
+                    })
+                    .unwrap_or_else(|e| e.into_inner());
+            }
+            Err(_) => return Err(Error("TERMINAL_IO")),
+        }
+    }
+    writer.flush().map_err(|_| Error("TERMINAL_IO"))
 }
 fn read_output(mut reader: Box<dyn Read + Send>, shared: &Shared) {
     let mut buffer = [0u8; 8192];

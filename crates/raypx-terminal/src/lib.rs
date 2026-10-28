@@ -4,6 +4,7 @@
 //! bounded replay stay separate from the actor, child and OS handles. This
 //! architecture was informed by herdr; this implementation shares no source.
 
+mod pty_io;
 mod session;
 
 use serde::Serialize;

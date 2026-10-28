@@ -3658,6 +3658,7 @@ name = "raypx-terminal"
 version = "0.1.0"
 dependencies = [
  "base64 0.23.1",
+ "filedescriptor",
  "nix 0.31.3",
  "portable-pty",
  "serde",
