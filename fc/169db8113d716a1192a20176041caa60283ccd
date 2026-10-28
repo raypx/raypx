@@ -1,0 +1,75 @@
+experiments/desktop-build/electrobun/src/schema.ts
+  s_59bd2cca60d0aa::t_5a02738a1600d4 6-7
+experiments/desktop-build/AGENTS.md
+  s_59bd2cca60d0aa::t_178f9e8d4eef8f 10-15
+experiments/desktop-build/cli-host/probe.go
+  s_59bd2cca60d0aa::t_6159ae12f33624 21-24,26-29,45,141-142,146-148,153,157,161
+  s_59bd2cca60d0aa::t_3584a82f33ce36 25,140,143-145,149-152,154-156,158-160,162,170
+  s_59bd2cca60d0aa::t_268c6b0913e184 171
+experiments/desktop-build/mygo/main.go
+  s_59bd2cca60d0aa::t_cc8dd693cdfad9 32,75,109-116,118
+  s_59bd2cca60d0aa::t_ed990dc53a120d 27-30,77-84,105-108,120,122
+  s_59bd2cca60d0aa::t_ce167a60ba3ded 119,123-124
+packages/tooling/src/validation/desktop-native-summary.ts
+  s_59bd2cca60d0aa::t_5b43b054921f8c 1-226
+  s_59bd2cca60d0aa::t_ec4a4c5c6de66d 227-240
+experiments/desktop-build/electrobun/src/renderer.ts
+  s_59bd2cca60d0aa::t_e054769797d4c2 14
+  s_59bd2cca60d0aa::t_5a02738a1600d4 5,13
+experiments/desktop-build/frontend/index.html
+  s_59bd2cca60d0aa::t_0bde80eff2f5b4 6-29,32-45,47-51,53,57-58,61,63-112
+experiments/desktop-build/electrobun/src/gui.ts
+  s_59bd2cca60d0aa::t_5a02738a1600d4 1-7,14-15,17,24,29-32,40-44,49-51,73,111,114,117,127-128,132-135
+  s_59bd2cca60d0aa::t_0bde80eff2f5b4 16,118-120,122-126
+  s_59bd2cca60d0aa::t_5a6bdd6b1a92e0 121
+  s_59bd2cca60d0aa::t_33966f409f8042 8-13,18-23,25-28,33-39,45-48,52-72,74-85,87-110,112-113,115-116,129-131
+  s_59bd2cca60d0aa::t_e054769797d4c2 86
+experiments/desktop-build/electrobun/src/probe.ts
+  s_59bd2cca60d0aa::t_3584a82f33ce36 22-26,95,99-104,106-108,118
+  s_59bd2cca60d0aa::t_9b90d84bd10690 47,71,96-98,105,109-114
+experiments/desktop-build/mygo/gui.go
+  s_59bd2cca60d0aa::t_36f2841802fffc 1-3,11,14-17,26,28,33-34,45-46,64,91,128,150
+  s_59bd2cca60d0aa::t_33966f409f8042 4-10,12-13,18-25,27,29-32,35-44,47,49-63,65-90,92-127,129-149
+  s_59bd2cca60d0aa::t_0bde80eff2f5b4 48
+packages/tooling/src/validation/desktop-native-memory.ts
+  s_59bd2cca60d0aa::t_8f12480b4c6e3d 1-2,4-64,69-74,89,103-110,114,116-118,122-128,137-163,171-177,179-207
+  s_59bd2cca60d0aa::t_bb95ee53bb8bd0 3,68,75-88,111,120-121,178
+  s_59bd2cca60d0aa::t_e3ba7761d827cc 65-67,90-102,112-113,115,119,129-136,164-170
+  s_59bd2cca60d0aa::t_c2a8d383240180 208-222
+packages/tooling/src/validation/desktop-native-run.ts
+  s_59bd2cca60d0aa::t_3584a82f33ce36 55-57,196
+  s_59bd2cca60d0aa::t_e054769797d4c2 1-54,58-195,197-257
+experiments/desktop-build/electrobun/electrobun.config.ts
+  s_59bd2cca60d0aa::t_0bde80eff2f5b4 12-16
+experiments/desktop-build/electrobun/src/main.ts
+  s_59bd2cca60d0aa::t_5a02738a1600d4 44
+  s_59bd2cca60d0aa::t_ed990dc53a120d 2,45-47
+  s_59bd2cca60d0aa::t_5125221e8827c3 48-51
+packages/tooling/src/validation/desktop-native-geometry.ts
+  s_59bd2cca60d0aa::t_2194062c7c3a9d 1-78
+  s_59bd2cca60d0aa::t_034212e43d02d0 79-84
+experiments/desktop-build/README.md
+  s_59bd2cca60d0aa::t_bcbee7eb02614a 146-198
+packages/tooling/AGENTS.md
+  s_59bd2cca60d0aa::t_61f8b9c137a884 45-49
+packages/tooling/src/validation/desktop-native-gui.ts
+  s_59bd2cca60d0aa::t_36201ea4b49b3f 1-66
+packages/tooling/src/validation/desktop-native-repeat-electrobun.ts
+  s_59bd2cca60d0aa::t_10b6a062505372 1-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fc169db8113d716a1192a20176041caa60283ccd",
+  "prompts": {},
+  "sessions": {
+    "s_59bd2cca60d0aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1809a-13f7-72c3-81b9-d8fc270e82a5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
