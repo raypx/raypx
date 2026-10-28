@@ -1,0 +1,145 @@
+docs/development/getting-started.md
+  s_a4f4f0ce2ca2a6::t_7d75cfe33f468f 26-27
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 3-7
+apps/desktop/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_7d75cfe33f468f 16-21,55-56,73-74,76-77,83,86,89,104-105,111-113,126-127
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 5-12
+  s_a4f4f0ce2ca2a6::t_870b3f29d89a95 128
+apps/desktop/tests/scripts/native/mygo.test.ts
+  s_a4f4f0ce2ca2a6::t_17df3529bd2dc7 1-26
+  s_a4f4f0ce2ca2a6::t_ab6723dcc869fc 27-43
+apps/desktop/native/README.md
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 1-31,36,49-52,58-62
+  s_a4f4f0ce2ca2a6::t_17df3529bd2dc7 32-35,37-48,53-57
+apps/desktop/native/internal/host/cookies.go
+  s_a4f4f0ce2ca2a6::t_fe89530dd4452c 15,22-25,27-352
+  s_a4f4f0ce2ca2a6::t_33aa91ce9ebba3 1-14,16-21,26,353
+docs/architecture/0038-mygo-desktop-host.md
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 1-47
+docs/architecture/0036-tauri-desktop-host.md
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 3-5
+AGENTS.md
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 38-40,52,55-56
+apps/desktop/native/internal/host/desktop.go
+  s_a4f4f0ce2ca2a6::t_fe89530dd4452c 18-23,25,31-43,45-47,49-84,87-101,110-111,145-149,153-160,162-163,165-311,320-359,363-413,429-476
+  s_a4f4f0ce2ca2a6::t_ead4c158603a2b 1-17,24,44
+  s_a4f4f0ce2ca2a6::t_673d6be44166fd 26-30,48,85-86,102-109,112-144,150-152,161,164,312-319,360-362,414-428
+apps/desktop/native/internal/host/api.go
+  s_a4f4f0ce2ca2a6::t_673d6be44166fd 3,15-21,23-165,167-214
+  s_a4f4f0ce2ca2a6::t_33aa91ce9ebba3 1-2,4-14,22,166,215
+docs/README.md
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 11-12
+packages/tooling/src/tasks/leaf.ts
+  s_a4f4f0ce2ca2a6::t_f8c3726c92b81a 12-14,19-29
+apps/desktop/native/internal/host/process_unix.go
+  s_a4f4f0ce2ca2a6::t_115507530ceafe 1-7
+apps/desktop/src/lib/mygo.ts
+  s_a4f4f0ce2ca2a6::t_d1161c166a2225 1-2,4-14,18-19,32-37,51,74-78,84-85,90-94
+  s_a4f4f0ce2ca2a6::t_50f7267a5a8298 3,15-17,20-31,38-49,52-73,79-83,86-89
+  s_a4f4f0ce2ca2a6::t_bed1b29b8db4e3 50
+docs/architecture/README.md
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 3-7
+  s_a4f4f0ce2ca2a6::t_7d75cfe33f468f 15,169-170,199
+packages/tooling/tests/unit/clean.test.ts
+  s_a4f4f0ce2ca2a6::t_f8c3726c92b81a 28-34,55-57,90-91
+apps/desktop/native/tests/page_origin_test.go
+  s_a4f4f0ce2ca2a6::t_9861b6b34e2a74 1-47
+apps/desktop/native/internal/host/config.go
+  s_a4f4f0ce2ca2a6::t_e59d39630d4929 1-113
+  s_a4f4f0ce2ca2a6::t_20b3c14ac2fd57 114-319
+apps/desktop/src/router.tsx
+  s_a4f4f0ce2ca2a6::t_d1161c166a2225 24-25
+  s_a4f4f0ce2ca2a6::t_50f7267a5a8298 22-23
+apps/desktop/native/main.go
+  s_a4f4f0ce2ca2a6::t_fdaaf0fc104ae9 55-66,185,247,256,270-271,298-303,305,313,349,355,368-369,381,414,418-421,431-432,436
+  s_a4f4f0ce2ca2a6::t_7634f478440666 78,166,306-312,382-386,415-417,433-435
+  s_a4f4f0ce2ca2a6::t_ac4ab1becc2efd 31-54,67-77,79-165,175-181,186-187,200-204,206-219,224-244,246,248-255,257-269,272-287,293,295-297,304,314-348,350-354,356-367,370-380,387-394,402-413,422-430,438,440-470
+  s_a4f4f0ce2ca2a6::t_6dbfa7423d8a7c 10,167-174,182-184,188-199,205
+  s_a4f4f0ce2ca2a6::t_f3bd5b7f34f5ae 220-223
+  s_a4f4f0ce2ca2a6::t_11dc186123b343 288-292,294,395-401
+  s_a4f4f0ce2ca2a6::t_0b037d945a6030 1-9,11-30,245,437,439,471
+apps/desktop/tests/renderer/unit/lib/mygo.test.ts
+  s_a4f4f0ce2ca2a6::t_57f569cc8bd92d 2-3,5-8,10,12,16-18,20,26-32,39-42,44,49-52,54,58-59,80,83-84
+  s_a4f4f0ce2ca2a6::t_025bb5da0111bd 1,4,9,19,45-48,56-57
+  s_a4f4f0ce2ca2a6::t_bed1b29b8db4e3 11,13-15,21-25,33-38,43,53,55,60-79,81-82
+packages/tooling/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_3051a00fdbe85b 39-42
+  s_a4f4f0ce2ca2a6::t_7d75cfe33f468f 32,37-38,46
+  s_a4f4f0ce2ca2a6::t_025bb5da0111bd 33-36
+apps/desktop/native/internal/host/engine.go
+  s_a4f4f0ce2ca2a6::t_115507530ceafe 1-96
+  s_a4f4f0ce2ca2a6::t_5578f3bf4f9649 97-517
+apps/desktop/native/tests/shutdown_test.go
+  s_a4f4f0ce2ca2a6::t_7eb4dedb249a56 140-172,178-180
+  s_a4f4f0ce2ca2a6::t_5450c8eafcd244 1-139,173-177,181-240
+apps/desktop/tests/scripts/native/task.test.ts
+  s_a4f4f0ce2ca2a6::t_f8c3726c92b81a 16,36,68,121,148-165
+apps/desktop/native/internal/host/platform.go
+  s_a4f4f0ce2ca2a6::t_9861b6b34e2a74 3-8,10-42
+  s_a4f4f0ce2ca2a6::t_ead4c158603a2b 1-2,9
+apps/desktop/native/internal/host/process_windows.go
+  s_a4f4f0ce2ca2a6::t_115507530ceafe 1-5
+  s_a4f4f0ce2ca2a6::t_38cbfe34c70873 6-12
+apps/desktop/native/tests/fixtures_test.go
+  s_a4f4f0ce2ca2a6::t_57f569cc8bd92d 1-30
+  s_a4f4f0ce2ca2a6::t_a40d0746947959 31-154
+.github/workflows/ci.yml
+  s_a4f4f0ce2ca2a6::t_50f7267a5a8298 216,218,301-329
+apps/desktop/native/tests/regressions_test.go
+  s_a4f4f0ce2ca2a6::t_7236e849f353e3 1-243
+  s_a4f4f0ce2ca2a6::t_96e351d2de92ca 244-249
+apps/desktop/native/AGENTS.md
+  s_a4f4f0ce2ca2a6::t_e59d39630d4929 1-18
+apps/desktop/scripts/native/mygo.ts
+  s_a4f4f0ce2ca2a6::t_17df3529bd2dc7 15-26,31-38,42-47,53-56,65-66,68-74,85,87,94,96-101,103-105,109-133,135-137,187
+  s_a4f4f0ce2ca2a6::t_d7981cec3656fe 27-30,39-41,48-52,57-64,138-186
+  s_a4f4f0ce2ca2a6::t_d1161c166a2225 1-14,67,75-84,86,88-93,95,102,106-108,134,188
+apps/desktop/src/lib/desktop.ts
+  s_a4f4f0ce2ca2a6::t_d1161c166a2225 25
+  s_a4f4f0ce2ca2a6::t_f5f03eab12a525 26-28,45-46
+docs/development/desktop-release.md
+  s_a4f4f0ce2ca2a6::t_7d75cfe33f468f 9,19-20,24
+  s_a4f4f0ce2ca2a6::t_d25ad85b16d251 3-8
+packages/tooling/src/tasks/model.ts
+  s_a4f4f0ce2ca2a6::t_7d75cfe33f468f 117-134,214-215
+apps/desktop/native/.gitignore
+  s_a4f4f0ce2ca2a6::t_0b037d945a6030 1-7
+  s_a4f4f0ce2ca2a6::t_9afb47674a602c 8
+packages/tooling/src/validation/mygo-package.ts
+  s_a4f4f0ce2ca2a6::t_208487926e5c49 1-97
+  s_a4f4f0ce2ca2a6::t_8e5c52f683fe42 98-159
+apps/desktop/scripts/native/task.ts
+  s_a4f4f0ce2ca2a6::t_50f7267a5a8298 2,9-11,19,26,50-51,110-111
+apps/desktop/native/tests/host_test.go
+  s_a4f4f0ce2ca2a6::t_7236e849f353e3 20-54,59-321
+  s_a4f4f0ce2ca2a6::t_2e765fc483658f 1-19,322
+  s_a4f4f0ce2ca2a6::t_7eb4dedb249a56 55-58
+apps/desktop/native/go.mod
+  s_a4f4f0ce2ca2a6::t_fc7b38249e7c9d 1-24
+apps/desktop/native/go.sum
+  s_a4f4f0ce2ca2a6::t_a902bd857a5a51 1-64
+apps/desktop/package.json
+  s_a4f4f0ce2ca2a6::t_7e9e2b82a816d9 17-18,28-34
+apps/desktop/vite.app.config.ts
+  s_a4f4f0ce2ca2a6::t_bbd8f3fd624aba 28
+packages/tooling/src/clean.ts
+  s_a4f4f0ce2ca2a6::t_ca715265ac6c64 45-47
+packages/tooling/src/cli.ts
+  s_a4f4f0ce2ca2a6::t_fee176c38cce4a 154
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9d32915bea403cc08bbf3cd565e49b6b036483d2",
+  "prompts": {},
+  "sessions": {
+    "s_a4f4f0ce2ca2a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1762e-b82b-7e63-9074-02137a943dc8",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
