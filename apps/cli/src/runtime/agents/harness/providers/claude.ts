@@ -13,7 +13,13 @@ export class ClaudeProvider {
   constructor(
     executable: string,
     directory: string,
-    options: { mode: AgentTask["mode"]; sessionId?: string; hookUrl: string; hookToken: string },
+    options: {
+      mode: AgentTask["mode"];
+      sessionId?: string;
+      hookUrl: string;
+      hookToken: string;
+      environment?: Record<string, string | undefined>;
+    },
     observer: ClaudeObserver,
     processFactory: ProcessFactory = createProcess,
   ) {
@@ -57,7 +63,7 @@ export class ClaudeProvider {
           observer.session(message.session_id);
         if (message.type === "result") observer.completed(message);
       },
-      { ...process.env, RAYPX_AGENT_HOOK_TOKEN: options.hookToken },
+      { ...(options.environment ?? process.env), RAYPX_AGENT_HOOK_TOKEN: options.hookToken },
     );
   }
   async sendTurn(prompt: string, sessionId: string | null) {

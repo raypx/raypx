@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import {
   localParams,
   LOCAL_WORKSPACE_ID,
@@ -10,6 +11,7 @@ import { AgentRuntime } from "./agents";
 import { FileRuntime } from "./files";
 import { JobRuntime } from "./jobs";
 import { ProcessRuntime } from "./process";
+import { BundledBun } from "./process/bun";
 import { StateStore, profilePath, acquireLock } from "./state";
 import { LocalError } from "./errors";
 import manifest from "../../package.json";
@@ -37,6 +39,8 @@ export function createRuntime(
 ) {
   const emit = options.emit ?? (() => {});
   const state = new StateStore(profilePath(options));
+  const bun = new BundledBun(join(state.directory, "bun"));
+  const environment = () => bun.environment();
   let releaseOwner: (() => void) | undefined;
   const ownAgents = () => {
     if (releaseOwner) return;
@@ -62,13 +66,14 @@ export function createRuntime(
       {
         resolveContext: (selection, target, prompt) =>
           getMemory().resolve(selection, target, prompt),
+        environment,
         ...(options.agentExecutables ? { executables: options.agentExecutables } : {}),
         ...(options.recordDiagnostic ? { recordDiagnostic: options.recordDiagnostic } : {}),
       },
     ));
   };
   const files = new FileRuntime(state);
-  const processes = new ProcessRuntime(emit);
+  const processes = new ProcessRuntime(emit, process.env.RAYPX_TERMINAL_HOST, environment);
   const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
   let memory: MemoryRuntime | undefined;
   const getMemory = () => (memory ??= new MemoryRuntime(state.directory, getAgents));
@@ -230,6 +235,8 @@ export function createRuntime(
               profile: options.profile ?? "default",
               scheduler: Boolean(options.scheduler),
               runtime: Bun.version,
+              // Absolute shim for commands; terminals and Agents find it on PATH.
+              bun: bun.ensure() ? bun.path : null,
               features: { localTerminalApprovals: false },
             };
           case "roots.list":

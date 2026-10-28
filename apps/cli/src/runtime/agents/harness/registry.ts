@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { AgentCapability, AgentProvider, AgentTask } from "@raypx/contracts/tasks";
 import { CodexProvider } from "./providers/codex";
 import { ClaudeProvider } from "./providers/claude";
-import type { AskApproval } from "./providers/process";
+import { createProcess, type AskApproval } from "./providers/process";
 
 /** Lifecycle port also permits future in-process drivers. No protocol/process API escapes. */
 export interface ExecutionHandle {
@@ -34,7 +34,13 @@ interface DriverPorts {
   failed(handle: ExecutionHandle): void;
   turnId(id: string): void;
 }
-type Start = { executable: string; directory: string; mode: AgentTask["mode"]; sessionId?: string };
+type Start = {
+  executable: string;
+  directory: string;
+  mode: AgentTask["mode"];
+  environment: Record<string, string | undefined>;
+  sessionId?: string;
+};
 type Registration = {
   supported(major: number, minor: number, patch: number): boolean;
   create(start: Start, ports: DriverPorts): ExecutionDriver;
@@ -43,14 +49,20 @@ const registry: Record<AgentProvider, Registration> = {
   codex: {
     supported: (major, minor) => major > 0 || minor >= 163,
     create(start, ports) {
-      const provider = new CodexProvider(start.executable, start.directory, {
-        current: () => ports.current(driver.handle),
-        record: (method, params) => ports.codexRecord(method, params),
-        ask: ports.approval.ask,
-        completed: (status, turnId) => ports.codexCompleted(driver, status, turnId),
-        failed: () => ports.failed(driver.handle),
-        turnId: (id) => ports.turnId(id),
-      });
+      const provider = new CodexProvider(
+        start.executable,
+        start.directory,
+        {
+          current: () => ports.current(driver.handle),
+          record: (method, params) => ports.codexRecord(method, params),
+          ask: ports.approval.ask,
+          completed: (status, turnId) => ports.codexCompleted(driver, status, turnId),
+          failed: () => ports.failed(driver.handle),
+          turnId: (id) => ports.turnId(id),
+        },
+        (executable, args, directory, onMessage) =>
+          createProcess(executable, args, directory, onMessage, start.environment),
+      );
       const driver: ExecutionDriver = {
         handle: { completed: provider.process.completed, kill: () => provider.process.kill() },
         input: "steer",
@@ -89,6 +101,7 @@ const registry: Record<AgentProvider, Registration> = {
           ...(start.sessionId ? { sessionId: start.sessionId } : {}),
           hookUrl: hook.url,
           hookToken: hook.token,
+          environment: start.environment,
         },
         {
           current: () => ports.current(driver.handle),

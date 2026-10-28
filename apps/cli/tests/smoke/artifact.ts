@@ -457,6 +457,24 @@ try {
       .find((value) => value.id === "smoke");
     assert.equal(`bun@${response.result.runtime}`, packageManager);
     assert.equal(response.result.scheduler, true);
+    const bunShim: unknown = response.result.bun;
+    assert.ok(typeof bunShim === "string", "runtime.info must report the bundled Bun shim");
+    assert.ok((await Bun.file(bunShim).text()).includes(binary), "Shim must run this executable");
+    if (process.platform !== "win32") {
+      const script = join(dataDir, "bundled-bun.ts");
+      await writeFile(script, "console.log(`bundled-bun ${Bun.version}`)");
+      const bun = Bun.spawn([bunShim, "run", script], {
+        cwd: dataDir,
+        env: { ...process.env, PATH: "" },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      assert.equal(await bun.exited, 0, "Bundled Bun must run scripts without an installed Bun");
+      assert.equal(
+        `bun@${(await new Response(bun.stdout).text()).trim().replace("bundled-bun ", "")}`,
+        packageManager,
+      );
+    }
     await child.stdin.write(
       JSON.stringify({ version: 1, id: "persisted", method: "roots.list", params: {} }) + "\n",
     );

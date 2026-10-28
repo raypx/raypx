@@ -49,6 +49,7 @@ I/O are bounded. Default CLI builds/tests need no Rust. Never retry uncertain in
   per-build copy under `<data>/bin` so the Desktop updater can replace the bundled executable.
   Ordinary foreground commands never install a daemon or system service. Desktop may start
   an independent owner on demand; `daemon install` alone registers launchd.
+- Child PATH ends with `<profile>/bun` `bun`/`bunx` shims (`BUN_BE_BUN=1`, `runtime.info.bun`); Bun's children inherit it.
 - Stdout is protocol-only in stdio mode. Logs go to stderr.
 - The executable configures `@raypx/logger` (evlog) once with an explicit field policy and a
   stderr stream drain, and closes it after runtime shutdown.

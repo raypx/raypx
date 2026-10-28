@@ -2,6 +2,8 @@
 
 The compiled `raypx` executable needs no installed Node or Bun. Desktop bundles the same version and starts private `stdio` mode; only that mode schedules tasks. Foreground commands run once and never install a service.
 
+Terminals, Agents and external commands started by the CLI can run `bun` and `bunx` without an installed Bun: the CLI appends shims for its embedded Bun to the end of their PATH, so an installed Bun still wins. `runtime.info` returns the absolute `bun` shim for commands that need an executable path.
+
 ```sh
 raypx files authorize /absolute/directory --json
 raypx files roots --json

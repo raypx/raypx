@@ -56,6 +56,8 @@ interface ExecutionEffects {
   changed(pendingRequest?: string): void;
   resolved(requestId: string): void;
   hook(): { url: string; token: string };
+  /** Provider processes inherit this, including the bundled `bun` PATH entry. */
+  environment(): Record<string, string | undefined>;
   track(completion: Promise<void>): void;
   ended(): void;
 }
@@ -296,7 +298,13 @@ export class ManagedExecution {
     this.planRequestHandled = false;
     const provider = createDriver(
       task.provider,
-      { executable, directory, mode: task.mode, ...(sessionId ? { sessionId } : {}) },
+      {
+        executable,
+        directory,
+        mode: task.mode,
+        environment: this.effects.environment(),
+        ...(sessionId ? { sessionId } : {}),
+      },
       {
         approval: { ask: (...args) => this.ask(...args), hook: () => this.effects.hook() },
         current: (handle) => !this.finished && this.process === handle,

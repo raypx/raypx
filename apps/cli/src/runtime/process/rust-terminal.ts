@@ -3,6 +3,7 @@ import { stat } from "node:fs/promises";
 import type { CommandSpec, LocalEvent } from "@raypx/contracts/local";
 import manifest from "../../../package.json";
 import { LocalError } from "../errors";
+import type { Environment } from "./bun";
 
 type Child = ReturnType<typeof Bun.spawn>;
 type RecordValue = Record<string, unknown>;
@@ -38,6 +39,8 @@ export class RustTerminalHost {
     private readonly binary: string,
     private readonly emit: (event: LocalEvent) => void,
     private readonly args: readonly string[] = [],
+    // PTY sessions inherit the host's environment.
+    private readonly environment: () => Environment = () => process.env,
   ) {}
 
   has(id: string) {
@@ -54,6 +57,7 @@ export class RustTerminalHost {
       );
     if (this.closing) throw new LocalError("CLOSING", "Terminal host is shutting down");
     const child = Bun.spawn([this.binary, ...this.args], {
+      env: this.environment(),
       stdin: "pipe",
       stdout: "pipe",
       stderr: "ignore",

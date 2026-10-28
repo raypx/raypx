@@ -2,6 +2,7 @@ import { isAbsolute, join } from "node:path";
 import { stat } from "node:fs/promises";
 import type { CommandSpec, LocalEvent, ToolResult } from "@raypx/contracts/local";
 import { LocalError } from "../errors";
+import type { Environment } from "./bun";
 import { RustTerminalHost } from "./rust-terminal";
 
 const MAX_OUTPUT = 1024 * 1024;
@@ -17,6 +18,7 @@ export class ProcessRuntime {
   constructor(
     private readonly emit: (event: LocalEvent) => void,
     private readonly terminalHost = process.env.RAYPX_TERMINAL_HOST,
+    private readonly environment: () => Environment = () => process.env,
   ) {}
   async validate(command: CommandSpec) {
     if (!isAbsolute(command.executable) || !isAbsolute(command.cwd))
@@ -79,6 +81,7 @@ export class ProcessRuntime {
     let cancelled = false;
     const child = Bun.spawn([command.executable, ...command.args], {
       cwd: command.cwd,
+      env: this.environment(),
       stdin: "ignore",
       stdout: "pipe",
       stderr: "pipe",
@@ -129,7 +132,7 @@ export class ProcessRuntime {
     await this.validate(command);
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
     if (this.terminalHost) {
-      this.rust ??= new RustTerminalHost(this.terminalHost, this.emit);
+      this.rust ??= new RustTerminalHost(this.terminalHost, this.emit, [], this.environment);
       return this.rust.open(command, cols, rows);
     }
     const id = crypto.randomUUID();
@@ -159,6 +162,7 @@ export class ProcessRuntime {
     });
     const child = Bun.spawn([command.executable, ...command.args], {
       cwd: command.cwd,
+      env: this.environment(),
       terminal,
       detached: process.platform !== "win32",
     });

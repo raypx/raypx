@@ -83,6 +83,7 @@ export class AgentRuntime {
       recordDiagnostic?: RecordDiagnostic;
       /** How long an interrupted turn may run before its pending input expires. */
       interruptTimeoutMs?: number;
+      environment?: () => Record<string, string | undefined>;
       resolveContext?: (
         selection: TaskContextSelection,
         target: TaskContextTarget,
@@ -640,6 +641,7 @@ export class AgentRuntime {
           this.hookTokens.set(task.id, token);
           return { url: `http://127.0.0.1:${this.server!.port}/hook/${task.id}`, token };
         },
+        environment: () => this.options.environment?.() ?? process.env,
         track: (completion) => {
           this.completions.add(completion);
           void completion.finally(() => this.completions.delete(completion));
