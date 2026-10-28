@@ -1,0 +1,50 @@
+packages/tooling/src/validation/desktop-cli-summary.ts
+  s_59bd2cca60d0aa::t_f6e827076d3e62 90-91
+  s_59bd2cca60d0aa::t_1223c5aaf0ccb1 92-94
+experiments/desktop-build/electrobun/src/probe.ts
+  s_59bd2cca60d0aa::t_a83d99cf32a02a 22,24,29-30
+  s_59bd2cca60d0aa::t_107f566462cdae 31-36,105-115
+experiments/desktop-build/electrobun/scripts/stage-cli.ts
+  s_59bd2cca60d0aa::t_a83d99cf32a02a 2-3,28,30-45
+  s_59bd2cca60d0aa::t_d664af4aa4c281 46,51-53
+packages/tooling/src/validation/desktop-cli-build.ts
+  s_59bd2cca60d0aa::t_676e36c44b06b6 21
+  s_59bd2cca60d0aa::t_a83d99cf32a02a 9,15,20,22
+  s_59bd2cca60d0aa::t_af81d1d2cb7daf 23-24,56,68,167-168
+packages/tooling/src/validation/desktop-shared-bun-run.ts
+  s_59bd2cca60d0aa::t_85e378d574877f 3-14,21-23,30-38,42-46,49-51,63-65,69-73,79-91,98-102,110-113,121-125,127-170,176-185,197-209,218-235,239-242,244-246,248-249,254-257,264-267,276-278,282-286,294-296,302-307,309-321,324-334
+  s_59bd2cca60d0aa::t_f6e827076d3e62 171-174,250-251,280
+  s_59bd2cca60d0aa::t_676e36c44b06b6 1-2,15-20,24-29,39-41,47-48,52-62,66-68,74-78,92-97,103-109,114-120,126,175,186-196,210-217,236-238,243,247,252-253,258-263,268-275,279,281,287-293,297-301,308,322-323,335
+  s_59bd2cca60d0aa::t_4b94164531baed 336-340
+experiments/desktop-build/AGENTS.md
+  s_59bd2cca60d0aa::t_b8296209f838bb 17-22
+packages/tooling/AGENTS.md
+  s_59bd2cca60d0aa::t_b8296209f838bb 40-44
+experiments/desktop-build/electrobun/src/renderer.ts
+  s_59bd2cca60d0aa::t_a83d99cf32a02a 4
+  s_59bd2cca60d0aa::t_38d9490e224ac6 5-7
+packages/tooling/src/validation/desktop-shared-bun-summary.ts
+  s_59bd2cca60d0aa::t_fd3c592acf20c8 1-72
+  s_59bd2cca60d0aa::t_f96b890c571321 73-165
+experiments/desktop-build/electrobun/src/main.ts
+  s_59bd2cca60d0aa::t_a83d99cf32a02a 2,15-17
+  s_59bd2cca60d0aa::t_5a1b141343595e 18,25,41,48
+experiments/desktop-build/README.md
+  s_59bd2cca60d0aa::t_be3200a0416b71 10,65,67-68,105-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "479562daab7d64d74cfe4b105ec57c1dfbd18aba",
+  "prompts": {},
+  "sessions": {
+    "s_59bd2cca60d0aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1809a-13f7-72c3-81b9-d8fc270e82a5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
