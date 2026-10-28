@@ -1,0 +1,22 @@
+experiments/desktop-build/README.md
+  s_59bd2cca60d0aa::t_345fd743cdbb82 199-216
+packages/tooling/src/validation/desktop-native-summary.ts
+  s_59bd2cca60d0aa::t_0df7bd06529aa2 248-256,262,268-270,273
+  s_59bd2cca60d0aa::t_62671aa87ef68f 32-48,67,79-87,116-127,144-145,162-164,236-241
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4fa15e942638d93f2ce3e51d8cd44052433ae91f",
+  "prompts": {},
+  "sessions": {
+    "s_59bd2cca60d0aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1809a-13f7-72c3-81b9-d8fc270e82a5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
