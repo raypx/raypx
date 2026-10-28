@@ -1,5 +1,14 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, it } from "vite-plus/test";
-import { tauriSigningEnvironment } from "../../../scripts/native/tauri";
+import {
+  bundleConfig,
+  tauriArguments,
+  tauriSigningEnvironment,
+} from "../../../scripts/native/tauri";
+
+const desktop = resolve(import.meta.dirname, "../../..");
+const json = (path: string) => JSON.parse(readFileSync(resolve(desktop, path), "utf8"));
 
 it("omits absent CI secrets instead of passing Some(empty) to Tauri", () => {
   const env = tauriSigningEnvironment(
@@ -105,4 +114,24 @@ it("requires the Windows certificate to be imported and passes only its configur
     { platform: "win32" },
   );
   expect(env).toEqual({ RAYPX_DESKTOP_SIGNING_THUMBPRINT: "public-thumbprint" });
+});
+
+it("declares the CLI sidecar only for packaging so dev Cargo builds ignore CLI rebuilds", () => {
+  expect(json("src-tauri/tauri.conf.json").bundle.externalBin).toBeUndefined();
+  expect(json(bundleConfig).bundle.externalBin).toEqual(["binaries/raypx"]);
+  expect(tauriArguments(["build", "--config", "ci.json"])).toEqual([
+    "build",
+    "--config",
+    bundleConfig,
+    "--config",
+    "ci.json",
+  ]);
+  expect(tauriArguments(["bundle", "--bundles", "dmg"])).toEqual([
+    "bundle",
+    "--config",
+    bundleConfig,
+    "--bundles",
+    "dmg",
+  ]);
+  expect(tauriArguments(["dev"])).toEqual(["dev"]);
 });

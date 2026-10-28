@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
-import { tauriSigningEnvironment } from "../../../scripts/native/tauri";
+import { tauriArguments, tauriSigningEnvironment } from "../../../scripts/native/tauri";
 import {
   installWindowsSmoke,
   type SmokeInstallation,
@@ -31,14 +31,16 @@ export async function buildSmoke(): Promise<SmokeInstallation> {
       process.execPath,
       "--bun",
       "tauri",
-      "build",
-      "--no-sign",
-      "--features",
-      "native-smoke",
-      "--config",
-      "src-tauri/tauri.smoke.conf.json",
-      "--bundles",
-      process.platform === "darwin" ? "app" : "nsis",
+      ...tauriArguments([
+        "build",
+        "--no-sign",
+        "--features",
+        "native-smoke",
+        "--config",
+        "src-tauri/tauri.smoke.conf.json",
+        "--bundles",
+        process.platform === "darwin" ? "app" : "nsis",
+      ]),
     ],
     {
       cwd,

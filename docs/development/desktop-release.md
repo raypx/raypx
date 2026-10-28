@@ -14,7 +14,7 @@ bun run package:desktop
 bun run --cwd apps/desktop native:smoke
 ```
 
-`build:desktop` 只构建 renderer。`package:desktop` 经 VP 先构建 renderer 和匹配的 CLI，再生成桥接方法/通知文案、复制 sidecar 并执行 `tauri build`。原生打包不进入 VP 缓存，Cargo 自行管理增量状态。根 `bun run verify` 保持无需 Rust 或 GUI；原生检查是单独的显式门禁。
+`build:desktop` 只构建 renderer。`package:desktop` 经 VP 先构建 renderer 和匹配的 CLI，再生成桥接方法/通知文案、复制 sidecar 并执行 `tauri build`。sidecar 只在 `src-tauri/tauri.bundle.conf.json` 中声明，由 `scripts/native/tauri.ts` 在 `build`/`bundle` 时合并；开发构建直接启动 `src-tauri/binaries` 下的 CLI，CLI 重新构建不会触发 Cargo 重编译 Desktop。原生打包不进入 VP 缓存，Cargo 自行管理增量状态。根 `bun run verify` 保持无需 Rust 或 GUI；原生检查是单独的显式门禁。
 
 Electrobun 宿主、SDK、适配器及其构建入口已删除。普通 `check` 严格检查 renderer 和 Bun 脚本；Rust 的策略、真实子进程和实例锁测试由 Cargo 执行。打包后的 `check-release.ts` 按二进制内容匹配 Cargo fingerprint，并检查正式包不含 `native-smoke` feature 或 socket marker。
 
@@ -110,7 +110,8 @@ bun apps/desktop/scripts/native/update-manifest.ts \
 
 For a host without Finder Automation permission, use the supported CI path rather
 than changing macOS privacy settings. After the ordinary release build has produced
-its application, `CI=true bun --bun tauri bundle --bundles dmg --no-sign` from
-`apps/desktop` creates an unsigned DMG without Finder decoration. Full CI packaging
+its application, `CI=true bun scripts/native/tauri.ts bundle --bundles dmg --no-sign`
+from `apps/desktop` creates an unsigned DMG without Finder decoration. The wrapper
+merges the packaging-only sidecar configuration; a direct `tauri bundle` omits the CLI. Full CI packaging
 uses its configured signing credentials. An unsigned DMG establishes size and
 contents only; it does not establish Developer ID signing or notarization.

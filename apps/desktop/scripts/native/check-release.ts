@@ -174,6 +174,9 @@ export async function checkRelease(options: {
       throw new ReleaseCheckError(
         "Packaged Desktop executable does not match the checked Cargo release binary",
       );
+    const cli = join(directory, "bundle/macos/Raypx.app/Contents/MacOS/raypx");
+    if (!(await lstat(cli).catch(() => undefined))?.isFile())
+      throw new ReleaseCheckError("macOS app bundle is missing the bundled CLI");
   }
   return {
     features: features as string[],

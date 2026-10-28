@@ -79,10 +79,20 @@ export function tauriSigningEnvironment(
   return env;
 }
 
+export const bundleConfig = "src-tauri/tauri.bundle.conf.json";
+
+/** Only packaging declares the CLI sidecar; Cargo dev builds never track its rebuilds. */
+export function tauriArguments(args: readonly string[]): string[] {
+  const [command, ...rest] = args;
+  return command === "build" || command === "bundle"
+    ? [command, "--config", bundleConfig, ...rest]
+    : [...args];
+}
+
 if (import.meta.main) {
   const args = process.argv.slice(2);
   if (!args.length) throw new Error("Usage: tauri.ts <Tauri CLI command and arguments>");
-  const child = Bun.spawn([process.execPath, "--bun", "tauri", ...args], {
+  const child = Bun.spawn([process.execPath, "--bun", "tauri", ...tauriArguments(args)], {
     cwd: resolve(import.meta.dirname, "../.."),
     env: tauriSigningEnvironment(process.env),
     stdin: "inherit",

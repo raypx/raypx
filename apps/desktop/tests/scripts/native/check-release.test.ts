@@ -187,6 +187,26 @@ it("also checks the actual macOS app binary, not just an earlier Cargo output", 
   );
 });
 
+it("requires the packaging-only CLI sidecar inside the macOS app", async () => {
+  const f = fixture();
+  writeFileSync(join(f.directory, "raypx-desktop"), "current clean release");
+  f.variant("0000000000000001", "current clean release");
+  copyFileSync(
+    join(f.directory, "deps/raypx_desktop-0000000000000001.exe"),
+    join(f.directory, "deps/raypx_desktop-0000000000000001"),
+  );
+  const app = join(f.directory, "bundle/macos/Raypx.app/Contents/MacOS/raypx-desktop");
+  mkdirSync(join(app, ".."), { recursive: true });
+  writeFileSync(app, "current clean release");
+  await expect(checkRelease({ releaseDirectory: f.directory, platform: "darwin" })).rejects.toThrow(
+    "missing the bundled CLI",
+  );
+  writeFileSync(join(app, "../raypx"), "bundled CLI");
+  await expect(
+    checkRelease({ releaseDirectory: f.directory, platform: "darwin" }),
+  ).resolves.toMatchObject({ checked: "release binary and macOS app bundle" });
+});
+
 /** A small PE32+ image with one section; signing changes only its certificate metadata. */
 function pe(signed: boolean) {
   const bytes = Buffer.alloc(signed ? 1056 : 1024);
@@ -243,6 +263,7 @@ it.skipIf(process.platform !== "darwin")(
     const app = join(f.directory, "bundle/macos/Raypx.app/Contents/MacOS/raypx-desktop");
     mkdirSync(join(app, ".."), { recursive: true });
     copyFileSync(binary, app);
+    writeFileSync(join(app, "../raypx"), "bundled CLI");
     for (const [path, identifier] of [
       [binary, "raypx-release-test"],
       [app, "raypx-package-test"],

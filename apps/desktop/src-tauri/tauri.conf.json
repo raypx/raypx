@@ -17,7 +17,6 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "externalBin": ["binaries/raypx"],
     "icon": ["icons/icon.png", "icons/icon.ico"],
     "macOS": {
       "minimumSystemVersion": "12.0",

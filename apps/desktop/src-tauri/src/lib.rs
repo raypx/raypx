@@ -404,21 +404,22 @@ pub async fn prepare_exit(app: &tauri::AppHandle, state: &Desktop) {
     state.instance.lock().unwrap().take();
 }
 fn cli_binary() -> Result<PathBuf, String> {
-    let binary = std::env::current_exe()
+    // Dev configuration declares no sidecar, so CLI rebuilds do not rerun Cargo;
+    // launch the staged binary rather than a stale copy beside the executable.
+    if tauri::is_dev() {
+        let target = env!("RAYPX_TARGET_TRIPLE");
+        return Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("binaries")
+            .join(format!(
+                "raypx-{target}{}",
+                if cfg!(windows) { ".exe" } else { "" }
+            )));
+    }
+    Ok(std::env::current_exe()
         .map_err(|_| "Unable to locate Desktop executable")?
         .parent()
         .ok_or("Unable to locate Desktop directory")?
-        .join(if cfg!(windows) { "raypx.exe" } else { "raypx" });
-    if binary.is_file() || !tauri::is_dev() {
-        return Ok(binary);
-    }
-    let target = env!("RAYPX_TARGET_TRIPLE");
-    Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("binaries")
-        .join(format!(
-            "raypx-{target}{}",
-            if cfg!(windows) { ".exe" } else { "" }
-        )))
+        .join(if cfg!(windows) { "raypx.exe" } else { "raypx" }))
 }
 fn navigation_allowed(url: &url::Url) -> bool {
     url.scheme() == "tauri" && url.host_str() == Some("localhost") && url.port().is_none()
