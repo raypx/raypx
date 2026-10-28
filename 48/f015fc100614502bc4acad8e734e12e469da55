@@ -1,0 +1,19 @@
+Cargo.toml
+  s_34718ae88c53b0::t_a7b768c190826c 18-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "48f015fc100614502bc4acad8e734e12e469da55",
+  "prompts": {},
+  "sessions": {
+    "s_34718ae88c53b0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3eea7228-74d3-4ae3-94e7-3975108dbdd3",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
