@@ -1,0 +1,84 @@
+packages/tooling/src/validation/desktop-cli-build.ts
+  s_59bd2cca60d0aa::t_d248b8b4b0830c 2-18,20,22-87,89-101
+  s_59bd2cca60d0aa::t_770ac2d302f6a8 1
+  s_59bd2cca60d0aa::t_887815a73275e6 19,21,88
+  s_59bd2cca60d0aa::t_ebe1a7793eb7d7 102-178
+experiments/desktop-build/electrobun/src/renderer.ts
+  s_59bd2cca60d0aa::t_b46f34503d48ad 1-4,7-9
+  s_59bd2cca60d0aa::t_09a418a9bf0bad 5-6
+experiments/desktop-build/electrobun/electrobun.config.ts
+  s_59bd2cca60d0aa::t_87c14b7fde8383 1-11,13-23,25
+  s_59bd2cca60d0aa::t_d248b8b4b0830c 24
+  s_59bd2cca60d0aa::t_770ac2d302f6a8 12
+experiments/desktop-build/cli-host/probe.go
+  s_59bd2cca60d0aa::t_073a6414ada4fe 1-144
+packages/tooling/AGENTS.md
+  s_59bd2cca60d0aa::t_d7e6e823d14d49 34-39
+experiments/desktop-build/electrobun/scripts/stage-cli.ts
+  s_59bd2cca60d0aa::t_09a418a9bf0bad 25
+  s_59bd2cca60d0aa::t_d248b8b4b0830c 1-24,26-34
+experiments/desktop-build/.gitignore
+  s_59bd2cca60d0aa::t_87c14b7fde8383 9-13
+experiments/desktop-build/electrobun/tsconfig.json
+  s_59bd2cca60d0aa::t_87c14b7fde8383 1,18-19
+  s_59bd2cca60d0aa::t_00d8f9fce4d1f5 2-17
+experiments/desktop-build/mygo/go.mod
+  s_59bd2cca60d0aa::t_073a6414ada4fe 7-10
+experiments/desktop-build/cli-host/go.mod
+  s_59bd2cca60d0aa::t_073a6414ada4fe 1-3
+experiments/desktop-build/electrobun/src/probe.ts
+  s_59bd2cca60d0aa::t_b46f34503d48ad 1-99
+  s_59bd2cca60d0aa::t_25b0d3eff86778 100-104
+experiments/desktop-build/electrobun/src/schema.ts
+  s_59bd2cca60d0aa::t_b46f34503d48ad 1-9
+  s_59bd2cca60d0aa::t_02a86c99fa85bd 10
+experiments/desktop-build/electrobun/package.json
+  s_59bd2cca60d0aa::t_87c14b7fde8383 1-6
+  s_59bd2cca60d0aa::t_83bf618b28ee9d 7-8
+experiments/desktop-build/AGENTS.md
+  s_59bd2cca60d0aa::t_02a86c99fa85bd 3-6,10-14,17-19
+experiments/desktop-build/wails/go.mod
+  s_59bd2cca60d0aa::t_073a6414ada4fe 7-10
+experiments/desktop-build/frontend/index.html
+  s_59bd2cca60d0aa::t_69da1d123a5c2f 17-20
+  s_59bd2cca60d0aa::t_02a86c99fa85bd 10-11,15-16,21-25,27,29-36
+  s_59bd2cca60d0aa::t_8eb7a8a07cdbf8 37-39
+experiments/desktop-build/electrobun/hutch.config.ts
+  s_59bd2cca60d0aa::t_87c14b7fde8383 1-4
+packages/tooling/src/validation/desktop-cli-run.ts
+  s_59bd2cca60d0aa::t_fef81b5941b26c 14-17,21-23,31,33-38,43-47,51-90,109-114,125-140,151-162,167-170,176-187
+  s_59bd2cca60d0aa::t_f3b1345867eb85 1-13,18-20,24-30,32,39-42,48-50,91,108,115-124,141-145,147-150,164-166,171-175,188-202
+  s_59bd2cca60d0aa::t_69da1d123a5c2f 92-107,146,163
+  s_59bd2cca60d0aa::t_3969a1ba58fb79 203-205
+packages/tooling/src/validation/desktop-cli-summary.ts
+  s_59bd2cca60d0aa::t_887815a73275e6 1-22,39-54,61-62,75-81,84-95,104,107,132
+  s_59bd2cca60d0aa::t_36c09c1e3c3ea2 23-38,55-60,63-74,82-83,96-103,105-106,108-131,133-148
+  s_59bd2cca60d0aa::t_399cca56020921 149-151
+experiments/desktop-build/electrobun/src/main.ts
+  s_59bd2cca60d0aa::t_b46f34503d48ad 1-26,30-44,47-54
+  s_59bd2cca60d0aa::t_09a418a9bf0bad 27-29,45-46
+experiments/desktop-build/README.md
+  s_59bd2cca60d0aa::t_ba0c5a9f096b7c 1-68,72-74,76-79,81-85,87,90-93,96-99,101-103,105,107-111
+experiments/desktop-build/electrobun/bun.lock
+  s_59bd2cca60d0aa::t_4662f476a61d38 1-15
+experiments/desktop-build/mygo/main.go
+  s_59bd2cca60d0aa::t_4e2632964c3fbb 15-16,27-29,34,51-53,63-64,73-79,93
+experiments/desktop-build/wails/main.go
+  s_59bd2cca60d0aa::t_f395bdbfcc92e9 15-16,27-29,34,51-53,63-64,73-79,94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e8ba8af272f43ea2ba4b25ad20c156d5348993ae",
+  "prompts": {},
+  "sessions": {
+    "s_59bd2cca60d0aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1809a-13f7-72c3-81b9-d8fc270e82a5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
