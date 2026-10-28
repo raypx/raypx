@@ -1,0 +1,36 @@
+packages/tasks/tests/component/workspace/filters.test.tsx
+  s_59bd2cca60d0aa::t_065557054e88d4 2,200-225
+  s_59bd2cca60d0aa::t_b548cb58d768eb 226-227
+packages/tasks/AGENTS.md
+  s_59bd2cca60d0aa::t_5103f017a0939e 42-44
+  s_59bd2cca60d0aa::t_d28d20028efa49 45
+packages/tasks/src/client/use-task-conversation.ts
+  s_59bd2cca60d0aa::t_5103f017a0939e 8,65
+packages/tasks/src/client/read.ts
+  s_59bd2cca60d0aa::t_5103f017a0939e 1-21
+packages/tasks/src/client/task-panels.tsx
+  s_59bd2cca60d0aa::t_d28d20028efa49 29
+  s_59bd2cca60d0aa::t_5103f017a0939e 14,16-17,21-27,34-37,60-73,132,152
+packages/tasks/tests/component/workspace/panels.test.tsx
+  s_59bd2cca60d0aa::t_d28d20028efa49 56-67
+  s_59bd2cca60d0aa::t_065557054e88d4 1-38,42-55
+  s_59bd2cca60d0aa::t_5103f017a0939e 39-41
+packages/tasks/src/client/remote-query.ts
+  s_59bd2cca60d0aa::t_5103f017a0939e 6,31-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4ab3aa163330df3da507341e4d52b80d9790430e",
+  "prompts": {},
+  "sessions": {
+    "s_59bd2cca60d0aa": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1809a-13f7-72c3-81b9-d8fc270e82a5",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
