@@ -6,8 +6,9 @@ export default defineConfig({
   fmt: {},
   staged: {
     "*.{ts,tsx,json,md,css,toml}": "bun --bun vp fmt --write",
-    // oxlint only reads scripts and fails when a commit stages none.
-    "*.{ts,tsx}": "bun --bun vp lint --fix",
+    // oxlint only reads scripts and fails when a commit stages none; vendored skill
+    // scripts are ignored, so a commit staging only those must still pass.
+    "*.{ts,tsx}": "bun --bun vp lint --fix --no-error-on-unmatched-pattern",
   },
   lint: {
     plugins: [
@@ -28,6 +29,11 @@ export default defineConfig({
       "**/.output/**",
       "**/node_modules/**",
       "docs/history/**",
+      // Vendored agent skills are upstream content managed by `bun run skills:update`;
+      // skills/ and .claude/skills link them for other agents and add only Markdown.
+      ".agents/**",
+      ".claude/**",
+      "skills/**",
       "**/*.gen.ts",
     ],
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],

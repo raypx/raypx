@@ -130,7 +130,7 @@ contains lightweight task metadata; application plugins live in `vite.app.config
 Language policy lives in i18n's public static `./config` export; repository checks
 read it without importing the i18n runtime.
 
-GitHub CI restores Bun downloads before every frozen install, then restores VP's
+GitHub CI restores Bun downloads before frozen installs outside Windows, then restores VP's
 task-cache directory. Only successful tasks become reusable entries, even if a
 later check fails. Cache archives use a fresh key per workflow attempt with a
 compatible fallback; OS, architecture, Bun versions and job partition them.
@@ -143,3 +143,11 @@ Required release artifacts move between jobs through artifacts rather than an
 optional cache. No external remote-cache service or Turbo credentials are used.
 Inspect reuse with `bun run test --verbose`, or `vp run --last-details` from root.
 Include transfer time when measuring CI gains. See the [testing guide](testing.md).
+
+## Agent skills
+
+Vendored skills live in `.agents/skills/` and `skills-lock.json` records their sources and
+hashes; `skills/` and `.claude/skills/` link them for each agent. Run `bun run skills:update`
+to pull upstream versions, review the diff, and never edit them by hand. A skill removed
+upstream stays installed until you remove it explicitly. `skills/raypx` is maintained in
+this repository. Lint skips vendored skills because they are upstream content.
