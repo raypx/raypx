@@ -16,7 +16,7 @@ bun run test coverage
 
 Default tests remain database-free. Explicit PostgreSQL, Redis, browser, Native and
 live-inference gates are not pulled into ordinary `test` or default package tests.
-Root test follows the current task graph, including Cargo when enabled; the JSON
+Root test follows the current JavaScript task graph; the JSON
 inventory audits Bun/Vitest suites and lists external browser/database files separately.
 
 ## Independent packages
@@ -99,8 +99,8 @@ Build/check/dev, Native smoke and database administration retain their existing 
 
 ## Historical verification record, 2026-10-27
 
-This snapshot predates removal of the Worker target and separation of optional Rust gates.
-Current commands above use Bun; Rust has a separate explicit gate.
+This snapshot predates removal of the Worker target and unused Rust crates.
+Current commands above use Bun and Go.
 
 Root and package-local Tasks unit entries each passed the same 32 case identities.
 Routing, graph/delegation and cache regressions passed 18 cases. Tooling's package-local

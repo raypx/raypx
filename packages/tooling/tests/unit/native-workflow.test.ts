@@ -49,7 +49,7 @@ it("checks both platforms and adds parallel distribution phases only when reques
   ]);
 });
 
-it("publishes shared JS inputs without waiting for Rust or Herdr", () => {
+it("publishes shared JS inputs without waiting for native checks or Herdr", () => {
   const prepare = native.prepare!.steps!;
   expect(prepare.some((step) => step.name === "Herdr terminal integration")).toBe(false);
   expect(prepare.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(false);
@@ -85,7 +85,6 @@ it("keeps explicit release acceptance independent from routine push cancellation
   const group = workflow("ci").concurrency?.group;
   expect(group).toContain("github.event_name");
   expect(group).toContain("inputs.distribution");
-  expect(workflow("rust").concurrency).toBeUndefined();
 });
 
 it("exposes distribution credentials only to packaging and always cleans them up", () => {

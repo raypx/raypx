@@ -8,7 +8,6 @@ import { changedFiles, githubPlan, verificationPlan } from "../../src/verificati
 import { verifyOptions } from "../../src/verification/index.js";
 import { assertCiResult } from "../../src/verification/result.js";
 import { completionReport } from "../../src/verification/report.js";
-import { affectedCargo } from "../../src/verification/rust.js";
 import { distributionRequested } from "../../src/verification/events.js";
 
 const { fixture, member } = workspaceFixtures();
@@ -59,12 +58,11 @@ describe("affected verification", () => {
     expect(plan.browser).toBe("none");
     expect(plan.tasks).toContain("api#task:build");
   });
-  it("keeps documentation-only feedback independent of JS, Cargo and native runners", () => {
+  it("keeps documentation-only feedback independent of JavaScript and native runners", () => {
     const { model } = project();
     const plan = verificationPlan(model, ["docs/development/testing.md", "AGENTS.md"]);
     expect(plan.workspaces).toEqual([]);
     expect(plan.tasks).toEqual([]);
-    expect(plan.rust).toBe(false);
     expect(plan.native).toBe(false);
   });
   it.each([
@@ -150,29 +148,6 @@ describe("affected verification", () => {
 });
 
 describe("required CI results", () => {
-  it("selects Rust consumers without scheduling Desktop for an unrelated library", () => {
-    const { root } = project();
-    const packages = [
-      { name: "shared", manifest_path: join(root, "crates/shared/Cargo.toml"), dependencies: [] },
-      {
-        name: "unrelated",
-        manifest_path: join(root, "crates/unrelated/Cargo.toml"),
-        dependencies: [],
-      },
-      {
-        name: "desktop",
-        manifest_path: join(root, "crates/consumer/Cargo.toml"),
-        dependencies: [{ name: "shared" }],
-      },
-    ];
-    const native = affectedCargo(root, ["crates/shared/src/lib.rs"], packages);
-    expect(native.native).toBe(false);
-    expect(native.packages).toContain("shared");
-    expect(affectedCargo(root, ["crates/unrelated/src/lib.rs"], packages)).toEqual({
-      packages: ["unrelated"],
-      native: false,
-    });
-  });
   const needs = {
     changes: {
       result: "success",
@@ -180,7 +155,6 @@ describe("required CI results", () => {
         backend: "false",
         browser: "false",
         native: "false",
-        rust: "false",
         distribution: "false",
       },
     },
@@ -188,7 +162,6 @@ describe("required CI results", () => {
     backend: { result: "skipped" },
     browser: { result: "skipped" },
     desktop: { result: "skipped" },
-    libraries: { result: "skipped" },
   };
   it("accepts intentionally skipped gates but rejects missing, cancelled or failed required gates", () => {
     expect(() => assertCiResult(needs)).not.toThrow();

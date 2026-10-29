@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
@@ -19,8 +19,6 @@ export const discover = (root: string) => discoverWorkspaces(root, { metadataKey
 /** Directory enumeration is traced separately from excluded output contents. */
 export function prepareTaskDirectories(model: TaskModel) {
   mkdirSync(join(model.root, ".artifacts"), { recursive: true });
-  if (existsSync(join(model.root, "Cargo.toml")))
-    mkdirSync(join(model.root, "target"), { recursive: true });
   for (const member of model.members.filter((candidate) => candidate.native))
     for (const directory of ["generated", "resources/bin", "build", ".mygo", "artifacts/browser"])
       mkdirSync(join(model.root, member.path, directory), { recursive: true });
@@ -50,7 +48,7 @@ export async function runTasks(
           ? "--concurrency-limit"
           : value.replace(/^--concurrency=/, "--concurrency-limit="),
     );
-  const model = taskModel(root, environment.RAYPX_VERIFY_TASKS, environment.RAYPX_VERIFY_CARGO);
+  const model = taskModel(root, environment.RAYPX_VERIFY_TASKS);
   const filtered = options.some((value) => value === "--filter" || value.startsWith("--filter="));
   if (owner && filtered) throw new Error("Use either a qualified task or workspace filters");
   if (filtered && forwarded.length)

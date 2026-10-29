@@ -51,7 +51,7 @@ func ParseCookie(origin *url.URL, raw string, now time.Time) (*CookieChange, err
 		return nil, nil
 	}
 	// ParseSetCookie removes surrounding quotes. The native cookie policy
-	// validates the raw value instead, matching the retained Rust host.
+	// validates the raw value instead, matching the preceding native host.
 	if strings.Contains(strings.TrimSpace(pair[1]), `"`) {
 		return nil, bad
 	}

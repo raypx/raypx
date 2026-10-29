@@ -104,7 +104,6 @@
     "build:desktop": "raypx-dev tasks build --filter desktop",
     "build:cli": "raypx-dev tasks build --filter cli",
     "build:storybook": "raypx-dev tasks build --filter ui-storybook",
-    "rust:clean": "raypx-dev clean:rust",
     "check": "raypx-dev tasks check",
     "test": "raypx-dev test",
     "lint": "bun --bun vp lint",

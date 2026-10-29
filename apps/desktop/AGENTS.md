@@ -99,7 +99,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
   renderer builds eliminate the native-smoke observation hook.
 - Bun/VP owns JS tasks and caches; Go owns native compilation caches. Default build
   checks/builds the renderer. Explicit packaging stages renderer, CLI and Herdr and
-  invokes MyGo uncached. Rust library verification is independent of Desktop.
+  invokes MyGo uncached. Go host verification is explicit in the shared task graph.
 - Native smoke exists only in the native_smoke Go build tag, with random-token
   private IPC, isolated profiles and a separate renderer/package output. Production
   has no socket/eval controls. Inspect actual build metadata and bytes before release.

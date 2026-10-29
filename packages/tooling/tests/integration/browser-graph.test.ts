@@ -78,7 +78,7 @@ it("normal Desktop builds render the app without staging a CLI", () => {
   expect(tasks).not.toContain("desktop#build:renderer");
 });
 
-it("packages Desktop explicitly with the matching CLI and without caching Cargo", () => {
+it("packages Desktop explicitly with the matching CLI and without caching native packaging", () => {
   const plan = graph(["tasks", "desktop#native:build"]).tasks;
   const tasks = plan.map((task) => task.taskId);
   expect(tasks).toContain("desktop#build");

@@ -15,15 +15,15 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
-- raypx-dev policy | verify | doctor | clean | clean:rust | clean:artifacts
+- raypx-dev policy | verify | doctor | clean | clean:artifacts
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--with-e2e [-- Playwright flags]]
 - `raypx.taskScripts` delegates a public package script to a terminal runner inside
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
-- `verify` selects affected source/tests and Go/Rust packages; `verify --full` checks
-  all current-platform JS/Go/Rust sources, builds and probes. `--base` selects a Git
+- `verify` selects affected JavaScript source/tests and Go host tasks; `verify --full` checks
+  all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
   base; `--dry-run` prints the plan and expanded VP graph.
 - CI consumes the same planner through private `ci:plan`/`ci:gate` entries. Unknown
   inputs or unavailable dependency graphs select full coverage. Required results
@@ -33,22 +33,15 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   run in parallel and the final result validates their selection against the event.
   Preparation builds shared JS inputs only. Herdr runs in the check phase before its
   Go checks, leaving package/smoke phases independent of terminal-test duration.
-- One private Rust pipeline runs rustfmt, Clippy and tests serially, uncached in VP.
-  Cargo owns incremental compilation under `target/`. Go host checks prepare generated contracts independently; Rust library changes
-  never stage Desktop inputs.
 - `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
-- `clean` delegates Rust cleanup to `cargo clean --workspace --profile dev`, preserving
-  dependency caches and Release artifacts. `clean:rust` runs only that step, exposed
-  as root `rust:clean`; `clean:artifacts` preserves all Rust outputs. Cargo is skipped
-  without a Cargo manifest or nonempty target directory; `CARGO_TARGET_DIR` is respected.
 - raypx-dev env -- <command>, db <operation>, desktop build [MyGo build arguments]
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/beta/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
   before starting Vite and MyGo. Direct Desktop scripts enter the same VP graph.
-  Rust libraries are independent of the Go host; native CI checks Go on each platform.
+  Native CI checks Go on each platform.
 - `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
 
 ## Constraints
@@ -79,8 +72,8 @@ while outcome-affecting fields and per-task argument keys participate in fingerp
 independent cached VP runners, so it must run without an enclosing filesystem tracer;
 `test:unit` remains cached and `test:integration` always executes.
 Platform/toolchain identity is also part of each command. Native packaging stays
-outside VP's filesystem tracer; Cargo owns its incremental state.
-The launcher creates ignored artifact/Cargo/native directories before tracing:
+outside VP's filesystem tracer; Go owns its native compilation cache.
+The launcher creates ignored artifact/native directories before tracing:
 directory enumeration can otherwise invalidate JS tasks when those paths first appear.
 Type checks explicitly fingerprint source/config files in the transitive workspace
 dependency closure, retaining dependency declarations under build outputs; Bun's

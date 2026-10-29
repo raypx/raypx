@@ -75,5 +75,5 @@ e2e/playwright-report/
 # Generated validation evidence only; reusable scripts belong in packages/tooling.
 .artifacts/
 
-# Cargo owns incremental Rust build outputs; Cargo.lock stays committed.
+# Retain ignored build caches from older branches until explicitly cleaned.
 /target/

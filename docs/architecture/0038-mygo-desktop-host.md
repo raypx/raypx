@@ -30,8 +30,8 @@ stream observation hook; production compilation removes that branch. App identit
 WebView/data paths and package outputs are isolated. The release gate checks Go
 module/build metadata and actual embedded bytes for accidentally shipped controls.
 
-Bun/VP still owns JS tasks and caches. Go owns compilation caches; Cargo owns only
-Rust library tasks. Normal CI checks sources/transport/Herdr. Explicit distribution
+Bun/VP still owns JS tasks and caches. Go owns native compilation caches. The unused Rust crate experiment and its
+Cargo toolchain have been removed. Normal CI checks sources/transport/Herdr. Explicit distribution
 runs package and native GUI acceptance in parallel on macOS and Windows, including
 per-user NSIS installation on hosted Windows runners.
 

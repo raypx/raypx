@@ -29,7 +29,7 @@ it.skipIf(process.platform === "win32")("makes the staged sidecar executable", a
   expect(statSync(target).mode & 0o777).toBe(0o755);
 });
 
-it("preserves an identical sidecar's mtime so packaging can reuse Cargo outputs", async () => {
+it("preserves an identical sidecar's mtime so native tooling can reuse staged outputs", async () => {
   const { source, target } = fixture();
   await stageCli(source, target);
   const previous = new Date("2020-01-01T00:00:00Z");

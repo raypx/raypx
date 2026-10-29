@@ -9,11 +9,7 @@ import type { VerificationPlan } from "./plan.js";
 import { completionReport, reportTiming } from "./report.js";
 
 export function executionTasks(plan: VerificationPlan, rootName: string) {
-  return [
-    ...plan.tasks,
-    ...(plan.full ? [taskRef(rootName, "lint")] : []),
-    ...(plan.rust ? [taskRef(rootName, "verify:rust")] : []),
-  ];
+  return [...plan.tasks, ...(plan.full ? [taskRef(rootName, "lint")] : [])];
 }
 
 async function sourceStyle(root: string, plan: VerificationPlan) {
@@ -41,7 +37,6 @@ export async function sourceChecks(root: string, plan: VerificationPlan) {
   if (refs.length)
     await runTasks(root, "verify:run", [], {
       RAYPX_VERIFY_TASKS: JSON.stringify(refs),
-      RAYPX_VERIFY_CARGO: JSON.stringify(plan.rustPackages),
       RAYPX_VERIFY_ROOT: root,
     });
   const tasksMs = Math.round(performance.now() - taskStarted);

@@ -4,7 +4,6 @@ import { discover } from "@raypx-kit/devkit/workspaces";
 import { argumentKey } from "./arguments.js";
 import { taskScripts } from "./delegation.js";
 import { taskRef } from "./names.js";
-import { rustTasks } from "./rust.js";
 export { taskName, taskRef } from "./names.js";
 export { argumentKey } from "./arguments.js";
 
@@ -202,7 +201,6 @@ function verificationEnvironment(root: string, name: string) {
 export function taskModel(
   root: string,
   selection = verificationEnvironment(root, "RAYPX_VERIFY_TASKS"),
-  cargoSelection = verificationEnvironment(root, "RAYPX_VERIFY_CARGO"),
 ): TaskModel {
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   const index = discover(root, { metadataKey: "raypx" });
@@ -243,8 +241,6 @@ export function taskModel(
       dependsOn,
       cache: false,
     });
-  const rust = rustTasks(root, manifest.name, members, definitions, cargoSelection);
-  if (rust.length) aggregate("verify:rust", rust);
   const names = new Set(members.flatMap((member) => Object.keys(member.scripts)));
   for (const name of names)
     aggregate(

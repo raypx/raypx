@@ -81,11 +81,10 @@ Treat all raw test evidence as local; review it before sharing.
 
 ## Cleanup
 
-| Command                   | Removes                                                                                                                 | Preserves                                                                                                                                         |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bun run clean:artifacts` | Root/workspace `.artifacts/`, workspace coverage, root/workspace `node_modules/.cache/raypx-tests`, E2E results/reports | Built applications, Desktop SDK/packages, VP transform/task caches, source, dependencies, user/database data                                      |
-| `bun run rust:clean`      | Workspace Rust development/test artifacts via Cargo                                                                     | Rust dependency caches, Release artifacts, JavaScript outputs, source and lockfiles                                                               |
-| `bun run clean`           | Report cleanup plus application builds/tool caches, staged sidecars and workspace Rust development/test artifacts       | Rust dependency caches and Release artifacts, source, dependencies, lockfiles, environment files, Git history, user profiles and database volumes |
+| Command                   | Removes                                                                                                                 | Preserves                                                                                                    |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `bun run clean:artifacts` | Root/workspace `.artifacts/`, workspace coverage, root/workspace `node_modules/.cache/raypx-tests`, E2E results/reports | Built applications, Desktop SDK/packages, VP transform/task caches, source, dependencies, user/database data |
+| `bun run clean`           | Report cleanup plus application builds/tool caches, staged native resources                                             | Source, dependencies, lockfiles, environment files, Git history, user profiles and database volumes          |
 
 Cleanup is explicit and idempotent. Do not run it during verification or while
 inspecting reports; it removes local evidence without a recovery archive. New runs

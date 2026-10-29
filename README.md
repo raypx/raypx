@@ -10,8 +10,8 @@ Bun 1.4.4 and an isolated PostgreSQL database for account flows. Bun is the only
 JavaScript runtime; `packageManager` pins it. With [mise](https://mise.jdx.dev),
 run `mise trust && mise install` once; direct installs also work.
 `bun run doctor` confirms it.
-Native Desktop development and packaging require Rust through rustup and the pinned `rust-toolchain.toml`; see the
-[Rust workspace guide](docs/development/rust.md).
+Native Desktop development and packaging require Go 1.27.3; see the
+[MyGo Desktop guide](docs/development/desktop-release.md).
 Desktop includes its own native host and compiled CLI; users do not install Bun.
 
 ```sh
@@ -47,7 +47,6 @@ bun run --cwd packages/tasks test
 bun run build
 bun run verify
 bun run verify --full
-cargo run -p raypx-core --locked --example basic
 bun run package:desktop
 ```
 
@@ -56,7 +55,6 @@ as `raypx-dev`; the product executable is `raypx`. Workspaces under apps and pac
 are discovered automatically, without editing a central name list.
 Use `bun run test --help` or the [test command guide](docs/development/test-commands.md)
 for root suites, package-local commands and optional backend/browser gates.
-Rust libraries live in `crates/`, with Cargo workspace membership and a shared lockfile.
 
 See [documentation](docs/README.md), [architecture](docs/architecture/README.md),
 [workspace extension](docs/development/workspaces.md) and [verification](docs/development/testing.md).

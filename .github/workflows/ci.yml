@@ -25,7 +25,6 @@ jobs:
       native: ${{ steps.plan.outputs.native }}
       backend: ${{ steps.plan.outputs.backend }}
       browser: ${{ steps.plan.outputs.browser }}
-      rust: ${{ steps.plan.outputs.rust }}
       distribution: ${{ steps.plan.outputs.distribution }}
     steps:
       - uses: actions/checkout@v7
@@ -60,10 +59,6 @@ jobs:
       - uses: ./.github/actions/vp-save
         with:
           key: ${{ steps.vp-cache.outputs.key }}
-  libraries:
-    needs: changes
-    if: needs.changes.outputs.rust == 'true'
-    uses: ./.github/workflows/rust.yml
   backend:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
@@ -136,7 +131,7 @@ jobs:
     secrets: inherit
   foundation:
     if: always()
-    needs: [changes, javascript, backend, browser, desktop, libraries]
+    needs: [changes, javascript, backend, browser, desktop]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

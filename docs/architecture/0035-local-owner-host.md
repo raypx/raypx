@@ -7,8 +7,8 @@ grants, connectors, SQLite, terminal settings and broker work without login.
 Cloud control owns origin/account credentials, grant renewal, relay and opted-in
 projections. Cloud restore runs in the background; local RPC never joins its
 serial queue. Signing in does not enable remote execution or upload local history.
-Rust is optional and excluded from default Bun gates; its explicit VP commands
-and independent path-filtered CI remain. Rust verification runs serially.
+The MyGo composition root uses Go; its checks run through the shared VP graph.
+The unused Rust experiment and its independent CI have been removed.
 
 ## Local terminal ownership
 
@@ -119,7 +119,7 @@ credentials, path grants and content require separate design.
 
 Default tests exercise offline readiness under blocked cloud restore, per-request
 channels, migration safety, withdrawal revision independence, route restrictions,
-adapter lifecycle and explicit Rust gates. Full validation uses `bun run verify`.
+adapter lifecycle and Go host transport. Full validation uses `bun run verify`.
 Packaged macOS and live hook checks are separate, isolated by profile,
 `RAYPX_HOME`, `CLAUDE_CONFIG_DIR` and `CODEX_HOME`; they do not edit personal hooks
 or system services. Real prompt visibility is measured only from timestamped PTY

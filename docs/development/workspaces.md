@@ -1,8 +1,7 @@
 # Extending workspaces
 
-Bun workspaces below cover TypeScript applications and libraries. Rust libraries
-live separately under `crates/*` in the root Cargo workspace; see the
-[Rust workspace guide](rust.md).
+Bun workspaces below cover TypeScript applications and libraries. Desktop also owns
+a Go module in apps/desktop; see the [Desktop guide](desktop-release.md).
 
 ```sh
 bun run workspace:list

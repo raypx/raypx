@@ -9,7 +9,7 @@ async function digest(file: string) {
   return hash.digest("hex");
 }
 
-/** Preserve the mtime Cargo tracks when packaging an unchanged sidecar. */
+/** Preserve the mtime of an unchanged staged CLI. */
 export async function stageCli(source: string, target: string): Promise<boolean> {
   const sourceInfo = await stat(source);
   const targetInfo = await stat(target).catch((error: NodeJS.ErrnoException) => {

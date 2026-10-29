@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import type { Kind, Target } from "@raypx-kit/devkit/workspaces";
-import { clean, cleanArtifacts, cleanRust } from "./clean.js";
+import { clean, cleanArtifacts } from "./clean.js";
 import { checkLocales, policy } from "./policy.js";
 import { discover, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
@@ -102,7 +102,7 @@ async function main() {
       if (process.env.GITHUB_OUTPUT)
         appendFileSync(
           process.env.GITHUB_OUTPUT,
-          `native=${plan.native}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\nrust=${plan.rust}\ndistribution=${plan.distribution}\n`,
+          `native=${plan.native}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\ndistribution=${plan.distribution}\n`,
         );
       break;
     }
@@ -152,17 +152,9 @@ async function main() {
       break;
     case "clean": {
       await clean(root);
-      console.log(
-        "Build outputs, staged sidecars and test artifacts removed; Rust dependency caches and Release artifacts preserved",
-      );
+      console.log("Build outputs, staged native resources and test artifacts removed");
       break;
     }
-    case "clean:rust":
-      await cleanRust(root);
-      console.log(
-        "Workspace Rust development artifacts cleaned; dependency caches and Release artifacts preserved",
-      );
-      break;
     case "clean:artifacts":
       await cleanArtifacts(root);
       console.log("Validation reports and test artifacts removed");
@@ -172,13 +164,13 @@ async function main() {
       if (Bun.version !== bun) throw new Error(`Expected Bun ${bun}, got ${Bun.version}`);
       console.log(`Bun ${Bun.version}; ${process.platform}/${process.arch}`);
       console.log(
-        `Desktop: MyGo; Go ${Bun.which("go") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected JS, Go and Rust checks`,
+        `Desktop: MyGo; Go ${Bun.which("go") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected JavaScript and Go checks`,
       );
       break;
     }
     case undefined:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | env | db | desktop | clean | clean:rust | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | env | db | desktop | clean | clean:artifacts | doctor",
       );
       break;
     default:

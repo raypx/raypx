@@ -12,17 +12,15 @@ eval "$(mise activate zsh)"         # in ~/.zshrc (bash/fish/PowerShell also sup
 ```
 
 Activated shells switch versions on cd; without activation use `mise exec -- <command>`.
-Raypx keeps mise for Bun selection and rustup for the native toolchain. Nix is not
+Raypx uses mise for Bun selection and Go 1.27.3 for the native host. Nix is not
 required: current CI bottlenecks are task selection and cache invalidation, while
 Windows acceptance still uses the native MSVC/WebView2 environment.
 Direct Bun installs also work. `bun run doctor` confirms the active runtime. PostgreSQL client tools come from the compose container:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
-Rust libraries live under `crates/`. Install rustup and run `rustup show` to prepare
-the version and components in `rust-toolchain.toml`. Daily `bun run verify` selects
-affected JS/Go/Rust checks; `bun run verify --full` checks all current-platform sources
-and artifacts before delivery. Use Cargo directly for focused Rust debugging.
-See the [Rust guide](rust.md) for commands and the initial `raypx-core` library.
+Desktop's Go module lives in apps/desktop. Daily `bun run verify` selects affected
+JavaScript and Go checks; `bun run verify --full` checks all current-platform sources
+and artifacts before delivery. See the [Desktop guide](desktop-release.md).
 
 `bun install` runs the root `prepare` script, which installs the Vite+ Git hook
 dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp staged`:
@@ -119,10 +117,7 @@ and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
 `bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
 Desktop's renderer artifacts and MyGo generated/resource directories, root
-`.artifacts`, and browser test results/reports. Rust cleanup runs
-`cargo clean --workspace --profile dev`, preserving dependency caches and Release
-artifacts. Use `bun run rust:clean` for only that Rust step. Cargo is skipped when no
-Rust target directory exists. Other removals run in batches of up to eight directories.
+`.artifacts`, and browser test results/reports. Removals run in batches of up to eight directories.
 It keeps dependencies, lockfiles,
 Git history, environment files, user profiles and database volumes. Native development,
 Go host checks and packaging prepare generated inputs and the matching CLI again.
@@ -139,8 +134,8 @@ GitHub CI restores Bun downloads before every frozen install, then restores VP's
 task-cache directory. Only successful tasks become reusable entries, even if a
 later check fails. Cache archives use a fresh key per workflow attempt with a
 compatible fallback; OS, architecture, Bun versions and job partition them.
-Only jobs with new successful VP artifacts upload a cache snapshot. Failed native
-jobs do not save the large Cargo cache. Task fingerprints choose reusable results.
+Only jobs with new successful VP artifacts upload a cache snapshot.
+Task fingerprints choose reusable results.
 CI caches this task-cache subdirectory,
 not dependencies or the rest of `node_modules`.
 

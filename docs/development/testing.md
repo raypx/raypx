@@ -26,18 +26,16 @@ discover supported layers instead of maintaining a package-name list.
 
 Use `bun run verify` for daily feedback: policy and locales are always checked;
 changed files select formatting/lint, affected workspace types/tests, and necessary
-Go host tasks and Rust packages through reverse dependency graphs. The default base is the merge-base
+Go host tasks through reverse dependency graphs. The default base is the merge-base
 with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
 Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
 Unknown inputs, shared configuration/lockfiles, or an unavailable base select full coverage.
 
 Use `bun run verify --full` before delivery. It checks all JS and current-platform
-Rust targets, builds outputs and runs independent artifact probes concurrently.
-It needs no GUI, database or mail service. JS-only incremental checks need no Rust.
-Rust source changes require the pinned toolchain and the platform's native build prerequisites;
-missing prerequisites fail verification rather than reporting a partial pass.
-`verify` and `verify --full` are the verification entry points. Use Cargo directly
-for focused Rust debugging. See the [Rust workspace guide](rust.md).
+Go host targets, builds outputs and runs independent artifact probes concurrently.
+It needs no GUI, database or mail service. The repository uses Bun for JavaScript
+and Go 1.27.3 for Desktop; no Rust toolchain is needed. `verify` and `verify --full`
+are the verification entry points.
 
 GitHub uses the same change planner. JS, database, browser and native gates run in
 parallel when relevant; Desktop/CLI dependencies retain both native platforms.
@@ -47,18 +45,16 @@ are separate from VP's JS task cache; smoke and production use separate outputs.
 
 The check phase stages a matching CLI, runs Herdr and executes Go source checks on both platforms.
 Herdr retains three Windows runs without blocking the parallel package/smoke phases.
-The separate Rust job checks only libraries; Desktop no longer requires a Cargo placeholder.
 Installer creation, signatures and installed GUI smoke run on tag pushes or manual
 dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
 Those runs require Go checks, production packaging and packaged GUI smoke in parallel.
 Manual distribution runs have their own cancellation group, so routine pushes cannot
-cancel a release acceptance run. Reusable Rust jobs follow their caller's cancellation.
+cancel a release acceptance run.
 The preparation job alone saves VP artifacts; phase consumers only restore them. Native Go
 compilation uses the Go cache and independent production/smoke package directories.
 Generated route trees and native JSON use LF on every checkout so Windows generators do not
 invalidate restored tasks. MyGo produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
-CI installs the pinned compiler in an isolated `RUSTUP_HOME`; unrelated preinstalled
-toolchains must not affect Rust cache keys when runner images change.
+CI selects Go through apps/desktop/go.mod and keys its native cache with go.sum.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
 The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
 worker and per-file isolation; larger suites set their worker count locally.

@@ -249,7 +249,7 @@ it.each([true, false])(
   30000,
 );
 
-it("checks a native app without staging sidecars or invoking Cargo", () => {
+it("checks a native app without staging native resources", () => {
   const root = project();
   const folder = checked(
     root,
@@ -272,7 +272,6 @@ it("checks a native app without staging sidecars or invoking Cargo", () => {
     'throw new Error("Native packaging must be explicit");',
   );
   writeFileSync(join(folder, "stage.ts"), 'throw new Error("Sidecar staging must be explicit");');
-  writeFileSync(join(root, "Cargo.toml"), "[workspace]\nmembers = []\n");
   const selector = "@raypx/native#task:check";
   pass(execute(root, "check", {}, selector));
   const warm = execute(root, "check", {}, selector);
@@ -280,7 +279,6 @@ it("checks a native app without staging sidecars or invoking Cargo", () => {
   expect(warm.log).toContain("cache hit");
   // Native preparation adds outputs after the first JS check on a fresh checkout.
   for (const [directory, file] of [
-    [join(root, "target/debug/deps"), "fixture.rlib"],
     [join(folder, "resources/bin"), "raypx"],
     [join(folder, "generated"), "schema.json"],
     [join(folder, "build/bindings"), "fixture.toml"],
@@ -297,7 +295,7 @@ it("checks a native app without staging sidecars or invoking Cargo", () => {
   expect(changed.log).toContain("not assignable to type 'number'");
 }, 30000);
 
-it("reuses VP pack results after Cargo creates its target directory", () => {
+it("reuses VP pack results after validation writes ignored artifacts", () => {
   const root = project();
   const folder = checked(
     root,
@@ -305,7 +303,6 @@ it("reuses VP pack results after Cargo creates its target directory", () => {
     {},
     { build: `bun --bun ${JSON.stringify(vp)} pack` },
   );
-  writeFileSync(join(root, "Cargo.toml"), "[workspace]\nmembers = []\n");
   const config = join(folder, "vite.config.ts");
   writeFileSync(
     config,
@@ -317,7 +314,7 @@ it("reuses VP pack results after Cargo creates its target directory", () => {
   const selector = "@raypx/cli-fixture#task:build";
   pass(execute(root, "build", {}, selector));
   expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
-  mkdirSync(join(root, "target/debug/deps"), { recursive: true });
-  writeFileSync(join(root, "target/debug/deps/fixture.rlib"), "fixture");
+  mkdirSync(join(root, ".artifacts/validation"), { recursive: true });
+  writeFileSync(join(root, ".artifacts/validation/result.json"), "fixture");
   expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
 }, 30000);

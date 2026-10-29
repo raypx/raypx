@@ -20,7 +20,7 @@ export function verifyOptions(args: string[]) {
 export async function verify(root: string, args: string[]) {
   if (args.length === 1 && ["--help", "-h"].includes(args[0]!)) {
     console.log(
-      "bun run verify              Affected JS/Go/Rust source checks\nbun run verify --full       Full current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run. GUI/database/browser acceptance runs in CI.",
+      "bun run verify              Affected JavaScript/Go source checks\nbun run verify --full       Full current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run. GUI/database/browser acceptance runs in CI.",
     );
     return;
   }
@@ -28,17 +28,13 @@ export async function verify(root: string, args: string[]) {
     options = verifyOptions(args);
   const plan = localPlan(root, options);
   if (options.dry) {
-    const model = taskModel(
-      root,
-      JSON.stringify(executionTasks(plan, taskModel(root).rootName)),
-      JSON.stringify(plan.rustPackages),
-    );
+    const model = taskModel(root, JSON.stringify(executionTasks(plan, taskModel(root).rootName)));
     const graph = taskPlan(model, [taskRef(model.rootName, "verify:run")]);
     console.log(JSON.stringify({ ...plan, graph }, null, 2));
     return;
   }
   console.log(
-    `Verification: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces; Rust ${plan.rust ? "enabled" : "not needed"}`,
+    `Verification: ${plan.full ? "full" : "affected"}; ${plan.workspaces.length} workspaces`,
   );
   for (const reason of plan.reasons) console.log(reason);
   const metrics = await sourceChecks(root, plan);
@@ -53,7 +49,7 @@ export async function ciGate(root: string, args: string[]) {
   const plan = readGithubPlan(root),
     [gate] = args;
   if (gate === "js") {
-    await sourceChecks(root, { ...plan, rust: false });
+    await sourceChecks(root, plan);
   } else if (gate === "backend") {
     if (plan.backend)
       for (const name of ["test:postgres", "test:redis"]) await runTasks(root, `api#${name}`);

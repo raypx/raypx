@@ -1,8 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
-import { cargoChanges } from "./rust.js";
 import { distributionRequested } from "./events.js";
 
 export type Artifact = "api" | "web" | "cli";
@@ -13,8 +11,6 @@ export interface VerificationPlan {
   workspaces: string[];
   tasks: string[];
   artifacts: Artifact[];
-  rust: boolean;
-  rustPackages: string[];
   native: boolean;
   backend: boolean;
   browser: "none" | "web" | "desktop" | "all";
@@ -56,7 +52,7 @@ function documentation(file: string) {
   );
 }
 function globalInput(file: string) {
-  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|rust-toolchain\.toml|Cargo\.(?:toml|lock)|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/|packages\/tooling\/)/.test(
+  return /^(?:package\.json|bun\.lock|bunfig\.toml|mise\.toml|(?:tsconfig|test\.config|vite\.config)[^/]*|\.github\/|packages\/tooling\/)/.test(
     file,
   );
 }
@@ -64,29 +60,10 @@ function globalInput(file: string) {
 export function verificationPlan(
   model: TaskModel,
   files: string[],
-  options: { full?: boolean; artifacts?: boolean; reasons?: string[]; rust?: boolean } = {},
+  options: { full?: boolean; artifacts?: boolean; reasons?: string[] } = {},
 ): VerificationPlan {
   const reasons = [...(options.reasons ?? [])];
   let full = Boolean(options.full || reasons.length);
-  let rustPackages: string[] = [],
-    nativeRust = false;
-  const rustFiles = files.some((file) => file.startsWith("crates/") || file.endsWith(".rs"));
-  if (
-    !full &&
-    !files.some(globalInput) &&
-    options.rust !== false &&
-    rustFiles &&
-    existsSync(join(model.root, "Cargo.toml"))
-  ) {
-    try {
-      const scope = cargoChanges(model.root, files);
-      rustPackages = scope.packages;
-      nativeRust = scope.native;
-    } catch {
-      full = true;
-      reasons.push("Cargo dependency graph unavailable; running full verification");
-    }
-  }
   const affected = new Set<string>();
   for (const file of files) {
     if (documentation(file)) continue;
@@ -99,13 +76,10 @@ export function verificationPlan(
       .filter((member) => file.startsWith(member.path + "/"))
       .sort((a, b) => b.path.length - a.path.length)[0];
     if (owner) affected.add(owner.name);
-    else if (
-      !file.startsWith("crates/") &&
-      !/^(?:\.gitignore|\.oxfmtrc[^/]*|\.oxlintrc[^/]*)$/.test(file)
-    ) {
+    else if (!/^(?:\.gitignore|\.oxfmtrc[^/]*|\.oxlintrc[^/]*)$/.test(file)) {
       full = true;
       reasons.push(`Unclassified input: ${file}`);
-    } else if (!file.startsWith("crates/")) {
+    } else {
       full = true;
       reasons.push(`Shared formatter/linter input: ${file}`);
     }
@@ -117,10 +91,6 @@ export function verificationPlan(
       if (member.dependencies.some((name) => affected.has(name))) affected.add(member.name);
     if (count === affected.size) break;
   }
-  const rust =
-    options.rust !== false &&
-    existsSync(join(model.root, "Cargo.toml")) &&
-    (full || files.some((file) => file.startsWith("crates/") || file.endsWith(".rs")));
   const workspaces = [...affected].sort();
   const includeArtifacts = options.artifacts ?? full;
   const artifacts = includeArtifacts
@@ -152,9 +122,7 @@ export function verificationPlan(
     workspaces,
     tasks,
     artifacts,
-    rust,
-    rustPackages,
-    native: full || desktop || affected.has("cli") || nativeRust,
+    native: full || desktop || affected.has("cli"),
     backend: full || affected.has("api"),
     browser:
       full || browserAll || (web && desktop) ? "all" : web ? "web" : desktop ? "desktop" : "none",
@@ -163,7 +131,7 @@ export function verificationPlan(
 
 export function localPlan(
   root: string,
-  options: { full?: boolean; base?: string; artifacts?: boolean; rust?: boolean } = {},
+  options: { full?: boolean; base?: string; artifacts?: boolean } = {},
 ) {
   const changed = changedFiles(root, options.base);
   return verificationPlan(taskModel(root), changed.files, { ...options, reasons: changed.reasons });

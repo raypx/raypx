@@ -192,4 +192,4 @@ cloud opt-in, terminal approval leases and migration boundary. Each profile owns
 one Bun/TypeScript execution Host. Local tasks, connectors and approvals require
 no account; cloud recovery does not block readiness. Go provides the native Desktop host; execution stays in the CLI. See
 [ADR 0036](0038-mygo-desktop-host.md). Windows also runs the independent daemon over
-token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Go host checks and independent Rust library gates run through verification.
+token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Go host checks run through shared verification.

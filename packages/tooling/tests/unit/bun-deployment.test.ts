@@ -71,20 +71,3 @@ it("probes Compose health with Bun instead of Node", () => {
   expect(probes).toEqual(["bun", "bun"]);
   expect(compose).not.toMatch(/^\s+- node$/m);
 });
-
-it("caches Rust CI without repeating clippy's check or test's build", () => {
-  const steps = read(".github/workflows/rust.yml");
-  expect(steps).toContain("uses: Swatinem/rust-cache@v2");
-  expect(steps).not.toMatch(/cargo (check|build)\b/);
-  for (const command of [
-    "cargo fmt --all -- --check",
-    "cargo clippy --workspace --exclude raypx-desktop --all-targets --all-features --locked -- -D warnings",
-    "cargo test --workspace --exclude raypx-desktop --all-features --locked",
-  ])
-    expect(steps).toContain(command);
-  // The cache restores after the toolchain is selected and before any cargo command.
-  expect(read(".github/actions/setup-rust/action.yml")).toContain("rustup show");
-  expect(steps).toContain("uses: ./.github/actions/setup-rust");
-  expect(steps.indexOf("setup-rust")).toBeLessThan(steps.indexOf("rust-cache"));
-  expect(steps.indexOf("rust-cache")).toBeLessThan(steps.indexOf("cargo fmt"));
-});

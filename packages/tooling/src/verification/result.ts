@@ -5,7 +5,7 @@ export function assertCiResult(needs: Record<string, Job>, distribution?: boolea
   if (needs.changes?.result !== "success") throw new Error("Change analysis did not succeed");
   const flags = needs.changes.outputs ?? {};
   if (
-    ["native", "backend", "browser", "rust", "distribution"].some(
+    ["native", "backend", "browser", "distribution"].some(
       (name) => !["true", "false"].includes(flags[name] ?? ""),
     )
   )
@@ -19,7 +19,6 @@ export function assertCiResult(needs: Record<string, Job>, distribution?: boolea
     backend: flags.backend === "true",
     browser: flags.browser === "true",
     desktop: flags.native === "true",
-    libraries: flags.rust === "true",
   })) {
     const result = needs[name]?.result;
     if (required ? result !== "success" : result !== "success" && result !== "skipped")

@@ -52,9 +52,8 @@ even when remote access is enabled. The local setup guide authorizes a project,
 checks installed agent capabilities and opens the task editor without starting work.
 
 The CLI, application features and shared contracts use Bun + TypeScript. Desktop
-uses a Tauri Rust policy host and system WKWebView/WebView2; native packaging
-requires Rust. Ordinary TypeScript development and verification require no Rust
-installation. macOS and Windows Desktop builds are checked in CI; Windows terminal
+uses a MyGo policy host and system WKWebView/WebView2; native development and
+packaging require Go 1.27.3. The standalone CLI retains its embedded Bun runtime. macOS and Windows Desktop builds are checked in CI; Windows terminal
 hooks await a packaged acceptance run. Linux keeps the existing CLI implementation without a claim
 of complete Desktop product acceptance.
 Configuration sync, local Web, standalone Server, native mobile, team ownership and
