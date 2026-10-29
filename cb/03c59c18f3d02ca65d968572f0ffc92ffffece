@@ -1,0 +1,29 @@
+docs/development/test-cases.md
+  s_18b05852ced651::t_032d49044724c6 29
+docs/development/testing.md
+  s_18b05852ced651::t_6adc9905289a46 190
+e2e/AGENTS.md
+  s_18b05852ced651::t_125c2bff939b87 19
+packages/tooling/AGENTS.md
+  s_18b05852ced651::t_74e555ea4a8f1d 90
+packages/tooling/src/browser-tests.ts
+  s_18b05852ced651::t_c8297401819f23 100-103
+packages/tooling/tests/unit/browser-tests.test.ts
+  s_18b05852ced651::t_5325658de90f05 85-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cb03c59c18f3d02ca65d968572f0ffc92ffffece",
+  "prompts": {},
+  "sessions": {
+    "s_18b05852ced651": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1827f-3c90-7301-b64a-8d52dd090344",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
