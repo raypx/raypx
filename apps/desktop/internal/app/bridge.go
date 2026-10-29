@@ -10,19 +10,6 @@ import (
 	host "raypx.local/desktop/internal/desktop"
 )
 
-type secrets struct{}
-
-func (secrets) Get(name string) ([]byte, error) {
-	value, err := mygo.Secrets.Service("com.raypx.desktop.session.v2").Get(name)
-	if errors.Is(err, mygo.ErrSecretNotFound) {
-		return nil, nil
-	}
-	return value, err
-}
-func (secrets) Set(name string, value []byte) error {
-	return mygo.Secrets.Service("com.raypx.desktop.session.v2").Set(name, value)
-}
-
 type Bridge struct {
 	mu      sync.RWMutex
 	desktop *host.Desktop

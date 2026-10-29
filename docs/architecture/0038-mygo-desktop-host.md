@@ -22,12 +22,15 @@ The application embeds the built frontend and generated manifests. Resources
 include the compiled, version-matched CLI and complete verified Herdr runtime.
 GUI Quit releases UI approval leases and closes only its daemon proxy. The daemon
 continues running tasks. Data paths, the SQLite cross-version instance lock and
-session-v2 encryption/key service identity remain stable.
+session-v2 encryption/key service identity remain stable. On Windows the native adapter
+retains keyring 4's user.service target and UTF-16LE password bytes; it can also
+read keys produced by the earlier MyGo prototype.
 
 `native_smoke` is a separate Go build tag. Only that build exposes the private
 random-token test endpoint. Its renderer is built in `native-smoke` mode with a
 stream observation hook; production compilation removes that branch. App identity,
-WebView/data paths and package outputs are isolated. The release gate checks Go
+WebView/data paths and package outputs are isolated. Startup validates the owned
+profile and its config directory before opening config, credentials or locks. The release gate checks Go
 module/build metadata and actual embedded bytes for accidentally shipped controls.
 
 Bun/VP still owns JS tasks and caches. Go owns native compilation caches. The unused Rust crate experiment and its

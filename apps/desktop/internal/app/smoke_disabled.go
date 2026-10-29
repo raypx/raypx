@@ -7,6 +7,7 @@ import (
 	host "raypx.local/desktop/internal/desktop"
 )
 
+func validateStartup() error { return nil }
 func smokeDirectory() string { return "" }
 func smokeArgs() []string    { return nil }
 func interactive() bool      { return true }

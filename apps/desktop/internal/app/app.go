@@ -39,6 +39,9 @@ func Run(bundled fs.FS) error {
 		mygo.BindAs("Desktop", &Bridge{})
 		return mygo.App.Run()
 	}
+	if err := validateStartup(); err != nil {
+		return err
+	}
 	config, err := host.LoadConfig()
 	if err != nil {
 		return err
@@ -95,7 +98,7 @@ func Run(bundled fs.FS) error {
 	mygo.App.WhenReady(func() {
 		go func() {
 			var err error
-			desktop, err := host.New(config, directory, binary, appVersion, smokeArgs(), runtime.GOOS == "darwin" || runtime.GOOS == "windows", secrets{}, methods)
+			desktop, err := host.New(config, directory, binary, appVersion, smokeArgs(), runtime.GOOS == "darwin" || runtime.GOOS == "windows", SessionKeys{}, methods)
 			if err != nil {
 				if interactive() {
 					_, _ = mygo.Dialog.Message(mygo.MessageOptions{Title: "Raypx", Type: mygo.MessageError, Message: "Unable to initialize Desktop / 无法启动桌面端"})
@@ -108,12 +111,24 @@ func Run(bundled fs.FS) error {
 				return
 			}
 			if !mygo.WebViewAvailable() {
-				_, _ = mygo.Dialog.Message(mygo.MessageOptions{Title: "Raypx", Type: mygo.MessageError, Message: "The system WebView is unavailable. Install the WebView runtime required by your operating system. / 系统网页组件不可用，请安装操作系统所需的 WebView 运行时。"})
+				if interactive() {
+					_, _ = mygo.Dialog.Message(mygo.MessageOptions{Title: "Raypx", Type: mygo.MessageError, Message: "The system WebView is unavailable. Install the WebView runtime required by your operating system. / 系统网页组件不可用，请安装操作系统所需的 WebView 运行时。"})
+				}
 				desktop.Close()
 				quit()
 				return
 			}
-			window := mygo.NewWindow(mygo.WindowOptions{Title: "Raypx", URL: "about:blank", Width: 1120, Height: 720, MinWidth: 800, MinHeight: 620, Hidden: true, Page: mygo.PageOptions{PreloadScript: desktop.Preload()}})
+			window := mygo.NewWindow(mygo.WindowOptions{Title: "Raypx", URL: "about:blank", Width: 1120, Height: 720, UseContentSize: true, MinWidth: 800, MinHeight: 620, Hidden: true, Page: mygo.PageOptions{PreloadScript: desktop.Preload()}})
+			// MyGo's native minimum describes the outer frame. Keep the same
+			// 800 x 620 content-area contract as the previous host.
+			frame, content := window.Bounds(), window.ContentBounds()
+			window.SetMinimumSize(800+max(0, frame.Width-content.Width), 620+max(0, frame.Height-content.Height))
+			window.OnResize(func() {
+				content := window.ContentBounds()
+				if content.Width < 800 || content.Height < 620 {
+					window.SetContentSize(max(800, content.Width), max(620, content.Height))
+				}
+			})
 			bridge.attach(desktop, window, config.Scope)
 			if quitting.Load() {
 				bridge.detach()

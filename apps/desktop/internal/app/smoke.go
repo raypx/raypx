@@ -21,6 +21,16 @@ import (
 	host "raypx.local/desktop/internal/desktop"
 )
 
+func validateStartup() error {
+	if err := host.ValidateSmokeProfile(smokeDirectory(), os.Getenv("RAYPX_HOME")); err != nil {
+		return err
+	}
+	token := os.Getenv("RAYPX_NATIVE_SMOKE_TOKEN")
+	if len(token) < 32 || len(token) > 256 || os.Getenv("RAYPX_NATIVE_SMOKE_SOCKET") == "" {
+		return errors.New("Native smoke endpoint is missing")
+	}
+	return nil
+}
 func smokeDirectory() string { return os.Getenv("RAYPX_NATIVE_SMOKE_DATA_DIR") }
 func smokeArgs() []string {
 	return []string{"--profile", "native-smoke", "--data-dir", smokeDirectory()}
@@ -195,12 +205,14 @@ func cleanupSmokeSessions(directory string) (int, error) {
 			if len(name) != 32 || strings.Trim(name, "0123456789abcdef") != "" || !plain(path, true) {
 				continue
 			}
-			err := mygo.Secrets.Service("com.raypx.desktop.session.v2").Delete(host.Digest(filepath.Join(path, "session-v2.enc")))
+			err := (SessionKeys{}).Delete(host.Digest(filepath.Join(path, "session-v2.enc")))
 			if err != nil && !errors.Is(err, mygo.ErrSecretNotFound) {
 				return 0, err
 			}
 			count++
 		}
+	} else if !os.IsNotExist(err) {
+		return 0, err
 	}
 	return count, host.AtomicWrite(filepath.Join(directory, ".native-smoke-sessions-cleaned"), []byte("true"))
 }

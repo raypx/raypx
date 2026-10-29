@@ -88,6 +88,8 @@ Local tools render during session/network checks. Auth routes use a standalone l
 - Load bounded runtime TOML from absolute RAYPX_HOME or ~/.raypx; invalid config
   stops startup. Only configured API origins are reachable. Isolate sessions,
   browser storage, remote settings and account-owned history by server origin.
+- Windows SessionKeys retains keyring 4's user.service identity and UTF-16LE
+  password encoding; native smoke validates owned data/config before startup.
 - Keep native data paths and the lifetime desktop-instance.sqlite exclusive lock
   compatible with earlier versions; never unlink an owned lock. Preferences remain
   device-local. Native reports raw JSON and read/missing/unreadable; renderer
