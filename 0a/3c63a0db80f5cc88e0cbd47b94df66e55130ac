@@ -1,0 +1,19 @@
+bench/sequence.sh
+  s_18b05852ced651::t_b05f7c197193ea 1-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0a3c63a0db80f5cc88e0cbd47b94df66e55130ac",
+  "prompts": {},
+  "sessions": {
+    "s_18b05852ced651": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1827f-3c90-7301-b64a-8d52dd090344",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
