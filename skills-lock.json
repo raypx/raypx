@@ -5,7 +5,7 @@
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/best-practices/SKILL.md",
-      "computedHash": "61ba0ef64ed2e7c424401cc848ca33dd6d790a720c44727717dc0c5cba5fc122"
+      "computedHash": "0c30be0e118c2b7a0c4c57bd9e63bf110c7e420a79ec6ce7997153f3b1e066ee"
     },
     "hono": {
       "source": "yusukebe/hono-skill",
@@ -17,25 +17,25 @@
       "source": "ccheney/robust-skills",
       "sourceType": "github",
       "skillPath": "skills/postgres-drizzle/SKILL.md",
-      "computedHash": "26754316f0d7698c323c5130d89ba04d49fabd1bf960c1a38c23b4d2bbe0424d"
+      "computedHash": "992e9c4f8fd4e2d9ea03329291fb382d0f41a6dfbb78d8b7b451539c7c113cf5"
     },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "c1a68ee06a668aced9ab2b5fbdea5f989864123794eb2e056b339a072dbb7f10"
+      "computedHash": "b864a958765563321f485a96f4d59c0bb6539f4286ab6d8b8b66895b7ebd302d"
     },
     "tanstack-router-best-practices": {
       "source": "deckardger/tanstack-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/tanstack-router/SKILL.md",
-      "computedHash": "65764bc7b90e47f6023cb7f89b3af93eaaafc517754f10b9382e184d4646a77d"
+      "computedHash": "659549bfcacc5767cd489fcbceb2889247bd38c82f0a37c282da754eb2603f63"
     },
     "tanstack-start-best-practices": {
       "source": "deckardger/tanstack-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/tanstack-start/SKILL.md",
-      "computedHash": "8b073187405a10f9997158f9139a9664cc801595d2fe63d542a0bac9bf2152f5"
+      "computedHash": "8799a83f34c3c0631915f8ddcdccc470d91e8bff05409564679bcd76b5eb0be8"
     },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
@@ -47,7 +47,7 @@
       "source": "antfu/skills",
       "sourceType": "github",
       "skillPath": "skills/vite/SKILL.md",
-      "computedHash": "867ff66238f3152e9c494339ad08dc432dd0df5bcf5cc7a00b61a72b580eb908"
+      "computedHash": "88ee465fd10f711efecc76e91e96accae2b229dda371614dcf219099c264a486"
     }
   }
 }
