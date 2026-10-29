@@ -1,0 +1,29 @@
+bench/run.ts
+  s_3d39844d28dfdb::t_f89b60f11a646c 30,32,65-68
+bench/sequence-turbo.sh
+  s_7ebdb0b32aa724::t_e1bf2f5c9d394f 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "af5db3dbc81f5b3841e2843363b8e26acde48aba",
+  "prompts": {},
+  "sessions": {
+    "s_3d39844d28dfdb": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a186ca-fd8e-7df3-87ac-1a2212ce31a9",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
