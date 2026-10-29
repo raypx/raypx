@@ -1,0 +1,50 @@
+apps/desktop/internal/desktop/keyring.go
+  s_8587c3f54e2a10::t_e1ebad8825150a 1-28
+  s_8587c3f54e2a10::t_1623150dddd60d 29-34
+apps/desktop/internal/app/secrets.go
+  s_8587c3f54e2a10::t_e1ebad8825150a 1-25
+  s_8587c3f54e2a10::t_8ce40a52a575f0 26-30
+apps/desktop/internal/app/secrets_windows.go
+  s_8587c3f54e2a10::t_e1ebad8825150a 1-84
+  s_8587c3f54e2a10::t_cad86051e23828 85-115
+apps/desktop/tests/native/host/keyring_windows_test.go
+  s_8587c3f54e2a10::t_ce7ba1a9fe3132 1-23
+  s_8587c3f54e2a10::t_0513021f79acfd 24-35
+apps/desktop/tests/native/host/keyring_test.go
+  s_8587c3f54e2a10::t_ce7ba1a9fe3132 1-21
+  s_8587c3f54e2a10::t_dfb729149587a9 22-29
+apps/desktop/internal/desktop/smoke_profile.go
+  s_8587c3f54e2a10::t_e1ebad8825150a 1-22
+  s_8587c3f54e2a10::t_654a4a137408f3 23-28
+apps/desktop/tests/native/host/smoke_profile_test.go
+  s_8587c3f54e2a10::t_ce7ba1a9fe3132 1-22
+  s_8587c3f54e2a10::t_65c65e7a8fc933 23-37
+apps/desktop/AGENTS.md
+  s_8587c3f54e2a10::t_40e102d249c580 91-92
+apps/desktop/go.mod
+  s_8587c3f54e2a10::t_de4a8b3850cff3 10
+apps/desktop/internal/app/app.go
+  s_8587c3f54e2a10::t_e56c6441b9883f 42-44,101,114-116,121-131
+apps/desktop/internal/app/smoke.go
+  s_8587c3f54e2a10::t_26883caa25073c 24-33,208,214-215
+apps/desktop/internal/app/smoke_disabled.go
+  s_8587c3f54e2a10::t_371f44fe00e28c 10
+docs/architecture/0038-mygo-desktop-host.md
+  s_8587c3f54e2a10::t_85ff4672935c6a 25-27,32-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "96ece14b00bc2d68d02de933a4573bfc8e87e73f",
+  "prompts": {},
+  "sessions": {
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
