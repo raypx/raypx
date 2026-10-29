@@ -1,0 +1,33 @@
+.github/workflows/rust.yml
+  s_3a4b502e70ec90::t_70cd68bdd0a601 16
+.github/actions/setup-rust/action.yml
+  s_3a4b502e70ec90::t_70cd68bdd0a601 1-11
+packages/tooling/tests/unit/bun-deployment.test.ts
+  s_3a4b502e70ec90::t_70cd68bdd0a601 86-88
+docs/development/testing.md
+  s_3a4b502e70ec90::t_bcd0fd9d28c464 49-50
+docs/development/rust.md
+  s_3a4b502e70ec90::t_c622b0b703ab55 28
+.github/workflows/ci.yml
+  s_3a4b502e70ec90::t_70cd68bdd0a601 141
+Cargo.toml
+  s_3a4b502e70ec90::t_c622b0b703ab55 8
+rust-toolchain.toml
+  s_3a4b502e70ec90::t_c622b0b703ab55 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e1349186edd7d45930b99a46f0ec2800d669b8f6",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
