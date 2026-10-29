@@ -14,7 +14,9 @@ async function writable(directory: string): Promise<void> {
 /** MyGo signs nested code before sealing/archiving it. Refresh checksums at that boundary. */
 export async function preparePackager(environment: NodeJS.ProcessEnv): Promise<string> {
   const desktop = resolve(import.meta.dirname, "../..");
-  const probe = Bun.spawn(["go", "list", "-m", "-json", "github.com/egoist/mygo"], {
+  // `go list -m` has no Dir in a fresh module cache. Materialize and verify the
+  // selected module before copying its pinned packaging sources.
+  const probe = Bun.spawn(["go", "mod", "download", "-json", "github.com/egoist/mygo"], {
     cwd: desktop,
     env: environment,
     stdout: "pipe",
