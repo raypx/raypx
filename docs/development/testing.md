@@ -93,7 +93,9 @@ native task entry; `vp run test` at root enters the normal root launcher.
 VP records local results in `node_modules/.vite/task-cache`. Use `--verbose` or
 `vp run --last-details` for cache misses and task timings. Cached logs describe an
 earlier execution; their test durations are not the current command's elapsed time.
-Keep the cache between runs. `bun run clean` removes task/transform caches while
+Task inputs ignore `node_modules` listings and tool caches such as `.nitro`, `.vite` and
+`.cache`, so a fresh CI runner can replay builds; `bun.lock` still invalidates dependency
+changes. Keep the cache between runs. `bun run clean` removes task/transform caches while
 preserving dependency packages, sources and local user data.
 
 The root `dev` entry selects Web and API and allows three task slots. Preparation

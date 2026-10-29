@@ -89,6 +89,7 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
     "**/node_modules/.vitest-cache/**",
     "**/node_modules/.vite/**",
     "**/node_modules/.vite-temp/**",
+    "**/node_modules/.cache/**",
     "**/.tanstack/**",
     ".artifacts/**",
     ...(build || name === "check"
@@ -108,6 +109,9 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
     ...exclusions
       .flatMap((pattern) => [pattern.slice(0, -3), pattern])
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
+    // Tool caches appear in node_modules after a first run, so a fresh CI runner lists it
+    // differently. Dependency changes still reach every task through bun.lock below.
+    { pattern: "!**/node_modules", base: "workspace" },
     ...["bunfig.toml", "bun.lock"].map((pattern) => ({
       pattern,
       base: "workspace" as const,
