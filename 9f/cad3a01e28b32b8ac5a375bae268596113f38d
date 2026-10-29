@@ -1,0 +1,81 @@
+.github/workflows/ci.yml
+  s_8587c3f54e2a10::t_2f575d4c82ac74 134
+.gitignore
+  s_8587c3f54e2a10::t_a2e7e5ee8090aa 78
+AGENTS.md
+  s_8587c3f54e2a10::t_942afb60622f18 90-91
+PRODUCT.md
+  s_8587c3f54e2a10::t_25582cdd14c6bb 55-56
+README.md
+  s_8587c3f54e2a10::t_c0a65c276e5527 13-14
+apps/desktop/AGENTS.md
+  s_8587c3f54e2a10::t_2275e4a67fd6af 102
+apps/desktop/internal/desktop/cookies.go
+  s_8587c3f54e2a10::t_dbcddd5b1fb4e4 54
+apps/desktop/scripts/native/prepare-cli.ts
+  s_8587c3f54e2a10::t_483d6debef3b59 12
+apps/desktop/tests/scripts/native/prepare-cli.test.ts
+  s_8587c3f54e2a10::t_29565b162b7aa0 32
+docs/README.md
+  s_8587c3f54e2a10::t_7e79ad0fab24f7 16
+docs/architecture/0034-extensible-foundation.md
+  s_8587c3f54e2a10::t_bba5c40bc5b2dc 16
+docs/architecture/0035-local-owner-host.md
+  s_8587c3f54e2a10::t_4fe5e7095d80af 10-11,122
+docs/architecture/0038-mygo-desktop-host.md
+  s_8587c3f54e2a10::t_1f2e7383fbe560 33-34
+docs/architecture/README.md
+  s_8587c3f54e2a10::t_f0e8896049cc44 195
+docs/development/getting-started.md
+  s_8587c3f54e2a10::t_2ddd1e8c66d02f 15,21-23,120,137-138
+docs/development/test-commands.md
+  s_8587c3f54e2a10::t_3ed665571ee9ee 19,102-103
+docs/development/testing.md
+  s_8587c3f54e2a10::t_945992cf414a17 29,35-38,52,57
+docs/development/validation-artifacts.md
+  s_8587c3f54e2a10::t_0dbffdf96d490f 84-87
+docs/development/workspaces.md
+  s_8587c3f54e2a10::t_a8a561552e51c0 3-4
+packages/tooling/AGENTS.md
+  s_8587c3f54e2a10::t_f4aa971abe30cb 18,25-26,44,75-76
+packages/tooling/src/clean.ts
+  s_8587c3f54e2a10::t_95a1a4ed74063d 2
+packages/tooling/src/cli.ts
+  s_8587c3f54e2a10::t_c8b190351982a7 8,105,155,167,173
+packages/tooling/src/repository.ts
+  s_8587c3f54e2a10::t_2f7eb947f3e5d1 2,51
+packages/tooling/src/verification/execution.ts
+  s_8587c3f54e2a10::t_ca44929159db82 12
+packages/tooling/src/verification/index.ts
+  s_8587c3f54e2a10::t_dcfd53c918fb35 23,31,37,52
+packages/tooling/src/verification/plan.ts
+  s_8587c3f54e2a10::t_6c6bc1199db6b1 2,55,63,79,82,125,134
+packages/tooling/src/verification/result.ts
+  s_8587c3f54e2a10::t_8b514aecba2cd2 8
+packages/tooling/tests/integration/browser-graph.test.ts
+  s_8587c3f54e2a10::t_e0935db3d6bd51 81
+packages/tooling/tests/integration/cache.test.ts
+  s_8587c3f54e2a10::t_0e5d6977dabfa0 252,298,317-318
+packages/tooling/tests/unit/clean.test.ts
+  s_8587c3f54e2a10::t_5bc34a54913f52 3-4,35,73
+packages/tooling/tests/unit/native-workflow.test.ts
+  s_8587c3f54e2a10::t_4343ab1bf56f0a 52
+packages/tooling/tests/unit/verification.test.ts
+  s_8587c3f54e2a10::t_e63ebcca2dd7d5 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9fcad3a01e28b32b8ac5a375bae268596113f38d",
+  "prompts": {},
+  "sessions": {
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
