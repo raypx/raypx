@@ -187,7 +187,7 @@ those entries. Workspaces inheriting the shared coverage configuration declare
 ### Faster browser feedback
 
 The complete browser gate remains `bun run test e2e`, with all ordinary assertions.
-CI defaults to three workers. Local hosts with at least eight available CPUs and
+CI defaults to two workers. Local hosts with at least eight available CPUs and
 16 GiB of total memory default to four; smaller hosts use one or two. Explicit
 Playwright flags override the default. Select a surface or a smaller smoke set:
 

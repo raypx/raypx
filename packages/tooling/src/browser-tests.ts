@@ -97,10 +97,8 @@ export function browserTestSettings(
       : undefined,
     trace: environment.CI ? ("on-first-retry" as const) : ("off" as const),
     screenshots: environment.RAYPX_E2E_SCREENSHOTS === "1",
-    // Hosted Linux runners have four CPUs; one stays free for the Web, API and Desktop servers.
-    workers: environment.CI
-      ? 3
-      : !capacity
+    workers:
+      environment.CI || !capacity
         ? 2
         : capacity.cpus >= 8 && capacity.memoryBytes >= 16 * 2 ** 30
           ? 4

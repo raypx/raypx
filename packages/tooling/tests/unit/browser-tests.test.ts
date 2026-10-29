@@ -82,8 +82,7 @@ it.each([
   [{}, 4, 16, 2],
   [{}, 8, 8, 2],
   [{}, 1, 16, 1],
-  [{ CI: "true" }, 4, 16, 3],
-  [{ CI: "true" }, 16, 64, 3],
+  [{ CI: "true" }, 16, 64, 2],
 ] as const)("bounds local worker capacity (%j, %i CPUs, %i GiB)", (env, cpus, gib, expected) => {
   expect(browserTestSettings(env, { cpus, memoryBytes: gib * 2 ** 30 }).workers).toBe(expected);
 });
