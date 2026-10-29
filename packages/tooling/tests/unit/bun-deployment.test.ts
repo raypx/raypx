@@ -83,6 +83,8 @@ it("caches Rust CI without repeating clippy's check or test's build", () => {
   ])
     expect(steps).toContain(command);
   // The cache restores after the toolchain is selected and before any cargo command.
-  expect(steps.indexOf("rustup show")).toBeLessThan(steps.indexOf("rust-cache"));
+  expect(read(".github/actions/setup-rust/action.yml")).toContain("rustup show");
+  expect(steps).toContain("uses: ./.github/actions/setup-rust");
+  expect(steps.indexOf("setup-rust")).toBeLessThan(steps.indexOf("rust-cache"));
   expect(steps.indexOf("rust-cache")).toBeLessThan(steps.indexOf("cargo fmt"));
 });

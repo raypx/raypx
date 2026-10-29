@@ -46,6 +46,8 @@ gate to succeed and permits only intentional skips. Herdr checks precede Rust ca
 restoration, failed jobs do not save large Rust caches, and VP archives are saved only
 when new successful task artifacts exist. Rust caches cover both production and smoke
 Cargo directories while keeping their outputs isolated.
+CI installs the pinned compiler in an isolated `RUSTUP_HOME`; unrelated preinstalled
+toolchains must not affect Rust cache keys when runner images change.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
 The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
 worker and per-file isolation; larger suites set their worker count locally.

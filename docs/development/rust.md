@@ -25,7 +25,7 @@ bun run verify --full
 cargo run -p raypx-core --locked --example basic
 ```
 
-`rust-toolchain.toml` is the Rust version source, pinned to 1.97.1 with a minimal
+`rust-toolchain.toml` is the Rust version source, pinned to 1.99.1 with a minimal
 profile plus rustfmt and Clippy. rustup installs the selected toolchain when a
 Cargo command runs. Root `Cargo.toml` shares the package version, Rust edition,
 minimum Rust version, license, repository, publication policy and lints. Keep its

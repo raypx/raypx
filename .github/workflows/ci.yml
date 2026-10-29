@@ -138,7 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Use the pinned Rust toolchain
-        run: rustup show
+        uses: ./.github/actions/setup-rust
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore
         id: vp-cache
