@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { run } from "@raypx-kit/devkit/process";
@@ -10,7 +10,8 @@ export async function cleanArtifacts(root: string): Promise<void> {
 
 export async function cleanRust(root: string): Promise<void> {
   const target = resolve(root, process.env.CARGO_TARGET_DIR || "target");
-  if (!existsSync(join(root, "Cargo.toml")) || !existsSync(target)) return;
+  if (!existsSync(join(root, "Cargo.toml")) || !existsSync(target) || !readdirSync(target).length)
+    return;
   await run("cargo", ["clean", "--workspace", "--profile", "dev", "--locked", "--offline"], root);
 }
 

@@ -1,11 +1,30 @@
 import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
 import { isBrowserTestTask, prepareBrowserTask } from "./browser-tests.js";
-import { argumentKey, taskModel, taskName, taskPlan, taskRef } from "./tasks/model.js";
+import {
+  argumentKey,
+  taskModel,
+  taskName,
+  taskPlan,
+  taskRef,
+  type TaskModel,
+} from "./tasks/model.js";
 
 /** Raypx conventions for the shared @raypx-kit/devkit checks. */
 export const discover = (root: string) => discoverWorkspaces(root, { metadataKey: "raypx" });
+
+/** Directory enumeration is traced separately from excluded output contents. */
+export function prepareTaskDirectories(model: TaskModel) {
+  mkdirSync(join(model.root, ".artifacts"), { recursive: true });
+  if (existsSync(join(model.root, "Cargo.toml")))
+    mkdirSync(join(model.root, "target"), { recursive: true });
+  for (const member of model.members.filter((candidate) => candidate.native))
+    for (const directory of ["src-tauri/binaries", "src-tauri/gen", "artifacts/browser"])
+      mkdirSync(join(model.root, member.path, directory), { recursive: true });
+}
 
 export async function runTasks(
   root: string,
@@ -42,6 +61,7 @@ export async function runTasks(
     console.log(JSON.stringify({ runner: "vp", tasks: taskPlan(model, [reference]) }));
     return;
   }
+  prepareTaskDirectories(model);
   const verb = name.split(":")[0];
   const planned = taskPlan(model, [reference]);
   const preparesEnvironment =

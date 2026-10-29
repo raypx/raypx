@@ -115,6 +115,8 @@ it("does not require Cargo before Rust artifacts exist or in a Bun-only reposito
   const root = fixture();
   writeFileSync(join(root, "Cargo.toml"), "manifest");
   await cleanRust(root);
+  mkdirSync(join(root, "target"));
+  await cleanRust(root);
   const bunOnly = fixture();
   mkdirSync(join(bunOnly, "target"));
   await cleanRust(bunOnly);
@@ -126,6 +128,7 @@ it("honors CARGO_TARGET_DIR without cleaning JavaScript outputs", async () => {
   const library = member(root, "feature");
   writeFileSync(join(root, "Cargo.toml"), "manifest");
   mkdirSync(join(root, "cargo-cache"));
+  writeFileSync(join(root, "cargo-cache/.rustc_info.json"), "{}");
   mkdirSync(join(root, library, "dist"));
   const output = join(root, library, "dist/index.js");
   writeFileSync(output, "built JavaScript");
@@ -140,6 +143,7 @@ it("propagates Cargo failures before removing application outputs", async () => 
   const library = member(root, "feature");
   writeFileSync(join(root, "Cargo.toml"), "manifest");
   mkdirSync(join(root, "target"));
+  writeFileSync(join(root, "target/.rustc_info.json"), "{}");
   mkdirSync(join(root, library, "dist"));
   const output = join(root, library, "dist/index.js");
   writeFileSync(output, "built JavaScript");

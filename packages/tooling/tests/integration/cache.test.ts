@@ -4,6 +4,8 @@ import { pathToFileURL } from "node:url";
 import { stripVTControlCharacters } from "node:util";
 import { expect, it } from "vite-plus/test";
 import { argumentKey } from "../../src/tasks/arguments.js";
+import { taskModel } from "../../src/tasks/model.js";
+import { prepareTaskDirectories } from "../../src/repository.js";
 import { workspaceFixtures } from "../helpers/workspace.js";
 
 const { fixture, member } = workspaceFixtures();
@@ -97,6 +99,7 @@ export default config;`,
 }
 
 function execute(root: string, task: string, env: Record<string, string> = {}, selector?: string) {
+  prepareTaskDirectories(taskModel(root));
   const child = Bun.spawnSync(
     [
       process.execPath,
@@ -269,13 +272,50 @@ it("checks a native app without staging sidecars or invoking Cargo", () => {
     'throw new Error("Native packaging must be explicit");',
   );
   writeFileSync(join(folder, "stage.ts"), 'throw new Error("Sidecar staging must be explicit");');
+  writeFileSync(join(root, "Cargo.toml"), "[workspace]\nmembers = []\n");
   const selector = "@raypx/native#task:check";
   pass(execute(root, "check", {}, selector));
   const warm = execute(root, "check", {}, selector);
   expect(warm.code).toBe(0);
   expect(warm.log).toContain("cache hit");
+  // Native preparation adds outputs after the first JS check on a fresh checkout.
+  for (const [directory, file] of [
+    [join(root, "target/debug/deps"), "fixture.rlib"],
+    [join(folder, "src-tauri/binaries"), "raypx"],
+    [join(folder, "src-tauri/gen"), "schema.json"],
+    [join(folder, "artifacts/browser"), "index.html"],
+  ] as const) {
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, file), "fixture");
+  }
+  expect(pass(execute(root, "check", {}, selector)).log).toContain("cache hit");
   writeFileSync(join(folder, "src/index.ts"), 'export const result: number = "changed";');
   const changed = execute(root, "check", {}, selector);
   expect(changed.code).not.toBe(0);
   expect(changed.log).toContain("not assignable to type 'number'");
+}, 30000);
+
+it("reuses VP pack results after Cargo creates its target directory", () => {
+  const root = project();
+  const folder = checked(
+    root,
+    "cli-fixture",
+    {},
+    { build: `bun --bun ${JSON.stringify(vp)} pack` },
+  );
+  writeFileSync(join(root, "Cargo.toml"), "[workspace]\nmembers = []\n");
+  const config = join(folder, "vite.config.ts");
+  writeFileSync(
+    config,
+    readFileSync(config, "utf8").replace(
+      "export default config;",
+      'export default {...config, envPrefix: [], pack: {entry: ["src/index.ts"], dts: false}};',
+    ),
+  );
+  const selector = "@raypx/cli-fixture#task:build";
+  pass(execute(root, "build", {}, selector));
+  expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
+  mkdirSync(join(root, "target/debug/deps"), { recursive: true });
+  writeFileSync(join(root, "target/debug/deps/fixture.rlib"), "fixture");
+  expect(pass(execute(root, "build", {}, selector)).log).toContain("2 cache hits");
 }, 30000);

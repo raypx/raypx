@@ -37,7 +37,7 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - `clean` delegates Rust cleanup to `cargo clean --workspace --profile dev`, preserving
   dependency caches and Release artifacts. `clean:rust` runs only that step, exposed
   as root `rust:clean`; `clean:artifacts` preserves all Rust outputs. Cargo is skipped
-  without a Cargo manifest or target directory; `CARGO_TARGET_DIR` is respected.
+  without a Cargo manifest or nonempty target directory; `CARGO_TARGET_DIR` is respected.
 - raypx-dev env -- <command>, db <operation>, desktop build [Tauri build arguments]
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/beta/agents tasks are uncached, depend on the
@@ -75,6 +75,8 @@ independent cached VP runners, so it must run without an enclosing filesystem tr
 `test:unit` remains cached and `test:integration` always executes.
 Platform/toolchain identity is also part of each command. Native packaging stays
 outside VP's filesystem tracer; Cargo owns its incremental state.
+The launcher creates ignored artifact/Cargo/native directories before tracing:
+directory enumeration can otherwise invalidate JS tasks when those paths first appear.
 Type checks explicitly fingerprint source/config files in the transitive workspace
 dependency closure, retaining dependency declarations under build outputs; Bun's
 native typechecker reads are not fully covered by automatic tracing on Linux.
