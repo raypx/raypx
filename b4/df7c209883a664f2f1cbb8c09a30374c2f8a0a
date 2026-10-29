@@ -1,0 +1,23 @@
+package.json
+  s_c8ddb790d61691::t_5987154a08c7b0 140,146
+docs/development/testing.md
+  s_c8ddb790d61691::t_5987154a08c7b0 171-174
+bun.lock
+  s_c8ddb790d61691::t_5545d4949540fe 586,592,906,908,910,912,914,916,918,920,922,924,926,928,930,932,934,936,938,940,942,946,2028
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b4df7c209883a664f2f1cbb8c09a30374c2f8a0a",
+  "prompts": {},
+  "sessions": {
+    "s_c8ddb790d61691": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18703-c385-7ca0-a1df-4dba9988959c",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
