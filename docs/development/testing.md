@@ -168,7 +168,10 @@ credentials. The Vitest scaffold is a static `.template` file copied into each n
 workspace, so its workspace-relative imports need no Knip resolution exception.
 Keep unused-export findings visible for review. Knip currently misses Bun's
 `overrides` catalog references for `esbuild`, `jiti` and `lightningcss`; preserve
-those entries. Workspaces inheriting the shared coverage configuration declare
+those entries. OXC parser and AST type versions follow each tool's dependency
+constraints: Devkit and Vite+ may use different releases, so do not force them to
+one version through root overrides.
+Workspaces inheriting the shared coverage configuration declare
 `@vitest/coverage-v8` directly, including those forwarding `--coverage` to `test`.
 
 ## Explicit gates
