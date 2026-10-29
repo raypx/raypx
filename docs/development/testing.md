@@ -168,9 +168,10 @@ credentials. The Vitest scaffold is a static `.template` file copied into each n
 workspace, so its workspace-relative imports need no Knip resolution exception.
 Keep unused-export findings visible for review. Knip currently misses Bun's
 `overrides` catalog references for `esbuild`, `jiti` and `lightningcss`; preserve
-those entries. OXC parser and AST type versions follow each tool's dependency
-constraints: Devkit and Vite+ may use different releases, so do not force them to
-one version through root overrides.
+those entries. Root overrides pin `oxc-parser` and `@oxc-project/types` together
+at `0.156.0`. Revalidate Tooling, Knip, type checks and builds when changing this
+pair, including compatibility with Vite+'s declarations. Native parser bindings
+follow the parser package; other OXC tools keep their own runtime versions.
 Workspaces inheriting the shared coverage configuration declare
 `@vitest/coverage-v8` directly, including those forwarding `--coverage` to `test`.
 
