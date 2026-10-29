@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -63,7 +64,7 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, sho
 			case permits <- struct{}{}:
 				go func() {
 					defer func() { conn.Close(); <-permits }()
-					serveSmoke(conn, token, func(ctx context.Context, method string, input host.JSON) (any, error) {
+					ServeSmoke(conn, token, func(ctx context.Context, method string, input host.JSON) (any, error) {
 						switch method {
 						case "eval":
 							script, _ := input["script"].(string)
@@ -136,7 +137,10 @@ func startSmoke(window *mygo.Window, tray *mygo.Tray, desktop *host.Desktop, sho
 	return nil
 }
 
-func serveSmoke(conn net.Conn, token string, dispatch func(context.Context, string, host.JSON) (any, error)) {
+var smokeErrorCode = regexp.MustCompile(`^[A-Z][A-Z0-9_]{0,127}$`)
+
+// ServeSmoke runs the authenticated test-only protocol without a GUI dependency.
+func ServeSmoke(conn net.Conn, token string, dispatch func(context.Context, string, host.JSON) (any, error)) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	scanner := bufio.NewScanner(conn)
@@ -170,6 +174,9 @@ func serveSmoke(conn net.Conn, token string, dispatch func(context.Context, stri
 			response := host.JSON{"id": request.ID, "ok": err == nil, "value": value}
 			if err != nil {
 				response["error"] = "Native smoke operation failed: " + request.Method
+				if request.Method == "engineRequest" && smokeErrorCode.MatchString(err.Error()) {
+					response["error"] = err.Error()
+				}
 			}
 			write.Lock()
 			defer write.Unlock()

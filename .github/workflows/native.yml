@@ -103,6 +103,7 @@ jobs:
           bun run --cwd apps/desktop mygo:test
           cd apps/desktop
           CGO_ENABLED=0 go vet -tags native_smoke ./internal/... ./tests/native/host/...
+          CGO_ENABLED=0 go test -tags native_smoke ./tests/native/host/... -run '^TestSmokeProtocol'
       - name: Import macOS signing certificate
         if: matrix.phase == 'package' && (runner.os == 'macOS' && env.APPLE_CERTIFICATE != '')
         run: |
