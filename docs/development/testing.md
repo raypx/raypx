@@ -44,13 +44,17 @@ gate to succeed and permits only intentional skips. Herdr integration and pinned
 are separate from VP's JS task cache; smoke and production use separate outputs.
 
 The check phase stages a matching CLI, runs Herdr and executes Go source checks on both platforms.
-Herdr retains three Windows runs without blocking the parallel package/smoke phases.
+Routine checks run Herdr once; distribution runs repeat it three times on Windows
+without blocking the parallel package/smoke phases.
 Installer creation, signatures and installed GUI smoke run on tag pushes or manual
 dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
 Those runs require Go checks, production packaging and packaged GUI smoke in parallel.
 Manual distribution runs have their own cancellation group, so routine pushes cannot
 cancel a release acceptance run.
-The preparation job alone saves VP artifacts; phase consumers only restore them. Native Go
+Distribution runs prepare shared JS inputs once per platform; that job alone saves VP artifacts
+and the parallel phases only restore them. Routine runs skip preparation, so the lone check
+phase builds and saves its own inputs. Verification, test and E2E tasks receive the fixed
+`VITE_APP_RELEASE=verification`, so a new commit does not invalidate unchanged tasks. Native Go
 compilation uses the Go cache and independent production/smoke package directories.
 Generated route trees and native JSON use LF on every checkout so Windows generators do not
 invalidate restored tasks. MyGo produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.

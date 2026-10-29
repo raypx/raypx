@@ -54,8 +54,9 @@ Both applications import the shared analytics stylesheet to register its Tailwin
 Both apps accept public build values `VITE_POSTHOG_PROJECT_TOKEN` and
 `VITE_POSTHOG_HOST` (the ingestion host for your PostHog region). Missing either
 leaves the controls disabled with an explanation. Root build commands supply
-`VITE_APP_RELEASE` from the Git commit unless explicitly set. Keep that same value
-through the entire release. `RAYPX_SOURCEMAPS=1` enables hidden client maps and is
+`VITE_APP_RELEASE` from the Git commit unless explicitly set; verification, test and
+E2E runs use the fixed `verification` so their caches survive commits. Keep that same
+value through the entire release. `RAYPX_SOURCEMAPS=1` enables hidden client maps and is
 part of the build cache key. No upload credentials use a `VITE_` name.
 
 For example, build Web with `RAYPX_SOURCEMAPS=1 bun run build:web`, then run

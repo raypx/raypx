@@ -15,8 +15,10 @@ permissions:
 env:
   BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
+  # Only parallel distribution phases share prepared inputs; a lone check phase prepares itself.
   prepare:
     name: Prepare native inputs
+    if: inputs.distribution
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 15
     steps:
@@ -26,12 +28,10 @@ jobs:
         id: vp-cache
         with:
           partition: desktop
-      - name: Prepare CLI and optional distribution renderer
+      - name: Prepare CLI and distribution renderer
         shell: bash
         run: |
-          if [ "${{ inputs.distribution }}" = "true" ]; then
-            bun run build:desktop
-          fi
+          bun run build:desktop
           bun run build:cli
       # One VP cache writer per platform. Consumers only restore prepared JS outputs.
       - uses: ./.github/actions/vp-save
@@ -40,6 +40,7 @@ jobs:
   verify:
     name: ${{ matrix.phase }}
     needs: prepare
+    if: ${{ !cancelled() && (needs.prepare.result == 'success' || needs.prepare.result == 'skipped') }}
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 45
     strategy:
@@ -66,6 +67,7 @@ jobs:
           cache-dependency-path: apps/desktop/go.sum
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore
+        id: vp-cache
         with:
           partition: desktop
       - name: Prepare native check or distribution inputs
@@ -75,6 +77,11 @@ jobs:
             bun run build:desktop
           fi
           bun run build:cli
+      # Without a preparation job the check phase is the platform's only VP cache writer.
+      - uses: ./.github/actions/vp-save
+        if: ${{ !inputs.distribution }}
+        with:
+          key: ${{ steps.vp-cache.outputs.key }}
       - name: Prepare Herdr runtime
         shell: bash
         run: bun run --cwd apps/cli prepare:herdr dist/herdr
@@ -82,10 +89,13 @@ jobs:
         if: matrix.phase == 'checks'
         env:
           RAYPX_HERDR_COMPILED: "1"
+          # Release acceptance repeats Windows PTY coverage; routine checks run it once.
+          RAYPX_HERDR_WINDOWS_RUNS: ${{ inputs.distribution && '3' || '1' }}
         shell: bash
         run: |
           bun - <<'TS'
-          for (let attempt = 0; attempt < (process.platform === "win32" ? 3 : 1); attempt++) {
+          const runs = process.platform === "win32" ? Number(process.env.RAYPX_HERDR_WINDOWS_RUNS) : 1;
+          for (let attempt = 0; attempt < runs; attempt++) {
             const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
               stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
             });

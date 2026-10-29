@@ -7,9 +7,11 @@ type Step = {
   uses?: string;
   if?: string;
   run?: string;
+  env?: Record<string, string>;
   with?: Record<string, string>;
 };
 type Job = {
+  if?: string;
   needs?: string | string[];
   uses?: string;
   with?: Record<string, string>;
@@ -49,19 +51,28 @@ it("checks both platforms and adds parallel distribution phases only when reques
   ]);
 });
 
-it("publishes shared JS inputs without waiting for native checks or Herdr", () => {
+it("prepares shared JS inputs only for parallel distribution phases", () => {
   const prepare = native.prepare!.steps!;
+  expect(native.prepare?.if).toBe("inputs.distribution");
+  expect(native.verify?.if).toContain("!cancelled()");
+  expect(native.verify?.if).toContain("needs.prepare.result == 'skipped'");
   expect(prepare.some((step) => step.name === "Herdr terminal integration")).toBe(false);
   expect(prepare.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(false);
   expect(prepare.at(-1)?.uses).toBe("./.github/actions/vp-save");
   expect(prepare.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
-  expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
+  const saves = steps.filter((step) => step.uses === "./.github/actions/vp-save");
+  expect(saves.map((step) => step.if)).toEqual(["${{ !inputs.distribution }}"]);
+  expect(steps.indexOf(saves[0]!)).toBe(
+    steps.indexOf(named("Prepare native check or distribution inputs")) + 1,
+  );
 });
 
 it("requires compiled Herdr integration and pinned Go checks in the check phase", () => {
   const herdr = named("Herdr terminal integration");
   expect(herdr.if).toBe("matrix.phase == 'checks'");
-  expect(herdr.run).toContain('process.platform === "win32" ? 3 : 1');
+  expect(herdr.env?.RAYPX_HERDR_WINDOWS_RUNS).toBe("${{ inputs.distribution && '3' || '1' }}");
+  expect(herdr.run).toContain('process.platform === "win32"');
+  expect(herdr.run).toContain("RAYPX_HERDR_WINDOWS_RUNS");
   expect(steps.indexOf(named("Prepare Herdr runtime"))).toBeLessThan(steps.indexOf(herdr));
   const go = steps.find((step) => step.uses === "actions/setup-go@v6")!;
   expect(go.with?.["go-version-file"]).toBe("apps/desktop/go.mod");

@@ -77,9 +77,13 @@ export async function runTasks(
           VITE_POSTHOG_HOST: "https://analytics.example.test",
         }
       : {}),
+    // Vite+ fingerprints VITE_* for build and test; verification output is never released,
+    // so a fixed name keeps unchanged tasks cached across commits.
     VITE_APP_RELEASE:
       process.env.VITE_APP_RELEASE ||
-      execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
+      (["verify", "test", "e2e"].includes(verb!)
+        ? "verification"
+        : execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim()),
     RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}`,
   };
   for (const member of model.members.filter(

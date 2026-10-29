@@ -121,7 +121,7 @@ export const windowActions = {
   hide: mainWindow.hide,
 };
 export function handleTrayAction(actionName: unknown) {
-  action("tray", { action: actionName });
+  return driver.request("tray", { action: actionName });
 }
 let cleanupAttempted = false;
 export async function cleanupSessionKeys(force = false) {
