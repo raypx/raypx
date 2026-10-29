@@ -1,0 +1,32 @@
+.github/workflows/native.yml
+  s_3a4b502e70ec90::t_3144f4d6123f13 19,32,74,83-104
+docs/development/testing.md
+  s_3a4b502e70ec90::t_471588db7b80b1 46,49-52,61-63
+packages/tooling/AGENTS.md
+  s_3a4b502e70ec90::t_471588db7b80b1 34-35
+apps/desktop/src-tauri/tauri.smoke.conf.json
+  s_3a4b502e70ec90::t_3144f4d6123f13 4
+packages/tooling/tests/unit/native-workflow.test.ts
+  s_3a4b502e70ec90::t_471588db7b80b1 52,54-56,61-70
+  s_3a4b502e70ec90::t_3f2415d64da859 71-72
+apps/desktop/AGENTS.md
+  s_3a4b502e70ec90::t_586805724a25c5 123-124
+.gitattributes
+  s_3a4b502e70ec90::t_3144f4d6123f13 3-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "880b5c382bce8e9532bcea2935974865d13c6a22",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
