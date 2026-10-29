@@ -1,5 +1,5 @@
 name: Prepare pinned Bun dependencies
-description: Restore downloads and perform one frozen workspace install
+description: Restore downloads outside Windows and perform one frozen workspace install
 runs:
   using: composite
   steps:
@@ -7,7 +7,9 @@ runs:
       id: bun
       with:
         bun-version-file: package.json
+    # Extracting thousands of cached package files on Windows is slower than a registry install.
     - uses: actions/cache/restore@v6
+      if: runner.os != 'Windows'
       id: downloads
       with:
         path: ${{ env.BUN_INSTALL_CACHE_DIR }}
@@ -17,7 +19,7 @@ runs:
     - shell: bash
       run: bun install --frozen-lockfile
     - uses: actions/cache/save@v6
-      if: steps.downloads.outputs.cache-hit != 'true'
+      if: runner.os != 'Windows' && steps.downloads.outputs.cache-hit != 'true'
       with:
         path: ${{ env.BUN_INSTALL_CACHE_DIR }}
         key: ${{ steps.downloads.outputs.cache-primary-key }}

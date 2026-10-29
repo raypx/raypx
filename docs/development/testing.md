@@ -59,6 +59,8 @@ compilation uses the Go cache and independent production/smoke package directori
 Generated route trees and native JSON use LF on every checkout so Windows generators do not
 invalidate restored tasks. MyGo produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
 CI selects Go through apps/desktop/go.mod and keys its native cache with go.sum.
+Windows jobs install Bun packages from the registry instead of restoring the download cache;
+extracting its many small files took longer than a fresh frozen install.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
 The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
 worker and per-file isolation; larger suites set their worker count locally.
