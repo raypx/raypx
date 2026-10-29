@@ -1,0 +1,29 @@
+docs/development/test-cases.md
+  s_7ebdb0b32aa724::t_b5bb0a53800ad7 29
+docs/development/testing.md
+  s_7ebdb0b32aa724::t_036c7c222252df 190
+e2e/AGENTS.md
+  s_7ebdb0b32aa724::t_713a9ae99677ff 19
+packages/tooling/AGENTS.md
+  s_7ebdb0b32aa724::t_452d233347d1fe 90
+packages/tooling/src/browser-tests.ts
+  s_7ebdb0b32aa724::t_811b9acd109745 100-101
+packages/tooling/tests/unit/browser-tests.test.ts
+  s_7ebdb0b32aa724::t_23464311674e27 85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "961dc747120723e9ee753f07e5408eaa49fd23d9",
+  "prompts": {},
+  "sessions": {
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
