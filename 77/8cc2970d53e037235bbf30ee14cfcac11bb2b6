@@ -1,0 +1,31 @@
+docs/development/getting-started.md
+  s_be0cafefd5c0be::t_dea7b55358cd91 133,146-153
+package.json
+  s_7ebdb0b32aa724::t_9d85a3e7a3378c 85,122,131
+vite.config.ts
+  s_7ebdb0b32aa724::t_dc50be2da2e0a9 31-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "778cc2970d53e037235bbf30ee14cfcac11bb2b6",
+  "prompts": {},
+  "sessions": {
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_be0cafefd5c0be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a176ee-3d90-7a50-b1c2-93b35b041162",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
