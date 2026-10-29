@@ -65,6 +65,8 @@ invalidate restored tasks. MyGo produces per-user NSIS installers for production
 CI selects Go through apps/desktop/go.mod and keys its native cache with go.sum.
 Windows jobs install Bun packages from the registry instead of restoring the download cache;
 extracting its many small files took longer than a fresh frozen install.
+The browser job caches Playwright's Chromium headless shell by Playwright version and runs
+`playwright install-deps` only when `ldd` reports a missing system library.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
 The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
 worker and per-file isolation; larger suites set their worker count locally.

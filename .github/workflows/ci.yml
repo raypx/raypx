@@ -105,8 +105,28 @@ jobs:
         id: vp-cache
         with:
           partition: browser
-      - run: bun --bun playwright install --with-deps chromium
+      - name: Resolve Playwright version
+        id: playwright
         working-directory: e2e
+        run: echo "version=$(bun --bun playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      # Headless runs only launch the Chromium shell; browser revisions follow the Playwright version.
+      - uses: actions/cache@v6
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-shell-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bun --bun playwright install --only-shell chromium
+        working-directory: e2e
+      # The runner image usually provides Chromium's libraries; apt runs only when one is missing.
+      - name: Install missing Chromium system libraries
+        working-directory: e2e
+        run: |
+          shell="$(find ~/.cache/ms-playwright -type f -name chrome-headless-shell | head -n 1)"
+          test -n "$shell"
+          if ldd "$shell" | grep -q "not found"; then
+            bun --bun playwright install-deps chromium
+          fi
       - run: bun run raypx-dev ci:gate browser
       - uses: ./.github/actions/vp-save
         with:
