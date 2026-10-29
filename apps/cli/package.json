@@ -15,7 +15,8 @@
     "build": "bun --bun vp pack",
     "smoke": "bun run tests/smoke/artifact.ts",
     "smoke:tui": "bun run tests/smoke/tui.ts",
-    "smoke:rust-terminal": "bun run tests/smoke/rust-terminal.ts",
+    "smoke:herdr-terminal": "bun run tests/smoke/herdr-terminal.ts",
+    "prepare:herdr": "bun run scripts/prepare-herdr.ts",
     "smoke:terminal": "bun run tests/smoke/terminal-hooks.ts",
     "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts",
     "smoke:daemon-agents": "bun run tests/smoke/daemon-agents.ts",
@@ -41,6 +42,31 @@
     "@types/node": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "vite-plus": "catalog:dev"
+  },
+  "herdr": {
+    "version": "0.9.3",
+    "assets": {
+      "darwin-arm64": {
+        "name": "herdr-macos-aarch64",
+        "sha256": "5173a3e0ae42d5d1ab7ebfa5d5e6329f7c3d23f8e1a3677c7ce3231da2884157"
+      },
+      "darwin-x64": {
+        "name": "herdr-macos-x86_64",
+        "sha256": "db62d548ff3e832b087a96b1894a08d26be3905f1830309cd556783f215d4054"
+      },
+      "linux-arm64": {
+        "name": "herdr-linux-aarch64",
+        "sha256": "4de7aa3e25678812e92960de64f7c2aaa1bca1f0f80a3c5e559837e231e1f5c0"
+      },
+      "linux-x64": {
+        "name": "herdr-linux-x86_64",
+        "sha256": "18a8dc65f1c2fa485884344356dea1cfd911c6f06cf46fa78e193f4087f4dba7"
+      },
+      "win32-x64": {
+        "name": "herdr-windows-x86_64.zip",
+        "sha256": "c75b1fa49f7a3ba4b8b11789912a6147e4214a3b6fd3556d0f80076c8887d795"
+      }
+    }
   },
   "raypx": {
     "kind": "app",

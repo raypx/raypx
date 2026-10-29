@@ -61,6 +61,15 @@ async function prepareCli() {
   )
     throw new Error("Build the selected Desktop renderer before native packaging");
   await stageCli(source, target);
+  const herdr = Bun.spawn(
+    [process.execPath, "run", "scripts/prepare-herdr.ts", resolve(destination, "herdr")],
+    {
+      cwd: resolve(import.meta.dirname, "../../../cli"),
+      stdout: "inherit",
+      stderr: "inherit",
+    },
+  );
+  if ((await herdr.exited) !== 0) throw new Error("Herdr runtime staging failed");
 }
 
 if (import.meta.main) await prepareCli();

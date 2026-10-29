@@ -432,7 +432,7 @@ try {
     assert.ok(!jobDiagnostics.includes(privateValue), "Diagnostics must omit private command data");
   const child = Bun.spawn([binary, "stdio", "--data-dir", dataDir], {
     cwd: dataDir,
-    env: { ...process.env, PATH: "" },
+    env: { ...process.env, PATH: "", RAYPX_HERDR_BINARY: join(dataDir, "missing-herdr") },
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
@@ -508,21 +508,20 @@ try {
         },
       }) + "\n",
     );
-    while (!output.includes('"event":"terminal.exit"')) {
+    // Real PTY/frame coverage belongs to smoke:herdr-terminal with the staged
+    // native runtime. Default verification deliberately has no Herdr installation.
+    while (!output.includes('"id":"pty"')) {
       const part = await reader.read();
-      if (part.done) throw new Error("CLI closed before PTY completion");
+      if (part.done) throw new Error("CLI closed before terminal admission");
       output += decoder.decode(part.value, { stream: true });
     }
     const events = output
       .split("\n")
       .filter(Boolean)
       .map((line) => JSON.parse(line));
-    assert.ok(
-      events.some(
-        (value) =>
-          value.event === "terminal.output" &&
-          Buffer.from(value.data.data, "base64").toString().includes("raypx-pty"),
-      ),
+    assert.equal(
+      events.find((value) => value.id === "pty").error.code,
+      "TERMINAL_HOST_UNAVAILABLE",
     );
     const toolId = crypto.randomUUID();
     await child.stdin.write(

@@ -73,7 +73,12 @@ export function createRuntime(
     ));
   };
   const files = new FileRuntime(state);
-  const processes = new ProcessRuntime(emit, process.env.RAYPX_TERMINAL_HOST, environment);
+  const processes = new ProcessRuntime(
+    emit,
+    process.env.RAYPX_HERDR_BINARY,
+    environment,
+    state.directory,
+  );
   const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
   let memory: MemoryRuntime | undefined;
   const getMemory = () => (memory ??= new MemoryRuntime(state.directory, getAgents));
@@ -307,6 +312,22 @@ export function createRuntime(
           case "terminal.resize": {
             const p = localParams[method].parse(raw);
             return processes.resize(p.id, p.cols, p.rows);
+          }
+          case "terminal.paste": {
+            const p = localParams[method].parse(raw);
+            return processes.paste(p.id, p.text);
+          }
+          case "terminal.key": {
+            const p = localParams[method].parse(raw);
+            return processes.key(p.id, p.key);
+          }
+          case "terminal.mouse": {
+            const { id, ...p } = localParams[method].parse(raw);
+            return processes.mouse(id, p);
+          }
+          case "terminal.scroll": {
+            const p = localParams[method].parse(raw);
+            return processes.scroll(p.id, p.direction, p.lines);
           }
           case "terminal.close":
             return processes.cancel(localParams[method].parse(raw).id);

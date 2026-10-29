@@ -11,10 +11,8 @@ unless explicitly opted in through their package manifests.
 of another crate. It owns native transport and policy; CLI owns execution and TS owns
 business schemas. Its platform verification runs in the Desktop CI matrix.
 
-`raypx-terminal` is a private PTY library and companion executable consumed by
-CLI's opt-in Rust terminal adapter. It owns terminal bytes/processes, not Agent
-task policy, accounts or durable task state. It has no Tauri dependency. Keep its
-protocol private and CLI-owned; see its AGENTS.md and README for lifecycle limits.
+Terminal PTYs and VT state use the external pinned Herdr runtime. CLI owns its
+adapter and lifecycle; no in-repository Rust terminal host is maintained.
 
 ## Boundaries
 

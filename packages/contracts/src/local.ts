@@ -206,6 +206,28 @@ export const localParams = {
     rows: z.number().int().min(2).max(300).default(24),
   }),
   "terminal.input": z.object({ id: z.string(), data: z.string() }),
+  "terminal.paste": z.object({ id: z.string(), text: z.string().max(65536) }),
+  "terminal.key": z.object({
+    id: z.string(),
+    key: z
+      .string()
+      .min(1)
+      .max(48)
+      .regex(/^[a-z0-9+]+$/i),
+  }),
+  "terminal.mouse": z.object({
+    id: z.string(),
+    action: z.enum(["down", "up", "drag", "move"]),
+    button: z.enum(["left", "middle", "right"]),
+    column: z.number().int().min(0).max(499),
+    row: z.number().int().min(0).max(299),
+    modifiers: z.number().int().min(0).max(7),
+  }),
+  "terminal.scroll": z.object({
+    id: z.string(),
+    direction: z.enum(["up", "down"]),
+    lines: z.number().int().min(1).max(300),
+  }),
   "terminal.resize": z.object({
     id: z.string(),
     cols: z.number().int().min(2).max(500),

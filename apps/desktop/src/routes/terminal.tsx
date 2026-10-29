@@ -10,6 +10,8 @@ import { Input } from "@raypx/ui/components/ui/input";
 import { useTranslations } from "@raypx/i18n/browser";
 import { themeTokens, useTheme } from "@raypx/ui/themes";
 import { isDesktop, localRequest, onLocalEvent } from "../lib/desktop";
+import { terminalFrame } from "../features/terminal/frame";
+import { terminalKey } from "../features/terminal/input";
 
 export const Route = createFileRoute("/terminal")({ component: TerminalPage });
 
@@ -17,9 +19,6 @@ function encode(value: string) {
   let binary = "";
   for (const byte of new TextEncoder().encode(value)) binary += String.fromCharCode(byte);
   return btoa(binary);
-}
-function decode(value: string) {
-  return Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
 }
 function TerminalPage() {
   const t = useTranslations("terminal");
@@ -37,7 +36,7 @@ function TerminalPage() {
   const [exitCode, setExitCode] = useState<number | null>(null);
   const earlyExits = useRef(new Map<string, number>());
   const [started, setStarted] = useState(false);
-  const earlyOutput = useRef<{ id: string; data: string }[]>([]);
+  const earlyOutput = useRef<{ id: string; data: string; full: boolean }[]>([]);
   useEffect(() => {
     if (!container.current) return;
     mounted.current = true;
@@ -45,7 +44,7 @@ function TerminalPage() {
       cursorBlink: true,
       fontSize: 13,
       fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
-      scrollback: 2000,
+      scrollback: 1000,
       convertEol: false,
       disableStdin: true,
     });
@@ -54,6 +53,82 @@ function TerminalPage() {
     view.open(container.current);
     terminal.current = view;
     fit.current = addon;
+    view.attachCustomKeyEventHandler((event) => {
+      const key = terminalKey(event);
+      if (!id.current || !key) return true;
+      void localRequest("terminal.key", { id: id.current, key }).catch(() => {});
+      return false;
+    });
+    const paste = (event: ClipboardEvent) => {
+      if (!id.current || !event.clipboardData) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void localRequest("terminal.paste", {
+        id: id.current,
+        text: event.clipboardData.getData("text/plain"),
+      }).catch(() => {});
+    };
+    const wheel = (event: WheelEvent) => {
+      if (!id.current || event.deltaY === 0) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void localRequest("terminal.scroll", {
+        id: id.current,
+        direction: event.deltaY < 0 ? "up" : "down",
+        lines: Math.min(
+          300,
+          Math.max(1, Math.ceil(Math.abs(event.deltaY) / (event.deltaMode === 0 ? 20 : 1))),
+        ),
+      }).catch(() => {});
+    };
+    container.current.addEventListener("paste", paste, true);
+    container.current.addEventListener("wheel", wheel, { capture: true, passive: false });
+    const surface = container.current;
+    let lastMouseMove = 0;
+    const mouse = (event: MouseEvent) => {
+      if (!id.current || event.shiftKey) return;
+      if (event.type === "mousemove") {
+        if (Date.now() - lastMouseMove < 32) return;
+        lastMouseMove = Date.now();
+      }
+      const screen = surface.querySelector(".xterm-screen")?.getBoundingClientRect();
+      if (!screen?.width || !screen.height) return;
+      void localRequest("terminal.mouse", {
+        id: id.current,
+        action:
+          event.type === "mousedown"
+            ? "down"
+            : event.type === "mouseup"
+              ? "up"
+              : event.buttons
+                ? "drag"
+                : "move",
+        button:
+          event.button === 1 || (event.buttons & 4) !== 0
+            ? "middle"
+            : event.button === 2 || (event.buttons & 2) !== 0
+              ? "right"
+              : "left",
+        column: Math.max(
+          0,
+          Math.min(
+            view.cols - 1,
+            Math.floor(((event.clientX - screen.left) * view.cols) / screen.width),
+          ),
+        ),
+        row: Math.max(
+          0,
+          Math.min(
+            view.rows - 1,
+            Math.floor(((event.clientY - screen.top) * view.rows) / screen.height),
+          ),
+        ),
+        modifiers: (event.altKey ? 4 : 0) | (event.ctrlKey ? 2 : 0),
+      }).catch(() => {});
+    };
+    surface.addEventListener("mousedown", mouse);
+    surface.addEventListener("mouseup", mouse);
+    surface.addEventListener("mousemove", mouse);
     const input = view.onData((data) => {
       if (id.current)
         void localRequest("terminal.input", { id: id.current, data: encode(data) }).catch(() => {});
@@ -73,9 +148,10 @@ function TerminalPage() {
         typeof data.id === "string" &&
         typeof data.data === "string"
       ) {
-        if (data.id === id.current) view.write(decode(data.data));
+        const reset = data.full === true && data.preserveScrollback !== true;
+        if (data.id === id.current) view.write(terminalFrame(data.data, reset));
         else if (!id.current) {
-          earlyOutput.current.push({ id: data.id, data: data.data });
+          earlyOutput.current.push({ id: data.id, data: data.data, full: reset });
           if (earlyOutput.current.length > 64) earlyOutput.current.shift();
         }
       }
@@ -99,6 +175,11 @@ function TerminalPage() {
       observer.disconnect();
       input.dispose();
       resize.dispose();
+      surface.removeEventListener("paste", paste, true);
+      surface.removeEventListener("wheel", wheel, true);
+      surface.removeEventListener("mousedown", mouse);
+      surface.removeEventListener("mouseup", mouse);
+      surface.removeEventListener("mousemove", mouse);
       if (id.current) void localRequest("terminal.close", { id: id.current }).catch(() => {});
       id.current = null;
       view.dispose();
@@ -153,7 +234,8 @@ function TerminalPage() {
       }
       id.current = result.id;
       for (const output of earlyOutput.current)
-        if (output.id === result.id) terminal.current.write(decode(output.data));
+        if (output.id === result.id)
+          terminal.current.write(terminalFrame(output.data, output.full));
       earlyOutput.current = [];
       const ended = earlyExits.current.get(result.id);
       if (ended !== undefined) {

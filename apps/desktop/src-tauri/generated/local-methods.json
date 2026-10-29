@@ -66,8 +66,12 @@
   "runtime.info",
   "terminal.close",
   "terminal.input",
+  "terminal.key",
+  "terminal.mouse",
   "terminal.open",
+  "terminal.paste",
   "terminal.resize",
+  "terminal.scroll",
   "tools.cancel",
   "tools.run"
 ]

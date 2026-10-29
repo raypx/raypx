@@ -98,8 +98,13 @@ Local tools render during session/network checks. Auth routes use a standalone l
   package:desktop explicitly builds CLI, stages the target-triple sidecar and runs
   Tauri uncached. Default Bun verification requires no Rust/WebView SDK.
 - Only `tauri build`/`bundle` merge `src-tauri/tauri.bundle.conf.json`, which
-  declares the sidecar; route them through `scripts/native/tauri.ts`. Dev builds
+  declares the sidecar and pinned Herdr resources; route them through `scripts/native/tauri.ts`. Dev builds
   launch the staged `src-tauri/binaries` CLI so CLI rebuilds do not rerun Cargo.
+- CLI's `prepare:herdr` stages the checksum-verified complete native distribution
+  beside the development CLI. Packaged resources live under `herdr/`; CLI copies
+  them into the profile before starting terminals so Windows updates retain no
+  running Herdr executables or ConPTY DLLs in the application bundle. The renderer
+  displays complete/incremental screen frames; scrolling and paste route to Herdr.
 - native-smoke exists only in an explicit Cargo feature. Its random-token private
   socket drives release WebViews; normal builds expose no eval/debug commands.
   Keep Cargo smoke outputs separate under target/native-smoke.

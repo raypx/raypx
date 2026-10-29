@@ -32,30 +32,44 @@ minimum Rust version, license, repository, publication policy and lints. Keep it
 `rust-version` aligned when upgrading the toolchain. New crates inherit those
 settings. Unsafe code is forbidden by the workspace lint policy.
 
-## Optional Rust terminal host
+## Herdr terminal runtime
 
-The private `crates/raypx-terminal` library and `raypx-terminal-host` executable
-provide GUI-independent PTY ownership. CLI's existing terminal methods can use it
-without moving Agent approvals or task persistence into Rust:
+Interactive terminals use the prebuilt [Herdr](https://github.com/herdrdev/herdr)
+runtime pinned in `apps/cli/package.json`. Herdr owns PTYs, terminal emulation and
+cursor responses; Raypx owns tasks, authorization and session lifetime. The old
+`raypx-terminal` crate has been removed. Cargo no longer compiles a terminal engine.
+
+Desktop preparation downloads the matching release, verifies its SHA-256 and stages
+the complete runtime and licenses. Windows includes the release's ConPTY DLLs.
+The packaged CLI copies it into the device profile before launch so an updater can
+replace the application bundle. Runtime requests never download executables.
+
+For standalone CLI development:
 
 ```sh
-cargo build -p raypx-terminal --locked
-export RAYPX_TERMINAL_HOST="$PWD/target/debug/raypx-terminal-host"
-bun run dev:desktop
+bun run --cwd apps/cli prepare:herdr "$PWD/apps/cli/dist/herdr"
+bun run build:cli
+RAYPX_HERDR_BINARY="$PWD/apps/cli/dist/herdr/herdr" RAYPX_HERDR_COMPILED=1 bun run --cwd apps/cli smoke:herdr-terminal
 ```
 
-On Windows use the absolute `.exe` path. The setting is captured by the CLI owner
-at startup; an already-running daemon retains its previous backend. Restart it
-only after its owned work is finished. An explicitly configured companion must
-match the application and protocol versions. Default Bun commands still need no
-Rust, and Desktop distribution does not yet bundle this optional executable.
+`RAYPX_HERDR_BINARY` may select an absolute, version-matched executable for development.
+Without an override, CLI uses its verified bundled/cache runtime, then a matching
+installed Herdr. Desktop preparation also stages a development copy under
+`apps/desktop/src-tauri/binaries/herdr`. An existing daemon keeps its original
+environment; restart only after its owned work is finished.
 
-The Rust host separates snapshots/replay from live PTYs, serializes input/resize,
-and keeps PTY readers independent of slow attachments. Detach preserves the
-process and a new attachment gets an atomic replay baseline. The current CLI
-adapter preserves client-owned terminal cancellation; managed Agent execution
-still belongs to the independent CLI daemon. Host restart is not crash recovery.
-See [the terminal host](../../crates/raypx-terminal/README.md).
+Each owner creates a private headless server with isolated config, state and sockets.
+Command arguments and the original child environment travel through a one-use local
+handoff, not persisted layouts. Full and incremental ANSI frames feed the embedded
+terminal; paste and scroll use Herdr's application modes and scrollback. A private
+wrapper retains the final screen until Raypx captures it and reports the actual exit
+code. Client disconnect cancels its terminals; owner EOF stops the private server.
+Existing user Herdr sessions are never reused. This is not durable session recovery.
+
+Default Bun verification uses protocol/distribution tests without a native runtime.
+The explicit headless smoke gate checks real input, resize, cursor queries, paste,
+final frames and cancellation; Desktop CI runs it with compiled CLI helpers on macOS
+and Windows. Packaged WebView acceptance remains a separate isolated-CI gate.
 
 Rust is managed by rustup; mise continues reading the existing Bun pin.
 `bun run doctor` checks Bun and reports the Rust/WebView platform prerequisites; `rustup show` reports the Rust toolchain.

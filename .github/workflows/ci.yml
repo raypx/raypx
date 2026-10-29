@@ -153,12 +153,16 @@ jobs:
           bun run build:cli
           bun run --cwd apps/desktop tauri:generate
           bun run --cwd apps/desktop tauri:cli --release
-      - name: Desktop and terminal Rust checks
+      - name: Herdr terminal integration
+        env:
+          RAYPX_HERDR_COMPILED: "1"
+        run: bun run --cwd apps/cli smoke:herdr-terminal
+      - name: Desktop Rust checks
         shell: bash
         run: |
           cargo fmt --all -- --check
-          cargo clippy -p raypx-desktop -p raypx-terminal --all-targets --all-features --locked -- -D warnings
-          cargo test -p raypx-desktop -p raypx-terminal --all-features --locked
+          cargo clippy -p raypx-desktop --all-targets --all-features --locked -- -D warnings
+          cargo test -p raypx-desktop --all-features --locked
       - name: Import macOS signing certificate
         if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
         run: |

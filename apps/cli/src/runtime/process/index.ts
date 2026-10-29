@@ -3,22 +3,22 @@ import { stat } from "node:fs/promises";
 import type { CommandSpec, LocalEvent, ToolResult } from "@raypx/contracts/local";
 import { LocalError } from "../errors";
 import type { Environment } from "./bun";
-import { RustTerminalHost } from "./rust-terminal";
+import { HerdrTerminalHost } from "./herdr";
+import { resolveHerdrBinary } from "./herdr-release";
 
 const MAX_OUTPUT = 1024 * 1024;
 type Child = ReturnType<typeof Bun.spawn>;
 export class ProcessRuntime {
-  private readonly children = new Map<
-    string,
-    { child: Child; terminal?: Bun.Terminal; cancel: () => void }
-  >();
+  private readonly children = new Map<string, { child: Child; cancel: () => void }>();
   private readonly completions = new Set<Promise<unknown>>();
   private closing = false;
-  private rust: RustTerminalHost | undefined;
+  private herdr: HerdrTerminalHost | undefined;
+  private terminalStarting: Promise<HerdrTerminalHost> | undefined;
   constructor(
     private readonly emit: (event: LocalEvent) => void,
-    private readonly terminalHost = process.env.RAYPX_TERMINAL_HOST,
+    private readonly terminalHost = process.env.RAYPX_HERDR_BINARY,
     private readonly environment: () => Environment = () => process.env,
+    private readonly directory = join(process.cwd(), ".raypx"),
   ) {}
   async validate(command: CommandSpec) {
     if (!isAbsolute(command.executable) || !isAbsolute(command.cwd))
@@ -131,70 +131,41 @@ export class ProcessRuntime {
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
     await this.validate(command);
     if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
-    if (this.terminalHost) {
-      this.rust ??= new RustTerminalHost(this.terminalHost, this.emit, [], this.environment);
-      return this.rust.open(command, cols, rows);
-    }
-    const id = crypto.randomUUID();
-    const terminal = new Bun.Terminal({
-      cols,
-      rows,
-      data: (_terminal, data) => {
-        if (data.length > MAX_OUTPUT) {
-          this.emit({
-            version: 1,
-            event: "terminal.output",
-            data: {
-              id,
-              data: Buffer.from(data.subarray(0, MAX_OUTPUT)).toString("base64"),
-              truncated: true,
-            },
-          });
-          this.cancel(id);
-          return;
-        }
-        this.emit({
-          version: 1,
-          event: "terminal.output",
-          data: { id, data: Buffer.from(data).toString("base64") },
-        });
-      },
-    });
-    const child = Bun.spawn([command.executable, ...command.args], {
-      cwd: command.cwd,
-      env: this.environment(),
-      terminal,
-      detached: process.platform !== "win32",
-    });
-    this.children.set(id, { child, terminal, cancel: () => this.kill(child) });
-    // Track cleanup completion as Promise<void>; exit data is emitted through the event channel.
-    const completion = child.exited.then((exitCode) => {
-      this.children.delete(id);
-      terminal.close();
-      this.emit({ version: 1, event: "terminal.exit", data: { id, exitCode } });
-    });
-    this.completions.add(completion);
-    void completion.finally(() => this.completions.delete(completion));
-    return { id };
+    const host = await (this.terminalStarting ??= resolveHerdrBinary(
+      this.directory,
+      this.terminalHost,
+    ).then((binary) => (this.herdr = new HerdrTerminalHost(binary, this.emit, this.environment))));
+    if (this.closing) throw new LocalError("CLOSING", "Local engine is shutting down");
+    return host.open(command, cols, rows);
   }
   input(id: string, data: string) {
     if (Buffer.byteLength(data, "base64") > 64 * 1024)
       throw new LocalError("TOO_LARGE", "Terminal input is limited to 64 KiB");
-    if (this.rust?.has(id)) return this.rust.input(id, data);
-    const terminal = this.children.get(id)?.terminal;
-    if (!terminal) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
-    terminal.write(Buffer.from(data, "base64"));
-    return { accepted: true };
+    if (!this.herdr) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
+    return this.herdr.input(id, data);
   }
   resize(id: string, cols: number, rows: number) {
-    if (this.rust?.has(id)) return this.rust.resize(id, cols, rows);
-    const terminal = this.children.get(id)?.terminal;
-    if (!terminal) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
-    terminal.resize(cols, rows);
-    return { accepted: true };
+    if (!this.herdr) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
+    return this.herdr.resize(id, cols, rows);
+  }
+  paste(id: string, text: string) {
+    if (!this.herdr) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
+    return this.herdr.paste(id, text);
+  }
+  key(id: string, key: string) {
+    if (!this.herdr) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
+    return this.herdr.key(id, key);
+  }
+  mouse(id: string, event: Parameters<HerdrTerminalHost["mouse"]>[1]) {
+    if (!this.herdr) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
+    return this.herdr.mouse(id, event);
+  }
+  scroll(id: string, direction: "up" | "down", lines: number) {
+    if (!this.herdr) throw new LocalError("TERMINAL_NOT_FOUND", "Terminal is closed");
+    return this.herdr.scroll(id, direction, lines);
   }
   cancel(id: string) {
-    if (this.rust?.has(id)) return this.rust.cancel(id);
+    if (this.herdr?.has(id)) return this.herdr.cancel(id);
     const item = this.children.get(id);
     if (!item) return { cancelled: false };
     item.cancel();
@@ -203,7 +174,8 @@ export class ProcessRuntime {
   async close() {
     this.closing = true;
     for (const item of this.children.values()) item.cancel();
-    await this.rust?.close();
+    await this.terminalStarting?.catch(() => {});
+    await this.herdr?.close();
     await Promise.allSettled(this.completions);
   }
 }

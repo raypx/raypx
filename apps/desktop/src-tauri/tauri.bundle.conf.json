@@ -1,3 +1,6 @@
 {
-  "bundle": { "externalBin": ["binaries/raypx"] }
+  "bundle": {
+    "externalBin": ["binaries/raypx"],
+    "resources": { "binaries/herdr/": "herdr/" }
+  }
 }
