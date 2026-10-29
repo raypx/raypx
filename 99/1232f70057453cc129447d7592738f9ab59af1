@@ -1,0 +1,19 @@
+bench/sequence-cold.sh
+  s_18b05852ced651::t_2c948b7b942db4 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "991232f70057453cc129447d7592738f9ab59af1",
+  "prompts": {},
+  "sessions": {
+    "s_18b05852ced651": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1827f-3c90-7301-b64a-8d52dd090344",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
