@@ -1,0 +1,14 @@
+bench/results.jsonl
+  h_f0766e80fd3864 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "19757be7a22c2f9260ccaf1113f79beb8148c54d",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
