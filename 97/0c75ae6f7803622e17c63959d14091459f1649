@@ -1,0 +1,21 @@
+.github/actions/setup-bun/action.yml
+  s_18b05852ced651::t_24e210002c3ae2 2,10,12,22
+docs/development/testing.md
+  s_18b05852ced651::t_16c380845552a9 62-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "970c75ae6f7803622e17c63959d14091459f1649",
+  "prompts": {},
+  "sessions": {
+    "s_18b05852ced651": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1827f-3c90-7301-b64a-8d52dd090344",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
