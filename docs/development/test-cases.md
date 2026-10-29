@@ -26,7 +26,7 @@ an HTTP fixture does not establish real authentication or database isolation.
 
 There are 28 ordinary cases and two opt-in environment cases. Web and Desktop
 each retain 14 ordinary cases. Real interactions and the seven-case smoke selection
-are unchanged. CI defaults to two workers; local defaults adapt to host capacity
+are unchanged. CI defaults to three workers; local defaults adapt to host capacity
 as described in the [testing guide](testing.md#faster-browser-feedback).
 
 | Suite                                                           | Ordinary cases | Responsibility                                                                |

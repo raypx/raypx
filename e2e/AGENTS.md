@@ -16,7 +16,7 @@ Root `test e2e --web`, `--desktop`, `--smoke` and `--visual` provide focused ent
 points. Package-local `e2e` and `e2e:*` commands use the same build graph through
 `raypx.taskScripts`; `_e2e` is VP's private runner. Pass Playwright flags after `--`.
 Surface/smoke filters intersect with user grep. Full `test e2e`
-retains all cases; focused runs do not replace full acceptance. CI defaults to two
+retains all cases; focused runs do not replace full acceptance. CI defaults to three
 workers; local 8+ CPU/16+ GiB hosts use four, smaller hosts one or two. Override
 with `-- --workers=2` on a busy machine. Test argv is decoded only by `browser:run`
 from `RAYPX_E2E_ARGS`, preserving dependency cache hashes across filters/reporters.

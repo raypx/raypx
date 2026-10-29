@@ -87,7 +87,7 @@ select synthetic analytics for every mode; live acceptance stays separate.
 Browser argv travels through `RAYPX_E2E_ARGS` to the uncached `browser:run` leaf,
 never dependency passthrough: test flags must not invalidate build/check dependencies.
 The config caps local defaults at four workers only with 8+ CPUs and 16+ GiB;
-smaller hosts use one or two, and CI defaults to two. Explicit Playwright flags win.
+smaller hosts use one or two, and CI defaults to three. Explicit Playwright flags win.
 `./browser-server` serves only compiled Desktop client assets on loopback with
 HTML deep-link fallback; never run Vite configuration or simulate backend/Native IPC there.
 Smoke orchestration and artifact probes live in
