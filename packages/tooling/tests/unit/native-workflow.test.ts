@@ -49,14 +49,25 @@ it("checks both platforms and adds parallel distribution phases only when reques
   ]);
 });
 
-it("prepares and verifies Herdr before publishing the shared JS cache", () => {
+it("publishes shared JS inputs without waiting for Rust or Herdr", () => {
   const prepare = native.prepare!.steps!;
-  const herdr = prepare.findIndex((step) => step.name === "Herdr terminal integration");
-  const save = prepare.findIndex((step) => step.uses === "./.github/actions/vp-save");
-  expect(herdr).toBeGreaterThan(-1);
-  expect(save).toBeGreaterThan(herdr);
+  expect(prepare.some((step) => step.name === "Herdr terminal integration")).toBe(false);
+  expect(prepare.some((step) => step.uses === "./.github/actions/setup-rust")).toBe(false);
+  expect(prepare.at(-1)?.uses).toBe("./.github/actions/vp-save");
   expect(prepare.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
   expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
+});
+
+it("requires compiled Herdr checks before restoring the check-phase Rust cache", () => {
+  const herdr = named("Herdr terminal integration");
+  expect(herdr.if).toBe("matrix.phase == 'checks'");
+  expect(herdr.run).toContain('process.platform === "win32" ? 3 : 1');
+  expect(steps.indexOf(named("Prepare native check or distribution inputs"))).toBeLessThan(
+    steps.indexOf(herdr),
+  );
+  expect(steps.indexOf(herdr)).toBeLessThan(
+    steps.findIndex((step) => step.uses === "Swatinem/rust-cache@v2"),
+  );
 });
 
 it("keeps Cargo cache writers and smoke outputs isolated by phase", () => {

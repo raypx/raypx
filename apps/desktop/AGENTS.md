@@ -120,6 +120,8 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 `bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. Default `quiet` presentation uses inactive windows and suppresses notifications/dialogs; native close/resize/focus acceptance is skipped. `native:smoke:interactive` explicitly enables those GUI checks. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile. Smoke bundles are named `Raypx Test` and built under `target/native-smoke`; release bundles remain `Raypx`.
 Shell/restore assert signed-out local access, then use an isolated loopback session fixture. The runner switches runtime TOML servers to check cookie/storage and remote opt-in isolation. These phases do not validate authentication; runtime code contains no fixture. Real HTTPS uses the separate beta phases.
+Temporary Windows smoke installers disable NSIS compression; production installers retain
+the LZMA default. Smoke still installs the real package and checks its payload hashes.
 
 `RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents` runs real Claude and
 Codex through Desktop's LocalEngine and the standalone CLI in temporary projects.

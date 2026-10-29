@@ -43,11 +43,13 @@ GitHub uses the same change planner. JS, database, browser and native gates run 
 parallel when relevant; Desktop/CLI dependencies retain both native platforms.
 Tags and manual dispatch select full source coverage. `foundation` requires every selected
 gate to succeed and permits only intentional skips. Herdr checks precede Rust cache
-restoration, failed jobs do not save large Rust caches, and VP archives are saved only
+restoration in the native check phase, failed jobs do not save large Rust caches, and VP archives are saved only
 when new successful task artifacts exist. Rust caches cover both production and smoke
 Cargo directories while keeping their outputs isolated.
-Native checks use `native.yml`: normal branch/PR runs prepare a matching CLI, run
-Herdr and execute Rust source checks on both platforms. The Rust-only job uses an
+Native checks use `native.yml`: a Bun-only preparation job builds shared renderer/CLI inputs.
+The check phase stages a matching CLI, runs Herdr and executes Rust source checks on both platforms.
+Herdr retains three Windows runs without blocking the parallel package/smoke phases.
+The Rust-only job uses an
 empty frontend placeholder; actual renderer builds and browser tests run in the JS gates.
 Installer creation, signatures and installed GUI smoke run on tag pushes or manual
 dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
@@ -56,6 +58,9 @@ Manual distribution runs have their own cancellation group, so routine pushes ca
 cancel a release acceptance run. Reusable Rust jobs follow their caller's cancellation.
 The preparation job alone saves VP artifacts; phase consumers only restore them. Cargo archives have
 separate phase keys, so a check-only job cannot overwrite release or smoke dependencies.
+Generated route trees and native JSON use LF on every checkout so Windows generators do not
+invalidate restored tasks. Temporary Windows smoke installers disable compression; production
+installers retain Tauri's LZMA default. Smoke still installs the NSIS package and verifies payload hashes.
 CI installs the pinned compiler in an isolated `RUSTUP_HOME`; unrelated preinstalled
 toolchains must not affect Rust cache keys when runner images change.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.

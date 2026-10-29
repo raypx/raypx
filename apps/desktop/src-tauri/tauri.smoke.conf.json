@@ -1,5 +1,5 @@
 {
   "productName": "Raypx Test",
   "identifier": "com.raypx.desktop.native-smoke",
-  "bundle": { "active": true }
+  "bundle": { "active": true, "windows": { "nsis": { "compression": "none" } } }
 }

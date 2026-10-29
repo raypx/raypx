@@ -31,6 +31,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - Branch/PR native gates check sources and Herdr. Installers, signing and installed
   GUI acceptance require a tag push or manual `distribution` request; release gates
   run in parallel and the final result validates their selection against the event.
+  Preparation builds shared JS inputs only. Herdr runs in the check phase before its
+  Rust cache restore, leaving package/smoke phases independent of terminal-test duration.
 - One private Rust pipeline runs rustfmt, Clippy and tests serially, uncached in VP.
   Cargo owns incremental compilation under `target/`. Only selected Desktop checks
   prepare generated contracts and the matching CLI; library-only changes skip staging.

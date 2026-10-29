@@ -1,2 +1,5 @@
 # Keep the generated theme byte-for-byte identical to the generator on Windows.
 packages/ui/src/styles/theme.css text eol=lf
+# Generators emit LF; checkout must match their bytes for cross-job task caches.
+**/routeTree.gen.ts text eol=lf
+apps/desktop/src-tauri/generated/*.json text eol=lf

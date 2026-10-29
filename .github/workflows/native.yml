@@ -16,13 +16,11 @@ env:
   BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
   prepare:
-    name: Prepare native inputs and Herdr
+    name: Prepare native inputs
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
-      - name: Use the pinned Rust toolchain
-        uses: ./.github/actions/setup-rust
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/vp-restore
         id: vp-cache
@@ -31,26 +29,11 @@ jobs:
       - name: Prepare CLI and optional distribution renderer
         shell: bash
         run: |
+          bun run --cwd apps/desktop tauri:generate
           if [ "${{ inputs.distribution }}" = "true" ]; then
             bun run build:desktop
           fi
           bun run build:cli
-          bun run --cwd apps/desktop tauri:generate
-          bun run --cwd apps/desktop tauri:cli ${{ inputs.distribution && '--release' || '' }}
-      - name: Herdr terminal integration
-        env:
-          RAYPX_HERDR_COMPILED: "1"
-        shell: bash
-        run: |
-          bun - <<'TS'
-          for (let attempt = 0; attempt < (process.platform === "win32" ? 3 : 1); attempt++) {
-            const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
-              stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
-            });
-            const code = await child.exited;
-            if (code !== 0) process.exit(code);
-          }
-          TS
       # One VP cache writer per platform. Consumers only restore prepared JS outputs.
       - uses: ./.github/actions/vp-save
         with:
@@ -85,16 +68,10 @@ jobs:
       - uses: ./.github/actions/vp-restore
         with:
           partition: desktop
-      # Each phase owns its archive: a smaller check cache cannot replace release/smoke dependencies.
-      - uses: Swatinem/rust-cache@v2
-        with:
-          prefix-key: raypx-rust-v2
-          shared-key: desktop-${{ matrix.phase }}
-          workspaces: . -> ${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}
-          cache-on-failure: "false"
       - name: Prepare native check or distribution inputs
         shell: bash
         run: |
+          bun run --cwd apps/desktop tauri:generate
           if [ "${{ matrix.phase }}" = "checks" ]; then
             mkdir -p apps/desktop/dist/client
             printf '<!doctype html>\n' > apps/desktop/dist/client/index.html
@@ -102,8 +79,29 @@ jobs:
             bun run build:desktop
           fi
           bun run build:cli
-          bun run --cwd apps/desktop tauri:generate
           bun run --cwd apps/desktop tauri:cli ${{ matrix.phase != 'checks' && '--release' || '' }}
+      - name: Herdr terminal integration
+        if: matrix.phase == 'checks'
+        env:
+          RAYPX_HERDR_COMPILED: "1"
+        shell: bash
+        run: |
+          bun - <<'TS'
+          for (let attempt = 0; attempt < (process.platform === "win32" ? 3 : 1); attempt++) {
+            const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
+              stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
+            });
+            const code = await child.exited;
+            if (code !== 0) process.exit(code);
+          }
+          TS
+      # Each phase owns its archive: a smaller check cache cannot replace release/smoke dependencies.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: raypx-rust-v2
+          shared-key: desktop-${{ matrix.phase }}
+          workspaces: . -> ${{ matrix.phase == 'smoke' && 'target/native-smoke' || 'target' }}
+          cache-on-failure: "false"
       - name: Desktop Rust checks
         if: matrix.phase == 'checks'
         shell: bash
