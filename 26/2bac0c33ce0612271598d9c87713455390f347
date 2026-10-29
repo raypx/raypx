@@ -1,0 +1,77 @@
+apps/api/package.json
+  s_7ebdb0b32aa724::t_2d88d1ed408e4c 16-19
+apps/cli/package.json
+  s_7ebdb0b32aa724::t_4961ee25197a48 23-26
+apps/desktop/package.json
+  s_7ebdb0b32aa724::t_7c60fcca423e02 31-34
+apps/storybook/package.json
+  s_7ebdb0b32aa724::t_274f04ccaeb630 9-11
+apps/web/package.json
+  s_7ebdb0b32aa724::t_824a0e21db1b44 16-19
+bench/run.ts
+  s_7ebdb0b32aa724::t_c47ab3abd0e129 1-77
+bench/setup.ts
+  s_7ebdb0b32aa724::t_e26132632e93c3 1-30
+bun.lock
+  s_7ebdb0b32aa724::t_dfe050e526c959 13,1365-1376,2225-2226
+e2e/package.json
+  s_7ebdb0b32aa724::t_cc210b7f17c6fa 14-15
+package.json
+  s_7ebdb0b32aa724::t_4db8c2fe807837 129
+packages/account/package.json
+  s_7ebdb0b32aa724::t_c9257521175727 15-17
+packages/ai/package.json
+  s_7ebdb0b32aa724::t_eca271644f6ffb 13-15
+packages/analytics/package.json
+  s_7ebdb0b32aa724::t_277c9bb3207be4 18-20
+packages/auth/package.json
+  s_7ebdb0b32aa724::t_55fa8dc111dbe0 18-20
+packages/blocks/package.json
+  s_7ebdb0b32aa724::t_d940cccff2a469 14-16
+packages/client/package.json
+  s_7ebdb0b32aa724::t_78deeceb082a08 14-16
+packages/contracts/package.json
+  s_7ebdb0b32aa724::t_f527397f339589 21-23
+packages/core/package.json
+  s_7ebdb0b32aa724::t_84c98d8cc4e921 17-19
+packages/database/package.json
+  s_7ebdb0b32aa724::t_1d3bb45c7afd6f 19-21
+packages/email/package.json
+  s_7ebdb0b32aa724::t_785c97d10f3ad0 15-17
+packages/host/package.json
+  s_7ebdb0b32aa724::t_8851ae87d5026b 12-14
+packages/i18n/package.json
+  s_7ebdb0b32aa724::t_7b0c8c365c9458 26-28
+packages/jobs/package.json
+  s_7ebdb0b32aa724::t_076f08dbf24322 16-18
+packages/logger/package.json
+  s_7ebdb0b32aa724::t_df27813d577728 19-21
+packages/memory/package.json
+  s_7ebdb0b32aa724::t_3ccc01bb90b998 16-18
+packages/storage/package.json
+  s_7ebdb0b32aa724::t_48f80860572f55 15-17
+packages/tasks/package.json
+  s_7ebdb0b32aa724::t_799d0c674e5632 18-20
+packages/tooling/package.json
+  s_7ebdb0b32aa724::t_b38bcefb66af17 24-25
+packages/ui/package.json
+  s_7ebdb0b32aa724::t_39ea529cc26cc1 48-50
+turbo.json
+  s_7ebdb0b32aa724::t_cf72b9e1db5b97 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "262bac0c33ce0612271598d9c87713455390f347",
+  "prompts": {},
+  "sessions": {
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
