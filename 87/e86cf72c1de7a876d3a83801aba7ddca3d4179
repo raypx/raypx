@@ -1,0 +1,23 @@
+apps/desktop/internal/app/smoke.go
+  s_8587c3f54e2a10::t_9252c9aa5fba13 16,67,140-143,177-179
+apps/desktop/tests/native/host/smoke_protocol_test.go
+  s_8587c3f54e2a10::t_9252c9aa5fba13 1-42
+.github/workflows/native.yml
+  s_8587c3f54e2a10::t_9252c9aa5fba13 106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "87e86cf72c1de7a876d3a83801aba7ddca3d4179",
+  "prompts": {},
+  "sessions": {
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
