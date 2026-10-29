@@ -1,0 +1,19 @@
+apps/web/tests/helpers/select.ts
+  s_3a4b502e70ec90::t_443ce370ad2a4b 7-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "85fa65551e6185eb02dac7fd69f9273dacd488d9",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
