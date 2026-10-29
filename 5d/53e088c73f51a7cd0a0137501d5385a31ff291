@@ -1,0 +1,30 @@
+apps/desktop/internal/app/app.go
+  s_8587c3f54e2a10::t_2f771e8a3b5c9e 203,218-221,223-243
+apps/desktop/tests/native/smoke/session.ts
+  s_8587c3f54e2a10::t_a85ffd6dc945a7 32-62
+  s_8587c3f54e2a10::t_0dfa642c581d73 63-64
+apps/desktop/tests/native/smoke/agents-run.ts
+  s_8587c3f54e2a10::t_a85ffd6dc945a7 1,6,56
+apps/desktop/tests/scripts/native/smoke-session.test.ts
+  s_8587c3f54e2a10::t_83e52fd63baecb 6,43-58
+apps/desktop/tests/native/smoke/run.ts
+  s_8587c3f54e2a10::t_a85ffd6dc945a7 1,9,99
+apps/desktop/tests/native/host/approvals_test.go
+  s_8587c3f54e2a10::t_0e585855fe9111 1-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5d53e088c73f51a7cd0a0137501d5385a31ff291",
+  "prompts": {},
+  "sessions": {
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
