@@ -1,0 +1,21 @@
+apps/desktop/CHANGELOG.md
+  s_8587c3f54e2a10::t_597ef72ee27178 15-16,20,29
+apps/desktop/scripts/native/packager.ts
+  s_8587c3f54e2a10::t_66f8557d88551a 17-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0b60cea93b8077a0e6e9d7756c59e5fcde929a27",
+  "prompts": {},
+  "sessions": {
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
