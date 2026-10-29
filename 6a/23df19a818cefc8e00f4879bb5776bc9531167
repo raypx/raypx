@@ -1,0 +1,165 @@
+.agents/skills/better-auth-best-practices/SKILL.md
+  s_be0cafefd5c0be::t_695793052db1b2 8-18,29-31,48-50,192
+.agents/skills/postgres-drizzle/SKILL.md
+  s_be0cafefd5c0be::t_e178648ff7abe5 3,6,8,10,12,14,16,18-23,25,27,29,31-39,41
+.agents/skills/postgres-drizzle/references/MIGRATIONS.md
+  s_be0cafefd5c0be::t_121d1805decee3 121-124,558-560
+.agents/skills/postgres-drizzle/references/RELATIONS.md
+  s_be0cafefd5c0be::t_8ce9126bd5b195 31-33
+.agents/skills/shadcn/SKILL.md
+  s_be0cafefd5c0be::t_d45e36821da194 3,85,148,197-207,227-231,288,295-296
+.agents/skills/shadcn/assets/showcase/color-pair.tsx
+  s_be0cafefd5c0be::t_ad667e71db2edb 1-126
+.agents/skills/shadcn/assets/showcase/preview-states.css
+  s_be0cafefd5c0be::t_9d6f5e7d7776c6 1-14
+.agents/skills/shadcn/assets/showcase/state-matrix.tsx
+  s_be0cafefd5c0be::t_165b99b3364cfe 1-72
+.agents/skills/shadcn/customization.md
+  s_be0cafefd5c0be::t_9e33b9a856ee1f 139-140
+.agents/skills/shadcn/design-system-page.md
+  s_be0cafefd5c0be::t_2130e8f25056b2 1-268
+.agents/skills/shadcn/design-system.md
+  s_be0cafefd5c0be::t_47ee8a76d30b7e 1-386
+.agents/skills/shadcn/evals/evals.json
+  s_be0cafefd5c0be::t_e2b79b578f56e8 75-123
+.agents/skills/shadcn/rules/chat.md
+  s_be0cafefd5c0be::t_fde1e76ec878fd 6,18-19,198-452,468-493
+.agents/skills/shadcn/rules/styling.md
+  s_be0cafefd5c0be::t_b3d0ce78ddb51b 154
+.agents/skills/shadcn/scripts/showcase-coverage.mjs
+  s_be0cafefd5c0be::t_01fb305041744c 1-53
+.agents/skills/tanstack-router-best-practices/rules/ctx-before-load.md
+  s_be0cafefd5c0be::t_296b56cb6ae110 1-119
+.agents/skills/tanstack-router-best-practices/rules/ctx-dependency-injection.md
+  s_be0cafefd5c0be::t_1a5a57ca39f433 1-125
+.agents/skills/tanstack-router-best-practices/rules/load-deferred-data.md
+  s_be0cafefd5c0be::t_1d0dc8a2e8b929 1-113
+.agents/skills/tanstack-router-best-practices/rules/load-error-handling.md
+  s_be0cafefd5c0be::t_77b04a5a537f3a 1-122
+.agents/skills/tanstack-router-best-practices/rules/load-loader-deps.md
+  s_be0cafefd5c0be::t_00db3c91e9a751 1-83
+.agents/skills/tanstack-router-best-practices/rules/nav-active-states.md
+  s_be0cafefd5c0be::t_0aba9eeb7852ee 1-129
+.agents/skills/tanstack-router-best-practices/rules/nav-relative-paths.md
+  s_be0cafefd5c0be::t_398e8e36bbe6d8 1-107
+.agents/skills/tanstack-router-best-practices/rules/nav-use-navigate.md
+  s_be0cafefd5c0be::t_8c6968370a1dc8 1,3,5,7,9,11-19,21-26,28-48,51-84,87-115,117-122
+.agents/skills/tanstack-router-best-practices/rules/org-file-based-routing.md
+  s_be0cafefd5c0be::t_11f36ba5702438 1-105
+.agents/skills/tanstack-router-best-practices/rules/org-index-routes.md
+  s_be0cafefd5c0be::t_edc0a638623182 1-100
+.agents/skills/tanstack-router-best-practices/rules/org-pathless-layouts.md
+  s_be0cafefd5c0be::t_8d673494d5c3d6 1-99
+.agents/skills/tanstack-router-best-practices/rules/org-route-tree-structure.md
+  s_be0cafefd5c0be::t_af6b8631304561 1-97
+.agents/skills/tanstack-router-best-practices/rules/preload-manual.md
+  s_be0cafefd5c0be::t_08e994bbf70e9f 1-113
+.agents/skills/tanstack-router-best-practices/rules/preload-stale-time.md
+  s_be0cafefd5c0be::t_5f6b25c1faa705 1-74
+.agents/skills/tanstack-router-best-practices/rules/search-defaults.md
+  s_be0cafefd5c0be::t_41401491f14155 1-110
+.agents/skills/tanstack-router-best-practices/rules/search-middleware.md
+  s_be0cafefd5c0be::t_8f1c2cfb316f95 1-123
+.agents/skills/tanstack-router-best-practices/rules/search-type-inheritance.md
+  s_be0cafefd5c0be::t_e154313a98b329 1-95
+.agents/skills/tanstack-router-best-practices/rules/split-auto-splitting.md
+  s_be0cafefd5c0be::t_8af8cb3caacf6b 1-106
+.agents/skills/tanstack-router-best-practices/rules/split-critical-path.md
+  s_be0cafefd5c0be::t_1ef56bcba93ead 1-95
+.agents/skills/tanstack-router-best-practices/rules/ts-query-options-loader.md
+  s_be0cafefd5c0be::t_866ebcc38cc655 1-92
+.agents/skills/tanstack-router-best-practices/rules/ts-route-context-typing.md
+  s_be0cafefd5c0be::t_64853ab4818375 1-70
+.agents/skills/tanstack-start-best-practices/SKILL.md
+  s_be0cafefd5c0be::t_cd50f2eae11bcc 29
+.agents/skills/tanstack-start-best-practices/rules/api-routes.md
+  s_be0cafefd5c0be::t_7f05935211abc4 42,55,59,133,136,144,152,179,195-200,202-209,231,233
+.agents/skills/tanstack-start-best-practices/rules/auth-cookie-security.md
+  s_be0cafefd5c0be::t_0db5aa4ea214c7 1-109
+.agents/skills/tanstack-start-best-practices/rules/auth-server-functions.md
+  s_be0cafefd5c0be::t_cab0ece02c9f38 1-110
+.agents/skills/tanstack-start-best-practices/rules/auth-session-management.md
+  s_be0cafefd5c0be::t_58d5facabbab1e 47,79
+.agents/skills/tanstack-start-best-practices/rules/deploy-adapters.md
+  s_be0cafefd5c0be::t_0b00ac9b3d0bcc 7,12,14,18,23,25-34,37-41,43,45-46,48-52,56,58-59,62-67,70-74,76,78,80-85,88-93,96-100,102,104-105,115,117-122,125-129,135-143,147-153
+.agents/skills/tanstack-start-best-practices/rules/deploy-env-config.md
+  s_be0cafefd5c0be::t_f27e167f657172 1-142
+.agents/skills/tanstack-start-best-practices/rules/err-not-found.md
+  s_be0cafefd5c0be::t_740d909015b3ee 1-128
+.agents/skills/tanstack-start-best-practices/rules/err-redirects.md
+  s_be0cafefd5c0be::t_3866fb964d08e0 1-123
+.agents/skills/tanstack-start-best-practices/rules/err-server-errors.md
+  s_be0cafefd5c0be::t_7c92dd0d87b005 14,73,88,150,187
+.agents/skills/tanstack-start-best-practices/rules/file-functions-file.md
+  s_be0cafefd5c0be::t_a044c9e605d948 1-108
+.agents/skills/tanstack-start-best-practices/rules/file-separation.md
+  s_be0cafefd5c0be::t_26818e2e94dd4f 83
+.agents/skills/tanstack-start-best-practices/rules/file-shared-validation.md
+  s_be0cafefd5c0be::t_c731a8f4a775f8 1-116
+.agents/skills/tanstack-start-best-practices/rules/mw-composability.md
+  s_be0cafefd5c0be::t_6c72b533459741 1-152
+.agents/skills/tanstack-start-best-practices/rules/mw-context-flow.md
+  s_be0cafefd5c0be::t_8b3bfd5b1a5e93 1-113
+.agents/skills/tanstack-start-best-practices/rules/mw-function-middleware.md
+  s_be0cafefd5c0be::t_548de2c43b863b 1-121
+.agents/skills/tanstack-start-best-practices/rules/mw-request-middleware.md
+  s_be0cafefd5c0be::t_791f26b9dd6f9b 99-100,104,110,164
+.agents/skills/tanstack-start-best-practices/rules/sec-auth-middleware.md
+  s_be0cafefd5c0be::t_4180ac978aa1dd 1-135
+.agents/skills/tanstack-start-best-practices/rules/sec-csrf-protection.md
+  s_be0cafefd5c0be::t_143afcbbef7d7c 1-105
+.agents/skills/tanstack-start-best-practices/rules/sec-sensitive-data.md
+  s_be0cafefd5c0be::t_887cfd5f358bd2 1-105
+.agents/skills/tanstack-start-best-practices/rules/sec-validate-inputs.md
+  s_be0cafefd5c0be::t_32c01fa1adaaa6 1-104
+.agents/skills/tanstack-start-best-practices/rules/sf-create-server-fn.md
+  s_be0cafefd5c0be::t_50b22036970bea 97
+.agents/skills/tanstack-start-best-practices/rules/sf-error-handling.md
+  s_be0cafefd5c0be::t_8a116199c29bb9 1-104
+.agents/skills/tanstack-start-best-practices/rules/sf-input-validation.md
+  s_be0cafefd5c0be::t_0d7e0daf070756 49,84,107,137,154
+.agents/skills/tanstack-start-best-practices/rules/sf-method-selection.md
+  s_be0cafefd5c0be::t_6a75422d27c0e4 1-74
+.agents/skills/tanstack-start-best-practices/rules/sf-response-headers.md
+  s_be0cafefd5c0be::t_c595646f24c9d0 1-89
+.agents/skills/tanstack-start-best-practices/rules/ssr-data-loading.md
+  s_be0cafefd5c0be::t_8abe4c744f5233 1-111
+.agents/skills/tanstack-start-best-practices/rules/ssr-prerender.md
+  s_be0cafefd5c0be::t_9c3b0be9a9da29 33-37,40-51,53,55,67,69-74,76-81,85,92-98,102-105,127-130,139-141,145,148-149,151-155,157-159,161-165
+.agents/skills/tanstack-start-best-practices/rules/ssr-selective.md
+  s_be0cafefd5c0be::t_814a106e9f527c 1-120
+.agents/skills/vite/GENERATION.md
+  s_be0cafefd5c0be::t_540b3e5af39ca7 4-5
+.agents/skills/vite/SKILL.md
+  s_be0cafefd5c0be::t_5dacae4b76e6c7 6,12
+.agents/skills/vite/references/build-and-ssr.md
+  s_be0cafefd5c0be::t_3081a724d100b1 77-78,81-83,120-121,131-141
+.agents/skills/vite/references/core-config.md
+  s_be0cafefd5c0be::t_a0a0440c1f9c08 71-81,95-96,140,150-167
+.agents/skills/vite/references/core-features.md
+  s_be0cafefd5c0be::t_5cde5c59cff10c 8-9,60-66,208-232
+.agents/skills/vite/references/core-plugin-api.md
+  s_be0cafefd5c0be::t_a1d1fd5c944a93 184,186,200-267
+.agents/skills/vite/references/environment-api.md
+  s_be0cafefd5c0be::t_861e6719c4e2d0 77-115,146-148
+.agents/skills/vite/references/rolldown-migration.md
+  s_be0cafefd5c0be::t_e97c6bd4f6ced9 8,14,16,18-20,23,25-39,48,56-57,62,72-73,99-118,120-122,124,136-138,142,145-147,151-152,155,169-170
+skills-lock.json
+  s_be0cafefd5c0be::t_0d1b297b5328fa 8,20,26,32,38,50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6a23df19a818cefc8e00f4879bb5776bc9531167",
+  "prompts": {},
+  "sessions": {
+    "s_be0cafefd5c0be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a176ee-3d90-7a50-b1c2-93b35b041162",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
