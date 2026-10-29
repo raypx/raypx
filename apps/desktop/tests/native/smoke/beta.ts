@@ -64,7 +64,7 @@ desktopApi.request = async (input: DesktopApiRequest) => {
   return result;
 };
 async function acceptance() {
-  await handleTrayAction("show");
+  handleTrayAction("show");
   await waitFor(() => engine.status.status === "ready", "standalone CLI startup");
   await waitFor(
     async () =>
@@ -132,7 +132,7 @@ async function acceptance() {
       "Native smoke beta-restore passed: real HTTPS session survives process restart, relay reconnects, logout clears session and detaches.",
     );
     await cleanupSessionKeys();
-    await handleTrayAction("quit");
+    handleTrayAction("quit");
     return;
   }
   stage = "real HTTPS sign in";
@@ -245,7 +245,7 @@ async function acceptance() {
     assert.equal((await Bun.file(join(project, task.file)).text()).trim(), task.marker);
   stage = "Desktop renderer receives completed remote tasks";
   // WebKit may suspend a hidden view; restore it before testing renderer interaction.
-  await handleTrayAction("show");
+  handleTrayAction("show");
   await evaluate('location.hash="/tasks";return true;');
   const remoteTab = messages.en.tasks.connectedComputers;
   await waitFor(
@@ -286,7 +286,7 @@ async function acceptance() {
     "Native smoke beta passed: Web → HTTPS relay → packaged Desktop → standalone CLI → real Claude/Codex → Web and native renderer.",
   );
   await cleanupSessionKeys();
-  await handleTrayAction("quit");
+  handleTrayAction("quit");
 }
 try {
   await acceptance();

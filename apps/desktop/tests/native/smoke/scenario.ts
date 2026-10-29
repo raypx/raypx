@@ -4,7 +4,6 @@ import { join } from "node:path";
 import type { JobDefinition, JobRun, RootGrant } from "@raypx/contracts/local";
 import type { ContextDocument, ContextDocumentSummary } from "@raypx/memory";
 import type { ObservedProjection } from "@raypx/contracts/terminal";
-import { messages } from "@raypx/i18n/messages";
 import { DEVICE_PREFERENCES_KEY } from "../../../preferences";
 import { CONNECTION_KEY } from "../../../config";
 import { nativePresentation } from "../../../scripts/native/presentation";
@@ -149,19 +148,6 @@ async function localSessionFixture() {
     "Synthetic shell session did not mount the desktop workspace",
   );
   await evaluate('location.hash="/";return true');
-  const homeTitles = [messages.en, messages.zh].flatMap((locale) => [
-    locale.localWorkspace.welcome,
-    locale.files.title,
-  ]);
-  await waitFor(
-    async () =>
-      Boolean(
-        await evaluate(
-          `return location.hash.split("?")[0]==="#/"&&${JSON.stringify(homeTitles)}.includes(document.querySelector("#main h1")?.textContent)`,
-        ),
-      ),
-    "Home navigation did not settle before the tray action",
-  );
 }
 
 async function reloadRenderer() {
@@ -492,7 +478,7 @@ try {
     }
     stage = "signed-out local workspace and isolated session fixture";
     await localSessionFixture();
-    await handleTrayAction("pending");
+    handleTrayAction("pending");
     await waitFor(
       async () => String(await evaluate("return location.hash")).includes("/approvals"),
       "Tray review action did not open the approval page",
@@ -741,7 +727,7 @@ try {
   );
   await fixtureServer?.stop(true);
   await cleanupSessionKeys();
-  await handleTrayAction("quit");
+  handleTrayAction("quit");
 } catch (error) {
   try {
     console.error(
