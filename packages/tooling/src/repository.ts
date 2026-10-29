@@ -22,6 +22,10 @@ export function prepareTaskDirectories(model: TaskModel) {
   for (const member of model.members.filter((candidate) => candidate.native))
     for (const directory of ["generated", "resources/bin", "build", ".mygo", "artifacts/browser"])
       mkdirSync(join(model.root, member.path, directory), { recursive: true });
+  // Builds may list their package after creating outputs; fresh runners must list them too.
+  for (const member of model.members.filter((candidate) => candidate.scripts.build))
+    for (const directory of ["dist", ".output"])
+      mkdirSync(join(model.root, member.path, directory), { recursive: true });
 }
 
 export async function runTasks(
