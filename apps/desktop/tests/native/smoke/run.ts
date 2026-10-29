@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
@@ -6,7 +6,7 @@ import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import { nativeSmokeOptions } from "../../../scripts/native/smoke-options";
 import { buildSmoke, runMyGoSmoke } from "./launch";
 import type { SmokeInstallation } from "./launch";
-import { prepareSmokeDirectory } from "./session";
+import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
 import { assertSmokeOwnerRunning, stopSmokeOwner } from "./owner";
 
 const { packageManager } = await Bun.file(
@@ -96,7 +96,7 @@ try {
           (!existsSync(join(directory, "servers")) ||
             existsSync(join(directory, ".native-smoke-sessions-cleaned")))
         )
-          await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+          await removeSmokeDirectory(directory);
         else {
           console.error(`Native smoke teardown incomplete; retained ${directory}`);
           process.exitCode = 1;

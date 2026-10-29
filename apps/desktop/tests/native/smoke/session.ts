@@ -29,3 +29,36 @@ export async function prepareSmokeDirectory(directory: string) {
   await writeFile(marker, "raypx-native-smoke-v1\n", { mode: 0o600, flag: "wx" });
   await rm(join(directory, ".native-smoke-sessions-cleaned"), { force: true });
 }
+
+/** WebView2 helpers can retain handles briefly after the GUI and daemon exit. */
+export async function removeSmokeDirectory(directory: string) {
+  const state = await lstat(directory);
+  const marker = join(directory, ".native-smoke-session-owner");
+  const owner = await lstat(marker);
+  if (
+    !isAbsolute(directory) ||
+    !state.isDirectory() ||
+    state.isSymbolicLink() ||
+    !owner.isFile() ||
+    owner.isSymbolicLink() ||
+    owner.size > 64 ||
+    (await readFile(marker, "utf8")) !== "raypx-native-smoke-v1\n"
+  )
+    throw new Error("Refusing to remove unowned smoke state");
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await rm(directory, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (attempt >= 29 || !["EPERM", "EBUSY", "ENOTEMPTY"].includes(code ?? "")) {
+        const remaining = await readdir(directory).catch(() => []);
+        console.error(
+          `Smoke cleanup retained ${directory}: ${code}; entries: ${remaining.join(", ")}`,
+        );
+        throw error;
+      }
+      await Bun.sleep(500);
+    }
+  }
+}

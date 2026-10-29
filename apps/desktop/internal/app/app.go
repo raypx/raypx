@@ -200,6 +200,7 @@ func Run(bundled fs.FS) error {
 			if data, err := fs.ReadFile(bundled, "generated/notifications.json"); err == nil {
 				_ = json.Unmarshal(data, &notifications)
 			}
+			notificationSlot := make(chan struct{}, 1)
 			desktop.Events.Observe = func(event host.JSON) {
 				name, _ := event["event"].(string)
 				data, _ := event["data"].(map[string]any)
@@ -214,22 +215,32 @@ func Run(bundled fs.FS) error {
 				pendingMu.Lock()
 				pendingScope = scope
 				pendingMu.Unlock()
-				locale, _ := desktop.Preferences.Read()["locale"].(string)
-				if locale == "" || locale == "system" {
-					preferred := mygo.App.PreferredLanguages()
-					if len(preferred) > 0 {
-						locale = preferred[0]
-					} else {
-						locale = os.Getenv("LANG")
+				select {
+				case notificationSlot <- struct{}{}:
+				default:
+					return
+				}
+				// The first macOS notification waits for permission. Never block
+				// CLI event delivery or approval lease responses on that answer.
+				go func() {
+					defer func() { <-notificationSlot }()
+					locale, _ := desktop.Preferences.Read()["locale"].(string)
+					if locale == "" || locale == "system" {
+						preferred := mygo.App.PreferredLanguages()
+						if len(preferred) > 0 {
+							locale = preferred[0]
+						} else {
+							locale = os.Getenv("LANG")
+						}
 					}
-				}
-				language := "en"
-				if strings.HasPrefix(strings.ToLower(locale), "zh") {
-					language = "zh"
-				}
-				notification := mygo.NewNotification(mygo.NotificationOptions{Title: "Raypx", Body: notifications[language]})
-				notification.OnClick(pending)
-				_ = notification.Show()
+					language := "en"
+					if strings.HasPrefix(strings.ToLower(locale), "zh") {
+						language = "zh"
+					}
+					notification := mygo.NewNotification(mygo.NotificationOptions{Title: "Raypx", Body: notifications[language]})
+					notification.OnClick(pending)
+					_ = notification.Show()
+				}()
 			}
 			// Publish only after UI and observer setup: shutdown may read them.
 			owned.Store(desktop)

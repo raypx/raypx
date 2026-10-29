@@ -1,9 +1,9 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { buildSmoke, runMyGoSmoke } from "./launch";
-import { prepareSmokeDirectory } from "./session";
+import { prepareSmokeDirectory, removeSmokeDirectory } from "./session";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import type { SmokeInstallation } from "./launch";
 import { stopSmokeOwner } from "./owner";
@@ -53,7 +53,7 @@ try {
     try {
       if (process.env.RAYPX_LIVE_KEEP === "1" || !cleanupSucceeded || !sessionsCleaned)
         console.info(`Live Agent acceptance data: ${directory}`);
-      else await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+      else await removeSmokeDirectory(directory);
     } finally {
       try {
         await installation?.dispose();
