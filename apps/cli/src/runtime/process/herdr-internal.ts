@@ -1,7 +1,7 @@
 import { basename, join } from "node:path";
-import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { herdrRequest, record } from "./herdr-ipc";
+import { removeHerdrDirectory } from "./herdr-cleanup";
 
 /** Private subprocess entrypoints, never registered as public CLI commands. */
 export async function herdrInternal(args: string[]) {
@@ -40,7 +40,21 @@ export async function herdrInternal(args: string[]) {
         } else child.kill("SIGKILL");
       }, 8000);
       try {
-        await herdrRequest(socket!, "server.stop").catch(() => {});
+        if (process.platform === "win32" && child.exitCode === null) {
+          // Kill the private server tree while its root still exists. Otherwise
+          // ConPTY helpers can outlive the server and retain its cwd handle.
+          const killer = Bun.spawn(
+            [
+              join(process.env.SystemRoot ?? "C:\\Windows", "System32/taskkill.exe"),
+              "/PID",
+              String(child.pid),
+              "/T",
+              "/F",
+            ],
+            { stdout: "ignore", stderr: "ignore", windowsHide: true },
+          );
+          await killer.exited;
+        } else await herdrRequest(socket!, "server.stop").catch(() => {});
         await child.exited;
       } finally {
         clearTimeout(deadline);
@@ -51,12 +65,7 @@ export async function herdrInternal(args: string[]) {
             .catch(() => null)) === owner
         ) {
           process.chdir(tmpdir());
-          await rm(directory, {
-            recursive: true,
-            force: true,
-            maxRetries: 10,
-            retryDelay: 200,
-          }).catch(() => {});
+          await removeHerdrDirectory(directory);
         }
       }
     }

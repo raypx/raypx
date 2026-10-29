@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { uploadAnalyticsMaps } from "./analytics.js";
-import { readFileSync } from "node:fs";
+import { readFileSync, appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { developmentEnvironment, run } from "@raypx-kit/devkit/process";
@@ -13,6 +13,9 @@ import { smoke } from "./smoke/index.js";
 import { readBunPin } from "./validation/toolchain.js";
 import { browserTestArguments } from "./browser-tests.js";
 import { packageTestArguments, runTests } from "./test-command.js";
+import { verify, ciGate } from "./verification/index.js";
+import { readGithubPlan } from "./verification/plan.js";
+import { cacheSnapshot } from "./verification/cache.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -91,13 +94,23 @@ async function main() {
       findings(checkLocales(root), "Locale catalogs");
       break;
     case "verify":
-    case "verify:quick":
-      findings(checkLocales(root), "Locale catalogs");
-      findings(policy(root), "Repository policy");
-      await run(process.execPath, ["--bun", "vp", "fmt", "--check"], root);
-      // One VP graph shares checks and builds; native packaging remains explicit.
-      await runTasks(root, command);
-      if (command === "verify") await smoke(root);
+      await verify(root, args);
+      break;
+    case "ci:plan": {
+      const plan = readGithubPlan(root);
+      console.log(JSON.stringify(plan, null, 2));
+      if (process.env.GITHUB_OUTPUT)
+        appendFileSync(
+          process.env.GITHUB_OUTPUT,
+          `native=${plan.native}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\nrust=${plan.rust}\n`,
+        );
+      break;
+    }
+    case "ci:gate":
+      await ciGate(root, args);
+      break;
+    case "ci:cache":
+      await cacheSnapshot(root, args[0] ?? "snapshot");
       break;
     case "smoke":
       await smoke(root);
@@ -159,15 +172,17 @@ async function main() {
       if (Bun.version !== bun) throw new Error(`Expected Bun ${bun}, got ${Bun.version}`);
       console.log(`Bun ${Bun.version}; ${process.platform}/${process.arch}`);
       console.log(
-        `Desktop: Tauri; Cargo ${Bun.which("cargo") ? "available" : "unavailable"} (required for native packaging); Rust checks run separately with bun run rust:verify`,
+        `Desktop: Tauri; Cargo ${Bun.which("cargo") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected Rust checks; --full checks all targets`,
       );
       break;
     }
     case undefined:
-    default:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | verify:quick | smoke | env | db | desktop | clean | clean:rust | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | env | db | desktop | clean | clean:rust | clean:artifacts | doctor",
       );
+      break;
+    default:
+      throw new Error(`Unknown command: ${command}`);
   }
 }
 await main().catch((error: unknown) => {

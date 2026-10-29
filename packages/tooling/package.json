@@ -10,6 +10,7 @@
     "./repository": "./src/repository.ts",
     "./build/nitro": "./src/build/nitro.ts",
     "./build/analytics": "./src/build/analytics.ts",
+    "./build/start-env": "./src/build/start-env.ts",
     "./browser-tests": "./src/browser-tests.ts",
     "./browser-server": "./src/browser-server.ts",
     "./tasks": "./src/tasks/config.ts"
@@ -42,6 +43,7 @@
     "entryTargets": {
       "./build/nitro": "node",
       "./build/analytics": "node",
+      "./build/start-env": "node",
       "./tasks": "node"
     },
     "sourceTargets": {
@@ -49,7 +51,9 @@
       "src/tasks/config.ts": "node",
       "src/tasks/model.ts": "node",
       "src/tasks/arguments.ts": "node",
-      "src/tasks/delegation.ts": "node"
+      "src/tasks/delegation.ts": "node",
+      "src/tasks/names.ts": "node",
+      "src/tasks/rust.ts": "node"
     }
   }
 }

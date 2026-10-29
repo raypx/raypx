@@ -114,8 +114,17 @@ it("changing browser selectors or workers preserves dependency task definitions"
   }
 });
 
-it("default verification contains only the active Node deployment target", () => {
-  const tasks = graph(["tasks", "verify"]).tasks.map((task) => task.taskId);
+it("full verification contains only the active Bun deployment target", () => {
+  const result = spawnSync(process.execPath, ["run", "verify", "--full", "--dry-run"], {
+    cwd: root,
+    env: process.env,
+    encoding: "utf8",
+    timeout: 30_000,
+  });
+  if (result.status !== 0) throw new Error(result.stderr || result.stdout);
+  const tasks = (JSON.parse(result.stdout) as { graph: { taskId: string }[] }).graph.map(
+    (task) => task.taskId,
+  );
   expect(tasks).toContain("api#build");
   expect(tasks).toContain("web#build");
   expect(tasks.some((task) => /cloudflare|wrangler|workerd/.test(task))).toBe(false);

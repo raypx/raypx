@@ -47,32 +47,35 @@ function desktopRepository() {
   return taskModel(model.root);
 }
 
-it("keeps Cargo gates explicit and outside default repository verification", () => {
+it("keeps generic JS tasks independent of the private Cargo pipeline", () => {
   const model = repository(true);
-  for (const name of ["verify", "verify:quick", "build", "check", "test", "lint"]) {
-    const plan = taskPlan(model, [taskRef("fixture", name)]);
-    expect(plan.some((task) => task.taskId.includes("rust:"))).toBe(false);
-    expect(plan.some((task) => task.command.startsWith("cargo "))).toBe(false);
+  for (const name of ["build", "check", "test", "lint"]) {
+    expect(
+      taskPlan(model, [taskRef("fixture", name)]).some((task) => task.command.startsWith("cargo ")),
+    ).toBe(false);
   }
-  const rust = taskPlan(model, [taskRef("fixture", "rust:verify")]);
-  expect(rust.filter((task) => task.command.startsWith("cargo "))).toHaveLength(5);
-  expect(rust.some((task) => task.taskId.startsWith("@raypx/library#"))).toBe(false);
-  const selected = taskPlan(model, [taskRef("@raypx/library", "build")]);
-  expect(selected.some((task) => task.command.startsWith("cargo "))).toBe(false);
+  const plan = taskPlan(model, [taskRef("fixture", "verify:rust")]);
+  const rust = plan.filter((task) => task.command.startsWith("cargo "));
+  expect(rust).toHaveLength(3);
+  expect(rust.every((task) => task.cache === false)).toBe(true);
+  expect(rust.find((task) => task.taskId.endsWith(":lint"))?.dependsOn).toContain(
+    taskRef("fixture", "verify:rust:format"),
+  );
+  expect(rust.find((task) => task.taskId.endsWith(":test"))?.dependsOn).toContain(
+    taskRef("fixture", "verify:rust:lint"),
+  );
+  expect(plan.some((task) => task.taskId.startsWith("@raypx/library#"))).toBe(false);
 });
 
-it("keeps repositories without a Cargo manifest independent of Rust", () => {
+it("does not register Cargo verification without a Cargo manifest", () => {
   const model = repository(false);
-  const plan = taskPlan(model, [taskRef("fixture", "verify")]);
-  expect(plan.some((task) => task.taskId.includes("rust:"))).toBe(false);
-  expect(model.definitions.has(taskRef("fixture", "rust:verify"))).toBe(false);
+  expect(model.definitions.has(taskRef("fixture", "verify:rust"))).toBe(false);
 });
 
-it("leaves Desktop compilation to platform CI when Linux runs library Cargo gates", () => {
+it("leaves Desktop to native CI when Linux verifies libraries", () => {
   const model = desktopRepository();
-  const plan = taskPlan(model, [taskRef("fixture", "rust:verify")]);
+  const plan = taskPlan(model, [taskRef("fixture", "verify:rust")]);
   for (const task of plan.filter((entry) => entry.command.startsWith("cargo "))) {
-    expect(task.cache).toBe(false);
     expect(task.command.includes("--exclude raypx-desktop")).toBe(
       process.platform === "linux" && !task.command.startsWith("cargo fmt"),
     );
@@ -80,28 +83,25 @@ it("leaves Desktop compilation to platform CI when Linux runs library Cargo gate
   expect(plan.some((task) => task.taskId === "desktop#tauri:cli")).toBe(
     process.platform !== "linux",
   );
+  expect(plan.some((task) => task.taskId === "cli#build")).toBe(process.platform !== "linux");
+  expect(plan.some((task) => task.taskId === "desktop#build")).toBe(false);
 });
 
-it.each(["build", "check", "test", "lint"])(
-  "prepares the matching CLI and generated contracts before rust:%s without building the renderer",
-  (name) => {
-    const model = desktopRepository();
-    const plan = taskPlan(model, [taskRef("fixture", `rust:${name}`)]);
-    const cargo = plan.find((task) => task.taskId === `fixture#rust:${name}`)!;
-    const native = process.platform !== "linux";
-    expect(cargo.dependsOn).toEqual(
-      native ? [taskRef("desktop", "tauri:generate"), taskRef("desktop", "tauri:cli")] : [],
-    );
-    expect(plan.some((task) => task.taskId === "cli#build")).toBe(native);
-    expect(plan.some((task) => task.taskId === "desktop#build")).toBe(false);
-    expect(plan.find((task) => task.taskId === "desktop#tauri:cli")?.dependsOn ?? []).toEqual(
-      native ? [taskRef("cli", "build")] : [],
-    );
-  },
-);
+it("selects library packages without preparing native binaries", () => {
+  const project = desktopRepository();
+  const model = taskModel(project.root, undefined, '["raypx-core"]');
+  const plan = taskPlan(model, [taskRef("fixture", "verify:rust")]);
+  const cargo = plan.filter((entry) => entry.command.startsWith("cargo "));
+  expect(cargo.filter((entry) => entry.command.includes("--package raypx-core"))).toHaveLength(2);
+  expect(cargo.some((entry) => entry.command.includes("--workspace"))).toBe(false);
+  expect(plan.some((task) => /^(?:cli|desktop)#/.test(task.taskId))).toBe(false);
+  expect(() => taskModel(project.root, undefined, '["core; echo unsafe"]')).toThrow(
+    "Invalid Cargo package selection",
+  );
+});
 
-it("formats Rust without preparing binaries or building the CLI", () => {
+it("formats Rust without staging CLI inputs", () => {
   const model = desktopRepository();
-  const plan = taskPlan(model, [taskRef("fixture", "rust:format")]);
-  expect(plan.map((task) => task.taskId)).toEqual(["fixture#rust:format"]);
+  const plan = taskPlan(model, [taskRef("fixture", "verify:rust:format")]);
+  expect(plan.map((task) => task.taskId)).toEqual(["fixture#verify:rust:format"]);
 });

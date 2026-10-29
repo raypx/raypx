@@ -24,11 +24,29 @@ scripts. See [test commands](test-commands.md) for package selection, local entr
 points and the migration from root `test:*` aliases. Use `bun run test list` to
 discover supported layers instead of maintaining a package-name list.
 
-Use `bun run verify:quick` for policy, formatting, lint, types and workspace tests.
-`bun run verify` additionally builds both runtime targets and probes their artifacts.
-Rust formatting, Clippy, checks, tests and builds are a separate explicit gate.
-Use `bun run rust:verify` for Rust-only feedback; see the
-[Rust workspace guide](rust.md).
+Use `bun run verify` for daily feedback: policy and locales are always checked;
+changed files select formatting/lint, affected workspace types/tests, and necessary
+Rust packages through reverse dependency graphs. The default base is the merge-base
+with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
+Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
+Unknown inputs, shared configuration/lockfiles, or an unavailable base select full coverage.
+
+Use `bun run verify --full` before delivery. It checks all JS and current-platform
+Rust targets, builds outputs and runs independent artifact probes concurrently.
+It needs no GUI, database or mail service. JS-only incremental checks need no Rust.
+Rust source changes require the pinned toolchain and the platform's native build prerequisites;
+missing prerequisites fail verification rather than reporting a partial pass.
+`verify` and `verify --full` are the verification entry points. Use Cargo directly
+for focused Rust debugging. See the [Rust workspace guide](rust.md).
+
+GitHub uses the same change planner. JS, database, browser and native gates run in
+parallel when relevant; Desktop/CLI dependencies retain both native platforms.
+Tags and manual dispatch select full coverage. `foundation` requires every selected
+gate to succeed and permits only intentional skips. Herdr checks precede Rust cache
+restoration, failed jobs do not save large Rust caches, and VP archives are saved only
+when new successful task artifacts exist. Rust caches cover both production and smoke
+Cargo directories while keeping their outputs isolated.
+Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
 The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
 worker and per-file isolation; larger suites set their worker count locally.
 CLI, Desktop and Tooling also own their subprocess test timeouts locally.

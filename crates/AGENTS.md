@@ -30,8 +30,9 @@ adapter and lifecycle; no in-repository Rust terminal host is maintained.
 
 ## Verification
 
-Run `bun run rust:verify` for formatting, Clippy, checks, tests and builds.
-Default Bun verification keeps Rust explicit. Linux Rust tasks exclude the Desktop
+Run `bun run verify` for affected checks or `bun run verify --full` for complete
+current-platform verification, including rustfmt, Clippy and tests.
+Linux Rust tasks exclude the Desktop
 crate to avoid requiring WebKit/GTK development libraries; Desktop CI checks it on
 macOS and Windows after staging the CLI sidecar.
 Use direct Cargo commands to select one crate or run an example.

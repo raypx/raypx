@@ -1,11 +1,12 @@
 import { i18nCatalogs } from "@raypx/i18n/vite";
 import { analyticsBuild } from "@raypx/tooling/build/analytics";
+import { startEnvironment } from "@raypx/tooling/build/start-env";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
-import { defineConfig } from "vite-plus";
+import { defineConfig, loadEnv } from "vite-plus";
 
 // Pages render inline hydration and theme scripts, so CSP limits framing, plugins,
 // base URLs and form targets rather than script sources.
@@ -33,7 +34,7 @@ export default defineConfig(() => {
       tailwindcss(),
       // Visitors download the default catalog plus their own language only.
       i18nCatalogs({ catalogs: "lazy" }),
-      tanstackStart(),
+      startEnvironment(tanstackStart(), loadEnv),
       react(),
     ],
     build: {

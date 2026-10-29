@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import type { CommandSpec, LocalEvent } from "@raypx/contracts/local";
@@ -6,6 +6,7 @@ import type { Environment } from "./bun";
 import { LocalError } from "../errors";
 import { herdrError, herdrRequest, record } from "./herdr-ipc";
 import { herdrVersion } from "./herdr-release";
+import { removeHerdrDirectory } from "./herdr-cleanup";
 import { herdrFrame } from "./herdr-frame";
 import { foreignLoopbackRequest } from "../local-http";
 
@@ -35,10 +36,19 @@ export function terminalLaunch() {
     : [process.execPath];
 }
 const fail = (code: string, message: string) => new LocalError(code, message);
-const retryRemoval = { recursive: true, force: true, maxRetries: 10, retryDelay: 200 };
 
 /** Herdr owns PTYs/VT state. Raypx owns command admission and session lifetime. */
 export class HerdrTerminalHost {
+  private readonly controls = new Set<Child>();
+  private readonly drains = new Set<Promise<void>>();
+  private track(operation: Promise<void>) {
+    this.drains.add(operation);
+    void operation.then(
+      () => this.drains.delete(operation),
+      () => this.drains.delete(operation),
+    );
+    return operation;
+  }
   private started: Promise<void> | undefined;
   private root = "";
   private socket = "";
@@ -169,7 +179,7 @@ export class HerdrTerminalHost {
     });
   }
   private control(session: Session, observe = false) {
-    return Bun.spawn(
+    const child = Bun.spawn(
       [
         this.binary,
         "terminal",
@@ -190,6 +200,9 @@ export class HerdrTerminalHost {
         windowsHide: true,
       },
     );
+    this.controls.add(child);
+    void child.exited.then(() => this.controls.delete(child));
+    return child;
   }
   private async frames(session: Session, child: Child, firstOnly = false) {
     let buffer = "",
@@ -424,68 +437,72 @@ export class HerdrTerminalHost {
     while (!session.pane && !session.finishing && Date.now() < until) await Bun.sleep(10);
     if (session.finishing) return session.done;
     session.finishing = true;
-    session.done = (async () => {
-      try {
-        let observed = false;
-        while (Date.now() < until) {
-          const info = await this.request("pane.get", { pane_id: session.pane });
-          if (record(info.pane) && info.pane.terminal_title === session.marker) {
-            observed = true;
-            break;
+    session.done = this.track(
+      (async () => {
+        try {
+          let observed = false;
+          while (Date.now() < until) {
+            const info = await this.request("pane.get", { pane_id: session.pane });
+            if (record(info.pane) && info.pane.terminal_title === session.marker) {
+              observed = true;
+              break;
+            }
+            await Bun.sleep(10);
           }
-          await Bun.sleep(10);
-        }
-        if (!observed) throw herdrError();
-        // Preserve a bounded history after the owned pane is closed. Screen
-        // frames alone only contain the visible viewport, not terminal scrollback.
-        const snapshot = await this.request("pane.read", {
-          pane_id: session.pane,
-          source: "recent",
-          format: "ansi",
-          lines: 1000,
-        });
-        const history = snapshot.read;
-        if (
-          !record(history) ||
-          typeof history.text !== "string" ||
-          Buffer.byteLength(history.text) > 4 * 1024 * 1024
-        )
-          throw herdrError();
-        if (session.control?.stdin && typeof session.control.stdin !== "number")
-          await session.control.stdin.end();
-        const control = session.control;
-        const drainDeadline = setTimeout(() => control?.kill(), 2000);
-        try {
-          await session.reading;
+          if (!observed) throw herdrError();
+          // Preserve a bounded history after the owned pane is closed. Screen
+          // frames alone only contain the visible viewport, not terminal scrollback.
+          const snapshot = await this.request("pane.read", {
+            pane_id: session.pane,
+            source: "recent",
+            format: "ansi",
+            lines: 1000,
+          });
+          const history = snapshot.read;
+          if (
+            !record(history) ||
+            typeof history.text !== "string" ||
+            Buffer.byteLength(history.text) > 4 * 1024 * 1024
+          )
+            throw herdrError();
+          if (session.control?.stdin && typeof session.control.stdin !== "number")
+            await session.control.stdin.end();
+          const control = session.control;
+          const drainDeadline = setTimeout(() => control?.kill(), 2000);
+          try {
+            await session.reading;
+          } finally {
+            clearTimeout(drainDeadline);
+          }
+          this.emit({
+            version: 1,
+            event: "terminal.output",
+            data: {
+              id: session.id,
+              data: Buffer.from(history.text.replace(/\r?\n/g, "\r\n")).toString("base64"),
+              full: true,
+              frame: false,
+            },
+          });
+          const observer = this.control(session, true);
+          const deadline = setTimeout(() => observer.kill(), 3000);
+          try {
+            await this.frames(session, observer, true);
+          } finally {
+            observer.kill();
+            await observer.exited;
+            clearTimeout(deadline);
+          }
+          this.finish(session, code);
+        } catch {
+          this.finish(session, 1);
         } finally {
-          clearTimeout(drainDeadline);
+          await this.request("workspace.close", { workspace_id: session.workspace }).catch(
+            () => {},
+          );
         }
-        this.emit({
-          version: 1,
-          event: "terminal.output",
-          data: {
-            id: session.id,
-            data: Buffer.from(history.text.replace(/\r?\n/g, "\r\n")).toString("base64"),
-            full: true,
-            frame: false,
-          },
-        });
-        const observer = this.control(session, true);
-        const deadline = setTimeout(() => observer.kill(), 3000);
-        try {
-          await this.frames(session, observer, true);
-        } finally {
-          observer.kill();
-          await observer.exited;
-          clearTimeout(deadline);
-        }
-        this.finish(session, code);
-      } catch {
-        this.finish(session, 1);
-      } finally {
-        await this.request("workspace.close", { workspace_id: session.workspace }).catch(() => {});
-      }
-    })();
+      })(),
+    );
     return session.done;
   }
   private finish(session: Session, exitCode: number) {
@@ -496,13 +513,15 @@ export class HerdrTerminalHost {
   private stopSession(session: Session, code: number) {
     if (session.done) return session.done;
     session.finishing = true;
-    return (session.done = (async () => {
-      await this.request("workspace.close", { workspace_id: session.workspace }).catch(() => {});
-      session.control?.kill();
-      await session.control?.exited;
-      await session.reading;
-      this.finish(session, code);
-    })());
+    return (session.done = this.track(
+      (async () => {
+        await this.request("workspace.close", { workspace_id: session.workspace }).catch(() => {});
+        session.control?.kill();
+        await session.control?.exited;
+        await session.reading;
+        this.finish(session, code);
+      })(),
+    ));
   }
   cancel(id: string) {
     const session = this.sessions.get(id);
@@ -519,6 +538,9 @@ export class HerdrTerminalHost {
     await Promise.allSettled(
       [...this.sessions.values()].map((session) => this.stopSession(session, 130)),
     );
+    await Promise.allSettled(this.drains);
+    for (const control of this.controls) control.kill();
+    await Promise.allSettled([...this.controls].map((control) => control.exited));
     if (this.supervisor) {
       const deadline = setTimeout(() => this.supervisor?.kill(), 10_000);
       try {
@@ -536,6 +558,6 @@ export class HerdrTerminalHost {
       }
     }
     await this.server?.stop(true);
-    if (this.root) await rm(this.root, retryRemoval);
+    if (this.root) await removeHerdrDirectory(this.root);
   }
 }

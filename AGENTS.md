@@ -91,9 +91,10 @@ The accepted foundation design supersedes documents in docs/history.
 
 ## Verification
 
-Run narrow meaningful tests, then bun run verify. The default gate needs no GUI,
-database or mail provider. PostgreSQL auth tests, browser tests and packaged
-native checks are separate explicit gates.
+Run narrow meaningful tests, then bun run verify --full before delivery. Daily
+`bun run verify` selects affected workspaces and Rust packages. Full verification
+checks the current platform's JS/Rust sources and artifacts without a GUI, database
+or mail provider. PostgreSQL, browser and packaged native acceptance run separately.
 Report unavailable checks as unavailable; never describe an unrun platform as passed.
 
 ## Documentation

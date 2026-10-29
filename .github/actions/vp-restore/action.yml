@@ -1,0 +1,25 @@
+name: Restore VP task cache
+description: Restore compatible tasks and record the existing artifact identities
+inputs:
+  partition:
+    description: Job partition
+    required: true
+outputs:
+  key:
+    description: Cache save key
+    value: ${{ steps.cache.outputs.cache-primary-key }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache/restore@v6
+      id: cache
+      with:
+        path: node_modules/.vite/task-cache
+        key: vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'bun.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: |
+          vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-${{ hashFiles('package.json', 'bun.lock') }}-
+          vp-v2-${{ runner.os }}-${{ runner.arch }}-${{ inputs.partition }}-
+    - shell: bash
+      run: |
+        mkdir -p node_modules/.vite/task-cache
+        bun run raypx-dev ci:cache snapshot

@@ -21,7 +21,7 @@ Install rustup, then run these commands from the repository root:
 
 ```sh
 rustup show
-bun run rust:verify
+bun run verify --full
 cargo run -p raypx-core --locked --example basic
 ```
 
@@ -78,23 +78,20 @@ Rust is managed by rustup; mise continues reading the existing Bun pin.
 
 | Command                             | Runs                                                                      |
 | ----------------------------------- | ------------------------------------------------------------------------- |
-| `bun run rust:check`                | Cargo check for workspace targets (Desktop excluded on Linux)             |
-| `bun run rust:test`                 | Cargo tests (Desktop excluded on Linux)                                   |
-| `bun run rust:build`                | Cargo build for workspace targets (Desktop excluded on Linux)             |
-| `bun run rust:lint`                 | Clippy for all targets, denying warnings                                  |
-| `bun run rust:format`               | rustfmt check                                                             |
-| `bun run rust:verify`               | All five Rust gates through VP                                            |
+| `bun run verify`                    | Affected JS/Rust checks and tests                                         |
+| `bun run verify --full`             | Full current-platform sources, builds and artifact probes                 |
 | `bun run rust:clean`                | Clean workspace development artifacts, retaining dependencies and Release |
 | `cargo fmt --all`                   | Apply Rust formatting                                                     |
-| `cargo test -p raypx-core --locked` | Test only the initial library                                             |
+| `cargo test -p raypx-core --locked` | Test one library directly                                                 |
 
-Rust is required to develop/package the Tauri Desktop host, and remains optional
-for renderer, API, Web and CLI work. Root `check`, `test`, `build`, `lint`, `format`, `verify:quick`
-and `verify` do not invoke Cargo or rustup. The independent `rust.yml` workflow
-runs for Rust/toolchain/task-model changes (or manual dispatch), excluding Desktop
-on Ubuntu. The Desktop CI matrix runs its fmt/Clippy/tests on macOS and Windows. Explicit
-`bun run rust:verify` schedules all five gates serially to avoid competing for
-Cargo's shared `target/` lock. Filtered Bun commands retain their selected scope.
+Rust is required to develop/package the Tauri Desktop host and remains optional
+for JS-only incremental feedback. `verify` selects Rust packages through the
+workspace's reverse dependency graph. One uncached VP pipeline orders rustfmt,
+Clippy for all targets/features and tests; Clippy and tests cover compilation without
+separate redundant check/build steps. Independent JavaScript tasks can run in parallel.
+Root `check`, `test`, `build`, `lint` and `format` remain independent of Cargo.
+The reusable `rust.yml` workflow checks libraries on Ubuntu when the CI planner
+selects Rust; Desktop fmt/Clippy/tests and packaging run on macOS and Windows.
 
 VP owns repository task scheduling. Cargo tasks are uncached in VP; Cargo owns
 its own incremental state in root `target/`. This avoids tracing compiler and
@@ -153,11 +150,10 @@ and add `--allow-dirty` to Cargo's package/publish commands.
 
 ## Desktop crate
 
-On macOS and Windows, root `rust:check`, `rust:lint`, `rust:test` and `rust:build`
-automatically build the matching CLI through VP and stage it together with generated
-TS vocabulary and translated notifications before invoking Cargo. Shared preparation
-runs once in `rust:verify`, without building the renderer. Formatting and Linux
-library verification need no sidecar. Staging identical CLI bytes preserves the
+On macOS and Windows, verification that includes Desktop prepares the matching
+CLI and generated TS vocabulary/translated notifications through VP before Cargo.
+Shared preparation runs once without building the renderer. Formatting and
+library-only checks need no sidecar. Staging identical CLI bytes preserves the
 sidecar's modification time so another package build can reuse Cargo outputs.
 
 Direct Cargo commands bypass VP. Prepare the inputs first when using them:

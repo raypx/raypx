@@ -12,13 +12,16 @@ eval "$(mise activate zsh)"         # in ~/.zshrc (bash/fish/PowerShell also sup
 ```
 
 Activated shells switch versions on cd; without activation use `mise exec -- <command>`.
-nvm (`nvm use`), fnm or direct installs also work. `bun run doctor` confirms the active
-runtimes. PostgreSQL client tools come from the compose container:
+Raypx keeps mise for Bun selection and rustup for the native toolchain. Nix is not
+required: current CI bottlenecks are task selection and cache invalidation, while
+Windows acceptance still uses the native MSVC/WebView2 environment.
+Direct Bun installs also work. `bun run doctor` confirms the active runtime. PostgreSQL client tools come from the compose container:
 `docker compose exec postgres psql -U raypx raypx_foundation`.
 
 Rust libraries live under `crates/`. Install rustup and run `rustup show` to prepare
-the version and components in `rust-toolchain.toml`. `bun run rust:verify` checks
-the Rust workspace; root checks, tests, builds and verification include its gates.
+the version and components in `rust-toolchain.toml`. Daily `bun run verify` selects
+affected JS/Rust checks; `bun run verify --full` checks all current-platform sources
+and artifacts before delivery. Use Cargo directly for focused Rust debugging.
 See the [Rust guide](rust.md) for commands and the initial `raypx-core` library.
 
 `bun install` runs the root `prepare` script, which installs the Vite+ Git hook
@@ -135,8 +138,10 @@ read it without importing the i18n runtime.
 GitHub CI restores Bun downloads before every frozen install, then restores VP's
 task-cache directory. Only successful tasks become reusable entries, even if a
 later check fails. Cache archives use a fresh key per workflow attempt with a
-compatible fallback; OS, architecture, Node/Bun versions and job partition them.
-Task fingerprints choose reusable results. CI caches this task-cache subdirectory,
+compatible fallback; OS, architecture, Bun versions and job partition them.
+Only jobs with new successful VP artifacts upload a cache snapshot. Failed native
+jobs do not save the large Cargo cache. Task fingerprints choose reusable results.
+CI caches this task-cache subdirectory,
 not dependencies or the rest of `node_modules`.
 
 Required release artifacts move between jobs through artifacts rather than an

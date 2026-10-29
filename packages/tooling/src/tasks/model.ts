@@ -3,6 +3,9 @@ import { dirname, join, relative, resolve } from "node:path";
 import { discover } from "@raypx-kit/devkit/workspaces";
 import { argumentKey } from "./arguments.js";
 import { taskScripts } from "./delegation.js";
+import { taskRef } from "./names.js";
+import { rustTasks } from "./rust.js";
+export { taskName, taskRef } from "./names.js";
 export { argumentKey } from "./arguments.js";
 
 export interface TaskCache {
@@ -30,9 +33,6 @@ export interface TaskModel {
   members: TaskMember[];
   definitions: Map<string, TaskDefinition>;
 }
-
-export const taskName = (name: string) => `task:${name}`;
-export const taskRef = (member: string, name: string) => `${member}#${taskName(name)}`;
 
 export function repositoryRoot(directory: string): string {
   let candidate = resolve(directory);
@@ -92,6 +92,14 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
     "**/node_modules/.vite-temp/**",
     "**/.tanstack/**",
     ".artifacts/**",
+    ...(build || name === "check"
+      ? [
+          "target/**",
+          "**/src-tauri/binaries/**",
+          "**/src-tauri/gen/**",
+          "**/node_modules/.nitro/**",
+        ]
+      : []),
   ];
   const input: TaskCache["input"] = [
     { auto: true },
@@ -122,7 +130,7 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
     "RAYPX_CACHE_PLATFORM",
     argumentKey(`${member.name}#${name}`),
   ];
-  if (build) env.push("VITE_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS");
+  if (build && member.name !== "cli") env.push("VITE_*", "NITRO_PRESET", "RAYPX_SOURCEMAPS");
   if (member.native && ["check", "build", "build:renderer"].includes(name)) {
     const category =
       name === "build:renderer" ? "RENDERER" : name.toUpperCase().replaceAll(":", "_");
@@ -184,7 +192,16 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
 }
 
 /** Data only: VP owns scheduling, caching and dependency execution. */
-export function taskModel(root: string): TaskModel {
+function verificationEnvironment(root: string, name: string) {
+  const selectedRoot = process.env.RAYPX_VERIFY_ROOT;
+  return selectedRoot && resolve(selectedRoot) === resolve(root) ? process.env[name] : undefined;
+}
+
+export function taskModel(
+  root: string,
+  selection = verificationEnvironment(root, "RAYPX_VERIFY_TASKS"),
+  cargoSelection = verificationEnvironment(root, "RAYPX_VERIFY_CARGO"),
+): TaskModel {
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   const index = discover(root, { metadataKey: "raypx" });
   if (index.findings.length) throw new Error(index.findings.join("\n"));
@@ -223,43 +240,8 @@ export function taskModel(root: string): TaskModel {
       dependsOn,
       cache: false,
     });
-  // Cargo owns Rust's incremental state. Keep it outside VP's filesystem tracer.
-  const rust = existsSync(join(root, "Cargo.toml"));
-  if (rust) {
-    // Linux library CI has no WebKitGTK development packages. The Desktop
-    // application has its own macOS/Windows checks and packaged smoke gates.
-    const exclude =
-      process.platform === "linux" && existsSync(join(root, "apps/desktop/src-tauri/Cargo.toml"))
-        ? " --exclude raypx-desktop"
-        : "";
-    const desktop = members.find(
-      (member) =>
-        member.native &&
-        member.scripts["tauri:generate"] &&
-        existsSync(join(root, member.path, "src-tauri/Cargo.toml")),
-    );
-    const prepare =
-      desktop && process.platform !== "linux"
-        ? [taskRef(desktop.name, "tauri:generate"), taskRef(desktop.name, "tauri:cli")]
-        : [];
-    const commands = {
-      build: `cargo build --workspace${exclude} --all-targets --locked`,
-      check: `cargo check --workspace${exclude} --all-targets --locked`,
-      test: `cargo test --workspace${exclude} --locked`,
-      lint: `cargo clippy --workspace${exclude} --all-targets --locked -- -D warnings`,
-      format: "cargo fmt --all -- --check",
-    };
-    for (const [name, command] of Object.entries(commands))
-      definitions.set(taskRef(manifest.name, `rust:${name}`), {
-        command,
-        dependsOn: name === "format" ? [] : prepare,
-        cache: false,
-      });
-    aggregate(
-      "rust:verify",
-      Object.keys(commands).map((name) => taskRef(manifest.name, `rust:${name}`)),
-    );
-  }
+  const rust = rustTasks(root, manifest.name, members, definitions, cargoSelection);
+  if (rust.length) aggregate("verify:rust", rust);
   const names = new Set(members.flatMap((member) => Object.keys(member.scripts)));
   for (const name of names)
     aggregate(
@@ -271,13 +253,15 @@ export function taskModel(root: string): TaskModel {
     dependsOn: [],
     cache: false,
   });
-  for (const name of ["verify", "verify:quick"])
-    aggregate(
-      name,
-      ["check", "test", ...(name === "verify" ? ["build"] : []), "lint"]
-        .filter((task) => definitions.has(taskRef(manifest.name, task)))
-        .map((task) => taskRef(manifest.name, task)),
-    );
+  const selected: unknown = selection ? JSON.parse(selection) : [];
+  if (
+    !Array.isArray(selected) ||
+    selected.some(
+      (ref) => typeof ref !== "string" || !definitions.has(ref) || ref.endsWith("#task:verify:run"),
+    )
+  )
+    throw new Error("Invalid verification task selection");
+  aggregate("verify:run", [...new Set(selected as string[])]);
   return { root, rootName: manifest.name, members, definitions };
 }
 

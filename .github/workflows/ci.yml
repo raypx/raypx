@@ -3,18 +3,61 @@ on:
   pull_request:
   push:
     branches: [canary, next]
+    tags: ["v*"]
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+env:
+  BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
 jobs:
-  foundation:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      native: ${{ steps.plan.outputs.native }}
+      backend: ${{ steps.plan.outputs.backend }}
+      browser: ${{ steps.plan.outputs.browser }}
+      rust: ${{ steps.plan.outputs.rust }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun
+      - name: Select affected verification gates
+        id: plan
+        run: bun run raypx-dev ci:plan
+  javascript:
+    needs: changes
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    env:
-      BUN_INSTALL_CACHE_DIR: ${{ github.workspace }}/.cache/bun-install
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/vp-restore
+        id: vp-cache
+        with:
+          partition: javascript
+      - name: Verify affected source and artifacts
+        run: bun run raypx-dev ci:gate js
+      - name: Generated sources remain reproducible
+        run: git diff --exit-code
+      - uses: ./.github/actions/vp-save
+        with:
+          key: ${{ steps.vp-cache.outputs.key }}
+  libraries:
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    uses: ./.github/workflows/rust.yml
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:17
@@ -32,56 +75,36 @@ jobs:
         options: >-
           --health-cmd "valkey-cli ping"
           --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      TEST_DATABASE_URL: postgres://raypx:raypx@127.0.0.1:5432/raypx_foundation_ci_test
+      TEST_REDIS_URL: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
-        id: bun
         with:
-          bun-version-file: package.json
-      - name: Restore Bun downloads
-        id: bun-cache
-        uses: actions/cache/restore@v6
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun
+      - run: bun run raypx-dev ci:gate backend
+  browser:
+    needs: changes
+    if: needs.changes.outputs.browser == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
         with:
-          path: ${{ env.BUN_INSTALL_CACHE_DIR }}
-          key: bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-
-      - run: bun install --frozen-lockfile
-        id: install
-      - name: Save Bun downloads
-        if: steps.bun-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
-        with:
-          path: ${{ env.BUN_INSTALL_CACHE_DIR }}
-          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
-      - name: Restore VP tasks
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/vp-restore
         id: vp-cache
-        uses: actions/cache/restore@v6
         with:
-          path: node_modules/.vite/task-cache
-          key: vp-v1-${{ runner.os }}-${{ runner.arch }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            vp-v1-${{ runner.os }}-${{ runner.arch }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-
-      - run: bun run verify
-      - run: bun run --cwd apps/api test:postgres
-        env:
-          NODE_ENV: test
-          TEST_DATABASE_URL: postgres://raypx:raypx@127.0.0.1:5432/raypx_foundation_ci_test
-      - run: bun run --cwd apps/api test:redis
-        env:
-          NODE_ENV: test
-          TEST_REDIS_URL: redis://127.0.0.1:6379
+          partition: browser
       - run: bun --bun playwright install --with-deps chromium
         working-directory: e2e
-      - run: bun run --cwd e2e e2e
-      - name: Generated sources remain reproducible
-        run: git diff --exit-code
-      - name: Save successful VP tasks
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        uses: actions/cache/save@v6
+      - run: bun run raypx-dev ci:gate browser
+      - uses: ./.github/actions/vp-save
         with:
-          path: node_modules/.vite/task-cache
-          key: ${{ steps.vp-cache.outputs.cache-primary-key }}
+          key: ${{ steps.vp-cache.outputs.key }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -89,6 +112,8 @@ jobs:
           path: e2e/test-results
           if-no-files-found: ignore
   desktop:
+    needs: changes
+    if: needs.changes.outputs.native == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -114,38 +139,11 @@ jobs:
       - uses: actions/checkout@v7
       - name: Use the pinned Rust toolchain
         run: rustup show
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: desktop-${{ runner.os }}
-          cache-on-failure: "true"
-      - uses: oven-sh/setup-bun@v2
-        id: bun
-        with:
-          bun-version-file: package.json
-      - name: Restore Bun downloads
-        id: bun-cache
-        uses: actions/cache/restore@v6
-        with:
-          path: ${{ env.BUN_INSTALL_CACHE_DIR }}
-          key: bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-
-      - run: bun install --frozen-lockfile
-        id: install
-      - name: Save Bun downloads
-        if: steps.bun-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
-        with:
-          path: ${{ env.BUN_INSTALL_CACHE_DIR }}
-          key: ${{ steps.bun-cache.outputs.cache-primary-key }}
-      - name: Restore VP tasks
+      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/vp-restore
         id: vp-cache
-        uses: actions/cache/restore@v6
         with:
-          path: node_modules/.vite/task-cache
-          key: vp-v1-${{ runner.os }}-${{ runner.arch }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            vp-v1-${{ runner.os }}-${{ runner.arch }}-bun${{ steps.bun.outputs.bun-version }}-${{ github.job }}-
+          partition: desktop
       - name: Prepare renderer and version-matched sidecar
         shell: bash
         run: |
@@ -156,7 +154,22 @@ jobs:
       - name: Herdr terminal integration
         env:
           RAYPX_HERDR_COMPILED: "1"
-        run: bun run --cwd apps/cli smoke:herdr-terminal
+        shell: bash
+        run: |
+          bun - <<'TS'
+          for (let attempt = 0; attempt < (process.platform === "win32" ? 3 : 1); attempt++) {
+            const child = Bun.spawn([process.execPath, "run", "--cwd", "apps/cli", "smoke:herdr-terminal"], {
+              stdin: "ignore", stdout: "inherit", stderr: "inherit", windowsHide: true,
+            });
+            const code = await child.exited;
+            if (code !== 0) process.exit(code);
+          }
+          TS
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: raypx-rust-v2
+          key: desktop
+          cache-on-failure: "false"
       - name: Desktop Rust checks
         shell: bash
         run: |
@@ -296,9 +309,20 @@ jobs:
           if [ -n "$RAYPX_DESKTOP_BUNDLE_CONFIG" ]; then
             rm -f "$RAYPX_DESKTOP_BUNDLE_CONFIG"
           fi
-      - name: Save successful VP tasks
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        uses: actions/cache/save@v6
+      - uses: ./.github/actions/vp-save
         with:
-          path: node_modules/.vite/task-cache
-          key: ${{ steps.vp-cache.outputs.cache-primary-key }}
+          key: ${{ steps.vp-cache.outputs.key }}
+  foundation:
+    if: always()
+    needs: [changes, javascript, backend, browser, desktop, libraries]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Require every selected gate to pass
+        env:
+          GITHUB_NEEDS: ${{ toJSON(needs) }}
+        run: bun packages/tooling/src/verification/result.ts

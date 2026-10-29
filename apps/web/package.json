@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "raypx-dev env -- bun --bun vp dev --config vite.app.config.ts",
     "build": "raypx-dev env -- bun --bun vp build --config vite.app.config.ts",
+    "_build": "bun --bun vp build --config vite.app.config.ts",
     "preview": "raypx-dev env -- bun --bun vp preview --config vite.app.config.ts",
     "start": "bun .output/server/index.mjs",
     "check": "bun --check --tsconfig-override tsconfig.json",
@@ -54,6 +55,9 @@
   "raypx": {
     "kind": "app",
     "target": "browser",
+    "taskScripts": {
+      "build": "_build"
+    },
     "sourceTargets": {
       "vite.app.config.ts": "node"
     }

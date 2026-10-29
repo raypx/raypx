@@ -33,6 +33,7 @@ function fixture() {
           "tauri:generate",
           "tauri:cli",
           "native:csp",
+          "vp",
         ].map((name) => [name, `bun record.ts ${name}`]),
       ),
     }),
@@ -153,19 +154,8 @@ describe("Desktop task graph entry", () => {
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
-        name: "raypx-dev",
-        args: [
-          "env",
-          "--",
-          process.execPath,
-          "--bun",
-          "vp",
-          "build",
-          "--config",
-          "vite.app.config.ts",
-          "--mode",
-          "staging",
-        ],
+        name: "vp",
+        args: ["build", "--config", "vite.app.config.ts", "--mode", "staging"],
         forwarded: {},
       },
       { name: "native:csp", args: [], forwarded: {} },
@@ -205,11 +195,6 @@ describe("Desktop task graph entry", () => {
     const result = fixture()("build", { leaf: true, forwarded: ["--mode", "value with spaces"] });
     expect(result.status).toBe(0);
     expect(result.events[0]?.args).toEqual([
-      "env",
-      "--",
-      process.execPath,
-      "--bun",
-      "vp",
       "build",
       "--config",
       "vite.app.config.ts",
@@ -222,19 +207,8 @@ describe("Desktop task graph entry", () => {
     expect(result.status).toBe(0);
     expect(result.events).toEqual([
       {
-        name: "raypx-dev",
-        args: [
-          "env",
-          "--",
-          process.execPath,
-          "--bun",
-          "vp",
-          "build",
-          "--config",
-          "vite.app.config.ts",
-          "--mode",
-          "e2e",
-        ],
+        name: "vp",
+        args: ["build", "--config", "vite.app.config.ts", "--mode", "e2e"],
         forwarded: {},
         browserBuild: true,
       },

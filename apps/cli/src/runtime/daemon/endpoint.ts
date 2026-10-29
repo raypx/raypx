@@ -157,6 +157,7 @@ export async function connectDaemon(
         ],
         {
           detached: true,
+          env: process.env,
           stdin: "ignore",
           stdout: "ignore",
           stderr: "ignore",

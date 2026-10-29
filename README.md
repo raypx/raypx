@@ -46,7 +46,7 @@ bun run test --package tasks
 bun run --cwd packages/tasks test
 bun run build
 bun run verify
-bun run rust:verify
+bun run verify --full
 cargo run -p raypx-core --locked --example basic
 bun run package:desktop
 ```

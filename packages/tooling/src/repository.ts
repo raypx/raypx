@@ -31,7 +31,7 @@ export async function runTasks(
           ? "--concurrency-limit"
           : value.replace(/^--concurrency=/, "--concurrency-limit="),
     );
-  const model = taskModel(root);
+  const model = taskModel(root, environment.RAYPX_VERIFY_TASKS, environment.RAYPX_VERIFY_CARGO);
   const filtered = options.some((value) => value === "--filter" || value.startsWith("--filter="));
   if (owner && filtered) throw new Error("Use either a qualified task or workspace filters");
   if (filtered && forwarded.length)
@@ -43,9 +43,11 @@ export async function runTasks(
     return;
   }
   const verb = name.split(":")[0];
-  const environmentBase = ["dev", "build"].includes(verb!)
-    ? developmentEnvironment(root)
-    : process.env;
+  const planned = taskPlan(model, [reference]);
+  const preparesEnvironment =
+    ["dev", "build"].includes(verb!) ||
+    planned.some((entry) => /#(?:build(?::renderer)?|dev)$/.test(entry.taskId));
+  const environmentBase = preparesEnvironment ? developmentEnvironment(root) : process.env;
   const env: NodeJS.ProcessEnv = {
     ...environmentBase,
     ...(browser?.env ?? environment),

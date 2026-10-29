@@ -22,7 +22,7 @@ fn require_name(name: &str) -> Result<&str> {
 From the repository root:
 
 ```sh
-bun run rust:verify
+bun run verify --full
 cargo run -p raypx-core --locked --example basic
 cargo doc -p raypx-core --no-deps --open
 ```

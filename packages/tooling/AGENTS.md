@@ -15,18 +15,22 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
-- raypx-dev policy | verify | verify:quick | doctor | clean | clean:rust | clean:artifacts
+- raypx-dev policy | verify | doctor | clean | clean:rust | clean:artifacts
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--with-e2e [-- Playwright flags]]
 - `raypx.taskScripts` delegates a public package script to a terminal runner inside
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
-- `verify:quick` checks source and tests; `verify` additionally builds and probes artifacts.
-- Optional root `rust:*` tasks run Cargo uncached, separately from default Bun gates.
-  Cargo owns incremental compilation under `target/`. macOS/Windows compile gates
-  prepare generated Desktop contracts and the matching CLI through VP before Cargo;
-  formatting and Linux library gates skip native preparation.
+- `verify` selects affected source/tests and Rust packages; `verify --full` checks
+  all current-platform JS/Rust sources, builds and probes. `--base` selects a Git
+  base; `--dry-run` prints the plan and expanded VP graph.
+- CI consumes the same planner through private `ci:plan`/`ci:gate` entries. Unknown
+  inputs or unavailable dependency graphs select full coverage. Required results
+  distinguish intentional skips from missing/cancelled/failed gates.
+- One private Rust pipeline runs rustfmt, Clippy and tests serially, uncached in VP.
+  Cargo owns incremental compilation under `target/`. Only selected Desktop checks
+  prepare generated contracts and the matching CLI; library-only changes skip staging.
 - `clean` removes workspace outputs, staged Tauri binaries/generated schemas and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
@@ -39,7 +43,7 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   `native:build` and native smoke/beta/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
   before starting Vite and Tauri. Direct Desktop scripts enter the same VP graph.
-  Linux root `rust:*` excludes `raypx-desktop`; platform CI checks that crate.
+  Linux Rust verification excludes `raypx-desktop`; platform CI checks that crate.
 - `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
 
 ## Constraints
@@ -74,7 +78,7 @@ outside VP's filesystem tracer; Cargo owns its incremental state.
 Type checks explicitly fingerprint source/config files in the transitive workspace
 dependency closure, retaining dependency declarations under build outputs; Bun's
 native typechecker reads are not fully covered by automatic tracing on Linux.
-Verification builds the API/Web outputs and probes them under the running Bun using temporary
+Full verification builds the API/Web outputs and probes them concurrently under Bun using temporary
 roots and fixture environments. `src/validation/toolchain.ts` reads the single Bun pin from
 `packageManager` and rejects Node pins. These config/test entries never enter product runtime code.
 `./browser-tests` combines browser surface/smoke/grep filters. Browser launchers

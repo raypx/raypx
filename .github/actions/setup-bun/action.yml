@@ -1,0 +1,23 @@
+name: Prepare pinned Bun dependencies
+description: Restore downloads and perform one frozen workspace install
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+      id: bun
+      with:
+        bun-version-file: package.json
+    - uses: actions/cache/restore@v6
+      id: downloads
+      with:
+        path: ${{ env.BUN_INSTALL_CACHE_DIR }}
+        key: bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-
+    - shell: bash
+      run: bun install --frozen-lockfile
+    - uses: actions/cache/save@v6
+      if: steps.downloads.outputs.cache-hit != 'true'
+      with:
+        path: ${{ env.BUN_INSTALL_CACHE_DIR }}
+        key: ${{ steps.downloads.outputs.cache-primary-key }}

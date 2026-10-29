@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  // Standalone CLI builds do not consume Vite browser environment variables.
+  envPrefix: [],
   ...workspaceTaskConfig(import.meta.url),
   pack: {
     entry: { main: "src/main.ts" },

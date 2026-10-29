@@ -32,6 +32,7 @@ if (
 )
   throw new Error("The selected renderer task owns its mode and output directory");
 // Scope Desktop arguments to its selected VP task, including dependency builds.
+// Explicitly forward changes: Bun's default spawn environment is its startup snapshot.
 const env = { ...process.env };
 if (task !== "build:renderer") delete env.RAYPX_DESKTOP_BROWSER_BUILD;
 if (!leaf) {
@@ -49,42 +50,14 @@ if (!leaf) {
   ];
 } else if (task === "build") {
   commands = [
-    [
-      bun,
-      "run",
-      "raypx-dev",
-      "env",
-      "--",
-      bun,
-      "--bun",
-      "vp",
-      "build",
-      "--config",
-      "vite.app.config.ts",
-      ...args,
-    ],
+    [bun, "--bun", "vp", "build", "--config", "vite.app.config.ts", ...args],
     [bun, "run", "native:csp"],
   ];
 } else if (task === "build:renderer") {
   // Start's prerender preview reloads Vite config without forwarding --mode.
   env.RAYPX_DESKTOP_BROWSER_BUILD = "1";
   commands = [
-    [
-      bun,
-      "run",
-      "raypx-dev",
-      "env",
-      "--",
-      bun,
-      "--bun",
-      "vp",
-      "build",
-      "--config",
-      "vite.app.config.ts",
-      ...args,
-      "--mode",
-      "e2e",
-    ],
+    [bun, "--bun", "vp", "build", "--config", "vite.app.config.ts", ...args, "--mode", "e2e"],
     [bun, "run", "native:csp", "artifacts/browser/client"],
   ];
 } else if (nativeGate) {
