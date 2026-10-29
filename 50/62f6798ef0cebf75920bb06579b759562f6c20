@@ -1,0 +1,21 @@
+docs/development/testing.md
+  s_7ebdb0b32aa724::t_fecf4cdc21f414 96-98
+packages/tooling/src/tasks/model.ts
+  s_7ebdb0b32aa724::t_2eabc62e5a4980 92,112-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5062f6798ef0cebf75920bb06579b759562f6c20",
+  "prompts": {},
+  "sessions": {
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
