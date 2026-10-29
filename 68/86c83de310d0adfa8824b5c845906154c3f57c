@@ -1,0 +1,55 @@
+packages/tooling/src/verification/plan.ts
+  s_3a4b502e70ec90::t_99b6db25ac3ccc 6,190-195,201
+  s_3a4b502e70ec90::t_0c880bb85982c9 179-180,196-200
+docs/development/testing.md
+  s_3a4b502e70ec90::t_9ac1e681e800ee 58
+  s_3a4b502e70ec90::t_dac3cf00e28a0a 44,49-54,57
+  s_3a4b502e70ec90::t_7c5f3f1572dc26 55-56
+packages/tooling/tests/unit/native-workflow.test.ts
+  s_3a4b502e70ec90::t_422fe75106b911 15,25,46-49
+  s_3a4b502e70ec90::t_dac3cf00e28a0a 18,35,40-41,43-45
+  s_3a4b502e70ec90::t_8c34cdb7dca4a3 24,72-74,81-87
+  s_3a4b502e70ec90::t_714da732a6044b 1-14,16-17,19-23,26-34,36-39,42,50-71,75-80,88-95
+packages/tooling/tests/integration/cache.test.ts
+  s_3a4b502e70ec90::t_9ac1e681e800ee 286
+.github/workflows/native.yml
+  s_3a4b502e70ec90::t_99b6db25ac3ccc 9-12,31,34-36,39,66,95,98-103,106
+  s_3a4b502e70ec90::t_714da732a6044b 1-8,13-18,20-30,32-33,37-38,40-65,67-94,96-97,104-105,107-111,113-253
+  s_3a4b502e70ec90::t_d9be1bbaacccd3 112
+  s_3a4b502e70ec90::t_dac3cf00e28a0a 19
+packages/tooling/src/repository.ts
+  s_3a4b502e70ec90::t_9ac1e681e800ee 25-30
+packages/tooling/src/verification/result.ts
+  s_3a4b502e70ec90::t_99b6db25ac3ccc 1-2,4,8,13-16,30-33
+  s_3a4b502e70ec90::t_7d01efbbbe31fd 34-37
+packages/tooling/src/verification/events.ts
+  s_3a4b502e70ec90::t_99b6db25ac3ccc 1-2,7
+  s_3a4b502e70ec90::t_dac3cf00e28a0a 3-6
+.github/workflows/ci.yml
+  s_3a4b502e70ec90::t_99b6db25ac3ccc 8-12,29,127-131,145
+  s_3a4b502e70ec90::t_7c5f3f1572dc26 16
+packages/tooling/AGENTS.md
+  s_3a4b502e70ec90::t_dac3cf00e28a0a 31-33
+packages/tooling/src/cli.ts
+  s_3a4b502e70ec90::t_99b6db25ac3ccc 105
+packages/tooling/tests/unit/verification.test.ts
+  s_3a4b502e70ec90::t_dac3cf00e28a0a 12,131,136,138,211-218
+  s_3a4b502e70ec90::t_7c5f3f1572dc26 2-3,132-134,179-185,219-247
+  s_3a4b502e70ec90::t_78689e4bbc1a89 248-255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6886c83de310d0adfa8824b5c845906154c3f57c",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
