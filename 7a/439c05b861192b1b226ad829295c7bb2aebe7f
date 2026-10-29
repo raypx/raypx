@@ -1,0 +1,21 @@
+.github/workflows/bench-turbo.yml
+  s_7ebdb0b32aa724::t_b8b45f60e1178b 1-66
+bench/run.ts
+  s_7ebdb0b32aa724::t_1eff90a583e351 4-5,57-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7a439c05b861192b1b226ad829295c7bb2aebe7f",
+  "prompts": {},
+  "sessions": {
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
