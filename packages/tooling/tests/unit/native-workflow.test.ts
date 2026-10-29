@@ -1,0 +1,95 @@
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { expect, it } from "vite-plus/test";
+
+type Step = {
+  name?: string;
+  uses?: string;
+  if?: string;
+  run?: string;
+  with?: Record<string, string>;
+};
+type Job = {
+  needs?: string | string[];
+  uses?: string;
+  with?: Record<string, string>;
+  env?: Record<string, string>;
+  steps?: Step[];
+  strategy?: { "fail-fast": boolean; matrix: Record<string, string[] | string> };
+};
+const root = resolve(import.meta.dirname, "../../../..");
+const workflow = (name: string) =>
+  Bun.YAML.parse(readFileSync(join(root, `.github/workflows/${name}.yml`), "utf8")) as {
+    jobs: Record<string, Job>;
+    concurrency?: { group: string };
+    on: { workflow_call?: { inputs: { distribution: { default: boolean } } } };
+  };
+const native = workflow("native").jobs;
+const steps = native.verify!.steps!;
+const named = (name: string) => {
+  const step = steps.find((candidate) => candidate.name === name);
+  if (!step) throw new Error(`Missing native acceptance step: ${name}`);
+  return step;
+};
+
+it("checks both platforms and adds parallel distribution phases only when requested", () => {
+  const ci = workflow("ci").jobs;
+  expect(ci.desktop?.uses).toBe("./.github/workflows/native.yml");
+  expect(ci.desktop?.strategy?.matrix.os).toEqual(["macos-latest", "windows-latest"]);
+  expect(ci.foundation?.needs).toContain("desktop");
+  expect(ci.desktop?.with?.distribution).toContain("needs.changes.outputs.distribution");
+  expect(workflow("native").on.workflow_call?.inputs.distribution.default).toBe(false);
+  expect(native.verify?.needs).toBe("prepare");
+  expect(native.verify?.strategy?.["fail-fast"]).toBe(false);
+  const selection = native.verify!.strategy!.matrix.phase as string;
+  expect(selection).toContain("inputs.distribution &&");
+  expect(selection.match(/\[[^\]]+\]/g)?.map((json) => JSON.parse(json))).toEqual([
+    ["checks", "package", "smoke"],
+    ["checks"],
+  ]);
+});
+
+it("prepares and verifies Herdr before publishing the shared JS cache", () => {
+  const prepare = native.prepare!.steps!;
+  const herdr = prepare.findIndex((step) => step.name === "Herdr terminal integration");
+  const save = prepare.findIndex((step) => step.uses === "./.github/actions/vp-save");
+  expect(herdr).toBeGreaterThan(-1);
+  expect(save).toBeGreaterThan(herdr);
+  expect(prepare.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
+  expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
+});
+
+it("keeps Cargo cache writers and smoke outputs isolated by phase", () => {
+  const cache = steps.find((step) => step.uses === "Swatinem/rust-cache@v2")!;
+  expect(cache.with?.["shared-key"]).toContain("matrix.phase");
+  expect(cache.with?.workspaces).toContain("target/native-smoke");
+  expect(cache.with?.["cache-on-failure"]).toBe("false");
+});
+
+it("retains Rust, production and interactive smoke acceptance", () => {
+  expect(named("Desktop Rust checks").if).toBe("matrix.phase == 'checks'");
+  expect(named("Desktop Rust checks").run).toContain("--all-targets --all-features --locked");
+  expect(named("Desktop Rust checks").run).toContain(
+    "cargo clippy -p raypx-desktop --all-targets --locked -- -D warnings",
+  );
+  expect(named("Package desktop").if).toBe("matrix.phase == 'package'");
+  expect(named("Verify production Desktop excludes smoke controls").if).toBe(
+    "matrix.phase == 'package'",
+  );
+  expect(named("Packaged native smoke").if).toBe("matrix.phase == 'smoke'");
+  expect(named("Packaged native smoke").run).toContain("native:smoke:interactive");
+});
+
+it("keeps explicit release acceptance independent from routine push cancellation", () => {
+  const group = workflow("ci").concurrency?.group;
+  expect(group).toContain("github.event_name");
+  expect(group).toContain("inputs.distribution");
+  expect(workflow("rust").concurrency).toBeUndefined();
+});
+
+it("exposes distribution credentials only to packaging and always cleans them up", () => {
+  for (const value of Object.values(native.verify!.env!))
+    expect(value).toContain("matrix.phase == 'package'");
+  expect(named("Remove temporary macOS signing material").if).toContain("always()");
+  expect(named("Remove temporary Windows signing material").if).toContain("always()");
+});

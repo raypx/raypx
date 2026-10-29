@@ -41,11 +41,21 @@ for focused Rust debugging. See the [Rust workspace guide](rust.md).
 
 GitHub uses the same change planner. JS, database, browser and native gates run in
 parallel when relevant; Desktop/CLI dependencies retain both native platforms.
-Tags and manual dispatch select full coverage. `foundation` requires every selected
+Tags and manual dispatch select full source coverage. `foundation` requires every selected
 gate to succeed and permits only intentional skips. Herdr checks precede Rust cache
 restoration, failed jobs do not save large Rust caches, and VP archives are saved only
 when new successful task artifacts exist. Rust caches cover both production and smoke
 Cargo directories while keeping their outputs isolated.
+Native checks use `native.yml`: normal branch/PR runs prepare a matching CLI, run
+Herdr and execute Rust source checks on both platforms. The Rust-only job uses an
+empty frontend placeholder; actual renderer builds and browser tests run in the JS gates.
+Installer creation, signatures and installed GUI smoke run on tag pushes or manual
+dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
+Those runs require Rust checks, production packaging and packaged GUI smoke in parallel.
+Manual distribution runs have their own cancellation group, so routine pushes cannot
+cancel a release acceptance run. Reusable Rust jobs follow their caller's cancellation.
+The preparation job alone saves VP artifacts; phase consumers only restore them. Cargo archives have
+separate phase keys, so a check-only job cannot overwrite release or smoke dependencies.
 CI installs the pinned compiler in an isolated `RUSTUP_HOME`; unrelated preinstalled
 toolchains must not affect Rust cache keys when runner images change.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.

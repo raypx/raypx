@@ -28,6 +28,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 - CI consumes the same planner through private `ci:plan`/`ci:gate` entries. Unknown
   inputs or unavailable dependency graphs select full coverage. Required results
   distinguish intentional skips from missing/cancelled/failed gates.
+- Branch/PR native gates check sources and Herdr. Installers, signing and installed
+  GUI acceptance require a tag push or manual `distribution` request; release gates
+  run in parallel and the final result validates their selection against the event.
 - One private Rust pipeline runs rustfmt, Clippy and tests serially, uncached in VP.
   Cargo owns incremental compilation under `target/`. Only selected Desktop checks
   prepare generated contracts and the matching CLI; library-only changes skip staging.

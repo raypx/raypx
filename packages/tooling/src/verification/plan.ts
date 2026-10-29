@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { cargoChanges } from "./rust.js";
+import { distributionRequested } from "./events.js";
 
 export type Artifact = "api" | "web" | "cli";
 export interface VerificationPlan {
@@ -175,7 +176,8 @@ export function localPlan(
 }
 export function githubPlan(root: string, eventName: string, event: Record<string, unknown>) {
   const pull = event.pull_request as { base: { sha: string } } | undefined;
-  const full = eventName === "workflow_dispatch" || String(event.ref).startsWith("refs/tags/");
+  const ref = typeof event.ref === "string" ? event.ref : "";
+  const full = eventName === "workflow_dispatch" || ref.startsWith("refs/tags/");
   const before =
     eventName === "pull_request"
       ? pull?.base.sha
@@ -185,11 +187,18 @@ export function githubPlan(root: string, eventName: string, event: Record<string
   const changed = before
     ? changedFiles(root, "HEAD", { before, head: "HEAD" })
     : { files: [], reasons: full ? [] : ["Event base unavailable; running full verification"] };
-  return verificationPlan(taskModel(root), changed.files, {
-    full,
-    artifacts: true,
-    reasons: changed.reasons,
-  });
+  return {
+    ...verificationPlan(taskModel(root), changed.files, {
+      full,
+      artifacts: true,
+      reasons: changed.reasons,
+    }),
+    distribution: distributionRequested(
+      eventName,
+      ref,
+      (event.inputs as Record<string, unknown> | undefined)?.distribution,
+    ),
+  };
 }
 export function readGithubPlan(root: string) {
   const file = process.env.GITHUB_EVENT_PATH;

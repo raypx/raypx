@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { copyFileSync, mkdirSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { workspaceFixtures } from "../helpers/workspace.js";
 import { taskModel, taskPlan, taskRef } from "../../src/tasks/model.js";
@@ -9,6 +9,7 @@ import { verifyOptions } from "../../src/verification/index.js";
 import { assertCiResult } from "../../src/verification/result.js";
 import { completionReport } from "../../src/verification/report.js";
 import { affectedCargo } from "../../src/verification/rust.js";
+import { distributionRequested } from "../../src/verification/events.js";
 
 const { fixture, member } = workspaceFixtures();
 afterEach(() => vi.unstubAllEnvs());
@@ -127,8 +128,14 @@ describe("affected verification", () => {
   it("runs manual/tag events fully and fails closed on unavailable push bases", () => {
     const { root } = project();
     expect(githubPlan(root, "workflow_dispatch", {}).full).toBe(true);
+    expect(githubPlan(root, "workflow_dispatch", {}).distribution).toBe(false);
+    expect(
+      githubPlan(root, "workflow_dispatch", { inputs: { distribution: "true" } }).distribution,
+    ).toBe(true);
     expect(githubPlan(root, "push", { ref: "refs/tags/v1.0.0" }).full).toBe(true);
+    expect(githubPlan(root, "push", { ref: "refs/tags/v1.0.0" }).distribution).toBe(true);
     expect(githubPlan(root, "push", { before: "0".repeat(40) }).full).toBe(true);
+    expect(githubPlan(root, "push", { before: "0".repeat(40) }).distribution).toBe(false);
   });
   it("uses one public command with explicit full mode and strict options", () => {
     expect(verifyOptions([])).toEqual({});
@@ -169,7 +176,13 @@ describe("required CI results", () => {
   const needs = {
     changes: {
       result: "success",
-      outputs: { backend: "false", browser: "false", native: "false", rust: "false" },
+      outputs: {
+        backend: "false",
+        browser: "false",
+        native: "false",
+        rust: "false",
+        distribution: "false",
+      },
     },
     javascript: { result: "success" },
     backend: { result: "skipped" },
@@ -194,6 +207,51 @@ describe("required CI results", () => {
     expect(() => assertCiResult({ ...needs, changes: { result: "failure" } })).toThrow(
       "Change analysis",
     );
+  });
+  it("requires explicit distribution selection and rejects release/source-mode mismatches", () => {
+    expect(distributionRequested("push", "refs/heads/canary")).toBe(false);
+    expect(distributionRequested("pull_request", "refs/pull/1/merge")).toBe(false);
+    expect(distributionRequested("push", "refs/tags/v1.0.0")).toBe(true);
+    expect(distributionRequested("workflow_dispatch", "refs/tags/v1.0.0", false)).toBe(false);
+    expect(distributionRequested("workflow_dispatch", "refs/heads/canary", "true")).toBe(true);
+    expect(() => assertCiResult(needs, false)).not.toThrow();
+    expect(() => assertCiResult(needs, true)).toThrow("does not match the event");
+    expect(() =>
+      assertCiResult(
+        {
+          ...needs,
+          changes: {
+            ...needs.changes,
+            outputs: { ...needs.changes.outputs, distribution: "true" },
+          },
+        },
+        true,
+      ),
+    ).toThrow("requires native gates");
+  });
+  it("runs the final gate without dependencies and validates manual input against the plan", () => {
+    const root = fixture();
+    const source = resolve(import.meta.dirname, "../../src/verification");
+    for (const file of ["result.ts", "events.ts"])
+      copyFileSync(join(source, file), join(root, file));
+    const execute = (request: string) =>
+      Bun.spawnSync([process.execPath, join(root, "result.ts")], {
+        cwd: root,
+        env: {
+          ...process.env,
+          PATH: "",
+          GITHUB_NEEDS: JSON.stringify(needs),
+          GITHUB_EVENT_NAME: "workflow_dispatch",
+          GITHUB_REF: "refs/heads/canary",
+          RAYPX_DISTRIBUTION_REQUEST: request,
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+    expect(execute("false").exitCode).toBe(0);
+    const mismatched = execute("true");
+    expect(mismatched.exitCode).not.toBe(0);
+    expect(new TextDecoder().decode(mismatched.stderr)).toContain("does not match the event");
   });
 });
 

@@ -102,7 +102,7 @@ async function main() {
       if (process.env.GITHUB_OUTPUT)
         appendFileSync(
           process.env.GITHUB_OUTPUT,
-          `native=${plan.native}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\nrust=${plan.rust}\n`,
+          `native=${plan.native}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\nrust=${plan.rust}\ndistribution=${plan.distribution}\n`,
         );
       break;
     }
