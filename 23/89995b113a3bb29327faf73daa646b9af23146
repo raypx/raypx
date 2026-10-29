@@ -1,0 +1,153 @@
+apps/cli/src/runtime/process/herdr.ts
+  s_3a4b502e70ec90::t_aabea209d1ecc4 9,42-48,203,500,505,516,522
+  s_3a4b502e70ec90::t_9f9d48998b3f6e 1
+  s_3a4b502e70ec90::t_e83288cd271695 49-51,182,204-205,440-441,443-498,501-502,504,517-521,523-524,541-543,561
+packages/tooling/AGENTS.md
+  s_3a4b502e70ec90::t_0f7d6a8a2d972d 25-33,46,81
+  s_3a4b502e70ec90::t_ed9aa86c692afc 18
+apps/cli/src/runtime/process/herdr-cleanup.ts
+  s_3a4b502e70ec90::t_aabea209d1ecc4 1-17
+  s_3a4b502e70ec90::t_d0c77e4df1744d 18-19
+apps/web/package.json
+  s_3a4b502e70ec90::t_9f9d48998b3f6e 9,58
+  s_3a4b502e70ec90::t_c965f44387bccc 59-60
+apps/cli/src/runtime/process/herdr-internal.ts
+  s_3a4b502e70ec90::t_aabea209d1ecc4 4,43-51
+  s_3a4b502e70ec90::t_5985c778d0edf7 52-57,68
+AGENTS.md
+  s_3a4b502e70ec90::t_0f7d6a8a2d972d 94-97
+apps/desktop/scripts/native/task.ts
+  s_3a4b502e70ec90::t_dad28d0772de1b 35,53,60
+packages/tooling/src/verification/plan.ts
+  s_3a4b502e70ec90::t_a5aae470657996 5,16,21-22,25-29,33-50,53-55,58-60,68,70-75,79-86,88-97,102-103,106-115,117-145,147-148,152-155,162-175,179
+  s_3a4b502e70ec90::t_ac5847f864b367 1-3,6-15,17-20,23-24,30-32,51-52,56-57,61-67,69,76-78,87,98-101,104-105,116,146,149-151,156-161,176-178,180-181
+  s_3a4b502e70ec90::t_9f9d48998b3f6e 4
+  s_3a4b502e70ec90::t_f13f916625fea8 182-198
+.github/actions/setup-bun/action.yml
+  s_3a4b502e70ec90::t_28c9505c80e78f 1-23
+packages/tooling/src/verification/result.ts
+  s_3a4b502e70ec90::t_28c9505c80e78f 1-4,16-24
+  s_3a4b502e70ec90::t_38b6e083b97393 5-7,14
+  s_3a4b502e70ec90::t_f0cf1dc8a6832a 8-13,15
+  s_3a4b502e70ec90::t_e0e7eb2daaa62e 25-26
+docs/development/getting-started.md
+  s_3a4b502e70ec90::t_0f7d6a8a2d972d 22-23
+  s_3a4b502e70ec90::t_27b5f6da82a002 15-17,141-143
+  s_3a4b502e70ec90::t_7b50b1e0c12ca3 18,24,144
+docs/development/testing.md
+  s_3a4b502e70ec90::t_0f7d6a8a2d972d 27-48
+  s_3a4b502e70ec90::t_be5df9dcca3d91 49
+packages/tooling/src/verification/rust.ts
+  s_3a4b502e70ec90::t_a5aae470657996 1-20
+  s_3a4b502e70ec90::t_0c9d4aa1ecdb9b 21-42
+.github/actions/vp-restore/action.yml
+  s_3a4b502e70ec90::t_28c9505c80e78f 1-25
+.github/workflows/rust.yml
+  s_3a4b502e70ec90::t_bd4d00e48de5fd 7,9,18-20
+  s_3a4b502e70ec90::t_c23b39f303107b 3,8
+  s_3a4b502e70ec90::t_4055e020f4f39b 22-23
+.github/workflows/ci.yml
+  s_3a4b502e70ec90::t_58794d33ca3ba5 6,13-14,16-33,36-51,56-60,78-81,85-94,96-98,101,104-105,107,115-116,142-143,146,168-172,312-316,318-322,324-328
+  s_3a4b502e70ec90::t_59b18d1036a630 157-167
+  s_3a4b502e70ec90::t_38b6e083b97393 52-55,317
+apps/cli/tests/unit/runtime/process/herdr-cleanup.test.ts
+  s_3a4b502e70ec90::t_30bbe938ab5ff3 1-21
+  s_3a4b502e70ec90::t_336935abaaee1a 22-42
+apps/desktop/vite.app.config.ts
+  s_3a4b502e70ec90::t_ba620ae2e2e667 2,6,18
+  s_3a4b502e70ec90::t_bf9bc0dea5ba6f 19-21
+apps/web/vite.app.config.ts
+  s_3a4b502e70ec90::t_ba620ae2e2e667 3,9,37
+apps/cli/src/runtime/daemon/endpoint.ts
+  s_3a4b502e70ec90::t_dad28d0772de1b 160
+packages/tooling/src/smoke/index.ts
+  s_3a4b502e70ec90::t_05a18b7175f829 6-20
+  s_3a4b502e70ec90::t_8bda74bcee7fad 21-28
+packages/tooling/tests/unit/verification.test.ts
+  s_3a4b502e70ec90::t_72b30f12a8edcf 4,13,38-44
+  s_3a4b502e70ec90::t_f0cf1dc8a6832a 10,16-19,21-34,63-69,83-85,94-102,111-118,129-133,140-143,154-157,162-165,167-171,173,176-179,184,188-190
+  s_3a4b502e70ec90::t_30bbe938ab5ff3 1-3,5-9,11-12,14-15,20,35-37,45-62,70-82,86-93,103-110,119-128,134-139,174-175,191-192
+  s_3a4b502e70ec90::t_38b6e083b97393 144-153,158-161,166,172,180-183,185-187
+  s_3a4b502e70ec90::t_c6e71b5bd1f556 193-218
+packages/tooling/src/cli.ts
+  s_3a4b502e70ec90::t_28c9505c80e78f 18,103-107,112-113
+  s_3a4b502e70ec90::t_05a18b7175f829 98-102,108-111
+  s_3a4b502e70ec90::t_9f9d48998b3f6e 3,16-17
+  s_3a4b502e70ec90::t_31c43ac6f0cc88 97,175,181,183-185
+.github/actions/vp-save/action.yml
+  s_3a4b502e70ec90::t_28c9505c80e78f 1-17
+packages/tooling/src/repository.ts
+  s_3a4b502e70ec90::t_a5aae470657996 34,47-48,50
+  s_3a4b502e70ec90::t_05a18b7175f829 46
+  s_3a4b502e70ec90::t_ba620ae2e2e667 49
+docs/development/rust.md
+  s_3a4b502e70ec90::t_3fb4e96f4b2882 88-94
+  s_3a4b502e70ec90::t_ffc9701eb46456 24,81-82,85,87,153-156
+packages/tooling/src/verification/index.ts
+  s_3a4b502e70ec90::t_baca7f42515968 25,37-42,46-48,50,63
+  s_3a4b502e70ec90::t_a5aae470657996 14-15,28-34,45
+  s_3a4b502e70ec90::t_77bed0ed3e1376 43-44,49,51-52,64
+  s_3a4b502e70ec90::t_1724e74c336c00 1,53-62
+  s_3a4b502e70ec90::t_9f9d48998b3f6e 3-6,35-36
+  s_3a4b502e70ec90::t_ac5847f864b367 2,7-13,16-24,26-27
+packages/tooling/src/build/start-env.ts
+  s_3a4b502e70ec90::t_ba620ae2e2e667 1-29
+  s_3a4b502e70ec90::t_642b46a901fa79 30-40
+packages/tooling/src/tasks/model.ts
+  s_3a4b502e70ec90::t_77bed0ed3e1376 200-201,204
+  s_3a4b502e70ec90::t_a5aae470657996 95,102
+  s_3a4b502e70ec90::t_1724e74c336c00 96-101,195-199,202-203
+  s_3a4b502e70ec90::t_05a18b7175f829 133
+  s_3a4b502e70ec90::t_e75259cec4708a 6-8,243-244,256-264
+packages/tooling/package.json
+  s_3a4b502e70ec90::t_af1c5683cfecc1 46
+  s_3a4b502e70ec90::t_ba620ae2e2e667 13
+  s_3a4b502e70ec90::t_58a9be2527a32b 54-56
+packages/tooling/tests/unit/start-env.test.ts
+  s_3a4b502e70ec90::t_f0cf1dc8a6832a 1-27
+  s_3a4b502e70ec90::t_97ea9772c3b881 28-36
+packages/tooling/src/verification/cache.ts
+  s_3a4b502e70ec90::t_28c9505c80e78f 1-20
+  s_3a4b502e70ec90::t_b2714f72b33de5 21-25
+apps/desktop/tests/scripts/native/task.test.ts
+  s_3a4b502e70ec90::t_e07abd60f7947d 36,157-158,210
+  s_3a4b502e70ec90::t_185fc8daeca0a0 211
+README.md
+  s_3a4b502e70ec90::t_e8cef959d222a1 49
+apps/cli/vite.config.ts
+  s_3a4b502e70ec90::t_eb0b5030449c61 6-7
+crates/AGENTS.md
+  s_3a4b502e70ec90::t_15f377c4303f6a 33-35
+crates/raypx-core/README.md
+  s_3a4b502e70ec90::t_7e045fcdf0a07e 25
+packages/tooling/src/tasks/names.ts
+  s_3a4b502e70ec90::t_c0e97ecefd05ec 1-2
+packages/tooling/src/tasks/rust.ts
+  s_3a4b502e70ec90::t_7c7c6ec18d2ca4 1-54
+packages/tooling/src/verification/execution.ts
+  s_3a4b502e70ec90::t_0c13cfd534f1a9 1-59
+packages/tooling/src/verification/report.ts
+  s_3a4b502e70ec90::t_1d6dd9a8a5153d 1-40
+packages/tooling/tests/integration/browser-graph.test.ts
+  s_3a4b502e70ec90::t_767af1f7fe344d 117-127
+packages/tooling/tests/unit/bun-deployment.test.ts
+  s_3a4b502e70ec90::t_486569fcbb4892 81-82
+packages/tooling/tests/unit/rust-tasks.test.ts
+  s_3a4b502e70ec90::t_26c98a38903266 50,52-55,57-67,70,72,75,77,86-87,90-101,103,105-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2389995b113a3bb29327faf73daa646b9af23146",
+  "prompts": {},
+  "sessions": {
+    "s_3a4b502e70ec90": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18236-2343-7873-8e2c-36133037a8e2",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
