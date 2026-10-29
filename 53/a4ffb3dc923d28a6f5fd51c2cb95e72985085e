@@ -1,0 +1,35 @@
+packages/tooling/src/verification/plan.ts
+  s_8587c3f54e2a10::t_d8e40b5df988c4 5,68-77,88-92,101-103,105-111,113,144-145
+packages/tooling/src/verification/platform.ts
+  s_8587c3f54e2a10::t_fee956c1b81928 1-102
+docs/development/testing.md
+  s_7ebdb0b32aa724::t_70110d90de0404 33-35,44-45
+packages/tooling/AGENTS.md
+  s_7ebdb0b32aa724::t_8d021793a8090b 29-30
+packages/tooling/tests/unit/verification.test.ts
+  s_7ebdb0b32aa724::t_6eeaef46120b26 38-95,126-158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "53a4ffb3dc923d28a6f5fd51c2cb95e72985085e",
+  "prompts": {},
+  "sessions": {
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_8587c3f54e2a10": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18605-ad86-7c82-87fd-080be732c401",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
