@@ -2,11 +2,20 @@
 
 ## Purpose
 
-Tauri desktop composition root with a React/Vite renderer, persistent WebView, tray and bundled local CLI.
+MyGo composition root with the existing React/Vite renderer, persistent system
+WebView, tray and standalone Bun CLI. internal/AGENTS.md owns Go host rules;
+README.md lists the layout, build and acceptance commands. Preserve DesktopBridge.
 
 ## Interface
 
-`src-tauri/src/lib.rs` owns window, tray, trusted renderer commands and local engine lifecycle. `bridge.ts` declares the renderer bridge. `src-tauri/src/engine.rs` adapts NDJSON to the bundled binary. The renderer is a TanStack Start SPA: file routes live in `src/routes`, `src/router.tsx` exports `getRouter` and provides a TanStack Query client (account caches removed on sign-out), `src/components/shell.tsx` fills the `@raypx/blocks/shell` window frame, and the build writes `dist/client` for the native app origin.
+`main.go`, `go.mod` and `mygo.config.ts` share the frontend root, following the
+MyGo Web template. `main.go` embeds prepared assets and calls `internal/app`,
+which owns MyGo windows, tray and restricted renderer entry points.
+`internal/desktop` owns framework-independent native transport/policy. `bridge.ts` declares the
+renderer contract.
+The renderer is a TanStack Start SPA: routes live in `src/routes`, `src/router.tsx`
+provides TanStack Query, `src/components/shell.tsx` fills the shared shell, and the
+build writes `dist/client` for the native app origin.
 
 `preferences.ts` shares preference types/validation; `src/preferences.tsx` owns renderer initialization. Complex page logic lives under `src/features/`; simple pages stay in route modules. `features/tasks/project-navigation.tsx` loads device-owned authorized projects for
 sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...`. This filters the loaded task page, never creates
@@ -40,8 +49,8 @@ Own native directory authorization and local UX. Runtime implementations live ex
 for Desktop account URLs, auth client and router search. Shared forms own fields,
 translated feedback and submission state; the renderer owns navigation. Renderer tests use
 `tests/renderer/unit/` and `tests/renderer/component/`, mirroring feature and route directories.
-Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay tests live in Host. Native transport and policy tests live in `src-tauri/tests/`; they exercise real
-subprocesses and OS locks with Cargo. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
+Task renderer tests separate conversation, history and drafts with per-case fixtures; shared relay tests live in Host. MyGo transport/policy tests live in `tests/native/host/`.
+These tests exercise real subprocesses and OS locks with Go. TS native smoke drivers use Bun types. `tests/native/smoke/` contains the
 packaged assertions driven over the native-smoke private socket.
 Native scripts/tests live in `scripts/native/` and `tests/scripts/native/` with Bun types.
 All tests stay outside `src/routes/` discovery and the renderer configuration.
@@ -57,126 +66,62 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 ## Constraints
 
-- `src-tauri` owns the Rust window/tray, lifecycle, encrypted API transport and CLI
-  bridge. `bridge.ts` declares the universal renderer vocabulary. Rust transports
-  opaque business JSON; TS contracts remain the only business schema source.
-- Builds use Tauri with WKWebView/WebView2. The Electrobun host, SDK and renderer
-  adapter have been removed; retain its policy fixtures for the Rust tests.
-- Start produces only a prerendered SPA (`dist/client`). No server runs at runtime.
+- MyGo v0.7.1 uses WKWebView/WebView2. Build with Go 1.27.3 and CGO_ENABLED=0.
+  Framework APIs live in internal/app; native transport/policy in internal/desktop.
+  Opaque business JSON uses TS contracts as the sole business schema authority.
+- Build a prerendered SPA in dist/client and embed it under generated/frontend.
+  Packaged routes use hash history; no frontend server runs in packaged apps.
   The root remains text-free; translated providers initialize inside ClientOnly.
-  Packaged native origins use hash history. Never edit generated route trees.
-- Launch only the absolute bundled CLI with a matching version/build identity.
-  macOS and Windows connect to an independent daemon; Quit preserves Agent work.
-  Spawn CLI children through `engine::cli_command` so Windows opens no console.
-  `__raypxTerminalHooks` (daemon hosts only) gates local terminal UI.
+- Launch only the absolute, version-matched bundled CLI at resources/bin/raypx.
+  Package the complete verified Herdr distribution in resources/bin/herdr. CLI
+  copies terminal resources into its profile before use, avoiding Windows DLL locks.
+- macOS and Windows connect to the independent daemon; GUI Quit preserves Agent
+  work. Spawn CLI children through Command so Windows opens no console. Terminal
+  hooks remain daemon-only. Hide/minimize/quit releases UI approval leases.
 - Renderer IPC cannot call host.*, approvals.local.watch, observed.remote or
-  roots.register. Directory grants come only from Rust's native picker. Connector
-  recovery runs only the bundled CLI with native-owned directories.
+  roots.register. Only native directory pickers grant roots. Connector recovery
+  uses the bundled CLI and native-owned config directories. Validate external URLs.
 - Cookie/Set-Cookie and restricted host credentials never enter renderer responses.
-  Rust owns API paths/headers, deadlines, cancellation, AES-GCM persistence and OS
-  keyring access. Storage errors are sanitized; failed persistence disables the
-  session transport. Temporary key-service failures must preserve encrypted files.
-- Load bounded runtime TOML from absolute RAYPX_HOME or ~/.raypx. Invalid configuration
-  stops startup. Only configured API origins are reachable through native HTTP;
-  renderer input cannot choose destinations or authentication headers.
-- A lifetime SQLite exclusive lock in desktop-instance.sqlite also excludes old
-  Desktop versions. Never unlink an owned lock file. Preferences stay device-local;
-  session and renderer storage keys are scoped by normalized API origin.
-- Native only reports raw preference JSON and read/missing/unreadable. Renderer
-  validates theme, locale and analytics. Only missing files may migrate browser
-  values; unreadable files use defaults without automatic rewriting. Serialize
-  complete preference updates and atomically preserve other top-level fields.
-- Only the main window's bundled origin and localhost development view receive IPC.
-  Capabilities grant application commands only, never fs/http/shell/plugin powers.
-  Validate HTTP(S) external links in Rust before opening the system browser.
-- CSP hashes prerendered startup scripts and permits Tauri IPC. Keep terminal,
-  theme and IPC checks in packaged smoke after CSP changes.
-- Native event streaming uses bounded buffers and acknowledged Channel credit.
-  Approval leases renew only while engine-ready, visible and not minimized; hiding
-  or quitting releases the lease before stopping the engine.
-- Bun/VP own JavaScript tasks. Default build constructs only renderer assets;
-  package:desktop explicitly builds CLI, stages the target-triple sidecar and runs
-  Tauri uncached. Default Bun verification requires no Rust/WebView SDK.
-- Only `tauri build`/`bundle` merge `src-tauri/tauri.bundle.conf.json`, which
-  declares the sidecar and pinned Herdr resources; route them through `scripts/native/tauri.ts`. Dev builds
-  launch the staged `src-tauri/binaries` CLI so CLI rebuilds do not rerun Cargo.
-- CLI's `prepare:herdr` stages the checksum-verified complete native distribution
-  beside the development CLI. Packaged resources live under `herdr/`; CLI copies
-  them into the profile before starting terminals so Windows updates retain no
-  running Herdr executables or ConPTY DLLs in the application bundle. The renderer
-  displays complete/incremental screen frames; scrolling and paste route to Herdr.
-- native-smoke exists only in an explicit Cargo feature. Its random-token private
-  socket drives release WebViews; normal builds expose no eval/debug commands.
-  Keep Cargo smoke outputs separate under target/native-smoke.
-- Local automated tests must stay quiet and avoid activating windows or switching
-  the user's desktop. Run foreground acceptance on isolated CI runners unless the
-  user explicitly requests a local interactive run.
-- Unsigned builds, unrun platforms, live-provider gates and skipped foreground UI
-  checks must be reported accurately. Linux Desktop remains unverified.
+  Keep allowlisted paths/headers, deadlines, cancellation, AES-GCM session-v2 and
+  OS key storage native. Sanitize errors. Persistence failure disables session
+  transport; temporary key-service failures preserve existing encrypted files.
+- Load bounded runtime TOML from absolute RAYPX_HOME or ~/.raypx; invalid config
+  stops startup. Only configured API origins are reachable. Isolate sessions,
+  browser storage, remote settings and account-owned history by server origin.
+- Keep native data paths and the lifetime desktop-instance.sqlite exclusive lock
+  compatible with earlier versions; never unlink an owned lock. Preferences remain
+  device-local. Native reports raw JSON and read/missing/unreadable; renderer
+  validates. Only missing preferences migrate browser values. Serialize complete
+  updates and atomically preserve other top-level fields.
+- Only the owned main page at its bundled origin or localhost dev view receives
+  IPC. Deny external navigation/popups. Event delivery is bounded and acknowledged.
+- CSP hashes startup scripts and rejects arbitrary inline JS/eval. Production
+  renderer builds eliminate the native-smoke observation hook.
+- Bun/VP owns JS tasks and caches; Go owns native compilation caches. Default build
+  checks/builds the renderer. Explicit packaging stages renderer, CLI and Herdr and
+  invokes MyGo uncached. Rust library verification is independent of Desktop.
+- Native smoke exists only in the native_smoke Go build tag, with random-token
+  private IPC, isolated profiles and a separate renderer/package output. Production
+  has no socket/eval controls. Inspect actual build metadata and bytes before release.
+- Local tests stay quiet and never activate windows/switch desktops. Foreground
+  acceptance runs on isolated CI unless the user explicitly requests a local run.
+- Signed updates use MyGo keys/manifests. Do not reuse the previous update feed.
+  Report unsigned/ad-hoc packages, unrun GUI/platform and live-provider gates
+  accurately. Linux native acceptance remains unverified.
 
 ## Verification
 
-`bun run --cwd apps/desktop check`, `bun run --cwd apps/desktop test`, `bun run build:desktop`, then `bun run package:desktop`.
+Run Desktop check/test, mygo:check/mygo:test, build:desktop, mygo:smoke (headless),
+package:desktop, and repository verify --full. Go policy tests need no GUI.
+For races: go test -race ./internal/... ./tests/native/host/....
 
-`bun run --cwd apps/desktop native:smoke` runs packaged assets, the renderer file/task/terminal bridge, CLI handshake, tray lifecycle and a full process restart for device preferences and local state. It uses `RAYPX_NATIVE_SMOKE=1` with the `shell` then `restore` phases. Default `quiet` presentation uses inactive windows and suppresses notifications/dialogs; native close/resize/focus acceptance is skipped. `native:smoke:interactive` explicitly enables those GUI checks. `write` then `read` with a synthetic HTTPS API verifies actual packaged-origin session persistence and logout. Never count loopback HTTP as production cookie verification. Tests use the isolated smoke identity, WebView partition and local profile. Smoke bundles are named `Raypx Test` and built under `target/native-smoke`; release bundles remain `Raypx`.
-Shell/restore assert signed-out local access, then use an isolated loopback session fixture. The runner switches runtime TOML servers to check cookie/storage and remote opt-in isolation. These phases do not validate authentication; runtime code contains no fixture. Real HTTPS uses the separate beta phases.
-Temporary Windows smoke installers disable NSIS compression; production installers retain
-the LZMA default. Smoke still installs the real package and checks its payload hashes.
+native:smoke builds the separate MyGo host/renderer and checks CLI handshake,
+local tools/terminal, native event credit, server isolation, restart/persistence
+and tray. Quiet mode uses inactive windows and suppresses notifications/dialogs;
+interactive mode adds focus/close/resize acceptance on isolated CI. Windows hosted
+CI installs/uninstalls the actual per-user NSIS package and verifies payload hashes.
 
-`RAYPX_LIVE_AGENTS=1 bun run --cwd apps/desktop native:agents` runs real Claude and
-Codex through Desktop's LocalEngine and the standalone CLI in temporary projects.
-It uses existing provider authentication and consumes inference usage. It checks
-plan rejection/approval, generated tests, session resume after restart and child
-process cancellation. It is opt-in and outside default verification.
-`native:beta` plus E2E `e2e:live` use a separately provisioned test account and
-isolated native data directory against an actual HTTPS deployment. The beta native
-phases cover packaged form login, hidden relay execution, process restart and
-logout. See docs/development/testing.md.
-
-## Remote tasks
-
-`/memory` defaults to device-owned references; the account tab uses RemoteBoundary.
-Keep the local form across tab/account changes without uploading or migrating it.
-Inject only the matching library; legacy account-local editors stay isolated.
-Cloud schedules use account references; task snapshots survive source changes.
-
-Tasks and approvals default to This computer. `features/tasks/local-client.ts`
-adapts private `agents.local.*` IPC to the shared task view interface and subscribes
-to native change events. New work uses reserved `LOCAL_WORKSPACE_ID` in the CLI profile;
-tasks/approvals stay in SQLite, never enter the outbox and remain separate from remote work. The
-remote tab alone uses the API task client. Local creation needs project authorization
-and an installed provider, with no login or grant. Native does not server-prefix the
-reserved owner; legacy history stays server/account-scoped and logout cancels only that legacy work.
-Native shows the pending-task notification for `agent.changed` events carrying
-`pendingRequest`; Agent settings can clear finished local history. The sidebar
-approval count combines local and remote approvals.
-
-`src-tauri/src/control.rs` bootstraps the CLI host on both supported platforms through Native-only host
-RPCs. Credentials go directly to private IPC and Keychain, never the renderer.
-The independent daemon renews short grants without browser cookies. Missing browser
-sessions and renderer unmount do not revoke authorization; explicit account sign-out
-uses `features/tasks/host-session.ts`, and account/origin changes detach the old binding. Host bootstrap needs recent sign-in; settings' shadcn password dialog refreshes it without logout or daemon detachment.
-
-Local terminal settings/connectors require no account. Hooks return native control
-on failure; only recorded Bash permissions are enabled, and Codex requires trust.
-Modified owned binaries need explicit backup/replacement confirmation. Repair uses
-the bundled CLI and Native directories, never a renderer-selected source.
-Timeouts are uncertain and never retried automatically.
-
-## Browser analytics
-
-`features/analytics` injects public build config and a device-local preference store
-into `@raypx/analytics`. Keep the SDK deferred and auth/account dependencies outside
-the document root. Route catches and React/global errors pass only sanitized app
-frames. Statistics and errors default off independently; identify internal IDs only
-with statistics consent, reset on logout and never capture raw task parameters.
-Restore analytics through getAnalyticsPreferences with a five-second RPC timeout;
-keep capture disabled until the latest Native value arrives, never authorize from preload.
-Source-map upload is an explicit release step using those same assets.
-Engine mismatch recovery confirms cancellation before replacing the old daemon. Native forwards loaded `[connectors]` paths/environment; settings show actual destinations and owned-binary repair/update.
-Older servers use browser-renewed managed-only grants, with terminal approvals disabled.
-`features/onboarding/welcome.tsx` guides authorization, agent detection and opening the editor; empty Files, `/welcome` and Settings open it. Never auto-execute or enable remote. Local drafts use the device owner; legacy/remote slots retain server/account WebView scope.
-Local approvals require no account. Native leases `approvals.local.watch` only
-while ready/visible/unminimized; renderer cannot call watch/host.*. Local RPC never
-accepts origin/account. Cloud opt-in scopes are local subsets. Prefer local
-`(id, epoch)` over cloud revisions; uncertain decisions never switch channels.
+native:agents and native:beta are opt-in real-provider/account gates. They require
+RAYPX_LIVE_AGENTS=1 and isolated data and consume provider inference. HTTPS session
+persistence must use a real or synthetic HTTPS API; loopback HTTP is not proof of
+production cookie persistence. Never count an unrun native platform as passed.

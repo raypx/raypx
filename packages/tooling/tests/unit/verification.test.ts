@@ -161,12 +161,12 @@ describe("required CI results", () => {
       },
       {
         name: "desktop",
-        manifest_path: join(root, "apps/desktop/src-tauri/Cargo.toml"),
+        manifest_path: join(root, "crates/consumer/Cargo.toml"),
         dependencies: [{ name: "shared" }],
       },
     ];
     const native = affectedCargo(root, ["crates/shared/src/lib.rs"], packages);
-    expect(native.native).toBe(true);
+    expect(native.native).toBe(false);
     expect(native.packages).toContain("shared");
     expect(affectedCargo(root, ["crates/unrelated/src/lib.rs"], packages)).toEqual({
       packages: ["unrelated"],

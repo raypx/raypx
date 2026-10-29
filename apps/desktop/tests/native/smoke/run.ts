@@ -4,8 +4,8 @@ import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
 import { nativeSmokeOptions } from "../../../scripts/native/smoke-options";
-import { buildSmoke, runTauriSmoke } from "./launch";
-import type { SmokeInstallation } from "../../../scripts/native/windows-smoke-install";
+import { buildSmoke, runMyGoSmoke } from "./launch";
+import type { SmokeInstallation } from "./launch";
 import { prepareSmokeDirectory } from "./session";
 import { assertSmokeOwnerRunning, stopSmokeOwner } from "./owner";
 
@@ -19,7 +19,7 @@ async function run(smokePhase: string, directory: string, restoredServer = false
     !["shell", "write", "beta"].includes(smokePhase) &&
     (smokePhase !== "restore" || phase !== "shell" || restoredServer);
   if (!installation) throw new Error("Native smoke installation is unavailable");
-  return runTauriSmoke(installation, smokePhase, directory, {
+  return runMyGoSmoke(installation, smokePhase, directory, {
     ...process.env,
     RAYPX_HOME: join(directory, "config"),
     CLAUDE_CONFIG_DIR: join(directory, "claude"),

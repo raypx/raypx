@@ -30,10 +30,10 @@ function fixture() {
           "raypx-dev",
           "typecheck",
           "typecheck:node",
-          "tauri:generate",
-          "tauri:cli",
           "native:csp",
           "vp",
+          "mygo:dev",
+          "mygo:build",
         ].map((name) => [name, `bun record.ts ${name}`]),
       ),
     }),
@@ -65,6 +65,7 @@ if (name === process.env.TASK_TEST_FAIL) process.exitCode = 7;`,
       "RAYPX_DESKTOP_DEV_ARGS",
       "RAYPX_DESKTOP_RENDERER_ARGS",
       "RAYPX_DESKTOP_NATIVE_SMOKE_ARGS",
+      "RAYPX_DESKTOP_NATIVE_BUILD_ARGS",
       "RAYPX_DESKTOP_NATIVE_SMOKE_INTERACTIVE_ARGS",
       "RAYPX_DESKTOP_NATIVE_BETA_ARGS",
       "RAYPX_DESKTOP_NATIVE_AGENTS_ARGS",
@@ -117,6 +118,7 @@ describe("Desktop task graph entry", () => {
     "check",
     "build",
     "dev",
+    "native:build",
     "build:renderer",
     "native:smoke",
     "native:smoke:interactive",
@@ -143,6 +145,24 @@ describe("Desktop task graph entry", () => {
     expect(result.events.map(({ name }) => name)).toEqual(["typecheck", "typecheck:node"]);
   });
 
+  it("uses the MyGo development leaf and preserves its arguments", () => {
+    const result = fixture()("dev", { leaf: true, args: ["--verbose"] });
+    expect(result.status).toBe(0);
+    expect(result.events).toEqual([{ name: "mygo:dev", args: ["--verbose"], forwarded: {} }]);
+  });
+
+  it("packages MyGo through the qualified native build leaf", () => {
+    const result = fixture()("native:build", { leaf: true, forwarded: ["-skip-dmg"] });
+    expect(result.status).toBe(0);
+    expect(result.events).toEqual([
+      {
+        name: "mygo:build",
+        args: ["-skip-dmg"],
+        forwarded: { RAYPX_DESKTOP_NATIVE_BUILD_ARGS: '["-skip-dmg"]' },
+      },
+    ]);
+  });
+
   it("preserves a failed check's exit status and skips remaining checks", () => {
     const result = fixture()("check", { leaf: true, fail: "typecheck:node" });
     expect(result.status).toBe(7);
@@ -162,33 +182,15 @@ describe("Desktop task graph entry", () => {
     ]);
   });
 
-  it("stages the already-built CLI before development without another preparation", () => {
-    const result = fixture()("dev", { leaf: true });
-    expect(result.status).toBe(0);
-    expect(result.events).toEqual([
-      { name: "tauri:generate", args: [], forwarded: {} },
-      { name: "tauri:cli", args: [], forwarded: {} },
-      {
-        name: "raypx-dev",
-        args: ["env", "--", process.execPath, "run", "scripts/native/dev.ts"],
-        forwarded: {},
-      },
-    ]);
-  });
-
   it.each([
     ["native:smoke", "smoke-run", []],
     ["native:smoke:interactive", "smoke-run", ["--interactive"]],
     ["native:beta", "smoke-run", ["beta"]],
     ["native:agents", "smoke-agents-run", []],
-  ] as const)("runs the staged Tauri %s gate inside VP", (task, name, args) => {
+  ] as const)("runs the MyGo %s gate inside VP", (task, name, args) => {
     const result = fixture()(task, { leaf: true });
     expect(result.status).toBe(0);
-    expect(result.events).toEqual([
-      { name: "tauri:generate", args: [], forwarded: {} },
-      { name: "tauri:cli", args: [], forwarded: {} },
-      { name, args, forwarded: {} },
-    ]);
+    expect(result.events).toEqual([{ name, args, forwarded: {} }]);
   });
 
   it("restores direct build arguments only inside the selected Desktop task", () => {

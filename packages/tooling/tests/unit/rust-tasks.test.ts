@@ -25,7 +25,7 @@ function desktopRepository() {
   member(model.root, "cli", {
     extra: { name: "cli", scripts: { build: "bun build.ts" } },
   });
-  mkdirSync(join(model.root, "apps/desktop/src-tauri"), { recursive: true });
+  mkdirSync(join(model.root, "apps/desktop"), { recursive: true });
   writeFileSync(
     join(model.root, "apps/desktop/package.json"),
     JSON.stringify({
@@ -35,15 +35,12 @@ function desktopRepository() {
       scripts: {
         build: "bun renderer.ts",
         "native:build": "bun package.ts",
-        "tauri:generate": "bun generate.ts",
-        "tauri:cli": "bun stage.ts",
+
+        "native:prepare": "bun stage.ts",
       },
     }),
   );
-  writeFileSync(
-    join(model.root, "apps/desktop/src-tauri/Cargo.toml"),
-    '[package]\nname = "raypx-desktop"\n',
-  );
+
   return taskModel(model.root);
 }
 
@@ -76,14 +73,10 @@ it("leaves Desktop to native CI when Linux verifies libraries", () => {
   const model = desktopRepository();
   const plan = taskPlan(model, [taskRef("fixture", "verify:rust")]);
   for (const task of plan.filter((entry) => entry.command.startsWith("cargo "))) {
-    expect(task.command.includes("--exclude raypx-desktop")).toBe(
-      process.platform === "linux" && !task.command.startsWith("cargo fmt"),
-    );
+    expect(task.command.includes("--exclude raypx-desktop")).toBe(false);
   }
-  expect(plan.some((task) => task.taskId === "desktop#tauri:cli")).toBe(
-    process.platform !== "linux",
-  );
-  expect(plan.some((task) => task.taskId === "cli#build")).toBe(process.platform !== "linux");
+  expect(plan.some((task) => task.taskId === "desktop#native:prepare")).toBe(false);
+  expect(plan.some((task) => task.taskId === "cli#build")).toBe(false);
   expect(plan.some((task) => task.taskId === "desktop#build")).toBe(false);
 });
 

@@ -22,12 +22,7 @@ export function prepareTaskDirectories(model: TaskModel) {
   if (existsSync(join(model.root, "Cargo.toml")))
     mkdirSync(join(model.root, "target"), { recursive: true });
   for (const member of model.members.filter((candidate) => candidate.native))
-    for (const directory of [
-      "src-tauri/binaries",
-      "src-tauri/gen",
-      "src-tauri/permissions",
-      "artifacts/browser",
-    ])
+    for (const directory of ["generated", "resources/bin", "build", ".mygo", "artifacts/browser"])
       mkdirSync(join(model.root, member.path, directory), { recursive: true });
 }
 

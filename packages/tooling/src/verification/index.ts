@@ -20,7 +20,7 @@ export function verifyOptions(args: string[]) {
 export async function verify(root: string, args: string[]) {
   if (args.length === 1 && ["--help", "-h"].includes(args[0]!)) {
     console.log(
-      "bun run verify              Affected JS/Rust source checks\nbun run verify --full       Full current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run. GUI/database/browser acceptance runs in CI.",
+      "bun run verify              Affected JS/Go/Rust source checks\nbun run verify --full       Full current-platform checks and artifacts\nAdvanced: --base <ref>, --dry-run. GUI/database/browser acceptance runs in CI.",
     );
     return;
   }

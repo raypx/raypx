@@ -2,10 +2,10 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
-import { buildSmoke, runTauriSmoke } from "./launch";
+import { buildSmoke, runMyGoSmoke } from "./launch";
 import { prepareSmokeDirectory } from "./session";
 import { cleanupSmokeBundles } from "../../../scripts/native/smoke-artifacts";
-import type { SmokeInstallation } from "../../../scripts/native/windows-smoke-install";
+import type { SmokeInstallation } from "./launch";
 import { stopSmokeOwner } from "./owner";
 
 // Building or importing the scenario must never start paid inference implicitly.
@@ -27,7 +27,7 @@ try {
     { mode: 0o600 },
   );
   installation = await buildSmoke();
-  await runTauriSmoke(installation, "agents", directory, {
+  await runMyGoSmoke(installation, "agents", directory, {
     ...process.env,
     RAYPX_HOME: config,
     RAYPX_NATIVE_SMOKE: "1",

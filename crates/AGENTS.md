@@ -7,9 +7,8 @@ the initial library experiment, with a small shared error surface and no runtime
 `raypx` is the public entry point and re-exports the core error types. Both are
 published to crates.io; publish `raypx-core` first. Other crates remain private
 unless explicitly opted in through their package manifests.
-`apps/desktop/src-tauri` is the Tauri application composition root, never a dependency
-of another crate. It owns native transport and policy; CLI owns execution and TS owns
-business schemas. Its platform verification runs in the Desktop CI matrix.
+Desktop is a separate MyGo/Go composition root at `apps/desktop`, outside the
+Cargo workspace. CLI owns execution and TS owns business schemas.
 
 Terminal PTYs and VT state use the external pinned Herdr runtime. CLI owns its
 adapter and lifecycle; no in-repository Rust terminal host is maintained.
@@ -32,7 +31,4 @@ adapter and lifecycle; no in-repository Rust terminal host is maintained.
 
 Run `bun run verify` for affected checks or `bun run verify --full` for complete
 current-platform verification, including rustfmt, Clippy and tests.
-Linux Rust tasks exclude the Desktop
-crate to avoid requiring WebKit/GTK development libraries; Desktop CI checks it on
-macOS and Windows after staging the CLI sidecar.
 Use direct Cargo commands to select one crate or run an example.

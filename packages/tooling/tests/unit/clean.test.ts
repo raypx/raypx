@@ -31,8 +31,8 @@ it("cleans generated files while preserving source, dependencies and local data 
     "node_modules/.cache/raypx-tests/run.json",
     ".artifacts/probe/cache/task.tar.zst",
     "apps/desktop/artifacts/browser/client/index.html",
-    "apps/desktop/src-tauri/binaries/raypx-aarch64-apple-darwin",
-    "apps/desktop/src-tauri/gen/schemas/desktop-schema.json",
+    "apps/desktop/resources/bin/raypx",
+    "apps/desktop/generated/local-methods.json",
     "e2e/test-results/screenshot.png",
     "e2e/playwright-report/index.html",
   ];
@@ -52,9 +52,9 @@ it("cleans generated files while preserving source, dependencies and local data 
     ".git/config",
     ".env.local",
     "data/profile.sqlite",
-    "apps/desktop/src-tauri/src/main.rs",
-    "apps/desktop/src-tauri/tauri.conf.json",
-    "apps/desktop/src-tauri/icons/icon.png",
+    "apps/desktop/main.go",
+    "apps/desktop/mygo.config.ts",
+    "apps/desktop/resources/icon.png",
     "packages/tooling/src/validation/inventory.ts",
     "compose.yaml",
   ];
@@ -91,7 +91,7 @@ it("cleans reports independently while preserving built applications, sidecars a
   const preserved = [
     `${library}/dist/index.js`,
     `${library}/node_modules/.vite/task-cache/task.json`,
-    "apps/desktop/src-tauri/binaries/raypx-aarch64-apple-darwin",
+    "apps/desktop/resources/bin/raypx",
     "target/release/bundle/dmg/Raypx.dmg",
     "packages/tooling/src/validation/inventory.ts",
     "data/profile.sqlite",

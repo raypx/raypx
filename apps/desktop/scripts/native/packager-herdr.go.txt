@@ -1,0 +1,32 @@
+
+// Raypx's input distribution has already passed the pinned download checksum.
+// Native signing can now change executable bytes. Record the signed bytes before
+// the enclosing app, installer and update archives are sealed, never at runtime.
+func raypxRefreshHerdr(resources string) error {
+    directory := filepath.Join(resources, "bin", "herdr")
+    path := filepath.Join(directory, "runtime.json")
+    raw, err := os.ReadFile(path)
+    if err != nil { return fmt.Errorf("Raypx Herdr manifest missing: %w", err) }
+    var manifest map[string]any
+    if len(raw) > 128*1024 || json.Unmarshal(raw, &manifest) != nil {
+        return fmt.Errorf("invalid Raypx Herdr manifest")
+    }
+    version, _ := manifest["version"].(string)
+    files, ok := manifest["files"].(map[string]any)
+    if !ok || version == "" || len(files) == 0 { return fmt.Errorf("invalid Raypx Herdr manifest") }
+    for name := range files {
+        if !filepath.IsLocal(name) || strings.Contains(name, "\\") {
+            return fmt.Errorf("invalid Raypx Herdr resource path")
+        }
+        current := filepath.Join(directory, name)
+        info, err := os.Lstat(current)
+        if err != nil || !info.Mode().IsRegular() { return fmt.Errorf("invalid Raypx Herdr resource") }
+        bytes, err := os.ReadFile(current)
+        if err != nil { return err }
+        digest := sha256.Sum256(bytes)
+        files[name] = hex.EncodeToString(digest[:])
+    }
+    bytes, err := json.Marshal(manifest)
+    if err != nil { return err }
+    return os.WriteFile(path, bytes, 0644)
+}

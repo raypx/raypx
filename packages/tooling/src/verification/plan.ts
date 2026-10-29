@@ -70,12 +70,7 @@ export function verificationPlan(
   let full = Boolean(options.full || reasons.length);
   let rustPackages: string[] = [],
     nativeRust = false;
-  const rustFiles = files.some(
-    (file) =>
-      file.startsWith("crates/") ||
-      file.startsWith("apps/desktop/src-tauri/") ||
-      file.endsWith(".rs"),
-  );
+  const rustFiles = files.some((file) => file.startsWith("crates/") || file.endsWith(".rs"));
   if (
     !full &&
     !files.some(globalInput) &&
@@ -125,13 +120,7 @@ export function verificationPlan(
   const rust =
     options.rust !== false &&
     existsSync(join(model.root, "Cargo.toml")) &&
-    (full ||
-      files.some(
-        (file) =>
-          file.startsWith("crates/") ||
-          file.startsWith("apps/desktop/src-tauri/") ||
-          file.endsWith(".rs"),
-      ));
+    (full || files.some((file) => file.startsWith("crates/") || file.endsWith(".rs")));
   const workspaces = [...affected].sort();
   const includeArtifacts = options.artifacts ?? full;
   const artifacts = includeArtifacts
@@ -144,7 +133,12 @@ export function verificationPlan(
   const tasks = model.members
     .filter((member) => affected.has(member.name))
     .flatMap((member) =>
-      ["check", "test", ...(includeArtifacts ? ["build"] : [])]
+      [
+        "check",
+        "test",
+        ...(member.native ? ["mygo:check", "mygo:test"] : []),
+        ...(includeArtifacts ? ["build"] : []),
+      ]
         .filter((name) => member.scripts[name])
         .map((name) => taskRef(member.name, name)),
     );

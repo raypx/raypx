@@ -1,5 +1,7 @@
 # ADR 0036: Tauri Desktop transport and native policy host
 
+Superseded on `next` by [ADR 0038](0038-mygo-desktop-host.md).
+
 Status: implemented, 2026-10-27.
 
 The maintenance costs of the Electrobun SDK projection, transport workarounds and

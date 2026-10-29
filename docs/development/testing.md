@@ -26,7 +26,7 @@ discover supported layers instead of maintaining a package-name list.
 
 Use `bun run verify` for daily feedback: policy and locales are always checked;
 changed files select formatting/lint, affected workspace types/tests, and necessary
-Rust packages through reverse dependency graphs. The default base is the merge-base
+Go host tasks and Rust packages through reverse dependency graphs. The default base is the merge-base
 with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
 Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
 Unknown inputs, shared configuration/lockfiles, or an unavailable base select full coverage.
@@ -42,25 +42,21 @@ for focused Rust debugging. See the [Rust workspace guide](rust.md).
 GitHub uses the same change planner. JS, database, browser and native gates run in
 parallel when relevant; Desktop/CLI dependencies retain both native platforms.
 Tags and manual dispatch select full source coverage. `foundation` requires every selected
-gate to succeed and permits only intentional skips. Herdr checks precede Rust cache
-restoration in the native check phase, failed jobs do not save large Rust caches, and VP archives are saved only
-when new successful task artifacts exist. Rust caches cover both production and smoke
-Cargo directories while keeping their outputs isolated.
-Native checks use `native.yml`: a Bun-only preparation job builds shared renderer/CLI inputs.
-The check phase stages a matching CLI, runs Herdr and executes Rust source checks on both platforms.
+gate to succeed and permits only intentional skips. Herdr integration and pinned Go checks run in the native check phase. Go caches
+are separate from VP's JS task cache; smoke and production use separate outputs.
+
+The check phase stages a matching CLI, runs Herdr and executes Go source checks on both platforms.
 Herdr retains three Windows runs without blocking the parallel package/smoke phases.
-The Rust-only job uses an
-empty frontend placeholder; actual renderer builds and browser tests run in the JS gates.
+The separate Rust job checks only libraries; Desktop no longer requires a Cargo placeholder.
 Installer creation, signatures and installed GUI smoke run on tag pushes or manual
 dispatch with the `distribution` checkbox enabled (`gh workflow run ci.yml -f distribution=true`).
-Those runs require Rust checks, production packaging and packaged GUI smoke in parallel.
+Those runs require Go checks, production packaging and packaged GUI smoke in parallel.
 Manual distribution runs have their own cancellation group, so routine pushes cannot
 cancel a release acceptance run. Reusable Rust jobs follow their caller's cancellation.
-The preparation job alone saves VP artifacts; phase consumers only restore them. Cargo archives have
-separate phase keys, so a check-only job cannot overwrite release or smoke dependencies.
+The preparation job alone saves VP artifacts; phase consumers only restore them. Native Go
+compilation uses the Go cache and independent production/smoke package directories.
 Generated route trees and native JSON use LF on every checkout so Windows generators do not
-invalidate restored tasks. Temporary Windows smoke installers disable compression; production
-installers retain Tauri's LZMA default. Smoke still installs the NSIS package and verifies payload hashes.
+invalidate restored tasks. MyGo produces per-user NSIS installers for production and smoke. Smoke still installs the NSIS package and verifies payload hashes.
 CI installs the pinned compiler in an isolated `RUSTUP_HOME`; unrelated preinstalled
 toolchains must not affect Rust cache keys when runner images change.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
@@ -116,7 +112,7 @@ until actual cases are written. The inventory check also rejects committed `.onl
 Desktop separates `tests/renderer/`, `tests/native/` and `tests/scripts/` and checks
 each against its platform types. Renderer suites use `unit/` and `component/`
 subdirectories. Native policy, subprocess and OS-lock tests now live in
-`apps/desktop/src-tauri/tests/` and run with Cargo; the deleted Bun native
+`apps/desktop/tests/native/host/` and run with Go; the deleted Bun native
 integration layer has no placeholder `test:integration` script.
 Scripts select directories independently of the `.ts`/`.tsx` extension.
 Development and packaging scripts live under `apps/desktop/scripts/native/`.
@@ -317,17 +313,17 @@ GUI-client disconnect, retention and Native authorization fences. `native:smoke`
 also probes the daemon after actual GUI Quit and explicitly stops its isolated
 owner at cleanup. Production service installation and iOS are separate gates.
 
-## Tauri Desktop migration gates
+## MyGo Desktop migration gates
 
-`native:smoke` builds a separate release application with the `native-smoke`
-Cargo feature, then drives the existing TS assertions through a token-authenticated
+`native:smoke` builds a separate release application with the `native_smoke`
+Go build tag, then drives the existing TS assertions through a token-authenticated
 Unix socket or Windows named pipe. `native:smoke:interactive` additionally exercises
 foreground close/focus/minimum-size behavior. The normal release has no smoke
 listener or eval commands; the post-package gate matches the actual binary to its
-Cargo fingerprint and checks that no native-smoke socket marker is present.
-Rust retains the shared config/Cookie/API/local-method JSON fixtures. Renderer
+Go module/build metadata and checks that no native-smoke socket marker is present.
+Go retains the shared config/Cookie/API/local-method JSON fixtures. Renderer
 tests verify the TS contract and preference validation, including the raw preload
-regression executed by Rust through a Bun fixture.
+regression executed by Go through a Bun fixture.
 Native application tests run separately in the macOS/Windows CI matrix. Default
 Bun verification builds renderer assets without preparing a native SDK. Local
 automation stays quiet; foreground close/focus/minimum-size checks run on isolated
@@ -338,4 +334,4 @@ every phase, then uninstalls and verifies cleanup.
 Release signing and real HTTPS/live-agent acceptance require their explicit CI
 secrets or isolated acceptance environment. A successful unsigned local bundle does
 not establish notarization, Windows WebView2 behavior or live-provider acceptance.
-See [ADR 0036](../architecture/0036-tauri-desktop-host.md).
+See [ADR 0038](../architecture/0038-mygo-desktop-host.md).

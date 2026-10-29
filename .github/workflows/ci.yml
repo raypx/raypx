@@ -44,6 +44,11 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun
+      - uses: actions/setup-go@v6
+        if: needs.changes.outputs.native == 'true'
+        with:
+          go-version-file: apps/desktop/go.mod
+          cache-dependency-path: apps/desktop/go.sum
       - uses: ./.github/actions/vp-restore
         id: vp-cache
         with:

@@ -1,6 +1,6 @@
 # Raypx
 
-A foundation for Web and Tauri Desktop, with shared
+A foundation for Web and MyGo Desktop, with shared
 accounts, device-local appearance/language settings, and a standalone local CLI.
 The previous cloud product is retired; historical decisions remain in docs/history.
 

@@ -13,7 +13,7 @@ const binary =
   process.env.RAYPX_HERDR_BINARY ??
   resolve(
     import.meta.dirname,
-    "../../../desktop/src-tauri/binaries/herdr",
+    "../../dist/herdr",
     process.platform === "win32" ? "herdr.exe" : "herdr",
   );
 const root = await mkdtemp(join(tmpdir(), "raypx-herdr-smoke-"));

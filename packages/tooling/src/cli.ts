@@ -172,7 +172,7 @@ async function main() {
       if (Bun.version !== bun) throw new Error(`Expected Bun ${bun}, got ${Bun.version}`);
       console.log(`Bun ${Bun.version}; ${process.platform}/${process.arch}`);
       console.log(
-        `Desktop: Tauri; Cargo ${Bun.which("cargo") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected Rust checks; --full checks all targets`,
+        `Desktop: MyGo; Go ${Bun.which("go") ? "available" : "unavailable"} (required for native packaging); bun run verify selects affected JS, Go and Rust checks`,
       );
       break;
     }

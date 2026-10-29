@@ -49,8 +49,10 @@ export async function clean(root: string): Promise<void> {
     "node_modules/.vite-temp",
     "node_modules/.vitest-cache",
     "apps/desktop/artifacts",
-    "apps/desktop/src-tauri/binaries",
-    "apps/desktop/src-tauri/gen",
+    "apps/desktop/generated",
+    "apps/desktop/resources/bin",
+    "apps/desktop/build",
+    "apps/desktop/.mygo",
   ]);
 }
 

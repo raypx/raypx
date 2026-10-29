@@ -10,7 +10,10 @@ function fixture() {
   roots.push(directory);
   const project = join(directory, "apps/desktop");
   mkdirSync(project, { recursive: true });
-  const output = join(directory, "target/native-smoke/release/bundle/macos");
+  const output = join(
+    project,
+    `build/native-smoke/darwin-${process.arch === "x64" ? "amd64" : process.arch}`,
+  );
   const testApp = join(output, "Raypx Test.app"),
     releaseApp = join(output, "Raypx.app");
   for (const app of [testApp, releaseApp]) {

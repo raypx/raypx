@@ -1,8 +1,10 @@
-# Start output is embedded in the Tauri WebView.
+# Start output is embedded in the native WebView.
 /dist
-/src-tauri/binaries/
-/src-tauri/gen/
-/src-tauri/permissions/desktop.toml
+# MyGo outputs; resources icons and entitlements are source files.
+/generated/
+/resources/bin/
+/.mygo/
+/mygo_windows_*.syso
 # Ignore generated outputs left in existing checkouts by the retired shell.
 /.hutch
 /.cottontail-tmp

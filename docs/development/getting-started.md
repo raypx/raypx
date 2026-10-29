@@ -20,7 +20,7 @@ Direct Bun installs also work. `bun run doctor` confirms the active runtime. Pos
 
 Rust libraries live under `crates/`. Install rustup and run `rustup show` to prepare
 the version and components in `rust-toolchain.toml`. Daily `bun run verify` selects
-affected JS/Rust checks; `bun run verify --full` checks all current-platform sources
+affected JS/Go/Rust checks; `bun run verify --full` checks all current-platform sources
 and artifacts before delivery. Use Cargo directly for focused Rust debugging.
 See the [Rust guide](rust.md) for commands and the initial `raypx-core` library.
 
@@ -118,14 +118,14 @@ and browser reports while preserving builds and SDKs. See
 and retention rules. Keep reusable scripts in Tooling, never in `.artifacts/`.
 
 `bun run clean` removes workspace build outputs, coverage, VP/Vitest and TanStack caches,
-Desktop's renderer artifacts and Cargo sidecar staging directories, root
+Desktop's renderer artifacts and MyGo generated/resource directories, root
 `.artifacts`, and browser test results/reports. Rust cleanup runs
 `cargo clean --workspace --profile dev`, preserving dependency caches and Release
 artifacts. Use `bun run rust:clean` for only that Rust step. Cargo is skipped when no
 Rust target directory exists. Other removals run in batches of up to eight directories.
 It keeps dependencies, lockfiles,
 Git history, environment files, user profiles and database volumes. Native development,
-Rust compile gates and packaging prepare generated inputs and the matching CLI again.
+Go host checks and packaging prepare generated inputs and the matching CLI again.
 
 VP owns the task graph and its local cache at `node_modules/.vite/task-cache`.
 Use root build/check/test commands for dependency ordering, or `vp run` to invoke

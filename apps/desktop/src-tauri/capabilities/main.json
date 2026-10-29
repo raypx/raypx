@@ -1,8 +1,0 @@
-{
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "main",
-  "description": "Only the bundled main view and loopback development view can invoke Raypx commands. No plugin capabilities are granted to JavaScript.",
-  "windows": ["main"],
-  "permissions": ["allow-desktop"],
-  "local": true
-}

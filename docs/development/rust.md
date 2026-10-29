@@ -1,9 +1,8 @@
 # Rust workspace
 
 Rust libraries live under `crates/*`, discovered by the root `Cargo.toml`.
-The Tauri application crate is `apps/desktop/src-tauri` (`raypx-desktop`); it owns
-transport and native policy, with no task execution or duplicated business schemas. The
-initial [raypx-core](../../crates/raypx-core/README.md) library provides `Error`
+Desktop uses a separate [MyGo module](desktop-release.md); it owns native policy
+and CLI transport. The initial [raypx-core](../../crates/raypx-core/README.md) library provides `Error`
 and `Result<T>`, integration tests, a compiled documentation example and a runnable
 `basic` example. It has no external dependencies or application runtime.
 The [raypx](../../crates/raypx/README.md) crate is the public Rust entry point,
@@ -55,7 +54,7 @@ RAYPX_HERDR_BINARY="$PWD/apps/cli/dist/herdr/herdr" RAYPX_HERDR_COMPILED=1 bun r
 `RAYPX_HERDR_BINARY` may select an absolute, version-matched executable for development.
 Without an override, CLI uses its verified bundled/cache runtime, then a matching
 installed Herdr. Desktop preparation also stages a development copy under
-`apps/desktop/src-tauri/binaries/herdr`. An existing daemon keeps its original
+`apps/desktop/resources/bin/herdr`. An existing daemon keeps its original
 environment; restart only after its owned work is finished.
 
 Each owner creates a private headless server with isolated config, state and sockets.
@@ -72,26 +71,26 @@ final frames and cancellation; Desktop CI runs it with compiled CLI helpers on m
 and Windows. Packaged WebView acceptance remains a separate isolated-CI gate.
 
 Rust is managed by rustup; mise continues reading the existing Bun pin.
-`bun run doctor` checks Bun and reports the Rust/WebView platform prerequisites; `rustup show` reports the Rust toolchain.
+`bun run doctor` checks Bun and reports the Go and Rust availability; `rustup show` reports the Rust toolchain.
 
 ## Commands and verification
 
 | Command                             | Runs                                                                      |
 | ----------------------------------- | ------------------------------------------------------------------------- |
-| `bun run verify`                    | Affected JS/Rust checks and tests                                         |
+| `bun run verify`                    | Affected JS/Go/Rust checks and tests                                      |
 | `bun run verify --full`             | Full current-platform sources, builds and artifact probes                 |
 | `bun run rust:clean`                | Clean workspace development artifacts, retaining dependencies and Release |
 | `cargo fmt --all`                   | Apply Rust formatting                                                     |
 | `cargo test -p raypx-core --locked` | Test one library directly                                                 |
 
-Rust is required to develop/package the Tauri Desktop host and remains optional
+Go is required to develop/package the MyGo Desktop host. Rust remains optional
 for JS-only incremental feedback. `verify` selects Rust packages through the
 workspace's reverse dependency graph. One uncached VP pipeline orders rustfmt,
 Clippy for all targets/features and tests; Clippy and tests cover compilation without
 separate redundant check/build steps. Independent JavaScript tasks can run in parallel.
 Root `check`, `test`, `build`, `lint` and `format` remain independent of Cargo.
 The reusable `rust.yml` workflow checks libraries on Ubuntu when the CI planner
-selects Rust; Desktop fmt/Clippy/tests and packaging run on macOS and Windows.
+selects Rust; Desktop Go tests and packaging run on macOS and Windows.
 
 VP owns repository task scheduling. Cargo tasks are uncached in VP; Cargo owns
 its own incremental state in root `target/`. This avoids tracing compiler and
@@ -148,28 +147,8 @@ Inspect package contents with `cargo package -p <name> --list`. When publishing
 from an intentionally uncommitted checkout, inspect the selected files first
 and add `--allow-dirty` to Cargo's package/publish commands.
 
-## Desktop crate
+## Desktop host
 
-On macOS and Windows, verification that includes Desktop prepares the matching
-CLI and generated TS vocabulary/translated notifications through VP before Cargo.
-Shared preparation runs once without building the renderer. Formatting and
-library-only checks need no sidecar. Staging identical CLI bytes preserves the
-sidecar's modification time so another package build can reuse Cargo outputs.
-
-Direct Cargo commands bypass VP. Prepare the inputs first when using them:
-
-```sh
-bun run build:cli
-bun run --cwd apps/desktop tauri:generate
-bun run --cwd apps/desktop tauri:cli
-cargo check -p raypx-desktop --locked --all-features
-cargo test -p raypx-desktop --locked --all-features
-bun run package:desktop
-```
-
-Cargo tests retain the migration JSON policy fixtures and check the generated TS
-command vocabulary. Preference preload tests also execute the actual JS and TS
-validator through Bun. The `native-smoke` Cargo
-feature adds a token-authenticated private socket for release WebView acceptance;
-normal builds cannot evaluate renderer scripts through a debug interface.
-See [ADR 0036](../architecture/0036-tauri-desktop-host.md) for migration gates.
+Desktop is a Go module at apps/desktop, outside the Cargo workspace. MyGo owns
+native packaging and the system WebView; the standalone Bun CLI owns execution.
+Use [Desktop build/release commands](desktop-release.md) for its Go and native gates.

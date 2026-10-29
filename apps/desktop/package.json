@@ -14,18 +14,21 @@
     "test:unit": "bun --bun vp test --run tests/renderer/unit tests/native tests/scripts --exclude \"**/integration/**\"",
     "test:component": "bun --bun vp test --run tests/renderer/component",
     "test:coverage": "bun --bun vp test --run --coverage",
-    "native:dev": "bun run tauri:generate && bun run tauri:cli && bun scripts/native/tauri.ts dev",
-    "native:build": "bun run tauri:generate && bun run tauri:cli --release && bun scripts/native/tauri.ts build",
+    "native:dev": "bun run scripts/native/task.ts dev",
+    "native:build": "bun run scripts/native/task.ts native:build",
     "native:csp": "bun scripts/native/csp.ts",
     "native:smoke": "bun run scripts/native/task.ts native:smoke",
     "native:smoke:interactive": "bun run scripts/native/task.ts native:smoke:interactive",
     "native:agents": "bun run scripts/native/task.ts native:agents",
     "native:beta": "bun run scripts/native/task.ts native:beta",
     "build:renderer": "bun run scripts/native/task.ts build:renderer",
-    "tauri:generate": "bun scripts/native/generate.ts",
-    "tauri:dev": "bun run tauri:generate && bun run tauri:cli && bun scripts/native/tauri.ts dev",
-    "tauri:build": "bun run tauri:generate && bun run tauri:cli --release && bun scripts/native/tauri.ts build",
-    "tauri:cli": "bun scripts/native/prepare-cli.ts"
+    "native:prepare": "bun scripts/native/mygo.ts prepare",
+    "mygo:build": "bun scripts/native/mygo.ts build",
+    "mygo:check": "bun scripts/native/mygo.ts check",
+    "mygo:test": "bun run native:generate && bun scripts/native/mygo.ts test",
+    "mygo:smoke": "bun scripts/native/mygo.ts smoke",
+    "mygo:dev": "bun scripts/native/mygo.ts dev",
+    "native:generate": "bun scripts/native/generate.ts"
   },
   "dependencies": {
     "@raypx/account": "workspace:*",
@@ -42,7 +45,6 @@
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
-    "@tauri-apps/api": "catalog:",
     "@xterm/addon-fit": "catalog:",
     "@xterm/xterm": "catalog:",
     "lucide-react": "catalog:",
@@ -55,7 +57,6 @@
     "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/tooling": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
-    "@tauri-apps/cli": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
     "@testing-library/react": "catalog:dev",
     "@testing-library/user-event": "catalog:dev",
@@ -81,6 +82,7 @@
       "scripts/**": "bun",
       "tests/scripts/**": "bun",
       "vite.app.config.ts": "bun",
+      "mygo.config.ts": "bun",
       "bridge.ts": "universal"
     }
   }

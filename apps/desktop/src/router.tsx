@@ -18,10 +18,7 @@ export function getRouter() {
     routeTree,
     defaultOnCatch: (error) => analytics.captureException(error),
     // Packaged views have no server rewrites, so deep links live in the hash.
-    ...(typeof window !== "undefined" &&
-    (window.location.protocol === "views:" ||
-      window.location.protocol === "tauri:" ||
-      window.location.hostname === "tauri.localhost")
+    ...(typeof window !== "undefined" && window.__raypxDesktopHost === "mygo"
       ? { history: createHashHistory() }
       : {}),
     defaultPreload: "intent",

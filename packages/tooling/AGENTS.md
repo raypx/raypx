@@ -22,8 +22,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
-- `verify` selects affected source/tests and Rust packages; `verify --full` checks
-  all current-platform JS/Rust sources, builds and probes. `--base` selects a Git
+- `verify` selects affected source/tests and Go/Rust packages; `verify --full` checks
+  all current-platform JS/Go/Rust sources, builds and probes. `--base` selects a Git
   base; `--dry-run` prints the plan and expanded VP graph.
 - CI consumes the same planner through private `ci:plan`/`ci:gate` entries. Unknown
   inputs or unavailable dependency graphs select full coverage. Required results
@@ -32,23 +32,23 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   GUI acceptance require a tag push or manual `distribution` request; release gates
   run in parallel and the final result validates their selection against the event.
   Preparation builds shared JS inputs only. Herdr runs in the check phase before its
-  Rust cache restore, leaving package/smoke phases independent of terminal-test duration.
+  Go checks, leaving package/smoke phases independent of terminal-test duration.
 - One private Rust pipeline runs rustfmt, Clippy and tests serially, uncached in VP.
-  Cargo owns incremental compilation under `target/`. Only selected Desktop checks
-  prepare generated contracts and the matching CLI; library-only changes skip staging.
-- `clean` removes workspace outputs, staged Tauri binaries/generated schemas and local test artifacts;
+  Cargo owns incremental compilation under `target/`. Go host checks prepare generated contracts independently; Rust library changes
+  never stage Desktop inputs.
+- `clean` removes workspace outputs, staged MyGo resources/generated assets and local test artifacts;
   it awaits asynchronous deletion in batches of eight. Dependencies, lockfiles
   and persistent user/database data stay intact.
 - `clean` delegates Rust cleanup to `cargo clean --workspace --profile dev`, preserving
   dependency caches and Release artifacts. `clean:rust` runs only that step, exposed
   as root `rust:clean`; `clean:artifacts` preserves all Rust outputs. Cargo is skipped
   without a Cargo manifest or nonempty target directory; `CARGO_TARGET_DIR` is respected.
-- raypx-dev env -- <command>, db <operation>, desktop build [Tauri build arguments]
+- raypx-dev env -- <command>, db <operation>, desktop build [MyGo build arguments]
 - Desktop's default build/check only verifies the renderer and scripts. Explicit
   `native:build` and native smoke/beta/agents tasks are uncached, depend on the
   renderer and matching CLI build, then stage the sidecar. `dev` stages that CLI
-  before starting Vite and Tauri. Direct Desktop scripts enter the same VP graph.
-  Linux Rust verification excludes `raypx-desktop`; platform CI checks that crate.
+  before starting Vite and MyGo. Direct Desktop scripts enter the same VP graph.
+  Rust libraries are independent of the Go host; native CI checks Go on each platform.
 - `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
 
 ## Constraints

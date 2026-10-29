@@ -14,7 +14,7 @@ import {
   quitDesktop,
   view,
   cleanupSessionKeys,
-} from "./tauri-host";
+} from "./host";
 
 const suppliedDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 const api = process.env.RAYPX_NATIVE_SMOKE_API;
@@ -77,7 +77,7 @@ async function acceptance() {
   );
   assert.equal(
     await evaluate("return location.protocol"),
-    process.platform === "win32" ? "http:" : "tauri:",
+    process.platform === "win32" ? "http:" : "mygo:",
   );
   if (restoring) {
     stage = "native process restart persistence and logout";

@@ -9,12 +9,13 @@ if (!name) throw new Error("A workspace task name is required");
 const manifest = JSON.parse(readFileSync(resolve("package.json"), "utf8"));
 if (!manifest.scripts?.[name]) throw new Error(`Unknown workspace script: ${name}`);
 const args = taskArguments(`${manifest.name}#${name}`, process.env);
-const native = manifest.scripts["native:build"] && manifest.scripts["tauri:cli"];
+const native = manifest.scripts["native:build"] && manifest.scripts["native:prepare"];
 const delegated = taskScripts(manifest)[name];
 const command = delegated
   ? [process.execPath, "run", delegated, ...args]
   : native &&
       [
+        "native:build",
         "check",
         "build",
         "build:renderer",

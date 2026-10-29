@@ -3,21 +3,17 @@ import { waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({ save: vi.fn() }));
-vi.mock("@tauri-apps/api/core", () => ({
-  Channel: class {
-    onmessage = (_input: unknown) => {};
-  },
-  invoke: (method: string, payload: { input?: unknown }) =>
-    method === "save_preferences" ? mocks.save(payload.input) : Promise.resolve(true),
+vi.mock("../../../../src/lib/mygo", () => ({
+  createMyGoBridge: async () => ({ request: { savePreferences: mocks.save } }),
 }));
 
 beforeEach(() => {
   vi.resetModules();
-  Object.defineProperty(window, "__TAURI_INTERNALS__", { value: {}, configurable: true });
+  Object.defineProperty(window, "__raypxDesktopHost", { value: "mygo", configurable: true });
   mocks.save.mockReset();
 });
 afterEach(() => {
-  Reflect.deleteProperty(window, "__TAURI_INTERNALS__");
+  Reflect.deleteProperty(window, "__raypxDesktopHost");
 });
 
 describe("Desktop preference bridge", () => {
@@ -42,7 +38,7 @@ describe("Desktop preference bridge", () => {
 
   it("keeps browser preview independent of native persistence", async () => {
     const { saveDesktopPreferences } = await import("../../../../src/lib/desktop");
-    Reflect.deleteProperty(window, "__TAURI_INTERNALS__");
+    Reflect.deleteProperty(window, "__raypxDesktopHost");
     await expect(saveDesktopPreferences({ theme: "dark", locale: "zh" })).resolves.toBe(false);
     expect(mocks.save).not.toHaveBeenCalled();
   });

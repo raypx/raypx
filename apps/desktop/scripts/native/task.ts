@@ -12,13 +12,14 @@ const nativeGate =
   ["native:smoke", "native:smoke:interactive", "native:beta", "native:agents"].includes(task);
 if (
   task !== "check" &&
+  task !== "native:build" &&
   task !== "build" &&
   task !== "build:renderer" &&
   task !== "dev" &&
   !nativeGate
 )
   throw new Error(
-    "Usage: scripts/native/task.ts <check|build|build:renderer|dev|native:smoke|native:smoke:interactive|native:beta|native:agents>",
+    "Usage: scripts/native/task.ts <check|build|build:renderer|dev|native:build|native:smoke|native:smoke:interactive|native:beta|native:agents>",
   );
 
 const argumentKey = `RAYPX_DESKTOP_${task === "build:renderer" ? "RENDERER" : task.toUpperCase().replaceAll(":", "_")}_ARGS`;
@@ -43,6 +44,8 @@ if (!leaf) {
 // Direct scripts enter VP; the private leaf invocation executes only this task.
 if (!leaf) {
   commands = [[bun, "run", "raypx-dev", "tasks", `desktop#${task}`]];
+} else if (task === "native:build") {
+  commands = [[bun, "run", "mygo:build", ...args]];
 } else if (task === "check") {
   commands = [
     [bun, "run", "typecheck"],
@@ -68,17 +71,9 @@ if (!leaf) {
       : task === "native:smoke:interactive"
         ? ["--interactive"]
         : [];
-  commands = [
-    [bun, "run", "tauri:generate"],
-    [bun, "run", "tauri:cli"],
-    [bun, "run", `tests/native/smoke/${scenario}`, ...mode, ...args],
-  ];
+  commands = [[bun, "run", `tests/native/smoke/${scenario}`, ...mode, ...args]];
 } else {
-  commands = [
-    [bun, "run", "tauri:generate"],
-    [bun, "run", "tauri:cli"],
-    [bun, "run", "raypx-dev", "env", "--", bun, "run", "scripts/native/dev.ts", ...args],
-  ];
+  commands = [[bun, "run", "mygo:dev", ...args]];
 }
 
 for (const command of commands) {

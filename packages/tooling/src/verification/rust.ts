@@ -24,11 +24,7 @@ export function affectedCargo(root: string, files: string[], packages: CargoPack
       if (pkg.dependencies.some((dep) => affected.has(dep.name))) affected.add(pkg.name);
     if (count === affected.size) break;
   }
-  const native = [...affected].some((name) => owners.get(name)?.endsWith("/src-tauri"));
-  const selected = [...affected]
-    .filter((name) => process.platform !== "linux" || !owners.get(name)?.endsWith("/src-tauri"))
-    .sort();
-  return { packages: selected, native };
+  return { packages: [...affected].sort(), native: false };
 }
 export function cargoChanges(root: string, files: string[]) {
   const metadata = JSON.parse(

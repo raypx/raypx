@@ -10,6 +10,7 @@
     "vite.config.ts",
     "vitest.config.ts",
     "vite.app.config.ts",
+    "mygo.config.ts",
     "scripts/**/*.ts",
     "tests/scripts/**/*.ts",
     "tests/native/**/*.ts"

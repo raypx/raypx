@@ -2,87 +2,86 @@ import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { tmpdir } from "node:os";
-import { tauriArguments, tauriSigningEnvironment } from "../../../scripts/native/tauri";
-import {
-  installWindowsSmoke,
-  type SmokeInstallation,
-} from "../../../scripts/native/windows-smoke-install";
+import { installWindowsSmoke } from "../../../scripts/native/windows-smoke-install";
+import { signingEnvironment } from "../../../scripts/native/signing";
 
 const cwd = resolve(import.meta.dirname, "../../..");
-const target = resolve(cwd, "../../target/native-smoke");
-
 export function shouldInstallWindowsSmoke(
   platform: NodeJS.Platform,
-  environment: Readonly<Record<string, string | undefined>>,
+  env: Readonly<Record<string, string | undefined>>,
 ) {
   return (
     platform === "win32" &&
-    environment.GITHUB_ACTIONS === "true" &&
-    environment.RUNNER_OS === "Windows" &&
-    environment.RUNNER_ENVIRONMENT === "github-hosted"
+    env.GITHUB_ACTIONS === "true" &&
+    env.RUNNER_OS === "Windows" &&
+    env.RUNNER_ENVIRONMENT === "github-hosted"
   );
+}
+export interface SmokeInstallation {
+  binary: string;
+  dispose(): Promise<void>;
 }
 
 export async function buildSmoke(): Promise<SmokeInstallation> {
   if (!["darwin", "win32"].includes(process.platform))
     throw new Error("Packaged native smoke is only verified on macOS and Windows");
-  const child = Bun.spawn(
+  const env = {
+    ...signingEnvironment(process.env, { smoke: true }),
+    RAYPX_NATIVE_SMOKE_PACKAGE: "1",
+    RAYPX_DESKTOP_NATIVE_SMOKE_BUILD: "1",
+  };
+  for (const command of [
     [
       process.execPath,
       "--bun",
-      "tauri",
-      ...tauriArguments([
-        "build",
-        "--no-sign",
-        "--features",
-        "native-smoke",
-        "--config",
-        "src-tauri/tauri.smoke.conf.json",
-        "--bundles",
-        process.platform === "darwin" ? "app" : "nsis",
-      ]),
+      "vp",
+      "build",
+      "--config",
+      "vite.app.config.ts",
+      "--mode",
+      "native-smoke",
     ],
-    {
+    [process.execPath, "scripts/native/csp.ts", "artifacts/native-smoke/client"],
+    [process.execPath, "scripts/native/mygo.ts", "build", "-skip-dmg"],
+  ]) {
+    const child = Bun.spawn(command, {
       cwd,
-      env: { ...tauriSigningEnvironment(process.env, { smoke: true }), CARGO_TARGET_DIR: target },
+      env,
       stdin: "ignore",
       stdout: "inherit",
       stderr: "inherit",
-    },
-  );
-  if ((await child.exited) !== 0) throw new Error("Tauri native-smoke packaging failed");
-  if (process.platform === "win32") {
-    if (shouldInstallWindowsSmoke(process.platform, process.env))
-      return installWindowsSmoke(target, resolve(cwd, "../cli/dist/raypx.exe"));
-    console.info(
-      "Windows smoke runs the Cargo build directly; NSIS installation is not validated outside a GitHub-hosted Windows runner.",
-    );
-    return {
-      binary: join(target, "release/raypx-desktop.exe"),
-      dispose: async () => {},
-    };
+    });
+    if (await child.exited) throw new Error("MyGo native-smoke packaging failed");
   }
+  const platform = process.platform === "win32" ? "windows" : "darwin";
+  const arch = process.arch === "x64" ? "amd64" : process.arch;
+  const output = join(cwd, "build/native-smoke", `${platform}-${arch}`);
+  if (shouldInstallWindowsSmoke(process.platform, process.env))
+    return installWindowsSmoke(output, resolve(cwd, "../cli/dist/raypx.exe"));
   return {
-    binary: join(target, "release/bundle/macos/Raypx Test.app/Contents/MacOS/raypx-desktop"),
+    binary:
+      process.platform === "win32"
+        ? join(output, "Raypx Test.exe")
+        : join(output, "Raypx Test.app/Contents/MacOS/Raypx Test"),
     dispose: async () => {},
   };
 }
 
-export async function runTauriSmoke(
+export async function runMyGoSmoke(
   installation: SmokeInstallation,
   phase: string,
   directory: string,
   env: NodeJS.ProcessEnv,
 ) {
   const { binary } = installation;
-  if (!existsSync(binary)) throw new Error("Build the Tauri native-smoke release first");
+  if (!existsSync(binary)) throw new Error("Build the MyGo native-smoke release first");
   const nonce = crypto.randomUUID();
   const endpoint =
     process.platform === "win32"
       ? String.raw`\\.\pipe\raypx-native-smoke-${nonce}`
       : join(tmpdir(), `raypx-${nonce}.sock`);
   const environment = {
-    ...tauriSigningEnvironment(env, { smoke: true }),
+    ...signingEnvironment(env, { smoke: true }),
     RAYPX_NATIVE_SMOKE_SOCKET: endpoint,
     RAYPX_NATIVE_SMOKE_TOKEN: crypto.randomUUID() + crypto.randomUUID(),
   };

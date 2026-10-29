@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { lstat, mkdtemp, readFile, readdir, realpath, rm } from "node:fs/promises";
+import { lstat, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve, win32 } from "node:path";
-import { tauriSigningEnvironment } from "./tauri";
+import { join, resolve, win32 } from "node:path";
+import { signingEnvironment } from "./signing";
 
 interface RegistryKeys {
   product: string;
@@ -42,7 +42,7 @@ async function powershell(script: string, values: Record<string, string>) {
       `$ErrorActionPreference = 'Stop'; ${script}`,
     ],
     {
-      env: { ...tauriSigningEnvironment(process.env, { smoke: true }), ...values },
+      env: { ...signingEnvironment(process.env, { smoke: true }), ...values },
       stdin: "ignore",
       stdout: "pipe",
       stderr: "pipe",
@@ -146,25 +146,6 @@ async function digest(path: string) {
   return { path, size: stat.size, sha256: hash.digest("hex") };
 }
 
-async function nsisMainPayload(path: string) {
-  await regularFile(path);
-  const bytes = await readFile(path);
-  const sourceSha256 = createHash("sha256").update(bytes).digest("hex");
-  const token = Buffer.from("__TAURI_BUNDLE_TYPE_VAR_UNK");
-  const offset = bytes.indexOf(token);
-  if (offset < 0) throw new Error(`Missing Tauri bundle-type token in NSIS main source: ${path}`);
-  // tauri-bundler 2.10.4 bundle.rs patches only the first token before NSIS File
-  // captures the main binary, then restores the source after packaging. Reproduce
-  // that exact equal-length patch in memory; all installed bytes still must match.
-  Buffer.from("__TAURI_BUNDLE_TYPE_VAR_NSS").copy(bytes, offset);
-  return {
-    path,
-    size: bytes.length,
-    sha256: createHash("sha256").update(bytes).digest("hex"),
-    sourceSha256,
-    bundleTypeOffset: offset,
-  };
-}
 const sameLocation = (left: string | null, right: string) =>
   left !== null &&
   win32.normalize(left.replace(/^"(.*)"$/, "$1")).toLowerCase() ===
@@ -176,60 +157,23 @@ export async function installWindowsSmoke(
   cli: string,
   options: { arch?: string; commands?: WindowsSmokeCommands } = {},
 ): Promise<SmokeInstallation> {
-  const arch = { x64: "x64", arm64: "arm64", ia32: "x86" }[options.arch ?? process.arch];
-  if (!arch) throw new Error("Unsupported Windows smoke architecture");
-  const script = await readFile(join(target, "release/nsis", arch, "installer.nsi"), "utf8");
-  const define = (name: string) => {
-    const matches = [...script.matchAll(new RegExp(`^!define ${name} "([^"\\r\\n]*)"`, "gm"))];
-    if (matches.length !== 1) throw new Error(`Missing or ambiguous NSIS ${name}`);
-    return matches[0]![1]!;
-  };
-  if (
-    define("PRODUCTNAME") !== "Raypx Test" ||
-    define("BUNDLEID") !== "com.raypx.desktop.native-smoke" ||
-    define("INSTALLMODE") !== "currentUser" ||
-    define("MAINBINARYNAME") !== "raypx-desktop" ||
-    define("ARCH") !== arch
-  )
-    throw new Error("Refusing to install a package without the per-user native-smoke identity");
-  const manufacturer = define("MANUFACTURER");
-  const version = define("VERSION");
-  if (!/^[\w .-]+$/.test(manufacturer) || !/^[\w.+-]+$/.test(version))
-    throw new Error("Unsafe NSIS smoke package metadata");
-  const output = join(target, "release/bundle/nsis");
-  const installers = (await readdir(output)).filter((name) => name.endsWith(".exe"));
-  const name = `Raypx Test_${version}_${arch}-setup.exe`;
-  if (installers.length !== 1 || installers[0] !== name)
-    throw new Error("Missing or ambiguous native-smoke NSIS installer");
-  const installer = join(output, name);
+  const arch = { x64: "amd64", arm64: "arm64" }[options.arch ?? process.arch];
+  if (!arch || !target.split(/[\\/]/).includes("native-smoke"))
+    throw new Error("Refusing to install outside the native-smoke output");
+  const manifest = await Bun.file(resolve(import.meta.dirname, "../../package.json")).json();
+  const installer = join(target, `raypx-test-setup-${manifest.version}-${arch}.exe`);
   await regularFile(installer);
-  const mainSource = define("MAINBINARYSRCPATH").replace(/\$\$/g, "$");
-  if ((await realpath(mainSource)) !== (await realpath(join(target, "release/raypx-desktop.exe"))))
-    throw new Error("NSIS main payload source does not match the smoke build");
-  const sidecars = [...script.matchAll(/^\s*File \/a "\/oname=raypx\.exe" "([^"\r\n]+)"\s*$/gm)];
-  if (sidecars.length !== 1) throw new Error("Missing or ambiguous NSIS CLI payload source");
-  const cliSource = sidecars[0]![1]!;
-  const cliArchitecture = { x64: "x86_64", arm64: "aarch64", x86: "i686" }[arch];
-  if (
-    (await realpath(dirname(cliSource))) !==
-      (await realpath(resolve(dirname(cli), "../../desktop/src-tauri/binaries"))) ||
-    !new RegExp(`^raypx-${cliArchitecture}-pc-windows-(msvc|gnu|gnullvm)\\.exe$`).test(
-      basename(cliSource),
-    )
-  )
-    throw new Error(`NSIS CLI payload source does not match the staged sidecar: ${cliSource}`);
   const [expectedMain, expectedCli, cliBuild] = await Promise.all([
-    nsisMainPayload(mainSource),
-    digest(cliSource),
+    digest(join(target, "Raypx Test.exe")),
+    digest(join(target, "bin/raypx.exe")),
     digest(cli),
   ]);
   if (expectedCli.sha256 !== cliBuild.sha256)
-    throw new Error(
-      `Staged NSIS CLI payload differs from the CLI build: ${JSON.stringify({ payload: expectedCli, build: cliBuild })}`,
-    );
+    throw new Error("Packaged NSIS CLI differs from the compiled CLI");
   const keys = {
-    product: `Software\\${manufacturer}\\Raypx Test`,
-    uninstall: "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Raypx Test",
+    product: "Software\\Raypx\\NativeSmokeUnused",
+    uninstall:
+      "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\com.raypx.desktop.native-smoke",
   };
   const run = options.commands ?? commands;
   const registered = () => run.registrations(keys);
@@ -238,8 +182,8 @@ export async function installWindowsSmoke(
   const root = await mkdtemp(join(tmpdir(), "raypx-nsis-smoke-"));
   const directory = join(root, "Raypx Test");
   if (/["\r\n]/.test(directory)) throw new Error("Unsafe smoke install directory");
-  const binary = join(directory, "raypx-desktop.exe");
-  const uninstaller = join(directory, "uninstall.exe");
+  const binary = join(directory, "Raypx Test.exe");
+  const uninstaller = join(directory, "Uninstall.exe");
   let disposed = false;
   async function dispose() {
     if (disposed) return;
@@ -272,7 +216,7 @@ export async function installWindowsSmoke(
       )
     )
       throw new Error(`Smoke uninstall incomplete; retained ${root}`);
-    // Tauri deliberately retains its install-location key on a silent uninstall.
+    // Remove only registrations in the owned temporary installation.
     // Remove only our matching product key, never its shared manufacturer parent.
     await run.clearProduct(keys, directory);
     if ((await registered()).some((entry) => entry.product || entry.uninstall))
@@ -281,18 +225,16 @@ export async function installWindowsSmoke(
     disposed = true;
   }
   try {
-    // /NS avoids shortcuts. Omitting /R prevents Tauri's silent-installer auto launch.
+    // MyGo uses a per-user installer; /D= selects only our isolated directory.
     // /D= must be the final, unquoted tail, including any spaces in the owned path.
-    await run.execute(installer, `/S /NS /D=${directory}`);
+    await run.execute(installer, `/S /D=${directory}`);
     const entries = (await registered()).filter((entry) => entry.product || entry.uninstall);
     if (
       !entries.some(
         (entry) =>
-          entry.view === (arch === "x86" ? "Registry32" : "Registry64") &&
-          entry.product &&
+          entry.view === (arch === "386" ? "Registry32" : "Registry64") &&
           entry.uninstall &&
-          sameLocation(entry.installLocation, directory) &&
-          sameLocation(entry.productLocation, directory),
+          sameLocation(entry.installLocation, directory),
       ) ||
       // HKCU Software keys can be shared by the two registry views.
       entries.some(
@@ -305,7 +247,7 @@ export async function installWindowsSmoke(
       throw new Error("NSIS did not register the owned per-user smoke installation");
     const [installedMain, installedCli] = await Promise.all([
       digest(binary),
-      digest(join(directory, "raypx.exe")),
+      digest(join(directory, "bin/raypx.exe")),
     ]);
     const payloads = {
       main: { expected: expectedMain, installed: installedMain },

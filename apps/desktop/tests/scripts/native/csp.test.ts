@@ -2,13 +2,13 @@ import { expect, it } from "vite-plus/test";
 import { createHash } from "node:crypto";
 import { secureHtml } from "../../../scripts/native/csp";
 
-it("allows only the exact prerendered scripts and the Tauri IPC transport", () => {
+it("allows only the exact prerendered scripts and the native WebView policy", () => {
   const script = "window.theme='dark'",
     html = secureHtml(
       `<html><head><script>${script}</script></head><body><script src="/assets/main.js"></script></body></html>`,
     );
   expect(html).toContain(`'sha256-${createHash("sha256").update(script).digest("base64")}'`);
-  expect(html).toContain("ipc: http://ipc.localhost");
+  expect(html).not.toContain("ipc:");
   expect(html).not.toContain("views:");
   expect(html).not.toContain("ws://");
   expect(html).not.toContain("unsafe-eval");

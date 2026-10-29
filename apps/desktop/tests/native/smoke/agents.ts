@@ -15,7 +15,7 @@ if (process.env.RAYPX_LIVE_AGENTS !== "1")
 const smokeDirectory = process.env.RAYPX_NATIVE_SMOKE_DATA_DIR;
 if (!smokeDirectory) throw new Error("Live Agent smoke requires an isolated native data directory");
 const directory = smokeDirectory;
-const { engine, quitDesktop } = await import("./tauri-host");
+const { engine, quitDesktop } = await import("./host");
 const accountId = "live-agent-acceptance";
 const results: { provider: AgentProvider; checks: string[] }[] = [];
 const activeStatuses = ["pending", "running", "waiting", "cancelling"];

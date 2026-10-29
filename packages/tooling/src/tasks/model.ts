@@ -95,8 +95,10 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
     ...(build || name === "check"
       ? [
           "target/**",
-          "**/src-tauri/binaries/**",
-          "**/src-tauri/gen/**",
+          "**/generated/**",
+          "**/resources/bin/**",
+          "**/build/**",
+          "**/.mygo/**",
           "**/node_modules/.nitro/**",
         ]
       : []),
@@ -111,13 +113,13 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
       pattern,
       base: "workspace" as const,
     })),
-    ...["dist", ".output", "artifacts/browser", "coverage"].flatMap((directory) => [
+    ...["dist", ".output", "artifacts", "coverage"].flatMap((directory) => [
       `!${directory}`,
       `!${directory}/**`,
     ]),
   ];
   if (member.native && name === "check")
-    for (const directory of ["artifacts/browser"])
+    for (const directory of ["artifacts"])
       input.push(
         { pattern: `!${member.path}/${directory}`, base: "workspace" },
         { pattern: `!${member.path}/${directory}/**`, base: "workspace" },
@@ -180,7 +182,7 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
   }
   if (
     member.native &&
-    name === "tauri:cli" &&
+    ["native:prepare", "mygo:smoke"].includes(name) &&
     members.some((candidate) => candidate.name === "cli" && candidate.scripts.build)
   )
     result.push(taskRef("cli", "build"));
@@ -216,7 +218,8 @@ export function taskModel(
       ]),
     ],
     native: Boolean(
-      workspace.manifest.scripts?.["native:build"] && workspace.manifest.scripts?.["tauri:cli"],
+      workspace.manifest.scripts?.["native:build"] &&
+      workspace.manifest.scripts?.["native:prepare"],
     ),
     uncachedTasks:
       (workspace.manifest.raypx as { uncachedTasks?: string[] } | undefined)?.uncachedTasks ?? [],

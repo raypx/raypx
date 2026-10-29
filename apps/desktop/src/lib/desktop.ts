@@ -5,12 +5,7 @@ import {
   type LocalParams,
   type RootGrant,
 } from "@raypx/contracts/local";
-import {
-  DESKTOP_METHODS,
-  type DesktopBridge,
-  type DesktopMethod,
-  type DesktopRuntime,
-} from "../../bridge";
+import { type DesktopBridge, type DesktopRuntime } from "../../bridge";
 import type { DevicePreferences } from "../../preferences";
 
 export type { DesktopRuntime } from "../../bridge";
@@ -22,7 +17,7 @@ export function onLocalEvent(listener: (event: LocalEvent) => void) {
   };
 }
 export function isDesktop() {
-  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  return typeof window !== "undefined" && window.__raypxDesktopHost === "mygo";
 }
 /** Local terminal approvals need the independent daemon's hook host. */
 export function hasTerminalHooks() {
@@ -39,36 +34,7 @@ function dispatchLocalEvent(value: unknown) {
 }
 let bridge: Promise<DesktopBridge> | undefined;
 async function createBridge(): Promise<DesktopBridge> {
-  const { Channel, invoke } = await import("@tauri-apps/api/core");
-  const channel = new Channel<{ sequence: number; event: unknown }>();
-  // oxlint-disable-next-line unicorn/prefer-add-event-listener -- Tauri Channel exposes a single onmessage callback.
-  channel.onmessage = ({ sequence, event }) => {
-    try {
-      dispatchLocalEvent(event);
-    } finally {
-      void invoke("ack_local_events", { input: { sequence } }).catch(() => {});
-    }
-  };
-  // Hold the channel for the WebView lifetime, including periods with no listeners.
-  await invoke("subscribe_local_events", { channel });
-  const request = new Proxy({} as DesktopBridge["request"], {
-    get(_target, property) {
-      if (typeof property !== "string" || !Object.hasOwn(DESKTOP_METHODS, property))
-        return undefined;
-      return (input: unknown, options?: { maxRequestTime?: number }) => {
-        const response = invoke(DESKTOP_METHODS[property as DesktopMethod], { input });
-        if (!options?.maxRequestTime) return response;
-        return new Promise((resolve, reject) => {
-          const timer = setTimeout(
-            () => reject(new Error("Desktop request timed out")),
-            options.maxRequestTime,
-          );
-          response.then(resolve, reject).finally(() => clearTimeout(timer));
-        });
-      };
-    },
-  });
-  return { request };
+  return (await import("./mygo")).createMyGoBridge(dispatchLocalEvent);
 }
 
 export function getBridge() {

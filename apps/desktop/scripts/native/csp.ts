@@ -17,7 +17,7 @@ export function secureHtml(
     if (!/\bsrc\s*=/.test(match[1]!))
       hashes.add(`'sha256-${createHash("sha256").update(match[2]!).digest("base64")}'`);
   }
-  const policy = `default-src 'none'; script-src 'self' ${[...hashes].join(" ")}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https:${loopback}; object-src 'none'; base-uri 'none'; form-action 'none'`;
+  const policy = `default-src 'none'; script-src 'self' ${[...hashes].join(" ")}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https:${loopback}; object-src 'none'; base-uri 'none'; form-action 'none'`;
   return html
     .replace(/<meta\b[^>]*http-equiv=["']Content-Security-Policy["'][^>]*>/gi, "")
     .replace(

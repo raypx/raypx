@@ -20,7 +20,7 @@ import {
   windowActions,
   cleanupSessionKeys,
   measureNativeCors,
-} from "./tauri-host";
+} from "./host";
 
 const evaluateNative = view.evaluate;
 const presentation = nativePresentation(process.env);
@@ -206,7 +206,7 @@ try {
   console.info(
     "Native smoke renderer status:",
     await evaluate(
-      'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.__TAURI_INTERNALS__ });',
+      'return JSON.stringify({ main: Boolean(document.querySelector("#main")), ready: document.readyState, nativeId: typeof window.mygo });',
     ),
   );
   await waitFor(
@@ -231,10 +231,10 @@ try {
   if (fixturePhase === "shell") {
     stage = "native Channel throughput";
     const runtime = (await evaluate(
-      "return await window.__TAURI_INTERNALS__.invoke('get_runtime',{input:{}})",
+      "return await window.mygo.call('Desktop.Request','get_runtime',{})",
     )) as { compiledFeatures: string[] };
     assert.deepEqual(runtime.compiledFeatures, ["native-smoke"]);
-    const { measureNativeStream } = await import("./tauri-host");
+    const { measureNativeStream } = await import("./host");
     const stream = await measureNativeStream();
     console.info(`Native smoke Channel: ${JSON.stringify(stream)}`);
     assert.equal(stream.renderer.ordered, true, "Native Channel reordered terminal packets");
@@ -488,7 +488,7 @@ try {
   if (phase === "shell") {
     assert.equal(
       await evaluate("return location.protocol"),
-      process.platform === "win32" ? "http:" : "tauri:",
+      process.platform === "win32" ? "http:" : "mygo:",
     );
     stage = "local renderer file bridge";
     const directory = join(dataDir, "authorized");

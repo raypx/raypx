@@ -18,7 +18,7 @@ export interface DesktopRuntime {
   features?: { localTerminalApprovals: boolean };
   compiledFeatures?: string[];
 }
-/** The native command vocabulary. Rust checks the generated manifest in its tests. */
+/** The native command vocabulary. The Go host validates the generated manifest. */
 export const DESKTOP_METHODS = {
   openExternal: "open_external",
   apiFetch: "api_fetch",

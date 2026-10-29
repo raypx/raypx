@@ -7,7 +7,7 @@ import { taskRef } from "./names.js";
 export function rustTasks(
   root: string,
   rootName: string,
-  members: TaskMember[],
+  _members: TaskMember[],
   definitions: Map<string, TaskDefinition>,
   selection?: string,
 ): string[] {
@@ -18,24 +18,9 @@ export function rustTasks(
     packages.some((name) => typeof name !== "string" || !/^[a-zA-Z0-9_-]+$/.test(name))
   )
     throw new Error("Invalid Cargo package selection");
-  const desktop = members.find(
-    (member) =>
-      member.native &&
-      member.scripts["tauri:generate"] &&
-      existsSync(join(root, member.path, "src-tauri/Cargo.toml")),
-  );
-  const native =
-    desktop &&
-    process.platform !== "linux" &&
-    (!packages.length || packages.includes("raypx-desktop"));
-  const prepare = native
-    ? [taskRef(desktop.name, "tauri:generate"), taskRef(desktop.name, "tauri:cli")]
-    : [];
-  // Linux library CI has no WebKitGTK development packages. Native CI owns Desktop.
-  const exclude = desktop && process.platform === "linux" ? " --exclude raypx-desktop" : "";
   const scope = packages.length
     ? packages.map((name) => `--package ${name}`).join(" ")
-    : `--workspace${exclude}`;
+    : "--workspace";
   let previous: string | undefined;
   for (const [name, command] of Object.entries({
     format: "cargo fmt --all -- --check",
@@ -46,7 +31,7 @@ export function rustTasks(
     definitions.set(ref, {
       command,
       cache: false,
-      dependsOn: [...(previous ? [previous] : []), ...(name === "lint" ? prepare : [])],
+      dependsOn: previous ? [previous] : [],
     });
     previous = ref;
   }

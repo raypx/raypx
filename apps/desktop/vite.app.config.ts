@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
   const preview = mode === "e2e" || process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1";
   return {
     ...analytics,
+    ...(mode === "native-smoke" || process.env.RAYPX_DESKTOP_NATIVE_SMOKE_BUILD === "1"
+      ? { build: { outDir: "artifacts/native-smoke" } }
+      : {}),
     ...(preview ? { build: { outDir: "artifacts/browser" } } : {}),
     plugins: [
       tailwindcss(),
@@ -29,7 +32,18 @@ export default defineConfig(({ mode }) => {
       port: 1420,
       strictPort: true,
       host: "localhost",
-      watch: { ignored: ["**/src-tauri/**", "**/artifacts/**"] },
+      watch: {
+        ignored: [
+          "**/*.go",
+          "**/go.mod",
+          "**/go.sum",
+          "**/generated/**",
+          "**/resources/**",
+          "**/build/**",
+          "**/.mygo/**",
+          "**/artifacts/**",
+        ],
+      },
     },
   };
 });

@@ -58,31 +58,21 @@ it("publishes shared JS inputs without waiting for Rust or Herdr", () => {
   expect(steps.some((step) => step.uses === "./.github/actions/vp-save")).toBe(false);
 });
 
-it("requires compiled Herdr checks before restoring the check-phase Rust cache", () => {
+it("requires compiled Herdr integration and pinned Go checks in the check phase", () => {
   const herdr = named("Herdr terminal integration");
   expect(herdr.if).toBe("matrix.phase == 'checks'");
   expect(herdr.run).toContain('process.platform === "win32" ? 3 : 1');
-  expect(steps.indexOf(named("Prepare native check or distribution inputs"))).toBeLessThan(
-    steps.indexOf(herdr),
-  );
-  expect(steps.indexOf(herdr)).toBeLessThan(
-    steps.findIndex((step) => step.uses === "Swatinem/rust-cache@v2"),
-  );
+  expect(steps.indexOf(named("Prepare Herdr runtime"))).toBeLessThan(steps.indexOf(herdr));
+  const go = steps.find((step) => step.uses === "actions/setup-go@v6")!;
+  expect(go.with?.["go-version-file"]).toBe("apps/desktop/go.mod");
+  expect(go.with?.["cache-dependency-path"]).toBe("apps/desktop/go.sum");
+  expect(steps.some((step) => step.uses === "Swatinem/rust-cache@v2")).toBe(false);
 });
 
-it("keeps Cargo cache writers and smoke outputs isolated by phase", () => {
-  const cache = steps.find((step) => step.uses === "Swatinem/rust-cache@v2")!;
-  expect(cache.with?.["shared-key"]).toContain("matrix.phase");
-  expect(cache.with?.workspaces).toContain("target/native-smoke");
-  expect(cache.with?.["cache-on-failure"]).toBe("false");
-});
-
-it("retains Rust, production and interactive smoke acceptance", () => {
-  expect(named("Desktop Rust checks").if).toBe("matrix.phase == 'checks'");
-  expect(named("Desktop Rust checks").run).toContain("--all-targets --all-features --locked");
-  expect(named("Desktop Rust checks").run).toContain(
-    "cargo clippy -p raypx-desktop --all-targets --locked -- -D warnings",
-  );
+it("retains Go, production and interactive smoke acceptance", () => {
+  expect(named("Desktop MyGo checks").if).toBe("matrix.phase == 'checks'");
+  expect(named("Desktop MyGo checks").run).toContain("mygo:test");
+  expect(named("Desktop MyGo checks").run).toContain("go vet -tags native_smoke");
   expect(named("Package desktop").if).toBe("matrix.phase == 'package'");
   expect(named("Verify production Desktop excludes smoke controls").if).toBe(
     "matrix.phase == 'package'",
