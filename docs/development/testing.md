@@ -30,6 +30,9 @@ Go host tasks through reverse dependency graphs. The default base is the merge-b
 with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
 Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
 Unknown inputs, shared configuration/lockfiles, or an unavailable base select full coverage.
+Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain
+browser code or import a browser entry, including type-only and test imports. If a workspace's
+non-browser, non-test sources import browser code, its consumers are selected as before.
 
 Use `bun run verify --full` before delivery. It checks all JS and current-platform
 Go host targets, builds outputs and runs independent artifact probes concurrently.
@@ -38,7 +41,8 @@ and Go 1.27.3 for Desktop; no Rust toolchain is needed. `verify` and `verify --f
 are the verification entry points.
 
 GitHub uses the same change planner. JS, database, browser and native gates run in
-parallel when relevant; Desktop/CLI dependencies retain both native platforms.
+parallel when relevant; Desktop/CLI dependencies retain both native platforms. Native gates
+skip changes that reach Desktop only through its browser renderer, which they never exercise.
 Tags and manual dispatch select full source coverage. `foundation` requires every selected
 gate to succeed and permits only intentional skips. Herdr integration and pinned Go checks run in the native check phase. Go caches
 are separate from VP's JS task cache; smoke and production use separate outputs.

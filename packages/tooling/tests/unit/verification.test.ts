@@ -35,6 +35,64 @@ function project() {
   });
   return { root, model: taskModel(root) };
 }
+/** Browser UI reaches a mixed feature's client entry; contracts and API use its universal entry. */
+function platformProject(options: { leak?: boolean; typedTest?: boolean } = {}) {
+  const root = fixture();
+  writeFileSync(
+    join(root, "package.json"),
+    JSON.stringify({ name: "fixture", packageManager: "bun@1.4.4", workspaces: ["packages/*"] }),
+  );
+  const scripts = { check: "bun check.ts", test: "bun test.ts" };
+  member(root, "ui", { metadata: { kind: "library", target: "browser" }, extra: { scripts } });
+  const feature = member(root, "feature", {
+    metadata: {
+      kind: "library",
+      target: "universal",
+      entryTargets: { "./client": "browser" },
+      sourceTargets: { "src/client.ts": "browser" },
+    },
+    deps: { "@raypx/ui": "workspace:*" },
+    ...(options.leak
+      ? {
+          source:
+            'import type { view } from "./client";\nexport type View = typeof view;\nexport const answer = 42;',
+        }
+      : {}),
+    extra: { scripts, exports: { ".": "./src/index.ts", "./client": "./src/client.ts" } },
+  });
+  writeFileSync(
+    join(root, feature, "src/client.ts"),
+    'import { answer } from "@raypx/ui";\nexport const view = answer;',
+  );
+  const contracts = member(root, "contracts", {
+    deps: { "@raypx/feature": "workspace:*" },
+    source: 'export { answer } from "@raypx/feature";',
+    extra: { scripts },
+  });
+  if (options.typedTest) {
+    mkdirSync(join(root, contracts, "tests"));
+    writeFileSync(
+      join(root, contracts, "tests/view.test.ts"),
+      'import type { view } from "@raypx/feature/client";\nexport type View = typeof view;',
+    );
+  }
+  member(root, "api", {
+    metadata: { kind: "app", target: "node" },
+    deps: { "@raypx/contracts": "workspace:*" },
+    extra: { name: "api", scripts },
+  });
+  for (const name of ["web", "desktop"])
+    member(root, name, {
+      metadata: {
+        kind: "app",
+        target: "browser",
+        ...(name === "desktop" ? { sourceTargets: { "bridge.ts": "universal" } } : {}),
+      },
+      deps: { "@raypx/ui": "workspace:*", "@raypx/feature": "workspace:*" },
+      extra: { name, scripts },
+    });
+  return taskModel(root);
+}
 describe("affected verification", () => {
   it("normalizes the selected repository root and isolates nested test repositories", () => {
     const { root } = project(),
@@ -64,6 +122,39 @@ describe("affected verification", () => {
     expect(plan.workspaces).toEqual([]);
     expect(plan.tasks).toEqual([]);
     expect(plan.native).toBe(false);
+  });
+  it("keeps browser-only changes within browser consumers", () => {
+    const plan = verificationPlan(platformProject(), ["packages/ui/src/index.ts"]);
+    expect(plan.workspaces).toEqual(["@raypx/feature", "@raypx/ui", "desktop", "web"]);
+    expect(plan.backend).toBe(false);
+    expect(plan.native).toBe(false);
+    expect(plan.browser).toBe("all");
+    const universal = verificationPlan(platformProject(), ["packages/feature/src/index.ts"]);
+    expect(universal.workspaces).toContain("api");
+    expect(universal.backend).toBe(true);
+    expect(universal.native).toBe(true);
+  });
+  it.each([
+    ["packages/desktop/src/index.ts", false],
+    ["packages/desktop/src/app.css", false],
+    ["packages/desktop/bridge.ts", true],
+    ["packages/desktop/main.go", true],
+    ["packages/desktop/package.json", true],
+  ])("runs native checks for %s: %s", (file, native) => {
+    const plan = verificationPlan(platformProject(), [file]);
+    expect(plan.workspaces).toEqual(["desktop"]);
+    expect(plan.native).toBe(native);
+    expect(plan.browser).toBe("desktop");
+  });
+  it("follows type-only and test imports of browser entries", () => {
+    const tested = verificationPlan(platformProject({ typedTest: true }), [
+      "packages/ui/src/index.ts",
+    ]);
+    expect(tested.workspaces).toContain("@raypx/contracts");
+    expect(tested.workspaces).not.toContain("api");
+    const leaked = verificationPlan(platformProject({ leak: true }), ["packages/ui/src/index.ts"]);
+    expect(leaked.workspaces).toContain("api");
+    expect(leaked.backend).toBe(true);
   });
   it.each([
     "bun.lock",

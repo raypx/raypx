@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { distributionRequested } from "./events.js";
+import { browserReach } from "./platform.js";
 
 export type Artifact = "api" | "web" | "cli";
 export interface VerificationPlan {
@@ -64,7 +65,16 @@ export function verificationPlan(
 ): VerificationPlan {
   const reasons = [...(options.reasons ?? [])];
   let full = Boolean(options.full || reasons.length);
-  const affected = new Set<string>();
+  // "browser" workspaces are reached only through browser code; "all" may affect any platform.
+  const affected = new Map<string, "browser" | "all">();
+  const mark = (name: string, scope: "browser" | "all") => {
+    const current = affected.get(name);
+    if (current === "all" || current === scope) return false;
+    affected.set(name, scope);
+    return true;
+  };
+  let reach: ReturnType<typeof browserReach> | undefined;
+  const platforms = () => (reach ??= browserReach(model.root));
   for (const file of files) {
     if (documentation(file)) continue;
     if (globalInput(file)) {
@@ -75,7 +85,11 @@ export function verificationPlan(
     const owner = model.members
       .filter((member) => file.startsWith(member.path + "/"))
       .sort((a, b) => b.path.length - a.path.length)[0];
-    if (owner) affected.add(owner.name);
+    if (owner)
+      mark(
+        owner.name,
+        platforms().browserOnly(file) && !platforms().leaks(owner.name) ? "browser" : "all",
+      );
     else if (!/^(?:\.gitignore|\.oxfmtrc[^/]*|\.oxlintrc[^/]*)$/.test(file)) {
       full = true;
       reasons.push(`Unclassified input: ${file}`);
@@ -84,14 +98,19 @@ export function verificationPlan(
       reasons.push(`Shared formatter/linter input: ${file}`);
     }
   }
-  if (full) for (const member of model.members) affected.add(member.name);
-  for (;;) {
-    const count = affected.size;
+  if (full) for (const member of model.members) mark(member.name, "all");
+  for (let changed = true; changed;) {
+    changed = false;
     for (const member of model.members)
-      if (member.dependencies.some((name) => affected.has(name))) affected.add(member.name);
-    if (count === affected.size) break;
+      for (const name of member.dependencies) {
+        const scope = affected.get(name);
+        if (scope === "all") changed = mark(member.name, "all") || changed;
+        else if (scope === "browser" && platforms().consumes(member.name))
+          changed =
+            mark(member.name, platforms().leaks(member.name) ? "all" : "browser") || changed;
+      }
   }
-  const workspaces = [...affected].sort();
+  const workspaces = [...affected.keys()].sort();
   const includeArtifacts = options.artifacts ?? full;
   const artifacts = includeArtifacts
     ? (["api", "web", "cli"] as const).filter(
@@ -122,7 +141,8 @@ export function verificationPlan(
     workspaces,
     tasks,
     artifacts,
-    native: full || desktop || affected.has("cli"),
+    // Native checks cover the Go host, bridge generation and CLI, never the browser renderer.
+    native: full || affected.get("desktop") === "all" || affected.has("cli"),
     backend: full || affected.has("api"),
     browser:
       full || browserAll || (web && desktop) ? "all" : web ? "web" : desktop ? "desktop" : "none",
