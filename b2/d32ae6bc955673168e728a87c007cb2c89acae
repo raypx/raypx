@@ -1,0 +1,18 @@
+apps/desktop/tests/native/smoke/beta.ts
+  h_f0766e80fd3864 67,135,248,289
+apps/desktop/tests/native/smoke/host.ts
+  h_f0766e80fd3864 124
+apps/desktop/tests/native/smoke/scenario.ts
+  h_f0766e80fd3864 481,730
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b2d32ae6bc955673168e728a87c007cb2c89acae",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
