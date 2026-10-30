@@ -1,0 +1,107 @@
+apps/desktop/AGENTS.md
+  s_909228ef08f567::t_f9e314beb74dc8 24-27
+apps/desktop/src/features/automations/local.tsx
+  s_909228ef08f567::t_bf3ef82adfcf12 153
+apps/desktop/src/features/onboarding/welcome.tsx
+  s_909228ef08f567::t_2465d293ab09a4 49
+apps/desktop/src/features/tasks/workspace.tsx
+  s_909228ef08f567::t_8e001b0b54ddfe 57,68,80-81,115,143,150-162
+apps/desktop/src/router.tsx
+  s_909228ef08f567::t_6837e9dd3283a3 6,33-44,49-52
+apps/desktop/src/routes/(local)/automations.tsx
+  s_909228ef08f567::t_ffc90d1f28fad7 14,32,52,54-57,73-91
+apps/desktop/src/routes/(local)/index.tsx
+  s_909228ef08f567::t_344b0b055662c5 26,130
+apps/desktop/src/routes/account.tsx
+  s_909228ef08f567::t_86f6d89e3b9b28 19,44,88
+apps/desktop/src/routes/approvals.tsx
+  s_be0cafefd5c0be::t_614e68dbe70cbd 4
+apps/desktop/src/routes/memory.tsx
+  s_909228ef08f567::t_d56c2dc791a6c5 15,34,36-39,49
+apps/desktop/src/routes/settings.tsx
+  s_be0cafefd5c0be::t_d82bcca2e0082b 12-15
+apps/desktop/src/routes/tasks.tsx
+  s_be0cafefd5c0be::t_7dce3c490102b4 4
+apps/desktop/src/routes/terminal.tsx
+  s_909228ef08f567::t_fedd07896596b3 16-19,274
+apps/desktop/src/routes/welcome.tsx
+  s_be0cafefd5c0be::t_e3a5c81a896838 3-6
+apps/web/AGENTS.md
+  s_909228ef08f567::t_266802973e41f1 27-29
+apps/web/src/features/auth/components/guest-home.tsx
+  s_909228ef08f567::t_c642adbe11ca5e 9
+apps/web/src/features/configuration/components/settings.tsx
+  s_909228ef08f567::t_3b0ecdb4efa541 26
+apps/web/src/features/tasks/guest.tsx
+  s_909228ef08f567::t_1e3f72123efd74 26
+apps/web/src/router.tsx
+  s_909228ef08f567::t_4f8129a319f0de 6,30-40,45-48
+apps/web/src/routes/(app)/admin/settings.tsx
+  s_be0cafefd5c0be::t_c6c2f5e8b4cd6e 8
+apps/web/src/routes/(app)/approvals.tsx
+  s_909228ef08f567::t_c845e8bf6ad469 10-13,18
+apps/web/src/routes/(app)/automations.tsx
+  s_909228ef08f567::t_b1fe760da75f43 8-11,16
+apps/web/src/routes/(app)/index.tsx
+  s_909228ef08f567::t_9eb33543f8e460 15,51
+apps/web/src/routes/(app)/memory.tsx
+  s_909228ef08f567::t_11f40dee6207fb 6-9,14
+apps/web/src/routes/(app)/settings.tsx
+  s_be0cafefd5c0be::t_bcbfb0e07cc2c7 9-12
+apps/web/src/routes/(app)/tasks.tsx
+  s_909228ef08f567::t_a906ef4ef4281c 16,42
+packages/blocks/AGENTS.md
+  s_909228ef08f567::t_8bf46323fe79f8 35-47
+packages/blocks/src/components/settings.tsx
+  s_be0cafefd5c0be::t_5320ae9e5c1c45 26,51
+packages/blocks/src/components/shell.tsx
+  s_909228ef08f567::t_5845b8c6099119 58-82,98-99,142,300,302-304
+packages/blocks/tests/component/shell.test.tsx
+  s_be0cafefd5c0be::t_59630dc11fdf59 30,68-70
+packages/jobs/src/client/cloud-jobs.tsx
+  s_909228ef08f567::t_04fb979c7551f1 264
+packages/memory/src/client/library.tsx
+  s_909228ef08f567::t_bfaafdaff92b9a 282
+packages/tasks/src/client/workspace.tsx
+  s_909228ef08f567::t_497685ae7857c9 77,169
+apps/desktop/src/components/shell.tsx
+  s_7ebdb0b32aa724::t_69442c423cea1f 21-28,81-88,170-171
+apps/desktop/tests/renderer/component/routes/pages.test.ts
+  s_7ebdb0b32aa724::t_4ee61a7d4190a8 1-36
+apps/web/src/components/shell.tsx
+  s_7ebdb0b32aa724::t_118529e3b1a71a 15-22,74,79-85,117-122
+apps/web/tests/component/routes/pages.test.ts
+  s_7ebdb0b32aa724::t_4ebb5a0b671f99 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2e58ad1f2e77abdc9ceed96a56bcf193672b90a2",
+  "prompts": {},
+  "sessions": {
+    "s_7ebdb0b32aa724": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a0a856a1-74a9-4c89-9119-b6f1b938c9d0",
+        "model": "unknown"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_909228ef08f567": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17716-05d0-7542-973b-0bbcb68a0cb4",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_be0cafefd5c0be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a176ee-3d90-7a50-b1c2-93b35b041162",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
