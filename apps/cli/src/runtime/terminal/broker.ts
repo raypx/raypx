@@ -10,7 +10,7 @@ import { validDecision, type HumanDecision } from "@raypx/contracts/tasks";
 import { LocalError } from "../errors";
 
 export type FallbackReason = "away_off" | "unavailable" | "expired" | "disconnected" | "stopped";
-export type HookOutcome =
+type HookOutcome =
   | { type: "decision"; decision: HumanDecision }
   | { type: "fallback"; reason: FallbackReason };
 export type DecisionReceipt = { input: TerminalDecision; request: TerminalRequest };

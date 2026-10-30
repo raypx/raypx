@@ -63,7 +63,7 @@ const rpcLimits = {
   "memory.restore": { window: 60, max: 20 },
 } satisfies Record<string, RateRule>;
 /** True when decoded input carries keys that merge or path-set helpers could abuse. */
-export function hasPollutingKey(value: unknown): boolean {
+function hasPollutingKey(value: unknown): boolean {
   const pending: unknown[] = [value];
   const seen = new Set<object>();
   while (pending.length > 0) {

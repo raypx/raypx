@@ -10,6 +10,7 @@ import { checkLocales, policy } from "./policy.js";
 import { discover, runTasks } from "./repository.js";
 import { scaffold } from "./scaffold.js";
 import { smoke } from "./smoke/index.js";
+import { checkKnip } from "./validation/knip.js";
 import { readBunPin } from "./validation/toolchain.js";
 import { browserTestArguments } from "./browser-tests.js";
 import { packageTestArguments, runTests } from "./test-command.js";
@@ -31,6 +32,9 @@ function option(name: string, fallback: string) {
 
 async function main() {
   switch (command) {
+    case "knip":
+      checkKnip(root);
+      break;
     case "test":
       await runTests(root, process.cwd(), args);
       break;

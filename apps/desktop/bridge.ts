@@ -5,7 +5,7 @@ import type { ControlInfo } from "@raypx/contracts/terminal";
 import type { DevicePreferences } from "./preferences";
 import type { DesktopApiRequest, DesktopApiResponse } from "./api";
 
-export interface EngineStatus {
+interface EngineStatus {
   status: "starting" | "ready" | "error";
   message?: string;
   code?: string;
@@ -41,7 +41,7 @@ export const DESKTOP_METHODS = {
   savePreferences: "save_preferences",
 } as const;
 
-export type DesktopRequests = {
+type DesktopRequests = {
   openExternal: { params: { url: string }; response: boolean };
   apiFetch: { params: DesktopApiRequest; response: DesktopApiResponse };
   apiCancel: { params: { id: string }; response: boolean };
@@ -73,7 +73,7 @@ export type DesktopRequests = {
 };
 
 export type DesktopMethod = keyof typeof DESKTOP_METHODS;
-export type DesktopRequest = {
+type DesktopRequest = {
   [M in DesktopMethod]: (
     params: DesktopRequests[M]["params"],
     options?: { maxRequestTime?: number },

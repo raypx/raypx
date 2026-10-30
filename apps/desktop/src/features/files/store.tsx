@@ -3,8 +3,8 @@ import { createStore } from "zustand/vanilla";
 import { useStore } from "zustand";
 import type { FileContent, FileEntry } from "@raypx/contracts/local";
 
-export type FileOperation = { type: "file" | "folder" } | { type: "move"; entry: FileEntry };
-export interface FileEditorState {
+type FileOperation = { type: "file" | "folder" } | { type: "move"; entry: FileEntry };
+interface FileEditorState {
   rootId: string;
   path: string;
   content: FileContent;
@@ -28,7 +28,7 @@ interface FilesState {
 }
 export const isDirty = (state: Pick<FilesState, "editor">) =>
   state.editor !== null && state.editor.text !== state.editor.content.text;
-export function createFilesStore() {
+function createFilesStore() {
   return createStore<FilesState>()((set) => ({
     editor: null,
     operation: null,

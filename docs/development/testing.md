@@ -3,7 +3,7 @@
 Run focused meaningful workspace tests, then `bun run verify` for daily changes.
 It checks catalog parity, workspace/platform rules, changed-file format/lint and
 affected workspace types/tests. Native inputs add current-platform Go checks.
-Builds, relocated API/Web/CLI artifact probes and repository-wide lint belong
+Builds, relocated API/Web/CLI artifact probes and repository-wide Knip/lint belong
 to explicit `bun run verify --full` for release preparation. These local commands
 require no database, GUI or mail provider. Test runners share test.config.ts and
 remain plugin-independent. VP schedules the selected checks and tests; full mode
@@ -26,6 +26,13 @@ scripts. See [test commands](test-commands.md) for package selection, local entr
 points and the migration from root `test:*` aliases. Use `bun run test list` to
 discover supported layers instead of maintaining a package-name list.
 
+Task discovery, dependency closure, argument keys, VP configuration and cache snapshots
+come from `@raypx-kit/devkit/tasks`. Git change reading and reverse propagation use
+`@raypx-kit/devkit/verification`; Raypx supplies browser/native scope policies.
+The Start environment adapter uses `@raypx-kit/devkit/vite` with injected Vite `loadEnv`.
+Repository selection is bound to `RAYPX_VERIFY_ROOT`, so nested fixture repositories
+cannot inherit another checkout's task list.
+
 Use `bun run verify` for daily feedback: policy and locales are always checked;
 changed files select formatting/lint and affected workspace types/tests through
 reverse dependency graphs. Native inputs independently select Go host tasks.
@@ -33,9 +40,10 @@ The default base is the merge-base
 with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
 Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
 Unknown inputs, shared JS configuration/lockfiles, or an unavailable base broaden
-source checks to all workspaces. This does not request release builds, browser
+source checks to all workspaces. This does not request release builds, Knip, browser
 acceptance or database jobs. An unavailable Git base also selects native checks
-conservatively because the native inputs are unknown.
+conservatively because the native inputs are unknown. `bun run knip` remains an
+explicit maintenance command.
 Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain
 browser code or import a browser entry, including type-only and test imports. If a workspace's
 non-browser, non-test sources import browser code, its consumers are selected as before.
@@ -196,9 +204,11 @@ spawned fixtures, native smoke entries, type assertions and command-loaded tools
 as entries. Drizzle config is analyzed statically, without loading database
 credentials. The Vitest scaffold is a static `.template` file copied into each new
 workspace, so its workspace-relative imports need no Knip resolution exception.
-Keep unused-export findings visible for review. Knip currently misses Bun's
-`overrides` catalog references for `esbuild`, `jiti` and `lightningcss`; preserve
-those entries. Root overrides pin `oxc-parser` and `@oxc-project/types` together
+The read-only JSON adapter recognizes only catalog findings backed by actual Bun
+root `overrides` references and existing catalog declarations. Every other finding
+fails verification. Go-launched TypeScript fixtures are explicit entries; vendored
+skills stay outside product analysis. The root `skills` dependency is the CLI used
+by `skills:update`. Root overrides pin `oxc-parser` and `@oxc-project/types` together
 at `0.156.0`. Revalidate Tooling, Knip, type checks and builds when changing this
 pair, including compatibility with Vite+'s declarations. Native parser bindings
 follow the parser package; other OXC tools keep their own runtime versions.

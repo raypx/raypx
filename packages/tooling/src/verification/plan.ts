@@ -1,10 +1,10 @@
-import { execFileSync } from "node:child_process";
+import { changedFiles as readChanges, affectedWorkspaces } from "@raypx-kit/devkit/verification";
 import { readFileSync } from "node:fs";
 import { taskModel, taskRef, type TaskModel } from "../tasks/model.js";
 import { distributionRequested } from "./events.js";
 import { browserReach } from "./platform.js";
 
-export type Artifact = "api" | "web" | "cli";
+type Artifact = "api" | "web" | "cli";
 export interface VerificationPlan {
   full: boolean;
   reasons: string[];
@@ -18,36 +18,18 @@ export interface VerificationPlan {
   backend: boolean;
   browser: "none" | "web" | "desktop" | "all";
 }
-const git = (root: string, args: string[]) =>
-  execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-
-/** NUL-delimited paths include both sides of renames without shell parsing. */
 export function changedFiles(
   root: string,
   base = "origin/canary",
   ci?: { before?: string; head?: string },
 ) {
-  try {
-    const from = ci?.before ?? git(root, ["merge-base", base, "HEAD"]).trim();
-    if (!from || /^0+$/.test(from)) throw new Error("Missing base");
-    const values = [
-      git(root, ["diff", "--name-only", "-z", "--no-renames", from, ci?.head ?? "HEAD"]),
-    ];
-    if (!ci)
-      values.push(
-        git(root, ["diff", "--name-only", "-z", "--no-renames", "HEAD"]),
-        git(root, ["ls-files", "--others", "--exclude-standard", "-z"]),
-      );
-    return {
-      files: [...new Set(values.flatMap((value) => value.split("\0").filter(Boolean)))].sort(),
-      reasons: [] as string[],
-    };
-  } catch {
-    return {
-      files: [] as string[],
-      reasons: ["Git base or changed paths unavailable; checking all sources and native targets"],
-    };
-  }
+  const changed = readChanges(root, base, ci);
+  return {
+    ...changed,
+    reasons: changed.reasons.map((reason) =>
+      reason.replace("full verification", "all source and native checks"),
+    ),
+  };
 }
 function documentation(file: string) {
   return (
@@ -139,17 +121,20 @@ export function verificationPlan(
   if (native.native)
     for (const member of model.members.filter((candidate) => candidate.native))
       mark(member.name, "all");
-  for (let changed = true; changed;) {
-    changed = false;
-    for (const member of model.members)
-      for (const name of member.dependencies) {
-        const scope = affected.get(name);
-        if (scope === "all") changed = mark(member.name, "all") || changed;
-        else if (scope === "browser" && platforms().consumes(member.name))
-          changed =
-            mark(member.name, platforms().leaks(member.name) ? "all" : "browser") || changed;
-      }
-  }
+  const reached = affectedWorkspaces(model.members, affected, {
+    merge: (before, next) =>
+      before === "all" || next === "all" ? ("all" as const) : ("browser" as const),
+    propagate: (scope, _, consumer) =>
+      scope === "all"
+        ? ("all" as const)
+        : platforms().consumes(consumer.name)
+          ? platforms().leaks(consumer.name)
+            ? ("all" as const)
+            : ("browser" as const)
+          : undefined,
+  });
+  affected.clear();
+  for (const [name, scope] of reached) affected.set(name, scope);
   const workspaces = [...affected.keys()].sort();
   const includeArtifacts = options.artifacts ?? full;
   const artifacts = includeArtifacts

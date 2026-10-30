@@ -4,7 +4,8 @@
 
 Private repository automation exposed as raypx-dev. VP owns task orchestration;
 `@raypx-kit/devkit` owns workspace discovery, boundary and toolchain checks, the static
-catalog reader, process helpers and artifact staging. This package supplies Raypx
+catalog reader, task graphs/arguments/cache snapshots, affected workspace propagation,
+scoped Start environment inputs, process helpers and artifact staging. This package supplies Raypx
 conventions (`src/repository.ts`), policy, locale parity, scaffolding and product probes.
 
 ## Interface
@@ -15,7 +16,7 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   capabilities. Tooling owns test:inventory/test:backends; E2E owns browser gates.
 - raypx-dev e2e [--web|--desktop] [--smoke] [--visual] [--dry-run] [-- Playwright flags]
 - raypx-dev workspace list | new <name> --kind library --target universal [--write]
-- raypx-dev policy | verify | doctor | clean | clean:artifacts
+- raypx-dev policy | knip | verify | doctor | clean | clean:artifacts
 - raypx-dev test:inventory [--layers] [--baseline file] [--owners file]
 - raypx-dev test:backends [--with-e2e [-- Playwright flags]]
 - `raypx.taskScripts` delegates a public package script to a terminal runner inside
@@ -55,6 +56,11 @@ client implementations; delegate database commands to database's scripts. Derive
 workspace lists from manifests. Scaffolding previews by default and never overwrites.
 Use platform-neutral filesystem/process APIs. Never print loaded secrets.
 Generic checks belong in @raypx-kit/devkit; keep only Raypx-specific rules here.
+Explicit full verification runs Knip; `bun run knip` remains available for maintenance.
+Its read-only JSON adapter recognizes catalog entries
+used by Bun root overrides, which Knip currently misses; all other findings fail.
+Native Go-launched TS fixtures are explicit entries. Vendored skills are excluded;
+the root `skills` CLI is retained for the explicit `skills:update` maintenance command.
 Reusable validation lives in `src/validation/`; `.artifacts/` contains generated
 evidence only. Inventory compares case multiplicity and checks exact file selection.
 Backend validation provisions only owned temporary services, resolves binaries from

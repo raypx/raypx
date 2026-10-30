@@ -460,10 +460,11 @@ it("rejects missing or incomplete VP completion reports", () => {
   expect(completionReport(root, ["api#task:check"])).toBe(1);
 });
 
-it("keeps repository-wide lint in explicit full verification", () => {
+it("keeps repository-wide Knip and lint in explicit full verification", () => {
   const { root } = project();
   for (const full of [false, true]) {
     const plan = verificationPlan(taskModel(root), ["packages/tokens/src/index.ts"], { full });
+    expect(executionTasks(plan, "fixture").includes("fixture#task:knip")).toBe(full);
     expect(executionTasks(plan, "fixture").includes("fixture#task:lint")).toBe(full);
   }
 });

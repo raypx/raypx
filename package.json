@@ -22,7 +22,7 @@
       "@raypx-kit/env": "0.0.0-alpha.2",
       "@raypx-kit/intl": "0.0.0-alpha.2",
       "@react-email/components": "^1.0.12",
-      "@react-email/render": "^2.1.1",
+      "@react-email/render": "^2.2.0",
       "@xterm/addon-fit": "^0.11.0",
       "@xterm/xterm": "^6.0.0",
       "aws4fetch": "^1.0.20",
@@ -66,7 +66,7 @@
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.1.2",
         "@vitest/coverage-v8": "5.0.5",
-        "@raypx-kit/devkit": "0.0.0-alpha.5",
+        "@raypx-kit/devkit": "0.0.0-alpha.6",
         "@raypx-kit/email-preview": "0.0.0-alpha.4",
         "@raypx-kit/tsconfig": "0.0.0-alpha.2",
         "drizzle-kit": "npm:@raypx-kit/drizzle-kit@0.0.0-alpha.4",
@@ -120,7 +120,8 @@
     "clean:artifacts": "raypx-dev clean:artifacts",
     "deps:audit": "bun audit",
     "skills:update": "DO_NOT_TRACK=1 bun --bun skills update --project --yes",
-    "analytics:sourcemaps": "raypx-dev analytics sourcemaps"
+    "analytics:sourcemaps": "raypx-dev analytics sourcemaps",
+    "knip": "raypx-dev knip"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
@@ -138,6 +139,7 @@
     "@emnapi/wasi-threads": "^1.2.3",
     "@jridgewell/trace-mapping": "^0.3.31",
     "@oxc-project/types": "0.156.0",
+    "@react-email/render": "catalog:",
     "@types/node": "catalog:dev",
     "aria-query": "^5.3.2",
     "esbuild": "catalog:dev",

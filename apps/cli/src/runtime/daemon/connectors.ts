@@ -32,7 +32,7 @@ export function raypxHome() {
     throw new LocalError("INVALID_CONFIG_PATH", "RAYPX_HOME must be absolute");
   return directory;
 }
-export const stableCliPath = (platform: NodeJS.Platform = process.platform) =>
+const stableCliPath = (platform: NodeJS.Platform = process.platform) =>
   join(raypxHome(), "bin", platform === "win32" ? "raypx.exe" : "raypx");
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
 /** Codex runs Windows hooks as `cmd /C "<command>"`; `%` and `"` cannot be quoted there. */

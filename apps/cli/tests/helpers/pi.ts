@@ -42,7 +42,7 @@ export function piMessage(
     },
   };
 }
-export function piStream(message: AssistantMessage, partial = "Partial draft") {
+function piStream(message: AssistantMessage, partial = "Partial draft") {
   if (message.stopReason === "pending") throw new Error("Fixture requires a final response");
   const stream = createAssistantMessageEventStream();
   stream.push({ type: "start", partial: piMessage([{ type: "text", text: partial }]) });

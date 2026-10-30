@@ -4,7 +4,7 @@ import {
   unifiedDiff,
   type DiffFile,
 } from "../model/diff.js";
-export type { DiffFile, DiffLine } from "../model/diff.js";
+export type { DiffFile } from "../model/diff.js";
 
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)

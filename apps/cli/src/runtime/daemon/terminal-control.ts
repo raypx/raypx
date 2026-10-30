@@ -27,7 +27,7 @@ import {
   type TerminalConfiguration,
 } from "./terminal-settings";
 
-export const APPROVAL_LEASE_MS = 15_000;
+const APPROVAL_LEASE_MS = 15_000;
 export type CloudTerminalChannel = {
   binding: string;
   accountId: string;

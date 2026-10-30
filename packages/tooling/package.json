@@ -51,9 +51,7 @@
       "src/tasks/config.ts": "node",
       "src/tasks/model.ts": "node",
       "src/tasks/arguments.ts": "node",
-      "src/tasks/delegation.ts": "node",
-      "src/tasks/names.ts": "node",
-      "src/tasks/rust.ts": "node"
+      "src/tasks/delegation.ts": "node"
     }
   }
 }

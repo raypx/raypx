@@ -1,4 +1,3 @@
-import type { ComponentProps } from "react";
 import { createIntlClient } from "@raypx-kit/intl/client";
 import { intlDefaults } from "./formats.js";
 import { localeRuntime } from "./runtime.js";
@@ -15,4 +14,3 @@ export const {
   useMessages,
   useLanguagePreference,
 } = intlClient;
-export type IntlProviderProps = ComponentProps<typeof IntlProvider>;

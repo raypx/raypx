@@ -7,7 +7,7 @@ import {
   type Api,
 } from "@raypx/ai";
 
-export type PiFailureCode =
+type PiFailureCode =
   | "PI_BUSY"
   | "PI_INVALID_INPUT"
   | "PI_RECOVERY_REQUIRED"
@@ -19,7 +19,7 @@ export type PiFailureCode =
   | "PI_DUPLICATE_TOOL_CALL"
   | "PI_TIMEOUT"
   | "PI_LIMIT_REACHED";
-export type PiStatus = "idle" | "running" | "succeeded" | "failed" | "cancelled" | "uncertain";
+type PiStatus = "idle" | "running" | "succeeded" | "failed" | "cancelled" | "uncertain";
 export interface PiContext {
   revision: number;
   status: PiStatus;

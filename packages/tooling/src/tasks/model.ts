@@ -1,50 +1,23 @@
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
-import { discover } from "@raypx-kit/devkit/workspaces";
-import { argumentKey } from "./arguments.js";
+import { join, relative } from "node:path";
+import { readFileSync } from "node:fs";
+import {
+  createTaskModel,
+  argumentKey,
+  taskPlan as sharedPlan,
+  taskRef,
+  taskSelection,
+  type TaskMember as Member,
+  type TaskModel as Model,
+  type TaskContext,
+  type TaskCache,
+} from "@raypx-kit/devkit/tasks";
 import { taskScripts } from "./delegation.js";
-import { taskRef } from "./names.js";
-export { taskName, taskRef } from "./names.js";
-export { argumentKey } from "./arguments.js";
-
-export interface TaskCache {
-  env: string[];
-  untrackedEnv: string[];
-  input: (string | { auto: boolean } | { pattern: string; base: "workspace" })[];
-  output: string[];
-}
-export interface TaskDefinition {
-  command: string;
-  dependsOn: string[];
-  cache: false | TaskCache;
-}
-export interface TaskMember {
-  name: string;
-  path: string;
-  scripts: Record<string, string>;
-  dependencies: string[];
+export { taskRef };
+interface TaskMember extends Member {
   native: boolean;
   uncachedTasks: string[];
 }
-export interface TaskModel {
-  root: string;
-  rootName: string;
-  members: TaskMember[];
-  definitions: Map<string, TaskDefinition>;
-}
-
-export function repositoryRoot(directory: string): string {
-  let candidate = resolve(directory);
-  while (true) {
-    const manifest = join(candidate, "package.json");
-    if (existsSync(manifest) && JSON.parse(readFileSync(manifest, "utf8")).workspaces)
-      return candidate;
-    const parent = dirname(candidate);
-    if (parent === candidate) throw new Error("Task config needs a workspace repository");
-    candidate = parent;
-  }
-}
-
+export type TaskModel = Model<TaskMember>;
 function platform(root: string) {
   const { packageManager } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   return `${process.platform}-${process.arch}-${String(packageManager).replace("@", "")}`;
@@ -58,30 +31,20 @@ function leafCommand(root: string, member: TaskMember, name: string) {
   return `bun ${JSON.stringify(file)} ${JSON.stringify(name)} ${JSON.stringify(platform(root))}`;
 }
 
-function checkInputs(member: TaskMember, members: TaskMember[]): TaskCache["input"] {
-  const inputs = new Set<TaskMember>();
-  const byName = new Map(members.map((candidate) => [candidate.name, candidate]));
-  function visit(candidate: TaskMember) {
-    if (inputs.has(candidate)) return;
-    inputs.add(candidate);
-    for (const name of candidate.dependencies) {
-      const dependency = byName.get(name);
-      if (dependency) visit(dependency);
-    }
-  }
-  visit(member);
-  // Bun's native typechecker reads are not fully traced on Linux. Include the
-  // workspace dependency closure explicitly, including dependency declarations.
+function checkInputs(member: TaskMember, context: TaskContext<TaskMember>): TaskCache["input"] {
   return [
     { pattern: "tsconfig*.json", base: "workspace" },
-    ...[...inputs].map((candidate) => ({
+    ...context.dependencyClosure(member).map((candidate) => ({
       pattern: `${candidate.path}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,json,jsonc}`,
       base: "workspace" as const,
     })),
   ];
 }
-
-function cachedTask(member: TaskMember, name: string, members: TaskMember[]): TaskCache | false {
+function cachedTask(
+  member: TaskMember,
+  name: string,
+  context: TaskContext<TaskMember>,
+): TaskCache | false {
   if (member.uncachedTasks.includes(name)) return false;
   const build = name === "build" || name === "build:renderer";
   if (!build && !["check", "test", "test:unit", "test:component"].includes(name)) return false;
@@ -105,7 +68,7 @@ function cachedTask(member: TaskMember, name: string, members: TaskMember[]): Ta
   ];
   const input: TaskCache["input"] = [
     { auto: true },
-    ...(name === "check" ? checkInputs(member, members) : []),
+    ...(name === "check" ? checkInputs(member, context) : []),
     ...exclusions
       .flatMap((pattern) => [pattern.slice(0, -3), pattern])
       .map((pattern) => ({ pattern: `!${pattern}`, base: "workspace" as const })),
@@ -196,91 +159,45 @@ function prerequisites(member: TaskMember, name: string, members: TaskMember[]) 
   return [...new Set(result)];
 }
 
-/** Data only: VP owns scheduling, caching and dependency execution. */
-function verificationEnvironment(root: string, name: string) {
-  const selectedRoot = process.env.RAYPX_VERIFY_ROOT;
-  return selectedRoot && resolve(selectedRoot) === resolve(root) ? process.env[name] : undefined;
-}
-
 export function taskModel(
   root: string,
-  selection = verificationEnvironment(root, "RAYPX_VERIFY_TASKS"),
+  selection = taskSelection(root, "RAYPX_VERIFY_TASKS", "RAYPX_VERIFY_ROOT"),
 ): TaskModel {
-  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const index = discover(root, { metadataKey: "raypx" });
-  if (index.findings.length) throw new Error(index.findings.join("\n"));
-  const members: TaskMember[] = index.workspaces.map((workspace) => ({
-    name: workspace.manifest.name,
-    path: workspace.path,
-    scripts: workspace.manifest.scripts ?? {},
-    dependencies: [
-      ...new Set([
-        ...Object.keys(workspace.manifest.dependencies ?? {}),
-        ...Object.keys(workspace.manifest.devDependencies ?? {}),
-      ]),
-    ],
-    native: Boolean(
-      workspace.manifest.scripts?.["native:build"] &&
-      workspace.manifest.scripts?.["native:prepare"],
-    ),
-    uncachedTasks:
-      (workspace.manifest.raypx as { uncachedTasks?: string[] } | undefined)?.uncachedTasks ?? [],
-  }));
-  const definitions = new Map<string, TaskDefinition>();
-  for (const member of members) {
-    taskScripts(index.byName.get(member.name)!.manifest);
-    if (member.uncachedTasks.some((name) => !member.scripts[name]))
-      throw new Error(`${member.name}: uncachedTasks must name existing scripts`);
-    for (const name of Object.keys(member.scripts)) {
-      definitions.set(taskRef(member.name, name), {
+  return createTaskModel<TaskMember>(
+    root,
+    {
+      discovery: { metadataKey: "raypx" },
+      member(workspace, member) {
+        taskScripts(workspace.manifest);
+        const uncachedTasks =
+          (workspace.manifest.raypx as { uncachedTasks?: string[] } | undefined)?.uncachedTasks ??
+          [];
+        if (uncachedTasks.some((name) => !member.scripts[name]))
+          throw new Error(`${member.name}: uncachedTasks must name existing scripts`);
+        return {
+          ...member,
+          native: Boolean(member.scripts["native:build"] && member.scripts["native:prepare"]),
+          uncachedTasks,
+        };
+      },
+      define: (member, name, context) => ({
         command: leafCommand(root, member, name),
-        dependsOn: prerequisites(member, name, members),
-        cache: cachedTask(member, name, members),
-      });
-    }
-  }
-  const aggregate = (name: string, dependsOn: string[]) =>
-    definitions.set(taskRef(manifest.name, name), {
-      command: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
-      dependsOn,
-      cache: false,
-    });
-  const names = new Set(members.flatMap((member) => Object.keys(member.scripts)));
-  for (const name of names)
-    aggregate(
-      name,
-      members.filter((member) => member.scripts[name]).map((member) => taskRef(member.name, name)),
-    );
-  definitions.set(taskRef(manifest.name, "lint"), {
-    command: "bun --bun vp lint",
-    dependsOn: [],
-    cache: false,
-  });
-  const selected: unknown = selection ? JSON.parse(selection) : [];
-  if (
-    !Array.isArray(selected) ||
-    selected.some(
-      (ref) => typeof ref !== "string" || !definitions.has(ref) || ref.endsWith("#task:verify:run"),
-    )
-  )
-    throw new Error("Invalid verification task selection");
-  aggregate("verify:run", [...new Set(selected as string[])]);
-  return { root, rootName: manifest.name, members, definitions };
+        dependsOn: prerequisites(member, name, context.members),
+        cache: cachedTask(member, name, context),
+      }),
+      aggregateCommand: `bun packages/tooling/src/tasks/leaf.ts --aggregate ${JSON.stringify(platform(root))}`,
+      rootTasks: () => ({
+        lint: { command: "bun --bun vp lint", dependsOn: [], cache: false },
+        knip: { command: "bun run knip", dependsOn: [], cache: false },
+      }),
+    },
+    selection,
+  );
 }
-
 export function taskPlan(model: TaskModel, references: string[]) {
-  const found = new Map<string, TaskDefinition>();
-  function visit(reference: string) {
-    if (found.has(reference)) return;
-    const definition = model.definitions.get(reference);
-    if (!definition) throw new Error(`Unknown VP task: ${reference}`);
-    found.set(reference, definition);
-    for (const dependency of definition.dependsOn) visit(dependency);
-  }
-  for (const reference of references) visit(reference);
-  return [...found].map(([reference, definition]) => ({
-    taskId: reference.replace("#task:", "#"),
-    vpTaskId: reference,
+  return sharedPlan(model, references, "task-first").map(({ ref, ...definition }) => ({
+    taskId: ref.replace("#task:", "#"),
+    vpTaskId: ref,
     ...definition,
   }));
 }

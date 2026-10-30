@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import type { JobInput, JobRun, RootGrant } from "@raypx/contracts/local";
 import { LocalError } from "../errors";
 
-export const STATE_SCHEMA_VERSION = 1;
+const STATE_SCHEMA_VERSION = 1;
 export function profilePath(options: { dataDir?: string; profile?: string } = {}) {
   const profile = options.profile ?? "default";
   if (!/^[a-zA-Z0-9_-]+$/.test(profile))

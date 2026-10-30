@@ -1,7 +1,7 @@
 import type { Locale, Messages } from "./types.js";
 
 /** A bundled catalog, or a loader for one that ships in its own chunk. */
-export type CatalogSource = Messages | (() => Promise<Messages>);
+type CatalogSource = Messages | (() => Promise<Messages>);
 export type CatalogSources = Readonly<Record<Locale, CatalogSource>>;
 export type LoadedCatalogs = Readonly<Partial<Record<Locale, Messages>>>;
 

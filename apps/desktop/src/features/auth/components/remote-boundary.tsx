@@ -6,7 +6,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { authClient } from "../client";
 import { desktopReturnTo } from "../return-to";
 
-export function DesktopSignIn({ returnTo }: { returnTo?: string }) {
+function DesktopSignIn({ returnTo }: { returnTo?: string }) {
   const location = useLocation();
   const c = useTranslations("common");
   return (

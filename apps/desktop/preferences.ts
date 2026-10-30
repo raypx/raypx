@@ -24,7 +24,7 @@ export const DEFAULT_DEVICE_PREFERENCES: Readonly<DevicePreferences> = Object.fr
   locale: "system",
 });
 
-export function parsePreferences(value: unknown): DevicePreferences {
+function parsePreferences(value: unknown): DevicePreferences {
   const input = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
   return {
     theme: parseTheme(typeof input.theme === "string" ? input.theme : undefined, "system"),

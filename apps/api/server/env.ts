@@ -1,6 +1,6 @@
 import { normalizeTrustedOrigins } from "@raypx/auth/origins";
 import { createEnv, type Preset, z } from "@raypx-kit/env";
-export const apiServerEnv = {
+const apiServerEnv = {
   id: "api",
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),

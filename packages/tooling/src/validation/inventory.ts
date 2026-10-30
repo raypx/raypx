@@ -7,7 +7,7 @@ export interface CaseIdentity {
   file: string;
   name: string;
 }
-export interface TestCase extends CaseIdentity {
+interface TestCase extends CaseIdentity {
   status: string;
   durationMs: number;
 }

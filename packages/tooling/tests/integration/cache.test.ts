@@ -1,4 +1,12 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  symlinkSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { stripVTControlCharacters } from "node:util";
@@ -39,6 +47,12 @@ function project(automaticInputs = true) {
       type: "module",
       raypx: { kind: "tooling", target: "bun" },
     }),
+  );
+  mkdirSync(join(root, "node_modules/@raypx-kit"), { recursive: true });
+  symlinkSync(
+    join(repository, "packages/tooling/node_modules/@raypx-kit/devkit"),
+    join(root, "node_modules/@raypx-kit/devkit"),
+    "dir",
   );
   for (const name of ["leaf", "arguments", "delegation"])
     copyFileSync(

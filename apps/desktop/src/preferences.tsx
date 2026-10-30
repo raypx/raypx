@@ -16,7 +16,7 @@ import {
 } from "../preferences";
 import { isDesktop, saveDesktopPreferences } from "./lib/desktop";
 
-export function restoreDevicePreferences(snapshot: unknown): PreferenceSnapshot {
+function restoreDevicePreferences(snapshot: unknown): PreferenceSnapshot {
   if (snapshot && typeof snapshot === "object" && "status" in snapshot) {
     if (snapshot.status === "read" && "raw" in snapshot && isDevicePreferences(snapshot.raw))
       return { status: "valid", preferences: { ...snapshot.raw } };

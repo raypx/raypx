@@ -31,7 +31,7 @@ import {
   type LocalAddress,
 } from "../local-http";
 
-export const terminalEndpointSchema = z
+const terminalEndpointSchema = z
   .object({
     version: z.literal(1),
     epoch: z.string().uuid(),

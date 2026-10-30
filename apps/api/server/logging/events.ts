@@ -8,7 +8,7 @@ interface RequestFields {
   code: string;
   durationMs: number;
 }
-export interface ApiEventFields {
+interface ApiEventFields {
   "http.request": RequestFields;
   "rpc.request": RequestFields & { rpc: { system: string; method: string } };
   "job.cleanup": {
@@ -37,8 +37,8 @@ export interface ApiEventFields {
     };
   };
 }
-export type ApiOperation = keyof ApiEventFields;
-export type ApiEventStart =
+type ApiOperation = keyof ApiEventFields;
+type ApiEventStart =
   | ({ operation: "http.request" | "rpc.request" } & Pick<
       RequestFields,
       "requestId" | "method" | "route"

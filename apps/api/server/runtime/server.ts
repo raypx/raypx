@@ -9,8 +9,6 @@ import { connectRedis } from "./redis.js";
 import { createClientIpReader } from "../app/client-ip.js";
 import { createRelayJobExecutor } from "../relay/jobs.js";
 
-export type { ApiRuntime } from "./shared.js";
-
 /** Socket address written by the server entry; the default auth rate-limit key. */
 export const CLIENT_IP_HEADER = "x-raypx-client-ip";
 type ServerRuntime = ApiRuntime & { clientIp: ReturnType<typeof createClientIpReader> };

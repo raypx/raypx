@@ -9,7 +9,10 @@ import type { VerificationPlan } from "./plan.js";
 import { completionReport, reportTiming } from "./report.js";
 
 export function executionTasks(plan: VerificationPlan, rootName: string) {
-  return [...plan.tasks, ...(plan.full ? [taskRef(rootName, "lint")] : [])];
+  return [
+    ...plan.tasks,
+    ...(plan.full ? [taskRef(rootName, "knip"), taskRef(rootName, "lint")] : []),
+  ];
 }
 
 async function sourceStyle(root: string, plan: VerificationPlan) {

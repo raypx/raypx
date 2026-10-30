@@ -7,11 +7,13 @@
     "**/.output/**",
     "**/dist/**",
     "**/build/**",
-    "**/artifacts/**"
+    "**/artifacts/**",
+    ".agents/skills/**"
   ],
   "workspaces": {
     ".": {
-      "entry": ["deploy/manifests.ts"]
+      "entry": ["deploy/manifests.ts"],
+      "ignoreDependencies": ["skills"]
     },
     "apps/api": {
       "entry": [
@@ -28,7 +30,8 @@
         "src/routes/**/*.tsx",
         "tests/native/smoke/*.ts",
         "vite.app.config.ts",
-        "scripts/native/*.ts"
+        "scripts/native/*.ts",
+        "tests/native/fixtures/*.ts"
       ]
     },
     "apps/web": {

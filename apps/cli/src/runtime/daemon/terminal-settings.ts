@@ -6,7 +6,6 @@ import { localParams } from "@raypx/contracts/local";
 import { bindingKey, hostBindingSchema } from "./vault";
 
 export const terminalSettingsSchema = localParams["approvals.local.configure"];
-export type TerminalSettings = z.infer<typeof terminalSettingsSchema>;
 export const cloudTerminalSchema = z.object({
   enabled: z.boolean(),
   rootIds: z.array(z.uuid()).max(200),

@@ -17,7 +17,7 @@ import { LocalError } from "../errors";
 import { localAddressSchema, localFetch } from "../local-http";
 
 export type ProfileOptions = { dataDir?: string; profile?: string };
-export const daemonEndpointSchema = z
+const daemonEndpointSchema = z
   .object({
     protocol: z.literal(1),
     version: z.string(),
@@ -78,7 +78,7 @@ async function probe(directory: string, compatibility: "match" | "any" = "match"
     );
   return endpoint;
 }
-export function cliLaunch() {
+function cliLaunch() {
   return /(?:^|[/\\])bun(?:\.exe)?$/.test(process.execPath)
     ? [process.execPath, Bun.main]
     : [process.execPath];
