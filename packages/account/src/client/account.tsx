@@ -62,7 +62,7 @@ export function AccountDetails({ account, busy, onSignOut, children }: AccountDe
           <p className="mt-0.75 text-muted-foreground">{account.email}</p>
         </div>
       </div>
-      <dl className="mb-7 [&>div]:flex [&>div]:items-center [&>div]:gap-6 [&>div]:border-t [&>div]:border-border [&>div]:py-4.5 [&_dd]:m-0 [&_dd]:[overflow-wrap:anywhere] [&_dt]:w-32.5 [&_dt]:text-muted-foreground max-[420px]:[&>div]:flex-col max-[420px]:[&>div]:items-start max-[420px]:[&>div]:gap-1.75">
+      <dl className="mb-7 [&>div]:flex [&>div]:items-center [&>div]:gap-6 [&>div]:border-t [&>div]:border-border [&>div]:py-4.5 [&_dd]:m-0 [&_dd]:[overflow-wrap:anywhere] [&_dt]:w-32.5 [&_dt]:text-muted-foreground @max-sm/main:[&>div]:flex-col @max-sm/main:[&>div]:items-start @max-sm/main:[&>div]:gap-1.75">
         <div>
           <dt>{t("name")}</dt>
           <dd>{account.name}</dd>

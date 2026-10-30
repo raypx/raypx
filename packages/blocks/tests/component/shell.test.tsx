@@ -65,8 +65,8 @@ describe("AppShell", () => {
     const main = screen.getByRole("main");
     expect(main.id).toBe("main");
     expect(main.textContent).toBe("Content");
-    // Templates size against the main region, so loading states share the page frame.
-    expect(main.className).toContain("@container/main");
+    // Templates and notices size against the content column, not the viewport.
+    expect(main.parentElement?.className).toContain("@container/main");
     expect(main.firstElementChild?.getAttribute("data-layout")).toBe("workbench");
   });
 

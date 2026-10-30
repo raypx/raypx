@@ -39,7 +39,7 @@ export function FilesToolbar({
       >
         {path || "/"}
       </span>
-      <div className="ml-auto flex flex-wrap items-center gap-1.25 max-[1100px]:ml-0">
+      <div className="ml-auto flex flex-wrap items-center gap-1.25 @max-4xl/main:ml-0">
         <Button
           variant="ghost"
           size="icon"

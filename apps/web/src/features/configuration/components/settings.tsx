@@ -8,7 +8,7 @@ import { authClient } from "../../auth/client";
 import { configurationClient, configurationError, type Configuration } from "../client";
 
 const row =
-  "grid gap-5 border-b border-border py-7 sm:grid-cols-[minmax(0,1fr)_minmax(200px,1fr)] sm:gap-10";
+  "grid gap-5 border-b border-border py-7 @xl/main:grid-cols-[minmax(0,1fr)_minmax(200px,1fr)] @xl/main:gap-10";
 
 export function ConfigurationSettings() {
   const t = useTranslations("configuration");
@@ -166,7 +166,7 @@ export function ConfigurationForm({
               {t("registrationHint")}
             </p>
           </div>
-          <div className="sm:justify-self-end">
+          <div className="@xl/main:justify-self-end">
             <Switch
               id="registration"
               aria-describedby="registration-hint"
@@ -184,7 +184,7 @@ export function ConfigurationForm({
               {t("cleanupHint")}
             </p>
           </div>
-          <div className="sm:justify-self-end">
+          <div className="@xl/main:justify-self-end">
             <Switch
               id="cleanup"
               aria-describedby="cleanup-hint cleanup-state"
@@ -192,7 +192,7 @@ export function ConfigurationForm({
               onCheckedChange={(checked) => change({ ...values, cleanupEnabled: checked })}
             />
           </div>
-          <p id="cleanup-state" className="text-[13px] text-muted-foreground sm:col-span-2">
+          <p id="cleanup-state" className="text-[13px] text-muted-foreground @xl/main:col-span-2">
             {t(saved.deployment.jobsEnabled ? "jobsAvailable" : "jobsDisabled")}
           </p>
         </div>

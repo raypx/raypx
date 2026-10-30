@@ -8,6 +8,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Icon-only sidebar: collapsed by the user, or forced into a rail on narrow screens.
+   The media rule matches useIsMobile, so server HTML paints the rail before hydration. */
+@custom-variant sidebar-icon {
+  &:is(:where(.group\/sidebar)[data-collapsible="icon"] *) {
+    @slot;
+  }
+  @media (max-width: 760px) {
+    &:is(:where(.group\/sidebar)[data-mobile-behavior="rail"] *) {
+      @slot;
+    }
+  }
+}
+
 @theme inline {
   --font-sans: Inter, "SF Pro Display", "Segoe UI", "Noto Sans SC", system-ui, sans-serif;
   --font-heading: var(--font-sans);

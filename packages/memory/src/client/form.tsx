@@ -65,7 +65,7 @@ export function DocumentForm({
     <section className="mb-7 rounded-lg border border-border bg-sidebar p-5">
       <h2 className="mb-5 text-base font-semibold">{t(document ? "edit" : "create")}</h2>
       <form onSubmit={(event) => void submit(event)} className="max-w-3xl space-y-5">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 @xl/main:grid-cols-2">
           <Field>
             <FieldLabel htmlFor={`${id}-kind`}>{t("kind")}</FieldLabel>
             <SelectField

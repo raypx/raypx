@@ -151,7 +151,7 @@ export function LocalJobsPage({
   const command = editing && editing.action.type === "command.run" ? editing.action.command : null;
   return (
     <section>
-      <header className="mb-10 flex items-start justify-between gap-6 max-[1100px]:flex-col max-[1100px]:gap-5">
+      <header className="mb-10 flex items-start justify-between gap-6 @max-4xl/main:flex-col @max-4xl/main:gap-5">
         <div>
           <h1>{t("title")}</h1>
           <p className="mt-[9px] max-w-[64ch] text-muted-foreground">{t("intro")}</p>
@@ -311,7 +311,7 @@ export function LocalJobsPage({
         <div>
           {jobs?.map((job) => (
             <article
-              className="flex items-start gap-4 border-t border-border py-6 max-[1100px]:flex-wrap"
+              className="flex items-start gap-4 border-t border-border py-6 @max-4xl/main:flex-wrap"
               key={job.id}
             >
               <div className="grid size-9.5 shrink-0 place-items-center rounded-[9px] border border-border text-muted-foreground">
@@ -337,7 +337,7 @@ export function LocalJobsPage({
                   </p>
                 )}
               </div>
-              <div className="flex max-w-82.5 flex-wrap items-center justify-end gap-0.75 max-[1100px]:ml-13.5 max-[1100px]:max-w-none">
+              <div className="flex max-w-82.5 flex-wrap items-center justify-end gap-0.75 @max-4xl/main:ml-13.5 @max-4xl/main:max-w-none">
                 <Button variant="outline" disabled={busy} onClick={() => void run(job)}>
                   <Play size={14} />
                   {t("run")}

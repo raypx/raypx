@@ -121,10 +121,7 @@ export function ProjectNavigation() {
   );
   const showAll = allOpen && projects.length > 5;
   return (
-    <SidebarGroup
-      className="p-0 group-data-[collapsible=icon]/sidebar:hidden"
-      aria-label={t("recentProjects")}
-    >
+    <SidebarGroup className="p-0 sidebar-icon:hidden" aria-label={t("recentProjects")}>
       <div className="mb-2 flex items-center justify-between pl-3">
         <SidebarGroupLabel className="h-auto p-0">{t("recentProjects")}</SidebarGroupLabel>
         <Button

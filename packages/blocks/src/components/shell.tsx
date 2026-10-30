@@ -57,7 +57,7 @@ export interface ShellNavItem<To extends string> {
 
 /**
  * Page templates own content width, gutters and vertical rhythm. Their breakpoints
- * follow the main region, whose width changes with the sidebar, not the viewport.
+ * follow the content column (`@…/main`), whose width changes with the sidebar.
  */
 export type PageLayout = "document" | "workbench" | "tool";
 
@@ -166,11 +166,9 @@ function ShellContents<To extends string>({
               <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center">
                 {item.icon}
               </span>
-              <span className="min-w-0 truncate group-data-[collapsible=icon]/sidebar:sr-only">
-                {item.label}
-              </span>
+              <span className="min-w-0 truncate sidebar-icon:sr-only">{item.label}</span>
               {item.badge !== undefined && (
-                <SidebarMenuBadge className="static ml-auto h-auto p-0 empty:hidden [&>span]:rounded-full [&>span]:text-[10px] group-data-[collapsible=icon]/sidebar:absolute group-data-[collapsible=icon]/sidebar:top-0.5 group-data-[collapsible=icon]/sidebar:right-0 group-data-[collapsible=icon]/sidebar:flex group-data-[collapsible=icon]/sidebar:[&>span]:bg-foreground group-data-[collapsible=icon]/sidebar:[&>span]:text-background">
+                <SidebarMenuBadge className="static ml-auto h-auto p-0 empty:hidden [&>span]:rounded-full [&>span]:text-[10px] sidebar-icon:absolute sidebar-icon:top-0.5 sidebar-icon:right-0 sidebar-icon:flex sidebar-icon:[&>span]:bg-foreground sidebar-icon:[&>span]:text-background">
                   {item.badge}
                 </SidebarMenuBadge>
               )}
@@ -193,7 +191,7 @@ function ShellContents<To extends string>({
         role="complementary"
         collapsible="icon"
         className={cn(
-          "min-h-0 overflow-hidden border-border bg-sidebar pb-3 px-3 group-data-[collapsible=icon]/sidebar:px-2 max-[420px]:group-data-[collapsible=icon]/sidebar:px-1.5",
+          "min-h-0 overflow-hidden border-border bg-sidebar pb-3 px-3 sidebar-icon:px-2 max-[420px]:sidebar-icon:px-1.5",
           windowed ? "pt-11" : "pt-6 max-[760px]:pt-5",
         )}
       >
@@ -202,12 +200,12 @@ function ShellContents<To extends string>({
             to={brand.to}
             markActive={false}
             aria-label={brand.label}
-            className="mx-3 w-fit max-w-full min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]/sidebar:mx-auto group-data-[collapsible=icon]/sidebar:[&_[data-slot=logo]>span]:hidden"
+            className="mx-3 w-fit max-w-full min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring sidebar-icon:mx-auto sidebar-icon:[&_[data-slot=logo]>span]:hidden"
           >
             <Logo label={brand.label} className="max-w-full [&>span]:truncate" />
           </LinkComponent>
           {brand.description && (
-            <p className="mt-2 truncate px-3 text-xs text-muted-foreground group-data-[collapsible=icon]/sidebar:hidden">
+            <p className="mt-2 truncate px-3 text-xs text-muted-foreground sidebar-icon:hidden">
               {brand.description}
             </p>
           )}
@@ -240,15 +238,13 @@ function ShellContents<To extends string>({
           )}
         </nav>
         {account !== undefined && (
-          <SidebarFooter className="mt-2 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 group-data-[collapsible=icon]/sidebar:flex-col">
-            <div className="min-w-0 flex-1 group-data-[collapsible=icon]/sidebar:w-full">
-              {account}
-            </div>
+          <SidebarFooter className="mt-2 shrink-0 flex-row items-center gap-1 border-t border-border px-0 pt-2 pb-0 sidebar-icon:flex-col">
+            <div className="min-w-0 flex-1 sidebar-icon:w-full">{account}</div>
             {accountAction}
           </SidebarFooter>
         )}
       </Sidebar>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="@container/main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header
           className={cn(
             "flex h-[66px] shrink-0 items-center gap-[13px] border-b border-border px-6 text-[13px] text-muted-foreground max-[760px]:h-[58px] max-[760px]:px-5",
@@ -297,7 +293,7 @@ function ShellContents<To extends string>({
         <main
           id="main"
           tabIndex={-1}
-          className="@container/main min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain outline-none"
+          className="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain outline-none"
         >
           <div data-layout={layout} className={cn("mx-auto w-full min-w-0", pageLayouts[layout])}>
             {children}

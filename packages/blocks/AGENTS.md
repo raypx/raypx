@@ -23,20 +23,22 @@ Code outside `src/components/` stays private.
   above the account slot. Desktop-width users can toggle an icon rail, which narrow
   screens use automatically. Rail links retain names, badges and shadcn tooltips.
   The shell composes UI’s shadcn SidebarProvider, Sidebar, groups, menus and footer.
-  It uses the persistent icon rail on narrow screens. The account slot adapts to
-  `group/sidebar` and `data-collapsible="icon"`.
+  It uses the persistent icon rail on narrow screens. The account slot adapts with
+  UI's `sidebar-icon:` variant.
   Blocks owns the local `raypx_sidebar_open` device preference and cross-window
   storage subscription; the UI primitive owns no persistence. Missing/blocked
   storage keeps the expanded default or current in-memory choice. Narrow layouts
-  still use the rail regardless of the stored desktop-width choice.
+  still use the rail regardless of the stored desktop-width choice; navigation uses
+  UI's `sidebar-icon:` variant so the rail paints before hydration.
   `brand.description` adds a compact workspace subtitle. Applications can insert
   `contextNavigation` after the primary group and an `accountAction` beside the
   account menu; Blocks never loads project or account data itself.
   `layout` selects the page template that owns content width, gutters and vertical
   rhythm: `document` (reading width for settings, account and onboarding),
   `workbench` (wide list/detail workspaces) or `tool` (the whole main region).
-  `#main` is the `main` container, so templates and page content query its width,
-  which follows the sidebar, with `@…/main` variants instead of viewport breakpoints.
+  The content column (top bar, notices and `#main`) is the `main` container: page
+  content and notices use `@…/main` variants, which follow the sidebar, while viewport
+  variants stay with shell chrome such as the sidebar and top bar.
   Pages, feature views and their loading/error states never set their own outer
   width or gutters. `ShellPage<Title>` is the route metadata shape: applications
   declare `staticData.page` with a value-free message key, an optional `guestTitle`

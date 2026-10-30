@@ -141,7 +141,7 @@ export function JobForm({
   }));
   if (selected && !device) options.unshift({ value: selected, label: t("targetUnavailable") });
   return (
-    <section className="mb-8 rounded-lg border border-border bg-sidebar p-5 sm:p-6">
+    <section className="mb-8 rounded-lg border border-border bg-sidebar p-5 @xl/main:p-6">
       <h2 className="mb-5 text-base font-semibold">{t(job ? "edit" : "create")}</h2>
       <form onSubmit={(event) => void submit(event)} className="flex max-w-3xl flex-col gap-5">
         <Field>
@@ -155,7 +155,7 @@ export function JobForm({
             disabled={busy}
           />
         </Field>
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 @xl/main:grid-cols-2">
           <Field>
             <FieldLabel htmlFor={`${prefix}-cron`}>{j("schedule")}</FieldLabel>
             <Input
@@ -236,7 +236,7 @@ export function JobForm({
                 required
               />
             </Field>
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-5 @xl/main:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor={`${prefix}-provider`}>{t("provider")}</FieldLabel>
                 <SelectField

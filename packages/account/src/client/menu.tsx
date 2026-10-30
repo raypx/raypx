@@ -41,7 +41,7 @@ export function AccountMenu({
         aria-label={c("accountMenu")}
         aria-busy={pending || busy}
         disabled={pending || busy}
-        className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-sidebar-accent motion-reduce:transition-none group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:px-0 max-[760px]:justify-center max-[760px]:px-0"
+        className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-sidebar-accent motion-reduce:transition-none sidebar-icon:justify-center sidebar-icon:px-0"
       >
         {user ? (
           <Avatar
@@ -53,7 +53,7 @@ export function AccountMenu({
             <CircleUserRound size={20} aria-hidden="true" />
           </span>
         )}
-        <span className="min-w-0 flex-1 group-data-[collapsible=icon]/sidebar:hidden max-[760px]:hidden">
+        <span className="min-w-0 flex-1 sidebar-icon:hidden">
           <span className="block truncate text-[13px] font-medium">
             {pending ? c("loading") : user?.name || c("signIn")}
           </span>
@@ -64,7 +64,7 @@ export function AccountMenu({
         <ChevronsUpDown
           aria-hidden="true"
           size={15}
-          className="shrink-0 text-muted-foreground group-data-[collapsible=icon]/sidebar:hidden max-[760px]:hidden"
+          className="shrink-0 text-muted-foreground sidebar-icon:hidden"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent

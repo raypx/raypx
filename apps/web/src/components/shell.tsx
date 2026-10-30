@@ -123,7 +123,7 @@ export function WebShell() {
         LinkComponent={ShellLink}
         notice={
           !session.isPending && !session.error && !accountId ? (
-            <p className="shrink-0 border-b border-border bg-sidebar px-6 py-2.5 text-xs leading-relaxed text-muted-foreground max-[760px]:px-5">
+            <p className="shrink-0 border-b border-border bg-sidebar px-8 py-2.5 text-xs leading-relaxed text-muted-foreground @max-2xl/main:px-5">
               {g("visitorNotice")}
             </p>
           ) : undefined

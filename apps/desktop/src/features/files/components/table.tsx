@@ -57,7 +57,7 @@ function LoadedFileTable({
   const setOperation = useFilesStore((s) => s.setOperation);
   return (
     <>
-      <div className="max-[1100px]:overflow-x-auto">
+      <div className="@max-4xl/main:overflow-x-auto">
         <table className="w-full border-collapse text-left text-[13px]">
           <thead>
             <tr>

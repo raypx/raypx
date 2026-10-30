@@ -29,7 +29,7 @@ export function GuestTasks({
         <h1>{t("title")}</h1>
         <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{g("tasksHint")}</p>
       </header>
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-8 @3xl/main:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         {!resume.ready ? (
           <LoadingState label={g("restoring")} />
         ) : (
@@ -63,7 +63,7 @@ export function GuestTasks({
             />
           </div>
         )}
-        <section className="min-w-0 border-t border-border pt-6 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+        <section className="min-w-0 border-t border-border pt-6 @3xl/main:border-t-0 @3xl/main:border-l @3xl/main:pl-8 @3xl/main:pt-0">
           <h2 className="text-base font-semibold">{g("history")}</h2>
           <p className="mt-2 max-w-[65ch] text-sm text-muted-foreground">{g("historyHint")}</p>
           <div className="mt-5">

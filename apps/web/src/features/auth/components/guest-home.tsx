@@ -18,7 +18,7 @@ export function GuestHome() {
       </div>
       <dl className="mt-10 divide-y divide-border border-y border-border">
         {(["draft", "approvals", "preferences"] as const).map((key) => (
-          <div key={key} className="grid gap-2 py-5 sm:grid-cols-[10rem_1fr]">
+          <div key={key} className="grid gap-2 py-5 @xl/main:grid-cols-[10rem_1fr]">
             <dt className="font-medium">{t(key)}</dt>
             <dd className="max-w-[65ch] text-sm text-muted-foreground">{t(`${key}Hint`)}</dd>
           </div>

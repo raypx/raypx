@@ -11,6 +11,9 @@ packages own page layout, forms, navigation and product behavior.
 - `components/ui/sidebar`: shadcn base-nova Sidebar composition and context.
   SidebarProvider supports a persistent mobile rail via `mobileBehavior="rail"`;
   the default is a Sheet. Callers supply translated trigger labels and own persistence.
+  Style icon-only sidebar content with the `sidebar-icon:` Tailwind variant from
+  `styles/globals.css`: it matches a user-collapsed sidebar and, for rails, the
+  `useIsMobile` media query, so server HTML paints the narrow rail before hydration.
   The keyboard shortcut ignores text editors.
 - `themes`: all dark/light behavior in `src/themes`. Render `ThemeScript` in the
   document head (optional `initialThemeSource` expression for native snapshots),

@@ -128,7 +128,7 @@ function FilesPage() {
   if (desktopAvailable && roots?.length === 0 && !data.rootId) return <LocalWelcome />;
   return (
     <section>
-      <header className="mb-10 flex items-start justify-between gap-6 max-[1100px]:flex-col max-[1100px]:gap-5">
+      <header className="mb-10 flex items-start justify-between gap-6 @max-4xl/main:flex-col @max-4xl/main:gap-5">
         <div>
           <h1>{t("title")}</h1>
           <p className="mt-[9px] max-w-[64ch] text-muted-foreground">{t("intro")}</p>

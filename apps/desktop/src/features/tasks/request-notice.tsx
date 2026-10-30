@@ -32,7 +32,7 @@ export function TerminalRequestNotice({ accountId }: { accountId: string | null 
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted px-5 py-3 sm:px-8"
+      className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted px-8 py-3 @max-2xl/main:px-5"
     >
       <p className="text-sm">{t("terminalPendingNotice", { count: data })}</p>
       <Button

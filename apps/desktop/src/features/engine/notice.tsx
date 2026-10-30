@@ -38,7 +38,7 @@ export function EngineNotice({
   return (
     <>
       <div
-        className="flex flex-wrap items-center justify-between gap-5 bg-muted px-5 py-4 sm:px-8"
+        className="flex flex-wrap items-center justify-between gap-5 bg-muted px-8 py-4 @max-2xl/main:px-5"
         role="alert"
       >
         <div>

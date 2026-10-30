@@ -55,7 +55,7 @@ export function LocalWelcome() {
       {!isDesktop() && <p className="mb-5 text-sm text-muted-foreground">{c("desktopOnly")}</p>}
       {setup.isLoading && <LoadingState label={c("loading")} />}
       <ol className="divide-y divide-border border-y border-border">
-        <li className="grid gap-4 py-6 sm:grid-cols-[2rem_1fr]">
+        <li className="grid gap-4 py-6 @xl/main:grid-cols-[2rem_1fr]">
           <span
             aria-hidden="true"
             className="flex size-8 items-center justify-center rounded-full border border-border text-sm"
@@ -81,7 +81,7 @@ export function LocalWelcome() {
             </Button>
           </div>
         </li>
-        <li className="grid gap-4 py-6 sm:grid-cols-[2rem_1fr]">
+        <li className="grid gap-4 py-6 @xl/main:grid-cols-[2rem_1fr]">
           <span
             aria-hidden="true"
             className="flex size-8 items-center justify-center rounded-full border border-border text-sm"
@@ -110,7 +110,7 @@ export function LocalWelcome() {
             </Button>
           </div>
         </li>
-        <li className="grid gap-4 py-6 sm:grid-cols-[2rem_1fr]">
+        <li className="grid gap-4 py-6 @xl/main:grid-cols-[2rem_1fr]">
           <span
             aria-hidden="true"
             className="flex size-8 items-center justify-center rounded-full border border-border text-sm"
