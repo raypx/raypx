@@ -1,0 +1,73 @@
+apps/desktop/src/features/automations/local.tsx
+  s_6291eb9cf26850::t_3fef1dcdb40822 154,314,340
+apps/desktop/src/features/engine/notice.tsx
+  s_6291eb9cf26850::t_aa539b7cde3bf1 41
+apps/desktop/src/features/files/components/table.tsx
+  s_6291eb9cf26850::t_8468903e32aa70 60
+apps/desktop/src/features/files/components/toolbar.tsx
+  s_6291eb9cf26850::t_e0f59568eefc01 42
+apps/desktop/src/features/onboarding/welcome.tsx
+  s_6291eb9cf26850::t_207cf44076dc22 58,84,113
+apps/desktop/src/features/tasks/project-navigation.tsx
+  s_6291eb9cf26850::t_008f4a47fa6577 124
+apps/desktop/src/features/tasks/request-notice.tsx
+  s_6291eb9cf26850::t_3d3485c61ad51e 35
+apps/desktop/src/routes/(local)/index.tsx
+  s_6291eb9cf26850::t_348b665cd3fdf7 131
+apps/web/src/components/shell.tsx
+  s_6291eb9cf26850::t_06ce083888af85 126
+apps/web/src/features/auth/components/guest-home.tsx
+  s_6291eb9cf26850::t_7f26050bbb2881 21
+apps/web/src/features/configuration/components/settings.tsx
+  s_6291eb9cf26850::t_34318ec603aab0 11,169,187,195
+apps/web/src/features/tasks/guest.tsx
+  s_6291eb9cf26850::t_579d2a90123ae6 32,66
+packages/account/src/client/account.tsx
+  s_6291eb9cf26850::t_6232346641fb08 65
+packages/account/src/client/menu.tsx
+  s_6291eb9cf26850::t_4224e5e417a83d 44,56,67
+packages/blocks/AGENTS.md
+  s_be0cafefd5c0be::t_b5a2efb4bd7e5f 26-27,31-32,39-41
+packages/blocks/src/components/shell.tsx
+  s_6291eb9cf26850::t_01828ec8689ee7 60,169,171,194,203,208,241-242,247,296
+packages/blocks/tests/component/shell.test.tsx
+  s_6291eb9cf26850::t_7e9f942cd359a1 68-69
+packages/jobs/src/client/job-form.tsx
+  s_6291eb9cf26850::t_f372d305e79f20 144,158,239
+packages/memory/src/client/form.tsx
+  s_6291eb9cf26850::t_32da5809e00fdb 68
+packages/ui/AGENTS.md
+  s_6291eb9cf26850::t_df5ddf24083fd2 14-16
+packages/ui/src/components/ui/sidebar.tsx
+  s_6291eb9cf26850::t_3435bcaf18eaf6 218,229-230,240-241,401,425,473,484,557,579,623,658
+packages/ui/src/hooks/use-mobile.ts
+  s_6291eb9cf26850::t_669acb601d3d0e 3
+packages/ui/src/styles/globals.css
+  s_6291eb9cf26850::t_2ad1f952bf81af 11-23
+packages/ui/tests/component/sidebar.test.tsx
+  s_6291eb9cf26850::t_69f70c80b6775b 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1ba4c41acffb78f4a727df2e5da002cc461cf8e0",
+  "prompts": {},
+  "sessions": {
+    "s_6291eb9cf26850": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18acf-dd29-7b63-88c0-81c47bb95fda",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_be0cafefd5c0be": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a176ee-3d90-7a50-b1c2-93b35b041162",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
