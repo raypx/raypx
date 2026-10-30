@@ -74,7 +74,7 @@ function Gate({ pending }: { pending?: boolean }) {
 export function TaskWorkspace(props: Props & { view?: "tasks" | "approvals" }) {
   if (!props.scope || props.pending)
     return (
-      <section className="mx-auto max-w-5xl p-8">
+      <section>
         <Gate {...(props.pending === undefined ? {} : { pending: props.pending })} />
       </section>
     );
@@ -166,10 +166,7 @@ function Workspace({
     .flatMap((device) => device.projects)
     .find((project) => project.id === activeFilters.project);
   return (
-    <section
-      data-tasks
-      className="@container mx-auto w-full max-w-[1600px] px-6 py-5 max-[760px]:px-5"
-    >
+    <section data-tasks className="@container">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">

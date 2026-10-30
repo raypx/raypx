@@ -12,6 +12,7 @@ import {
 } from "../features/memory/client";
 import { isDesktop } from "../lib/desktop";
 export const Route = createFileRoute("/memory")({
+  staticData: { page: { title: "memory.title", layout: "workbench" } },
   validateSearch: (search: Record<string, unknown>): { scope?: "local" | "account" } =>
     search.scope === "account" || search.scope === "local" ? { scope: search.scope } : {},
   component: Page,
@@ -30,14 +31,12 @@ function Page() {
           replace: true,
         })
       }
-      className="gap-0"
+      className="gap-6"
     >
-      <div className="mx-auto w-full max-w-6xl px-8 pt-6">
-        <TabsList aria-label={t("scope")}>
-          <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
-          <TabsTrigger value="account">{t("accountScope")}</TabsTrigger>
-        </TabsList>
-      </div>
+      <TabsList aria-label={t("scope")}>
+        <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
+        <TabsTrigger value="account">{t("accountScope")}</TabsTrigger>
+      </TabsList>
       <TabsContent value="local" keepMounted>
         {isDesktop() ? (
           <MemoryLibraryPage
@@ -47,7 +46,7 @@ function Page() {
             scope="device"
           />
         ) : (
-          <p className="px-8 py-8 text-sm text-muted-foreground">{t("desktopOnly")}</p>
+          <p className="text-sm text-muted-foreground">{t("desktopOnly")}</p>
         )}
       </TabsContent>
       <TabsContent value="account">

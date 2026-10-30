@@ -54,7 +54,7 @@ export function DesktopTaskWorkspace({
       value={
         selectedScope === "remote" ? "remote" : selectedScope === "local" ? "local" : initialScope
       }
-      className="gap-0"
+      className="gap-5"
       onValueChange={(value) => {
         const next = value === "remote" ? "remote" : "local";
         void router.navigate({
@@ -65,7 +65,7 @@ export function DesktopTaskWorkspace({
         analytics.capture("task_scope_changed", { scope: next });
       }}
     >
-      <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-4 px-8 pt-6 max-[760px]:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <TabsList aria-label={t("taskScope")}>
           <TabsTrigger value="local">{t("thisComputer")}</TabsTrigger>
           <TabsTrigger value="remote">{t("connectedComputers")}</TabsTrigger>
@@ -77,8 +77,8 @@ export function DesktopTaskWorkspace({
           {t("agentSettings")}
         </Link>
       </div>
-      <TabsContent value="local">
-        <div className="mx-auto w-full max-w-[1600px] space-y-3 px-8 pt-5 max-[760px]:px-5">
+      <TabsContent value="local" className="space-y-6">
+        <div className="space-y-3">
           <p className="max-w-[75ch] text-sm text-muted-foreground">
             {text(legacy ? "legacyHint" : "ownershipHint")}
           </p>
@@ -112,9 +112,7 @@ export function DesktopTaskWorkspace({
           </Link>
         </div>
         {legacy && !accountId ? (
-          <div className="px-8">
-            <RemoteBoundary>{() => null}</RemoteBoundary>
-          </div>
+          <RemoteBoundary>{() => null}</RemoteBoundary>
         ) : isDesktop() ? (
           <TaskWorkspace
             contextLibrary={legacy ? undefined : localMemory}
@@ -142,28 +140,26 @@ export function DesktopTaskWorkspace({
             }
           />
         ) : (
-          <section className="mx-auto w-full max-w-[1600px] px-10 py-10">
+          <section>
             <h1>{t(view === "tasks" ? "title" : "inbox")}</h1>
             <p className="mt-4 text-sm text-muted-foreground">{c("desktopOnly")}</p>
           </section>
         )}
       </TabsContent>
       <TabsContent value="remote">
-        <div className="mx-auto w-full max-w-[1600px] px-8 max-[760px]:px-5">
-          <RemoteBoundary>
-            {(remoteAccount) => (
-              <TaskWorkspace
-                contextLibrary={accountMemory}
-                persistEditor
-                storageNamespace={apiUrl}
-                client={remote}
-                scope={{ kind: "remote", namespace: apiUrl, accountId: remoteAccount }}
-                view={view}
-                initialTaskId={taskId}
-              />
-            )}
-          </RemoteBoundary>
-        </div>
+        <RemoteBoundary>
+          {(remoteAccount) => (
+            <TaskWorkspace
+              contextLibrary={accountMemory}
+              persistEditor
+              storageNamespace={apiUrl}
+              client={remote}
+              scope={{ kind: "remote", namespace: apiUrl, accountId: remoteAccount }}
+              view={view}
+              initialTaskId={taskId}
+            />
+          )}
+        </RemoteBoundary>
       </TabsContent>
     </Tabs>
   );

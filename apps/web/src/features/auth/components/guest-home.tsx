@@ -6,7 +6,7 @@ import { SignInLink } from "./session-boundary";
 export function GuestHome() {
   const t = useTranslations("guest");
   return (
-    <section className="mx-auto max-w-[900px] px-14 py-13 max-[760px]:px-6 max-[760px]:py-8">
+    <section>
       <p className="mb-4 text-sm text-muted-foreground">{t("visitor")}</p>
       <h1>{t("title")}</h1>
       <p className="mt-3 max-w-[65ch] text-muted-foreground">{t("intro")}</p>

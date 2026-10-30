@@ -32,9 +32,19 @@ Code outside `src/components/` stays private.
   `brand.description` adds a compact workspace subtitle. Applications can insert
   `contextNavigation` after the primary group and an `accountAction` beside the
   account menu; Blocks never loads project or account data itself.
-- `settings`: `SettingsPage`, `SettingsSection` (heading-labelled row with a control),
-  and the device preference sections `AppearanceSettings` (needs UI's ThemeProvider)
-  and `LanguageSettings` (needs i18n's BrowserLanguageProvider). LanguageSettings
+  `layout` selects the page template that owns content width, gutters and vertical
+  rhythm: `document` (reading width for settings, account and onboarding),
+  `workbench` (wide list/detail workspaces) or `tool` (the whole main region).
+  `#main` is the `main` container, so templates and page content query its width,
+  which follows the sidebar, with `@…/main` variants instead of viewport breakpoints.
+  Pages, feature views and their loading/error states never set their own outer
+  width or gutters. `ShellPage<Title>` is the route metadata shape: applications
+  declare `staticData.page` with a value-free message key, an optional `guestTitle`
+  and the layout, and derive breadcrumbs and `layout` from the deepest match.
+- `settings`: `SettingsPage` (header and sections inside a `document` template),
+  `SettingsSection` (heading-labelled row with a control), and the device preference
+  sections `AppearanceSettings` (needs UI's ThemeProvider) and `LanguageSettings`
+  (needs i18n's BrowserLanguageProvider). LanguageSettings
   composes UI's shadcn Select with i18n's preference hook and locale options.
 - `styles.css`: registers Blocks as a Tailwind source; applications import it.
 

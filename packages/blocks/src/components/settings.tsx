@@ -23,7 +23,7 @@ export interface SettingsPageProps {
 
 export function SettingsPage({ title, description, footnote, children }: SettingsPageProps) {
   return (
-    <section className="mx-auto max-w-240 px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14 max-[420px]:px-5">
+    <section>
       <header className="mb-10">
         <h1>{title}</h1>
         {description && (
@@ -48,7 +48,7 @@ export function SettingsSection({ title, description, children }: SettingsSectio
   return (
     <section
       aria-labelledby={id}
-      className="flex items-start justify-between gap-8 border-b border-border pt-7 pb-8 first-of-type:pt-0 max-[1100px]:flex-col max-[1100px]:gap-5.5"
+      className="flex items-start justify-between gap-8 border-b border-border pt-7 pb-8 first-of-type:pt-0 @max-4xl/main:flex-col @max-4xl/main:gap-5.5"
     >
       <div>
         <h2 id={id} className="mb-1.5 text-[15px]">

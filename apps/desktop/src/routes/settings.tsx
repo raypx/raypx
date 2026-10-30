@@ -9,7 +9,10 @@ import { RemoteBoundary } from "../features/auth/components/remote-boundary";
 import { authClient } from "../features/auth/client";
 import { isDesktop } from "../lib/desktop";
 
-export const Route = createFileRoute("/settings")({ component: SettingsRoute });
+export const Route = createFileRoute("/settings")({
+  staticData: { page: { title: "common.settings", layout: "document" } },
+  component: SettingsRoute,
+});
 
 function SettingsRoute() {
   const t = useTranslations("settings");

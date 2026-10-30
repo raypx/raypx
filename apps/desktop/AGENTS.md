@@ -21,7 +21,10 @@ which owns MyGo windows, tray and restricted renderer entry points.
 renderer contract.
 The renderer is a TanStack Start SPA: routes live in `src/routes`, `src/router.tsx`
 provides TanStack Query, `src/components/shell.tsx` fills the shared shell, and the
-build writes `dist/client` for the native app origin.
+build writes `dist/client` for the native app origin. Every shell route declares
+`staticData.page` (title key from `PageTitle` in `src/router.tsx` and a Blocks page
+layout); the shell derives breadcrumbs and the page template, so pages never add
+their own outer width or gutters.
 
 `preferences.ts` shares preference types/validation; `src/preferences.tsx` owns renderer initialization. Complex page logic lives under `src/features/`; simple pages stay in route modules. `features/tasks/project-navigation.tsx` loads device-owned authorized projects for
 sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...`. This filters the loaded task page, never creates

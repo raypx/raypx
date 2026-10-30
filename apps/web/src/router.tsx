@@ -3,6 +3,7 @@ import { createQueryFailureReporter } from "@raypx/analytics/browser";
 import { createRouter } from "@tanstack/react-router";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
+import type { ShellPage } from "@raypx/blocks/shell";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -26,8 +27,23 @@ export function getRouter() {
   setupRouterSsrQueryIntegration({ router, queryClient });
   return router;
 }
+/** Message keys that title shell pages; each translates without values. */
+type PageTitle =
+  | "common.account"
+  | "common.adminSettings"
+  | "common.approvals"
+  | "common.home"
+  | "common.jobs"
+  | "common.settings"
+  | "common.tasks"
+  | "memory.title";
+
 declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>;
+  }
+  interface StaticDataRouteOption {
+    /** Shell title and page template; the deepest matched route that declares one wins. */
+    page?: ShellPage<PageTitle>;
   }
 }

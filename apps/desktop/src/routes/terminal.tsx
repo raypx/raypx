@@ -13,7 +13,10 @@ import { isDesktop, localRequest, onLocalEvent } from "../lib/desktop";
 import { terminalFrame } from "../features/terminal/frame";
 import { terminalKey } from "../features/terminal/input";
 
-export const Route = createFileRoute("/terminal")({ component: TerminalPage });
+export const Route = createFileRoute("/terminal")({
+  staticData: { page: { title: "common.terminal", layout: "tool" } },
+  component: TerminalPage,
+});
 
 function encode(value: string) {
   let binary = "";
@@ -268,7 +271,7 @@ function TerminalPage() {
     }
   }
   return (
-    <section className="mx-auto max-w-[1320px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+    <section>
       <header className="mb-10">
         <h1>{t("title")}</h1>
         <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("intro")}</p>

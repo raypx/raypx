@@ -18,7 +18,14 @@ import {
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopReturnTo } from "../features/auth/return-to";
 import { useEffect, useState } from "react";
-import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  useMatches,
+  useRouter,
+  useRouterState,
+  type StaticDataRouteOption,
+} from "@tanstack/react-router";
 import {
   CalendarClock,
   FolderOpen,
@@ -70,8 +77,15 @@ export function DesktopShell() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const auth = useAuthActions({ client: authClient, webUrl });
-  const path = useRouterState({ select: (state) => state.location.pathname });
   const href = useRouterState({ select: (state) => state.location.href });
+  const page = useMatches({
+    select: (matches) =>
+      matches.reduce<StaticDataRouteOption["page"]>(
+        (found, match) => match.staticData.page ?? found,
+        undefined,
+      ),
+  });
+  const t = useTranslations();
   const c = useTranslations("common");
   const memory = useTranslations("memory");
   const [engine, setEngine] = useState("starting");
@@ -153,26 +167,8 @@ export function DesktopShell() {
             <TooltipContent side="top">{c("settings")}</TooltipContent>
           </Tooltip>
         }
-        breadcrumbs={[
-          "Raypx",
-          path.startsWith("/memory")
-            ? memory("title")
-            : c(
-                path.startsWith("/tasks")
-                  ? "tasks"
-                  : path.startsWith("/approvals")
-                    ? "approvals"
-                    : path.startsWith("/automations")
-                      ? "jobs"
-                      : path.startsWith("/terminal")
-                        ? "terminal"
-                        : path.startsWith("/account")
-                          ? "account"
-                          : path.startsWith("/settings")
-                            ? "settings"
-                            : "files",
-              ),
-        ]}
+        breadcrumbs={page ? ["Raypx", t(page.title)] : ["Raypx"]}
+        layout={page?.layout ?? "document"}
         LinkComponent={ShellLink}
         notice={
           <>

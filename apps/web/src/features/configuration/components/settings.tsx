@@ -23,7 +23,7 @@ export function ConfigurationSettings() {
     refetchOnWindowFocus: false,
   });
   return (
-    <section className="mx-auto max-w-240 px-14 pt-13 pb-20 max-[760px]:px-6 max-[760px]:pt-8.5 max-[420px]:px-5">
+    <section>
       <header className="mb-3">
         <h1>{t("title")}</h1>
         <p className="mt-2 max-w-[65ch] text-muted-foreground">{t("intro")}</p>

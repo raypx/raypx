@@ -6,7 +6,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppearanceSettings, LanguageSettings, SettingsPage } from "@raypx/blocks/settings";
 import { useTranslations } from "@raypx/i18n/browser";
 
-export const Route = createFileRoute("/(app)/settings")({ component: SettingsRoute });
+export const Route = createFileRoute("/(app)/settings")({
+  staticData: { page: { title: "common.settings", layout: "document" } },
+  component: SettingsRoute,
+});
 
 function SettingsRoute() {
   const t = useTranslations("settings");

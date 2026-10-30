@@ -23,7 +23,7 @@ export function GuestTasks({
   const [options, setOptions] = useState(false);
   const resume = useGuestDraft(namespace);
   return (
-    <section className="@container mx-auto max-w-[1400px] px-8 py-7 max-[760px]:px-5">
+    <section className="@container">
       <header className="mb-7">
         <p className="mb-2 text-sm text-muted-foreground">{g("visitor")}</p>
         <h1>{t("title")}</h1>

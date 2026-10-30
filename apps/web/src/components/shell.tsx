@@ -12,7 +12,14 @@ import { useAuthActions } from "@raypx/auth/hooks";
 import { apiUrl, authClient, webUrl } from "../features/auth/client";
 import { taskClient } from "../features/tasks/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  useMatches,
+  useRouter,
+  useRouterState,
+  type StaticDataRouteOption,
+} from "@tanstack/react-router";
 import {
   ListTodo,
   Inbox,
@@ -64,11 +71,18 @@ export function WebShell() {
     return () => taskClient.setAccount?.(null);
   }, [accountId, queryClient, router]);
   const auth = useAuthActions({ client: authClient, webUrl });
+  const t = useTranslations();
   const c = useTranslations("common");
   const g = useTranslations("guest");
   const memory = useTranslations("memory");
   const href = useRouterState({ select: (state) => state.location.href });
-  const path = useRouterState({ select: (state) => state.location.pathname });
+  const page = useMatches({
+    select: (matches) =>
+      matches.reduce<StaticDataRouteOption["page"]>(
+        (found, match) => match.staticData.page ?? found,
+        undefined,
+      ),
+  });
   const navigation: ShellNavItem<WebPath>[] = [
     { to: "/tasks", label: c("tasks"), icon: <ListTodo /> },
     { to: "/automations", label: c("jobs"), icon: <CalendarClock /> },
@@ -100,26 +114,12 @@ export function WebShell() {
         navigation={[navigation]}
         navigationLabels={[c("workspace")]}
         secondaryNavigation={secondaryNavigation}
-        breadcrumbs={[
-          siteName,
-          path.startsWith("/memory")
-            ? memory("title")
-            : c(
-                path.startsWith("/admin/")
-                  ? "adminSettings"
-                  : path.startsWith("/tasks")
-                    ? "tasks"
-                    : path.startsWith("/automations")
-                      ? "jobs"
-                      : path.startsWith("/approvals")
-                        ? "approvals"
-                        : path === "/settings"
-                          ? "settings"
-                          : accountId
-                            ? "account"
-                            : "home",
-              ),
-        ]}
+        breadcrumbs={
+          page
+            ? [siteName, t(!accountId && page.guestTitle ? page.guestTitle : page.title)]
+            : [siteName]
+        }
+        layout={page?.layout ?? "document"}
         LinkComponent={ShellLink}
         notice={
           !session.isPending && !session.error && !accountId ? (

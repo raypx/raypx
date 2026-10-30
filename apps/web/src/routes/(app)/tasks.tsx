@@ -13,6 +13,7 @@ import { accountMemory } from "../../features/memory/client";
 const reportedClient = instrumentTaskClient(taskClient, analytics, "remote");
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 export const Route = createFileRoute("/(app)/tasks")({
+  staticData: { page: { title: "common.tasks", layout: "workbench" } },
   validateSearch: (search: Record<string, unknown>): { taskId?: string; guestDraft?: string } => ({
     ...(typeof search.taskId === "string" && uuid.test(search.taskId)
       ? { taskId: search.taskId }
@@ -38,7 +39,7 @@ function SignedInTasks({ accountId }: { accountId: string }) {
   return (
     <>
       {resume.failed && (
-        <p role="alert" className="px-8 pt-4 text-sm text-destructive-text">
+        <p role="alert" className="mb-4 text-sm text-destructive-text">
           {g("restoreFailed")}
         </p>
       )}

@@ -11,6 +11,7 @@ import { accountMemory } from "../../features/memory/client";
 
 const localRoute = getRouteApi("/(local)");
 export const Route = createFileRoute("/(local)/automations")({
+  staticData: { page: { title: "common.jobs", layout: "workbench" } },
   preload: false,
   validateSearch: (search: Record<string, unknown>): { scope?: "local" | "cloud" } =>
     search.scope === "cloud" || search.scope === "local" ? { scope: search.scope } : {},
@@ -28,11 +29,7 @@ export const Route = createFileRoute("/(local)/automations")({
 });
 function JobsPending() {
   const c = useTranslations("common");
-  return (
-    <section className="mx-auto max-w-[1320px] px-8 py-9">
-      <p role="status">{c("loading")}</p>
-    </section>
-  );
+  return <p role="status">{c("loading")}</p>;
 }
 function JobsPage() {
   const router = useRouter(),
@@ -52,14 +49,12 @@ function JobsPage() {
           replace: true,
         })
       }
-      className="gap-0"
+      className="gap-6"
     >
-      <div className="mx-auto w-full max-w-[1320px] px-8 pt-6">
-        <TabsList aria-label={t("scope")}>
-          <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
-          <TabsTrigger value="cloud">{t("cloudScope")}</TabsTrigger>
-        </TabsList>
-      </div>
+      <TabsList aria-label={t("scope")}>
+        <TabsTrigger value="local">{t("localScope")}</TabsTrigger>
+        <TabsTrigger value="cloud">{t("cloudScope")}</TabsTrigger>
+      </TabsList>
       <TabsContent value="local" keepMounted>
         <LocalJobsPage
           data={data}
@@ -75,27 +70,25 @@ function JobsPage() {
         />
       </TabsContent>
       <TabsContent value="cloud">
-        <div className="mx-auto max-w-[1320px] px-8">
-          <RemoteBoundary>
-            {(accountId) => (
-              <CloudJobsPage
-                contextLibrary={accountMemory}
-                accountId={accountId}
-                client={cloudJobs}
-                devices={jobDevices}
-                renderTaskLink={(taskId) => (
-                  <Link
-                    to="/tasks"
-                    search={{ scope: "remote", taskId }}
-                    className="underline underline-offset-4"
-                  >
-                    {cloud("viewTask")}
-                  </Link>
-                )}
-              />
-            )}
-          </RemoteBoundary>
-        </div>
+        <RemoteBoundary>
+          {(accountId) => (
+            <CloudJobsPage
+              contextLibrary={accountMemory}
+              accountId={accountId}
+              client={cloudJobs}
+              devices={jobDevices}
+              renderTaskLink={(taskId) => (
+                <Link
+                  to="/tasks"
+                  search={{ scope: "remote", taskId }}
+                  className="underline underline-offset-4"
+                >
+                  {cloud("viewTask")}
+                </Link>
+              )}
+            />
+          )}
+        </RemoteBoundary>
       </TabsContent>
     </Tabs>
   );

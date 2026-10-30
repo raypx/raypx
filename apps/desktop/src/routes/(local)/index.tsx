@@ -23,6 +23,7 @@ import { LocalWelcome } from "../../features/onboarding/welcome";
 const localRoute = getRouteApi("/(local)");
 
 export const Route = createFileRoute("/(local)/")({
+  staticData: { page: { title: "common.files", layout: "tool" } },
   preload: false,
   validateSearch: filesSearch,
   loaderDeps: ({ search }) => ({
@@ -126,7 +127,7 @@ function FilesPage() {
   }
   if (desktopAvailable && roots?.length === 0 && !data.rootId) return <LocalWelcome />;
   return (
-    <section className="mx-auto max-w-[1320px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+    <section>
       <header className="mb-10 flex items-start justify-between gap-6 max-[1100px]:flex-col max-[1100px]:gap-5">
         <div>
           <h1>{t("title")}</h1>

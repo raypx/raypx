@@ -55,6 +55,31 @@ export interface ShellNavItem<To extends string> {
   badge?: ReactNode;
 }
 
+/**
+ * Page templates own content width, gutters and vertical rhythm. Their breakpoints
+ * follow the main region, whose width changes with the sidebar, not the viewport.
+ */
+export type PageLayout = "document" | "workbench" | "tool";
+
+/** Metadata an application declares on each route rendered inside the shell. */
+export interface ShellPage<Title extends string = string> {
+  /** Breadcrumb title as a full message key, such as `common.tasks`. */
+  title: Title;
+  /** Title for signed-out visitors, when the page serves them as something else. */
+  guestTitle?: Title;
+  layout: PageLayout;
+}
+
+const pageLayouts: Record<PageLayout, string> = {
+  // Settings, account and onboarding keep a reading width.
+  document:
+    "max-w-240 px-14 pt-13 pb-20 @max-4xl/main:px-8 @max-4xl/main:pt-9 @max-4xl/main:pb-14 @max-xl/main:px-5",
+  // List and detail workspaces.
+  workbench: "max-w-400 px-8 pt-6 pb-10 @max-2xl/main:px-5",
+  // Local tools use the whole main region.
+  tool: "px-8 pt-6 pb-10 @max-2xl/main:px-5",
+};
+
 export interface AppShellProps<To extends string> {
   storageKey?: string;
   /** Both frames fill the viewport; `window` also reserves the native title-bar inset. */
@@ -70,6 +95,8 @@ export interface AppShellProps<To extends string> {
   account?: ReactNode;
   accountAction?: ReactNode;
   breadcrumbs: readonly string[];
+  /** Template for the current page, including its loading and error states. */
+  layout: PageLayout;
   /** Shown between the top bar and main content, such as a service alert. */
   notice?: ReactNode;
   LinkComponent: ComponentType<ShellLinkProps<To>>;
@@ -112,6 +139,7 @@ function ShellContents<To extends string>({
   account,
   accountAction,
   breadcrumbs,
+  layout,
   notice,
   LinkComponent,
   children,
@@ -269,9 +297,11 @@ function ShellContents<To extends string>({
         <main
           id="main"
           tabIndex={-1}
-          className="min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain outline-none"
+          className="@container/main min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain outline-none"
         >
-          {children}
+          <div data-layout={layout} className={cn("mx-auto w-full min-w-0", pageLayouts[layout])}>
+            {children}
+          </div>
         </main>
       </div>
     </>

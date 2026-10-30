@@ -27,6 +27,7 @@ function renderShell(frame?: "document" | "window") {
           ],
         ]}
         breadcrumbs={["Acme", "Tasks"]}
+        layout="workbench"
         notice={<p role="alert">Offline</p>}
         account={<button type="button">Menu</button>}
         LinkComponent={TestLink}
@@ -64,6 +65,9 @@ describe("AppShell", () => {
     const main = screen.getByRole("main");
     expect(main.id).toBe("main");
     expect(main.textContent).toBe("Content");
+    // Templates size against the main region, so loading states share the page frame.
+    expect(main.className).toContain("@container/main");
+    expect(main.firstElementChild?.getAttribute("data-layout")).toBe("workbench");
   });
 
   it("scrolls only main content inside a native window", () => {

@@ -261,7 +261,7 @@ function CloudJobs({
   }
   const date = (value: string) => format.dateTime(new Date(value), "timestamp");
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-7 sm:px-8">
+    <section>
       <header className="mb-7 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1>{t("title")}</h1>

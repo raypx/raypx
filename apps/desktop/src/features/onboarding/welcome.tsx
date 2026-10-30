@@ -46,7 +46,7 @@ export function LocalWelcome() {
     }
   }
   return (
-    <section className="mx-auto max-w-[1040px] px-14 py-12 max-[1100px]:px-8">
+    <section className="mx-auto max-w-240">
       <header className="mb-9">
         <p className="mb-3 text-sm text-muted-foreground">{t("localMode")}</p>
         <h1>{t("welcome")}</h1>

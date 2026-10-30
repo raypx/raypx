@@ -5,16 +5,15 @@ import { SessionBoundary, SignInGate } from "../../features/auth/components/sess
 import { cloudJobs, jobDevices } from "../../features/automations/client";
 import { accountMemory } from "../../features/memory/client";
 
-export const Route = createFileRoute("/(app)/automations")({ component: Page });
+export const Route = createFileRoute("/(app)/automations")({
+  staticData: { page: { title: "common.jobs", layout: "workbench" } },
+  component: Page,
+});
 function Page() {
   const t = useTranslations("cloudJobs");
   return (
     <SessionBoundary
-      guest={
-        <div className="mx-auto max-w-6xl px-8 py-7">
-          <SignInGate heading="h1" title={t("title")} description={t("signInHint")} />
-        </div>
-      }
+      guest={<SignInGate heading="h1" title={t("title")} description={t("signInHint")} />}
     >
       {(accountId) => (
         <CloudJobsPage

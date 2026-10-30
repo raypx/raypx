@@ -12,6 +12,7 @@ import { AccountSessions } from "../../features/auth/components/account-sessions
 import { ProfileSettings } from "../../features/auth/components/profile-settings";
 
 export const Route = createFileRoute("/(app)/")({
+  staticData: { page: { title: "common.account", guestTitle: "common.home", layout: "document" } },
   loader: ({ context }) => context.account,
   component: AccountPage,
 });
@@ -47,7 +48,7 @@ function AccountPage() {
   )
     return <LoadingState label={c("loading")} />;
   return (
-    <section className="mx-auto max-w-[900px] px-14 pt-13 pb-20 max-[760px]:px-6 max-[760px]:pt-8.5 max-[760px]:pb-14 max-[420px]:px-5">
+    <section>
       <header className="mb-10">
         <h1>{t("accountTitle")}</h1>
         <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>

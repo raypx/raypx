@@ -24,6 +24,9 @@ application is an independent composition root and is never imported by another 
   `src/components/shell.tsx` (`@raypx/blocks/shell` with the account menu and pending count) for the account,
   settings, task and approval pages; `src/routes/(auth)/` is a logo-only layout for sign-in pages.
   Import heavy client modules only from the layout or route that needs them.
+- Every `(app)` route declares `staticData.page` (title key from `PageTitle` in
+  `src/router.tsx` and a Blocks page layout). The shell derives breadcrumbs and the
+  page template from it; pages never add their own outer width or gutters.
 - `src/router.tsx` creates one TanStack QueryClient per router (per request on the
   server), passes it as route context and connects SSR dehydration through `@tanstack/react-router-ssr-query`.
 - `(app)/route.tsx` resolves account context with `queryClient.fetchQuery(accountQuery())`

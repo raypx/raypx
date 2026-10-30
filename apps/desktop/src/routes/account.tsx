@@ -16,6 +16,7 @@ import { taskClient } from "../features/tasks/client";
 import { signOutDesktopHost } from "../features/tasks/host-session";
 
 export const Route = createFileRoute("/account")({
+  staticData: { page: { title: "common.account", layout: "document" } },
   ssr: false,
   preload: false,
   loader: async ({ abortController }) => {
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/account")({
 function AccountPending() {
   const t = useTranslations("auth");
   return (
-    <section className="mx-auto max-w-[900px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+    <section>
       <header className="mb-10">
         <h1>{t("accountTitle")}</h1>
         <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>
@@ -84,7 +85,7 @@ function AccountPage() {
     return router.invalidate({ filter: (match) => match.routeId === Route.id });
   }
   return (
-    <section className="mx-auto max-w-[900px] px-14 pt-13 pb-20 max-[1100px]:px-8 max-[1100px]:pt-9 max-[1100px]:pb-14">
+    <section>
       <header className="mb-10">
         <h1>{t("accountTitle")}</h1>
         <p className="mt-[9px] max-w-[65ch] text-muted-foreground">{t("accountIntro")}</p>
