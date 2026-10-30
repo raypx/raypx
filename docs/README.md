@@ -12,6 +12,7 @@
 - [MyGo Desktop build and release](development/desktop-release.md)
 - [Shared logger workspace](../packages/logger/README.md)
 - [Development environment and commands](development/getting-started.md)
+- [Development page DevTools and diagnostic snapshots](development/devtools.md)
 - [Desktop connection configuration](development/desktop-configuration.md)
 - [Native cloud oRPC transport](development/desktop-orpc.md)
 - [Pi AI model calls](development/ai.md)

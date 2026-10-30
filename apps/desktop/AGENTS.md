@@ -2,6 +2,12 @@
 
 ## Purpose
 
+Development diagnostics use the private `@raypx/devtools` bridge under existing
+renderer providers, guarded by `import.meta.env.DEV`. The official Dock runs only
+with Vite serve; no Go or IPC clipboard interface is added. Copy failures reveal
+selected JSON for manual copying. Native and compiled builds must not contain
+the diagnostics bootstrap or panel. See the page DevTools development guide.
+
 MyGo composition root with the existing React/Vite renderer, persistent system
 WebView, tray and standalone Bun CLI. internal/AGENTS.md owns Go host rules;
 README.md lists the layout, build and acceptance commands. Preserve DesktopBridge.

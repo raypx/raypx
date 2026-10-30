@@ -9,6 +9,7 @@ const settings = browserTestSettings(process.env, {
 
 export default defineConfig({
   testDir: "./tests",
+  testIgnore: "**/devtools.spec.ts",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

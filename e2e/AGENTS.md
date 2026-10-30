@@ -45,6 +45,12 @@ errors; remote views require confirmed login and preserve their return destinati
 
 ## Verification
 
+`e2e:devtools` is a separate development-only browser gate with its own Playwright
+configuration and two owned loopback Vite servers. Its suite is excluded from the
+default compiled-artifact configuration. Client authorization is disabled only on
+these isolated test servers; API traffic uses synthetic responses. It validates
+both renderer surfaces without claiming native WebView acceptance.
+
 Run bun run --cwd e2e check; bun run test e2e is an explicit browser gate.
 
 The control browser test is an explicit real-backend gate. Launch the isolated API

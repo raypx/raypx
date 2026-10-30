@@ -1,4 +1,5 @@
 import { i18nCatalogs } from "@raypx/i18n/vite";
+import { raypxDevtools } from "@raypx/devtools/vite";
 import { analyticsBuild } from "@raypx/tooling/build/analytics";
 import { startEnvironment } from "@raypx/tooling/build/start-env";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
@@ -23,8 +24,10 @@ const securityHeaders = {
 export default defineConfig(() => {
   const analytics = analyticsBuild();
   return {
+    devtools: { apply: "serve", embeddedVisibility: "passive" },
     define: analytics.define,
     plugins: [
+      raypxDevtools(),
       nitro({
         ...nitroTarget(),
         routeRules: { "/**": { headers: securityHeaders } },

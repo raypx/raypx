@@ -1,0 +1,51 @@
+{
+  "name": "@raypx/devtools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/client.tsx",
+    "./snapshot": "./src/snapshot.ts",
+    "./vite": "./src/vite.ts",
+    "./renderer": "./src/renderer.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "check": "bun --check --tsconfig-override tsconfig.json",
+    "test": "bun --bun vp test --run",
+    "test:unit": "bun --bun vp test --run --project unit",
+    "test:component": "bun --bun vp test --run --project component"
+  },
+  "dependencies": {
+    "@raypx/i18n": "workspace:*",
+    "@raypx/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/tooling": "workspace:*",
+    "@testing-library/react": "catalog:dev",
+    "@types/react": "catalog:dev",
+    "@types/react-dom": "catalog:dev",
+    "@vitejs/devtools-kit": "catalog:dev",
+    "@vitest/coverage-v8": "catalog:dev",
+    "happy-dom": "catalog:dev",
+    "vite": "catalog:dev"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.105.0",
+    "@tanstack/react-router": "^1.170.46",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "raypx": {
+    "kind": "library",
+    "target": "browser",
+    "entryTargets": {
+      "./vite": "node"
+    },
+    "sourceTargets": {
+      "src/vite.ts": "node"
+    }
+  }
+}

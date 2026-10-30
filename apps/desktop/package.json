@@ -55,6 +55,7 @@
   "devDependencies": {
     "@orpc/server": "catalog:",
     "@raypx-kit/tsconfig": "catalog:dev",
+    "@raypx/devtools": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@tailwindcss/vite": "catalog:dev",
     "@testing-library/jest-dom": "catalog:dev",
@@ -64,6 +65,7 @@
     "@types/node": "catalog:dev",
     "@types/react": "catalog:dev",
     "@types/react-dom": "catalog:dev",
+    "@vitejs/devtools": "catalog:dev",
     "@vitejs/plugin-react": "catalog:dev",
     "@vitest/coverage-v8": "catalog:dev",
     "happy-dom": "catalog:dev",
@@ -74,6 +76,9 @@
   "raypx": {
     "kind": "app",
     "target": "browser",
+    "bundledDependencies": [
+      "@raypx/devtools"
+    ],
     "sourceTargets": {
       "tests/native/**": "bun",
       "preferences.ts": "universal",

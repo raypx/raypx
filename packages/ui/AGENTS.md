@@ -26,6 +26,7 @@ packages own page layout, forms, navigation and product behavior.
 - `styles/app.css`: imports the Tailwind entry once and supplies layered app base
   defaults. Layout and control utilities live in their owning components.
 - Other explicit subpaths expose reusable visual patterns and the original logo.
+- `logo-mark.webp` exposes the unchanged brand asset for browser and build-tool use.
 - `select-field` composes the shadcn Select for labelled string options, including
   disabled options, placeholders and named form values. Prefer it to NativeSelect
   in feature UI so popup appearance and keyboard behavior are shared.

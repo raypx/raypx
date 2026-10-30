@@ -6,6 +6,7 @@
 @import "@raypx/account/client/styles.css";
 @import "@raypx/analytics/client/styles.css";
 @import "@raypx/blocks/styles.css";
+@import "@raypx/devtools/styles.css";
 
 @layer base {
   /* Keep OS contrast modes native and leave all scrolling behavior with the WebView. */

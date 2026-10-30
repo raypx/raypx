@@ -7,6 +7,7 @@
     "check": "bun --check --tsconfig-override tsconfig.json",
     "e2e": "raypx-dev e2e",
     "e2e:live": "bun --bun playwright test --config playwright.live.config.ts",
+    "e2e:devtools": "bun --bun playwright test --config playwright.devtools.config.ts",
     "e2e:web": "raypx-dev e2e --web",
     "e2e:desktop": "raypx-dev e2e --desktop",
     "e2e:smoke": "raypx-dev e2e --smoke",

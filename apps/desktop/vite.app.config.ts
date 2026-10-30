@@ -1,4 +1,5 @@
 import { analyticsBuild } from "@raypx/tooling/build/analytics";
+import { raypxDevtools } from "@raypx/devtools/vite";
 import { startEnvironment } from "@raypx/tooling/build/start-env";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -9,12 +10,14 @@ const analytics = analyticsBuild();
 export default defineConfig(({ mode }) => {
   const preview = mode === "e2e" || process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1";
   return {
+    devtools: { apply: "serve", embeddedVisibility: "passive" },
     ...analytics,
     ...(mode === "native-smoke" || process.env.RAYPX_DESKTOP_NATIVE_SMOKE_BUILD === "1"
       ? { build: { outDir: "artifacts/native-smoke" } }
       : {}),
     ...(preview ? { build: { outDir: "artifacts/browser" } } : {}),
     plugins: [
+      raypxDevtools(),
       tailwindcss(),
       // SPA build only: the root shell is prerendered into dist/client/index.html,
       // which the native WebView serves. There is no server for server functions.

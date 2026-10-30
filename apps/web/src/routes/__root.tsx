@@ -1,5 +1,10 @@
-import type { ReactNode } from "react";
-import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
+import { lazy, Suspense, type ReactNode } from "react";
+import {
+  ClientOnly,
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+} from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider, ThemeScript, themeMeta } from "@raypx/ui/themes";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
@@ -7,6 +12,10 @@ import { resolveLocalePreference } from "@raypx/i18n/preferences";
 import { loadPreferences } from "../preferences";
 import { AppAnalytics } from "../features/analytics/provider";
 import appCss from "../styles.css?url";
+
+const Devtools = import.meta.env.DEV
+  ? lazy(() => import("@raypx/devtools").then((module) => ({ default: module.DevtoolsBridge })))
+  : null;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: () => loadPreferences(),
@@ -45,7 +54,16 @@ function RootDocument({ children }: { children: ReactNode }) {
             initialPreference={preferences.locale}
             initialSystemLocales={preferences.systemLocales}
           >
-            <AppAnalytics>{children}</AppAnalytics>
+            <AppAnalytics>
+              {children}
+              {Devtools && (
+                <ClientOnly fallback={null}>
+                  <Suspense fallback={null}>
+                    <Devtools surface="web" stylesheetUrl={appCss} />
+                  </Suspense>
+                </ClientOnly>
+              )}
+            </AppAnalytics>
           </BrowserLanguageProvider>
         </ThemeProvider>
         <Scripts />

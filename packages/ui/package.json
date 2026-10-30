@@ -18,6 +18,7 @@
     ".": "./src/index.ts",
     "./avatar": "./src/avatar.tsx",
     "./logo": "./src/logo.tsx",
+    "./logo-mark.webp": "./src/assets/raypx-mark.webp",
     "./toast": "./src/toast/index.tsx",
     "./themes": "./src/themes/index.ts",
     "./themes/config": "./src/themes/config.ts",
@@ -76,6 +77,7 @@
     "kind": "library",
     "target": "browser",
     "entryTargets": {
+      "./logo-mark.webp": "universal",
       "./themes/config": "universal"
     },
     "sourceTargets": {

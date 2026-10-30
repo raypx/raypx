@@ -123,6 +123,14 @@ Task and approval routes use `@raypx/tasks/client`; the shell imports only
 visibility-aware relay subscriptions. Settings lists device connections. Never render agent
 content as HTML or send a raw local method, path or executable to the API.
 
+## Development diagnostics
+
+The development-only `@raypx/devtools` bridge is lazily mounted inside the existing
+Router/Query and preference providers after hydration. `vite.app.config.ts` enables
+the official Vite DevTools only for serve. Keep production imports eliminated;
+never expose query hashes/data, URL values or loader results in diagnostic snapshots.
+The shared panel owns metadata display and browser/manual clipboard handling.
+
 ## Browser analytics
 
 `features/analytics` injects public build config and a device-local preference store

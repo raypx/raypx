@@ -57,7 +57,12 @@
       "drizzle": false
     },
     "e2e": {
-      "entry": ["tests/**/*.ts", "playwright.config.ts", "playwright.live.config.ts"]
+      "entry": [
+        "tests/**/*.ts",
+        "playwright.config.ts",
+        "playwright.live.config.ts",
+        "playwright.devtools.config.ts"
+      ]
     }
   }
 }

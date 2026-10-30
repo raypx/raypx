@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { ClientOnly, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { DesktopShell, ShellSkeleton } from "../components/shell";
 import { ThemeScript, themeMeta } from "@raypx/ui/themes";
@@ -9,6 +9,10 @@ import { getBridge, isDesktop } from "../lib/desktop";
 import { AppAnalytics } from "../features/analytics/provider";
 import { externalLinkTarget } from "../lib/external-links";
 import appCss from "../styles.css?url";
+
+const Devtools = import.meta.env.DEV
+  ? lazy(() => import("@raypx/devtools").then((module) => ({ default: module.DevtoolsBridge })))
+  : null;
 
 export const Route = createRootRoute({
   head: () => ({
@@ -64,6 +68,11 @@ function RootComponent() {
           <SessionGate>
             <DesktopShell />
           </SessionGate>
+          {Devtools && (
+            <Suspense fallback={null}>
+              <Devtools surface="desktop" stylesheetUrl={appCss} />
+            </Suspense>
+          )}
         </AppAnalytics>
       </DesktopPreferencesProvider>
     </ClientOnly>
