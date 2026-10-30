@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	github.com/Microsoft/go-winio v0.6.2
-	github.com/egoist/mygo v0.7.1
+	github.com/egoist/mygo v0.7.3
 	github.com/pelletier/go-toml/v2 v2.4.3
 	golang.org/x/net v0.59.0
 	golang.org/x/sys v0.49.0

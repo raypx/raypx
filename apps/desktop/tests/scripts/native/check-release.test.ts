@@ -1,7 +1,7 @@
 import { expect, it } from "vite-plus/test";
 import { assertProduction } from "../../../scripts/native/check-release";
 
-const metadata = "mod github.com/egoist/mygo v0.7.1 h1:fixture\n\tbuild -tags=mygo_noinspector\n";
+const metadata = "mod github.com/egoist/mygo v0.7.3 h1:fixture\n\tbuild -tags=mygo_noinspector\n";
 it("accepts a production MyGo executable with its inspector excluded", () => {
   expect(() => assertProduction(Buffer.from("production renderer"), metadata)).not.toThrow();
 });
@@ -21,7 +21,7 @@ it("rejects a smoke build even when its socket strings are stripped", () => {
 });
 it("requires the pinned framework and production inspector policy", () => {
   expect(() =>
-    assertProduction(Buffer.from("clean"), metadata.replace("v0.7.1", "v0.7.0")),
+    assertProduction(Buffer.from("clean"), metadata.replace("v0.7.3", "v0.7.1")),
   ).toThrow("pinned MyGo");
   expect(() =>
     assertProduction(Buffer.from("clean"), metadata.replace("mygo_noinspector", "")),

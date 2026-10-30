@@ -1,6 +1,6 @@
 # Raypx Desktop
 
-MyGo v0.7.1 hosts the existing React SPA and launches the standalone Bun CLI.
+MyGo v0.7.3 hosts the existing React SPA and launches the standalone Bun CLI.
 Go 1.27.3 builds with CGO_ENABLED=0. The CLI owns execution and the independent
 daemon; Herdr remains the terminal runtime.
 

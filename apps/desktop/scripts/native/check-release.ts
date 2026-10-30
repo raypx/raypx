@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 /** Inspect compiler metadata and the shipped bytes, including embedded renderer assets. */
 export function assertProduction(bytes: Uint8Array, buildInfo: string) {
   const binary = Buffer.from(bytes);
-  if (!/\bgithub\.com\/egoist\/mygo\s+v0\.7\.1\b/.test(buildInfo))
+  if (!/\bgithub\.com\/egoist\/mygo\s+v0\.7\.3\b/.test(buildInfo))
     throw new Error("Release is missing the pinned MyGo dependency");
   if (
     /(?:^|[\s,=])native_smoke(?:[\s,]|$)/m.test(buildInfo) ||

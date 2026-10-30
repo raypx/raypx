@@ -3,7 +3,7 @@
 Status: accepted for `next`; supersedes ADR 0036 on this branch.
 
 The React SPA, public DesktopBridge vocabulary, standalone Bun CLI and independent
-execution daemon stay in place. MyGo v0.7.1 replaces the Tauri application crate,
+execution daemon stay in place. MyGo v0.7.3 replaces the Tauri application crate,
 renderer SDK and packager. Go 1.27.3 builds the native host with CGO_ENABLED=0.
 macOS uses WKWebView, Windows uses WebView2. Linux compiles but native acceptance
 is still required before claiming support.

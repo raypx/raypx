@@ -23,8 +23,8 @@ export async function preparePackager(environment: NodeJS.ProcessEnv): Promise<s
     stderr: "inherit",
   });
   const metadata = JSON.parse(await new Response(probe.stdout).text());
-  if ((await probe.exited) || metadata.Version !== "v0.7.1" || !metadata.Dir)
-    throw new Error("The packaging adapter requires the pinned MyGo v0.7.1 source");
+  if ((await probe.exited) || metadata.Version !== "v0.7.3" || !metadata.Dir)
+    throw new Error("The packaging adapter requires the pinned MyGo v0.7.3 source");
   const directory = join(desktop, ".mygo/packager");
   await mkdir(directory, { recursive: true });
   await writable(directory);
@@ -34,7 +34,7 @@ export async function preparePackager(environment: NodeJS.ProcessEnv): Promise<s
     "module github.com/egoist/mygo",
     "module github.com/egoist/mygo/cmd/raypx-packager",
   );
-  await writeFile(join(directory, "go.mod"), `${module}\nrequire github.com/egoist/mygo v0.7.1\n`);
+  await writeFile(join(directory, "go.mod"), `${module}\nrequire github.com/egoist/mygo v0.7.3\n`);
   const sums = [
     await readFile(join(metadata.Dir, "go.sum"), "utf8"),
     await readFile(join(desktop, "go.sum"), "utf8"),

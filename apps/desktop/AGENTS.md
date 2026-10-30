@@ -66,7 +66,7 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 ## Constraints
 
-- MyGo v0.7.1 uses WKWebView/WebView2. Build with Go 1.27.3 and CGO_ENABLED=0.
+- MyGo v0.7.3 uses WKWebView/WebView2. Build with Go 1.27.3 and CGO_ENABLED=0.
   Framework APIs live in internal/app; native transport/policy in internal/desktop.
   Opaque business JSON uses TS contracts as the sole business schema authority.
 - Build a prerendered SPA in dist/client and embed it under generated/frontend.

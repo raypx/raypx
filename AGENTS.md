@@ -47,7 +47,7 @@ The accepted foundation design supersedes documents in docs/history.
 - @raypx-kit packages remain independently released external dependencies.
 - Shared logging is the private `@raypx/logger` source workspace; API and CLI consume it directly.
 - Internal libraries are private ESM source packages unless an actual artifact is required.
-- Desktop's Go module lives in `apps/desktop`, with MyGo v0.7.1 and Go 1.27.3.
+- Desktop's Go module lives in `apps/desktop`, with MyGo v0.7.3 and Go 1.27.3.
   Native builds require `CGO_ENABLED=0`; `internal/app` owns framework APIs and
   `internal/desktop` owns native policy and CLI transport. Bun/VP owns JS builds.
 - Use Bun's native no-emit check with an explicit tsconfig; declaration emit uses TypeScript.
