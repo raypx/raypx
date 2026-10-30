@@ -18,7 +18,9 @@ Go module/build metadata and rejects embedded native-smoke controls or renderer
 hooks. The headless `mygo:smoke` checks the embedded frontend and matching CLI;
 it does not validate a running WebView.
 
-Normal CI checks Go policy/transport and compiled Herdr. Distribution is selected
+Native input changes select Go policy/transport and compiled Herdr on the relevant
+platforms; renderer changes and shared JS dependency updates use daily source checks.
+Full release preparation uses `bun run verify --full`. Distribution is selected
 only for a tag or explicit `distribution` request. Packaging and installed native
 GUI smoke run separately on macOS and Windows. Smoke uses a separate identity,
 Go build tag, renderer output and temporary profile; Windows hosted runners verify

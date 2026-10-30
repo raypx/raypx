@@ -34,10 +34,16 @@ const named = (name: string) => {
   return step;
 };
 
-it("checks both platforms and adds parallel distribution phases only when requested", () => {
+it("checks selected platforms and adds parallel distribution phases only when requested", () => {
   const ci = workflow("ci").jobs;
   expect(ci.desktop?.uses).toBe("./.github/workflows/native.yml");
-  expect(ci.desktop?.strategy?.matrix.os).toEqual(["macos-latest", "windows-latest"]);
+  expect(ci.desktop?.strategy?.matrix.os).toBe(
+    "${{ fromJSON(needs.changes.outputs.native_runners) }}",
+  );
+  expect(ci.desktop?.if).toBe("needs.changes.outputs.native == 'true'");
+  expect(ci.javascript?.steps?.find((step) => step.uses === "actions/setup-go@v6")?.if).toBe(
+    "needs.changes.outputs.go == 'true'",
+  );
   expect(ci.foundation?.needs).toContain("desktop");
   expect(ci.desktop?.with?.distribution).toContain("needs.changes.outputs.distribution");
   expect(workflow("native").on.workflow_call?.inputs.distribution.default).toBe(false);

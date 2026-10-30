@@ -22,7 +22,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
+      go: ${{ steps.plan.outputs.go }}
       native: ${{ steps.plan.outputs.native }}
+      native_runners: ${{ steps.plan.outputs.native_runners }}
       backend: ${{ steps.plan.outputs.backend }}
       browser: ${{ steps.plan.outputs.browser }}
       distribution: ${{ steps.plan.outputs.distribution }}
@@ -44,7 +46,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-bun
       - uses: actions/setup-go@v6
-        if: needs.changes.outputs.native == 'true'
+        if: needs.changes.outputs.go == 'true'
         with:
           go-version-file: apps/desktop/go.mod
           cache-dependency-path: apps/desktop/go.sum
@@ -143,7 +145,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: ${{ fromJSON(needs.changes.outputs.native_runners) }}
     uses: ./.github/workflows/native.yml
     with:
       runner: ${{ matrix.os }}

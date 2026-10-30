@@ -1,11 +1,13 @@
 # Verification
 
-Run narrow meaningful workspace tests, then bun run verify. The default gate checks
-catalog parity, workspace/platform rules, format, lint, types, unit/component tests,
-builds, relocated API and Web SSR outputs started with Bun,
-and the compiled CLI. It requires no database,
-GUI or mail provider. Test runners share test.config.ts and remain plugin-independent.
-Verification schedules lint, checks, tests and builds in one VP graph. Desktop's
+Run focused meaningful workspace tests, then `bun run verify` for daily changes.
+It checks catalog parity, workspace/platform rules, changed-file format/lint and
+affected workspace types/tests. Native inputs add current-platform Go checks.
+Builds, relocated API/Web/CLI artifact probes and repository-wide lint belong
+to explicit `bun run verify --full` for release preparation. These local commands
+require no database, GUI or mail provider. Test runners share test.config.ts and
+remain plugin-independent. VP schedules the selected checks and tests; full mode
+adds builds in the same graph. Desktop's
 SDK preparation runs once as an uncached dependency; checks fingerprint its generated
 files after preparation. Application task configs never load the SDK or Vite app
 plugins, so pure package tests work after clean. Outcome-affecting fields are declared
@@ -25,29 +27,49 @@ points and the migration from root `test:*` aliases. Use `bun run test list` to
 discover supported layers instead of maintaining a package-name list.
 
 Use `bun run verify` for daily feedback: policy and locales are always checked;
-changed files select formatting/lint, affected workspace types/tests, and necessary
-Go host tasks through reverse dependency graphs. The default base is the merge-base
+changed files select formatting/lint and affected workspace types/tests through
+reverse dependency graphs. Native inputs independently select Go host tasks.
+The default base is the merge-base
 with `origin/canary`; staged, unstaged, untracked, renamed and deleted files count.
 Use `--base <ref>` to change it or `--dry-run` to inspect the JSON plan.
-Unknown inputs, shared configuration/lockfiles, or an unavailable base select full coverage.
+Unknown inputs, shared JS configuration/lockfiles, or an unavailable base broaden
+source checks to all workspaces. This does not request release builds, browser
+acceptance or database jobs. An unavailable Git base also selects native checks
+conservatively because the native inputs are unknown.
 Frontend files whose declared `raypx` target is `browser` reach only workspaces that contain
 browser code or import a browser entry, including type-only and test imports. If a workspace's
 non-browser, non-test sources import browser code, its consumers are selected as before.
 
-Use `bun run verify --full` before delivery. It checks all JS and current-platform
+Use `bun run verify --full` for release preparation or an explicit full check. It checks all JS and current-platform
 Go host targets, builds outputs and runs independent artifact probes concurrently.
 It needs no GUI, database or mail service. The repository uses Bun for JavaScript
 and Go 1.27.3 for Desktop; no Rust toolchain is needed. `verify` and `verify --full`
 are the verification entry points.
 
-GitHub uses the same change planner. JS, database, browser and native gates run in
-parallel when relevant; Desktop/CLI dependencies retain both native platforms. Native gates
-skip changes that reach Desktop only through its browser renderer, which they never exercise.
-Tags and manual dispatch select full source coverage. `foundation` requires every selected
-gate to succeed and permits only intentional skips. Herdr integration and pinned Go checks run in the native check phase. Go caches
+GitHub uses the same change planner:
+
+| Change                                                                            | Daily acceptance                                                                            |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Documentation                                                                     | Changed-file formatting and repository policy; no workspace/native suites                   |
+| JS/React business code                                                            | Affected workspace types and unit/component/integration tests                               |
+| Shared JS dependency/configuration                                                | All workspace source checks/tests; no release builds or native runners                      |
+| API or its affected libraries                                                     | Source checks/tests plus PostgreSQL/Redis integration                                       |
+| Native host, IPC contracts, native resources/scripts, CLI terminal/daemon/process | Go checks and relevant macOS/Windows native checks                                          |
+| Browser acceptance tests themselves                                               | Browser acceptance, to validate the changed suite                                           |
+| Version tag or manual full check                                                  | All workspaces, audits, builds, artifact probes, database/browser and both native platforms |
+
+Platform-specific filenames containing `windows`/`win32` select Windows;
+`darwin`/`macos`/`unix` select macOS; shared native inputs select both. Linux-only
+native files run the Linux Go checks without requesting macOS/Windows. JavaScript
+dependency reach alone never requests native runners, including renderer changes.
+Native workflow changes validate both platforms. `foundation` requires every
+selected gate to succeed and permits only intentional skips; an abandoned runner
+is reported as unavailable, never as a passing native check.
+
+Herdr integration and pinned Go checks run in the native check phase. Go caches
 are separate from VP's JS task cache; smoke and production use separate outputs.
 
-The check phase stages a matching CLI, runs Herdr and executes Go source checks on both platforms.
+The check phase stages a matching CLI, runs Herdr and executes Go source checks on each selected platform.
 Routine checks run Herdr once; distribution runs repeat it three times on Windows
 without blocking the parallel package/smoke phases.
 Installer creation, signatures and installed GUI smoke run on tag pushes or manual
@@ -68,6 +90,14 @@ extracting its many small files took longer than a fresh frozen install.
 The browser job caches Playwright's Chromium headless shell by Playwright version and runs
 `playwright install-deps` only when `ldd` reports a missing system library.
 Timing and scope for local verification are recorded in `.artifacts/verification/latest.json`.
+
+The approach borrows component path selection from
+[Tauri's core workflow](https://github.com/tauri-apps/tauri/blob/dev/.github/workflows/test-core.yml),
+documentation-only test skipping and a bounded platform/version matrix from
+[Vite's CI](https://github.com/vitejs/vite/blob/main/.github/workflows/ci.yml),
+and an independent tag-triggered release flow from
+[MyGo's release workflow](https://github.com/egoist/mygo/blob/main/.github/workflows/release.yml).
+Raypx keeps its existing affected-workspace planner and adds no third-party filtering action.
 The root launcher defaults to two workspace tasks. Shared Vitest defaults use one
 worker and per-file isolation; larger suites set their worker count locally.
 CLI, Desktop and Tooling also own their subprocess test timeouts locally.

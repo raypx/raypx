@@ -12,7 +12,9 @@ export interface VerificationPlan {
   workspaces: string[];
   tasks: string[];
   artifacts: Artifact[];
+  /** Current-platform Go checks; Linux-only changes need no macOS/Windows runner. */
   native: boolean;
+  nativeRunners: string[];
   backend: boolean;
   browser: "none" | "web" | "desktop" | "all";
 }
@@ -43,7 +45,7 @@ export function changedFiles(
   } catch {
     return {
       files: [] as string[],
-      reasons: ["Git base or changed paths unavailable; running full verification"],
+      reasons: ["Git base or changed paths unavailable; checking all sources and native targets"],
     };
   }
 }
@@ -58,13 +60,48 @@ function globalInput(file: string) {
   );
 }
 
+/** Select native work from its actual inputs, independently of JavaScript dependency reach. */
+function nativeChanges(model: TaskModel, files: string[], full: boolean) {
+  const runners = ["macos-latest", "windows-latest"];
+  const paths = files.filter((file) => {
+    if (documentation(file)) return false;
+    if (file === ".github/workflows/native.yml") return true;
+    const member = model.members.find((candidate) => file.startsWith(candidate.path + "/"));
+    if (!member) return false;
+    const relative = file.slice(member.path.length + 1);
+    if (member.native)
+      return /^(?:[^/]+\.go$|go\.(?:mod|sum)$|(?:bridge|preferences|mygo\.config)\.ts$|package\.json$|internal\/|resources\/|scripts\/native\/|tests\/native\/)/.test(
+        relative,
+      );
+    if (member.name === "cli")
+      return /^(?:package\.json$|scripts\/prepare-herdr\.ts$|src\/runtime\/(?:terminal|daemon|process)\/|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal)|fixtures\/(?:terminal|process)\/|smoke\/(?:herdr-terminal|terminal-)))/.test(
+        relative,
+      );
+    return member.name === "@raypx/contracts" && /^src\/(?:local|terminal)(?:\/|\.)/.test(relative);
+  });
+  const selected = new Set<string>();
+  for (const file of paths) {
+    if (/(?:^|[/_.-])(?:windows|win32)(?:[/_.-]|$)/i.test(file)) selected.add("windows-latest");
+    else if (/(?:^|[/_.-])(?:darwin|macos|unix)(?:[/_.-]|$)/i.test(file))
+      selected.add("macos-latest");
+    else if (!/(?:^|[/_.-])linux(?:[/_.-]|$)/i.test(file))
+      for (const runner of runners) selected.add(runner);
+  }
+  return {
+    native: full || paths.length > 0,
+    nativeRunners: full ? runners : runners.filter((runner) => selected.has(runner)),
+  };
+}
+
 export function verificationPlan(
   model: TaskModel,
   files: string[],
   options: { full?: boolean; artifacts?: boolean; reasons?: string[] } = {},
 ): VerificationPlan {
   const reasons = [...(options.reasons ?? [])];
-  let full = Boolean(options.full || reasons.length);
+  const full = Boolean(options.full);
+  let allSources = full || reasons.length > 0;
+  const native = nativeChanges(model, files, full || reasons.length > 0);
   // "browser" workspaces are reached only through browser code; "all" may affect any platform.
   const affected = new Map<string, "browser" | "all">();
   const mark = (name: string, scope: "browser" | "all") => {
@@ -78,7 +115,7 @@ export function verificationPlan(
   for (const file of files) {
     if (documentation(file)) continue;
     if (globalInput(file)) {
-      full = true;
+      allSources = true;
       reasons.push(`Shared verification input: ${file}`);
       continue;
     }
@@ -91,14 +128,17 @@ export function verificationPlan(
         platforms().browserOnly(file) && !platforms().leaks(owner.name) ? "browser" : "all",
       );
     else if (!/^(?:\.gitignore|\.oxfmtrc[^/]*|\.oxlintrc[^/]*)$/.test(file)) {
-      full = true;
+      allSources = true;
       reasons.push(`Unclassified input: ${file}`);
     } else {
-      full = true;
+      allSources = true;
       reasons.push(`Shared formatter/linter input: ${file}`);
     }
   }
-  if (full) for (const member of model.members) mark(member.name, "all");
+  if (allSources) for (const member of model.members) mark(member.name, "all");
+  if (native.native)
+    for (const member of model.members.filter((candidate) => candidate.native))
+      mark(member.name, "all");
   for (let changed = true; changed;) {
     changed = false;
     for (const member of model.members)
@@ -125,15 +165,13 @@ export function verificationPlan(
       [
         "check",
         "test",
-        ...(member.native ? ["mygo:check", "mygo:test"] : []),
+        ...(member.native && native.native ? ["mygo:check", "mygo:test"] : []),
         ...(includeArtifacts ? ["build"] : []),
       ]
         .filter((name) => member.scripts[name])
         .map((name) => taskRef(member.name, name)),
     );
-  const web = affected.has("web"),
-    desktop = affected.has("desktop"),
-    browserAll = affected.has("@raypx/e2e");
+  const browserTests = model.members.find((member) => member.name === "@raypx/e2e");
   return {
     full,
     reasons: [...new Set(reasons)],
@@ -141,11 +179,14 @@ export function verificationPlan(
     workspaces,
     tasks,
     artifacts,
-    // Native checks cover the Go host, bridge generation and CLI, never the browser renderer.
-    native: full || affected.get("desktop") === "all" || affected.has("cli"),
-    backend: full || affected.has("api"),
+    ...native,
+    backend: full || (!allSources && affected.has("api")),
     browser:
-      full || browserAll || (web && desktop) ? "all" : web ? "web" : desktop ? "desktop" : "none",
+      full ||
+      (browserTests &&
+        files.some((file) => file.startsWith(browserTests.path + "/") && !documentation(file)))
+        ? "all"
+        : "none",
   };
 }
 
@@ -168,11 +209,14 @@ export function githubPlan(root: string, eventName: string, event: Record<string
         : undefined;
   const changed = before
     ? changedFiles(root, "HEAD", { before, head: "HEAD" })
-    : { files: [], reasons: full ? [] : ["Event base unavailable; running full verification"] };
+    : {
+        files: [],
+        reasons: full ? [] : ["Event base unavailable; checking all sources and native targets"],
+      };
   return {
     ...verificationPlan(taskModel(root), changed.files, {
       full,
-      artifacts: true,
+      artifacts: full,
       reasons: changed.reasons,
     }),
     distribution: distributionRequested(

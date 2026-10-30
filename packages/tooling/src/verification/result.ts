@@ -21,6 +21,10 @@ export function assertCiResult(needs: Record<string, Job>, distribution?: boolea
     desktop: flags.native === "true",
   })) {
     const result = needs[name]?.result;
+    if (required && result === "abandoned")
+      throw new Error(
+        `CI runner was unavailable for required gate ${name} (abandoned); rerun the gate when runner capacity recovers`,
+      );
     if (required ? result !== "success" : result !== "success" && result !== "skipped")
       throw new Error(`CI gate ${name} did not complete successfully (${result ?? "missing"})`);
   }

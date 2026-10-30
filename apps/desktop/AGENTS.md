@@ -113,8 +113,11 @@ Local tools render during session/network checks. Auth routes use a standalone l
 
 ## Verification
 
-Run Desktop check/test, mygo:check/mygo:test, build:desktop, mygo:smoke (headless),
-package:desktop, and repository verify --full. Go policy tests need no GUI.
+Daily changes run affected Desktop check/test through repository `bun run verify`.
+Native host, IPC, native resources/scripts and terminal/daemon changes also run
+mygo:check/mygo:test and CI on the affected native platforms. Renderer-only changes
+need no native runner. Release preparation adds build:desktop, mygo:smoke (headless),
+package:desktop and repository verify --full. Go policy tests need no GUI.
 For races: go test -race ./internal/... ./tests/native/host/....
 
 native:smoke builds the separate MyGo host/renderer and checks CLI handshake,

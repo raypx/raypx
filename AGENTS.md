@@ -86,10 +86,13 @@ The accepted foundation design supersedes documents in docs/history.
 
 ## Verification
 
-Run narrow meaningful tests, then bun run verify --full before delivery. Daily
-`bun run verify` selects affected workspaces and Go host tasks. Full verification
-checks the current platform's JavaScript/Go sources and artifacts without a GUI, database
-or mail provider. PostgreSQL, browser and packaged native acceptance run separately.
+Run focused meaningful tests and `bun run verify` for daily delivery. It selects
+affected source checks/tests and Go host tasks only for native inputs. Shared
+JavaScript dependency/configuration changes broaden source checks without selecting
+builds or native platforms. Use `bun run verify --full` for release preparation or an
+explicit full-validation request; it includes repository-wide audits, builds and
+current-platform artifact probes. PostgreSQL, browser and packaged native acceptance
+run separately; releases require their full selected matrix.
 Report unavailable checks as unavailable; never describe an unrun platform as passed.
 
 ## Documentation

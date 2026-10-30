@@ -8,6 +8,7 @@ import { changedFiles, githubPlan, verificationPlan } from "../../src/verificati
 import { verifyOptions } from "../../src/verification/index.js";
 import { assertCiResult } from "../../src/verification/result.js";
 import { completionReport } from "../../src/verification/report.js";
+import { executionTasks } from "../../src/verification/execution.js";
 import { distributionRequested } from "../../src/verification/events.js";
 
 const { fixture, member } = workspaceFixtures();
@@ -89,8 +90,24 @@ function platformProject(options: { leak?: boolean; typedTest?: boolean } = {}) 
         ...(name === "desktop" ? { sourceTargets: { "bridge.ts": "universal" } } : {}),
       },
       deps: { "@raypx/ui": "workspace:*", "@raypx/feature": "workspace:*" },
-      extra: { name, scripts },
+      extra: {
+        name,
+        scripts:
+          name === "desktop"
+            ? {
+                ...scripts,
+                "native:build": "bun native.ts",
+                "native:prepare": "bun prepare.ts",
+                "mygo:check": "go vet ./...",
+                "mygo:test": "go test ./...",
+              }
+            : scripts,
+      },
     });
+  member(root, "cli", {
+    metadata: { kind: "app", target: "bun" },
+    extra: { name: "cli", scripts: { ...scripts, build: "bun build.ts" } },
+  });
   return taskModel(root);
 }
 describe("affected verification", () => {
@@ -128,11 +145,12 @@ describe("affected verification", () => {
     expect(plan.workspaces).toEqual(["@raypx/feature", "@raypx/ui", "desktop", "web"]);
     expect(plan.backend).toBe(false);
     expect(plan.native).toBe(false);
-    expect(plan.browser).toBe("all");
+    expect(plan.browser).toBe("none");
     const universal = verificationPlan(platformProject(), ["packages/feature/src/index.ts"]);
     expect(universal.workspaces).toContain("api");
     expect(universal.backend).toBe(true);
-    expect(universal.native).toBe(true);
+    expect(universal.native).toBe(false);
+    expect(universal.tasks).not.toContain("desktop#task:mygo:test");
   });
   it.each([
     ["packages/desktop/src/index.ts", false],
@@ -144,7 +162,7 @@ describe("affected verification", () => {
     const plan = verificationPlan(platformProject(), [file]);
     expect(plan.workspaces).toEqual(["desktop"]);
     expect(plan.native).toBe(native);
-    expect(plan.browser).toBe("desktop");
+    expect(plan.browser).toBe("none");
   });
   it("follows type-only and test imports of browser entries", () => {
     const tested = verificationPlan(platformProject({ typedTest: true }), [
@@ -162,12 +180,61 @@ describe("affected verification", () => {
     ".github/actions/example/action.yml",
     "packages/tooling/src/cli.ts",
     "unknown/file.ts",
-  ])("falls back to full for %s", (file) => {
+  ])("broadens source checks without release gates for %s", (file) => {
     const { model } = project();
     const plan = verificationPlan(model, [file]);
-    expect(plan.full).toBe(true);
+    expect(plan.full).toBe(false);
     expect(plan.workspaces).toHaveLength(model.members.length);
+    expect(plan.native).toBe(false);
+    expect(plan.nativeRunners).toEqual([]);
+    expect(plan.artifacts).toEqual([]);
+    expect(plan.backend).toBe(false);
+    expect(plan.browser).toBe("none");
+    expect(plan.tasks.every((task) => /#task:(?:check|test)$/.test(task))).toBe(true);
+  });
+  it.each([
+    ["packages/desktop/internal/desktop/process_windows.go", ["windows-latest"]],
+    ["packages/desktop/scripts/native/windows-smoke-install.ts", ["windows-latest"]],
+    ["packages/desktop/internal/app/keyring_darwin_test.go", ["macos-latest"]],
+    ["packages/desktop/internal/desktop/process_unix.go", ["macos-latest"]],
+    ["packages/desktop/internal/desktop/process_linux.go", []],
+    ["packages/desktop/go.mod", ["macos-latest", "windows-latest"]],
+    ["packages/contracts/src/local.ts", ["macos-latest", "windows-latest"]],
+    ["packages/contracts/src/terminal.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/src/runtime/daemon/endpoint.ts", ["macos-latest", "windows-latest"]],
+    ["packages/cli/src/runtime/process/windows.ts", ["windows-latest"]],
+    ["packages/cli/scripts/prepare-herdr.ts", ["macos-latest", "windows-latest"]],
+    [".github/workflows/native.yml", ["macos-latest", "windows-latest"]],
+  ])("selects native runners from the changed input %s", (file, runners) => {
+    const plan = verificationPlan(platformProject(), [file]);
     expect(plan.native).toBe(true);
+    expect(plan.nativeRunners).toEqual(runners);
+    expect(plan.tasks).toContain("desktop#task:mygo:test");
+  });
+  it("keeps CLI business logic independent of native platform runners", () => {
+    const plan = verificationPlan(platformProject(), [
+      "packages/cli/src/runtime/agents/providers.ts",
+    ]);
+    expect(plan.workspaces).toEqual(["cli"]);
+    expect(plan.native).toBe(false);
+    expect(plan.nativeRunners).toEqual([]);
+    expect(plan.artifacts).toEqual([]);
+  });
+  it("unions platform-specific changes and keeps release acceptance complete", () => {
+    const model = platformProject();
+    const files = [
+      "packages/desktop/internal/process_windows.go",
+      "packages/desktop/internal/process_darwin.go",
+    ];
+    expect(verificationPlan(model, files).nativeRunners).toEqual([
+      "macos-latest",
+      "windows-latest",
+    ]);
+    const release = verificationPlan(model, [files[0]!], { full: true });
+    expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
+    expect(release.browser).toBe("all");
+    expect(release.backend).toBe(true);
+    expect(release.tasks).toContain("desktop#task:mygo:test");
   });
   it("preserves private VP prerequisites and rejects injected/cyclic task references", () => {
     const { root } = project();
@@ -214,7 +281,7 @@ describe("affected verification", () => {
     );
     expect(changedFiles(root, "missing-ref").reasons).not.toEqual([]);
   });
-  it("runs manual/tag events fully and fails closed on unavailable push bases", () => {
+  it("runs manual/tag events fully and checks all sources when push bases are unavailable", () => {
     const { root } = project();
     expect(githubPlan(root, "workflow_dispatch", {}).full).toBe(true);
     expect(githubPlan(root, "workflow_dispatch", {}).distribution).toBe(false);
@@ -223,8 +290,53 @@ describe("affected verification", () => {
     ).toBe(true);
     expect(githubPlan(root, "push", { ref: "refs/tags/v1.0.0" }).full).toBe(true);
     expect(githubPlan(root, "push", { ref: "refs/tags/v1.0.0" }).distribution).toBe(true);
-    expect(githubPlan(root, "push", { before: "0".repeat(40) }).full).toBe(true);
-    expect(githubPlan(root, "push", { before: "0".repeat(40) }).distribution).toBe(false);
+    const unknown = githubPlan(root, "push", { before: "0".repeat(40) });
+    expect(unknown.full).toBe(false);
+    expect(unknown.workspaces).toHaveLength(taskModel(root).members.length);
+    expect(unknown.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
+    expect(unknown.artifacts).toEqual([]);
+    expect(unknown.distribution).toBe(false);
+  });
+  it("keeps a real dependency-only push on source checks and expands its release tag", () => {
+    const { root } = project();
+    const git = (...args: string[]) =>
+      execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: "pipe" }).trim();
+    git("init", "-q");
+    git("add", ".");
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "-qm",
+      "base",
+    );
+    const before = git("rev-parse", "HEAD");
+    writeFileSync(join(root, "bun.lock"), "dependency fixture");
+    git("add", ".");
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "-qm",
+      "dependency",
+    );
+    const daily = githubPlan(root, "push", { ref: "refs/heads/canary", before });
+    expect(daily.workspaces).toHaveLength(taskModel(root).members.length);
+    expect(daily.nativeRunners).toEqual([]);
+    expect(daily.artifacts).toEqual([]);
+    expect(daily.browser).toBe("none");
+    expect(daily.backend).toBe(false);
+    expect(daily.distribution).toBe(false);
+    const release = githubPlan(root, "push", { ref: "refs/tags/v1.0.0", before });
+    expect(release.artifacts).toEqual(["api"]);
+    expect(release.nativeRunners).toEqual(["macos-latest", "windows-latest"]);
+    expect(release.browser).toBe("all");
+    expect(release.backend).toBe(true);
+    expect(release.distribution).toBe(true);
   });
   it("uses one public command with explicit full mode and strict options", () => {
     expect(verifyOptions([])).toEqual({});
@@ -293,6 +405,15 @@ describe("required CI results", () => {
       ),
     ).toThrow("requires native gates");
   });
+  it("reports unavailable runners without accepting incomplete native verification", () => {
+    expect(() =>
+      assertCiResult({
+        ...needs,
+        changes: { ...needs.changes, outputs: { ...needs.changes.outputs, native: "true" } },
+        desktop: { result: "abandoned" },
+      }),
+    ).toThrow("CI runner was unavailable");
+  });
   it("runs the final gate without dependencies and validates manual input against the plan", () => {
     const root = fixture();
     const source = resolve(import.meta.dirname, "../../src/verification");
@@ -337,4 +458,12 @@ it("rejects missing or incomplete VP completion reports", () => {
     }),
   );
   expect(completionReport(root, ["api#task:check"])).toBe(1);
+});
+
+it("keeps repository-wide lint in explicit full verification", () => {
+  const { root } = project();
+  for (const full of [false, true]) {
+    const plan = verificationPlan(taskModel(root), ["packages/tokens/src/index.ts"], { full });
+    expect(executionTasks(plan, "fixture").includes("fixture#task:lint")).toBe(full);
+  }
 });

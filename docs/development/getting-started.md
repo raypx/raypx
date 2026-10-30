@@ -20,7 +20,9 @@ Direct Bun installs also work. `bun run doctor` confirms the active runtime. Pos
 
 Desktop's Go module lives in apps/desktop. Daily `bun run verify` selects affected
 JavaScript and Go checks; `bun run verify --full` checks all current-platform sources
-and artifacts before delivery. See the [Desktop guide](desktop-release.md).
+and artifacts for release preparation or an explicit full-validation request.
+Shared JS configuration/lockfile changes broaden source checks without starting
+native runners. See the [Desktop guide](desktop-release.md).
 
 `bun install` runs the root `prepare` script, which installs the Vite+ Git hook
 dispatcher (`core.hooksPath` → `.vite-hooks/_`). The pre-commit hook runs `vp staged`:

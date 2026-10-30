@@ -22,14 +22,17 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   VP's leaf. Validate both names, refuse chains/cycles and retain public task argv.
 - `clean:artifacts` removes reports, coverage, test-report caches and browser results,
   preserving builds, staged sidecars, dependencies and source. `clean` includes these paths.
-- `verify` selects affected JavaScript source/tests and Go host tasks; `verify --full` checks
+- `verify` selects affected JavaScript source/tests and native-input Go tasks; `verify --full` checks
   all current-platform JavaScript/Go sources, builds and probes. `--base` selects a Git
   base; `--dry-run` prints the plan and expanded VP graph.
-- CI consumes the same planner through private `ci:plan`/`ci:gate` entries. Unknown
-  inputs or unavailable dependency graphs select full coverage. Browser-target frontend
+- CI consumes the same planner through private `ci:plan`/`ci:gate` entries. Shared or unknown
+  inputs broaden source checks without requesting release builds/audits. Missing Git
+  bases also select native checks conservatively. Browser-target frontend
   changes reach only browser consumers (`src/verification/platform.ts`). Required results
   distinguish intentional skips from missing/cancelled/failed gates.
-- Branch/PR native gates check sources and Herdr. Installers, signing and installed
+- Branch/PR native gates run only for native/IPC/terminal/daemon inputs and select
+  macOS/Windows by platform-specific filenames; shared native inputs select both.
+  JavaScript dependency reach alone does not select native runners. Installers, signing and installed
   GUI acceptance require a tag push or manual `distribution` request; release gates
   run in parallel and the final result validates their selection against the event.
   Preparation builds shared JS inputs only. Herdr runs in the check phase before its
