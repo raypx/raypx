@@ -1,0 +1,40 @@
+apps/desktop/tests/scripts/native/check-release.test.ts
+  s_ec0bb2776ccc14::t_d20f759c037a86 4,24
+docs/architecture/0038-mygo-desktop-host.md
+  s_ec0bb2776ccc14::t_d20f759c037a86 6
+docs/development/desktop-release.md
+  s_ec0bb2776ccc14::t_d20f759c037a86 5,11-13
+  s_ec0bb2776ccc14::t_21a2565b5fb146 14
+apps/desktop/README.md
+  s_ec0bb2776ccc14::t_d20f759c037a86 3
+AGENTS.md
+  s_ec0bb2776ccc14::t_d20f759c037a86 50
+apps/desktop/scripts/native/mygo.ts
+  s_ec0bb2776ccc14::t_d20f759c037a86 196
+apps/desktop/AGENTS.md
+  s_ec0bb2776ccc14::t_d20f759c037a86 69
+apps/desktop/scripts/native/check-release.ts
+  s_ec0bb2776ccc14::t_d20f759c037a86 8
+apps/desktop/scripts/native/packager.ts
+  s_ec0bb2776ccc14::t_d20f759c037a86 26-27,37
+apps/desktop/go.mod
+  s_ec0bb2776ccc14::t_d289088564defe 7
+apps/desktop/go.sum
+  s_ec0bb2776ccc14::t_c916a9fc4483fd 7-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "90c099e2b899e627fba49ea1ce49a4bf8760ba2d",
+  "prompts": {},
+  "sessions": {
+    "s_ec0bb2776ccc14": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18a9d-da3e-7a33-a95c-3a5ab61ef99d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
