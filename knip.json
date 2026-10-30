@@ -12,7 +12,7 @@
   ],
   "workspaces": {
     ".": {
-      "entry": ["deploy/manifests.ts"],
+      "entry": ["deploy/manifests.ts", ".railway/railway.ts", "deploy/railway/iac-preload.ts"],
       "ignoreDependencies": ["skills"]
     },
     "apps/api": {

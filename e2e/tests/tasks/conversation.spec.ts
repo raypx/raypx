@@ -260,7 +260,9 @@ for (const [surface, base] of surfaces) {
       ).toBe(true);
       if (surface === "Web") {
         await page.goto(base + "/settings");
-        await page.getByRole("radio", { name: "Dark", exact: true }).check();
+        await page.getByText("Dark", { exact: true }).click();
+        await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
+        await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
         await page.getByRole("combobox", { name: "Language", exact: true }).click();
         await page.getByRole("option", { name: "简体中文", exact: true }).click();
         await page.goto(base + "/tasks");

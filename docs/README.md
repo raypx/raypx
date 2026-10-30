@@ -21,6 +21,7 @@
 - [Validation scripts, evidence and cleanup](development/validation-artifacts.md)
 - [Test case ownership and consolidation](development/test-cases.md)
 - [Shared deployment per project](development/deployment.md)
+- [Railway deployment and domain setup](development/railway.md)
 - [Existing beta environment](development/beta.md)
 - [Production environment](development/production.md)
 - [Administrator configuration](development/configuration.md)

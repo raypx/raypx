@@ -7,7 +7,9 @@ import { signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 async function preferencesPersist(page: Page, base: string) {
   await page.goto(`${base}/settings`);
   await expect(page.getByRole("heading", { name: "Make it yours" })).toBeVisible();
-  await page.getByRole("radio", { name: "Dark", exact: true }).check();
+  // The visible theme card activates its visually hidden radio.
+  await page.getByText("Dark", { exact: true }).click();
+  await expect(page.getByRole("radio", { name: "Dark", exact: true })).toBeChecked();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("combobox", { name: "Language", exact: true }).click();
   await page.getByRole("option", { name: "简体中文", exact: true }).click();
@@ -44,7 +46,8 @@ test(
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${web}/settings`);
     await expect(page.getByRole("combobox", { name: "Language", exact: true })).toBeVisible();
-    await page.getByRole("radio", { name: "Light", exact: true }).check();
+    await page.getByText("Light", { exact: true }).click();
+    await expect(page.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);

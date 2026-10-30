@@ -1,8 +1,13 @@
-# Single-server deployment
+# Deployment
 
-This directory owns the shared Bun deployment managed by Dokploy Compose.
+This directory owns Dokploy Compose and the Railway gateway deployment.
 Build from the repository root with `build.sh`; Dockerfiles remain with Web/API.
 Read `docs/development/deployment.md` before changing deployment behavior.
+Railway uses `.railway/railway.ts` and `deploy/railway/`; see
+`docs/development/railway.md`. Its gateway publishes the shared origin while API,
+Web, Postgres and Redis communicate over Railway's private network. Keep existing
+database services and volumes outside the application's named IaC partial.
+The rules below apply to the Compose host workflow.
 
 - Read deployment configuration from explicit environment variables. Do not infer
   credentials or hostnames from Git branches or server state.
