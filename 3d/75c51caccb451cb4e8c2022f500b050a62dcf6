@@ -1,0 +1,49 @@
+packages/tooling/src/cli.ts
+  s_ec0bb2776ccc14::t_da4d6e39df2af4 105
+.github/workflows/ci.yml
+  s_ec0bb2776ccc14::t_da4d6e39df2af4 25,27,49,148
+AGENTS.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 89-95
+docs/development/desktop-release.md
+  s_ec0bb2776ccc14::t_8386ba8b8dbcff 21-23
+packages/tooling/tests/unit/native-workflow.test.ts
+  s_ec0bb2776ccc14::t_eba41d238387e5 37,40-42
+  s_ec0bb2776ccc14::t_9e7a94b69c6d17 43-46
+packages/tooling/src/verification/plan.ts
+  s_ec0bb2776ccc14::t_da4d6e39df2af4 15,17,48,63-95,102-104,118,131
+packages/tooling/src/verification/result.ts
+  s_ec0bb2776ccc14::t_da4d6e39df2af4 24-25
+  s_ec0bb2776ccc14::t_62dbac4813a9a1 26-27
+packages/tooling/tests/unit/verification.test.ts
+  s_ec0bb2776ccc14::t_264af6838907cc 95-104,107-110,203-206,213-219,223-230,297-321,331
+  s_ec0bb2776ccc14::t_eba41d238387e5 11,93-94,105,148,152-153,165,183,186,188-202,207-209,211-212,220-222,231-237,284,293-296
+  s_ec0bb2776ccc14::t_1008bf3c5ff72c 322-324,328-330
+  s_ec0bb2776ccc14::t_17603fdc990f0a 332-334
+docs/development/getting-started.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 23-25
+apps/desktop/AGENTS.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 116-120
+packages/tooling/AGENTS.md
+  s_ec0bb2776ccc14::t_eba41d238387e5 28-30,33
+  s_ec0bb2776ccc14::t_ac3c9c40d7c8e7 34-35
+docs/development/testing.md
+  s_ec0bb2776ccc14::t_8386ba8b8dbcff 3-10,35-38,43,49,59-69,72,93-99
+  s_ec0bb2776ccc14::t_eb851a2801ddc4 30-32,50-58
+  s_ec0bb2776ccc14::t_ae29503e9b4d0a 100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3d75c51caccb451cb4e8c2022f500b050a62dcf6",
+  "prompts": {},
+  "sessions": {
+    "s_ec0bb2776ccc14": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18a9d-da3e-7a33-a95c-3a5ab61ef99d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
