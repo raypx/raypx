@@ -93,7 +93,7 @@ function fixture(provider: AgentProvider, records = recording(provider)) {
     request: vi.fn((_binding, request) => {
       requests.set(request.id, request);
     }),
-    requests: vi.fn(() => [...requests.values()]),
+    getRequest: vi.fn((_binding, requestId) => requests.get(requestId)),
   };
   const conversation = new ConversationRecorder(id, (entry) =>
     store.recordActivity(local.binding, entry),

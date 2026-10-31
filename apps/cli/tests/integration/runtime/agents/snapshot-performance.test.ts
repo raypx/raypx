@@ -85,6 +85,107 @@ function fixture() {
 }
 afterEach(() => vi.restoreAllMocks());
 
+it("bounds local pages, task approvals and startup work among 10,000 historical records", async () => {
+  const f = fixture();
+  const state = new StateStore(f.directory);
+  let runtime: AgentRuntime | undefined;
+  const binding = "desktop:performance";
+  try {
+    f.database.transaction(() => {
+      for (let index = 1; index <= 10_000; index++) {
+        const local = task(index, index % 2 ? "desktop:other" : binding);
+        f.put.run(local.task.id, JSON.stringify(local));
+        const value = { ...request(index, local.task.id), status: "applied" };
+        f.request.run(value.id, binding, JSON.stringify(value));
+      }
+    })();
+    const parse = vi.spyOn(JSON, "parse");
+    const queries = vi.spyOn(Database.prototype, "query");
+    runtime = new AgentRuntime(state, () => {});
+    expect(parse).not.toHaveBeenCalled();
+    for (let index = 10_001; index <= 10_002; index++) {
+      f.store.put({ ...task(index, binding, "waiting"), sessionId: `live-${index}` });
+      const value = request(index, uuid(index));
+      f.request.run(value.id, binding, JSON.stringify(value));
+    }
+    f.store.put(task(1, "desktop:other", "waiting"));
+    // Pending requests for finished or foreign tasks must not enter this inbox.
+    for (const index of [1, 2]) {
+      const value = request(20_000 + index, uuid(index));
+      f.request.run(value.id, binding, JSON.stringify(value));
+    }
+    parse.mockClear();
+    const started = performance.now();
+    expect(runtime.localTasks("performance", 100)).toHaveLength(100);
+    expect(parse).toHaveBeenCalledTimes(100);
+    parse.mockClear();
+    const before = `${now}:${uuid(8_000)}`;
+    expect(runtime.localTasks("performance", 100, before).map((value) => value.id)).toEqual(
+      Array.from({ length: 100 }, (_, index) => uuid(7_998 - index * 2)),
+    );
+    expect(parse).toHaveBeenCalledTimes(100);
+    parse.mockClear();
+    expect(runtime.localTasks("missing", 100)).toEqual([]);
+    expect(parse).not.toHaveBeenCalled();
+    expect(runtime.localTask("performance", uuid(2), 0).requests).toHaveLength(2);
+    expect(parse).toHaveBeenCalledTimes(3);
+    parse.mockClear();
+    expect(runtime.localApprovals("performance").map((value) => value.taskId)).toEqual([
+      uuid(10_001),
+      uuid(10_002),
+    ]);
+    expect(parse).toHaveBeenCalledTimes(2);
+    parse.mockClear();
+    expect(runtime.managesSession("codex", "live-10001")).toBe(true);
+    expect(runtime.managesSession("claude", "live-10001")).toBe(false);
+    expect(parse).not.toHaveBeenCalled();
+    const sql = queries.mock.calls.map(([statement]) => statement);
+    queries.mockRestore();
+    parse.mockRestore();
+    const startup = sql.find((statement) =>
+      statement.startsWith("SELECT value FROM tasks WHERE json_extract(value,'$.task.status') IN"),
+    )!;
+    expect(JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${startup}`).all())).toMatch(
+      /USING INDEX tasks_(active_session|binding_active)/,
+    );
+    const page = sql.find((statement) => statement.includes("|| ':' || id)<?"))!;
+    const plan = JSON.stringify(
+      f.database.query(`EXPLAIN QUERY PLAN ${page}`).all(binding, before, 100),
+    );
+    expect(plan).toContain("tasks_binding_cursor");
+    expect(plan).not.toContain("TEMP B-TREE");
+    const pending = sql.find((statement) => statement.includes("AND EXISTS (SELECT 1 FROM tasks"))!;
+    expect(
+      JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${pending}`).all(binding)),
+    ).toContain("requests_binding_pending");
+    const approvals = sql.find((statement) =>
+      statement.startsWith(
+        "SELECT value FROM requests WHERE binding=? AND json_extract(value,'$.taskId')=?",
+      ),
+    )!;
+    expect(
+      JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${approvals}`).all(binding, uuid(2))),
+    ).toContain("requests_binding_task");
+    console.info(
+      JSON.stringify({
+        benchmark: "local-agent-reads",
+        taskRows: 10_002,
+        requestRows: 10_004,
+        pageDecodedRows: 100,
+        detailDecodedRows: 3,
+        inboxDecodedRows: 2,
+        startupDecodedRows: 0,
+        elapsedMs: performance.now() - started,
+      }),
+    );
+  } finally {
+    vi.restoreAllMocks();
+    await runtime?.close();
+    state.close();
+    f.close();
+  }
+});
+
 it("bounds decoded activity among 10,000 historical entries while retaining old active work", () => {
   const f = fixture();
   try {
@@ -232,7 +333,7 @@ it("upgrades old JSON-only task profiles idempotently without rewriting their ro
     const original = JSON.stringify(local, null, 2);
     f.put.run(local.task.id, original);
     f.database.exec(
-      "DROP INDEX tasks_binding_created; DROP INDEX tasks_binding_active; DROP INDEX requests_binding_task; DROP INDEX activity_task_active;",
+      "DROP INDEX tasks_binding_created; DROP INDEX tasks_binding_active; DROP INDEX tasks_binding_cursor; DROP INDEX tasks_active_session; DROP INDEX requests_binding_task; DROP INDEX requests_binding_pending; DROP INDEX activity_task_active; DROP INDEX commands_binding;",
     );
     f.store.close();
     reopened = new AgentStore(f.directory);
@@ -247,10 +348,10 @@ it("upgrades old JSON-only task profiles idempotently without rewriting their ro
     expect(
       f.database
         .query(
-          "SELECT name FROM sqlite_master WHERE name IN ('tasks_binding_created','tasks_binding_active','requests_binding_task','activity_task_active')",
+          "SELECT name FROM sqlite_master WHERE name IN ('tasks_binding_created','tasks_binding_active','tasks_binding_cursor','tasks_active_session','requests_binding_task','requests_binding_pending','activity_task_active','commands_binding')",
         )
         .all(),
-    ).toHaveLength(4);
+    ).toHaveLength(8);
   } finally {
     reopened?.close();
     f.database.close();

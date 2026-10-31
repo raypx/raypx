@@ -1,6 +1,6 @@
 # Agent quality and performance checks
 
-`bun run perf:tasks` runs the CLI snapshot and Tasks conversation performance
+`bun run perf:tasks` runs the CLI snapshot/local-read and Tasks conversation performance
 regressions through the existing VP task graph. The gates assert bounded work,
 snapshot budgets, stable references and rendered row counts. Timings and memory
 measurements are evidence, not hardware-dependent pass thresholds. Browser
@@ -29,6 +29,30 @@ Real model Evals and a measured model baseline have not been collected. They
 require an explicit provider/model and `--run`; offline success does not establish
 the quality of a real model. Platform release acceptance is described in
 [testing](testing.md) and [Desktop release](desktop-release.md).
+
+## Local history reads and clearing
+
+Local task pagination filters by binding and creation-time/ID cursor in SQLite
+before decoding at most the requested page. Task details select only that task's
+approvals; the pending inbox selects eligible requests joined to active tasks in
+the same binding. Startup reads only unfinished tasks, and managed-session lookup
+uses an indexed existence query. Existing JSON profiles gain indexes without
+rewriting task rows. Byte limits and equal-timestamp cursor navigation remain in place.
+
+The local-read performance regression seeds 10,000 historical tasks and approvals.
+A 100-task page decodes 100 rows, the selected task with two approvals decodes
+three, and an inbox with two eligible approvals decodes two. Startup with only
+finished history decodes no task rows. Query-plan checks cover cursor, pending,
+task-approval and startup indexes; frozen snapshots retain their partial active index.
+
+Explicit local history clearing removes finished tasks and replaces their command
+payloads/results with SHA-256 fingerprints and a fixed `NOT_FOUND` result in the
+same transaction. It also clears orphaned local receipts left by earlier versions.
+Identical retries return `NOT_FOUND` without executing; changed payloads or owners
+still return `IDEMPOTENCY_CONFLICT`. Late completions cannot restore receipt content.
+Active work and its immediate parents, pending creations waiting on context, other
+bindings and remote command receipts are preserved. This is logical history removal,
+not a secure erase of storage media or a cleanup of external providers' own history.
 
 ## Deterministic lifecycle tests
 

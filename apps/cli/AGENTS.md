@@ -139,8 +139,9 @@ import cloud authentication or expose executable paths through remote contracts.
 Commit task status and its outbox event atomically. Release canonical project locks
 only after process-tree termination and stream draining complete, including detach.
 
-Relay command receipts retain their original payload and result. Keep acknowledged
-events for cursor replay; a frozen paged snapshot covers journal compaction gaps.
+Relay receipts keep payload/results; local history clearing instead keeps content-free hashes
+(same retry: NOT_FOUND; changed payload: IDEMPOTENCY_CONFLICT). Keep acknowledged replay
+events; frozen paged snapshots cover journal compaction gaps.
 `tasks.input` records a durable instruction before dispatch. Queue runs only after
 a successful turn; Codex steer targets the current turn ID, while Claude confirms
 interrupt and waits for its result before sending on the same stream. Keep one
@@ -153,10 +154,9 @@ keep stable IDs and increasing revisions; throttle deltas and flush on terminati
 and detach through private stdio only. Local tasks use a persistent device identity
 and a `desktop:` binding, share the same execution locks and approval arbitration,
 and keep status/request journal history without a cloud outbox. Activity lives only in its latest projection. Never include these bindings in
-remote snapshots or replay. Local activity is durable and exempt from relay journal
-compaction; indexed task cursors paginate it. History survives logout until
-`agents.local.clear` removes finished tasks; active local work is cancelled
-on account change or engine shutdown. A new local approval adds `pendingRequest`
+remote snapshots or replay. Local activity survives relay compaction. Local pages, pending
+approvals and startup recovery filter in indexed SQL. History survives logout until
+`agents.local.clear` removes finished tasks and orphaned receipts atomically, keeping active work/parents and pending creation; active local work is cancelled on account change or engine shutdown. A new local approval adds `pendingRequest`
 to `agent.changed` so Desktop can notify; relay approvals notify after delivery.
 Legacy local activity journal cleanup is a marked, indexed one-time migration,
 followed by VACUUM to reclaim disk. Any optional VACUUM failure emits a sanitized

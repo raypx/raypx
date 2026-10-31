@@ -1,5 +1,6 @@
 import { normalizeTaskJson } from "@raypx/contracts/tasks";
 import { Database } from "bun:sqlite";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import type {
   AgentEvent,
@@ -19,11 +20,16 @@ const stored = (value: string) => normalizeTaskJson(JSON.parse(value));
 const activeTasks = `json_extract(value,'$.task.status') IN (${activeTaskStatuses.map((status) => `'${status}'`).join(",")})`;
 const activeActivity =
   "json_extract(value,'$.status') IN ('streaming','running','queued','sending')";
+const pendingRequests = "json_extract(value,'$.status') IN ('pending','decided')";
+const taskCursor = "json_extract(value,'$.task.createdAt') || ':' || id";
+const forgottenCommand = (payload: string) =>
+  JSON.stringify({ forgotten: createHash("sha256").update(payload).digest("hex") });
+const forgottenResult = JSON.stringify({ ok: false, code: "NOT_FOUND" });
 const snapshotTasksSql = `WITH recent AS (
   SELECT id FROM tasks WHERE json_extract(value,'$.binding')=?
   ORDER BY json_extract(value,'$.task.createdAt') DESC,id ASC LIMIT 100
 ), selected AS (
-  SELECT id FROM recent UNION SELECT id FROM tasks
+  SELECT id FROM recent UNION SELECT id FROM tasks INDEXED BY tasks_binding_active
   WHERE json_extract(value,'$.binding')=? AND ${activeTasks}
 )
 SELECT value FROM tasks JOIN selected USING(id)
@@ -72,8 +78,12 @@ export class AgentStore {
     this.database.exec(`
       CREATE INDEX IF NOT EXISTS tasks_binding_created ON tasks (json_extract(value,'$.binding'),json_extract(value,'$.task.createdAt') DESC,id ASC);
       CREATE INDEX IF NOT EXISTS tasks_binding_active ON tasks (json_extract(value,'$.binding'),json_extract(value,'$.task.createdAt') DESC,id ASC) WHERE ${activeTasks};
+      CREATE INDEX IF NOT EXISTS tasks_binding_cursor ON tasks (json_extract(value,'$.binding'),(${taskCursor}) DESC);
+      CREATE INDEX IF NOT EXISTS tasks_active_session ON tasks (json_extract(value,'$.task.provider'),json_extract(value,'$.sessionId')) WHERE ${activeTasks};
       CREATE INDEX IF NOT EXISTS requests_binding_task ON requests (binding,json_extract(value,'$.taskId'));
+      CREATE INDEX IF NOT EXISTS requests_binding_pending ON requests (binding,json_extract(value,'$.expiresAt')) WHERE ${pendingRequests};
       CREATE INDEX IF NOT EXISTS activity_task_active ON activity (binding,task_id) WHERE ${activeActivity};
+      CREATE INDEX IF NOT EXISTS commands_binding ON commands (json_extract(payload,'$.binding'));
     `);
     this.database
       .query("INSERT OR IGNORE INTO agent_meta VALUES ('stream',?)")
@@ -168,9 +178,36 @@ export class AgentStore {
     } | null;
     return row ? stored(row.value) : undefined;
   }
-  tasks(): LocalAgentTask[] {
-    return (this.database.query("SELECT value FROM tasks").all() as { value: string }[]).map(
-      (row) => stored(row.value),
+  tasks(options: { binding?: string; activeOnly?: boolean } = {}): LocalAgentTask[] {
+    const conditions = [
+      ...(options.binding === undefined ? [] : ["json_extract(value,'$.binding')=?"]),
+      ...(options.activeOnly ? [activeTasks] : []),
+    ];
+    return (
+      this.database
+        .query(
+          `SELECT value FROM tasks${conditions.length ? ` WHERE ${conditions.join(" AND ")}` : ""}`,
+        )
+        .all(...(options.binding === undefined ? [] : [options.binding])) as { value: string }[]
+    ).map((row) => stored(row.value));
+  }
+  taskPage(binding: string, limit: number, before?: string): AgentTask[] {
+    before ||= undefined;
+    return (
+      this.database
+        .query(
+          `SELECT value FROM tasks WHERE json_extract(value,'$.binding')=?${before === undefined ? "" : ` AND (${taskCursor})<?`} ORDER BY (${taskCursor}) DESC LIMIT ?`,
+        )
+        .all(binding, ...(before === undefined ? [] : [before]), limit) as { value: string }[]
+    ).map((row) => (stored(row.value) as LocalAgentTask).task);
+  }
+  hasActiveSession(provider: AgentProvider, sessionId: string) {
+    return Boolean(
+      this.database
+        .query(
+          `SELECT 1 FROM tasks WHERE ${activeTasks} AND json_extract(value,'$.task.provider')=? AND json_extract(value,'$.sessionId')=? LIMIT 1`,
+        )
+        .get(provider, sessionId),
     );
   }
   put(value: LocalAgentTask) {
@@ -192,8 +229,8 @@ export class AgentStore {
     this.database.transaction(() => {
       this.put(value);
       if (!activeTaskStatuses.includes(value.task.status)) {
-        for (const request of this.requests(value.binding))
-          if (request.taskId === value.task.id && ["pending", "decided"].includes(request.status))
+        for (const request of this.requests(value.binding, value.task.id))
+          if (["pending", "decided"].includes(request.status))
             this.request(value.binding, { ...request, status: "cancelled" });
         for (const entry of this.activity(value.binding, value.task.id))
           if (entry.kind === "input" && ["queued", "sending"].includes(entry.status))
@@ -468,17 +505,66 @@ export class AgentStore {
       )
       .run(binding, binding, sequence, binding);
   }
-  requests(binding: string): HumanRequest[] {
+  requests(binding: string, taskId?: string): HumanRequest[] {
     return (
       this.database
-        .query("SELECT value FROM requests WHERE binding=? ORDER BY rowid")
+        .query(
+          `SELECT value FROM requests WHERE binding=?${taskId === undefined ? "" : " AND json_extract(value,'$.taskId')=?"} ORDER BY rowid`,
+        )
+        .all(binding, ...(taskId === undefined ? [] : [taskId])) as { value: string }[]
+    ).map((row) => stored(row.value));
+  }
+  getRequest(binding: string, id: string): HumanRequest | undefined {
+    const row = this.database
+      .query("SELECT value FROM requests WHERE binding=? AND id=?")
+      .get(binding, id) as { value: string } | null;
+    return row ? stored(row.value) : undefined;
+  }
+  pendingRequests(binding: string): HumanRequest[] {
+    return (
+      this.database
+        .query(`SELECT value FROM requests WHERE binding=? AND ${pendingRequests}
+        AND EXISTS (SELECT 1 FROM tasks WHERE tasks.id=json_extract(requests.value,'$.taskId')
+          AND json_extract(tasks.value,'$.binding')=requests.binding AND ${activeTasks})
+        ORDER BY json_extract(value,'$.expiresAt'),rowid`)
         .all(binding) as { value: string }[]
     ).map((row) => stored(row.value));
   }
-  forget(binding: string, ids: string[]) {
+  forget(binding: string, ids: string[], pendingCommands: ReadonlySet<string> = new Set()) {
     this.database.transaction(() => {
+      const removed = new Set(ids);
+      // Include orphaned receipts from earlier clears. Read this binding once, before
+      // deleting requests needed to associate approval decisions with their task.
+      const commands = this.database
+        .query("SELECT id,payload FROM commands WHERE json_extract(payload,'$.binding')=?")
+        .all(binding) as { id: string; payload: string }[];
+      for (const command of commands) {
+        const { request } = JSON.parse(command.payload) as { request: RelayCommand["request"] };
+        if (request.method === "observed.decide") continue;
+        const taskId =
+          request.method === "approvals.decide"
+            ? this.getRequest(binding, request.input.id)?.taskId
+            : request.method === "tasks.input"
+              ? request.input.taskId
+              : request.input.id;
+        if (!taskId || !removed.has(taskId)) {
+          if (pendingCommands.has(command.id)) continue;
+          if (
+            taskId &&
+            this.database
+              .query("SELECT 1 FROM tasks WHERE id=? AND json_extract(value,'$.binding')=?")
+              .get(taskId, binding)
+          )
+            continue;
+        }
+        this.database
+          .query("UPDATE commands SET payload=?,result=? WHERE id=?")
+          .run(forgottenCommand(command.payload), forgottenResult, command.id);
+      }
       for (const id of ids) {
-        this.database.query("DELETE FROM tasks WHERE id=?").run(id);
+        this.database
+          .query("DELETE FROM tasks WHERE id=? AND json_extract(value,'$.binding')=?")
+          .run(id, binding);
         this.database.query("DELETE FROM activity WHERE binding=? AND task_id=?").run(binding, id);
         this.database
           .query("DELETE FROM requests WHERE binding=? AND json_extract(value,'$.taskId')=?")
@@ -515,7 +601,7 @@ export class AgentStore {
       .query("SELECT payload,result FROM commands WHERE id=?")
       .get(command.id) as { payload: string; result: string | null } | null;
     if (old) {
-      if (old.payload !== payload)
+      if (old.payload !== payload && old.payload !== forgottenCommand(payload))
         throw new LocalError("IDEMPOTENCY_CONFLICT", "Command identity changed");
       return old.result ? JSON.parse(old.result) : null;
     }
@@ -523,7 +609,12 @@ export class AgentStore {
     return null;
   }
   complete(id: string, result: { ok: true; value: unknown } | { ok: false; code: string }) {
-    this.database.query("UPDATE commands SET result=? WHERE id=?").run(JSON.stringify(result), id);
+    // A completion racing an explicit clear must not restore a private result.
+    this.database
+      .query(
+        "UPDATE commands SET result=? WHERE id=? AND json_extract(payload,'$.forgotten') IS NULL",
+      )
+      .run(JSON.stringify(result), id);
   }
   events(binding: string): AgentEvent[] {
     const values = (

@@ -92,9 +92,8 @@ export class AgentRuntime {
     } = {},
   ) {
     this.store = new AgentStore(state.directory, undefined, undefined, options.recordDiagnostic);
-    for (const local of this.store.tasks())
-      if (activeTaskStatuses.includes(local.task.status))
-        this.status(local, "interrupted", undefined, "HOST_RESTARTED");
+    for (const local of this.store.tasks({ activeOnly: true }))
+      this.status(local, "interrupted", undefined, "HOST_RESTARTED");
   }
   async localDevice(accountId: string): Promise<SyncDevice> {
     return {
@@ -111,15 +110,7 @@ export class AgentRuntime {
     };
   }
   localTasks(accountId: string, limit: number, before?: string) {
-    return bounded(
-      this.store
-        .tasks()
-        .filter((local) => local.binding === desktopBinding(accountId))
-        .map((local) => local.task)
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
-        .filter((task) => !before || `${task.createdAt}:${task.id}` < before)
-        .slice(0, limit),
-    );
+    return bounded(this.store.taskPage(desktopBinding(accountId), limit, before));
   }
   localTask(accountId: string, id: string, after: number, beforeActivity?: number) {
     const binding = desktopBinding(accountId),
@@ -129,31 +120,12 @@ export class AgentRuntime {
       task: local.task,
       ...this.store.activityPage(binding, id, beforeActivity),
       events: bounded(this.store.taskEvents(binding, id, after)),
-      requests: bounded(
-        this.store
-          .requests(binding)
-          .filter((request) => request.taskId === id)
-          .reverse(),
-        true,
-      ),
+      requests: bounded(this.store.requests(binding, id).reverse(), true),
     };
   }
   localApprovals(accountId: string) {
     const binding = desktopBinding(accountId);
-    return bounded(
-      this.store
-        .requests(binding)
-        .filter((request) => {
-          const local = this.store.get(request.taskId);
-          return (
-            ["pending", "decided"].includes(request.status) &&
-            local &&
-            activeTaskStatuses.includes(local.task.status)
-          );
-        })
-        .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt)),
-      true,
-    );
+    return bounded(this.store.pendingRequests(binding), true);
   }
   async localExecute(accountId: string, id: string, request: RelayRequest) {
     const binding = desktopBinding(accountId),
@@ -176,17 +148,14 @@ export class AgentRuntime {
   // Local history has no cloud copy, so finished tasks are removed only on request.
   localClear(accountId: string) {
     const binding = desktopBinding(accountId),
-      tasks = this.store
-        .tasks()
-        .filter((local) => local.binding === binding)
-        .map((local) => local.task),
+      tasks = this.store.tasks({ binding }).map((local) => local.task),
       kept = new Set(
         tasks
           .filter((task) => activeTaskStatuses.includes(task.status) || this.active.has(task.id))
           .flatMap((task) => [task.id, ...(task.parentTaskId ? [task.parentTaskId] : [])]),
       ),
       removed = tasks.filter((task) => !kept.has(task.id)).map((task) => task.id);
-    this.store.forget(binding, removed);
+    this.store.forget(binding, removed, new Set(this.remoteCommands.keys()));
     this.changed();
     return { removed: removed.length };
   }
@@ -248,14 +217,7 @@ export class AgentRuntime {
     return { configured: true };
   }
   managesSession(provider: AgentProvider, sessionId: string) {
-    return this.store
-      .tasks()
-      .some(
-        (local) =>
-          local.task.provider === provider &&
-          local.sessionId === sessionId &&
-          activeTaskStatuses.includes(local.task.status),
-      );
+    return this.store.hasActiveSession(provider, sessionId);
   }
   projectProviders(rootId: string) {
     return this.store.projects().find((project) => project.id === rootId)?.providers ?? [];
@@ -473,9 +435,7 @@ export class AgentRuntime {
       }
       return getTask(local.task.id).task;
     }
-    const requestValue = this.store
-      .requests(binding)
-      .find((value) => value.id === request.input.id);
+    const requestValue = this.store.getRequest(binding, request.input.id);
     if (!requestValue) throw new LocalError("NOT_FOUND", "Request unavailable");
     const local = getTask(requestValue.taskId);
     if (!validDecision(requestValue, request.input.decision))
@@ -506,7 +466,7 @@ export class AgentRuntime {
       requestId: requestValue.id,
       decision: request.input.decision,
     });
-    return this.store.requests(binding).find((value) => value.id === requestValue.id)!;
+    return this.store.getRequest(binding, requestValue.id)!;
   }
   ack(binding: string, ids: string[]) {
     this.store.ack(binding, ids);

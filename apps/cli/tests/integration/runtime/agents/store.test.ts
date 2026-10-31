@@ -416,11 +416,12 @@ it("paginates every local task across byte and record limits, including equal ti
         summary: index < 3 ? "文".repeat(32_000) : "Done",
         status: "succeeded",
         parentTaskId: null,
-        createdAt: new Date(1_700_000_000_000).toISOString(),
+        createdAt: new Date(1_700_000_000_000 - (index === 105 ? 86_400_000 : 0)).toISOString(),
         updatedAt: new Date(1_700_000_000_000).toISOString(),
       }),
     );
     for (const task of tasks) store.put({ task, binding, sessionId: null });
+    expect(runtime.localTasks("account-a", 100, "")).toEqual(runtime.localTasks("account-a", 100));
     const ids: string[] = [];
     let before: string | undefined;
     for (let pageNumber = 0; pageNumber <= tasks.length; pageNumber++) {
@@ -433,9 +434,8 @@ it("paginates every local task across byte and record limits, including equal ti
     }
     expect(ids).toEqual(
       tasks
-        .map((task) => task.id)
-        .sort()
-        .reverse(),
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+        .map((task) => task.id),
     );
     expect(runtime.localTasks("account-b", 100)).toEqual([]);
   } finally {

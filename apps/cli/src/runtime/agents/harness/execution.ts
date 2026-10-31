@@ -49,7 +49,7 @@ export function executionSession(
 /** One execution uses persistence without owning SQLite or its lifecycle. */
 export type ExecutionStore = Pick<
   AgentStore,
-  "get" | "put" | "recordActivity" | "request" | "requests" | "tokenUsage"
+  "get" | "put" | "recordActivity" | "request" | "getRequest" | "tokenUsage"
 >;
 interface ExecutionEffects {
   status(status: AgentTask["status"], summary?: string): void;
@@ -486,8 +486,7 @@ export class ManagedExecution {
     )?.request;
     const decision = await answer;
     if (this.finished) return;
-    const applied =
-      request && this.store.requests(this.local.binding).find((item) => item.id === request.id);
+    const applied = request && this.store.getRequest(this.local.binding, request.id);
     if (applied?.status !== "applied") {
       this.finish("cancelled");
       return;
