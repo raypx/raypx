@@ -6,6 +6,30 @@ snapshot budgets, stable references and rendered row counts. Timings and memory
 measurements are evidence, not hardware-dependent pass thresholds. Browser
 acceptance remains a separate Playwright gate.
 
+## Implementation and acceptance status
+
+The six-part optimization plan is implemented. The following checks cover its
+boundaries without requiring real inference:
+
+| Area                             | Acceptance                                                                                                                    |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Indexed, frozen snapshots        | 10,000/100,000 task rows, 10,000 activities plus another binding, old profiles, byte budgets and concurrent writes            |
+| Conversation state and rendering | Stable references, atomic deltas, 10,000 loaded rows, bounded DOM, focus, virtual/full height changes, paging and gap anchors |
+| Connection reliability           | Shared scheduler, deterministic retry/renewal/heartbeat/ACK/drain tests, real loopback transport                              |
+| Provider lifecycle replay        | Shared Codex/Claude execution scenarios and protocol-specific steer/interrupt cases                                           |
+| Performance entry                | `bun run perf:tasks`; Chromium reports DOM counts, timings and available heap separately                                      |
+| Policy Evals                     | Case validation, simulated effects, grading and injected model turns; paid inference remains opt-in                           |
+
+Run `bun run --cwd e2e e2e -- tests/tasks` for all Web/Desktop task browser
+journeys, including long conversations. This checks compiled renderers; packaged
+native WebView and Windows acceptance remain separate platform gates. For the
+standalone CLI, run `bun run build:cli` then `bun run --cwd apps/cli smoke`.
+
+Real model Evals and a measured model baseline have not been collected. They
+require an explicit provider/model and `--run`; offline success does not establish
+the quality of a real model. Platform release acceptance is described in
+[testing](testing.md) and [Desktop release](desktop-release.md).
+
 ## Deterministic lifecycle tests
 
 Client and Host accept the same optional `RelayScheduler` for time, jitter and

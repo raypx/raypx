@@ -85,6 +85,52 @@ function fixture() {
 }
 afterEach(() => vi.restoreAllMocks());
 
+it("bounds decoded activity among 10,000 historical entries while retaining old active work", () => {
+  const f = fixture();
+  try {
+    f.store.put(task(1));
+    f.database.transaction(() => {
+      for (let index = 0; index < 10_000; index++) {
+        const entry = activity(
+          index,
+          uuid(1),
+          `Activity ${index}`,
+          index === 0 ? "streaming" : "complete",
+        );
+        f.activity.run(entry.id, "relay", entry.taskId, JSON.stringify(entry));
+        const other = activity(10_000 + index, uuid(1), "Other binding");
+        f.activity.run(other.id, "other-binding", other.taskId, JSON.stringify(other));
+      }
+    })();
+    const parse = vi.spyOn(JSON, "parse");
+    const started = performance.now();
+    const snapshot = f.store.snapshot("relay");
+    const elapsedMs = performance.now() - started;
+    const decodedRows = parse.mock.calls.length;
+    parse.mockRestore();
+    const entries = snapshot.records.flatMap((record) =>
+      record.kind === "activity" ? [record.entry] : [],
+    );
+    expect(entries.map((entry) => entry.id)).toEqual([
+      activity(0, uuid(1)).id,
+      ...Array.from({ length: 64 }, (_, index) => activity(9_999 - index, uuid(1)).id),
+    ]);
+    expect(snapshot.records[0]).toMatchObject({ kind: "task", task: { activityIncomplete: true } });
+    expect(decodedRows).toBe(66);
+    console.info(
+      JSON.stringify({
+        benchmark: "agent-snapshot-activity",
+        activityRows: 10_000,
+        otherBindingRows: 10_000,
+        decodedRows,
+        elapsedMs,
+      }),
+    );
+  } finally {
+    f.close();
+  }
+});
+
 it.each([10_000, 100_000])(
   "decodes only selected task rows among %i short tasks and uses indexed queries",
   (count) => {

@@ -196,6 +196,32 @@ for (const [surface, base] of surfaces) {
       await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
       await viewport.focus();
       await expect.poll(() => readingPosition(viewport)).not.toBeNull();
+      const beforeResize = await settledReadingPosition(viewport);
+      const predecessorId = await viewport.evaluate((element) => {
+        const top = element.getBoundingClientRect().top + element.clientTop;
+        return [...element.querySelectorAll<HTMLElement>("[data-conversation-row]")]
+          .find(
+            (row) =>
+              row.dataset.conversationRow?.startsWith("activity:") &&
+              row.getBoundingClientRect().bottom <= top,
+          )
+          ?.dataset.conversationRow?.slice("activity:".length);
+      });
+      expect(predecessorId).toBeTruthy();
+      const predecessorIndex = loaded.findIndex((entry) => entry.id === predecessorId);
+      const predecessor = loaded[predecessorIndex]!;
+      if (predecessor.kind !== "message") throw new Error("Fixture requires a message predecessor");
+      loaded[predecessorIndex] = {
+        ...predecessor,
+        revision: 2,
+        text:
+          "Revised virtual predecessor. " + "A growing paragraph above the reader. ".repeat(200),
+      };
+      await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+      await expect(viewport.getByText(/Revised virtual predecessor/)).toHaveCount(1);
+      await settledReadingPosition(viewport);
+      await expectReadingPosition(viewport, beforeResize);
+      await expect.poll(() => rows.count()).toBeLessThanOrEqual(80);
       const saved = await settledReadingPosition(viewport);
       const fullStarted = performance.now();
       await page.getByRole("button", { name: "Show all loaded messages", exact: true }).click();
