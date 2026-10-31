@@ -77,6 +77,14 @@ preference; the active locale is derived from that preference and the full order
 system locale list. See [internationalization](internationalization.md).
 DB owns fresh auth-only schema/migrations; mail owns auth delivery/templates.
 
+CLI's device stores use Drizzle's Bun SQLite driver and private typed tables in
+`runtime/sqlite/schema.ts`; server PostgreSQL schemas stay in the database workspace.
+Repositories validate stored JSON and commit revision checks, history and receipts
+in synchronous transactions. Current-schema bootstrap SQL, PRAGMAs and profile
+locks remain SQLite operations. Parameterized Drizzle SQL preserves `REPLACE`
+rowid ordering and the snapshot index hint; dedicated native cursors execute
+Drizzle-built queries to bound snapshot memory. No legacy data imports are run.
+
 ## Browser analytics
 
 Web and Desktop use the consent-controlled Kit analytics client through Raypx's

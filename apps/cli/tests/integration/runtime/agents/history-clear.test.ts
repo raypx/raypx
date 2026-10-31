@@ -199,7 +199,11 @@ it("rolls back receipt redaction together with a failed history deletion", () =>
   f.db.exec(
     "CREATE TRIGGER reject_clear BEFORE DELETE ON tasks BEGIN SELECT RAISE(ABORT,'synthetic clear failure'); END",
   );
-  expect(() => f.runtime.localClear("owner")).toThrow("synthetic clear failure");
+  expect(() => f.runtime.localClear("owner")).toThrow(
+    expect.objectContaining({
+      cause: expect.objectContaining({ message: "synthetic clear failure" }),
+    }),
+  );
   expect(f.store.get(value.id)?.task).toEqual(value);
   expect(f.store.reserve(binding, command)).toEqual({ ok: true, value });
   f.db.exec("DROP TRIGGER reject_clear");

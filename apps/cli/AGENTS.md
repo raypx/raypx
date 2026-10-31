@@ -36,6 +36,8 @@ text; never rewrite persisted output. Cross-owner control and default no-arg TUI
 ## Ownership
 
 Own authorized directory operations, device-local SQLite state, Cron scheduling, external commands and interactive terminals. Shared wire schemas live in `@raypx/contracts/local`.
+SQLite tables and ordinary queries use private `runtime/sqlite` Drizzle definitions with the Bun driver.
+Keep schema bootstrap/PRAGMA SQL, rowid-preserving REPLACE and bounded native snapshot cursors explicit.
 
 `runtime/process/herdr.ts` delegates PTY/VT/cursor state to pinned Herdr; Desktop stages its verified runtime/DLLs/licenses. Runtime never downloads binaries.
 `RAYPX_HERDR_BINARY` selects an absolute development binary. Each owner starts an isolated server: client EOF cancels its PTYs; owner EOF stops its server. Never reuse user sessions.

@@ -1,6 +1,9 @@
 import { Database } from "bun:sqlite";
 import { chmodSync, existsSync, lstatSync } from "node:fs";
 import { isAbsolute } from "node:path";
+import { and, eq, sql } from "drizzle-orm";
+import { drizzle, type LocalDatabase } from "../../../sqlite";
+import { piContexts } from "../../../sqlite/schema";
 import type { PiContext, PiContextStore } from "../providers/pi";
 import { piStoredContextSchema } from "./schema";
 
@@ -27,7 +30,7 @@ function fail(code: StoreCode): never {
 
 /** Private experimental transcript storage. Callers own its path, context identity and lifetime. */
 export class SqlitePiContextStore implements PiContextStore {
-  private database: Database | undefined;
+  private database: LocalDatabase | undefined;
   constructor(
     path: string,
     private readonly contextId: string,
@@ -54,7 +57,7 @@ export class SqlitePiContextStore implements PiContextStore {
       database.exec(
         "CREATE TABLE IF NOT EXISTS pi_contexts (context_id TEXT PRIMARY KEY, revision INTEGER NOT NULL CHECK(revision>0), value TEXT NOT NULL) STRICT;",
       );
-      this.database = database;
+      this.database = drizzle({ client: database });
     } catch (error) {
       try {
         database?.close();
@@ -68,13 +71,20 @@ export class SqlitePiContextStore implements PiContextStore {
   private open() {
     return this.database ?? fail("PI_STORE_CLOSED");
   }
-  private row(database: Database) {
+  private row(database: LocalDatabase) {
     // Do not pull an oversized corrupted body into JS before rejecting it.
+    const bytes = sql<number>`length(CAST(${piContexts.value} AS BLOB))`;
     return database
-      .query(
-        "SELECT revision,length(CAST(value AS BLOB)) AS bytes,CASE WHEN length(CAST(value AS BLOB))<=? THEN value ELSE NULL END AS value FROM pi_contexts WHERE context_id=?",
-      )
-      .get(PI_CONTEXT_MAX_BYTES, this.contextId) as Row | null;
+      .select({
+        revision: piContexts.revision,
+        bytes,
+        value: sql<
+          string | null
+        >`CASE WHEN ${bytes}<=${PI_CONTEXT_MAX_BYTES} THEN ${piContexts.value} ELSE NULL END`,
+      })
+      .from(piContexts)
+      .where(eq(piContexts.contextId, this.contextId))
+      .get();
   }
   private decode(row: Row): PiContext {
     if (!validRevision(row.revision) || row.revision < 1) fail("PI_CONTEXT_INVALID");
@@ -114,25 +124,34 @@ export class SqlitePiContextStore implements PiContextStore {
     const value = this.encode(context);
     const database = this.open();
     try {
-      return database
-        .transaction(() => {
+      return database.transaction(
+        () => {
           const row = this.row(database);
           if (row) {
             this.decode(row); // Corrupted persisted state is never silently replaced.
             if (row.revision !== expectedRevision) fail("PI_STORE_CONFLICT");
             const result = database
-              .query("UPDATE pi_contexts SET revision=?,value=? WHERE context_id=? AND revision=?")
-              .run(expectedRevision + 1, value, this.contextId, expectedRevision);
+              .update(piContexts)
+              .set({ revision: expectedRevision + 1, value })
+              .where(
+                and(
+                  eq(piContexts.contextId, this.contextId),
+                  eq(piContexts.revision, expectedRevision),
+                ),
+              )
+              .run();
             if (result.changes !== 1) fail("PI_STORE_CONFLICT");
           } else {
             if (expectedRevision !== 0) fail("PI_STORE_CONFLICT");
             database
-              .query("INSERT INTO pi_contexts(context_id,revision,value) VALUES (?,?,?)")
-              .run(this.contextId, 1, value);
+              .insert(piContexts)
+              .values({ contextId: this.contextId, revision: 1, value })
+              .run();
           }
           return expectedRevision + 1;
-        })
-        .immediate();
+        },
+        { behavior: "immediate" },
+      );
     } catch (error) {
       if (error instanceof PiContextStoreError) throw error;
       return fail("PI_STORE_UNAVAILABLE");
@@ -142,7 +161,7 @@ export class SqlitePiContextStore implements PiContextStore {
     const database = this.database;
     this.database = undefined;
     try {
-      database?.close();
+      database?.$client.close();
     } catch {
       fail("PI_STORE_UNAVAILABLE");
     }

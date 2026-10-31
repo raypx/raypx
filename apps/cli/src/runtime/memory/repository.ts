@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { chmodSync } from "node:fs";
+import { and, count, desc, eq, lt, sql } from "drizzle-orm";
 import {
   ContextError,
   contextDocumentSchema,
@@ -9,6 +10,8 @@ import {
   type ContextVersion,
 } from "@raypx/memory";
 import type { ContextLibraryRepository } from "@raypx/memory/server";
+import { drizzle, type LocalDatabase } from "../sqlite";
+import { deletedDocuments, documents, versions } from "../sqlite/schema";
 
 const summary = ({ content: _content, ...document }: ContextDocument) => document;
 const inputOf = ({ kind, name, category, content, project }: ContextDocumentInput) => ({
@@ -20,7 +23,7 @@ const inputOf = ({ kind, name, category, content, project }: ContextDocumentInpu
 });
 /** Device-profile data only. Transactions fence revisions across CLI connections. */
 export class SqliteContextRepository implements ContextLibraryRepository {
-  private readonly db: Database;
+  private readonly db: LocalDatabase;
   constructor(
     path: string,
     private readonly now: () => number = Date.now,
@@ -28,13 +31,13 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     let database: Database | undefined;
     try {
       database = new Database(path, { create: true, strict: true });
-      this.db = database;
+      this.db = drizzle({ client: database });
       if (process.platform !== "win32") chmodSync(path, 0o600);
-      this.db.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
-      const version = (this.db.query("PRAGMA user_version").get() as { user_version: number })
+      database.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
+      const version = (database.query("PRAGMA user_version").get() as { user_version: number })
         .user_version;
       if (version !== 0 && version !== 2) throw new ContextError("CONTEXT_UNAVAILABLE");
-      this.db.exec(
+      database.exec(
         "CREATE TABLE IF NOT EXISTS documents (owner TEXT NOT NULL,id TEXT NOT NULL,value TEXT NOT NULL,PRIMARY KEY(owner,id)); CREATE TABLE IF NOT EXISTS versions (owner TEXT NOT NULL,id TEXT NOT NULL,revision INTEGER NOT NULL,value TEXT NOT NULL,PRIMARY KEY(owner,id,revision)); CREATE TABLE IF NOT EXISTS deleted_documents (id TEXT PRIMARY KEY,owner TEXT NOT NULL,revision INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS documents_canonical_idx ON documents(lower(id)); PRAGMA user_version=2;",
       );
     } catch {
@@ -51,10 +54,11 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     }
   }
   private storedDocument(owner: string, id: string) {
-    const rows = this.db
-      .query("SELECT id,value FROM documents WHERE owner=? AND id=? LIMIT 1")
-      .all(owner, id.toLowerCase()) as { id: string; value: string }[];
-    const row = rows[0];
+    const row = this.db
+      .select({ id: documents.id, value: documents.value })
+      .from(documents)
+      .where(and(eq(documents.owner, owner), eq(documents.id, id.toLowerCase())))
+      .get();
     if (!row) throw new ContextError("CONTEXT_NOT_FOUND");
     const result = contextDocumentSchema.safeParse(JSON.parse(row.value));
     if (!result.success || result.data.id !== row.id) throw new ContextError("CONTEXT_UNAVAILABLE");
@@ -65,8 +69,10 @@ export class SqliteContextRepository implements ContextLibraryRepository {
   }
   private historical(owner: string, id: string, revision: number): ContextVersion {
     const row = this.db
-      .query("SELECT value FROM versions WHERE owner=? AND id=? AND revision=?")
-      .get(owner, id, revision) as { value: string } | null;
+      .select({ value: versions.value })
+      .from(versions)
+      .where(and(eq(versions.owner, owner), eq(versions.id, id), eq(versions.revision, revision)))
+      .get();
     if (!row) throw new ContextError("CONTEXT_NOT_FOUND");
     const result = contextVersionSchema.safeParse(JSON.parse(row.value));
     if (!result.success || result.data.id !== id || result.data.revision !== revision)
@@ -84,11 +90,18 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     if (!parsed.success || parsed.data.id !== physicalId) throw new ContextError("INVALID_CONTEXT");
     const version = { ...parsed.data, reason, ...(restoredFrom ? { restoredFrom } : {}) };
     this.db
-      .query("INSERT INTO versions VALUES (?,?,?,?)")
-      .run(owner, physicalId, document.revision, JSON.stringify(version));
-    this.db
-      .query("INSERT OR REPLACE INTO documents VALUES (?,?,?)")
-      .run(owner, physicalId, JSON.stringify(parsed.data));
+      .insert(versions)
+      .values({
+        owner,
+        id: physicalId,
+        revision: document.revision,
+        value: JSON.stringify(version),
+      })
+      .run();
+    // REPLACE allocates a new rowid, preserving the library's most-recent-write order.
+    this.db.run(
+      sql`INSERT OR REPLACE INTO ${documents} (${sql.identifier("owner")}, ${sql.identifier("id")}, ${sql.identifier("value")}) VALUES (${owner}, ${physicalId}, ${JSON.stringify(parsed.data)})`,
+    );
     return parsed.data;
   }
   private change(
@@ -101,8 +114,8 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     unchanged?: (document: ContextDocument) => boolean,
   ) {
     return this.safe(() =>
-      this.db
-        .transaction(() => {
+      this.db.transaction(
+        () => {
           const { document: current, physicalId } = this.storedDocument(owner, id);
           if (current.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
           if (unchanged?.(current)) return current;
@@ -120,24 +133,25 @@ export class SqliteContextRepository implements ContextLibraryRepository {
             reason,
             restoredFrom,
           );
-        })
-        .immediate(),
+        },
+        { behavior: "immediate" },
+      ),
     );
   }
   async list(owner: string) {
     return this.safe(() => {
-      const rows = (
-        this.db
-          .query(
-            "SELECT id,value FROM documents WHERE owner=? AND id=lower(id) ORDER BY rowid DESC",
-          )
-          .all(owner) as { id: string; value: string }[]
-      ).map((row) => {
-        const parsed = contextDocumentSchema.safeParse(JSON.parse(row.value));
-        if (!parsed.success || parsed.data.id !== row.id)
-          throw new ContextError("CONTEXT_UNAVAILABLE");
-        return summary(parsed.data);
-      });
+      const rows = this.db
+        .select({ id: documents.id, value: documents.value })
+        .from(documents)
+        .where(and(eq(documents.owner, owner), eq(documents.id, sql`lower(${documents.id})`)))
+        .orderBy(desc(sql`rowid`))
+        .all()
+        .map((row) => {
+          const parsed = contextDocumentSchema.safeParse(JSON.parse(row.value));
+          if (!parsed.success || parsed.data.id !== row.id)
+            throw new ContextError("CONTEXT_UNAVAILABLE");
+          return summary(parsed.data);
+        });
       if (new Set(rows.map((row) => row.id)).size !== rows.length)
         throw new ContextError("CONTEXT_CONFLICT");
       return rows;
@@ -152,11 +166,20 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     );
   }
   private creation(owner: string, requestId: string, input: ContextDocumentInput) {
-    if (this.db.query("SELECT id FROM deleted_documents WHERE id=?").get(requestId.toLowerCase()))
+    if (
+      this.db
+        .select({ id: deletedDocuments.id })
+        .from(deletedDocuments)
+        .where(eq(deletedDocuments.id, requestId.toLowerCase()))
+        .get()
+    )
       throw new ContextError("IDEMPOTENCY_CONFLICT");
     const rows = this.db
-      .query("SELECT owner,id FROM documents WHERE lower(id)=? LIMIT 2")
-      .all(requestId.toLowerCase()) as { owner: string; id: string }[];
+      .select({ owner: documents.owner, id: documents.id })
+      .from(documents)
+      .where(eq(sql`lower(${documents.id})`, requestId.toLowerCase()))
+      .limit(2)
+      .all();
     if (rows.length > 1) throw new ContextError("IDEMPOTENCY_CONFLICT");
     const existing = rows[0];
     if (!existing) return null;
@@ -170,15 +193,17 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     return this.document(owner, existing.id);
   }
   async findCreation(owner: string, requestId: string, input: ContextDocumentInput) {
-    return this.safe(() => this.db.transaction(() => this.creation(owner, requestId, input))());
+    return this.safe(() => this.db.transaction(() => this.creation(owner, requestId, input)));
   }
   async delete(owner: string, id: string, revision: number) {
     return this.safe(() =>
-      this.db
-        .transaction(() => {
+      this.db.transaction(
+        () => {
           const deleted = this.db
-            .query("SELECT owner,revision FROM deleted_documents WHERE id=?")
-            .get(id.toLowerCase()) as { owner: string; revision: number } | null;
+            .select({ owner: deletedDocuments.owner, revision: deletedDocuments.revision })
+            .from(deletedDocuments)
+            .where(eq(deletedDocuments.id, id.toLowerCase()))
+            .get();
           if (deleted) {
             if (deleted.owner !== owner) throw new ContextError("CONTEXT_NOT_FOUND");
             if (deleted.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
@@ -187,29 +212,34 @@ export class SqliteContextRepository implements ContextLibraryRepository {
           const { document, physicalId } = this.storedDocument(owner, id);
           if (document.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
           if (!document.archived) throw new ContextError("CONTEXT_NOT_ARCHIVED");
+          this.db.insert(deletedDocuments).values({ id: id.toLowerCase(), owner, revision }).run();
           this.db
-            .query("INSERT INTO deleted_documents VALUES (?,?,?)")
-            .run(id.toLowerCase(), owner, revision);
-          this.db.query("DELETE FROM versions WHERE owner=? AND id=?").run(owner, physicalId);
-          this.db.query("DELETE FROM documents WHERE owner=? AND id=?").run(owner, physicalId);
+            .delete(versions)
+            .where(and(eq(versions.owner, owner), eq(versions.id, physicalId)))
+            .run();
+          this.db
+            .delete(documents)
+            .where(and(eq(documents.owner, owner), eq(documents.id, physicalId)))
+            .run();
           return { deleted: true as const };
-        })
-        .immediate(),
+        },
+        { behavior: "immediate" },
+      ),
     );
   }
   async create(owner: string, requestId: string, input: ContextDocumentInput) {
     requestId = requestId.toLowerCase();
     return this.safe(() =>
-      this.db
-        .transaction(() => {
+      this.db.transaction(
+        () => {
           const existing = this.creation(owner, requestId, input);
           if (existing) return existing;
-          const count = (
-            this.db.query("SELECT count(*) AS count FROM documents WHERE owner=?").get(owner) as {
-              count: number;
-            }
-          ).count;
-          if (count >= 100) throw new ContextError("CONTEXT_LIMIT");
+          const total = this.db
+            .select({ count: count() })
+            .from(documents)
+            .where(eq(documents.owner, owner))
+            .get()!.count;
+          if (total >= 100) throw new ContextError("CONTEXT_LIMIT");
           const now = new Date(this.now()).toISOString();
           return this.write(
             owner,
@@ -224,8 +254,9 @@ export class SqliteContextRepository implements ContextLibraryRepository {
             },
             "created",
           );
-        })
-        .immediate(),
+        },
+        { behavior: "immediate" },
+      ),
     );
   }
   async update(owner: string, id: string, revision: number, input: ContextDocumentInput) {
@@ -253,13 +284,20 @@ export class SqliteContextRepository implements ContextLibraryRepository {
   async history(owner: string, id: string, before: number | undefined, limit: number) {
     return this.safe(() => {
       const { physicalId } = this.storedDocument(owner, id);
-      return (
-        this.db
-          .query(
-            "SELECT revision FROM versions WHERE owner=? AND id=? AND (? IS NULL OR revision<?) ORDER BY revision DESC LIMIT ?",
-          )
-          .all(owner, physicalId, before ?? null, before ?? null, limit) as { revision: number }[]
-      ).map((row) => this.historical(owner, physicalId, row.revision));
+      return this.db
+        .select({ revision: versions.revision })
+        .from(versions)
+        .where(
+          and(
+            eq(versions.owner, owner),
+            eq(versions.id, physicalId),
+            before === undefined ? undefined : lt(versions.revision, before),
+          ),
+        )
+        .orderBy(desc(versions.revision))
+        .limit(limit)
+        .all()
+        .map((row) => this.historical(owner, physicalId, row.revision));
     });
   }
   async restore(owner: string, id: string, revision: number, version: number) {
@@ -285,10 +323,10 @@ export class SqliteContextRepository implements ContextLibraryRepository {
             version: this.historical(owner, physicalId, ref.revision),
           };
         }),
-      )(),
+      ),
     );
   }
   close() {
-    this.db.close();
+    this.db.$client.close();
   }
 }

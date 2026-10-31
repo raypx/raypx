@@ -11,6 +11,9 @@ import { StateStore } from "../../../../src/runtime/state";
 
 const uuid = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
 const now = "2026-10-31T00:00:00.000Z";
+// Inspect plans independently of Drizzle's quoting, case and whitespace choices.
+const normalizedSql = (statement: string) =>
+  statement.replaceAll('"', "").toLowerCase().replace(/\s+/g, " ");
 function task(
   index: number,
   binding = "relay",
@@ -144,25 +147,29 @@ it("bounds local pages, task approvals and startup work among 10,000 historical 
     queries.mockRestore();
     parse.mockRestore();
     const startup = sql.find((statement) =>
-      statement.startsWith("SELECT value FROM tasks WHERE json_extract(value,'$.task.status') IN"),
+      normalizedSql(statement).startsWith(
+        "select value from tasks where json_extract(tasks.value,'$.task.status') in",
+      ),
     )!;
     expect(JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${startup}`).all())).toMatch(
       /USING INDEX tasks_(active_session|binding_active)/,
     );
-    const page = sql.find((statement) => statement.includes("|| ':' || id)<?"))!;
+    const page = sql.find((statement) =>
+      normalizedSql(statement).includes("|| ':' || tasks.id < ?"),
+    )!;
     const plan = JSON.stringify(
       f.database.query(`EXPLAIN QUERY PLAN ${page}`).all(binding, before, 100),
     );
     expect(plan).toContain("tasks_binding_cursor");
     expect(plan).not.toContain("TEMP B-TREE");
-    const pending = sql.find((statement) => statement.includes("AND EXISTS (SELECT 1 FROM tasks"))!;
+    const pending = sql.find((statement) => normalizedSql(statement).includes("exists (select"))!;
     expect(
       JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${pending}`).all(binding)),
     ).toContain("requests_binding_pending");
-    const approvals = sql.find((statement) =>
-      statement.startsWith(
-        "SELECT value FROM requests WHERE binding=? AND json_extract(value,'$.taskId')=?",
-      ),
+    const approvals = sql.find(
+      (statement) =>
+        normalizedSql(statement).startsWith("select value from requests") &&
+        normalizedSql(statement).includes("json_extract(requests.value,'$.taskid') = ?"),
     )!;
     expect(
       JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${approvals}`).all(binding, uuid(2))),
@@ -287,23 +294,27 @@ it.each([10_000, 100_000])(
           heapDeltaBytes,
         }),
       );
-      const taskQuery = sql.find((statement) => statement.startsWith("WITH recent"))!;
+      const taskQuery = sql.find((statement) =>
+        normalizedSql(statement).startsWith("with selected as"),
+      )!;
       const plan = JSON.stringify(
-        f.database.query(`EXPLAIN QUERY PLAN ${taskQuery}`).all("relay", "relay"),
+        f.database.query(`EXPLAIN QUERY PLAN ${taskQuery}`).all("relay", 100, "relay"),
       );
       expect(plan).toContain("tasks_binding_created");
       expect(plan).toContain("tasks_binding_active");
       expect(plan).not.toMatch(/SCAN tasks(?:"| )/);
       const activeQuery = sql.find(
         (statement) =>
-          statement.startsWith("SELECT id,value FROM activity") &&
+          /^select id,\s*value from activity/.test(normalizedSql(statement)) &&
           statement.includes("json_extract"),
       )!;
       expect(
-        JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${activeQuery}`).all("relay", uuid(2))),
+        JSON.stringify(
+          f.database.query(`EXPLAIN QUERY PLAN ${activeQuery}`).all("relay", uuid(2), 64),
+        ),
       ).toContain("activity_task_active");
       const requestsQuery = sql.find((statement) =>
-        statement.startsWith("SELECT value FROM requests"),
+        normalizedSql(statement).startsWith("select value from requests"),
       )!;
       expect(
         JSON.stringify(
@@ -312,7 +323,9 @@ it.each([10_000, 100_000])(
             .all("relay", JSON.stringify([uuid(2)])),
         ),
       ).toContain("requests_binding_task");
-      const countsQuery = sql.find((statement) => statement.startsWith("SELECT task_id,count(*)"))!;
+      const countsQuery = sql.find((statement) =>
+        /^select task_id,\s*count\(\*\)/.test(normalizedSql(statement)),
+      )!;
       expect(
         JSON.stringify(
           f.database

@@ -31,6 +31,22 @@ const document: ContextDocumentInput = {
   content: "Original reference",
   project: null,
 };
+it("keeps recently changed documents first without reordering unchanged retries", async () => {
+  const { store } = repository();
+  const first = crypto.randomUUID(),
+    second = crypto.randomUUID();
+  await store.create("device", first, document);
+  await store.create("device", second, document);
+  const ids = async () => (await store.list("device")).map((entry) => entry.id);
+  expect(await ids()).toEqual([second, first]);
+  await store.update("device", first, 1, { ...document, content: "Edited" });
+  expect(await ids()).toEqual([first, second]);
+  await store.update("device", second, 1, document);
+  await store.create("device", second, document);
+  expect(await ids()).toEqual([first, second]);
+  await store.archive("device", second, 1, true);
+  expect(await ids()).toEqual([second, first]);
+});
 it("persists immutable versions and restores content without changing archival state across reopen", async () => {
   const f = repository(),
     id = crypto.randomUUID();
