@@ -9,6 +9,7 @@ import {
   type RelaySocketFactory,
 } from "@raypx/client";
 import {
+  RELAY_VERSION,
   deviceGrantSchema,
   type DeviceGrant,
   type DeviceProject,
@@ -211,7 +212,7 @@ export class RemoteControl {
       ...(this.options.socket ? { socket: this.options.socket } : {}),
       authenticate: async () => ({
         type: "auth",
-        protocolVersion: 3,
+        protocolVersion: RELAY_VERSION,
         role: "device",
         token: grant.token,
       }),
@@ -379,8 +380,6 @@ export class RemoteControl {
         instanceId: info.instanceId,
         projects,
         capabilities,
-        syncSupported: true,
-        contextSupported: true,
       });
     } else if (frame.type === "resume") {
       if (frame.syncId) {

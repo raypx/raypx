@@ -17,7 +17,7 @@ import {
   terminalRequestSchema,
   terminalSessionSchema,
 } from "./terminal.js";
-export const RELAY_VERSION = 3;
+export const RELAY_VERSION = 4;
 
 export const deviceProjectSchema = z.object({
   id: z.string().uuid(),
@@ -135,8 +135,6 @@ export const relayClientSchema = z.discriminatedUnion("type", [
     instanceId: z.string().uuid(),
     projects: z.array(deviceProjectSchema).max(200),
     capabilities: z.array(capabilitySchema).max(2),
-    syncSupported: z.boolean().optional(),
-    contextSupported: z.boolean().optional(),
   }),
   z.object({
     type: z.literal("snapshot"),
@@ -167,7 +165,6 @@ export const relayServerSchema = z.discriminatedUnion("type", [
     type: z.literal("ready"),
     protocolVersion: z.literal(RELAY_VERSION),
     role: z.enum(["device", "viewer"]),
-    contextSupported: z.boolean().optional(),
   }),
   z.object({ type: z.literal("pong") }),
   z.object({

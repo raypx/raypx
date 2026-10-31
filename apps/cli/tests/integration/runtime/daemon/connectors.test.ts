@@ -14,6 +14,28 @@ import {
 import { planHookSettings } from "../../../../src/runtime/terminal/settings";
 import { cliBuild } from "../../../../src/runtime/daemon/build";
 afterEach(() => vi.unstubAllEnvs());
+it.each([
+  { digest: createHash("sha256").update("owned binary").digest("hex") },
+  { digest: createHash("sha256").update("owned binary").digest("hex"), version: cliBuild.version },
+])(
+  "rejects incomplete installation metadata without replacing the owned binary: %j",
+  (metadata) => {
+    const directory = mkdtempSync(join(tmpdir(), "raypx-current-installation-")),
+      binary = join(directory, "raypx"),
+      file = join(directory, "installation.json"),
+      text = JSON.stringify(metadata);
+    try {
+      writeFileSync(binary, "owned binary");
+      writeFileSync(file, text);
+      expect(stableCliStatus(binary)).toMatchObject({ error: "INSTALLATION_CONFLICT" });
+      expect(() => preserveModifiedCli(binary, true)).toThrow("unsupported format");
+      expect(readFileSync(binary, "utf8")).toBe("owned binary");
+      expect(readFileSync(file, "utf8")).toBe(text);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  },
+);
 it("requires confirmation and preserves a modified owned executable before replacement", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-repair-backup-")),
     binary = join(directory, "raypx");
@@ -22,7 +44,10 @@ it("requires confirmation and preserves a modified owned executable before repla
     expect(() => preserveModifiedCli(binary, true)).toThrow("not owned");
     writeFileSync(
       join(directory, "installation.json"),
-      JSON.stringify({ digest: createHash("sha256").update("original").digest("hex") }),
+      JSON.stringify({
+        ...cliBuild,
+        digest: createHash("sha256").update("original").digest("hex"),
+      }),
     );
     expect(() => preserveModifiedCli(binary)).toThrow("changed outside Raypx");
     const backup = preserveModifiedCli(binary, true)!;
@@ -91,7 +116,7 @@ it("checks the real hook binary, exposes upgrade state and rejects a downgrade",
     });
     writeFileSync(binary, "changed binary");
     expect(stableCliStatus().error).toBe("INSTALLATION_CONFLICT");
-    expect(() => assertStableUpgrade({ version: "99.0.0" })).toThrow("newer");
+    expect(() => assertStableUpgrade({ version: "99.0.0", builtAt: 0 })).toThrow("newer");
     expect(() => assertStableUpgrade({ ...cliBuild, builtAt: cliBuild.builtAt + 1 })).toThrow(
       "newer",
     );

@@ -135,7 +135,7 @@ for (const [surface, base] of surfaces) {
         socket.onMessage((raw) => {
           const frame = JSON.parse(String(raw)) as RelayClientFrame;
           if (frame.type === "auth")
-            socket.send(JSON.stringify({ type: "ready", protocolVersion: 3, role: "viewer" }));
+            socket.send(JSON.stringify({ type: "ready", protocolVersion: 4, role: "viewer" }));
           if (frame.type !== "request") return;
           let value: unknown;
           if (frame.request.method === "tasks.input") {

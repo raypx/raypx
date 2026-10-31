@@ -137,8 +137,7 @@ for (const [surface, base] of [
               JSON.stringify({
                 type: "ready",
                 role: "viewer",
-                protocolVersion: 3,
-                contextSupported: true,
+                protocolVersion: 4,
               }),
             );
           if (frame.type !== "request" || frame.request.method !== "tasks.create") return;

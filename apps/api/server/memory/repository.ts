@@ -72,7 +72,7 @@ async function documentRow(tx: Database | Transaction, owner: string, id: string
   const query = tx
     .select()
     .from(contextDocument)
-    .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id.toLowerCase())))
+    .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id)))
     .limit(2);
   const rows = await (lock ? query.for("update") : query);
   if (!rows.length) throw new ContextError("CONTEXT_NOT_FOUND");
@@ -131,28 +131,25 @@ async function findCreation(
   const [deleted] = await tx
     .select({ id: contextDeletion.id })
     .from(contextDeletion)
-    .where(eq(contextDeletion.id, requestId.toLowerCase()))
+    .where(eq(contextDeletion.id, requestId))
     .limit(1);
   if (deleted) throw new ContextError("IDEMPOTENCY_CONFLICT");
   const rows = await tx
     .select()
     .from(contextDocument)
-    .where(sql`lower(${contextDocument.id})=${requestId.toLowerCase()}`)
+    .where(sql`lower(${contextDocument.id})=${requestId}`)
     .limit(2);
   if (rows.length > 1) throw new ContextError("IDEMPOTENCY_CONFLICT");
   const row = rows[0];
   if (!row) return null;
-  if (row.userId !== owner || row.id !== requestId.toLowerCase())
-    throw new ContextError("IDEMPOTENCY_CONFLICT");
+  if (row.userId !== owner || row.id !== requestId) throw new ContextError("IDEMPOTENCY_CONFLICT");
   const original = await selectedVersion(tx, owner, row.id, 1);
   if (canonical(definition(original)) !== canonical(definition(input)))
     throw new ContextError("IDEMPOTENCY_CONFLICT");
   return documentView(row);
 }
 async function lockIdentity(tx: Transaction, id: string) {
-  await tx.execute(
-    sql`select pg_advisory_xact_lock(hashtextextended(${`memory:${id.toLowerCase()}`},0))`,
-  );
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`memory:${id}`},0))`);
 }
 
 export function createContextRepository(db: Database): ContextLibraryRepository {
@@ -183,7 +180,6 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
     },
     findCreation: (owner, requestId, input) => findCreation(db, owner, requestId, input),
     async create(owner, requestId, input) {
-      requestId = requestId.toLowerCase();
       try {
         return await db.transaction(async (tx) => {
           await lockIdentity(tx, requestId);
@@ -262,7 +258,7 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
         const [deleted] = await tx
           .select()
           .from(contextDeletion)
-          .where(and(eq(contextDeletion.id, id.toLowerCase()), eq(contextDeletion.userId, owner)));
+          .where(and(eq(contextDeletion.id, id), eq(contextDeletion.userId, owner)));
         if (deleted) {
           if (deleted.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
           return { deleted: true as const };
@@ -270,7 +266,7 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
         const current = await documentRow(tx, owner, id, true);
         if (current.revision !== revision) throw new ContextError("CONTEXT_CONFLICT");
         if (!current.archived) throw new ContextError("CONTEXT_NOT_ARCHIVED");
-        await tx.insert(contextDeletion).values({ id: id.toLowerCase(), userId: owner, revision });
+        await tx.insert(contextDeletion).values({ id: id, userId: owner, revision });
         await tx
           .delete(contextDocument)
           .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, current.id)));
@@ -329,7 +325,7 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
             sql`(${sql.join(
               sources.map(
                 (source) =>
-                  sql`(${contextDocument.id}=${source.id.toLowerCase()} and ${contextVersion.revision}=${source.revision})`,
+                  sql`(${contextDocument.id}=${source.id} and ${contextVersion.revision}=${source.revision})`,
               ),
               sql` or `,
             )})`,
@@ -340,7 +336,7 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
             eq(contextDocument.userId, owner),
             inArray(
               contextDocument.id,
-              sources.map((source) => source.id.toLowerCase()),
+              sources.map((source) => source.id),
             ),
           ),
         );

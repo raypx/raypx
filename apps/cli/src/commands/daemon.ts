@@ -73,7 +73,6 @@ export function createDaemonCommands(invocation: CliArgs, options: ProfileOption
             const endpoint = await connectDaemon(
               options,
               action === "start" || action === "restart",
-              action === "status" ? "any" : "match",
             );
             result = { running: true, version: endpoint.version };
           }

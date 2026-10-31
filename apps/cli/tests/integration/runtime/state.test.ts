@@ -38,12 +38,18 @@ describe("device state", () => {
       reopened.close();
     }
   });
-  it("refuses a newer schema and never migrates while another runtime holds a lease", async () => {
-    const { runtime, dir } = await fixture();
-    runtime.state.db.$client.exec("PRAGMA user_version=0");
-    expect(() => createRuntime({ dataDir: dir })).toThrow(/locked/i);
-    runtime.state.db.$client.exec("PRAGMA user_version=2");
-    expect(() => createRuntime({ dataDir: dir })).toThrow(/newer Raypx/);
-    runtime.state.db.$client.exec("PRAGMA user_version=1");
-  });
+  it.each([0, 2])(
+    "rejects an existing unsupported state schema %s without changing it",
+    async (version) => {
+      const { runtime, dir } = await fixture();
+      const roots = runtime.state.roots();
+      runtime.state.db.$client.exec(`PRAGMA user_version=${version}`);
+      expect(() => createRuntime({ dataDir: dir })).toThrow("unsupported state schema");
+      expect(runtime.state.db.$client.query("PRAGMA user_version").get()).toEqual({
+        user_version: version,
+      });
+      expect(runtime.state.roots()).toEqual(roots);
+      runtime.state.db.$client.exec("PRAGMA user_version=1");
+    },
+  );
 });

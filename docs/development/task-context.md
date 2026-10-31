@@ -41,8 +41,9 @@ and 8,000 characters per document. Lists return summaries without bodies; histor
 loads at most 20 versions per page. Existing documents can be edited or restored.
 Content-only edits work when the unchanged project is unavailable; assigning
 another project still validates it. Creation retries recover the existing document
-before checking whether a project remains available. Context UUIDs are canonical
-lowercase; repositories require canonical stored keys and reject identity collisions.
+before checking whether a project remains available. Context UUIDs must be canonical
+lowercase at every boundary; uppercase aliases are rejected. Repositories require
+canonical stored keys and reject identity collisions.
 Old noncanonical keys are neither migrated nor read as aliases.
 PostgreSQL enforces global case-insensitive document-ID uniqueness with a `lower(id)`
 expression index, which also bounds creation retry lookups to the matching key.
@@ -89,10 +90,10 @@ authoritative task is available. These receipts preserve the no-replay guarantee
 They are deliberately not deleted by a simple TTL. Apply the generated partial
 indexes before deploying the new cleanup and admission queries.
 
-Host announcements and the server's viewer-ready frame advertise `contextSupported`.
-Clients require an explicit server declaration on every connection; the server
-also rejects a host without that capability with `UPGRADE_REQUIRED`. Context is reference data and
-does not change project authorization, approval, cancellation or command policy.
+Relay v4 requires context and snapshot synchronization on every connection.
+Clients and servers reject other protocol versions with `UPGRADE_REQUIRED`;
+there is no separate capability negotiation. Context is reference data and does
+not change project authorization, approval, cancellation or command policy.
 
 ## Scheduled Agent tasks
 

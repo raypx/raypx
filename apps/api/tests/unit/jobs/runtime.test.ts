@@ -10,8 +10,6 @@ const result = {
   sessions: 1,
   verifications: 2,
   rateLimits: 3,
-  observedRequests: 0,
-  observedSessions: 0,
   contextCommands: 0,
 };
 it("uses the server runtime without closing the shared HTTP pool", async () => {

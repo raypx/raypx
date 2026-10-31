@@ -31,6 +31,20 @@ const document: ContextDocumentInput = {
   content: "Original reference",
   project: null,
 };
+it("rejects an unversioned populated memory database without relabeling or changing it", async () => {
+  const f = repository();
+  const id = crypto.randomUUID();
+  const saved = await f.store.create("device", id, document);
+  const raw = new Database(f.path);
+  try {
+    raw.exec("PRAGMA user_version=0");
+    expect(() => new SqliteContextRepository(f.path)).toThrow("CONTEXT_UNAVAILABLE");
+    expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: 0 });
+    expect(await f.store.get("device", id)).toEqual(saved);
+  } finally {
+    raw.close();
+  }
+});
 it("keeps recently changed documents first without reordering unchanged retries", async () => {
   const { store } = repository();
   const first = crypto.randomUUID(),
@@ -323,7 +337,7 @@ it("permanently deletes only owned archived revisions, erases versions and reser
     code: "CONTEXT_NOT_FOUND",
   });
   for (const owner of ["device", "other"])
-    await expect(f.store.create(owner, id.toUpperCase(), document)).rejects.toMatchObject({
+    await expect(f.store.create(owner, id, document)).rejects.toMatchObject({
       code: "IDEMPOTENCY_CONFLICT",
     });
   const raw = new Database(f.path);

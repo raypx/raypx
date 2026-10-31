@@ -20,8 +20,6 @@ interface ApiEventFields {
       sessions: string;
       verifications: string;
       rateLimits: string;
-      observedRequests: string;
-      observedSessions: string;
       contextReceipts: string;
     };
   };

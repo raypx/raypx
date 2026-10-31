@@ -87,7 +87,7 @@ Upload from a clean checkout plus the reviewed deployment configuration.
 CLI uploads remain available for explicit manual releases. Use GitHub-triggered
 deployments for normal canary updates after connecting the repository.
 Detached upload completion is not a health result: inspect deployment status and
-logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v3.
+logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v4.
 
 The shared API Dockerfile's final `railway` stage carries the database's production dependencies and
 canonical migrations. Railway runs bun run --cwd packages/database migrate

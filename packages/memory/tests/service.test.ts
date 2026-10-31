@@ -239,18 +239,25 @@ it("enforces the combined context budget without clipping a selected document", 
   ).rejects.toMatchObject({ code: "CONTEXT_TOO_LARGE" });
 });
 
-it("normalizes context UUIDs before lookup and project validation", async () => {
+it("rejects noncanonical context IDs before lookup or project validation", async () => {
   const f = fixture();
   const selected = {
-    sources: f.selection.sources.map((source) => ({ ...source, id: source.id.toUpperCase() })),
+    sources: f.selection.sources.map((source) => ({
+      ...source,
+      id: "ABCDEFAB-CDEF-4ABC-8DEF-ABCDEFABCDEF",
+    })),
   };
   const upperTarget = {
-    deviceId: target.deviceId.toUpperCase(),
+    deviceId: "ABCDEFAB-CDEF-4ABC-8DEF-ABCDEFABCDEF",
     projectId: target.projectId.toUpperCase(),
   };
-  const snapshot = await f.service.resolve("owner", selected, upperTarget, "Task");
-  expect(snapshot.sources[0]!.id).toBe(f.selection.sources[0]!.id.toLowerCase());
-  expect(f.repository.readSources).toHaveBeenCalledWith("owner", f.selection.sources);
+  await expect(f.service.resolve("owner", selected, target, "Task")).rejects.toMatchObject({
+    code: "INVALID_CONTEXT",
+  });
+  await expect(f.service.resolve("owner", f.selection, upperTarget, "Task")).rejects.toMatchObject({
+    code: "INVALID_CONTEXT",
+  });
+  expect(f.repository.readSources).not.toHaveBeenCalled();
 });
 
 it("sanitizes persistence text and hides infrastructure errors without hiding domain errors", async () => {

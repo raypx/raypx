@@ -1,12 +1,5 @@
 import type { Database } from "@raypx/database/connection";
-import {
-  controlObservedRequest,
-  controlObservedSession,
-  controlDevice,
-  rateLimit,
-  session,
-  verification,
-} from "@raypx/database/schema";
+import { rateLimit, session, verification } from "@raypx/database/schema";
 import { sql } from "drizzle-orm";
 import type { ApiLogging } from "../logging.js";
 import type { ConfigurationReader } from "../configuration/types.js";
@@ -33,8 +26,6 @@ export interface CleanupResult {
   sessions: number;
   verifications: number;
   rateLimits: number;
-  observedRequests: number;
-  observedSessions: number;
   contextCommands: number;
 }
 
@@ -51,8 +42,6 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
       sessions: 0,
       verifications: 0,
       rateLimits: 0,
-      observedRequests: 0,
-      observedSessions: 0,
       contextCommands: 0,
     };
     if (!lock?.acquired) return result;
@@ -93,22 +82,6 @@ export async function cleanupExpired(db: Database): Promise<CleanupResult> {
       `);
       result[key] = row!.count;
     }
-    // Repair data retained by older revocation code. Composite identity and
-    // device scope prevent cross-account deletion; managed history is separate.
-    for (const [key, table] of [
-      ["observedRequests", controlObservedRequest],
-      ["observedSessions", controlObservedSession],
-    ] as const) {
-      const [row] = await tx.execute<{ count: number }>(sql`
-        with candidates as (
-          select r.user_id, r.id from ${table} r
-          where exists (select 1 from ${controlDevice} d where d.user_id=r.user_id and d.id=r.device_id and d.body->>'revoked'='true')
-          order by r.user_id, r.id limit 1000 for update of r skip locked
-        ), removed as (
-          delete from ${table} r using candidates c where r.user_id=c.user_id and r.id=c.id returning 1
-        ) select count(*)::integer as count from removed`);
-      result[key] = row!.count;
-    }
     const [commands] = await tx.execute<{ count: number }>(
       contextCommandPrune(sql`transaction_timestamp()`),
     );
@@ -134,8 +107,6 @@ export async function runCleanupJob(
           sessions: 0,
           verifications: 0,
           rateLimits: 0,
-          observedRequests: 0,
-          observedSessions: 0,
           contextCommands: 0,
         };
     event.emit({
@@ -146,8 +117,6 @@ export async function runCleanupJob(
         sessions: String(result.sessions),
         verifications: String(result.verifications),
         rateLimits: String(result.rateLimits),
-        observedRequests: String(result.observedRequests),
-        observedSessions: String(result.observedSessions),
         contextReceipts: String(result.contextCommands),
       },
     });

@@ -1,8 +1,8 @@
 # Remote Agent relay and replay
 
-Web and Desktop connect to an authenticated WebSocket relay. On macOS the independent
-CLI daemon is the execution authority; Desktop is its private IPC client. Windows
-retains the foreground bundled CLI. The owner creates tasks, owns Agent sessions,
+Web and Desktop connect to an authenticated WebSocket relay. On macOS and Windows the independent
+CLI daemon is the execution authority; Desktop is its private IPC client.
+The owner creates tasks, owns Agent sessions,
 resolves approvals and decides final status. API stores account-scoped read projections and
 routes commands; a server clock cannot declare a local execution finished.
 
@@ -11,6 +11,9 @@ routes commands; a server clock cannot declare a local execution finished.
 Web / Desktop UI ↔ API relay ↔ CLI daemon ↔ Claude Code / Codex (macOS, Windows).
 Desktop native ↔ private daemon proxy for local views on both platforms.
 All remote connections are outbound HTTPS/WSS. Native exposes no public port.
+Relay v4 is the only supported version. Context and authoritative snapshot sync
+are required parts of the protocol. Deploy the API, Web, Desktop and bundled CLI
+with matching contracts; mixed protocol versions stop with `UPGRADE_REQUIRED`.
 The local engine uses version-matched NDJSON over stdio. Codex uses its local
 stdio app-server; Claude uses persistent stream-JSON input/output and authenticated session hooks on
 loopback. Provider wire messages and credentials remain on the computer.
@@ -203,7 +206,7 @@ after suspension are labelled; contiguous history can be loaded deliberately.
 
 ## Observed terminal sessions
 
-macOS relay v3 also synchronizes explicitly opted-in Claude/Codex Bash permission
+macOS relay v4 also synchronizes explicitly opted-in Claude/Codex Bash permission
 hooks through a separate RequestBroker and observed projection. Away waiting is
 bounded and fails back to the terminal. Tool outputs and full terminal streams
 remain local. Content is plaintext private testing data, pending E2EE. See the

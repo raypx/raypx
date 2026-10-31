@@ -468,7 +468,7 @@ it("permanently deletes archived data with CAS while preserving frozen task cont
     await connection.db.select().from(contextVersion).where(eq(contextVersion.documentId, id)),
   ).toEqual([]);
   for (const account of [owner, stranger])
-    await expect(other.create(account, id.toUpperCase(), original)).rejects.toMatchObject({
+    await expect(other.create(account, id, original)).rejects.toMatchObject({
       code: "IDEMPOTENCY_CONFLICT",
     });
 });

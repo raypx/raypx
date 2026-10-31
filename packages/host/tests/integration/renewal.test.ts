@@ -154,8 +154,8 @@ it("delegates terminal authorization loss to its owner", async () => {
   expect(lost).toHaveBeenCalledExactlyOnceWith("AUTH_REQUIRED");
 });
 
-it("stops on an old server and resumes v3 only after explicit attach", async () => {
-  let version: 2 | 3 = 2;
+it("stops on an old server and resumes the current protocol only after explicit attach", async () => {
+  let version: 3 | 4 = 3;
   const f = await control(
     {},
     () => false,
@@ -164,12 +164,12 @@ it("stops on an old server and resumes v3 only after explicit attach", async () 
   await expect.poll(() => f.value.info("account").error).toBe("UPGRADE_REQUIRED");
   expect(
     f.frames.filter((frame) => frame.type === "auth").map((frame) => frame.protocolVersion),
-  ).toEqual([3]);
+  ).toEqual([4]);
   expect(f.value.info("account").connected).toBe(false);
-  version = 3;
+  version = 4;
   await f.value.attach("account", f.base, { ...f.grant, token: "new-" + crypto.randomUUID() });
   await expect.poll(() => f.value.info("account").connected).toBe(true);
   expect(
     f.frames.filter((frame) => frame.type === "auth").map((frame) => frame.protocolVersion),
-  ).toEqual([3, 3]);
+  ).toEqual([4, 4]);
 });

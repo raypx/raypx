@@ -38,7 +38,7 @@ compiled CLI for the daemon integration test; only its isolated daemon is stoppe
 `native:smoke:interactive` also checks native focus/resize/close; use isolated CI.
 Normal production builds exclude the private endpoint and renderer test hook.
 
-Native data paths, encrypted-session format and device preferences are preserved.
-WebView storage now has a MyGo origin, so installed-app migration still needs native
-acceptance. MyGo signed updates use distinct keys and manifests. Local unsigned or
+Native uses the current data paths, encrypted-session format and device preferences.
+Retired WebView and keyring data is not imported. MyGo signed updates use distinct
+keys and manifests. Local unsigned or
 ad-hoc packages do not establish distribution signing, notarization or GUI results.

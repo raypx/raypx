@@ -15,6 +15,7 @@ import {
 import { basename, dirname, isAbsolute, join } from "node:path";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
+import { z } from "zod";
 
 import type { AgentProvider } from "@raypx/core/tasks";
 import {
@@ -142,13 +143,12 @@ export function connectorSettingsFile(
   return join(target, provider === "claude" ? "settings.json" : "hooks.json");
 }
 export function assertStableUpgrade(
-  previous: { version?: string; builtAt?: number },
+  previous: { version: string; builtAt: number },
   next = cliBuild,
 ) {
   if (
-    previous.version &&
-    (Bun.semver.order(previous.version, next.version) > 0 ||
-      (previous.version === next.version && (previous.builtAt ?? 0) > next.builtAt))
+    Bun.semver.order(previous.version, next.version) > 0 ||
+    (previous.version === next.version && previous.builtAt > next.builtAt)
   )
     throw new LocalError(
       "HOST_DOWNGRADE",
@@ -156,19 +156,33 @@ export function assertStableUpgrade(
     );
 }
 const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex");
+const installationSchema = z.strictObject({
+  digest: z.string().regex(/^[a-f0-9]{64}$/),
+  version: z.string().min(1).max(120),
+  builtAt: z.number().int().nonnegative(),
+});
+function readInstallation(file: string) {
+  const result = installationSchema.safeParse(JSON.parse(readFileSync(file, "utf8")));
+  if (!result.success)
+    throw new LocalError(
+      "INSTALLATION_CONFLICT",
+      "Installation metadata uses an unsupported format",
+    );
+  return result.data;
+}
 export function stableCliStatus(binary = stableCliPath()) {
   const metadata = join(dirname(binary), "installation.json");
   try {
     if (!existsSync(binary)) return { error: "HOST_BINARY_MISSING", updateAvailable: false };
     if (!existsSync(metadata)) return { error: "INSTALLATION_CONFLICT", updateAvailable: false };
-    const previous = JSON.parse(readFileSync(metadata, "utf8"));
+    const previous = readInstallation(metadata);
     if (!lstatSync(binary).isFile())
       return { error: "INSTALLATION_CONFLICT", updateAvailable: false };
     if (previous.digest !== digest(binary))
       return {
         error: "INSTALLATION_CONFLICT",
         updateAvailable: false,
-        repairable: typeof previous.digest === "string" && /^[a-f0-9]{64}$/.test(previous.digest),
+        repairable: true,
       };
     const updateAvailable =
       previous.version !== cliBuild.version ||
@@ -209,12 +223,7 @@ export function preserveModifiedCli(binary: string, confirmed = false) {
   const ownership = join(dirname(binary), "installation.json");
   if (!existsSync(ownership) || !lstatSync(binary).isFile())
     throw new LocalError("INSTALLATION_CONFLICT", "Existing executable is not owned by Raypx");
-  const previous = JSON.parse(readFileSync(ownership, "utf8"));
-  if (typeof previous.digest !== "string" || !/^[a-f0-9]{64}$/.test(previous.digest))
-    throw new LocalError(
-      "INSTALLATION_CONFLICT",
-      "Installation ownership requires manual recovery",
-    );
+  const previous = readInstallation(ownership);
   if (previous.digest === digest(binary)) return;
   if (!confirmed)
     throw new LocalError("INSTALLATION_CONFLICT", "Installed executable changed outside Raypx");
@@ -243,7 +252,7 @@ export function installStableCli(recoverModified = false) {
   const release = acquireLock(directory, "installation");
   if (!release) throw new LocalError("INSTALLATION_BUSY", "Another Raypx installation is running");
   try {
-    if (existsSync(ownership)) assertStableUpgrade(JSON.parse(readFileSync(ownership, "utf8")));
+    if (existsSync(ownership)) assertStableUpgrade(readInstallation(ownership));
     if (existsSync(binary)) {
       if (!existsSync(ownership))
         throw new LocalError(

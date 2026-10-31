@@ -13,7 +13,7 @@ it("persists installation identity and account intent while keeping credentials 
   expect(f.urls.every((url) => !url.includes(f.grant.token))).toBe(true);
   expect(f.frames[0]).toMatchObject({
     type: "auth",
-    protocolVersion: 3,
+    protocolVersion: 4,
     role: "device",
     token: f.grant.token,
   });

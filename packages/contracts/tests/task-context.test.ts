@@ -41,7 +41,7 @@ it("accepts selected revisions on public task creation and snapshots only on the
     }).context,
   ).toEqual(context);
 });
-it("advertises optional context support and forbids account routing parameters on device memory", () => {
+it("uses current context contracts without capability flags and forbids account routing on device memory", () => {
   const id = "11111111-1111-4111-8111-111111111111";
   expect(
     relayClientSchema.parse({
@@ -50,9 +50,8 @@ it("advertises optional context support and forbids account routing parameters o
       instanceId: id,
       projects: [],
       capabilities: [],
-      contextSupported: true,
     }),
-  ).toHaveProperty("contextSupported", true);
+  ).toEqual({ type: "announce", streamId: id, instanceId: id, projects: [], capabilities: [] });
   expect(localParams["memory.list"].safeParse({ accountId: "remote-account" }).success).toBe(false);
   expect(
     localParams["memory.resolve"].safeParse({

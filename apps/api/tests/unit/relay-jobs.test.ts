@@ -31,7 +31,7 @@ function run(action: CloudJobAction): CloudJobRun {
     sync: null,
   };
 }
-async function fixture(syncSupported = true) {
+async function fixture() {
   const repository = memoryControlRepository(),
     control = new ControlService(repository),
     f = await connected(control);
@@ -46,12 +46,12 @@ async function fixture(syncSupported = true) {
     id,
     JSON.stringify({
       type: "auth",
-      protocolVersion: 3,
+      protocolVersion: 4,
       role: "device",
       token: hostGrant.grant.token,
     }),
   );
-  await hub.receive(id, JSON.stringify({ ...f.announce, syncSupported }));
+  await hub.receive(id, JSON.stringify(f.announce));
   await hub.receive(id, JSON.stringify({ type: "available" }));
   repository.validSession = false; // Jobs and restricted hosts keep no browser-session dependency.
   cleanups.push(() => hub.shutdown());
@@ -230,15 +230,10 @@ it("resolves sync only after its correlated final snapshot commits and keeps com
     true,
   );
 });
-it("fails old hosts explicitly and does not accept an unrelated snapshot as a sync result", async () => {
-  const old = await fixture(false),
-    action = { type: "device.sync" as const, deviceId: old.grant.deviceId, epoch: old.grant.epoch };
-  await expect(
-    old.executor.execute(old.auth.user.id, run(action), new AbortController().signal),
-  ).rejects.toMatchObject({ code: "UPGRADE_REQUIRED", uncertain: false });
+it("does not accept an unrelated snapshot as a sync result", async () => {
   const f = await fixture(),
     controller = new AbortController(),
-    jobRun = run({ ...action, deviceId: f.grant.deviceId });
+    jobRun = run({ type: "device.sync", deviceId: f.grant.deviceId, epoch: f.grant.epoch });
   const pending = f.executor.execute(f.auth.user.id, jobRun, controller.signal);
   const rejected = pending.catch((error: unknown) => error);
   await expect

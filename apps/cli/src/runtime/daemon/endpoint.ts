@@ -21,7 +21,7 @@ const daemonEndpointSchema = z
   .object({
     protocol: z.literal(1),
     version: z.string(),
-    builtAt: z.number().nonnegative().optional(),
+    builtAt: z.number().int().nonnegative(),
     epoch: z.string().uuid(),
     token: z.string().min(64).max(200),
   })
@@ -43,7 +43,7 @@ export function daemonFetch(
     ...(signal ? { signal } : {}),
   });
 }
-async function probe(directory: string, compatibility: "match" | "any" = "match") {
+async function probe(directory: string, purpose: "connect" | "stop" = "connect") {
   let endpoint: DaemonEndpoint;
   try {
     endpoint = readDaemon(directory);
@@ -67,10 +67,11 @@ async function probe(directory: string, compatibility: "match" | "any" = "match"
   if (info.epoch !== endpoint.epoch) return;
   if (info.protocol !== 1 || typeof info.version !== "string" || info.version !== endpoint.version)
     return;
-  if (info.closing && compatibility === "match") return;
+  if (info.builtAt !== endpoint.builtAt) return;
+  if (info.closing && purpose === "connect") return;
   if (
-    compatibility === "match" &&
-    (info.version !== manifest.version || (info.builtAt ?? 0) !== cliBuild.builtAt)
+    purpose === "connect" &&
+    (info.version !== manifest.version || info.builtAt !== cliBuild.builtAt)
   )
     throw new LocalError(
       "HOST_VERSION_MISMATCH",
@@ -119,13 +120,9 @@ export function daemonLaunch(
       }
   return [target];
 }
-export async function connectDaemon(
-  options: ProfileOptions,
-  start = true,
-  compatibility: "match" | "any" = "match",
-) {
+export async function connectDaemon(options: ProfileOptions, start = true) {
   const directory = profilePath(options);
-  const current = await probe(directory, compatibility);
+  const current = await probe(directory);
   if (current) return current;
   if (!start) throw new LocalError("HOST_NOT_RUNNING", "Raypx daemon is not running");
   mkdirSync(directory, { recursive: true, mode: 0o700 });
@@ -135,7 +132,7 @@ export async function connectDaemon(
     if (release) {
       const deadline = Date.now() + 10_000;
       for (;;) {
-        const ready = await probe(directory, compatibility);
+        const ready = await probe(directory);
         if (ready) return ready;
         const available = acquireLock(directory, "daemon-owner");
         if (available) {
@@ -168,7 +165,7 @@ export async function connectDaemon(
     }
     const deadline = Date.now() + 10_000;
     while (Date.now() < deadline) {
-      const ready = await probe(directory, compatibility);
+      const ready = await probe(directory);
       if (ready) return ready;
       await Bun.sleep(50);
     }
@@ -183,7 +180,8 @@ export async function connectDaemon(
 
 /** Version-independent administrative stop; wait for ownership, not just the HTTP ACK. */
 export async function stopDaemon(options: ProfileOptions) {
-  const endpoint = await connectDaemon(options, false, "any");
+  const endpoint = await probe(profilePath(options), "stop");
+  if (!endpoint) throw new LocalError("HOST_NOT_RUNNING", "Raypx daemon is not running");
   const response = await daemonFetch(endpoint, "/stop", {}, AbortSignal.timeout(5000));
   if (!response.ok) throw new LocalError("HOST_UNAVAILABLE", "Daemon rejected stop");
   const deadline = Date.now() + 15_000;

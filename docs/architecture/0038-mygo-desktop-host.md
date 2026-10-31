@@ -22,9 +22,9 @@ The application embeds the built frontend and generated manifests. Resources
 include the compiled, version-matched CLI and complete verified Herdr runtime.
 GUI Quit releases UI approval leases and closes only its daemon proxy. The daemon
 continues running tasks. Data paths, the SQLite cross-version instance lock and
-session-v2 encryption/key service identity remain stable. On Windows the native adapter
-retains keyring 4's user.service target and UTF-16LE password bytes; it can also
-read keys produced by the earlier MyGo prototype.
+session-v2 encryption/key service identity remain stable. The native adapter
+uses MyGo Secrets on every platform. Windows uses the current service/account
+identity and raw credential bytes; retired keyring formats are not imported.
 
 `native_smoke` is a separate Go build tag. Only that build exposes the private
 random-token test endpoint. Its renderer is built in `native-smoke` mode with a

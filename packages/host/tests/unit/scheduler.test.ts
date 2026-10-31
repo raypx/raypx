@@ -59,7 +59,7 @@ async function fixture() {
   }
   async function ready(snapshot = false, socket = sockets.at(-1)!) {
     await authenticate(socket);
-    socket.receive({ type: "ready", role: "device", protocolVersion: 3 });
+    socket.receive({ type: "ready", role: "device", protocolVersion: 4 });
     await socket.sent((frame) => frame.type === "announce");
     socket.receive({ type: "resume", streamId, sequence: 0, snapshot });
     if (!snapshot) await socket.sent((frame) => frame.type === "available");

@@ -2,6 +2,41 @@ import { expect, it, vi } from "vite-plus/test";
 import { RelayConnection } from "../src/relay.js";
 import { deferred, ManualScheduler, RelaySocket } from "./helpers/relay.js";
 
+it.each([undefined, 1, 2, 3, "4", 5])(
+  "rejects server protocol %s without retrying or accepting application frames",
+  async (protocolVersion) => {
+    const scheduler = new ManualScheduler(),
+      socket = new RelaySocket(),
+      status = vi.fn(),
+      message = vi.fn();
+    const connection = new RelayConnection({
+      url: "wss://relay.example.test/relay",
+      scheduler,
+      status,
+      message,
+      authenticate: async () => ({
+        type: "auth",
+        role: "viewer",
+        protocolVersion: 4,
+        token: "synthetic-ticket",
+      }),
+      socket: () => socket.asWebSocket(),
+    });
+    try {
+      connection.start();
+      socket.open();
+      await socket.sent((frame) => frame.type === "auth");
+      socket.receive({ type: "ready", role: "viewer", protocolVersion });
+      expect(await socket.closed.promise).toBe(4006);
+      expect(status).toHaveBeenLastCalledWith(false, "UPGRADE_REQUIRED");
+      expect(message).not.toHaveBeenCalled();
+      expect(scheduler.pending).toBe(0);
+    } finally {
+      connection.stop();
+    }
+  },
+);
+
 it("drives retry backoff, heartbeat expiry and stop entirely through its scheduler", async () => {
   const scheduler = new ManualScheduler(),
     sockets: RelaySocket[] = [],
@@ -14,7 +49,7 @@ it("drives retry backoff, heartbeat expiry and stop entirely through its schedul
     authenticate: async () => ({
       type: "auth",
       role: "viewer",
-      protocolVersion: 3,
+      protocolVersion: 4,
       token: "synthetic-ticket",
     }),
     socket: () => {
@@ -39,7 +74,7 @@ it("drives retry backoff, heartbeat expiry and stop entirely through its schedul
   const socket = sockets.at(-1)!;
   socket.open();
   await socket.sent((frame) => frame.type === "auth");
-  socket.receive({ type: "ready", role: "viewer", protocolVersion: 3 });
+  socket.receive({ type: "ready", role: "viewer", protocolVersion: 4 });
   scheduler.advance(45_000);
   expect(socket.frames.filter((frame) => frame.type === "ping")).toHaveLength(3);
   scheduler.advance(15_000);
@@ -54,7 +89,7 @@ it("drives retry backoff, heartbeat expiry and stop entirely through its schedul
 
 it("fences authentication that resolves after stop and resets backoff after live traffic", async () => {
   const scheduler = new ManualScheduler(),
-    auth = deferred<{ type: "auth"; role: "viewer"; protocolVersion: 3; token: string }>();
+    auth = deferred<{ type: "auth"; role: "viewer"; protocolVersion: 4; token: string }>();
   const sockets: RelaySocket[] = [];
   const connection = new RelayConnection({
     url: "wss://relay.example.test/relay",
@@ -71,7 +106,7 @@ it("fences authentication that resolves after stop and resets backoff after live
   connection.start();
   sockets[0]!.open();
   connection.stop();
-  auth.resolve({ type: "auth", role: "viewer", protocolVersion: 3, token: "synthetic-ticket" });
+  auth.resolve({ type: "auth", role: "viewer", protocolVersion: 4, token: "synthetic-ticket" });
   await auth.promise;
   expect(sockets[0]!.frames).toEqual([]);
   connection.start();
@@ -81,7 +116,7 @@ it("fences authentication that resolves after stop and resets backoff after live
   scheduler.advance(400);
   sockets[2]!.open();
   await sockets[2]!.sent((frame) => frame.type === "auth");
-  sockets[2]!.receive({ type: "ready", role: "viewer", protocolVersion: 3 });
+  sockets[2]!.receive({ type: "ready", role: "viewer", protocolVersion: 4 });
   sockets[2]!.receive({ type: "pong" });
   sockets[2]!.close(1012);
   expect(scheduler.nextDelay).toBe(400);

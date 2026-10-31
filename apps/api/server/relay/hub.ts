@@ -2,6 +2,7 @@ import { JobError, type CloudJobRun } from "@raypx/jobs";
 import type { JobDispatchResult } from "@raypx/jobs/server";
 import {
   relayClientSchema,
+  RELAY_VERSION,
   MAX_RELAY_BYTES,
   type RelayClientFrame,
   type RelayServerFrame,
@@ -31,8 +32,6 @@ type Client = {
     bytes: number;
     syncId?: string;
   };
-  syncSupported?: boolean;
-  contextSupported?: boolean;
 };
 type DeviceResult = Extract<RelayClientFrame, { type: "result" }>["result"];
 // Only these host paths reject before launching a task. Generic errors can also
@@ -100,7 +99,7 @@ export class RelayHub {
           typeof raw === "object" &&
           "type" in raw &&
           raw.type === "auth" &&
-          (!("protocolVersion" in raw) || raw.protocolVersion !== 3)
+          (!("protocolVersion" in raw) || raw.protocolVersion !== RELAY_VERSION)
         )
           throw new ControlError("UPGRADE_REQUIRED");
         const parsed = relayClientSchema.safeParse(raw);
@@ -167,7 +166,6 @@ export class RelayHub {
         type: "ready",
         protocolVersion: frame.protocolVersion,
         role: actor.role,
-        ...(actor.role === "viewer" ? { contextSupported: true } : {}),
       });
       if (actor.role === "viewer")
         for (const event of await this.use((control) =>
@@ -206,7 +204,6 @@ export class RelayHub {
             peer.actor.deviceId === command.deviceId,
         );
         if (!device) throw new ControlError("DEVICE_OFFLINE");
-        if (command.context && !device.contextSupported) throw new ControlError("UPGRADE_REQUIRED");
         const routeId = crypto.randomUUID();
         const timer = setTimeout(() => {
           const item = this.pending.get(routeId);
@@ -251,8 +248,6 @@ export class RelayHub {
     }
     if (frame.type === "announce") {
       client.ready = false;
-      client.syncSupported = frame.syncSupported === true;
-      client.contextSupported = frame.contextSupported === true;
       const resume = await this.use((control) => control.announce(actor, frame));
       client.cursor = { streamId: resume.streamId, sequence: resume.sequence };
       this.send(client, resume);
@@ -423,7 +418,6 @@ export class RelayHub {
           taskId: command.recoveredTask.id,
           status: command.recoveredTask.status,
         };
-      if (command.context && !device.contextSupported) throw new ControlError("UPGRADE_REQUIRED");
       await this.use((control) => control.validateJobPeer(device.actor!, run.action));
     } catch (error) {
       throw new JobError(error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE");
@@ -488,7 +482,6 @@ export class RelayHub {
   async sync(userId: string, run: CloudJobRun, signal: AbortSignal): Promise<Synced> {
     if (run.action.type !== "device.sync") throw new JobError("INVALID_INPUT");
     const device = await this.jobDevice(userId, run, signal);
-    if (!device.syncSupported) throw new JobError("UPGRADE_REQUIRED");
     if (!device.cursor) throw new JobError("DEVICE_OFFLINE");
     const key = `${userId}:${run.id}`,
       previous = this.syncs.get(key);

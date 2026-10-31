@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { RemoteControl } from "@raypx/host";
 import {
+  RELAY_VERSION,
   relayClientSchema,
   type RelayClientFrame,
   type RelayServerFrame,
@@ -19,7 +20,7 @@ export function hostFixtures() {
   async function control(
     options: NonNullable<ConstructorParameters<typeof RemoteControl>[4]> = {},
     rejectAuthentication = () => false,
-    supportedVersion?: () => 2 | 3,
+    supportedVersion?: () => number,
   ) {
     const directory = mkdtempSync(join(tmpdir(), "raypx-relay-native-"));
     const streamId = crypto.randomUUID(),
@@ -64,18 +65,17 @@ export function hostFixtures() {
             return;
           }
           if (frame.type === "auth") {
-            if (supportedVersion && frame.protocolVersion > supportedVersion()) {
+            if (supportedVersion && frame.protocolVersion !== supportedVersion()) {
               peer.close(4006, "UPGRADE_REQUIRED");
               return;
             }
             peer.send({
               type: "ready",
-              protocolVersion: 3,
+              protocolVersion: RELAY_VERSION,
               role: frame.role,
             });
           }
           if (frame.type === "announce") {
-            expect(frame.contextSupported).toBe(true);
             peer.send({ type: "resume", streamId, sequence: cursor, snapshot: !initialized });
           }
           if (frame.type === "snapshot" && frame.done) {
@@ -134,7 +134,7 @@ export function hostFixtures() {
     });
     await value.enable("account", true);
     await value.attach("account", server.url.origin, grant);
-    if (supportedVersion?.() === 2)
+    if (supportedVersion && supportedVersion() !== RELAY_VERSION)
       await expect.poll(() => value.info("account").error).toBe("UPGRADE_REQUIRED");
     else await expect.poll(() => value.info("account").connected).toBe(true);
     return {

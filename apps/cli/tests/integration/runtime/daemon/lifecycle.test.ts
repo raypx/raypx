@@ -11,8 +11,26 @@ import {
 } from "../../../../src/runtime/daemon/endpoint";
 import { startDaemon } from "../../../../src/runtime/daemon/server";
 
+it.each([undefined, 1.5])("rejects daemon metadata with invalid build identity %s", (builtAt) => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-daemon-format-"));
+  const text = JSON.stringify({
+    protocol: 1,
+    version: "0.1.0",
+    builtAt,
+    epoch: crypto.randomUUID(),
+    token: "a".repeat(64),
+    socket: join(directory, "host.sock"),
+  });
+  try {
+    writeFileSync(join(directory, "daemon.json"), text);
+    expect(() => readDaemon(directory)).toThrow(/builtAt/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 it.skipIf(process.platform === "win32")(
-  "can stop an incompatible owner and waits for its lock to be released",
+  "refuses connections to a different build and waits for its lock after an explicit stop",
   async () => {
     const dataDir = mkdtempSync(join(tmpdir(), "raypx-old-owner-")),
       directory = profilePath({ dataDir });
@@ -22,6 +40,7 @@ it.skipIf(process.platform === "win32")(
     const endpoint = {
       protocol: 1,
       version: "99.0.0",
+      builtAt: 1,
       epoch: crypto.randomUUID(),
       token: "a".repeat(64),
       socket: join(dataDir, "host.sock"),
@@ -42,7 +61,6 @@ it.skipIf(process.platform === "win32")(
       await expect(connectDaemon({ dataDir }, false)).rejects.toMatchObject({
         code: "HOST_VERSION_MISMATCH",
       });
-      expect((await connectDaemon({ dataDir }, false, "any")).version).toBe("99.0.0");
       await expect(stopDaemon({ dataDir })).resolves.toEqual({ stopped: true });
       expect(released).toBe(true);
     } finally {

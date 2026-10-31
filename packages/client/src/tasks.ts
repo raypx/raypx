@@ -1,6 +1,7 @@
 import type { ApiClient } from "./index.js";
 import { RelayConnection, relayUrl, type RelaySocketFactory } from "./relay.js";
 import {
+  RELAY_VERSION,
   type RelayRequest,
   type RelayCursor,
   type TaskChange,
@@ -102,7 +103,7 @@ export function createTaskClient(
         if (account !== currentAccount) throw new Error("Account changed");
         return {
           type: "auth",
-          protocolVersion: 3,
+          protocolVersion: RELAY_VERSION,
           role: "viewer",
           token: ticket.token,
           cursors: [...cursors.values()],
@@ -187,12 +188,6 @@ export function createTaskClient(
       });
     }
     if (!connection) throw failure("NETWORK_UNAVAILABLE");
-    if (
-      value.method === "tasks.create" &&
-      value.input.contextSelection?.sources.length &&
-      !connection.contextSupported
-    )
-      throw failure("UPGRADE_REQUIRED");
     const id =
       value.method === "observed.decide"
         ? value.input.receiptId

@@ -40,7 +40,6 @@ it("keeps snapshot requests arriving during a flush and ignores duplicate old sn
   const f = await control(),
     announce = f.frames.find((frame) => frame.type === "announce")!;
   if (announce.type !== "announce") throw new Error("Missing announcement");
-  expect(announce.syncSupported).toBe(true);
   const original = f.request.getMockImplementation()!;
   let release!: () => void, entered!: () => void;
   const gate = new Promise<void>((resolve) => {

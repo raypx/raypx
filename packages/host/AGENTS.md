@@ -11,7 +11,7 @@ Public exports are `RemoteControl`, `ControlInfo`, `serverOrigin` and the pure
 `readRemoteControlSettings` reader. The reader shares runtime parsing rules but
 must not create directories, IDs, files, controllers or network activity. Inject the
 local engine, credential renewal, notifications and optional observed-session
-projection/acknowledgement callbacks. Relay requires protocol 3 and stops with
+projection/acknowledgement callbacks. Relay requires protocol 4 and stops with
 UPGRADE_REQUIRED on unsupported versions. Renderer imports pure contract types.
 
 ## Constraints
@@ -35,13 +35,13 @@ Keep loopback coverage for actual authentication, command delivery and renewal.
 Unsupported handshakes stop with UPGRADE_REQUIRED. Terminal renewal failures call
 the owner's authorization-loss handler, which owns binding cleanup. Consume background
 promise failures and fence queued cleanup to its original binding. Always authenticate
-with protocol 3, including after grant renewal or an explicit restart.
+with protocol 4, including after grant renewal or an explicit restart.
 
-A new host advertises `announce.syncSupported`. Internal server sync requests use
+All current hosts support authoritative snapshots. Internal server sync requests use
 `resume.syncId`; never reset the cursor, reconnect or detach for these requests.
 Queue each distinct ID through the current flush, carry it on every snapshot page,
 and remove it only after the matching snapshot ACK. A request arriving while
 another snapshot is in flight must retain its own authoritative checkpoint.
 
-Hosts advertise `announce.contextSupported` for frozen task reference snapshots;
-the transport forwards these snapshots and never resolves device library entries.
+All current hosts accept frozen task reference snapshots; the transport forwards
+them and never resolves device library entries.

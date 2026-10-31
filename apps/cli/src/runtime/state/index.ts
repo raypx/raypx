@@ -28,47 +28,39 @@ export function profilePath(options: { dataDir?: string; profile?: string } = {}
 }
 export class StateStore {
   readonly db: LocalDatabase;
-  private readonly lease: Database;
   constructor(readonly directory: string) {
     mkdirSync(directory, { recursive: true });
     const database = new Database(join(directory, "state.sqlite"), { create: true, strict: true });
     this.db = drizzle({ client: database });
     database.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
-    this.lease = new Database(join(directory, "schema.lock.sqlite"), { create: true });
     try {
-      this.lease.exec("PRAGMA busy_timeout=1000;");
-      if (!this.lease.query("SELECT name FROM sqlite_master WHERE name='lease'").get())
-        this.lease.exec(
-          "CREATE TABLE IF NOT EXISTS lease (id INTEGER PRIMARY KEY); INSERT OR IGNORE INTO lease VALUES (1);",
-        );
-      const version = (database.query("PRAGMA user_version").get() as { user_version: number })
-        .user_version;
-      if (version > STATE_SCHEMA_VERSION) {
-        throw new LocalError("NEWER_SCHEMA", "This profile requires a newer Raypx CLI");
-      }
-      if (version < STATE_SCHEMA_VERSION) {
-        // Every process opens the schema lease before migration; existing runtimes
-        // retain a shared reader lease so migrations cannot race live executors.
-        const migration = new Database(join(directory, "schema.lock.sqlite"), { create: true });
-        try {
-          migration.exec("PRAGMA busy_timeout=1000; BEGIN EXCLUSIVE;");
-          this.db.transaction(() => {
-            database.exec(
-              "CREATE TABLE IF NOT EXISTS roots (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, jobId TEXT NOT NULL, startedAt TEXT NOT NULL, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL); INSERT OR IGNORE INTO meta VALUES ('revision',0); PRAGMA user_version=1;",
+      this.db.transaction(
+        () => {
+          const version = (database.query("PRAGMA user_version").get() as { user_version: number })
+            .user_version;
+          if (version === STATE_SCHEMA_VERSION) return;
+          if (
+            version !== 0 ||
+            database
+              .query("SELECT name FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*' LIMIT 1")
+              .get()
+          )
+            throw new LocalError(
+              "UNSUPPORTED_SCHEMA",
+              "This profile uses an unsupported state schema",
             );
-          });
-          migration.exec("COMMIT;");
-        } finally {
-          migration.close();
-        }
-      }
-      this.lease.exec("BEGIN; SELECT id FROM lease;");
+          // Only a genuinely empty database is initialized. Existing data is never upgraded.
+          database.exec(
+            "CREATE TABLE roots (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE jobs (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE runs (id TEXT PRIMARY KEY, jobId TEXT NOT NULL, startedAt TEXT NOT NULL, value TEXT NOT NULL); CREATE TABLE meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL); INSERT INTO meta VALUES ('revision',0); PRAGMA user_version=1;",
+          );
+        },
+        { behavior: "immediate" },
+      );
       this.db
         .delete(runs)
         .where(lt(runs.startedAt, new Date(Date.now() - 30 * 86_400_000).toISOString()))
         .run();
     } catch (error) {
-      this.lease.close();
       this.db.$client.close();
       throw error;
     }
@@ -179,8 +171,6 @@ export class StateStore {
       .map((row) => JSON.parse(row.value));
   }
   close() {
-    this.lease.exec("ROLLBACK;");
-    this.lease.close();
     this.db.$client.close();
   }
 }

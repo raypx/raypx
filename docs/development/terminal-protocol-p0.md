@@ -101,7 +101,7 @@ credential configuration has been installed by this change.
 ## Follow-on status
 
 The [P1 implementation](terminal-host-p1.md) now promotes the private broker into
-an independent macOS daemon with restricted host authorization, relay v3 and
+an independent macOS daemon with restricted host authorization, relay v4 and
 Web/Desktop observed-request approvals. P0 remains the source of recorded vendor
 contract evidence. Its original standalone smoke does not by itself prove relay
 integration; use P1's real PostgreSQL/relay acceptance for that claim.

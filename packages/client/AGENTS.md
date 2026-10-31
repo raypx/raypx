@@ -11,7 +11,7 @@ and injectable fetch/socket types. `RelayScheduler` and `systemRelayScheduler` e
 clock, timer cancellation and random source; RelayConnection accepts one optional scheduler
 for deterministic retry and heartbeat tests, retaining system defaults at runtime. Task mutations use the relay; HTTP reads retain
 the existing projection contracts. Relay traffic contains no credentials in URLs.
-Task subscriptions carry typed device/event/reset changes. Relay requires v3 for
+Task subscriptions carry typed device/event/reset changes. Relay requires v4 for
 managed tasks and observed requests. Unsupported versions stop with UPGRADE_REQUIRED;
 there is no downgrade or missing-procedure fallback. New account attachment explicitly
 restarts a rejected connection after the server is upgraded.
@@ -36,4 +36,4 @@ bun run --cwd packages/client test
 selects only the account/coordination contracts, excluding administrator settings.
 
 `TaskClient.observed` reads bounded summaries and individual request bodies, and sends
-receipt-bound decisions over relay v3. Never automatically retry a changed decision.
+receipt-bound decisions over relay v4. Never automatically retry a changed decision.

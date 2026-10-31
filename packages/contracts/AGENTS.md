@@ -35,7 +35,7 @@ Core owns code-point-safe `taskText` clipping within UTF-16 schema budgets and
 replaces lone surrogates and NUL with the replacement character, preserving valid
 Unicode pairs; use it on transport JSON, not non-JSON objects such as Date.
 Relay schemas compose core models into commands, sequenced events, snapshots and cursor recovery.
-Relay requires explicit protocolVersion 3 for managed tasks and observed requests.
+Relay requires explicit protocolVersion 4 for managed tasks and observed requests.
 Unsupported versions receive UPGRADE_REQUIRED without fallback. Full activity events are
 authoritative checkpoints; activity_delta appends require an entry ID and adjacent
 base/new revisions. Core's applyActivityEvent returns undefined when checkpoint recovery
@@ -53,13 +53,13 @@ They reuse normalized task/decision DTOs without publishing a local HTTP endpoin
 `/api` also exports configuration DTOs and administrator RPC contracts. Public
 settings are an explicit projection; write values reject unknown keys. No secrets.
 
-Relay's optional `announce.syncSupported`, `resume.syncId` and `snapshot.syncId`
-correlate a backend-requested authoritative snapshot without a new protocol
-version or a device disconnect. Older hosts omit support and cannot claim sync
-success; jobs must report upgrade required. These fields are not public job RPCs.
+Relay v4 includes authoritative snapshot sync and frozen task contexts for every
+host. `resume.syncId` and `snapshot.syncId` correlate backend-requested snapshots;
+background recovery does not require a correlation ID. No capability negotiation
+or partial-protocol mode is supported.
 
 Task creation accepts `contextSelection` references only; the internal relay command
-carries an authoritative `context` snapshot. Hosts advertise `contextSupported`.
+carries an authoritative `context` snapshot.
 Private `memory.*` IPC always addresses the device-profile library, accepts no
 account ID, and uses the same version/CAS inputs as the account library.
 

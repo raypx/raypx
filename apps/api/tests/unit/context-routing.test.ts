@@ -129,14 +129,14 @@ it("reclaims an accepted command snapshot and recovers the task without another 
   try {
     await hub.receive(
       host,
-      JSON.stringify({ type: "auth", protocolVersion: 3, role: "device", token: f.grant.token }),
+      JSON.stringify({ type: "auth", protocolVersion: 4, role: "device", token: f.grant.token }),
     );
-    await hub.receive(host, JSON.stringify({ ...f.announce, contextSupported: true }));
+    await hub.receive(host, JSON.stringify(f.announce));
     await hub.receive(host, JSON.stringify({ type: "available" }));
     const ticket = await control.ticket(f.auth);
     await hub.receive(
       viewer,
-      JSON.stringify({ type: "auth", protocolVersion: 3, role: "viewer", token: ticket.token }),
+      JSON.stringify({ type: "auth", protocolVersion: 4, role: "viewer", token: ticket.token }),
     );
     const input = {
       ...f.input,
@@ -237,64 +237,59 @@ it("compacts unknown delivery into a private-content-free receipt and never reso
   expect(resolve).toHaveBeenCalledTimes(1);
 });
 
-it.each([false, true])(
-  "forwards context only to an explicitly capable host (%s)",
-  async (supported) => {
-    const captured = snapshot();
-    const control = new ControlService(memoryControlRepository(), Date.now, async () => captured);
-    const f = await connected(control);
-    const hub = new RelayHub(async (run) => run(control));
-    const deviceId = crypto.randomUUID(),
-      viewerId = crypto.randomUUID();
-    const deviceFrames: RelayServerFrame[] = [],
-      viewerFrames: RelayServerFrame[] = [];
-    hub.open({ id: deviceId, send: (frame) => deviceFrames.push(frame), close() {} });
-    hub.open({ id: viewerId, send: (frame) => viewerFrames.push(frame), close() {} });
-    try {
-      await hub.receive(
-        deviceId,
-        JSON.stringify({ type: "auth", protocolVersion: 3, role: "device", token: f.grant.token }),
-      );
-      await hub.receive(deviceId, JSON.stringify({ ...f.announce, contextSupported: supported }));
-      await hub.receive(deviceId, JSON.stringify({ type: "available" }));
-      const ticket = await control.ticket(f.auth);
-      await hub.receive(
-        viewerId,
-        JSON.stringify({ type: "auth", protocolVersion: 3, role: "viewer", token: ticket.token }),
-      );
-      const input = {
-        ...f.input,
-        contextSelection: {
-          sources: captured.sources.map(({ id, revision }) => ({ id, revision })),
-        },
-      };
-      await hub.receive(
-        viewerId,
-        JSON.stringify({
-          type: "request",
-          id: input.id,
-          request: { method: "tasks.create", input },
-        }),
-      );
-      const command = deviceFrames.find((frame) => frame.type === "command");
-      expect(command?.command.context).toEqual(supported ? captured : undefined);
-      if (supported) {
-        await hub.receive(
-          deviceId,
-          JSON.stringify({
-            type: "result",
-            routeId: command!.routeId,
-            result: { ok: false, code: "CONTEXT_TOO_LARGE" },
-          }),
-        );
-      }
-      expect(viewerFrames).toContainEqual({
-        type: "result",
+it("forwards context to every current-protocol host", async () => {
+  const captured = snapshot();
+  const control = new ControlService(memoryControlRepository(), Date.now, async () => captured);
+  const f = await connected(control);
+  const hub = new RelayHub(async (run) => run(control));
+  const deviceId = crypto.randomUUID(),
+    viewerId = crypto.randomUUID();
+  const deviceFrames: RelayServerFrame[] = [],
+    viewerFrames: RelayServerFrame[] = [];
+  hub.open({ id: deviceId, send: (frame) => deviceFrames.push(frame), close() {} });
+  hub.open({ id: viewerId, send: (frame) => viewerFrames.push(frame), close() {} });
+  try {
+    await hub.receive(
+      deviceId,
+      JSON.stringify({ type: "auth", protocolVersion: 4, role: "device", token: f.grant.token }),
+    );
+    await hub.receive(deviceId, JSON.stringify(f.announce));
+    await hub.receive(deviceId, JSON.stringify({ type: "available" }));
+    const ticket = await control.ticket(f.auth);
+    await hub.receive(
+      viewerId,
+      JSON.stringify({ type: "auth", protocolVersion: 4, role: "viewer", token: ticket.token }),
+    );
+    const input = {
+      ...f.input,
+      contextSelection: {
+        sources: captured.sources.map(({ id, revision }) => ({ id, revision })),
+      },
+    };
+    await hub.receive(
+      viewerId,
+      JSON.stringify({
+        type: "request",
         id: input.id,
-        result: { ok: false, code: supported ? "CONTEXT_TOO_LARGE" : "UPGRADE_REQUIRED" },
-      });
-    } finally {
-      await hub.shutdown();
-    }
-  },
-);
+        request: { method: "tasks.create", input },
+      }),
+    );
+    const command = deviceFrames.find((frame) => frame.type === "command");
+    expect(command?.command.context).toEqual(captured);
+    await hub.receive(
+      deviceId,
+      JSON.stringify({
+        type: "result",
+        routeId: command!.routeId,
+        result: { ok: false, code: "CONTEXT_TOO_LARGE" },
+      }),
+    );
+    expect(viewerFrames).toContainEqual({
+      type: "result",
+      id: input.id,
+      result: { ok: false, code: "CONTEXT_TOO_LARGE" },
+    });
+  } finally {
+    await hub.shutdown();
+  }
+});

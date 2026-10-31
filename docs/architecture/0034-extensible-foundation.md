@@ -16,9 +16,9 @@ toolchain and runtime choices. The compiled CLI includes Bun;
 [ADR 0038](0038-mygo-desktop-host.md) replaces the Desktop host with MyGo
 and system WKWebView/WebView2.
 
-The account database and migration history are new and independent. Old SQL is
-historical and must not be applied by the foundation commands. No old user data
-or volumes are changed as part of the rebuild.
+The account database and migration history are new and independent. Retired SQL
+is available only in Git history and must not be applied by foundation commands.
+No old user data or volumes are changed as part of the rebuild.
 
 Consequences: entrypoint/platform checks and generator templates require maintenance,
 but ordinary packages no longer require edits to a central architecture whitelist,

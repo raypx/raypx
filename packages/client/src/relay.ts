@@ -27,10 +27,6 @@ export class RelayConnection {
   private generation = 0;
   private failures = 0;
   private lastMessage = 0;
-  private contextAvailable = false;
-  get contextSupported() {
-    return this.contextAvailable;
-  }
   constructor(
     private readonly options: {
       url: string;
@@ -56,7 +52,6 @@ export class RelayConnection {
   private connect() {
     if (!this.enabled) return;
     const generation = ++this.generation;
-    this.contextAvailable = false;
     try {
       const socket = (this.options.socket ?? ((url) => new WebSocket(url)))(this.options.url);
       this.socket = socket;
@@ -95,7 +90,6 @@ export class RelayConnection {
           if (frame.type === "pong" || frame.type === "changed") this.failures = 0;
           this.lastMessage = this.scheduler.now();
           if (frame.type === "ready") {
-            this.contextAvailable = frame.contextSupported === true;
             this.options.status(true);
             this.heartbeat = this.scheduler.interval(() => {
               if (this.scheduler.now() - this.lastMessage > 45_000)
@@ -114,7 +108,6 @@ export class RelayConnection {
         if (this.heartbeat) this.heartbeat();
         this.heartbeat = undefined;
         this.socket = undefined;
-        this.contextAvailable = false;
         this.options.status(
           false,
           event.code === 4006
@@ -144,13 +137,6 @@ export class RelayConnection {
     }
   }
   send(frame: RelayClientFrame) {
-    if (
-      frame.type === "request" &&
-      frame.request.method === "tasks.create" &&
-      frame.request.input.contextSelection?.sources.length &&
-      !this.contextAvailable
-    )
-      throw new Error("UPGRADE_REQUIRED");
     const value = JSON.stringify(frame);
     if (new TextEncoder().encode(value).byteLength > MAX_RELAY_BYTES)
       throw new Error("RELAY_FRAME_LIMIT");
@@ -164,7 +150,6 @@ export class RelayConnection {
   }
   stop() {
     this.enabled = false;
-    this.contextAvailable = false;
     this.generation++;
     if (this.retry) this.retry();
     if (this.heartbeat) this.heartbeat();

@@ -105,8 +105,8 @@ remote waiting followed by terminal fallback.
 
 ## Protocol and UI
 
-Relay v3 adds observed session/request batches and ACKs after database commit;
-only protocol 3 is supported. Other versions fail with UPGRADE_REQUIRED. Observed requests are separate from
+Relay v4 adds observed session/request batches and ACKs after database commit;
+only protocol 4 is supported. Other versions fail with UPGRADE_REQUIRED. Observed requests are separate from
 ManagedTask and keep invocation ID, request ID, revision, host epoch, expiry and
 immutable decision receipt. The host is the approval authority. Duplicate answers
 with the same receipt return its original result; changing the answer, revision,
@@ -196,8 +196,8 @@ provider, PostgreSQL, production or mobile acceptance claim.
 
 ## Subsequent review
 
-[The P1 review remediation](terminal-host-p1-review.md) records stream framing,
+[The P1 review remediation](../history/development/terminal-host-p1-review.md) records stream framing,
 host-owned revisions, authorization revocation and connector updates. That historical
 record includes transitional compatibility and migration behavior removed on 2026-10-31.
-Current clients and hosts require Relay v3 and the current host authorization API;
+Current clients and hosts require Relay v4 and the current host authorization API;
 there is no protocol downgrade, browser-grant fallback or automatic data import.

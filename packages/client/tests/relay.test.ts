@@ -40,7 +40,7 @@ it("rejects an older server without downgrading and reconnects after an explicit
         );
       if (frame.type === "auth") {
         versions.push(frame.protocolVersion);
-        if (olderServer && frame.protocolVersion === 3) this.close(4006);
+        if (olderServer && frame.protocolVersion === 4) this.close(4006);
         else reply({ type: "ready", role: "viewer", protocolVersion: frame.protocolVersion });
       }
       if (frame.type === "request")
@@ -69,18 +69,18 @@ it("rejects an older server without downgrading and reconnects after an explicit
     release = client.subscribe(() => {});
     // Drive the complete retry windows without racing the polling deadline.
     await vi.advanceTimersByTimeAsync(500);
-    expect(versions).toEqual([3]);
+    expect(versions).toEqual([4]);
     await expect(client.tasks.cancel({ id: task.id })).rejects.toMatchObject({
       data: { error: { code: "UPGRADE_REQUIRED" } },
     });
     await vi.advanceTimersByTimeAsync(30_000);
-    expect(versions).toEqual([3]);
+    expect(versions).toEqual([4]);
     expect(observedReads).toBe(0);
     olderServer = false;
     client.setAccount(null);
     client.setAccount("account");
     await vi.advanceTimersByTimeAsync(0);
-    expect(versions).toEqual([3, 3]);
+    expect(versions).toEqual([4, 4]);
     expect(await client.tasks.cancel({ id: task.id })).toMatchObject({
       id: task.id,
       status: "cancelled",
@@ -94,9 +94,8 @@ it("rejects an older server without downgrading and reconnects after an explicit
   }
 });
 
-it("requires explicit context support and renegotiates it on every connection", async () => {
-  let supportsContext = false,
-    disconnect = () => {};
+it("supports context on every current-protocol connection without capability negotiation", async () => {
+  let disconnect = () => {};
   const sent: unknown[] = [];
   const task = taskSchema.parse({
     id: crypto.randomUUID(),
@@ -133,8 +132,7 @@ it("requires explicit context support and renegotiates it on every connection", 
         reply({
           type: "ready",
           role: "viewer",
-          protocolVersion: 3,
-          ...(supportsContext ? { contextSupported: true } : {}),
+          protocolVersion: 4,
         });
       if (frame.type === "request") {
         sent.push(frame);
@@ -169,23 +167,11 @@ it("requires explicit context support and renegotiates it on every connection", 
     client.setAccount("account");
     release = client.subscribe(() => {});
     await vi.advanceTimersByTimeAsync(0);
-    await expect(
-      client.tasks.create({ ...input, contextSelection: selection }),
-    ).rejects.toMatchObject({ data: { error: { code: "UPGRADE_REQUIRED" } } });
-    expect(sent).toEqual([]);
-    await client.tasks.create(input);
+    await client.tasks.create({ ...input, contextSelection: selection });
     expect(sent).toHaveLength(1);
-    supportsContext = true;
     disconnect();
     await vi.advanceTimersByTimeAsync(1000);
     await client.tasks.create({ ...input, id: crypto.randomUUID(), contextSelection: selection });
-    expect(sent).toHaveLength(2);
-    supportsContext = false;
-    disconnect();
-    await vi.advanceTimersByTimeAsync(1000);
-    await expect(
-      client.tasks.create({ ...input, id: crypto.randomUUID(), contextSelection: selection }),
-    ).rejects.toMatchObject({ data: { error: { code: "UPGRADE_REQUIRED" } } });
     expect(sent).toHaveLength(2);
   } finally {
     release();

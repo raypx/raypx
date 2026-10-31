@@ -90,7 +90,7 @@ runtime dependency or part of the cross-platform default verify gate.
 
 `runtime/terminal` supplies the observed-session RequestBroker, private authenticated
 hook endpoint (Unix socket, or loopback on Windows), bounded plain-content envelopes and safe hook settings plans.
-`runtime/daemon` owns relay v3, project-specific Away opt-in, host authorization
+`runtime/daemon` owns relay v4, project-specific Away opt-in, host authorization
 in Keychain or Windows Credential Manager and connector/service installation.
 `runtime/foreground.ts` reuses its control and terminal routing for direct Windows stdio,
 with lifecycle shutdown owned by that foreground process. Host credentials never enter JSON

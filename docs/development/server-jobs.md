@@ -56,8 +56,7 @@ never resent. A process restart first checks the persisted task ID; a dispatch s
 unconfirmed after two minutes becomes unknown. A completed projection can resolve
 the run later, but does not automatically re-enable the paused plan.
 
-Projection sync requires the host's optional `syncSupported` capability and a
-matching `syncId`. Older hosts return `UPGRADE_REQUIRED`. New sync requests are
+Relay v4 requires authoritative projection sync with a matching `syncId`. New sync requests are
 queued during an in-progress flush without disconnecting active commands.
 
 Cloud mutations require a trusted Origin, a current account session and rate limits;
@@ -89,13 +88,13 @@ Only the following `raypx_foundation` records are eligible:
 | Sessions               | Expired more than 24 hours ago      | 1,000                  |
 | Verification tokens    | Expired more than 24 hours ago      | 1,000                  |
 | Rate limits            | Last request more than one hour ago | 1,000                  |
-| Terminal requests      | Device has been revoked             | 1,000                  |
-| Terminal sessions      | Device has been revoked             | 1,000                  |
 | Context command bodies | Accepted at least 24 hours ago      | 1,000 compacted        |
 
 All comparisons use PostgreSQL time. The grace periods preserve recently expired
 records and exceed the shared maximum 60-second rate-limit window. Users, accounts,
-devices, managed Agent tasks, replay history and local profiles have no cleanup policy here. Device revocation now deletes its terminal projections immediately; this job drains records retained by older versions. It preserves projections for active devices. Old-data cleanup requires both enablement switches above, while new revocations do not depend on the schedule.
+devices, managed Agent tasks, replay history and local profiles have no cleanup
+policy here. Device revocation deletes its terminal projections immediately and
+does not depend on this schedule. No repair or import of retired data is performed.
 
 Context command cleanup removes private request/reference bodies while retaining
 compact digest receipts for unknown delivery. Matching authoritative task

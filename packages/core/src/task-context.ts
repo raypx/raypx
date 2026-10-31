@@ -1,12 +1,14 @@
 import { z } from "zod";
 
-export const taskContextIdSchema = z.uuid().toLowerCase();
+export const taskContextIdSchema = z
+  .uuid()
+  .refine((value) => value === value.toLowerCase(), "Expected a canonical lowercase UUID");
 const selectedSource = z.strictObject({
   id: taskContextIdSchema,
   revision: z.number().int().positive(),
 });
 const uniqueSources = (sources: { id: string }[]) =>
-  new Set(sources.map((source) => source.id.toLowerCase())).size === sources.length;
+  new Set(sources.map((source) => source.id)).size === sources.length;
 export const MAX_TASK_EXECUTION_PROMPT = 32_000;
 export const taskContextTargetSchema = z.strictObject({
   deviceId: taskContextIdSchema,

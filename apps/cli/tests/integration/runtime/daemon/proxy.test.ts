@@ -42,6 +42,7 @@ it.skipIf(process.platform === "win32")(
     const endpoint = {
       protocol: 1,
       version: manifest.version,
+      builtAt: 0,
       epoch: crypto.randomUUID(),
       socket: join(dataDir, "host.sock"),
       token: "a".repeat(64),

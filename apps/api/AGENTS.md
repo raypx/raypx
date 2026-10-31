@@ -37,7 +37,7 @@ service projects public fields; API owns HTTP and unauthorized/error mapping.
 `JOBS_ENABLED` (false by default). Nitro owns the schedule.
 Cleanup uses PostgreSQL transaction time, an advisory transaction lock and bounded
 row-locked batches. Sessions/verification records expired over 24 hours ago,
-rate limits older than one hour and terminal projections of revoked devices are eligible. Failure rolls back and retries
+rate limits older than one hour are eligible. Device revocation removes terminal projections immediately. Failure rolls back and retries
 on the next schedule. Never add a production HTTP task runner or log driver errors.
 Tasks reuse the API runtime.
 See `docs/development/server-jobs.md` for policy and verification.
@@ -181,7 +181,7 @@ See `docs/development/configuration.md`.
 Host bootstrap requires the current account session and a device/epoch binding.
 Only hashed, expiring, device-scoped credentials are stored. They renew device grants
 without retaining browser sessions; revoke invalidates all credentials for that device.
-Never accept a host credential as a viewer ticket. Relay v3 stores observed requests
+Never accept a host credential as a viewer ticket. Relay v4 stores observed requests
 separately from managed tasks, validates connection/epoch/revision and ACKs only after
 commit. Summary reads omit bodies/questions/answers; fetch one body only on expansion.
 Private local host/router methods are never public HTTP methods. Terminal content is

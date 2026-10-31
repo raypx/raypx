@@ -30,7 +30,7 @@ for (const [surface, base] of [
         socket.onMessage((raw) => {
           const message = JSON.parse(String(raw));
           if (message.type === "auth")
-            socket.send(JSON.stringify({ type: "ready", role: "viewer", protocolVersion: 3 }));
+            socket.send(JSON.stringify({ type: "ready", role: "viewer", protocolVersion: 4 }));
           else if (message.type === "ping") socket.send(JSON.stringify({ type: "pong" }));
           else if (message.type === "request") executionCommands++;
         });

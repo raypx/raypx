@@ -86,36 +86,33 @@ it("preserves markdown, quotes and backslashes without charging JSON escaping to
   expect(prompt.length).toBeLessThan(32_000);
   expect(JSON.stringify(task.context.sources).length).toBeGreaterThan(32_000);
 });
-it("normalizes legacy uppercase UUIDs in targets, selections and frozen snapshots", () => {
+it("rejects noncanonical context UUIDs instead of importing uppercase aliases", () => {
   const id = "abcdefab-cdef-4abc-8def-abcdefabcdef";
-  expect(taskContextIdSchema.parse(id.toUpperCase())).toBe(id);
+  expect(taskContextIdSchema.parse(id)).toBe(id);
+  expect(taskContextIdSchema.safeParse(id.toUpperCase()).success).toBe(false);
   expect(
-    taskContextTargetSchema.parse({ deviceId: id.toUpperCase(), projectId: id.toUpperCase() }),
-  ).toEqual({ deviceId: id, projectId: id });
+    taskContextTargetSchema.safeParse({ deviceId: id.toUpperCase(), projectId: id }).success,
+  ).toBe(false);
   expect(
-    taskContextSelectionSchema.parse({ sources: [{ id: id.toUpperCase(), revision: 1 }] }),
-  ).toEqual({ sources: [{ id, revision: 1 }] });
+    taskContextSelectionSchema.safeParse({ sources: [{ id: id.toUpperCase(), revision: 1 }] })
+      .success,
+  ).toBe(false);
   expect(
-    taskContextSnapshotSchema.parse({
+    taskContextSnapshotSchema.safeParse({
       ...context,
-      sources: [
-        {
-          ...source,
-          id: id.toUpperCase(),
-          project: { deviceId: id.toUpperCase(), projectId: id.toUpperCase() },
-        },
-      ],
-    }).sources[0],
-  ).toMatchObject({ id, project: { deviceId: id, projectId: id } });
+      sources: [{ ...source, id: id.toUpperCase() }],
+    }).success,
+  ).toBe(false);
   expect(
     taskContextSelectionSchema.safeParse({
       sources: [
         { id, revision: 1 },
-        { id: id.toUpperCase(), revision: 2 },
+        { id, revision: 2 },
       ],
     }).success,
   ).toBe(false);
 });
+
 it("rejects an oversized combined prompt without dropping selected content", () => {
   expect(() => taskExecutionPrompt({ prompt: "x".repeat(32000), context })).toThrow(
     "CONTEXT_TOO_LARGE",
