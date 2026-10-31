@@ -72,7 +72,7 @@ export function TaskInputComposer({
       setBusy(false);
     }
   }
-  if (!modes.length) return <p className="text-xs text-muted-foreground">{t("inputUpgrade")}</p>;
+  if (!modes.length) return null;
   return (
     <form
       className="space-y-3 border-t border-border pt-5"

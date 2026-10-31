@@ -56,7 +56,8 @@ settings are an explicit projection; write values reject unknown keys. No secret
 Relay v4 includes authoritative snapshot sync and frozen task contexts for every
 host. `resume.syncId` and `snapshot.syncId` correlate backend-requested snapshots;
 background recovery does not require a correlation ID. No capability negotiation
-or partial-protocol mode is supported.
+or partial-protocol mode is supported. Provider capabilities require `reason` and
+`inputModes`; task detail replies always include `activity`, including an empty list.
 
 Task creation accepts `contextSelection` references only; the internal relay command
 carries an authoritative `context` snapshot.

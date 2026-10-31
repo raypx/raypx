@@ -195,7 +195,6 @@ export function memoryControlRepository(): ControlRepository & {
           count = 0;
         for (const item of rows.sort((a, b) => b.cursor - a.cursor)) {
           if (orphans && !draft.has(key("task", item.taskId))) draft.delete(key("event", item.id));
-          else if (item.event.kind === "activity_delta") draft.delete(key("event", item.id));
           else if (item.event.kind !== "activity") {
             bytes += new TextEncoder().encode(JSON.stringify(item)).byteLength;
             if (++count > 4096 || bytes > 8 * 1024 * 1024 || item.streamId !== streamId)
@@ -272,7 +271,13 @@ export async function connected(service: ControlService, auth = controlAuth()) {
       },
     ],
     capabilities: [
-      { provider: "codex" as const, available: true, version: "0.163.0", reason: "ready" as const },
+      {
+        provider: "codex" as const,
+        available: true,
+        version: "0.163.0",
+        reason: "ready" as const,
+        inputModes: ["steer" as const, "queue" as const],
+      },
     ],
   };
   await service.announce(actor, announce);

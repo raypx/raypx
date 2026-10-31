@@ -81,7 +81,12 @@ test(
       if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
       const { json: input } = route.request().postDataJSON() as { json: { id: string } };
       return authResponse(route, {
-        json: { task: tasks.find((task) => task.id === input.id), events: [], requests: [] },
+        json: {
+          task: tasks.find((task) => task.id === input.id),
+          events: [],
+          requests: [],
+          activity: [],
+        },
       });
     });
     await page.goto(desktop + "/tasks");
@@ -140,7 +145,12 @@ for (const [surface, base] of surfaces) {
         if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
         const { json: input } = route.request().postDataJSON() as { json: { id: string } };
         return authResponse(route, {
-          json: { task: tasks.find((task) => task.id === input.id), events: [], requests: [] },
+          json: {
+            task: tasks.find((task) => task.id === input.id),
+            events: [],
+            requests: [],
+            activity: [],
+          },
         });
       });
       await page.goto(base + "/tasks");

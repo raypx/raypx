@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Node HTTP composition root for authentication and account RPC.
+The Bun HTTP composition root for authentication and account RPC.
 
 ## Interface
 
@@ -33,7 +33,7 @@ Account RPC uses `@raypx/account/server` with an injected session reader. The
 service projects public fields; API owns HTTP and unauthorized/error mapping.
 
 `jobs/` owns server maintenance; `jobs/runtime/` contains the Nitro Task entries.
-`maintenance:cleanup` runs every 15 minutes on Node, gated by
+`maintenance:cleanup` runs every 15 minutes on Bun, gated by
 `JOBS_ENABLED` (false by default). Nitro owns the schedule.
 Cleanup uses PostgreSQL transaction time, an advisory transaction lock and bounded
 row-locked batches. Sessions/verification records expired over 24 hours ago,
@@ -42,7 +42,7 @@ on the next schedule. Never add a production HTTP task runner or log driver erro
 Tasks reuse the API runtime.
 See `docs/development/server-jobs.md` for policy and verification.
 
-`schedules:tick` runs every minute on Node with the same deployment gate.
+`schedules:tick` runs every minute on Bun with the same deployment gate.
 `@raypx/jobs/server` owns scheduling use cases; API supplies PostgreSQL persistence
 and the private relay executor. `jobs.*` RPC resolves an account on every call;
 writes additionally require a trusted Origin, revision checks and account limits.
@@ -75,12 +75,12 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   Compose selects its existing runtime and separate migrate targets explicitly.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
 - Production rate limits share the `rate_limit` table: Better Auth limits auth routes
-  by client IP. The Node entry overwrites `x-raypx-client-ip` with the socket address
+  by client IP. The Nitro entry overwrites `x-raypx-client-ip` with the socket address
   and uses it unless `AUTH_IP_HEADERS`/`AUTH_TRUSTED_PROXIES` describe a proxy. `server/rate-limit.ts` limits grant/ticket procedures per account (`RATE_LIMITED`).
   Keep RPC windows at or below 60 seconds, Better Auth's pruning horizon. Host grants
   have pre-lookup limits by platform-owned client address (120/min) and credential
   digest (6/min); never use a caller-selected forwarding header or raw bearer key.
-- Optional `REDIS_URL` (Node only, `server/runtime/redis.ts` with ioredis) becomes
+- Optional `REDIS_URL` (Bun runtime, `server/runtime/redis.ts` with ioredis) becomes
   Better Auth's secondary storage for sessions and rate limits, backs RPC limits and
   stores `runtime.cache` values.
   Sessions are still written to PostgreSQL. Requires
@@ -131,14 +131,14 @@ modules. Share record types privately; preserve owner transactions and read-only
 `server/relay` authenticates and routes typed WebSocket messages; execution and
 first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
 and one-time viewer tickets. No HTTP task mutation or polling exchange remains.
-Node uses one relay process with connections fenced by identity. Keep credentials out of URLs and diagnostics.
-Relay v2 requires an explicit protocol version. Preserve full activity checkpoints
+Bun uses one relay process with connections fenced by identity. Keep credentials out of URLs and diagnostics.
+Relay v4 requires an explicit protocol version. Preserve full activity checkpoints
 and bounded incremental replay; a missing revision requests a snapshot. Keep the latest
 activity projection until explicit history removal. Missing entries in partial snapshots
 never authorize deleting conversation history. Read projections through the repository's
 read-only transaction without the owner write lock; constrain task history in SQL.
 Task pagination and pending-approval filtering/limits also belong in SQL. Normalize
-JSON strings at the repository boundary, including old malformed surrogate/NUL input.
+JSON strings at the repository boundary, including malformed surrogate/NUL input.
 Internal storage failures close relay with SERVER_UNAVAILABLE/1011; malformed frames
 remain INVALID_FRAME. Persist the latest activity projection, not raw delta replay
 rows. Delta-only batches do not prune the replay window; gaps trigger authoritative
@@ -150,7 +150,7 @@ reset. Materialize the window once before deletion, even with stale device stati
 `types.ts` defines the reader, service and repository ports. Inject `ConfigurationReader`
 into read-only consumers; `createRuntime` exposes `configuration` and accepts a
 `createConfigurationRepository(db)` factory scoped to its owned connection.
-The Node constructor accepts these typed providers as a second argument.
+The runtime constructor accepts these typed providers as a second argument.
 `runtime.readSession(headers)` resolves through the same auth adapter as HTTP on
 each call; consumers must not retain that session between requests. Direct
 service writes require a freshly resolved administrator session and expected revision,
@@ -162,7 +162,7 @@ Registration is enforced by the Better Auth user-create hook with a fresh read, 
 it covers every sign-in method; the email signup route only pre-checks the 5-second
 `readCached()` snapshot. Use `readCached()` only where that delay is acceptable.
 Optional `S3_*` variables (all of endpoint, bucket and keys, or none) give `runtime.storage`
-an S3-compatible `@raypx/storage` store on Node; otherwise it is the
+an S3-compatible `@raypx/storage` store on Bun; otherwise it is the
 unavailable storage whose operations fail with `STORAGE_NOT_CONFIGURED`. `RuntimeProviders.storage`
 overrides it. No route exposes storage yet; consumers must validate ownership before
 issuing keys or pre-signed URLs. See `docs/development/object-storage.md`.

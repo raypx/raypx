@@ -26,7 +26,15 @@ const device: SyncDevice = {
     { id: projectId, name: "Current project", providers: ["claude"], dirty: false },
     { id: otherProject, name: "Other project", providers: ["claude"], dirty: false },
   ],
-  capabilities: [{ provider: "claude", available: true, version: "1", reason: "ready" }],
+  capabilities: [
+    {
+      provider: "claude",
+      available: true,
+      version: "1",
+      reason: "ready",
+      inputModes: ["steer" as const, "queue" as const],
+    },
+  ],
 };
 const selection: TaskContextSelection = { sources: [{ id: sourceId, revision: 3 }] };
 beforeEach(() => {

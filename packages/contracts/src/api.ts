@@ -101,7 +101,7 @@ export const apiContract = {
           task: taskSchema,
           events: z.array(z.object({ cursor: z.number(), event: agentEventSchema })),
           requests: z.array(humanRequestSchema),
-          activity: z.array(taskActivitySchema).optional(),
+          activity: z.array(taskActivitySchema),
           activityBefore: z.number().int().positive().optional(),
         }),
       ),

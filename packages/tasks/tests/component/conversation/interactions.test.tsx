@@ -37,7 +37,7 @@ async function workspace() {
   const client = createTaskClient({
     tasks: {
       list: async () => [task],
-      get: async () => ({ task, events: [], requests: [] }),
+      get: async () => ({ task, events: [], requests: [], activity: [] }),
       followUp,
     },
     devices: { list: async () => [] },

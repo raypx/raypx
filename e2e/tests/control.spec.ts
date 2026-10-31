@@ -72,7 +72,15 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
       streamId,
       instanceId: crypto.randomUUID(),
       projects: [{ id: projectId, name: "Current project", providers: ["codex"], dirty: true }],
-      capabilities: [{ provider: "codex", available: true, version: "0.163.0", reason: "ready" }],
+      capabilities: [
+        {
+          provider: "codex",
+          available: true,
+          version: "0.163.0",
+          reason: "ready",
+          inputModes: ["steer" as const, "queue" as const],
+        },
+      ],
     });
     await take("resume");
     send({

@@ -272,7 +272,6 @@ export default {
     queue: "Queue next turn",
     inputQueued: "Queued",
     inputSent: "Sent",
-    inputUpgrade: "Update Raypx Desktop to send instructions while a task is running.",
     claudeInputHint:
       "Send now interrupts Claude’s current turn and sends your instruction in the same session. Queue waits for the current turn to finish.",
     codexInputHint:

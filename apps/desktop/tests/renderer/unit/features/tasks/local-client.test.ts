@@ -60,7 +60,7 @@ it("uses only scoped IPC for queries and mutations even when network access fail
         projects: [],
         capabilities: [],
       };
-    if (method === "agents.local.get") return { task, events: [], requests: [] };
+    if (method === "agents.local.get") return { task, events: [], requests: [], activity: [] };
     if (method === "agents.local.approvals") return [];
     return { ok: true, value: task };
   });

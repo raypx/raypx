@@ -45,7 +45,13 @@ for (const [surface, base] of [
                 { id: projectId, name: "Context project", dirty: false, providers: ["codex"] },
               ],
               capabilities: [
-                { provider: "codex", available: true, reason: "ready", version: "fixture" },
+                {
+                  provider: "codex",
+                  available: true,
+                  reason: "ready",
+                  version: "fixture",
+                  inputModes: ["steer" as const, "queue" as const],
+                },
               ],
             },
           ],

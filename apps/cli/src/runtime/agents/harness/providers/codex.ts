@@ -86,10 +86,7 @@ export class CodexProvider {
         .catch(() => {
           if (this.observer.current()) this.observer.failed();
         });
-    } else if (
-      message.id !== undefined &&
-      (method === "item/tool/requestUserInput" || method === "tool/requestUserInput")
-    ) {
+    } else if (message.id !== undefined && method === "item/tool/requestUserInput") {
       const questions = Array.isArray(params.questions)
         ? params.questions.map((q: unknown) => {
             const question = object(q);

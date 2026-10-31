@@ -175,7 +175,7 @@ it.each(["reset", "visibility", "missing-baseline"] as const)(
     await screen.findByText("account-a: History task 1");
     const task = fixture.tasks[0]!;
     const entries = Array.from({ length: 70 }, (_, index) => ({
-      ...fixture.historyPage(task, `Continuous ${index}`).activity![0]!,
+      ...fixture.historyPage(task, `Continuous ${index}`).activity[0]!,
       id: crypto.randomUUID(),
       order: 1000 + index * 10,
     }));
@@ -200,7 +200,7 @@ it.each(["reset", "visibility", "missing-baseline"] as const)(
     const gapName = "Some messages are missing here. Load the missing history.";
     expect(screen.queryByRole("button", { name: gapName })).not.toBeInTheDocument();
     const recovered = Array.from({ length: 64 }, (_, index) => ({
-      ...fixture.historyPage(task, `Recovered checkpoint ${index}`).activity![0]!,
+      ...fixture.historyPage(task, `Recovered checkpoint ${index}`).activity[0]!,
       id: crypto.randomUUID(),
       order: 5000 + index * 10,
     }));

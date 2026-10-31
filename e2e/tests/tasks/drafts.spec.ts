@@ -44,7 +44,12 @@ for (const [surface, base] of surfaces) {
         if (route.request().method() === "OPTIONS") return authResponse(route, null, 204);
         const { json } = route.request().postDataJSON() as { json: { id: string } };
         return authResponse(route, {
-          json: { task: tasks.find((task) => task.id === json.id), events: [], requests: [] },
+          json: {
+            task: tasks.find((task) => task.id === json.id),
+            events: [],
+            requests: [],
+            activity: [],
+          },
         });
       });
       await page.route("**/rpc/devices/list", (route) =>

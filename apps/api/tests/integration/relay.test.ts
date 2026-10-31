@@ -33,7 +33,13 @@ async function setup() {
     instanceId,
     projects: [{ id: projectId, name: "Project", providers: ["codex" as const], dirty: false }],
     capabilities: [
-      { provider: "codex" as const, available: true, version: "0.163.0", reason: "ready" as const },
+      {
+        provider: "codex" as const,
+        available: true,
+        version: "0.163.0",
+        reason: "ready" as const,
+        inputModes: ["steer" as const, "queue" as const],
+      },
     ],
   };
   native.send(announce);

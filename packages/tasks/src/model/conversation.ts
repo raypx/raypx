@@ -49,7 +49,7 @@ export class ConversationState {
     this.tracksLiveCoverage = true;
     this.recovering = true;
   }
-  private mergeActivity(entries: TaskActivity[] = []) {
+  private mergeActivity(entries: TaskActivity[]) {
     for (const entry of entries) {
       const previous = this.activity.get(entry.id);
       if (previous && entry.revision <= previous.revision) continue;
@@ -82,14 +82,14 @@ export class ConversationState {
     if (!this.initialized) {
       this.olderBefore = page.activityBefore;
       this.initialized = true;
-    } else if (page.activity?.[0] && coveredUpper && (page.activityBefore ?? 0) > coveredUpper) {
+    } else if (page.activity[0] && coveredUpper && (page.activityBefore ?? 0) > coveredUpper) {
       this.addGap(page.activityBefore!, coveredUpper);
     }
     let pageUpper = 0;
-    for (const entry of page.activity ?? []) pageUpper = Math.max(pageUpper, entry.order);
+    for (const entry of page.activity) pageUpper = Math.max(pageUpper, entry.order);
     this.checkpointUpper = Math.max(this.checkpointUpper, pageUpper);
     if (this.tracksLiveCoverage && pageUpper >= this.liveUpper) this.recovering = false;
-    if (page.activity?.length) {
+    if (page.activity.length) {
       const pageLower = page.activityBefore === undefined ? 0 : page.activity[0]!.order;
       this.gaps = this.gaps.filter((gap) => pageLower > gap.after || pageUpper < gap.before);
     }

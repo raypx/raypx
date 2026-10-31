@@ -15,7 +15,7 @@ export interface TaskHistoryPage {
   task: AgentTask;
   events: { cursor: number; event: AgentEvent }[];
   requests: HumanRequest[];
-  activity?: TaskActivity[] | undefined;
+  activity: TaskActivity[];
   activityBefore?: number | undefined;
 }
 type CommandInput<M extends RelayRequest["method"]> = Extract<RelayRequest, { method: M }>["input"];

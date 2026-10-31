@@ -68,8 +68,9 @@ The accepted foundation design supersedes documents in docs/history.
 - Preserve strict TypeScript, type-only imports and exactOptionalPropertyTypes.
 - Do not log credentials, tokens, cookies, passwords or private file content.
 - Device preferences and CLI SQLite profiles stay local and survive logout.
-- Support current protocols and data formats only. Do not add legacy fallback,
-  compatibility aliases or automatic imports of old data. Reject unsupported versions.
+- Current functionality is the initial baseline. Support current protocols and data formats
+  only. Do not add legacy fallback, compatibility aliases or automatic imports of old data.
+  Reject unsupported versions.
 - The new PostgreSQL database is isolated from the retired product database.
   Never run new migrations or destructive commands against an old/operator database.
 - File grants constrain built-in file operations. External commands retain OS permissions.

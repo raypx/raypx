@@ -156,7 +156,8 @@ export async function discoverProviders(
         join(homedir(), ".bun", "bin", provider + suffix),
         join("/opt/homebrew/bin", provider),
       ].find((path) => path && existsSync(path));
-      if (!executable) return { provider, available: false, version: "", reason: "missing" };
+      if (!executable)
+        return { provider, available: false, version: "", reason: "missing", inputModes: [] };
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
         const child = Bun.spawn([executable, "--version"], { stdout: "pipe", stderr: "ignore" });
@@ -194,10 +195,10 @@ export async function discoverProviders(
           available: supported,
           version,
           reason: supported ? "ready" : "unsupported",
-          ...(supported ? { inputModes: ["steer", "queue"] } : {}),
+          inputModes: supported ? ["steer", "queue"] : [],
         };
       } catch {
-        return { provider, available: false, version: "", reason: "unsupported" };
+        return { provider, available: false, version: "", reason: "unsupported", inputModes: [] };
       } finally {
         clearTimeout(timer);
       }

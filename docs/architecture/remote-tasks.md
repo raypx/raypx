@@ -143,8 +143,8 @@ have a Diff view alongside the complete original request. Previews show at most
 20 files / 1,200 lines per file and disclose limits. Replacement snippets use
 snippet-relative line numbers, not invented file locations. Unknown operations
 retain their original text approval. Token counts cover loaded turns only; Raypx
-does not infer a bill from them. Older hosts omit input capabilities and show an
-upgrade hint instead of nonfunctional controls.
+does not infer a bill from them. Hosts always include each provider's reason and
+supported input modes. Unavailable providers advertise an empty list of modes.
 
 ## Data and limits
 

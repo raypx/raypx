@@ -235,7 +235,6 @@ export default {
     queue: "排入下一轮",
     inputQueued: "排队中",
     inputSent: "已发送",
-    inputUpgrade: "更新 Raypx Desktop 后，即可在任务运行时追加指令。",
     claudeInputHint:
       "立即发送会中断 Claude 当前轮次，在同一会话发送新指令；排入下一轮会等待当前轮次完成。",
     codexInputHint: "立即发送会追加到 Codex 当前轮次；排入下一轮会等待当前轮次完成。",

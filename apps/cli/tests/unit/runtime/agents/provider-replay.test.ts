@@ -362,6 +362,35 @@ it("keeps drain pending for queued protocol operations and tracked asynchronous 
   expect(replay.pending).toEqual({ queued: 0, inFlight: 0, remaining: 0 });
 });
 
+it("rejects the unscoped Codex input method without opening an approval", async () => {
+  const response = { id: 1, error: { code: -32601, message: "Unsupported host request" } };
+  const replay = new ProviderReplay([
+    { direction: "gate", name: "request" },
+    { direction: "provider", message: { id: 1, method: "tool/requestUserInput", params: {} } },
+    { direction: "host", channel: "send", message: response },
+    { direction: "exit", code: 0 },
+  ]);
+  const ask = vi.fn();
+  const provider = new CodexProvider(
+    "codex",
+    "/synthetic-project",
+    {
+      current: () => true,
+      record: vi.fn(),
+      ask,
+      completed: vi.fn(),
+      failed: vi.fn(),
+      turnId: vi.fn(),
+    },
+    replay.factory,
+  );
+  replay.release("request");
+  await replay.drain();
+  expect(await provider.process.completed).toBe(0);
+  expect(replay.sent).toMatchObject([{ channel: "send", message: response }]);
+  expect(ask).not.toHaveBeenCalled();
+});
+
 it.each(["item/commandExecution/requestApproval", "item/tool/requestUserInput"])(
   "fences a late %s reply after its process owner is cancelled",
   async (method) => {

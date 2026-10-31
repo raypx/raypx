@@ -269,11 +269,6 @@ export function createControlRepository(database: Database): ControlRepository {
           },
           async pruneEvents(deviceId, streamId, orphans = false) {
             await databaseTx.execute(eventWindowPrune(userId, deviceId, streamId));
-            // Remove pre-upgrade delta replay rows in bounded batches. New deltas
-            // update only the authoritative activity projection.
-            await databaseTx.execute(
-              sql`delete from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and id in (select id from raypx_foundation.control_event where user_id=${userId} and device_id=${deviceId} and body->'event'->>'kind'='activity_delta' limit 1000)`,
-            );
             if (orphans)
               await databaseTx.execute(
                 sql`delete from raypx_foundation.control_event where user_id=${userId} and id in (select e.id from raypx_foundation.control_event e where e.user_id=${userId} and e.device_id=${deviceId} and not exists (select 1 from raypx_foundation.control_task t where t.user_id=e.user_id and t.id=e.body->>'taskId') limit 1000)`,

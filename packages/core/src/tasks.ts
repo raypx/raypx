@@ -20,11 +20,8 @@ export const capabilitySchema = z.object({
   provider: agentProviderSchema,
   available: z.boolean(),
   version: z.string().max(120),
-  reason: z.enum(["ready", "missing", "unsupported"]).default("ready"),
-  inputModes: z
-    .array(z.enum(["steer", "queue"]))
-    .max(2)
-    .optional(),
+  reason: z.enum(["ready", "missing", "unsupported"]),
+  inputModes: z.array(z.enum(["steer", "queue"])).max(2),
 });
 export type AgentCapability = z.infer<typeof capabilitySchema>;
 

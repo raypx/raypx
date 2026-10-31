@@ -63,8 +63,20 @@ for (const [surface, base] of [
                 },
               ],
               capabilities: [
-                { provider: "codex", available: true, version: "fixture" },
-                { provider: "claude", available: true, version: "fixture" },
+                {
+                  provider: "codex",
+                  available: true,
+                  reason: "ready",
+                  version: "fixture",
+                  inputModes: ["steer" as const, "queue" as const],
+                },
+                {
+                  provider: "claude",
+                  available: true,
+                  reason: "ready",
+                  version: "fixture",
+                  inputModes: ["steer" as const, "queue" as const],
+                },
               ],
             },
           ],

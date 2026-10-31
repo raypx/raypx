@@ -29,7 +29,15 @@ async function submission() {
     lastSeenAt: null,
     online: true,
     projects: [{ id: projectId, name: "Test project", providers: ["claude"], dirty: false }],
-    capabilities: [{ provider: "claude", available: true, version: "test", reason: "ready" }],
+    capabilities: [
+      {
+        provider: "claude",
+        available: true,
+        version: "test",
+        reason: "ready",
+        inputModes: ["steer" as const, "queue" as const],
+      },
+    ],
   };
   let accepted: AgentTask;
   let projected: AgentTask[] = [];
@@ -52,6 +60,7 @@ async function submission() {
   const get = vi.fn(async () => ({
     task: accepted,
     events: [],
+    activity: [],
     requests: [
       {
         id: crypto.randomUUID(),
