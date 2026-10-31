@@ -72,7 +72,7 @@ function request(index: number, taskId: string, body = "Confirm"): HumanRequest 
 function fixture() {
   const directory = mkdtempSync(join(tmpdir(), "raypx-snapshot-performance-"));
   const store = new AgentStore(directory);
-  const database = new Database(join(directory, "agents.sqlite"));
+  const database = new Database(join(directory, "profile.sqlite"));
   return {
     directory,
     store,
@@ -339,9 +339,8 @@ it.each([10_000, 100_000])(
   },
 );
 
-it("upgrades old JSON-only task profiles idempotently without rewriting their rows", () => {
+it("rejects unmanaged JSON-only task profiles without repairing indexes or rewriting rows", () => {
   const f = fixture();
-  let reopened: AgentStore | undefined;
   try {
     const local = task(1);
     const original = JSON.stringify(local, null, 2);
@@ -349,13 +348,9 @@ it("upgrades old JSON-only task profiles idempotently without rewriting their ro
     f.database.exec(
       "DROP INDEX tasks_binding_created; DROP INDEX tasks_binding_active; DROP INDEX tasks_binding_cursor; DROP INDEX tasks_active_session; DROP INDEX requests_binding_task; DROP INDEX requests_binding_pending; DROP INDEX activity_task_active; DROP INDEX commands_binding;",
     );
+    f.database.exec("DROP TABLE __drizzle_migrations;");
     f.store.close();
-    reopened = new AgentStore(f.directory);
-    expect(reopened.snapshot("relay").records).toMatchObject([
-      { kind: "task", task: { id: uuid(1), activityIncomplete: false } },
-    ]);
-    reopened.close();
-    reopened = new AgentStore(f.directory);
+    expect(() => new AgentStore(f.directory)).toThrow("unsupported SQLite schema");
     expect(f.database.query("SELECT value FROM tasks WHERE id=?").get(uuid(1))).toEqual({
       value: original,
     });
@@ -365,9 +360,8 @@ it("upgrades old JSON-only task profiles idempotently without rewriting their ro
           "SELECT name FROM sqlite_master WHERE name IN ('tasks_binding_created','tasks_binding_active','tasks_binding_cursor','tasks_active_session','requests_binding_task','requests_binding_pending','activity_task_active','commands_binding')",
         )
         .all(),
-    ).toHaveLength(8);
+    ).toHaveLength(0);
   } finally {
-    reopened?.close();
     f.database.close();
     rmSync(f.directory, { recursive: true, force: true });
   }
@@ -496,7 +490,7 @@ it("freezes paged records across live writes, caps pages at ten rows and 384 KiB
   const state = new StateStore(directory);
   const runtime = new AgentRuntime(state, () => {});
   const writer = new AgentStore(directory);
-  const database = new Database(join(directory, "agents.sqlite"));
+  const database = new Database(join(directory, "profile.sqlite"));
   try {
     for (let index = 1; index <= 21; index++) writer.put(task(index));
     const insert = database.query("INSERT INTO requests VALUES (?,?,?)");

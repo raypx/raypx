@@ -12,7 +12,7 @@ The unused Rust experiment and its independent CI have been removed.
 
 ## Local terminal ownership
 
-One broker uses `<profile>/terminal/terminal.sqlite`; its OS owner lock is at
+One broker uses the shared `<profile>/profile.sqlite`; its OS owner lock is at
 profile level. Hook discovery remains `<profile>/terminal-hook.json`. Settings
 are atomically saved in `<profile>/terminal/settings.json`. `/away` calls this
 same settings service. `/state` is a read and never renews a viewer lease.

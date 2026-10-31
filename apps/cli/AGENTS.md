@@ -36,8 +36,9 @@ text; never rewrite persisted output. Cross-owner control and default no-arg TUI
 ## Ownership
 
 Own authorized directory operations, device-local SQLite state, Cron scheduling, external commands and interactive terminals. Shared wire schemas live in `@raypx/contracts/local`.
-SQLite tables and ordinary queries use private `runtime/sqlite` Drizzle definitions with the Bun driver.
-Keep schema bootstrap/PRAGMA SQL, rowid-preserving REPLACE and bounded native snapshot cursors explicit.
+All stores share `<profile>/profile.sqlite` through private `runtime/sqlite` Drizzle definitions.
+`db:generate` generates migrations/snapshots and embeds the journal; never edit generated files.
+`check` verifies the embedded journal; migrate uses a separate process lock and rejects unmanaged/unknown schemas. Keep PRAGMA SQL, rowid-preserving REPLACE and bounded native snapshot cursors explicit.
 
 `runtime/process/herdr.ts` delegates PTY/VT/cursor state to pinned Herdr; Desktop stages its verified runtime/DLLs/licenses. Runtime never downloads binaries.
 `RAYPX_HERDR_BINARY` selects an absolute development binary. Each owner starts an isolated server: client EOF cancels its PTYs; owner EOF stops its server. Never reuse user sessions.
@@ -107,7 +108,7 @@ without credentials in the default suite. Never commit the private raw captures.
 
 ## Agent host
 
-`runtime/memory` owns the device-profile `memory.sqlite` and injects the shared
+`runtime/memory` owns the context tables in the shared profile database and injects the shared
 context-library service. Private `memory.*` IPC needs no account and never migrates
 on login/logout. Validate project targets against this device and granted Agent
 projects. Immutable history and current documents commit atomically with revision

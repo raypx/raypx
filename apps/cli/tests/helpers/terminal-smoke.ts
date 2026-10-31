@@ -22,7 +22,14 @@ export async function terminalSmokeHost(
   changed: (request: TerminalRequest) => void,
 ) {
   if (process.env.RAYPX_P0_HOST_MODE !== "daemon") {
-    const host = startTerminalHost({ directory, projects: [project], away, waitSeconds, changed });
+    const host = startTerminalHost({
+      profileDirectory: directory,
+      directory,
+      projects: [project],
+      away,
+      waitSeconds,
+      changed,
+    });
     return {
       discoveryDirectory: directory,
       watch: async () => {

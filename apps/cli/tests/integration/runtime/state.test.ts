@@ -38,18 +38,18 @@ describe("device state", () => {
       reopened.close();
     }
   });
-  it.each([0, 2])(
+  it.each([1, 2])(
     "rejects an existing unsupported state schema %s without changing it",
     async (version) => {
       const { runtime, dir } = await fixture();
       const roots = runtime.state.roots();
       runtime.state.db.$client.exec(`PRAGMA user_version=${version}`);
-      expect(() => createRuntime({ dataDir: dir })).toThrow("unsupported state schema");
+      expect(() => createRuntime({ dataDir: dir })).toThrow("unsupported SQLite schema");
       expect(runtime.state.db.$client.query("PRAGMA user_version").get()).toEqual({
         user_version: version,
       });
       expect(runtime.state.roots()).toEqual(roots);
-      runtime.state.db.$client.exec("PRAGMA user_version=1");
+      runtime.state.db.$client.exec("PRAGMA user_version=0");
     },
   );
 });

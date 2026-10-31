@@ -8,7 +8,7 @@ provide reusable task instructions as reference text and do not enable tools.
 
 ## Ownership and storage
 
-Device documents live in `memory.sqlite` under the CLI profile, with the reserved
+Device documents live in the CLI profile’s shared `profile.sqlite`, with the reserved
 device-workspace owner. They survive login, logout, account switches and changes
 to the remote service. No operation merges them with an account or uploads them.
 The private `memory.*` IPC methods accept no account identifier.
@@ -124,8 +124,8 @@ accepted task and command snapshots remain independent. A body-free deletion
 receipt reserves the canonical ID and makes a matching deletion retry idempotent,
 so an old pinned reference cannot resolve to a replacement document. API writes
 still require the current account, trusted Origin and the memory mutation limit.
-SQLite requires schema version 2, including device-owned deletion receipts.
-Fresh databases initialize that format; older schemas are rejected without migration.
+Device-owned context tables and deletion receipts live in the shared CLI `profile.sqlite`.
+Drizzle applies the embedded profile migration; unmanaged or unknown schemas are rejected.
 
 Task and cloud Agent-plan editors show the combined reference/prompt character
 budget using Core's exact execution formatter. Selected immutable bodies are read

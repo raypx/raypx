@@ -41,8 +41,7 @@ async function fixture() {
   let approved = false,
     executions = 0;
   const directory = await mkdtemp(join(tmpdir(), "raypx-pi-context-"));
-  const file = join(directory, "contexts.sqlite");
-  let store = new SqlitePiContextStore(file, "fixture");
+  let store = new SqlitePiContextStore(directory, "fixture");
   try {
     const options: PiRunnerOptions = {
       model: piModel,
@@ -69,7 +68,7 @@ async function fixture() {
     assert.equal(checkpoint.status, "succeeded");
     assert.equal(checkpoint.pendingEffect, undefined);
     store.close();
-    store = new SqlitePiContextStore(file, "fixture");
+    store = new SqlitePiContextStore(directory, "fixture");
     assert.deepEqual(await store.load(), checkpoint);
     const resumed = new PiRunner({ ...options, store });
     assert.deepEqual(await resumed.run("Continue after reopening SQLite"), {

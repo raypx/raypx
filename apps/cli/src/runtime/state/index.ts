@@ -1,15 +1,13 @@
 import { Database } from "bun:sqlite";
-import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { and, asc, desc, eq, lt, notInArray, or, sql } from "drizzle-orm";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobInput, JobRun } from "@raypx/jobs";
 import { LocalError } from "../errors";
-import { drizzle, type LocalDatabase } from "../sqlite";
+import { openProfileDatabase, type LocalDatabase } from "../sqlite";
 import { jobs, meta, roots, runs } from "../sqlite/schema";
 
-const STATE_SCHEMA_VERSION = 1;
 export function profilePath(options: { dataDir?: string; profile?: string } = {}) {
   const profile = options.profile ?? "default";
   if (!/^[a-zA-Z0-9_-]+$/.test(profile))
@@ -29,33 +27,9 @@ export function profilePath(options: { dataDir?: string; profile?: string } = {}
 export class StateStore {
   readonly db: LocalDatabase;
   constructor(readonly directory: string) {
-    mkdirSync(directory, { recursive: true });
-    const database = new Database(join(directory, "state.sqlite"), { create: true, strict: true });
-    this.db = drizzle({ client: database });
-    database.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
+    this.db = openProfileDatabase(directory);
     try {
-      this.db.transaction(
-        () => {
-          const version = (database.query("PRAGMA user_version").get() as { user_version: number })
-            .user_version;
-          if (version === STATE_SCHEMA_VERSION) return;
-          if (
-            version !== 0 ||
-            database
-              .query("SELECT name FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*' LIMIT 1")
-              .get()
-          )
-            throw new LocalError(
-              "UNSUPPORTED_SCHEMA",
-              "This profile uses an unsupported state schema",
-            );
-          // Only a genuinely empty database is initialized. Existing data is never upgraded.
-          database.exec(
-            "CREATE TABLE roots (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE jobs (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE runs (id TEXT PRIMARY KEY, jobId TEXT NOT NULL, startedAt TEXT NOT NULL, value TEXT NOT NULL); CREATE TABLE meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL); INSERT INTO meta VALUES ('revision',0); PRAGMA user_version=1;",
-          );
-        },
-        { behavior: "immediate" },
-      );
+      this.db.insert(meta).values({ key: "revision", value: 0 }).onConflictDoNothing().run();
       this.db
         .delete(runs)
         .where(lt(runs.startedAt, new Date(Date.now() - 30 * 86_400_000).toISOString()))

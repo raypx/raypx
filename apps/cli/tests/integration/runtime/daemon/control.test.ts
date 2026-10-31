@@ -98,7 +98,7 @@ async function fixture(seed = false) {
   const scope = { accountId, apiUrl: api.url.origin },
     terminalDirectory = join(profilePath({ dataDir }), "terminal");
   if (seed) {
-    const store = new TerminalStore(terminalDirectory);
+    const store = new TerminalStore(profilePath({ dataDir }));
     const sessions: TerminalSession[] = [];
     for (let index = 0; index < 111; index++) {
       const session: TerminalSession = {

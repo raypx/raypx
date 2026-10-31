@@ -19,13 +19,13 @@ afterEach(() => {
 function fixture() {
   const directory = mkdtempSync(join(tmpdir(), "raypx-pi-store-"));
   cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
-  const path = join(directory, "pi-context.sqlite");
+  const path = join(directory, "profile.sqlite");
   const open = (id = "one") => {
-    const store = new SqlitePiContextStore(path, id);
+    const store = new SqlitePiContextStore(directory, id);
     cleanups.push(() => store.close());
     return store;
   };
-  return { path, open };
+  return { path, directory, open };
 }
 const idle = () => ({ status: "idle" as const, messages: [] });
 
@@ -87,7 +87,7 @@ it("loads a successful transcript after the writing process exits and continues 
     const store = new SqlitePiContextStore(process.argv[1], "restart");
     await store.commit(0, {status:"succeeded",messages:[{role:"user",content:"Previous turn",timestamp:1}]});
     store.close();`;
-  const child = Bun.spawn([process.execPath, "-e", source, f.path], {
+  const child = Bun.spawn([process.execPath, "-e", source, f.directory], {
     stdout: "ignore",
     stderr: "pipe",
   });
@@ -310,7 +310,7 @@ it("has an idempotent caller-owned close and sanitized input/open errors", async
   await expect(store.load()).rejects.toMatchObject({ code: "PI_STORE_CLOSED" });
   await expect(store.commit(0, idle())).rejects.toMatchObject({ code: "PI_STORE_CLOSED" });
   expect(() => new SqlitePiContextStore("relative.sqlite", "one")).toThrow(PiContextStoreError);
-  expect(() => new SqlitePiContextStore(f.path, "")).toThrow("PI_CONTEXT_INVALID");
+  expect(() => new SqlitePiContextStore(f.directory, "")).toThrow("PI_CONTEXT_INVALID");
   expect(() => new SqlitePiContextStore(join(f.path, "private", "context.sqlite"), "one")).toThrow(
     "PI_STORE_UNAVAILABLE",
   );

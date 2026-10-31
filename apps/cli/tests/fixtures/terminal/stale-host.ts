@@ -1,2 +1,6 @@
 import { startTerminalHost } from "../../../src/runtime/terminal/host";
-startTerminalHost({ directory: process.argv[2]!, projects: [] });
+startTerminalHost({
+  profileDirectory: process.argv[2]!,
+  directory: process.argv[2]!,
+  projects: [],
+});

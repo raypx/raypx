@@ -1,8 +1,6 @@
-import { Database } from "bun:sqlite";
-import { chmodSync, existsSync, lstatSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { and, eq, sql } from "drizzle-orm";
-import { drizzle, type LocalDatabase } from "../../../sqlite";
+import { openProfileDatabase, type LocalDatabase } from "../../../sqlite";
 import { piContexts } from "../../../sqlite/schema";
 import type { PiContext, PiContextStore } from "../providers/pi";
 import { piStoredContextSchema } from "./schema";
@@ -32,39 +30,21 @@ function fail(code: StoreCode): never {
 export class SqlitePiContextStore implements PiContextStore {
   private database: LocalDatabase | undefined;
   constructor(
-    path: string,
+    directory: string,
     private readonly contextId: string,
   ) {
     if (
-      typeof path !== "string" ||
+      typeof directory !== "string" ||
+      !isAbsolute(directory) ||
       typeof contextId !== "string" ||
-      !isAbsolute(path) ||
       !contextId.trim() ||
       contextId.length > 200 ||
       contextId.includes("\0")
     )
       fail("PI_CONTEXT_INVALID");
-    let database: Database | undefined;
     try {
-      if (existsSync(path)) {
-        const info = lstatSync(path);
-        if (!info.isFile() || info.isSymbolicLink()) fail("PI_STORE_UNAVAILABLE");
-      }
-      database = new Database(path, { create: true, strict: true });
-      // Set the database mode before SQLite creates a WAL containing transcript text.
-      chmodSync(path, 0o600);
-      database.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
-      database.exec(
-        "CREATE TABLE IF NOT EXISTS pi_contexts (context_id TEXT PRIMARY KEY, revision INTEGER NOT NULL CHECK(revision>0), value TEXT NOT NULL) STRICT;",
-      );
-      this.database = drizzle({ client: database });
-    } catch (error) {
-      try {
-        database?.close();
-      } catch {
-        /* Preserve the sanitized opening error. */
-      }
-      if (error instanceof PiContextStoreError) throw error;
+      this.database = openProfileDatabase(directory);
+    } catch {
       fail("PI_STORE_UNAVAILABLE");
     }
   }

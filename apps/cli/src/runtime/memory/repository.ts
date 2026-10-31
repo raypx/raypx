@@ -1,5 +1,3 @@
-import { Database } from "bun:sqlite";
-import { chmodSync } from "node:fs";
 import { and, count, desc, eq, lt, sql } from "drizzle-orm";
 import {
   ContextError,
@@ -10,7 +8,7 @@ import {
   type ContextVersion,
 } from "@raypx/memory";
 import type { ContextLibraryRepository } from "@raypx/memory/server";
-import { drizzle, type LocalDatabase } from "../sqlite";
+import { openProfileDatabase, type LocalDatabase } from "../sqlite";
 import { deletedDocuments, documents, versions } from "../sqlite/schema";
 
 const summary = ({ content: _content, ...document }: ContextDocument) => document;
@@ -25,36 +23,12 @@ const inputOf = ({ kind, name, category, content, project }: ContextDocumentInpu
 export class SqliteContextRepository implements ContextLibraryRepository {
   private readonly db: LocalDatabase;
   constructor(
-    path: string,
+    directory: string,
     private readonly now: () => number = Date.now,
   ) {
-    let database: Database | undefined;
     try {
-      database = new Database(path, { create: true, strict: true });
-      this.db = drizzle({ client: database });
-      if (process.platform !== "win32") chmodSync(path, 0o600);
-      database.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
-      this.db.transaction(
-        () => {
-          const version = (
-            this.db.$client.query("PRAGMA user_version").get() as { user_version: number }
-          ).user_version;
-          if (version === 2) return;
-          if (
-            version !== 0 ||
-            this.db.$client
-              .query("SELECT name FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*' LIMIT 1")
-              .get()
-          )
-            throw new ContextError("CONTEXT_UNAVAILABLE");
-          this.db.$client.exec(
-            "CREATE TABLE documents (owner TEXT NOT NULL,id TEXT NOT NULL,value TEXT NOT NULL,PRIMARY KEY(owner,id)); CREATE TABLE versions (owner TEXT NOT NULL,id TEXT NOT NULL,revision INTEGER NOT NULL,value TEXT NOT NULL,PRIMARY KEY(owner,id,revision)); CREATE TABLE deleted_documents (id TEXT PRIMARY KEY,owner TEXT NOT NULL,revision INTEGER NOT NULL); CREATE INDEX documents_canonical_idx ON documents(lower(id)); PRAGMA user_version=2;",
-          );
-        },
-        { behavior: "immediate" },
-      );
+      this.db = openProfileDatabase(directory);
     } catch {
-      database?.close();
       throw new ContextError("CONTEXT_UNAVAILABLE");
     }
   }

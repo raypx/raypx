@@ -78,6 +78,7 @@
         "@types/bun": "catalog:dev",
         "@types/node": "catalog:dev",
         "@vitest/coverage-v8": "catalog:dev",
+        "drizzle-kit": "catalog:dev",
         "vite-plus": "catalog:dev",
       },
     },

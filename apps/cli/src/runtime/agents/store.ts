@@ -1,7 +1,5 @@
 import { normalizeTaskJson } from "@raypx/core/task-text";
-import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
-import { join } from "node:path";
 import {
   and,
   asc,
@@ -29,7 +27,7 @@ import { LocalError } from "../errors";
 
 import { activeTaskStatuses, taskActivitySchema } from "@raypx/core/tasks";
 import { taskActivityPage } from "@raypx/core/activity";
-import { drizzle, iterateRows, type LocalDatabase } from "../sqlite";
+import { iterateRows, openProfileDatabase, type LocalDatabase } from "../sqlite";
 import {
   activity,
   agentMeta,
@@ -43,11 +41,6 @@ import {
 } from "../sqlite/schema";
 
 const stored = (value: string) => normalizeTaskJson(JSON.parse(value));
-const activeTasks = `json_extract(value,'$.task.status') IN (${activeTaskStatuses.map((status) => `'${status}'`).join(",")})`;
-const activeActivity =
-  "json_extract(value,'$.status') IN ('streaming','running','queued','sending')";
-const pendingRequests = "json_extract(value,'$.status') IN ('pending','decided')";
-const taskCursor = "json_extract(value,'$.task.createdAt') || ':' || id";
 const taskBinding = sql<string>`json_extract(${tasks.value},'$.binding')`;
 const taskCreatedAt = sql<string>`json_extract(${tasks.value},'$.task.createdAt')`;
 const taskPageCursor = sql<string>`${taskCreatedAt} || ':' || ${tasks.id}`;
@@ -85,48 +78,30 @@ export class AgentStore {
     private readonly retained = 4096,
     private readonly retainedBytes = 8 * 1024 * 1024,
   ) {
-    const database = new Database(join(directory, "agents.sqlite"), { create: true, strict: true });
-    this.database = drizzle({ client: database });
-    database.exec(
-      "PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, providers TEXT NOT NULL); CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS receipts (id TEXT PRIMARY KEY); CREATE TABLE IF NOT EXISTS outbox (sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, binding TEXT NOT NULL, value TEXT NOT NULL);",
-    );
-    database.exec(
-      "CREATE TABLE IF NOT EXISTS journal (sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, binding TEXT NOT NULL, value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY,binding TEXT NOT NULL,value TEXT NOT NULL); CREATE TABLE IF NOT EXISTS commands (id TEXT PRIMARY KEY,payload TEXT NOT NULL,result TEXT); CREATE TABLE IF NOT EXISTS agent_meta (id TEXT PRIMARY KEY,value TEXT NOT NULL);",
-    );
-    database.exec(
-      "CREATE INDEX IF NOT EXISTS journal_binding ON journal (binding,sequence); CREATE INDEX IF NOT EXISTS journal_task ON journal (binding,json_extract(value,'$.taskId'),sequence);",
-    );
-    database.exec(
-      "CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY,binding TEXT NOT NULL,task_id TEXT NOT NULL,value TEXT NOT NULL); CREATE INDEX IF NOT EXISTS activity_task ON activity (binding,task_id);",
-    );
-    // Expression indexes upgrade existing profiles without rewriting their JSON rows.
-    database.exec(`
-      CREATE INDEX IF NOT EXISTS tasks_binding_created ON tasks (json_extract(value,'$.binding'),json_extract(value,'$.task.createdAt') DESC,id ASC);
-      CREATE INDEX IF NOT EXISTS tasks_binding_active ON tasks (json_extract(value,'$.binding'),json_extract(value,'$.task.createdAt') DESC,id ASC) WHERE ${activeTasks};
-      CREATE INDEX IF NOT EXISTS tasks_binding_cursor ON tasks (json_extract(value,'$.binding'),(${taskCursor}) DESC);
-      CREATE INDEX IF NOT EXISTS tasks_active_session ON tasks (json_extract(value,'$.task.provider'),json_extract(value,'$.sessionId')) WHERE ${activeTasks};
-      CREATE INDEX IF NOT EXISTS requests_binding_task ON requests (binding,json_extract(value,'$.taskId'));
-      CREATE INDEX IF NOT EXISTS requests_binding_pending ON requests (binding,json_extract(value,'$.expiresAt')) WHERE ${pendingRequests};
-      CREATE INDEX IF NOT EXISTS activity_task_active ON activity (binding,task_id) WHERE ${activeActivity};
-      CREATE INDEX IF NOT EXISTS commands_binding ON commands (json_extract(payload,'$.binding'));
-    `);
-    this.database
-      .insert(agentMeta)
-      .values({ id: "stream", value: crypto.randomUUID() })
-      .onConflictDoNothing()
-      .run();
-    this.streamId = this.database
-      .select({ value: agentMeta.value })
-      .from(agentMeta)
-      .where(eq(agentMeta.id, "stream"))
-      .get()!.value;
-    for (const row of this.database
-      .selectDistinct({ binding: journal.binding })
-      .from(journal)
-      .where(sql`${journal.binding} NOT GLOB 'desktop:*'`)
-      .all())
-      this.compact(row.binding);
+    this.database = openProfileDatabase(directory);
+    try {
+      this.database
+        .insert(agentMeta)
+        .values({ id: "stream", value: crypto.randomUUID() })
+        .onConflictDoNothing()
+        .run();
+      this.streamId = this.database
+        .select({ value: agentMeta.value })
+        .from(agentMeta)
+        .where(eq(agentMeta.id, "stream"))
+        .get()!.value;
+      for (const row of this.database
+        .selectDistinct({ binding: journal.binding })
+        .from(journal)
+        .where(sql`${journal.binding} NOT GLOB 'desktop:*'`)
+        .all())
+        this.compact(row.binding);
+    } catch (error) {
+      this.database.$client.close();
+      throw error;
+    }
   }
+
   projects(): { id: string; providers: AgentProvider[] }[] {
     return this.database
       .select()

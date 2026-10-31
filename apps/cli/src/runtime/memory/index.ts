@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { ContextError } from "@raypx/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
@@ -12,7 +11,7 @@ export class MemoryRuntime {
   private readonly repository: SqliteContextRepository;
   readonly service: ContextLibraryService;
   constructor(directory: string, agents: () => AgentRuntime) {
-    this.repository = new SqliteContextRepository(join(directory, "memory.sqlite"));
+    this.repository = new SqliteContextRepository(directory);
     this.service = new ContextLibraryService({
       repository: this.repository,
       scope: "device",

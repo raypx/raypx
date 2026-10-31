@@ -19,8 +19,8 @@ afterEach(() => {
 function repository() {
   const root = mkdtempSync(join(tmpdir(), "raypx-memory-"));
   roots.push(root);
-  const path = join(root, "memory.sqlite");
-  const store = new SqliteContextRepository(path);
+  const path = join(root, "profile.sqlite");
+  const store = new SqliteContextRepository(root);
   stores.push(store);
   return { root, path, store };
 }
@@ -37,8 +37,8 @@ it("rejects an unversioned populated memory database without relabeling or chang
   const saved = await f.store.create("device", id, document);
   const raw = new Database(f.path);
   try {
-    raw.exec("PRAGMA user_version=0");
-    expect(() => new SqliteContextRepository(f.path)).toThrow("CONTEXT_UNAVAILABLE");
+    raw.exec("DROP TABLE __drizzle_migrations;");
+    expect(() => new SqliteContextRepository(f.root)).toThrow("CONTEXT_UNAVAILABLE");
     expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: 0 });
     expect(await f.store.get("device", id)).toEqual(saved);
   } finally {
@@ -88,7 +88,7 @@ it("persists immutable versions and restores content without changing archival s
   ]);
   f.store.close();
   stores.splice(stores.indexOf(f.store), 1);
-  const reopened = new SqliteContextRepository(f.path);
+  const reopened = new SqliteContextRepository(f.root);
   stores.push(reopened);
   expect(await reopened.get("device", id)).toMatchObject({
     revision: 4,
@@ -177,7 +177,7 @@ it("recovers retry IDs after target removal while allowing same-project edits an
 });
 it("allows only one revision winner across two connections", async () => {
   const f = repository(),
-    second = new SqliteContextRepository(f.path),
+    second = new SqliteContextRepository(f.root),
     id = crypto.randomUUID();
   stores.push(second);
   await f.store.create("device", id, document);
@@ -359,10 +359,10 @@ it.each([1, 3])("rejects unsupported memory schema %s without migrating its data
   const raw = new Database(f.path);
   try {
     raw.exec(`PRAGMA user_version=${version}`);
-    expect(() => new SqliteContextRepository(f.path)).toThrow("CONTEXT_UNAVAILABLE");
+    expect(() => new SqliteContextRepository(f.root)).toThrow("CONTEXT_UNAVAILABLE");
     expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: version });
   } finally {
-    raw.exec("PRAGMA user_version=2");
+    raw.exec("PRAGMA user_version=0");
     raw.close();
   }
 });

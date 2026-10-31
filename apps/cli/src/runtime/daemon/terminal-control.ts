@@ -86,6 +86,7 @@ export class LocalTerminalControl {
     try {
       this.terminal = startTerminalHost({
         directory: join(profile, "terminal"),
+        profileDirectory: profile,
         discoveryDirectory: profile,
         lockDirectory: profile,
         ...this.configuration(),

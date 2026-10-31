@@ -52,6 +52,7 @@ const decisionInput = z.object({ id: z.string().uuid(), epoch: z.string().uuid()
 /** Private hook endpoint; never exposes the daemon's local method router. */
 type TerminalOptions = {
   directory: string;
+  profileDirectory: string;
   projects: string[];
   projectIds?: ReadonlyMap<string, string>;
   discoveryDirectory?: string;
@@ -85,7 +86,7 @@ export function startTerminalHost(options: TerminalOptions) {
   let socketDirectory: string | undefined;
   let server: ReturnType<typeof Bun.serve> | undefined;
   try {
-    store = new TerminalStore(options.directory);
+    store = new TerminalStore(options.profileDirectory);
     const broker = new RequestBroker(store, options.changed);
     const sessions = new Map<string, TerminalSession>(store.sessions());
     let previous: string | undefined;

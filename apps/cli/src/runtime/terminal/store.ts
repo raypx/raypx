@@ -1,6 +1,3 @@
-import { Database } from "bun:sqlite";
-import { chmodSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
 import { and, eq, notExists, sql } from "drizzle-orm";
 import {
   terminalDecisionSchema,
@@ -11,7 +8,7 @@ import {
 } from "@raypx/contracts/terminal";
 import type { BrokerStore, DecisionReceipt } from "./broker";
 import { LocalError } from "../errors";
-import { drizzle, type LocalDatabase } from "../sqlite";
+import { openProfileDatabase, type LocalDatabase } from "../sqlite";
 import {
   terminalProjects,
   terminalReceipts,
@@ -22,35 +19,30 @@ import {
 export class TerminalStore implements BrokerStore {
   private readonly db: LocalDatabase;
   constructor(directory: string) {
-    mkdirSync(directory, { recursive: true, mode: 0o700 });
-    const file = join(directory, "terminal.sqlite");
-    const database = new Database(file, { create: true, strict: true });
-    this.db = drizzle({ client: database });
-    chmodSync(file, 0o600);
-    database.exec(`
-      PRAGMA busy_timeout=1000;
-      CREATE TABLE IF NOT EXISTS terminal_request (id TEXT PRIMARY KEY, value TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS terminal_receipt (id TEXT PRIMARY KEY, value TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS terminal_session (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS terminal_project (path TEXT PRIMARY KEY, id TEXT NOT NULL UNIQUE);
-    `);
-    this.db
-      .delete(terminalSessions)
-      .where(
-        notExists(
-          this.db
-            .select({ id: terminalRequests.id })
-            .from(terminalRequests)
-            .where(
-              eq(
-                sql`json_extract(${terminalRequests.value},'$.sessionId')`,
-                sql`json_extract(${terminalSessions.value},'$.id')`,
+    this.db = openProfileDatabase(directory);
+    try {
+      this.db
+        .delete(terminalSessions)
+        .where(
+          notExists(
+            this.db
+              .select({ id: terminalRequests.id })
+              .from(terminalRequests)
+              .where(
+                eq(
+                  sql`json_extract(${terminalRequests.value},'$.sessionId')`,
+                  sql`json_extract(${terminalSessions.value},'$.id')`,
+                ),
               ),
-            ),
-        ),
-      )
-      .run();
+          ),
+        )
+        .run();
+    } catch (error) {
+      this.db.$client.close();
+      throw error;
+    }
   }
+
   projectId(path: string): string {
     const old = this.db
       .select({ id: terminalProjects.id })

@@ -37,7 +37,7 @@ it("stores local text once and sends linear-size relay deltas with a bounded ref
       store.recordActivity(binding, { ...draft, text: "x".repeat(32_000), status: "complete" });
       expect(store.activity(binding, taskId)).toHaveLength(1);
     }
-    const db = new Database(join(directory, "agents.sqlite"));
+    const db = new Database(join(directory, "profile.sqlite"));
     try {
       expect(
         db.query("SELECT count(*) AS count FROM journal WHERE binding LIKE 'desktop:%'").get(),
@@ -74,7 +74,7 @@ it("compacts journal bytes and removes dangling outbox references without removi
         status: "succeeded",
         summary: "x".repeat(600),
       });
-    const db = new Database(join(directory, "agents.sqlite"));
+    const db = new Database(join(directory, "profile.sqlite"));
     try {
       expect(
         (
@@ -105,7 +105,7 @@ it("leaves existing local journal rows intact and bounds remote replay on restar
   const directory = mkdtempSync(join(tmpdir(), "raypx-old-journal-"));
   const initial = new AgentStore(directory);
   initial.close();
-  const db = new Database(join(directory, "agents.sqlite"));
+  const db = new Database(join(directory, "profile.sqlite"));
   const local = desktopBinding("account");
   const status = {
     id: crypto.randomUUID(),

@@ -30,6 +30,7 @@
 - [Object storage](development/object-storage.md)
 - [Server jobs and expired-record cleanup](development/server-jobs.md)
 - [Memory, templates and task context](development/task-context.md)
+- [Local SQLite schema and migrations](development/local-sqlite.md)
 - [Memory review remediation](development/memory-review-ffcc9bd.md)
 - [Raypx Kit library changes](development/intl-release.md)
 - [Foundation acceptance results](development/foundation-acceptance.md)

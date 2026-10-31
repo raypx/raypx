@@ -336,7 +336,7 @@ try {
     completed(rejectedDiagnostics, "tui", "failed");
     assert.equal(
       await Bun.file(
-        join(dataDir, "not-interactive", "profiles", "default", "state.sqlite"),
+        join(dataDir, "not-interactive", "profiles", "default", "profile.sqlite"),
       ).exists(),
       false,
     );

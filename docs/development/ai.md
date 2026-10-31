@@ -145,8 +145,8 @@ The first cancellation cause is retained, and a storage failure takes precedence
 over a timeout. Once a completed outcome enters its terminal commit, that durable
 outcome remains authoritative even if cancellation arrives during the write.
 
-`harness/context/sqlite.ts` provides the local `SqlitePiContextStore(path, contextId)`.
-It separates contexts, validates persisted messages, limits each context to 8 MiB
+`harness/context/sqlite.ts` provides the local `SqlitePiContextStore(profileDirectory, contextId)`.
+It uses the shared profile database, separates contexts, validates persisted messages, limits each context to 8 MiB
 and commits with an atomic revision check across connections. Callers close the
 store after execution has drained. Reopening preserves completed history and
 unresolved intents; the store does not make recovery decisions.

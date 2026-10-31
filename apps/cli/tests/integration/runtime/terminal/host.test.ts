@@ -41,7 +41,7 @@ it.skipIf(loopbackTransport())(
       child.kill("SIGKILL");
       await child.exited;
       expect(existsSync(old)).toBe(true);
-      host = startTerminalHost({ directory, projects: [] });
+      host = startTerminalHost({ profileDirectory: directory, directory, projects: [] });
       expect(existsSync(old)).toBe(false);
     } finally {
       if (child.exitCode === null) {
@@ -99,6 +99,7 @@ it.skipIf(process.platform === "win32")(
     }
     store.close();
     const host = startTerminalHost({
+      profileDirectory: directory,
       directory,
       projects: [project],
       away: true,
@@ -132,7 +133,11 @@ it.skipIf(process.platform === "win32")(
     } finally {
       await host.close();
     }
-    const restored = startTerminalHost({ directory, projects: [project] });
+    const restored = startTerminalHost({
+      profileDirectory: directory,
+      directory,
+      projects: [project],
+    });
     try {
       expect(restored.sessions()).toHaveLength(256);
       expect(restored.sessions().some((value) => value.id === sessions[0]!.id)).toBe(true);
@@ -149,11 +154,16 @@ it.skipIf(process.platform === "win32")(
     const dir = await mkdtemp(join(tmpdir(), "raypx-terminal-ipc-"));
     await mkdir(join(dir, "project"));
     const project = await realpath(join(dir, "project"));
-    const host = startTerminalHost({ directory: dir, projects: [project], away: true });
+    const host = startTerminalHost({
+      profileDirectory: dir,
+      directory: dir,
+      projects: [project],
+      away: true,
+    });
     try {
-      expect(() => startTerminalHost({ directory: dir, projects: [project] })).toThrow(
-        /already owns/,
-      );
+      expect(() =>
+        startTerminalHost({ profileDirectory: dir, directory: dir, projects: [project] }),
+      ).toThrow(/already owns/);
       const { socket } = host.endpoint;
       expect(socket === undefined || ((await stat(socket)).mode & 0o777) === 0o600).toBe(true);
       const noAuth = await localFetch(host.endpoint, "/state");
@@ -211,7 +221,7 @@ it.skipIf(process.platform === "win32")(
   async () => {
     const dir = await mkdtemp(join(tmpdir(), "raypx-terminal-fallback-"));
     const project = await realpath(dir);
-    const host = startTerminalHost({ directory: dir, projects: [project] });
+    const host = startTerminalHost({ profileDirectory: dir, directory: dir, projects: [project] });
     const input = {
       provider: "claude",
       input: {
@@ -263,6 +273,7 @@ it.skipIf(process.platform === "win32")(
     const directory = await mkdtemp(join(tmpdir(), "raypx-managed-hook-")),
       project = await realpath(directory);
     const host = startTerminalHost({
+      profileDirectory: directory,
       directory,
       projects: [project],
       away: true,

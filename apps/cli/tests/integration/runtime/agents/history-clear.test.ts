@@ -21,7 +21,7 @@ function fixture(options: ConstructorParameters<typeof AgentRuntime>[2] = {}) {
   const f = {
     runtime: new AgentRuntime(state, () => {}, options),
     store: new AgentStore(directory),
-    db: new Database(join(directory, "agents.sqlite")),
+    db: new Database(join(directory, "profile.sqlite")),
     state,
   };
   cleanups.push(async () => {
