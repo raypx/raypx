@@ -1,5 +1,6 @@
+import { profileStorage, removeProfileDirectory } from "./sqlite";
 import { afterEach } from "vite-plus/test";
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { StateStore } from "../../src/runtime/state";
@@ -38,7 +39,7 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
     cpSync(join(import.meta.dirname, "../fixtures/agents"), directory, { recursive: true });
     const source = readFileSync(join(directory, fixture + ".mjs"), "utf8");
     writeFileSync(file, `#!${process.execPath}\n${source}`, { mode: 0o700 });
-    const state = new StateStore(directory);
+    const state = new StateStore(profileStorage(directory));
     const rootId = crypto.randomUUID();
     state.putRoot({
       id: rootId,
@@ -62,8 +63,7 @@ export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = 
     await runtime.capabilities();
     cleanups.push(async () => {
       await runtime.close();
-      state.close();
-      rmSync(directory, { recursive: true, force: true });
+      removeProfileDirectory(directory, { recursive: true, force: true });
     });
     const task: AgentTask = {
       id: crypto.randomUUID(),

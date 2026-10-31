@@ -8,7 +8,7 @@ export default defineWebSocketHandler({
       throw new Response(null, { status: 403 });
   },
   open(peer) {
-    hub.open({
+    return hub.open({
       id: peer.id,
       send: (frame) => {
         // crossws reads Bun's getBufferedAmount() behind its portable peer getter.

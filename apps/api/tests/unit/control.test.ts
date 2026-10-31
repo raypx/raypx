@@ -51,7 +51,7 @@ describe("Desktop-owned task projections", () => {
           streamId,
           cursor,
           event: {
-            id: `event-${cursor}`,
+            id: crypto.randomUUID(),
             taskId: task.id,
             kind: "status",
             status: "succeeded",
@@ -61,19 +61,14 @@ describe("Desktop-owned task projections", () => {
       await tx.put("event", {
         id: "orphan",
         deviceId: task.deviceId,
-        taskId: "missing",
+        taskId: crypto.randomUUID(),
         streamId,
         cursor: 5001,
-        event: { kind: "activity" },
+        event: { id: crypto.randomUUID(), taskId: task.id, kind: "activity", entry },
       });
     });
     await service.snapshot(f.actor, streamId, 5001, []);
-    const rows = await repository.read(f.auth.user.id, (tx) =>
-      tx.list<{ id: string; deviceId: string; streamId: string; event: { kind: string } }>(
-        "event",
-        task.deviceId,
-      ),
-    );
+    const rows = await repository.read(f.auth.user.id, (tx) => tx.list("event", task.deviceId));
     const replay = rows.filter((row) => row.event.kind !== "activity");
     expect(replay.length).toBeLessThanOrEqual(4096);
     expect(
@@ -132,9 +127,7 @@ describe("Desktop-owned task projections", () => {
     prune.mockClear();
     await service.events(f.actor, f.announce.streamId, [{ sequence: 3, event: delta }]);
     expect(prune).not.toHaveBeenCalled();
-    const records = await repository.read(f.auth.user.id, (tx) =>
-      tx.list<{ id: string; deviceId: string; event: { kind: string } }>("event", task.deviceId),
-    );
+    const records = await repository.read(f.auth.user.id, (tx) => tx.list("event", task.deviceId));
     expect(records.some((record) => record.event.kind === "activity_delta")).toBe(false);
     await expect(
       service.events(f.actor, f.announce.streamId, [

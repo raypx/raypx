@@ -119,7 +119,11 @@ one; disable automatic image cleanup for this local-image strategy. Keep prior
 release tags and the migration image until explicitly retired.
 
 PostgreSQL becomes healthy, migration exits successfully, then API and Web start.
-Keep one API process because Relay authority is process-local.
+Without `REDIS_URL`, keep one API instance. Shared PostgreSQL and Redis enable
+cross-instance Relay routing, with no offline queue or automatic delivery retry.
+Configured Redis outages disconnect Relay clients and fail its readiness probe;
+`/health` remains liveness-only. Keep the broker private to this deployment.
+The provided Compose update script still manages one API container.
 `POSTGRES_MEMORY`/`POSTGRES_CPUS`, `MIGRATE_MEMORY`/`MIGRATE_CPUS`,
 `API_MEMORY`/`API_CPUS` and `WEB_MEMORY`/`WEB_CPUS` configure runtime limits. Budget
 for all projects, Dokploy and builds on a shared host.
@@ -186,7 +190,7 @@ then use a protected Compose override specifying the captured `sha256:` images a
 `/health`, `/ready`, login and relay before ending maintenance. Retain additive
 migrations when reverting an application image; never delete migrations or volumes.
 
-Deploy relay v2 Web/API/Desktop together. Older relay peers receive
+Deploy relay v4 Web/API/Desktop together. Older relay peers receive
 `UPGRADE_REQUIRED`; new clients stop retrying a version mismatch.
 
 The CI deployment gate runs for deployment adapters, API/Web runtime or dependency

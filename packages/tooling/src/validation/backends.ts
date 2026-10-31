@@ -159,7 +159,7 @@ export async function validateBackends(root: string, args: string[]) {
       }
       const env = backendEnvironment(process.env, url, redisURL);
       const cli = join(root, "packages/tooling/src/cli.ts");
-      for (const task of ["test:postgres", "test:redis"]) {
+      for (const task of ["test:postgres", "test:redis", "test:cluster"]) {
         const label = task.replaceAll(":", "-");
         const report = `backend-${evidence.id}-${label}.json`;
         await evidence.command(

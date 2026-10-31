@@ -5,8 +5,8 @@ import { drizzle } from "drizzle-orm/bun-sqlite";
 import { LocalError } from "../errors";
 import { migrateLocalDatabase } from "./migrate";
 
-/** Every store opens the same profile file; closing one store releases only its connection. */
-export function openProfileDatabase(directory: string) {
+/** Only the profile owner opens and migrates the shared writer. */
+function openProfileDatabase(directory: string) {
   if (!isAbsolute(directory))
     throw new LocalError("INVALID_PROFILE", "Profile directory must be absolute");
   const path = join(directory, "profile.sqlite");
@@ -25,5 +25,18 @@ export function openProfileDatabase(directory: string) {
   } catch (error) {
     client.close();
     throw error;
+  }
+}
+
+export class ProfileStorage {
+  readonly database: ReturnType<typeof drizzle>;
+  private closed = false;
+  constructor(readonly directory: string) {
+    this.database = openProfileDatabase(directory);
+  }
+  close() {
+    if (this.closed) return;
+    this.closed = true;
+    this.database.$client.close();
   }
 }

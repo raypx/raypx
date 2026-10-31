@@ -16,14 +16,9 @@ import { CONTEXT_COMMAND_TTL_MS } from "./repository.js";
 
 import {
   ControlError,
-  type Device,
-  type ObservedRequest,
-  type Task,
   type ContextCommand,
   type RoutedCommand,
   type ResolveTaskContext,
-  type Project,
-  type StoredRequest,
   type RelayActor,
   required,
   hash,
@@ -41,12 +36,10 @@ export class ControlCommands {
     return new Date(this.clock()).toISOString();
   }
   private async jobTarget(tx: ControlReader, action: CloudJobAction) {
-    const device = required(await tx.get<Device>("device", action.deviceId));
+    const device = required(await tx.get("device", action.deviceId));
     if (device.revoked || device.epoch !== action.epoch) throw new ControlError("DEVICE_REVOKED");
     if (action.type === "agent.run") {
-      const project = required(
-        await tx.get<Project>("project", `${device.id}:${action.projectId}`),
-      );
+      const project = required(await tx.get("project", `${device.id}:${action.projectId}`));
       if (!project.providers.includes(action.provider))
         throw new ControlError("PROVIDER_UNAVAILABLE");
       if (
@@ -67,9 +60,9 @@ export class ControlCommands {
   }
   validateContextProject(userId: string, target: TaskContextTarget) {
     return this.repository.read(userId, async (tx) => {
-      const device = required(await tx.get<Device>("device", target.deviceId));
+      const device = required(await tx.get("device", target.deviceId));
       if (device.revoked) throw new ControlError("DEVICE_REVOKED");
-      required(await tx.get<Project>("project", `${device.id}:${target.projectId}`));
+      required(await tx.get("project", `${device.id}:${target.projectId}`));
     });
   }
   private async contextFor(
@@ -110,7 +103,7 @@ export class ControlCommands {
   }
   jobTask(userId: string, taskId: string) {
     return this.repository.read(userId, async (tx) => {
-      const task = await tx.get<Task>("task", taskId);
+      const task = await tx.get("task", taskId);
       return task ? { status: task.status } : null;
     });
   }
@@ -182,7 +175,7 @@ export class ControlCommands {
     if (request.method === "tasks.create" && request.input.contextSelection?.sources.length) {
       if (id !== request.input.id) throw new ControlError("IDEMPOTENCY_CONFLICT");
       const [previous, task] = await this.repository.read(userId, (tx) =>
-        Promise.all([tx.get<ContextCommand>("command", id), tx.get<Task>("task", id)]),
+        Promise.all([tx.get("command", id), tx.get("task", id)]),
       );
       if (task) return this.recoveredTask(task, id, request);
       if (previous) {
@@ -197,7 +190,7 @@ export class ControlCommands {
     }
     return this.repository.transaction(userId, async (tx) => {
       if (context && request.method === "tasks.create") {
-        const task = await tx.get<Task>("task", id);
+        const task = await tx.get("task", id);
         if (task) return this.recoveredTask(task, id, request);
       }
       if (job) {
@@ -216,9 +209,7 @@ export class ControlCommands {
       }
       let deviceId: string;
       if (request.method === "observed.decide") {
-        const pending = required(
-          await tx.get<ObservedRequest>("observed_request", request.input.id),
-        );
+        const pending = required(await tx.get("observed_request", request.input.id));
         if (
           pending.status !== "pending" ||
           Date.parse(pending.expiresAt) <= this.clock() ||
@@ -230,10 +221,10 @@ export class ControlCommands {
         deviceId = pending.deviceId;
       } else if (request.method === "tasks.create") deviceId = request.input.deviceId;
       else if (request.method === "approvals.decide")
-        deviceId = required(await tx.get<StoredRequest>("request", request.input.id)).deviceId;
+        deviceId = required(await tx.get("request", request.input.id)).deviceId;
       else
         deviceId = required(
-          await tx.get<Task>(
+          await tx.get(
             "task",
             request.method === "tasks.cancel"
               ? request.input.id
@@ -242,7 +233,7 @@ export class ControlCommands {
                 : request.input.parentTaskId,
           ),
         ).deviceId;
-      const device = required(await tx.get<Device>("device", deviceId));
+      const device = required(await tx.get("device", deviceId));
       if (device.revoked) throw new ControlError("DEVICE_REVOKED");
       if (
         (request.method === "tasks.create" ||
@@ -251,7 +242,7 @@ export class ControlCommands {
         id !== request.input.id
       )
         throw new ControlError("IDEMPOTENCY_CONFLICT");
-      const previous = await tx.get<ContextCommand>("command", id);
+      const previous = await tx.get("command", id);
       if (previous) {
         if (previous.deviceId !== deviceId) throw new ControlError("IDEMPOTENCY_CONFLICT");
         context = this.commandContext(previous, request, requestHash);

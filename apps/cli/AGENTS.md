@@ -36,7 +36,7 @@ text; never rewrite persisted output. Cross-owner control and default no-arg TUI
 ## Ownership
 
 Own authorized directory operations, device-local SQLite state, Cron scheduling, external commands and interactive terminals. Shared wire schemas live in `@raypx/contracts/local`.
-All stores share `<profile>/profile.sqlite` through private `runtime/sqlite` Drizzle definitions.
+The runtime owns `ProfileStorage` for `<profile>/profile.sqlite` through private `runtime/sqlite` Drizzle definitions. Repositories borrow its writer; they never open, migrate or close it. The profile closes after producers and pending requests drain.
 `db:generate` generates migrations/snapshots and embeds the journal; never edit generated files.
 `check` verifies the embedded journal; migrate uses a separate process lock and rejects unmanaged/unknown schemas. Keep PRAGMA SQL, rowid-preserving REPLACE and bounded native snapshot cursors explicit.
 
@@ -93,7 +93,7 @@ runtime dependency or part of the cross-platform default verify gate.
 hook endpoint (Unix socket, or loopback on Windows), bounded plain-content envelopes and safe hook settings plans.
 `runtime/daemon` owns relay v4, project-specific Away opt-in, host authorization
 in Keychain or Windows Credential Manager and connector/service installation.
-`runtime/foreground.ts` reuses its control and terminal routing for direct Windows stdio,
+`runtime/host.ts` owns shared construction, request routing, cloud wakeups and shutdown for both daemon and foreground transports. `runtime/foreground.ts` adapts it for direct Windows stdio,
 with lifecycle shutdown owned by that foreground process. Host credentials never enter JSON
 settings or Desktop renderer responses. See docs/development/terminal-host-p1.md.
 Hook failure returns no decision, unlike the managed Agent's blocking hook policy.

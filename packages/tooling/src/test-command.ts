@@ -15,6 +15,7 @@ const suites = [
   "coverage",
   "postgres",
   "redis",
+  "cluster",
   "e2e",
   "inventory",
   "backends",
@@ -131,7 +132,7 @@ export async function runTests(root: string, cwd: string, args: string[]) {
     if (plan.kind === "help")
       console.log(
         [
-          "bun run test [all|unit|component|integration|coverage|postgres|redis] [--package name|path] [VP flags] [-- test flags]",
+          "bun run test [all|unit|component|integration|coverage|postgres|redis|cluster] [--package name|path] [VP flags] [-- test flags]",
           "bun run test e2e [--web|--desktop] [--smoke] [--visual] [-- Playwright flags]",
           "bun run test inventory [--layers] [--baseline file] [--owners file]",
           "bun run test backends [--with-e2e [-- Playwright flags]]",

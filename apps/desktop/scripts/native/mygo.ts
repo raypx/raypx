@@ -1,11 +1,9 @@
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { localParams } from "@raypx/contracts/local";
-import { messages } from "@raypx/i18n/messages";
 import { preparePackager } from "./packager";
 import { stageCli } from "./prepare-cli";
 import { signingEnvironment } from "./signing";
-import { DESKTOP_METHODS } from "../../bridge";
+import { generateNativeContracts } from "./generate";
 
 const desktop = resolve(import.meta.dirname, "../..");
 const root = resolve(desktop, "../..");
@@ -116,16 +114,8 @@ export async function prepare(
   }
   const generated = join(paths.desktop, "generated");
   await mkdir(generated, { recursive: true });
-  for (const [name, value] of Object.entries({
-    "desktop-methods.json": DESKTOP_METHODS,
-    "version.json": manifest.version,
-    "local-methods.json": Object.keys(localParams).sort(),
-    "notifications.json": {
-      en: messages.en.tasks.notification,
-      zh: messages.zh.tasks.notification,
-    },
-  }))
-    await writeFile(join(generated, name), JSON.stringify(value, null, 2) + "\n");
+  await generateNativeContracts(paths.desktop);
+  await writeFile(join(generated, "version.json"), JSON.stringify(manifest.version) + "\n");
   const frontend = join(generated, "frontend");
   await rm(frontend, { recursive: true, force: true });
   if (

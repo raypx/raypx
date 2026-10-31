@@ -1,6 +1,7 @@
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { Database } from "bun:sqlite";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -71,7 +72,7 @@ function request(index: number, taskId: string, body = "Confirm"): HumanRequest 
 }
 function fixture() {
   const directory = mkdtempSync(join(tmpdir(), "raypx-snapshot-performance-"));
-  const store = new AgentStore(directory);
+  const store = new AgentStore(profileStorage(directory).database);
   const database = new Database(join(directory, "profile.sqlite"));
   return {
     directory,
@@ -81,9 +82,8 @@ function fixture() {
     activity: database.query("INSERT INTO activity VALUES (?,?,?,?)"),
     request: database.query("INSERT INTO requests VALUES (?,?,?)"),
     close() {
-      store.close();
       database.close();
-      rmSync(directory, { recursive: true, force: true });
+      removeProfileDirectory(directory, { recursive: true, force: true });
     },
   };
 }
@@ -91,7 +91,7 @@ afterEach(() => vi.restoreAllMocks());
 
 it("bounds local pages, task approvals and startup work among 10,000 historical records", async () => {
   const f = fixture();
-  const state = new StateStore(f.directory);
+  const state = new StateStore(profileStorage(f.directory));
   let runtime: AgentRuntime | undefined;
   const binding = "desktop:performance";
   try {
@@ -189,7 +189,6 @@ it("bounds local pages, task approvals and startup work among 10,000 historical 
   } finally {
     vi.restoreAllMocks();
     await runtime?.close();
-    state.close();
     f.close();
   }
 });
@@ -349,8 +348,9 @@ it("rejects unmanaged JSON-only task profiles without repairing indexes or rewri
       "DROP INDEX tasks_binding_created; DROP INDEX tasks_binding_active; DROP INDEX tasks_binding_cursor; DROP INDEX tasks_active_session; DROP INDEX requests_binding_task; DROP INDEX requests_binding_pending; DROP INDEX activity_task_active; DROP INDEX commands_binding;",
     );
     f.database.exec("DROP TABLE __drizzle_migrations;");
-    f.store.close();
-    expect(() => new AgentStore(f.directory)).toThrow("unsupported SQLite schema");
+    expect(() => new AgentStore(profileStorage(f.directory).database)).toThrow(
+      "unsupported SQLite schema",
+    );
     expect(f.database.query("SELECT value FROM tasks WHERE id=?").get(uuid(1))).toEqual({
       value: original,
     });
@@ -363,13 +363,13 @@ it("rejects unmanaged JSON-only task profiles without repairing indexes or rewri
     ).toHaveLength(0);
   } finally {
     f.database.close();
-    rmSync(f.directory, { recursive: true, force: true });
+    removeProfileDirectory(f.directory, { recursive: true, force: true });
   }
 });
 
 it("reads task rows and watermark from one frozen WAL transaction while another owner advances", () => {
   const f = fixture();
-  const writer = new AgentStore(f.directory);
+  const writer = new AgentStore(profileStorage(f.directory).database);
   try {
     const local = task(1);
     writer.put(local);
@@ -399,7 +399,6 @@ it("reads task rows and watermark from one frozen WAL transaction while another 
     expect(writer.sequence("relay")).toBeGreaterThan(snapshot.sequence);
     expect(writer.get(uuid(1))?.task.summary).toBe("After");
   } finally {
-    writer.close();
     f.close();
   }
 });
@@ -487,9 +486,9 @@ it("keeps old active entries plus a bounded recent page, deduplicates them and m
 
 it("freezes paged records across live writes, caps pages at ten rows and 384 KiB, and expires cursors", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-snapshot-pages-"));
-  const state = new StateStore(directory);
+  const state = new StateStore(profileStorage(directory));
   const runtime = new AgentRuntime(state, () => {});
-  const writer = new AgentStore(directory);
+  const writer = new AgentStore(profileStorage(directory).database);
   const database = new Database(join(directory, "profile.sqlite"));
   try {
     for (let index = 1; index <= 21; index++) writer.put(task(index));
@@ -527,9 +526,7 @@ it("freezes paged records across live writes, caps pages at ten rows and 384 KiB
   } finally {
     vi.restoreAllMocks();
     database.close();
-    writer.close();
     await runtime.close();
-    state.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });

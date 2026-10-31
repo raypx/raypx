@@ -99,7 +99,7 @@ export async function collectInventory(root: string, reportNames: string[]): Pro
         workspace: workspace.manifest.name,
         file: join(workspace.path, file).replaceAll("\\", "/"),
         layer:
-          external || /^tests\/(postgres|redis)\//.test(file)
+          external || /^tests\/(postgres|redis|cluster)\//.test(file)
             ? "external"
             : file.includes("/component/")
               ? "component"

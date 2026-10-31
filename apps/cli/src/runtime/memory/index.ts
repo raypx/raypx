@@ -3,6 +3,7 @@ import { ContextError } from "@raypx/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 
 import { type TaskContextSelection, type TaskContextTarget } from "@raypx/core/tasks";
+import type { LocalDatabase } from "../sqlite";
 import type { AgentRuntime } from "../agents";
 import { SqliteContextRepository } from "./repository";
 
@@ -10,8 +11,8 @@ import { SqliteContextRepository } from "./repository";
 export class MemoryRuntime {
   private readonly repository: SqliteContextRepository;
   readonly service: ContextLibraryService;
-  constructor(directory: string, agents: () => AgentRuntime) {
-    this.repository = new SqliteContextRepository(directory);
+  constructor(database: LocalDatabase, agents: () => AgentRuntime) {
+    this.repository = new SqliteContextRepository(database);
     this.service = new ContextLibraryService({
       repository: this.repository,
       scope: "device",
@@ -28,8 +29,5 @@ export class MemoryRuntime {
   }
   async resolve(selection: TaskContextSelection, target: TaskContextTarget, prompt = " ") {
     return this.service.resolve(LOCAL_WORKSPACE_ID, selection, target, prompt);
-  }
-  close() {
-    this.repository.close();
   }
 }

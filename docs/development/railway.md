@@ -18,8 +18,9 @@ upgrades; API and Web have no public domains, and database connections use priva
 references. Access logging is
 disabled and the error log removes request details.
 
-API and Web bind to :: for Railway private networking. API has exactly one
-replica because Relay ownership is process-local. All three application services
+API and Web bind to :: for Railway private networking. IaC defaults to one API
+replica. Relay supports multiple replicas sharing the same PostgreSQL, Redis and
+AUTH_SECRET; keep broker channels private to this deployment. All three application services
 stay awake. Forwarded client IP headers remain untrusted until explicit, verified
 proxy CIDRs are configured; the API uses its socket peer by default.
 

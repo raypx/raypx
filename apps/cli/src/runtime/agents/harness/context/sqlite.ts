@@ -1,6 +1,5 @@
-import { isAbsolute } from "node:path";
 import { and, eq, sql } from "drizzle-orm";
-import { openProfileDatabase, type LocalDatabase } from "../../../sqlite";
+import { type LocalDatabase } from "../../../sqlite";
 import { piContexts } from "../../../sqlite/schema";
 import type { PiContext, PiContextStore } from "../providers/pi";
 import { piStoredContextSchema } from "./schema";
@@ -26,27 +25,21 @@ function fail(code: StoreCode): never {
   throw new PiContextStoreError(code);
 }
 
-/** Private experimental transcript storage. Callers own its path, context identity and lifetime. */
+/** Private transcript storage. The profile owns the database; callers own context identity and lifetime. */
 export class SqlitePiContextStore implements PiContextStore {
   private database: LocalDatabase | undefined;
   constructor(
-    directory: string,
+    database: LocalDatabase,
     private readonly contextId: string,
   ) {
     if (
-      typeof directory !== "string" ||
-      !isAbsolute(directory) ||
       typeof contextId !== "string" ||
       !contextId.trim() ||
       contextId.length > 200 ||
       contextId.includes("\0")
     )
       fail("PI_CONTEXT_INVALID");
-    try {
-      this.database = openProfileDatabase(directory);
-    } catch {
-      fail("PI_STORE_UNAVAILABLE");
-    }
+    this.database = database;
   }
   private open() {
     return this.database ?? fail("PI_STORE_CLOSED");
@@ -138,12 +131,6 @@ export class SqlitePiContextStore implements PiContextStore {
     }
   }
   close() {
-    const database = this.database;
     this.database = undefined;
-    try {
-      database?.$client.close();
-    } catch {
-      fail("PI_STORE_UNAVAILABLE");
-    }
   }
 }

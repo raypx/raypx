@@ -1,12 +1,13 @@
 import { chmodSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { localParams, localRequestSchema, type LocalEvent } from "@raypx/contracts/local";
-import { createRuntime, type LocalRuntime } from "../index";
+import { createHost } from "../host";
+import type { LocalRuntime } from "../index";
 import { acquireLock, profilePath } from "../state";
 import { errorPayload, LocalError } from "../errors";
 import { endpointFile, readDaemon, type DaemonEndpoint, type ProfileOptions } from "./endpoint";
-import { DaemonControl } from "./control";
-import { LocalTerminalControl } from "./terminal-control";
+import type { DaemonControl } from "./control";
+import type { LocalTerminalControl } from "./terminal-control";
 import type { HostVault } from "./vault";
 import manifest from "../../../package.json";
 
@@ -57,6 +58,7 @@ export async function startDaemon(
   let endpoint: DaemonEndpoint = { ...identity, ...address };
   const clients = new Map<string, Client>(),
     encoder = new TextEncoder();
+  let host: ReturnType<typeof createHost> | undefined;
   let terminal: LocalTerminalControl | undefined;
   let runtime: LocalRuntime | undefined,
     control: DaemonControl | undefined,
@@ -100,11 +102,6 @@ export async function startDaemon(
         releaseClient(id);
       }
     }
-    if (
-      (event.event === "agent.changed" || event.event === "observed.changed") &&
-      !event.data.notificationOnly
-    )
-      void control?.wake().catch(backgroundFailure);
   };
   const close = () => {
     stopping = true;
@@ -113,17 +110,9 @@ export async function startDaemon(
       try {
         for (const id of clients.keys()) releaseClient(id);
         try {
-          await control?.close();
+          await host?.close();
         } finally {
-          try {
-            try {
-              await terminal?.close();
-            } finally {
-              await runtime?.close();
-            }
-          } finally {
-            await server?.stop(true);
-          }
+          await server?.stop(true);
         }
       } finally {
         try {
@@ -140,9 +129,8 @@ export async function startDaemon(
   };
   try {
     refreshStableCli();
-    runtime = createRuntime({ ...options, scheduler: true, exclusiveOwner: true, emit });
-    terminal = new LocalTerminalControl(directory, runtime, emit);
-    control = new DaemonControl(directory, runtime, emit, terminal, options.vault);
+    host = createHost({ ...options, owner: "daemon", emit });
+    ({ runtime, terminal, control } = host);
     server = Bun.serve({
       ...(address.socket === undefined
         ? { hostname: "127.0.0.1", port: 0 }
@@ -222,21 +210,7 @@ export async function startDaemon(
             const result = await runtime!.processes.run(params, client.abort.signal, toolId);
             return Response.json({ version: 1, id: requestId, result });
           }
-          let result =
-            input.method.startsWith("approvals.local.") || input.method.startsWith("connectors.")
-              ? await terminal!.request(input.method, input.params, id)
-              : input.method.startsWith("host.") || input.method === "observed.remote"
-                ? await control!.request(input.method, input.params)
-                : await runtime!.request(input.method, input.params);
-          if (input.method === "runtime.info")
-            result = {
-              ...(result as Record<string, unknown>),
-              owner: "daemon",
-              hostProtocol: 1,
-              features: { localTerminalApprovals: terminal!.supported },
-            };
-          if (input.method === "agents.configure" || input.method === "roots.remove")
-            terminal!.projectsChanged();
+          const result = await host!.request(input.method, input.params, id);
           if (
             input.method === "terminal.open" &&
             result &&
@@ -279,7 +253,7 @@ export async function startDaemon(
       temporary = `${file}.${endpoint.epoch}.tmp`;
     writeFileSync(temporary, JSON.stringify(endpoint), { flag: "wx", mode: 0o600 });
     renameSync(temporary, file);
-    void control.restore().catch(backgroundFailure);
+    host.restore();
     return { endpoint, runtime, control, terminal, emit, close, stopped };
   } catch (error) {
     await close();

@@ -1,7 +1,13 @@
 import { expect, it, vi } from "vite-plus/test";
 import { createHash } from "node:crypto";
 import { ControlService } from "../../server/control/service.js";
-import { connected, controlAuth, memoryControlRepository } from "../helpers/control.js";
+import {
+  connected,
+  controlAuth,
+  memoryControlRepository,
+  observed,
+  running,
+} from "../helpers/control.js";
 import { createApiClient } from "@raypx/client";
 import { createApiApp } from "../../server/api.js";
 
@@ -41,7 +47,7 @@ it("limits host grants before credential lookup without retaining bearer secrets
   expect(JSON.stringify(rateLimit.mock.calls)).not.toContain(credential);
   expect(hostGrant).not.toHaveBeenCalled();
 });
-it("requires legacy credentials to be bootstrapped again before grants or relay access", async () => {
+it("rejects credentials missing bootstrap attribution before grants or relay access", async () => {
   const repository = memoryControlRepository(),
     service = new ControlService(repository),
     host = await connected(service);
@@ -49,9 +55,7 @@ it("requires legacy credentials to be bootstrapped again before grants or relay 
     grant = await service.hostGrant(key.credential);
   const actor = await service.authenticate("device", grant.grant.token, crypto.randomUUID());
   await repository.transaction(host.auth.user.id, async (tx) => {
-    for (const row of await tx.list<{ id: string; deviceId: string; bootstrapSessionId?: string }>(
-      "credential",
-    )) {
+    for (const row of await tx.list("credential")) {
       delete row.bootstrapSessionId;
       await tx.put("credential", row);
     }
@@ -69,16 +73,10 @@ it("purges only the revoked device's terminal content and preserves managed hist
     service = new ControlService(repository),
     first = await connected(service),
     second = await connected(service, first.auth);
-  await repository.transaction(first.auth.user.id, async (tx) => {
-    for (const host of [first, second]) {
-      for (const kind of ["observed_session", "observed_request", "task"] as const)
-        await tx.put(kind, {
-          id: `${kind}:${host.grant.deviceId}`,
-          deviceId: host.grant.deviceId,
-          body: "private retained text",
-        });
-    }
-  });
+  for (const host of [first, second]) {
+    await running(service, host);
+    await service.observed(host.actor, observed(host.input.projectId).frame);
+  }
   await service.revoke(first.auth.user.id, first.grant);
   await repository.read(first.auth.user.id, async (tx) => {
     for (const kind of ["observed_session", "observed_request"] as const) {

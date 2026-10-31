@@ -9,7 +9,7 @@ belong to `@raypx/core`; transport adapters compose those same schema instances.
 
 `/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
 
-`/api`: public HTTP account contract. `/local`: versioned local CLI/Desktop protocol. `.` re-exports the API seam.
+`/api`: public HTTP account contract and exhaustive native transport exposure policy (`apiExposure`). Desktop generates its Go RPC allowlists from this policy. `/local`: versioned local CLI/Desktop protocol. `.` re-exports the API seam.
 
 ## Ownership
 

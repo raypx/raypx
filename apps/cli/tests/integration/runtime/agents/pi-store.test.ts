@@ -1,13 +1,13 @@
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { afterEach, expect, it } from "vite-plus/test";
 import { Database } from "bun:sqlite";
-import { mkdtempSync, rmSync, statSync } from "node:fs";
+import { mkdtempSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   SqlitePiContextStore,
   PI_CONTEXT_MAX_BYTES,
-  PiContextStoreError,
 } from "../../../../src/runtime/agents/harness/context/sqlite";
 import { PiRunner, type PiContext } from "../../../../src/runtime/agents/harness/providers/pi";
 import { piMessage, piModel, piScript, piTool } from "../../../helpers/pi";
@@ -18,10 +18,10 @@ afterEach(() => {
 });
 function fixture() {
   const directory = mkdtempSync(join(tmpdir(), "raypx-pi-store-"));
-  cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
+  cleanups.push(() => removeProfileDirectory(directory, { recursive: true, force: true }));
   const path = join(directory, "profile.sqlite");
   const open = (id = "one") => {
-    const store = new SqlitePiContextStore(directory, id);
+    const store = new SqlitePiContextStore(profileStorage(directory).database, id);
     cleanups.push(() => store.close());
     return store;
   };
@@ -83,10 +83,15 @@ it("loads a successful transcript after the writing process exits and continues 
   const module = fileURLToPath(
     new URL("../../../../src/runtime/agents/harness/context/sqlite.ts", import.meta.url),
   );
+  const profileModule = fileURLToPath(
+    new URL("../../../../src/runtime/sqlite/profile.ts", import.meta.url),
+  );
   const source = `import { SqlitePiContextStore } from ${JSON.stringify(module)};
-    const store = new SqlitePiContextStore(process.argv[1], "restart");
+    import { ProfileStorage } from ${JSON.stringify(profileModule)};
+    const storage = new ProfileStorage(process.argv[1]);
+    const store = new SqlitePiContextStore(storage.database, "restart");
     await store.commit(0, {status:"succeeded",messages:[{role:"user",content:"Previous turn",timestamp:1}]});
-    store.close();`;
+    store.close(); storage.close();`;
   const child = Bun.spawn([process.execPath, "-e", source, f.directory], {
     stdout: "ignore",
     stderr: "pipe",
@@ -309,9 +314,9 @@ it("has an idempotent caller-owned close and sanitized input/open errors", async
   store.close();
   await expect(store.load()).rejects.toMatchObject({ code: "PI_STORE_CLOSED" });
   await expect(store.commit(0, idle())).rejects.toMatchObject({ code: "PI_STORE_CLOSED" });
-  expect(() => new SqlitePiContextStore("relative.sqlite", "one")).toThrow(PiContextStoreError);
-  expect(() => new SqlitePiContextStore(f.directory, "")).toThrow("PI_CONTEXT_INVALID");
-  expect(() => new SqlitePiContextStore(join(f.path, "private", "context.sqlite"), "one")).toThrow(
-    "PI_STORE_UNAVAILABLE",
+  expect(() => profileStorage("relative.sqlite")).toThrow("Profile directory must be absolute");
+  expect(() => new SqlitePiContextStore(profileStorage(f.directory).database, "")).toThrow(
+    "PI_CONTEXT_INVALID",
   );
+  expect(() => profileStorage(join(f.path, "private", "context.sqlite"))).toThrow(/ENOTDIR|EEXIST/);
 });

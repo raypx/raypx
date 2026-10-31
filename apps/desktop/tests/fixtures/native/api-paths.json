@@ -159,5 +159,32 @@
     },
     "allowed": false,
     "native": false
+  },
+  {
+    "input": {
+      "path": "/rpc/configuration/update",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": true,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/rpc/hosts/grant",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": false
+  },
+  {
+    "input": {
+      "path": "/rpc/hosts/grant",
+      "method": "POST",
+      "headers": {}
+    },
+    "allowed": false,
+    "native": true
   }
 ]

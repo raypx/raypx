@@ -8,7 +8,7 @@ import {
 } from "@raypx/contracts/terminal";
 import type { BrokerStore, DecisionReceipt } from "./broker";
 import { LocalError } from "../errors";
-import { openProfileDatabase, type LocalDatabase } from "../sqlite";
+import { type LocalDatabase } from "../sqlite";
 import {
   terminalProjects,
   terminalReceipts,
@@ -17,30 +17,23 @@ import {
 } from "../sqlite/schema";
 
 export class TerminalStore implements BrokerStore {
-  private readonly db: LocalDatabase;
-  constructor(directory: string) {
-    this.db = openProfileDatabase(directory);
-    try {
-      this.db
-        .delete(terminalSessions)
-        .where(
-          notExists(
-            this.db
-              .select({ id: terminalRequests.id })
-              .from(terminalRequests)
-              .where(
-                eq(
-                  sql`json_extract(${terminalRequests.value},'$.sessionId')`,
-                  sql`json_extract(${terminalSessions.value},'$.id')`,
-                ),
+  constructor(private readonly db: LocalDatabase) {
+    this.db
+      .delete(terminalSessions)
+      .where(
+        notExists(
+          this.db
+            .select({ id: terminalRequests.id })
+            .from(terminalRequests)
+            .where(
+              eq(
+                sql`json_extract(${terminalRequests.value},'$.sessionId')`,
+                sql`json_extract(${terminalSessions.value},'$.id')`,
               ),
-          ),
-        )
-        .run();
-    } catch (error) {
-      this.db.$client.close();
-      throw error;
-    }
+            ),
+        ),
+      )
+      .run();
   }
 
   projectId(path: string): string {
@@ -159,8 +152,5 @@ export class TerminalStore implements BrokerStore {
           )
           .run();
     });
-  }
-  close() {
-    this.db.$client.close();
   }
 }

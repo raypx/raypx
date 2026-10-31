@@ -125,13 +125,12 @@ TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/
 
 ## Remote tasks
 
-`server/control` owns device credentials and account-scoped read projections. The service
-composes credential fencing, command routing, task projection and observed projection
-modules. Share record types privately; preserve owner transactions and read-only reads.
+`server/control` owns device credentials and account-scoped read projections. Its service composes credential fencing, command routing, task projection and observed projection modules. Private record schemas own stored validation and inferred types; repository kinds determine return types and query options. Observed summaries have a separate typed read. Account authorization mutations take an exclusive owner lock; device projection transactions take a shared owner security fence and a device advisory lock. Read-only reads take neither lock.
 `server/relay` authenticates and routes typed WebSocket messages; execution and
 first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
 and one-time viewer tickets. No HTTP task mutation or polling exchange remains.
-Bun uses one relay process with connections fenced by identity. Keep credentials out of URLs and diagnostics.
+Each runtime owns RelayHub. REDIS_URL enables a private bounded cross-instance bus; PostgreSQL owns connection identity. Without Redis use one instance. Broker loss closes clients and fails readiness until subscriptions recover; never fall back or retry uncertain delivery. Keep credentials out of the bus, URLs and diagnostics.
+`test:cluster` requires isolated TEST_DATABASE_URL and TEST_REDIS_URL; it verifies two real socket servers. See docs/architecture/remote-tasks.md.
 Relay v4 requires an explicit protocol version. Preserve full activity checkpoints
 and bounded incremental replay; a missing revision requests a snapshot. Keep the latest
 activity projection until explicit history removal. Missing entries in partial snapshots

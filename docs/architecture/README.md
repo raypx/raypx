@@ -75,13 +75,15 @@ Raypx Kit provider delegates translation, formatting and React context to its bu
 Only `useLanguagePreference().setPreference()` changes the product language
 preference; the active locale is derived from that preference and the full ordered
 system locale list. See [internationalization](internationalization.md).
-DB owns fresh auth-only schema/migrations; mail owns auth delivery/templates.
+Database owns current auth and cloud projection schema/migrations; mail owns auth delivery/templates.
 
 CLI's device stores use Drizzle's Bun SQLite driver and private typed tables in
 `runtime/sqlite/schema.ts`; server PostgreSQL schemas stay in the database workspace.
 Repositories validate stored JSON and commit revision checks, history and receipts
-in synchronous transactions. Current-schema bootstrap SQL, PRAGMAs and profile
-locks remain SQLite operations. Parameterized Drizzle SQL preserves `REPLACE`
+in synchronous transactions. One `ProfileStorage` opens, migrates and closes the
+profile writer; repositories borrow that connection and can join one transaction.
+Drizzle migrations initialize the current schema; PRAGMAs and profile locks remain
+SQLite operations. Parameterized Drizzle SQL preserves `REPLACE`
 rowid ordering and the snapshot index hint; dedicated native cursors execute
 Drizzle-built queries to bound snapshot memory. No legacy data imports are run.
 
@@ -102,7 +104,7 @@ and `error`, then completed with `emit`. Every drained event first passes
 (`API_LOG_FIELDS`, the CLI field list) and the fixed envelope leave the process,
 sensitive values are replaced and errors keep only a name and code. API and CLI use
 the workspace's `/managed` drain for safe buffering, statistics and idempotent shutdown;
-the CLI and Node API write JSON lines to
+the CLI and Bun API write JSON lines to
 stderr. Applications own environment
 parsing, permitted fields, output and shutdown.
 
@@ -197,7 +199,9 @@ with a durable sequenced journal for reconnect replay and snapshot recovery.
 
 [ADR 0035](0035-local-owner-host.md) defines the current local-first ownership,
 cloud opt-in, terminal approval leases and migration boundary. Each profile owns
-one Bun/TypeScript execution Host. Local tasks, connectors and approvals require
+one Bun/TypeScript execution Host. Foreground and daemon transports use the same
+`runtime/host.ts` composition for routing, cloud restore and teardown.
+Local tasks, connectors and approvals require
 no account; cloud recovery does not block readiness. Go provides the native Desktop host; execution stays in the CLI. See
 [ADR 0036](0038-mygo-desktop-host.md). Windows also runs the independent daemon over
 token-guarded loopback; see [ADR 0037](0037-windows-daemon.md). Go host checks run through shared verification.

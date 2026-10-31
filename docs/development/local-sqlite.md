@@ -1,9 +1,12 @@
 # Local SQLite storage
 
 Each CLI profile has one business database, `<profile>/profile.sqlite`. State,
-Memory, Agent, Terminal and Pi context stores open separate connections to that
-file. Closing one store leaves the other connections usable. WAL and the busy
-timeout apply consistently to every connection. The database is private on POSIX.
+Memory, Agent, Terminal and Pi context repositories borrow the profile writer.
+The runtime owns `ProfileStorage`: it opens the database, runs migrations once,
+injects the writer and closes it after producers and pending requests drain.
+Repositories never migrate or close borrowed connections. Operations across
+repositories can share one Drizzle transaction. Independent profile owners in
+other processes still use separate connections. The database is private on POSIX.
 
 `apps/cli/src/runtime/sqlite/schema/` owns the table definitions by feature;
 `schema.ts` exports the complete profile schema. A single generated initial
@@ -38,6 +41,6 @@ that file fail explicitly. Other files in the profile directory do not participa
 in storage initialization.
 
 Default integration tests exercise initialization, reopen, cross-store visibility,
-independent connection closure, rejected formats and six processes starting at
+cross-repository rollback, owner closure, validated stored JSON, rejected formats and six processes starting at
 once. `apps/cli`'s `smoke` and `smoke:pi` commands additionally run copied compiled
 executables outside the repository.

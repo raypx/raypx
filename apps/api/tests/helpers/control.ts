@@ -1,4 +1,5 @@
-import { normalizeTaskJson } from "@raypx/core/task-text";
+import { terminalRequestSchema, terminalSessionSchema } from "@raypx/contracts/terminal";
+import { decodeControlRecord, decodeObservedSummary } from "../../server/control/schemas.js";
 import type { AuthSession } from "@raypx/auth/types";
 import {
   CONTEXT_COMMAND_TTL_MS,
@@ -52,11 +53,12 @@ export function memoryControlRepository(): ControlRepository & {
           revokedAt: Date.now(),
         } as ControlRecord);
       },
-      async get<R extends ControlRecord>(kind: RecordKind, id: string) {
-        return structuredClone(draft.get(key(kind, id))) as R | undefined;
+      async get<K extends RecordKind>(kind: K, id: string) {
+        const value = draft.get(key(kind, id));
+        return value ? decodeControlRecord(kind, structuredClone(value)) : undefined;
       },
-      async list<R extends ControlRecord>(
-        kind: RecordKind,
+      async list<K extends RecordKind>(
+        kind: K,
         deviceId?: string,
         query: import("../../server/control/repository.js").ControlQuery = {},
       ) {
@@ -68,7 +70,7 @@ export function memoryControlRepository(): ControlRepository & {
           )
           .map(
             ([, item]) =>
-              structuredClone(item) as R & {
+              structuredClone(item) as ControlRecord & {
                 taskId?: string;
                 createdAt?: string;
                 expiresAt?: string;
@@ -124,18 +126,14 @@ export function memoryControlRepository(): ControlRepository & {
               (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
           );
         const result = query.limit === undefined ? rows : rows.slice(0, query.limit);
-        if (!query.summary) return result;
-        return result.map(
-          (item) =>
-            Object.fromEntries(
-              Object.entries(item).filter(
-                ([field]) => !["body", "questions", "decision"].includes(field),
-              ),
-            ) as R,
-        );
+        return result.map((item) => decodeControlRecord(kind, item));
+      },
+      async observedSummaries(query) {
+        const rows = await transaction(draft, userId).list("observed_request", undefined, query);
+        return rows.map((item) => decodeObservedSummary(item));
       },
       async put(kind, item) {
-        const normalized = normalizeTaskJson(item);
+        const normalized = decodeControlRecord(kind, item);
         draft.set(key(kind, item.id), structuredClone(normalized));
         return normalized;
       },
@@ -143,13 +141,7 @@ export function memoryControlRepository(): ControlRepository & {
         draft.delete(key(kind, id));
       },
       async pruneCommands(now) {
-        const commands = await transaction(draft, userId).list<
-          ControlRecord & {
-            requestHash?: string;
-            capturedAt?: string;
-            context?: { capturedAt: string };
-          }
-        >("command");
+        const commands = await transaction(draft, userId).list("command");
         const time = (item: (typeof commands)[number]) =>
           item.capturedAt ?? item.context?.capturedAt ?? "";
         let bytes = 0,
@@ -183,14 +175,7 @@ export function memoryControlRepository(): ControlRepository & {
         }
       },
       async pruneEvents(deviceId, streamId, orphans = false) {
-        const rows = await transaction(draft, userId).list<
-          ControlRecord & {
-            taskId: string;
-            streamId: string;
-            cursor: number;
-            event: { kind: string };
-          }
-        >("event", deviceId);
+        const rows = await transaction(draft, userId).list("event", deviceId);
         let bytes = 0,
           count = 0;
         for (const item of rows.sort((a, b) => b.cursor - a.cursor)) {
@@ -220,6 +205,7 @@ export function memoryControlRepository(): ControlRepository & {
       return undefined;
     },
     read: (userId, run) => run(transaction(structuredClone(data), userId)),
+    deviceTransaction: (userId, _deviceId, run) => repository.transaction(userId, run),
     transaction<T>(userId: string, run: (tx: ControlTransaction) => Promise<T>): Promise<T> {
       const result = queue.then(async () => {
         const draft = structuredClone(data);
@@ -331,5 +317,54 @@ export function humanRequest(task: AgentTask): HumanRequest {
     expiresAt: new Date(Date.now() + 300_000).toISOString(),
     status: "pending",
     decision: null,
+  };
+}
+
+export function observed(projectId: string) {
+  const epoch = crypto.randomUUID(),
+    session = terminalSessionSchema.parse({
+      id: crypto.randomUUID(),
+      provider: "codex",
+      providerSessionId: "synthetic-session",
+      projectId,
+      projectName: "Synthetic project",
+      capabilities: {
+        permission: true,
+        permissionTools: ["Bash"],
+        question: false,
+        plan: false,
+        simultaneousAnswers: false,
+        requiresHookTrust: true,
+      },
+    });
+  const request = terminalRequestSchema.parse({
+    version: 1,
+    id: crypto.randomUUID(),
+    sessionId: session.id,
+    epoch,
+    revision: 1,
+    provider: "codex",
+    invocationId: crypto.randomUUID(),
+    kind: "permission",
+    title: "Bash",
+    encoding: "plain",
+    body: '{"command":"printf synthetic"}',
+    questions: [],
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 300_000).toISOString(),
+    status: "pending",
+    decision: null,
+  });
+  return {
+    epoch,
+    session,
+    request,
+    frame: {
+      type: "observed" as const,
+      epoch,
+      revision: 1,
+      sessions: [session],
+      requests: [request],
+    },
   };
 }

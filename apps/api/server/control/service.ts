@@ -72,6 +72,11 @@ export class ControlService {
   ): ReturnType<TaskProjection["announce"]> {
     return this.tasks.announce(...args);
   }
+  connection(
+    ...args: Parameters<TaskProjection["connection"]>
+  ): ReturnType<TaskProjection["connection"]> {
+    return this.tasks.connection(...args);
+  }
   touch(...args: Parameters<TaskProjection["touch"]>): ReturnType<TaskProjection["touch"]> {
     return this.tasks.touch(...args);
   }

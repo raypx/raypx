@@ -93,7 +93,7 @@ export class AgentRuntime {
       ) => Promise<TaskContextSnapshot>;
     } = {},
   ) {
-    this.store = new AgentStore(state.directory);
+    this.store = new AgentStore(state.db);
     for (const local of this.store.tasks({ activeOnly: true }))
       this.status(local, "interrupted", undefined, "HOST_RESTARTED");
   }
@@ -701,6 +701,5 @@ export class AgentRuntime {
     for (const execution of executions) execution.cancel();
     await Promise.allSettled(this.completions);
     await this.server?.stop(true);
-    this.store.close();
   }
 }

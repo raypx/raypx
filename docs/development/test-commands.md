@@ -29,7 +29,12 @@ bun run --cwd packages/host test:integration
 bun run --cwd apps/api test
 bun run --cwd apps/api test:postgres
 bun run --cwd apps/api test:redis
+bun run --cwd apps/api test:cluster
 ```
+
+`test:cluster` requires both `TEST_DATABASE_URL` (an isolated database ending in
+`_test`) and `TEST_REDIS_URL`. It checks multi-instance Relay with real sockets.
+`test backends` and the CI backend gate include it.
 
 Only layers with actual suites get scripts. Root selection accepts the full name,
 workspace path or an unambiguous directory name. Running `raypx-dev test` within a

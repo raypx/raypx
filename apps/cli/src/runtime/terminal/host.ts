@@ -1,3 +1,4 @@
+import type { LocalDatabase } from "../sqlite";
 import {
   chmodSync,
   mkdirSync,
@@ -52,7 +53,7 @@ const decisionInput = z.object({ id: z.string().uuid(), epoch: z.string().uuid()
 /** Private hook endpoint; never exposes the daemon's local method router. */
 type TerminalOptions = {
   directory: string;
-  profileDirectory: string;
+  database: LocalDatabase;
   projects: string[];
   projectIds?: ReadonlyMap<string, string>;
   discoveryDirectory?: string;
@@ -86,7 +87,7 @@ export function startTerminalHost(options: TerminalOptions) {
   let socketDirectory: string | undefined;
   let server: ReturnType<typeof Bun.serve> | undefined;
   try {
-    store = new TerminalStore(options.profileDirectory);
+    store = new TerminalStore(options.database);
     const broker = new RequestBroker(store, options.changed);
     const sessions = new Map<string, TerminalSession>(store.sessions());
     let previous: string | undefined;
@@ -335,7 +336,6 @@ export function startTerminalHost(options: TerminalOptions) {
           broker.close();
         } finally {
           await server!.stop(true);
-          store!.close();
           try {
             if (readTerminalEndpoint(options.directory).epoch === endpoint.epoch) {
               rmSync(file, { force: true });
@@ -352,7 +352,6 @@ export function startTerminalHost(options: TerminalOptions) {
     };
   } catch (error) {
     void server?.stop(true);
-    store?.close();
     if (socketDirectory) rmSync(socketDirectory, { recursive: true, force: true });
     unlock();
     throw error;

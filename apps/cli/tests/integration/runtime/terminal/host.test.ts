@@ -1,3 +1,4 @@
+import { profileStorage } from "../../../helpers/sqlite";
 import { expect, it } from "vite-plus/test";
 import { mkdtemp, mkdir, realpath, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -41,7 +42,11 @@ it.skipIf(loopbackTransport())(
       child.kill("SIGKILL");
       await child.exited;
       expect(existsSync(old)).toBe(true);
-      host = startTerminalHost({ profileDirectory: directory, directory, projects: [] });
+      host = startTerminalHost({
+        database: profileStorage(directory).database,
+        directory,
+        projects: [],
+      });
       expect(existsSync(old)).toBe(false);
     } finally {
       if (child.exitCode === null) {
@@ -59,7 +64,7 @@ it.skipIf(process.platform === "win32")(
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "raypx-terminal-retention-")),
       project = await realpath(directory);
-    const store = new TerminalStore(directory),
+    const store = new TerminalStore(profileStorage(directory).database),
       projectId = store.projectId(project),
       now = new Date().toISOString();
     const sessions: TerminalSession[] = [];
@@ -97,9 +102,8 @@ it.skipIf(process.platform === "win32")(
         expiresAt: now,
       });
     }
-    store.close();
     const host = startTerminalHost({
-      profileDirectory: directory,
+      database: profileStorage(directory).database,
       directory,
       projects: [project],
       away: true,
@@ -134,7 +138,7 @@ it.skipIf(process.platform === "win32")(
       await host.close();
     }
     const restored = startTerminalHost({
-      profileDirectory: directory,
+      database: profileStorage(directory).database,
       directory,
       projects: [project],
     });
@@ -155,14 +159,18 @@ it.skipIf(process.platform === "win32")(
     await mkdir(join(dir, "project"));
     const project = await realpath(join(dir, "project"));
     const host = startTerminalHost({
-      profileDirectory: dir,
+      database: profileStorage(dir).database,
       directory: dir,
       projects: [project],
       away: true,
     });
     try {
       expect(() =>
-        startTerminalHost({ profileDirectory: dir, directory: dir, projects: [project] }),
+        startTerminalHost({
+          database: profileStorage(dir).database,
+          directory: dir,
+          projects: [project],
+        }),
       ).toThrow(/already owns/);
       const { socket } = host.endpoint;
       expect(socket === undefined || ((await stat(socket)).mode & 0o777) === 0o600).toBe(true);
@@ -221,7 +229,11 @@ it.skipIf(process.platform === "win32")(
   async () => {
     const dir = await mkdtemp(join(tmpdir(), "raypx-terminal-fallback-"));
     const project = await realpath(dir);
-    const host = startTerminalHost({ profileDirectory: dir, directory: dir, projects: [project] });
+    const host = startTerminalHost({
+      database: profileStorage(dir).database,
+      directory: dir,
+      projects: [project],
+    });
     const input = {
       provider: "claude",
       input: {
@@ -273,7 +285,7 @@ it.skipIf(process.platform === "win32")(
     const directory = await mkdtemp(join(tmpdir(), "raypx-managed-hook-")),
       project = await realpath(directory);
     const host = startTerminalHost({
-      profileDirectory: directory,
+      database: profileStorage(directory).database,
       directory,
       projects: [project],
       away: true,

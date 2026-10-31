@@ -8,7 +8,7 @@ import {
   type ContextVersion,
 } from "@raypx/memory";
 import type { ContextLibraryRepository } from "@raypx/memory/server";
-import { openProfileDatabase, type LocalDatabase } from "../sqlite";
+import { type LocalDatabase } from "../sqlite";
 import { deletedDocuments, documents, versions } from "../sqlite/schema";
 
 const summary = ({ content: _content, ...document }: ContextDocument) => document;
@@ -21,17 +21,10 @@ const inputOf = ({ kind, name, category, content, project }: ContextDocumentInpu
 });
 /** Device-profile data only. Transactions fence revisions across CLI connections. */
 export class SqliteContextRepository implements ContextLibraryRepository {
-  private readonly db: LocalDatabase;
   constructor(
-    directory: string,
+    private readonly db: LocalDatabase,
     private readonly now: () => number = Date.now,
-  ) {
-    try {
-      this.db = openProfileDatabase(directory);
-    } catch {
-      throw new ContextError("CONTEXT_UNAVAILABLE");
-    }
-  }
+  ) {}
   private safe<T>(operation: () => T): T {
     try {
       return operation();
@@ -311,8 +304,5 @@ export class SqliteContextRepository implements ContextLibraryRepository {
         }),
       ),
     );
-  }
-  close() {
-    this.db.$client.close();
   }
 }

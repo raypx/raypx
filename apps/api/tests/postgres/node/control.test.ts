@@ -8,7 +8,7 @@ import {
   eventWindowPrune,
 } from "../../../server/control/repository.js";
 import { ControlService } from "../../../server/control/service.js";
-import { connected, controlAuth, humanRequest, running } from "../../helpers/control.js";
+import { connected, controlAuth, humanRequest, running, observed } from "../../helpers/control.js";
 import { createApiApp } from "../../../server/api.js";
 import { createApiClient } from "@raypx/client";
 
@@ -134,14 +134,15 @@ it("scopes observed summaries, excludes revoked devices and honors empty ID filt
   const revoked = await connected(service, auth);
   const foreignDeviceId = crypto.randomUUID();
   const pending = {
+    ...observed(active.input.projectId).request,
     id: crypto.randomUUID(),
     deviceId: active.grant.deviceId,
-    status: "pending",
+    status: "pending" as const,
     createdAt: "2026-10-27T09:00:00.000Z",
     expiresAt: "2026-10-27T11:00:00.000Z",
     body: "Private tool body",
-    questions: [{ question: "Private question" }],
-    decision: { answer: "Private answer" },
+    questions: [],
+    decision: null,
   };
   const expired = {
     ...pending,
@@ -160,14 +161,22 @@ it("scopes observed summaries, excludes revoked devices and honors empty ID filt
       deviceId: revoked.grant.deviceId,
     });
   });
+  const activeDevice = await repository.read(auth.user.id, (tx) =>
+    tx.get("device", active.grant.deviceId),
+  );
   await repository.transaction(otherAuth.user.id, async (tx) => {
-    await tx.put("device", { id: foreignDeviceId, deviceId: foreignDeviceId, revoked: false });
+    await tx.put("device", {
+      ...activeDevice!,
+      id: foreignDeviceId,
+      deviceId: foreignDeviceId,
+      installationId: crypto.randomUUID(),
+      revoked: false,
+    });
     await tx.put("observed_request", { ...pending, deviceId: foreignDeviceId });
   });
   await repository.read(auth.user.id, async (tx) => {
-    const summaries = await tx.list("observed_request", undefined, {
+    const summaries = await tx.observedSummaries({
       observedAt: "2026-10-27T10:00:00.000Z",
-      summary: true,
       limit: 2,
     });
     expect(summaries.map((row) => row.id)).toEqual([pending.id, expired.id]);
@@ -396,4 +405,111 @@ it("invalidates actual PostgreSQL credentials after password updates and securit
   await service.revokeHostAuthorizations(auth.user.id);
   await expect(service.hostGrant(next.credential)).rejects.toThrow("AUTH_REQUIRED");
   await expect(service.authorizeHost(auth, host.grant)).rejects.toThrow("AUTH_REQUIRED");
+});
+
+it("rejects invalid task projections at the repository boundary without rewriting them", async () => {
+  const f = await connected(service, auth),
+    task = await running(service, f);
+  await connection.db.execute(
+    sql`update raypx_foundation.control_task set body = body - 'status' where user_id=${auth.user.id} and id=${task.id}`,
+  );
+  await expect(repository.read(auth.user.id, (tx) => tx.get("task", task.id))).rejects.toThrow(
+    "Invalid stored control data",
+  );
+  const rows = await connection.db.execute<{ missing: boolean }>(
+    sql`select not (body ? 'status') as missing from raypx_foundation.control_task where user_id=${auth.user.id} and id=${task.id}`,
+  );
+  expect(rows[0]?.missing).toBe(true);
+});
+
+it("serializes one device while allowing another device projection for the same account", async () => {
+  const first = await connected(service, auth),
+    second = await connected(service, auth);
+  const concurrent = connectDatabase(url, { max: 4 });
+  const repo = createControlRepository(concurrent.db);
+  const { promise: held, resolve: release } = Promise.withResolvers<void>();
+  const { promise: ready, resolve: acquired } = Promise.withResolvers<void>();
+  const writer = repo.deviceTransaction(auth.user.id, first.grant.deviceId, async (tx) => {
+    const device = (await tx.get("device", first.grant.deviceId))!;
+    acquired();
+    await held;
+    device.cursor++;
+    await tx.put("device", device);
+  });
+  await ready;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let sameEntered = false;
+  const same = repo.deviceTransaction(auth.user.id, first.grant.deviceId, async (tx) => {
+    sameEntered = true;
+    const device = (await tx.get("device", first.grant.deviceId))!;
+    device.cursor++;
+    await tx.put("device", device);
+  });
+  try {
+    await Promise.race([
+      repo.deviceTransaction(auth.user.id, second.grant.deviceId, async (tx) => {
+        const device = (await tx.get("device", second.grant.deviceId))!;
+        device.cursor++;
+        await tx.put("device", device);
+      }),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("Independent device was serialized")), 3000);
+      }),
+    ]);
+    expect(sameEntered).toBe(false);
+  } finally {
+    clearTimeout(timer);
+    release();
+    await Promise.all([writer, same]);
+    await concurrent.close();
+  }
+  const values = await repository.read(auth.user.id, (tx) =>
+    Promise.all([tx.get("device", first.grant.deviceId), tx.get("device", second.grant.deviceId)]),
+  );
+  expect(values.map((device) => device?.cursor)).toEqual([2, 1]);
+});
+
+it("keeps account revocation exclusive against device writes and rejects cross-device writes", async () => {
+  const first = await connected(service, auth),
+    second = await connected(service, auth);
+  const concurrent = connectDatabase(url, { max: 4 });
+  const repo = createControlRepository(concurrent.db),
+    control = new ControlService(repo);
+  const { promise: held, resolve: release } = Promise.withResolvers<void>();
+  const { promise: ready, resolve: acquired } = Promise.withResolvers<void>();
+  const writer = repo.deviceTransaction(auth.user.id, first.grant.deviceId, async (tx) => {
+    acquired();
+    await held;
+    const device = (await tx.get("device", first.grant.deviceId))!;
+    await tx.put("device", { ...device, cursor: device.cursor + 1 });
+  });
+  await ready;
+  let revoked = false;
+  const revocation = control.revoke(auth.user.id, first.grant).then(() => {
+    revoked = true;
+  });
+  try {
+    // A read from an independent connection can finish while the exclusive writer waits.
+    const device = await repo.read(auth.user.id, (tx) => tx.get("device", first.grant.deviceId));
+    expect(device?.revoked).toBe(false);
+    expect(revoked).toBe(false);
+  } finally {
+    release();
+    await Promise.all([writer, revocation]);
+  }
+  try {
+    await expect(control.touch(first.actor)).rejects.toThrow("DEVICE_REVOKED");
+    await control.touch(second.actor);
+    await expect(
+      repo.deviceTransaction(auth.user.id, first.grant.deviceId, async (tx) => {
+        const device = (await tx.get("device", second.grant.deviceId))!;
+        await tx.put("device", { ...device, revoked: true });
+      }),
+    ).rejects.toThrow("Device transaction scope mismatch");
+    expect(
+      (await repo.read(auth.user.id, (tx) => tx.get("device", second.grant.deviceId)))?.revoked,
+    ).toBe(false);
+  } finally {
+    await concurrent.close();
+  }
 });

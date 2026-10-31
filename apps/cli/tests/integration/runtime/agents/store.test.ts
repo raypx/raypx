@@ -1,5 +1,6 @@
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -16,7 +17,7 @@ import { Database } from "bun:sqlite";
 afterEach(() => vi.restoreAllMocks());
 it("stores local text once and sends linear-size relay deltas with a bounded referenced outbox", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-stream-storage-"));
-  const store = new AgentStore(directory);
+  const store = new AgentStore(profileStorage(directory).database);
   const now = new Date().toISOString(),
     taskId = crypto.randomUUID();
   const message = {
@@ -58,13 +59,12 @@ it("stores local text once and sends linear-size relay deltas with a bounded ref
       db.close();
     }
   } finally {
-    store.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });
 it("compacts journal bytes and removes dangling outbox references without removing final activity", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-byte-window-")),
-    store = new AgentStore(directory, 4096, 2048);
+    store = new AgentStore(profileStorage(directory).database, 4096, 2048);
   try {
     for (let index = 0; index < 20; index++)
       store.event("relay", {
@@ -97,14 +97,14 @@ it("compacts journal bytes and removes dangling outbox references without removi
     expect(store.events("relay")).toEqual([]);
     expect(store.replay("relay", 0).floor).toBeGreaterThan(1);
   } finally {
-    store.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });
 it("leaves existing local journal rows intact and bounds remote replay on restart", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-old-journal-"));
-  const initial = new AgentStore(directory);
-  initial.close();
+  const initialStorage = profileStorage(directory);
+  const streamId = new AgentStore(initialStorage.database).streamId;
+  initialStorage.close();
   const db = new Database(join(directory, "profile.sqlite"));
   const local = desktopBinding("account");
   const status = {
@@ -140,8 +140,9 @@ it("leaves existing local journal rows intact and bounds remote replay on restar
       JSON.stringify(event),
     );
   }
-  const restored = new AgentStore(directory, 3);
+  const restored = new AgentStore(profileStorage(directory).database, 3);
   try {
+    expect(restored.streamId).toBe(streamId);
     expect(restored.taskEvents(local, status.taskId, 0).map((item) => item.event)).toEqual([
       status,
     ]);
@@ -153,16 +154,15 @@ it("leaves existing local journal rows intact and bounds remote replay on restar
       count: 3,
     });
   } finally {
-    restored.close();
     db.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });
 
 it("rolls back the task transition when its outbox write fails and preserves a committed result across restart", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-agent-transition-"));
-  const state = new StateStore(directory);
-  let store: AgentStore | undefined = new AgentStore(directory);
+  const state = new StateStore(profileStorage(directory));
+  let store: AgentStore | undefined = new AgentStore(profileStorage(directory).database);
   let runtime: AgentRuntime | undefined;
   try {
     const local: LocalAgentTask = {
@@ -202,14 +202,12 @@ it("rolls back the task transition when its outbox write fails and preserves a c
     expect(store.events(local.binding)).toEqual([]);
     insert.mockRestore();
     store.transition(completed, event);
-    store.close();
-    store = new AgentStore(directory);
+    store = new AgentStore(profileStorage(directory).database);
     expect(store.get(local.task.id)?.task).toMatchObject({
       status: "succeeded",
       summary: "Durable result",
     });
     expect(store.events(local.binding)).toEqual([event]);
-    store.close();
     store = undefined;
     runtime = new AgentRuntime(state, () => {});
     expect(runtime.events(local.binding).events).toEqual([event]);
@@ -217,16 +215,14 @@ it("rolls back the task transition when its outbox write fails and preserves a c
     expect(runtime.events(local.binding).events).toEqual([]);
   } finally {
     await runtime?.close();
-    store?.close();
-    state.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });
 it("keeps Desktop identity and task history across restart without creating a relay outbox", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-local-agent-")),
-    state = new StateStore(directory),
+    state = new StateStore(profileStorage(directory)),
     binding = desktopBinding("account-a");
-  const store = new AgentStore(directory),
+  const store = new AgentStore(profileStorage(directory).database),
     deviceId = store.deviceId(binding);
   const task: LocalAgentTask = {
     binding,
@@ -274,7 +270,6 @@ it("keeps Desktop identity and task history across restart without creating a re
     createdAt: now,
     updatedAt: now,
   });
-  store.close();
   const runtime = new AgentRuntime(state, () => {});
   try {
     expect(runtime.localTasks("account-a", 100)[0]).toMatchObject({
@@ -299,28 +294,25 @@ it("keeps Desktop identity and task history across restart without creating a re
     });
     expect(runtime.events(binding).events).toEqual([]);
     expect(runtime.replay("remote-binding", 0).events).toEqual([]);
-    const reopened = new AgentStore(directory);
-    try {
+    const reopened = new AgentStore(profileStorage(directory).database);
+    {
       expect(reopened.deviceId(binding)).toBe(deviceId);
       expect(reopened.deviceId(desktopBinding("account-b"))).not.toBe(deviceId);
       expect(reopened.taskEvents(binding, task.task.id, 0).at(-1)?.event).toMatchObject({
         kind: "status",
         status: "interrupted",
       });
-    } finally {
-      reopened.close();
     }
   } finally {
     await runtime.close();
-    state.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });
 it("paginates every local task across byte and record limits, including equal timestamps", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-local-pages-")),
-    state = new StateStore(directory),
+    state = new StateStore(profileStorage(directory)),
     runtime = new AgentRuntime(state, () => {}),
-    store = new AgentStore(directory),
+    store = new AgentStore(profileStorage(directory).database),
     binding = desktopBinding("account-a"),
     deviceId = store.deviceId(binding);
   try {
@@ -358,10 +350,8 @@ it("paginates every local task across byte and record limits, including equal ti
     );
     expect(runtime.localTasks("account-b", 100)).toEqual([]);
   } finally {
-    store.close();
     await runtime.close();
-    state.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });
 it("retains local activity across relay compaction and restart without creating a cloud outbox", () => {
@@ -369,7 +359,7 @@ it("retains local activity across relay compaction and restart without creating 
     binding = desktopBinding("account-a"),
     oldTaskId = crypto.randomUUID(),
     nextTaskId = crypto.randomUUID();
-  let store = new AgentStore(directory, 8);
+  let store = new AgentStore(profileStorage(directory).database, 8);
   const event = (taskId: string): AgentEvent => ({
     id: crypto.randomUUID(),
     taskId,
@@ -387,8 +377,7 @@ it("retains local activity across relay compaction and restart without creating 
       store.event("remote-binding", event(nextTaskId));
     }
     store.checkpoint("remote-binding", store.sequence("remote-binding"));
-    store.close();
-    store = new AgentStore(directory, 8);
+    store = new AgentStore(profileStorage(directory).database, 8);
     expect(store.taskEvents(binding, oldTaskId, 0).map((item) => item.event)).toEqual([original]);
     expect(store.taskEvents(desktopBinding("account-b"), oldTaskId, 0)).toEqual([]);
     expect(store.events(binding)).toEqual([]);
@@ -396,7 +385,6 @@ it("retains local activity across relay compaction and restart without creating 
     expect(store.taskEvents("remote-binding", oldTaskId, 0)).toEqual([]);
     expect(store.replay("remote-binding", 0).floor).toBeGreaterThan(remoteStart);
   } finally {
-    store.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   }
 });

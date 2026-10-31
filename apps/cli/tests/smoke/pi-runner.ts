@@ -1,3 +1,4 @@
+import { ProfileStorage } from "../../src/runtime/sqlite";
 import assert from "node:assert/strict";
 import { copyFile, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -41,7 +42,8 @@ async function fixture() {
   let approved = false,
     executions = 0;
   const directory = await mkdtemp(join(tmpdir(), "raypx-pi-context-"));
-  let store = new SqlitePiContextStore(directory, "fixture");
+  const storage = new ProfileStorage(directory);
+  let store = new SqlitePiContextStore(storage.database, "fixture");
   try {
     const options: PiRunnerOptions = {
       model: piModel,
@@ -68,7 +70,7 @@ async function fixture() {
     assert.equal(checkpoint.status, "succeeded");
     assert.equal(checkpoint.pendingEffect, undefined);
     store.close();
-    store = new SqlitePiContextStore(directory, "fixture");
+    store = new SqlitePiContextStore(storage.database, "fixture");
     assert.deepEqual(await store.load(), checkpoint);
     const resumed = new PiRunner({ ...options, store });
     assert.deepEqual(await resumed.run("Continue after reopening SQLite"), {
@@ -94,6 +96,7 @@ async function fixture() {
     );
   } finally {
     store.close();
+    storage.close();
     await rm(directory, { recursive: true, force: true });
   }
 }

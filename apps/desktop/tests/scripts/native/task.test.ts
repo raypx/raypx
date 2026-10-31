@@ -22,6 +22,10 @@ function fixture() {
     join(root, "scripts/native/task.ts"),
   );
   writeFileSync(
+    join(root, "scripts/native/generate.ts"),
+    'process.argv.splice(2, 0, "native:generate"); await import("../../record.ts");',
+  );
+  writeFileSync(
     join(root, "package.json"),
     JSON.stringify({
       type: "module",
@@ -142,7 +146,11 @@ describe("Desktop task graph entry", () => {
   it("checks renderer and scripts inside VP without a native compiler", () => {
     const result = fixture()("check", { leaf: true });
     expect(result.status).toBe(0);
-    expect(result.events.map(({ name }) => name)).toEqual(["typecheck", "typecheck:node"]);
+    expect(result.events.map(({ name }) => name)).toEqual([
+      "native:generate",
+      "typecheck",
+      "typecheck:node",
+    ]);
   });
 
   it("uses the MyGo development leaf and preserves its arguments", () => {
@@ -166,7 +174,11 @@ describe("Desktop task graph entry", () => {
   it("preserves a failed check's exit status and skips remaining checks", () => {
     const result = fixture()("check", { leaf: true, fail: "typecheck:node" });
     expect(result.status).toBe(7);
-    expect(result.events.map(({ name }) => name)).toEqual(["typecheck", "typecheck:node"]);
+    expect(result.events.map(({ name }) => name)).toEqual([
+      "native:generate",
+      "typecheck",
+      "typecheck:node",
+    ]);
   });
 
   it("runs only the renderer build inside VP and forwards arguments", () => {

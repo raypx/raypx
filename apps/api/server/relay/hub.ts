@@ -12,6 +12,7 @@ import { normalizeTaskJson } from "@raypx/core/task-text";
 import { taskSchema, humanRequestSchema } from "@raypx/core/tasks";
 import { terminalRequestSchema } from "@raypx/contracts/terminal";
 import { ControlError, type ControlService, type RelayActor } from "../control/service.js";
+import type { RelayCluster, RelayNotice, RelayOperation, RelayReply } from "./cluster.js";
 export interface RelayPeer {
   id: string;
   send(frame: RelayServerFrame): void;
@@ -23,6 +24,7 @@ type Client = {
   ready: boolean;
   chain: Promise<void>;
   timer: ReturnType<typeof setTimeout>;
+  abort: AbortController;
   cursor?: { streamId: string; sequence: number };
   snapshot?: {
     id: string;
@@ -65,19 +67,155 @@ export class RelayHub {
   private readonly pending = new Map<string, Pending>();
   private readonly syncs = new Map<string, SyncPending>();
   private readonly closing = new Map<string, Promise<void>>();
+  private cluster?: RelayCluster;
+  private stopping = false;
   constructor(
     private readonly use: UseControl,
     private readonly room?: string | ((userId: string) => boolean),
   ) {}
+  async attachCluster(cluster: RelayCluster) {
+    this.cluster = cluster;
+    await cluster.start(
+      (operation, signal) => this.forwarded(operation, signal),
+      (notice) => this.notice(notice),
+      () => {
+        for (const client of this.peers.values()) {
+          client.ready = false;
+          client.peer.close(1013, "Relay unavailable");
+          void this.close(client.peer.id).catch(() => {});
+        }
+      },
+    );
+  }
+  ready() {
+    return !this.stopping && (!this.cluster || this.cluster.ready());
+  }
+  private connectionId(id: string) {
+    return this.cluster ? `${this.cluster.nodeId}:${id}` : id;
+  }
+  private async remote(userId: string, deviceId: string) {
+    if (!this.ready()) throw new JobError("SERVER_UNAVAILABLE");
+    const connection = await this.use((control) => control.connection(userId, deviceId));
+    if (!connection?.ready) throw new JobError("DEVICE_OFFLINE");
+    return connection;
+  }
+  private async localConnection(userId: string, deviceId: string, connectionId: string) {
+    if (!this.inRoom(userId)) throw new JobError("FORBIDDEN");
+    if (!this.ready()) throw new JobError("SERVER_UNAVAILABLE");
+    const client = [...this.peers.values()].find(
+      (peer) =>
+        peer.ready &&
+        peer.actor?.role === "device" &&
+        peer.actor.userId === userId &&
+        peer.actor.deviceId === deviceId &&
+        peer.actor.connectionId === connectionId,
+    );
+    if (!client?.actor) throw new JobError("DEVICE_OFFLINE");
+    await this.use((control) => control.validate(client.actor!));
+    const current = await this.remote(userId, deviceId);
+    if (current.id !== connectionId) throw new JobError("DEVICE_REPLACED");
+    if (this.peers.get(client.peer.id) !== client || !client.ready)
+      throw new JobError("DEVICE_OFFLINE");
+    return client;
+  }
+  private async forwarded(operation: RelayOperation, signal: AbortSignal): Promise<RelayReply> {
+    try {
+      const userId = operation.type === "command" ? operation.viewer.userId : operation.userId;
+      const deviceId =
+        operation.type === "command" ? operation.command.deviceId : operation.run.action.deviceId;
+      const device = await this.localConnection(userId, deviceId, operation.connectionId);
+      if (signal.aborted) throw new JobError("REQUEST_TIMEOUT");
+      if (operation.type === "dispatch")
+        return this.dispatch(userId, operation.run, signal, operation.connectionId);
+      if (operation.type === "sync")
+        return this.sync(userId, operation.run, signal, operation.connectionId);
+      await this.use((control) => control.validate(operation.viewer));
+      if (Date.parse(operation.command.expiresAt) <= Date.now())
+        throw new JobError("DELIVERY_EXPIRED");
+      if (this.pending.size >= 1024) throw new JobError("TOO_MANY_REQUESTS");
+      return await new Promise<RelayReply>((resolve, reject) => {
+        const routeId = crypto.randomUUID();
+        let sent = false,
+          settled = false;
+        const complete = (result: DeviceResult, uncertain = false) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          signal.removeEventListener("abort", abort);
+          this.pending.delete(routeId);
+          if (uncertain) reject(new JobError(result.ok ? "SERVER_UNAVAILABLE" : result.code, sent));
+          else resolve({ type: "command", result });
+        };
+        const abort = () => complete({ ok: false, code: "REQUEST_TIMEOUT" }, true);
+        const timer = setTimeout(
+          () => complete({ ok: false, code: "DELIVERY_EXPIRED" }, true),
+          15_000,
+        );
+        this.pending.set(routeId, {
+          kind: "job",
+          device: device.peer.id,
+          id: operation.command.id,
+          method: operation.command.request.method,
+          timer,
+          complete,
+        });
+        signal.addEventListener("abort", abort, { once: true });
+        if (signal.aborted) abort();
+        else {
+          sent = true;
+          this.send(device, { type: "command", routeId, command: operation.command });
+        }
+      });
+    } catch (error) {
+      if (error instanceof ControlError) throw new JobError(error.code);
+      throw error;
+    }
+  }
+  private async notice(notice: RelayNotice) {
+    if (notice.type === "changed") {
+      this.broadcastLocal(notice.userId, notice.frame);
+      return;
+    }
+    if (notice.type === "revoke") {
+      for (const client of this.peers.values()) {
+        if (client.actor?.userId !== notice.userId || client.actor.deviceId !== notice.deviceId)
+          continue;
+        try {
+          await this.use((control) => control.validate(client.actor!));
+        } catch (error) {
+          if (error instanceof ControlError) client.peer.close(4003, "Device revoked");
+          else throw error;
+        }
+      }
+      return;
+    }
+    const current = await this.use((control) => control.connection(notice.userId, notice.deviceId));
+    if (current?.id !== notice.connectionId) return; // Late notices cannot fence the newer owner.
+    for (const client of this.peers.values())
+      if (
+        client.actor?.role === "device" &&
+        client.actor.userId === notice.userId &&
+        client.actor.deviceId === notice.deviceId &&
+        client.actor.connectionId !== current.id
+      ) {
+        client.ready = false;
+        client.peer.close(4002, "Device reconnected");
+      }
+  }
   private inRoom(userId: string) {
     return !this.room || (typeof this.room === "string" ? this.room === userId : this.room(userId));
   }
   open(peer: RelayPeer) {
+    if (!this.ready()) {
+      peer.close(1013, "Relay unavailable");
+      return;
+    }
     this.peers.set(peer.id, {
       peer,
       ready: false,
       chain: Promise.resolve(),
       timer: setTimeout(() => peer.close(4001, "Authentication timeout"), 5000),
+      abort: new AbortController(),
     });
   }
   receive(id: string, data: string) {
@@ -133,16 +271,36 @@ export class RelayHub {
       client.peer.close(4000, "Backpressure");
     }
   }
-  private broadcast(actor: RelayActor, frame: Extract<RelayServerFrame, { type: "changed" }>) {
+  private broadcastLocal(userId: string, frame: RelayServerFrame) {
     for (const client of this.peers.values())
-      if (client.actor?.role === "viewer" && client.actor.userId === actor.userId)
+      if (client.actor?.role === "viewer" && client.actor.userId === userId)
         this.send(client, frame);
+  }
+  private async broadcast(
+    actor: RelayActor,
+    frame: Extract<RelayServerFrame, { type: "changed" | "observed_changed" }>,
+  ) {
+    this.broadcastLocal(actor.userId, frame);
+    await this.cluster?.notify({ type: "changed", userId: actor.userId, frame });
+  }
+  private result(method: string, result: DeviceResult): DeviceResult {
+    return result.ok
+      ? {
+          ok: true,
+          value:
+            method === "observed.decide"
+              ? terminalRequestSchema.parse(result.value)
+              : method === "approvals.decide"
+                ? humanRequestSchema.parse(result.value)
+                : taskSchema.parse(result.value),
+        }
+      : result;
   }
   private async frame(client: Client, frame: RelayClientFrame) {
     if (!client.actor) {
       if (frame.type !== "auth") throw new ControlError("AUTH_REQUIRED");
       const actor = await this.use((control) =>
-        control.authenticate(frame.role, frame.token, client.peer.id),
+        control.authenticate(frame.role, frame.token, this.connectionId(client.peer.id)),
       );
       if (!this.inRoom(actor.userId)) throw new ControlError("FORBIDDEN");
       client.actor = actor;
@@ -196,14 +354,31 @@ export class RelayHub {
           });
           return;
         }
-        const device = [...this.peers.values()].find(
-          (peer) =>
-            peer.ready &&
-            peer.actor?.role === "device" &&
-            peer.actor.userId === actor.userId &&
-            peer.actor.deviceId === command.deviceId,
-        );
-        if (!device) throw new ControlError("DEVICE_OFFLINE");
+        const connection = await this.remote(actor.userId, command.deviceId);
+        const owner = this.cluster && connection.id.split(":")[0];
+        if (this.cluster && owner !== this.cluster.nodeId) {
+          const reply = await this.cluster.invoke(
+            owner!,
+            {
+              type: "command",
+              connectionId: connection.id,
+              viewer: { ...actor, role: "viewer" },
+              command,
+            },
+            client.abort.signal,
+          );
+          if (reply.type !== "command") throw new JobError("INVALID_DEVICE_RESULT", true);
+          await this.use((control) => control.validate(actor));
+          if (this.peers.get(client.peer.id) === client)
+            this.send(client, {
+              type: "result",
+              id: frame.id,
+              result: this.result(frame.request.method, reply.result),
+            });
+          return;
+        }
+        const device = await this.localConnection(actor.userId, command.deviceId, connection.id);
+        if (this.pending.size >= 1024) throw new ControlError("TOO_MANY_REQUESTS");
         const routeId = crypto.randomUUID();
         const timer = setTimeout(() => {
           const item = this.pending.get(routeId);
@@ -231,7 +406,10 @@ export class RelayHub {
           id: frame.id,
           result: {
             ok: false,
-            code: error instanceof ControlError ? error.code : "NETWORK_UNAVAILABLE",
+            code:
+              error instanceof ControlError || error instanceof JobError
+                ? error.code
+                : "NETWORK_UNAVAILABLE",
           },
         });
       }
@@ -241,14 +419,18 @@ export class RelayHub {
       if (!client.ready) throw new ControlError("FORBIDDEN");
       await this.use((control) => control.observed(actor, frame));
       this.send(client, { type: "observed_ack", epoch: frame.epoch, revision: frame.revision });
-      for (const viewer of this.peers.values())
-        if (viewer.actor?.role === "viewer" && viewer.actor.userId === actor.userId)
-          this.send(viewer, { type: "observed_changed", deviceId: actor.deviceId });
+      await this.broadcast(actor, { type: "observed_changed", deviceId: actor.deviceId });
       return;
     }
     if (frame.type === "announce") {
       client.ready = false;
       const resume = await this.use((control) => control.announce(actor, frame));
+      await this.cluster?.notify({
+        type: "connected",
+        userId: actor.userId,
+        deviceId: actor.deviceId,
+        connectionId: actor.connectionId,
+      });
       client.cursor = { streamId: resume.streamId, sequence: resume.sequence };
       this.send(client, resume);
       return;
@@ -285,7 +467,7 @@ export class RelayHub {
           sequence: frame.sequence,
           snapshotId: frame.id,
         });
-        this.broadcast(actor, {
+        await this.broadcast(actor, {
           type: "changed",
           deviceId: actor.deviceId,
           streamId: frame.streamId,
@@ -310,7 +492,7 @@ export class RelayHub {
       );
       client.cursor = { streamId: frame.streamId, sequence };
       this.send(client, { type: "ack", streamId: frame.streamId, sequence });
-      this.broadcast(actor, {
+      await this.broadcast(actor, {
         type: "changed",
         deviceId: actor.deviceId,
         streamId: frame.streamId,
@@ -324,7 +506,11 @@ export class RelayHub {
       client.ready = true;
       await this.use((control) => control.touch(actor));
       if (client.cursor)
-        this.broadcast(actor, { type: "changed", deviceId: actor.deviceId, ...client.cursor });
+        await this.broadcast(actor, {
+          type: "changed",
+          deviceId: actor.deviceId,
+          ...client.cursor,
+        });
       return;
     }
     if (frame.type === "result") {
@@ -339,24 +525,20 @@ export class RelayHub {
       const viewer = this.peers.get(pending.viewer);
       if (!viewer?.actor) return;
       await this.use((control) => control.validate(viewer.actor!));
-      const result = frame.result.ok
-        ? {
-            ok: true as const,
-            value:
-              pending.method === "observed.decide"
-                ? terminalRequestSchema.parse(frame.result.value)
-                : pending.method === "approvals.decide"
-                  ? humanRequestSchema.parse(frame.result.value)
-                  : taskSchema.parse(frame.result.value),
-          }
-        : frame.result;
+      const result = this.result(pending.method, frame.result);
       this.send(viewer, { type: "result", id: pending.id, result });
       return;
     }
     throw new ControlError("FORBIDDEN");
   }
-  private async jobDevice(userId: string, run: CloudJobRun, signal: AbortSignal) {
+  private async jobDevice(
+    userId: string,
+    run: CloudJobRun,
+    signal: AbortSignal,
+    expectedConnection?: string,
+  ) {
     if (signal.aborted) throw new JobError("REQUEST_TIMEOUT");
+    if (!this.ready()) throw new JobError("SERVER_UNAVAILABLE");
     if (!this.inRoom(userId)) throw new JobError("FORBIDDEN");
     try {
       await this.use((control) => control.validateJobTarget(userId, run.action));
@@ -371,6 +553,8 @@ export class RelayHub {
             client.actor.epoch === run.action.epoch,
         );
       if (!device?.actor) throw new JobError("DEVICE_OFFLINE");
+      if (expectedConnection && device.actor.connectionId !== expectedConnection)
+        throw new JobError("DEVICE_REPLACED");
       await this.use((control) => control.validateJobPeer(device.actor!, run.action));
       if (this.peers.get(device.peer.id) !== device || !device.ready)
         throw new JobError("DEVICE_OFFLINE");
@@ -381,15 +565,43 @@ export class RelayHub {
       throw new JobError(error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE");
     }
   }
+  private async forwardJob(
+    type: "dispatch" | "sync",
+    userId: string,
+    run: CloudJobRun,
+    signal: AbortSignal,
+  ) {
+    if (signal.aborted) throw new JobError("REQUEST_TIMEOUT");
+    if (!this.inRoom(userId)) throw new JobError("FORBIDDEN");
+    if (!this.cluster) return;
+    try {
+      await this.use((control) => control.validateJobTarget(userId, run.action));
+    } catch (error) {
+      throw new JobError(error instanceof ControlError ? error.code : "SERVER_UNAVAILABLE");
+    }
+    const connection = await this.remote(userId, run.action.deviceId);
+    const owner = connection.id.split(":")[0]!;
+    if (owner === this.cluster.nodeId) return;
+    return this.cluster.invoke(owner, { type, userId, run, connectionId: connection.id }, signal);
+  }
   /** Internal scheduling port; it never creates a viewer or a browser session. */
   async dispatch(
     userId: string,
     run: CloudJobRun,
     signal: AbortSignal,
+    expectedConnection?: string,
   ): Promise<Extract<JobDispatchResult, { type: "task" }>> {
     if (run.action.type !== "agent.run" || run.taskId !== run.id)
       throw new JobError("IDEMPOTENCY_CONFLICT");
-    const device = await this.jobDevice(userId, run, signal),
+    if (!expectedConnection) {
+      const reply = await this.forwardJob("dispatch", userId, run, signal);
+      if (reply) {
+        if (reply.type !== "task" || reply.taskId !== run.id)
+          throw new JobError("INVALID_DEVICE_RESULT", true);
+        return reply;
+      }
+    }
+    const device = await this.jobDevice(userId, run, signal, expectedConnection),
       action = run.action;
     let command: Awaited<ReturnType<ControlService["route"]>>;
     try {
@@ -479,9 +691,21 @@ export class RelayHub {
     });
   }
   /** Resolve only after the correlated complete snapshot transaction commits. */
-  async sync(userId: string, run: CloudJobRun, signal: AbortSignal): Promise<Synced> {
+  async sync(
+    userId: string,
+    run: CloudJobRun,
+    signal: AbortSignal,
+    expectedConnection?: string,
+  ): Promise<Synced> {
     if (run.action.type !== "device.sync") throw new JobError("INVALID_INPUT");
-    const device = await this.jobDevice(userId, run, signal);
+    if (!expectedConnection) {
+      const reply = await this.forwardJob("sync", userId, run, signal);
+      if (reply) {
+        if (reply.type !== "synced") throw new JobError("INVALID_DEVICE_RESULT", true);
+        return reply;
+      }
+    }
+    const device = await this.jobDevice(userId, run, signal, expectedConnection);
     if (!device.cursor) throw new JobError("DEVICE_OFFLINE");
     const key = `${userId}:${run.id}`,
       previous = this.syncs.get(key);
@@ -521,6 +745,7 @@ export class RelayHub {
     const client = this.peers.get(id);
     if (!client) return Promise.resolve();
     this.peers.delete(id);
+    client.abort.abort();
     clearTimeout(client.timer);
     for (const [route, item] of this.pending)
       if ((item.kind === "viewer" && item.viewer === id) || item.device === id) {
@@ -546,7 +771,7 @@ export class RelayHub {
       if (client.actor?.role === "device") {
         await this.use((control) => control.disconnect(client.actor!));
         if (client.cursor)
-          this.broadcast(client.actor, {
+          await this.broadcast(client.actor, {
             type: "changed",
             deviceId: client.actor.deviceId,
             ...client.cursor,
@@ -556,12 +781,18 @@ export class RelayHub {
     this.closing.set(id, cleanup);
     return cleanup;
   }
-  async revoke(userId: string, deviceId: string) {
+  private revokeLocal(userId: string, deviceId: string) {
     for (const client of this.peers.values())
       if (client.actor?.userId === userId && client.actor.deviceId === deviceId)
         client.peer.close(4003, "Device revoked");
   }
+  async revoke(userId: string, deviceId: string) {
+    this.revokeLocal(userId, deviceId);
+    await this.cluster?.notify({ type: "revoke", userId, deviceId });
+  }
   async shutdown() {
+    this.stopping = true;
+    await this.cluster?.close();
     const clients = [...this.peers.values()];
     for (const client of clients) client.peer.close(1001, "Server stopping");
     for (const item of this.pending.values()) {

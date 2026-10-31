@@ -282,6 +282,10 @@ it("checks a native app without staging native resources", () => {
     join(folder, "scripts/native/task.ts"),
   );
   writeFileSync(
+    join(folder, "scripts/native/generate.ts"),
+    "// Contract generation checked by desktop tests.\n",
+  );
+  writeFileSync(
     join(folder, "package.ts"),
     'throw new Error("Native packaging must be explicit");',
   );

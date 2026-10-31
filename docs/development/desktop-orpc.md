@@ -4,6 +4,12 @@ The Go host's `API.RPC` calls account/get and hosts/authorize/revoke through the
 same native HTTP adapter as renderer API requests. Business payloads stay opaque
 JSON; TypeScript contracts remain authoritative.
 
+`apiExposure` in `@raypx/contracts/api` assigns every procedure to renderer, native
+or independent host access. `native:generate` derives the Go RPC path policy;
+Desktop check verifies its tracked output without requiring ignored build assets.
+Packaging and native test preparation use the same generator. Native cookie and
+credential isolation remains enforced by the Go HTTP adapter.
+
 The adapter enforces configured origin, allowlisted paths/headers, Origin:
 views://main, request/response limits, deadlines, cancellation, redirect refusal
 and atomic encrypted Cookie batches. Host credentials never enter renderer replies.

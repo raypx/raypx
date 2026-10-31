@@ -55,7 +55,8 @@ export async function ciGate(root: string, args: string[]) {
     if (plan.deployment) await smokeDeployment(root, []);
   } else if (gate === "backend") {
     if (plan.backend)
-      for (const name of ["test:postgres", "test:redis"]) await runTasks(root, `api#${name}`);
+      for (const name of ["test:postgres", "test:redis", "test:cluster"])
+        await runTasks(root, `api#${name}`);
   } else if (gate === "browser") {
     if (plan.browser !== "none")
       await runTasks(root, `@raypx/e2e#${plan.browser === "all" ? "e2e" : `e2e:${plan.browser}`}`);

@@ -12,10 +12,6 @@ import type { ControlRepository, ControlTransaction } from "./repository.js";
 
 import {
   ControlError,
-  type Device,
-  type Task,
-  type Project,
-  type StoredRequest,
   type Event,
   type RelayActor,
   required,
@@ -33,6 +29,21 @@ export class TaskProjection {
   private now() {
     return new Date(this.clock()).toISOString();
   }
+  /** Internal routing metadata; only PostgreSQL can assign the active connection. */
+  connection(userId: string, deviceId: string) {
+    return this.repository.read(userId, async (tx) => {
+      const device = await tx.get("device", deviceId);
+      if (!device || device.revoked || !device.connectionId) return null;
+      return {
+        id: device.connectionId,
+        epoch: device.epoch,
+        ready:
+          device.initialized &&
+          device.lastSeenAt !== null &&
+          this.clock() - Date.parse(device.lastSeenAt) < 45_000,
+      };
+    });
+  }
   async announce(actor: RelayActor, input: Extract<RelayClientFrame, { type: "announce" }>) {
     let snapshot = false,
       sequence = 0;
@@ -48,7 +59,7 @@ export class TaskProjection {
         device.connectionId = actor.connectionId;
         device.lastSeenAt = null;
         device.capabilities = input.capabilities;
-        for (const project of await tx.list<Project>("project", device.id))
+        for (const project of await tx.list("project", device.id))
           await tx.remove("project", project.id);
         for (const project of input.projects)
           await tx.put("project", {
@@ -68,9 +79,9 @@ export class TaskProjection {
     });
   }
   disconnect(actor: RelayActor) {
-    return this.repository.transaction(actor.userId, async (tx) => {
+    return this.repository.deviceTransaction(actor.userId, actor.deviceId, async (tx) => {
       if (actor.role !== "device") return;
-      const device = await tx.get<Device>("device", actor.deviceId);
+      const device = await tx.get("device", actor.deviceId);
       if (device?.connectionId === actor.connectionId) {
         device.lastSeenAt = null;
         device.connectionId = null;
@@ -81,7 +92,7 @@ export class TaskProjection {
   private async record(tx: ControlTransaction, actor: RelayActor, record: SnapshotRecord) {
     if (record.kind === "task") {
       if (record.task.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
-      const old = await tx.get<Task>("task", record.task.id);
+      const old = await tx.get("task", record.task.id);
       if (old && old.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
       await tx.put("task", {
         ...record.task,
@@ -100,9 +111,9 @@ export class TaskProjection {
         0,
       );
     } else {
-      const task = required(await tx.get<Task>("task", record.request.taskId));
+      const task = required(await tx.get("task", record.request.taskId));
       if (task.deviceId !== actor.deviceId) throw new ControlError("NOT_FOUND");
-      const old = await tx.get<StoredRequest>("request", record.request.id);
+      const old = await tx.get("request", record.request.id);
       if (old && old.taskId !== task.id) throw new ControlError("NOT_FOUND");
       await tx.put("request", { ...record.request, deviceId: actor.deviceId });
     }
@@ -114,13 +125,13 @@ export class TaskProjection {
     streamId: string,
     cursor: number,
   ) {
-    const task = required(await tx.get<Task>("task", event.taskId));
+    const task = required(await tx.get("task", event.taskId));
     if (task.deviceId !== actor.deviceId || event.entry.taskId !== task.id)
       throw new ControlError("NOT_FOUND");
     // Streaming revisions replace the read projection; they do not duplicate the full
     // message in cloud storage on every delta. The executor owns the replay journal.
     const id = `${actor.deviceId}:activity:${event.entry.id}`,
-      old = await tx.get<Event>("event", id);
+      old = await tx.get("event", id);
     if (old) {
       if (
         old.taskId !== task.id ||
@@ -136,7 +147,7 @@ export class TaskProjection {
         throw new ControlError("EVENT_CONFLICT");
       if (old.event.entry.revision >= event.entry.revision) return;
     }
-    await tx.put<Event>("event", {
+    await tx.put("event", {
       id,
       deviceId: actor.deviceId,
       taskId: task.id,
@@ -153,13 +164,11 @@ export class TaskProjection {
         records.filter((record) => record.kind === "task").map((record) => record.task.id),
       );
       // The host's complete snapshot, not a server clock, resolves lost local state.
-      for (const task of await tx.list<Task>("task", device.id))
+      for (const task of await tx.list("task", device.id))
         if (!ids.has(task.id) && !terminal(task))
           await tx.put("task", { ...task, status: "interrupted", updatedAt: this.now() });
-      const tasks = new Map(
-        (await tx.list<Task>("task", device.id)).map((task) => [task.id, task]),
-      );
-      for (const request of await tx.list<StoredRequest>("request", device.id))
+      const tasks = new Map((await tx.list("task", device.id)).map((task) => [task.id, task]));
+      for (const request of await tx.list("request", device.id))
         if (request.status === "pending" && terminal(required(tasks.get(request.taskId))))
           await tx.put("request", { ...request, status: "cancelled" });
       device.cursor = sequence;
@@ -176,7 +185,7 @@ export class TaskProjection {
         if (item.sequence <= previous) throw new ControlError("EVENT_CONFLICT");
         previous = item.sequence;
         const key = `${device.id}:${streamId}:${item.event.id}`,
-          old = await tx.get<Event>("event", key);
+          old = await tx.get("event", key);
         if (old && canonical(old.event) !== canonical(item.event))
           throw new ControlError("EVENT_CONFLICT");
         if (item.sequence <= device.cursor) continue;
@@ -191,7 +200,7 @@ export class TaskProjection {
             throw new ControlError("INVALID_EVENT");
           if (event.task) await this.record(tx, actor, { kind: "task", task: event.task });
           else {
-            const task = required(await tx.get<Task>("task", event.taskId));
+            const task = required(await tx.get("task", event.taskId));
             if (task.deviceId !== device.id) throw new ControlError("NOT_FOUND");
             await tx.put("task", { ...task, status: event.status, summary: event.summary });
           }
@@ -199,7 +208,7 @@ export class TaskProjection {
           if (event.request.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
           await this.record(tx, actor, { kind: "request", request: event.request });
         } else if (event.kind === "activity_delta") {
-          const projection = await tx.get<Event>("event", `${device.id}:activity:${event.entryId}`);
+          const projection = await tx.get("event", `${device.id}:activity:${event.entryId}`);
           const entry = applyActivityEvent(
             projection?.event.kind === "activity" ? projection.event.entry : undefined,
             event,
@@ -216,7 +225,7 @@ export class TaskProjection {
           if (event.entry.taskId !== event.taskId) throw new ControlError("INVALID_EVENT");
           await this.activity(tx, actor, event, streamId, item.sequence);
         } else {
-          const request = await tx.get<StoredRequest>("request", event.requestId);
+          const request = await tx.get("request", event.requestId);
           if (request?.taskId === event.taskId && request.deviceId === device.id)
             await tx.put("request", { ...request, status: "applied" });
         }
@@ -243,7 +252,7 @@ export class TaskProjection {
   }
   listTasks(userId: string, input: { limit: number; before?: string | undefined }) {
     return this.repository.read(userId, (tx) =>
-      tx.list<Task>("task", undefined, {
+      tx.list("task", undefined, {
         limit: input.limit,
         ...(input.before ? { beforeTask: input.before } : {}),
       }),
@@ -251,14 +260,14 @@ export class TaskProjection {
   }
   getTask(userId: string, id: string, after: number, beforeActivity?: number) {
     return this.repository.read(userId, async (tx) => {
-      const task = required(await tx.get<Task>("task", id));
-      const events = await tx.list<Event>("event", task.deviceId, {
+      const task = required(await tx.get("task", id));
+      const events = await tx.list("event", task.deviceId, {
         taskId: id,
         activity: false,
         after,
         limit: 100,
       });
-      const activity = await tx.list<Event>("event", task.deviceId, {
+      const activity = await tx.list("event", task.deviceId, {
         taskId: id,
         activity: true,
         ...(beforeActivity === undefined ? {} : { beforeActivity }),
@@ -276,13 +285,13 @@ export class TaskProjection {
           .sort((a, b) => a.cursor - b.cursor)
           .slice(0, 100)
           .map((item) => ({ cursor: item.cursor, event: item.event })),
-        requests: await tx.list<StoredRequest>("request", task.deviceId, { taskId: id }),
+        requests: await tx.list("request", task.deviceId, { taskId: id }),
       };
     });
   }
   listApprovals(userId: string) {
     return this.repository.read(userId, (tx) =>
-      tx.list<StoredRequest>("request", undefined, { pendingApprovals: true, limit: 100 }),
+      tx.list("request", undefined, { pendingApprovals: true, limit: 100 }),
     );
   }
   replay(
@@ -291,13 +300,13 @@ export class TaskProjection {
   ): Promise<Extract<RelayServerFrame, { type: "changed" }>[]> {
     return this.repository.read(userId, async (tx) => {
       const output: Extract<RelayServerFrame, { type: "changed" }>[] = [];
-      for (const device of await tx.list<Device>("device")) {
+      for (const device of await tx.list("device")) {
         if (!device.streamId) continue;
         const cursor = cursors.find(
           (item) => item.deviceId === device.id && item.streamId === device.streamId,
         );
         const rows = (
-          await tx.list<Event>("event", device.id, {
+          await tx.list("event", device.id, {
             streamId: device.streamId,
             after: cursor?.sequence ?? 0,
             limit: 51,

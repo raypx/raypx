@@ -1,3 +1,4 @@
+import { closeProfileStorage } from "./sqlite";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -23,7 +24,12 @@ export function runtimeFixtures() {
   }
   afterEach(async () => {
     await Promise.all(runtimes.splice(0).map((runtime) => runtime.close()));
-    await Promise.all(roots.splice(0).map((path) => rm(path, { recursive: true, force: true })));
+    await Promise.all(
+      roots.splice(0).map((path) => {
+        closeProfileStorage(path);
+        return rm(path, { recursive: true, force: true });
+      }),
+    );
   });
   return { fixture, runtimes };
 }

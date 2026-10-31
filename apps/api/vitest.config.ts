@@ -23,6 +23,16 @@ export default defineConfig(({ mode }) => {
           },
         }),
       );
+    case "cluster":
+      return mergeConfig(
+        defaults,
+        defineConfig({
+          test: {
+            include: ["tests/cluster/**/*.{test,spec}.{ts,tsx}"],
+            fileParallelism: false,
+          },
+        }),
+      );
     default:
       return mergeConfig(
         defaults,

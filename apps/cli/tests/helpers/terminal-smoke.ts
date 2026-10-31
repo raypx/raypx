@@ -1,3 +1,4 @@
+import { ProfileStorage } from "../../src/runtime/sqlite";
 import { join } from "node:path";
 import type { LocalMethod } from "@raypx/contracts/local";
 
@@ -22,8 +23,9 @@ export async function terminalSmokeHost(
   changed: (request: TerminalRequest) => void,
 ) {
   if (process.env.RAYPX_P0_HOST_MODE !== "daemon") {
+    const storage = new ProfileStorage(directory);
     const host = startTerminalHost({
-      profileDirectory: directory,
+      database: storage.database,
       directory,
       projects: [project],
       away,
@@ -38,7 +40,13 @@ export async function terminalSmokeHost(
       },
       list: async () => host.broker.list(),
       decide: async (decision: TerminalDecision) => host.broker.decide(decision),
-      close: () => host.close(),
+      close: async () => {
+        try {
+          await host.close();
+        } finally {
+          storage.close();
+        }
+      },
     };
   }
   const daemon = await startDaemon({ dataDir: directory });

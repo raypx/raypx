@@ -1,3 +1,4 @@
+import { profileStorage } from "../../helpers/sqlite";
 import { describe, expect, it } from "vite-plus/test";
 import { createRuntime } from "../../../src/runtime/index.js";
 import { runtimeFixtures } from "../../helpers/runtime.js";
@@ -27,15 +28,13 @@ describe("device state", () => {
         output: "",
         exitCode: null,
       });
-    const reopened = new StateStore(state.directory);
-    try {
+    const reopened = new StateStore(profileStorage(state.directory));
+    {
       expect(reopened.roots()).toEqual(state.roots());
       expect(reopened.revision()).toBe(revision + 2);
       expect(reopened.history(jobId).map((run) => run.id)).toEqual(
         Array.from({ length: 100 }, (_, index) => `run-${104 - index}`),
       );
-    } finally {
-      reopened.close();
     }
   });
   it.each([1, 2])(

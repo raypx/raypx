@@ -27,7 +27,12 @@ function setup() {
     extra: { scripts: { test: "fixture", "test:unit": "fixture", "test:component": "fixture" } },
   });
   const files = ["tests/unit/model.test.ts", "tests/component/view.test.tsx"];
-  for (const file of [...files, "tests/postgres/node/storage.test.ts", "tests/redis/cache.test.ts"])
+  for (const file of [
+    ...files,
+    "tests/postgres/node/storage.test.ts",
+    "tests/redis/cache.test.ts",
+    "tests/cluster/relay.test.ts",
+  ])
     write(root, `${directory}/${file}`, "fixture");
   const browser = member(root, "browser", {
     metadata: { kind: "tooling", target: "bun" },
@@ -50,7 +55,7 @@ it("reconciles default and focused reports against actual files without includin
   ]);
   expect(layers.cases).toEqual(full.cases);
   expect(full.files).toHaveLength(2);
-  expect(full.sources.filter((source) => source.layer === "external")).toHaveLength(3);
+  expect(full.sources.filter((source) => source.layer === "external")).toHaveLength(4);
 });
 
 it("rejects missing, stale, duplicate and failed reports rather than reporting incomplete coverage as passed", async () => {

@@ -1,5 +1,15 @@
-import { expect, it } from "vite-plus/test";
+import { afterEach, expect, it, vi } from "vite-plus/test";
 import { getApiEnvironment } from "../../server/env.js";
+afterEach(() => vi.unstubAllEnvs());
+it("uses only explicit runtime inputs without inheriting deployment connections", () => {
+  vi.stubEnv("DATABASE_URL", "postgres://fixture:fixture@operator.example:5432/operator");
+  vi.stubEnv("REDIS_URL", "redis://operator.example:6379");
+  const environment = getApiEnvironment({ NODE_ENV: "test" });
+  expect(environment.DATABASE_URL).toBe(
+    "postgres://postgres:postgres@localhost:5433/raypx_foundation",
+  );
+  expect(environment.REDIS_URL).toBeUndefined();
+});
 it("requires explicit production configuration", () => {
   expect(() => getApiEnvironment({ NODE_ENV: "production" })).toThrow("Production requires");
   expect(getApiEnvironment({ NODE_ENV: "test" }).DATABASE_URL).toContain(":5433/raypx_foundation");

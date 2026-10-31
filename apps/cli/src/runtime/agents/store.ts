@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { storedRecord } from "../sqlite/records";
 import { normalizeTaskJson } from "@raypx/core/task-text";
 import { createHash } from "node:crypto";
 import {
@@ -15,7 +17,12 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import type { RelayCommand, SequencedEvent, SnapshotRecord } from "@raypx/contracts/tasks";
+import {
+  relayRequestSchema,
+  type RelayCommand,
+  type SequencedEvent,
+  type SnapshotRecord,
+} from "@raypx/contracts/tasks";
 import type {
   AgentEvent,
   AgentProvider,
@@ -25,9 +32,16 @@ import type {
 } from "@raypx/core/tasks";
 import { LocalError } from "../errors";
 
-import { activeTaskStatuses, taskActivitySchema } from "@raypx/core/tasks";
+import {
+  activeTaskStatuses,
+  taskActivitySchema,
+  taskSchema,
+  agentEventSchema,
+  humanRequestSchema,
+  agentProviderSchema,
+} from "@raypx/core/tasks";
 import { taskActivityPage } from "@raypx/core/activity";
-import { iterateRows, openProfileDatabase, type LocalDatabase } from "../sqlite";
+import { iterateRows, type LocalDatabase } from "../sqlite";
 import {
   activity,
   agentMeta,
@@ -40,7 +54,23 @@ import {
   tasks,
 } from "../sqlite/schema";
 
-const stored = (value: string) => normalizeTaskJson(JSON.parse(value));
+const tokenUsageSchema = z.object({
+  inputTokens: z.number().nonnegative(),
+  outputTokens: z.number().nonnegative(),
+  cachedInputTokens: z.number().nonnegative(),
+  cacheWriteInputTokens: z.number().nonnegative(),
+});
+const localAgentTaskSchema = z.object({
+  task: taskSchema,
+  binding: z.string().min(1),
+  sessionId: z.string().nullable(),
+  tokenUsage: tokenUsageSchema.optional(),
+});
+const commandPayloadSchema = z.object({ request: relayRequestSchema });
+const commandResultSchema = z.discriminatedUnion("ok", [
+  z.object({ ok: z.literal(true), value: z.unknown() }),
+  z.object({ ok: z.literal(false), code: z.string() }),
+]);
 const taskBinding = sql<string>`json_extract(${tasks.value},'$.binding')`;
 const taskCreatedAt = sql<string>`json_extract(${tasks.value},'$.task.createdAt')`;
 const taskPageCursor = sql<string>`${taskCreatedAt} || ':' || ${tasks.id}`;
@@ -56,17 +86,7 @@ const forgottenResult = JSON.stringify({ ok: false, code: "NOT_FOUND" });
 type Draft<T> = T extends unknown ? Omit<T, "order" | "revision"> : never;
 export type ActivityDraft = Draft<TaskActivity>;
 
-export interface LocalAgentTask {
-  task: AgentTask;
-  binding: string;
-  sessionId: string | null;
-  tokenUsage?: {
-    inputTokens: number;
-    outputTokens: number;
-    cachedInputTokens: number;
-    cacheWriteInputTokens: number;
-  };
-}
+export type LocalAgentTask = z.output<typeof localAgentTaskSchema>;
 export const desktopBinding = (accountId: string) => `desktop:${accountId}`;
 export const isDesktopBinding = (binding: string) => binding.startsWith("desktop:");
 export class AgentStore {
@@ -74,32 +94,27 @@ export class AgentStore {
   readonly streamId: string;
   // Relay replay keeps a rolling window per binding; tests pass a small window.
   constructor(
-    directory: string,
+    database: LocalDatabase,
     private readonly retained = 4096,
     private readonly retainedBytes = 8 * 1024 * 1024,
   ) {
-    this.database = openProfileDatabase(directory);
-    try {
-      this.database
-        .insert(agentMeta)
-        .values({ id: "stream", value: crypto.randomUUID() })
-        .onConflictDoNothing()
-        .run();
-      this.streamId = this.database
-        .select({ value: agentMeta.value })
-        .from(agentMeta)
-        .where(eq(agentMeta.id, "stream"))
-        .get()!.value;
-      for (const row of this.database
-        .selectDistinct({ binding: journal.binding })
-        .from(journal)
-        .where(sql`${journal.binding} NOT GLOB 'desktop:*'`)
-        .all())
-        this.compact(row.binding);
-    } catch (error) {
-      this.database.$client.close();
-      throw error;
-    }
+    this.database = database;
+    this.database
+      .insert(agentMeta)
+      .values({ id: "stream", value: crypto.randomUUID() })
+      .onConflictDoNothing()
+      .run();
+    this.streamId = this.database
+      .select({ value: agentMeta.value })
+      .from(agentMeta)
+      .where(eq(agentMeta.id, "stream"))
+      .get()!.value;
+    for (const row of this.database
+      .selectDistinct({ binding: journal.binding })
+      .from(journal)
+      .where(sql`${journal.binding} NOT GLOB 'desktop:*'`)
+      .all())
+      this.compact(row.binding);
   }
 
   projects(): { id: string; providers: AgentProvider[] }[] {
@@ -108,7 +123,10 @@ export class AgentStore {
       .from(projects)
       .orderBy(projects.id)
       .all()
-      .map((row) => ({ id: row.id, providers: JSON.parse(row.providers) }));
+      .map((row) => ({
+        id: row.id,
+        providers: storedRecord(z.array(agentProviderSchema).max(2), row.providers),
+      }));
   }
   tokenUsage(sessionId: string): LocalAgentTask["tokenUsage"] {
     const row = this.database
@@ -116,7 +134,7 @@ export class AgentStore {
       .from(agentMeta)
       .where(eq(agentMeta.id, `usage:codex:${sessionId}`))
       .get();
-    return row ? stored(row.value) : undefined;
+    return row ? storedRecord(tokenUsageSchema, row.value) : undefined;
   }
   recordTokenUsage(local: LocalAgentTask, totals: NonNullable<LocalAgentTask["tokenUsage"]>) {
     this.database.transaction(() => {
@@ -160,7 +178,7 @@ export class AgentStore {
       .all();
     return rows.map((row) => ({
       cursor: row.sequence,
-      event: stored(row.value) as AgentEvent,
+      event: storedRecord(agentEventSchema, row.value),
     }));
   }
   configure(id: string, providers: AgentProvider[]) {
@@ -176,7 +194,7 @@ export class AgentStore {
       .from(tasks)
       .where(eq(tasks.id, id))
       .get();
-    return row ? stored(row.value) : undefined;
+    return row ? storedRecord(localAgentTaskSchema, row.value) : undefined;
   }
   tasks(options: { binding?: string; activeOnly?: boolean } = {}): LocalAgentTask[] {
     return this.database
@@ -189,7 +207,7 @@ export class AgentStore {
         ),
       )
       .all()
-      .map((row) => stored(row.value));
+      .map((row) => storedRecord(localAgentTaskSchema, row.value));
   }
   taskPage(binding: string, limit: number, before?: string): AgentTask[] {
     before ||= undefined;
@@ -205,7 +223,7 @@ export class AgentStore {
       .orderBy(desc(taskPageCursor))
       .limit(limit)
       .all()
-      .map((row) => (stored(row.value) as LocalAgentTask).task);
+      .map((row) => storedRecord(localAgentTaskSchema, row.value).task);
   }
   hasActiveSession(provider: AgentProvider, sessionId: string) {
     return Boolean(
@@ -274,7 +292,7 @@ export class AgentStore {
       .where(and(eq(activity.binding, binding), eq(activity.taskId, taskId)))
       .orderBy(sql`rowid`)
       .all()
-      .map((row) => stored(row.value));
+      .map((row) => storedRecord(taskActivitySchema, row.value));
   }
   activityPage(binding: string, taskId: string, before?: number) {
     const rows = this.database
@@ -291,7 +309,7 @@ export class AgentStore {
       .limit(65)
       .all();
     return taskActivityPage(
-      rows.map((row) => stored(row.value) as TaskActivity),
+      rows.map((row) => storedRecord(taskActivitySchema, row.value)),
       before,
     );
   }
@@ -368,7 +386,7 @@ export class AgentStore {
         .innerJoin(selectedIds, eq(tasks.id, selectedIds.id))
         .orderBy(desc(taskCreatedAt), asc(tasks.id))
         .all()
-        .map((row) => stored(row.value) as LocalAgentTask);
+        .map((row) => storedRecord(localAgentTaskSchema, row.value));
       const ids = selected.map((local) => local.task.id);
       const selectedTaskIds = this.database
         .select({ value: sql<string>`value` })
@@ -386,7 +404,7 @@ export class AgentStore {
           .where(and(eq(requests.binding, binding), inArray(requestTaskId, selectedTaskIds)))
           .orderBy(sql`rowid`),
       ))
-        records.push({ kind: "request", request: stored(row.value) as HumanRequest });
+        records.push({ kind: "request", request: storedRecord(humanRequestSchema, row.value) });
       const totals = new Map(
         this.database
           .select({ taskId: activity.taskId, count: count() })
@@ -416,7 +434,7 @@ export class AgentStore {
                 exhausted = true;
                 break;
               }
-              const entry = stored(row.value.value) as TaskActivity;
+              const entry = storedRecord(taskActivitySchema, row.value.value);
               records.push({ kind: "activity", entry });
               remaining -= size;
               included.set(entry.taskId, (included.get(entry.taskId) ?? 0) + 1);
@@ -462,7 +480,7 @@ export class AgentStore {
           .from(activity)
           .where(eq(activity.id, draft.id))
           .get()!.rowid;
-      const previous = old ? (stored(old.value) as TaskActivity) : undefined;
+      const previous = old ? storedRecord(taskActivitySchema, old.value) : undefined;
       const entry = taskActivitySchema.parse(
         normalizeTaskJson({
           ...draft,
@@ -598,7 +616,7 @@ export class AgentStore {
     for (const row of rows) {
       bytes += Buffer.byteLength(row.value);
       if (bytes > 768 * 1024) break;
-      events.push({ sequence: row.sequence, event: stored(row.value) });
+      events.push({ sequence: row.sequence, event: storedRecord(agentEventSchema, row.value) });
     }
     return { streamId: this.streamId, sequence: this.sequence(binding), floor, events };
   }
@@ -640,7 +658,7 @@ export class AgentStore {
       )
       .orderBy(sql`rowid`)
       .all()
-      .map((row) => stored(row.value));
+      .map((row) => storedRecord(humanRequestSchema, row.value));
   }
   getRequest(binding: string, id: string): HumanRequest | undefined {
     const row = this.database
@@ -648,7 +666,7 @@ export class AgentStore {
       .from(requests)
       .where(and(eq(requests.binding, binding), eq(requests.id, id)))
       .get();
-    return row ? stored(row.value) : undefined;
+    return row ? storedRecord(humanRequestSchema, row.value) : undefined;
   }
   pendingRequests(binding: string): HumanRequest[] {
     return this.database
@@ -674,7 +692,7 @@ export class AgentStore {
       )
       .orderBy(sql`json_extract(${requests.value},'$.expiresAt')`, sql`rowid`)
       .all()
-      .map((row) => stored(row.value));
+      .map((row) => storedRecord(humanRequestSchema, row.value));
   }
   forget(binding: string, ids: string[], pendingCommands: ReadonlySet<string> = new Set()) {
     this.database.transaction(() => {
@@ -687,7 +705,7 @@ export class AgentStore {
         .where(eq(sql`json_extract(${commands.payload},'$.binding')`, binding))
         .all();
       for (const command of savedCommands) {
-        const { request } = JSON.parse(command.payload) as { request: RelayCommand["request"] };
+        const { request } = storedRecord(commandPayloadSchema, command.payload);
         if (request.method === "observed.decide") continue;
         const taskId =
           request.method === "approvals.decide"
@@ -764,7 +782,7 @@ export class AgentStore {
     if (old) {
       if (old.payload !== payload && old.payload !== forgottenCommand(payload))
         throw new LocalError("IDEMPOTENCY_CONFLICT", "Command identity changed");
-      return old.result ? JSON.parse(old.result) : null;
+      return old.result ? storedRecord(commandResultSchema, old.result) : null;
     }
     this.database.insert(commands).values({ id: command.id, payload, result: null }).run();
     return null;
@@ -786,7 +804,7 @@ export class AgentStore {
       .orderBy(journal.sequence)
       .limit(50)
       .all()
-      .map((row) => stored(row.value) as AgentEvent);
+      .map((row) => storedRecord(agentEventSchema, row.value));
     const batch: AgentEvent[] = [];
     let bytes = 0;
     for (const value of values) {
@@ -805,8 +823,5 @@ export class AgentStore {
           .where(and(eq(outbox.binding, binding), eq(outbox.id, id)))
           .run();
     });
-  }
-  close() {
-    this.database.$client.close();
   }
 }

@@ -27,6 +27,8 @@ const contextParams = <T>(schema: { parse(input: unknown): T }, input: unknown):
   }
 };
 
+import { ProfileStorage } from "./sqlite";
+
 export function createRuntime(
   options: {
     dataDir?: string;
@@ -39,7 +41,14 @@ export function createRuntime(
   } = {},
 ) {
   const emit = options.emit ?? (() => {});
-  const state = new StateStore(profilePath(options));
+  const storage = new ProfileStorage(profilePath(options));
+  let state: StateStore;
+  try {
+    state = new StateStore(storage);
+  } catch (error) {
+    storage.close();
+    throw error;
+  }
   const bun = new BundledBun(join(state.directory, "bun"));
   const environment = () => bun.environment();
   let releaseOwner: (() => void) | undefined;
@@ -82,7 +91,7 @@ export function createRuntime(
   );
   const jobs = new JobRuntime(state, files, processes, emit, options.recordDiagnostic);
   let memory: MemoryRuntime | undefined;
-  const getMemory = () => (memory ??= new MemoryRuntime(state.directory, getAgents));
+  const getMemory = () => (memory ??= new MemoryRuntime(state.db, getAgents));
   let closing = false;
   let closingPromise: Promise<void> | undefined;
   const pending = new Set<Promise<unknown>>();
@@ -91,7 +100,7 @@ export function createRuntime(
     if (options.scheduler) jobs.startScheduler();
   } catch (error) {
     releaseOwner?.();
-    state.close();
+    storage.close();
     throw error;
   }
   return {
@@ -352,8 +361,7 @@ export function createRuntime(
           ...(agentHost ? [agentHost.close()] : []),
         ]);
         await Promise.allSettled(pending);
-        memory?.close();
-        state.close();
+        storage.close();
         releaseOwner?.();
       })();
       return closingPromise;

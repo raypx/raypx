@@ -1,5 +1,6 @@
+import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite";
 import { afterEach, expect, it } from "vite-plus/test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { Database } from "bun:sqlite";
@@ -10,19 +11,18 @@ import type { ContextDocument, ContextDocumentInput } from "@raypx/memory";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { runtimeFixtures } from "../../helpers/runtime";
 
-const roots: string[] = [],
-  stores: SqliteContextRepository[] = [];
+const roots: string[] = [];
 afterEach(() => {
-  for (const store of stores.splice(0)) store.close();
-  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  for (const root of roots.splice(0))
+    removeProfileDirectory(root, { recursive: true, force: true });
 });
 function repository() {
   const root = mkdtempSync(join(tmpdir(), "raypx-memory-"));
   roots.push(root);
   const path = join(root, "profile.sqlite");
-  const store = new SqliteContextRepository(root);
-  stores.push(store);
-  return { root, path, store };
+  const profile = profileStorage(root);
+  const store = new SqliteContextRepository(profile.database);
+  return { root, path, store, profile };
 }
 const document: ContextDocumentInput = {
   kind: "memory",
@@ -38,7 +38,9 @@ it("rejects an unversioned populated memory database without relabeling or chang
   const raw = new Database(f.path);
   try {
     raw.exec("DROP TABLE __drizzle_migrations;");
-    expect(() => new SqliteContextRepository(f.root)).toThrow("CONTEXT_UNAVAILABLE");
+    expect(() => new SqliteContextRepository(profileStorage(f.root).database)).toThrow(
+      "unsupported SQLite schema",
+    );
     expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: 0 });
     expect(await f.store.get("device", id)).toEqual(saved);
   } finally {
@@ -86,10 +88,8 @@ it("persists immutable versions and restores content without changing archival s
     [2, "updated", undefined],
     [1, "created", undefined],
   ]);
-  f.store.close();
-  stores.splice(stores.indexOf(f.store), 1);
-  const reopened = new SqliteContextRepository(f.root);
-  stores.push(reopened);
+  f.profile.close();
+  const reopened = new SqliteContextRepository(profileStorage(f.root).database);
   expect(await reopened.get("device", id)).toMatchObject({
     revision: 4,
     content: document.content,
@@ -177,9 +177,8 @@ it("recovers retry IDs after target removal while allowing same-project edits an
 });
 it("allows only one revision winner across two connections", async () => {
   const f = repository(),
-    second = new SqliteContextRepository(f.root),
+    second = new SqliteContextRepository(profileStorage(f.root).database),
     id = crypto.randomUUID();
-  stores.push(second);
   await f.store.create("device", id, document);
   const results = await Promise.allSettled([
     f.store.update("device", id, 1, { ...document, content: "First" }),
@@ -359,7 +358,9 @@ it.each([1, 3])("rejects unsupported memory schema %s without migrating its data
   const raw = new Database(f.path);
   try {
     raw.exec(`PRAGMA user_version=${version}`);
-    expect(() => new SqliteContextRepository(f.root)).toThrow("CONTEXT_UNAVAILABLE");
+    expect(() => new SqliteContextRepository(profileStorage(f.root).database)).toThrow(
+      "unsupported SQLite schema",
+    );
     expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: version });
   } finally {
     raw.exec("PRAGMA user_version=0");

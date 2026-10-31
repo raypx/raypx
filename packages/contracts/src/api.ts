@@ -116,3 +116,37 @@ export const apiContract = {
     get: oc.input(z.object({})).output(accountProfileSchema),
   },
 };
+
+/** Native transport policy. Every HTTP procedure must explicitly select its consumer. */
+type NativeExposure<C> = {
+  [Group in keyof C]: { [Method in keyof C[Group]]: "renderer" | "native" | "host" };
+};
+export const apiExposure = {
+  account: { get: "renderer" },
+  devices: { register: "renderer", refreshGrant: "renderer", list: "renderer", revoke: "renderer" },
+  tasks: { list: "renderer", get: "renderer" },
+  approvals: { list: "renderer" },
+  relay: { ticket: "renderer" },
+  observed: { list: "renderer", get: "renderer" },
+  hosts: { authorize: "native", revoke: "native", grant: "host" },
+  configuration: { public: "renderer", access: "renderer", get: "renderer", update: "renderer" },
+  jobs: {
+    list: "renderer",
+    create: "renderer",
+    update: "renderer",
+    remove: "renderer",
+    run: "renderer",
+    history: "renderer",
+  },
+  memory: {
+    list: "renderer",
+    get: "renderer",
+    create: "renderer",
+    update: "renderer",
+    archive: "renderer",
+    delete: "renderer",
+    history: "renderer",
+    restore: "renderer",
+    resolve: "renderer",
+  },
+} as const satisfies NativeExposure<typeof apiContract>;

@@ -1,6 +1,7 @@
+import { profileStorage, removeProfileDirectory } from "../../helpers/sqlite";
 import { afterEach, expect, it } from "vite-plus/test";
 import { Database } from "bun:sqlite";
-import { mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,7 +19,7 @@ afterEach(() => {
 });
 function directory() {
   const path = mkdtempSync(join(tmpdir(), "raypx-sqlite-migrations-"));
-  cleanups.push(() => rmSync(path, { recursive: true, force: true }));
+  cleanups.push(() => removeProfileDirectory(path, { recursive: true, force: true }));
   return path;
 }
 function fixture() {
@@ -43,14 +44,31 @@ it("initializes the single profile migration once and reopens the recorded schem
   }
 });
 
-it("shares one business database across every store without sharing connection lifetimes", async () => {
+it("shares one profile writer and transaction across every repository", async () => {
   const f = fixture(),
-    state = new StateStore(f.directory),
-    agents = new AgentStore(f.directory),
-    terminal = new TerminalStore(f.directory),
-    memory = new SqliteContextRepository(f.directory),
-    pi = new SqlitePiContextStore(f.directory, "shared");
+    storage = profileStorage(f.directory),
+    state = new StateStore(storage),
+    agents = new AgentStore(storage.database),
+    terminal = new TerminalStore(storage.database),
+    memory = new SqliteContextRepository(storage.database),
+    pi = new SqlitePiContextStore(storage.database, "shared");
   try {
+    const revision = state.revision();
+    expect(() =>
+      storage.database.transaction(() => {
+        state.putRoot({
+          id: crypto.randomUUID(),
+          name: "Rollback",
+          path: f.directory,
+          createdAt: new Date().toISOString(),
+        });
+        terminal.projectId("rolled-back");
+        throw new Error("rollback");
+      }),
+    ).toThrow("rollback");
+    expect(state.roots()).toEqual([]);
+    expect(state.revision()).toBe(revision);
+    expect(f.client.query("SELECT id FROM terminal_project").all()).toEqual([]);
     const projectId = terminal.projectId(f.directory),
       id = crypto.randomUUID();
     await memory.create("device", id, {
@@ -72,7 +90,6 @@ it("shares one business database across every store without sharing connection l
     expect(f.client.query("SELECT count(*) AS count FROM __drizzle_migrations").get()).toEqual({
       count: 1,
     });
-    state.close();
     expect(terminal.projectId(f.directory)).toBe(projectId);
     expect((await memory.get("device", id)).content).toBe("Reference");
     expect((await pi.load()).revision).toBe(1);
@@ -82,12 +99,44 @@ it("shares one business database across every store without sharing connection l
       ),
     ).toEqual(["profile.sqlite"]);
   } finally {
-    state.close();
-    agents.close();
-    terminal.close();
-    memory.close();
     pi.close();
+    storage.close();
   }
+});
+
+it("keeps repositories borrowed until the profile owner closes them", () => {
+  const root = directory();
+  const storage = profileStorage(root);
+  const state = new StateStore(storage);
+  const agents = new AgentStore(storage.database);
+  const terminal = new TerminalStore(storage.database);
+  terminal.projectId(root);
+  expect(state.roots()).toEqual([]);
+  expect(agents.projects()).toEqual([]);
+  storage.close();
+  storage.close();
+  expect(() => state.roots()).toThrow(/closed|finalized|query|database/i);
+  expect(() => agents.projects()).toThrow(/closed|finalized|query|database/i);
+  expect(() => terminal.projectId(root)).toThrow(/closed|finalized|query|database/i);
+});
+
+it("rejects corrupted persisted records before they enter runtime state", () => {
+  const storage = profileStorage(directory());
+  const state = new StateStore(storage);
+  const agents = new AgentStore(storage.database);
+  const client = storage.database.$client;
+  client.query("INSERT INTO roots VALUES (?,?)").run("invalid", JSON.stringify({ id: "invalid" }));
+  client
+    .query("INSERT INTO tasks VALUES (?,?)")
+    .run(
+      "invalid",
+      JSON.stringify({ task: { id: "invalid" }, binding: "desktop:local", sessionId: null }),
+    );
+  expect(() => state.roots()).toThrow("Profile contains invalid stored data");
+  expect(() => agents.get("invalid")).toThrow("Profile contains invalid stored data");
+  expect(client.query("SELECT value FROM roots WHERE id='invalid'").get()).toEqual({
+    value: JSON.stringify({ id: "invalid" }),
+  });
 });
 
 it("rejects an unmanaged database without adopting or changing its data", () => {

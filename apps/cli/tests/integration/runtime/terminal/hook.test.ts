@@ -1,3 +1,4 @@
+import { profileStorage } from "../../../helpers/sqlite";
 import { expect, it } from "vite-plus/test";
 import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -28,7 +29,7 @@ it.skipIf(process.platform === "win32")(
     const dir = await mkdtemp(join(tmpdir(), "raypx-hook-forward-")),
       project = await realpath(dir);
     const host = startTerminalHost({
-      profileDirectory: dir,
+      database: profileStorage(dir).database,
       directory: dir,
       projects: [project],
       away: true,

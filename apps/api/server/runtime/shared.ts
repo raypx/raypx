@@ -48,6 +48,7 @@ export interface RuntimeResources extends RuntimeProviders {
   clientIpHeader?: string;
   onRevoke?: (userId: string, deviceId: string) => Promise<void>;
   createJobExecutor?: (control: ControlService) => CloudJobExecutor;
+  relayReadiness?: () => Promise<void>;
   connect(): DatabaseConnection;
   closeLogger(): Promise<void>;
   /** Owned by the runtime: sessions, rate limits and cache values; PostgreSQL is used without it. */
@@ -138,7 +139,10 @@ export async function createRuntime(environment: ApiEnvironment, resources: Runt
         allowedOrigins: environment.allowedOrigins,
         mailAvailable: mailer.available,
         logger,
-        readiness,
+        readiness: {
+          ...readiness,
+          ...(resources.relayReadiness ? { relay: resources.relayReadiness } : {}),
+        },
         ...(rateLimit ? { rateLimit } : {}),
       }),
       close: () => lifecycle.close(),

@@ -1,6 +1,7 @@
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { Database } from "bun:sqlite";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
@@ -17,19 +18,17 @@ afterEach(async () => {
 });
 function fixture(options: ConstructorParameters<typeof AgentRuntime>[2] = {}) {
   const directory = mkdtempSync(join(tmpdir(), "raypx-history-clear-"));
-  const state = new StateStore(directory);
+  const state = new StateStore(profileStorage(directory));
   const f = {
     runtime: new AgentRuntime(state, () => {}, options),
-    store: new AgentStore(directory),
+    store: new AgentStore(profileStorage(directory).database),
     db: new Database(join(directory, "profile.sqlite")),
     state,
   };
   cleanups.push(async () => {
     f.db.close();
-    f.store.close();
     await f.runtime.close();
-    state.close();
-    rmSync(directory, { recursive: true, force: true });
+    removeProfileDirectory(directory, { recursive: true, force: true });
   });
   return f;
 }

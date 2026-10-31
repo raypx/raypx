@@ -75,8 +75,18 @@ session revocation and credential expiry. Account changes, logout, disabling rem
 access cancel affected managed tasks; transient network loss does not. macOS GUI
 Quit preserves tasks, while explicit daemon stop and Windows GUI Quit cancel them.
 
-Node uses Nitro's WebSocket adapter and one relay process. Its first release
-requires a single API instance for relay connections.
+Bun uses Nitro's WebSocket adapter. With `REDIS_URL`, API instances share a private
+bounded Redis request/reply bus. PostgreSQL stores the active node/connection
+identity; each delivery revalidates that identity and its actor. Viewers and job
+workers can reach a host on another instance. Reconnect/revoke and committed
+projection notices reach the other instances. The bus carries no bearer credentials.
+Without Redis, use one API instance. A configured broker outage closes Relay
+connections until subscriptions recover; HTTP liveness remains available and
+readiness reports Relay unavailable. Redis does not queue offline commands or
+retry uncertain delivery. Losing a response after publish remains uncertain and
+never causes automatic task recreation. `test:cluster` verifies two socket
+servers against isolated PostgreSQL and Redis, including reconnect, revoke,
+subscription loss and correlated snapshot completion.
 
 ## Commands and host authority
 
@@ -195,8 +205,9 @@ journal. Content that has reached its display bound stops generating unchanged w
 
 API read transactions are repeatable-read, read-only and never acquire the
 account decision lock. Task activity/event/request queries filter by user/task
-and cursor in SQL, supported by expression indexes. Write decisions still use
-the account lock. Cloud activity retains its latest revision indefinitely; only
+and cursor in SQL, supported by expression indexes. Device projection writes share
+the account security fence and serialize per device; account authorization and
+shared quota/receipt decisions take the exclusive account lock. Cloud activity retains its latest revision indefinitely; only
 bounded replay/obsolete stream records and orphan projections are reclaimed.
 An absent task in a partial snapshot is never evidence that its history was deleted.
 

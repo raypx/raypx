@@ -27,7 +27,6 @@ func NewAPI(origin string, cookies *CookieJar) *API {
 }
 
 var authPaths = strings.Fields("/api/auth/get-session /api/auth/sign-in/email /api/auth/sign-up/email /api/auth/sign-out /api/auth/send-verification-email /api/auth/verify-email /api/auth/request-password-reset /api/auth/reset-password /api/auth/update-user /api/auth/list-sessions /api/auth/revoke-session /api/auth/revoke-other-sessions")
-var rpcPaths = strings.Fields("/rpc/account/get /rpc/devices/register /rpc/devices/refreshGrant /rpc/devices/list /rpc/devices/revoke /rpc/tasks/list /rpc/tasks/get /rpc/approvals/list /rpc/relay/ticket /rpc/observed/list /rpc/observed/get /rpc/jobs/list /rpc/jobs/create /rpc/jobs/update /rpc/jobs/remove /rpc/jobs/run /rpc/jobs/history /rpc/memory/list /rpc/memory/get /rpc/memory/create /rpc/memory/update /rpc/memory/archive /rpc/memory/delete /rpc/memory/history /rpc/memory/restore /rpc/memory/resolve")
 
 func contains(values []string, value string) bool {
 	for _, v := range values {
@@ -51,7 +50,7 @@ func ValidateAPI(origin *url.URL, input JSON, native bool) (*http.Request, error
 	if err != nil || u.Host != origin.Host || u.Scheme != origin.Scheme || u.Fragment != "" {
 		return nil, errors.New("API path is not permitted")
 	}
-	rpc := contains(rpcPaths, u.EscapedPath()) || native && contains([]string{"/rpc/hosts/authorize", "/rpc/hosts/revoke"}, u.EscapedPath())
+	rpc := contains(rpcPaths, u.EscapedPath()) || native && contains(nativeRPCPaths, u.EscapedPath())
 	if !contains(authPaths, u.EscapedPath()) && !rpc {
 		return nil, errors.New("API path is not permitted")
 	}

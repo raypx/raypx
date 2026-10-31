@@ -1,3 +1,4 @@
+import { profileStorage } from "../../../helpers/sqlite";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -52,7 +53,7 @@ afterEach(() => {
 });
 it("evicts finished history and its receipts after 256 entries while keeping new requests usable", async () => {
   const directory = await mkdtemp(join(tmpdir(), "raypx-terminal-bounds-")),
-    store = new TerminalStore(directory),
+    store = new TerminalStore(profileStorage(directory).database),
     b = broker(store);
   const projectId = store.projectId("/private/synthetic-project");
   const receipts: string[] = [];
@@ -71,12 +72,10 @@ it("evicts finished history and its receipts after 256 entries while keeping new
     expect(projectId).toMatch(/^[a-f0-9-]{36}$/);
     expect(store.projectId("/private/synthetic-project")).toBe(projectId);
     b.close();
-    const restored = new TerminalStore(directory);
+    const restored = new TerminalStore(profileStorage(directory).database);
     expect(restored.projectId("/private/synthetic-project")).toBe(projectId);
-    restored.close();
   } finally {
     b.close();
-    store.close();
     await rm(directory, { recursive: true, force: true });
   }
 });
@@ -185,7 +184,7 @@ it("falls back on disconnect even if cancellation cannot be persisted", async ()
 
 it("persists receipts across restart and marks uncertain delivery honestly", async () => {
   const dir = await mkdtemp(join(tmpdir(), "raypx-terminal-store-"));
-  let store = new TerminalStore(dir);
+  let store = new TerminalStore(profileStorage(dir).database);
   const first = broker(store),
     { request, outcome } = first.open(input(), { away: true, reachable: true });
   const answer = decision(request!);
@@ -193,8 +192,7 @@ it("persists receipts across restart and marks uncertain delivery honestly", asy
   await outcome;
   first.close();
   brokers.splice(brokers.indexOf(first), 1);
-  store.close();
-  store = new TerminalStore(dir);
+  store = new TerminalStore(profileStorage(dir).database);
   const second = broker(store);
   try {
     expect(second.get(request!.id)?.status).toBe("outcome_unknown");
@@ -203,7 +201,6 @@ it("persists receipts across restart and marks uncertain delivery honestly", asy
   } finally {
     second.close();
     brokers.splice(brokers.indexOf(second), 1);
-    store.close();
     await rm(dir, { recursive: true, force: true });
   }
 });

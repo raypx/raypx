@@ -1,5 +1,6 @@
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { expect, it } from "vite-plus/test";
-import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startDaemon } from "../../../../src/runtime/daemon/server";
@@ -98,7 +99,7 @@ async function fixture(seed = false) {
   const scope = { accountId, apiUrl: api.url.origin },
     terminalDirectory = join(profilePath({ dataDir }), "terminal");
   if (seed) {
-    const store = new TerminalStore(profilePath({ dataDir }));
+    const store = new TerminalStore(profileStorage(profilePath({ dataDir })).database);
     const sessions: TerminalSession[] = [];
     for (let index = 0; index < 111; index++) {
       const session: TerminalSession = {
@@ -129,7 +130,6 @@ async function fixture(seed = false) {
         decision: null,
       });
     }
-    store.close();
   }
   const vault: HostVault = {
     get: async () => stored,
@@ -185,7 +185,7 @@ async function fixture(seed = false) {
     close: async () => {
       await host.close();
       await api.stop(true);
-      rmSync(dataDir, { recursive: true, force: true });
+      removeProfileDirectory(dataDir, { recursive: true, force: true });
     },
   };
 }

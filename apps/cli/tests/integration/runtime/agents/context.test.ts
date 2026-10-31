@@ -1,3 +1,4 @@
+import { profileStorage } from "../../../helpers/sqlite";
 import { expect, it } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -155,12 +156,10 @@ it.each(["claude", "codex"] as const)(
   async (provider) => {
     const f = await completedContextParent(provider),
       id = crypto.randomUUID();
-    const store = new AgentStore(f.directory);
-    try {
+    const store = new AgentStore(profileStorage(f.directory).database);
+    {
       const parent = store.get(f.input.id)!;
       store.put({ ...parent, sessionId: null });
-    } finally {
-      store.close();
     }
     expect(
       await f.runtime.localExecute(LOCAL_WORKSPACE_ID, id, {
@@ -199,11 +198,9 @@ it.each(["claude", "codex"] as const)(
       summary: "SESSION_UNAVAILABLE",
       context: f.context,
     });
-    const store = new AgentStore(f.directory);
-    try {
+    const store = new AgentStore(profileStorage(f.directory).database);
+    {
       expect(store.get(id)?.sessionId).not.toBe("fresh-interactive");
-    } finally {
-      store.close();
     }
   },
 );

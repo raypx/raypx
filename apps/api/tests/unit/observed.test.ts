@@ -1,56 +1,7 @@
 import { expect, it } from "vite-plus/test";
 import { ControlService } from "../../server/control/service.js";
-import { connected, controlAuth, memoryControlRepository } from "../helpers/control.js";
-import { terminalRequestSchema, terminalSessionSchema } from "@raypx/contracts/terminal";
+import { connected, controlAuth, memoryControlRepository, observed } from "../helpers/control.js";
 
-function observed(projectId: string) {
-  const epoch = crypto.randomUUID(),
-    session = terminalSessionSchema.parse({
-      id: crypto.randomUUID(),
-      provider: "codex",
-      providerSessionId: "synthetic-session",
-      projectId,
-      projectName: "Synthetic project",
-      capabilities: {
-        permission: true,
-        permissionTools: ["Bash"],
-        question: false,
-        plan: false,
-        simultaneousAnswers: false,
-        requiresHookTrust: true,
-      },
-    });
-  const request = terminalRequestSchema.parse({
-    version: 1,
-    id: crypto.randomUUID(),
-    sessionId: session.id,
-    epoch,
-    revision: 1,
-    provider: "codex",
-    invocationId: crypto.randomUUID(),
-    kind: "permission",
-    title: "Bash",
-    encoding: "plain",
-    body: '{"command":"printf synthetic"}',
-    questions: [],
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 300_000).toISOString(),
-    status: "pending",
-    decision: null,
-  });
-  return {
-    epoch,
-    session,
-    request,
-    frame: {
-      type: "observed" as const,
-      epoch,
-      revision: 1,
-      sessions: [session],
-      requests: [request],
-    },
-  };
-}
 it("projects external sessions separately, excludes tool bodies from lists and routes only a matching receipt/revision", async () => {
   const service = new ControlService(memoryControlRepository()),
     host = await connected(service),

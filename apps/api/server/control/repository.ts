@@ -1,4 +1,11 @@
-import { normalizeTaskJson } from "@raypx/core/task-text";
+import {
+  decodeControlRecord,
+  decodeObservedSummary,
+  type ControlRecords,
+  type RecordKind,
+  type ObservedSummary,
+} from "./schemas.js";
+export type { RecordKind } from "./schemas.js";
 import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Database } from "@raypx/database/connection";
@@ -15,17 +22,6 @@ import {
   controlTask,
 } from "@raypx/database/schema";
 
-export type RecordKind =
-  | "device"
-  | "project"
-  | "task"
-  | "request"
-  | "event"
-  | "command"
-  | "grant"
-  | "credential"
-  | "observed_session"
-  | "observed_request";
 export interface ControlRecord {
   id: string;
   deviceId: string;
@@ -42,20 +38,36 @@ export interface ControlQuery {
   descending?: boolean;
   ids?: string[];
   observedAt?: string;
-  summary?: boolean;
 }
+/** Query options belong to the record being read. */
+type ControlQueries = {
+  device: Pick<ControlQuery, "limit" | "ids">;
+  project: Pick<ControlQuery, "limit" | "ids">;
+  task: Pick<ControlQuery, "limit" | "beforeTask">;
+  request: Pick<ControlQuery, "limit" | "taskId" | "pendingApprovals">;
+  event: Pick<
+    ControlQuery,
+    "limit" | "taskId" | "streamId" | "after" | "beforeActivity" | "activity" | "descending"
+  >;
+  command: Pick<ControlQuery, "limit">;
+  grant: Pick<ControlQuery, "limit">;
+  credential: Pick<ControlQuery, "limit">;
+  observed_session: Pick<ControlQuery, "limit" | "ids">;
+  observed_request: Pick<ControlQuery, "limit" | "observedAt" | "ids">;
+};
 export interface ControlTransaction {
   sessionActive(id: string, now: Date): Promise<boolean>;
   securityVersion(): Promise<string>;
   hostSessionAllowed(createdAt: Date): Promise<boolean>;
   revokeHostSecurity(): Promise<void>;
-  get<T extends ControlRecord>(kind: RecordKind, id: string): Promise<T | undefined>;
-  list<T extends ControlRecord>(
-    kind: RecordKind,
+  get<K extends RecordKind>(kind: K, id: string): Promise<ControlRecords[K] | undefined>;
+  list<K extends RecordKind>(
+    kind: K,
     deviceId?: string,
-    query?: ControlQuery,
-  ): Promise<T[]>;
-  put<T extends ControlRecord>(kind: RecordKind, value: T): Promise<T>;
+    query?: ControlQueries[NoInfer<K>],
+  ): Promise<ControlRecords[K][]>;
+  observedSummaries(query: { observedAt: string; limit: number }): Promise<ObservedSummary[]>;
+  put<K extends RecordKind>(kind: K, value: ControlRecords[NoInfer<K>]): Promise<ControlRecords[K]>;
   remove(kind: RecordKind, id: string): Promise<void>;
   pruneEvents(deviceId: string, streamId: string, orphans?: boolean): Promise<void>;
   pruneCommands(now: Date): Promise<void>;
@@ -68,6 +80,11 @@ export type ControlReader = Omit<
 export interface ControlRepository {
   read<T>(userId: string, run: (tx: ControlReader) => Promise<T>): Promise<T>;
   transaction<T>(userId: string, run: (tx: ControlTransaction) => Promise<T>): Promise<T>;
+  deviceTransaction<T>(
+    userId: string,
+    deviceId: string,
+    run: (tx: ControlTransaction) => Promise<T>,
+  ): Promise<T>;
   findGrant(hash: string): Promise<{ userId: string } | undefined>;
   findCredential(hash: string): Promise<{ userId: string } | undefined>;
 }
@@ -92,7 +109,7 @@ export function controlListQuery(
   kind: RecordKind,
   userId: string,
   deviceId?: string,
-  query: ControlQuery = {},
+  query: ControlQuery & { summary?: boolean } = {},
 ) {
   const record = table(kind);
   const device = alias(controlDevice, "d");
@@ -196,6 +213,7 @@ export function createControlRepository(database: Database): ControlRepository {
     userId: string,
     readOnly: boolean,
     run: (tx: ControlTransaction) => Promise<T>,
+    deviceId?: string,
   ) =>
     database.transaction(
       async (databaseTx) => {
@@ -203,15 +221,24 @@ export function createControlRepository(database: Database): ControlRepository {
           await databaseTx.execute(
             sql`insert into raypx_foundation.control_owner (user_id) values (${userId}) on conflict do nothing`,
           );
+          // Device projections share the security fence; authorization mutations own it exclusively.
           await databaseTx.execute(
-            sql`select user_id from raypx_foundation.control_owner where user_id = ${userId} for update`,
+            deviceId === undefined
+              ? sql`select user_id from raypx_foundation.control_owner where user_id = ${userId} for update`
+              : sql`select user_id from raypx_foundation.control_owner where user_id = ${userId} for share`,
           );
+          if (deviceId !== undefined)
+            await databaseTx.execute(
+              sql`select pg_advisory_xact_lock(hashtextextended(${JSON.stringify([userId, deviceId])},0))`,
+            );
         }
         const tx: ControlTransaction = {
-          async purgeObserved(deviceId) {
+          async purgeObserved(targetDeviceId) {
+            if (deviceId !== undefined && deviceId !== targetDeviceId)
+              throw new Error("Device transaction scope mismatch");
             for (const kind of ["observed_request", "observed_session"] as const)
               await databaseTx.execute(
-                sql`delete from ${table(kind)} where user_id=${userId} and device_id=${deviceId}`,
+                sql`delete from ${table(kind)} where user_id=${userId} and device_id=${targetDeviceId}`,
               );
           },
           async sessionActive(id, now) {
@@ -234,26 +261,37 @@ export function createControlRepository(database: Database): ControlRepository {
             return rows.length > 0;
           },
           async revokeHostSecurity() {
+            if (deviceId !== undefined)
+              throw new Error("Security changes require an account transaction");
             await databaseTx.execute(
               sql`update raypx_foundation.control_owner set security_epoch=security_epoch+1, security_revoked_at=clock_timestamp() where user_id=${userId}`,
             );
           },
-          async get<R extends ControlRecord>(kind: RecordKind, id: string) {
+          async get<K extends RecordKind>(kind: K, id: string) {
             const rows = await databaseTx.execute<{ body: unknown }>(
               sql`select body from ${table(kind)} where user_id = ${userId} and id = ${id}`,
             );
-            return rows[0]?.body as R | undefined;
+            return rows[0] ? decodeControlRecord(kind, rows[0].body) : undefined;
           },
-          async list<R extends ControlRecord>(
-            kind: RecordKind,
-            deviceId?: string,
+          async list<K extends RecordKind>(
+            kind: K,
+            targetDeviceId?: string,
             query: ControlQuery = {},
           ) {
-            const rows = await controlListQuery(databaseTx, kind, userId, deviceId, query);
-            return rows.map((row) => row.body as R);
+            const rows = await controlListQuery(databaseTx, kind, userId, targetDeviceId, query);
+            return rows.map((row) => decodeControlRecord(kind, row.body));
+          },
+          async observedSummaries(query) {
+            const rows = await controlListQuery(databaseTx, "observed_request", userId, undefined, {
+              ...query,
+              summary: true,
+            });
+            return rows.map((row) => decodeObservedSummary(row.body));
           },
           async put(kind, value) {
-            value = normalizeTaskJson(value);
+            value = decodeControlRecord(kind, value);
+            if (deviceId !== undefined && value.deviceId !== deviceId)
+              throw new Error("Device transaction scope mismatch");
             await databaseTx.execute(
               sql`insert into ${table(kind)} (id, user_id, device_id, body) values (${value.id}, ${userId}, ${value.deviceId}, ${value}::jsonb) on conflict (user_id, id) do update set body = excluded.body, device_id = excluded.device_id`,
             );
@@ -261,17 +299,21 @@ export function createControlRepository(database: Database): ControlRepository {
           },
           async remove(kind, id) {
             await databaseTx.execute(
-              sql`delete from ${table(kind)} where user_id = ${userId} and id = ${id}`,
+              sql`delete from ${table(kind)} where user_id = ${userId} and id = ${id} ${deviceId === undefined ? sql`` : sql`and device_id=${deviceId}`}`,
             );
           },
           async pruneCommands(now) {
+            if (deviceId !== undefined)
+              throw new Error("Command compaction requires an account transaction");
             await databaseTx.execute(contextCommandPrune(now, userId));
           },
-          async pruneEvents(deviceId, streamId, orphans = false) {
-            await databaseTx.execute(eventWindowPrune(userId, deviceId, streamId));
+          async pruneEvents(targetDeviceId, streamId, orphans = false) {
+            if (deviceId !== undefined && deviceId !== targetDeviceId)
+              throw new Error("Device transaction scope mismatch");
+            await databaseTx.execute(eventWindowPrune(userId, targetDeviceId, streamId));
             if (orphans)
               await databaseTx.execute(
-                sql`delete from raypx_foundation.control_event where user_id=${userId} and id in (select e.id from raypx_foundation.control_event e where e.user_id=${userId} and e.device_id=${deviceId} and not exists (select 1 from raypx_foundation.control_task t where t.user_id=e.user_id and t.id=e.body->>'taskId') limit 1000)`,
+                sql`delete from raypx_foundation.control_event where user_id=${userId} and id in (select e.id from raypx_foundation.control_event e where e.user_id=${userId} and e.device_id=${targetDeviceId} and not exists (select 1 from raypx_foundation.control_task t where t.user_id=e.user_id and t.id=e.body->>'taskId') limit 1000)`,
               );
           },
         };
@@ -282,6 +324,7 @@ export function createControlRepository(database: Database): ControlRepository {
   return {
     read: (userId, run) => execute(userId, true, run),
     transaction: (userId, run) => execute(userId, false, run),
+    deviceTransaction: (userId, deviceId, run) => execute(userId, false, run, deviceId),
     async findGrant(hash) {
       const rows = await database.execute<{ user_id: string }>(
         sql`select user_id from raypx_foundation.control_grant where id = ${hash}`,

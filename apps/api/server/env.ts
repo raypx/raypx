@@ -1,5 +1,5 @@
 import { normalizeTrustedOrigins } from "@raypx/auth/origins";
-import { createEnv, type Preset, z } from "@raypx-kit/env";
+import { defineEnv, type Preset, z } from "@raypx-kit/env";
 import type apiEnvironmentSources from "./env.contract.js";
 const server = {
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -46,7 +46,7 @@ const list = (value: string | undefined) =>
     .filter(Boolean);
 
 export function getApiEnvironment(runtimeEnv: Record<string, string | undefined> = process.env) {
-  const env = createEnv({ extends: [apiServerEnv], runtimeEnv });
+  const env = defineEnv({ extends: [apiServerEnv], runtimeEnv, isServer: true });
   if (env.NODE_ENV === "production") {
     if (
       !runtimeEnv.DATABASE_URL ||

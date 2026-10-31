@@ -1,5 +1,6 @@
+import { profileStorage, removeProfileDirectory } from "../../../helpers/sqlite";
 import { expect, it } from "vite-plus/test";
-import { existsSync, writeFileSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, writeFileSync, readFileSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { agentFixtures } from "../../../helpers/agents";
 import { tmpdir } from "node:os";
@@ -416,8 +417,8 @@ it("cancels a headless Claude plan without spawning an implementation process", 
 });
 it("recovers an ambiguous persisted execution as interrupted instead of starting it again", async () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-agent-recovery-"));
-  const state = new StateStore(directory);
-  const store = new AgentStore(directory);
+  const state = new StateStore(profileStorage(directory));
+  const store = new AgentStore(profileStorage(directory).database);
   const task: AgentTask = {
     id: crypto.randomUUID(),
     deviceId: crypto.randomUUID(),
@@ -433,15 +434,13 @@ it("recovers an ambiguous persisted execution as interrupted instead of starting
   };
   const id = crypto.randomUUID();
   store.accept({ task, binding: "binding", sessionId: null }, id);
-  store.close();
   const runtime = new AgentRuntime(state, () => {});
   await runtime.start("binding", id, task, new Date(Date.now() + 60_000).toISOString());
   expect(runtime.events("binding").events).toEqual([
     expect.objectContaining({ status: "interrupted" }),
   ]);
   await runtime.close();
-  state.close();
-  rmSync(directory, { recursive: true, force: true });
+  removeProfileDirectory(directory, { recursive: true, force: true });
 });
 
 it("deduplicates relayed starts and accepts only the first valid approval on the host", async () => {

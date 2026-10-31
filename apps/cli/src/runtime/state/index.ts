@@ -1,3 +1,7 @@
+import { z } from "zod";
+import { rootGrantSchema } from "@raypx/contracts/local";
+import { jobInputSchema, jobRunSchema } from "@raypx/jobs";
+import { storedRecord } from "../sqlite/records";
 import { Database } from "bun:sqlite";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -5,7 +9,7 @@ import { and, asc, desc, eq, lt, notInArray, or, sql } from "drizzle-orm";
 import type { RootGrant } from "@raypx/contracts/local";
 import type { JobInput, JobRun } from "@raypx/jobs";
 import { LocalError } from "../errors";
-import { openProfileDatabase, type LocalDatabase } from "../sqlite";
+import { type ProfileStorage, type LocalDatabase } from "../sqlite";
 import { jobs, meta, roots, runs } from "../sqlite/schema";
 
 export function profilePath(options: { dataDir?: string; profile?: string } = {}) {
@@ -24,20 +28,23 @@ export function profilePath(options: { dataDir?: string; profile?: string } = {}
         : join(process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"), "raypx"));
   return resolve(base, "profiles", profile);
 }
+const storedJobSchema = jobInputSchema.extend({
+  id: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  enabled: z.boolean(),
+});
 export class StateStore {
   readonly db: LocalDatabase;
-  constructor(readonly directory: string) {
-    this.db = openProfileDatabase(directory);
-    try {
-      this.db.insert(meta).values({ key: "revision", value: 0 }).onConflictDoNothing().run();
-      this.db
-        .delete(runs)
-        .where(lt(runs.startedAt, new Date(Date.now() - 30 * 86_400_000).toISOString()))
-        .run();
-    } catch (error) {
-      this.db.$client.close();
-      throw error;
-    }
+  readonly directory: string;
+  constructor(storage: ProfileStorage) {
+    this.directory = storage.directory;
+    this.db = storage.database;
+    this.db.insert(meta).values({ key: "revision", value: 0 }).onConflictDoNothing().run();
+    this.db
+      .delete(runs)
+      .where(lt(runs.startedAt, new Date(Date.now() - 30 * 86_400_000).toISOString()))
+      .run();
   }
   revision() {
     return this.db.select({ value: meta.value }).from(meta).where(eq(meta.key, "revision")).get()!
@@ -56,7 +63,7 @@ export class StateStore {
       .from(roots)
       .orderBy(asc(sql`rowid`))
       .all()
-      .map((row) => JSON.parse(row.value));
+      .map((row) => storedRecord(rootGrantSchema, row.value));
   }
   root(id: string) {
     const root = this.roots().find((entry) => entry.id === id);
@@ -81,7 +88,7 @@ export class StateStore {
       .from(jobs)
       .orderBy(asc(sql`rowid`))
       .all()
-      .map((row) => JSON.parse(row.value));
+      .map((row) => storedRecord(storedJobSchema, row.value));
   }
   job(id: string) {
     const job = this.jobs().find((entry) => entry.id === id);
@@ -142,10 +149,7 @@ export class StateStore {
       .orderBy(desc(runs.startedAt))
       .limit(100)
       .all()
-      .map((row) => JSON.parse(row.value));
-  }
-  close() {
-    this.db.$client.close();
+      .map((row) => storedRecord(jobRunSchema, row.value));
   }
 }
 export function acquireLock(directory: string, name: string): (() => void) | null {
