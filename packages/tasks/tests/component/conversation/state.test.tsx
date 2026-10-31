@@ -4,7 +4,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import type { TaskClient, TaskChange } from "@raypx/client";
+import type { TaskChange } from "@raypx/contracts/tasks";
+import { createTaskClient } from "../../helpers/client.js";
 import type { TaskHistoryPage } from "@raypx/tasks/model";
 
 beforeEach(() => {
@@ -59,12 +60,12 @@ it("does not reuse another account's conversation while the next account loads",
           finish = resolve;
         }),
     );
-  const client = {
+  const client = createTaskClient({
     tasks: { list: async (input: { limit?: number }) => (input.limit === 1 ? [] : [task]), get },
     devices: { list: async () => [] },
     approvals: { list: async () => [] },
     subscribe: () => () => {},
-  } as unknown as TaskClient;
+  });
   const queries = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const accountWorkspace = (accountId: string) => (
     <QueryClientProvider client={queries}>
@@ -111,7 +112,7 @@ it("merges live activity without refreshing workspace queries and recovers a mis
     updatedAt: task.updatedAt,
   };
   let checkpoint = false;
-  const get = vi.fn(async (_input: { beforeActivity?: number }) => ({
+  const get = vi.fn(async (_input: { beforeActivity?: number | undefined }) => ({
     task,
     events: [],
     requests: [],
@@ -121,7 +122,7 @@ it("merges live activity without refreshing workspace queries and recovers a mis
   const devices = vi.fn(async () => []),
     approvals = vi.fn(async () => []);
   const listeners = new Set<(change?: TaskChange) => void>();
-  const client = {
+  const client = createTaskClient({
     tasks: { list, get },
     devices: { list: devices },
     approvals: { list: approvals },
@@ -129,7 +130,7 @@ it("merges live activity without refreshing workspace queries and recovers a mis
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-  } as unknown as TaskClient;
+  });
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -299,12 +300,12 @@ it("opens a linked task outside the loaded list without creating or resending wo
       },
     ],
   }));
-  const client = {
+  const client = createTaskClient({
     tasks: { list: async () => [], get, create, followUp },
     devices: { list: async () => [] },
     approvals: { list: async () => [] },
     subscribe: () => () => {},
-  } as unknown as TaskClient;
+  });
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}

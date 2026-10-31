@@ -6,6 +6,11 @@ The Node HTTP composition root for authentication and account RPC.
 
 ## Interface
 
+`deployment:fixture` is a test-only account provisioner for `smoke:deployment`.
+It requires the explicit fixture flag, an owned `raypx_deployment_*_test` database
+and an `example.invalid` account. Verification mail stays in-process; never reuse
+this fixture against an operator database or bypass real-user verification.
+
 `/api/auth/*` delegates to Better Auth. `/rpc/*` serves the explicit oRPC account
 contract. `/health` reports process liveness without querying PostgreSQL.
 Every other path is a JSON 404; Web is a separate service.
@@ -65,7 +70,7 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
   Common target options come from `@raypx/tooling/build/nitro`; API owns routes and runtime plugins.
 - Never host Web pages or assets. Optional AUTH_DOMAIN shares session cookies
   with a Web host on a sibling subdomain so its server rendering sees the session.
-- The profile in deploy/railway/api/Dockerfile additionally carries the database's production
+- The final railway target in apps/api/Dockerfile additionally carries the database's production
   dependencies and migration sources for an isolated pre-deploy migration.
   Compose selects its existing runtime and separate migrate targets explicitly.
 - Resolve the Better Auth session on every account RPC; never accept actor IDs.
@@ -93,6 +98,8 @@ same compactor for expired bodies; partial indexes exclude already compacted rec
 - `secureHeaders` sends a deny-all CSP, `X-Frame-Options: DENY` and HSTS. Keep
   Cross-Origin-Resource-Policy off; CORS remains the cross-origin access control.
 - Production requires explicit DATABASE_URL, AUTH_URL, AUTH_SECRET and ALLOWED_ORIGINS.
+  `server/env.contract.ts` is the static deployment input catalog. The runtime schema
+  must declare exactly its keys; tooling reads this data without importing API runtime.
 - Use HTTPS and secure cookies in production, exact trusted origins only.
 - Close the PostgreSQL pool idempotently through Nitro's close hook.
 - No old business endpoints, worker, local execution endpoints or second server.
@@ -118,7 +125,9 @@ TEST_DATABASE_URL=postgres://localhost/raypx_foundation_test bun run --cwd apps/
 
 ## Remote tasks
 
-`server/control` owns device credentials and account-scoped read projections.
+`server/control` owns device credentials and account-scoped read projections. The service
+composes credential fencing, command routing, task projection and observed projection
+modules. Share record types privately; preserve owner transactions and read-only reads.
 `server/relay` authenticates and routes typed WebSocket messages; execution and
 first-answer decisions belong to CLI. HTTP RPC exposes reads, device management
 and one-time viewer tickets. No HTTP task mutation or polling exchange remains.

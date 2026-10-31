@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import type { AgentCapability, DeviceProject } from "@raypx/contracts/tasks";
+
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
@@ -21,8 +21,8 @@ export function LocalWelcome() {
     retry: false,
     queryFn: async () => {
       const [projects, agents] = await Promise.all([
-        localRequest<DeviceProject[]>("agents.projects", {}),
-        localRequest<AgentCapability[]>("agents.capabilities", {}),
+        localRequest("agents.projects", {}),
+        localRequest("agents.capabilities", {}),
       ]);
       return { projects, agents };
     },

@@ -25,7 +25,7 @@ export function CloudTerminalSettings({
     let active = true;
     void Promise.all([
       getBridge().then((bridge) => bridge.request.terminalSettings({ accountId })),
-      localRequest<{ rootIds: string[] }>("approvals.local.settings", {}),
+      localRequest("approvals.local.settings", {}),
     ]).then(
       ([settings, local]) => {
         if (active) {
@@ -48,7 +48,7 @@ export function CloudTerminalSettings({
   useEffect(() => {
     let active = true;
     const refresh = () => {
-      void localRequest<{ rootIds: string[] }>("approvals.local.settings", {}).then(
+      void localRequest("approvals.local.settings", {}).then(
         (local) => {
           if (!active) return;
           setLocalRoots(local.rootIds);

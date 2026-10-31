@@ -12,18 +12,18 @@ RUN bun deploy/manifests.ts /app /manifests
 FROM bun AS dependencies
 WORKDIR /app
 COPY --from=manifests /manifests/ ./
-RUN --mount=type=cache,id=raypx-bun-install,target=/root/.bun/install/cache,sharing=locked \
-    VP_GIT_HOOKS=0 bun install --frozen-lockfile
+RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
 FROM dependencies AS build
 COPY . .
 # Browser and server rendering both use the API origin baked into this build.
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
-ARG VITE_APP_RELEASE=unversioned
+ARG VITE_APP_RELEASE
+ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
-RUN --mount=type=cache,id=raypx-vp,target=/app/node_modules/.vite/task-cache,sharing=locked \
-    bun run build:web
+ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
+RUN bun run build:web
 
 FROM oven/bun:1.4.4-slim AS runtime
 ENV NODE_ENV=production NITRO_PORT=3000 HOST=0.0.0.0

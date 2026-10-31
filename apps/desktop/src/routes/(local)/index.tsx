@@ -3,7 +3,7 @@ import { FolderOpen } from "lucide-react";
 import { Button } from "@raypx/ui/components/ui/button";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { useTranslations } from "@raypx/i18n/browser";
-import type { FileListing } from "@raypx/contracts/local";
+
 import { localRequest } from "../../lib/desktop";
 import { filesSearch } from "../../features/files/search";
 import {
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/(local)/")({
     const rootId = deps.rootId || roots?.[0]?.id || "";
     const request: Promise<FileListingResult> =
       context.desktopAvailable && rootId
-        ? localRequest<FileListing>("files.list", {
+        ? localRequest("files.list", {
             rootId,
             path: deps.path,
             offset: deps.offset,

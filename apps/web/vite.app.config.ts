@@ -3,6 +3,7 @@ import { raypxDevtools } from "@raypx/devtools/vite";
 import { analyticsBuild } from "@raypx/tooling/build/analytics";
 import { startEnvironment } from "@raypx/tooling/build/start-env";
 import { nitroTarget } from "@raypx/tooling/build/nitro";
+import { deploymentServices } from "@raypx/tooling/build/deployment";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
@@ -22,11 +23,12 @@ const securityHeaders = {
 };
 
 export default defineConfig(() => {
-  const analytics = analyticsBuild();
+  const analytics = analyticsBuild("web");
   return {
     devtools: { apply: "serve", embeddedVisibility: "passive" },
     define: analytics.define,
     plugins: [
+      analytics.plugin,
       raypxDevtools(),
       nitro({
         ...nitroTarget(),
@@ -51,6 +53,6 @@ export default defineConfig(() => {
     },
     // A `bun link`ed library resolves its own React copy; keep singleton peers unique.
     resolve: { dedupe: ["react", "react-dom"] },
-    server: { port: 3000, strictPort: true },
+    server: { port: deploymentServices.web.port, strictPort: true },
   };
 });

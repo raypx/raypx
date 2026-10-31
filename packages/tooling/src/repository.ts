@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { resolveRelease } from "./build/release.js";
 import { developmentEnvironment } from "@raypx-kit/devkit/process";
 import { discover as discoverWorkspaces } from "@raypx-kit/devkit/workspaces";
 import { isBrowserTestTask, prepareBrowserTask } from "./browser-tests.js";
@@ -48,20 +48,27 @@ export async function runTasks(
       const development =
         ["dev", "build"].includes(verb!) ||
         plan.some(({ ref }) => /#task:(?:build(?::renderer)?|dev)$/.test(ref));
-      return {
+      const inherited = {
         ...(development ? developmentEnvironment(root) : process.env),
         ...(browser?.env ?? environment),
+      };
+      return {
+        ...inherited,
         ...(browser
           ? {
               VITE_POSTHOG_PROJECT_TOKEN: "phc_e2e_synthetic",
               VITE_POSTHOG_HOST: "https://analytics.example.test",
             }
           : {}),
-        VITE_APP_RELEASE:
-          process.env.VITE_APP_RELEASE ||
-          (["verify", "test", "e2e"].includes(verb!)
+        VITE_APP_RELEASE: resolveRelease(
+          root,
+          inherited,
+          ["verify", "test", "e2e"].includes(verb!)
             ? "verification"
-            : execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim()),
+            : verb === "dev"
+              ? "development"
+              : "build",
+        ),
         RAYPX_CACHE_PLATFORM: `${process.platform}-${process.arch}-bun${process.versions.bun}`,
       };
     },

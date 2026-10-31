@@ -1,5 +1,3 @@
-# Railway requires literal service-specific cache mount IDs.
-# Use portable Docker dependency layers; keep Bun/manifests aligned with apps/api/Dockerfile.
 # syntax=docker/dockerfile:1
 # The bun, manifests and dependencies stages match apps/web/Dockerfile exactly, so
 # one builder reuses the installed workspace for both images.
@@ -31,8 +29,10 @@ CMD ["bun", "run", "--cwd", "packages/database", "migrate"]
 
 FROM dependencies AS build
 COPY . .
-ARG VITE_APP_RELEASE=unversioned
+ARG VITE_APP_RELEASE
+ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
+ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
 RUN bun run build:api
 
 FROM oven/bun:1.4.4-slim AS runtime
@@ -43,9 +43,10 @@ USER bun
 EXPOSE 3002
 CMD ["bun", ".output/server/index.mjs"]
 
-# Railway runs migrations in an isolated pre-deploy container from this image.
-# Compose explicitly selects runtime above, keeping its separate migration image.
+# Railway builds the final target for its isolated pre-deploy migration.
+# Compose selects runtime or migrate explicitly.
 FROM runtime AS railway
 COPY --from=migrate-dependencies --chown=bun:bun /app/ ./
 COPY --chown=bun:bun packages/database/src/ ./packages/database/src/
 COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/
+# Generated from apps/api/Dockerfile; run bun run raypx-dev deployment:sync.

@@ -479,6 +479,7 @@ export default {
     rateLimited: "尝试次数过多，请稍后重试。",
   },
   settings: {
+    preferencesSaveFailed: "外观和语言更改未能保存，请重试。",
     title: "按你的习惯设置",
     intro: "偏好设置保存在当前设备。",
     appearance: "外观",

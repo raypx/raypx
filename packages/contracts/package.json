@@ -12,7 +12,8 @@
     "./task-text": "./src/task-text.ts",
     "./terminal": "./src/terminal.ts",
     "./jobs": "./src/jobs.ts",
-    "./memory": "./src/memory.ts"
+    "./memory": "./src/memory.ts",
+    "./local-client": "./src/local-client.ts"
   },
   "scripts": {
     "check": "bun --check --tsconfig-override tsconfig.json",

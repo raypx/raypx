@@ -6,17 +6,19 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite-plus";
 
-const analytics = analyticsBuild();
+const analytics = analyticsBuild("desktop");
 export default defineConfig(({ mode }) => {
   const preview = mode === "e2e" || process.env.RAYPX_DESKTOP_BROWSER_BUILD === "1";
   return {
     devtools: { apply: "serve", embeddedVisibility: "passive" },
-    ...analytics,
+    define: analytics.define,
+    build: analytics.build,
     ...(mode === "native-smoke" || process.env.RAYPX_DESKTOP_NATIVE_SMOKE_BUILD === "1"
-      ? { build: { outDir: "artifacts/native-smoke" } }
+      ? { build: { ...analytics.build, outDir: "artifacts/native-smoke" } }
       : {}),
-    ...(preview ? { build: { outDir: "artifacts/browser" } } : {}),
+    ...(preview ? { build: { ...analytics.build, outDir: "artifacts/browser" } } : {}),
     plugins: [
+      analytics.plugin,
       raypxDevtools(),
       tailwindcss(),
       // SPA build only: the root shell is prerendered into dist/client/index.html,

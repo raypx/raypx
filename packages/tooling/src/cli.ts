@@ -17,6 +17,8 @@ import { packageTestArguments, runTests } from "./test-command.js";
 import { verify, ciGate } from "./verification/index.js";
 import { readGithubPlan } from "./verification/plan.js";
 import { cacheSnapshot } from "./verification/cache.js";
+import { syncDeploymentCompatibility } from "./validation/deployment.js";
+import { smokeDeployment } from "./validation/deployment-smoke.js";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const [command, ...args] = process.argv.slice(2);
@@ -106,7 +108,7 @@ async function main() {
       if (process.env.GITHUB_OUTPUT)
         appendFileSync(
           process.env.GITHUB_OUTPUT,
-          `go=${plan.native}\nnative=${plan.nativeRunners.length > 0}\nnative_runners=${JSON.stringify(plan.nativeRunners)}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\ndistribution=${plan.distribution}\n`,
+          `go=${plan.native}\nnative=${plan.nativeRunners.length > 0}\nnative_runners=${JSON.stringify(plan.nativeRunners)}\ndeployment=${plan.deployment}\nbackend=${plan.backend}\nbrowser=${plan.browser !== "none"}\ndistribution=${plan.distribution}\n`,
         );
       break;
     }
@@ -118,6 +120,12 @@ async function main() {
       break;
     case "smoke":
       await smoke(root);
+      break;
+    case "deployment:sync":
+      syncDeploymentCompatibility(root);
+      break;
+    case "deployment:smoke":
+      await smokeDeployment(root, args);
       break;
     case "env": {
       const values = args[0] === "--" ? args.slice(1) : args;
@@ -174,7 +182,7 @@ async function main() {
     }
     case undefined:
       console.log(
-        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | env | db | desktop | clean | clean:artifacts | doctor",
+        "raypx-dev: test | tasks | e2e | workspace | policy | i18n | verify | smoke | deployment:smoke | deployment:sync | env | db | desktop | clean | clean:artifacts | doctor",
       );
       break;
     default:

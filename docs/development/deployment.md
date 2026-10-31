@@ -48,6 +48,17 @@ instances use `NODE_ENV=production`, HTTPS and secure cookies.
 password-reset mail. Otherwise the explicit mail guard remains active.
 `JOBS_ENABLED` controls maintenance scheduling.
 
+The template also forwards optional `AUTH_DOMAIN`, `MAIL_DEFAULT_LOCALE`,
+`REDIS_URL`, S3 storage settings and server `POSTHOG_PROJECT_TOKEN`/`POSTHOG_HOST`.
+Empty optional values keep the corresponding integration disabled. These settings
+do not provision Redis, storage or mail services; supply the intended environment's
+endpoints and credentials. Browser analytics uses its separate public build values.
+
+`@raypx/tooling/build/deployment` owns service ports, readiness paths and API ingress
+routes. Vite and Railway use that contract directly. `bun run policy` checks the
+static Compose, Docker and Caddy adapters against it, and rejects API settings
+missing from Compose or the environment template.
+
 ## Build
 
 ```sh
@@ -63,6 +74,13 @@ limits explicitly or choose a new builder name. A stopped builder starts on the
 next build. Reuse one bounded builder for the shared Bun download and VP task cache.
 
 Build and runtime stages use the pinned `oven/bun` images; Bun is the only runtime.
+Compose and Railway both use `apps/api/Dockerfile` and `apps/web/Dockerfile`.
+These portable files have no platform-specific cache IDs. `deploy/build.sh` adds
+local Bun install and VP task cache mounts to a temporary Dockerfile and removes
+it on exit, including build failure. All install/build commands remain in the
+application Dockerfiles. Compose explicitly selects the API's `migrate` and
+`runtime` targets; the final `railway` target additionally carries migration
+dependencies for Railway's isolated pre-deploy command.
 API and Web share identical manifest and dependency stages: `deploy/manifests.ts`
 extracts package manifests and `bun.lock`, so source edits reuse the installed
 dependencies and only manifest or lockfile changes reinstall. The script
@@ -109,6 +127,12 @@ for all projects, Dokploy and builds on a shared host.
 Check `/health`, database-aware `/ready`, signed-out redirects, real login,
 WebSocket upgrades and that images/routes/volumes belong to the intended project.
 Browser checks do not validate packaged Desktop or unconfigured mail flows.
+
+Run `bun run smoke:deployment` to build and exercise both deployment image targets
+locally. The shared checks cover migrations, dependency readiness, guest SSR,
+assets, authenticated sessions, secure cookie attributes, Relay and recorded build
+release metadata. See [validation evidence](validation-artifacts.md) for isolation,
+cleanup and the limits of this local acceptance.
 
 ## Update and recover
 
@@ -164,3 +188,14 @@ migrations when reverting an application image; never delete migrations or volum
 
 Deploy relay v2 Web/API/Desktop together. Older relay peers receive
 `UPGRADE_REQUIRED`; new clients stop retrying a version mismatch.
+
+The CI deployment gate runs for deployment adapters, API/Web runtime or dependency
+changes, shared build inputs and full release verification. It uses the same
+`smoke:deployment` acceptance as local verification and must pass when selected.
+Ordinary browser component/style changes use source gates; full release verification
+still exercises the images.
+Only `results.json` and `commands.json` are uploaded; raw subprocess logs stay local.
+API environment keys come from `apps/api/server/env.contract.ts`, whose exact keys
+are enforced by the runtime schema. Policy reads this static catalog without
+executing app code or loading environment files, and checks runtime Docker stages
+including inherited Railway settings.

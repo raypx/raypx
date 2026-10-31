@@ -26,6 +26,7 @@ build writes `dist/client` for the native app origin. Every shell route declares
 layout); the shell derives breadcrumbs and the page template, so pages never add
 their own outer width or gutters.
 
+`@raypx/contracts/local-client` owns renderer method/parameter/reply inference and validates both sides of IPC; callers never supply reply generics.
 `preferences.ts` shares preference types/validation; `src/preferences.tsx` owns renderer initialization. Complex page logic lives under `src/features/`; simple pages stay in route modules. `features/tasks/project-navigation.tsx` loads device-owned authorized projects for
 sidebar shortcuts, keeps a bounded device-local recent selection and opens `/tasks?scope=local&project=...`. This filters the loaded task page, never creates
 work or reads remote/account-owned projects. Account and settings share the footer.
@@ -103,7 +104,9 @@ Local tools render during session/network checks. Auth routes use a standalone l
   compatible with earlier versions; never unlink an owned lock. Preferences remain
   device-local. Native reports raw JSON and read/missing/unreadable; renderer
   validates. Only missing preferences migrate browser values. Serialize complete
-  updates and atomically preserve other top-level fields.
+  updates and atomically preserve other top-level fields. A failed preference save keeps
+  current UI choices and shows translated feedback with a deliberate retry; only native
+  acknowledgements mark snapshots saved. Ignore obsolete completion feedback.
 - Only the owned main page at its bundled origin or localhost dev view receives
   IPC. Deny external navigation/popups. Event delivery is bounded and acknowledged.
 - CSP hashes startup scripts and rejects arbitrary inline JS/eval. Production

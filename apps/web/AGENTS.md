@@ -99,6 +99,8 @@ behavior by client/contracts.
 - Dev, build, preview and production run under Bun (`bun --bun vp`); the Nitro `bun`
   preset traces Bun export conditions, so start the output with `bun`.
   Common target options come from `@raypx/tooling/build/nitro`; Web owns its Start plugins and React tracing.
+- `apps/web/Dockerfile` is shared by Compose and Railway. Keep build commands there;
+  `deploy/build.sh` adds Compose-only cache mounts to a temporary copy.
 - Do not edit `src/routeTree.gen.ts` or regenerate it with `tsr`.
 - Keep independent test configuration so application plugins stay outside tests.
 

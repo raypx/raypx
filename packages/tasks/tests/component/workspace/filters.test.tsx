@@ -5,7 +5,7 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import type { AgentTask, SyncDevice } from "@raypx/tasks";
-import type { TaskClient } from "@raypx/client";
+import { createTaskClient } from "../../helpers/client.js";
 import { selectOption } from "../../helpers/select.js";
 
 beforeEach(() => {
@@ -67,11 +67,11 @@ function workspace(
     input.limit === 1 ? [] : tasks,
   ),
 ) {
-  const client = {
+  const client = createTaskClient({
     tasks: { list },
     devices: { list: async () => [mac, windows] },
     approvals: { list: async () => [] },
-  } as unknown as TaskClient;
+  });
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}

@@ -530,6 +530,7 @@ export default {
     rateLimited: "Too many attempts. Please try again later.",
   },
   settings: {
+    preferencesSaveFailed: "Your appearance and language changes could not be saved. Try again.",
     title: "Make it yours",
     intro: "Preferences are saved on this device.",
     appearance: "Appearance",

@@ -7,10 +7,12 @@ import type { WorkspaceIndex } from "@raypx-kit/devkit/workspaces";
 import { compareMessageCatalogs } from "@raypx-kit/intl/testing";
 import { discover } from "./repository.js";
 import { checkToolchain } from "./validation/toolchain.js";
+import { checkDeployment } from "./validation/deployment.js";
 
 export function policy(root: string): string[] {
   const index = discover(root);
   const findings = checkArchitecture(index);
+  findings.push(...checkDeployment(root));
   for (const workspace of index.workspaces) {
     const file = join(root, workspace.path, "AGENTS.md");
     if (!existsSync(file)) findings.push(`${workspace.path}: missing AGENTS.md`);

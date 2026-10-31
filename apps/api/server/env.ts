@@ -1,45 +1,44 @@
 import { normalizeTrustedOrigins } from "@raypx/auth/origins";
 import { createEnv, type Preset, z } from "@raypx-kit/env";
-const apiServerEnv = {
-  id: "api",
-  server: {
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    ADMIN_EMAILS: z
-      .string()
-      .default("")
-      .transform((value) =>
-        value
-          .split(",")
-          .map((email) => email.trim().toLowerCase())
-          .filter(Boolean),
-      )
-      .pipe(z.array(z.email())),
-    JOBS_ENABLED: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((value) => value === "true"),
-    DATABASE_URL: z.url().default("postgres://postgres:postgres@localhost:5433/raypx_foundation"),
-    AUTH_URL: z.url().default("http://localhost:3002"),
-    AUTH_SECRET: z.string().min(32).default("raypx-development-only-secret-32-characters"),
-    ALLOWED_ORIGINS: z
-      .string()
-      .default("http://localhost:3000,http://localhost:5173,views://main,raypx://"),
-    RESEND_API_KEY: z.string().optional(),
-    MAIL_FROM: z.string().optional(),
-    MAIL_DEFAULT_LOCALE: z.enum(["en", "zh"]).default("en"),
-    AUTH_DOMAIN: z.string().min(1).optional(),
-    AUTH_IP_HEADERS: z.string().optional(),
-    AUTH_TRUSTED_PROXIES: z.string().optional(),
-    REDIS_URL: z.url().optional(),
-    S3_ENDPOINT: z.url().optional(),
-    S3_REGION: z.string().min(1).default("auto"),
-    S3_BUCKET: z.string().min(1).optional(),
-    S3_ACCESS_KEY_ID: z.string().min(1).optional(),
-    S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
-    POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
-    POSTHOG_HOST: z.url().optional(),
-  },
-} as const satisfies Preset;
+import type apiEnvironmentSources from "./env.contract.js";
+const server = {
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  ADMIN_EMAILS: z
+    .string()
+    .default("")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.email())),
+  JOBS_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  DATABASE_URL: z.url().default("postgres://postgres:postgres@localhost:5433/raypx_foundation"),
+  AUTH_URL: z.url().default("http://localhost:3002"),
+  AUTH_SECRET: z.string().min(32).default("raypx-development-only-secret-32-characters"),
+  ALLOWED_ORIGINS: z
+    .string()
+    .default("http://localhost:3000,http://localhost:5173,views://main,raypx://"),
+  RESEND_API_KEY: z.string().optional(),
+  MAIL_FROM: z.string().optional(),
+  MAIL_DEFAULT_LOCALE: z.enum(["en", "zh"]).default("en"),
+  AUTH_DOMAIN: z.string().min(1).optional(),
+  AUTH_IP_HEADERS: z.string().optional(),
+  AUTH_TRUSTED_PROXIES: z.string().optional(),
+  REDIS_URL: z.url().optional(),
+  S3_ENDPOINT: z.url().optional(),
+  S3_REGION: z.string().min(1).default("auto"),
+  S3_BUCKET: z.string().min(1).optional(),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
+  POSTHOG_HOST: z.url().optional(),
+} satisfies Record<keyof typeof apiEnvironmentSources, z.ZodType>;
+const apiServerEnv = { id: "api", server } as const satisfies Preset;
 const list = (value: string | undefined) =>
   (value ?? "")
     .split(",")

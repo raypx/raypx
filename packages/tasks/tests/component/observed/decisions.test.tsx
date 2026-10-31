@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import type { TaskClient } from "@raypx/client";
+import { createTaskClient } from "../../helpers/client.js";
 import {
   terminalRequestSchema,
   terminalRequestSummarySchema,
@@ -56,13 +56,13 @@ function fixture() {
     request = { ...request, revision: 3, status: "delivered", decision: input.decision };
     return request;
   });
-  const client = {
+  const client = createTaskClient({
     tasks: { list: async () => [] },
     devices: { list: async () => [] },
     approvals: { list: async () => [] },
     observed: { list, get, decide },
     subscribe: () => () => {},
-  } as unknown as TaskClient;
+  });
   const show = () =>
     render(
       <QueryClientProvider

@@ -1,6 +1,9 @@
 # @raypx/tasks
 
 Shared Agent task and approval views for Web and Desktop.
+Workspace composition, task details, approvals and device management live in separate
+client modules. Approval reads do not depend on task-list availability. Test fixtures
+implement the independent ports and fail unexpected calls; never cast partial clients.
 The root exports pure task helpers; /model owns the independent TaskWorkspacePort,
 WorkspaceScope, deterministic ConversationState, bounded draft parsing and pure diff
 previews. /client exports DOM components and visibility-aware subscriptions;

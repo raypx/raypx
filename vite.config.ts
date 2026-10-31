@@ -83,12 +83,5 @@ export default defineConfig({
       "jsx-a11y/prefer-tag-over-role": "off",
       "jsx-a11y/no-autofocus": "off",
     },
-    overrides: [
-      {
-        files: ["apps/mobile/**/*.tsx"],
-        // Expo StatusBar accepts a string style, unlike a DOM element's style prop.
-        rules: { "react/style-prop-object": ["error", { allow: ["StatusBar"] }] },
-      },
-    ],
   },
 });

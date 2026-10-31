@@ -1,3 +1,4 @@
+import { smokeDeployment } from "../validation/deployment-smoke.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { runTasks } from "../repository.js";
@@ -50,6 +51,8 @@ export async function ciGate(root: string, args: string[]) {
     [gate] = args;
   if (gate === "js") {
     await sourceChecks(root, plan);
+  } else if (gate === "deployment") {
+    if (plan.deployment) await smokeDeployment(root, []);
   } else if (gate === "backend") {
     if (plan.backend)
       for (const name of ["test:postgres", "test:redis"]) await runTasks(root, `api#${name}`);

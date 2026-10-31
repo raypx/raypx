@@ -4,7 +4,7 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DeviceSettings } from "@raypx/tasks/client";
 import type { SyncDevice } from "@raypx/tasks";
-import type { TaskClient } from "@raypx/client";
+import type { DeviceManagementPort } from "../../../src/model/port.js";
 
 beforeEach(() => {
   localStorage.clear();
@@ -26,8 +26,13 @@ function devices(failInitialRead = false) {
   };
   const list = vi.fn(async () => [computer]);
   if (failInitialRead) list.mockRejectedValueOnce(new Error("private device diagnostic"));
-  const revoke = vi.fn(async (_input: { deviceId: string; epoch: number }) => ({ ok: true }));
-  const client = { devices: { list, revoke } } as unknown as TaskClient;
+  const revoke = vi.fn(async (_input: { deviceId: string; epoch: number }) => ({
+    revoked: true as const,
+  }));
+  const client = {
+    devices: { list, revoke },
+    subscribe: () => () => {},
+  } satisfies DeviceManagementPort;
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -61,7 +66,7 @@ it("revokes the selected computer only after confirmation and prevents duplicate
   revoke.mockImplementationOnce(
     () =>
       new Promise((resolve) => {
-        finish = () => resolve({ ok: true });
+        finish = () => resolve({ revoked: true as const });
       }),
   );
   fireEvent.click(await screen.findByRole("button", { name: "Disconnect computer" }));

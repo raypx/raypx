@@ -10,6 +10,8 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 
 ## Interface
 
+- `deployment:sync` refreshes temporary legacy Railway Dockerfile copies from the shared
+  application Dockerfiles; deployment policy rejects missing or stale copies.
 - raypx-dev tasks <task> [VP options]
 - raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
   Root owns this aggregate; package scripts own actual suites. `test list` discovers
@@ -30,7 +32,9 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   inputs broaden source checks without requesting release builds/audits. Missing Git
   bases also select native checks conservatively. Browser-target frontend
   changes reach only browser consumers (`src/verification/platform.ts`). Required results
-  distinguish intentional skips from missing/cancelled/failed gates.
+  distinguish intentional skips from missing/cancelled/failed gates. Deployment inputs,
+  API/Web runtime dependencies and full release runs select an isolated Docker acceptance
+  job for Compose and Railway. Source-only verify remains independent of Docker.
 - Branch/PR native gates run only for native/IPC/terminal/daemon inputs and select
   macOS/Windows by platform-specific filenames; shared native inputs select both.
   JavaScript dependency reach alone does not select native runners. Installers, signing and installed
@@ -48,6 +52,13 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
   before starting Vite and MyGo. Direct Desktop scripts enter the same VP graph.
   Native CI checks Go on each platform.
 - `./build/nitro` supplies shared Nitro Bun build options to API and Web configs.
+- `./build/deployment` owns service ports, health paths and API ingress routes.
+  Policy checks static Docker, Compose and Caddy adapters plus API environment
+  forwarding without importing application runtime or loading environment files.
+- `raypx-dev deployment:smoke [--platform linux/amd64|linux/arm64]` builds both image
+  profiles with an owned bounded builder, isolated temporary services and a synthetic
+  API-owned account fixture. Share SSR/API assertions with relocated artifact probes.
+  Always clean only owned resources; retain protected evidence under `.artifacts/deployment/`.
 
 ## Constraints
 
@@ -119,4 +130,7 @@ Run bun run --cwd packages/tooling test and check, then bun run policy.
 `analytics sourcemaps <web|desktop>` prepares existing client
 artifacts with the external PostHog CLI. Require release credentials and hidden
 maps, upload before deleting maps, and never rebuild before deployment. The build
-helper exposes only public release metadata and the hidden-map flag.
+helper exposes only public release metadata and the hidden-map flag. Resolve release
+once (explicit VITE_APP_RELEASE, Railway SHA, Git SHA), write client metadata during
+the build, and upload using that recorded release; never infer upload versions from
+the current checkout. Reject conflicting overrides before modifying assets.

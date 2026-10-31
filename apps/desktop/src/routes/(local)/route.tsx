@@ -13,7 +13,7 @@ export const Route = createFileRoute("/(local)")({
   loader: async ({ context }): Promise<{ roots: RootGrant[] | null }> => {
     if (!context.desktopAvailable) return { roots: [] };
     try {
-      return { roots: await localRequest<RootGrant[]>("roots.list", {}) };
+      return { roots: await localRequest("roots.list", {}) };
     } catch {
       return { roots: null };
     }

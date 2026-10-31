@@ -16,6 +16,7 @@ export interface VerificationPlan {
   native: boolean;
   nativeRunners: string[];
   backend: boolean;
+  deployment: boolean;
   browser: "none" | "web" | "desktop" | "all";
 }
 export function changedFiles(
@@ -59,7 +60,10 @@ function nativeChanges(model: TaskModel, files: string[], full: boolean) {
       return /^(?:package\.json$|scripts\/prepare-herdr\.ts$|src\/runtime\/(?:terminal|daemon|process)\/|tests\/(?:integration|unit)\/runtime\/(?:terminal|daemon|process|herdr)(?:\/|\.)|tests\/(?:helpers\/(?:herdr|terminal)|fixtures\/(?:terminal|process)\/|smoke\/(?:herdr-terminal|terminal-)))/.test(
         relative,
       );
-    return member.name === "@raypx/contracts" && /^src\/(?:local|terminal)(?:\/|\.)/.test(relative);
+    return (
+      member.name === "@raypx/contracts" &&
+      /^src\/(?:local(?:-client)?|terminal)(?:\/|\.)/.test(relative)
+    );
   });
   const selected = new Set<string>();
   for (const file of paths) {
@@ -166,6 +170,39 @@ export function verificationPlan(
     artifacts,
     ...native,
     backend: full || (!allSources && affected.has("api")),
+    deployment:
+      full ||
+      (options.reasons?.length ?? 0) > 0 ||
+      files.some((file) => {
+        if (documentation(file) || /\/tests?\/|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file))
+          return false;
+        if (
+          /^(?:deploy\/|apps\/(?:api|web)\/Dockerfile$|\.railway\/|\.dockerignore$|package\.json$|bun\.lock$|bunfig\.toml$|(?:vite\.config|tsconfig)[^/]*$|\.github\/workflows\/ci\.yml$)/.test(
+            file,
+          ) ||
+          /^packages\/tooling\/src\/(?:build\/|validation\/deployment|verification\/)/.test(file)
+        )
+          return true;
+        const owner = model.members.find((member) => file.startsWith(member.path + "/"));
+        if (!owner) return false;
+        const relative = file.slice(owner.path.length + 1);
+        if (["api", "web"].includes(owner.name)) {
+          if (
+            /^(?:package\.json$|Dockerfile$|vite[^/]*$|scripts\/|server\/|src\/(?:server\/|start\.|router\.|ssr\.))/.test(
+              relative,
+            )
+          )
+            return true;
+          return !platforms().browserOnly(file);
+        }
+        // Browser-only feature edits use source checks. Shared runtime/build inputs
+        // must still exercise the images consumed by API/Web.
+        return (
+          /^packages\/[^/]+\/(?:package\.json$|vite[^/]*$|src\/)/.test(file) &&
+          (affected.has("api") || affected.has("web")) &&
+          (!platforms().browserOnly(file) || platforms().leaks(owner.name))
+        );
+      }),
     browser:
       full ||
       (browserTests &&

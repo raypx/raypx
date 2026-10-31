@@ -1,4 +1,5 @@
 import { defineRailway, github, project, service } from "railway/iac";
+import { deploymentServices } from "@raypx/tooling/build/deployment";
 
 // Existing Postgres/Redis services and volumes remain outside this partial.
 export const partial = "raypx-app";
@@ -31,17 +32,11 @@ export default defineRailway((context) => {
     replicas,
     build: {
       builder: "DOCKERFILE",
-      dockerfilePath: "deploy/railway/api/Dockerfile",
-      watchPatterns: [
-        "apps/api/**",
-        "deploy/railway/api/**",
-        "deploy/manifests.ts",
-        ".railway/railway.ts",
-        ...sharedInputs,
-      ],
+      dockerfilePath: "apps/api/Dockerfile",
+      watchPatterns: ["apps/api/**", "deploy/manifests.ts", ".railway/railway.ts", ...sharedInputs],
     },
     preDeploy: "bun run --cwd packages/database migrate",
-    healthcheck: "/ready",
+    healthcheck: deploymentServices.api.ready,
     healthcheckTimeout: 180,
     deploy: { ...deployment, preDeployTimeoutSeconds: 180 },
   });
@@ -50,16 +45,10 @@ export default defineRailway((context) => {
     replicas,
     build: {
       builder: "DOCKERFILE",
-      dockerfilePath: "deploy/railway/web/Dockerfile",
-      watchPatterns: [
-        "apps/web/**",
-        "deploy/railway/web/**",
-        "deploy/manifests.ts",
-        ".railway/railway.ts",
-        ...sharedInputs,
-      ],
+      dockerfilePath: "apps/web/Dockerfile",
+      watchPatterns: ["apps/web/**", "deploy/manifests.ts", ".railway/railway.ts", ...sharedInputs],
     },
-    healthcheck: "/health",
+    healthcheck: deploymentServices.web.health,
     healthcheckTimeout: 180,
     deploy: deployment,
   });
@@ -76,7 +65,7 @@ export default defineRailway((context) => {
         ".dockerignore",
       ],
     },
-    healthcheck: "/ready",
+    healthcheck: deploymentServices.gateway.ready,
     healthcheckTimeout: 180,
     deploy: deployment,
   });

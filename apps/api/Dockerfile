@@ -12,14 +12,12 @@ RUN bun deploy/manifests.ts /app /manifests
 FROM bun AS dependencies
 WORKDIR /app
 COPY --from=manifests /manifests/ ./
-RUN --mount=type=cache,id=raypx-bun-install,target=/root/.bun/install/cache,sharing=locked \
-    VP_GIT_HOOKS=0 bun install --frozen-lockfile
+RUN VP_GIT_HOOKS=0 bun install --frozen-lockfile
 
 FROM bun AS migrate-dependencies
 WORKDIR /app
 COPY --from=manifests /manifests/ ./
-RUN --mount=type=cache,id=raypx-bun-install,target=/root/.bun/install/cache,sharing=locked \
-    bun install --frozen-lockfile --production --filter @raypx/database --ignore-scripts
+RUN bun install --frozen-lockfile --production --filter @raypx/database --ignore-scripts
 
 FROM bun AS migrate
 WORKDIR /app
@@ -31,10 +29,11 @@ CMD ["bun", "run", "--cwd", "packages/database", "migrate"]
 
 FROM dependencies AS build
 COPY . .
-ARG VITE_APP_RELEASE=unversioned
+ARG VITE_APP_RELEASE
+ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
-RUN --mount=type=cache,id=raypx-vp,target=/app/node_modules/.vite/task-cache,sharing=locked \
-    bun run build:api
+ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
+RUN bun run build:api
 
 FROM oven/bun:1.4.4-slim AS runtime
 ENV NODE_ENV=production NITRO_PORT=3002 HOST=0.0.0.0
@@ -43,3 +42,10 @@ COPY --from=build --chown=bun:bun /app/apps/api/.output ./.output
 USER bun
 EXPOSE 3002
 CMD ["bun", ".output/server/index.mjs"]
+
+# Railway builds the final target for its isolated pre-deploy migration.
+# Compose selects runtime or migrate explicitly.
+FROM runtime AS railway
+COPY --from=migrate-dependencies --chown=bun:bun /app/ ./
+COPY --chown=bun:bun packages/database/src/ ./packages/database/src/
+COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/

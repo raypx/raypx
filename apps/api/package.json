@@ -13,7 +13,8 @@
     "test:coverage": "bun --bun vp test --run --coverage",
     "build": "bun --bun vp build --config vite.app.config.ts",
     "test:postgres": "bun --bun vp test --run --mode postgres",
-    "test:redis": "bun --bun vp test --run --mode redis"
+    "test:redis": "bun --bun vp test --run --mode redis",
+    "deployment:fixture": "bun --no-env-file tests/fixtures/deployment.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",

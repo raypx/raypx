@@ -5,7 +5,7 @@ import {
   createLocalTaskClient,
   createPendingClient,
 } from "../../../../../src/features/tasks/local-client";
-import type { localRequest } from "../../../../../src/lib/desktop";
+import { createLocalClient } from "@raypx/contracts/local-client";
 
 afterEach(() => vi.unstubAllGlobals());
 const task: AgentTask = {
@@ -23,7 +23,7 @@ const task: AgentTask = {
 };
 it("keeps the device owner stable across login, account switches and logout", async () => {
   const request = vi.fn(async () => [task]);
-  const client = createLocalTaskClient(request as typeof localRequest, () => () => {}, {
+  const client = createLocalTaskClient(createLocalClient(request), () => () => {}, {
     owner: LOCAL_WORKSPACE_ID,
   });
   for (const account of [null, "account-a", "account-b", null]) {
@@ -45,14 +45,26 @@ it("uses only scoped IPC for queries and mutations even when network access fail
   const calls: { method: LocalMethod; params: unknown }[] = [];
   let listener: ((event: LocalEvent) => void) | undefined;
   const detach = vi.fn();
-  const request = (async (method: LocalMethod, params: unknown) => {
+  const request = createLocalClient(async (method, params) => {
     calls.push({ method, params });
     if (method === "agents.local.list") return [task];
-    if (method === "agents.local.device") return { id: task.deviceId };
+    if (method === "agents.local.device")
+      return {
+        id: task.deviceId,
+        name: "Local",
+        platform: "darwin",
+        appVersion: "1.0.0",
+        lastSeenAt: null,
+        epoch: 1,
+        revoked: false,
+        online: true,
+        projects: [],
+        capabilities: [],
+      };
     if (method === "agents.local.get") return { task, events: [], requests: [] };
     if (method === "agents.local.approvals") return [];
     return { ok: true, value: task };
-  }) as typeof localRequest;
+  });
   const client = createLocalTaskClient(request, (next) => {
     listener = next;
     return detach;
@@ -98,7 +110,7 @@ it("rejects old account responses and preserves host error codes", async () => {
         }),
     )
     .mockResolvedValue({ ok: false, code: "PROJECT_BUSY" });
-  const client = createLocalTaskClient(request as typeof localRequest, () => () => {});
+  const client = createLocalTaskClient(createLocalClient(request), () => () => {});
   client.setAccount("account-a");
   const old = client.tasks.list({ limit: 100 });
   client.setAccount("account-b");
@@ -150,7 +162,7 @@ it("shares one command for identical in-flight cancels", async () => {
         resolve = done;
       }),
   );
-  const client = createLocalTaskClient(request as typeof localRequest, () => () => {});
+  const client = createLocalTaskClient(createLocalClient(request), () => () => {});
   client.setAccount("account-a");
   const first = client.tasks.cancel({ id: task.id }),
     second = client.tasks.cancel({ id: task.id });

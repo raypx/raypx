@@ -1,26 +1,21 @@
 import type { ReactNode } from "react";
-import { AnalyticsPreferencesProvider, AnalyticsErrorBoundary } from "@raypx/analytics/client";
+import { AnalyticsApplication } from "@raypx/analytics/client/application";
 import { browserPreferenceStore } from "@raypx/analytics/browser";
-import { useTranslations } from "@raypx/i18n/browser";
+import { useRouterState } from "@tanstack/react-router";
 import { analytics, analyticsConfigured } from "./client";
-import { AnalyticsObserver } from "./observer";
 const store = browserPreferenceStore();
 
 export function AppAnalytics({ children }: { children: ReactNode }) {
-  const t = useTranslations("analytics");
+  const path = useRouterState({ select: (state) => state.location.pathname });
   return (
-    <AnalyticsPreferencesProvider client={analytics} store={store} configured={analyticsConfigured}>
-      <AnalyticsErrorBoundary
-        client={analytics}
-        fallback={
-          <p role="alert" className="p-8">
-            {t("viewError")}
-          </p>
-        }
-      >
-        <AnalyticsObserver />
-        {children}
-      </AnalyticsErrorBoundary>
-    </AnalyticsPreferencesProvider>
+    <AnalyticsApplication
+      client={analytics}
+      store={store}
+      configured={analyticsConfigured}
+      path={path}
+      surface="web"
+    >
+      {children}
+    </AnalyticsApplication>
   );
 }

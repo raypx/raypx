@@ -223,7 +223,7 @@ function TerminalPage() {
     earlyExits.current.clear();
     try {
       fit.current?.fit();
-      const result = await localRequest<{ id: string }>("terminal.open", {
+      const result = await localRequest("terminal.open", {
         executable: formText(data, "executable").trim(),
         args,
         cwd: formText(data, "cwd").trim(),

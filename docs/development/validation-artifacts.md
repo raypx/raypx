@@ -79,6 +79,34 @@ and custom `VITE_*` values may be exposed to client code.
 The command manifest contains labels, exit codes and timings, never argv/environment.
 Treat all raw test evidence as local; review it before sharing.
 
+## Deployment images
+
+```sh
+bun run smoke:deployment
+bun run smoke:deployment --platform linux/arm64
+```
+
+Docker with Buildx must be available. The default target is `linux/amd64`; foreign
+architectures require Docker's emulation support. Builds run sequentially in an
+owned builder capped at two CPUs and 3 GiB RAM. The command builds the Compose
+migration/API/Web images, Railway API/Web images, Caddy gateway and a test-only
+API fixture image. API/Web assertions are shared with relocated artifact probes.
+
+Each run creates its own internal backend and gateway ingress networks, tmpfs PostgreSQL and nonpersistent Redis, using
+synthetic credentials and an `example.invalid` account. Mail verification runs
+through an in-process fixture mailer without delivery. Both profiles execute real
+migrations, readiness, SSR/assets, login/session, secure cookie attribute and Relay
+checks; Railway also checks Redis readiness and IPv6 binding. Release metadata must
+match the version embedded during the build. The gateway publishes only on loopback.
+This checks proxy/session behavior over local HTTP; real public HTTPS, delivery,
+Railway infrastructure and packaged Native acceptance remain separate gates.
+
+No operator env file, existing database or volume is selected. Containers, networks,
+builder and tagged test images are removed on success, failure or handled interruption;
+base images may remain cached. `.artifacts/deployment/<run>/` retains protected
+command logs plus `commands.json` and `results.json`. Manifests contain labels,
+exit codes and timings, never command arguments or environment values.
+
 ## Cleanup
 
 | Command                   | Removes                                                                                                                 | Preserves                                                                                                    |

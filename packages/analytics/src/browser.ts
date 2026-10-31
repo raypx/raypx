@@ -103,20 +103,21 @@ export function browserPreferenceStore(): AnalyticsPreferenceStore {
     },
   };
 }
-type WorkspaceClient = Pick<TaskClient, "tasks" | "approvals" | "subscribe" | "observed"> & {
-  devices: Pick<TaskClient["devices"], "list">;
+type MutationClient = {
+  tasks: Pick<TaskClient["tasks"], "create">;
+  approvals: Pick<TaskClient["approvals"], "decide">;
 };
 /** Observe actual mutation attempts. Reads and relay invalidations never emit product results. */
-export function instrumentTaskClient(
-  client: WorkspaceClient,
+export function instrumentTaskClient<T extends MutationClient>(
+  client: T,
   analytics: AnalyticsClient,
   scope: "local" | "remote",
-): WorkspaceClient {
+) {
   return {
     ...client,
     tasks: {
       ...client.tasks,
-      create: async (...args) => {
+      create: async (...args: Parameters<MutationClient["tasks"]["create"]>) => {
         const report = reporter(analytics);
         try {
           const result = await client.tasks.create(...args);
@@ -139,7 +140,7 @@ export function instrumentTaskClient(
     },
     approvals: {
       ...client.approvals,
-      decide: async (...args) => {
+      decide: async (...args: Parameters<MutationClient["approvals"]["decide"]>) => {
         const report = reporter(analytics);
         try {
           const result = await client.approvals.decide(...args);

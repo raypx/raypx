@@ -5,9 +5,7 @@ import type {
   MemoryReadOptions,
   MemoryUsagePort,
 } from "@raypx/memory/client";
-import type { ContextDocument, ContextDocumentSummary, ContextVersion } from "@raypx/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import type { SyncDevice } from "@raypx/contracts/tasks";
 import { localRequest } from "../../lib/desktop";
 import { apiUrl, desktopFetch } from "../auth/client";
 let api: ReturnType<typeof createApiClient> | undefined;
@@ -55,32 +53,20 @@ async function localRead<T>(read: () => Promise<T>, options?: MemoryReadOptions)
   return value;
 }
 export const localMemory: MemoryClientPort = {
-  delete: (input, options) =>
-    localRead(() => localRequest<{ deleted: true }>("memory.delete", input), options),
-  list: (input = {}, options) =>
-    localRead(() => localRequest<ContextDocumentSummary[]>("memory.list", input), options),
-  get: (input, options) =>
-    localRead(() => localRequest<ContextDocument>("memory.get", input), options),
-  create: (input, options) =>
-    localRead(() => localRequest<ContextDocument>("memory.create", input), options),
-  update: (input, options) =>
-    localRead(() => localRequest<ContextDocument>("memory.update", input), options),
-  archive: (input, options) =>
-    localRead(() => localRequest<ContextDocument>("memory.archive", input), options),
-  history: (input, options) =>
-    localRead(() => localRequest<ContextVersion[]>("memory.history", input), options),
-  restore: (input, options) =>
-    localRead(() => localRequest<ContextDocument>("memory.restore", input), options),
-  resolve: (input, options) =>
-    localRead(
-      () => localRequest<Awaited<ReturnType<MemoryClientPort["resolve"]>>>("memory.resolve", input),
-      options,
-    ),
+  delete: (input, options) => localRead(() => localRequest("memory.delete", input), options),
+  list: (input = {}, options) => localRead(() => localRequest("memory.list", input), options),
+  get: (input, options) => localRead(() => localRequest("memory.get", input), options),
+  create: (input, options) => localRead(() => localRequest("memory.create", input), options),
+  update: (input, options) => localRead(() => localRequest("memory.update", input), options),
+  archive: (input, options) => localRead(() => localRequest("memory.archive", input), options),
+  history: (input, options) => localRead(() => localRequest("memory.history", input), options),
+  restore: (input, options) => localRead(() => localRequest("memory.restore", input), options),
+  resolve: (input, options) => localRead(() => localRequest("memory.resolve", input), options),
 };
 export const localMemoryProjects: MemoryProjectsPort = {
   list: (options) =>
     localRead(async () => {
-      const device = await localRequest<SyncDevice>("agents.local.device", {
+      const device = await localRequest("agents.local.device", {
         accountId: LOCAL_WORKSPACE_ID,
       });
       return device.projects.map((project) => ({

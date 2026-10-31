@@ -7,6 +7,8 @@ belong to `@raypx/core`; transport adapters compose those same schema instances.
 
 ## Interface
 
+`/local-client`: renderer-safe methods and reply schemas; createLocalClient validates inputs and outputs, infers replies from the method and prevents caller-selected result generics. Native-only methods stay outside this client.
+
 `/api`: public HTTP account contract. `/local`: versioned local CLI/Desktop protocol. `.` re-exports the API seam.
 
 ## Ownership

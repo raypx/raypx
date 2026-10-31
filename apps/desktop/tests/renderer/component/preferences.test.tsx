@@ -23,6 +23,7 @@ function Probe() {
       <button onClick={() => setPreference("en")}>English</button>
       <button onClick={() => setPreference("system")}>System</button>
       <button onClick={() => setTheme("light")}>Light</button>
+      <button onClick={() => setTheme("dark")}>Dark</button>
     </>
   );
 }
@@ -127,4 +128,55 @@ describe("Desktop preference initialization", () => {
     fireEvent.click(screen.getByText("English"));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ theme: "system", locale: "en" }));
   });
+});
+
+it.each([false, new Error("private storage failure")])(
+  "shows save failures and retries the latest choices (%s)",
+  async (failure) => {
+    snapshot({ status: "read", raw: { theme: "dark", locale: "en" } });
+    if (failure instanceof Error) mocks.save.mockRejectedValueOnce(failure);
+    else mocks.save.mockResolvedValueOnce(failure);
+    mount();
+    fireEvent.click(screen.getByText("Light"));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("could not be saved");
+    expect(alert.textContent).not.toContain("private storage failure");
+    expect(mocks.save).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    expect(mocks.save.mock.calls).toEqual([
+      [{ theme: "light", locale: "en" }],
+      [{ theme: "light", locale: "en" }],
+    ]);
+  },
+);
+
+it("queues a return to the saved value and ignores an older failed response", async () => {
+  snapshot({ status: "read", raw: { theme: "dark", locale: "en" } });
+  let finish!: (saved: boolean) => void;
+  mocks.save.mockImplementationOnce(
+    () =>
+      new Promise<boolean>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  mount();
+  fireEvent.click(screen.getByText("System"));
+  await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
+  fireEvent.click(screen.getByText("English"));
+  await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
+  finish(false);
+  await waitFor(() => expect(mocks.save).toHaveBeenLastCalledWith({ theme: "dark", locale: "en" }));
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it("clears failed-save feedback when returning to the confirmed snapshot", async () => {
+  snapshot({ status: "read", raw: { theme: "dark", locale: "en" } });
+  mocks.save.mockResolvedValueOnce(false);
+  mount();
+  fireEvent.click(screen.getByText("Light"));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByText("Dark"));
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  expect(mocks.save).toHaveBeenCalledTimes(1);
 });

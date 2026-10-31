@@ -1,5 +1,3 @@
-# Railway requires literal service-specific cache mount IDs.
-# Use portable Docker dependency layers; keep Bun/manifests aligned with apps/web/Dockerfile.
 # syntax=docker/dockerfile:1
 # The bun, manifests and dependencies stages match apps/api/Dockerfile exactly, so
 # one builder reuses the installed workspace for both images.
@@ -21,8 +19,10 @@ COPY . .
 # Browser and server rendering both use the API origin baked into this build.
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
-ARG VITE_APP_RELEASE=unversioned
+ARG VITE_APP_RELEASE
+ARG RAILWAY_GIT_COMMIT_SHA
 ENV VITE_APP_RELEASE=$VITE_APP_RELEASE
+ENV RAILWAY_GIT_COMMIT_SHA=$RAILWAY_GIT_COMMIT_SHA
 RUN bun run build:web
 
 FROM oven/bun:1.4.4-slim AS runtime
@@ -32,3 +32,4 @@ COPY --from=build --chown=bun:bun /app/apps/web/.output ./.output
 USER bun
 EXPOSE 3000
 CMD ["bun", ".output/server/index.mjs"]
+# Generated from apps/web/Dockerfile; run bun run raypx-dev deployment:sync.

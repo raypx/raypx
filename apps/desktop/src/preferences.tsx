@@ -4,6 +4,7 @@ import {
   getBrowserSystemLocales,
   readBrowserPreference,
   useLanguagePreference,
+  useTranslations,
 } from "@raypx/i18n/browser";
 import { LOCALE_PREFERENCE_KEY } from "@raypx/i18n/preferences";
 import { readStoredTheme, storeTheme, ThemeProvider, useTheme } from "@raypx/ui/themes";
@@ -14,6 +15,7 @@ import {
   type DevicePreferences,
   type PreferenceSnapshot,
 } from "../preferences";
+import { Button } from "@raypx/ui/components/ui/button";
 import { isDesktop, saveDesktopPreferences } from "./lib/desktop";
 
 function restoreDevicePreferences(snapshot: unknown): PreferenceSnapshot {
@@ -37,7 +39,12 @@ function samePreferences(left: DevicePreferences | null, right: DevicePreference
 function PersistPreferences({ initial }: { initial: PreferenceSnapshot }) {
   const { theme } = useTheme();
   const { preference, hydrated } = useLanguagePreference();
-  const lastRequested = useRef<DevicePreferences | null>(
+  const t = useTranslations("settings");
+  const c = useTranslations("common");
+  const [failed, setFailed] = useState(false);
+  const [attempt, retry] = useState(0);
+  const pending = useRef(0);
+  const lastSaved = useRef<DevicePreferences | null>(
     initial.status === "missing" ? null : initial.preferences,
   );
   useEffect(() => {
@@ -50,11 +57,38 @@ function PersistPreferences({ initial }: { initial: PreferenceSnapshot }) {
     } catch {
       // Ignored for the same reason.
     }
-    if (samePreferences(lastRequested.current, next)) return;
-    lastRequested.current = next;
-    void saveDesktopPreferences(next).catch(() => {});
-  }, [theme, preference, hydrated]);
-  return null;
+    if (samePreferences(lastSaved.current, next) && pending.current === 0) {
+      setFailed(false);
+      return;
+    }
+    let active = true;
+    pending.current++;
+    setFailed(false);
+    void saveDesktopPreferences(next)
+      .then(
+        (saved) => {
+          if (saved) lastSaved.current = next;
+          if (active) setFailed(!saved);
+        },
+        () => {
+          if (active) setFailed(true);
+        },
+      )
+      .finally(() => {
+        pending.current--;
+      });
+    return () => {
+      active = false;
+    };
+  }, [theme, preference, hydrated, attempt]);
+  return failed ? (
+    <div role="alert" className="mx-auto flex max-w-3xl flex-wrap items-center gap-3 p-4 text-sm">
+      <p className="text-destructive">{t("preferencesSaveFailed")}</p>
+      <Button variant="outline" size="sm" onClick={() => retry((value) => value + 1)}>
+        {c("retry")}
+      </Button>
+    </div>
+  ) : null;
 }
 
 /** Native snapshots own initial state; browser preview keeps its normal storage adapters. */

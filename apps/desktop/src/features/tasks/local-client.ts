@@ -1,10 +1,10 @@
+import { type LocalClient } from "@raypx/contracts/local-client";
 import { LOCAL_WORKSPACE_ID, type LocalEvent } from "@raypx/contracts/local";
 import {
   taskSchema,
   humanRequestSchema,
   taskInputActivitySchema,
   type RelayRequest,
-  type SyncDevice,
   taskChangeSchema,
   type TaskChange,
 } from "@raypx/contracts/tasks";
@@ -16,7 +16,7 @@ function failure(code: string) {
   return Object.assign(new Error(code), { data: { error: { code } } });
 }
 export function createLocalTaskClient(
-  request: typeof localRequest = localRequest,
+  request: LocalClient = localRequest,
   events: (listener: (event: LocalEvent) => void) => () => void = onLocalEvent,
   configuration: { owner?: string; observed?: boolean } = {},
 ): TaskWorkspaceClient & { setAccount(accountId: string | null): void } {
@@ -59,11 +59,7 @@ export function createLocalTaskClient(
   };
   const send = async (id: string, value: RelayRequest, signal?: AbortSignal) => {
     const result = await read(
-      (accountId) =>
-        request<{ ok: true; value: unknown } | { ok: false; code: string }>(
-          "agents.local.execute",
-          { accountId, id, request: value },
-        ),
+      (accountId) => request("agents.local.execute", { accountId, id, request: value }),
       signal,
     );
     changed();
@@ -102,24 +98,17 @@ export function createLocalTaskClient(
     devices: {
       list: (_input, options) =>
         read(
-          async (accountId) => [await request<SyncDevice>("agents.local.device", { accountId })],
+          async (accountId) => [await request("agents.local.device", { accountId })],
           options?.signal,
         ),
     },
     tasks: {
       list: (input, options) =>
-        read(
-          (accountId) =>
-            request<Awaited<ReturnType<TaskWorkspaceClient["tasks"]["list"]>>>(
-              "agents.local.list",
-              { ...input, accountId },
-            ),
-          options?.signal,
-        ),
+        read((accountId) => request("agents.local.list", { ...input, accountId }), options?.signal),
       get: (input, options) =>
         read(
           (accountId) =>
-            request<Awaited<ReturnType<TaskWorkspaceClient["tasks"]["get"]>>>("agents.local.get", {
+            request("agents.local.get", {
               ...input,
               accountId,
             }),
@@ -138,14 +127,7 @@ export function createLocalTaskClient(
     },
     approvals: {
       list: (_input, options) =>
-        read(
-          (accountId) =>
-            request<Awaited<ReturnType<TaskWorkspaceClient["approvals"]["list"]>>>(
-              "agents.local.approvals",
-              { accountId },
-            ),
-          options?.signal,
-        ),
+        read((accountId) => request("agents.local.approvals", { accountId }), options?.signal),
       decide: async (input, options) =>
         humanRequestSchema.parse(
           await execute({ method: "approvals.decide", input }, options?.signal),

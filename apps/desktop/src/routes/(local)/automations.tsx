@@ -1,5 +1,5 @@
 import { createFileRoute, getRouteApi, Link, useRouter } from "@tanstack/react-router";
-import type { JobDefinition } from "@raypx/jobs";
+
 import { CloudJobsPage } from "@raypx/jobs/client";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/(local)/automations")({
   loader: async ({ context, deps }) => {
     if (!context.desktopAvailable || deps.scope === "cloud") return { jobs: null, failed: false };
     try {
-      return { jobs: await localRequest<JobDefinition[]>("jobs.list", {}), failed: false };
+      return { jobs: await localRequest("jobs.list", {}), failed: false };
     } catch {
       return { jobs: null, failed: true };
     }

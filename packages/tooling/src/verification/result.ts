@@ -5,7 +5,7 @@ export function assertCiResult(needs: Record<string, Job>, distribution?: boolea
   if (needs.changes?.result !== "success") throw new Error("Change analysis did not succeed");
   const flags = needs.changes.outputs ?? {};
   if (
-    ["native", "backend", "browser", "distribution"].some(
+    ["native", "backend", "browser", "distribution", "deployment"].some(
       (name) => !["true", "false"].includes(flags[name] ?? ""),
     )
   )
@@ -16,6 +16,7 @@ export function assertCiResult(needs: Record<string, Job>, distribution?: boolea
     throw new Error("Distribution acceptance requires native gates");
   for (const [name, required] of Object.entries({
     javascript: true,
+    deployment: flags.deployment === "true",
     backend: flags.backend === "true",
     browser: flags.browser === "true",
     desktop: flags.native === "true",

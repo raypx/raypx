@@ -48,23 +48,30 @@ payload through a single fetch with a ten-second timeout, no credentials/referre
 keepalive, retries, offline queue or unload beacon. SDK persisted opt-out state is
 reconciled with current application consent after initialization.
 Both applications import the shared analytics stylesheet to register its Tailwind sources.
+`@raypx/analytics/client/application` owns consent restoration, the error boundary
+and the page observer. Web and Desktop inject only their client, preference store,
+surface and router pathname; the shared component converts paths to safe page enums.
 
 ## Configuration and source maps
 
 Both apps accept public build values `VITE_POSTHOG_PROJECT_TOKEN` and
 `VITE_POSTHOG_HOST` (the ingestion host for your PostHog region). Missing either
-leaves the controls disabled with an explanation. Root build commands supply
-`VITE_APP_RELEASE` from the Git commit unless explicitly set; verification, test and
-E2E runs use the fixed `verification` so their caches survive commits. Keep that same
-value through the entire release. `RAYPX_SOURCEMAPS=1` enables hidden client maps and is
+leaves the controls disabled with an explanation. One release resolver prefers
+explicit `VITE_APP_RELEASE`, then `RAILWAY_GIT_COMMIT_SHA`, then the checkout's Git
+commit. Verification, test and E2E runs default to `verification` so their caches
+survive commits. Builds outside Git require one of those explicit identifiers.
+Each client build writes `assets/raypx-release.json` with its surface and the
+same release embedded in JavaScript. `RAYPX_SOURCEMAPS=1` enables hidden client maps and is
 part of the build cache key. No upload credentials use a `VITE_` name.
 
 For example, build Web with `RAYPX_SOURCEMAPS=1 bun run build:web`, then run
 `bun run analytics:sourcemaps web` with `POSTHOG_CLI_HOST` (PostHog UI host),
 `POSTHOG_CLI_PROJECT_ID` and secret `POSTHOG_CLI_API_KEY` in the release environment.
 For Desktop use `build:desktop` and the `desktop` target. The command injects release
-and chunk metadata, uploads maps, and removes maps after success. It fails when
-credentials/maps are missing; ordinary builds and verification require neither.
+and chunk metadata, uploads maps, and removes maps after success. Upload reads the
+recorded build release, independently of the current Git checkout. Missing/invalid
+metadata, a different surface or a conflicting explicit `VITE_APP_RELEASE` fails
+before injection. Credentials and maps are required only for upload.
 
 Publish those same injected outputs. For Desktop, run the workspace `native:build` after injection; do
 not run root `package:desktop`, which rebuilds the renderer. Do not publish outputs

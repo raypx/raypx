@@ -1,10 +1,5 @@
-import {
-  localEventSchema,
-  type LocalEvent,
-  type LocalMethod,
-  type LocalParams,
-  type RootGrant,
-} from "@raypx/contracts/local";
+import { createLocalClient } from "@raypx/contracts/local-client";
+import { localEventSchema, type LocalEvent, type RootGrant } from "@raypx/contracts/local";
 import { type DesktopBridge, type DesktopRuntime } from "../../bridge";
 import type { DevicePreferences } from "../../preferences";
 
@@ -57,12 +52,9 @@ export async function pickDirectory(): Promise<RootGrant | null> {
 export async function restartEngine(replaceOwner = false) {
   return (await getBridge()).request.restartEngine({ replaceOwner });
 }
-export async function localRequest<T, M extends LocalMethod = LocalMethod>(
-  method: M,
-  params: LocalParams<M>,
-): Promise<T> {
-  return (await (await getBridge()).request.localRequest({ method, params })) as T;
-}
+export const localRequest = createLocalClient(async (method, params) =>
+  (await getBridge()).request.localRequest({ method, params }),
+);
 
 let preferenceWrite: Promise<boolean> = Promise.resolve(false);
 export async function saveDesktopPreferences(preferences: DevicePreferences) {

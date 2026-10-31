@@ -1,3 +1,4 @@
+import type { LocalResult } from "@raypx/contracts/local-client";
 import { useEffect, useId, useState, useRef } from "react";
 import type { DeviceProject } from "@raypx/contracts/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
@@ -8,23 +9,8 @@ import { SelectField } from "@raypx/ui/select-field";
 import { useConfirmation } from "@raypx/ui/confirmation";
 import { localRequest } from "../../lib/desktop";
 
-type Settings = {
-  rootIds: string[];
-  away: boolean;
-  waitSeconds: number;
-  migrationRequired?: boolean;
-};
-type Connector = {
-  provider: "claude" | "codex";
-  installed: boolean;
-  hookInstalled?: boolean;
-  updateAvailable?: boolean;
-  settingsFile?: string;
-  modified: boolean;
-  requiresTrust: boolean;
-  error: string | null;
-  repairable?: boolean;
-};
+type Settings = LocalResult<"approvals.local.settings">;
+type Connector = LocalResult<"connectors.status">[number];
 const errorKeys = {
   INSTALLATION_BUSY: "terminalInstallationBusy",
   EACCES: "terminalInstallationPermission",
@@ -65,8 +51,8 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
   useEffect(() => {
     let active = true;
     void Promise.all([
-      localRequest<Settings>("approvals.local.settings", {}),
-      localRequest<Connector[]>("connectors.status", {}),
+      localRequest("approvals.local.settings", {}),
+      localRequest("connectors.status", {}),
     ]).then(
       ([value, hooks]) => {
         if (active) {
@@ -96,7 +82,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
     setSaved(false);
     try {
       await run();
-      setConnectors(await localRequest<Connector[]>("connectors.status", {}));
+      setConnectors(await localRequest("connectors.status", {}));
       if (save) {
         setDirty(false);
         setSaved(true);
@@ -324,7 +310,7 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
             disabled={busy}
             onClick={() =>
               void action(async () => {
-                const next = await localRequest<Settings>("approvals.local.settings", {});
+                const next = await localRequest("approvals.local.settings", {});
                 if (!dirty) setSettings(next);
               })
             }

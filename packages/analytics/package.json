@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./browser": "./src/browser.ts",
     "./client": "./src/client/provider.tsx",
+    "./client/application": "./src/client/application.tsx",
     "./client/settings": "./src/client/settings.tsx",
     "./client/styles.css": "./src/client/styles.css"
   },
@@ -41,6 +42,7 @@
     "entryTargets": {
       "./browser": "browser",
       "./client": "browser",
+      "./client/application": "browser",
       "./client/settings": "browser",
       "./client/styles.css": "browser"
     },

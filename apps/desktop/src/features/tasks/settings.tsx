@@ -40,9 +40,9 @@ export function AgentSettings() {
     const bridge = await getBridge();
     const [next, folders, configured, agents] = await Promise.all([
       accountId ? bridge.request.controlInfo({ accountId }) : Promise.resolve(undefined),
-      localRequest<RootGrant[]>("roots.list", {}),
-      localRequest<DeviceProject[]>("agents.projects", {}),
-      localRequest<AgentCapability[]>("agents.capabilities", {}),
+      localRequest("roots.list", {}),
+      localRequest("agents.projects", {}),
+      localRequest("agents.capabilities", {}),
     ]);
     setRemoteInfo({ account: accountId, value: next });
     setRoots(folders);

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
-import type { TaskClient } from "@raypx/client";
+import { createTaskClient } from "../../helpers/client.js";
 
 beforeEach(() => {
   // happy-dom has no layout; provide dimensions for the real virtualizer.
@@ -34,7 +34,7 @@ async function workspace() {
     ...input,
     parentTaskId: task.id,
   }));
-  const client = {
+  const client = createTaskClient({
     tasks: {
       list: async () => [task],
       get: async () => ({ task, events: [], requests: [] }),
@@ -42,7 +42,7 @@ async function workspace() {
     },
     devices: { list: async () => [] },
     approvals: { list: async () => [] },
-  } as unknown as TaskClient;
+  });
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -79,7 +79,7 @@ it.each(["pending", "cancelling", "running"] as const)(
       updatedAt: now,
     };
     const input = vi.fn(() => new Promise<never>(() => {}));
-    const client = {
+    const client = createTaskClient({
       tasks: {
         list: async () => [task],
         get: async () => ({ task, events: [], requests: [], activity: [] }),
@@ -90,13 +90,27 @@ it.each(["pending", "cancelling", "running"] as const)(
           {
             id: task.deviceId,
             name: "Test",
+            platform: "darwin",
+            appVersion: "1.0.0",
+            epoch: 1,
+            revoked: false,
+            lastSeenAt: null,
+            online: true,
             projects: [],
-            capabilities: [{ provider: "codex", available: true, inputModes: ["queue", "steer"] }],
+            capabilities: [
+              {
+                provider: "codex",
+                available: true,
+                version: "test",
+                reason: "ready",
+                inputModes: ["queue", "steer"],
+              },
+            ],
           },
         ],
       },
       approvals: { list: async () => [] },
-    } as unknown as TaskClient;
+    });
     render(
       <QueryClientProvider
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -182,12 +196,12 @@ it("answers single and multiple choice questions with labelled shadcn controls",
     status: "pending" as const,
     decision: null,
   };
-  const decide = vi.fn(async () => ({ ...request, status: "decided" }));
-  const client = {
+  const decide = vi.fn(async () => ({ ...request, status: "decided" as const }));
+  const client = createTaskClient({
     tasks: { list: async () => [] },
     devices: { list: async () => [] },
     approvals: { list: async () => [request], decide },
-  } as unknown as TaskClient;
+  });
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}

@@ -10,4 +10,5 @@ one public HTTPS origin; API, Web and databases use private networking.
 
 Use the Bun-scoped IaC preload documented in docs/development/railway.md. Review
 the plan before applying. Keep one API replica and preserve the separate
-Compose runtime/migration image targets.
+Compose runtime/migration image targets. Use the shared apps/api and apps/web
+Dockerfiles; API's final railway target includes pre-deploy migration dependencies.

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { FileContent, FileEntry } from "@raypx/contracts/local";
+import type { FileEntry } from "@raypx/contracts/local";
 import { localRequest, pickDirectory } from "../../lib/desktop";
 import { fileErrors, isDirty, useFilesStoreApi, type FileError } from "./store";
 
@@ -59,7 +59,7 @@ export function useFileActions({
       const version = generation.current;
       if (!(await confirmDiscard()) || version !== generation.current) return;
       return run(async (current) => {
-        const content = await localRequest<FileContent>("files.read", { rootId, path: entry.path });
+        const content = await localRequest("files.read", { rootId, path: entry.path });
         if (current())
           store.setState({ editor: { rootId, path: entry.path, content, text: content.text } });
       }, fileErrors.readOnly);
@@ -73,7 +73,7 @@ export function useFileActions({
       run(async (current) => {
         const editor = store.getState().editor;
         if (!editor || !isDirty(store.getState())) return;
-        const content = await localRequest<FileContent>("files.write", {
+        const content = await localRequest("files.write", {
           rootId: editor.rootId,
           path: editor.path,
           text: editor.text,

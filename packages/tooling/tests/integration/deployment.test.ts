@@ -1,5 +1,5 @@
 import { expect, it } from "vite-plus/test";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -76,6 +76,70 @@ it("rejects invalid release tags before invoking Docker", () => {
     expect(result.stderr).not.toContain("not found");
   }
 });
+it.each([false, true])(
+  "builds shared Compose targets with local caches and cleans temporary Dockerfiles (failure=%s)",
+  (fail) => {
+    const directory = mkdtempSync(join(tmpdir(), "raypx-deploy-build-"));
+    try {
+      writeFileSync(
+        join(directory, "docker"),
+        `#!/bin/sh
+[ "$1 $2" = "buildx build" ] || exit 0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --file) file=$2; shift ;;
+    --target) target=$2; shift ;;
+    --tag) tag=$2; shift ;;
+  esac
+  shift
+done
+image=\${tag%%:*}
+image=\${image##*/}
+cp "$file" "$RAYPX_DEPLOY_TEST_CAPTURE/$image.Dockerfile"
+printf '%s %s %s\\n' "$image" "$target" "$file" >> "$RAYPX_DEPLOY_TEST_CAPTURE/commands"
+if [ "$image" = api ] && [ "$RAYPX_DEPLOY_TEST_FAIL" = true ]; then exit 9; fi
+`,
+        { mode: 0o700 },
+      );
+      const result = spawnSync("/bin/sh", [join(root, "deploy/build.sh")], {
+        env: {
+          ...process.env,
+          PATH: `${directory}:/usr/bin:/bin`,
+          TMPDIR: directory,
+          COMPOSE_PROJECT_NAME: "isolated-test",
+          APP_HOST: "app.example.test",
+          RAYPX_RELEASE: "build-test",
+          RAYPX_DEPLOY_TEST_CAPTURE: directory,
+          RAYPX_DEPLOY_TEST_FAIL: String(fail),
+        },
+        encoding: "utf8",
+      });
+      expect(result.status).toBe(fail ? 9 : 0);
+      const commands = readFileSync(join(directory, "commands"), "utf8")
+        .trim()
+        .split("\n")
+        .map((line) => line.split(" "));
+      expect(commands.map(([image, target]) => [image, target])).toEqual([
+        ["api-migrate", "migrate"],
+        ["api", "runtime"],
+        ...(fail ? [] : [["web", "runtime"]]),
+      ]);
+      for (const [image, , file] of commands) {
+        expect(existsSync(file!)).toBe(false);
+        const cached = readFileSync(join(directory, `${image}.Dockerfile`), "utf8");
+        const app = image === "web" ? "web" : "api";
+        // Only mounts differ; commands, sources and runtime targets remain canonical.
+        expect(cached.replace(/--mount=type=cache,\S+ /g, "")).toBe(
+          readFileSync(join(root, `apps/${app}/Dockerfile`), "utf8"),
+        );
+        expect(cached).toContain("id=raypx-bun-install,target=/root/.bun/install/cache");
+        expect(cached).toContain("id=raypx-vp,target=/app/node_modules/.vite/task-cache");
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  },
+);
 it("discovers build manifests and bin placeholders without copying application code or secrets", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-metadata-"));
   try {

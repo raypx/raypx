@@ -1,5 +1,7 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { expect, it } from "vite-plus/test";
 import { nitroTarget } from "../../src/build/nitro.js";
 
@@ -61,6 +63,53 @@ it("shares identical dependency stages so one builder reuses the install", () =>
   expect(stages("apps/api/Dockerfile").get("migrate-dependencies")!.lines.join("\n")).toMatch(
     /--production --filter @raypx\/database --ignore-scripts/,
   );
+});
+
+it("shares portable Dockerfiles with Railway and retains isolated pre-deploy migrations", () => {
+  const configuration = pathToFileURL(join(root, ".railway/railway.ts")).href;
+  const result = spawnSync(
+    process.execPath,
+    [
+      "--no-env-file",
+      "-e",
+      `import program from ${JSON.stringify(configuration)};
+const project = program({projectId:"766ffb45-d60f-4e4d-83b1-135443ff0b51",environment:"production"});
+console.log(JSON.stringify(project.resources));`,
+    ],
+    { encoding: "utf8", env: { ...process.env, RAILWAY_IAC_CONTEXT: "" } },
+  );
+  expect(result.status).toBe(0);
+  const services = JSON.parse(result.stdout) as {
+    name: string;
+    build: { dockerfilePath: string; watchPatterns: string[] };
+    deploy: { preDeployCommand?: string[]; healthcheckPath: string };
+  }[];
+  for (const app of ["api", "web"]) {
+    const service = services.find(({ name }) => name === app)!;
+    const file = `apps/${app}/Dockerfile`;
+    expect(service.build.dockerfilePath).toBe(file);
+    expect(service.build.watchPatterns).toContain(`apps/${app}/**`);
+    expect(read(file)).not.toContain("--mount=type=cache");
+    const legacy = read(`deploy/railway/${app}/Dockerfile`);
+    expect(legacy).toBe(
+      `${read(file)}# Generated from ${file}; run bun run raypx-dev deployment:sync.\n`,
+    );
+  }
+  const api = services.find(({ name }) => name === "api")!;
+  expect(api.deploy.preDeployCommand).toEqual(["bun run --cwd packages/database migrate"]);
+  expect(api.deploy.healthcheckPath).toBe("/ready");
+  expect(services.find(({ name }) => name === "web")!.deploy.healthcheckPath).toBe("/health");
+  const all = stages("apps/api/Dockerfile");
+  expect([...all.keys()].at(-1)).toBe("railway");
+  expect(all.get("railway")).toEqual({
+    from: "runtime",
+    lines: [
+      "COPY --from=migrate-dependencies --chown=bun:bun /app/ ./",
+      "COPY --chown=bun:bun packages/database/src/ ./packages/database/src/",
+      "COPY --chown=bun:bun packages/database/drizzle-foundation/ ./packages/database/drizzle-foundation/",
+    ],
+  });
+  expect(all.get("migrate")!.from).toBe("bun");
 });
 
 it("probes Compose health with Bun instead of Node", () => {

@@ -129,7 +129,7 @@ export function LocalJobsPage({
   async function showHistory(job: JobDefinition) {
     setError("");
     try {
-      setHistory({ job, runs: await localRequest<JobRun[]>("jobs.history", { id: job.id }) });
+      setHistory({ job, runs: await localRequest("jobs.history", { id: job.id }) });
     } catch {
       setError(c("error"));
     }

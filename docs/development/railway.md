@@ -33,20 +33,39 @@ railway variable set --skip-deploys; never commit decrypted variables.
 | api      | NODE_ENV=production; HOST=::; PORT=3002; NITRO_PORT=3002; DATABASE_URL=${{Postgres.DATABASE_URL}}; REDIS_URL=${{Redis.REDIS_URL}}; AUTH_SECRET is a private random value of at least 32 characters |
 | api      | AUTH_URL=${{gateway.PUBLIC_ORIGIN}}; ALLOWED_ORIGINS includes that origin, https://raypx.com, views://main and raypx://; JOBS_ENABLED=true                                                         |
 | web      | NODE_ENV=production; HOST=::; PORT=3000; NITRO_PORT=3000; VITE_API_URL=${{gateway.PUBLIC_ORIGIN}}                                                                                                  |
-| api, web | VITE_APP_RELEASE identifies the uploaded source version                                                                                                                                            |
+| api, web | VITE_APP_RELEASE optionally overrides the build release; otherwise the Docker build uses Railway's RAILWAY_GIT_COMMIT_SHA                                                                          |
 
 Optional mail, administrator, storage and analytics settings remain explicit
 per-environment settings. Without RESEND_API_KEY and a verified MAIL_FROM, mail
 actions retain the MAIL_NOT_CONFIGURED guard. Never bypass verification for real users.
+Both Dockerfiles declare `RAILWAY_GIT_COMMIT_SHA` as a build argument. Manual builds
+outside Git must supply it or `VITE_APP_RELEASE`; no unversioned production fallback
+is generated. Client assets record the resolved version for later SourceMap upload.
+Service ports and health paths come from `@raypx/tooling/build/deployment`; repository
+policy checks Caddy and Compose against the same ingress contract.
 
 ## Apply and deploy
 
 API, Web and Gateway use the raypx/raypx GitHub repository's canary branch.
-Matching pushes trigger automatic deployments using each service's Dockerfile
-and watch patterns. Shared package or manifest changes rebuild API and Web;
+Matching pushes trigger automatic deployments using the shared
+`apps/api/Dockerfile` and `apps/web/Dockerfile` and each service's watch patterns.
+Shared package or manifest changes rebuild API and Web;
 Gateway watches its proxy configuration and the IaC file.
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
+
+The legacy `deploy/railway/api/Dockerfile` and `deploy/railway/web/Dockerfile`
+paths remain generated compatibility copies of the shared application Dockerfiles. Existing
+service settings can therefore build a pushed commit before the IaC path update.
+Refresh them with `bun run raypx-dev deployment:sync` after editing a shared Dockerfile;
+policy rejects missing or stale copies. Keep them until the configured paths and any `RAILWAY_DOCKERFILE_PATH`
+overrides have been switched to the shared paths.
+
+For that configuration cutover, pause API/Web GitHub autodeploys, review
+`config plan`, then apply the new paths and watch patterns. Keep any
+`RAILWAY_DOCKERFILE_PATH` variable aligned with the same shared path. Deploy the
+latest commit for API, wait for readiness, then deploy Web and verify it before
+re-enabling autodeploys. Pushing the IaC file alone does not update live settings.
 
 Install the repository dependencies with the pinned Bun. CLI 5.71.0 and SDK 3.16.0
 were used for the initial deployment. Railway's legacy railway.toml configuration
@@ -74,7 +93,7 @@ deployments for normal canary updates after connecting the repository.
 Detached upload completion is not a health result: inspect deployment status and
 logs, then verify HTTPS, /ready, SSR assets, login, secure cookies and Relay v3.
 
-The final API Docker stage carries the database's production dependencies and
+The shared API Dockerfile's final `railway` stage carries the database's production dependencies and
 canonical migrations. Railway runs bun run --cwd packages/database migrate
 in its isolated pre-deploy container. A failure blocks the new deployment.
 For future updates, back up the database first. If pending migrations require
@@ -82,11 +101,14 @@ transactional indexes or otherwise block writers, stop the existing API for an
 agreed maintenance window before migration; ordinary rolling pre-deploy execution
 does not stop the old API. Preserve migration history and storage on rollback.
 
-The Railway API/Web Dockerfiles omit cache mounts: Railway requires literal
-service IDs in those mount IDs and does not support variables there. Their
-manifest/dependency layers still cache installs. Keep their Bun pins and shared
-dependency stages aligned with the application Dockerfiles; Compose retains its
-existing bounded builder and cache mounts.
+API and Web each have one Dockerfile for both deployment platforms. The shared
+files omit cache mounts because Railway requires literal service IDs in mount
+IDs and does not support variables there. Their manifest/dependency layers still
+cache installs. Compose's `deploy/build.sh` adds Bun/VP cache mounts to a temporary
+copy of these same files and explicitly selects `migrate`/`runtime`; it does not
+build the API's final Railway stage. The temporary copies are removed on exit.
+`bun run smoke:deployment` exercises both image profiles with an isolated temporary
+database and Redis. This local gate does not apply IaC or contact Railway services.
 
 ## Bind raypx.com
 

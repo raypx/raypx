@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { readBuiltRelease } from "./build/release.js";
 import { run } from "@raypx-kit/devkit/process";
 export async function uploadAnalyticsMaps(root: string, target: string | undefined) {
   const targets = {
@@ -24,9 +24,11 @@ export async function uploadAnalyticsMaps(root: string, target: string | undefin
     throw new Error(
       "No client source maps found. Build this target with RAYPX_SOURCEMAPS=1 first.",
     );
-  const release =
-    process.env.VITE_APP_RELEASE ||
-    execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
+  const release = readBuiltRelease(directory, target as "web" | "desktop");
+  if (process.env.VITE_APP_RELEASE && process.env.VITE_APP_RELEASE !== release)
+    throw new Error(
+      "VITE_APP_RELEASE differs from the built assets; upload the recorded build release",
+    );
   const cli = fileURLToPath(import.meta.resolve("@posthog/cli/run-posthog-cli.js"));
   await run(
     process.execPath,

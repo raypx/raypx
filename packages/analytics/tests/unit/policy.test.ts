@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import type { TaskClient } from "@raypx/client";
+type AgentTask = Awaited<ReturnType<TaskClient["tasks"]["create"]>>;
 import { createNoopAnalytics } from "@raypx-kit/analytics";
 import { eventPolicy, parseAnalyticsConsent, analyticsPage } from "../../src/index";
 import {
@@ -31,14 +32,24 @@ it("projects explicit enums and never forwards task content or raw URLs", () => 
 });
 it("records mutation responses once per attempt while reads and raw arguments stay private", async () => {
   const analytics = { ...createNoopAnalytics(), capture: vi.fn() };
-  const result = { id: "private-id" };
+  const result: AgentTask = {
+    id: "private-id",
+    deviceId: "private-device",
+    projectId: "private-project",
+    provider: "codex",
+    mode: "run",
+    prompt: "private",
+    status: "running",
+    summary: "",
+    parentTaskId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
   const create = vi.fn().mockResolvedValue(result);
   const client = {
     tasks: { create, list: vi.fn().mockResolvedValue([]) },
-    devices: { list: vi.fn() },
     approvals: { decide: vi.fn().mockResolvedValue({}) },
-    subscribe: () => () => {},
-  } as unknown as TaskClient;
+  };
   const wrapped = instrumentTaskClient(client, analytics, "local");
   const input = {
     id: "private-id",
@@ -74,20 +85,34 @@ it("drops late mutation diagnostics after an account change without changing the
   analytics.setConsent({ usage: true, errors: false });
   analytics.identify("account-a");
   const capture = vi.spyOn(analytics, "capture");
-  let resolve!: (value: unknown) => void;
+  let resolve!: (value: AgentTask) => void;
   const client = {
     tasks: {
       create: () =>
-        new Promise((done) => {
+        new Promise<AgentTask>((done) => {
           resolve = done;
         }),
     },
-    approvals: {},
-    devices: {},
-    subscribe: () => () => {},
-  } as unknown as TaskClient;
+    approvals: {
+      decide: vi.fn(async (): Promise<never> => {
+        throw new Error("Unexpected call");
+      }),
+    },
+  };
   const wrapped = instrumentTaskClient(client, analytics, "local");
-  const result = { id: "private-task" };
+  const result: AgentTask = {
+    id: "private-task",
+    deviceId: "device",
+    projectId: "project",
+    provider: "codex",
+    mode: "run",
+    prompt: "private",
+    status: "running",
+    summary: "",
+    parentTaskId: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
   const pending = wrapped.tasks.create({
     id: "id",
     deviceId: "device",

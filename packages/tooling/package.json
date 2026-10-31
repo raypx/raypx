@@ -9,6 +9,7 @@
   "exports": {
     "./repository": "./src/repository.ts",
     "./build/nitro": "./src/build/nitro.ts",
+    "./build/deployment": "./src/build/deployment.ts",
     "./build/analytics": "./src/build/analytics.ts",
     "./build/start-env": "./src/build/start-env.ts",
     "./browser-tests": "./src/browser-tests.ts",
@@ -42,6 +43,7 @@
     ],
     "entryTargets": {
       "./build/nitro": "node",
+      "./build/deployment": "node",
       "./build/analytics": "node",
       "./build/start-env": "node",
       "./tasks": "node"

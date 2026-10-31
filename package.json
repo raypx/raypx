@@ -113,6 +113,7 @@
     "format:fix": "bun --bun vp fmt --write",
     "verify": "raypx-dev verify",
     "smoke": "raypx-dev smoke",
+    "smoke:deployment": "raypx-dev deployment:smoke",
     "package:desktop": "raypx-dev desktop build",
     "db:migrate": "raypx-dev db migrate",
     "db:generate": "raypx-dev db generate",

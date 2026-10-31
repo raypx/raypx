@@ -359,9 +359,11 @@ describe("required CI results", () => {
         browser: "false",
         native: "false",
         distribution: "false",
+        deployment: "false",
       },
     },
     javascript: { result: "success" },
+    deployment: { result: "skipped" },
     backend: { result: "skipped" },
     browser: { result: "skipped" },
     desktop: { result: "skipped" },
@@ -467,4 +469,62 @@ it("keeps repository-wide Knip and lint in explicit full verification", () => {
     expect(executionTasks(plan, "fixture").includes("fixture#task:knip")).toBe(full);
     expect(executionTasks(plan, "fixture").includes("fixture#task:lint")).toBe(full);
   }
+});
+
+it("selects deployment acceptance for Docker, runtime and shared dependency inputs", () => {
+  const { model } = project();
+  for (const file of [
+    "deploy/compose.yaml",
+    "apps/api/Dockerfile",
+    "packages/api/src/server.ts",
+    "bun.lock",
+    "packages/tokens/src/index.ts",
+  ])
+    expect(verificationPlan(model, [file]).deployment).toBe(true);
+  for (const file of [
+    "docs/development/deployment.md",
+    "packages/independent/tests/a.test.ts",
+    "apps/desktop/src/routes/settings.tsx",
+  ])
+    expect(verificationPlan(model, [file]).deployment).toBe(false);
+  expect(verificationPlan(model, [], { full: true }).deployment).toBe(true);
+});
+it("requires selected deployment results and rejects skipped or cancelled acceptance", () => {
+  const needs = {
+    changes: {
+      result: "success",
+      outputs: {
+        native: "false",
+        backend: "false",
+        browser: "false",
+        distribution: "false",
+        deployment: "true",
+      },
+    },
+    javascript: { result: "success" },
+    backend: { result: "skipped" },
+    browser: { result: "skipped" },
+    desktop: { result: "skipped" },
+    deployment: { result: "success" },
+  };
+  expect(() => assertCiResult(needs)).not.toThrow();
+  for (const result of ["skipped", "failure", "cancelled", "abandoned"])
+    expect(() => assertCiResult({ ...needs, deployment: { result } })).toThrow(/deployment/);
+});
+
+it("keeps ordinary browser edits on source gates while deployment configuration selects Docker", () => {
+  const model = platformProject();
+  for (const file of [
+    "packages/web/src/routes/index.tsx",
+    "packages/ui/src/index.ts",
+    "packages/feature/src/client.ts",
+  ])
+    expect(verificationPlan(model, [file]).deployment).toBe(false);
+  for (const file of [
+    "packages/web/vite.app.config.ts",
+    "packages/web/package.json",
+    "packages/api/src/server.ts",
+    "packages/contracts/src/index.ts",
+  ])
+    expect(verificationPlan(model, [file]).deployment).toBe(true);
 });

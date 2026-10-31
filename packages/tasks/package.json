@@ -32,7 +32,6 @@
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",
-    "@raypx/client": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@testing-library/jest-dom": "catalog:dev",

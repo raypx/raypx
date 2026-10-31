@@ -5,7 +5,8 @@ import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import type { AgentTask, SyncDevice } from "@raypx/tasks";
-import type { TaskClient } from "@raypx/client";
+import type { TaskWorkspacePort } from "@raypx/tasks/model";
+import { createTaskClient } from "../../helpers/client.js";
 import { selectOption } from "../../helpers/select.js";
 
 beforeEach(() => {
@@ -35,7 +36,7 @@ async function submission() {
   let rejectReceipt: (error: Error) => void = () => {};
   const listeners = new Set<() => void>();
   const create = vi.fn(
-    (input: Parameters<TaskClient["tasks"]["create"]>[0]) =>
+    (input: Parameters<TaskWorkspacePort["tasks"]["create"]>[0]) =>
       new Promise<AgentTask>((_resolve, reject) => {
         rejectReceipt = reject;
         accepted = {
@@ -55,17 +56,17 @@ async function submission() {
       {
         id: crypto.randomUUID(),
         taskId: accepted.id,
-        kind: "plan",
+        kind: "plan" as const,
         title: "Review the plan",
         body: "Create the requested file",
         questions: [],
         expiresAt: new Date(Date.now() + 60_000).toISOString(),
-        status: "pending",
+        status: "pending" as const,
         decision: null,
       },
     ],
   }));
-  const client = {
+  const client = createTaskClient({
     tasks: {
       create,
       get,
@@ -77,7 +78,7 @@ async function submission() {
       listeners.add(notify);
       return () => listeners.delete(notify);
     },
-  } as unknown as TaskClient;
+  });
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
