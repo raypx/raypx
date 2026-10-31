@@ -30,6 +30,7 @@ async function fixture() {
   let corrupt = false;
   let uninstallFails = false;
   const calls: string[] = [];
+  const invocationArgs: string[] = [];
   const commands: WindowsSmokeCommands = {
     async registrations() {
       return structuredClone(entries);
@@ -37,8 +38,8 @@ async function fixture() {
     async clearProduct() {},
     async execute(file, args) {
       calls.push(file);
+      invocationArgs.push(args);
       if (file === installer) {
-        expect(args.startsWith("/S /D=")).toBe(true);
         directory = args.slice("/S /D=".length);
         roots.push(dirname(directory));
         await mkdir(join(directory, "bin"), { recursive: true });
@@ -59,8 +60,8 @@ async function fixture() {
           },
         ];
       } else {
-        expect(file).toBe(join(directory, "Uninstall.exe"));
-        expect(args).toBe(`/S _?=${directory}`);
+        if (file !== join(directory, "Uninstall.exe"))
+          throw Error(`Unexpected smoke command: ${file}`);
         if (uninstallFails) throw Error("uninstall failed");
         entries = [];
       }
@@ -73,6 +74,7 @@ async function fixture() {
     main,
     installer,
     calls,
+    invocationArgs,
     commands,
     entries: (value: SmokeRegistration[]) => (entries = value),
     corrupt: () => (corrupt = true),
@@ -89,7 +91,11 @@ it("installs the actual test package, verifies payload hashes and disposes once"
   await installed.dispose();
   await installed.dispose();
   expect(existsSync(installed.binary)).toBe(false);
-  expect(f.calls).toHaveLength(2);
+  expect(f.calls).toEqual([f.installer, join(dirname(installed.binary), "Uninstall.exe")]);
+  expect(f.invocationArgs).toEqual([
+    `/S /D=${dirname(installed.binary)}`,
+    `/S _?=${dirname(installed.binary)}`,
+  ]);
 });
 it("refuses to overwrite an existing registered installation", async () => {
   const f = await fixture();
