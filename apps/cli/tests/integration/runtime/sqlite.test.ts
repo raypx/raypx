@@ -4,7 +4,7 @@ import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { drizzle, migrateLocalDatabase, openProfileDatabase } from "../../../src/runtime/sqlite";
+import { drizzle, migrateLocalDatabase } from "../../../src/runtime/sqlite";
 import migrations from "../../../src/runtime/sqlite/migrations.generated.json";
 import { StateStore } from "../../../src/runtime/state";
 import { AgentStore } from "../../../src/runtime/agents/store";
@@ -98,19 +98,6 @@ it("rejects an unmanaged database without adopting or changing its data", () => 
   expect(f.client.query("SELECT name FROM sqlite_schema WHERE type='table'").all()).toEqual([
     { name: "existing" },
   ]);
-});
-
-it("rejects retired split databases without creating an empty replacement", () => {
-  const root = directory(),
-    old = new Database(join(root, "state.sqlite"), { create: true });
-  try {
-    old.exec("CREATE TABLE existing (value TEXT); INSERT INTO existing VALUES ('preserved');");
-    expect(() => openProfileDatabase(root)).toThrow("retired SQLite databases");
-    expect(readdirSync(root)).toEqual(["state.sqlite"]);
-    expect(old.query("SELECT * FROM existing").all()).toEqual([{ value: "preserved" }]);
-  } finally {
-    old.close();
-  }
 });
 
 it("rejects a retired Drizzle ledger before the ORM can upgrade it", () => {

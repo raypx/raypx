@@ -32,11 +32,10 @@ transaction. Kernel locks release if the owner exits. Daemon/project ownership
 locks also remain separate from the business database, so a long-lived owner
 does not hold its business write lock.
 
-Only empty databases or databases with a recognized current Drizzle ledger can
-open. Retired split profile databases, unmanaged tables, older ledger formats
-and unknown migration records fail explicitly. They are not imported, relabeled
-or deleted. Use a new `--profile` for the current format when an existing profile
-uses retired storage.
+Startup opens only `<profile>/profile.sqlite` and initializes it when absent.
+Unmanaged tables, unsupported ledger formats and unknown migration records in
+that file fail explicitly. Other files in the profile directory do not participate
+in storage initialization.
 
 Default integration tests exercise initialization, reopen, cross-store visibility,
 independent connection closure, rejected formats and six processes starting at

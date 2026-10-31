@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { chmodSync, existsSync, lstatSync, mkdirSync } from "node:fs";
-import { isAbsolute, join, resolve } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { LocalError } from "../errors";
 import { migrateLocalDatabase } from "./migrate";
@@ -10,22 +10,6 @@ export function openProfileDatabase(directory: string) {
   if (!isAbsolute(directory))
     throw new LocalError("INVALID_PROFILE", "Profile directory must be absolute");
   const path = join(directory, "profile.sqlite");
-  if (
-    !existsSync(path) &&
-    [
-      "state.sqlite",
-      "agents.sqlite",
-      "memory.sqlite",
-      "terminal.sqlite",
-      "terminal/terminal.sqlite",
-      "pi-context.sqlite",
-      "contexts.sqlite",
-    ].some((name) => existsSync(resolve(directory, name)))
-  )
-    throw new LocalError(
-      "UNSUPPORTED_SCHEMA",
-      "This profile uses retired SQLite databases; create a new profile",
-    );
   if (existsSync(path)) {
     const info = lstatSync(path);
     if (!info.isFile() || info.isSymbolicLink())
