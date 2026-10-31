@@ -3,9 +3,6 @@
 This directory owns Dokploy Compose and the Railway gateway deployment.
 Build from the repository root with `build.sh`; Compose and Railway share the
 Dockerfiles in apps/api and apps/web. Keep install/build commands in those files.
-Legacy Railway Dockerfiles are generated compatibility copies during the IaC cutover.
-Edit only apps/api and apps/web; refresh copies with `bun run raypx-dev deployment:sync`.
-Policy rejects drift. Retain compatibility until live settings use the shared paths.
 `build.sh` adds Compose-only cache mounts to temporary copies and removes them on exit.
 Use the service/ingress contract in `@raypx/tooling/build/deployment`; `policy`
 checks static adapters and API environment forwarding. Run `smoke:deployment`

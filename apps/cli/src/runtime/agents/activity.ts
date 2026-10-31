@@ -1,5 +1,6 @@
-import { taskText } from "@raypx/contracts/tasks";
-import type { TaskActivity } from "@raypx/contracts/tasks";
+import { taskText } from "@raypx/core/task-text";
+
+import type { TaskActivity } from "@raypx/core/tasks";
 import type { ActivityDraft } from "./store";
 
 const object = (value: unknown): Record<string, unknown> =>

@@ -19,11 +19,11 @@ The accepted foundation design supersedes documents in docs/history.
 - Remote contracts and local device contracts have separate public entries.
 - Desktop launches the bundled CLI by absolute path. Do not import CLI source.
 - Desktop local tools and its device-profile workspace require no account. Gate remote
-  data and host authorization on login; keep legacy account-owned local data isolated.
+  data and host authorization on login. Only device-owned local work is supported.
 - Theme belongs in UI. Only pure tokens/types are available to every platform.
 - Add packages when their responsibility and actual consumers are established.
 - Core owns task domain schemas and pure rules; contracts composes wire schemas and
-  retains compatible re-exports. Tasks/model owns page state and injected view ports;
+  exports only transport definitions. Tasks/model owns page state and injected view ports;
   Tasks/client adapts those models to React. Keep execution in CLI's private harness
   until a second execution consumer establishes a shared package boundary.
 
@@ -68,6 +68,8 @@ The accepted foundation design supersedes documents in docs/history.
 - Preserve strict TypeScript, type-only imports and exactOptionalPropertyTypes.
 - Do not log credentials, tokens, cookies, passwords or private file content.
 - Device preferences and CLI SQLite profiles stay local and survive logout.
+- Support current protocols and data formats only. Do not add legacy fallback,
+  compatibility aliases or automatic imports of old data. Reject unsupported versions.
 - The new PostgreSQL database is isolated from the retired product database.
   Never run new migrations or destructive commands against an old/operator database.
 - File grants constrain built-in file operations. External commands retain OS permissions.
@@ -112,4 +114,4 @@ projections. Native handles initial opt-in without exporting cookies or host sec
 to the renderer. Explicit logout/account changes revoke the affected binding. Never publish the
 local method router or provider credentials. Desktop connection settings are
 user-level runtime TOML; server origins isolate sessions, remote settings and
-account-specific local Agent history.
+remote authorization.

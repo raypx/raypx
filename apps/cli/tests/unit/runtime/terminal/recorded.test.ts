@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { hookDecision, parseHookInvocation } from "../../../../src/runtime/terminal/protocol";
 import { ConversationRecorder } from "../../../../src/runtime/agents/activity";
 import type { ActivityDraft } from "../../../../src/runtime/agents/store";
-import type { AgentProvider, HumanDecision, TaskActivity } from "@raypx/contracts/tasks";
+
+import type { AgentProvider, HumanDecision, TaskActivity } from "@raypx/core/tasks";
 
 const directory = fileURLToPath(new URL("../../../fixtures/terminal/recorded", import.meta.url));
 type Fixture = {

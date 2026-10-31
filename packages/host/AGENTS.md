@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Shared Bun-only outbound remote-control transport for the CLI daemon and the
-legacy Desktop host. Domain schemas remain in contracts; execution stays in CLI.
+Bun-only outbound remote-control transport for the CLI daemon.
+Domain schemas live in Core; contracts owns wire envelopes; execution stays in CLI.
 
 ## Interface
 
@@ -11,8 +11,8 @@ Public exports are `RemoteControl`, `ControlInfo`, `serverOrigin` and the pure
 `readRemoteControlSettings` reader. The reader shares runtime parsing rules but
 must not create directories, IDs, files, controllers or network activity. Inject the
 local engine, credential renewal, notifications and optional observed-session
-projection/acknowledgement callbacks. Protocol 2 remains the managed-only fallback;
-protocol 3 adds terminal requests. Renderer code imports pure types from contracts.
+projection/acknowledgement callbacks. Relay requires protocol 3 and stops with
+UPGRADE_REQUIRED on unsupported versions. Renderer imports pure contract types.
 
 ## Constraints
 
@@ -32,12 +32,10 @@ for exact retry, renewal-drain and acknowledgement deadlines. RemoteControl forw
 one scheduler to RelayConnection so clocks, jitter and all timers share one source.
 Keep loopback coverage for actual authentication, command delivery and renewal.
 
-A rejected v3 handshake negotiates managed-only v2 once. Do not send observed
-frames or advertise terminal support on that connection. Terminal renewal failures
-call the owner's authorization-loss handler; that handler owns binding cleanup.
-Consume background promise failures and fence queued cleanup to its original binding.
-Always authenticate with the configured preferred protocol on a new connection
-cycle, including grant renewal; the accepted version is connection-local state.
+Unsupported handshakes stop with UPGRADE_REQUIRED. Terminal renewal failures call
+the owner's authorization-loss handler, which owns binding cleanup. Consume background
+promise failures and fence queued cleanup to its original binding. Always authenticate
+with protocol 3, including after grant renewal or an explicit restart.
 
 A new host advertises `announce.syncSupported`. Internal server sync requests use
 `resume.syncId`; never reset the cursor, reconnect or detach for these requests.

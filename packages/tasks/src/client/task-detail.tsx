@@ -2,7 +2,7 @@ import { Approval } from "./approval.js";
 
 import { ContextSnapshot } from "@raypx/memory/client";
 import { useId, useRef, useState, type FormEvent } from "react";
-import { type TaskWorkspaceClient } from "./remote-query.js";
+import type { TaskWorkspacePort } from "../model/port.js";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
@@ -34,7 +34,7 @@ export function TaskDetail({
   onChanged,
   scope,
 }: {
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   id: string;
   devices: SyncDevice[];
   onChanged: () => void;

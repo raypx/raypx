@@ -5,7 +5,8 @@ import {
   CollapsibleTrigger,
 } from "@raypx/ui/components/ui/collapsible";
 import { useId } from "react";
-import type { AgentTask, SyncDevice } from "@raypx/contracts/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
+import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";

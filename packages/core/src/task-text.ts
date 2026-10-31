@@ -8,7 +8,7 @@ export function taskText(value: string, max: number, tail = false) {
     boundary += tail ? 1 : -1;
   return tail ? value.slice(boundary) : value.slice(0, boundary);
 }
-/** JSON projections must be representable by PostgreSQL jsonb, including legacy data. */
+/** JSON projections must be representable by PostgreSQL jsonb, including malformed provider data. */
 export function normalizeTaskJson<T>(value: T): T {
   const string = (text: string) =>
     text.replaceAll("\0", "\ufffd").replace(/[\uD800-\uDFFF]/gu, "\ufffd");

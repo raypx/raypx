@@ -25,7 +25,8 @@ import {
   it,
   vi,
 } from "vite-plus/test";
-import type { JobDefinition, LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
+import type { LocalEvent, LocalMethod, RootGrant } from "@raypx/contracts/local";
+import type { JobDefinition } from "@raypx/jobs";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { ThemeProvider } from "@raypx/ui/themes";
 import { routeTree } from "../../../../src/routeTree.gen";

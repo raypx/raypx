@@ -17,42 +17,6 @@ import {
   terminalRequestSchema,
   terminalSessionSchema,
 } from "./terminal.js";
-export {
-  agentProviderSchema,
-  capabilitySchema,
-  questionSchema,
-  decisionSchema,
-  taskModeSchema,
-  taskStatusSchema,
-  activeTaskStatuses,
-  taskSchema,
-  humanRequestSchema,
-  taskInputActivitySchema,
-  taskActivitySchema,
-  taskInputSchema,
-  agentEventSchema,
-  validDecision,
-  taskContextSelectionSchema,
-  taskContextSnapshotSchema,
-  taskExecutionPrompt,
-  TaskContextError,
-  taskContextTargetSchema,
-  MAX_TASK_EXECUTION_PROMPT,
-  type TaskContextTarget,
-  type TaskContextSelection,
-  type TaskContextSnapshot,
-  type AgentProvider,
-  type AgentCapability,
-  type TaskStatus,
-  type AgentTask,
-  type HumanRequest,
-  type HumanDecision,
-  type TaskActivity,
-  type TaskInput,
-  type AgentEvent,
-} from "@raypx/core/tasks";
-export { taskText, normalizeTaskJson } from "@raypx/core/task-text";
-export { taskActivityPage, applyActivityEvent } from "@raypx/core/activity";
 export const RELAY_VERSION = 3;
 
 export const deviceProjectSchema = z.object({
@@ -151,7 +115,7 @@ export const relayCursorSchema = z.object({
 export const relayClientSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("auth"),
-    protocolVersion: z.union([z.literal(2), z.literal(RELAY_VERSION)]),
+    protocolVersion: z.literal(RELAY_VERSION),
     role: z.enum(["device", "viewer"]),
     token: z.string().min(32).max(200),
     cursors: z.array(relayCursorSchema).max(200).optional(),
@@ -201,7 +165,7 @@ export const relayClientSchema = z.discriminatedUnion("type", [
 export const relayServerSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ready"),
-    protocolVersion: z.union([z.literal(2), z.literal(RELAY_VERSION)]),
+    protocolVersion: z.literal(RELAY_VERSION),
     role: z.enum(["device", "viewer"]),
     contextSupported: z.boolean().optional(),
   }),

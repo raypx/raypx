@@ -1,12 +1,11 @@
 import { z } from "zod";
+import { deviceCommandSchema, relayCommandSchema, relayRequestSchema } from "./tasks.js";
 import {
   taskSchema,
-  deviceGrantSchema,
-  deviceCommandSchema,
   agentProviderSchema,
-  relayCommandSchema,
-  relayRequestSchema,
-} from "./tasks.js";
+  taskContextSelectionSchema,
+  taskContextTargetSchema,
+} from "@raypx/core/tasks";
 import { hostAuthorizationSchema, terminalDecisionSchema } from "./terminal.js";
 import {
   contextCreateSchema,
@@ -16,15 +15,14 @@ import {
   contextHistorySchema,
   contextRestoreSchema,
 } from "@raypx/memory";
-import { taskContextSelectionSchema, taskContextTargetSchema } from "@raypx/core/tasks";
 
 export const LOCAL_PROTOCOL_VERSION = 1 as const;
 /** Private device-profile owner, independent of any remote account or deployment. */
 export const LOCAL_WORKSPACE_ID = "device:local-workspace:v1";
 export const MAX_TEXT_BYTES = 1024 * 1024;
 const pathRef = { rootId: z.string().min(1), path: z.string().default("") };
-const agentAccount = { accountId: z.string().min(1).max(200) };
-const hostScope = { ...agentAccount, apiUrl: z.string().min(1).max(2048) };
+const deviceOwner = { accountId: z.literal(LOCAL_WORKSPACE_ID) };
+const hostScope = { accountId: z.string().min(1).max(200), apiUrl: z.string().min(1).max(2048) };
 export const rootGrantSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -41,17 +39,6 @@ export const fileEntrySchema = z.object({
   version: z.string(),
 });
 export type FileEntry = z.infer<typeof fileEntrySchema>;
-export {
-  commandSchema,
-  jobActionSchema,
-  jobInputSchema,
-  jobDefinitionSchema,
-  jobRunSchema,
-  type CommandSpec,
-  type JobInput,
-  type JobDefinition,
-  type JobRun,
-} from "@raypx/jobs";
 import { commandSchema, jobInputSchema } from "@raypx/jobs";
 export const localParams = {
   "memory.list": z.strictObject({}),
@@ -75,7 +62,6 @@ export const localParams = {
   "host.refresh": z.object(hostScope),
   "host.enable": z.object({ ...hostScope, enabled: z.boolean() }),
   "host.revoked": z.object(hostScope),
-  "host.legacy": z.object({ ...hostScope, grant: deviceGrantSchema }),
   "host.authorize": z.object({ ...hostScope, authorization: hostAuthorizationSchema }),
   "host.detach": z.object(hostScope),
   "approvals.local.settings": z.strictObject({}),
@@ -125,26 +111,26 @@ export const localParams = {
       })
       .optional(),
   }),
-  "agents.local.device": z.object(agentAccount),
+  "agents.local.device": z.object(deviceOwner),
   "agents.local.list": z.object({
-    ...agentAccount,
+    ...deviceOwner,
     limit: z.number().int().min(1).max(100).default(100),
     before: z.string().optional(),
   }),
   "agents.local.get": z.object({
-    ...agentAccount,
+    ...deviceOwner,
     id: z.string().uuid(),
     after: z.number().int().min(0).default(0),
     beforeActivity: z.number().int().positive().optional(),
   }),
-  "agents.local.approvals": z.object(agentAccount),
+  "agents.local.approvals": z.object(deviceOwner),
   "agents.local.execute": z.object({
-    ...agentAccount,
+    ...deviceOwner,
     id: z.string().uuid(),
     request: relayRequestSchema,
   }),
-  "agents.local.clear": z.object(agentAccount),
-  "agents.local.detach": z.object(agentAccount),
+  "agents.local.clear": z.object(deviceOwner),
+  "agents.local.detach": z.object(deviceOwner),
   "agents.remote": z.object({ binding: z.string().min(1).max(300), command: relayCommandSchema }),
   "agents.checkpoint": z.object({
     binding: z.string().min(1).max(300),

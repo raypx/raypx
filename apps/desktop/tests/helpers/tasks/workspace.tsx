@@ -9,9 +9,10 @@ import {
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { AgentTask, HumanRequest, SyncDevice, TaskActivity } from "@raypx/contracts/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
+import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import { DesktopTaskWorkspace } from "../../../src/features/tasks/workspace";
-import { localTaskClient, accountLocalTaskClient } from "../../../src/features/tasks/local-client";
+import { localTaskClient } from "../../../src/features/tasks/local-client";
 // Register matchers with the active Vite+ test runtime.
 // oxlint-disable-next-line import/no-empty-named-blocks, unicorn/require-module-specifiers
 import type {} from "@testing-library/jest-dom/vitest";
@@ -114,13 +115,11 @@ export function setupWorkspaceTests() {
     vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(480);
     vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(96);
     mocks.user = { id: "account-a" };
-    accountLocalTaskClient.setAccount("account-a");
     state.tasks = [];
     state.activity = [];
     state.request = undefined;
     localStorage.clear();
     localStorage.setItem("raypx_locale", "en");
-    localTaskClient.setAccount("account-a");
     mocks.remote.mockReset().mockRejectedValue(new Error("API offline"));
     mocks.request
       .mockReset()
@@ -182,10 +181,9 @@ export function setupWorkspaceTests() {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
-    localTaskClient.setAccount(null);
     for (const history of histories.splice(0)) history.destroy();
   });
-  return { accountLocalTaskClient };
+  return { localTaskClient };
 }
 export async function page(url = "/") {
   const history = createMemoryHistory({ initialEntries: [url] });

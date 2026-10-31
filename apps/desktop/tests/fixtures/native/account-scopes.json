@@ -5,10 +5,7 @@
       "accountId": "same-user-id",
       "limit": 50
     },
-    "expected": {
-      "accountId": "server:test-scope:d30cbf43eb36ef628555a3f0c39f90ff",
-      "limit": 50
-    }
+    "invalid": true
   },
   {
     "scope": "test-scope",
@@ -27,10 +24,7 @@
       "accountId": "",
       "limit": 50
     },
-    "expected": {
-      "accountId": "",
-      "limit": 50
-    }
+    "invalid": true
   },
   {
     "scope": "test-scope",
@@ -38,10 +32,7 @@
       "accountId": 42,
       "limit": 50
     },
-    "expected": {
-      "accountId": 42,
-      "limit": 50
-    }
+    "invalid": true
   },
   {
     "scope": "test-scope",
@@ -49,9 +40,6 @@
       "accountId": "用户",
       "limit": 50
     },
-    "expected": {
-      "accountId": "server:test-scope:0d0e1a86b3aa787709b00329fcd32b5b",
-      "limit": 50
-    }
+    "invalid": true
   }
 ]

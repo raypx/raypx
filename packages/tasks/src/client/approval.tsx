@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from "react";
-import { type TaskWorkspaceClient } from "./remote-query.js";
-import type { AgentTask, HumanRequest, HumanDecision } from "@raypx/contracts/tasks";
+import type { TaskWorkspacePort } from "../model/port.js";
+
+import type { AgentTask, HumanRequest, HumanDecision } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 
@@ -20,7 +21,7 @@ export function Approval({
   task,
   onChanged,
 }: {
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   request: HumanRequest;
   task?: AgentTask | undefined;
   onChanged: () => void;

@@ -14,9 +14,6 @@ vi.mock("../../../../src/features/auth/client", () => ({
   authClient: { useSession: () => mocks.session },
 }));
 vi.mock("../../../../src/features/tasks/client", () => ({ taskClient: { setAccount: vi.fn() } }));
-vi.mock("../../../../src/features/tasks/local-client", () => ({
-  accountLocalTaskClient: { setAccount: vi.fn() },
-}));
 vi.mock("../../../../src/lib/desktop", () => ({
   isDesktop: () => true,
   hasTerminalHooks: () => true,
@@ -52,9 +49,9 @@ it("preserves independent authorization across cookie expiry and renderer unmoun
   expect(mocks.local).not.toHaveBeenCalled();
   expect(mocks.sessionRequest).toHaveBeenCalledTimes(1);
 });
-it("revokes authorization and cancels account work on explicit sign-out", async () => {
-  await signOutDesktopHost("account-a");
+it("revokes remote authorization on explicit sign-out", async () => {
+  await signOutDesktopHost();
   expect(mocks.sessionRequest).toHaveBeenCalledWith({ accountId: null });
   expect(mocks.detach).toHaveBeenCalledTimes(1);
-  expect(mocks.local).toHaveBeenCalledWith("agents.local.detach", { accountId: "account-a" });
+  expect(mocks.local).not.toHaveBeenCalled();
 });

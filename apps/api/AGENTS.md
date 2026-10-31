@@ -190,8 +190,8 @@ explicitly plain private testing data; E2EE is a later public-release gate.
 Host bootstrap requires a session created within ten minutes and after the last
 security revocation. Replace the prior device key atomically under the account
 write lock. Validate password fingerprint and `control_owner.security_epoch` on
-host grants/relay access. Legacy credentials without a bootstrap session must
-reauthorize; they cannot issue grants or retain relay access. Successful bulk auth
+host grants/relay access. Credentials require a bootstrap session; missing attribution
+requires reauthorization and cannot issue grants or retain relay access. Successful bulk auth
 revocation advances the epoch; a successful single-session revocation targets only
 its credentials. Ordinary expiry is independent. Device revocation deletes its
 observed sessions/requests transactionally, preserving managed history. Background

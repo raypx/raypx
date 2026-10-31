@@ -37,6 +37,7 @@
     "@raypx/blocks": "workspace:*",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*",
     "@raypx/i18n": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/memory": "workspace:*",

@@ -101,9 +101,9 @@ Local tools render during session/network checks. Auth routes use a standalone l
 - Windows SessionKeys retains keyring 4's user.service identity and UTF-16LE
   password encoding; native smoke validates owned data/config before startup.
 - Keep native data paths and the lifetime desktop-instance.sqlite exclusive lock
-  compatible with earlier versions; never unlink an owned lock. Preferences remain
+  stable; never unlink an owned lock. Preferences remain
   device-local. Native reports raw JSON and read/missing/unreadable; renderer
-  validates. Only missing preferences migrate browser values. Serialize complete
+  validates. Missing preferences use defaults and never import browser values. Serialize complete
   updates and atomically preserve other top-level fields. A failed preference save keeps
   current UI choices and shows translated feedback with a deliberate retry; only native
   acknowledgements mark snapshots saved. Ignore obsolete completion feedback.

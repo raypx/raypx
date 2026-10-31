@@ -6,9 +6,11 @@ import {
   type TaskContextSelection,
   type TaskContextSnapshot,
   type TaskContextTarget,
+  type AgentTask,
 } from "@raypx/core/tasks";
 
-import { type AgentTask, type RelayRequest } from "@raypx/contracts/tasks";
+import { type RelayRequest } from "@raypx/contracts/tasks";
+
 import type { ControlRepository, ControlReader } from "./repository.js";
 import { CONTEXT_COMMAND_TTL_MS } from "./repository.js";
 
@@ -154,7 +156,7 @@ export class ControlCommands {
     if (previous.compacted || !previous.context) throw new ControlError("CONTEXT_REQUEST_EXPIRED");
     if (canonical(previous.request) !== canonical(request))
       throw new ControlError("IDEMPOTENCY_CONFLICT");
-    const acceptedAt = Date.parse(previous.capturedAt ?? previous.context.capturedAt);
+    const acceptedAt = Date.parse(previous.capturedAt ?? "");
     if (!Number.isFinite(acceptedAt) || this.clock() - acceptedAt >= CONTEXT_COMMAND_TTL_MS)
       throw new ControlError("CONTEXT_REQUEST_EXPIRED");
     if (request.method === "tasks.create") {

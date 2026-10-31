@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import { mkdtempSync, rmSync, statSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -9,91 +9,11 @@ import {
 } from "../../../../src/runtime/agents/store";
 import { AgentRuntime } from "../../../../src/runtime/agents";
 import { StateStore } from "../../../../src/runtime/state";
-import { taskSchema, type AgentEvent } from "@raypx/contracts/tasks";
+
+import { taskSchema, type AgentEvent } from "@raypx/core/tasks";
 import { Database } from "bun:sqlite";
 
 afterEach(() => vi.restoreAllMocks());
-it.each(["SQLITE_FULL", "SQLITE_IOERR", "SQLITE_BUSY"])(
-  "keeps the engine available after %s during optional VACUUM",
-  (code) => {
-    const directory = mkdtempSync(join(tmpdir(), "raypx-vacuum-failure-"));
-    const original: Database["exec"] = Reflect.get(Database.prototype, "exec"),
-      warning = vi.fn();
-    const execute = vi.spyOn(Database.prototype, "exec").mockImplementation(function (
-      this: Database,
-      statement: string,
-    ) {
-      if (statement.includes("VACUUM"))
-        throw Object.assign(new Error("private storage details"), { code });
-      return original.call(this, statement);
-    });
-    try {
-      const store = new AgentStore(directory, undefined, undefined, warning);
-      expect(store.tasks()).toEqual([]);
-      store.close();
-      expect(warning).toHaveBeenCalledWith({
-        operation: "agent.maintenance",
-        code: "VACUUM_DEFERRED",
-        outcome: "deferred",
-      });
-      new AgentStore(directory).close();
-      execute.mockRestore();
-      new AgentStore(directory).close();
-      const db = new Database(join(directory, "agents.sqlite"));
-      expect(db.query("SELECT value FROM agent_meta WHERE id='vacuum-pending'").get()).toBeNull();
-      db.close();
-    } finally {
-      rmSync(directory, { recursive: true, force: true });
-    }
-  },
-);
-it("reclaims a large legacy local journal once and skips cleanup on subsequent starts", () => {
-  const directory = mkdtempSync(join(tmpdir(), "raypx-legacy-size-"));
-  const file = join(directory, "agents.sqlite");
-  new AgentStore(directory).close();
-  const seed = new Database(file);
-  try {
-    seed.exec("DELETE FROM agent_meta WHERE id='local-journal-v2'");
-    const insert = seed.query(
-      "INSERT INTO journal(id,binding,value) VALUES (?, 'desktop:legacy', ?)",
-    );
-    const value = JSON.stringify({ taskId: "legacy", kind: "activity", text: "x".repeat(2048) });
-    seed.transaction(() => {
-      for (let index = 0; index < 20_000; index++) insert.run(`old-${index}`, value);
-    })();
-    seed.exec("PRAGMA wal_checkpoint(TRUNCATE)");
-  } finally {
-    seed.close();
-  }
-  const before = statSync(file).size;
-  try {
-    new AgentStore(directory).close();
-    expect(statSync(file).size).toBeLessThan(before / 4);
-    const check = new Database(file);
-    expect(check.query("SELECT count(*) as count FROM journal").get()).toEqual({ count: 0 });
-    expect(
-      JSON.stringify(
-        check
-          .query("EXPLAIN QUERY PLAN SELECT id FROM journal WHERE binding GLOB 'desktop:*'")
-          .all(),
-      ),
-    ).toContain("SEARCH journal USING INDEX journal_");
-    // A marker makes subsequent startup independent of old journal row counts.
-    check
-      .query("INSERT INTO journal(id,binding,value) VALUES ('sentinel','desktop:legacy',?)")
-      .run(JSON.stringify({ taskId: "legacy", kind: "activity" }));
-    check.close();
-    const execute = vi.spyOn(Database.prototype, "exec");
-    new AgentStore(directory).close();
-    expect(
-      execute.mock.calls.some(([statement]) =>
-        /VACUUM|DELETE FROM journal WHERE binding GLOB/.test(statement),
-      ),
-    ).toBe(false);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
-});
 it("stores local text once and sends linear-size relay deltas with a bounded referenced outbox", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-stream-storage-"));
   const store = new AgentStore(directory);
@@ -181,12 +101,11 @@ it("compacts journal bytes and removes dangling outbox references without removi
     rmSync(directory, { recursive: true, force: true });
   }
 });
-it("migrates old local revisions and bounds existing remote replay on restart", () => {
+it("leaves existing local journal rows intact and bounds remote replay on restart", () => {
   const directory = mkdtempSync(join(tmpdir(), "raypx-old-journal-"));
   const initial = new AgentStore(directory);
   initial.close();
   const db = new Database(join(directory, "agents.sqlite"));
-  db.exec("DELETE FROM agent_meta WHERE id='local-journal-v2'");
   const local = desktopBinding("account");
   const status = {
     id: crypto.randomUUID(),
@@ -227,11 +146,11 @@ it("migrates old local revisions and bounds existing remote replay on restart", 
       status,
     ]);
     expect(db.query("SELECT count(*) AS count FROM journal WHERE binding=?").get(local)).toEqual({
-      count: 1,
+      count: 1101,
     });
     expect(restored.events("relay")).toHaveLength(3);
-    expect(db.query("SELECT count(*) AS count FROM outbox WHERE value!=''").get()).toEqual({
-      count: 0,
+    expect(db.query("SELECT count(*) AS count FROM outbox").get()).toEqual({
+      count: 3,
     });
   } finally {
     restored.close();

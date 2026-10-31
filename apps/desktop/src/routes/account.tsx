@@ -107,7 +107,7 @@ function AccountPage() {
           busy={busy}
           onSignOut={() =>
             auth.signOut(async () => {
-              await signOutDesktopHost(state.account.id);
+              await signOutDesktopHost();
               queryClient.removeQueries({
                 predicate: (query) => query.queryKey.includes(state.account.id),
               });

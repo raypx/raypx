@@ -4,14 +4,12 @@ import { Link, useRouter, useLocation } from "@tanstack/react-router";
 import { TaskWorkspace } from "@raypx/tasks/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { useTranslations } from "@raypx/i18n/browser";
-import { apiUrl, authClient } from "../auth/client";
+import { apiUrl } from "../auth/client";
 import { taskClient } from "./client";
 import { isDesktop } from "../../lib/desktop";
-import { localTaskClient, accountLocalTaskClient } from "./local-client";
+import { localTaskClient } from "./local-client";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { RemoteBoundary } from "../auth/components/remote-boundary";
-import { SelectField } from "@raypx/ui/select-field";
-import { useId } from "react";
 import { accountMemory, localMemory } from "../memory/client";
 
 const local = instrumentTaskClient(localTaskClient, analytics, "local");
@@ -27,14 +25,9 @@ export function DesktopTaskWorkspace({
   const selectedScope = useLocation({
     select: (location) => new URLSearchParams(location.searchStr).get("scope"),
   });
-  const session = authClient.useSession(),
-    t = useTranslations("tasks"),
+  const t = useTranslations("tasks"),
     c = useTranslations("common");
-  const accountId = session.error || session.isPending ? null : (session.data?.user.id ?? null);
   const text = useTranslations("localWorkspace");
-  const legacy = useLocation({
-    select: (location) => new URLSearchParams(location.searchStr).get("history") === "account",
-  });
   const projectId = useLocation({
     select: (location) => new URLSearchParams(location.searchStr).get("project") ?? "",
   });
@@ -47,8 +40,6 @@ export function DesktopTaskWorkspace({
         : undefined;
     },
   });
-  const owner = legacy && accountId ? accountId : LOCAL_WORKSPACE_ID;
-  const sourceId = useId();
   return (
     <Tabs
       value={
@@ -79,52 +70,18 @@ export function DesktopTaskWorkspace({
       </div>
       <TabsContent value="local" className="space-y-6">
         <div className="space-y-3">
-          <p className="max-w-[75ch] text-sm text-muted-foreground">
-            {text(legacy ? "legacyHint" : "ownershipHint")}
-          </p>
-          {accountId && (
-            <div className="flex flex-wrap items-center gap-3">
-              <label htmlFor={sourceId} className="text-sm">
-                {text("source")}
-              </label>
-              <SelectField
-                id={sourceId}
-                value={legacy ? "account" : "device"}
-                onValueChange={(value) =>
-                  void router.navigate({
-                    to: view === "approvals" ? "/approvals" : "/tasks",
-                    search: {
-                      scope: "local",
-                      ...(value === "account" ? { history: "account" as const } : {}),
-                    },
-                    replace: true,
-                  })
-                }
-                options={[
-                  { value: "device", label: text("deviceSource") },
-                  { value: "account", label: text("legacySource") },
-                ]}
-              />
-            </div>
-          )}
+          <p className="max-w-[75ch] text-sm text-muted-foreground">{text("ownershipHint")}</p>
           <Link to="/welcome" className="text-sm underline underline-offset-4">
             {text("getStarted")}
           </Link>
         </div>
-        {legacy && !accountId ? (
-          <RemoteBoundary>{() => null}</RemoteBoundary>
-        ) : isDesktop() ? (
+        {isDesktop() ? (
           <TaskWorkspace
-            contextLibrary={legacy ? undefined : localMemory}
-            key={owner}
+            contextLibrary={localMemory}
             persistEditor
             storageNamespace={apiUrl}
-            client={legacy ? accountLocalTaskClient : local}
-            scope={
-              legacy && accountId
-                ? { kind: "account-local", namespace: apiUrl, accountId }
-                : { kind: "device", namespace: apiUrl, workspaceId: LOCAL_WORKSPACE_ID }
-            }
+            client={local}
+            scope={{ kind: "device", namespace: apiUrl, workspaceId: LOCAL_WORKSPACE_ID }}
             view={view}
             projectId={projectId}
             initialTaskId={taskId}
@@ -133,7 +90,6 @@ export function DesktopTaskWorkspace({
                 to: "/tasks",
                 search: {
                   scope: "local",
-                  ...(legacy ? { history: "account" as const } : {}),
                   ...(project ? { project } : {}),
                 },
               })

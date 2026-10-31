@@ -1,16 +1,17 @@
-import { isMissingProcedure } from "./response.js";
 import type { ApiClient } from "./index.js";
 import { RelayConnection, relayUrl, type RelaySocketFactory } from "./relay.js";
 import {
-  taskSchema,
-  humanRequestSchema,
-  taskInputActivitySchema,
-  type TaskInput,
   type RelayRequest,
   type RelayCursor,
   type TaskChange,
   terminalRequestSchema,
 } from "@raypx/contracts/api";
+import {
+  taskSchema,
+  humanRequestSchema,
+  taskInputActivitySchema,
+  type TaskInput,
+} from "@raypx/core/tasks";
 
 type Input<M extends RelayRequest["method"]> = Extract<RelayRequest, { method: M }>["input"];
 export interface TaskClient extends Pick<
@@ -60,7 +61,6 @@ export function createTaskClient(
   let account: string | null = null,
     connection: RelayConnection | undefined,
     connected = false;
-  let protocolVersion: 2 | 3 = 3;
   let terminalError: string | null = null;
   const inFlight = new Map<string, { key: string; promise: Promise<unknown> }>();
   const listeners = new Set<(change?: TaskChange) => void>(),
@@ -108,9 +108,6 @@ export function createTaskClient(
           cursors: [...cursors.values()],
         };
       },
-      protocolChanged: (value) => {
-        protocolVersion = value;
-      },
       status: (value, code) => {
         if (code === "UPGRADE_REQUIRED") terminalError = code;
         connected = value;
@@ -155,8 +152,6 @@ export function createTaskClient(
   };
   const sendRequest = async (value: RelayRequest, signal?: AbortSignal) => {
     if (terminalError) throw failure(terminalError);
-    if (value.method === "observed.decide" && protocolVersion === 2)
-      throw failure("UPGRADE_REQUIRED");
     if (!connected) {
       if (!account) throw failure("AUTH_REQUIRED");
       connect();
@@ -197,8 +192,6 @@ export function createTaskClient(
       value.input.contextSelection?.sources.length &&
       !connection.contextSupported
     )
-      throw failure("UPGRADE_REQUIRED");
-    if (value.method === "observed.decide" && protocolVersion === 2)
       throw failure("UPGRADE_REQUIRED");
     const id =
       value.method === "observed.decide"
@@ -262,15 +255,7 @@ export function createTaskClient(
     devices: api.devices,
     relay: api.relay,
     observed: {
-      list: async (...args) => {
-        if (protocolVersion === 2) return { sessions: [], requests: [] };
-        try {
-          return await api.observed.list(...args);
-        } catch (error) {
-          if (isMissingProcedure(error)) return { sessions: [], requests: [] };
-          throw error;
-        }
-      },
+      list: (...args) => api.observed.list(...args),
       get: (...args) => api.observed.get(...args),
       decide: async (input, opts) =>
         terminalRequestSchema.parse(
@@ -305,7 +290,6 @@ export function createTaskClient(
       stop();
       account = value;
       terminalError = null;
-      protocolVersion = 3;
       cursors.clear();
       connect();
       changed();

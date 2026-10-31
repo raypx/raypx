@@ -4,7 +4,7 @@ import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { LoadingState } from "@raypx/ui/loading-state";
 import { TaskComposer } from "@raypx/tasks/client/task-composer";
-import type { TaskWorkspaceClient } from "@raypx/tasks/client";
+import type { TaskWorkspacePort } from "@raypx/tasks/model";
 import { SignInLink } from "../auth/components/session-boundary";
 import { saveGuestDraft, writeGuestDraft, useGuestDraft } from "./guest-draft";
 
@@ -12,7 +12,7 @@ export function GuestTasks({
   client,
   namespace,
 }: {
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   namespace: string;
 }) {
   const t = useTranslations("tasks");

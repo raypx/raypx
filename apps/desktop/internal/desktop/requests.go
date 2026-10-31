@@ -18,13 +18,13 @@ func (d *Desktop) RendererParams(method string, params any) (any, error) {
 	}
 	if input, ok := params.(map[string]any); ok {
 		input = clone(input)
+		if strings.HasPrefix(method, "agents.local.") {
+			if id, exists := input["accountId"]; exists && id != "device:local-workspace:v1" {
+				return nil, errors.New("Local workspace owner is invalid")
+			}
+		}
 		if strings.HasPrefix(method, "connectors.") {
 			input["configDirs"] = d.Config.Directories
-		}
-		if strings.HasPrefix(method, "agents.local.") {
-			if id, ok := input["accountId"].(string); ok && id != "" && UTF16Length(id) <= 200 && id != "device:local-workspace:v1" {
-				input["accountId"] = "server:" + d.Config.Scope + ":" + Digest(id)[:32]
-			}
 		}
 		return input, nil
 	}

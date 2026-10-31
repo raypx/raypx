@@ -2,7 +2,8 @@ import { expect, it } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { agentFixtures } from "../../../helpers/agents";
-import type { AgentProvider } from "@raypx/contracts/tasks";
+
+import type { AgentProvider } from "@raypx/core/tasks";
 // Shortened from the production ten seconds; the races depend on ordering, not duration.
 const interruptTimeoutMs = 1000;
 const { host } = agentFixtures({ interruptTimeoutMs });

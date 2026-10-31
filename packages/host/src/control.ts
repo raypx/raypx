@@ -12,11 +12,11 @@ import {
   deviceGrantSchema,
   type DeviceGrant,
   type DeviceProject,
-  type AgentCapability,
   type RelayServerFrame,
   type SequencedEvent,
   type SnapshotRecord,
 } from "@raypx/contracts/tasks";
+import { type AgentCapability } from "@raypx/core/tasks";
 import type { LocalMethod } from "@raypx/contracts/local";
 import { serverOrigin } from "./origin.js";
 import type { ControlInfo } from "@raypx/contracts/terminal";
@@ -58,7 +58,6 @@ export class RemoteControl {
   private renewalFailures = 0;
   private renewalTimer: (() => void) | undefined;
   private draining = false;
-  private protocolVersion: 2 | 3;
   private readonly commands = new Set<Promise<void>>();
   private get scheduler() {
     return this.options.scheduler ?? systemRelayScheduler;
@@ -92,7 +91,6 @@ export class RemoteControl {
       socket?: RelaySocketFactory;
       scheduler?: RelayScheduler;
       renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
-      protocolVersion?: 2 | 3;
       authorizationLost?: (code: "AUTH_REQUIRED" | "DEVICE_REVOKED") => Promise<void>;
       bindingKey?: (accountId: string, grant: DeviceGrant) => string;
       syncObserved?: (
@@ -107,7 +105,6 @@ export class RemoteControl {
       drainTimeoutMs?: number;
     } = {},
   ) {
-    this.protocolVersion = options.protocolVersion ?? 2;
     this.settings = { installationId: crypto.randomUUID(), accounts: {} };
     try {
       mkdirSync(directory, { recursive: true });
@@ -133,7 +130,7 @@ export class RemoteControl {
       connected: this.accountId === accountId && this.connected,
       pendingRevoke: saved?.pendingRevoke ?? null,
       binding: saved?.binding ?? null,
-      terminalSupported: this.protocolVersion === 3,
+      terminalSupported: true,
       error: this.storageUnavailable
         ? "SETTINGS_UNAVAILABLE"
         : this.accountId === accountId
@@ -183,7 +180,6 @@ export class RemoteControl {
     this.binding = binding;
     this.grant = grant;
     this.apiUrl = apiUrl;
-    this.protocolVersion = this.options.protocolVersion ?? 2;
     this.error = null;
     this.renewAt = 0;
     const saved = this.settings.accounts[accountId];
@@ -215,15 +211,10 @@ export class RemoteControl {
       ...(this.options.socket ? { socket: this.options.socket } : {}),
       authenticate: async () => ({
         type: "auth",
-        // Negotiate from the preferred version on every connection cycle. The
-        // accepted version describes this connection, not the server forever.
-        protocolVersion: this.options.protocolVersion ?? 2,
+        protocolVersion: 3,
         role: "device",
         token: grant.token,
       }),
-      protocolChanged: (version) => {
-        this.protocolVersion = version;
-      },
       status: (connected, code) => {
         if (generation !== this.generation) return;
         if (!connected) {
@@ -561,8 +552,7 @@ export class RemoteControl {
         this.renewalFailures = 0;
         this.renewAt = 0;
         this.error = null;
-        if (this.protocolVersion === 3)
-          await this.options.syncObserved?.((frame) => this.connection!.send(frame));
+        await this.options.syncObserved?.((frame) => this.connection!.send(frame));
         if (!this.dirty && !this.snapshotRequests.size) return;
         continue;
       }

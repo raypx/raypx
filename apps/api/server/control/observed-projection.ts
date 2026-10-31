@@ -62,10 +62,7 @@ export class ObservedProjectionStore {
         const old = await tx.get<ObservedRequest>("observed_request", request.id);
         if (old && (old.deviceId !== actor.deviceId || old.sessionId !== request.sessionId))
           throw new ControlError("NOT_FOUND");
-        if (
-          old?.revision === request.revision &&
-          !(old.status === "cancelled" && old.epoch !== frame.epoch && request.status !== "pending")
-        ) {
+        if (old?.revision === request.revision) {
           const { deviceId: _deviceId, serverCancelled: _cancelled, ...projection } = old;
           if (
             canonical(old.serverCancelled ? { ...projection, status: "pending" } : projection) !==
@@ -75,13 +72,7 @@ export class ObservedProjectionStore {
         }
         // Only the host assigns request revisions. A server-side cancellation is a
         // projection fence and must never consume its next revision.
-        const legacyCancellation =
-          old?.status === "cancelled" && old.epoch !== frame.epoch && request.status !== "pending";
-        if (
-          !old ||
-          old.revision < request.revision ||
-          (legacyCancellation && old.revision === request.revision)
-        )
+        if (!old || old.revision < request.revision)
           await tx.put("observed_request", { ...request, deviceId: actor.deviceId });
       }
       const history = await tx.list<ObservedRequest>("observed_request", device.id, {

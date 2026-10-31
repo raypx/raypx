@@ -11,15 +11,10 @@ and injectable fetch/socket types. `RelayScheduler` and `systemRelayScheduler` e
 clock, timer cancellation and random source; RelayConnection accepts one optional scheduler
 for deterministic retry and heartbeat tests, retaining system defaults at runtime. Task mutations use the relay; HTTP reads retain
 the existing projection contracts. Relay traffic contains no credentials in URLs.
-Task subscriptions carry typed device/event/reset changes. Relay v3 carries observed requests; managed-only v2 remains compatible. Rejected v3 authentication falls back once to managed-only v2 with a new ticket.
-Unsupported versions then stop reconnection with UPGRADE_REQUIRED. Incremental activities require their exact baseline;
-consumers recover missing revisions from the task checkpoint.
-After an accepted connection drops, retry the preferred protocol before falling
-back again. Explicit restart also resets negotiation; a rolling upgrade must not
-leave a client permanently on v2. Only plain HTTP 404 indicates a missing router;
-typed RPC NOT_FOUND remains a domain error.
-Contextual tasks require an explicit `ready.contextSupported` on every connection.
-Absence rejects before sending with `UPGRADE_REQUIRED`; ordinary tasks remain compatible.
+Task subscriptions carry typed device/event/reset changes. Relay requires v3 for
+managed tasks and observed requests. Unsupported versions stop with UPGRADE_REQUIRED;
+there is no downgrade or missing-procedure fallback. New account attachment explicitly
+restarts a rejected connection after the server is upgraded.
 
 ## Ownership
 
@@ -27,7 +22,7 @@ The browser/native-safe remote API SDK.
 
 ## Constraints
 
-Use only the public contracts/api entry. Reconnect replays events by cursor; never
+Use public contracts/api and Core domain entries. Reconnect replays events by cursor; never
 automatically retry a sent execution command. Fetch credentials and headers for every request. Use POST without automatic retry, compression or batching. No filesystem, SQLite, PTY, environment or database imports.
 
 ## Verification

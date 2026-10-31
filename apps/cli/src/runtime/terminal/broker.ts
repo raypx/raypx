@@ -6,7 +6,8 @@ import {
   type TerminalDecision,
   type TerminalRequest,
 } from "@raypx/contracts/terminal";
-import { validDecision, type HumanDecision } from "@raypx/contracts/tasks";
+
+import { validDecision, type HumanDecision } from "@raypx/core/tasks";
 import { LocalError } from "../errors";
 
 export type FallbackReason = "away_off" | "unavailable" | "expired" | "disconnected" | "stopped";

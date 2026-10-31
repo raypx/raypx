@@ -16,7 +16,8 @@
   "dependencies": {
     "@orpc/client": "catalog:",
     "@orpc/contract": "catalog:",
-    "@raypx/contracts": "workspace:*"
+    "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",

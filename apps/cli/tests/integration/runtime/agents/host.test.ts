@@ -7,7 +7,8 @@ import { StateStore } from "../../../../src/runtime/state";
 import { AgentRuntime } from "../../../../src/runtime/agents";
 import { AgentStore } from "../../../../src/runtime/agents/store";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import type { AgentTask } from "@raypx/contracts/tasks";
+
+import type { AgentTask } from "@raypx/core/tasks";
 const { host } = agentFixtures();
 
 it("routes Codex permission requests and deduplicates command replay", async () => {

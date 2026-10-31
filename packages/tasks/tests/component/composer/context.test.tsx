@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { TaskComposer } from "@raypx/tasks/client/task-composer";
-import type { TaskWorkspaceClient } from "@raypx/tasks/client";
+import type { TaskWorkspacePort } from "@raypx/tasks/model";
 import { taskExecutionBudget, type TaskContextSelection } from "@raypx/core/tasks";
 import type { SyncDevice } from "@raypx/contracts/tasks";
 import type { MemoryClientPort } from "@raypx/memory/client";
@@ -48,7 +48,7 @@ function fixture(guest = false, content = "Selected reference content") {
   const list = vi.fn<MemoryClientPort["list"]>(async () => [reference]);
   const get = vi.fn<MemoryClientPort["get"]>(async () => ({ ...reference, content }));
   const library = { list, get } as unknown as MemoryClientPort;
-  const create = vi.fn<TaskWorkspaceClient["tasks"]["create"]>(async (input) => ({
+  const create = vi.fn<TaskWorkspacePort["tasks"]["create"]>(async (input) => ({
     ...input,
     summary: "",
     parentTaskId: null,
@@ -56,7 +56,7 @@ function fixture(guest = false, content = "Selected reference content") {
     updatedAt: new Date().toISOString(),
     status: "running",
   }));
-  const client = { tasks: { create } } as unknown as TaskWorkspaceClient;
+  const client = { tasks: { create } } as unknown as TaskWorkspacePort;
   const signIn = vi.fn();
   function Composer() {
     const prompt = useRef<HTMLTextAreaElement>(null),

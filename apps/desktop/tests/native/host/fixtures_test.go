@@ -107,6 +107,12 @@ func TestSharedRendererAndScopeFixtures(t *testing.T) {
 	for _, row := range fixture(t, "account-scopes") {
 		desktop.Config.Scope = row["scope"].(string)
 		value, err := desktop.RendererParams("agents.local.list", row["input"])
+		if row["invalid"] == true {
+			if err == nil {
+				t.Error("accepted retired local owner")
+			}
+			continue
+		}
 		if err != nil || !reflect.DeepEqual(value, row["expected"]) {
 			t.Errorf("account scope fixture differs: %v", row["input"])
 		}

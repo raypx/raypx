@@ -62,6 +62,7 @@
         "@raypx/ai": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/host": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/logger": "workspace:*",
@@ -89,6 +90,7 @@
         "@raypx/blocks": "workspace:*",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
         "@raypx/i18n": "workspace:*",
         "@raypx/jobs": "workspace:*",
         "@raypx/memory": "workspace:*",
@@ -200,6 +202,9 @@
         "@raypx-kit/tsconfig": "catalog:dev",
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
+        "@raypx/jobs": "workspace:*",
+        "@raypx/memory": "workspace:*",
         "@raypx/tooling": "workspace:*",
         "@types/bun": "catalog:dev",
       },
@@ -314,6 +319,7 @@
         "@orpc/client": "catalog:",
         "@orpc/contract": "catalog:",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
       },
       "devDependencies": {
         "@raypx-kit/tsconfig": "catalog:dev",
@@ -416,6 +422,7 @@
       "dependencies": {
         "@raypx/client": "workspace:*",
         "@raypx/contracts": "workspace:*",
+        "@raypx/core": "workspace:*",
       },
       "devDependencies": {
         "@raypx-kit/tsconfig": "catalog:dev",

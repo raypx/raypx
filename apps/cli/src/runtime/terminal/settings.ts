@@ -5,7 +5,8 @@ import {
   TERMINAL_HOOK_TIMEOUT_SECONDS,
   terminalPermissionMatcher,
 } from "@raypx/contracts/terminal";
-import type { AgentProvider } from "@raypx/contracts/tasks";
+
+import type { AgentProvider } from "@raypx/core/tasks";
 import { LocalError } from "../errors";
 import { terminalCapabilities } from "./protocol";
 

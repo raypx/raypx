@@ -5,12 +5,8 @@ import { capture } from "../helpers/capture.js";
 import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
 import { selectOption } from "../helpers/select.js";
 import { expectViewportShell } from "../helpers/layout.js";
-import type {
-  AgentTask,
-  HumanRequest,
-  TaskActivity,
-  RelayClientFrame,
-} from "@raypx/contracts/tasks";
+import type { RelayClientFrame } from "@raypx/contracts/tasks";
+import type { AgentTask, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 
 for (const [surface, base] of surfaces) {
   test(
@@ -139,7 +135,7 @@ for (const [surface, base] of surfaces) {
         socket.onMessage((raw) => {
           const frame = JSON.parse(String(raw)) as RelayClientFrame;
           if (frame.type === "auth")
-            socket.send(JSON.stringify({ type: "ready", protocolVersion: 2, role: "viewer" }));
+            socket.send(JSON.stringify({ type: "ready", protocolVersion: 3, role: "viewer" }));
           if (frame.type !== "request") return;
           let value: unknown;
           if (frame.request.method === "tasks.input") {

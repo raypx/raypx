@@ -1,12 +1,12 @@
+import { taskText } from "@raypx/core/task-text";
 import {
-  taskText,
   taskExecutionPrompt,
   humanRequestSchema,
   type AgentTask,
   type HumanDecision,
   type HumanRequest,
   type TaskInput,
-} from "@raypx/contracts/tasks";
+} from "@raypx/core/tasks";
 import { LocalError } from "../../errors";
 import type { AgentStore, LocalAgentTask } from "../store";
 import type { ConversationRecorder } from "../activity";

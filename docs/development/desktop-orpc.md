@@ -13,12 +13,13 @@ Requests use the oRPC JSON envelope. Current contracts represent dates as string
 nonempty serialization metadata, blobs and maps are rejected. HTTP 401 maps to
 AUTH_REQUIRED; recognized NOT_FOUND/FORBIDDEN/BAD_REQUEST errors preserve only
 their fixed code. Server messages/data are not forwarded. A plain/malformed 404
-maps to MISSING_PROCEDURE, the only condition permitting the legacy host path.
+maps to MISSING_PROCEDURE and authorization fails. The current hosts API is required;
+there is no browser-grant fallback.
 Redirects cannot become successful authorization responses.
 
 Run `bun run --cwd apps/desktop mygo:test`. The Go tests launch the actual oRPC 2
 TypeScript router in tests/native/fixtures/orpc-server.ts with the pinned Bun,
 on an ephemeral loopback port. They verify Cookie continuity, native credentials,
-account/authorize/revoke calls, status-less errors, legacy fallback, redirect
+account/authorize/revoke calls, status-less errors, missing procedures, redirect
 refusal and unsupported metadata. No GUI, database or provider login is needed.
 Loopback protocol checks do not establish production HTTPS persistence acceptance.

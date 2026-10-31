@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
-import { decisionSchema, type AgentProvider } from "@raypx/contracts/tasks";
+
+import { decisionSchema, type AgentProvider } from "@raypx/core/tasks";
 import { TERMINAL_HOOK_TIMEOUT_SECONDS } from "@raypx/contracts/terminal";
 import { hookDecision, parseHookInvocation } from "./protocol";
 import { localAddressSchema, localFetch } from "../local-http";

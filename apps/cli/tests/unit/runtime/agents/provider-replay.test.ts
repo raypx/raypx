@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/contracts/tasks";
+
+import type { AgentProvider, HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import {
   ManagedExecution,
   type ExecutionStore,

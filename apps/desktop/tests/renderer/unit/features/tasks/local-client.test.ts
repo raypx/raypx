@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vite-plus/test";
-import type { AgentTask } from "@raypx/contracts/tasks";
+
+import type { AgentTask } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID, type LocalEvent, type LocalMethod } from "@raypx/contracts/local";
 import {
   createLocalTaskClient,
@@ -23,11 +24,9 @@ const task: AgentTask = {
 };
 it("keeps the device owner stable across login, account switches and logout", async () => {
   const request = vi.fn(async () => [task]);
-  const client = createLocalTaskClient(createLocalClient(request), () => () => {}, {
-    owner: LOCAL_WORKSPACE_ID,
-  });
+  const client = createLocalTaskClient(createLocalClient(request), () => () => {});
   for (const account of [null, "account-a", "account-b", null]) {
-    client.setAccount(account);
+    void account;
     await client.tasks.list({ limit: 100 });
   }
   expect(request.mock.calls).toHaveLength(4);
@@ -69,10 +68,6 @@ it("uses only scoped IPC for queries and mutations even when network access fail
     listener = next;
     return detach;
   });
-  await expect(client.tasks.list({ limit: 100 })).rejects.toMatchObject({
-    data: { error: { code: "AUTH_REQUIRED" } },
-  });
-  client.setAccount("account-a");
   const changed = vi.fn(),
     stop = client.subscribe(changed);
   expect((await client.tasks.list({ limit: 100 }))[0]?.id).toBe(task.id);
@@ -92,14 +87,14 @@ it("uses only scoped IPC for queries and mutations even when network access fail
     calls.every(
       (call) =>
         call.method.startsWith("agents.local.") &&
-        (call.params as { accountId: string }).accountId === "account-a",
+        (call.params as { accountId: string }).accountId === LOCAL_WORKSPACE_ID,
     ),
   ).toBe(true);
   expect(network).not.toHaveBeenCalled();
   stop();
   expect(detach).toHaveBeenCalledTimes(1);
 });
-it("rejects old account responses and preserves host error codes", async () => {
+it("preserves host error codes and honors cancelled reads", async () => {
   let resolve!: (value: unknown) => void;
   const request = vi
     .fn()
@@ -111,11 +106,9 @@ it("rejects old account responses and preserves host error codes", async () => {
     )
     .mockResolvedValue({ ok: false, code: "PROJECT_BUSY" });
   const client = createLocalTaskClient(createLocalClient(request), () => () => {});
-  client.setAccount("account-a");
   const old = client.tasks.list({ limit: 100 });
-  client.setAccount("account-b");
   resolve([task]);
-  await expect(old).rejects.toMatchObject({ data: { error: { code: "AUTH_REQUIRED" } } });
+  expect(await old).toEqual([task]);
   await expect(client.tasks.create(task)).rejects.toMatchObject({
     data: { error: { code: "PROJECT_BUSY" } },
   });
@@ -163,7 +156,6 @@ it("shares one command for identical in-flight cancels", async () => {
       }),
   );
   const client = createLocalTaskClient(createLocalClient(request), () => () => {});
-  client.setAccount("account-a");
   const first = client.tasks.cancel({ id: task.id }),
     second = client.tasks.cancel({ id: task.id });
   resolve({ ok: true, value: task });

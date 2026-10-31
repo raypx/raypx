@@ -1,5 +1,6 @@
 import { ContextError } from "@raypx/memory";
-import { TaskContextError } from "@raypx/contracts/tasks";
+
+import { TaskContextError } from "@raypx/core/tasks";
 
 export class LocalError extends Error {
   constructor(

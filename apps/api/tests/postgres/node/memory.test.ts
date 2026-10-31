@@ -325,7 +325,7 @@ it("reads historical snapshots without waiting for an account write lock and inv
   expect(rows).toHaveLength(4);
 });
 
-it("keeps legacy uppercase document keys linked to immutable versions while canonicalizing DTOs", async () => {
+it("does not read or migrate retired noncanonical document keys", async () => {
   const id = `abcdefab-${crypto.randomUUID().slice(9)}`,
     physicalId = id.toUpperCase();
   const original = input(),
@@ -349,28 +349,16 @@ it("keeps legacy uppercase document keys linked to immutable versions while cano
     body: { ...legacy, reason: "created" },
   });
   const service = new ContextLibraryService({ repository, scope: "account" });
-  expect(await service.get(owner, { id })).toMatchObject({ id, revision: 1, project: target });
-  expect(await service.create(owner, { requestId: id, document: original })).toMatchObject({
-    id,
-    revision: 1,
+  await expect(service.get(owner, { id })).rejects.toMatchObject({ code: "CONTEXT_NOT_FOUND" });
+  await expect(service.create(owner, { requestId: id, document: original })).rejects.toMatchObject({
+    code: "IDEMPOTENCY_CONFLICT",
   });
-  await service.update(owner, { id, revision: 1, document: { ...original, content: "New text" } });
-  expect((await service.history(owner, { id })).map((version) => version.revision)).toEqual([2, 1]);
   expect(
-    (await service.resolve(owner, { sources: [{ id, revision: 1 }] }, target, "Task")).sources[0],
-  ).toMatchObject({ id, content: original.content, project: target });
-  await service.archive(owner, { id, revision: 2, archived: true });
-  expect(await service.restore(owner, { id, revision: 3, version: 1 })).toMatchObject({
-    id,
-    revision: 4,
-    archived: true,
-  });
-  expect((await repository.version(owner, id, 1)).id).toBe(id);
-  const physicalVersions = await connection.db
-    .select({ id: contextVersion.documentId })
-    .from(contextVersion)
-    .where(eq(contextVersion.documentId, physicalId));
-  expect(physicalVersions).toEqual(Array.from({ length: 4 }, () => ({ id: physicalId })));
+    await connection.db
+      .select({ id: contextVersion.documentId })
+      .from(contextVersion)
+      .where(eq(contextVersion.documentId, physicalId)),
+  ).toEqual([{ id: physicalId }]);
 });
 
 it("prevents canonical document collisions in the database across owners", async () => {
@@ -415,7 +403,9 @@ it("prevents canonical document collisions in the database across owners", async
           archived: false,
         }),
       ).rejects.toMatchObject({ cause: { code: "23505" } });
-    expect(await repository.create(collisionOwner, id, input())).toMatchObject({ id });
+    await expect(repository.create(collisionOwner, id, input())).rejects.toMatchObject({
+      code: "IDEMPOTENCY_CONFLICT",
+    });
     await expect(repository.findCreation(stranger, id, input())).rejects.toMatchObject({
       code: "IDEMPOTENCY_CONFLICT",
     });

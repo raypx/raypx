@@ -1,4 +1,4 @@
-import { normalizeTaskJson } from "@raypx/contracts/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
 import type { AuthSession } from "@raypx/auth/types";
 import {
   CONTEXT_COMMAND_TTL_MS,
@@ -8,7 +8,8 @@ import {
   type RecordKind,
 } from "../../server/control/repository.js";
 import type { ControlService } from "../../server/control/service.js";
-import type { AgentTask, HumanRequest } from "@raypx/contracts/tasks";
+
+import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
 
 export function memoryControlRepository(): ControlRepository & {
   validSession: boolean;

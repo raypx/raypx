@@ -2,19 +2,20 @@ import {
   type TaskContextSelection,
   type TaskContextSnapshot,
   type TaskContextTarget,
-} from "@raypx/core/tasks";
-
-import type { TerminalRequest, TerminalSession } from "@raypx/contracts/terminal";
-import {
-  normalizeTaskJson,
   activeTaskStatuses,
   type AgentTask,
   type AgentEvent,
   type HumanRequest,
+} from "@raypx/core/tasks";
+
+import type { TerminalRequest, TerminalSession } from "@raypx/contracts/terminal";
+import {
   type RelayClientFrame,
   type RelayCommand,
   type RelayRequest,
 } from "@raypx/contracts/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
+
 import type { ControlRecord } from "./repository.js";
 
 export class ControlError extends Error {

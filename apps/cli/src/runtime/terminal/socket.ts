@@ -37,7 +37,7 @@ export function privateSocketDirectory(
         rmdirSync(old); // Never remove unknown contents or recurse into a stale path.
       }
     } catch {
-      /* Unmarked legacy directories and unavailable paths are left intact. */
+      /* Unowned directories and unavailable paths are left intact. */
     }
   }
   const directory = mkdtempSync(prefix);

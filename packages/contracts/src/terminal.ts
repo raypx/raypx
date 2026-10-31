@@ -98,7 +98,6 @@ export interface ControlInfo {
   binding: { deviceId: string; epoch: number } | null;
   error: string | null;
   daemon?: boolean;
-  legacy?: boolean;
   persistent?: boolean;
   authorized?: boolean;
   terminalSupported?: boolean;

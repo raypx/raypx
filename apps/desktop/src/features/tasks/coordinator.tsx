@@ -1,19 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { apiUrl, authClient } from "../auth/client";
 import { taskClient } from "./client";
-import { getBridge, isDesktop, onLocalEvent, localRequest } from "../../lib/desktop";
-import { accountLocalTaskClient } from "./local-client";
+import { getBridge, isDesktop, onLocalEvent } from "../../lib/desktop";
 
 export function RemoteCoordinator() {
   const session = authClient.useSession();
   const accountId = session.error ? undefined : session.data?.user.id;
-  const previousAccount = useRef<string | null>(null);
   useEffect(() => {
     taskClient.setAccount?.(accountId ?? null);
-    accountLocalTaskClient.setAccount(accountId ?? null);
     return () => {
       taskClient.setAccount?.(null);
-      accountLocalTaskClient.setAccount(null);
     };
   }, [accountId]);
   useEffect(() => {
@@ -21,10 +17,6 @@ export function RemoteCoordinator() {
     // Restricted host credentials outlive browser sessions on both platforms.
     // Explicit sign-out uses controlSession(null) through host-session.ts.
     if (!accountId) return;
-    const previous = previousAccount.current;
-    previousAccount.current = accountId ?? null;
-    if (previous && previous !== accountId)
-      void localRequest("agents.local.detach", { accountId: previous }).catch(() => {});
     let active = true;
     let refreshing = false;
     const attach = async () => {

@@ -4,8 +4,10 @@ import { Approval } from "./approval.js";
 import { PersistentTaskComposer } from "./persistent-task-composer.js";
 import { type MemoryClientPort } from "@raypx/memory/client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
-import type { AgentTask, SyncDevice, HumanRequest } from "@raypx/contracts/tasks";
+import { useRemoteQuery } from "./remote-query.js";
+import type { TaskWorkspacePort } from "../model/port.js";
+import type { SyncDevice } from "@raypx/contracts/tasks";
+import type { AgentTask, HumanRequest } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 
@@ -31,7 +33,7 @@ import {
 } from "../model/scope.js";
 
 interface Props {
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   scope: WorkspaceScope | null;
   pending?: boolean;
   persistEditor?: boolean;

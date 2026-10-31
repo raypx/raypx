@@ -1,14 +1,8 @@
 import { type LocalClient } from "@raypx/contracts/local-client";
 import { LOCAL_WORKSPACE_ID, type LocalEvent } from "@raypx/contracts/local";
-import {
-  taskSchema,
-  humanRequestSchema,
-  taskInputActivitySchema,
-  type RelayRequest,
-  taskChangeSchema,
-  type TaskChange,
-} from "@raypx/contracts/tasks";
-import type { TaskWorkspaceClient } from "@raypx/tasks/client";
+import { type RelayRequest, taskChangeSchema, type TaskChange } from "@raypx/contracts/tasks";
+import { taskSchema, humanRequestSchema, taskInputActivitySchema } from "@raypx/core/tasks";
+import type { TaskWorkspacePort } from "@raypx/tasks/model";
 import { localRequest, onLocalEvent, hasTerminalHooks } from "../../lib/desktop";
 import { observedProjectionSchema, terminalRequestSchema } from "@raypx/contracts/terminal";
 
@@ -18,17 +12,17 @@ function failure(code: string) {
 export function createLocalTaskClient(
   request: LocalClient = localRequest,
   events: (listener: (event: LocalEvent) => void) => () => void = onLocalEvent,
-  configuration: { owner?: string; observed?: boolean } = {},
-): TaskWorkspaceClient & { setAccount(accountId: string | null): void } {
-  let account: string | null = configuration.owner ?? null;
+): TaskWorkspacePort {
   const listeners = new Set<(change?: TaskChange) => void>();
   let stopEvents: (() => void) | undefined;
   const changed = (change?: TaskChange) => {
     for (const listener of listeners) listener(change);
   };
-  const read = async <T>(run: (accountId: string) => Promise<T>, signal?: AbortSignal) => {
-    const id = account;
-    if (!id) throw failure("AUTH_REQUIRED");
+  const read = async <T>(
+    run: (accountId: typeof LOCAL_WORKSPACE_ID) => Promise<T>,
+    signal?: AbortSignal,
+  ) => {
+    const id = LOCAL_WORKSPACE_ID;
     signal?.throwIfAborted();
     let value: T;
     try {
@@ -36,7 +30,6 @@ export function createLocalTaskClient(
     } catch {
       throw failure("LOCAL_UNAVAILABLE");
     }
-    if (account !== id) throw failure("AUTH_REQUIRED");
     signal?.throwIfAborted();
     return value;
   };
@@ -67,7 +60,7 @@ export function createLocalTaskClient(
     return result.value;
   };
   return {
-    ...(configuration.observed && hasTerminalHooks()
+    ...(hasTerminalHooks()
       ? {
           observed: {
             list: (_input, options) =>
@@ -133,13 +126,6 @@ export function createLocalTaskClient(
           await execute({ method: "approvals.decide", input }, options?.signal),
         ),
     },
-    setAccount(id) {
-      if (configuration.owner) return;
-      if (account !== id) {
-        account = id;
-        changed();
-      }
-    },
     subscribe(listener) {
       listeners.add(listener);
       stopEvents ??= events((event) => {
@@ -161,9 +147,9 @@ export function createLocalTaskClient(
 }
 // The sidebar badge counts approvals from this computer and connected computers.
 export function createPendingClient(
-  local: TaskWorkspaceClient,
-  remote: TaskWorkspaceClient,
-): TaskWorkspaceClient {
+  local: TaskWorkspacePort,
+  remote: TaskWorkspacePort,
+): TaskWorkspacePort {
   let localRequests = new Map<string, string>();
   const refreshLocal = async (options?: { signal?: AbortSignal | undefined }) => {
     if (!local.observed) return;
@@ -244,9 +230,4 @@ export function createPendingClient(
     },
   };
 }
-export const localTaskClient = createLocalTaskClient(undefined, undefined, {
-  owner: LOCAL_WORKSPACE_ID,
-  observed: true,
-});
-/** Legacy account-owned history and account-authorized terminal requests stay isolated. */
-export const accountLocalTaskClient = createLocalTaskClient();
+export const localTaskClient = createLocalTaskClient();

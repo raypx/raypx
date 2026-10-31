@@ -20,8 +20,6 @@ const browser = createBrowserLanguage<Locale, typeof en>(
     // The catalog provider reads the store; this snapshot only satisfies the adapter.
     messages: store.snapshot() as MessagesByLocale,
     storageKey: LOCALE_PREFERENCE_KEY,
-    // Values written before the product rename keep working once.
-    legacyStorageKeys: ["voidmix_locale"],
   },
 );
 

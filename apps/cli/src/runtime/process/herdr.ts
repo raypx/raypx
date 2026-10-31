@@ -1,7 +1,8 @@
 import { mkdtemp, mkdir, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
-import type { CommandSpec, LocalEvent } from "@raypx/contracts/local";
+import type { LocalEvent } from "@raypx/contracts/local";
+import type { CommandSpec } from "@raypx/jobs";
 import type { Environment } from "./bun";
 import { LocalError } from "../errors";
 import { herdrError, herdrRequest, record } from "./herdr-ipc";

@@ -1,14 +1,13 @@
 import {
-  taskActivityPage,
-  applyActivityEvent,
   MAX_RELAY_BYTES,
-  type AgentEvent,
   type RelayClientFrame,
   type RelayCursor,
   type RelayServerFrame,
   type SnapshotRecord,
   type SequencedEvent,
 } from "@raypx/contracts/tasks";
+import { taskActivityPage, applyActivityEvent } from "@raypx/core/activity";
+import { type AgentEvent } from "@raypx/core/tasks";
 import type { ControlRepository, ControlTransaction } from "./repository.js";
 
 import {

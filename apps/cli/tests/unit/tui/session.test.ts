@@ -1,4 +1,4 @@
-import type { JobDefinition, JobRun } from "@raypx/contracts/local";
+import type { JobDefinition, JobRun } from "@raypx/jobs";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { runSession, type TuiService } from "../../../src/tui/session";
 import type { TuiTerminal } from "../../../src/tui/terminal";

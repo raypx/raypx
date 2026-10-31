@@ -2,7 +2,7 @@ import { afterEach, expect, it } from "vite-plus/test";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { checkDeployment, syncDeploymentCompatibility } from "../../src/validation/deployment.js";
+import { checkDeployment } from "../../src/validation/deployment.js";
 
 const repository = resolve(import.meta.dirname, "../../../..");
 const roots: string[] = [];
@@ -24,7 +24,6 @@ function fixture() {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     copyFileSync(join(repository, file), join(root, file));
   }
-  syncDeploymentCompatibility(root);
   return root;
 }
 function replace(root: string, file: string, from: string, to: string) {
@@ -107,14 +106,4 @@ it("ignores build-stage settings and checks the inherited Railway runtime", () =
     "FROM runtime AS railway\nENV NITRO_PORT=30020",
   );
   expect(checkDeployment(inherited)).toContain("apps/api/Dockerfile: runtime port must be 3002");
-});
-
-it("rejects stale compatibility copies and regenerates them from the canonical source", () => {
-  const root = fixture();
-  replace(root, "apps/api/Dockerfile", "NITRO_PORT=3002", 'NITRO_PORT="3002"');
-  expect(checkDeployment(root)).toEqual([
-    "deploy/railway/api/Dockerfile: run bun run raypx-dev deployment:sync to refresh the compatibility copy",
-  ]);
-  syncDeploymentCompatibility(root);
-  expect(checkDeployment(root)).toEqual([]);
 });

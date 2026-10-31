@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 import { access, mkdtemp, mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { FileEntry, JobDefinition, RootGrant, ToolResult } from "@raypx/contracts/local";
+import type { FileEntry, RootGrant, ToolResult } from "@raypx/contracts/local";
+import type { JobDefinition } from "@raypx/jobs";
 import manifest from "../../../package.json";
 import { parseCliArgs } from "../../../src/commands/args";
 import { runCommand } from "../../../src/commands/index";

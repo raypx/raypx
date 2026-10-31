@@ -2,7 +2,8 @@ import { bounded } from "../../../../src/runtime/agents";
 import { expect, it, vi } from "vite-plus/test";
 import { ConversationRecorder } from "../../../../src/runtime/agents/activity";
 import type { ActivityDraft } from "../../../../src/runtime/agents/store";
-import type { TaskActivity } from "@raypx/contracts/tasks";
+
+import type { TaskActivity } from "@raypx/core/tasks";
 
 function recorder() {
   const entries = new Map<string, TaskActivity>();

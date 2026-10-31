@@ -1,13 +1,8 @@
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type {
-  AgentProvider,
-  AgentTask,
-  HumanRequest,
-  RelayRequest,
-  SyncDevice,
-} from "@raypx/contracts/tasks";
+import type { RelayRequest, SyncDevice } from "@raypx/contracts/tasks";
+import type { AgentProvider, AgentTask, HumanRequest } from "@raypx/core/tasks";
 
 // Explicit gate: existing provider credentials/configuration are used and inference is billed.
 if (process.env.RAYPX_LIVE_AGENTS !== "1")

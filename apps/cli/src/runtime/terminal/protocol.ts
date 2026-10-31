@@ -1,4 +1,5 @@
-import { normalizeTaskJson, type AgentProvider, type HumanDecision } from "@raypx/contracts/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
+import { type AgentProvider, type HumanDecision } from "@raypx/core/tasks";
 import {
   terminalPermissionSupported,
   type TerminalRequest,

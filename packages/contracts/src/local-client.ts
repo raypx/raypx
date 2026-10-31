@@ -6,16 +6,15 @@ import {
   type LocalParams,
   type LocalMethod,
 } from "./local.js";
+import { deviceSchema, deviceProjectSchema } from "./tasks.js";
 import {
   taskSchema,
-  deviceSchema,
   capabilitySchema,
-  deviceProjectSchema,
   agentEventSchema,
   humanRequestSchema,
   taskActivitySchema,
   taskContextSnapshotSchema,
-} from "./tasks.js";
+} from "@raypx/core/tasks";
 import { observedProjectionSchema, terminalRequestSchema } from "./terminal.js";
 import {
   contextDocumentSchema,
@@ -25,9 +24,7 @@ import {
 } from "@raypx/memory";
 import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs";
 
-const settings = localParams["approvals.local.configure"].extend({
-  migrationRequired: z.boolean().optional(),
-});
+const settings = localParams["approvals.local.configure"];
 const connector = z.object({
   provider: z.enum(["claude", "codex"]),
   installed: z.boolean(),

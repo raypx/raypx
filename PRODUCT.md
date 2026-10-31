@@ -20,11 +20,11 @@ actions and interactive terminals through the bundled Raypx CLI.
   login. Return to the original page afterward and restore drafts without sending them.
 - Local runtime state and device preferences survive account logout.
 - New Desktop local tasks and drafts belong to the current device workspace, across
-  login, account switches and logout. Legacy account-owned local data keeps its original
-  server/account scope. Neither workspace is uploaded or merged automatically.
+  login, account switches and logout. Local data is never uploaded automatically.
+  Old account-owned local workspaces and automatic data migration are unsupported.
 - Show real execution, permission failures and retry state. Never fabricate data.
 - macOS and Windows Desktop Quit leaves the independent CLI daemon and Agent tasks running.
-  Explicit logout/revoke cancels affected remote and legacy account work, preserving
+  Explicit logout/revoke cancels affected remote work, preserving
   device-owned tasks. Daemon stop cancels owned work. Host/OS restart recovery
   remains a separate capability.
 - Use stable package interfaces and add shared packages when real consumers need them.

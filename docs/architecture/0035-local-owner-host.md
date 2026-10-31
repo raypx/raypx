@@ -79,24 +79,12 @@ is never automatically retried over another channel.
 
 ## Upgrade and data boundaries
 
-Automatic migration requires all of: valid `host-binding.json`, a matching valid
-`host-session.json` with normalized origin/account, valid legacy `observed.json`
-in the selected binding directory, and that directory's parsed
-`remote-control.json` with `accounts[accountId].enabled === true`.
-The shared settings reader is pure: no RemoteControl construction, new directory,
-installation ID, writes or network. Missing and corrupt files remain distinct.
-
-A valid source seeds local rootIds/Away/wait and preserves enabled cloud terminal
-sharing for that exact binding with the same project scope, offline. Other
-accounts/origins are never merged. A versioned atomic state makes migration
-repeatable; source files are preserved. Without an explicit current binding, even
-a single legacy directory is not inferred. Defaults are Away off, empty project
-scope and cloud sharing off; unsafe migration shows a reconfiguration notice.
-
-Legacy terminal databases remain in place and are not imported or uploaded.
-Restart recovery remains pending → cancelled and decided/delivered →
-outcome_unknown. Account changes preserve `LOCAL_WORKSPACE_ID` work/settings;
-legacy `server:<origin>:<account>` work retains the existing detach rule.
+Only `terminal/settings.json` is read. Missing settings start with Away off, empty
+project scope and cloud sharing off. Corrupt current settings require explicit repair.
+No host-binding, per-account observed settings or older terminal databases are imported.
+Existing files are left intact. Account changes preserve `LOCAL_WORKSPACE_ID` work and
+settings; remote work remains scoped to its authorized account and origin.
+Restart recovery remains pending → cancelled and decided/delivered → outcome_unknown.
 
 ## Execution adapters and scope
 

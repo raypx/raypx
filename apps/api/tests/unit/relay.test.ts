@@ -2,21 +2,24 @@ import { expect, it, vi } from "vite-plus/test";
 import { RelayHub } from "../../server/relay/hub.js";
 import { ControlService } from "../../server/control/service.js";
 import { connected, memoryControlRepository } from "../helpers/control.js";
-it("rejects old relay versions with a terminal upgrade code", async () => {
-  const service = new ControlService(memoryControlRepository()),
-    hub = new RelayHub(async (run) => run(service)),
-    id = crypto.randomUUID(),
-    send = vi.fn(),
-    close = vi.fn();
-  hub.open({ id, send, close });
-  await hub.receive(
-    id,
-    JSON.stringify({ type: "auth", role: "viewer", token: "synthetic-token-without-version" }),
-  );
-  expect(send).toHaveBeenCalledWith({ type: "error", code: "UPGRADE_REQUIRED" });
-  expect(close).toHaveBeenCalledWith(4006, "UPGRADE_REQUIRED");
-  await hub.shutdown();
-});
+it.each([undefined, 2, "3", 4])(
+  "rejects unsupported relay version %s with a terminal upgrade code",
+  async (protocolVersion) => {
+    const service = new ControlService(memoryControlRepository()),
+      hub = new RelayHub(async (run) => run(service)),
+      id = crypto.randomUUID(),
+      send = vi.fn(),
+      close = vi.fn();
+    hub.open({ id, send, close });
+    await hub.receive(
+      id,
+      JSON.stringify({ type: "auth", protocolVersion, role: "viewer", token: "synthetic-token" }),
+    );
+    expect(send).toHaveBeenCalledWith({ type: "error", code: "UPGRADE_REQUIRED" });
+    expect(close).toHaveBeenCalledWith(4006, "UPGRADE_REQUIRED");
+    await hub.shutdown();
+  },
+);
 
 it("drains in-flight device frames before disconnecting on shutdown", async () => {
   const control = new ControlService(memoryControlRepository()),
@@ -38,7 +41,7 @@ it("drains in-flight device frames before disconnecting on shutdown", async () =
   hub.open({ id, send() {}, close() {} });
   await hub.receive(
     id,
-    JSON.stringify({ type: "auth", protocolVersion: 2, role: "device", token: f.grant.token }),
+    JSON.stringify({ type: "auth", protocolVersion: 3, role: "device", token: f.grant.token }),
   );
   blocked = true;
   const announce = hub.receive(id, JSON.stringify(f.announce));
@@ -61,7 +64,7 @@ it("classifies repository failures as retryable server errors, never invalid cli
   hub.open({ id, send, close });
   await hub.receive(
     id,
-    JSON.stringify({ type: "auth", protocolVersion: 2, role: "viewer", token: "x".repeat(72) }),
+    JSON.stringify({ type: "auth", protocolVersion: 3, role: "viewer", token: "x".repeat(72) }),
   );
   expect(send).toHaveBeenCalledWith({ type: "error", code: "SERVER_UNAVAILABLE" });
   expect(close).toHaveBeenCalledWith(1011, "SERVER_UNAVAILABLE");

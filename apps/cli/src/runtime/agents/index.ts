@@ -3,26 +3,28 @@ import type { RecordDiagnostic } from "../../diagnostics";
 import { existsSync, realpathSync } from "node:fs";
 import { hostname } from "node:os";
 import {
-  taskText,
-  activeTaskStatuses,
-  type AgentTask,
-  type AgentProvider,
-  type AgentCapability,
-  type AgentEvent,
   type DeviceProject,
   type DeviceCommand,
   type RelayCommand,
   type SnapshotRecord,
   type RelayRequest,
   type SyncDevice,
-  type TaskInput,
   type TaskChange,
+} from "@raypx/contracts/tasks";
+import { taskText } from "@raypx/core/task-text";
+import {
+  activeTaskStatuses,
+  type AgentTask,
+  type AgentProvider,
+  type AgentCapability,
+  type AgentEvent,
+  type TaskInput,
   validDecision,
   TaskContextError,
   type TaskContextSelection,
   type TaskContextTarget,
   type TaskContextSnapshot,
-} from "@raypx/contracts/tasks";
+} from "@raypx/core/tasks";
 import { type StateStore, acquireLock } from "../state";
 import { LocalError } from "../errors";
 import { AgentStore, desktopBinding, isDesktopBinding, type LocalAgentTask } from "./store";
@@ -91,7 +93,7 @@ export class AgentRuntime {
       ) => Promise<TaskContextSnapshot>;
     } = {},
   ) {
-    this.store = new AgentStore(state.directory, undefined, undefined, options.recordDiagnostic);
+    this.store = new AgentStore(state.directory);
     for (const local of this.store.tasks({ activeOnly: true }))
       this.status(local, "interrupted", undefined, "HOST_RESTARTED");
   }

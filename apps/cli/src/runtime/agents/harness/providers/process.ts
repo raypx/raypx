@@ -1,4 +1,4 @@
-import type { HumanDecision, HumanRequest } from "@raypx/contracts/tasks";
+import type { HumanDecision, HumanRequest } from "@raypx/core/tasks";
 import { JsonProcess } from "../../transport";
 
 /** The provider adapter sees protocol I/O, never Bun's child process or task storage. */

@@ -1,4 +1,5 @@
-import { type AgentTask, type RelayRequest } from "@raypx/contracts/tasks";
+import { type RelayRequest } from "@raypx/contracts/tasks";
+import { type AgentTask } from "@raypx/core/tasks";
 import type { ControlTransaction } from "./repository.js";
 
 import { type ContextCommand, canonical, hash } from "./records.js";

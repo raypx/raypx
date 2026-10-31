@@ -63,7 +63,7 @@ test("relays a task from mobile Web, applies an approval on Desktop and pushes t
     socket.addEventListener("error", () => reject(new Error("Relay unavailable")), { once: true });
   });
   try {
-    send({ type: "auth", protocolVersion: 2, role: "device", token: grant.token });
+    send({ type: "auth", protocolVersion: 3, role: "device", token: grant.token });
     await take("ready");
     const projectId = crypto.randomUUID(),
       streamId = crypto.randomUUID();

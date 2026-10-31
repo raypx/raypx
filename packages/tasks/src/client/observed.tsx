@@ -15,16 +15,17 @@ import {
 } from "@raypx/ui/components/ui/collapsible";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
 import { ChevronDown, Terminal } from "lucide-react";
-import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
+import { useRemoteQuery } from "./remote-query.js";
+import type { TaskWorkspacePort } from "../model/port.js";
 import { ApprovalBody } from "./approval-body.js";
 
-type ObservedClient = NonNullable<TaskWorkspaceClient["observed"]>;
-type Client = TaskWorkspaceClient & { observed: ObservedClient };
+type ObservedClient = NonNullable<TaskWorkspacePort["observed"]>;
+type Client = TaskWorkspacePort & { observed: ObservedClient };
 export function ObservedApprovals({
   client,
   accountId,
 }: {
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   accountId: string;
 }) {
   if (!client.observed) return null;

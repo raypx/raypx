@@ -1,5 +1,6 @@
 import { expect, it } from "vite-plus/test";
-import type { AgentEvent, TaskActivity } from "@raypx/contracts/tasks";
+
+import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
 import { ConversationState } from "../../src/model.js";
 
 it("keeps 10,000 loaded entries and bounds historical work during tail streaming", () => {

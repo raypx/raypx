@@ -13,9 +13,9 @@ it.each([
 ])("rejects an unsafe desktop login destination %s", (input) => {
   expect(desktopReturnTo(input)).toBe("/");
 });
-it("retains local/remote scope and the selected legacy history through login", () => {
+it("retains local/remote scope and the selected project through login", () => {
   expect(desktopReturnTo("/tasks?scope=remote#editor")).toBe("/tasks?scope=remote#editor");
-  expect(desktopReturnTo("/approvals?scope=local&history=account")).toBe(
-    "/approvals?scope=local&history=account",
+  expect(desktopReturnTo("/approvals?scope=local&project=project-a")).toBe(
+    "/approvals?scope=local&project=project-a",
   );
 });

@@ -1,7 +1,9 @@
 import { expect } from "@playwright/test";
 import { test } from "./helpers/browser-fixture.js";
-import type { AgentTask } from "@raypx/contracts/tasks";
-import type { CloudJob, CloudJobCreateInput, CloudJobRun } from "@raypx/contracts/jobs";
+
+import type { AgentTask } from "@raypx/core/tasks";
+
+import type { CloudJob, CloudJobCreateInput, CloudJobRun } from "@raypx/jobs";
 import { authResponse, signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 import { selectOption } from "./helpers/select.js";
 

@@ -9,7 +9,6 @@
     "./api": "./src/api.ts",
     "./local": "./src/local.ts",
     "./tasks": "./src/tasks.ts",
-    "./task-text": "./src/task-text.ts",
     "./terminal": "./src/terminal.ts",
     "./jobs": "./src/jobs.ts",
     "./memory": "./src/memory.ts",

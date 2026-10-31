@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { readStaticCatalog } from "@raypx-kit/devkit/catalogs";
 import { apiIngress, deploymentServices } from "../build/deployment.js";
 
@@ -7,21 +7,6 @@ interface ComposeService {
   environment?: Record<string, string>;
   healthcheck?: { test: string[] };
   labels?: string[];
-}
-
-const compatibilityCopy = (app: "api" | "web", source: string) =>
-  `${source}# Generated from apps/${app}/Dockerfile; run bun run raypx-dev deployment:sync.\n`;
-
-/** Keep old Railway build paths usable until the live IaC cutover is complete. */
-export function syncDeploymentCompatibility(root: string) {
-  for (const app of ["api", "web"] as const) {
-    const destination = join(root, `deploy/railway/${app}/Dockerfile`);
-    mkdirSync(dirname(destination), { recursive: true });
-    writeFileSync(
-      destination,
-      compatibilityCopy(app, readFileSync(join(root, `apps/${app}/Dockerfile`), "utf8")),
-    );
-  }
 }
 
 /** Check static deployment adapters without importing application runtime code or loading env files. */
@@ -51,11 +36,6 @@ export function checkDeployment(root: string): string[] {
       const service = deploymentServices[app];
       const file = `apps/${app}/Dockerfile`;
       const source = read(file);
-      const legacy = `deploy/railway/${app}/Dockerfile`;
-      if (!existsSync(join(root, legacy)) || read(legacy) !== compatibilityCopy(app, source))
-        findings.push(
-          `${legacy}: run bun run raypx-dev deployment:sync to refresh the compatibility copy`,
-        );
       const stages = dockerStages(source);
       if (
         ![stages.runtime, stages.final].every(

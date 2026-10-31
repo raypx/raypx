@@ -2,14 +2,13 @@ import { JobError, type CloudJobRun } from "@raypx/jobs";
 import type { JobDispatchResult } from "@raypx/jobs/server";
 import {
   relayClientSchema,
-  normalizeTaskJson,
-  taskSchema,
-  humanRequestSchema,
   MAX_RELAY_BYTES,
   type RelayClientFrame,
   type RelayServerFrame,
   type SnapshotRecord,
 } from "@raypx/contracts/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
+import { taskSchema, humanRequestSchema } from "@raypx/core/tasks";
 import { terminalRequestSchema } from "@raypx/contracts/terminal";
 import { ControlError, type ControlService, type RelayActor } from "../control/service.js";
 export interface RelayPeer {
@@ -21,7 +20,6 @@ type Client = {
   peer: RelayPeer;
   actor?: RelayActor;
   ready: boolean;
-  protocolVersion?: 2 | 3;
   chain: Promise<void>;
   timer: ReturnType<typeof setTimeout>;
   cursor?: { streamId: string; sequence: number };
@@ -102,7 +100,7 @@ export class RelayHub {
           typeof raw === "object" &&
           "type" in raw &&
           raw.type === "auth" &&
-          (!("protocolVersion" in raw) || ![2, 3].includes(Number(raw.protocolVersion)))
+          (!("protocolVersion" in raw) || raw.protocolVersion !== 3)
         )
           throw new ControlError("UPGRADE_REQUIRED");
         const parsed = relayClientSchema.safeParse(raw);
@@ -149,7 +147,6 @@ export class RelayHub {
       );
       if (!this.inRoom(actor.userId)) throw new ControlError("FORBIDDEN");
       client.actor = actor;
-      client.protocolVersion = frame.protocolVersion;
       clearTimeout(client.timer);
       client.timer = setTimeout(
         () => client.peer.close(4001, "Credential expired"),
@@ -189,8 +186,6 @@ export class RelayHub {
     }
     if (actor.role === "viewer") {
       if (frame.type !== "request") throw new ControlError("FORBIDDEN");
-      if (frame.request.method === "observed.decide" && client.protocolVersion !== 3)
-        throw new ControlError("UPGRADE_REQUIRED");
       try {
         const command = await this.use((control) =>
           control.route(actor.userId, frame.id, frame.request),
@@ -246,15 +241,11 @@ export class RelayHub {
       return;
     }
     if (frame.type === "observed") {
-      if (client.protocolVersion !== 3 || !client.ready) throw new ControlError("FORBIDDEN");
+      if (!client.ready) throw new ControlError("FORBIDDEN");
       await this.use((control) => control.observed(actor, frame));
       this.send(client, { type: "observed_ack", epoch: frame.epoch, revision: frame.revision });
       for (const viewer of this.peers.values())
-        if (
-          viewer.actor?.role === "viewer" &&
-          viewer.actor.userId === actor.userId &&
-          viewer.protocolVersion === 3
-        )
+        if (viewer.actor?.role === "viewer" && viewer.actor.userId === actor.userId)
           this.send(viewer, { type: "observed_changed", deviceId: actor.deviceId });
       return;
     }

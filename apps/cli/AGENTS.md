@@ -61,7 +61,7 @@ Default builds/tests need no Herdr/Rust. `smoke:herdr-terminal` is the explicit 
   measures only its short-lived logging scope.
 - Built-in file operations reject traversal and symlinks. External commands run with ordinary user permissions.
 - Deletion requires explicit confirmation. File writes require the current version or null for creation.
-- Legacy stdio EOF and explicit daemon stop cancel owned descendants. Daemon proxy EOF
+- Foreground stdio EOF and explicit daemon stop cancel owned descendants. Daemon proxy EOF
   disconnects one client and cancels its tools/PTYs, preserving Agent tasks and scheduling.
   Missed Cron triggers are skipped.
 - Profile databases and locks are local; tests and smoke runs use temporary profiles.
@@ -150,18 +150,15 @@ uncertain inference. Conversation projections select text, tool status and usage
 exclude reasoning, child-agent content, tool arguments and stdout. Activity entries
 keep stable IDs and increasing revisions; throttle deltas and flush on termination.
 
-`agents.local.*` exposes account-scoped task reads, direct commands, device metadata
+`agents.local.*` exposes device-workspace task reads, direct commands, device metadata
 and detach through private stdio only. Local tasks use a persistent device identity
 and a `desktop:` binding, share the same execution locks and approval arbitration,
 and keep status/request journal history without a cloud outbox. Activity lives only in its latest projection. Never include these bindings in
 remote snapshots or replay. Local activity survives relay compaction. Local pages, pending
 approvals and startup recovery filter in indexed SQL. History survives logout until
-`agents.local.clear` removes finished tasks and orphaned receipts atomically, keeping active work/parents and pending creation; active local work is cancelled on account change or engine shutdown. A new local approval adds `pendingRequest`
+`agents.local.clear` removes finished tasks and orphaned receipts atomically, keeping active work/parents and pending creation; device-owned local work survives account changes and stops on engine shutdown. A new local approval adds `pendingRequest`
 to `agent.changed` so Desktop can notify; relay approvals notify after delivery.
-Legacy local activity journal cleanup is a marked, indexed one-time migration,
-followed by VACUUM to reclaim disk. Any optional VACUUM failure emits a sanitized
-warning and leaves reclamation pending for the next startup without blocking the
-engine or repeating row cleanup. Use contracts' code-point-safe
+Use Core's code-point-safe
 text clipping and JSON normalization at persistence boundaries. Codex counter resets
 replace the baseline and mark the affected turn's usage unknown. A rejected steer
 waits in the queue for actual turn completion; it never times out a healthy turn.
@@ -175,7 +172,7 @@ and cancellation never start another inference call. An approved hook-based plan
 also moves the task to run mode so it is not offered twice.
 
 P1 review hardening: proxy stdout contains complete bounded NDJSON lines only.
-Administrative stop accepts an older known IPC version and waits for owner lock
+Administrative stop accepts only the current IPC protocol, permits a different build, and waits for owner lock
 release; explicit restart cancels owned work. Closing rejects new clients. Compiled
 build identity also fences same-version upgrades. Connector status validates the
 owned executable, repair/update retains ownership and refuses downgrades. Explicit

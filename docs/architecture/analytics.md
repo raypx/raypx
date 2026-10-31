@@ -12,9 +12,8 @@ Usage statistics and error reports default off and are independent device choice
 Web restores localStorage after hydration; Desktop reads current Native analytics
 preferences through a five-second RPC and saves only analytics through its own RPC.
 Capture stays disabled until the read completes; startup preload is not an authorization source.
-Missing/failed
-Native reads never fall back to stale WebView consent. Legacy preference files
-have both categories disabled. Theme/locale writes preserve analytics fields.
+Missing/failed Native reads never fall back to stale WebView consent.
+Missing consent fields disable both categories. Theme/locale writes preserve analytics fields.
 SDK loading is deferred until an enabled category is used. Disabled/unconfigured
 builds never send diagnostics, and pre-consent events are not queued for later.
 

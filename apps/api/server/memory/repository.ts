@@ -64,7 +64,7 @@ const summaryView = (row: Omit<DocumentRow, "userId" | "content">) =>
   });
 const versionView = (body: unknown, physicalId: string, revision: number) => {
   const version = contextVersionSchema.parse(body);
-  if (version.id !== physicalId.toLowerCase() || version.revision !== revision)
+  if (version.id !== physicalId || version.revision !== revision)
     throw new ContextError("CONTEXT_UNAVAILABLE");
   return version;
 };
@@ -72,9 +72,7 @@ async function documentRow(tx: Database | Transaction, owner: string, id: string
   const query = tx
     .select()
     .from(contextDocument)
-    .where(
-      and(eq(contextDocument.userId, owner), sql`lower(${contextDocument.id})=${id.toLowerCase()}`),
-    )
+    .where(and(eq(contextDocument.userId, owner), eq(contextDocument.id, id.toLowerCase())))
     .limit(2);
   const rows = await (lock ? query.for("update") : query);
   if (!rows.length) throw new ContextError("CONTEXT_NOT_FOUND");
@@ -144,7 +142,8 @@ async function findCreation(
   if (rows.length > 1) throw new ContextError("IDEMPOTENCY_CONFLICT");
   const row = rows[0];
   if (!row) return null;
-  if (row.userId !== owner) throw new ContextError("IDEMPOTENCY_CONFLICT");
+  if (row.userId !== owner || row.id !== requestId.toLowerCase())
+    throw new ContextError("IDEMPOTENCY_CONFLICT");
   const original = await selectedVersion(tx, owner, row.id, 1);
   if (canonical(definition(original)) !== canonical(definition(input)))
     throw new ContextError("IDEMPOTENCY_CONFLICT");
@@ -163,7 +162,12 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
         await db
           .select(summaryColumns)
           .from(contextDocument)
-          .where(eq(contextDocument.userId, owner))
+          .where(
+            and(
+              eq(contextDocument.userId, owner),
+              sql`${contextDocument.id}=lower(${contextDocument.id})`,
+            ),
+          )
           .orderBy(desc(contextDocument.updatedAt), desc(contextDocument.id))
           .limit(100)
       ).map(summaryView);
@@ -315,7 +319,6 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
           current: summaryColumns,
           version: contextVersion.body,
           versionRevision: contextVersion.revision,
-          duplicates: sql<number>`(count(*) over (partition by lower(${contextDocument.id})))::integer`,
         })
         .from(contextDocument)
         .leftJoin(
@@ -326,7 +329,7 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
             sql`(${sql.join(
               sources.map(
                 (source) =>
-                  sql`(lower(${contextDocument.id})=${source.id.toLowerCase()} and ${contextVersion.revision}=${source.revision})`,
+                  sql`(${contextDocument.id}=${source.id.toLowerCase()} and ${contextVersion.revision}=${source.revision})`,
               ),
               sql` or `,
             )})`,
@@ -336,12 +339,11 @@ export function createContextRepository(db: Database): ContextLibraryRepository 
           and(
             eq(contextDocument.userId, owner),
             inArray(
-              sql`lower(${contextDocument.id})`,
+              contextDocument.id,
               sources.map((source) => source.id.toLowerCase()),
             ),
           ),
         );
-      if (rows.some((row) => row.duplicates > 1)) throw new ContextError("CONTEXT_CONFLICT");
       return rows.flatMap((row) =>
         row.version === null || row.versionRevision === null
           ? []

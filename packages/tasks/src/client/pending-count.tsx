@@ -1,12 +1,13 @@
 import { useCallback } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
-import { useRemoteQuery, type TaskWorkspaceClient } from "./remote-query.js";
+import { useRemoteQuery } from "./remote-query.js";
+import type { TaskWorkspacePort } from "../model/port.js";
 
 export function PendingCount({
   client,
   accountId,
 }: {
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   accountId: string | null;
 }) {
   const t = useTranslations("tasks");

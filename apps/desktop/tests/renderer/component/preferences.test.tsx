@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { useLocale, useLanguagePreference } from "@raypx/i18n/browser";
 import { useTheme } from "@raypx/ui/themes";
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { DEVICE_PREFERENCES_KEY, type NativePreferenceSnapshot } from "../../../preferences";
 import { DesktopPreferencesProvider } from "../../../src/preferences";
 
@@ -74,31 +74,15 @@ describe("Desktop preference initialization", () => {
     await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ theme: "light", locale: "zh" }));
   });
 
-  it("migrates historical storage only when the native file is missing", async () => {
+  it("starts with defaults when native preferences are missing, ignoring WebView values", async () => {
     snapshot({ status: "missing", raw: null });
     localStorage.setItem("theme", "dark");
-    localStorage.setItem("voidmix_locale", "zh");
-    const phases: { hydrated: boolean; writes: number }[] = [];
-    function InitializationProbe() {
-      const { hydrated } = useLanguagePreference();
-      useEffect(() => {
-        phases.push({ hydrated, writes: mocks.save.mock.calls.length });
-      }, [hydrated]);
-      return <Probe />;
-    }
-    const { unmount } = mount(<InitializationProbe />);
-    expect(phases[0]).toEqual({ hydrated: false, writes: 0 });
-    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith({ theme: "dark", locale: "zh" }));
-    expect(mocks.save.mock.calls).toEqual([[{ theme: "dark", locale: "zh" }]]);
-    fireEvent.click(screen.getByText("System"));
-    await waitFor(() =>
-      expect(mocks.save).toHaveBeenLastCalledWith({ theme: "dark", locale: "system" }),
-    );
-    unmount();
-    snapshot({ status: "read", raw: { theme: "dark", locale: "system" } });
-    localStorage.setItem("voidmix_locale", "zh");
+    localStorage.setItem("raypx_locale", "zh");
     mount();
-    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("dark:system:en:true"));
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith({ theme: "system", locale: "system" }),
+    );
+    expect(mocks.save.mock.calls).toEqual([[{ theme: "system", locale: "system" }]]);
   });
 
   it("uses every system language candidate on the first translated render", () => {

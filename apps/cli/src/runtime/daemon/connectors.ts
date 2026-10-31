@@ -15,7 +15,8 @@ import {
 import { basename, dirname, isAbsolute, join } from "node:path";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
-import type { AgentProvider } from "@raypx/contracts/tasks";
+
+import type { AgentProvider } from "@raypx/core/tasks";
 import {
   applyHookSettings,
   planHookSettings,

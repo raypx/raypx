@@ -18,8 +18,6 @@ import {
   contextVersionSchema,
 } from "@raypx/memory";
 
-export * from "@raypx/memory";
-
 /** Account context documents and immutable revisions; no client-selected owner. */
 export const memoryContract = {
   list: oc.input(z.strictObject({})).output(z.array(contextDocumentSummarySchema).max(100)),

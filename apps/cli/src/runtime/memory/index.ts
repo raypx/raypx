@@ -2,7 +2,8 @@ import { join } from "node:path";
 import { ContextLibraryService } from "@raypx/memory/server";
 import { ContextError } from "@raypx/memory";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import { type TaskContextSelection, type TaskContextTarget } from "@raypx/contracts/tasks";
+
+import { type TaskContextSelection, type TaskContextTarget } from "@raypx/core/tasks";
 import type { AgentRuntime } from "../agents";
 import { SqliteContextRepository } from "./repository";
 

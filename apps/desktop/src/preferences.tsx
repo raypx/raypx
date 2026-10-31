@@ -2,12 +2,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BrowserLanguageProvider,
   getBrowserSystemLocales,
-  readBrowserPreference,
   useLanguagePreference,
   useTranslations,
 } from "@raypx/i18n/browser";
 import { LOCALE_PREFERENCE_KEY } from "@raypx/i18n/preferences";
-import { readStoredTheme, storeTheme, ThemeProvider, useTheme } from "@raypx/ui/themes";
+import { storeTheme, ThemeProvider, useTheme } from "@raypx/ui/themes";
 import {
   DEFAULT_DEVICE_PREFERENCES,
   DEVICE_PREFERENCES_KEY,
@@ -23,9 +22,7 @@ function restoreDevicePreferences(snapshot: unknown): PreferenceSnapshot {
     if (snapshot.status === "read" && "raw" in snapshot && isDevicePreferences(snapshot.raw))
       return { status: "valid", preferences: { ...snapshot.raw } };
     if (snapshot.status === "missing") {
-      // A first native launch migrates WebView values; unreadable storage falls back.
-      const theme = readStoredTheme(DEFAULT_DEVICE_PREFERENCES.theme);
-      return { status: "missing", preferences: { theme, locale: readBrowserPreference() } };
+      return { status: "missing", preferences: { ...DEFAULT_DEVICE_PREFERENCES } };
     }
   }
   // A failed native read must never resurrect stale WebView values.

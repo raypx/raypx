@@ -40,6 +40,6 @@ per-user NSIS installation on hosted Windows runners.
 
 MyGo updater keys/manifests are separate from the former Tauri updater protocol.
 Unsigned/ad-hoc packages are development artifacts. Developer ID/notarization,
-Authenticode, installed legacy-session migration and native GUI acceptance must be
+Authenticode and native GUI acceptance must be
 verified in their actual environments before release; local headless checks do not
 establish those results.

@@ -6,11 +6,6 @@ export default {
       "Run local tasks without a Raypx account. Set up a project and an agent, then write your first task.",
     ownershipHint:
       "Local tasks and drafts belong to this computer's workspace. Signing in, switching accounts or signing out does not move, upload or stop them.",
-    source: "Local data",
-    deviceSource: "This computer's workspace",
-    legacySource: "Earlier account-owned local data",
-    legacyHint:
-      "These older tasks and drafts remain private to the signed-in account on this server. They are not merged into this computer's workspace; signing out stops their active tasks.",
     remoteSignIn: "Sign in for remote access",
     remoteSignInHint:
       "Use an account to connect computers, read synced history and handle remote approvals. Local tools remain available without signing in.",
@@ -195,8 +190,7 @@ export default {
     terminalCloud: "Sync terminal approvals to this account",
     terminalCloudHint:
       "Explicitly share new requests from selected local projects. Signing in does not upload local history or enable remote execution.",
-    terminalMigrationRequired:
-      "Previous terminal settings could not be safely adopted. Select your local projects again.",
+
     terminalSettings: "Terminal connections",
     terminalSettingsHint:
       "Connect new Claude and Codex sessions. Authorize each project separately; tool inputs are stored in plain text on your selected server during private testing.",

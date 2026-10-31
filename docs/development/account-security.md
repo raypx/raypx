@@ -43,6 +43,6 @@ Origin, including the native `views://main` origin; missing/external origins fai
 
 Desktop local tools do not require an account. Remote pages request contextual login
 and preserve an allowlisted return path. New local tasks use the device-profile owner;
-legacy local history and remote drafts retain server/account ownership. Logout revokes
-remote authorization and stops legacy account work while device-owned tasks continue.
+remote drafts retain server/account ownership. Logout revokes remote authorization
+while device-owned tasks continue. Old account-local workspaces are unsupported.
 Local drafts are not uploaded or reassigned when signing in or changing accounts.

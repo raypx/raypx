@@ -36,9 +36,8 @@ catalogs into them. Change that behavior in Raypx Kit, not here.
 - `useLanguagePreference` is the only language mutation entry. Effective locale is
   derived from this preference and the full ordered system-language list; IntlProvider
   receives that locale and one current catalog without another locale state.
-- Web first renders the server snapshot, then restores new device storage, the old
-  `voidmix_locale` key and cookies. An invalid explicit new key means system. Migrate
-  only when the new key is absent and remove the old key only after a successful write.
+- Web first renders the server snapshot, then restores only `raypx_locale`. Missing
+  or invalid values mean system. Retired product keys are ignored without migration.
   Denied reads preserve the initial snapshot; denied writes never roll back the UI.
 - Native bootstrap passes `restorePreference={false}` to BrowserLanguageProvider.
   It must wait for `hydrated` before writing device preferences back to the host.

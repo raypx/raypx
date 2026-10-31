@@ -1,4 +1,4 @@
-import type { AgentTask } from "@raypx/contracts/tasks";
+import type { AgentTask } from "@raypx/core/tasks";
 import { createProcess, type ProcessFactory, type ProviderProcess } from "./process";
 
 interface ClaudeObserver {

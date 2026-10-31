@@ -42,9 +42,7 @@ export function ProjectNavigation() {
   const location = useLocation();
   const search = new URLSearchParams(location.searchStr);
   const selected =
-    location.pathname === "/tasks" &&
-    search.get("scope") !== "remote" &&
-    search.get("history") !== "account"
+    location.pathname === "/tasks" && search.get("scope") !== "remote"
       ? search.get("project")
       : null;
   const [recent, setRecent] = useState(readRecent);

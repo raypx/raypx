@@ -1,12 +1,12 @@
 import { expect, it, vi } from "vite-plus/test";
 import { createTaskClient } from "../src/tasks.js";
 import type { ApiClient } from "../src/index.js";
-import { taskSchema } from "@raypx/contracts/api";
 
-it("negotiates v2 with an older server and retains managed task actions", async () => {
+import { taskSchema } from "@raypx/core/tasks";
+
+it("rejects an older server without downgrading and reconnects after an explicit account reset", async () => {
   const versions: number[] = [];
   let olderServer = true,
-    disconnect = () => {},
     observedReads = 0;
   const task = taskSchema.parse({
     id: crypto.randomUUID(),
@@ -26,7 +26,6 @@ it("negotiates v2 with an older server and retains managed task actions", async 
     bufferedAmount = 0;
     constructor() {
       super();
-      disconnect = () => this.close(1012);
       queueMicrotask(() => this.dispatchEvent(new Event("open")));
     }
     close(code = 1000) {
@@ -70,17 +69,22 @@ it("negotiates v2 with an older server and retains managed task actions", async 
     release = client.subscribe(() => {});
     // Drive the complete retry windows without racing the polling deadline.
     await vi.advanceTimersByTimeAsync(500);
-    expect(versions).toEqual([3, 2]);
+    expect(versions).toEqual([3]);
+    await expect(client.tasks.cancel({ id: task.id })).rejects.toMatchObject({
+      data: { error: { code: "UPGRADE_REQUIRED" } },
+    });
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(versions).toEqual([3]);
+    expect(observedReads).toBe(0);
+    olderServer = false;
+    client.setAccount(null);
+    client.setAccount("account");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(versions).toEqual([3, 3]);
     expect(await client.tasks.cancel({ id: task.id })).toMatchObject({
       id: task.id,
       status: "cancelled",
     });
-    expect(await client.observed!.list({})).toEqual({ sessions: [], requests: [] });
-    expect(observedReads).toBe(0);
-    olderServer = false;
-    disconnect();
-    await vi.advanceTimersByTimeAsync(1000);
-    expect(versions).toEqual([3, 2, 3]);
     await client.observed!.list({});
     expect(observedReads).toBe(1);
   } finally {

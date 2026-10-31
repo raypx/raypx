@@ -1,5 +1,9 @@
 # Memory review remediation: ffcc9bd
 
+> Historical validation record. Legacy protocol fallback, local-account workspaces,
+> storage migration and compatibility exports described below were removed on 2026-10-31.
+> Current behavior is specified by the architecture documents and package instructions.
+
 This ledger tracks the twelve findings against the original implementation.
 The new implementation preserves account/device ownership, immutable history,
 CAS and execution receipts.

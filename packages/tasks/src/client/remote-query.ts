@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import { type QueryKey, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AgentEvent, TaskActivity, TaskChange } from "@raypx/contracts/tasks";
+import type { TaskChange } from "@raypx/contracts/tasks";
+import type { AgentEvent, TaskActivity } from "@raypx/core/tasks";
 import { failureCode } from "./failure.js";
-import type { TaskChangeSource, TaskWorkspacePort } from "../model/port.js";
+import type { TaskChangeSource } from "../model/port.js";
 import { waitForRead } from "./read.js";
 
-/** Compatibility name for existing platform adapters. */
-export type TaskWorkspaceClient = TaskWorkspacePort;
 const scopes = new WeakMap<object, number>();
 let nextScope = 0;
 // Web, the Desktop IPC adapter and the composite pending client share one QueryClient.

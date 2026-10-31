@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { AgentCapability, AgentProvider, AgentTask } from "@raypx/contracts/tasks";
+
+import type { AgentCapability, AgentProvider, AgentTask } from "@raypx/core/tasks";
 import { CodexProvider } from "./providers/codex";
 import { ClaudeProvider } from "./providers/claude";
 import { createProcess, type AskApproval, type ProcessFactory } from "./providers/process";

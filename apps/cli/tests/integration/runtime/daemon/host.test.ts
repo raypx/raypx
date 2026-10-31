@@ -15,7 +15,8 @@ import { startDaemon } from "../../../../src/runtime/daemon/server";
 import { daemonFetch } from "../../../../src/runtime/daemon/endpoint";
 import { localFetch } from "../../../../src/runtime/local-http";
 import { createRuntime } from "../../../../src/runtime";
-import type { AgentTask } from "@raypx/contracts/tasks";
+
+import type { AgentTask } from "@raypx/core/tasks";
 
 it.skipIf(process.platform === "win32")(
   "keeps managed work alive when a GUI client disconnects, rejects a second owner and reconnects to the same task",
@@ -77,7 +78,9 @@ it.skipIf(process.platform === "win32")(
       const first = await connect();
       const root = (await first.request("roots.register", { path: project })) as { id: string };
       await first.request("agents.configure", { rootId: root.id, providers: ["codex"] });
-      const device = (await first.request("agents.local.device", { accountId: "account-a" })) as {
+      const device = (await first.request("agents.local.device", {
+        accountId: "device:local-workspace:v1",
+      })) as {
         id: string;
       };
       const input = {
@@ -90,7 +93,7 @@ it.skipIf(process.platform === "win32")(
       };
       expect(
         await first.request("agents.local.execute", {
-          accountId: "account-a",
+          accountId: "device:local-workspace:v1",
           id: input.id,
           request: { method: "tasks.create", input },
         }),
@@ -102,14 +105,14 @@ it.skipIf(process.platform === "win32")(
       const competing = createRuntime({ dataDir });
       try {
         await expect(
-          competing.request("agents.local.list", { accountId: "account-a" }),
+          competing.request("agents.local.list", { accountId: "device:local-workspace:v1" }),
         ).rejects.toThrow("already owns");
       } finally {
         await competing.close();
       }
       const second = await connect();
       const tasks = (await second.request("agents.local.list", {
-        accountId: "account-a",
+        accountId: "device:local-workspace:v1",
       })) as AgentTask[];
       expect(tasks[0]?.id).toBe(input.id);
       expect(tasks[0]?.status).toBe("running");
@@ -122,7 +125,9 @@ it.skipIf(process.platform === "win32")(
         .poll(
           async () =>
             (
-              (await second.request("agents.local.list", { accountId: "account-a" })) as AgentTask[]
+              (await second.request("agents.local.list", {
+                accountId: "device:local-workspace:v1",
+              })) as AgentTask[]
             )[0]?.status,
         )
         .toBe("succeeded");

@@ -4,12 +4,8 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
-import type {
-  AgentTask,
-  HumanRequest,
-  RelayCommand,
-  TaskContextSnapshot,
-} from "@raypx/contracts/tasks";
+import type { RelayCommand } from "@raypx/contracts/tasks";
+import type { AgentTask, HumanRequest, TaskContextSnapshot } from "@raypx/core/tasks";
 import { AgentRuntime } from "../../../../src/runtime/agents";
 import { AgentStore, desktopBinding } from "../../../../src/runtime/agents/store";
 import { StateStore } from "../../../../src/runtime/state";

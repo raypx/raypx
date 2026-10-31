@@ -1,24 +1,18 @@
 import { expect, it, vi, afterEach } from "vite-plus/test";
-import {
-  existsSync,
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readRemoteControlSettings } from "@raypx/host";
 import { bindingKey } from "../../../../src/runtime/daemon/vault";
-import { readTerminalConfiguration } from "../../../../src/runtime/daemon/terminal-settings";
+import {
+  readTerminalConfiguration,
+  writeTerminalConfiguration,
+} from "../../../../src/runtime/daemon/terminal-settings";
 import { startDaemon } from "../../../../src/runtime/daemon/server";
 import { profilePath } from "../../../../src/runtime/state";
 
 afterEach(() => vi.unstubAllEnvs());
 
-function legacy(profile: string, apiUrl = "https://example.test") {
+function bindingFixture(profile: string, apiUrl = "https://example.test") {
   const accountId = "account",
     rootId = crypto.randomUUID();
   const binding = {
@@ -46,63 +40,28 @@ function legacy(profile: string, apiUrl = "https://example.test") {
   );
   return { directory, key, binding, rootId };
 }
-it("purely reads the legacy opt-in, migrates only the selected binding once and preserves its cloud scope", () => {
-  const profile = mkdtempSync(join(tmpdir(), "raypx-terminal-migrate-"));
+it("starts disabled without importing old settings or changing their files", () => {
+  const profile = mkdtempSync(join(tmpdir(), "raypx-terminal-current-"));
   try {
-    const f = legacy(profile),
-      names = readdirSync(f.directory),
-      before = names.map((name) => readFileSync(join(f.directory, name), "utf8"));
-    expect(readRemoteControlSettings(f.directory)?.accounts.account?.enabled).toBe(true);
-    expect(readdirSync(f.directory)).toEqual(names);
-    expect(names.map((name) => readFileSync(join(f.directory, name), "utf8"))).toEqual(before);
-    const settings = readTerminalConfiguration(profile);
-    expect(settings.local).toEqual({ rootIds: [f.rootId], away: true, waitSeconds: 120 });
-    expect(settings.clouds[f.key]).toEqual({ enabled: true, rootIds: [f.rootId] });
-    rmSync(join(profile, "host-binding.json"));
-    expect(readTerminalConfiguration(profile)).toEqual(settings);
-    expect(names.map((name) => readFileSync(join(f.directory, name), "utf8"))).toEqual(before);
-    const absent = join(profile, "absent");
-    expect(readRemoteControlSettings(absent)).toBeUndefined();
-    expect(existsSync(absent)).toBe(false);
-    writeFileSync(join(f.directory, "remote-control.json"), "invalid");
-    expect(() => readRemoteControlSettings(f.directory)).toThrow(SyntaxError);
-    expect(readFileSync(join(f.directory, "remote-control.json"), "utf8")).toBe("invalid");
+    const f = bindingFixture(profile);
+    const source = readFileSync(join(f.directory, "observed.json"), "utf8");
+    expect(readTerminalConfiguration(profile)).toEqual({
+      version: 1,
+      local: { rootIds: [], away: false, waitSeconds: 300 },
+      clouds: {},
+    });
+    expect(readFileSync(join(f.directory, "observed.json"), "utf8")).toBe(source);
+    const current = {
+      version: 1 as const,
+      local: { rootIds: [f.rootId], away: true, waitSeconds: 120 },
+      clouds: { [f.key]: { enabled: true, rootIds: [f.rootId] } },
+    };
+    writeTerminalConfiguration(join(profile, "terminal"), current);
+    expect(readTerminalConfiguration(profile)).toEqual(current);
   } finally {
     rmSync(profile, { recursive: true, force: true });
   }
 });
-it.each(["missing-session", "wrong-session", "disabled", "corrupt", "no-binding"])(
-  "does not infer authority from an unsafe migration source: %s",
-  (scenario) => {
-    const profile = mkdtempSync(join(tmpdir(), "raypx-terminal-unsafe-"));
-    try {
-      const f = legacy(profile);
-      if (scenario === "missing-session") rmSync(join(profile, "host-session.json"));
-      if (scenario === "no-binding") rmSync(join(profile, "host-binding.json"));
-      if (scenario === "wrong-session")
-        writeFileSync(
-          join(profile, "host-session.json"),
-          JSON.stringify({ apiUrl: f.binding.apiUrl, accountId: "different" }),
-        );
-      if (scenario === "disabled")
-        writeFileSync(
-          join(f.directory, "remote-control.json"),
-          JSON.stringify({
-            installationId: crypto.randomUUID(),
-            accounts: { account: { enabled: false } },
-          }),
-        );
-      if (scenario === "corrupt") writeFileSync(join(f.directory, "observed.json"), "invalid");
-      expect(readTerminalConfiguration(profile)).toMatchObject({
-        local: { rootIds: [], away: false },
-        clouds: {},
-        migrationRequired: true,
-      });
-    } finally {
-      rmSync(profile, { recursive: true, force: true });
-    }
-  },
-);
 it.skipIf(process.platform === "win32")(
   "makes the Host and local operations ready while cloud restoration remains blocked",
   async () => {
@@ -132,7 +91,12 @@ it.skipIf(process.platform === "win32")(
       },
     });
     const profile = profilePath({ dataDir }),
-      f = legacy(profile, api.url.origin);
+      f = bindingFixture(profile, api.url.origin);
+    writeTerminalConfiguration(join(profile, "terminal"), {
+      version: 1,
+      local: { rootIds: [f.rootId], away: true, waitSeconds: 120 },
+      clouds: { [f.key]: { enabled: true, rootIds: [f.rootId] } },
+    });
     writeFileSync(
       join(profile, "host-session.json"),
       JSON.stringify({ accountId: f.binding.accountId, apiUrl: api.url.origin + "/" }),

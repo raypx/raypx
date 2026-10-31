@@ -15,7 +15,8 @@ import { BundledBun } from "./process/bun";
 import { StateStore, profilePath, acquireLock } from "./state";
 import { LocalError } from "./errors";
 import manifest from "../../package.json";
-import type { AgentProvider } from "@raypx/contracts/tasks";
+
+import type { AgentProvider } from "@raypx/core/tasks";
 import type { RecordDiagnostic } from "../diagnostics";
 
 const contextParams = <T>(schema: { parse(input: unknown): T }, input: unknown): T => {
@@ -149,7 +150,6 @@ export function createRuntime(
             const p = contextParams(localParams[method], raw);
             return getMemory().resolve(p.selection, p.target, p.prompt);
           }
-          case "host.legacy":
           case "host.authorize":
           case "host.detach":
           case "host.enable":

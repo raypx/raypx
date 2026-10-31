@@ -2,11 +2,12 @@ import { expect, it } from "vite-plus/test";
 import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { agentFixtures } from "../../../helpers/agents";
+
 import {
   taskExecutionPrompt,
   type AgentProvider,
   type TaskContextSnapshot,
-} from "@raypx/contracts/tasks";
+} from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { AgentStore } from "../../../../src/runtime/agents/store";
 const { host } = agentFixtures();

@@ -19,6 +19,9 @@
     "@raypx-kit/tsconfig": "catalog:dev",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*",
+    "@raypx/jobs": "workspace:*",
+    "@raypx/memory": "workspace:*",
     "@raypx/tooling": "workspace:*",
     "@types/bun": "catalog:dev"
   },

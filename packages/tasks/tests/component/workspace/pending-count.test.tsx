@@ -3,7 +3,8 @@ import { afterEach, expect, it, vi } from "vite-plus/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
 import { PendingCount } from "@raypx/tasks/client/pending-count";
-import { humanRequestSchema } from "@raypx/contracts/tasks";
+
+import { humanRequestSchema } from "@raypx/core/tasks";
 import { terminalRequestSummarySchema } from "@raypx/contracts/terminal";
 import { createTaskClient } from "../../helpers/client.js";
 afterEach(cleanup);

@@ -90,10 +90,6 @@ console.log(JSON.stringify(project.resources));`,
     expect(service.build.dockerfilePath).toBe(file);
     expect(service.build.watchPatterns).toContain(`apps/${app}/**`);
     expect(read(file)).not.toContain("--mount=type=cache");
-    const legacy = read(`deploy/railway/${app}/Dockerfile`);
-    expect(legacy).toBe(
-      `${read(file)}# Generated from ${file}; run bun run raypx-dev deployment:sync.\n`,
-    );
   }
   const api = services.find(({ name }) => name === "api")!;
   expect(api.deploy.preDeployCommand).toEqual(["bun run --cwd packages/database migrate"]);

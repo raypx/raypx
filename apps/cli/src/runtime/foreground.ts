@@ -1,5 +1,6 @@
 import type { LocalEvent, LocalMethod } from "@raypx/contracts/local";
-import type { AgentProvider } from "@raypx/contracts/tasks";
+
+import type { AgentProvider } from "@raypx/core/tasks";
 import type { RecordDiagnostic } from "../diagnostics";
 import { createRuntime } from "./index";
 import { DaemonControl } from "./daemon/control";

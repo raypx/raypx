@@ -158,25 +158,6 @@ it("renews and restores the foreground owner without browser cookies, then revok
   }
 });
 
-it("keeps legacy grant renewal in Desktop when the server has no host authorization endpoint", async () => {
-  const f = fixture();
-  try {
-    await f.host.request("host.session", f.scope);
-    await f.host.request("host.legacy", { ...f.scope, grant: f.grant() });
-    expect(await f.host.request("host.info", f.scope)).toMatchObject({
-      daemon: false,
-      legacy: true,
-      authorized: false,
-      persistent: false,
-    });
-    expect(await f.host.request("host.refresh", f.scope)).toBe(false);
-    expect(f.events.some((event) => event.event === "sync.grantRequired")).toBe(true);
-    expect(f.grants()).toBe(0);
-  } finally {
-    await f.close();
-  }
-});
-
 it("cancels foreground work on close and releases the owner for the next launch", async () => {
   const f = fixture();
   try {

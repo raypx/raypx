@@ -1,6 +1,7 @@
 import { Cron } from "croner";
-import { nextJobRuns } from "@raypx/jobs";
-import type { JobDefinition, JobInput, JobRun, LocalEvent } from "@raypx/contracts/local";
+import { nextJobRuns, type JobDefinition, type JobInput, type JobRun } from "@raypx/jobs";
+import type { LocalEvent } from "@raypx/contracts/local";
+
 import { LocalError } from "../errors";
 import type { FileRuntime } from "../files";
 import type { ProcessRuntime } from "../process";

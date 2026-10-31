@@ -1,7 +1,6 @@
 /** Data ownership is independent of the currently signed-in browser session. */
 export type WorkspaceScope =
   | { kind: "device"; namespace: string; workspaceId: string }
-  | { kind: "account-local"; namespace: string; accountId: string }
   | { kind: "remote"; namespace: string; accountId: string };
 
 export function workspaceOwner(scope: WorkspaceScope) {
@@ -9,10 +8,10 @@ export function workspaceOwner(scope: WorkspaceScope) {
 }
 
 export function isLocalWorkspace(scope: WorkspaceScope) {
-  return scope.kind !== "remote";
+  return scope.kind === "device";
 }
 
-/** Reuse the existing storage format so adoption never moves or claims a draft. */
+/** Draft storage is scoped to its data owner. */
 export function workspaceDraftKey(scope: WorkspaceScope) {
   return JSON.stringify([
     "raypx.task-drafts.v1",

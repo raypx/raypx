@@ -184,7 +184,7 @@ it("enforces the complete document quota including archived entries and hides co
 });
 
 const { fixture } = runtimeFixtures();
-it("keeps legacy uppercase primary keys connected to versions while returning canonical IDs", async () => {
+it("does not read or migrate retired noncanonical document keys", async () => {
   const f = repository(),
     id = `abcdefab-${crypto.randomUUID().slice(9)}`,
     physicalId = id.toUpperCase();
@@ -211,82 +211,16 @@ it("keeps legacy uppercase primary keys connected to versions while returning ca
     .run("device", physicalId, 1, JSON.stringify({ ...legacy, reason: "created" }));
   const service = new ContextLibraryService({ repository: f.store, scope: "device" });
   try {
-    expect(await service.get("device", { id })).toMatchObject({ id, revision: 1, project: target });
-    expect(await service.create("device", { requestId: id, document: original })).toMatchObject({
-      id,
-      revision: 1,
+    await expect(service.get("device", { id })).rejects.toMatchObject({
+      code: "CONTEXT_NOT_FOUND",
     });
-    await service.update("device", {
-      id,
-      revision: 1,
-      document: { ...original, content: "New text" },
-    });
-    expect((await service.history("device", { id })).map((version) => version.revision)).toEqual([
-      2, 1,
-    ]);
-    expect(
-      (await service.resolve("device", { sources: [{ id, revision: 1 }] }, target, "Task"))
-        .sources[0],
-    ).toMatchObject({ id, content: document.content, project: target });
-    await service.archive("device", { id, revision: 2, archived: true });
-    expect(await service.restore("device", { id, revision: 3, version: 1 })).toMatchObject({
-      id,
-      revision: 4,
-      archived: true,
-    });
-    expect(raw.query("SELECT id FROM documents WHERE owner=?").all("device")).toEqual([
-      { id: physicalId },
-    ]);
-    expect(raw.query("SELECT DISTINCT id FROM versions WHERE owner=?").all("device")).toEqual([
-      { id: physicalId },
-    ]);
-    expect((await service.history("device", { id })).map((version) => version.revision)).toEqual([
-      4, 3, 2, 1,
-    ]);
+    await expect(
+      service.create("device", { requestId: id, document: original }),
+    ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    expect(raw.query("SELECT id FROM documents").all()).toEqual([{ id: physicalId }]);
   } finally {
     raw.close();
   }
-});
-
-it("fails closed when legacy keys differ only by case instead of overwriting a selected source", async () => {
-  const f = repository(),
-    id = `abcdefab-${crypto.randomUUID().slice(9)}`,
-    physicalId = id.toUpperCase();
-  const legacy = {
-    ...document,
-    id: physicalId,
-    revision: 1,
-    archived: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  const raw = new Database(f.path);
-  for (const key of [id, physicalId])
-    raw
-      .query("INSERT INTO documents VALUES (?,?,?)")
-      .run("device", key, JSON.stringify({ ...legacy, id: key }));
-  // Only one physical row has the requested version; the other must still make resolution ambiguous.
-  raw
-    .query("INSERT INTO versions VALUES (?,?,?,?)")
-    .run("device", physicalId, 1, JSON.stringify({ ...legacy, reason: "created" }));
-  raw.close();
-  await expect(f.store.get("device", id)).rejects.toMatchObject({ code: "CONTEXT_CONFLICT" });
-  await expect(f.store.update("device", id, 1, document)).rejects.toMatchObject({
-    code: "CONTEXT_CONFLICT",
-  });
-  await expect(f.store.history("device", id, undefined, 20)).rejects.toMatchObject({
-    code: "CONTEXT_CONFLICT",
-  });
-  await expect(f.store.list("device")).rejects.toMatchObject({ code: "CONTEXT_CONFLICT" });
-  await expect(f.store.readSources("device", [{ id, revision: 1 }])).rejects.toMatchObject({
-    code: "CONTEXT_CONFLICT",
-  });
-  await expect(f.store.create("device", id, document)).rejects.toMatchObject({
-    code: "IDEMPOTENCY_CONFLICT",
-  });
-  await expect(f.store.findCreation("other", id, document)).rejects.toMatchObject({
-    code: "IDEMPOTENCY_CONFLICT",
-  });
 });
 
 it("keeps memory IPC local, validates authorized project targets and resolves pinned revisions", async () => {
@@ -386,6 +320,19 @@ it("permanently deletes only owned archived revisions, erases versions and reser
       revision: 2,
     });
   } finally {
+    raw.close();
+  }
+});
+
+it.each([1, 3])("rejects unsupported memory schema %s without migrating its data", (version) => {
+  const f = repository();
+  const raw = new Database(f.path);
+  try {
+    raw.exec(`PRAGMA user_version=${version}`);
+    expect(() => new SqliteContextRepository(f.path)).toThrow("CONTEXT_UNAVAILABLE");
+    expect(raw.query("PRAGMA user_version").get()).toEqual({ user_version: version });
+  } finally {
+    raw.exec("PRAGMA user_version=2");
     raw.close();
   }
 });

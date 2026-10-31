@@ -1,12 +1,10 @@
 import { capture } from "./helpers/capture.js";
 import { expect } from "@playwright/test";
 import { test } from "./helpers/browser-fixture.js";
-import type {
-  ContextDocument,
-  ContextDocumentInput,
-  ContextVersion,
-} from "@raypx/contracts/memory";
-import type { AgentTask, RelayClientFrame } from "@raypx/contracts/tasks";
+
+import type { ContextDocument, ContextDocumentInput, ContextVersion } from "@raypx/memory";
+import type { RelayClientFrame } from "@raypx/contracts/tasks";
+import type { AgentTask } from "@raypx/core/tasks";
 import { authResponse, signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
 import { selectOption } from "./helpers/select.js";
 

@@ -34,14 +34,13 @@ and password reset still use their existing Web callbacks.
 
 New local tasks use the reserved device-profile `LOCAL_WORKSPACE_ID`, a `desktop:`
 binding and a stable local device ID. Native does not prefix this owner by server.
-Legacy account-owned tasks retain their deployment/account namespace and are available
-only through an explicit signed-in history source; no automatic migration or upload occurs.
-Their tasks, answers and event journal stay in SQLite. They never enter the cloud
+Old account-owned local history is unsupported and is never imported or uploaded.
+Local tasks, answers and event journals stay in SQLite and never enter the cloud
 outbox, including after remote access is enabled, and remote snapshots/replay cannot
 read them. The same CLI execution host owns process locks, session continuation,
 idempotency and first-answer approval arbitration for both transports. Native change
 events refresh local views without network polling. Login/account switches/logout leave
-device work running. Logout cancels remote and legacy account work while preserving history;
+device work running. Logout cancels remote work while preserving history;
 a host restart marks uncertain runs interrupted.
 Local activity is durable and exempt from relay journal compaction. Task lists use
 creation-time/ID cursors with newer/older navigation, including when a response's
@@ -51,7 +50,7 @@ Connected computers retains the remote task flow and account-scoped projections.
 Agent settings authorizes local projects independently of login and the remote toggle.
 The setup guide authorizes one project, checks installed providers and opens an editor
 without starting work. Desktop autosaves a bounded editor slot alongside named drafts.
-Device slots retain the same owner across accounts; legacy/remote slots remain scoped
+Device slots retain the same owner across accounts; remote slots remain scoped
 by server/account. WebView partitions still isolate browser storage between deployments.
 
 ## Authentication and routing
@@ -181,10 +180,10 @@ separately. Packaged native GUI behavior, hidden-window credential renewal,
 notifications, Windows process cleanup and live provider inference still require
 explicit platform acceptance; browser tests do not imply those checks passed.
 
-## Managed activity compatibility and read isolation
+## Managed activity and read isolation
 
-Auth and ready negotiate version 2 or 3; v3 adds observed requests while retaining
-the managed activity format introduced in v2. Messages begin with a full
+Auth and ready require protocol version 3 for managed tasks and observed requests.
+Other versions fail with UPGRADE_REQUIRED and are never retried as an older protocol. Messages begin with a full
 activity checkpoint, then carry append-only deltas with base/new revisions;
 replacements and terminal updates are full checkpoints. A missing base requires
 snapshot recovery. Outbox rows reference journal events rather than copy text.

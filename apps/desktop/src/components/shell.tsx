@@ -10,11 +10,7 @@ import { signOutDesktopHost } from "../features/tasks/host-session";
 import { TerminalRequestNotice } from "../features/tasks/request-notice";
 import { ProjectNavigation } from "../features/tasks/project-navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@raypx/ui/components/ui/tooltip";
-import {
-  createPendingClient,
-  localTaskClient,
-  accountLocalTaskClient,
-} from "../features/tasks/local-client";
+import { createPendingClient, localTaskClient } from "../features/tasks/local-client";
 import { LOCAL_WORKSPACE_ID } from "@raypx/contracts/local";
 import { desktopReturnTo } from "../features/auth/return-to";
 import { useEffect, useState } from "react";
@@ -41,10 +37,7 @@ import { desktopStorageKey } from "../lib/storage";
 import { useTranslations } from "@raypx/i18n/browser";
 import { getDesktopRuntime, isDesktop, onLocalEvent, restartEngine } from "../lib/desktop";
 
-const pendingClient = createPendingClient(
-  createPendingClient(localTaskClient, accountLocalTaskClient),
-  taskClient,
-);
+const pendingClient = createPendingClient(localTaskClient, taskClient);
 
 type DesktopPath =
   | "/"
@@ -202,7 +195,7 @@ export function DesktopShell() {
             }
             onSignOut={async () => {
               const result = await auth.signOut(async () => {
-                if (accountId) await signOutDesktopHost(accountId);
+                if (accountId) await signOutDesktopHost();
                 // Drop every account-scoped query before the next session reads.
                 analytics.reset();
                 queryClient.removeQueries({

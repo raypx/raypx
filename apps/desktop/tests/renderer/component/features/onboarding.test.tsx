@@ -15,7 +15,8 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { DeviceProject, AgentCapability } from "@raypx/contracts/tasks";
+import type { DeviceProject } from "@raypx/contracts/tasks";
+import type { AgentCapability } from "@raypx/core/tasks";
 const mocks = vi.hoisted(() => ({ request: vi.fn(), pick: vi.fn() }));
 vi.mock("../../../../src/lib/desktop", () => ({
   isDesktop: () => true,

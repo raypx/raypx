@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { AgentTask, TaskActivity, TaskInput } from "@raypx/contracts/tasks";
+
+import type { AgentTask, TaskActivity, TaskInput } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
 import { Textarea } from "@raypx/ui/components/ui/textarea";
-import type { TaskWorkspaceClient } from "./remote-query.js";
+import type { TaskWorkspacePort } from "../model/port.js";
 import { failureCode } from "./failure.js";
 
 export function TaskInputComposer({
@@ -15,7 +16,7 @@ export function TaskInputComposer({
   waiting,
   onChanged,
 }: {
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   task: AgentTask;
   modes: TaskInput["mode"][];
   entries: TaskActivity[];

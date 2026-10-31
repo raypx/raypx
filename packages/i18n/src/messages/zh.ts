@@ -5,11 +5,6 @@ export default {
     welcomeHint: "无需 Raypx 账号即可运行本地任务。先配置项目和 Agent，再编写第一个任务。",
     ownershipHint:
       "本地任务和草稿属于这台电脑的工作区。登录、切换账号或退出登录都不会迁移、上传或停止它们。",
-    source: "本地数据",
-    deviceSource: "这台电脑的工作区",
-    legacySource: "旧版按账号保存的本地数据",
-    legacyHint:
-      "这些旧任务和草稿仍属于当前服务上的登录账号，不会合并到本机工作区；退出登录会停止其中仍在执行的任务。",
     remoteSignIn: "登录以使用远程功能",
     remoteSignInHint: "连接电脑、查看同步历史和处理远程审批需要账号。本地工具无需登录即可使用。",
     backToLocal: "返回本地工具",
@@ -165,7 +160,7 @@ export default {
     terminalInstallationSource: "请打开当前版本的 Desktop 修复 hook，已修改的程序不能替换自身。",
     terminalCloud: "同步终端审批到此账户",
     terminalCloudHint: "明确授权所选本机项目的新请求。登录不会上传本机历史或开启远程执行。",
-    terminalMigrationRequired: "无法安全采用原有终端设置，请重新选择本机项目。",
+
     terminalSettings: "终端连接",
     terminalSettingsHint:
       "连接新启动的 Claude 和 Codex 会话。逐个授权项目；私有内测期间，工具输入会以明文保存在你选择的服务端。",

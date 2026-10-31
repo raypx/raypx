@@ -1,7 +1,8 @@
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Bounded read-only scroll regions need keyboard focus for scrolling. */
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/react-virtual";
-import type { AgentTask, TaskActivity } from "@raypx/contracts/tasks";
+
+import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { useFormatter, useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { TaskMarkdown } from "./markdown.js";

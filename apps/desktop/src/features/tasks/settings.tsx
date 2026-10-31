@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
-import type { AgentCapability, DeviceProject } from "@raypx/contracts/tasks";
+import type { DeviceProject } from "@raypx/contracts/tasks";
+import type { AgentCapability } from "@raypx/core/tasks";
 import { LOCAL_WORKSPACE_ID, type RootGrant } from "@raypx/contracts/local";
 import type { ControlInfo } from "@raypx/contracts/terminal";
 import {

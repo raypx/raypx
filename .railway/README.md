@@ -5,9 +5,7 @@ Postgres, Redis and their volumes remain outside application ownership. Runtime
 variables and secrets stay on Railway and are not managed by this file.
 The application services track raypx/raypx on canary and deploy matching pushes.
 API and Web use the same application Dockerfiles as Compose. API's final railway
-target includes its isolated pre-deploy migration dependencies. Legacy Railway
-Dockerfile paths retain generated compatibility copies during the live configuration
-transition; policy rejects drift from the shared files.
+target includes its isolated pre-deploy migration dependencies.
 
 Use the pinned Bun toolchain and the scoped IaC preload when planning or applying.
 Commands, variable references, migrations and the raypx.com domain cutover are

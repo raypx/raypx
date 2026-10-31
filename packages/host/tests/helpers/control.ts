@@ -70,7 +70,7 @@ export function hostFixtures() {
             }
             peer.send({
               type: "ready",
-              protocolVersion: supportedVersion?.() ?? 2,
+              protocolVersion: 3,
               role: frame.role,
             });
           }
@@ -134,7 +134,9 @@ export function hostFixtures() {
     });
     await value.enable("account", true);
     await value.attach("account", server.url.origin, grant);
-    await expect.poll(() => value.info("account").connected).toBe(true);
+    if (supportedVersion?.() === 2)
+      await expect.poll(() => value.info("account").error).toBe("UPGRADE_REQUIRED");
+    else await expect.poll(() => value.info("account").connected).toBe(true);
     return {
       value,
       directory,

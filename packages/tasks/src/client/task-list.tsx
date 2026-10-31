@@ -8,7 +8,8 @@ import {
   type KeyboardEvent,
 } from "react";
 import { defaultRangeExtractor, useVirtualizer, type Range } from "@tanstack/react-virtual";
-import type { AgentTask, SyncDevice } from "@raypx/contracts/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
+import type { AgentTask } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Bot } from "lucide-react";

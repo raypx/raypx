@@ -12,8 +12,8 @@ version-matched bundled CLI.
 Desktop builds with TanStack Start SPA mode: file routes, and a text-free root
 shell prerendered to index.html. It has no server, so no server functions.
 Desktop mounts its device-local workspace independently of account resolution.
-Remote data and host authorization use a contextual login boundary; legacy
-account-owned local history remains isolated from device-owned work. Web supports
+Remote data and host authorization use a contextual login boundary. Local work
+belongs to the device workspace; old account-owned local history is unsupported. Web supports
 guest browsing and restores an explicitly submitted guest draft after login,
 without automatically sending it. The CLI engine and persisted local state remain
 independent of browser sessions.
@@ -36,7 +36,7 @@ to the parent domain of sibling Web/API hosts.
 Core owns the normalized task, activity, input and human-decision schemas and
 their pure rules. It has no transport, React, filesystem or database dependency.
 Contracts imports those schemas to assemble HTTP, relay and local IPC messages;
-its existing task exports remain compatibility re-exports of the same definitions.
+domain consumers import Core directly, without contract re-export aliases.
 There is one domain schema source and the dependency direction is contracts → core.
 
 Tasks separates its pure `/model` entry from its browser `/client` entry. The model

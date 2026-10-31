@@ -77,18 +77,11 @@ describe("Raypx browser language wiring", () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it("migrates the legacy value only after the replacement write succeeds", () => {
+  it("ignores preferences stored under retired product keys", () => {
     localStorage.setItem("voidmix_locale", "zh-CN");
-    expect(readBrowserPreference()).toBe("zh");
-    expect(localStorage.getItem("raypx_locale")).toBe("zh");
-    expect(localStorage.getItem("voidmix_locale")).toBeNull();
-    localStorage.clear();
-    localStorage.setItem("voidmix_locale", "zh");
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-    expect(readBrowserPreference()).toBe("zh");
-    expect(localStorage.getItem("voidmix_locale")).toBe("zh");
+    expect(readBrowserPreference()).toBe("system");
+    expect(localStorage.getItem("raypx_locale")).toBeNull();
+    expect(localStorage.getItem("voidmix_locale")).toBe("zh-CN");
   });
 
   it("keeps native snapshots authoritative and reports hydration before persistence", async () => {

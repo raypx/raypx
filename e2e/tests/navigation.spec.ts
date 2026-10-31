@@ -3,7 +3,8 @@ import { test } from "./helpers/browser-fixture.js";
 import { surfaces } from "./helpers/surfaces.js";
 import { capture } from "./helpers/capture.js";
 import { authResponse, signedInAccount, webShellFixture } from "./helpers/account-fixture.js";
-import type { HumanRequest } from "@raypx/contracts/tasks";
+
+import type { HumanRequest } from "@raypx/core/tasks";
 
 for (const [surface, base] of surfaces) {
   test(

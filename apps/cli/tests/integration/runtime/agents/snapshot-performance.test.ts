@@ -3,7 +3,8 @@ import { Database } from "bun:sqlite";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { HumanRequest, TaskActivity } from "@raypx/contracts/tasks";
+
+import type { HumanRequest, TaskActivity } from "@raypx/core/tasks";
 import { AgentRuntime } from "../../../../src/runtime/agents";
 import { AgentStore, type LocalAgentTask } from "../../../../src/runtime/agents/store";
 import { StateStore } from "../../../../src/runtime/state";

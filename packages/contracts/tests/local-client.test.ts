@@ -31,3 +31,12 @@ it("returns the method's validated response", async () => {
     version: "v1",
   });
 });
+
+it("rejects retired account-owned local workspaces before transport", async () => {
+  const transport = vi.fn();
+  const client = createLocalClient(transport);
+  await expect(
+    client("agents.local.list", { accountId: "account-a", limit: 100 } as never),
+  ).rejects.toThrow(/accountId/);
+  expect(transport).not.toHaveBeenCalled();
+});

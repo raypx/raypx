@@ -113,9 +113,6 @@ func (d *Desktop) attach(ctx context.Context, input JSON) (any, error) {
 	}
 	d.control.Unlock()
 	if err != nil {
-		if err.Error() == "MISSING_PROCEDURE" && current {
-			return d.controlRequest(ctx, "host.legacy", JSON{"accountId": account, "grant": grant})
-		}
 		return nil, err
 	}
 	if !current {

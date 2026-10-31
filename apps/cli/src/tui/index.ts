@@ -1,4 +1,4 @@
-import { jobDefinitionSchema, jobRunSchema } from "@raypx/contracts/local";
+import { jobDefinitionSchema, jobRunSchema } from "@raypx/jobs";
 import type { RecordDiagnostic } from "../diagnostics";
 import type { LocalRuntime } from "../runtime";
 import { runSession } from "./session";

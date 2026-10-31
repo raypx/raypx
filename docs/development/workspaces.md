@@ -73,8 +73,8 @@ product workflow settles; no Kit release or archive is required.
 ## Agent domain and page boundaries
 
 `@raypx/core` is the universal source of task-domain schemas, inferred types and
-pure activity/decision rules. `@raypx/contracts` adds protocol envelopes and keeps
-compatible exports while consumers migrate. Never define a second copy of a domain
+pure activity/decision rules. `@raypx/contracts` adds protocol envelopes. Consumers
+import domain definitions from their owning package; compatibility aliases are not provided. Never define a second copy of a domain
 interface or introduce a core dependency on contracts, React or host implementations.
 
 `@raypx/tasks/model` exposes workspace scopes, draft identities, conversation state
@@ -124,5 +124,6 @@ job schemas, inferred types and calendar rules. `/server` contains injected sche
 use cases, and `/client` contains shared browser views and their injected ports. Contracts
 depends on the root; jobs must not depend on contracts or a concrete API SDK.
 API supplies SQL/relay adapters, while CLI supplies local scheduling and execution.
-Local IPC job exports remain compatible re-exports. New cloud schedules do not
+Import job models directly from `@raypx/jobs`; Contracts owns only wire definitions.
+Cloud schedules do not
 claim local plans or move them between accounts. See [server jobs](server-jobs.md).

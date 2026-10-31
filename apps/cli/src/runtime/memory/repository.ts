@@ -33,7 +33,7 @@ export class SqliteContextRepository implements ContextLibraryRepository {
       this.db.exec("PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL;");
       const version = (this.db.query("PRAGMA user_version").get() as { user_version: number })
         .user_version;
-      if (version > 2) throw new ContextError("CONTEXT_UNAVAILABLE");
+      if (version !== 0 && version !== 2) throw new ContextError("CONTEXT_UNAVAILABLE");
       this.db.exec(
         "CREATE TABLE IF NOT EXISTS documents (owner TEXT NOT NULL,id TEXT NOT NULL,value TEXT NOT NULL,PRIMARY KEY(owner,id)); CREATE TABLE IF NOT EXISTS versions (owner TEXT NOT NULL,id TEXT NOT NULL,revision INTEGER NOT NULL,value TEXT NOT NULL,PRIMARY KEY(owner,id,revision)); CREATE TABLE IF NOT EXISTS deleted_documents (id TEXT PRIMARY KEY,owner TEXT NOT NULL,revision INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS documents_canonical_idx ON documents(lower(id)); PRAGMA user_version=2;",
       );
@@ -52,14 +52,12 @@ export class SqliteContextRepository implements ContextLibraryRepository {
   }
   private storedDocument(owner: string, id: string) {
     const rows = this.db
-      .query("SELECT id,value FROM documents WHERE owner=? AND lower(id)=? LIMIT 2")
+      .query("SELECT id,value FROM documents WHERE owner=? AND id=? LIMIT 1")
       .all(owner, id.toLowerCase()) as { id: string; value: string }[];
-    if (rows.length > 1) throw new ContextError("CONTEXT_CONFLICT");
     const row = rows[0];
     if (!row) throw new ContextError("CONTEXT_NOT_FOUND");
     const result = contextDocumentSchema.safeParse(JSON.parse(row.value));
-    if (!result.success || result.data.id !== row.id.toLowerCase())
-      throw new ContextError("CONTEXT_UNAVAILABLE");
+    if (!result.success || result.data.id !== row.id) throw new ContextError("CONTEXT_UNAVAILABLE");
     return { physicalId: row.id, document: result.data };
   }
   private document(owner: string, id: string): ContextDocument {
@@ -71,7 +69,7 @@ export class SqliteContextRepository implements ContextLibraryRepository {
       .get(owner, id, revision) as { value: string } | null;
     if (!row) throw new ContextError("CONTEXT_NOT_FOUND");
     const result = contextVersionSchema.safeParse(JSON.parse(row.value));
-    if (!result.success || result.data.id !== id.toLowerCase() || result.data.revision !== revision)
+    if (!result.success || result.data.id !== id || result.data.revision !== revision)
       throw new ContextError("CONTEXT_UNAVAILABLE");
     return result.data;
   }
@@ -83,8 +81,7 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     restoredFrom?: number,
   ) {
     const parsed = contextDocumentSchema.safeParse(document);
-    if (!parsed.success || parsed.data.id !== physicalId.toLowerCase())
-      throw new ContextError("INVALID_CONTEXT");
+    if (!parsed.success || parsed.data.id !== physicalId) throw new ContextError("INVALID_CONTEXT");
     const version = { ...parsed.data, reason, ...(restoredFrom ? { restoredFrom } : {}) };
     this.db
       .query("INSERT INTO versions VALUES (?,?,?,?)")
@@ -131,11 +128,13 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     return this.safe(() => {
       const rows = (
         this.db
-          .query("SELECT id,value FROM documents WHERE owner=? ORDER BY rowid DESC")
+          .query(
+            "SELECT id,value FROM documents WHERE owner=? AND id=lower(id) ORDER BY rowid DESC",
+          )
           .all(owner) as { id: string; value: string }[]
       ).map((row) => {
         const parsed = contextDocumentSchema.safeParse(JSON.parse(row.value));
-        if (!parsed.success || parsed.data.id !== row.id.toLowerCase())
+        if (!parsed.success || parsed.data.id !== row.id)
           throw new ContextError("CONTEXT_UNAVAILABLE");
         return summary(parsed.data);
       });
@@ -163,6 +162,7 @@ export class SqliteContextRepository implements ContextLibraryRepository {
     if (!existing) return null;
     if (
       existing.owner !== owner ||
+      existing.id !== requestId.toLowerCase() ||
       JSON.stringify(inputOf(this.historical(owner, existing.id, 1))) !==
         JSON.stringify(inputOf(input))
     )

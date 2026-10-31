@@ -4,7 +4,8 @@ import { surfaces } from "../helpers/surfaces.js";
 import { capture } from "../helpers/capture.js";
 import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
 import { selectOption } from "../helpers/select.js";
-import type { AgentTask } from "@raypx/contracts/tasks";
+
+import type { AgentTask } from "@raypx/core/tasks";
 
 for (const [surface, base] of surfaces) {
   test(

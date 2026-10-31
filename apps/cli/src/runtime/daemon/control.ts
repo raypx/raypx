@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createApiClient, isMissingProcedure } from "@raypx/client";
@@ -33,7 +32,6 @@ export class DaemonControl {
   private readonly controls = new Map<string, RemoteControl>();
   private current: HostBinding | undefined;
   private persistent = false;
-  private legacy = false;
   private readonly authorizationErrors = new Map<string, string>();
   private retry: ReturnType<typeof setTimeout> | undefined;
   private revision = 0;
@@ -117,7 +115,6 @@ export class DaemonControl {
         }),
       () => this.emit({ version: 1, event: "sync.grantRequired", data: {} }),
       {
-        protocolVersion: 3,
         connected: () => {
           if (this.current && this.isCurrent(scope))
             this.terminal.connected(remoteBinding(this.current));
@@ -139,10 +136,6 @@ export class DaemonControl {
         bindingKey: (accountId, grant) =>
           remoteBinding({ ...grant, accountId, apiUrl: scope.apiUrl }),
         renewGrant: async () => {
-          if (this.legacy) {
-            this.emit({ version: 1, event: "sync.grantRequired", data: {} });
-            throw new LocalError("NETWORK_UNAVAILABLE", "Legacy server renewal requires Desktop");
-          }
           const current = this.current;
           if (!current || !this.isCurrent(scope))
             throw new LocalError("AUTH_REQUIRED", "Host authorization is unavailable");
@@ -267,8 +260,7 @@ export class DaemonControl {
       ...this.control(scope).info(scope.accountId),
       daemon: this.independent,
       persistent: this.isCurrent(scope) && this.persistent,
-      authorized: this.isCurrent(scope) && !this.legacy,
-      legacy: this.isCurrent(scope) && this.legacy,
+      authorized: this.isCurrent(scope),
       ...(this.authorizationErrors.has(bindingKey(scope.apiUrl, scope.accountId))
         ? { error: this.authorizationErrors.get(bindingKey(scope.apiUrl, scope.accountId))! }
         : {}),
@@ -304,7 +296,6 @@ export class DaemonControl {
     const previous = this.current;
     if (previous && remoteBinding(previous) !== remoteBinding(binding)) await this.detachCurrent();
     this.current = binding;
-    this.legacy = false;
     this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
     writeJson(join(this.directory, "host-binding.json"), binding);
     const control = this.control(scope);
@@ -320,7 +311,6 @@ export class DaemonControl {
     if (!current) return;
     const authorization = await this.vault.get(current);
     this.current = undefined;
-    this.legacy = false;
     this.persistent = false;
     this.ack?.reject();
     this.ack = undefined;
@@ -340,20 +330,7 @@ export class DaemonControl {
   private async selectAccount(scope: { accountId: string | null; apiUrl: string }) {
     const file = join(this.directory, "host-session.json"),
       next = { accountId: scope.accountId, apiUrl: serverOrigin(scope.apiUrl) };
-    const previous = existsSync(file)
-      ? localParams["host.session"].parse(JSON.parse(readFileSync(file, "utf8")))
-      : undefined;
     writeJson(file, next);
-    if (previous) {
-      const old = previous;
-      if (old.accountId && (old.accountId !== next.accountId || old.apiUrl !== next.apiUrl)) {
-        const origin = createHash("sha256").update(old.apiUrl).digest("hex").slice(0, 32),
-          account = createHash("sha256").update(old.accountId).digest("hex").slice(0, 32);
-        await this.runtime.request("agents.local.detach", {
-          accountId: `server:${origin}:${account}`,
-        });
-      }
-    }
     if (
       this.current &&
       (this.current.accountId !== next.accountId || this.current.apiUrl !== next.apiUrl)
@@ -502,28 +479,6 @@ export class DaemonControl {
           daemon: this.independent,
           persistent: false,
         };
-      });
-    }
-    if (method === "host.legacy") {
-      const input = localParams[method].parse(raw),
-        scope = this.scope(input);
-      return this.serial(async () => {
-        const binding: HostBinding = {
-          ...scope,
-          deviceId: input.grant.deviceId,
-          epoch: input.grant.epoch,
-          expiresAt: input.grant.expiresAt,
-        };
-        if (this.current && remoteBinding(this.current) !== remoteBinding(binding))
-          await this.detachCurrent();
-        this.current = binding;
-        this.legacy = true;
-        this.persistent = false;
-        this.authorizationErrors.delete(bindingKey(scope.apiUrl, scope.accountId));
-        const control = this.control(scope);
-        await control.enable(scope.accountId, true);
-        await control.attach(scope.accountId, scope.apiUrl, input.grant);
-        return this.info(scope);
       });
     }
     if (method === "host.authorize") {

@@ -1,4 +1,4 @@
-import type { JobDefinition, JobRun } from "@raypx/contracts/local";
+import type { JobDefinition, JobRun } from "@raypx/jobs";
 import type { TuiTerminal } from "./terminal";
 import { messages, outputLines, safeText, type TuiLocale } from "./text";
 

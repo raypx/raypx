@@ -1,6 +1,7 @@
 import { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
 import {
   relayServerSchema,
+  RELAY_VERSION,
   MAX_RELAY_BYTES,
   type RelayClientFrame,
   type RelayServerFrame,
@@ -26,9 +27,6 @@ export class RelayConnection {
   private generation = 0;
   private failures = 0;
   private lastMessage = 0;
-  private fallbackVersion: 2 | undefined;
-  private attemptedVersion: 2 | 3 = 2;
-  private accepted = false;
   private contextAvailable = false;
   get contextSupported() {
     return this.contextAvailable;
@@ -39,7 +37,6 @@ export class RelayConnection {
       authenticate: () => Promise<Extract<RelayClientFrame, { type: "auth" }>>;
       message: (frame: RelayServerFrame) => void;
       status: (connected: boolean, code?: string) => void;
-      protocolChanged?: (version: 2 | 3) => void;
       socket?: RelaySocketFactory;
       scheduler?: RelayScheduler;
     },
@@ -50,7 +47,6 @@ export class RelayConnection {
   start() {
     if (this.enabled) return;
     this.enabled = true;
-    this.fallbackVersion = undefined;
     this.connect();
   }
   restart() {
@@ -60,7 +56,6 @@ export class RelayConnection {
   private connect() {
     if (!this.enabled) return;
     const generation = ++this.generation;
-    this.accepted = false;
     this.contextAvailable = false;
     try {
       const socket = (this.options.socket ?? ((url) => new WebSocket(url)))(this.options.url);
@@ -69,8 +64,7 @@ export class RelayConnection {
         void this.options.authenticate().then(
           (frame) => {
             if (this.enabled && generation === this.generation) {
-              this.attemptedVersion = this.fallbackVersion ?? frame.protocolVersion;
-              this.send({ ...frame, protocolVersion: this.attemptedVersion });
+              this.send(frame);
             }
           },
           () => {
@@ -92,7 +86,7 @@ export class RelayConnection {
             typeof raw === "object" &&
             "type" in raw &&
             raw.type === "ready" &&
-            (!("protocolVersion" in raw) || ![2, 3].includes(Number(raw.protocolVersion)))
+            (!("protocolVersion" in raw) || raw.protocolVersion !== RELAY_VERSION)
           ) {
             socket.close(4006, "UPGRADE_REQUIRED");
             return;
@@ -101,9 +95,7 @@ export class RelayConnection {
           if (frame.type === "pong" || frame.type === "changed") this.failures = 0;
           this.lastMessage = this.scheduler.now();
           if (frame.type === "ready") {
-            this.accepted = true;
             this.contextAvailable = frame.contextSupported === true;
-            this.options.protocolChanged?.(frame.protocolVersion);
             this.options.status(true);
             this.heartbeat = this.scheduler.interval(() => {
               if (this.scheduler.now() - this.lastMessage > 45_000)
@@ -123,18 +115,9 @@ export class RelayConnection {
         this.heartbeat = undefined;
         this.socket = undefined;
         this.contextAvailable = false;
-        const fallback =
-          event.code === 4006 &&
-          !this.accepted &&
-          this.attemptedVersion === 3 &&
-          this.fallbackVersion === undefined;
-        if (fallback) {
-          this.fallbackVersion = 2;
-          this.options.protocolChanged?.(2);
-        } else if (this.accepted) this.fallbackVersion = undefined;
         this.options.status(
           false,
-          event.code === 4006 && !fallback
+          event.code === 4006
             ? "UPGRADE_REQUIRED"
             : event.code === 4003
               ? "DEVICE_REVOKED"
@@ -142,7 +125,7 @@ export class RelayConnection {
                 ? "AUTH_REQUIRED"
                 : "NETWORK_UNAVAILABLE",
         );
-        if (event.code === 4006 && !fallback) this.enabled = false;
+        if (event.code === 4006) this.enabled = false;
         if (this.enabled && generation === this.generation)
           this.retry = this.scheduler.timeout(
             () => this.connect(),

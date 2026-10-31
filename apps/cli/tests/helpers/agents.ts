@@ -4,13 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { StateStore } from "../../src/runtime/state";
 import { AgentRuntime } from "../../src/runtime/agents";
+
 import type {
   AgentTask,
   AgentProvider,
   TaskContextSnapshot,
   TaskContextSelection,
   TaskContextTarget,
-} from "@raypx/contracts/tasks";
+} from "@raypx/core/tasks";
 
 export function agentFixtures(runtimeOptions: { interruptTimeoutMs?: number } = {}) {
   const cleanups: (() => Promise<void>)[] = [];

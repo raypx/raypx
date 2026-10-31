@@ -29,6 +29,7 @@
     "@raypx/ai": "workspace:*",
     "@raypx/client": "workspace:*",
     "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*",
     "@raypx/host": "workspace:*",
     "@raypx/jobs": "workspace:*",
     "@raypx/logger": "workspace:*",

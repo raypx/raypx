@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import type { LocalMethod } from "@raypx/contracts/local";
-import type { AgentProvider } from "@raypx/contracts/tasks";
+
+import type { AgentProvider } from "@raypx/core/tasks";
 import type {
   ObservedProjection,
   TerminalDecision,

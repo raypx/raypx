@@ -80,7 +80,6 @@ export class LocalTerminalControl {
         version: 1,
         local: { rootIds: [], away: false, waitSeconds: 300 },
         clouds: {},
-        migrationRequired: true,
       };
       this.unavailable = true;
     }
@@ -187,10 +186,7 @@ export class LocalTerminalControl {
       projectIds: paths,
       away: settings.away,
       waitSeconds: settings.waitSeconds,
-      authorizeProject: (
-        path: string,
-        provider: import("@raypx/contracts/tasks").AgentProvider,
-      ) => {
+      authorizeProject: (path: string, provider: import("@raypx/core/tasks").AgentProvider) => {
         const id = paths.get(path);
         return Boolean(
           id &&
@@ -220,10 +216,10 @@ export class LocalTerminalControl {
         { ...value, rootIds: value.rootIds.filter((id) => local.rootIds.includes(id)) },
       ]),
     );
-    this.save({ ...this.settings, local, clouds, migrationRequired: false });
+    this.save({ ...this.settings, local, clouds });
     this.reconcileExposures();
     this.terminal?.configure(this.configuration());
-    return { ...local, migrationRequired: false };
+    return local;
   }
   projectsChanged() {
     if (this.unavailable) return;
@@ -386,7 +382,7 @@ export class LocalTerminalControl {
     }
     if (method === "approvals.local.settings") {
       localParams[method].parse(raw);
-      return { ...this.settings.local, migrationRequired: this.settings.migrationRequired };
+      return this.settings.local;
     }
     if (method === "approvals.local.configure") return this.configure(raw);
     if (method === "approvals.local.decide")

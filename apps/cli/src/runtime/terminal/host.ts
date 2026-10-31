@@ -10,7 +10,9 @@ import {
 import { createHash } from "node:crypto";
 import { basename, isAbsolute, join, relative, sep } from "node:path";
 import { z } from "zod";
-import { taskText, type AgentProvider } from "@raypx/contracts/tasks";
+
+import { taskText } from "@raypx/core/task-text";
+import { type AgentProvider } from "@raypx/core/tasks";
 import {
   terminalDecisionSchema,
   terminalSessionSchema,

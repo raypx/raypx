@@ -44,24 +44,17 @@ HTML and the first hydration render consume the same snapshot. Only after
 hydration does the browser read localStorage and `navigator.languages` (falling
 back to `navigator.language` when the list is empty).
 
-Browser restoration order is the new `raypx_locale` key, one-time migration from
-`voidmix_locale`, the locale cookie, then system. An existing but invalid new key
-selects system and cannot revive an old choice. Storage denial retains the loader
-snapshot. Migration deletes the old key only after successfully writing the new
-one; a write failure can still use the migrated preference for that session.
-
-An explicit locale writes the cookie; system deletes it. Cookie-only preferences
-are mirrored to storage. Cross-window events are accepted only for the target
-localStorage area and preference key, including storage clear. Removal, clear or
-invalid values select system and synchronize the cookie. Runtime resets never
-rerun historical migration. `languagechange` refreshes the full candidate list.
+Browser restoration reads only `raypx_locale`; a missing or invalid value selects
+system. Retired product keys are ignored without deletion or migration. Storage denial
+retains the loader snapshot. Native snapshots remain authoritative and do not restore
+WebView preferences. `languagechange` refreshes the full candidate list.
 
 ### Desktop
 
 The native preferences file keeps its existing schema and atomic writes. Preload
 passes a snapshot directly to the renderer, distinguishing valid, missing and
 failed reads. A valid file is authoritative. A missing file permits renderer
-storage migration. An invalid or unreadable file starts from safe defaults.
+default initialization. An invalid or unreadable file starts from safe defaults.
 LocalStorage synchronization is best effort and cannot replace the native snapshot.
 
 The renderer enables native writeback only after initialization. It cannot write

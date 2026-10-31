@@ -1,6 +1,7 @@
 /* oxlint-disable jsx-a11y/no-noninteractive-tabindex -- Bounded Diff tables need keyboard focus for horizontal and vertical scrolling. */
 import { useMemo } from "react";
-import type { HumanRequest } from "@raypx/contracts/tasks";
+
+import type { HumanRequest } from "@raypx/core/tasks";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@raypx/ui/components/ui/tabs";
 import { approvalChanges } from "./approval-changes.js";

@@ -7,7 +7,7 @@ implement the independent ports and fail unexpected calls; never cast partial cl
 The root exports pure task helpers; /model owns the independent TaskWorkspacePort,
 WorkspaceScope, deterministic ConversationState, bounded draft parsing and pure diff
 previews. /client exports DOM components and visibility-aware subscriptions;
-TaskWorkspaceClient remains a compatibility name for the independent port. /client/pending-count
+TaskWorkspacePort is the canonical model interface. /client/pending-count
 exports only the approval badge for always-mounted shells, without the workspace or virtualizer.
 `/client/task-composer` exposes the standalone composer and its plain draft type.
 Applications can inject a restored draft and a guest sign-in/persistence adapter;
@@ -27,7 +27,7 @@ clear the selection; guest handoff and account/scope changes never migrate it.
 Creation sends `contextSelection`; only the runtime supplies the immutable
 `task.context` snapshot rendered in task details. Templates remain reference text
 and do not grant tools or execute on selection.
-WorkspaceScope distinguishes device, account-local and remote ownership, derives
+WorkspaceScope distinguishes device and remote ownership, derives
 cache identities and preserves the existing draft storage keys. Applications provide
 the confirmed scope; a guest editor never creates a private workspace or executes
 a restored draft. ConversationState owns cursors, revision merges and history gaps;
@@ -97,7 +97,7 @@ task location. Validate and bound stored drafts (20 drafts, 32,000 characters ea
 preserve editor text on storage/delivery failures. Drafts never execute until Send.
 Desktop opts into `persistEditor` for a separately bounded current-editor slot, restored
 before the composer mounts. Keep its owner/namespace identical to the named draft list.
-The device owner persists across account changes; legacy and remote slots remain account-scoped.
+The device owner persists across account changes; remote slots remain account-scoped.
 
 Optional `client.observed` adds a separate terminal-request section. List summaries
 omit tool bodies; expansion loads one request. Render capabilities, revision/epoch

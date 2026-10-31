@@ -2,7 +2,8 @@ import { expect, type Locator } from "@playwright/test";
 import { test } from "../helpers/browser-fixture.js";
 import { surfaces } from "../helpers/surfaces.js";
 import { authResponse, signedInAccount, webShellFixture } from "../helpers/account-fixture.js";
-import type { AgentTask, TaskActivity } from "@raypx/contracts/tasks";
+
+import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 
 async function readingPosition(viewport: Locator) {
   return viewport.evaluate((element) => {

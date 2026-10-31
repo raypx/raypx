@@ -1,20 +1,19 @@
-import { normalizeTaskJson } from "@raypx/contracts/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
 import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
+import type { RelayCommand, SequencedEvent, SnapshotRecord } from "@raypx/contracts/tasks";
 import type {
   AgentEvent,
   AgentProvider,
   AgentTask,
   HumanRequest,
-  RelayCommand,
-  SequencedEvent,
-  SnapshotRecord,
   TaskActivity,
-} from "@raypx/contracts/tasks";
+} from "@raypx/core/tasks";
 import { LocalError } from "../errors";
-import { activeTaskStatuses, taskActivitySchema, taskActivityPage } from "@raypx/contracts/tasks";
-import { recordDiagnostic, type RecordDiagnostic } from "../../diagnostics";
+
+import { activeTaskStatuses, taskActivitySchema } from "@raypx/core/tasks";
+import { taskActivityPage } from "@raypx/core/activity";
 
 const stored = (value: string) => normalizeTaskJson(JSON.parse(value));
 const activeTasks = `json_extract(value,'$.task.status') IN (${activeTaskStatuses.map((status) => `'${status}'`).join(",")})`;
@@ -59,7 +58,6 @@ export class AgentStore {
     directory: string,
     private readonly retained = 4096,
     private readonly retainedBytes = 8 * 1024 * 1024,
-    diagnostics?: RecordDiagnostic,
   ) {
     this.database = new Database(join(directory, "agents.sqlite"), { create: true, strict: true });
     this.database.exec(
@@ -93,31 +91,6 @@ export class AgentStore {
         value: string;
       }
     ).value;
-    // One-time, indexed legacy cleanup. Commit the marker before vacuuming;
-    // a separate pending marker retries disk reclamation after a crash.
-    if (!this.database.query("SELECT 1 FROM agent_meta WHERE id='local-journal-v2'").get()) {
-      this.database.transaction(() => {
-        this.database.exec(
-          "DELETE FROM journal WHERE binding GLOB 'desktop:*' AND json_extract(value,'$.kind') IN ('activity','activity_delta'); DELETE FROM outbox WHERE id NOT IN (SELECT id FROM journal); UPDATE outbox SET value='' WHERE value!=''; INSERT OR REPLACE INTO agent_meta VALUES ('local-journal-v2','done'); INSERT OR REPLACE INTO agent_meta VALUES ('vacuum-pending','1');",
-        );
-      })();
-    }
-    if (this.database.query("SELECT 1 FROM agent_meta WHERE id='vacuum-pending'").get()) {
-      try {
-        this.database.exec("PRAGMA wal_checkpoint(TRUNCATE); VACUUM;");
-        this.database.exec(
-          "DELETE FROM agent_meta WHERE id='vacuum-pending'; PRAGMA wal_checkpoint(TRUNCATE);",
-        );
-      } catch {
-        // Reclamation is optional, including FULL/IOERR. Keep the retry marker
-        // without preventing reads or rerunning the committed row migration.
-        recordDiagnostic(diagnostics, {
-          operation: "agent.maintenance",
-          code: "VACUUM_DEFERRED",
-          outcome: "deferred",
-        });
-      }
-    }
     for (const row of this.database
       .query("SELECT DISTINCT binding FROM journal WHERE binding NOT GLOB 'desktop:*'")
       .all() as { binding: string }[])

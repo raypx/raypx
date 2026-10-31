@@ -7,8 +7,9 @@ import {
   type FormEvent,
   type RefObject,
 } from "react";
-import type { AgentTask, AgentProvider, SyncDevice } from "@raypx/contracts/tasks";
-import type { TaskContextSelection } from "@raypx/core/tasks";
+import type { SyncDevice } from "@raypx/contracts/tasks";
+import { type AgentTask, type AgentProvider, type TaskContextSelection } from "@raypx/core/tasks";
+
 import {
   ContextPicker,
   ContextBudget,
@@ -16,7 +17,7 @@ import {
   type ContextBudgetState,
   type MemoryClientPort,
 } from "@raypx/memory/client";
-import type { TaskWorkspaceClient } from "./remote-query.js";
+import type { TaskWorkspacePort } from "../model/port.js";
 import { useTranslations } from "@raypx/i18n/browser";
 import { Button } from "@raypx/ui/components/ui/button";
 import { Field, FieldLabel } from "@raypx/ui/components/ui/field";
@@ -72,7 +73,7 @@ export function TaskComposer({
   };
   initialDraft?: TaskComposerDraft | undefined;
   onDraftRestored?: (() => void) | undefined;
-  client: TaskWorkspaceClient;
+  client: TaskWorkspacePort;
   devices: SyncDevice[];
   tasks: AgentTask[];
   onCreated: (task: AgentTask) => void;

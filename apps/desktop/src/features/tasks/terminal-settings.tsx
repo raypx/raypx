@@ -216,11 +216,6 @@ export function TerminalSettings({ projects }: { projects: DeviceProject[] }) {
         ))}
       </ul>
       <p className="mt-3 max-w-[65ch] text-xs text-muted-foreground">{t("terminalTrust")}</p>
-      {settings?.migrationRequired && (
-        <p role="status" className="mt-3 text-sm text-muted-foreground">
-          {t("terminalMigrationRequired")}
-        </p>
-      )}
       {settings && (
         <div className="mt-6 space-y-5">
           <div className="flex items-start justify-between gap-5">

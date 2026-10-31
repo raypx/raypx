@@ -54,12 +54,8 @@ Gateway watches its proxy configuration and the IaC file.
 Infrastructure changes still require config plan/apply: Railway does not apply
 the IaC authoring file simply because it was pushed.
 
-The legacy `deploy/railway/api/Dockerfile` and `deploy/railway/web/Dockerfile`
-paths remain generated compatibility copies of the shared application Dockerfiles. Existing
-service settings can therefore build a pushed commit before the IaC path update.
-Refresh them with `bun run raypx-dev deployment:sync` after editing a shared Dockerfile;
-policy rejects missing or stale copies. Keep them until the configured paths and any `RAILWAY_DOCKERFILE_PATH`
-overrides have been switched to the shared paths.
+API and Web require `apps/api/Dockerfile` and `apps/web/Dockerfile`; the former
+`deploy/railway/{api,web}/Dockerfile` paths are no longer provided.
 
 For that configuration cutover, pause API/Web GitHub autodeploys, review
 `config plan`, then apply the new paths and watch patterns. Keep any

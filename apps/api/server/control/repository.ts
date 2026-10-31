@@ -1,4 +1,4 @@
-import { normalizeTaskJson } from "@raypx/contracts/tasks";
+import { normalizeTaskJson } from "@raypx/core/task-text";
 import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Database } from "@raypx/database/connection";
@@ -164,7 +164,7 @@ export function eventWindowPrune(userId: string, deviceId: string, streamId: str
 /** Remove private replay bodies, retaining compact receipts so unknown delivery cannot replay. */
 export function contextCommandPrune(now: Date | SQL, userId?: string) {
   const time = now instanceof Date ? sql`${now.toISOString()}::timestamptz` : now;
-  const captured = sql`coalesce(c.body->>'capturedAt',c.body->'context'->>'capturedAt','')`;
+  const captured = sql`coalesce(c.body->>'capturedAt','')`;
   const cutoff = sql`to_char((${time} - ${CONTEXT_COMMAND_TTL_MS} * interval '1 millisecond') at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`;
   const candidates =
     userId === undefined

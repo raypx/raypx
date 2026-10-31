@@ -156,7 +156,7 @@ it("keeps server cancellation outside the host revision sequence across epoch re
   expect((await service.getObserved(host.auth.user.id, next.request.id)).status).toBe("delivered");
 });
 
-it("repairs the equal-revision cancellation written by the previous server", async () => {
+it("rejects conflicting equal-revision cancellations without historical repair", async () => {
   const repository = memoryControlRepository(),
     service = new ControlService(repository),
     host = await connected(service),
@@ -171,13 +171,15 @@ it("repairs the equal-revision cancellation written by the previous server", asy
     }),
   );
   const next = observed(host.input.projectId);
-  await service.observed(host.actor, {
-    ...next.frame,
-    sessions: [f.session, next.session],
-    requests: [{ ...f.request, status: "expired", revision: 2 }, next.request],
-  });
+  await expect(
+    service.observed(host.actor, {
+      ...next.frame,
+      sessions: [f.session, next.session],
+      requests: [{ ...f.request, status: "expired", revision: 2 }, next.request],
+    }),
+  ).rejects.toThrow("EVENT_CONFLICT");
   expect(await service.getObserved(host.auth.user.id, f.request.id)).toMatchObject({
-    status: "expired",
+    status: "cancelled",
     revision: 2,
   });
 });

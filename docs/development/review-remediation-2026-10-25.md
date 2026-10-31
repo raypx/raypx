@@ -1,5 +1,9 @@
 # Review remediation — 2026-10-25
 
+> Historical validation record. Legacy protocol fallback, local-account workspaces,
+> storage migration and compatibility exports described below were removed on 2026-10-31.
+> Current behavior is specified by the architecture documents and package instructions.
+
 > Historical validation snapshot: the Worker deployment target and its gates have been removed.
 > Current deployment and verification use Node; commands below record the earlier state.
 

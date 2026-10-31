@@ -11,7 +11,7 @@ import {
   runningTask,
 } from "../../../../helpers/tasks/workspace";
 
-const { accountLocalTaskClient } = setupWorkspaceTests();
+setupWorkspaceTests();
 
 it("saves and restores local drafts without sending a task, and preserves unsaved text on cancel", async () => {
   const first = await page();
@@ -157,24 +157,8 @@ it("keeps earlier account-owned drafts isolated instead of adopting them into th
     ]),
   );
   await page("/tasks?scope=local&history=account");
-  await showDrafts();
-  await screen.findByRole("button", { name: /^Account A private draft/ });
-  await act(async () => {
-    accountLocalTaskClient.setAccount("account-b");
-    mocks.user = { id: "account-b" };
-    for (const listener of mocks.listeners) listener();
-  });
-  await waitFor(() =>
-    expect(screen.queryByRole("button", { name: /^Account A private draft/ })).toBeNull(),
-  );
+  expect(screen.queryByRole("button", { name: /^Account A private draft/ })).toBeNull();
   expect(await screen.findByRole("textbox", { name: "What should the agent do?" })).toHaveValue("");
-  await act(async () => {
-    accountLocalTaskClient.setAccount(null);
-    mocks.user = null;
-    for (const listener of mocks.listeners) listener();
-  });
-  await screen.findByRole("heading", { name: "Sign in for remote access" });
-  expect(screen.queryByRole("textbox", { name: "What should the agent do?" })).toBeNull();
   expect(JSON.parse(localStorage.getItem(key)!)[0].prompt).toBe("Account A private draft");
   expect(mocks.remote).not.toHaveBeenCalled();
 });

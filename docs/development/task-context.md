@@ -42,7 +42,8 @@ loads at most 20 versions per page. Existing documents can be edited or restored
 Content-only edits work when the unchanged project is unavailable; assigning
 another project still validates it. Creation retries recover the existing document
 before checking whether a project remains available. Context UUIDs are canonical
-lowercase; repositories preserve legacy physical keys and reject canonical collisions.
+lowercase; repositories require canonical stored keys and reject identity collisions.
+Old noncanonical keys are neither migrated nor read as aliases.
 PostgreSQL enforces global case-insensitive document-ID uniqueness with a `lower(id)`
 expression index, which also bounds creation retry lookups to the matching key.
 
@@ -122,7 +123,8 @@ accepted task and command snapshots remain independent. A body-free deletion
 receipt reserves the canonical ID and makes a matching deletion retry idempotent,
 so an old pinned reference cannot resolve to a replacement document. API writes
 still require the current account, trusted Origin and the memory mutation limit.
-SQLite schema version 2 adds the device-owned deletion receipts.
+SQLite requires schema version 2, including device-owned deletion receipts.
+Fresh databases initialize that format; older schemas are rejected without migration.
 
 Task and cloud Agent-plan editors show the combined reference/prompt character
 budget using Core's exact execution formatter. Selected immutable bodies are read

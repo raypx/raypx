@@ -1,13 +1,12 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
+import { deviceSchema, deviceGrantSchema } from "./tasks.js";
 import {
-  deviceSchema,
-  deviceGrantSchema,
   taskSchema,
   humanRequestSchema,
   agentEventSchema,
   taskActivitySchema,
-} from "./tasks.js";
+} from "@raypx/core/tasks";
 export * from "./tasks.js";
 export * from "./configuration.js";
 import { configurationContract } from "./configuration.js";
@@ -28,7 +27,6 @@ export const accountProfileSchema = z.object({
   name: z.string(),
 });
 export type AccountProfile = z.infer<typeof accountProfileSchema>;
-export type AccountProfileDto = AccountProfile;
 
 export const apiErrorDataSchema = z.object({
   error: z.object({

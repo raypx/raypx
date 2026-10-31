@@ -1,4 +1,4 @@
-import type { AgentTask } from "@raypx/contracts/tasks";
+import type { AgentTask } from "@raypx/core/tasks";
 import { initialExecutionPrompt } from "../../src/runtime/agents/harness/execution";
 
 export interface EvalCase {

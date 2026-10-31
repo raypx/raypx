@@ -9,7 +9,8 @@ import { DaemonControl } from "./control";
 import { LocalTerminalControl } from "./terminal-control";
 import type { HostVault } from "./vault";
 import manifest from "../../../package.json";
-import type { AgentProvider } from "@raypx/contracts/tasks";
+
+import type { AgentProvider } from "@raypx/core/tasks";
 import { cliBuild } from "./build";
 import { refreshStableCli } from "./connectors";
 import { privateSocketDirectory } from "../terminal/socket";

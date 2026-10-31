@@ -311,9 +311,12 @@ func TestRendererPolicyKeepsPrivilegedMethodsNative(t *testing.T) {
 			t.Errorf("accepted privileged method %q", method)
 		}
 	}
-	value, err := desktop.RendererParams("agents.local.list", host.JSON{"accountId": "account"})
-	if err != nil || value.(map[string]any)["accountId"] == "account" {
-		t.Fatal("account was not server-scoped")
+	if _, err := desktop.RendererParams("agents.local.list", host.JSON{"accountId": "account"}); err == nil {
+		t.Fatal("accepted retired account owner")
+	}
+	value, err := desktop.RendererParams("agents.local.list", host.JSON{"accountId": "device:local-workspace:v1"})
+	if err != nil || value.(map[string]any)["accountId"] != "device:local-workspace:v1" {
+		t.Fatal("device workspace owner changed")
 	}
 	value, err = desktop.RendererParams("connectors.install", host.JSON{"configDirs": host.JSON{"codex": "/attacker"}})
 	if err != nil || value.(map[string]any)["configDirs"].(map[string]any)["codex"] == "/attacker" {

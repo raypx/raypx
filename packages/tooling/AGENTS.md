@@ -10,8 +10,6 @@ conventions (`src/repository.ts`), policy, locale parity, scaffolding and produc
 
 ## Interface
 
-- `deployment:sync` refreshes temporary legacy Railway Dockerfile copies from the shared
-  application Dockerfiles; deployment policy rejects missing or stale copies.
 - raypx-dev tasks <task> [VP options]
 - raypx-dev test [suite] [--package name|path] [VP options] [-- runner arguments]
   Root owns this aggregate; package scripts own actual suites. `test list` discovers

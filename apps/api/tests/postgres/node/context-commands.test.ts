@@ -93,7 +93,6 @@ it("compacts only this owner's expired full context and preserves unknown delive
   const old = command(expired),
     recent = command(),
     foreign = command(expired);
-  const { capturedAt: _captured, requestHash: _hash, ...legacy } = command(expired);
   const unrelated = {
     id: crypto.randomUUID(),
     deviceId,
@@ -101,7 +100,6 @@ it("compacts only this owner's expired full context and preserves unknown delive
   };
   await save(owner, old);
   await save(owner, recent);
-  await save(owner, legacy);
   await save(owner, unrelated);
   await save(stranger, foreign);
   await connection.db.insert(controlTask).values({
@@ -116,12 +114,6 @@ it("compacts only this owner's expired full context and preserves unknown delive
     deviceId,
     capturedAt: expired,
     requestHash: hash,
-    compacted: true,
-  });
-  expect(await body(owner, legacy.id)).toEqual({
-    id: legacy.id,
-    deviceId,
-    capturedAt: expired,
     compacted: true,
   });
   expect(await body(owner, recent.id)).toEqual(recent);
@@ -165,11 +157,11 @@ it("bounds real UTF-8 JSONB replay bytes as well as row count", async () => {
   expect(retained.count).toBeLessThan(500);
 });
 
-it("drains legacy overflow in at most 1000 body changes per call, keeping each compact receipt", async () => {
+it("drains expired overflow in at most 1000 body changes per call, keeping each compact receipt", async () => {
   const owner = await fixture(),
     sample = command(expired);
   await connection.db.execute(sql`insert into ${controlCommand} (id,user_id,device_id,body)
-    select 'legacy-'||n,${owner},${deviceId},${sample}::jsonb || jsonb_build_object('id','legacy-'||n) from generate_series(1,1001)n`);
+    select 'expired-'||n,${owner},${deviceId},${sample}::jsonb || jsonb_build_object('id','expired-'||n) from generate_series(1,1001)n`);
   const [first] = await connection.db.execute<{ count: number }>(contextCommandPrune(now, owner));
   expect(first!.count).toBe(1000);
   expect((await window(owner)).count).toBe(1);

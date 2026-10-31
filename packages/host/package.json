@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@raypx/client": "workspace:*",
-    "@raypx/contracts": "workspace:*"
+    "@raypx/contracts": "workspace:*",
+    "@raypx/core": "workspace:*"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",

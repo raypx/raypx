@@ -3,7 +3,8 @@ import { mockTaskLayout } from "../../helpers/layout.js";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 import { BrowserLanguageProvider } from "@raypx/i18n/browser";
-import type { AgentTask, TaskActivity } from "@raypx/contracts/tasks";
+
+import type { AgentTask, TaskActivity } from "@raypx/core/tasks";
 import { Conversation } from "../../../src/client/conversation.js";
 
 beforeEach(() => {

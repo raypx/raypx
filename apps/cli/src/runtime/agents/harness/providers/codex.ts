@@ -1,4 +1,5 @@
-import { taskText, type AgentTask } from "@raypx/contracts/tasks";
+import { taskText } from "@raypx/core/task-text";
+import { type AgentTask } from "@raypx/core/tasks";
 import {
   createProcess,
   object,

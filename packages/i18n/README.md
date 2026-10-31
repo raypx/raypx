@@ -34,26 +34,17 @@ Web uses lazy delivery; Desktop reads local files and stays static.
 
 `BrowserLanguageProvider` from `/browser` accepts `initialPreference` and
 `initialSystemLocales`. Server rendering and the first client render use only this
-snapshot. After hydration the adapter restores `raypx_locale`, then the legacy
-`voidmix_locale` value when the new key is absent, then the locale cookie, then system.
-An invalid explicit new key selects system. A failed storage read keeps the initial
-snapshot. Successful legacy migration writes the new value before removing the old
-key; a failed write keeps the old value available.
-
-Fixed choices are mirrored to a server-visible cookie. System clears that cookie.
-The provider follows complete `navigator.languages` lists and localStorage
-set/remove/clear events from other documents, ignoring sessionStorage. Persistence
-failures do not prevent in-memory switching.
-Deletion, clear and invalid storage events write a best-effort `system` reset marker
-so surviving legacy values cannot return after remount. If writes are blocked, the
-reset still applies in memory but cannot be guaranteed across a later mount.
+snapshot. After hydration the adapter restores only `raypx_locale`; missing or
+invalid values select system. Storage denial retains the loader snapshot. Retired
+product keys are ignored and left intact. Explicit choices persist to the current
+key; if writes are blocked, the active session still reflects the selected preference.
 
 Desktop passes its validated native snapshot with `restorePreference={false}`.
 This disables browser restoration and storage-event overrides while retaining system
 language changes and user choices. `useLanguagePreference().hydrated` becomes true
 after browser environment reconciliation, so the host can gate writeback.
-`readBrowserPreference()` restores/migrates device storage without inheriting cookies
-when Desktop needs to bootstrap a missing native preference file.
+`readBrowserPreference()` reads the current browser key without inheriting cookies.
+Missing native preference files start from defaults.
 
 ## Pure helpers
 
