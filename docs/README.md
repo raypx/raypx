@@ -17,6 +17,7 @@
 - [Native cloud oRPC transport](development/desktop-orpc.md)
 - [Pi AI model calls](development/ai.md)
 - [Testing and release gates](development/testing.md)
+- [Agent quality Evals and performance checks](development/agent-quality.md)
 - [Root test command and package ownership](development/test-commands.md)
 - [Validation scripts, evidence and cleanup](development/validation-artifacts.md)
 - [Test case ownership and consolidation](development/test-cases.md)

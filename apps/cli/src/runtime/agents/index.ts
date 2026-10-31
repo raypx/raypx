@@ -299,44 +299,11 @@ export class AgentRuntime {
       for (const [key, value] of this.snapshots)
         if (value.binding === binding || value.expires < Date.now()) this.snapshots.delete(key);
       id = crypto.randomUUID();
-      const tasks = this.store
-        .tasks()
-        .filter((local) => local.binding === binding)
-        .sort((a, b) => b.task.createdAt.localeCompare(a.task.createdAt));
-      const selected = tasks.filter(
-        (local, index) => index < 100 || activeTaskStatuses.includes(local.task.status),
-      );
-      const ids = new Set(selected.map((local) => local.task.id));
-      const records: SnapshotRecord[] = [
-        ...selected.map((local) => ({ kind: "task" as const, task: local.task })),
-        ...this.store
-          .requests(binding)
-          .filter((request) => ids.has(request.taskId))
-          .map((request) => ({ kind: "request" as const, request })),
-      ];
-      const remaining = 32 * 1024 * 1024 - 64 * 1024 - Buffer.byteLength(JSON.stringify(records));
-      if (remaining > 128 * 1024) {
-        const pages = selected.map((local) => this.store.snapshotActivity(binding, local.task.id));
-        const activity: SnapshotRecord[] = [];
-        for (let activityOffset = 0; pages.some((page) => page[activityOffset]); activityOffset++)
-          for (const page of pages)
-            if (page[activityOffset])
-              activity.push({ kind: "activity", entry: page[activityOffset]! });
-        records.push(...bounded(activity, false, remaining));
-      }
-      for (const record of records)
-        if (record.kind === "task") {
-          const total = this.store.activityCount(binding, record.task.id);
-          const included = records.filter(
-            (entry) => entry.kind === "activity" && entry.entry.taskId === record.task.id,
-          ).length;
-          record.task = { ...record.task, activityIncomplete: included < total };
-        }
+      const snapshot = this.store.snapshot(binding);
       this.snapshots.set(id, {
         binding,
         expires: Date.now() + 120_000,
-        sequence: this.store.sequence(binding),
-        records,
+        ...snapshot,
       });
     }
     const snapshot = this.snapshots.get(id);

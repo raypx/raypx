@@ -8,6 +8,7 @@ import type {
   HumanRequest,
   RelayCommand,
   SequencedEvent,
+  SnapshotRecord,
   TaskActivity,
 } from "@raypx/contracts/tasks";
 import { LocalError } from "../errors";
@@ -15,6 +16,18 @@ import { activeTaskStatuses, taskActivitySchema, taskActivityPage } from "@raypx
 import { recordDiagnostic, type RecordDiagnostic } from "../../diagnostics";
 
 const stored = (value: string) => normalizeTaskJson(JSON.parse(value));
+const activeTasks = `json_extract(value,'$.task.status') IN (${activeTaskStatuses.map((status) => `'${status}'`).join(",")})`;
+const activeActivity =
+  "json_extract(value,'$.status') IN ('streaming','running','queued','sending')";
+const snapshotTasksSql = `WITH recent AS (
+  SELECT id FROM tasks WHERE json_extract(value,'$.binding')=?
+  ORDER BY json_extract(value,'$.task.createdAt') DESC,id ASC LIMIT 100
+), selected AS (
+  SELECT id FROM recent UNION SELECT id FROM tasks
+  WHERE json_extract(value,'$.binding')=? AND ${activeTasks}
+)
+SELECT value FROM tasks JOIN selected USING(id)
+ORDER BY json_extract(value,'$.task.createdAt') DESC,id ASC`;
 
 type Draft<T> = T extends unknown ? Omit<T, "order" | "revision"> : never;
 export type ActivityDraft = Draft<TaskActivity>;
@@ -55,6 +68,13 @@ export class AgentStore {
     this.database.exec(
       "CREATE TABLE IF NOT EXISTS activity (id TEXT PRIMARY KEY,binding TEXT NOT NULL,task_id TEXT NOT NULL,value TEXT NOT NULL); CREATE INDEX IF NOT EXISTS activity_task ON activity (binding,task_id);",
     );
+    // Expression indexes upgrade existing profiles without rewriting their JSON rows.
+    this.database.exec(`
+      CREATE INDEX IF NOT EXISTS tasks_binding_created ON tasks (json_extract(value,'$.binding'),json_extract(value,'$.task.createdAt') DESC,id ASC);
+      CREATE INDEX IF NOT EXISTS tasks_binding_active ON tasks (json_extract(value,'$.binding'),json_extract(value,'$.task.createdAt') DESC,id ASC) WHERE ${activeTasks};
+      CREATE INDEX IF NOT EXISTS requests_binding_task ON requests (binding,json_extract(value,'$.taskId'));
+      CREATE INDEX IF NOT EXISTS activity_task_active ON activity (binding,task_id) WHERE ${activeActivity};
+    `);
     this.database
       .query("INSERT OR IGNORE INTO agent_meta VALUES ('stream',?)")
       .run(crypto.randomUUID());
@@ -222,24 +242,103 @@ export class AgentStore {
       before,
     );
   }
-  activityCount(binding: string, taskId: string) {
-    return (
-      this.database
-        .query("SELECT count(*) AS count FROM activity WHERE binding=? AND task_id=?")
-        .get(binding, taskId) as { count: number }
-    ).count;
+  private *snapshotActivityRows(binding: string, taskId: string) {
+    const seen = new Set<string>();
+    for (const active of [true, false]) {
+      // query() caches one cursor per SQL string; parallel task iterators need their own statements.
+      const statement = this.database.prepare(
+        `SELECT id,value FROM activity WHERE binding=? AND task_id=?${active ? ` AND ${activeActivity}` : ""} ORDER BY rowid DESC LIMIT 64`,
+      );
+      let bytes = 0;
+      let count = 0;
+      try {
+        for (const row of statement.iterate(binding, taskId) as Iterable<{
+          id: string;
+          value: string;
+        }>) {
+          if (!active) {
+            const size = Buffer.byteLength(row.value);
+            if (count && bytes + size > 192 * 1024) break;
+            count++;
+            bytes += size;
+          }
+          if (!seen.has(row.id)) {
+            seen.add(row.id);
+            yield row;
+          }
+        }
+      } finally {
+        statement.finalize();
+      }
+    }
   }
-  snapshotActivity(binding: string, taskId: string) {
-    const active = this.database
-      .query(
-        "SELECT value FROM activity WHERE binding=? AND task_id=? AND json_extract(value,'$.status') IN ('streaming','running','queued','sending') ORDER BY rowid DESC LIMIT 64",
-      )
-      .all(binding, taskId) as { value: string }[];
-    const entries = [
-      ...active.map((row) => stored(row.value) as TaskActivity),
-      ...this.activityPage(binding, taskId).activity.reverse(),
-    ];
-    return [...new Map(entries.map((entry) => [entry.id, entry])).values()];
+
+  snapshot(binding: string) {
+    // The first task read fixes the WAL view for rows, counts and the journal watermark.
+    return this.database.transaction(() => {
+      const selected = (
+        this.database.query(snapshotTasksSql).all(binding, binding) as { value: string }[]
+      ).map((row) => stored(row.value) as LocalAgentTask);
+      const ids = JSON.stringify(selected.map((local) => local.task.id));
+      const records: SnapshotRecord[] = selected.map((local) => ({
+        kind: "task",
+        // Reserve the completion flag before computing the byte budget (false is longer than true).
+        task: { ...local.task, activityIncomplete: false },
+      }));
+      for (const row of this.database
+        .query(
+          "SELECT value FROM requests WHERE binding=? AND json_extract(value,'$.taskId') IN (SELECT value FROM json_each(?)) ORDER BY rowid",
+        )
+        .iterate(binding, ids) as Iterable<{ value: string }>)
+        records.push({ kind: "request", request: stored(row.value) as HumanRequest });
+      const totals = new Map(
+        (
+          this.database
+            .query(
+              "SELECT task_id,count(*) AS count FROM activity WHERE binding=? AND task_id IN (SELECT value FROM json_each(?)) GROUP BY task_id",
+            )
+            .all(binding, ids) as { task_id: string; count: number }[]
+        ).map((row) => [row.task_id, row.count]),
+      );
+      const included = new Map<string, number>();
+      let remaining = 32 * 1024 * 1024 - 64 * 1024 - Buffer.byteLength(JSON.stringify(records));
+      if (remaining > 128 * 1024) {
+        const pages = selected.map((local) => this.snapshotActivityRows(binding, local.task.id));
+        try {
+          let pending = true;
+          let exhausted = false;
+          while (pending && !exhausted) {
+            pending = false;
+            for (const page of pages) {
+              const row = page.next();
+              if (row.done) continue;
+              pending = true;
+              const size =
+                Buffer.byteLength(row.value.value) +
+                Buffer.byteLength(',{"kind":"activity","entry":}');
+              if (size > remaining) {
+                exhausted = true;
+                break;
+              }
+              const entry = stored(row.value.value) as TaskActivity;
+              records.push({ kind: "activity", entry });
+              remaining -= size;
+              included.set(entry.taskId, (included.get(entry.taskId) ?? 0) + 1);
+            }
+          }
+        } finally {
+          for (const page of pages) page.return();
+        }
+      }
+      for (const record of records)
+        if (record.kind === "task")
+          record.task = {
+            ...record.task,
+            activityIncomplete:
+              (included.get(record.task.id) ?? 0) < (totals.get(record.task.id) ?? 0),
+          };
+      return { records, sequence: this.sequence(binding) };
+    })();
   }
   recordActivity(binding: string, draft: ActivityDraft): TaskActivity {
     return this.database.transaction(() => {

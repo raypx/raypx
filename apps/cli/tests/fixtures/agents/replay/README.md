@@ -1,0 +1,5 @@
+These NDJSON tapes contain synthetic Codex and Claude protocol traffic only. They require no provider executable, credentials, network access or new dependency. Never replace them with unreviewed real captures.
+
+`host` records validate a queued send/request/control/kill operation. Their message is a recursive subset, allowing generated UUIDs without normalizing real payloads. Request/control replies resolve the matching operation. `provider` records deliver an incoming protocol message. `gate` records expose a named promise milestone and wait for explicit release. `exit` resolves process completion independently from kill, so lifecycle tests can verify that project locks remain held through draining and that late output is fenced.
+
+The shared lifecycle suite reuses the fixture bootstrap for resume, input queues, approval competition, cancellation and process exit. Protocol-specific cases retain Codex turn IDs/steer and Claude interrupt/result sequencing. `ProviderReplay.drain()` covers the remaining tape, queued protocol operations and explicitly tracked asynchronous hook/approval delivery.

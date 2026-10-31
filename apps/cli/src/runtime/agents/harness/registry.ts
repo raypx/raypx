@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { AgentCapability, AgentProvider, AgentTask } from "@raypx/contracts/tasks";
 import { CodexProvider } from "./providers/codex";
 import { ClaudeProvider } from "./providers/claude";
-import { createProcess, type AskApproval } from "./providers/process";
+import { createProcess, type AskApproval, type ProcessFactory } from "./providers/process";
 
 /** Lifecycle port also permits future in-process drivers. No protocol/process API escapes. */
 export interface ExecutionHandle {
@@ -43,12 +43,12 @@ type Start = {
 };
 type Registration = {
   supported(major: number, minor: number, patch: number): boolean;
-  create(start: Start, ports: DriverPorts): ExecutionDriver;
+  create(start: Start, ports: DriverPorts, processFactory: ProcessFactory): ExecutionDriver;
 };
 const registry: Record<AgentProvider, Registration> = {
   codex: {
     supported: (major, minor) => major > 0 || minor >= 163,
-    create(start, ports) {
+    create(start, ports, processFactory) {
       const provider = new CodexProvider(
         start.executable,
         start.directory,
@@ -61,7 +61,7 @@ const registry: Record<AgentProvider, Registration> = {
           turnId: (id) => ports.turnId(id),
         },
         (executable, args, directory, onMessage) =>
-          createProcess(executable, args, directory, onMessage, start.environment),
+          processFactory(executable, args, directory, onMessage, start.environment),
       );
       const driver: ExecutionDriver = {
         handle: { completed: provider.process.completed, kill: () => provider.process.kill() },
@@ -91,7 +91,7 @@ const registry: Record<AgentProvider, Registration> = {
   claude: {
     supported: (major, minor, patch) =>
       major > 2 || (major === 2 && (minor > 1 || (minor === 1 && patch >= 302))),
-    create(start, ports) {
+    create(start, ports, processFactory) {
       const hook = ports.approval.hook();
       const provider = new ClaudeProvider(
         start.executable,
@@ -109,6 +109,7 @@ const registry: Record<AgentProvider, Registration> = {
           session: (id) => ports.session(id),
           completed: (message) => ports.claudeCompleted(driver.handle, message),
         },
+        processFactory,
       );
       const driver: ExecutionDriver = {
         handle: { completed: provider.process.completed, kill: () => provider.process.kill() },
@@ -130,8 +131,13 @@ const registry: Record<AgentProvider, Registration> = {
     },
   },
 };
-export function createDriver(provider: AgentProvider, start: Start, ports: DriverPorts) {
-  return registry[provider].create(start, ports);
+export function createDriver(
+  provider: AgentProvider,
+  start: Start,
+  ports: DriverPorts,
+  processFactory: ProcessFactory = createProcess,
+) {
+  return registry[provider].create(start, ports, processFactory);
 }
 
 /** Discovery is bounded in both time and output, including incompatible installations. */

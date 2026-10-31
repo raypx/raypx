@@ -75,7 +75,7 @@ Tests live under `tests/unit/` and `tests/integration/`, then mirror runtime,
 commands and TUI. Pure parsers, injected provider ports and SDK loops stay in unit;
 filesystem/SQLite, real HTTP, subprocess and daemon boundaries stay in integration.
 Agent integration suites separate lifecycle/approvals, inputs and context/resume.
-Injected Pi suites separate lifecycle, tool durability and authoritative completion.
+Injected suites separate Pi tool durability and provider gate/drain replay (`tests/helpers/provider-replay.ts`).
 Temporary profiles and execution hosts are owned by `tests/helpers/runtime.ts` and
 `tests/helpers/agents.ts`; each case still receives a fresh runtime and directory.
 `tests/smoke/artifact.ts` validates the built executable separately from the unit tests.
@@ -101,7 +101,7 @@ Codex runs in a real PTY; exec's never-approval policy is not a hook acceptance 
 Reviewed, redacted recordings are under `tests/fixtures/terminal/recorded` and replay
 without credentials in the default suite. Never commit the private raw captures.
 
-`bun run --cwd apps/cli check`, `bun run --cwd apps/cli test`, `bun run --cwd apps/cli build`, then `bun run --cwd apps/cli smoke`.
+`eval:agents` previews policy Evals (`--run` enables paid calls); `perf:tasks` checks snapshots. See docs/development/agent-quality.md.
 
 ## Agent host
 

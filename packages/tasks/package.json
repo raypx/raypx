@@ -15,7 +15,8 @@
     "check": "bun --check --tsconfig-override tsconfig.json",
     "test": "bun --bun vp test --run",
     "test:unit": "bun --bun vp test --run --project unit",
-    "test:component": "bun --bun vp test --run --project component"
+    "test:component": "bun --bun vp test --run --project component",
+    "perf:tasks": "bun --bun vp test --run --project unit tests/unit/conversation-performance.test.ts --reporter=verbose --silent=false"
   },
   "dependencies": {
     "@raypx/contracts": "workspace:*",

@@ -214,6 +214,10 @@ export default {
     discardChanges: "放弃修改",
     promptPlaceholder: "描述要修改的内容、问题或排查目标…",
     conversation: "会话",
+    loadedFullText: "显示全部已加载消息",
+    virtualConversation: "使用虚拟滚动",
+    loadedConversationScope:
+      "显示全部已加载消息，可全文选择和浏览器查找。加载更早的消息可扩展历史范围。",
     you: "你",
     streaming: "正在输出…",
     olderMessages: "加载更早的消息",

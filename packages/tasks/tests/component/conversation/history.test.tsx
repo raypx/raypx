@@ -257,6 +257,7 @@ it.each(["reset", "visibility", "missing-baseline"] as const)(
       }),
     );
     await screen.findByText("Recovered checkpoint 63");
+    fireEvent.click(screen.getByRole("button", { name: "Show all loaded messages" }));
     await screen.findByRole("button", { name: gapName });
   },
 );

@@ -2,36 +2,6 @@ import { expect, it, vi } from "vite-plus/test";
 import { hostFixtures } from "../helpers/control.js";
 const { control } = hostFixtures();
 
-it.each(["close", "error"] as const)(
-  "backs off grants rejected through %s after successful renewal",
-  async (trigger) => {
-    let reject = false;
-    const attempts: number[] = [];
-    const renewGrant = vi.fn(
-      async (_account: string, binding: { deviceId: string; epoch: number }) => {
-        attempts.push(Date.now());
-        return {
-          ...binding,
-          token: "renewed-" + crypto.randomUUID(),
-          expiresAt: new Date(Date.now() + 600_000).toISOString(),
-        };
-      },
-    );
-    const f = await control({ renewGrant }, () => reject);
-    const initialRequests = f.renew.mock.calls.length;
-    reject = true;
-    for (const peer of f.sockets) {
-      if (trigger === "close") peer.close(4001, "Rejected grant");
-      else peer.send({ type: "error", code: "AUTH_REQUIRED" });
-    }
-    await expect.poll(() => attempts.length, { timeout: 8000 }).toBeGreaterThanOrEqual(3);
-    expect(attempts[1]! - attempts[0]!).toBeGreaterThanOrEqual(700);
-    expect(attempts[2]! - attempts[1]!).toBeGreaterThanOrEqual(1400);
-    expect(f.renew).toHaveBeenCalledTimes(initialRequests);
-  },
-  10_000,
-);
-
 it("finishes an in-flight command before replacing its socket for proactive renewal", async () => {
   const renewGrant = vi.fn(
     async (_account: string, binding: { deviceId: string; epoch: number }) => ({
@@ -94,53 +64,6 @@ it("finishes an in-flight command before replacing its socket for proactive rene
   await expect.poll(() => f.frames.filter((frame) => frame.type === "auth").length).toBe(2);
   expect(f.frames.some((frame) => frame.type === "result" && frame.routeId === routeId)).toBe(true);
 });
-
-it("caps proactive renewal draining at its timeout without cancelling the in-flight task", async () => {
-  const renewGrant = vi.fn(
-    async (_account: string, binding: { deviceId: string; epoch: number }) => ({
-      ...binding,
-      token: "renewed-" + crypto.randomUUID(),
-      expiresAt: new Date(Date.now() + 600_000).toISOString(),
-    }),
-  );
-  // Shortened from the production ten seconds; the cap matters, not its length.
-  const drainTimeoutMs = 1000;
-  const f = await control({ renewGrant, drainTimeoutMs }),
-    original = f.request.getMockImplementation()!;
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  f.request.mockImplementation(async (method, params) =>
-    method === "agents.remote"
-      ? gate.then(() => ({ ok: true, value: {} }))
-      : original(method, params),
-  );
-  for (const peer of f.sockets)
-    peer.send({
-      type: "command",
-      routeId: crypto.randomUUID(),
-      command: {
-        id: crypto.randomUUID(),
-        deviceId: f.grant.deviceId,
-        expiresAt: new Date(Date.now() + 60_000).toISOString(),
-        request: { method: "tasks.cancel", input: { id: crypto.randomUUID() } },
-      },
-    });
-  await expect
-    .poll(() => f.request.mock.calls.some(([method]) => method === "agents.remote"))
-    .toBe(true);
-  try {
-    const started = Date.now();
-    expect(await f.value.refreshGrant()).toBe(true);
-    expect(Date.now() - started).toBeGreaterThanOrEqual(drainTimeoutMs - 100);
-    expect(Date.now() - started).toBeLessThan(drainTimeoutMs + 3_000);
-    await expect.poll(() => f.frames.filter((frame) => frame.type === "auth").length).toBe(2);
-    expect(f.request.mock.calls.some(([method]) => method === "agents.detach")).toBe(false);
-  } finally {
-    release();
-  }
-}, 8_000);
 
 it("renews a connection without cancelling tasks and disables execution after server revocation", async () => {
   const f = await control();

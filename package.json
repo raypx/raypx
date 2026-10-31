@@ -122,7 +122,9 @@
     "deps:audit": "bun audit",
     "skills:update": "DO_NOT_TRACK=1 bun --bun skills update --project --yes",
     "analytics:sourcemaps": "raypx-dev analytics sourcemaps",
-    "knip": "raypx-dev knip"
+    "knip": "raypx-dev knip",
+    "perf:tasks": "raypx-dev tasks perf:tasks",
+    "eval:agents": "raypx-dev tasks cli#eval:agents --"
   },
   "devDependencies": {
     "@raypx-kit/tsconfig": "catalog:dev",

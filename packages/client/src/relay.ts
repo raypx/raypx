@@ -1,3 +1,4 @@
+import { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";
 import {
   relayServerSchema,
   MAX_RELAY_BYTES,
@@ -19,8 +20,8 @@ export function relayUrl(baseUrl: string, accountId?: string) {
 }
 export class RelayConnection {
   private socket: WebSocket | undefined;
-  private retry: ReturnType<typeof setTimeout> | undefined;
-  private heartbeat: ReturnType<typeof setInterval> | undefined;
+  private retry: (() => void) | undefined;
+  private heartbeat: (() => void) | undefined;
   private enabled = false;
   private generation = 0;
   private failures = 0;
@@ -40,8 +41,12 @@ export class RelayConnection {
       status: (connected: boolean, code?: string) => void;
       protocolChanged?: (version: 2 | 3) => void;
       socket?: RelaySocketFactory;
+      scheduler?: RelayScheduler;
     },
   ) {}
+  private get scheduler() {
+    return this.options.scheduler ?? systemRelayScheduler;
+  }
   start() {
     if (this.enabled) return;
     this.enabled = true;
@@ -94,14 +99,15 @@ export class RelayConnection {
           }
           const frame = relayServerSchema.parse(raw);
           if (frame.type === "pong" || frame.type === "changed") this.failures = 0;
-          this.lastMessage = Date.now();
+          this.lastMessage = this.scheduler.now();
           if (frame.type === "ready") {
             this.accepted = true;
             this.contextAvailable = frame.contextSupported === true;
             this.options.protocolChanged?.(frame.protocolVersion);
             this.options.status(true);
-            this.heartbeat = setInterval(() => {
-              if (Date.now() - this.lastMessage > 45_000) socket.close(4000, "Heartbeat timeout");
+            this.heartbeat = this.scheduler.interval(() => {
+              if (this.scheduler.now() - this.lastMessage > 45_000)
+                socket.close(4000, "Heartbeat timeout");
               else this.send({ type: "ping" });
             }, 15_000);
           }
@@ -113,7 +119,7 @@ export class RelayConnection {
       socket.addEventListener("error", () => socket.close());
       socket.addEventListener("close", (event) => {
         if (generation !== this.generation) return;
-        if (this.heartbeat) clearInterval(this.heartbeat);
+        if (this.heartbeat) this.heartbeat();
         this.heartbeat = undefined;
         this.socket = undefined;
         this.contextAvailable = false;
@@ -138,17 +144,19 @@ export class RelayConnection {
         );
         if (event.code === 4006 && !fallback) this.enabled = false;
         if (this.enabled && generation === this.generation)
-          this.retry = setTimeout(
+          this.retry = this.scheduler.timeout(
             () => this.connect(),
-            Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) * (0.8 + Math.random() * 0.2),
+            Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) *
+              (0.8 + this.scheduler.random() * 0.2),
           );
       });
     } catch {
       this.options.status(false, "NETWORK_UNAVAILABLE");
       if (this.enabled && generation === this.generation)
-        this.retry = setTimeout(
+        this.retry = this.scheduler.timeout(
           () => this.connect(),
-          Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) * (0.8 + Math.random() * 0.2),
+          Math.min(30_000, 500 * 2 ** Math.min(this.failures++, 6)) *
+            (0.8 + this.scheduler.random() * 0.2),
         );
     }
   }
@@ -175,8 +183,8 @@ export class RelayConnection {
     this.enabled = false;
     this.contextAvailable = false;
     this.generation++;
-    if (this.retry) clearTimeout(this.retry);
-    if (this.heartbeat) clearInterval(this.heartbeat);
+    if (this.retry) this.retry();
+    if (this.heartbeat) this.heartbeat();
     this.retry = undefined;
     this.heartbeat = undefined;
     this.socket?.close(1000, "Disconnected");

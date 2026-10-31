@@ -1,0 +1,380 @@
+import { afterEach, expect, it, vi } from "vite-plus/test";
+import { Database } from "bun:sqlite";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { HumanRequest, TaskActivity } from "@raypx/contracts/tasks";
+import { AgentRuntime } from "../../../../src/runtime/agents";
+import { AgentStore, type LocalAgentTask } from "../../../../src/runtime/agents/store";
+import { StateStore } from "../../../../src/runtime/state";
+
+const uuid = (index: number) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`;
+const now = "2026-10-31T00:00:00.000Z";
+function task(
+  index: number,
+  binding = "relay",
+  status: LocalAgentTask["task"]["status"] = "succeeded",
+): LocalAgentTask {
+  return {
+    binding,
+    sessionId: null,
+    task: {
+      id: uuid(index),
+      deviceId: uuid(1),
+      projectId: uuid(2),
+      provider: "codex",
+      mode: "run",
+      prompt: "Short task",
+      summary: "Done",
+      status,
+      parentTaskId: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  };
+}
+function activity(
+  index: number,
+  taskId: string,
+  text = "done",
+  status: "complete" | "streaming" = "complete",
+): TaskActivity {
+  return {
+    id: uuid(1_000_000 + index),
+    taskId,
+    kind: "message",
+    text,
+    status,
+    truncated: false,
+    createdAt: now,
+    updatedAt: now,
+    order: index + 1,
+    revision: 1,
+  };
+}
+function request(index: number, taskId: string, body = "Confirm"): HumanRequest {
+  return {
+    id: uuid(2_000_000 + index),
+    taskId,
+    kind: "permission",
+    title: "Permission",
+    body,
+    questions: [],
+    expiresAt: now,
+    status: "pending",
+    decision: null,
+  };
+}
+function fixture() {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-snapshot-performance-"));
+  const store = new AgentStore(directory);
+  const database = new Database(join(directory, "agents.sqlite"));
+  return {
+    directory,
+    store,
+    database,
+    put: database.query("INSERT OR REPLACE INTO tasks VALUES (?,?)"),
+    activity: database.query("INSERT INTO activity VALUES (?,?,?,?)"),
+    request: database.query("INSERT INTO requests VALUES (?,?,?)"),
+    close() {
+      store.close();
+      database.close();
+      rmSync(directory, { recursive: true, force: true });
+    },
+  };
+}
+afterEach(() => vi.restoreAllMocks());
+
+it.each([10_000, 100_000])(
+  "decodes only selected task rows among %i short tasks and uses indexed queries",
+  (count) => {
+    const f = fixture();
+    try {
+      f.database.transaction(() => {
+        for (let index = count; index > 0; index--) {
+          const local = task(index, index % 2 ? "other-binding" : "relay");
+          f.put.run(local.task.id, JSON.stringify(local));
+        }
+        const active = task(count + 1, "relay", "waiting");
+        active.task.createdAt = "2020-01-01T00:00:00.000Z";
+        f.put.run(active.task.id, JSON.stringify(active));
+        const recentActive = task(2, "relay", "running");
+        f.put.run(recentActive.task.id, JSON.stringify(recentActive));
+        for (const [index, binding, taskId] of [
+          [1, "relay", uuid(2)],
+          [2, "relay", uuid(count)],
+          [3, "other-binding", uuid(2)],
+        ] as const)
+          f.request.run(uuid(2_000_000 + index), binding, JSON.stringify(request(index, taskId)));
+      })();
+      const parse = vi.spyOn(JSON, "parse");
+      const queries = vi.spyOn(Database.prototype, "query");
+      const prepares = vi.spyOn(Database.prototype, "prepare");
+      const memoryBefore = process.memoryUsage().heapUsed;
+      const started = performance.now();
+      const snapshot = f.store.snapshot("relay");
+      const elapsedMs = performance.now() - started;
+      const heapDeltaBytes = process.memoryUsage().heapUsed - memoryBefore;
+      expect(
+        snapshot.records.filter((row) => row.kind === "task").map((row) => row.task.id),
+      ).toEqual([
+        ...Array.from({ length: 100 }, (_, index) => uuid((index + 1) * 2)),
+        uuid(count + 1),
+      ]);
+      expect(
+        snapshot.records.filter((row) => row.kind === "request").map((row) => row.request.id),
+      ).toEqual([uuid(2_000_001)]);
+      expect(parse).toHaveBeenCalledTimes(102);
+      const sql = [...queries.mock.calls, ...prepares.mock.calls].map(([statement]) => statement);
+      parse.mockRestore();
+      queries.mockRestore();
+      prepares.mockRestore();
+      console.info(
+        JSON.stringify({
+          benchmark: "agent-snapshot",
+          taskRows: count,
+          decodedRows: 102,
+          records: snapshot.records.length,
+          elapsedMs,
+          heapDeltaBytes,
+        }),
+      );
+      const taskQuery = sql.find((statement) => statement.startsWith("WITH recent"))!;
+      const plan = JSON.stringify(
+        f.database.query(`EXPLAIN QUERY PLAN ${taskQuery}`).all("relay", "relay"),
+      );
+      expect(plan).toContain("tasks_binding_created");
+      expect(plan).toContain("tasks_binding_active");
+      expect(plan).not.toMatch(/SCAN tasks(?:"| )/);
+      const activeQuery = sql.find(
+        (statement) =>
+          statement.startsWith("SELECT id,value FROM activity") &&
+          statement.includes("json_extract"),
+      )!;
+      expect(
+        JSON.stringify(f.database.query(`EXPLAIN QUERY PLAN ${activeQuery}`).all("relay", uuid(2))),
+      ).toContain("activity_task_active");
+      const requestsQuery = sql.find((statement) =>
+        statement.startsWith("SELECT value FROM requests"),
+      )!;
+      expect(
+        JSON.stringify(
+          f.database
+            .query(`EXPLAIN QUERY PLAN ${requestsQuery}`)
+            .all("relay", JSON.stringify([uuid(2)])),
+        ),
+      ).toContain("requests_binding_task");
+      const countsQuery = sql.find((statement) => statement.startsWith("SELECT task_id,count(*)"))!;
+      expect(
+        JSON.stringify(
+          f.database
+            .query(`EXPLAIN QUERY PLAN ${countsQuery}`)
+            .all("relay", JSON.stringify([uuid(2)])),
+        ),
+      ).toContain("COVERING INDEX activity_task");
+    } finally {
+      f.close();
+    }
+  },
+);
+
+it("upgrades old JSON-only task profiles idempotently without rewriting their rows", () => {
+  const f = fixture();
+  let reopened: AgentStore | undefined;
+  try {
+    const local = task(1);
+    const original = JSON.stringify(local, null, 2);
+    f.put.run(local.task.id, original);
+    f.database.exec(
+      "DROP INDEX tasks_binding_created; DROP INDEX tasks_binding_active; DROP INDEX requests_binding_task; DROP INDEX activity_task_active;",
+    );
+    f.store.close();
+    reopened = new AgentStore(f.directory);
+    expect(reopened.snapshot("relay").records).toMatchObject([
+      { kind: "task", task: { id: uuid(1), activityIncomplete: false } },
+    ]);
+    reopened.close();
+    reopened = new AgentStore(f.directory);
+    expect(f.database.query("SELECT value FROM tasks WHERE id=?").get(uuid(1))).toEqual({
+      value: original,
+    });
+    expect(
+      f.database
+        .query(
+          "SELECT name FROM sqlite_master WHERE name IN ('tasks_binding_created','tasks_binding_active','requests_binding_task','activity_task_active')",
+        )
+        .all(),
+    ).toHaveLength(4);
+  } finally {
+    reopened?.close();
+    f.database.close();
+    rmSync(f.directory, { recursive: true, force: true });
+  }
+});
+
+it("reads task rows and watermark from one frozen WAL transaction while another owner advances", () => {
+  const f = fixture();
+  const writer = new AgentStore(f.directory);
+  try {
+    const local = task(1);
+    writer.put(local);
+    writer.event("relay", {
+      id: uuid(3),
+      taskId: uuid(1),
+      kind: "status",
+      status: "succeeded",
+      summary: "Before",
+    });
+    const previous = writer.sequence("relay");
+    const sequence = f.store.sequence.bind(f.store);
+    vi.spyOn(f.store, "sequence").mockImplementation((binding) => {
+      writer.put({ ...local, task: { ...local.task, summary: "After" } });
+      writer.event("relay", {
+        id: uuid(4),
+        taskId: uuid(1),
+        kind: "status",
+        status: "succeeded",
+        summary: "After",
+      });
+      return sequence(binding);
+    });
+    const snapshot = f.store.snapshot("relay");
+    expect(snapshot.sequence).toBe(previous);
+    expect(snapshot.records).toMatchObject([{ task: { summary: "Done" } }]);
+    expect(writer.sequence("relay")).toBeGreaterThan(snapshot.sequence);
+    expect(writer.get(uuid(1))?.task.summary).toBe("After");
+  } finally {
+    writer.close();
+    f.close();
+  }
+});
+
+it("admits activity in fair rounds before decoding and stays within the 32 MiB checkpoint budget", () => {
+  const f = fixture();
+  try {
+    f.database.transaction(() => {
+      for (let index = 0; index < 100; index++) {
+        const local = task(index + 1);
+        f.put.run(local.task.id, JSON.stringify(local));
+        for (let entry = 0; entry < 16; entry++) {
+          const value = activity(
+            index * 16 + entry,
+            local.task.id,
+            "x".repeat(32_000),
+            "streaming",
+          );
+          f.activity.run(value.id, "relay", local.task.id, JSON.stringify(value));
+        }
+      }
+    })();
+    const parse = vi.spyOn(JSON, "parse");
+    const snapshot = f.store.snapshot("relay");
+    const entries = snapshot.records.filter((record) => record.kind === "activity");
+    expect(parse).toHaveBeenCalledTimes(100 + entries.length);
+    expect(entries.length).toBeGreaterThan(100);
+    expect(entries.length).toBeLessThan(1600);
+    expect(new Set(entries.slice(0, 100).map((record) => record.entry.taskId)).size).toBe(100);
+    const counts = new Map<string, number>();
+    for (const record of entries)
+      counts.set(record.entry.taskId, (counts.get(record.entry.taskId) ?? 0) + 1);
+    expect(Math.max(...counts.values()) - Math.min(...counts.values())).toBeLessThanOrEqual(1);
+    expect(Buffer.byteLength(JSON.stringify(snapshot.records))).toBeLessThan(
+      32 * 1024 * 1024 - 64 * 1024,
+    );
+    expect(
+      snapshot.records
+        .filter((record) => record.kind === "task")
+        .every((record) => record.task.activityIncomplete),
+    ).toBe(true);
+  } finally {
+    f.close();
+  }
+});
+
+it("keeps old active entries plus a bounded recent page, deduplicates them and marks omitted history", () => {
+  const f = fixture();
+  try {
+    f.store.put(task(1));
+    f.store.put(task(2));
+    f.store.put(task(3));
+    f.database.transaction(() => {
+      for (let index = 0; index < 80; index++) {
+        const value = activity(
+          index,
+          uuid(1),
+          "界".repeat(32_000),
+          index === 0 ? "streaming" : "complete",
+        );
+        f.activity.run(value.id, "relay", uuid(1), JSON.stringify(value));
+      }
+      const value = activity(100, uuid(2), "done", "streaming");
+      f.activity.run(value.id, "relay", uuid(2), JSON.stringify(value));
+    })();
+    const parse = vi.spyOn(JSON, "parse");
+    const snapshot = f.store.snapshot("relay");
+    const entries = snapshot.records.filter((record) => record.kind === "activity");
+    expect(entries.map((record) => record.entry.id)).toEqual([
+      uuid(1_000_000),
+      uuid(1_000_100),
+      uuid(1_000_079),
+      uuid(1_000_078),
+    ]);
+    expect(parse).toHaveBeenCalledTimes(7);
+    expect(
+      snapshot.records
+        .filter((record) => record.kind === "task")
+        .map((record) => record.task.activityIncomplete),
+    ).toEqual([true, false, false]);
+  } finally {
+    f.close();
+  }
+});
+
+it("freezes paged records across live writes, caps pages at ten rows and 384 KiB, and expires cursors", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "raypx-snapshot-pages-"));
+  const state = new StateStore(directory);
+  const runtime = new AgentRuntime(state, () => {});
+  const writer = new AgentStore(directory);
+  const database = new Database(join(directory, "agents.sqlite"));
+  try {
+    for (let index = 1; index <= 21; index++) writer.put(task(index));
+    const insert = database.query("INSERT INTO requests VALUES (?,?,?)");
+    for (let index = 0; index < 5; index++) {
+      const value = request(index, uuid(1), "x".repeat(128_000));
+      insert.run(value.id, "relay", JSON.stringify(value));
+    }
+    const first = runtime.snapshot("relay");
+    expect(first.records).toHaveLength(10);
+    writer.put({ ...task(11), task: { ...task(11).task, summary: "Changed after snapshot" } });
+    writer.event("relay", {
+      id: uuid(40),
+      taskId: uuid(11),
+      kind: "status",
+      status: "succeeded",
+      summary: "Changed after snapshot",
+    });
+    let page = first;
+    const records = [...first.records];
+    do {
+      page = runtime.snapshot("relay", first.id, page.next);
+      expect(page.records.length).toBeLessThanOrEqual(10);
+      expect(Buffer.byteLength(JSON.stringify(page.records))).toBeLessThan(384 * 1024);
+      expect(page.sequence).toBe(first.sequence);
+      records.push(...page.records);
+    } while (!page.done);
+    expect(records).toHaveLength(26);
+    expect(
+      records.find((record) => record.kind === "task" && record.task.id === uuid(11)),
+    ).toMatchObject({ task: { summary: "Done" } });
+    expect(() => runtime.snapshot("other-binding", first.id)).toThrow("Snapshot unavailable");
+    vi.spyOn(Date, "now").mockReturnValue(Date.now() + 120_001);
+    expect(() => runtime.snapshot("relay", first.id)).toThrow("Snapshot unavailable");
+  } finally {
+    vi.restoreAllMocks();
+    database.close();
+    writer.close();
+    await runtime.close();
+    state.close();
+    rmSync(directory, { recursive: true, force: true });
+  }
+});

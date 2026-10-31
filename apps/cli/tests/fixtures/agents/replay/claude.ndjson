@@ -1,0 +1,10 @@
+{"direction":"host","channel":"send","message":{"type":"user","session_id":"synthetic-session"}}
+{"direction":"provider","message":{"type":"system","session_id":"synthetic-session"}}
+{"direction":"gate","name":"started"}
+{"direction":"provider","message":{"type":"result","result":"Synthetic first result"}}
+{"direction":"host","channel":"send","message":{"type":"user","session_id":"synthetic-session","message":{"content":"Queued synthetic input"}}}
+{"direction":"gate","name":"queued"}
+{"direction":"provider","message":{"type":"result","result":"Synthetic queued result"}}
+{"direction":"host","channel":"kill"}
+{"direction":"gate","name":"draining"}
+{"direction":"exit","code":0}

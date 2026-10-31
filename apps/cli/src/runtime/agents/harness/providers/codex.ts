@@ -69,7 +69,8 @@ export class CodexProvider {
             2,
           ),
         )
-        .then((decision) =>
+        .then((decision) => {
+          if (!this.observer.current()) return;
           this.process.send({
             id: message.id,
             result:
@@ -79,9 +80,11 @@ export class CodexProvider {
                     scope: "turn",
                   }
                 : { decision: decision.type === "allow" ? "accept" : "decline" },
-          }),
-        )
-        .catch(() => this.observer.failed());
+          });
+        })
+        .catch(() => {
+          if (this.observer.current()) this.observer.failed();
+        });
     } else if (
       message.id !== undefined &&
       (method === "item/tool/requestUserInput" || method === "tool/requestUserInput")
@@ -112,7 +115,8 @@ export class CodexProvider {
             ? Date.now() + params.autoResolutionMs
             : undefined,
         )
-        .then((decision) =>
+        .then((decision) => {
+          if (!this.observer.current()) return;
           this.process.send({
             id: message.id,
             result: {
@@ -123,9 +127,11 @@ export class CodexProvider {
                     )
                   : {},
             },
-          }),
-        )
-        .catch(() => this.observer.failed());
+          });
+        })
+        .catch(() => {
+          if (this.observer.current()) this.observer.failed();
+        });
     } else if (message.id !== undefined && method)
       this.process.send({
         id: message.id,

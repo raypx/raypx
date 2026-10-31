@@ -23,10 +23,14 @@ Validate remote origins and keep secrets out of disk settings and diagnostics.
 
 ## Verification
 
-Run this workspace's `check`, `test` and `test:integration` commands. Transport
+Run this workspace's `check`, `test`, `test:unit` and `test:integration` commands. Transport
 regressions live in `tests/integration/`, grouped by renewal, replay and snapshots;
 `tests/helpers/control.ts` owns a fresh loopback relay and temporary state per case.
 CLI retains daemon integration tests for its application-specific lifecycle.
+`tests/unit/scheduler.test.ts` uses injected sockets and the client's manual scheduler
+for exact retry, renewal-drain and acknowledgement deadlines. RemoteControl forwards
+one scheduler to RelayConnection so clocks, jitter and all timers share one source.
+Keep loopback coverage for actual authentication, command delivery and renewal.
 
 A rejected v3 handshake negotiates managed-only v2 once. Do not send observed
 frames or advertise terminal support on that connection. Terminal renewal failures

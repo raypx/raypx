@@ -42,3 +42,5 @@ export type {
   RelayCommand,
   TaskChange,
 } from "@raypx/contracts/api";
+
+export { systemRelayScheduler, type RelayScheduler } from "./scheduler.js";

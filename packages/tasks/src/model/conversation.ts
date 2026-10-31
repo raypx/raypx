@@ -13,7 +13,16 @@ type History = Pick<TaskHistoryPage, "activity" | "activityBefore" | "events">;
 export class ConversationState {
   private cursor = 0;
   private readonly events = new Map<number, AgentEvent>();
-  private activity = new Map<string, TaskActivity>();
+  private readonly activity = new Map<string, TaskActivity>();
+  private readonly orderedIds: string[] = [];
+  private eventsVersion = 0;
+  private snapshotEventsVersion = -1;
+  private activityVersion = 0;
+  private snapshotVersion = -1;
+  private cachedActivity: TaskActivity[] = [];
+  private cachedEvents: { cursor: number; event: AgentEvent }[] = [];
+  private cachedGaps: ConversationGap[] = [];
+  private cachedSnapshot: ReturnType<ConversationState["buildSnapshot"]> | undefined;
   private olderBefore: number | undefined;
   // A live entry can arrive ahead of a recovering HTTP page. Its order does not
   // prove that the intervening history was loaded (orders are global row IDs).
@@ -43,7 +52,19 @@ export class ConversationState {
   private mergeActivity(entries: TaskActivity[] = []) {
     for (const entry of entries) {
       const previous = this.activity.get(entry.id);
-      if (!previous || entry.revision > previous.revision) this.activity.set(entry.id, entry);
+      if (previous && entry.revision <= previous.revision) continue;
+      if (!previous) {
+        let low = 0,
+          high = this.orderedIds.length;
+        while (low < high) {
+          const middle = (low + high) >>> 1;
+          if (this.activity.get(this.orderedIds[middle]!)!.order <= entry.order) low = middle + 1;
+          else high = middle;
+        }
+        this.orderedIds.splice(low, 0, entry.id);
+      }
+      this.activity.set(entry.id, entry);
+      this.activityVersion++;
     }
   }
   private addGap(before: number, after: number) {
@@ -77,7 +98,10 @@ export class ConversationState {
       this.addGap(this.liveUpper, recoveredUpper);
     this.mergeActivity(page.activity);
     for (const item of page.events) {
-      this.events.set(item.cursor, item.event);
+      if (this.events.get(item.cursor) !== item.event) {
+        this.events.set(item.cursor, item.event);
+        this.eventsVersion++;
+      }
       this.cursor = Math.max(this.cursor, item.cursor);
     }
     return this.snapshot();
@@ -100,28 +124,56 @@ export class ConversationState {
   }
   /** Commit a batch only when every delta has its baseline; otherwise fetch a checkpoint. */
   applyEvents(events: AgentEvent[]) {
-    const next = new Map(this.activity);
+    const next = new Map<string, TaskActivity>();
     let liveUpper = this.liveUpper;
     for (const event of events) {
       if (event.kind !== "activity" && event.kind !== "activity_delta") return undefined;
       const id = event.kind === "activity" ? event.entry.id : event.entryId;
-      const entry = applyActivityEvent(next.get(id), event);
+      const entry = applyActivityEvent(next.get(id) ?? this.activity.get(id), event);
       if (!entry) return undefined;
       next.set(id, entry);
       liveUpper = Math.max(liveUpper, entry.order);
     }
-    this.activity = next;
+    this.mergeActivity([...next.values()]);
     this.liveUpper = liveUpper;
     if (this.tracksLiveCoverage && !this.recovering)
       this.continuousLiveUpper = Math.max(this.continuousLiveUpper, liveUpper);
     return this.snapshot().activity;
   }
   snapshot() {
+    if (this.snapshotVersion !== this.activityVersion) {
+      this.cachedActivity = this.orderedIds.map((id) => this.activity.get(id)!);
+      this.snapshotVersion = this.activityVersion;
+    }
+    if (this.snapshotEventsVersion !== this.eventsVersion) {
+      this.cachedEvents = [...this.events.entries()].map(([cursor, event]) => ({ cursor, event }));
+      this.snapshotEventsVersion = this.eventsVersion;
+    }
+    if (
+      this.cachedGaps.length !== this.gaps.length ||
+      this.gaps.some((gap, index) => {
+        const old = this.cachedGaps[index];
+        return !old || old.id !== gap.id || old.before !== gap.before || old.after !== gap.after;
+      })
+    )
+      this.cachedGaps = this.gaps.map((gap) => ({ ...gap }));
+    const old = this.cachedSnapshot;
+    if (
+      !old ||
+      old.activity !== this.cachedActivity ||
+      old.events !== this.cachedEvents ||
+      old.activityGaps !== this.cachedGaps ||
+      old.activityBefore !== this.olderBefore
+    )
+      this.cachedSnapshot = this.buildSnapshot();
+    return this.cachedSnapshot!;
+  }
+  private buildSnapshot() {
     return {
       activityBefore: this.olderBefore,
-      activityGaps: this.gaps.map((gap) => ({ ...gap })),
-      activity: [...this.activity.values()].sort((a, b) => a.order - b.order),
-      events: [...this.events.entries()].map(([cursor, event]) => ({ cursor, event })),
+      activityGaps: this.cachedGaps,
+      activity: this.cachedActivity,
+      events: this.cachedEvents,
     };
   }
 }

@@ -95,6 +95,7 @@ export class ManagedExecution {
     private readonly store: ExecutionStore,
     private readonly effects: ExecutionEffects,
     private readonly interruptTimeoutMs = 10_000,
+    private readonly driverFactory: typeof createDriver = createDriver,
   ) {}
   hasPending(id: string) {
     return this.pending.has(id);
@@ -296,7 +297,7 @@ export class ManagedExecution {
     )
       throw new LocalError("SESSION_UNAVAILABLE", "Previous session is unavailable");
     this.planRequestHandled = false;
-    const provider = createDriver(
+    const provider = this.driverFactory(
       task.provider,
       {
         executable,

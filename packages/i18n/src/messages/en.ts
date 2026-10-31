@@ -250,6 +250,10 @@ export default {
     discardChanges: "Discard changes",
     promptPlaceholder: "Describe the change, question or investigation…",
     conversation: "Conversation",
+    loadedFullText: "Show all loaded messages",
+    virtualConversation: "Use virtual scrolling",
+    loadedConversationScope:
+      "All loaded messages are shown for selection and browser search. Load earlier messages to include more history.",
     you: "You",
     streaming: "Writing…",
     olderMessages: "Load earlier messages",

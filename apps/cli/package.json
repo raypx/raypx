@@ -20,7 +20,9 @@
     "smoke:terminal": "bun run tests/smoke/terminal-hooks.ts",
     "smoke:terminal-stream": "bun run tests/smoke/terminal-stream.ts",
     "smoke:daemon-agents": "bun run tests/smoke/daemon-agents.ts",
-    "smoke:pi": "bun run tests/smoke/pi-runner.ts"
+    "smoke:pi": "bun run tests/smoke/pi-runner.ts",
+    "perf:tasks": "bun --bun vp test --run tests/integration/runtime/agents/snapshot-performance.test.ts --reporter=verbose --silent=false",
+    "eval:agents": "bun --no-env-file tests/evals/run.ts"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "catalog:",

@@ -1,7 +1,13 @@
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { hostname } from "node:os";
-import { RelayConnection, relayUrl, type RelaySocketFactory } from "@raypx/client";
+import {
+  RelayConnection,
+  relayUrl,
+  systemRelayScheduler,
+  type RelayScheduler,
+  type RelaySocketFactory,
+} from "@raypx/client";
 import {
   deviceGrantSchema,
   type DeviceGrant,
@@ -24,7 +30,7 @@ export class RemoteControl {
   private binding: string | undefined;
   private grant: DeviceGrant | undefined;
   private connection: RelayConnection | undefined;
-  private timer: ReturnType<typeof setInterval> | undefined;
+  private timer: (() => void) | undefined;
   private generation = 0;
   private error: string | null = null;
   private renewAt = 0;
@@ -43,27 +49,30 @@ export class RemoteControl {
         snapshotId?: string;
         resolve(): void;
         reject(): void;
-        timer: ReturnType<typeof setTimeout>;
+        timer: () => void;
       }
     | undefined;
   private readonly notified = new Set<string>();
   private apiUrl: string | undefined;
   private renewing: Promise<boolean> | undefined;
   private renewalFailures = 0;
-  private renewalTimer: ReturnType<typeof setTimeout> | undefined;
+  private renewalTimer: (() => void) | undefined;
   private draining = false;
   private protocolVersion: 2 | 3;
   private readonly commands = new Set<Promise<void>>();
+  private get scheduler() {
+    return this.options.scheduler ?? systemRelayScheduler;
+  }
   private scheduleRenewal(disconnect = true) {
     if (this.renewalTimer || !this.accountId || this.error === "UPGRADE_REQUIRED") return;
     if (disconnect) this.resetConnection();
     const delay = Math.max(
-      this.renewAt - Date.now(),
+      this.renewAt - this.scheduler.now(),
       Math.min(30_000, 500 * 2 ** Math.min(this.renewalFailures++, 6)) *
-        (0.8 + Math.random() * 0.2),
+        (0.8 + this.scheduler.random() * 0.2),
     );
-    this.renewAt = Date.now() + delay;
-    this.renewalTimer = setTimeout(() => {
+    this.renewAt = this.scheduler.now() + delay;
+    this.renewalTimer = this.scheduler.timeout(() => {
       this.renewalTimer = undefined;
       void this.refreshGrant()
         .then((restored) => {
@@ -81,6 +90,7 @@ export class RemoteControl {
     private readonly grantRequired: () => void,
     private readonly options: {
       socket?: RelaySocketFactory;
+      scheduler?: RelayScheduler;
       renewGrant?: (accountId: string, binding: Binding) => Promise<DeviceGrant>;
       protocolVersion?: 2 | 3;
       authorizationLost?: (code: "AUTH_REQUIRED" | "DEVICE_REVOKED") => Promise<void>;
@@ -200,6 +210,7 @@ export class RemoteControl {
       grant = this.grant;
     if (!grant || !this.accountId) return;
     this.connection = new RelayConnection({
+      scheduler: this.scheduler,
       url: relayUrl(apiUrl, this.accountId),
       ...(this.options.socket ? { socket: this.options.socket } : {}),
       authenticate: async () => ({
@@ -250,23 +261,23 @@ export class RemoteControl {
     this.connection.start();
   }
   private maintenance() {
-    if (this.timer) clearInterval(this.timer);
+    if (this.timer) this.timer();
     const check = () => {
       if (!this.accountId || this.error === "UPGRADE_REQUIRED") return;
       if (
-        (!this.grant || Date.parse(this.grant.expiresAt) - Date.now() < 60_000) &&
-        Date.now() >= this.renewAt &&
+        (!this.grant || Date.parse(this.grant.expiresAt) - this.scheduler.now() < 60_000) &&
+        this.scheduler.now() >= this.renewAt &&
         !this.renewalTimer &&
         !this.renewing
       ) {
-        if (!this.grant) this.renewAt = Date.now() + 15_000;
+        if (!this.grant) this.renewAt = this.scheduler.now() + 15_000;
         void this.refreshGrant().catch(() => {
           this.error = "NETWORK_UNAVAILABLE";
         });
       }
     };
     check();
-    this.timer = setInterval(check, 15_000);
+    this.timer = this.scheduler.interval(check, 15_000);
   }
   /** Native renewal remains active when the renderer is hidden or suspended. */
   refreshGrant(): Promise<boolean> {
@@ -297,22 +308,22 @@ export class RemoteControl {
           next.deviceId !== grant.deviceId ||
           next.epoch !== grant.epoch ||
           !Number.isFinite(Date.parse(next.expiresAt)) ||
-          Date.parse(next.expiresAt) <= Date.now()
+          Date.parse(next.expiresAt) <= this.scheduler.now()
         )
           throw new Error("Invalid renewed grant");
         this.grant = next;
         this.error = null;
         this.draining = true;
-        let timeout: ReturnType<typeof setTimeout> | undefined;
+        let timeout: (() => void) | undefined;
         try {
           await Promise.race([
             Promise.allSettled(this.commands),
             new Promise<void>((resolve) => {
-              timeout = setTimeout(resolve, this.options.drainTimeoutMs ?? 10_000);
+              timeout = this.scheduler.timeout(resolve, this.options.drainTimeoutMs ?? 10_000);
             }),
           ]);
         } finally {
-          clearTimeout(timeout);
+          timeout?.();
           this.draining = false;
         }
         if (generation !== this.generation || this.accountId !== accountId) return false;
@@ -445,7 +456,7 @@ export class RemoteControl {
       const finish = (error: boolean) => {
         const pending = this.acknowledgement;
         if (!pending) return;
-        clearTimeout(pending.timer);
+        pending.timer();
         this.acknowledgement = undefined;
         if (error) reject(new Error("NETWORK_UNAVAILABLE"));
         else resolve();
@@ -455,7 +466,7 @@ export class RemoteControl {
         ...(snapshotId ? { snapshotId } : {}),
         resolve: () => finish(false),
         reject: () => finish(true),
-        timer: setTimeout(() => finish(true), 10_000),
+        timer: this.scheduler.timeout(() => finish(true), 10_000),
       };
     });
   }
@@ -575,19 +586,27 @@ export class RemoteControl {
     }
   }
   async detach() {
-    clearTimeout(this.renewalTimer);
+    this.renewalTimer?.();
     this.renewalTimer = undefined;
-    if (this.timer) clearInterval(this.timer);
+    if (this.timer) this.timer();
     this.timer = undefined;
     const binding = this.binding;
     this.detaching = true;
     if (binding) {
       await this.engine.request("agents.detach", { binding }).catch(() => {});
-      if (this.ready)
-        await Promise.race([
-          this.wake(),
-          new Promise<void>((resolve) => setTimeout(resolve, 2000)),
-        ]);
+      if (this.ready) {
+        let cancel: (() => void) | undefined;
+        try {
+          await Promise.race([
+            this.wake(),
+            new Promise<void>((resolve) => {
+              cancel = this.scheduler.timeout(resolve, 2000);
+            }),
+          ]);
+        } finally {
+          cancel?.();
+        }
+      }
     }
     this.resetConnection();
     this.binding = undefined;
